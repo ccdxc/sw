@@ -54,21 +54,6 @@
         "timeout": 30.0
     },
     {
-        "name": "nicmgr",
-        "command": "/bin/sh /platform/tools/start-nicmgr-haps.sh",
-        "dependencies": [
-            {
-                "kind": "service",
-                "service-name": "delphi"
-            },
-            {
-                "kind": "service",
-                "service-name": "pciemgrd"
-            }],
-        "flags": [],
-        "timeout": 0.0
-    },
-    {
         "name": "hal",
         "command": "/bin/sh /nic/tools/start-hal-haps.sh",
         "dependencies": [
@@ -106,10 +91,6 @@
             {
                 "kind": "service",
                 "service-name": "upgrade"
-            },
-            {
-                "kind": "service",
-                "service-name": "nicmgr"
             },
             {
                 "kind": "service",
@@ -207,7 +188,7 @@
         "dependencies": [
             {
                 "kind": "service",
-                "service-name": "nicmgr"
+                "service-name": "hal"
             }
         ],
         "flags": [],
@@ -220,7 +201,7 @@
         "dependencies": [
             {
                 "kind": "service",
-                "service-name": "nicmgr"
+                "service-name": "hal"
             }
         ],
         "flags": [],

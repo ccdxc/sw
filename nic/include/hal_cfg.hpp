@@ -21,9 +21,10 @@ enum {
     HAL_THREAD_ID_DELPHI_CLIENT       = 6,
     HAL_THREAD_ID_LINKMGR_CTRL        = 7,
     HAL_THREAD_ID_VMOTION             = 8,
-    HAL_THREAD_ID_MAX                 = 9,
-    HAL_THREAD_ID_VMOTION_THREADS_MIN = 10, // 64 Worker vMotion threads
-    HAL_THREAD_ID_VMOTION_THREADS_MAX = 73,
+    HAL_THREAD_ID_NICMGR              = 9,
+    HAL_THREAD_ID_MAX                 = 10,
+    HAL_THREAD_ID_VMOTION_THREADS_MIN = 11, // 64 Worker vMotion threads
+    HAL_THREAD_ID_VMOTION_THREADS_MAX = 74,
 };
 
 #define HAL_MAX_NAME_STR       16

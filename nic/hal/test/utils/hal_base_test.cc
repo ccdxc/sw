@@ -132,6 +132,9 @@ hal_uninitialize (void)
         fprintf(stderr, "HAL initialization failed, quitting ...\n");
         exit(1);
     }
+    // wait for all threads to stop
+    // TODO, proper thread shutdown and wait in hal_destroy()
+    sleep(5);
     printf("HAL UnInitialized \n");
 }
 

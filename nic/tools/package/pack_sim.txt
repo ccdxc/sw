@@ -105,6 +105,13 @@ nic/build/x86_64/iris/lib/libflowstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/librulestatsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libftl.so                                 /nic/lib/
+nic/build/x86_64/iris/lib/libnicmgr.so                              /nic/lib/
+nic/build/x86_64/iris/lib/libnicmgr_iris.so                         /nic/lib/
+nic/build/x86_64/iris/lib/libpciemgr_if.so                          /nic/lib/
+nic/build/x86_64/iris/lib/libintrutils.so                           /nic/lib/
+nic/build/x86_64/iris/lib/libmisc.so                                /nic/lib/
+nic/build/x86_64/iris/lib/libevutils.so                             /nic/lib/
+nic/build/x86_64/iris/lib/libmnet.so                                /nic/lib/
 
 nic/hal/third-party/lkl/export/x86_64/lib/liblkl.so              /nic/lib/
 nic/sdk/third-party/libev/x86_64/lib/libev.so                    /nic/lib/

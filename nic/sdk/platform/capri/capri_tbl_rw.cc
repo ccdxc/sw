@@ -855,11 +855,14 @@ capri_p4plus_table_rw_cleanup (void)
 static int
 capri_p4plus_shadow_init (void)
 {
-    g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                                                 sizeof(capri_sram_shadow_mem_t));
-    g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
-                                                                 sizeof(capri_sram_shadow_mem_t));
-
+    if (!g_shadow_sram_rxdma) {
+        g_shadow_sram_rxdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                                                     sizeof(capri_sram_shadow_mem_t));
+    }
+    if (!g_shadow_sram_txdma) {
+        g_shadow_sram_txdma = (capri_sram_shadow_mem_t*)CAPRI_CALLOC(1,
+                                                                     sizeof(capri_sram_shadow_mem_t));
+    }
     if (!g_shadow_sram_rxdma || !g_shadow_sram_txdma) {
         // TODO: Log error/trace
         capri_p4plus_table_rw_cleanup();

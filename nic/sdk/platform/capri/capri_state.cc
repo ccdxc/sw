@@ -68,6 +68,9 @@ capri_state_pd::factory(capri_cfg_t *cfg)
 sdk_ret_t
 capri_state_pd_init(capri_cfg_t *cfg)
 {
+    if (g_capri_state_pd) {
+        return SDK_RET_OK;
+    }
     sdk::platform::capri::csr_init();
 
     g_capri_state_pd = sdk::platform::capri::capri_state_pd::factory(cfg);

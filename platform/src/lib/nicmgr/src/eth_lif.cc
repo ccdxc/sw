@@ -27,10 +27,10 @@ namespace psp
 #include "nic/p4/common/defines.h"
 #include "nic/sdk/lib/thread/thread.hpp"
 
-#ifdef IRIS
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
 #include "gen/proto/nicmgr/metrics.delphi.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
-#endif  // IRIS
+#endif
 
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
@@ -2660,14 +2660,14 @@ EthLif::DelphiMountEventHandler(bool mounted)
     if (!mounted) {
         return;
     }
-#ifdef IRIS
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     auto lif_stats =
         delphi::objects::LifMetrics::NewLifMetrics(hal_lif_info_.lif_id, lif_stats_addr);
     if (lif_stats == NULL) {
         NIC_LOG_ERR("{}: Failed lif metrics registration with delphi", hal_lif_info_.name);
         throw;
     }
-#endif  // IRIS
+#endif  // NICMGR_DELPHI_METRICS_ENABLE
 }
 
 void

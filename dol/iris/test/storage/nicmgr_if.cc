@@ -7,7 +7,6 @@
 #include "logger.hpp"
 #include "nic/sdk/platform/utils/qstate_mgr.hpp"
 #include "nic/sdk/platform/capri/capri_state.hpp"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
 
 #include <assert.h>
 #include <stdint.h>
@@ -25,9 +24,6 @@ using namespace utils;
  * Public symbols for libnicmgr to silence linker warnings
  */
 class pciemgr *pciemgr;
-namespace nicmgr {
-    shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
-}
 
 namespace nicmgr_if {
 

@@ -23,6 +23,7 @@ public:
    delphi_client(delphi::SdkPtr &sdk);
    void OnMountComplete(void);
    void init_done(void);
+   void send_upg_stage_status(bool status);
    delphi::SdkPtr sdk(void);
    virtual std::string Name();
 

@@ -30,6 +30,7 @@
 #include "nic/hal/svc/hal_ext.hpp"
 #include "nic/delphi/utils/log.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
+#include "platform/src/app/nicmgrd/src/nicmgr_init.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -203,6 +204,45 @@ hal_delphi_thread_init (hal_cfg_t *hal_cfg)
     return HAL_RET_OK;
 }
 
+
+static void
+nicmgr_thread_start (void *ctxt)
+{
+    sdk::platform::platform_type_t platform = g_hal_state->platform_type();
+    sdk::event_thread::event_thread *curr_thread = (sdk::event_thread::event_thread *)ctxt;
+
+    nicmgr::nicmgr_init(platform, curr_thread);
+    hal_thread_add((sdk::lib::thread *)ctxt);
+}
+
+static void
+nicmgr_thread_exit (void *ctxt)
+{
+    nicmgr::nicmgr_exit();
+}
+
+hal_ret_t
+hal_nicmgr_init (hal_cfg_t *hal_cfg)
+{
+    sdk::event_thread::event_thread *nicmgr_thread;
+
+    nicmgr_thread =
+        sdk::event_thread::event_thread::factory(
+            "nicmgr", HAL_THREAD_ID_NICMGR,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0x0,    // use all control cores
+            nicmgr_thread_start,  // entry function
+            nicmgr_thread_exit,  // exit function
+            NULL,  // thread event callback
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
+    SDK_ASSERT_TRACE_RETURN((nicmgr_thread != NULL), HAL_RET_ERR,
+                            "Failed to spawn nicmgr thread");
+    nicmgr_thread->start(nicmgr_thread);
+    return HAL_RET_OK;
+}
+
 //------------------------------------------------------------------------------
 // init function for HAL
 //------------------------------------------------------------------------------
@@ -271,6 +311,11 @@ hal_init (hal_cfg_t *hal_cfg)
     sdk::lib::pal_program_marvell(MARVELL_PORT_CTRL_REG,
                                   sdk::linkmgr::marvell_port_cfg_1g(),
                                   MARVELL_PORT0);
+
+    // nicmgr init
+    if (!getenv("DISABLE_NICMGR_HAL_THREAD")) {
+        hal_nicmgr_init(hal_cfg);
+    }
 
     // linkmgr init
     hal_linkmgr_init(hal_cfg, hal::port_event_cb);

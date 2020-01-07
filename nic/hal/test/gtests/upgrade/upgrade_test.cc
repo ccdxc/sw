@@ -65,7 +65,16 @@ TEST_F(upgrade_test, test1)
     // LinkDown handler
     UpgCtx upgCtx;
     UpgHandlerPtr upg_handler = std::make_shared<upgrade_handler>();
-    HdlrResp resp = upg_handler->LinkDownHandler(upgCtx);
+
+    HdlrResp resp = upg_handler->CompatCheckHandler(upgCtx);
+    ASSERT_TRUE(resp.resp == ::upgrade::SUCCESS);
+
+    resp = upg_handler->LinkDownHandler(upgCtx);
+    ASSERT_TRUE(resp.resp != ::upgrade::FAIL);
+    if (resp.resp == ::upgrade::INPROGRESS) {
+        sleep(2); // wait for any pending status
+    }
+    resp = upg_handler->SaveStateHandler(upgCtx);
     ASSERT_TRUE(resp.resp == ::upgrade::SUCCESS);
 
     // psp is timing out

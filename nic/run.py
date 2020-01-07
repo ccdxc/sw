@@ -343,6 +343,8 @@ def run_hal(args):
     os.environ["COVFILE"] = os.path.realpath(bullseye_hal_cov_file)
     if not args.enable_aging:
         os.environ["DISABLE_AGING"] = "1"
+    if args.nicmgr_gtest:
+        os.environ["DISABLE_NICMGR_HAL_THREAD"] = "1"
 
     #hal_dir = nic_dir + "/../bazel-bin/nic/hal"
     os.chdir(nic_dir)

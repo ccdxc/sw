@@ -2,16 +2,15 @@
 #include <stdio.h>
 
 #include "nic/sdk/lib/device/device.hpp"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
-#include "platform/src/app/nicmgrd/src/delphic.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include <grpc++/grpc++.h>
 #include "gen/proto/interface.grpc.pb.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
-#include "devapi_types.hpp"
 // #include "logger.hpp"
 
 using grpc::Channel;
@@ -27,10 +26,6 @@ using boost::multiprecision::uint128_t;
 using namespace std::chrono;
 
 using namespace std;
-
-namespace nicmgr {
-shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
-}
 
 DeviceManager *devmgr = NULL;
 sdk::lib::dev_forwarding_mode_t g_fwd_mode;

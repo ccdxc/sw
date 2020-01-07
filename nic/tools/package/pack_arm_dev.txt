@@ -108,6 +108,10 @@ nic/build/aarch64/iris/lib/liblinkmgr_src.so                        /nic/lib/
 nic/build/aarch64/iris/lib/liblinkmgrdelphi.so                      /nic/lib/
 nic/build/aarch64/iris/lib/libsdklinkmgr.so                         /nic/lib/
 
+# nicmgr
+nic/build/aarch64/iris/lib/libnicmgr.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libnicmgr_iris.so                        /nic/lib/
+
 # AAPL
 nic/sdk/third-party/avago/build/aarch64/bin/aapl                    /nic/bin/
 nic/sdk/third-party/avago/build/aarch64/lib/aapl/C/libAAPL.so       /nic/lib/

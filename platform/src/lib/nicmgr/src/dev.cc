@@ -685,6 +685,10 @@ void
 DeviceManager::HeartbeatEventHandler(void *obj)
 {
     DeviceManager *devmgr = (DeviceManager *)obj;
+    if (devmgr->Thread()) {
+        // call thread level heartbeat
+        devmgr->Thread()->punch_heartbeat();
+    }
 
     for (auto it = devmgr->devices.begin(); it != devmgr->devices.end(); it++) {
         Device *dev = it->second;

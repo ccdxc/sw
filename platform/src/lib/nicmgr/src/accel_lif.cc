@@ -18,13 +18,14 @@
 #include "nic/include/notify.hpp"
 
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
-#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
-
+#endif
 #include "logger.hpp"
 #include "accel_dev.hpp"
 #include "accel_lif.hpp"
@@ -42,7 +43,6 @@
 #define STORAGE_SEQ_RATE_LIMIT_GBPS_SCALE(gbps)         \
     (GBPS_TO_BYTES_PER_SEC(gbps) >> STORAGE_SEQ_RL_UNITS_SCALE_SHFT)
 
-using namespace nicmgr;
 
 // Amount of time to wait for sequencer queues to be quiesced
 #define ACCEL_DEV_SEQ_QUEUES_QUIESCE_TIME_US    (5 * USEC_PER_SEC)
@@ -930,7 +930,6 @@ AccelLif::accel_rgroup_find_create(uint32_t ring_handle,
                                    uint32_t sub_ring)
 {
     accel_rgroup_ring_key_t         key;
-    accel_metrics::AccelHwRingKey   delphi_key;
 
     key = accel_rgroup_ring_key_make(ring_handle, sub_ring);
     auto iter = rgroup_map.find(key);
@@ -939,13 +938,16 @@ AccelLif::accel_rgroup_find_create(uint32_t ring_handle,
     }
 
     accel_rgroup_ring_t& rgroup_ring = rgroup_map[key];
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     if (g_nicmgr_svc) {
+        accel_metrics::AccelHwRingKey   delphi_key;
         delphi_key.set_rid(accel_ring_id2name_get(ring_handle));
         delphi_key.set_subrid(std::to_string(sub_ring));
         rgroup_ring.delphi_metrics = delphi::objects::AccelHwRingMetrics::
                            NewAccelHwRingMetrics(delphi_key,
                               rmetrics_addr_get(ring_handle, sub_ring));
     }
+#endif
     return rgroup_ring;
 }
 
@@ -2140,6 +2142,7 @@ AccelLif::accel_ring_info_del_all(void)
     auto iter = rgroup_map.begin();
     while (iter != rgroup_map.end()) {
          accel_rgroup_ring_t& rgroup_ring = iter->second;
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
          if (rgroup_ring.delphi_metrics) {
              accel_rgroup_ring_key_extract(iter->first, ring_handle, sub_ring);
              NIC_LOG_DEBUG("{}: deleting delphi_metrics ring {} "
@@ -2148,6 +2151,7 @@ AccelLif::accel_ring_info_del_all(void)
              rgroup_ring.delphi_metrics->Delete();
              rgroup_ring.delphi_metrics.reset();
          }
+#endif
 
          iter = rgroup_map.erase(iter);
     }
@@ -2767,6 +2771,7 @@ AccelLif::accel_ring_desc_idx_delta(const accel_ring_t *ring,
 int
 AccelLif::qmetrics_init(void)
 {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     accel_metrics::AccelSeqQueueKey     seq_qkey;
     uint64_t                            qmetrics_addr;
     int64_t                             qstate_addr;
@@ -2808,13 +2813,14 @@ AccelLif::qmetrics_init(void)
                       LifNameGet(), delphi_qmetrics_vec.size(),
                       delphi_qinfo_vec.size());
     }
-
+#endif
     return SDK_RET_OK;
 }
 
 void
 AccelLif::qmetrics_fini(void)
 {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     uint32_t    qid;
 
     if (delphi_qmetrics_vec.size() == delphi_qinfo_vec.size()) {
@@ -2840,6 +2846,7 @@ AccelLif::qmetrics_fini(void)
                     delphi_qinfo_vec.size());
         throw;
     }
+#endif
 }
 
 /*

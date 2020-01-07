@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/hal/hal.hpp"
+#include "nic/hal/core/event_ipc.hpp"
 
 #include "nic/hal/svc/debug_svc.hpp"
 #include "nic/hal/svc/table_svc.hpp"
@@ -90,6 +91,8 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     // notify sysmgr that we are up
     hal::svc::hal_init_done();
     hal::svc::set_hal_status(hal::HAL_STATUS_UP);
+    // raise HAL_UP event
+    sdk::ipc::broadcast(event_id_t::EVENT_ID_HAL_UP, NULL, 0);
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

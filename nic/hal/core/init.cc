@@ -113,6 +113,9 @@ hal_thread_destroy (void)
     HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
     g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
 
+    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_NICMGR] != NULL);
+    g_hal_threads[HAL_THREAD_ID_NICMGR]->stop();
+
     hal::utils::trace_deinit();
 
     return HAL_RET_OK;
@@ -160,6 +163,18 @@ void
 hal_thread_start (uint32_t thread_id, void *ctxt)
 {
     g_hal_threads[thread_id]->start(ctxt);
+}
+
+//------------------------------------------------------------------------------
+// check for thread ready state with given id
+//------------------------------------------------------------------------------
+bool
+hal_thread_ready (uint32_t thread_id)
+{
+    if (g_hal_threads[thread_id]) {
+        return g_hal_threads[thread_id]->ready();
+    }
+    return false;
 }
 
 //------------------------------------------------------------------------------

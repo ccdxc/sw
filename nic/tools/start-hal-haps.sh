@@ -12,6 +12,15 @@ export HAL_PBC_INIT_CONFIG="2x100_hbm"
 export COVFILE=$HAL_CONFIG_PATH/hw_bullseye_hal.cov
 #export DISABLE_AGING=1
 
+#nicmgr specific
+export PLATFORM_DIR='/platform'
+export LOG_DIR='/obfl'
+export NICMGR_LOG_LEVEL=debug
+export NICMGR_CONFIG_PATH=$PLATFORM_DIR/etc/nicmgrd
+export NICMGR_LIBRARY_PATH=$PLATFORM_DIR/lib:$NIC_DIR/lib:$NIC_DIR/conf/sdk
+export HAL_LIBRARY_PATH=$HAL_LIBRARY_PATH:$NICMGR_LIBRARY_PATH
+rm -f $PERSISTENT_LOGDIR/nicmgr.log*
+
 # remove logs
 rm -f $PERSISTENT_LOGDIR/hal.log*
 rm -f $NON_PERSISTENT_LOGDIR/hal.log*

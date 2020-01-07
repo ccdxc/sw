@@ -15,6 +15,7 @@
 
 #include "pal_compat.hpp"
 
+#include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
@@ -135,6 +136,11 @@ public:
 
     DevPcieEvHandler pcie_evhandler;
     evutil_timer heartbeat_timer;
+    sdk::lib::thread *Thread(void) { return thread; }
+    void SetThread(sdk::lib::thread *thr) { thread = thr; }
+    void SetUpgradeMode(UpgradeMode mode) { upgrade_mode = mode; }
+    UpgradeMode GetUpgradeMode(void) { return upgrade_mode; }
+    struct ev_loop *ev_loop(void) { return EV_A; }
 
 private:
     static DeviceManager *instance;
@@ -145,6 +151,7 @@ private:
     EV_P;
     devapi *dev_api;
     PdClient *pd;
+    sdk::lib::thread *thread;
     bool skip_hwinit;
     std::map<uint32_t, uplink_t *> uplinks;
 

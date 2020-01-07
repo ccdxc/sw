@@ -80,6 +80,7 @@ PdClient::p4plus_rxdma_init_tables()
             .cfg_path            = hal_cfg_path_.c_str(),
     };
 
+    NIC_LOG_DEBUG("Initializing p4plus RXDMA table");
     // parse the NCC generated table info file for p4+ tables
     rc = p4pluspd_rxdma_init(&p4pd_cfg);
     assert(rc == P4PD_SUCCESS);
@@ -138,6 +139,7 @@ PdClient::p4plus_txdma_init_tables()
         .cfg_path            = hal_cfg_path_.c_str(),
     };
 
+    NIC_LOG_DEBUG("Initializing p4plus TXDMA table");
     // parse the NCC generated table info file for p4+ tables
     rc = p4pluspd_txdma_init(&p4pd_cfg);
     assert(rc == P4PD_SUCCESS);
@@ -444,12 +446,12 @@ mpart_cfg_path(std::string hal_cfg_path, sdk::lib::dev_forwarding_mode_t fwd_mod
 void
 PdClient::init()
 {
+    int ret;
 #ifdef IRIS
     // initialize capri_state_pd
     sdk::platform::capri::capri_state_pd_init(NULL);
 #endif
 
-    int ret;
     NIC_LOG_DEBUG("Loading p4plus RxDMA asic lib tables cfg_path: {}...", hal_cfg_path_);
     ret = p4plus_rxdma_init_tables();
     assert(ret == 0);
@@ -462,6 +464,10 @@ PdClient::init()
     mp_ = mpartition::factory(mpart_cfg_path_.c_str());
     assert(mp_);
 
+#if defined(ARTEMIS)
+    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
+    SDK_ASSERT(ret == 0);
+#endif
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);

@@ -17,10 +17,11 @@
 #include "nic/include/base.hpp"
 #include "nic/include/notify.hpp"
 
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
 #include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
-
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
+#endif
 
 #include "logger.hpp"
 #include "accel_dev.hpp"

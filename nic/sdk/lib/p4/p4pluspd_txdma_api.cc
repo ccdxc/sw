@@ -211,16 +211,22 @@ void
 p4pluspd_txdma_cleanup (void)
 {
     P4PD_FREE(_p4plus_txdma_tbls);
+    _p4plus_txdma_tbls = NULL;
 }
 
 p4pd_error_t
 p4pluspd_txdma_init (p4pd_cfg_t *cfg)
 {
+    if (_p4plus_txdma_tbls) {
+        return P4PD_SUCCESS;
+    }
+
     p4pd_txdma_prep_p4tbl_names();
     p4pd_txdma_prep_p4tbl_sw_struct_sizes();
 
     if (p4pluspd_txdma_tbl_packing_json_parse(cfg) != P4PD_SUCCESS) {
         P4PD_FREE(_p4plus_txdma_tbls);
+        _p4plus_txdma_tbls = NULL;
         return P4PD_FAIL;
     }
     return P4PD_SUCCESS;

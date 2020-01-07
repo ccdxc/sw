@@ -168,6 +168,8 @@ nic/build/aarch64/iris/lib/librulestatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/libhal_mem.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsdkring.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libftl.so                                /nic/lib/
+nic/build/aarch64/iris/lib/libnicmgr.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libnicmgr_iris.so                        /nic/lib/
 
 #test binaries
 nic/build/aarch64/iris/lib/libfte_base_test.so                       /nic/lib/

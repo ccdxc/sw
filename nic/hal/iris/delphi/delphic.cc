@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "nic/include/base.hpp"
 #include "nic/hal/hal_trace.hpp"
+#include "nic/hal/iris/upgrade/upg_ipc.hpp"
 #include "nic/hal/iris/delphi/delphi.hpp"
 #include "nic/hal/iris/delphi/delphic.hpp"
 #include "nic/hal/iris/delphi/utils/utils.hpp"
@@ -46,6 +47,9 @@ delphi_client_start (void *ctxt)
 
     // register delphi client
     sdk->RegisterService(g_delphic);
+
+    // register for sdk ipc for nicmgr events
+    hal::upgrade::upg_event_init();
 
     // sit in main loop
     sdk->MainLoop();
@@ -115,6 +119,17 @@ delphi_client::init_done(void)
    }
 }
 
+// send upgrade stage status
+void
+delphi_client::send_upg_stage_status(bool status)
+{
+   if (status) {
+        upgsdk_->SendAppRespSuccess();
+   } else {
+        upgsdk_->SendAppRespFail("Timeout occurred");
+   }
+}
+
 // API to invoke when HAL is ready for external world
 void
 hal_init_done (void)
@@ -151,6 +166,7 @@ micro_seg_mode_notify (MicroSegMode mode)
 {
     delphi::SdkPtr        sdk = g_delphic ? g_delphic->sdk() : NULL;
     dobj::SystemSpecPtr   spec;
+    hal::core::event_t    event;
 
     if (!g_delphic) {
         return;
@@ -162,6 +178,9 @@ micro_seg_mode_notify (MicroSegMode mode)
     spec->set_micro_seg_mode((mode == sys::MICRO_SEG_ENABLE) ? 
                              device::MICRO_SEG_ENABLE : device::MICRO_SEG_DISABLE);
     sdk->QueueUpdate(spec);
+    memset(&event, 0, sizeof(event));
+    event.mseg.status = mode == sys::MICRO_SEG_ENABLE ? true : false;
+    sdk::ipc::broadcast(event_id_t::EVENT_ID_MICRO_SEG, &event, sizeof(event));
 }
 
 }    // namespace svc

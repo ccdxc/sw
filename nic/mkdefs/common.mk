@@ -68,9 +68,12 @@ export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
                                     cfg_plugin_nat
 endif
 
+export NIC_HAL_NICMGR_SOLIBS := nicmgr nicmgr_iris
+
 ifeq ($(PIPELINE), gft)
 export NIC_HAL_CFG_PLUGIN_SOLIBS := ${NIC_HAL_CFG_PLUGIN_SOLIBS} \
                                     cfg_plugin_gft
+export NIC_HAL_NICMGR_SOLIBS := nicmgr_mock
 endif
 
 export NIC_HAL_CFG_PLUGIN_SOLIBS_x86_64 := plugin_proxy
@@ -277,7 +280,7 @@ export NIC_HAL_ALL_SOLIBS   := ${NIC_HAL_CORE_SOLIBS} \
                                pal agent_api delphisdk haldelphi halsysmgr \
                                nicmgrproto sdkcapri_asicrw_if commonproto haldelphiutils \
                                ftestatsproto dropstatsproto rulestatsproto hal_mem linkmgrproto \
-                               vmotion flowstatsproto
+                               vmotion flowstatsproto ${NIC_HAL_NICMGR_SOLIBS} penipc
 
 export NIC_HAL_ALL_LDLIBS   := ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                                ${NIC_THIRDPARTY_SSL_LDLIBS} \

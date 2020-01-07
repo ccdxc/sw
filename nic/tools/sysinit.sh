@@ -85,11 +85,6 @@ if [[ ! -f $NIC_DIR/bin/netagent ]]; then
     exit 1
 fi
 
-if [[ ! -f $PLATFORM_DIR/bin/nicmgrd ]]; then
-    echo "Aborting Sysinit - nicmgr binary not found"
-    exit 1
-fi
-
 if [[ ! -f $PLATFORM_DIR/drivers/ionic_mnic.ko ]]; then
     echo "Aborting Sysinit - mnic driver not found"
     exit 1

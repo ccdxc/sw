@@ -20,6 +20,7 @@
 #include "nic/hal/src/utils/if_utils.hpp"
 #include "nic/hal/plugins/cfg/mcast/oif_list_api.hpp"
 #include "nic/linkmgr/linkmgr.hpp"
+#include "nic/linkmgr/linkmgr_ipc.hpp"
 #include "nic/sdk/linkmgr/linkmgr_internal.hpp"
 #include "nic/include/fte.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
@@ -5195,6 +5196,7 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
     if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
     linkmgr::port_event_notify(&port_event_info);
+    linkmgr::ipc::port_event_notify(&port_event_info);
 
     // Free ctxt
     hal::delay_delete_to_slab(HAL_SLAB_PORT_TIMER_CTXT, ctxt);

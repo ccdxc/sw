@@ -69,7 +69,9 @@ extern std::vector<std::pair<const std::string,uint32_t>> accel_ring_vec;
  * Accelerator device ring group ring info
  */
 typedef struct {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     delphi::objects::AccelHwRingMetricsPtr delphi_metrics;
+#endif
     accel_rgroup_rinfo_rsp_t    info;
     accel_rgroup_rindices_rsp_t indices;
     accel_rgroup_rmetrics_rsp_t metrics;
@@ -336,9 +338,11 @@ private:
     struct queue_info           qinfo[NUM_QUEUE_TYPES];
     accel_rgroup_map_t          rgroup_map;
 
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     // Delphi
     std::vector<delphi::objects::AccelSeqQueueInfoMetricsPtr> delphi_qinfo_vec;
     std::vector<delphi::objects::AccelSeqQueueMetricsPtr> delphi_qmetrics_vec;
+#endif
 
     // PD Info
     PdClient                    *pd;

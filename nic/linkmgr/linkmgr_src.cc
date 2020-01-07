@@ -7,6 +7,7 @@
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/sdk/linkmgr/port_serdes.hpp"
 #include "linkmgr_src.hpp"
+#include "linkmgr_ipc.hpp"
 #include "nic/linkmgr/utils.hpp"
 #include "nic/linkmgr/linkmgr_utils.hpp"
 #include "nic/hal/hal.hpp"
@@ -203,6 +204,7 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
 
     // notify outside
     xcvr_event_notify(xcvr_event_info);
+    linkmgr::ipc::xcvr_event_notify(xcvr_event_info);
 
     return false;
 }
@@ -486,6 +488,7 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         xcvr_event_info.port_num = pi_p->port_num;
 
         xcvr_event_notify(&xcvr_event_info);
+        linkmgr::ipc::xcvr_event_notify(&xcvr_event_info);
     }
 
     return ret;

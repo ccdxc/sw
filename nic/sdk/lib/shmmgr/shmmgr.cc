@@ -6,10 +6,22 @@
 #include "lib/shmmgr/shmmgr.hpp"
 
 using namespace boost::interprocess;
-#define TO_FM_SHM(x)    ((fixed_managed_shared_memory *)(x))
+#define TO_FM_SHM(x) ((fixed_managed_shared_memory *)(x))
+#define TO_SHM(x)    ((managed_shared_memory *)(x))
 
 namespace sdk {
 namespace lib {
+
+// base structure for named segment allocation
+class shm_segment {
+public:
+    // offset of the allocated memory from the named segment
+    uint64_t offset;
+    // size of the allocated memory
+    std::size_t size;
+};
+
+
 
 //------------------------------------------------------------------------------
 // initialization routine
@@ -18,26 +30,44 @@ bool
 shmmgr::init(const char *name, const std::size_t size,
              shm_mode_e mode, void *baseaddr)
 {
-    fixed_managed_shared_memory    *fixed_mgr_shm;
+    if (baseaddr) {
+        fixed_managed_shared_memory    *fixed_mgr_shm;
 
-    if (mode == SHM_CREATE_ONLY) {
-        fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
-                                                        size, baseaddr);
-    } else if (mode == SHM_OPEN_ONLY) {
-        fixed_mgr_shm = new fixed_managed_shared_memory(open_only, name,
-                                                        baseaddr);
-    } else if (mode == SHM_OPEN_OR_CREATE) {
-        fixed_mgr_shm = new fixed_managed_shared_memory(open_or_create, name,
-                                                         size, baseaddr);
-    } else if (mode == SHM_OPEN_READ_ONLY) {
-        fixed_mgr_shm = new fixed_managed_shared_memory(open_read_only,
-                                                        name, baseaddr);
+        if (mode == SHM_CREATE_ONLY) {
+            fixed_mgr_shm = new fixed_managed_shared_memory(create_only, name,
+                                                            size, baseaddr);
+        } else if (mode == SHM_OPEN_ONLY) {
+            fixed_mgr_shm = new fixed_managed_shared_memory(open_only, name,
+                                                            baseaddr);
+        } else if (mode == SHM_OPEN_OR_CREATE) {
+            fixed_mgr_shm = new fixed_managed_shared_memory(open_or_create, name,
+                                                            size, baseaddr);
+        } else if (mode == SHM_OPEN_READ_ONLY) {
+            fixed_mgr_shm = new fixed_managed_shared_memory(open_read_only,
+                                                            name, baseaddr);
+        } else {
+            return false;
+        }
+        mmgr_ = fixed_mgr_shm;
+        fixed_ = true;
     } else {
-        return false;
-    }
+        managed_shared_memory    *mgr_shm;
 
+        if (mode == SHM_CREATE_ONLY) {
+            mgr_shm = new managed_shared_memory(create_only, name, size);
+        } else if (mode == SHM_OPEN_ONLY) {
+            mgr_shm = new managed_shared_memory(open_only, name);
+        } else if (mode == SHM_OPEN_OR_CREATE) {
+            mgr_shm = new managed_shared_memory(open_or_create, name, size);
+        } else if (mode == SHM_OPEN_READ_ONLY) {
+            mgr_shm = new managed_shared_memory(open_read_only, name);
+        } else {
+            return false;
+        }
+        mmgr_ = mgr_shm;
+        fixed_ = false;
+    }
     strncpy(name_, name, SHMSEG_NAME_MAX_LEN);
-    mmgr_ = fixed_mgr_shm;
     return true;
 }
 
@@ -67,7 +97,7 @@ shmmgr::factory(const char *name, const std::size_t size,
     shmmgr    *new_shmmgr;
 
     // basic validation(s)
-    if ((name == NULL) || size <= 16 || baseaddr == NULL) {
+    if ((name == NULL) || size <= 16) {
         return NULL;
     }
 
@@ -131,7 +161,11 @@ shmmgr::exists(const char *name, void *baseaddr)
         return false;
     }
     try {
-        fixed_managed_shared_memory seg(open_only, name, baseaddr);
+        if (baseaddr) {
+            fixed_managed_shared_memory seg(open_only, name, baseaddr);
+        } else {
+            managed_shared_memory seg(open_only, name);
+        }
         //return segment.check_sanity();
         return true;
     } catch (const boost::interprocess::interprocess_exception &ex) {
@@ -152,11 +186,12 @@ shmmgr::alloc(const std::size_t size, const std::size_t alignment,
     void    *ptr = NULL;
 
     if (alignment == 0) {
-        ptr = TO_FM_SHM(mmgr_)->allocate(size);
+        ptr = fixed_ ? TO_FM_SHM(mmgr_)->allocate(size) : TO_SHM(mmgr_)->allocate(size);
     } else {
         assert((alignment & (alignment - 1)) == 0);
         assert(alignment >= 4);
-        ptr = TO_FM_SHM(mmgr_)->allocate_aligned(size, alignment);
+        ptr = fixed_ ? TO_FM_SHM(mmgr_)->allocate_aligned(size, alignment) :
+            TO_SHM(mmgr_)->allocate_aligned(size, alignment);
     }
     if (ptr) {
         memset(ptr, 0, size);
@@ -173,7 +208,7 @@ shmmgr::free(void *mem)
     if (mem == NULL) {
         return;
     }
-    TO_FM_SHM(mmgr_)->deallocate(mem);
+    fixed_ ? TO_FM_SHM(mmgr_)->deallocate(mem) : TO_SHM(mmgr_)->deallocate(mem);
 }
 
 //------------------------------------------------------------------------------
@@ -182,7 +217,7 @@ shmmgr::free(void *mem)
 std::size_t
 shmmgr::size(void) const
 {
-    return TO_FM_SHM(mmgr_)->get_size();
+    return fixed_ ? TO_FM_SHM(mmgr_)->get_size() : TO_SHM(mmgr_)->get_size();
 }
 
 //------------------------------------------------------------------------------
@@ -191,7 +226,7 @@ shmmgr::size(void) const
 std::size_t
 shmmgr::free_size(void) const
 {
-    return TO_FM_SHM(mmgr_)->get_free_memory();
+    return fixed_ ? TO_FM_SHM(mmgr_)->get_free_memory() : TO_SHM(mmgr_)->get_free_memory();
 }
 
 void *
@@ -200,6 +235,56 @@ shmmgr::mmgr(void) const
     return mmgr_;
 }
 
+void *
+shmmgr::segment_alloc(const char *name, std::size_t size, bool create) {
+    std::pair<shm_segment*, std::size_t> res;
+    shm_segment* state;
+    void *addr = NULL;
+    managed_shared_memory *shm =  (managed_shared_memory *)mmgr_;
+
+    res = shm->find<shm_segment>(name);
+    state = res.first;
+    if (create) {
+        // free the exiting one in hardinit
+        if (state != NULL) {
+            addr = (void *)((uint64_t)state - state->offset);
+            shm->deallocate(addr);
+            shm->destroy_ptr(state);
+        }
+        state = shm->construct<shm_segment>(name)();
+        if (state) {
+            addr = shm->allocate(size);
+            if (addr) {
+                state->offset = (uint64_t)state - (uint64_t)addr;
+                state->size = size;
+                return addr;
+            } else {
+                SDK_TRACE_ERR("Memory alloc failed");
+                shm->destroy_ptr(state);
+            }
+        }
+    } else {
+        // in upgrade init this should be created.  mmgr will be enabled only in
+        // upgrade scenarios. so no need of explicit upgrade check
+        SDK_ASSERT(state != NULL);
+        addr = (void *)((uint64_t)state - state->offset);
+    }
+    return addr;
+}
+
+std::size_t
+shmmgr::get_segment_size(const char *name) {
+    std::pair<shm_segment*, std::size_t> res;
+    shm_segment* state;
+    managed_shared_memory *shm = (managed_shared_memory *)mmgr_;
+
+    res = shm->find<shm_segment>(name);
+    state = res.first;
+    if (!state) {
+        return 0;
+    }
+    return state->size;
+}
 
 }    // namespace lib
 }    // namespace sdk

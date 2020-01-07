@@ -29,6 +29,7 @@ nic/build/aarch64/iris/bin/ncsid                                                
 # Libraries
 nic/build/aarch64/iris/lib/libpciehw.so                                         /platform/lib/
 nic/build/aarch64/iris/lib/libnicmgr.so                                         /platform/lib/
+nic/build/aarch64/iris/lib/libnicmgr_iris.so                                    /platform/lib/
 nic/build/aarch64/iris/lib/libpciehost.so                                       /platform/lib/
 nic/build/aarch64/iris/lib/libpciemgr_if.so                                     /platform/lib/
 nic/build/aarch64/iris/lib/libpciehsvc.so                                       /platform/lib/

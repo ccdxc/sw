@@ -56,9 +56,14 @@ public:
     // NOTE: use it only in exception cases
     void *mmgr(void) const;
 
+    // allocate a named segment from shared memory
+    void *segment_alloc(const char *name, std::size_t size, bool create);
+    // get size of the named segment
+    std::size_t get_segment_size(const char *name);
 private:
     char    name_[SHMSEG_NAME_MAX_LEN];
     void    *mmgr_;
+    bool    fixed_;
 
 private:
     shmmgr();

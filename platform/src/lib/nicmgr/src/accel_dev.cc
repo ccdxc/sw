@@ -13,13 +13,16 @@
 
 #include "nic/include/base.hpp"
 #include "gen/proto/nicmgr/accel_metrics.pb.h"
-#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
+#include "gen/proto/nicmgr/accel_metrics.delphi.hpp"
 #include "platform/src/app/nicmgrd/src/delphic.hpp"
+using namespace nicmgr;
+#endif
 
 #ifdef __aarch64__
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
@@ -33,9 +36,6 @@
 #include "accel_lif.hpp"
 #include "pd_client.hpp"
 #include "adminq.hpp"
-
-
-using namespace nicmgr;
 
 extern class pciemgr *pciemgr;
 
@@ -211,7 +211,7 @@ AccelDev::AccelDev(devapi *dapi,
     lif_res.intr_base = intr_base;
     lif_res.cmb_mem_addr = cmb_mem_addr;
     lif_res.cmb_mem_size = cmb_mem_size;
-    auto lif = new AccelLif(*this, lif_res, EV_DEFAULT);
+    auto lif = new AccelLif(*this, lif_res, EV_A);
     if (!lif) {
         NIC_LOG_ERR("{}: failed to create AccelLif {}",
                     DevNameGet(), lif_res.lif_id);
@@ -389,6 +389,7 @@ AccelDev::_DevInfoRegsInit(void)
 void
 AccelDev::_MetricsInit(void)
 {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     if (g_nicmgr_svc && delphi_mounted && !delphi_pf) {
         NIC_LOG_INFO("{}: Registering AccelPfInfo", DevNameGet());
         delphi_pf = make_shared<delphi::objects::AccelPfInfo>();
@@ -401,16 +402,19 @@ AccelDev::_MetricsInit(void)
         delphi_pf->set_intrcount(spec->intr_count);
         g_nicmgr_svc->sdk()->SetObject(delphi_pf);
     }
+#endif
 }
 
 void
 AccelDev::_MetricsFini(void)
 {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     if (g_nicmgr_svc && delphi_pf) {
         NIC_LOG_INFO("{}: Deregistering AccelPfInfo", DevNameGet());
         g_nicmgr_svc->sdk()->DeleteObject(delphi_pf);
         delphi_pf.reset();
     }
+#endif
 }
 
 void

@@ -39,7 +39,7 @@
                                 {
                                         "Name" : "Collect Update Directory",
                                         "Method" : 0,
-                                        "Command" : "mkdir update && cp /update/upgrade_halt_state_machine /update/pcieport_upgdata /update/pciemgr_upgdata /update/pciemgr_upgrollback /update/nicmgr_upgstate /data/upgrade_to_same_firmware_allowed  update"
+                                        "Command" : "mkdir update && cp /update/upgrade_halt_state_machine /update/pcieport_upgdata /update/pciemgr_upgdata /update/pciemgr_upgrollback /update/nicmgr_upgdata /update/nicmgr_upgstate /data/upgrade_to_same_firmware_allowed  update"
                                 },
                                 {
                                         "Name" : "Collect Events",
