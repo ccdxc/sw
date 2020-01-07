@@ -199,7 +199,7 @@ current_thread (void)
 }
 
 bool
-is_linkmgr_ctrl_thread()
+is_linkmgr_ctrl_thread (void)
 {
     bool is_ctrl_thread;
 
@@ -226,6 +226,13 @@ is_linkmgr_ctrl_thread()
 end:
     // SDK_TRACE_DEBUG("ctrl thread %s", is_ctrl_thread == true? "true" : "false");
     return is_ctrl_thread;
+}
+
+bool
+is_linkmgr_ctrl_thread_ready (void)
+{
+    return (g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL] &&
+            g_linkmgr_threads[LINKMGR_THREAD_ID_CTRL]->ready());
 }
 
 void

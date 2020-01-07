@@ -1347,7 +1347,7 @@ port::port_event_notify(port_event_t port_event)
     port_event_info.event = port_event;
     port_event_info.speed = port_speed();
     port_event_info.type = port_type();
-    port_event_info.num_lanes = num_lanes(); 
+    port_event_info.num_lanes = num_lanes();
     port_event_info.oper_status = oper_status();
     port_event_info.auto_neg_enable = auto_neg_enable();
 
@@ -1781,50 +1781,45 @@ port::phy_port_mac_addr(uint32_t phy_port, mac_addr_t mac_addr) {
 sdk_ret_t
 port::port_enable(port *port_p)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
 
-    if (is_linkmgr_ctrl_thread()) {
-        ret = port_p->port_enable();
-    } else {
-        // wake up the linkmgr control thread to process port event
-
-        linkmgr_entry_data_t data;
-        data.ctxt  = port_p;
-        data.timer = NULL;
-
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, &data,
-                             q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
-
-        if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Error notifying control-thread for port enable");
-        }
+    // wait for linkmgr control thread to process port event
+    while (!is_linkmgr_ctrl_thread_ready()) {
+        pthread_yield();
     }
 
+    linkmgr_entry_data_t data;
+    data.ctxt  = port_p;
+    data.timer = NULL;
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_ENABLE, &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
+
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error notifying control-thread for port enable");
+    }
     return ret;
 }
 
 sdk_ret_t
 port::port_disable(port *port_p)
 {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
 
-    if (is_linkmgr_ctrl_thread()) {
-        ret = port_p->port_disable();
-    } else {
-        // wake up the linkmgr control thread to process port event
-
-        linkmgr_entry_data_t data;
-        data.ctxt  = port_p;
-        data.timer = NULL;
-
-        ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, &data,
-                             q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
-
-        if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Error notifying control-thread for port disable");
-        }
+    // wait for linkmgr control thread to process port event
+    while (!is_linkmgr_ctrl_thread_ready()) {
+        pthread_yield();
     }
 
+    linkmgr_entry_data_t data;
+    data.ctxt  = port_p;
+    data.timer = NULL;
+
+    ret = linkmgr_notify(LINKMGR_OPERATION_PORT_DISABLE, &data,
+                         q_notify_mode_t::Q_NOTIFY_MODE_BLOCKING);
+
+    if (ret != SDK_RET_OK) {
+        SDK_TRACE_ERR("Error notifying control-thread for port disable");
+    }
     return ret;
 }
 
