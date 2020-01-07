@@ -1108,6 +1108,7 @@ func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.Mib = r.Mib
 	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
+	pdsaGlobOpts.FillFn = r.FillFn
 	return pdsaGlobOpts, nil
 }
 

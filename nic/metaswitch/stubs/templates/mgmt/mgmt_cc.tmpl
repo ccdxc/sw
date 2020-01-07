@@ -254,6 +254,7 @@
     {{$oidFam := $param.OidFam}}
     {{$struct := $param.Struct}}
     {{$mib    := $param.Mib}}
+    {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
     /*===== Get MS Table: {{$struct}} =====*/
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
@@ -534,6 +535,13 @@
         pds_ms_get_{{$struct | ToLower}}_oid(req, oid);
 
         /***************************************************************************/
+        /* Invoke custom fill function registered by the user                      */
+        /***************************************************************************/
+        {{if not (eq $fillFn "")}}
+        {{$fillFn}}(req, mib_msg, data, row_status);
+        {{end}}
+
+        /***************************************************************************/
         /* Build the common part of the AMB_GET message.                           */
         /***************************************************************************/
         v_amb_get = pds_ms_amb_get_common(data_len, oid[0], oid);
@@ -601,6 +609,13 @@
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
         pds_ms_getall_{{$struct | ToLower}}_oid(req, oid);
+
+        /***************************************************************************/
+        /* Invoke custom fill function registered by the user                      */
+        /***************************************************************************/
+        {{if not (eq $fillFn "")}}
+        {{$fillFn}}(req, mib_msg, data, row_status);
+        {{end}}
 
         /***************************************************************************/
         /* Build the common part of the AMB_GET message.                           */
