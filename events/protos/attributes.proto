@@ -14,6 +14,8 @@ enum Category {
     Rollout     = 3;
     // Config related events
     Config      = 4;
+    // Resource related events (cpu, mem and disk usage)
+    Resource    = 5;
 }
 
 // Severity Level of an event

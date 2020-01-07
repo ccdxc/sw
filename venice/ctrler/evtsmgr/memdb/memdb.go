@@ -2,11 +2,13 @@ package memdb
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -94,7 +96,12 @@ func (m *MemDb) AddOrUpdateAlertToGrps(alert *monitoring.Alert) {
 
 	var evtMessageObjRefKey string
 	if alert.Status.ObjectRef != nil {
-		evtMessageObjRefKey = fmt.Sprintf("%s.%s", alert.Status.Message, alert.Status.ObjectRef.String())
+		message := alert.Status.Message
+		if strings.Contains(message, globals.DiskHighThresholdMessage) {
+			message = globals.DiskHighThresholdMessage
+		}
+
+		evtMessageObjRefKey = fmt.Sprintf("%s.%s", message, alert.Status.ObjectRef.String())
 	}
 
 	alertsByPolicy, found := m.alertsByPolicy[key]
@@ -154,7 +161,12 @@ func (m *MemDb) DeleteAlertFromGrps(alert *monitoring.Alert) {
 			delete(grp.grpByEventURI, alert.Status.EventURI)
 
 			if alert.Status.ObjectRef != nil {
-				evtMessageObjRefKey := fmt.Sprintf("%s.%s", alert.Status.Message, alert.Status.ObjectRef.String())
+				message := alert.Status.Message
+				if strings.Contains(message, globals.DiskHighThresholdMessage) {
+					message = globals.DiskHighThresholdMessage
+				}
+
+				evtMessageObjRefKey := fmt.Sprintf("%s.%s", message, alert.Status.ObjectRef.String())
 				delete(grp.grpByEventMessageAndObjectRef, evtMessageObjRefKey)
 			}
 

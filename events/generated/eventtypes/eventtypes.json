@@ -1,4 +1,11 @@
 {
+ "": [
+  {
+   "Name": "DISK_THRESHOLD_EXCEEDED",
+   "Severity": "critical",
+   "Desc": "Disk threshold exceeded"
+  }
+ ],
  "cluster": [
   {
    "Name": "AUDITING_FAILED",

@@ -18,6 +18,8 @@ import (
 	"github.com/pensando/sw/api/generated/apiclient"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/events/generated/eventattrs"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/alertengine/exporter"
 	eapiclient "github.com/pensando/sw/venice/ctrler/evtsmgr/apiclient"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr/memdb"
@@ -402,7 +404,15 @@ func (a *alertEngineImpl) createAlert(reqID string, apCl apiclient.Services, ale
 
 		// if there is no alert from the same event, check if there is an alert from some other event.
 		if evt.GetObjectRef() != nil {
-			if a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), policyID, evt.GetMessage(), evt.GetObjectRef()) {
+			// for resource events, use partial string match to check if an alert is already there
+			message := evt.GetMessage()
+			if evt.GetCategory() == eventattrs.Category_Resource.String() {
+				if eventtypes.EventType(eventtypes.EventType_value[evt.GetType()]) == eventtypes.DISK_THRESHOLD_EXCEEDED {
+					message = globals.DiskHighThresholdMessage
+				}
+			}
+
+			if a.memDb.AnyOutstandingAlertsByMessageAndRef(alertPolicy.GetTenant(), policyID, message, evt.GetObjectRef()) {
 				a.logger.Infof("{req: %s} outstanding alert found that matches the message and object ref. ", reqID)
 				return false, nil
 			}

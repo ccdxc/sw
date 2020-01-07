@@ -7,6 +7,9 @@ interface EventType {
 }
 
 export const categoryToEventType: { [cat: string]: string[] } = {
+  : [
+    'DISK_THRESHOLD_EXCEEDED',
+  ],
   cluster: [
     'AUDITING_FAILED',
     'AUTO_GENERATED_TLS_CERT',
@@ -75,6 +78,11 @@ export const categoryToEventType: { [cat: string]: string[] } = {
 }
 
 export const eventTypes: { [name: string]: EventType } = {
+  'DISK_THRESHOLD_EXCEEDED' : {
+      "Name": "DISK_THRESHOLD_EXCEEDED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "Disk threshold exceeded",
+  },
   'AUDITING_FAILED' : {
       "Name": "AUDITING_FAILED",
       "Severity": EventsEvent_severity.critical,

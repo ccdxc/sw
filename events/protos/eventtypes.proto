@@ -273,6 +273,11 @@ enum EventTypes {
                                            (severity)    = WARN,
                                            (desc)        = "System post diag test failed"];
 
+     // ------------------------------ Resource events -------------------------- //
+     DISK_THRESHOLD_EXCEEDED         = 601 [(category) = Resource,
+                                            (severity) = CRITICAL,
+                                            (desc)     = "Disk threshold exceeded"];
+
     // ------------------------------ Rollout events -------------------------- //
     ROLLOUT_STARTED                 = 701 [(category) = Rollout,
                                            (severity) = INFO,

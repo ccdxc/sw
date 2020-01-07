@@ -538,7 +538,8 @@
             "network",
             "system",
             "rollout",
-            "config"
+            "config",
+            "resource"
           ],
           "default": "cluster"
         },
@@ -588,7 +589,8 @@
             "network",
             "system",
             "rollout",
-            "config"
+            "config",
+            "resource"
           ],
           "default": "cluster",
           "title": "Category represents the category of an event. e.g. Cluster/Network/Datapath"

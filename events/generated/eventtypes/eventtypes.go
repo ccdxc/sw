@@ -384,6 +384,13 @@ func init() {
 		Desc:       "System post diag test failed",
 		SuppressMM: false}
 
+	eventTypes[DISK_THRESHOLD_EXCEEDED] = &EventTypeAttributes{
+		EType:      DISK_THRESHOLD_EXCEEDED.String(),
+		Severity:   "critical",
+		Category:   "",
+		Desc:       "Disk threshold exceeded",
+		SuppressMM: false}
+
 	eventTypes[ROLLOUT_STARTED] = &EventTypeAttributes{
 		EType:      ROLLOUT_STARTED.String(),
 		Severity:   "info",

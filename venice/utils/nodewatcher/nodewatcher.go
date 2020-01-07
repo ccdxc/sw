@@ -16,6 +16,10 @@ import (
 	"github.com/shirou/gopsutil/net"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -81,6 +85,11 @@ func NewNodeWatcher(pctx context.Context, obj runtime.Object, frequency time.Dur
 		metricObj: metricObj,
 		logger:    logger,
 	}
+
+	if obj.GetObjectKind() == string(cluster.KindDistributedServiceCard) {
+		globals.ThresholdEventConfig = false
+	}
+
 	w.wg.Add(1)
 	go w.periodicUpdate(ctx)
 	return w, nil
@@ -153,6 +162,18 @@ func (w *nodewatcher) periodicUpdate(ctx context.Context) {
 			if diskTotal > 0 {
 				diskUsedPercent := math.Ceil(float64(diskUsed*10000)/float64(diskTotal)) / 100
 				w.metricObj.DiskUsedPercent.Set(diskUsedPercent)
+
+				if globals.ThresholdEventConfig {
+					if diskUsedPercent > globals.DiskHighThreshold {
+						if !globals.DiskHighThresholdEventStatus {
+							recorder.Event(eventtypes.DISK_THRESHOLD_EXCEEDED,
+								fmt.Sprintf("%s, current usage: %v%%", globals.DiskHighThresholdMessage, diskUsedPercent), nil)
+							globals.DiskHighThresholdEventStatus = true
+						}
+					} else {
+						globals.DiskHighThresholdEventStatus = false
+					}
+				}
 			}
 
 			// network

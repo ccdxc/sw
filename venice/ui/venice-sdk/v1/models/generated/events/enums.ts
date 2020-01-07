@@ -26,6 +26,7 @@ export enum EventsEvent_severity {
 }
 
 export enum EventsEvent_type {
+    'DISK_THRESHOLD_EXCEEDED' = "DISK_THRESHOLD_EXCEEDED",
     'AUDITING_FAILED' = "AUDITING_FAILED",
     'AUTO_GENERATED_TLS_CERT' = "AUTO_GENERATED_TLS_CERT",
     'CONFIG_RESTORED' = "CONFIG_RESTORED",
@@ -89,6 +90,7 @@ export enum EventsEvent_category {
     'system' = "system",
     'rollout' = "rollout",
     'config' = "config",
+    'resource' = "resource",
 }
 
 export enum EventsEventAttributes_severity {
@@ -104,6 +106,7 @@ export enum EventsEventAttributes_category {
     'system' = "system",
     'rollout' = "rollout",
     'config' = "config",
+    'resource' = "resource",
 }
 
 
