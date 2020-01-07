@@ -927,7 +927,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
-                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
+                vlan            : 0
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
@@ -965,7 +965,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=2
             qtag    :
                 prio            : 0
-                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=2
+                vlan            : 0
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=2
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=2
@@ -994,7 +994,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0
-                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=3
+                vlan            : 0
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
@@ -1032,7 +1032,7 @@ packets:
                 dst             : callback://telemetry/callbacks/GetCollectorDstMac/sessionid=3
             qtag    :
                 prio            : 0
-                vlan            : callback://telemetry/callbacks/GetCollectorVlan/sessionid=3
+                vlan            : 0
             ipv4    :
                 src             : callback://telemetry/callbacks/GetCollectorSrcIp/sessionid=3
                 dst             : callback://telemetry/callbacks/GetCollectorDstIp/sessionid=3
@@ -1195,25 +1195,13 @@ expect:
     packets:
         - packet:
             object  : ref://testcase/packets/id=EPKT2_1
-            port    : 3
+            port    : 1
         - packet:
             object  : ref://testcase/packets/id=EPKT2_2
-            port    : 3
+            port    : 1
         - packet:
             object  : ref://testcase/packets/id=EPKT3_1
-            port    : 4
+            port    : 1
         - packet:
             object  : ref://testcase/packets/id=EPKT3_2
-            port    : 4
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2_1
-            port    : 128
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT2_2
-            port    : 128
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3_1
-            port    : 128
-        - packet:
-            object  : callback://networking/packets/GetCpuPacket/expktid=ECPUPKT3_2
-            port    : 128
+            port    : 1

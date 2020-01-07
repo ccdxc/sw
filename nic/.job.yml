@@ -311,15 +311,14 @@ targets:
     feature:
     build-dependencies:
     - build-iris-x86
-      # Unified Mode changes. No longer support Uplink -> Uplink
-  #dol/telemetry:
-  #  commands: ["make", "jobd/dol/telemetry"]
-  #  owners: ["email:jcruz@pensando.io"]
-  #  area:
-  #  sub-area:
-  #  feature:
-  #  build-dependencies:
-  #  - build-iris-x86
+  dol/telemetry:
+    commands: ["make", "jobd/dol/telemetry"]
+    owners: ["email:jcruz@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+    - build-iris-x86
   # Unified Mode changes. No longer support p4pt
   #dol/p4pt:
   #  commands: ["make", "jobd/dol/p4pt"]
