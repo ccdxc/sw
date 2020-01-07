@@ -17,6 +17,8 @@ struct tx_table_s2_t0_adminq_post_nicmgr_d d;
 #define   _r_ptr              r5        // Current DMA byte offset in PHV
 #define   _r_index            r6        // Current DMA command index in PHV
 
+#define   _c_intr_enable      c3
+
 %%
 
 .param  adminq_commit
@@ -36,6 +38,7 @@ adminq_post_nicmgr:
   // Load DMA command pointer
   add             _r_index, r0, k.adminq_global_dma_cur_index
 
+adminq_post_nicmgr_request:
   // Compute the descriptor address
   add             _r_desc_addr, d.{ring_base}.dx, d.{c_index0}.hx, LG2_NICMGR_REQ_DESC_SIZE
 
@@ -60,17 +63,18 @@ adminq_post_nicmgr_completion:
   tblmincri.c1    d.color, 1, 1
 
   // Do we need to generate an interrupt?
-  seq             c3, d.intr_enable, 1
+  seq             _c_intr_enable, d.intr_enable, 1
 
   // DMA nicmgr request completion
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HBM_PHV2MEM_WF(_r_ptr, !c3, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_comp_desc_color), CAPRI_PHV_END_OFFSET(nicmgr_req_comp_desc_rsvd), r7)
+  DMA_HBM_PHV2MEM_WF(_r_ptr, !_c_intr_enable, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_req_comp_desc_color), CAPRI_PHV_END_OFFSET(nicmgr_req_comp_desc_rsvd), r7)
   DMA_CMD_NEXT(_r_index)
 
-  bcf             [!c3], adminq_post_nicmgr_evaldb
+  bcf             [!c3], adminq_post_nicmgr_done
   nop
 
 adminq_post_nicmgr_interrupt:
+  // Compute interrupt address
   addi            _r_intr_addr, r0, INTR_ASSERT_BASE
   add             _r_intr_addr, _r_intr_addr, d.{intr_assert_index}.hx, LG2_INTR_ASSERT_STRIDE
 
@@ -79,16 +83,6 @@ adminq_post_nicmgr_interrupt:
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_HBM_PHV2MEM_WF(_r_ptr, _C_TRUE, _r_intr_addr, CAPRI_PHV_START_OFFSET(adminq_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(adminq_to_s2_intr_assert_data), r7)
   DMA_CMD_NEXT(_r_index)
-
-adminq_post_nicmgr_evaldb:
-  // Eval doorbell when pi == ci
-  seq             c3, d.{p_index0}.hx, d.{c_index0}.hx
-  bcf             [!c3], adminq_post_nicmgr_done
-  nop
-
-  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.adminq_t0_s2s_qtype, k.adminq_t0_s2s_lif)   // R4 = ADDR
-  CAPRI_RING_DOORBELL_DATA(0, k.adminq_t0_s2s_qid, 0, 0)   // R3 = DATA
-  memwr.dx        _r_db_addr, _r_db_data
 
 adminq_post_nicmgr_done:
   // Save DMA command pointer
@@ -103,10 +97,6 @@ adminq_post_nicmgr_done:
 
 adminq_post_nicmgr_error:
 adminq_post_nicmgr_queue_disabled:
-  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_CLEAR, k.adminq_t0_s2s_qtype, k.adminq_t0_s2s_lif)   // R4 = ADDR
-  CAPRI_RING_DOORBELL_DATA(0, k.adminq_t0_s2s_qid, 0, 0)   // R3 = DATA
-  memwr.dx        _r_db_addr, _r_db_data
-
 adminq_post_nicmgr_queue_full:
   // TODO: Don't commit adminq ci
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0

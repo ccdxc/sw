@@ -18,7 +18,6 @@ struct tx_table_s3_t0_nicmgr_commit_d d;
 
 #define   _c_spec_hit         c1
 #define   _c_intr_enable      c2
-#define   _c_ring_empty       c3
 
 %%
 
@@ -53,40 +52,31 @@ nicmgr_commit_completion:
   // Do we need to generate an interrupt?
   seq             _c_intr_enable, d.intr_enable, 1
 
-  // DMA completion to nicmgr response queue
+  // DMA nicmgr response completion
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_HBM_PHV2MEM_WF(_r_ptr, !_c_intr_enable, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_resp_comp_desc_color), CAPRI_PHV_END_OFFSET(nicmgr_resp_comp_desc_color), r7)
   DMA_CMD_NEXT(_r_index)
 
-  bcf             [!_c_intr_enable], nicmgr_commit_eval_db
+  bcf             [!_c_intr_enable], nicmgr_commit_done
   nop
 
 nicmgr_commit_interrupt:
   addi            _r_intr_addr, r0, INTR_ASSERT_BASE
   add             _r_intr_addr, _r_intr_addr, d.{intr_assert_index}.hx, LG2_INTR_ASSERT_STRIDE
 
-  // DMA nicmgr request interrupt
+  // DMA nicmgr response interrupt
   phvwri          p.nicmgr_to_s2_intr_assert_data, 0x01000000
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
   DMA_HBM_PHV2MEM_WF(_r_ptr, _C_TRUE, _r_intr_addr, CAPRI_PHV_START_OFFSET(nicmgr_to_s2_intr_assert_data), CAPRI_PHV_END_OFFSET(nicmgr_to_s2_intr_assert_data), r7)
   DMA_CMD_NEXT(_r_index)
 
-nicmgr_commit_eval_db:
-  // Eval doorbell when pi == ci
-  seq             _c_ring_empty, d.{p_index0}.hx, d.{c_index0}.hx
-  bcf             [!_c_ring_empty], nicmgr_commit_done
-  nop.!_c_ring_empty.e
-
-  CAPRI_RING_DOORBELL_ADDR(0, DB_IDX_UPD_NOP, DB_SCHED_UPD_EVAL, k.nicmgr_t0_s2s_qtype, k.nicmgr_t0_s2s_lif)   // R4 = ADDR
-  CAPRI_RING_DOORBELL_DATA(0, k.nicmgr_t0_s2s_qid, 0, 0)   // R3 = DATA
-  memwr.dx.e      _r_db_addr, _r_db_data
-
 nicmgr_commit_done:
-  phvwri.f        p.{app_header_table0_valid...app_header_table3_valid}, 0
+  // End of pipeline - Make sure no more tables will be launched
+  phvwri.e.f      p.{app_header_table0_valid...app_header_table3_valid}, 0
+  nop
 
 nicmgr_commit_abort:
-  // TODO: Don't commit CI
-
 nicmgr_commit_error:
+  // TODO: Don't commit CI
   phvwri.e        p.{app_header_table0_valid...app_header_table3_valid}, 0
   phvwri.f        p.p4_intr_global_drop, 1
