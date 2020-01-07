@@ -27,22 +27,44 @@ fi
 set -x
 echo $NICDIR
 
-function finish () {
+function stop_process () {
+    echo "===== Nuking processes ====="
     if [ $START_VPP == 1 ]; then
         sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
     fi
     pkill agent
     pkill cap_model
+}
+
+function remove_stale_files () {
+    echo "===== Cleaning stale files ====="
     rm -f $NICDIR/out.sh
+    rm -f $NICDIR/conf/pipeline.json
+    rm -f $NICDIR/conf/gen/dol_agentcfg.json
+}
+
+function remove_logs () {
+    # NOT to be used post run
+    echo "===== Cleaning log & core files ====="
+    rm -f ${NICDIR}/*log* ${NICDIR}/core*
+}
+
+function collect_logs () {
     echo "===== Collecting logs ====="
     ${NICDIR}/apollo/test/tools/savelogs.sh
+}
+
+function finish () {
+    stop_process
+    collect_logs
+    remove_stale_files
 }
 trap finish EXIT
 
 function setup () {
     # remove stale files from older runs
-    rm -f ${NICDIR}/*log* ${NICDIR}/core* $NICDIR/out.sh
-    rm -f $NICDIR/conf/gen/dol_agentcfg.json
+    remove_stale_files
+    remove_logs
 }
 setup
 

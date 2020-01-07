@@ -9,8 +9,7 @@
 #include "nic/apollo/packet/apulu/p4_cpu_hdr.h"
 #include "nic/apollo/p4/include/apulu_defines.h"
 
-#define LEARN_LIF_NAME  ""
-// #define LEARN_LIF_NAME          "net_ionic1"
+#define LEARN_LIF_NAME          "net_ionic1"
 #define LEARN_ARM_TO_P4_HDR_SZ  APULU_ARM_TO_P4_HDR_SZ
 #define LEARN_P4_TO_ARM_HDR_SZ  APULU_P4_TO_ARM_HDR_SZ
 
