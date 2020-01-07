@@ -233,7 +233,7 @@ func getIotaAgentClient(ip, username, password string) (iota.IotaAgentApiClient,
 func provideNaplesEsxPersonality(client iota.IotaAgentApiClient) error {
 
 	req := &iota.Node{Name: "naples-esx-test", IpAddress: "",
-		NodeInfo:  &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{NaplesIpAddress: naplesIP, NicType: "pensando", NaplesUsername: naplesUsername, NaplesPassword: naplesPassword}},
+		NodeInfo:  &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesIpAddress: naplesIP, NicType: "pensando", NaplesUsername: naplesUsername, NaplesPassword: naplesPassword}}}},
 		EsxConfig: &iota.VmwareESXConfig{IpAddress: esxHost, Username: esxUsername, Password: esxPassword},
 		Entities: []*iota.Entity{&iota.Entity{Name: "host", Type: iota.EntityType_ENTITY_TYPE_HOST},
 			&iota.Entity{Name: "naples", Type: iota.EntityType_ENTITY_TYPE_NAPLES}},

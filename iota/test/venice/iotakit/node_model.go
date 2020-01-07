@@ -37,6 +37,7 @@ type Naples struct {
 	testNode *TestNode
 	smartNic *cluster.DistributedServiceCard
 	sm       *SysModel // pointer back to the model
+	nodeuuid string
 }
 
 // Switch represents a data-switch
@@ -333,23 +334,27 @@ func (hc *HostCollection) NewWorkload(namePrefix string, snc *NetworkCollection)
 
 // createNaples creates a naples instance
 func (sm *SysModel) createNaples(node *TestNode) error {
-	snic, err := sm.GetSmartNICByName(node.NodeName)
-	if sm.tb.mockMode {
-		snic, err = sm.GetSmartNICInMacRange(node.NodeUUID)
-	}
-	if err != nil {
-		err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
-		log.Errorf("%v", err)
-		return err
-	}
-	naples := Naples{
-		iotaNode: node.iotaNode,
-		testNode: node,
-		smartNic: snic,
-		sm:       sm,
-	}
+	for _, naplesConfig := range node.NaplesConfigs.Configs {
+		snic, err := sm.GetSmartNICByName(naplesConfig.Name)
+		if sm.tb.mockMode {
+			snic, err = sm.GetSmartNICInMacRange(naplesConfig.NodeUuid)
+		}
+		if err != nil {
+			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", node.NodeName, err)
+			log.Errorf("%v", err)
+			return err
+		}
+		naples := Naples{
+			iotaNode: node.iotaNode,
+			testNode: node,
+			smartNic: snic,
+			sm:       sm,
+			nodeuuid: naplesConfig.NodeUuid,
+			name:     naplesConfig.Name,
+		}
 
-	sm.naples[node.NodeName] = &naples
+		sm.naples[naplesConfig.Name] = &naples
+	}
 
 	return nil
 }
@@ -814,17 +819,16 @@ func (sm *SysModel) AssociateHosts() error {
 		}
 		//In mockmode we retrieve mac from the snicList, so we should convert to format that venice likes.
 		for _, naples := range sm.naples {
-			naples.iotaNode.NodeUuid = convertMac(naples.iotaNode.NodeUuid)
+			naples.nodeuuid = convertMac(naples.nodeuuid)
 		}
 	}
 
 	for k := range sm.hosts {
 		delete(sm.hosts, k)
 	}
-	//TOOD:Associate fake naples too
 	for _, n := range sm.naples {
 		n.smartNic.Labels = make(map[string]string)
-		nodeMac := strings.Replace(n.iotaNode.GetNodeUuid(), ":", "", -1)
+		nodeMac := strings.Replace(n.nodeuuid, ":", "", -1)
 		for _, obj := range objs {
 			objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
 			if objMac == nodeMac {

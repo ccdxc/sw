@@ -181,7 +181,7 @@ message Node {
     // Node specific configs
     oneof node_info {
         // naples
-        NaplesConfig    naples_config               = 6;
+        NaplesConfigs   naples_configs              = 6;
 
         VeniceConfig    venice_config               = 7;
 
@@ -194,7 +194,6 @@ message Node {
     // NodeStatus captures the details of the node action
     IotaAPIResponse     node_status     = 12;
 
-    string              node_uuid       = 13;
 
     // Optionally run a start up script during add or reload.
     string              startup_script  = 14;
@@ -265,6 +264,18 @@ message NaplesConfig {
     // Nic type
     string nic_type              = 9;
 
+    // hint, if there are more than 1 naples in system
+    string nic_hint             = 10;
+
+    // nodeuuid return as part read
+    string node_uuid            = 11;
+
+    // unique Identifier
+    string name                 = 12;
+}
+
+message NaplesConfigs {
+    repeated NaplesConfig configs = 1;
 }
 
 message ThirdPartyNicConfig {

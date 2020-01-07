@@ -62,6 +62,94 @@ class Node(object):
         def GetInfo(self):
             return {'nic':self.__nic, 'bus':self.__bus, 'device':self.__device, 'function':self.__function}
 
+    class NicDevice:
+        def __init__(self, name):
+            self.__name = name
+            self.__uuid = None
+            self.__host_intfs = None
+            self.__host_if_alloc_idx = 0
+            self.__nic_mgmt_ip = None
+            self.__nic_console_ip = None
+            self.__nic_console_port = None
+            self.__nic_mgmt_intf = None
+            self.__console_hdl = None
+
+        def HostIntfs(self):
+            return self.__host_intfs
+        
+        def Uuid(self):
+            return self.__uuid
+
+        def Name(self):
+            return self.__name
+
+        def SetUuid(self, uuid):
+            self.__uuid = formatMac(uuid)
+        
+        def SetHostIntfs(self, host_intfs):
+            self.__host_intfs = host_intfs
+
+        def AllocateHostInterface(self, device = None):
+           host_if = self.__host_intfs[self.__host_if_alloc_idx]
+           self.__host_if_alloc_idx = (self.__host_if_alloc_idx + 1) % len(self.__host_intfs)
+           return host_if
+
+        def GetNicMgmtIP(self):
+           return self.__nic_mgmt_ip
+
+        def GetNicIntMgmtIP(self):
+           return self.__nic_int_mgmt_ip
+
+        def GetNicConsoleIP(self):
+           return self.__nic_console_ip
+
+        def GetNicConsolePort(self):
+           return self.__nic_console_port
+
+        def GetNicMgmtIntf(self):
+            return self.__nic_mgmt_intf
+
+        def SetNicMgmtIP(self, ip):
+           self.__nic_mgmt_ip = ip
+
+        def SetNicIntMgmtIP(self, ip):
+           self.__nic_int_mgmt_ip = ip
+
+        def SetNicConsoleIP(self, ip):
+           self.__nic_console_ip = ip
+
+        def SetNicConsolePort(self, port):
+           self.__nic_console_port = port
+        
+        def SetNicMgmtIntf(self, intf):
+            self.__nic_mgmt_intf = intf
+
+        def read_mgmt_ip_from_console(self):
+            if self.__nic_console_ip != "" and self.__nic_console_port != "":
+                try:
+                    ip_read = False
+                    with open(node_log_file, 'r') as json_file:
+                        data = json.load(json_file)
+                        for node in data:
+                            for _, dev in node["Devices"].items():
+                                if dev["NicConsoleIP"] == self.__nic_console_ip and \
+                                    dev["NicConsolePort"] == self.__nic_console_port and \
+                                    dev["NicMgmtIP"] not in [ "N/A", "" ]:
+                                    self.__nic_mgmt_ip = dev["NicMgmtIP"]
+                                    ip_read = True
+                    if not ip_read:
+                        raise
+                except:
+                        self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
+                        output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
+                        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+                        x = re.findall(ifconfig_regexp, str(output))
+                        if len(x) > 0:
+                            Logger.info("Read management IP %s %s" % (self.__name, x[0]))
+                            self.__nic_mgmt_ip = x[0]
+            else:
+                Logger.info("Skipping management IP read as no console info %s" % self.__name)
+
     def __init__(self, spec):
         self.__spec = spec
         self.__name = spec.name
@@ -72,16 +160,23 @@ class Node(object):
 
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
-        self.__nic_mgmt_ip = getattr(self.__inst, "NicMgmtIP", None)
-        #self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", "169.254.0.1")
-        self.__nic_int_mgmt_ip = getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp())
-        self.__nic_console_ip = getattr(self.__inst, "NicConsoleIP", "")
-        self.__nic_console_port = getattr(self.__inst, "NicConsolePort", "")
-        self.__nic_mgmt_intf = getattr(self.__inst, "NicMgmtIntf", "oob_mnic0")
-        self.__console_hdl = None
-        self.__read_mgmt_ip_from_console()
+
+        self.__dev_index = 1
+        self.__devices = {}
+        for index in range(1):
+               name = self.GetNicType() + str(self.__dev_index)
+               device = Node.NicDevice(name)
+               self.__dev_index = self.__dev_index + 1
+               self.__devices[name] = device
+               device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
+               device.SetNicConsoleIP(getattr(self.__inst, "NicConsoleIP", ""))
+               device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
+               device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
+               device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
+               device.read_mgmt_ip_from_console()
 
         self.__nic_pci_info = {}
+        self.__nic_info = {}
         self.__vmUser = getattr(self.__inst, "Username", "vm")
         self.__vmPassword = getattr(self.__inst, "Password", "vm")
         self.ssh_host = "%s@%s" % (self.__vmUser, self.__ip_address) 
@@ -130,30 +225,7 @@ class Node(object):
             sys.exit(1)
         return role
 
-    def __read_mgmt_ip_from_console(self):
-        if self.__nic_console_ip != "" and self.__nic_console_port != "":
-            try:
-                ip_read = False
-                with open(node_log_file, 'r') as json_file:
-                    data = json.load(json_file)
-                    for node in data:
-                        if node["NicConsoleIP"] == self.__nic_console_ip and \
-                            node["NicConsolePort"] == self.__nic_console_port and \
-                            node["NicMgmtIP"] not in [ "N/A", "" ]:
-                            self.__nic_mgmt_ip = node["NicMgmtIP"]
-                            ip_read = True
-                if not ip_read:
-                    raise
-            except:
-                    self.__console_hdl = Console(self.__nic_console_ip, self.__nic_console_port, disable_log=True)
-                    output = self.__console_hdl.RunCmdGetOp("ifconfig " + self.__nic_mgmt_intf)
-                    ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-                    x = re.findall(ifconfig_regexp, str(output))
-                    if len(x) > 0:
-                        Logger.info("Read management IP %s %s" % (self.__name, x[0]))
-                        self.__nic_mgmt_ip = x[0]
-        else:
-            Logger.info("Skipping management IP read as no console info %s" % self.__name)
+
 
     def GetNicPciInfo(self,nic):
         if nic not in self.__nic_pci_info:
@@ -203,17 +275,21 @@ class Node(object):
     def GetDataNetworks(self):
         return self.__inst.DataNetworks
 
-    def GetNicMgmtIP(self):
-        return self.__nic_mgmt_ip
+    def GetNicMgmtIP(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetNicMgmtIP()
 
-    def GetNicIntMgmtIP(self):
-        return self.__nic_int_mgmt_ip
+    def GetNicIntMgmtIP(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetNicIntMgmtIP()
 
-    def GetNicConsoleIP(self):
-        return self.__nic_console_ip
+    def GetNicConsoleIP(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetNicConsoleIP()
 
-    def GetNicConsolePort(self):
-        return self.__nic_console_port
+    def GetNicConsolePort(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetNicConsolePort()
 
     def Name(self):
         return self.__name
@@ -250,18 +326,38 @@ class Node(object):
     def IsWorkloadNode(self):
         return self.__role != topo_pb2.PERSONALITY_VENICE
 
-    def UUID(self):
+    def GetDevicesNames(self):
+        return sort(self.__devices.keys())
+
+    def GetDevices(self):
+        return self.__devices
+
+    def __get_device(self, device = None):
+        key = ""
+        if device == None:
+            devices = list(self.__devices.keys())
+            devices.sort()
+            key = devices[0]
+        else:
+            key = device
+        return self.__devices[key]
+
+    def GetDefaultDeivce(self):
+        return self.__get_device(None)
+
+    def UUID(self, device = None):
         if self.IsThirdParty():
             return self.Name()
-        return self.__uuid
+        dev = self.__get_device(device)
+        return dev.Uuid()
 
-    def HostInterfaces(self):
-        return self.__host_intfs
+    def HostInterfaces(self, device = None):
+        dev = self.__get_device(device)
+        return dev.HostIntfs()
 
-    def AllocateHostInterface(self):
-        host_if = self.__host_intfs[self.__host_if_alloc_idx]
-        self.__host_if_alloc_idx = (self.__host_if_alloc_idx + 1) % len(self.__host_intfs)
-        return host_if
+    def AllocateHostInterface(self, device = None):
+        dev = self.__get_device(device)
+        return dev.AllocateHostInterface()
 
     def ControlIpAddress(self):
         return self.__control_ip
@@ -329,29 +425,31 @@ class Node(object):
                 #Just test code
                 msg.naples_multi_sim_config.venice_ips.append("1.2.3.4")
             else:
-                msg.naples_config.nic_type = self.GetNicType()
-                msg.naples_config.control_intf = self.__control_intf
-                msg.naples_config.control_ip = str(self.__control_ip)
                 if not self.IsNaplesHw() and not self.IsThirdParty():
                     msg.image = os.path.basename(testsuite.GetImages().naples)
-                for data_intf in self.__data_intfs:
-                    msg.naples_config.data_intfs.append(data_intf)
+                for _, device in self.__devices.items():
+                    naples_config = msg.naples_configs.configs.add()
+                    naples_config.nic_type = self.GetNicType()
+                    naples_config.control_intf = self.__control_intf
+                    naples_config.control_ip = str(self.__control_ip)
+                    naples_config.name = device.Name()
+                    naples_config.naples_username = "root"
+                    naples_config.naples_password = "pen123"
+
+                    if device.GetNicIntMgmtIP() == "N/A" or self.IsNaplesCloudPipeline():
+                        naples_config.naples_ip_address = device.GetNicMgmtIP()
+                    else:
+                        naples_config.naples_ip_address = device.GetNicIntMgmtIP()
+
+                    for n in topology.Nodes():
+                        if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
+                        naples_config.venice_ips.append(str(n.ControlIpAddress()))
+                    for data_intf in self.__data_intfs:
+                        naples_config.data_intfs.append(data_intf)
                     try:
                         self.DetermineNicPciInfo(data_intf)
                     except:
                         Logger.debug('failed to get pci info for node {0} nic {1}. error was: {2}'.format(self.__name, data_intf, traceback.format_exc()))
-                for n in topology.Nodes():
-                    if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
-                    msg.naples_config.venice_ips.append(str(n.ControlIpAddress()))
-
-                #msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
-                if self.__nic_int_mgmt_ip == "N/A" or self.IsNaplesCloudPipeline():
-                    msg.naples_config.naples_ip_address = self.__nic_mgmt_ip
-                else:
-                    msg.naples_config.naples_ip_address = self.__nic_int_mgmt_ip
-
-                msg.naples_config.naples_username = "root"
-                msg.naples_config.naples_password = "pen123"
 
             if self.IsNaplesHwWithBumpInTheWire() or self.IsNaplesHwWithBumpInTheWirePerf():
                 #make sure to use actual management
@@ -362,9 +460,10 @@ class Node(object):
             host_entity.type = topo_pb2.ENTITY_TYPE_HOST
             host_entity.name = self.__name + "_host"
             if self.IsNaples():
-                nic_entity = msg.entities.add()
-                nic_entity.type = topo_pb2.ENTITY_TYPE_NAPLES
-                nic_entity.name = self.__name + "_naples"
+                for _, device in self.__devices.items():
+                    nic_entity = msg.entities.add()
+                    nic_entity.type = topo_pb2.ENTITY_TYPE_NAPLES
+                    nic_entity.name = device.Name()
 
         script = self.GetStartUpScript()
         if script != None:
@@ -373,15 +472,21 @@ class Node(object):
         return types.status.SUCCESS
 
     def ProcessResponse(self, resp):
-        self.__uuid = resp.node_uuid
         if self.IsNaples():
-            self.__host_intfs = resp.naples_config.host_intfs
-            self.__uuid = formatMac(self.__uuid)
-            Logger.info("Node: %s UUID: %s" % (self.__name, self.__uuid))
+            for naples_config in resp.naples_configs.configs:
+                device = self.__get_device(naples_config.name)
+                assert(device)
+                device.SetUuid(naples_config.node_uuid)
+                device.SetHostIntfs(naples_config.host_intfs)
+                Logger.info("Nic: %s UUID: %s" % (naples_config.name, naples_config.node_uuid))
+                self.__host_intfs.extend(naples_config.host_intfs)
         elif self.IsThirdParty():
             if GlobalOptions.dryrun:
                 self.__host_intfs = []
             else:
+                device = self.GetDefaultDeivce()
+                assert(device)
+                device.SetHostIntfs(resp.third_party_nic_config.host_intfs)
                 self.__host_intfs = resp.third_party_nic_config.host_intfs
         Logger.info("Node: %s Host Interfaces: %s" % (self.__name, self.__host_intfs))
         if len(self.__host_intfs) == 0 and  not self.IsVenice() and self.__role not in [topo_pb2.PERSONALITY_NAPLES_BITW, topo_pb2.PERSONALITY_NAPLES_BITW_PERF]:
@@ -406,11 +511,17 @@ class Node(object):
     def GetNodeInfo(self):
         info = {
             "Name" : self.__name,
-            "NicMgmtIP" : self.__nic_mgmt_ip,
-            "NicConsoleIP" : self.__nic_console_ip,
-            "NicConsolePort" : self.__nic_console_port,
-            "InstanceID" : self.__node_id
+            "InstanceID" : self.__node_id,
+            "Devices" : {}
         }
+        for _, device in self.__devices.items():
+            dev_info = {
+                "Name" :  device.Name(),
+                "NicMgmtIP" : device.GetNicMgmtIP(),
+                "NicConsoleIP" : device.GetNicConsoleIP(),
+                "NicConsolePort" : device.GetNicConsolePort(),
+            }
+            info["Devices"][device.Name()] = dev_info
         return info
 
     def RunConsoleCmd(self,cmd):
@@ -604,7 +715,12 @@ class Topology(object):
         uuid_map = {}
         for n in self.__nodes.values():
             if n.IsWorkloadNode():
-                uuid_map[n.Name()] = n.UUID()
+                for _, device in n.GetDevices().items():
+                    uuid_map[device.Name()] = device.Uuid()
+                #Also set default to first
+                device = n.GetDefaultDeivce()
+                assert(device)
+                uuid_map[n.Name()] = device.Uuid()
         return uuid_map
 
     def GetVeniceHostnames(self):
@@ -656,20 +772,20 @@ class Topology(object):
         if self.__nodes[node_name].IsNaples():
             return self.__nodes[node_name].MgmtIpAddress()
 
-    def GetNicMgmtIP(self, node_name):
-        return self.__nodes[node_name].GetNicMgmtIP()
+    def GetNicMgmtIP(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicMgmtIP(device)
 
-    def GetNicIntMgmtIP(self, node_name):
-        return self.__nodes[node_name].GetNicIntMgmtIP()
+    def GetNicIntMgmtIP(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicIntMgmtIP(device)
 
-    def GetNicConsoleIP(self, node_name):
-        return self.__nodes[node_name].GetNicConsoleIP()
+    def GetNicConsoleIP(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicConsoleIP(device)
 
-    def GetNicConsolePort(self, node_name):
-        return self.__nodes[node_name].GetNicConsolePort()
+    def GetNicConsolePort(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicConsolePort(device)
 
-    def GetNicIntMgmtIP(self, node_name):
-        return self.__nodes[node_name].GetNicIntMgmtIP()
+    def GetNicIntMgmtIP(self, node_name, device = None):
+        return self.__nodes[node_name].GetNicIntMgmtIP(device)
 
     def GetMaxConcurrentWorkloads(self, node_name):
         return self.__nodes[node_name].GetMaxConcurrentWorkloads()
@@ -685,3 +801,11 @@ class Topology(object):
 
     def SetupTestBedNetwork():
         return store.GetTestbed().SetupTestBedNetwork()
+
+    def GetDefaultDeivce(self, node_name):
+        return self.__nodes[node_name].GetDefaultDeivce()
+    
+    def GetDefaultNaples(self, node_name):
+        device = self.GetDefaultDeivce(node_name)
+        assert(device)
+        return device.Name()

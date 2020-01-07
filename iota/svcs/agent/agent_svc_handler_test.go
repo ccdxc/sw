@@ -136,9 +136,10 @@ func TestAgentService_Node_Multi_Naples_Add_Delete(t *testing.T) {
 
 func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
-		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{
+		NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
@@ -148,9 +149,11 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
-		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{
+		NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -160,6 +163,10 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -178,6 +185,10 @@ func TestAgentService_Node_Naples_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	nodeResp, err = agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Delete Node call failed. Err: %v", err)
@@ -256,9 +267,11 @@ func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
 	defer stopNaplesNode()
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
-		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "eth1",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
@@ -270,9 +283,9 @@ func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.Entities = []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{Name: "naples-host", Type: iota.EntityType_ENTITY_TYPE_HOST}}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
-		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando",
-		VeniceIps: []string{"10.1.1.3/24"}, NaplesIpAddress: "127.0.0.1", NaplesUsername: naplesUserName, NaplesPassword: naplesPassword}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: controlIntf,
+		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+		VeniceIps: []string{"10.1.1.3/24"}, NaplesIpAddress: "127.0.0.1", NaplesUsername: naplesUserName, NaplesPassword: naplesPassword}}}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -282,6 +295,10 @@ func TestAgentService_Node_Naples_Hw_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -378,6 +395,10 @@ func TestAgentService_Workload_Add_Delete(t *testing.T) {
 	TestUtils.Assert(t, workloadResp.ApiResponse.ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Add workload success!")
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -448,6 +469,10 @@ func TestAgentService_Workload_Trigger(t *testing.T) {
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: naplesSimName,
 		Entities: []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{Name: "naples-host", Type: iota.EntityType_ENTITY_TYPE_HOST}}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -748,7 +773,8 @@ func TestAgentService_Naples_Hw_Workload_Add_Delete(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.Entities = []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{
 		Name: "naples", Type: iota.EntityType_ENTITY_TYPE_NAPLES}}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword, NaplesIpAddress: "127.0.0.1", NicType: "pensando"}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword,
+		NaplesIpAddress: "127.0.0.1", NicType: "pensando", Name: naplesSimName}}}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -823,7 +849,8 @@ func TestAgentService_Naples_Hw_baremetal_Workload_Add_Delete(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.Entities = []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{
 		Name: "naples", Type: iota.EntityType_ENTITY_TYPE_NAPLES}}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword, NaplesIpAddress: "127.0.0.1", NicType: "pensando"}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword, NaplesIpAddress: "127.0.0.1",
+		NicType: "pensando", Name: naplesSimName}}}}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -889,7 +916,8 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES, Name: "naples"}
 	iotaNode.Entities = []*iota.Entity{&iota.Entity{Name: naplesSimName, Type: iota.EntityType_ENTITY_TYPE_NAPLES}, &iota.Entity{
 		Name: "naples", Type: iota.EntityType_ENTITY_TYPE_NAPLES}}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword, NaplesIpAddress: "127.0.0.1", NicType: "pensando"}}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesUsername: naplesUserName, NaplesPassword: naplesPassword, NaplesIpAddress: "127.0.0.1",
+		NicType: "pensando", Name: naplesSimName}}}}
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -991,6 +1019,10 @@ func TestAgentService_baremetal_Workload_Trigger(t *testing.T) {
 func TestAgentService_Node_Naples_reload_invalid(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples-junk"}
 
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err := agentClient.ReloadNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -1001,9 +1033,9 @@ func TestAgentService_Node_Naples_reload_invalid(t *testing.T) {
 
 func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+		VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
@@ -1013,9 +1045,9 @@ func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+		VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -1025,6 +1057,10 @@ func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -1044,6 +1080,10 @@ func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
 	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	nodeResp, err = agentClient.SaveNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Save Node call failed. Err: %v", err)
@@ -1061,7 +1101,10 @@ func TestAgentService_Node_Naples_Add_Save(t *testing.T) {
 	RestartIOTAAgent()
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.ReloadNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -1092,9 +1135,9 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 	hntapCfgTempFile = "test/hntap-cfg.json"
 
 	iotaNode := &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: "eth1",
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+		VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	nodeResp, err := agentClient.DeleteNode(context.Background(), iotaNode)
 	if err != nil {
@@ -1104,9 +1147,9 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 	TestUtils.Assert(t, nodeResp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_BAD_REQUEST, "Delete node success!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-	iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{ControlIntf: controlIntf,
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{ControlIntf: "",
 		DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24",
-		VeniceIps: []string{"10.1.1.3/24"}}}
+		VeniceIps: []string{"10.1.1.3/24"}}}}}
 
 	resp, err := agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
@@ -1116,6 +1159,10 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 	TestUtils.Assert(t, resp.GetNodeStatus().ApiStatus == iota.APIResponseType_API_STATUS_OK, "Add node failed")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.AddNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)
@@ -1140,6 +1187,10 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 	TestUtils.Assert(t, iotaNodeHealth.GetHealthCode() != iota.NodeHealth_HEALTH_OK, "Node health not ok!")
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	nodeResp, err = agentClient.SaveNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Save Node call failed. Err: %v", err)
@@ -1157,7 +1208,10 @@ func TestAgentService_Node_Naples_Add_Save_with_workloads(t *testing.T) {
 	RestartIOTAAgent()
 
 	iotaNode = &iota.Node{Type: iota.PersonalityType_PERSONALITY_NAPLES_SIM, Name: "naples"}
-
+	iotaNode.NodeInfo = &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{
+		&iota.NaplesConfig{ControlIntf: "",
+			DataIntfs: []string{"eth2"}, ControlIp: "10.1.1.2/24", NicType: "pensando", Name: naplesSimName,
+			VeniceIps: []string{"10.1.1.3/24"}}}}}
 	resp, err = agentClient.ReloadNode(context.Background(), iotaNode)
 	if err != nil {
 		t.Errorf("Add Node call failed. Err: %v", err)

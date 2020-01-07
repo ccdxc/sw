@@ -58,7 +58,7 @@ func (n *TestNode) AddNode() error {
 		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
 	}
 	n.RespNode.Name = n.Node.Name
-	n.Node.NodeUuid = resp.NodeUuid
+	//n.Node.NodeUuid = resp.NodeUuid
 	return nil
 }
 

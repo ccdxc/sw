@@ -107,7 +107,7 @@ func (venice *veniceNode) Init(in *iota.Node) (*iota.Node, error) {
 	os.Mkdir(dir, 0765)
 	os.Chmod(dir, 0777)
 
-	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, NodeUuid: "", Type: in.GetType(),
+	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, Type: in.GetType(),
 		NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 
@@ -133,6 +133,6 @@ func (venice *veniceBMNode) Init(in *iota.Node) (*iota.Node, error) {
 	os.Mkdir(dir, 0765)
 	os.Chmod(dir, 0777)
 
-	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, NodeUuid: "", Type: in.GetType(),
+	return &iota.Node{Name: in.Name, IpAddress: in.IpAddress, Type: in.GetType(),
 		NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }

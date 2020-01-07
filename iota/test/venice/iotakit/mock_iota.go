@@ -238,7 +238,7 @@ func (ms *mockIotaServer) AddNodes(ctx context.Context, req *iota.NodeMsg) (*iot
 	idx := 0
 	for _, nr := range req.Nodes {
 		if nr.Type == iota.PersonalityType_PERSONALITY_NAPLES_SIM || nr.Type == iota.PersonalityType_PERSONALITY_NAPLES {
-			nr.NodeUuid = snicList[idx].Status.PrimaryMAC
+			nr.GetNaplesConfigs().Configs[0].NodeUuid = snicList[idx].Status.PrimaryMAC
 			idx++
 		}
 	}

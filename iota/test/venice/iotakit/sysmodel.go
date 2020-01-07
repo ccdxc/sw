@@ -453,7 +453,7 @@ func (sm *SysModel) SetupWorkloadsOnHost(h *Host) (*WorkloadCollection, error) {
 			}
 			nwMap[nw]++
 			wloadsToCreate = append(wloadsToCreate, wload)
-			log.Infof("Adding workload %v (host:%v NodeUUID:(%v) iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.GetNodeUuid(), h.iotaNode.Name, nw)
+			log.Infof("Adding workload %v (host:%v iotaNode:%v nw:%v) to create list", wload.GetName(), h.veniceHost.GetName(), h.iotaNode.Name, nw)
 
 			if len(wloadsToCreate) == defaultWorkloadPerHost {
 				// We have enough workloads already for this host.

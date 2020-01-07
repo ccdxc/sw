@@ -107,9 +107,9 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		}
 
 		// check smartnic status in Venice
-		snic, err := act.model.GetSmartNICByName(np.iotaNode.Name)
+		snic, err := act.model.GetSmartNICByName(np.name)
 		if err != nil {
-			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.iotaNode.Name, err)
+			err := fmt.Errorf("Failed to get smartnc object for name %v. Err: %+v", np.name, err)
 			log.Errorf("%v", err)
 			return err
 		}
@@ -118,19 +118,19 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 
 		if snic.Status.AdmissionPhase != cluster.DistributedServiceCardStatus_ADMITTED.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.iotaNode.Name, snic.Status)
+			return fmt.Errorf("Invalid admin phase for naples %v. Status: %+v", np.name, snic.Status)
 		}
 		if len(snic.Status.Conditions) < 1 {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("No naples status reported for naples %v", np.iotaNode.Name)
+			return fmt.Errorf("No naples status reported for naples %v", np.name)
 		}
 		if snic.Status.Conditions[0].Type != cluster.DSCCondition_HEALTHY.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.iotaNode.Name)
+			return fmt.Errorf("Invalid status condition-type %v for naples %v", snic.Status.Conditions[0].Type, np.name)
 		}
 		if snic.Status.Conditions[0].Status != cluster.ConditionStatus_TRUE.String() {
 			log.Errorf("Invalid Naples status: %+v", snic)
-			return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.iotaNode.Name)
+			return fmt.Errorf("Invalid status %v for naples %v", snic.Status.Conditions[0].Status, np.name)
 		}
 	}
 

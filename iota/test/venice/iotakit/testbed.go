@@ -82,12 +82,12 @@ type TestBedParams struct {
 // TestNode contains state of a node in the testbed
 type TestNode struct {
 	NodeName            string               // node name specific to this topology
-	NodeUUID            string               // node UUID
+	NodeUUID            []string             // node UUID
 	Type                iota.TestBedNodeType // node type
 	Personality         iota.PersonalityType // node topology
 	NodeMgmtIP          string
 	VeniceConfig        iota.VeniceConfig         // venice specific configuration
-	NaplesConfig        iota.NaplesConfig         // naples specific config
+	NaplesConfigs       iota.NaplesConfigs        // naples specific config
 	NaplesMultSimConfig iota.NaplesMultiSimConfig // naples multiple sim specific config
 	iotaNode            *iota.Node                // node info we got from iota
 	instParams          *InstanceParams           // instance params we got from warmd.json
@@ -381,14 +381,19 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 			}
 
 			tb.hasNaplesSim = true
-			node.NaplesConfig = iota.NaplesConfig{
-				ControlIntf:     "eth1",
-				ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
-				DataIntfs:       []string{"eth2", "eth3"},
-				NaplesIpAddress: "169.254.0.1",
-				NaplesUsername:  "root",
-				NaplesPassword:  "pen123",
-				NicType:         "pensando-sim",
+			node.NaplesConfigs = iota.NaplesConfigs{
+				Configs: []*iota.NaplesConfig{
+					&iota.NaplesConfig{
+						ControlIntf:     "eth1",
+						ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+						DataIntfs:       []string{"eth2", "eth3"},
+						NaplesIpAddress: "169.254.0.1",
+						NaplesUsername:  "root",
+						NaplesPassword:  "pen123",
+						NicType:         "pensando-sim",
+						Name:            "pensando-sim",
+					},
+				},
 			}
 		case iota.PersonalityType_PERSONALITY_VENICE:
 			if node.instParams.Type != "vm" {
@@ -422,15 +427,22 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 				}
 			}
 
-			node.NaplesConfig = iota.NaplesConfig{
-				ControlIntf:     "eth1",
-				ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
-				DataIntfs:       []string{"eth2", "eth3"},
-				NaplesIpAddress: "169.254.0.1",
-				NaplesUsername:  "root",
-				NaplesPassword:  "pen123",
-				NicType:         "naples",
+			node.NaplesConfigs = iota.NaplesConfigs{
+				Configs: []*iota.NaplesConfig{
+					&iota.NaplesConfig{
+						ControlIntf:     "eth1",
+						ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
+						DataIntfs:       []string{"eth2", "eth3"},
+						NaplesIpAddress: "169.254.0.1",
+						NaplesUsername:  "root",
+						NaplesPassword:  "pen123",
+						NicType:         "naples",
+						//Todo change this
+						Name: node.NodeName + "_naples",
+					},
+				},
 			}
+
 		default:
 			return fmt.Errorf("unsupported node personality %v for Type: %v", personality, node.instParams.Type)
 		}
@@ -470,7 +482,9 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM {
 			node.NaplesMultSimConfig.VeniceIps = veniceIps
 		} else {
-			node.NaplesConfig.VeniceIps = veniceIps
+			for _, naplesConfig := range node.NaplesConfigs.Configs {
+				naplesConfig.VeniceIps = veniceIps
+			}
 		}
 	case iota.PersonalityType_PERSONALITY_VENICE:
 		fallthrough
@@ -716,8 +730,12 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 	for index, node := range newNodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			tb.addToNaplesCache(node.NodeName, node.instParams.ID)
+			for iter, naplesConfig := range addNodeResp.Nodes[index].GetNaplesConfigs().GetConfigs() {
+				node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
+				node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
+			}
 		}
-		node.NodeUUID = addNodeResp.Nodes[index].NodeUuid
+
 		node.iotaNode = addNodeResp.Nodes[index]
 		tb.Nodes = append(tb.Nodes, node)
 	}
@@ -910,18 +928,20 @@ func (tb *TestBed) getIotaNode(node *TestNode) *iota.Node {
 		fallthrough
 	case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 		tbn.Image = filepath.Base(tb.Topo.NaplesImage)
-		tbn.NodeInfo = &iota.Node_NaplesConfig{
-			NaplesConfig: &node.NaplesConfig,
+		tbn.NodeInfo = &iota.Node_NaplesConfigs{
+			NaplesConfigs: &node.NaplesConfigs,
 		}
 		tbn.Entities = []*iota.Entity{
 			{
 				Type: iota.EntityType_ENTITY_TYPE_HOST,
 				Name: node.NodeName + "_host",
 			},
-			{
+		}
+		for _, naplesConfig := range tbn.GetNaplesConfigs().Configs {
+			tbn.Entities = append(tbn.Entities, &iota.Entity{
 				Type: iota.EntityType_ENTITY_TYPE_NAPLES,
-				Name: node.NodeName + "_naples",
-			},
+				Name: naplesConfig.Name,
+			})
 		}
 	case iota.PersonalityType_PERSONALITY_VENICE:
 		tbn.Image = filepath.Base(tb.Topo.VeniceImage)
@@ -1155,18 +1175,20 @@ func (tb *TestBed) setupTestBed() error {
 			fallthrough
 		case iota.PersonalityType_PERSONALITY_NAPLES_SIM:
 			tbn.Image = filepath.Base(tb.Topo.NaplesImage)
-			tbn.NodeInfo = &iota.Node_NaplesConfig{
-				NaplesConfig: &node.NaplesConfig,
+			tbn.NodeInfo = &iota.Node_NaplesConfigs{
+				NaplesConfigs: &node.NaplesConfigs,
 			}
 			tbn.Entities = []*iota.Entity{
 				{
 					Type: iota.EntityType_ENTITY_TYPE_HOST,
 					Name: node.NodeName + "_host",
 				},
-				{
+			}
+			for _, naplesConfig := range tbn.GetNaplesConfigs().Configs {
+				tbn.Entities = append(tbn.Entities, &iota.Entity{
 					Type: iota.EntityType_ENTITY_TYPE_NAPLES,
-					Name: node.NodeName + "_naples",
-				},
+					Name: naplesConfig.Name,
+				})
 			}
 		case iota.PersonalityType_PERSONALITY_NAPLES_MULTI_SIM:
 			tbn.Image = filepath.Base(tb.Topo.NaplesSimImage)
@@ -1243,13 +1265,16 @@ func (tb *TestBed) setupTestBed() error {
 			log.Debugf("Checking %v %v", node.NodeName, nr.Name)
 			if node.NodeName == nr.Name {
 				log.Debugf("Adding node %v as used", node.topoNode.NodeName)
-				node.NodeUUID = nr.NodeUuid
 				node.iotaNode = nr
 				nodeAdded = true
 				addedNodes = append(addedNodes, node)
 				//Update Instance to be used.
 				if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 					tb.addToNaplesCache(node.NodeName, node.instParams.ID)
+					for iter, naplesConfig := range nr.GetNaplesConfigs().GetConfigs() {
+						node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
+						node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
+					}
 				}
 			}
 		}
@@ -1377,31 +1402,38 @@ func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 	// set date, untar penctl and trigger mode switch
 	trig := sm.tb.NewTrigger()
 	for _, node := range nodes {
-		veniceIPs := strings.Join(node.NaplesConfig.VeniceIps, ",")
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			err := sm.tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
-			if err != nil {
-				return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
+			for _, naplesConfig := range node.NaplesConfigs.Configs {
+
+				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
+				err := sm.tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
+				if err != nil {
+					return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
+				}
+				// untar the package
+				cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+
+				// clean up roots of trust, if any
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
+
+				// disable watchdog for naples
+				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
+
+				// make sure console is enabled
+				trig.AddCommand(fmt.Sprintf("touch /sysconfig/config0/.console"), node.NodeName+"_naples", node.NodeName)
+				// trigger mode switch
+				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
+					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 			}
-			// untar the package
-			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-
-			// clean up roots of trust, if any
-			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
-
-			// disable watchdog for naples
-			trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
-
-			// make sure console is enabled
-			trig.AddCommand(fmt.Sprintf("touch /sysconfig/config0/.console"), node.NodeName+"_naples", node.NodeName)
-			// trigger mode switch
-			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, node.NodeName, node.iotaNode.NodeUuid)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
 			// trigger mode switch on Naples sim
-			cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --managed-by network --management-network oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --id %s --localhost", veniceIPs, node.iotaNode.GetNaplesConfig().ControlIp, node.iotaNode.NodeUuid, node.NodeName)
-			trig.AddCommand(cmd, node.iotaNode.Name+"_naples", node.iotaNode.Name)
+			for _, naplesConfig := range node.NaplesConfigs.Configs {
+				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
+				cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --managed-by network --management-network oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --id %s --localhost", veniceIPs, naplesConfig.ControlIp, naplesConfig.NodeUuid, naplesConfig.Name)
+				trig.AddCommand(cmd, node.iotaNode.Name+"_naples", node.iotaNode.Name)
+			}
 		}
 	}
 	resp, err := trig.Run()

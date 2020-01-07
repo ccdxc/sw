@@ -74,11 +74,11 @@ func getNode(nodeFile string, nodeName string) (*iota.Node, error) {
 			}
 		}
 
-		iotaNode.NodeInfo = &iota.Node_NaplesConfig{NaplesConfig: &iota.NaplesConfig{
+		iotaNode.NodeInfo = &iota.Node_NaplesConfigs{&iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{
 			ControlIntf: nodeData["control-intf"].(string),
 			DataIntfs:   dataIntfs,
 			ControlIp:   nodeData["control-ip"].(string),
-		}}
+		}}}}
 
 	} else if nodeData["kind"] == "venice" {
 		veniceNodes := ([]*iota.VenicePeer{})

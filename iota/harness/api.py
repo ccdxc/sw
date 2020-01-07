@@ -668,7 +668,8 @@ def Trigger_AddHostCommand(req, node_name, command,
 def Trigger_AddNaplesCommand(req, node_name, command,
                              background = False, rundir = "",
                              timeout = DEFAULT_COMMAND_TIMEOUT):
-    return Trigger_AddCommand(req, node_name, "%s_naples" % node_name,
+    naples = store.GetTestbed().GetCurrentTestsuite().GetTopology().GetDefaultNaples(node_name)
+    return Trigger_AddCommand(req, node_name, naples,
                               command, background, rundir, timeout)
 
 def Trigger_IsBackgroundCommand(cmd):

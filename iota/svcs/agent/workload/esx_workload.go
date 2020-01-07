@@ -193,8 +193,7 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 
 func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
 
-	vsname := constants.EsxIotaDataSwitch
-	vsspec := vmware.VswitchSpec{Name: vsname}
+	vsspec := vmware.VswitchSpec{Name: vm.Switch()}
 
 	nwName := constants.EsxDataNWPrefix + strconv.Itoa(vlan)
 

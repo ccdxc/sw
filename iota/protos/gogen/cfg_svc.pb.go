@@ -29,6 +29,7 @@
 		Node
 		NaplesMultiSimConfig
 		NaplesConfig
+		NaplesConfigs
 		ThirdPartyNicConfig
 		MellanoxConfig
 		BroadcomConfig

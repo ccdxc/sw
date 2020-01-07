@@ -71,6 +71,8 @@ type Workload interface {
 	GetWorkloadAgent() interface{}
 	TearDown()
 	Type() string
+	SetSwitch(name string)
+	Switch() string
 }
 
 func isFreeBsd() bool {
@@ -89,6 +91,7 @@ type workloadBase struct {
 	bgCmdIndex uint64
 	baseDir    string
 	wlType     string
+	switchName string
 }
 
 type remoteWorkload struct {
@@ -142,6 +145,14 @@ func freebsdVlanIntf(name string, vlan int) string {
 
 func macVlanIntf(name string, vlan int) string {
 	return name + "_" + "m" + strconv.Itoa(vlan)
+}
+
+func (app *workloadBase) SetSwitch(name string) {
+	app.switchName = name
+}
+
+func (app *workloadBase) Switch() string {
+	return app.switchName
 }
 
 func (app *workloadBase) Name() string {

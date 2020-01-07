@@ -380,8 +380,12 @@ func (act *ActionCtx) DisconnectNaples(npc *NaplesCollection) error {
 
 	// ifconfig down command
 	for _, naples := range npc.nodes {
-		cmd := fmt.Sprintf("ifconfig %s down", naples.iotaNode.GetNaplesConfig().ControlIntf)
-		trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+		for _, naplesConfig := range naples.iotaNode.GetNaplesConfigs().Configs {
+			if naplesConfig.NodeUuid == naples.nodeuuid {
+				cmd := fmt.Sprintf("ifconfig %s down", naplesConfig.ControlIntf)
+				trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+			}
+		}
 	}
 
 	// run the trigger
@@ -413,8 +417,12 @@ func (act *ActionCtx) ConnectNaples(npc *NaplesCollection) error {
 
 	// ifconfig up command
 	for _, naples := range npc.nodes {
-		cmd := fmt.Sprintf("ifconfig %s %s/16 up", naples.iotaNode.GetNaplesConfig().ControlIntf, naples.iotaNode.GetNaplesConfig().ControlIp)
-		trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+		for _, naplesConfig := range naples.iotaNode.GetNaplesConfigs().Configs {
+			if naplesConfig.NodeUuid == naples.nodeuuid {
+				cmd := fmt.Sprintf("ifconfig %s %s/16 up", naplesConfig.ControlIntf, naplesConfig.ControlIp)
+				trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+			}
+		}
 	}
 
 	// run the trigger
