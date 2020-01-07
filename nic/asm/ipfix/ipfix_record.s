@@ -119,15 +119,23 @@ ipfix_update_record_stats:
     memwr.dx    r6, r7
 
 ipfix_header_fixups:
-    // if scan is not complete and there is space for another record,
-    // don't flush the packet out
     seq         c1, k.ipfix_metadata_scan_complete, FALSE
     cmov        r6, c1, IPFIX_SCAN_INCOMPLETE, IPFIX_SCAN_COMPLETE
+
+    // if scan is not complete and there is space for another record,
+    // don't flush the packet out
     add         r7, d.{u.ipfix_create_record_d.next_record_offset}.hx, \
                     IPFIX_MAX_RECORD_SIZE
-    sle.c1      c1, r7, d.{u.ipfix_create_record_d.pktsize}.hx
-    bcf         [c1], ipfix_record_done
-    phvwr.c1    p.phv2mem_cmd2_dma_cmd_eop, 1
+    sle         c2, r7, d.{u.ipfix_create_record_d.pktsize}.hx
+    andcf       c2, [c1]
+    bcf         [c2], ipfix_record_done
+    phvwr.c2    p.phv2mem_cmd2_dma_cmd_eop, 1
+
+    // if scan is complete and there are no records to export, don't fixup
+    // headers, just disable self and ring exporter to shut-off scan
+    add         r7, d.{u.ipfix_create_record_d.ipfix_hdr_offset}.hx, 16
+    seq         c2, r7, d.{u.ipfix_create_record_d.next_record_offset}.hx
+    bcf         [!c1 & c2], ipfix_update_doorbells
 
     // IPFIX header fixups before sending the packet out
     phvwr       p.ipfix_record_header_version, IPFIX_VERSION
@@ -153,6 +161,7 @@ ipfix_header_fixups:
     // increment sequence number
     tbladd      d.{u.ipfix_create_record_d.seq_no}.wx, 1
 
+ipfix_update_doorbells:
     // disable doorbell (self)
     addi        r1, r0, DB_ADDR_BASE
     or          r1, r1, 0x2, DB_UPD_SHFT
