@@ -857,6 +857,64 @@ devapi_lif::update_vlanins(bool vlan_insert_en)
 }
 
 sdk_ret_t
+devapi_lif::update_bcast_filters(lif_bcast_filter_t bcast_filter)
+{
+    sdk_ret_t status = SDK_RET_OK;
+    
+    NIC_LOG_DEBUG("Bcast filters update: arp: {}, dhcp_client: {}, "
+                  "dhcp_server: {}, netbios: {}",
+                  bcast_filter.arp, bcast_filter.dhcp_client, 
+                  bcast_filter.dhcp_server, bcast_filter.netbios);
+    if (bcast_filter.arp != info_.bcast_filter.arp ||
+        bcast_filter.dhcp_client != info_.bcast_filter.dhcp_client ||
+        bcast_filter.dhcp_server != info_.bcast_filter.dhcp_server ||
+        bcast_filter.netbios != info_.bcast_filter.netbios) {
+        info_.bcast_filter.arp = bcast_filter.arp;
+        info_.bcast_filter.dhcp_client = bcast_filter.dhcp_client;
+        info_.bcast_filter.dhcp_server = bcast_filter.dhcp_server;
+        info_.bcast_filter.netbios = bcast_filter.netbios;
+
+        status = lif_halupdate();
+    } else {
+        NIC_LOG_DEBUG("devapi_lif: {}. No bcast filters change.", get_id());
+    }
+
+    return status;
+}
+
+sdk_ret_t
+devapi_lif::update_mcast_filters(lif_mcast_filter_t mcast_filter)
+{
+    sdk_ret_t status = SDK_RET_OK;
+
+    NIC_LOG_DEBUG("Mcast filters Update: ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
+                  "dhcpv6_relay: {}, dhcpv6_mcast: {}, ipv6_mld: {}, ipv6_neigh_sol: {}",
+                  mcast_filter.ipv6_neigh_adv, mcast_filter.ipv6_router_adv,
+                  mcast_filter.dhcpv6_relay, mcast_filter.dhcpv6_mcast, 
+                  mcast_filter.ipv6_mld, mcast_filter.ipv6_neigh_sol);
+    
+    if (mcast_filter.ipv6_neigh_adv != info_.mcast_filter.ipv6_neigh_adv ||
+        mcast_filter.ipv6_router_adv != info_.mcast_filter.ipv6_router_adv ||
+        mcast_filter.dhcpv6_relay != info_.mcast_filter.dhcpv6_relay ||
+        mcast_filter.dhcpv6_mcast != info_.mcast_filter.dhcpv6_mcast ||
+        mcast_filter.ipv6_mld != info_.mcast_filter.ipv6_mld ||
+        mcast_filter.ipv6_neigh_sol != info_.mcast_filter.ipv6_neigh_sol) {
+        info_.mcast_filter.ipv6_neigh_adv = mcast_filter.ipv6_neigh_adv;
+        info_.mcast_filter.ipv6_router_adv = mcast_filter.ipv6_router_adv;
+        info_.mcast_filter.dhcpv6_relay = mcast_filter.dhcpv6_relay;
+        info_.mcast_filter.dhcpv6_mcast = mcast_filter.dhcpv6_mcast;
+        info_.mcast_filter.ipv6_mld = mcast_filter.ipv6_mld;
+        info_.mcast_filter.ipv6_neigh_sol = mcast_filter.ipv6_neigh_sol;
+
+        status = lif_halupdate();
+    } else {
+        NIC_LOG_DEBUG("devapi_lif: {}. No mcast filters change.", get_id());
+    }
+
+    return status;
+}
+
+sdk_ret_t
 devapi_lif::upd_name(std::string name)
 {
     strcpy(info_.name, name.c_str());
@@ -1232,6 +1290,17 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     req->set_admin_status((::intf::IfStatus)lif_info->lif_state);
     req->set_enable_rdma(lif_info->enable_rdma);
     req->set_rdma_sniff_en(lif_info->rdma_sniff);
+    // NCSI bcast & mcast filters
+    req->mutable_bcast_pkt_filter()->set_arp(lif_info->bcast_filter.arp);
+    req->mutable_bcast_pkt_filter()->set_dhcp_client(lif_info->bcast_filter.dhcp_client);
+    req->mutable_bcast_pkt_filter()->set_dhcp_server(lif_info->bcast_filter.dhcp_server);
+    req->mutable_bcast_pkt_filter()->set_netbios(lif_info->bcast_filter.netbios);
+    req->mutable_mcast_pkt_filter()->set_ipv6_neigh_adv(lif_info->mcast_filter.ipv6_neigh_adv);
+    req->mutable_mcast_pkt_filter()->set_ipv6_router_adv(lif_info->mcast_filter.ipv6_router_adv);
+    req->mutable_mcast_pkt_filter()->set_dhcpv6_relay(lif_info->mcast_filter.dhcpv6_relay);
+    req->mutable_mcast_pkt_filter()->set_dhcpv6_mcast(lif_info->mcast_filter.dhcpv6_mcast);
+    req->mutable_mcast_pkt_filter()->set_ipv6_mld(lif_info->mcast_filter.ipv6_mld);
+    req->mutable_mcast_pkt_filter()->set_ipv6_neigh_sol(lif_info->mcast_filter.ipv6_neigh_sol);
 
     if (lif_info->type == sdk::platform::LIF_TYPE_SWM) {
         req->mutable_swm_oob()->

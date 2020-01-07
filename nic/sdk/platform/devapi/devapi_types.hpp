@@ -57,6 +57,22 @@ typedef struct lif_queue_info_s {
     const char* qstate;          /* Qstate structure */
 } __PACK__ lif_queue_info_t;
 
+typedef struct lif_bcast_filter_s {
+    bool    arp;
+    bool    dhcp_client;
+    bool    dhcp_server;
+    bool    netbios;
+} __PACK__ lif_bcast_filter_t;
+
+typedef struct lif_mcast_filter_s {
+    bool    ipv6_neigh_adv;
+    bool    ipv6_router_adv;
+    bool    dhcpv6_relay;
+    bool    dhcpv6_mcast;
+    bool    ipv6_mld;
+    bool    ipv6_neigh_sol;
+} __PACK__ lif_mcast_filter_t;
+
 typedef struct lif_info_s {
     uint64_t lif_id;
     char name[256];
@@ -84,6 +100,8 @@ typedef struct lif_info_s {
     uint64_t qstate_addr[NUM_QUEUE_TYPES];
     lif_state_t lif_state;
     mac_addr_t mac;
+    lif_bcast_filter_t bcast_filter;
+    lif_mcast_filter_t mcast_filter;
 } __PACK__ lif_info_t;
 
 typedef struct port_config_s {
@@ -243,5 +261,7 @@ using sdk::platform::qos_class_info_t;
 using sdk::platform::qos_sched_type_t;
 using sdk::platform::qos_class_type_t;
 using sdk::platform::pause_type_t;
+using sdk::platform::lif_bcast_filter_t;
+using sdk::platform::lif_mcast_filter_t;
 
 #endif    // __DEVAPI_TYPES_HPP__

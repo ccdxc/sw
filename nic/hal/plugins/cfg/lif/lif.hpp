@@ -52,6 +52,22 @@ typedef struct pkt_filter_s {
     bool    receive_promiscuous;   // Receive Unknown Unicast, Broadcast, Multicast. Not Known Unicast
 } __PACK__ pkt_filter_t;
 
+typedef struct bcast_pkt_filter_s {
+    bool    arp;
+    bool    dhcp_client;
+    bool    dhcp_server;
+    bool    netbios;
+} __PACK__ bcast_pkt_filter_t;
+
+typedef struct mcast_pkt_filter_s {
+    bool    ipv6_neigh_adv;
+    bool    ipv6_router_adv;
+    bool    dhcpv6_relay;
+    bool    dhcpv6_mcast;
+    bool    ipv6_mld;
+    bool    ipv6_neigh_sol;
+} __PACK__ mcast_pkt_filter_t;
+
 typedef struct lif_cos_info_s {
     uint16_t            cos_bmp;         // bitmap of COS values for Tx traffic supported on this LIF.
     uint8_t             coses;           // cos values supported by LIF. cosA - Bits 0-4, cosB - Bits 4-7.
@@ -99,6 +115,8 @@ typedef struct lif_s {
     lif_qos_info_t      qos_info;
     bool                qstate_init_done;// qstate map init status.
     pkt_filter_t        packet_filters;  // Packet Filter Modes
+    bcast_pkt_filter_t  bcast_filter;
+    mcast_pkt_filter_t  mcast_filter;
     lif_rss_info_t      rss;             // rss configuration
     uint32_t            qcount;
     bool                qstate_pgm_in_hal;
@@ -159,6 +177,8 @@ typedef struct lif_update_app_ctxt_s {
     bool         rss_config_changed;
     bool         name_changed:1;
     bool         status_changed:1;
+    bool         bcast_filters_changed:1;
+    bool         mcast_filters_changed:1;
 } __PACK__ lif_update_app_ctxt_t;
 
 typedef struct lif_sched_control_cb_ctxt_s {
@@ -225,6 +245,13 @@ hal_ret_t lif_disable_tx_scheduler (void);
 int32_t hal_get_pc_offset(const char *prog_name, const char *label,
                           uint8_t *offset);
 hal_ret_t lif_make_clone (lif_t *lif, lif_t **lif_clone, LifSpec& spec);
+hal_ret_t lif_populate_filters(lif_t *lif, LifSpec& spec);
+bool lif_bcast_filter_any_set(lif_t *lif);
+bool lif_mcast_filter_any_set(lif_t *lif);
+hal_ret_t lif_bcast_filter_install(lif_t *lif);
+hal_ret_t lif_bcast_filter_uninstall(lif_t *lif);
+hal_ret_t lif_mcast_filter_install(lif_t *lif);
+hal_ret_t lif_mcast_filter_uninstall(lif_t *lif);
 
 }    // namespace hal
 

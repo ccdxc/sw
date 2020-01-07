@@ -21,6 +21,10 @@ using delphi::error;
 using dobj::PortStatus;
 using dobj::NcsiVlanFilter;
 using dobj::NcsiMacFilter;
+using dobj::NcsiChanRx;
+using dobj::NcsiChanTx;
+using dobj::NcsiBcastFilter;
+using dobj::NcsiMcastFilter;
 using dobj::HalStatus;
 using sdk::types::port_oper_status_t;
 
@@ -36,6 +40,10 @@ port_status_handler_ptr_t g_port_status_handler;
 hal_status_handler_ptr_t g_hal_status_handler;
 ncsi_vlan_filter_handler_ptr_t g_ncsi_vlan_filter_handler;
 ncsi_mac_filter_handler_ptr_t g_ncsi_mac_filter_handler;
+ncsi_chan_rx_handler_ptr_t g_ncsi_chan_rx_handler;
+ncsi_chan_tx_handler_ptr_t g_ncsi_chan_tx_handler;
+ncsi_bcast_filter_handler_ptr_t g_ncsi_bcast_filter_handler;
+ncsi_mcast_filter_handler_ptr_t g_ncsi_mcast_filter_handler;
 
 shared_ptr<NicMgrService> g_nicmgr_svc;
 system_spec_handler_ptr_t g_system_spec_handler;
@@ -372,53 +380,255 @@ Status init_eth_objects(delphi::SdkPtr sdk) {
     return Status::OK;
 }
 
-// init_ncsi_vlan_filter_handler creates a ncsi vlan filter reactor
+//------------------------------------------------------------------------------
+// Proto Message dump
+//------------------------------------------------------------------------------
+void
+proto_msg_dump (Message& msg)
+{
+    std::string    msg_str;
+
+    google::protobuf::util::MessageToJsonString(msg, &msg_str);
+    NIC_LOG_DEBUG("{}", msg_str.c_str());
+}
+
+//------------------------------------------------------------------------------
+// Vlan filter 
+//------------------------------------------------------------------------------
 Status init_ncsi_vlan_filter_handler (delphi::SdkPtr sdk) {
-    // create the NcsiVlanFilter reactor
     g_ncsi_vlan_filter_handler = std::make_shared<ncsi_vlan_filter_handler>(sdk);
-
-    // mount objects
     delphi::objects::NcsiVlanFilter::Mount(sdk, delphi::ReadMode);
-
-    // Register NcsiVlanFilter reactor
     delphi::objects::NcsiVlanFilter::Watch(sdk, g_ncsi_vlan_filter_handler);
-
     return Status::OK;
 }
+error 
+ncsi_vlan_filter_handler::update_vlan_filter(NcsiVlanFilterPtr obj, 
+                                             bool create)
+{
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
 
-error ncsi_vlan_filter_handler::OnNcsiVlanFilterCreate(NcsiVlanFilterPtr ncsiVlanFilter) {
+    if (create) {
+        devmgr->DevApi()->swm_add_vlan(obj->vlan_id());
+    } else {
+        devmgr->DevApi()->swm_del_vlan(obj->vlan_id());
+    }
+    return error::OK();
+}
+error ncsi_vlan_filter_handler::OnNcsiVlanFilterCreate(NcsiVlanFilterPtr obj) {
     NIC_LOG_DEBUG("Rcvd ncsi vlan filter create");
-    return error::OK();
+    return update_vlan_filter(obj, true);
+}
+error ncsi_vlan_filter_handler::OnNcsiVlanFilterDelete(NcsiVlanFilterPtr obj) {
+    NIC_LOG_DEBUG("Rcvd ncsi vlan filter delete");
+    return update_vlan_filter(obj, false);
 }
 
-
-// OnNcsiVlanFilterUpdate gets called when NcsiVlanFilter object is updated
-error ncsi_vlan_filter_handler::OnNcsiVlanFilterUpdate(NcsiVlanFilterPtr ncsiVlanFilter) {
-    NIC_LOG_DEBUG("Rcvd ncsi vlan filter update");
-    return error::OK();
-}
-
-// init_ncsi_mac_filter_handler creates a ncsi mac filter reactor
+//------------------------------------------------------------------------------
+// MAC filter 
+//------------------------------------------------------------------------------
 Status init_ncsi_mac_filter_handler (delphi::SdkPtr sdk) {
-    // create the NcsiMacFilter reactor
     g_ncsi_mac_filter_handler = std::make_shared<ncsi_mac_filter_handler>(sdk);
-
-    // mount objects
     delphi::objects::NcsiMacFilter::Mount(sdk, delphi::ReadMode);
-
-    // Register NcsiMacFilter reactor
     delphi::objects::NcsiMacFilter::Watch(sdk, g_ncsi_mac_filter_handler);
-
     return Status::OK;
 }
+error 
+ncsi_mac_filter_handler::update_mac_filter(NcsiMacFilterPtr obj, 
+                                           bool create)
+{
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
 
-// OnNcsiMacFilterUpdate gets called when NcsiMacFilter object is updated
-error ncsi_mac_filter_handler::OnNcsiMacFilterUpdate(NcsiMacFilterPtr ncsiMacFilter) {
-    NIC_LOG_DEBUG("Rcvd ncsi mac filter update");
+    if (create) {
+        devmgr->DevApi()->swm_add_mac(obj->mac_addr());
+    } else {
+        devmgr->DevApi()->swm_del_mac(obj->mac_addr());
+    }
     return error::OK();
 }
+error ncsi_mac_filter_handler::OnNcsiMacFilterCreate(NcsiMacFilterPtr obj) {
+    NIC_LOG_DEBUG("Rcvd ncsi mac filter create");
+    return update_mac_filter(obj, true);
+}
+error ncsi_mac_filter_handler::OnNcsiMacFilterDelete(NcsiMacFilterPtr obj) {
+    NIC_LOG_DEBUG("Rcvd ncsi mac filter delete");
+    return update_mac_filter(obj, false);
+}
 
-// initialization function for delphi
+//------------------------------------------------------------------------------
+// RX Enable
+//------------------------------------------------------------------------------
+Status init_ncsi_chan_rx_handler(delphi::SdkPtr sdk)
+{
+    g_ncsi_chan_rx_handler = std::make_shared<ncsi_chan_rx_handler>(sdk);
+    delphi::objects::NcsiChanRx::Mount(sdk, delphi::ReadMode);
+    delphi::objects::NcsiChanRx::Watch(sdk, g_ncsi_chan_rx_handler);
+    return Status::OK;
+}
+error
+ncsi_chan_rx_handler::update_rx(NcsiChanRxPtr obj, bool create)
+{
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    if (create) {
+    } else {
+    }
+    return error::OK();
+}
+error ncsi_chan_rx_handler::OnNcsiChanRxCreate(NcsiChanRxPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi RX create");
+    return update_rx(obj, true);
+}
+error ncsi_chan_rx_handler::OnNcsiChanRxDelete(NcsiChanRxPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi RX delete");
+    return update_rx(obj, true);
+}
+
+//------------------------------------------------------------------------------
+// TX Enable
+//------------------------------------------------------------------------------
+Status init_ncsi_chan_tx_handler(delphi::SdkPtr sdk)
+{
+    g_ncsi_chan_tx_handler = std::make_shared<ncsi_chan_tx_handler>(sdk);
+    delphi::objects::NcsiChanTx::Mount(sdk, delphi::ReadMode);
+    delphi::objects::NcsiChanTx::Watch(sdk, g_ncsi_chan_tx_handler);
+    return Status::OK;
+}
+error
+ncsi_chan_tx_handler::update_tx(NcsiChanTxPtr obj, bool create)
+{
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    if (create) {
+    } else {
+    }
+    return error::OK();
+}
+error ncsi_chan_tx_handler::OnNcsiChanTxCreate(NcsiChanTxPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi TX create");
+    return update_tx(obj, true);
+}
+error ncsi_chan_tx_handler::OnNcsiChanTxDelete(NcsiChanTxPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi TX delete");
+    return update_tx(obj, true);
+}
+
+//------------------------------------------------------------------------------
+// Bcast
+//------------------------------------------------------------------------------
+Status init_ncsi_bcast_filter_handler(delphi::SdkPtr sdk)
+{
+    g_ncsi_bcast_filter_handler = std::make_shared<ncsi_bcast_filter_handler>(sdk);
+    delphi::objects::NcsiBcastFilter::Mount(sdk, delphi::ReadMode);
+    delphi::objects::NcsiBcastFilter::Watch(sdk, g_ncsi_bcast_filter_handler);
+    return Status::OK;
+}
+error
+ncsi_bcast_filter_handler::update_bcast(NcsiBcastFilterPtr obj, 
+                                        bool create_update)
+{
+    lif_bcast_filter_t bcast_filter = {0};
+
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    if (create_update) {
+        bcast_filter.arp = obj->enable_arp();
+        bcast_filter.dhcp_client = obj->enable_dhcp_client();
+        bcast_filter.dhcp_server = obj->enable_dhcp_server();
+        bcast_filter.netbios = obj->enable_netbios();
+    }
+    devmgr->DevApi()->swm_upd_bcast_filter(bcast_filter);
+    return error::OK();
+}
+error ncsi_bcast_filter_handler::OnNcsiBcastFilterCreate(NcsiBcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi bcast create");
+    return update_bcast(obj, true);
+}
+error ncsi_bcast_filter_handler::OnNcsiBcastFilterDelete(NcsiBcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi bcast delete");
+    return update_bcast(obj, false);
+}
+error ncsi_bcast_filter_handler::OnNcsiBcastFilterUpdate(NcsiBcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi bcast update");
+    return update_bcast(obj, true);
+}
+
+//------------------------------------------------------------------------------
+// Mcast
+//------------------------------------------------------------------------------
+Status init_ncsi_mcast_filter_handler(delphi::SdkPtr sdk)
+{
+    g_ncsi_mcast_filter_handler = std::make_shared<ncsi_mcast_filter_handler>(sdk);
+    delphi::objects::NcsiMcastFilter::Mount(sdk, delphi::ReadMode);
+    delphi::objects::NcsiMcastFilter::Watch(sdk, g_ncsi_mcast_filter_handler);
+    return Status::OK;
+}
+error
+ncsi_mcast_filter_handler::update_mcast(NcsiMcastFilterPtr obj, 
+                                        bool create_update)
+{
+    lif_mcast_filter_t mcast_filter = {0};
+
+    proto_msg_dump(*obj); 
+    if (!devmgr) {
+        NIC_LOG_ERR("devmgr ptr is null");
+        return error::OK();
+    }
+
+    if (create_update) {
+        mcast_filter.ipv6_neigh_adv = obj->enable_ipv6_neigh_adv();
+        mcast_filter.ipv6_router_adv = obj->enable_ipv6_router_adv();
+        mcast_filter.dhcpv6_relay = obj->enable_dhcpv6_relay();
+        mcast_filter.dhcpv6_mcast = obj->enable_dhcpv6_mcast();
+        mcast_filter.ipv6_mld = obj->enable_ipv6_mld();
+        mcast_filter.ipv6_neigh_sol = obj->enable_ipv6_neigh_sol();
+    }
+    devmgr->DevApi()->swm_upd_mcast_filter(mcast_filter);
+    return error::OK();
+}
+error ncsi_mcast_filter_handler::OnNcsiMcastFilterCreate(NcsiMcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi mcast create");
+    return update_mcast(obj, true);
+}
+error ncsi_mcast_filter_handler::OnNcsiMcastFilterDelete(NcsiMcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi mcast delete");
+    return update_mcast(obj, false);
+}
+error ncsi_mcast_filter_handler::OnNcsiMcastFilterUpdate(NcsiMcastFilterPtr obj)
+{
+    NIC_LOG_DEBUG("Rcvd ncsi mcast update");
+    return update_mcast(obj, true);
+}
+
+
 void
 delphi_init (void)
 {
@@ -434,11 +644,13 @@ delphi_init (void)
     // init port status handler
     init_port_status_handler(sdk);
 
-    //init ncsi vlan filter handler
+    //init ncsi handlers
     init_ncsi_vlan_filter_handler(sdk);
-
-    //init ncsi mac filter handler
     init_ncsi_mac_filter_handler(sdk);
+    init_ncsi_chan_rx_handler(sdk);
+    init_ncsi_chan_tx_handler(sdk);
+    init_ncsi_bcast_filter_handler(sdk);
+    init_ncsi_mcast_filter_handler(sdk);
 
     // init hal status handler
     init_hal_status_handler(sdk);

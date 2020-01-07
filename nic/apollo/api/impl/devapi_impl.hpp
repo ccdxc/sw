@@ -55,6 +55,10 @@ public:
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) override;
     virtual sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state) override;
     virtual sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) override;
+    virtual sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, 
+                                           lif_bcast_filter_t bcast_filter) override;
+    virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, 
+                                           lif_mcast_filter_t mcast_filter) override;
     static sdk_ret_t lif_program_tx_scheduler(lif_info_t *info);
 
     // qos APIs
@@ -93,6 +97,8 @@ public:
     virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast) override;
     virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast) override;
     virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous) override;
+    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter) override;
+    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter) override;
 
 private:
     devapi_impl() {}

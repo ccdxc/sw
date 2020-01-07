@@ -320,6 +320,46 @@ end:
 }
 
 sdk_ret_t
+devapi_iris::lif_upd_bcast_filter(uint32_t lif_id, 
+                                  lif_bcast_filter_t bcast_filter)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx mode. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->update_bcast_filters(bcast_filter);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_upd_mcast_filter(uint32_t lif_id, 
+                                  lif_mcast_filter_t mcast_filter)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx mode. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->update_mcast_filters(mcast_filter);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
 devapi_iris::lif_upd_name(uint32_t lif_id, std::string name)
 {
     sdk_ret_t ret = SDK_RET_OK;
@@ -901,6 +941,18 @@ sdk_ret_t
 devapi_iris::swm_upd_rx_pmode(bool promiscuous)
 {
     return devapi_swm::swm()->upd_rx_pmode(promiscuous);
+}
+
+sdk_ret_t
+devapi_iris::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+{
+    return devapi_swm::swm()->upd_bcast_filter(bcast_filter);
+}
+
+sdk_ret_t
+devapi_iris::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter)
+{
+    return devapi_swm::swm()->upd_mcast_filter(mcast_filter);
 }
 
 }    // namespace iris

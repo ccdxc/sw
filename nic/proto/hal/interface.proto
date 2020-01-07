@@ -123,10 +123,28 @@ message PktFilter {
     bool    receive_promiscuous   = 3;    // Receive Unknown Unicast
 }
 
+// Allow only these bcast pkts
+message BcastPktFilter {
+    bool   arp          = 1;    
+    bool   dhcp_client  = 2;
+    bool   dhcp_server  = 3;
+    bool   netbios      = 4;
+}
+
+// Allow only these mcast pkts
+message McastPktFilter {
+    bool  ipv6_neigh_adv    = 1;
+    bool  ipv6_router_adv   = 2;
+    bool  dhcpv6_relay      = 3;
+    bool  dhcpv6_mcast      = 4;
+    bool  ipv6_mld          = 5;
+    bool  ipv6_neigh_sol    = 6;
+}
+
 // LIF object
 message LifSpec {
   option (delphi.update_event) = true;
-  delphi.ObjectMeta          Meta                       = 1;
+  delphi.ObjectMeta          Meta                        = 1;
 
   // key_or_handle is LIF's key or handle
   kh.LifKeyHandle            key_or_handle               = 2 [(gogoproto.moretags) = "venice:key"];
@@ -157,6 +175,8 @@ message LifSpec {
   uint32                     nvme_max_sess               = 27;   // NVME: maximum number of sessions
   uint32                     nvme_host_page_size         = 28;   // NVME: host page size, must be power of 2
   kh.InterfaceKeyHandle      swm_oob                     = 29;   // SWM: Uplink to reach BMC
+  BcastPktFilter             bcast_pkt_filter            = 30;
+  McastPktFilter             mcast_pkt_filter            = 31;
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

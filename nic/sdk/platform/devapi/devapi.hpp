@@ -41,6 +41,10 @@ public:
     virtual sdk_ret_t lif_get_max_filters(uint32_t *ucast_filters, uint32_t *mcast_filters) = 0;
     virtual sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state) = 0;
     virtual sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) = 0;
+    virtual sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, 
+                                           lif_bcast_filter_t bcast_filter) = 0; 
+    virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, 
+                                           lif_mcast_filter_t mcast_filter) = 0; 
 
     // qos APIs
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) = 0;
@@ -82,6 +86,8 @@ public:
     virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast) = 0;
     virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast) = 0;
     virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous) = 0;
+    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter) = 0;
+    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter) = 0;
 
     // accel APIs
     virtual sdk_ret_t accel_rgroup_add(string name,

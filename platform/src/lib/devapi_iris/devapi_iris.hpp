@@ -40,6 +40,8 @@ public:
                                   uint32_t *mcast_filters);
     sdk_ret_t lif_upd_state(uint32_t lif_id, lif_state_t state);
     sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff);
+    sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, lif_bcast_filter_t bcast_filter);
+    sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter);
 
     // Qos APIs
     sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
@@ -71,6 +73,8 @@ public:
     sdk_ret_t swm_upd_rx_bmode(bool broadcast);
     sdk_ret_t swm_upd_rx_mmode(bool all_multicast);
     sdk_ret_t swm_upd_rx_pmode(bool promiscuous);
+    sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter);
+    sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter);
 
     // Port APIs
     sdk_ret_t port_get_status(uint32_t port_num,

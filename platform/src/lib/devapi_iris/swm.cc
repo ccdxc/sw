@@ -382,7 +382,7 @@ devapi_swm::upd_rx_bmode(bool broadcast)
 {
     swm_->set_rx_bmode(broadcast);
     return dapi_->lif_upd_rx_bmode(swm_->swm_lif(), 
-                                                       broadcast);
+                                   broadcast);
 }
 
 sdk_ret_t 
@@ -390,7 +390,7 @@ devapi_swm::upd_rx_mmode(bool all_multicast)
 {
     swm_->set_rx_mmode(all_multicast);
     return dapi_->lif_upd_rx_mmode(swm_->swm_lif(), 
-                                                       all_multicast);
+                                   all_multicast);
 }
 
 sdk_ret_t 
@@ -398,7 +398,19 @@ devapi_swm::upd_rx_pmode(bool promiscuous)
 {
     swm_->set_rx_pmode(promiscuous);
     return dapi_->lif_upd_rx_pmode(swm_->swm_lif(), 
-                                                       promiscuous);
+                                   promiscuous);
+}
+
+sdk_ret_t
+devapi_swm::upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+{
+    return dapi_->lif_upd_bcast_filter(swm_->swm_lif(), bcast_filter);
+}
+
+sdk_ret_t
+devapi_swm::upd_mcast_filter(lif_mcast_filter_t mcast_filter)
+{
+    return dapi_->lif_upd_mcast_filter(swm_->swm_lif(), mcast_filter);
 }
 
 #if 0

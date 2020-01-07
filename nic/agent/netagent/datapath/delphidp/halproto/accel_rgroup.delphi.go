@@ -358,6 +358,8 @@ It has these top-level messages:
 	HalStatus
 	LifQStateMapEntry
 	PktFilter
+	BcastPktFilter
+	McastPktFilter
 	LifSpec
 	LifRequestMsg
 	LifStatus

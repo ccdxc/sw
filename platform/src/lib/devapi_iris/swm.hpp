@@ -62,6 +62,8 @@ public:
     sdk_ret_t upd_rx_bmode(bool broadcast);
     sdk_ret_t upd_rx_mmode(bool all_multicast);
     sdk_ret_t upd_rx_pmode(bool promiscuous);
+    sdk_ret_t upd_bcast_filter(lif_bcast_filter_t bcast_filter);
+    sdk_ret_t upd_mcast_filter(lif_mcast_filter_t mcast_filter);
     sdk_ret_t upd_uplink(uint32_t port_num);
 
     uint32_t port_num() { return port_num_; }

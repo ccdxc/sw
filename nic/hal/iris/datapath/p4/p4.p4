@@ -138,6 +138,7 @@ header_type control_metadata_t {
         src_if_label                   : 3;
         uuc_fl_pe_sup_en               : 1;
         ep_learn_en                    : 1;
+        nacl_egress_drop               : 1;
     }
 }
 

@@ -110,11 +110,18 @@ typedef struct udp_header_s {
     uint16_t  check;
 } __PACK__ udp_header_t;
 
+#define ICMP_MCAST_LISTENER_QUERY      130
+#define ICMP_MCAST_LISTENER_REPORT     131
+#define ICMP_MCAST_LISTENER_DONE       132
+#define ICMP_ROUTER_ADVERTISEMENT      134
 #define ICMP_NEIGHBOR_SOLICITATION     135
 #define ICMP_NEIGHBOR_ADVERTISEMENT    136
 
 #define DHCP_CLIENT_PORT               67
 #define DHCP_SERVER_PORT               68
+
+#define NETBIOS_NS_PORT                137
+#define NETBIOS_DS_PORT                138                
 
 #define ICMP_TYPE_ECHO_REQUEST         8
 #define ICMP_CODE_ECHO_REQUEST         0
@@ -122,6 +129,9 @@ typedef struct udp_header_s {
 #define ICMP_CODE_ECHO_RESPONSE        0
 #define ICMPV6_TYPE_ECHO_REQUEST       128
 #define ICMPV6_TYPE_ECHO_RESPONSE      129
+
+#define DHCPV6_MCAST_PORT              546
+#define DHCPV6_RELAY_PORT              547
 
 typedef struct icmp_header_s {
     uint8_t          type;

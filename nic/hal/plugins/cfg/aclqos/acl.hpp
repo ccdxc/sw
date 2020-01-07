@@ -38,6 +38,7 @@ using acl::AclGetRequestMsg;
 using acl::AclGetResponse;
 using acl::AclGetResponseMsg;
 using acl::AclStats;
+using acl::IPSelector;
 
 namespace hal {
 
@@ -63,6 +64,22 @@ namespace hal {
 #define ACL_QUIESCE_ENTRY_ID             2
 #define ACL_EPLEARN_ENTRY_ID_BEGIN       3
 #define ACL_EPLEARN_ENTRY_ID_END         7
+#define ACL_NCSI_BCAST_ARP               8
+#define ACL_NCSI_BCAST_DHCP_CLIENT       9
+#define ACL_NCSI_BCAST_DHCP_SERVER       10
+#define ACL_NCSI_BCAST_NETBIOS_NS        11
+#define ACL_NCSI_BCAST_NETBIOS_DS        12
+#define ACL_NCSI_BCAST_ALL               13
+#define ACL_NCSI_MCAST_IPV6_NADV         14
+#define ACL_NCSI_MCAST_IPV6_RADV         15
+#define ACL_NCSI_MCAST_DHCPV6_RELAY      16
+#define ACL_NCSI_MCAST_DHCPV6_MCAST      17
+#define ACL_NCSI_MCAST_IPV6_MLD_LQ       18
+#define ACL_NCSI_MCAST_IPV6_MLD_LR       19
+#define ACL_NCSI_MCAST_IPV6_MLD_LD       20
+#define ACL_NCSI_MCAST_IPV6_NSOL         21
+#define ACL_NCSI_MCAST_ALL               22
+
 
 #define ACL_IP_FRAGMENT_DROP_ENTRY_PRIORITY    0
 #define ACL_HOSTPIN_HOST_MGMT_DROP             1
@@ -73,6 +90,21 @@ namespace hal {
 #define ACL_SNAKE_TEST_PRIORITY_BEGIN          9
 #define ACL_SNAKE_TEST_PRIORITY_END            24
 #define ACL_RDMA_SNIFFER_PRIORITY              25
+#define ACL_NCSI_BCAST_ARP_PRIORITY            26
+#define ACL_NCSI_BCAST_DHCP_CLIENT_PRIORITY    27
+#define ACL_NCSI_BCAST_DHCP_SERVER_PRIORITY    28
+#define ACL_NCSI_BCAST_NETBIOS_NS_PRIORITY     29
+#define ACL_NCSI_BCAST_NETBIOS_DS_PRIORITY     30
+#define ACL_NCSI_BCAST_ALL_PRIORITY            31
+#define ACL_NCSI_MCAST_IPV6_NADV_PRIORITY      32
+#define ACL_NCSI_MCAST_IPV6_RADV_PRIORITY      33
+#define ACL_NCSI_MCAST_DHCPV6_RELAY_PRIORITY   34
+#define ACL_NCSI_MCAST_DHCPV6_MCAST_PRIORITY   35
+#define ACL_NCSI_MCAST_IPV6_MLD_LQ_PRIORITY    36
+#define ACL_NCSI_MCAST_IPV6_MLD_LR_PRIORITY    37
+#define ACL_NCSI_MCAST_IPV6_MLD_LD_PRIORITY    38
+#define ACL_NCSI_MCAST_IPV6_NSOL_PRIORITY      39
+#define ACL_NCSI_MCAST_ALL_PRIORITY            40
 
 
 typedef struct acl_eth_match_spec_s {

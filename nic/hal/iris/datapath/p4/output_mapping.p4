@@ -62,7 +62,7 @@ action set_tm_oport_enforce_src_lport(vlan_strip, nports, egress_mirror_en,
                  encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                  egress_port1, egress_port2, egress_port3, egress_port4,
                  egress_port5, egress_port6, egress_port7, egress_port8,
-                 mnic_enforce_src_lport);
+                 mnic_enforce_src_lport, 0);
 }
 
 // When ever a new parameter is added to this set_tm_oport add to the
@@ -77,7 +77,15 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
                     encap_vlan_id, encap_vlan_id_valid, access_vlan_id,
                     egress_port1, egress_port2, egress_port3, egress_port4,
                     egress_port5, egress_port6, egress_port7, egress_port8,
-                    mnic_enforce_src_lport) {
+                    mnic_enforce_src_lport, nacl_egress_drop_en) {
+
+    if ((nacl_egress_drop_en == TRUE) and 
+        (control_metadata.nacl_egress_drop == TRUE)) {
+        modify_field(control_metadata.egress_drop_reason,
+                     EGRESS_DROP_OUTPUT_MAPPING);
+        drop_packet();
+        // return;
+    }
 
     if (nports == 1) {
         modify_field(capri_intrinsic.tm_oport, egress_port1);
@@ -132,6 +140,7 @@ action set_tm_oport(vlan_strip, nports, egress_mirror_en,
     modify_field(scratch_metadata.flag, egress_mirror_en);
     modify_field(scratch_metadata.flag, mirror_en);
     modify_field(scratch_metadata.flag, encap_vlan_id_valid);
+    modify_field(scratch_metadata.flag, nacl_egress_drop_en);
     modify_field(scratch_metadata.vlan_id, access_vlan_id);
     modify_field(control_metadata.src_lport, mnic_enforce_src_lport);
 }

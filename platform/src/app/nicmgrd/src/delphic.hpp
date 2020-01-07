@@ -30,6 +30,11 @@ using dobj::HalStatusPtr;
 using dobj::SystemSpecPtr;
 using dobj::NcsiVlanFilterPtr;
 using dobj::NcsiMacFilterPtr;
+using dobj::NcsiBcastFilterPtr;
+using dobj::NcsiChanRxPtr;
+using dobj::NcsiChanTxPtr;
+using dobj::NcsiMcastFilterPtr;
+using google::protobuf::Message;
 
 class NicMgrService : public delphi::Service,
                       public enable_shared_from_this<NicMgrService> {
@@ -110,7 +115,9 @@ typedef std::shared_ptr<hal_status_handler> hal_status_handler_ptr_t;
 // init_hal_status_handler creates a reactor for HAL status
 Status init_hal_status_handler(delphi::SdkPtr sdk);
 
-// Reactor for NcsiVlanFilter object
+//------------------------------------------------------------------------------
+// Vlan filter
+//------------------------------------------------------------------------------
 class ncsi_vlan_filter_handler : public dobj::NcsiVlanFilterReactor {
 public:
     ncsi_vlan_filter_handler(delphi::SdkPtr sdk) {
@@ -118,34 +125,107 @@ public:
     }
 
     virtual error OnNcsiVlanFilterCreate(NcsiVlanFilterPtr ncsiVlanFilter);
-    // OnNcsiVlanFilterUpdate gets called when NcsiVlanFilter object is updated
-    virtual error OnNcsiVlanFilterUpdate(NcsiVlanFilterPtr ncsiVlanFilter);
-
+    virtual error OnNcsiVlanFilterDelete(NcsiVlanFilterPtr ncsiVlanFilter);
+    error update_vlan_filter(NcsiVlanFilterPtr ncsiVlanFilter, bool create);
 private:
     delphi::SdkPtr    sdk_;
 };
 typedef std::shared_ptr<ncsi_vlan_filter_handler> ncsi_vlan_filter_handler_ptr_t;
-
-// init_ncsi_vlan_filter_handler creates a port reactor
 Status init_ncsi_vlan_filter_handler(delphi::SdkPtr sdk);
 
-// Reactor for NcsiMacFilter object
+//------------------------------------------------------------------------------
+// MAC filter 
+//------------------------------------------------------------------------------
 class ncsi_mac_filter_handler : public dobj::NcsiMacFilterReactor {
 public:
     ncsi_mac_filter_handler(delphi::SdkPtr sdk) {
         this->sdk_ = sdk;
     }
 
-    // OnNcsiMacFilterUpdate gets called when NcsiMacFilter object is updated
-    virtual error OnNcsiMacFilterUpdate(NcsiMacFilterPtr port);
+    virtual error OnNcsiMacFilterCreate(NcsiMacFilterPtr obj);
+    virtual error OnNcsiMacFilterDelete(NcsiMacFilterPtr obj);
+    error update_mac_filter(NcsiMacFilterPtr obj, bool create);
 
 private:
     delphi::SdkPtr    sdk_;
 };
 typedef std::shared_ptr<ncsi_mac_filter_handler> ncsi_mac_filter_handler_ptr_t;
-
-// init_ncsi_mac_filter_handler creates a port reactor
 Status init_ncsi_mac_filter_handler(delphi::SdkPtr sdk);
+
+//------------------------------------------------------------------------------
+// RX Enable
+//------------------------------------------------------------------------------
+class ncsi_chan_rx_handler : public dobj::NcsiChanRxReactor {
+public:
+    ncsi_chan_rx_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+    virtual error OnNcsiChanRxCreate(NcsiChanRxPtr obj);
+    virtual error OnNcsiChanRxDelete(NcsiChanRxPtr obj);
+    error update_rx(NcsiChanRxPtr obj, bool create);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_chan_rx_handler> ncsi_chan_rx_handler_ptr_t;
+Status init_ncsi_chan_rx_handler(delphi::SdkPtr sdk);
+
+
+//------------------------------------------------------------------------------
+// TX Enable
+//------------------------------------------------------------------------------
+class ncsi_chan_tx_handler : public dobj::NcsiChanTxReactor {
+public:
+    ncsi_chan_tx_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+    virtual error OnNcsiChanTxCreate(NcsiChanTxPtr obj);
+    virtual error OnNcsiChanTxDelete(NcsiChanTxPtr obj);
+    error update_tx(NcsiChanTxPtr obj, bool create);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_chan_tx_handler> ncsi_chan_tx_handler_ptr_t;
+Status init_ncsi_chan_tx_handler(delphi::SdkPtr sdk);
+
+//------------------------------------------------------------------------------
+// Bcast
+//------------------------------------------------------------------------------
+class ncsi_bcast_filter_handler : public dobj::NcsiBcastFilterReactor {
+public:
+    ncsi_bcast_filter_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+    virtual error OnNcsiBcastFilterCreate(NcsiBcastFilterPtr obj);
+    virtual error OnNcsiBcastFilterDelete(NcsiBcastFilterPtr obj);
+    virtual error OnNcsiBcastFilterUpdate(NcsiBcastFilterPtr obj);
+    error update_bcast(NcsiBcastFilterPtr obj, bool create_update);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_bcast_filter_handler> ncsi_bcast_filter_handler_ptr_t;
+Status init_ncsi_bcast_filter_handler(delphi::SdkPtr sdk);
+
+//------------------------------------------------------------------------------
+// Mcast
+//------------------------------------------------------------------------------
+class ncsi_mcast_filter_handler : public dobj::NcsiMcastFilterReactor {
+public:
+    ncsi_mcast_filter_handler(delphi::SdkPtr sdk) {
+        this->sdk_ = sdk;
+    }
+    virtual error OnNcsiMcastFilterCreate(NcsiMcastFilterPtr obj);
+    virtual error OnNcsiMcastFilterDelete(NcsiMcastFilterPtr obj);
+    virtual error OnNcsiMcastFilterUpdate(NcsiMcastFilterPtr obj);
+    error update_mcast(NcsiMcastFilterPtr obj, bool create_update);
+
+private:
+    delphi::SdkPtr    sdk_;
+};
+typedef std::shared_ptr<ncsi_mcast_filter_handler> ncsi_mcast_filter_handler_ptr_t;
+Status init_ncsi_mcast_filter_handler(delphi::SdkPtr sdk);
 
 // init_accel_objects mounts accelerator objects
 Status init_accel_objects(delphi::SdkPtr sdk);

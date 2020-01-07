@@ -26,6 +26,9 @@ set_tm_oport_enforce_src_lport:
 
 .align
 set_tm_oport:
+  seq         c1, d.u.set_tm_oport_d.nacl_egress_drop_en, TRUE
+  seq         c2, k.control_metadata_nacl_egress_drop, TRUE
+  bcf         [c1 & c2], output_mapping_drop
   add         r7, r0, r0
   seq         c1, d.u.set_tm_oport_d.nports, 0
   mod.!c1     r7, k.rewrite_metadata_entropy_hash, d.u.set_tm_oport_d.nports
@@ -83,6 +86,11 @@ redirect_to_remote:
   phvwr       p.capri_intrinsic_tm_oport, d.u.redirect_to_remote_d.tm_oport
   phvwr.e     p.capri_intrinsic_tm_oq, d.u.redirect_to_remote_d.tm_oq
   phvwr       p.rewrite_metadata_tunnel_rewrite_index, d.u.redirect_to_remote_d.tunnel_index
+
+output_mapping_drop1:
+  phvwr       p.capri_intrinsic_lif, 0
+  phvwr.e     p.capri_intrinsic_drop, TRUE
+  phvwr       p.control_metadata_egress_drop_reason[EGRESS_DROP_OUTPUT_MAPPING], 1
 
 /*****************************************************************************/
 /* error function                                                            */

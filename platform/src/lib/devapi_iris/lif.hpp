@@ -85,6 +85,8 @@ public:
     sdk_ret_t update_recbcast(bool receive_broadcast);
     sdk_ret_t update_recallmc(bool receive_all_multicast);
     sdk_ret_t update_recprom(bool receive_promiscuous);
+    sdk_ret_t update_bcast_filters(lif_bcast_filter_t bcast_filter);
+    sdk_ret_t update_mcast_filters(lif_mcast_filter_t mcast_filter);
 
     sdk_ret_t upd_name(std::string name);
     sdk_ret_t reset(void);

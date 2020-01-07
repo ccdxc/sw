@@ -199,6 +199,18 @@ devapi_impl::lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) {
 }
 
 sdk_ret_t
+devapi_impl::lif_upd_bcast_filter(uint32_t lif_id, lif_bcast_filter_t bcast_filter) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter) {
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters) {
     *ucast_filters = *mcast_filters = MAX_FILTERS_CLASSIC;
@@ -383,6 +395,20 @@ devapi_impl::swm_upd_rx_mmode(bool all_multicast)
 
 sdk_ret_t
 devapi_impl::swm_upd_rx_pmode(bool promiscuous)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;

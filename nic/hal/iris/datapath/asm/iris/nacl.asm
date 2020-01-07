@@ -57,6 +57,7 @@ nacl_permit:
   phvwr.c2      p.control_metadata_dst_lport, d.u.nacl_permit_d.dst_lport
   phvwr.c2      p.capri_intrinsic_tm_cpu, FALSE
   phvwr         p.control_metadata_nacl_stats_idx, d.u.nacl_permit_d.stats_idx
+  phvwr         p.control_metadata_nacl_egress_drop, d.u.nacl_permit_d.egress_drop
   phvwr.e       p.copp_metadata_policer_index, d.u.nacl_permit_d.policer_index
   phvwrpair.c2  p.capri_intrinsic_tm_replicate_ptr, 0, \
                 p.capri_intrinsic_tm_replicate_en, FALSE

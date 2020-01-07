@@ -8,7 +8,9 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
                    rewrite_en, rewrite_index, rewrite_flags,
                    tunnel_rewrite_en, tunnel_rewrite_index, tunnel_vnid,
                    tunnel_originate,
-                   dst_lport_en, dst_lport, discard_drop, stats_idx) {
+                   dst_lport_en, dst_lport, discard_drop, 
+                   egress_drop, 
+                   stats_idx) {
     // dummy ops to keep compiler happy
     modify_field(scratch_metadata.force_flow_hit, force_flow_hit);
     modify_field(scratch_metadata.qid_en, qid_en);
@@ -42,6 +44,7 @@ action nacl_permit(force_flow_hit, policer_index, log_en,
 
     modify_field(copp_metadata.policer_index, policer_index);
     modify_field(control_metadata.nacl_stats_idx, stats_idx);
+    modify_field(control_metadata.nacl_egress_drop, egress_drop);
 
     if (egress_mirror_en == TRUE) {
         modify_field(control_metadata.egress_mirror_session_id,
