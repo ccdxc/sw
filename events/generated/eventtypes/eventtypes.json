@@ -237,12 +237,12 @@
   },
   {
    "Name": "NAPLES_OVER_TEMP_EXIT",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "System temperature is below threshold."
   },
   {
    "Name": "NAPLES_PANIC_EVENT",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "System panic on the previous boot"
   },
   {

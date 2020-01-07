@@ -365,14 +365,14 @@ func init() {
 
 	eventTypes[NAPLES_OVER_TEMP_EXIT] = &EventTypeAttributes{
 		EType:      NAPLES_OVER_TEMP_EXIT.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "system",
 		Desc:       "System temperature is below threshold.",
 		SuppressMM: false}
 
 	eventTypes[NAPLES_PANIC_EVENT] = &EventTypeAttributes{
 		EType:      NAPLES_PANIC_EVENT.String(),
-		Severity:   "warn",
+		Severity:   "critical",
 		Category:   "system",
 		Desc:       "System panic on the previous boot",
 		SuppressMM: false}
