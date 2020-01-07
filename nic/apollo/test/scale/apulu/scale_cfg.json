@@ -57,7 +57,7 @@
         },
         {
             "kind" : "napt",
-            "napt-prefix" : "6.0.0.0/8"
+            "napt-prefix" : "6.0.3.20/32"
         },
         {
             "kind" : "mirror",

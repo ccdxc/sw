@@ -2422,6 +2422,17 @@ pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
     }
     api_spec->nat_port_range.port_lo = proto_spec.ports().portlow();
     api_spec->nat_port_range.port_hi = proto_spec.ports().porthigh();
+    switch (proto_spec.addresstype()) {
+    case types::ADDR_TYPE_PUBLIC:
+        api_spec->address_type = ADDR_TYPE_PUBLIC;
+        break;
+    case types::ADDR_TYPE_SERVICE:
+        api_spec->address_type = ADDR_TYPE_SERVICE;
+        break;
+    default:
+        SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
+    }
     return SDK_RET_OK;
 }
 
@@ -2436,6 +2447,17 @@ pds_nat_port_block_api_spec_to_proto (pds::NatPortBlockSpec *proto_spec,
     iprange_api_spec_to_proto_spec(range_spec, &api_spec->nat_ip_range);
     proto_spec->mutable_ports()->set_portlow(api_spec->nat_port_range.port_lo);
     proto_spec->mutable_ports()->set_porthigh(api_spec->nat_port_range.port_hi);
+    switch (api_spec->address_type) {
+    case ADDR_TYPE_PUBLIC:
+        proto_spec->set_addresstype(types::ADDR_TYPE_PUBLIC);
+        break;
+    case ADDR_TYPE_SERVICE:
+        proto_spec->set_addresstype(types::ADDR_TYPE_SERVICE);
+        break;
+    default:
+        SDK_ASSERT(FALSE);
+        return SDK_RET_INVALID_ARG;
+    }
     return SDK_RET_OK;
 }
 

@@ -731,6 +731,7 @@ create_nat_port_blocks (uint32_t num_vpcs, ip_prefix_t *napt_prefix)
         pds_napt.nat_ip_range = ip_range;
         pds_napt.nat_port_range.port_lo = 1024;
         pds_napt.nat_port_range.port_hi = 65535;
+        pds_napt.address_type = ADDR_TYPE_PUBLIC;
         rv = create_nat_port_block(&pds_napt);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create nat port block %u failed, rv %u",
