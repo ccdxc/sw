@@ -8,6 +8,7 @@
 ///
 //----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -32,8 +33,8 @@
 {                                                                            \
     if ((dnat_en_)) {                                                        \
         (nh_val_) |= (ROUTE_RESULT_DNAT_EN_MASK |                            \
-                      ((dnat_idx_ << ROUTE_RESULT_DNAT_IDX_SHIFT)            \
-                                   & ROUTE_RESULT_DNAT_IDX_MASK));           \
+                      (((dnat_idx_) << ROUTE_RESULT_DNAT_IDX_SHIFT)          \
+                       & ROUTE_RESULT_DNAT_IDX_MASK));                       \
     } else {                                                                 \
         (nh_val_) &= ~(ROUTE_RESULT_DNAT_EN_MASK|ROUTE_RESULT_DNAT_IDX_MASK);\
     }                                                                        \
@@ -89,14 +90,35 @@ route_table_impl::free(route_table_impl *impl) {
 sdk_ret_t
 route_table_impl::reserve_resources(api_base *api_obj,
                                     api_obj_ctxt_t *obj_ctxt) {
-    uint32_t                  lpm_block_id;
-    pds_route_table_spec_t    *spec;
+    sdk_ret_t ret;
+    uint32_t lpm_block_id;
+    pds_route_t *route_spec;
+    pds_route_table_spec_t *spec;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     // record the fact that resource reservation was attempted
     // NOTE: even if we partially acquire resources and fail eventually,
     //       this will ensure that proper release of resources will happen
     api_obj->set_rsvd_rsc();
+
+    for (uint32_t i = 0; i < spec->num_routes; i++) {
+        route_spec = &spec->routes[i];
+        if ((route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) ||
+            (route_spec->nat.dst_nat_ip.af == IP_AF_IPV6)) {
+            num_dnat_entries_++;
+        }
+    }
+    if (num_dnat_entries_) {
+        ret = apulu_impl_db()->dnat_idxr()->alloc_block(&dnat_base_idx_,
+                                                        num_dnat_entries_,
+                                                        false);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve %u entries in DNAT table for "
+                          "route table %u, err %u", spec->key.id, ret);
+            return ret;
+        }
+    }
+
     // allocate free lpm slab for this route table
     if (spec->af == IP_AF_IPV4) {
         if (route_table_impl_db()->v4_idxr()->alloc(&lpm_block_id) !=
@@ -135,6 +157,10 @@ route_table_impl::release_resources(api_base *api_obj) {
             route_table_impl_db()->v6_idxr()->free(lpm_block_id);
         }
     }
+
+    if (dnat_base_idx_ != 0xFFFFFFFF) {
+        apulu_impl_db()->dnat_idxr()->free(dnat_base_idx_, num_dnat_entries_);
+    }
     return SDK_RET_OK;
 }
 
@@ -144,6 +170,7 @@ route_table_impl::nuke_resources(api_base *api_obj) {
     return this->release_resources(api_obj);
 }
 
+#define dnat_info    action_u.dnat_dnat
 sdk_ret_t
 route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t              ret;
@@ -154,8 +181,10 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t               nh_val;
     pds_vpc_key_t          vpc_key;
     route_table_t          *rtable;
+    p4pd_error_t           p4pd_ret;
     nexthop_group          *nh_group;
     pds_route_t            *route_spec;
+    dnat_actiondata_t      dnat_data;
 
     spec = &obj_ctxt->api_params->route_table_spec;
     // allocate memory for the library to build route table
@@ -176,7 +205,7 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         rtable->max_routes = route_table_impl_db()->v6_max_routes();
     }
     rtable->num_routes = spec->num_routes;
-    for (uint32_t i = 0; i < rtable->num_routes; i++) {
+    for (uint32_t i = 0, dnat_idx = 0; i < rtable->num_routes; i++) {
         nh_val = 0;
         route_spec = &spec->routes[i];
         rtable->routes[i].prefix = route_spec->prefix;
@@ -192,10 +221,33 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         }
 #endif
         PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val, route_spec->nat.src_nat_type);
-        if (!ip_addr_is_zero(&route_spec->nat.dst_nat_ip)) {
+        if ((route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) ||
+            (route_spec->nat.dst_nat_ip.af == IP_AF_IPV6)) {
             // DNAT is enabled on this route
-            // TODO: allocate idx from DNAT table
-            //PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, TRUE, dnat_idx);
+            PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, TRUE,
+                                          dnat_base_idx_ + dnat_idx);
+            // write to DNAT table at this index
+            dnat_data.action_id = DNAT_DNAT_ID;
+            dnat_data.dnat_info.route_table_hw_id = 0;
+            if (route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) {
+                memcpy(dnat_data.dnat_info.dnat_address,
+                       &route_spec->nat.dst_nat_ip.addr.v4_addr, IP4_ADDR8_LEN);
+            } else {
+                sdk::lib::memrev(dnat_data.dnat_info.dnat_address,
+                                 route_spec->nat.dst_nat_ip.addr.v6_addr.addr8,
+                                 IP6_ADDR8_LEN);
+            }
+            p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_TXDMA_TBL_ID_DNAT,
+                                               dnat_base_idx_ + dnat_idx,
+                                               NULL, NULL, &dnat_data);
+            if (p4pd_ret != P4PD_SUCCESS) {
+                PDS_TRACE_ERR("Failed to program DNAT table at %u for route "
+                              "%s in route table %u", dnat_base_idx_ + dnat_idx,
+                              ippfx2str(&route_spec->prefix), spec->key.id);
+                ret = SDK_RET_INVALID_ARG;
+                goto cleanup;
+            }
+            dnat_idx++;
         } else {
             PDS_IMPL_NH_VAL_SET_DNAT_INFO(nh_val, FALSE, 0);
         }

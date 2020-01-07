@@ -115,6 +115,8 @@ private:
     /// \brief constructor
     route_table_impl() {
         lpm_root_addr_ = 0xFFFFFFFFFFFFFFFFUL;
+        dnat_base_idx_ = 0xFFFFFFFF;
+        num_dnat_entries_ = 0;
     }
 
     /// \brief destructor
@@ -126,7 +128,9 @@ private:
 
 private:
     // P4 datapath specific state
-    mem_addr_t lpm_root_addr_;    ///< LPM tree's root node address
+    mem_addr_t lpm_root_addr_;     ///< LPM tree's root node address
+    uint32_t dnat_base_idx_;       ///< DNAT table based index in use
+    uint32_t num_dnat_entries_;    ///< no. of entries allocated in DNAT table
 } __PACK__;
 
 /// \@}
