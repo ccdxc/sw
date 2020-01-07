@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	_ "net/http/pprof"
 	"os"
 	"path/filepath"
 	"strings"
