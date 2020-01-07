@@ -39,8 +39,8 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (iftype == topo.InterfaceTypes.UPLINKPC):
             self.port_bmap = getattr(spec, 'portbmp', None)
         elif (iftype == topo.InterfaceTypes.L3):
-            self.VPC = getattr(spec, 'vpc', 0)
-            self.ip_prefix = getattr(spec, 'ippfx', None)
+            self.VpcId = getattr(spec, 'vpc', 0)
+            self.ip_prefix = next(resmgr.L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
@@ -53,7 +53,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             res = str("port_bmap: %s" % self.port_bmap)
         elif (self.__type == topo.InterfaceTypes.L3):
             res = str("VPC:%d|ip:%s|ethifidx:%d|encap:%s|mac:%s"% \
-                    (self.VPC, self.ip_prefix, self.ethifidx, self.encap, \
+                    (self.VpcId, self.ip_prefix, self.ethifidx, self.encap, \
                     self.macaddr))
         else:
             return
@@ -119,6 +119,8 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.Type = interface_pb2.IF_TYPE_L3
             spec.L3IfSpec.EthIfIndex = self.IfInfo.ethifidx
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
+            spec.L3IfSpec.VpcId = self.IfInfo.VpcId
+            utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
         return
 
     def ValidateSpec(self, spec):
@@ -220,6 +222,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             hostifspec = getattr(iflist, 'host', None)
             self.__generate_host_interfaces(hostifspec)
         if utils.IsL3InterfaceSupported():
+            # TODO: move these under underlay VPC
             # generate l3 if for uplink interface
             self.__generate_l3_uplink_interfaces()
         return

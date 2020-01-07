@@ -130,6 +130,8 @@ NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
 UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
 OverlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_OVERLAY_NHS+1))
 
+L3InterfaceIPv4PfxPool = iter(ipaddress.IPv4Network('40.40.0.0/16').subnets(new_prefix=24))
+
 # Create subnets from base prefix
 # - base is a prefix in the form of '10.0.0.0/16'
 # - sublen is the subnet length, gt base prefix length.

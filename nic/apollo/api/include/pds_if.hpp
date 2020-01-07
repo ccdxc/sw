@@ -52,7 +52,7 @@ typedef struct pds_uplink_pc_info_s {
 typedef struct pds_l3_if_info_s {
     pds_vpc_key_t   vpc;          ///< vpc this L3 if belongs to
     ip_prefix_t     ip_prefix;    ///< IP address and subnet of this L3 if
-    uint32_t        eth_ifindex;    ///< Eth ifindex of this L3 if
+    pds_ifindex_t   eth_ifindex;  ///< Eth ifindex of this L3 if
     pds_encap_t     encap;        ///< (optional) encap used for egress rewrite
     mac_addr_t      mac_addr;     ///< MAC address of this L3 interface
 } __PACK__ pds_l3_if_info_t;

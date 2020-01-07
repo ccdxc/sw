@@ -285,11 +285,11 @@ private:
         } uplink_;
         ///< L3 interface specific information
         struct {
-            pds_vpc_key_t vpc_;    ///< vpc of this L3 interface
-            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
-            uint32_t eth_ifindex_;   ///< eth ifindex
-            pds_encap_t encap_;    ///< wire encap, if any
-            mac_addr_t mac_;       ///< MAC address of this L3 interface
+            pds_vpc_key_t vpc_;           ///< vpc of this L3 interface
+            ip_prefix_t ip_pfx_;          ///< IP subnet of this L3 interface
+            pds_ifindex_t eth_ifindex_;   ///< eth ifindex
+            pds_encap_t encap_;           ///< wire encap, if any
+            mac_addr_t mac_;              ///< MAC address of this L3 interface
         } l3_;
     } if_info_;
 
