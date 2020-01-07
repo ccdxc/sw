@@ -29,7 +29,6 @@ protected:
     virtual void SetUp() {}
     virtual void TearDown() {}
     static void SetUpTestCase() {
-        g_tc_params.disable_vpp_mock = true;
         if (!agent_mode())
             pds_test_base::SetUpTestCase(g_tc_params);
     }

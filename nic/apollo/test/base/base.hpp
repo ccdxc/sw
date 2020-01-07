@@ -90,28 +90,44 @@ artemis (void)
 static inline bool
 capri_mock_mode (void)
 {
-    static bool input_check1 = false;
     static bool capri_mock_mode = true;
+    static bool capri_mock_mode_env_var_read = false;
 
-    if (!input_check1) {
+    if (!capri_mock_mode_env_var_read) {
         if (getenv("CAPRI_MOCK_MODE") == NULL)
             capri_mock_mode = false;
-        input_check1 = true;
+        capri_mock_mode_env_var_read = true;
     }
 
     return capri_mock_mode;
 }
 
+// Returns true if VPP_IPC_MOCK_MODE is enabled, otherwise false
+static inline bool
+vpp_ipc_mock_mode (void)
+{
+    static bool vpp_ipc_mock_mode = true;
+    static bool vpp_ipc_mock_mode_env_var_read = false;
+
+    if (!vpp_ipc_mock_mode_env_var_read) {
+        if (getenv("VPP_IPC_MOCK_MODE") == NULL)
+            vpp_ipc_mock_mode = false;
+        vpp_ipc_mock_mode_env_var_read = true;
+    }
+
+    return vpp_ipc_mock_mode;
+}
+
 static inline bool
 agent_mode (void)
 {
-    static bool input_check2 = false;
     static bool agent_mode = false;
+    static bool agent_mode_env_var_read = false;
 
-    if (!input_check2) {
+    if (!agent_mode_env_var_read) {
         if (getenv("AGENT_MODE") != NULL)
             agent_mode = true;
-        input_check2 = true;
+        agent_mode_env_var_read = true;
     }
 
     return agent_mode;
@@ -121,7 +137,6 @@ agent_mode (void)
 typedef struct test_case_params_t_ {
     const char      *cfg_file;        ///< config file
     bool            enable_fte;       ///< Unused
-    bool            disable_vpp_mock; ///< vpp mock is not started if true
     std::string     profile;          ///< config profile
 } test_case_params_t;
 

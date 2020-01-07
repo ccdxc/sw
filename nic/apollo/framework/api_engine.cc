@@ -1183,7 +1183,7 @@ api_engine::pds_msg_send_(pds_msg_list_t *msgs) {
         return sdk::SDK_RET_OK;
     }
 
-    if (g_pds_state.vpp_ipc_msg_mock() == false) {
+    if (g_pds_state.vpp_ipc_mock() == false) {
         sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CFG,
                           msgs, core::pds_msg_list_size(msgs),
                           process_ipc_async_result_, NULL);

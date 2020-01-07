@@ -110,8 +110,8 @@ public:
         scale_profile_ = profile;
     }
     pds_scale_profile_t scale_profile(void) const { return scale_profile_; }
-    void set_vpp_ipc_msg_mock(bool mock) { vpp_ipc_msg_mock_ = mock; }
-    bool vpp_ipc_msg_mock(void) const { return vpp_ipc_msg_mock_; }
+    void set_vpp_ipc_mock(bool mock) { vpp_ipc_mock_ = mock; }
+    bool vpp_ipc_mock(void) const { return vpp_ipc_mock_; }
     void set_control_cores_mask(uint64_t control_cores_mask) {
         control_cores_mask_ = control_cores_mask;
     }
@@ -196,7 +196,8 @@ private:
     mpartition              *mpartition_;
     platform_type_t         platform_type_;
     pds_scale_profile_t     scale_profile_;
-    bool                    vpp_ipc_msg_mock_;
+    // TODO: remove this after we phase out apollo/artemis tests
+    bool                    vpp_ipc_mock_;
     program_info            *pginfo_;
     uint64_t                control_cores_mask_;
     uint16_t                num_control_cores_;

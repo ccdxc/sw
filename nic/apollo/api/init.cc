@@ -196,8 +196,8 @@ pds_init (pds_init_params_t *params)
     // do state initialization
     SDK_ASSERT(api::g_pds_state.init() == SDK_RET_OK);
 
-    if (getenv("VPP_IPC_MSG_MOCK_MODE"))
-        api::g_pds_state.set_vpp_ipc_msg_mock(true);
+    if (getenv("VPP_IPC_MOCK_MODE"))
+        api::g_pds_state.set_vpp_ipc_mock(true);
 
     // parse global configuration
     api::g_pds_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
