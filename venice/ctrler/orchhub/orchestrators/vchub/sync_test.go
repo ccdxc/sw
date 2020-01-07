@@ -8,10 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	"github.com/vmware/govmomi/vim25/mo"
-	"github.com/vmware/govmomi/vim25/types"
-
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	. "github.com/pensando/sw/venice/utils/testutils"
 
@@ -88,83 +84,14 @@ func TestVCSyncPG(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	// SETTING UP MOCK
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	mockProbe := mock.NewMockProbeInf(mockCtrl)
-
+	// Real probe that will be used by mock probe when possible
 	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vchub.probe = mockProbe
-	defer vchub.Destroy()
-
-	// Real probe that will be used my mock probe when possible
 	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
-	vcp.Start()
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start()
 
-	mockProbe.EXPECT().IsSessionReady().DoAndReturn(func() bool {
-		return vcp.IsSessionReady()
-	}).AnyTimes()
-
-	mockProbe.EXPECT().ClearState().Return()
-
-	var ref types.ManagedObjectReference
-
-	mockProbe.EXPECT().ListDC().DoAndReturn(func() []mo.Datacenter {
-		dcs := vcp.ListDC()
-		ref = dcs[0].Reference()
-		return dcs
-	})
-
-	mockProbe.EXPECT().AddPenDVS(defaultTestParams.TestDCName, gomock.Any()).DoAndReturn(
-		func(dcName, dvsCreateSpec interface{}) error {
-			return vcp.AddPenDVS(dcName.(string), dvsCreateSpec.(*types.DVSCreateSpec))
-		})
-
-	// Overriding default probe behavior to work correctly with vcsim
-	mockProbe.EXPECT().ListDVS(gomock.Any()).DoAndReturn(func(_ interface{}) []mo.VmwareDistributedVirtualSwitch {
-		var dvsObjs []mo.DistributedVirtualSwitch
-		var ret []mo.VmwareDistributedVirtualSwitch
-		vcp.ListObj("DistributedVirtualSwitch", []string{"name"}, &dvsObjs, &ref)
-		for _, obj := range dvsObjs {
-			ret = append(ret, mo.VmwareDistributedVirtualSwitch{
-				DistributedVirtualSwitch: obj,
-			})
-		}
-		return ret
-	})
-
-	// Overriding probe to return a PG with PVLAN config since vcsim doesn't support it currently
-	mockProbe.EXPECT().ListPG(gomock.Any()).DoAndReturn(
-		func(dcRef interface{}) []mo.DistributedVirtualPortgroup {
-			// stale pg
-			pg1 := mo.DistributedVirtualPortgroup{
-				Network: mo.Network{
-					Name: createPGName("stalePG1"),
-				},
-				Config: types.DVPortgroupConfigInfo{
-					DefaultPortConfig: &types.VMwareDVSPortSetting{
-						Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
-							PvlanId: 10,
-						},
-					},
-				},
-			}
-			pg2 := mo.DistributedVirtualPortgroup{
-				Network: mo.Network{
-					Name: createPGName("pg1"),
-				},
-				Config: types.DVPortgroupConfigInfo{
-					DefaultPortConfig: &types.VMwareDVSPortSetting{
-						Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
-							PvlanId: 12,
-						},
-					},
-				},
-			}
-			return []mo.DistributedVirtualPortgroup{pg1, pg2}
-		})
-
-	mockProbe.EXPECT().AddPenPG(defaultTestParams.TestDCName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	mockProbe.EXPECT().RemovePenPG(defaultTestParams.TestDCName, gomock.Any()).Return(nil).AnyTimes()
+	defer vchub.Destroy()
 
 	vchub.Sync()
 
