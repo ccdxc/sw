@@ -172,6 +172,11 @@
                                         "Command" : "/platform/bin/pcieutil aximst"
                                 },
                                 {
+                                        "Name" : "Pcie dberr",
+                                        "Method" : 0,
+                                        "Command" : "/platform/bin/pcieutil dberr"
+                                },
+                                {
                                         "Name" : "Fwupdate",
                                         "Method" : 0,
                                         "Command" : "/nic/tools/fwupdate -l"
