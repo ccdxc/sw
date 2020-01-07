@@ -209,18 +209,23 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         nh_val = 0;
         route_spec = &spec->routes[i];
         rtable->routes[i].prefix = route_spec->prefix;
+        // if user specified priority explicitly, use it or else use prefix
+        // length to compute the priority (to provide longest prefix matching
+        // semantics)
         if (rtable->pbr_enabled) {
             rtable->routes[i].prio = route_spec->prio;
         } else {
             rtable->routes[i].prio = 128 - route_spec->prefix.len;
         }
-
-#if 0
+        // if metering is enabled on this route, set the M bit in the
+        // corresponding nexthop
         if (route_spec->meter) {
             PDS_IMPL_NH_VAL_SET_METER_EN(nh_val);
         }
-#endif
+        // set the SNAT type
         PDS_IMPL_NH_VAL_SET_SNAT_TYPE(nh_val, route_spec->nat.src_nat_type);
+        // if DNAT is required for traffic hitting this route, setup the DNA
+        // table entry
         if ((route_spec->nat.dst_nat_ip.af == IP_AF_IPV4) ||
             (route_spec->nat.dst_nat_ip.af == IP_AF_IPV6)) {
             // DNAT is enabled on this route
