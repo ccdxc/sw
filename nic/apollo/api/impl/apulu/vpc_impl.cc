@@ -238,9 +238,9 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
+    spec = &obj_ctxt->api_params->vpc_spec;
     PDS_TRACE_DEBUG("Activating vpc %u, hw id %u update",
                     spec->key.id, vpc->hw_id());
-    spec = &obj_ctxt->api_params->vpc_spec;
 
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;

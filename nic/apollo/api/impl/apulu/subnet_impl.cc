@@ -291,9 +291,9 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
 
+    spec = &obj_ctxt->api_params->subnet_spec;
     PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, update host if 0x%x",
                     spec->key.id, hw_id_, spec->host_ifindex);
-    spec = &obj_ctxt->api_params->subnet_spec;
     vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
         PDS_TRACE_ERR("No vpc %u found to program subnet %u",
