@@ -2,12 +2,13 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
-#ifndef __LEARN_APULU_LEARN_UTILS_HPP__
-#define __LEARN_APULU_LEARN_UTILS_HPP__
+#ifndef __LEARN_APULU_PKT_UTILS_HPP__
+#define __LEARN_APULU_PKT_UTILS_HPP__
 
 #include <arpa/inet.h>
 #include "nic/apollo/packet/apulu/p4_cpu_hdr.h"
 #include "nic/apollo/p4/include/apulu_defines.h"
+
 #define LEARN_LIF_NAME  ""
 // #define LEARN_LIF_NAME          "net_ionic1"
 #define LEARN_ARM_TO_P4_HDR_SZ  APULU_ARM_TO_P4_HDR_SZ
@@ -32,4 +33,4 @@ learn_p4_tx_hdr_fill (char *pkt)
     //tx_hdr->nexthop_id = 0;
 }
 
-#endif  //__LEARN_APULU_LEARN_UTILS_HPP__
+#endif  //__LEARN_APULU_PKT_UTILS_HPP__

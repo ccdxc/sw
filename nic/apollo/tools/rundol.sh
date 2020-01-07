@@ -13,8 +13,6 @@ argv=($@)
 for (( j=0; j<argc; j++ )); do
     if [ ${argv[j]} == '--pipeline' ];then
         PIPELINE=${argv[j+1]}
-    elif [ ${argv[j]} == '--topo' ];then
-        TOPO=${argv[j+1]}
     elif [ ${argv[j]} == '--feature' ];then
         FEATURE=${argv[j+1]}
     elif [[ ${argv[j]} =~ .*'--dry'.* ]];then
@@ -59,11 +57,6 @@ $NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
 export CONFIG_PATH=$NICDIR/conf
 
 if [ $START_VPP == 1 ]; then
-    if [ $TOPO == 'learn' ]; then
-        # TODO: cleanup
-        echo "Wait for learn thread to be up before starting VPP"
-        sleep 180
-    fi
     echo "Starting VPP"
     sudo $NICDIR/vpp/tools/start-vpp-sim.sh $*
     if [[ $? != 0 ]]; then

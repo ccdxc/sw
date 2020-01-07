@@ -14,7 +14,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/learn/learn.hpp"
-#include "learn_utils.hpp"
+#include "pkt_utils.hpp"
 
 using namespace std;
 
@@ -72,8 +72,8 @@ learn_p4_tx_hdr_add (dpdk_mbuf *pkt)
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-learn_pkt_headers_process (dpdk_mbuf *pkt)
+static sdk_ret_t
+learn_pkt_hdrs_process (dpdk_mbuf *pkt)
 {
     sdk_ret_t ret;
 
@@ -95,8 +95,8 @@ learn_pkt_headers_process (dpdk_mbuf *pkt)
     return SDK_RET_OK;
 }
 
-void
-learn_packets_process (dpdk_mbuf **rx_pkts, uint16_t rx_count)
+static void
+learn_pkts_process (dpdk_mbuf **rx_pkts, uint16_t rx_count)
 {
     sdk_ret_t ret;
     dpdk_mbuf *rx_pkt;
@@ -105,7 +105,7 @@ learn_packets_process (dpdk_mbuf **rx_pkts, uint16_t rx_count)
     PDS_TRACE_DEBUG("learn thread received %u packets", rx_count);
     for (uint16_t i = 0; i < rx_count; i++) {
         rx_pkt = rx_pkts[i];
-        ret = learn_pkt_headers_process(rx_pkt);
+        ret = learn_pkt_hdrs_process(rx_pkt);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("learn thread : Failed to process learn pkt");
             // TODO: Drop packets?
@@ -118,7 +118,7 @@ learn_packets_process (dpdk_mbuf **rx_pkts, uint16_t rx_count)
     PDS_TRACE_DEBUG("learn thread re-injected %u packets", tx_count-tx_fail);
 }
 
-void
+static void
 learn_pkt_poll_timer_cb (void *timer)
 {
     uint16_t rx_count = 0;
@@ -129,18 +129,20 @@ learn_pkt_poll_timer_cb (void *timer)
         return;
     }
 
-    learn_packets_process(rx_pkts, rx_count);
+    learn_pkts_process(rx_pkts, rx_count);
 }
 
-sdk_ret_t
+static sdk_ret_t
 learn_init (void)
 {
     sdk_ret_t ret;
     sdk_dpdk_params_t params;
     sdk_dpdk_device_params_t args;
 
+    memset(&params, 0, sizeof(sdk_dpdk_params_t));
+    memset(&args, 0, sizeof(sdk_dpdk_device_params_t));
     params.log_cb = learn_log;
-    params.eal_init_list = "-c 3 -n 4 --in-memory --file-prefix learn --master-lcore 1";
+    params.eal_init_list = "-n 4 --in-memory --file-prefix learn --master-lcore 1 -c 3";
     params.log_name = "learn_dpdk";
     params.mbuf_pool_name = "learn_dpdk";
     params.mbuf_size = 512;
@@ -150,7 +152,7 @@ learn_init (void)
     if (unlikely(ret != SDK_RET_OK)) {
         // learn lif may not be present on all pipelines, so exit
         // on dpdk init failure.
-        PDS_TRACE_ERR("DPDK init failed! learn thread exiting!");
+        PDS_TRACE_ERR("learn thread exiting - DPDK init failed, ret %u", ret);
         return ret;
     }
 
