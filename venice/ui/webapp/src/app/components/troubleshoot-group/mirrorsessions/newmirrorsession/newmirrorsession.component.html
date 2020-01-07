@@ -214,6 +214,16 @@
     </div>
     <div fxFlex="none">
       <fieldset class="newmirrorsession-rule-app">
+        <legend>Protocol</legend>
+        <div fxFlex="none" fxLayout="column">
+          <div fxFlex="5px"></div>
+          <app-formchips fxFlex="none" [chipsLabel]="'Protocol / Ports'"
+                         [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
+                         boxStyleClass="newmirrorsession-proto-boxes" [itemValidator]="isValidProto"
+                         [itemErrorMsg]="PROTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
+          </app-formchips>
+        </div>
+        <!-- comment out for relase A
         <legend>Protocol Or App</legend>
         <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
                          fxLayoutGap="25px" class="newmirrorsession-attach-radio"
@@ -241,6 +251,7 @@
                          [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'applications'])">
           </p-multiSelect>
         </div>
+        -->
       </fieldset>
     </div>
   </div>
