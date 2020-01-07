@@ -61,12 +61,13 @@ def Verify(tc):
 
     api.Logger.info("rmmod_rdma results")
 
+    rc = api.types.status.SUCCESS
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
-            return api.types.status.FAILURE
+            rc = api.types.status.FAILURE
 
-    return api.types.status.SUCCESS
+    return rc
 
 def Teardown(tc):
     return api.types.status.SUCCESS
