@@ -1,14 +1,14 @@
 
 action config1_epoch_verify(epoch) {
     if (control_metadata.config1_epoch != epoch) {
-        modify_field(p4i_to_p4e_header.flow_miss, TRUE);
+        modify_field(control_metadata.flow_miss, TRUE);
     }
     modify_field(scratch_metadata.config_epoch, epoch);
 }
 
 action config2_epoch_verify(epoch) {
     if (control_metadata.config2_epoch != epoch) {
-        modify_field(p4i_to_p4e_header.flow_miss, TRUE);
+        modify_field(control_metadata.flow_miss, TRUE);
     }
     modify_field(scratch_metadata.config_epoch, epoch);
 }
@@ -41,7 +41,11 @@ table config2 {
 
 control config_verify {
     if (control_metadata.flow_miss == FALSE) {
-        apply(config1);
-        apply(config2);
+        if (control_metadata.config1_idx_valid == TRUE) {
+            apply(config1);
+        }
+        if (control_metadata.config2_idx_valid == TRUE) {
+            apply(config2);
+        }
     }
 }

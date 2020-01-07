@@ -35,12 +35,12 @@ flow_hash:
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.flow_hash_d.more_hints
 label_flow_miss:
-    phvwr       p.p4i_to_p4e_header_flow_miss, TRUE
     phvwr       p.control_metadata_flow_miss, TRUE
     phvwr.e     p.p4i_to_p4e_header_session_index, 0
     phvwr       p.ingress_recirc_header_flow_done, TRUE
 
 label_flow_hit:
+    phvwr       p.p4i_to_p4e_header_direction, k.control_metadata_direction
     phvwr.e     p.p4i_to_p4e_header_session_index, d.flow_hash_d.session_index
     phvwr       p.ingress_recirc_header_flow_done, TRUE
 

@@ -2,7 +2,6 @@
 #include "../../../p4/include/app_headers.p4"
 #include "../../../p4/common/defines.h"
 
-#include "../include/defines.h"
 #include "../include/athena_defines.h"
 #include "../include/athena_table_sizes.h"
 #include "headers.p4"

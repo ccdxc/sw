@@ -67,8 +67,14 @@ table histogram {
 
 control statistics {
     if (control_metadata.flow_miss == FALSE) {
-        apply(counterset1);
-        apply(counterset2);
-        apply(histogram);
+        if (control_metadata.counterset1_valid == TRUE) {
+            apply(counterset1);
+        }
+        if (control_metadata.counterset2_valid == TRUE) {
+            apply(counterset2);
+        }
+        if (control_metadata.histogram_valid == TRUE) {
+            apply(histogram);
+        }
     }
 }

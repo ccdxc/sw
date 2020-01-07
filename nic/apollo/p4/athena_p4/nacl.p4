@@ -6,7 +6,8 @@ action nacl_drop() {
 action nacl_permit() {
 }
 
-action nacl_redirect(app_id, oport, lif, qtype, qid) {
+action nacl_redirect(redir_type, app_id, oport, lif, qtype, qid) {
+    modify_field(p4i_to_p4e_header.redir_to_rxdma, redir_type);
     modify_field(p4i_to_p4e_header.nacl_redir_oport, oport);
     modify_field(p4i_to_p4e_header.nacl_redir_lif, lif);
     modify_field(p4i_to_p4e_header.nacl_redir_qtype, qtype);
@@ -27,7 +28,7 @@ action nacl_redirect(app_id, oport, lif, qtype, qid) {
 table nacl {
     reads {
         control_metadata.direction          : ternary;
-        p4i_to_p4e_header.flow_miss         : ternary;
+        control_metadata.flow_miss          : ternary;
         key_metadata.ktype                  : ternary;
         key_metadata.dst                    : ternary;
         key_metadata.src                    : ternary;

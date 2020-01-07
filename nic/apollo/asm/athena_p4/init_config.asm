@@ -15,8 +15,13 @@ init_config:
     phvwr           p.capri_p4_intrinsic_recirc, FALSE
 
 ingress_recirc_header_done:
+    seq             c1, k.control_metadata_skip_flow_lkp, TRUE
+    phvwr.c1        p.control_metadata_flow_miss, TRUE
+    phvwr.c1        p.ingress_recirc_header_flow_done, TRUE
+
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
     phvwr           p.capri_p4_intrinsic_packet_len, r1
+    phvwr           p.p4i_to_p4e_header_packet_len, r1
     sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
     phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

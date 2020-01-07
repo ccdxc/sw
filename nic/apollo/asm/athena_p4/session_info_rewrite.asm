@@ -5,11 +5,14 @@
 
 struct session_info_rewrite_k_      k;
 struct session_info_rewrite_d       d;
-struct phv_     p;
+struct phv_                         p;
 
 %%
 
 session_info_rewrite:
+    /* Verify if the session info is valid */
+    sne             c1, d.session_info_rewrite_d.valid_flag, TRUE
+    b.c1            session_info_pkt_encap_done
 
     seq             c1, k.ipv4_1_valid, TRUE
     add             r1, d.session_info_rewrite_d.user_pkt_rewrite_type, r0
@@ -76,7 +79,6 @@ session_info_pkt_rewrite_done:
 
         .brcase REWRITE_ENCAP_MPLSOUDP
         phvwr           p.{ipv4_0_version...ipv4_0_ihl}, 0x45
-        //phvwr           p.ipv4_0_totalLen,  TODO
         phvwr           p.ipv4_0_ttl, d.session_info_rewrite_d.ip_ttl
         phvwr           p.ipv4_0_protocol, IP_PROTO_UDP
         phvwr           p.{ipv4_0_srcAddr...ipv4_0_dstAddr}, \
@@ -84,7 +86,6 @@ session_info_pkt_rewrite_done:
 
         phvwr           p.{udp_0_srcPort...udp_0_dstPort}, \
                         d.{session_info_rewrite_d.udp_sport...session_info_rewrite_d.udp_dport}
-        //phvwr           p.udp_0_len, TODO
         phvwr           p.{udp_0_valid...ipv4_0_valid}, 0x5
 
         phvwr           p.mpls_label1_0_label, d.session_info_rewrite_d.mpls1_label
@@ -94,10 +95,18 @@ session_info_pkt_rewrite_done:
 
         sne             c1, d.session_info_rewrite_d.mpls2_label, r0
         phvwr.!c1       p.mpls_label1_0_bos, TRUE
-        phvwr.c1        p.mpls_label2_0_label, d.session_info_rewrite_d.mpls1_label
+        phvwr.c1        p.mpls_label2_0_label, d.session_info_rewrite_d.mpls2_label
         /* TODO: Confirm TTL value */
         phvwr.c1        p.mpls_label2_0_ttl, d.session_info_rewrite_d.ip_ttl
         phvwr.c1        p.mpls_label2_0_bos, TRUE
+
+        /* Setup IP and UDP lengths */
+        add             r1, k.p4i_to_p4e_header_packet_len, (20 + 8 + 4)
+        add.c1          r1, r1, 4
+        phvwr           p.ipv4_0_totalLen, r1
+        sub             r2, r1, 20
+        phvwr           p.udp_0_len, r2
+
         b               session_info_pkt_encap_done
         phvwr.c1        p.mpls_label2_0_valid, TRUE
 
@@ -128,5 +137,9 @@ session_info_pkt_rewrite_done:
     .brend
 
 session_info_pkt_encap_done:
+        phvwr           p.control_metadata_forward_to_uplink, TRUE
+        seq             c1, k.p4i_to_p4e_header_direction, TX_FROM_HOST
+        phvwr.c1        p.p4i_to_p4e_header_nacl_redir_oport, TM_PORT_UPLINK_1
+        phvwr.!c1       p.p4i_to_p4e_header_nacl_redir_oport, TM_PORT_UPLINK_0
         nop.e
         nop

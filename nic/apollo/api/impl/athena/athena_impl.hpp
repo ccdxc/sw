@@ -15,7 +15,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/p4/loader/loader.hpp"
 #include "nic/apollo/framework/pipeline_impl_base.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/athena_defines.h"
 
 #define PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID    0
 #define PDS_IMPL_MYTEP_NEXTHOP_HW_ID          1
@@ -169,6 +169,10 @@ private:
     /// \brief  init routine to initialize key tunnel table
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t key_tunneled_init_(void);
+
+    /// \brief  init routine to initialize NACL table
+    /// \return SDK_RET_OK on success, failure status code on error
+    sdk_ret_t nacl_init_(void);
 
     /// \brief  init routine to initialize ingress to rxdma table
     /// \return SDK_RET_OK on success, failure status code on error

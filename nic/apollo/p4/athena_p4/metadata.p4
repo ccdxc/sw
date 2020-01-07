@@ -34,11 +34,18 @@ header_type control_metadata_t {
         direction                           : 1;
         parse_tcp_option_error              : 1;
         flow_miss                           : 1;
+        config1_idx_valid                   : 1;
+        config2_idx_valid                   : 1;
+        throttle_pps_valid                  : 1;
+        throttle_bw_valid                   : 1;
+        counterset1_valid                   : 1;
+        counterset2_valid                   : 1;
+        histogram_valid                     : 1;
         launch_v4                           : 1; // Dummy - never set
         p4plus_app_id                       : 8;
         config1_epoch                       : 32;
-        config1_idx                         : 16;
         config2_epoch                       : 32;
+        config1_idx                         : 16;
         config2_idx                         : 16;
         throttle_pps                        : 16;
         throttle_bw                         : 16;
@@ -80,10 +87,10 @@ header_type scratch_metadata_t {
         mac                 : 48;
         ipv4                : 32;
 
-        flow_data_pad       : 7;
+        flow_data_pad       : 15;
 
         // Session info
-        timestamp           : 48;
+        timestamp           : 20;
         config_epoch        : 32;
         config_substrate_src_ip : 32;
         pop_hdr_flag        : 1;
@@ -129,6 +136,7 @@ header_type offset_metadata_t {
         l3_2                : 8;
         l4_1                : 8;
         l4_2                : 8;
+        user_packet_offset  : 8;
         payload_offset      : 16;
     }
 }

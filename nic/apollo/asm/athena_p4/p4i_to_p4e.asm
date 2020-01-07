@@ -28,6 +28,7 @@ p4i_to_p4e:
 
 
     /* Ingress to Egress */
+    phvwr           p.p4i_to_p4e_header_flow_miss, k.control_metadata_flow_miss
 #if 0
     phvwr.!c1       p.p4plus_to_p4_vlan_valid, FALSE
     phvwr.!c1       p.p4plus_to_p4_valid, FALSE

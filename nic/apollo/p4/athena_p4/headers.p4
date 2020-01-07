@@ -265,6 +265,7 @@ header_type p4i_to_p4e_header_t {
         counterset1             : 24;
         counterset2             : 24;
         histogram               : 24;
+        packet_len              : 16;
         nacl_redir_oport        : 4;
         nacl_redir_app_id       : 4;
         nacl_redir_lif          : 11;
@@ -275,7 +276,8 @@ header_type p4i_to_p4e_header_t {
         flow_miss               : 1;
         forward_to_uplink       : 1;
         redir_to_rxdma          : 1;
-        pad1                    : 3;
+        direction               : 1;
+        pad1                    : 2;
     }
 }
 

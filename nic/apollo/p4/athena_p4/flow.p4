@@ -10,6 +10,7 @@ action flow_hash(entry_valid, session_index, pad,
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);
         modify_field(p4i_to_p4e_header.session_index, session_index);
+        modify_field(p4i_to_p4e_header.direction, control_metadata.direction);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.flow_hash) and setup lookup in overflow table
@@ -48,7 +49,6 @@ action flow_hash(entry_valid, session_index, pad,
     } else {
         modify_field(ingress_recirc_header.flow_done, TRUE);
         modify_field(p4i_to_p4e_header.session_index, 0);
-        modify_field(p4i_to_p4e_header.flow_miss, TRUE);
         modify_field(control_metadata.flow_miss, TRUE);
     }
 

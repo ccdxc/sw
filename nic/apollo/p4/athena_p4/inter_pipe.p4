@@ -15,6 +15,7 @@ action p4i_to_p4e() {
         /* To P4E */
         remove_header(ingress_recirc_header);
         add_header(p4i_to_p4e_header);
+        modify_field(p4i_to_p4e_header.flow_miss, control_metadata.flow_miss);
         modify_field(capri_intrinsic.tm_oport, TM_PORT_EGRESS);
     }
 }
@@ -79,7 +80,8 @@ action p4e_to_rxdma() {
     modify_field(p4e_to_p4plus_classic_nic.p4plus_app_id, p4i_to_p4e_header.nacl_redir_app_id);
     add_header(p4e_to_p4plus_classic_nic_ip);
 
-    modify_field(p4e_to_p4plus_classic_nic.packet_len, capri_p4_intrinsic.packet_len);
+    //modify_field(p4e_to_p4plus_classic_nic.packet_len, capri_p4_intrinsic.packet_len);
+    modify_field(p4e_to_p4plus_classic_nic.packet_len, p4i_to_p4e_header.packet_len);
 
     if (ipv4_1.valid == TRUE) {
         modify_field(p4e_to_p4plus_classic_nic_ip.ip_sa, ipv4_1.srcAddr);

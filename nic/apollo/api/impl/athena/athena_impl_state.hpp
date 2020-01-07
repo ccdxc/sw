@@ -15,7 +15,7 @@
 #include "nic/sdk/lib/table/sltcam/sltcam.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/apollo/p4/include/defines.h"
+#include "nic/apollo/p4/include/athena_defines.h"
 
 namespace api {
 namespace impl {

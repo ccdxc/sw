@@ -22,9 +22,6 @@ metadata p4_2_p4plus_app_header_t app_header;
 metadata p4_2_p4plus_ext_app_header_t ext_app_header;
 
 @pragma dont_trim
-@pragma pa_header_union ingress app_header
-metadata p4_to_rxdma_header_t p4_to_rxdma_header;
-@pragma dont_trim
 @pragma pa_header_union ingress ext_app_header
 metadata predicate_header_t predicate_header;
 

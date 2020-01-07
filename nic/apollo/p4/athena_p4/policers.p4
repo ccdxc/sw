@@ -65,6 +65,10 @@ table policer_pps {
 
 
 control policers {
-    apply(policer_pps);
-    apply(policer_bw);
+    if (control_metadata.throttle_pps_valid == TRUE) {
+        apply(policer_pps);
+    }
+    if (control_metadata.throttle_bw_valid == TRUE) {
+        apply(policer_bw);
+    }
 }

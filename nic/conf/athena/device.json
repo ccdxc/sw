@@ -51,18 +51,21 @@
             }
         },
         {
-            "name" : "int_mnic0",
+            "name" : "cpu_mnic0",
             "dev_uuid" : 14,
-            "type": "internal_mgmt",
+            "type": "cpu",
             "lif_count" : 1,
-            "rxq_count" : 1,
-            "txq_count" : 1,
+            "rxq_count" : 4,
+            "txq_count" : 4,
             "eq_count" : 1,
             "adminq_count" : 1,
-            "intr_count" : 4
+            "intr_count" : 16,
+            "network" : {
+                "uplink" : 285278209
+            }
         },
         {
-            "name" : "cpu_mnic0",
+            "name" : "cpu_mnic1",
             "dev_uuid" : 15,
             "type": "cpu",
             "lif_count" : 1,
@@ -70,7 +73,10 @@
             "txq_count" : 4,
             "eq_count" : 1,
             "adminq_count" : 1,
-            "intr_count" : 16
+            "intr_count" : 16,
+            "network" : {
+                "uplink" : 285343745
+            }
         }
     ],
     "eth_dev" : [

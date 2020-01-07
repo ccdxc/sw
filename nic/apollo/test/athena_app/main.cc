@@ -124,7 +124,88 @@ print_usage (char **argv)
 {
     fprintf(stdout, "Usage : %s -c|--config <cfg.json>\n", argv[0]);
 }
+#ifdef __x86_64__
+void dump_pkt(std::vector<uint8_t> &pkt)
+{
+    for (std::vector<uint8_t>::iterator it = pkt.begin() ; it != pkt.end(); ++it) {
+        printf("%02x", *it);
+    }
+    printf("\n");
+}
 
+sdk_ret_t send_packet(const char *out_pkt_descr, uint8_t *out_pkt, uint16_t out_pkt_len, uint32_t out_port,
+        uint8_t *in_pkt, uint16_t in_pkt_len, uint32_t in_port)
+{
+    uint32_t                port;
+    uint32_t                cos = 0;
+    std::vector<uint8_t>    ipkt;
+    std::vector<uint8_t>    opkt;
+    std::vector<uint8_t>    epkt;
+
+    if (out_pkt_descr)
+        printf("Test with Pkt:%s\n", out_pkt_descr);
+
+    ipkt.resize(out_pkt_len);
+    memcpy(ipkt.data(), out_pkt, out_pkt_len);
+
+    printf("Sending Packet on port: %d\n", out_port);
+    dump_pkt(ipkt);
+
+    step_network_pkt(ipkt, out_port);
+
+    get_next_pkt(opkt, port, cos);
+
+    printf("Received Packet on port: %d\n", port);
+    dump_pkt(opkt);
+
+    if (in_pkt && in_pkt_len) {
+        if (port != in_port) {
+            printf("Input port (%u) does not match the expected port (%u)\n", port, in_port);
+            return SDK_RET_ERR;
+        }
+        epkt.resize(in_pkt_len);
+        memcpy(epkt.data(), in_pkt, in_pkt_len);
+        if (opkt != epkt) {
+            printf("Output packet does not match the expected packet\n");
+            return SDK_RET_ERR;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t recv_packet(void)
+{
+    uint32_t                port;
+    uint32_t                cos = 0;
+    std::vector<uint8_t>    opkt;
+
+    get_next_pkt(opkt, port, cos);
+
+    printf("Received Packet on port: %d\n", port);
+    dump_pkt(opkt);
+    return SDK_RET_OK;
+}
+uint8_t     g_h2s_port = TM_PORT_UPLINK_0;
+uint8_t     g_s2h_port = TM_PORT_UPLINK_1;
+/*
+ * Host to Switch: Flow-miss
+ */
+uint8_t g_snd_pkt_h2s_flow_miss[] = {
+    0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0, 0x00, 0x00,
+    0x00, 0x40, 0x08, 0x01, 0x81, 0x00, 0x00, 0x02,
+    0x08, 0x00, 0x45, 0x00, 0x00, 0x50, 0x00, 0x01,
+    0x00, 0x00, 0x40, 0x11, 0xB6, 0x9A, 0x02, 0x00,
+    0x00, 0x01, 0xC0, 0x00, 0x02, 0x01, 0x03, 0xE8,
+    0x27, 0x10, 0x00, 0x3C, 0x00, 0x00, 0x61, 0x62,
+    0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A,
+    0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72,
+    0x73, 0x74, 0x75, 0x76, 0x77, 0x7A, 0x78, 0x79,
+    0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68,
+    0x69, 0x6A, 0x6C, 0x6B, 0x6D, 0x6E, 0x6F, 0x70,
+    0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x7A,
+    0x78, 0x79
+};
+#endif /* __x86_64__ */
 
 int
 main (int argc, char **argv)
@@ -249,7 +330,17 @@ main (int argc, char **argv)
     pds_init(&init_params);
 
     // wait forver
-    printf("Initialization done ...");
+    printf("Initialization done ...\n");
+#ifdef __x86_64__
+    /* Packet injection support on SIM.
+     * The delay below is required to wait untill the ionic initializations are done
+     */
+    printf("Waiting for 40 seconds...\n");
+    sleep(40);
+    send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
+    sleep(5);
+    recv_packet();
+#endif /* __x86_64__ */
     while (1);
 
     return 0;

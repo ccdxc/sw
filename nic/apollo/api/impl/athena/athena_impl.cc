@@ -24,8 +24,8 @@
 #include "nic/apollo/api/impl/athena/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/athena/impl_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
-#include "nic/apollo/p4/include/defines.h"
-#include "nic/apollo/p4/include/artemis_table_sizes.h"
+#include "nic/apollo/p4/include/athena_defines.h"
+#include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "gen/p4gen/athena/include/p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
@@ -392,6 +392,34 @@ athena_impl::ingress_drop_stats_init_(void) {
 #endif
 
 sdk_ret_t
+athena_impl::nacl_init_(void)
+{
+    sdk_ret_t                    ret;
+
+    nacl_swkey_t           key = { 0 };
+    nacl_swkey_mask_t      mask = { 0 };
+    nacl_actiondata_t      data =  { 0 };
+    sdk_table_api_params_t tparams;
+    uint32_t               idx;
+
+    // Flow Hit -> Permit
+    key.control_metadata_flow_miss = 0;
+    mask.control_metadata_flow_miss_mask = 1;
+    data.action_id = NACL_NACL_PERMIT_ID;
+    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &key, &mask, &data,
+                                   NACL_NACL_REDIRECT_ID,
+                                   sdk::table::handle_t::null());
+    ret = athena_impl_db()->nacl_tbl()->insert(&tparams);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to program NACL entry for"
+                      "direction 0x%x, err %u", TX_FROM_HOST, ret);
+        return ret;
+    }
+    PDS_TRACE_DEBUG("NACL to permit flow-hit packets installed\n");
+    return ret;
+}
+
+sdk_ret_t
 athena_impl::stats_init_(void) {
 #if 0
     ingress_drop_stats_init_();
@@ -409,6 +437,10 @@ athena_impl::table_init_(void) {
         return ret;
     }
     ret = key_tunneled_init_();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+    ret = nacl_init_();
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -481,8 +513,6 @@ athena_impl::pipeline_init(void) {
     g_pds_impl_state.init(&api::g_pds_state);
     api::g_pds_state.lif_db()->impl_state_set(g_pds_impl_state.lif_impl_db());
 
-    ret = init_service_lif(APOLLO_SERVICE_LIF, p4pd_cfg.cfg_path);
-    SDK_ASSERT(ret == SDK_RET_OK);
     ret = table_init_();
     SDK_ASSERT(ret == SDK_RET_OK);
     ret = stats_init_();
@@ -566,41 +596,6 @@ sdk_ret_t
 athena_impl::meter_stats(debug::meter_stats_get_cb_t cb, uint32_t lowidx,
                          uint32_t highidx, void *ctxt) {
     sdk_ret_t ret;
-    pds_meter_debug_stats_t stats = {0};
-    uint64_t tx_offset = 0, rx_offset = 0;
-    uint64_t start_addr = 0;
-
-    if (highidx > (METER_STATS_TABLE_SIZE >> 1)) {
-        PDS_TRACE_ERR("Read meter stats failed, invalid index {} specified",
-                highidx);
-        return SDK_RET_ERR;
-    }
-
-    start_addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
-    for (uint32_t idx = lowidx; idx <= highidx; idx ++) {
-        tx_offset = idx * 8; // Each statistics is 8B
-        rx_offset = tx_offset + (METER_STATS_TABLE_SIZE << 2); // ((SIZE/2) * 8)
-
-        stats.idx = idx;
-
-        ret = sdk::asic::asic_mem_read(start_addr + tx_offset,
-                (uint8_t *)&stats.tx_bytes, 8);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Read meter TX stats for index {} failed with err %u",
-                    idx, ret);
-            return ret;
-        }
-
-        ret = sdk::asic::asic_mem_read(start_addr + rx_offset,
-                (uint8_t *)&stats.rx_bytes, 8);
-        if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Read meter RX stats for index {} failed with err %u",
-                    idx, ret);
-            return ret;
-        }
-        cb (&stats, ctxt);
-    }
-
     return SDK_RET_OK;
 }
 

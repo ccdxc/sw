@@ -458,22 +458,14 @@ parser parse_mpls_label1_1 {
     extract(mpls_label1_1);
     return select(latest.bos) {
         0 : parse_mpls_label2_1;
-//      1 : error!
+        1 : parse_mpls_payload;
     }
 }
 
 parser parse_mpls_label2_1 {
     extract(mpls_label2_1);
     return select(latest.bos) {
-        0 : parse_mpls_label3_1;
-        1 : parse_mpls_payload;
-    }
-}
-
-parser parse_mpls_label3_1 {
-    extract(mpls_label3_1);
-    return select(latest.bos) {
-//      0 : error ! ;
+        //0 : parse_mpls_label3_1; /* error */
         1 : parse_mpls_payload;
     }
 }
@@ -484,6 +476,7 @@ parser parse_mpls_label3_1 {
  *  MPLS label
  */
 parser parse_mpls_payload {
+    set_metadata(offset_metadata.user_packet_offset, current + 0);
     return select(current(0, 4)) {
         0x4 : parse_mpls_inner_ipv4;
         0x6 : parse_mpls_inner_ipv6;

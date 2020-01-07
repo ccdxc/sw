@@ -140,14 +140,21 @@ action ingress_recirc_header_info() {
 
 action init_config() {
     ingress_recirc_header_info();
+    /* TODO: Account only the user packet for throttling */
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
+             offset_metadata.l2_1);
+    subtract(p4i_to_p4e_header.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     if (capri_intrinsic.tm_oq != TM_P4_RECIRC_QUEUE) {
         modify_field(capri_intrinsic.tm_iq, capri_intrinsic.tm_oq);
     }
+
+    if (control_metadata.skip_flow_lkp == TRUE) {
+        modify_field(control_metadata.flow_miss, TRUE);
+    }
 }
 
-@pragma stage 1
+@pragma stage 0
 table init_config {
     actions {
         init_config;

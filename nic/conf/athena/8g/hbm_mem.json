@@ -126,6 +126,18 @@
             "_comment": "4M * 64B"
         },
         {
+            "name": "session_info",
+            "size": "128M",
+            "cache": "p4ig",
+            "_comment": "4M * 32"
+        },
+        {
+            "name": "session_info_rewrite",
+            "size": "256M",
+            "cache": "p4eg",
+            "_comment": "4M * 64B"
+        },
+        {
             "name": "qos-hbm-fifo",
             "size": "0K"
         },
