@@ -1120,11 +1120,12 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
         api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
     }
     api_spec->host_ifindex = proto_spec.hostifindex();
+    api_spec->tx_policer.id = proto_spec.txpolicerid();
+    api_spec->rx_policer.id = proto_spec.rxpolicerid();
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
     api_spec->flow_learn_en = proto_spec.flowlearnen();
-    api_spec->tx_policer.id = proto_spec.txpolicerid();
-    api_spec->rx_policer.id = proto_spec.rxpolicerid();
+    api_spec->meter = proto_spec.meteren();
     return SDK_RET_OK;
 }
 
@@ -1177,11 +1178,12 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
         proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
     }
     proto_spec->set_hostifindex(api_spec->host_ifindex);
+    proto_spec->set_txpolicerid(api_spec->tx_policer.id);
+    proto_spec->set_rxpolicerid(api_spec->rx_policer.id);
     proto_spec->set_primary(api_spec->primary);
     proto_spec->set_maxsessions(api_spec->max_sessions);
     proto_spec->set_flowlearnen(api_spec->flow_learn_en);
-    proto_spec->set_txpolicerid(api_spec->tx_policer.id);
-    proto_spec->set_rxpolicerid(api_spec->rx_policer.id);
+    proto_spec->set_meteren(api_spec->meter);
 }
 
 // populate proto buf status from vnic API status
@@ -2560,6 +2562,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
                        sizeof(api_spec->routes[i].nat.dst_nat_ip));
             }
         }
+        api_spec->routes[i].meter = proto_route.meteren();
     }
     return SDK_RET_OK;
 }
@@ -2631,6 +2634,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
                 route->mutable_nataction()->mutable_dstnatip(),
                 &api_spec->routes[i].nat.dst_nat_ip);
         }
+        route->set_meteren(api_spec->routes[i].meter);
     }
     return;
 }

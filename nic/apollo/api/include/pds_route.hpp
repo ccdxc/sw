@@ -51,11 +51,16 @@ typedef struct pds_route_s {
         pds_vnic_key_t          vnic;     ///< vnic nexthop
     };
     /// NAT action, if any
-    /// if NATAction is set, source and/or destination NAT will be performed on
+    /// if NAT action is set, source and/or destination NAT will be performed on
     /// the packet and if destination NAT is performed, another route lookup
     /// will be done in the same route table with the post-NAT destination IP
     /// address being rewritten
     pds_nat_action_t        nat;          ///< NAT action
+    /// enable or disable metering for the route
+    /// if metering is true, when traffic from a vnic hits the route and
+    /// metering is enabled on that vnic, such traffic is accounted (bytes &
+    /// packets) against the vnic
+    bool                    meter;
 } __PACK__ pds_route_t;
 
 /// \brief route table configuration

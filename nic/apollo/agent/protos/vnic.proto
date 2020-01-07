@@ -80,6 +80,9 @@ message VnicSpec {
   // is cretaed upon processing of the 1st packet and eventually exported to
   // agent/controller/collector
   bool            FlowLearnEn           = 22;
+  // if MeterEn is true, when traffic from a vnic hits a route with metering
+  // enabled, such traffic is accounted (bytes & packets) against the vnic
+  bool            MeterEn               = 23;
 }
 
 // operational status of Vnic, if any

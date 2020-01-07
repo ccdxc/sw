@@ -65,10 +65,10 @@ message Route {
   // will be done in the same route table with the post-NAT destination IP
   // address being rewritten
   NATAction           NatAction      = 9;
-  // if Meter is on, when traffic from a vnic hist the route and
-  // vnic's meter id (if configured) will be used to account
-  // packet & byte count
-  bool                Meter          = 10;
+  // if MeterEn is true, when traffic from a vnic hits the route and
+  // metering is enabled on that vnic, such traffic is accounted (bytes &
+  // packets) against the vnic
+  bool                MeterEn        = 10;
 }
 
 // route table specification

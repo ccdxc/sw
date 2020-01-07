@@ -72,6 +72,11 @@ typedef struct pds_vnic_spec_s {
     /// session is cretaed upon processing of the 1st packet and eventually
     /// exported to agent/controller/collector
     bool     flow_learn_en;
+    /// enable or disable metering on this vnic
+    /// if metering is true, when traffic from a vnic hits a route with
+    /// metering enabled, such traffic is accounted (bytes & packets)
+    /// against the vnic
+    bool     meter;
 } __PACK__ pds_vnic_spec_t;
 
 /// \brief VNIC status
