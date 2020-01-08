@@ -103,9 +103,13 @@ f_flow_info_thread_1:
   /* qos class selection */
   seq           c1, d.u.flow_info_d.qos_class_en, 1
   phvwr.c1      p.qos_metadata_qos_class_id, d.u.flow_info_d.qos_class_id
+  
+  /* Skip if its a deja-vu packet */
+  seq           c1, k.control_metadata_skip_flow_update, TRUE
+  bcf           [c1], flow_skip
 
   /* mirror session id and logging */
-  phvwrpair     p.capri_intrinsic_tm_span_session, \
+  phvwrpair.!c1 p.capri_intrinsic_tm_span_session, \
                     d.u.flow_info_d.ingress_mirror_session_id, \
                     p.capri_intrinsic_tm_cpu, d.u.flow_info_d.log_en
   phvwr         p.control_metadata_egress_mirror_session_id, \
