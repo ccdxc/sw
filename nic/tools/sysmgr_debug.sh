@@ -4,7 +4,7 @@ NOW=`date +"%Y%m%d%H%M%S"`
 TOP=/obfl/sysmgr-dumps
 LOCATION=${TOP}/debug-${NOW}-$1
 MAX_DAYS="1"
-MAX_RECORDS="11"
+MAX_RECORDS="4"
 
 mkdir -p ${LOCATION}
 

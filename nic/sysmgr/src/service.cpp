@@ -193,10 +193,12 @@ void Service::on_child(pid_t pid)
 
     std::string reason = parse_status(this->child_watcher->get_status());
 
-    glog->info("Service {} {}", this->spec->name, reason);
-    g_events->ServiceStoppedEvent(this->spec->name);
+    if (this->spec->kind != SERVICE_ONESHOT) {
+        glog->info("Service {} {}", this->spec->name, reason);
+        g_events->ServiceStoppedEvent(this->spec->name);
+        run_debug(this->pid);
+    }
 
-    run_debug(this->pid);
 
     if (spec->mem_limit > 0.0) {
         cg_reset(this->pid);
