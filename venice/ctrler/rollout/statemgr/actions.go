@@ -73,7 +73,7 @@ func verifyAdmittedDSCState(dscState *SmartNICState, ros *RolloutState, op proto
 		// not retry: skip DSC and set phase
 		if numRetries == 0 {
 			//this is counted as successful rollout so set the status
-			ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC running same version", phase)
+			ros.setSmartNICPhase(dscState.Name, opStatusSkipped, "Skipped DSC from upgrade: DSC running same version", roproto.RolloutPhase_COMPLETE)
 		} else {
 			//retry mode and same version, no need to to setPhase
 			log.Infof("SKIPDSC: Retry mode and running same version nothing to do.")
