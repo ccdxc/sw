@@ -10,19 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 import { AuthRadiusDomain, IAuthRadiusDomain } from './auth-radius-domain.model';
 
 export interface IAuthRadius {
-    'enabled'?: boolean;
     'domains'?: Array<IAuthRadiusDomain>;
 }
 
 
 export class AuthRadius extends BaseModel implements IAuthRadius {
-    'enabled': boolean = null;
     'domains': Array<AuthRadiusDomain> = null;
     public static propInfo: { [prop in keyof IAuthRadius]: PropInfoItem } = {
-        'enabled': {
-            required: false,
-            type: 'boolean'
-        },
         'domains': {
             required: false,
             type: 'object'
@@ -61,13 +55,6 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['enabled'] != null) {
-            this['enabled'] = values['enabled'];
-        } else if (fillDefaults && AuthRadius.hasDefaultValue('enabled')) {
-            this['enabled'] = AuthRadius.propInfo['enabled'].default;
-        } else {
-            this['enabled'] = null
-        }
         if (values) {
             this.fillModelArray<AuthRadiusDomain>(this, 'domains', values['domains'], AuthRadiusDomain);
         } else {
@@ -80,7 +67,6 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthRadius.propInfo['enabled']),
                 'domains': new FormArray([]),
             });
             // generate FormArray control elements
@@ -100,7 +86,6 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['enabled'].setValue(this['enabled']);
             this.fillModelArray<AuthRadiusDomain>(this, 'domains', this['domains'], AuthRadiusDomain);
         }
     }

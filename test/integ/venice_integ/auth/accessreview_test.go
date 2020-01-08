@@ -170,7 +170,7 @@ func TestSubjectAccessReviewValidationFailures(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, adminCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, adminCred, tinfo.l)
@@ -205,7 +205,7 @@ func TestSelfSubjectAccessReview(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -351,7 +351,7 @@ func TestNonExistentUser(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -383,7 +383,7 @@ func TestSubjectAccessReview(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)

@@ -211,7 +211,7 @@ func TestAuditLogs(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -372,7 +372,7 @@ func TestAuditAuthz(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -461,7 +461,7 @@ func TestSecretsInAuditLogs(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -701,7 +701,7 @@ func TestAuditingWithElasticNotAvailable(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -747,7 +747,7 @@ func TestAPIServerNotAvailable(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, userCred, ti.logger); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, userCred, ti.logger)

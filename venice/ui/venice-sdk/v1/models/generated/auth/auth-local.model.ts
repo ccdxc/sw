@@ -9,17 +9,11 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface IAuthLocal {
-    'enabled'?: boolean;
 }
 
 
 export class AuthLocal extends BaseModel implements IAuthLocal {
-    'enabled': boolean = null;
     public static propInfo: { [prop in keyof IAuthLocal]: PropInfoItem } = {
-        'enabled': {
-            required: false,
-            type: 'boolean'
-        },
     }
 
     public getPropInfo(propName: string): PropInfoItem {
@@ -53,13 +47,6 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['enabled'] != null) {
-            this['enabled'] = values['enabled'];
-        } else if (fillDefaults && AuthLocal.hasDefaultValue('enabled')) {
-            this['enabled'] = AuthLocal.propInfo['enabled'].default;
-        } else {
-            this['enabled'] = null
-        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -67,7 +54,6 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLocal.propInfo['enabled']),
             });
         }
         return this._formGroup;
@@ -79,7 +65,6 @@ export class AuthLocal extends BaseModel implements IAuthLocal {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['enabled'].setValue(this['enabled']);
         }
     }
 }

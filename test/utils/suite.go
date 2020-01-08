@@ -310,8 +310,7 @@ func (tu *TestUtils) SetupAuth() {
 		}
 	}
 	// create authentication policy with local auth enabled
-	_, err = testutils.CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: tu.AuthMethod == auth.Authenticators_LOCAL.String()},
-		&auth.Ldap{Enabled: tu.AuthMethod == auth.Authenticators_LDAP.String()})
+	_, err = testutils.CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, nil, nil, []string{auth.Authenticators_LOCAL.String()}, testutils.ExpiryDuration)
 	if err != nil {
 		// 409 is returned when authpolicy already exists. 401 when auth is already bootstrapped. we are ok with that
 		if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {

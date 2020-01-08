@@ -318,7 +318,7 @@ func (s *authHooks) validateBindPassword(ctx context.Context, kv kvstore.Interfa
 		switch authenticatorType {
 		case auth.Authenticators_LDAP.String():
 			config := r.Spec.Authenticators.GetLdap()
-			if config != nil && config.Enabled && len(config.Domains) == 1 && config.Domains[0].BindPassword == "" {
+			if config != nil && len(config.Domains) == 1 && config.Domains[0].BindPassword == "" {
 				return i, true, errors.New("bind password not defined")
 			}
 		default:

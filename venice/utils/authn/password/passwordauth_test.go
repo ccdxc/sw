@@ -87,7 +87,7 @@ func cachePasswordHash() {
 }
 
 func TestAuthenticate(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
 	if err != nil {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
@@ -107,7 +107,7 @@ func TestAuthenticate(t *testing.T) {
 }
 
 func TestIncorrectPasswordAuthentication(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
 	if err != nil {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
@@ -127,7 +127,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 }
 
 func TestIncorrectUserAuthentication(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false})
+	policy, err := CreateAuthenticationPolicyWithOrder(apicl, &auth.Local{}, &auth.Ldap{}, &auth.Radius{}, []string{auth.Authenticators_LOCAL.String()}, "144h")
 	if err != nil {
 		t.Errorf("err %s in CreateAuthenticationPolicy", err)
 		return
@@ -145,23 +145,4 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
 	Assert(t, err != nil, "No error returned for incorrect username")
 	Assert(t, err == ErrInvalidCredential, "Incorrect error type returned")
-}
-
-func TestDisabledPasswordAuthenticator(t *testing.T) {
-	policy, err := CreateAuthenticationPolicy(apicl, &auth.Local{Enabled: false}, &auth.Ldap{Enabled: false})
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-
-	defer DeleteAuthenticationPolicy(apicl)
-
-	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-	Assert(t, !ok, "Successful local user authentication")
-	Assert(t, autheduser == nil, "User returned with disabled password authenticator")
-	AssertOk(t, err, "Error returned with disabled password authenticator")
 }

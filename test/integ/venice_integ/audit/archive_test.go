@@ -50,7 +50,7 @@ func TestAuditLogArchive(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -108,7 +108,7 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)
@@ -218,7 +218,7 @@ func TestCancelArchiveRequests(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create default tenant and global admin user
-	if err := SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, adminCred, ti.logger); err != nil {
+	if err := SetupAuth(ti.apiServerAddr, true, nil, nil, adminCred, ti.logger); err != nil {
 		t.Fatalf("auth setupElastic failed")
 	}
 	defer CleanupAuth(ti.apiServerAddr, true, false, adminCred, ti.logger)

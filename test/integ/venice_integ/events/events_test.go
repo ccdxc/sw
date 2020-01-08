@@ -385,7 +385,7 @@ func TestEventsRESTEndpoints(t *testing.T) {
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, nil, nil, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service")
 	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
@@ -870,7 +870,7 @@ func TestEventsAlertEngine(t *testing.T) {
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, nil, nil, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service, err: %v", err)
 	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)
@@ -1252,7 +1252,7 @@ func TestEventsAlertEngineWithAPIServerShutdown(t *testing.T) {
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, nil, nil, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service, err: %v", err)
 	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 
@@ -2645,7 +2645,7 @@ func TestGarbageCollectAlerts(t *testing.T) {
 
 	// setup authn and get authz token
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(ti.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, ti.logger)
+	err = testutils.SetupAuth(ti.apiServerAddr, true, nil, nil, userCreds, ti.logger)
 	AssertOk(t, err, "failed to setup authN service, err: %v", err)
 	defer testutils.CleanupAuth(ti.apiServerAddr, true, false, userCreds, ti.logger)
 	authzHeader, err := testutils.GetAuthorizationHeader(apiGwAddr, userCreds)

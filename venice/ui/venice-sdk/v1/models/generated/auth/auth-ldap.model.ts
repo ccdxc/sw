@@ -10,21 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 import { AuthLdapDomain, IAuthLdapDomain } from './auth-ldap-domain.model';
 
 export interface IAuthLdap {
-    'enabled'?: boolean;
     'domains'?: Array<IAuthLdapDomain>;
 }
 
 
 export class AuthLdap extends BaseModel implements IAuthLdap {
-    /** Whether LDAP is enabled or not */
-    'enabled': boolean = null;
     'domains': Array<AuthLdapDomain> = null;
     public static propInfo: { [prop in keyof IAuthLdap]: PropInfoItem } = {
-        'enabled': {
-            description:  `Whether LDAP is enabled or not`,
-            required: false,
-            type: 'boolean'
-        },
         'domains': {
             required: false,
             type: 'object'
@@ -63,13 +55,6 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
-        if (values && values['enabled'] != null) {
-            this['enabled'] = values['enabled'];
-        } else if (fillDefaults && AuthLdap.hasDefaultValue('enabled')) {
-            this['enabled'] = AuthLdap.propInfo['enabled'].default;
-        } else {
-            this['enabled'] = null
-        }
         if (values) {
             this.fillModelArray<AuthLdapDomain>(this, 'domains', values['domains'], AuthLdapDomain);
         } else {
@@ -82,7 +67,6 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'enabled': CustomFormControl(new FormControl(this['enabled']), AuthLdap.propInfo['enabled']),
                 'domains': new FormArray([]),
             });
             // generate FormArray control elements
@@ -102,7 +86,6 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
 
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
-            this._formGroup.controls['enabled'].setValue(this['enabled']);
             this.fillModelArray<AuthLdapDomain>(this, 'domains', this['domains'], AuthLdapDomain);
         }
     }

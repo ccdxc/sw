@@ -25,7 +25,6 @@ func getDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -52,9 +51,7 @@ func getDefaultAuthenticationPolicy() *auth.AuthenticationPolicy {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
@@ -217,7 +214,6 @@ func TestBind(t *testing.T) {
 	}
 
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{

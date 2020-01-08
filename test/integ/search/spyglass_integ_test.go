@@ -216,7 +216,7 @@ func (tInfo *testInfo) setup(t *testing.T) error {
 
 	// setup auth
 	userCreds := &auth.PasswordCredential{Username: testutils.TestLocalUser, Password: testutils.TestLocalPassword, Tenant: testutils.TestTenant}
-	err = testutils.SetupAuth(tInfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCreds, tInfo.l)
+	err = testutils.SetupAuth(tInfo.apiServerAddr, true, nil, nil, userCreds, tInfo.l)
 	if err != nil {
 		return err
 	}

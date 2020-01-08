@@ -110,12 +110,8 @@ func NewMockAuthenticationManager() *AuthenticationManager {
 			},
 			Spec: auth.AuthenticationPolicySpec{
 				Authenticators: auth.Authenticators{
-					Ldap: &auth.Ldap{
-						Enabled: true,
-					},
-					Local: &auth.Local{
-						Enabled: true,
-					},
+					Ldap:               &auth.Ldap{},
+					Local:              &auth.Local{},
 					AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 				},
 				Secret: nil,

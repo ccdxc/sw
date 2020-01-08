@@ -59,7 +59,6 @@ var typesMapAuth = map[string]*api.Struct{
 			"bind-dn":                       api.CLIInfo{Path: "Status.LdapServers[].BindDN", Skip: false, Insert: "", Help: ""},
 			"bind-password":                 api.CLIInfo{Path: "Status.LdapServers[].BindPassword", Skip: false, Insert: "", Help: ""},
 			"email":                         api.CLIInfo{Path: "Spec.Authenticators.Ldap.Domains[].AttributeMapping.Email", Skip: false, Insert: "", Help: ""},
-			"enabled":                       api.CLIInfo{Path: "Spec.Authenticators.Radius.Enabled", Skip: false, Insert: "", Help: ""},
 			"fullname":                      api.CLIInfo{Path: "Spec.Authenticators.Ldap.Domains[].AttributeMapping.Fullname", Skip: false, Insert: "", Help: ""},
 			"generation-id":                 api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"group":                         api.CLIInfo{Path: "Spec.Authenticators.Ldap.Domains[].AttributeMapping.Group", Skip: false, Insert: "", Help: ""},
@@ -120,8 +119,6 @@ var typesMapAuth = map[string]*api.Struct{
 	"auth.Ldap": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Ldap{}) },
 		Fields: map[string]api.Field{
-			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{ID: "enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
 			"Domains": api.Field{Name: "Domains", CLITag: api.CLIInfo{ID: "domains", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "domains", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.LdapDomain"},
 		},
 	},
@@ -185,9 +182,7 @@ var typesMapAuth = map[string]*api.Struct{
 	},
 	"auth.Local": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Local{}) },
-		Fields: map[string]api.Field{
-			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{ID: "enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-		},
+		Fields: map[string]api.Field{},
 	},
 	"auth.Operation": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Operation{}) },
@@ -304,8 +299,6 @@ var typesMapAuth = map[string]*api.Struct{
 	"auth.Radius": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(Radius{}) },
 		Fields: map[string]api.Field{
-			"Enabled": api.Field{Name: "Enabled", CLITag: api.CLIInfo{ID: "enabled", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enabled", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_BOOL"},
-
 			"Domains": api.Field{Name: "Domains", CLITag: api.CLIInfo{ID: "domains", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "domains", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "auth.RadiusDomain"},
 		},
 	},

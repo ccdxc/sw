@@ -46,10 +46,6 @@ func NewLdapAuthenticator(config *auth.Ldap) authn.Authenticator {
 //   bool true upon successful authentication
 //   error ErrSSLConfig if there is certificate format error, errors returned from LDAP client library
 func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
-	if !a.ldapConfig.GetEnabled() {
-		return nil, false, nil
-	}
-
 	ldapCredential, found := credential.(*auth.PasswordCredential)
 	if !found {
 		log.Errorf("Incorrect credential type: expected '*authn.PasswordCredential', got [%T]", credential)

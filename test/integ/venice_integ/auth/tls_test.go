@@ -189,7 +189,7 @@ func TestClusterUpdate(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)

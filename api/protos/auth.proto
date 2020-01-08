@@ -87,9 +87,7 @@ message Authenticators {
 }
 
 message Ldap {
-    // Whether LDAP is enabled or not
-    bool Enabled                = 1 [(gogoproto.jsontag) = "enabled"];
-    repeated LdapDomain Domains = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
+    repeated LdapDomain Domains = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
 }
 
 message LdapDomain {
@@ -171,7 +169,6 @@ message LdapServerStatus {
 }
 
 message Local {
-    bool Enabled = 1 [(gogoproto.jsontag) = "enabled"];
 }
 
 message Radius {
@@ -185,8 +182,7 @@ message Radius {
         // EAP_TTLS sends user credentials using TLS tunnel
         EAP_TTLS_PAP  = 2[(venice.enumValueStr) = "eap-ttls-pap"];;
     }
-    bool Enabled                  = 1 [(gogoproto.jsontag) = "enabled"];
-    repeated RadiusDomain Domains = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
+    repeated RadiusDomain Domains = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "domains,omitempty"];
 }
 
 message RadiusDomain {

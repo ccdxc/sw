@@ -196,11 +196,12 @@ func (a *authHooks) userCreateCheck(ctx context.Context, in interface{}) (contex
 		return ctx, in, true, err
 	}
 	// check if local auth is enabled
-	if !policy.Spec.Authenticators.Local.Enabled {
-		a.logger.Errorf("Local auth not enabled, user [%s] cannot be created", obj.Name)
-		return ctx, in, true, errors.New("local authentication not enabled")
+	for _, authenticator := range policy.Spec.Authenticators.AuthenticatorOrder {
+		if authenticator == auth.Authenticators_LOCAL.String() {
+			return ctx, in, false, nil
+		}
 	}
-	return ctx, in, false, nil
+	return ctx, in, true, errors.New("local authentication not enabled")
 }
 
 // userUpdateCheck pre-call hook fails is password is specified in update operation

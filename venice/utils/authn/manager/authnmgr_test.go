@@ -107,7 +107,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -134,9 +133,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),
@@ -149,13 +146,9 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: false,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+				Ldap:               &auth.Ldap{},
+				Local:              &auth.Local{},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),
 		},
@@ -168,7 +161,6 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -195,9 +187,7 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
 			TokenExpiry: expiration.String(),
@@ -210,13 +200,9 @@ func authenticationPoliciesData() map[string]*auth.AuthenticationPolicy {
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: false,
-				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+				Ldap:               &auth.Ldap{},
+				Local:              &auth.Local{},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),
 		},
@@ -307,11 +293,11 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	}
 }
 
-// disabledLocalAuthenticatorPolicyData returns policy data where both LDAP and Local authenticators are disabled
+// disabledLocalAuthenticatorPolicyData returns policy data where Local authenticator is disabled
 func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPolicy) {
 	policydata := make(map[string]*auth.AuthenticationPolicy)
 
-	policydata["LDAP explicitly disabled, Local explicitly disabled"] = &auth.AuthenticationPolicy{
+	policydata["LDAP disabled, Local disabled"] = &auth.AuthenticationPolicy{
 		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Name: "AuthenticationPolicy",
@@ -319,64 +305,6 @@ func disabledLocalAuthenticatorPolicyData() map[string](*auth.AuthenticationPoli
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: false,
-				},
-				Local: &auth.Local{
-					Enabled: false,
-				},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-			TokenExpiry: expiration.String(),
-		},
-	}
-	policydata["LDAP implicitly disabled, Local implicitly disabled"] = &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap:               &auth.Ldap{},
-				Local:              &auth.Local{},
-				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
-			},
-			TokenExpiry: expiration.String(),
-		},
-	}
-
-	return policydata
-}
-
-// TestAuthenticateWithDisabledAuthenticators test authentication for local user when all authenticators are disabled
-func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
-	for testtype, policy := range disabledLocalAuthenticatorPolicyData() {
-		createAuthenticationPolicy(t, policy)
-
-		// authenticate
-		var autheduser *auth.User
-		var ok bool
-		var err error
-		AssertEventually(t, func() (bool, interface{}) {
-			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
-			return !ok, nil
-		}, fmt.Sprintf("[%v] local user authentication should fail", testtype))
-
-		Assert(t, autheduser == nil, fmt.Sprintf("[%v] User returned with disabled authenticators", testtype))
-		AssertOk(t, err, fmt.Sprintf("[%v] No error should be returned with disabled authenticators", testtype))
-		deleteAuthenticationPolicy(t)
-	}
-}
-
-func TestAuthnMgrValidateToken(t *testing.T) {
-	policy := &auth.AuthenticationPolicy{
-		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
-		ObjectMeta: api.ObjectMeta{
-			Name: "AuthenticationPolicy",
-		},
-		Spec: auth.AuthenticationPolicySpec{
-			Authenticators: auth.Authenticators{
-				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -403,9 +331,71 @@ func TestAuthnMgrValidateToken(t *testing.T) {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
+				Local:              &auth.Local{},
+				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String()},
+			},
+			TokenExpiry: expiration.String(),
+		},
+	}
+	return policydata
+}
+
+// TestAuthenticateWithDisabledAuthenticators test authentication for local user when local authenticator is disabled
+func TestAuthenticateWithDisabledAuthenticators(t *testing.T) {
+	for testtype, policy := range disabledLocalAuthenticatorPolicyData() {
+		createAuthenticationPolicy(t, policy)
+
+		// authenticate
+		var autheduser *auth.User
+		var ok bool
+		var err error
+		AssertEventually(t, func() (bool, interface{}) {
+			autheduser, ok, err = authnmgr.Authenticate(&auth.PasswordCredential{Username: testUser, Password: testPassword})
+			return !ok, nil
+		}, fmt.Sprintf("[%v] local user authentication should fail", testtype))
+
+		Assert(t, autheduser == nil, fmt.Sprintf("[%v] User returned with disabled authenticators", testtype))
+		Assert(t, err != nil, fmt.Sprintf("[%v] No error returned with disabled local authenticator", testtype))
+		deleteAuthenticationPolicy(t)
+	}
+}
+
+func TestAuthnMgrValidateToken(t *testing.T) {
+	policy := &auth.AuthenticationPolicy{
+		TypeMeta: api.TypeMeta{Kind: "AuthenticationPolicy"},
+		ObjectMeta: api.ObjectMeta{
+			Name: "AuthenticationPolicy",
+		},
+		Spec: auth.AuthenticationPolicySpec{
+			Authenticators: auth.Authenticators{
+				Ldap: &auth.Ldap{
+					Domains: []*auth.LdapDomain{
+						{
+							Servers: []*auth.LdapServer{
+								{
+									Url: "localhost:389",
+									TLSOptions: &auth.TLSOptions{
+										StartTLS:                   true,
+										SkipServerCertVerification: false,
+										ServerName:                 ServerName,
+										TrustedCerts:               TrustedCerts,
+									},
+								},
+							},
+
+							BaseDN:       BaseDN,
+							BindDN:       BindDN,
+							BindPassword: BindPassword,
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             UserAttribute,
+								UserObjectClass:  UserObjectClassAttribute,
+								Group:            GroupAttribute,
+								GroupObjectClass: GroupObjectClassAttribute,
+							},
+						},
+					},
 				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),

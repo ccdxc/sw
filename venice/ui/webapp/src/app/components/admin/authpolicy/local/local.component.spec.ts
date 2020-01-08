@@ -63,7 +63,7 @@ describe('LocalComponent', () => {
     component.localData = { enabled: true };
     fixture.detectChanges();
     let toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
-    expect(toggle.length).toBe(1);
+    expect(toggle.length).toBe(0);
 
     component.localData = { enabled: false };
     fixture.detectChanges();

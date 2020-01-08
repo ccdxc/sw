@@ -141,18 +141,10 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     return this.isAllInputsValid(this.radiusObject);
   }
 
-  setRadiusEnableControl() {
-    if (this.radiusEditMode) {
-      this.radiusObject.$formGroup.controls['enabled'].enable();
-    } else {
-      this.radiusObject.$formGroup.controls['enabled'].disable();
-    }
-  }
-
   setRadiusEditMode(isInEditMode) {
     this.radiusEditMode = isInEditMode;
-    this.setRadiusEnableControl();
   }
+
 
   addServer() {
     const servers = this.radiusObject.$formGroup.get(['domains', '0', 'servers']) as FormArray;
@@ -221,7 +213,6 @@ export class RadiusComponent extends AuthpolicybaseComponent implements OnInit, 
     this.toggleEdit();
     this.inCreateMode = true;
     this.setRadiusEditMode(true);
-    this.radiusObject.$formGroup.controls['enabled'].setValue(true);  // set RADIUS enable when set "create RADIUS"
   }
 
 }

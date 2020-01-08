@@ -156,7 +156,7 @@ describe('AuthpolicyComponent', () => {
           expect(radius).toBeTruthy();
           // checking that the data is the same
           const toggle = groups[0].queryAll(By.css('.mat-checked'));
-          expect(toggle.length).toBe(1);
+          expect(toggle.length).toBe(0);
           const values = groups[0].queryAll(By.css('.ldap-input'));
           expect(values[0].nativeElement.innerHTML).toContain('binddn');
           expect(values[1].nativeElement.innerHTML).toContain('**********'); // VS-214 use password input

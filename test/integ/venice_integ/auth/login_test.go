@@ -31,7 +31,7 @@ func TestLogin(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -136,7 +136,7 @@ func TestLoginFailures(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -178,7 +178,7 @@ func TestUserPasswordRemoval(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -257,7 +257,7 @@ func TestAuthPolicy(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -284,8 +284,8 @@ func TestAuthPolicy(t *testing.T) {
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Ldap:               &auth.Ldap{Enabled: false},
-				Local:              &auth.Local{Enabled: true},
+				Ldap:               &auth.Ldap{},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
 		},
@@ -300,9 +300,9 @@ func TestAuthPolicy(t *testing.T) {
 			},
 			Spec: auth.AuthenticationPolicySpec{
 				Authenticators: auth.Authenticators{
-					Ldap:               &auth.Ldap{Enabled: false, Domains: []*auth.LdapDomain{{BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword}}},
-					Radius:             &auth.Radius{Enabled: false, Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}}}},
-					Local:              &auth.Local{Enabled: true},
+					Ldap:               &auth.Ldap{Domains: []*auth.LdapDomain{{BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword}}},
+					Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}}}},
+					Local:              &auth.Local{},
 					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 				},
 				TokenExpiry: "24h",
@@ -334,8 +334,8 @@ func TestAuthPolicy(t *testing.T) {
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Ldap:               &auth.Ldap{Enabled: false},
-				Local:              &auth.Local{Enabled: true},
+				Ldap:               &auth.Ldap{},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
 			TokenExpiry: "1m",
@@ -350,7 +350,7 @@ func TestAuthPolicy(t *testing.T) {
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Local:              &auth.Local{Enabled: true},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
 			},
 			TokenExpiry: "1m",
@@ -366,7 +366,7 @@ func TestUserStatus(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -434,7 +434,6 @@ func TestLdapLogin(t *testing.T) {
 	}
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -474,7 +473,7 @@ func TestLdapLogin(t *testing.T) {
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, &auth.Radius{Enabled: false}, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, nil, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
@@ -546,7 +545,6 @@ func TestUsernameConflict(t *testing.T) {
 	}
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -575,7 +573,7 @@ func TestUsernameConflict(t *testing.T) {
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, &auth.Radius{Enabled: false}, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, ldapConf, nil, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
@@ -628,7 +626,6 @@ func TestUsernameConflict(t *testing.T) {
 func TestLdapChecks(t *testing.T) {
 	config := getADConfig()
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -659,7 +656,7 @@ func TestLdapChecks(t *testing.T) {
 	MustCreateCluster(tinfo.apicl)
 	defer MustDeleteCluster(tinfo.apicl)
 	// create authentication policy
-	MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapConf, &auth.Radius{Enabled: false})
+	MustCreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, ldapConf, nil)
 	defer MustDeleteAuthenticationPolicy(tinfo.apicl)
 	restcl, err := apiclient.NewRestAPIClient(tinfo.apiGwAddr)
 	if err != nil {
@@ -739,7 +736,6 @@ func TestRadiusLogin(t *testing.T) {
 		Tenant:   config.Tenant,
 	}
 	radiusConf := &auth.Radius{
-		Enabled: true,
 		Domains: []*auth.RadiusDomain{
 			{
 				Servers: []*auth.RadiusServer{
@@ -761,7 +757,7 @@ func TestRadiusLogin(t *testing.T) {
 		},
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, radiusConf, localUserCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, radiusConf, localUserCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, true, localUserCred, tinfo.l)
@@ -838,7 +834,7 @@ func TestPasswordChange(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -949,7 +945,7 @@ func TestPasswordReset(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -1004,7 +1000,6 @@ func TestAuthOrder(t *testing.T) {
 		Tenant:   radiusConfig.Tenant,
 	}
 	radiusConf := &auth.Radius{
-		Enabled: true,
 		Domains: []*auth.RadiusDomain{
 			{
 				Servers: []*auth.RadiusServer{{
@@ -1018,7 +1013,6 @@ func TestAuthOrder(t *testing.T) {
 	}
 	ldapConfig := getADConfig()
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -1069,7 +1063,7 @@ func TestPasswordValidation(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -1098,7 +1092,7 @@ func TestChangeUserType(t *testing.T) {
 		Tenant:   testTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)
@@ -1126,7 +1120,7 @@ func TestTokenSecretGenerate(t *testing.T) {
 		Tenant:   globals.DefaultTenant,
 	}
 	// create tenant and admin user
-	if err := SetupAuth(tinfo.apiServerAddr, true, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false}, userCred, tinfo.l); err != nil {
+	if err := SetupAuth(tinfo.apiServerAddr, true, nil, nil, userCred, tinfo.l); err != nil {
 		t.Fatalf("auth setup failed")
 	}
 	defer CleanupAuth(tinfo.apiServerAddr, true, false, userCred, tinfo.l)

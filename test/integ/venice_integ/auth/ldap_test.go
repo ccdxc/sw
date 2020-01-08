@@ -183,7 +183,7 @@ func TestDisabledLdapAuthenticator(t *testing.T) {
 func TestReferral(t *testing.T) {
 	config := getOpenLdapConfig()
 	for testtype, ldapconf := range authenticationPoliciesData(config) {
-		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
+		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, ldapconf)
 		if err != nil {
 			t.Errorf("err %s in CreateAuthenticationPolicy", err)
 			return

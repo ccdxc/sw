@@ -84,7 +84,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.LDAPObject.setValues(this.LDAPData);
     if (this.LDAPObject.domains == null || this.LDAPObject.domains.length === 0) {
       const newDomain = new AuthLdapDomain();
-      this.LDAPObject.domains = [ newDomain ];
+      this.LDAPObject.domains = [newDomain];
       const domains = this.LDAPObject.$formGroup.get(['domains']) as FormArray;
       domains.insert(0, newDomain.$formGroup);
     }
@@ -169,7 +169,7 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
         this.checkServerTlsDisabling(server, index);
       });
     }
-    this.setLDAPEnableControl();
+
   }
 
   /**
@@ -186,17 +186,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     });
   }
 
-  setLDAPEnableControl() {
-    if (this.LDAPEditMode) {
-      this.LDAPObject.$formGroup.controls['enabled'].enable();
-    } else {
-      this.LDAPObject.$formGroup.controls['enabled'].disable();
-    }
-  }
 
   setLDAPEditMode(isInEditMode) {
     this.LDAPEditMode = isInEditMode;
-    this.setLDAPEnableControl();
   }
 
   /**
@@ -291,8 +283,9 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     let ldapSave: LdapSave;
     if (this.inCreateMode) {
       if (this.isAllInputsValid(this.LDAPObject)) {
-        ldapSave =  { createData: this.LDAPData,
-          onSuccess: (resp) => {this.setLDAPEditMode(false); },
+        ldapSave = {
+          createData: this.LDAPData,
+          onSuccess: (resp) => { this.setLDAPEditMode(false); },
         };
         this.invokeCreateLDAP.emit(ldapSave);
       } else {
@@ -300,8 +293,8 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
       }
     } else {
       // POST DATA
-      ldapSave =  {
-        onSuccess: (resp) => {this.setLDAPEditMode(false); },
+      ldapSave = {
+        onSuccess: (resp) => { this.setLDAPEditMode(false); },
       };
       this.invokeSaveLDAP.emit(ldapSave); // emit event to parent to update LDAP if REST call succeeds, ngOnChange() will bb invoked and refresh data.
     }
@@ -323,7 +316,6 @@ export class LdapComponent extends AuthpolicybaseComponent implements OnInit, On
     this.toggleEdit();
     this.inCreateMode = true;
     this.setLDAPEditMode(true);
-    this.LDAPObject.$formGroup.controls['enabled'].setValue(true);  // set LDAP enable when set "create LDAP"
   }
 
   onCheckLdapConnection($event) {

@@ -155,28 +155,6 @@
             }
           },
           {
-            "name": "ldap.enabled",
-            "description": "Whether LDAP is enabled or not.",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "local.enabled",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
-            "name": "radius.enabled",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
-          },
-          {
             "name": "spec.secret",
             "description": "Secret used to sign JWT token.",
             "in": "query",
@@ -6556,11 +6534,6 @@
     "authLdap": {
       "type": "object",
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "format": "boolean",
-          "title": "Whether LDAP is enabled or not"
-        },
         "domains": {
           "type": "array",
           "items": {
@@ -6685,13 +6658,7 @@
       }
     },
     "authLocal": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        }
-      }
+      "type": "object"
     },
     "authOperation": {
       "type": "object",
@@ -6852,10 +6819,6 @@
     "authRadius": {
       "type": "object",
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "format": "boolean"
-        },
         "domains": {
           "type": "array",
           "items": {

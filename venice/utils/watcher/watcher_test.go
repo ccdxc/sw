@@ -102,7 +102,7 @@ func TestWatcher(t *testing.T) {
 	testutils.MustCreateTenant(apicl, globals.DefaultTenant)
 	defer testutils.DeleteTenant(apicl, globals.DefaultTenant)
 	// create auth policy
-	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
+	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{}, nil, nil)
 	defer testutils.DeleteAuthenticationPolicy(apicl)
 	AssertEventually(t, func() (bool, interface{}) {
 		return cbs.processEvent == 2, nil

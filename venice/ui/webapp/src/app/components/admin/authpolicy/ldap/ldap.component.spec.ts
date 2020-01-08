@@ -105,7 +105,7 @@ describe('LdapComponent', () => {
     });
     fixture.detectChanges();
     let toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
-    expect(toggle.length).toBe(1);
+    expect(toggle.length).toBe(0);
 
     let values = fixture.debugElement.queryAll(By.css('.ldap-input'));
     expect(values[0].nativeElement.innerText).toContain('binddn');
@@ -453,8 +453,8 @@ describe('LdapComponent', () => {
       let toggles = fixture.debugElement.queryAll(By.css('.ldap-toggle'));
       const checkedToggles = fixture.debugElement.queryAll(By.css('.mat-checked'));
       const disabledToggles = fixture.debugElement.queryAll(By.css('.mat-disabled'));
-      expect(toggles.length).toBe(5);
-      expect(checkedToggles.length).toBe(3); // Enabled flag, and 2 of the server toggles
+      expect(toggles.length).toBe(4);
+      expect(checkedToggles.length).toBe(2); // Enabled flag, and 2 of the server toggles
       expect(disabledToggles.length).toBe(1);
 
       // check disabled fields
@@ -467,7 +467,7 @@ describe('LdapComponent', () => {
       toggles[1].children[0].nativeElement.click();
       fixture.detectChanges();
       const checkedDisabledToggle = fixture.debugElement.queryAll(By.css('.mat-checked.mat-disabled'));
-      expect(checkedDisabledToggle.length).toBe(1);
+      expect(checkedDisabledToggle.length).toBe(0);
 
       values = fixture.debugElement.queryAll(By.css('.ldap-input:disabled'));
       certs = fixture.debugElement.queryAll(By.css('.ldap-server-certs:disabled'));
@@ -509,7 +509,7 @@ describe('LdapComponent', () => {
       fixture.detectChanges();
 
       toggles = fixture.debugElement.queryAll(By.css('.mat-checked'));
-      expect(toggles.length).toBe(1);
+      expect(toggles.length).toBe(0);
 
       values = fixture.debugElement.queryAll(By.css('.ldap-input'));
       expect(values[0].nativeElement.innerText).toContain('binddn');

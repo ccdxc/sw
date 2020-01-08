@@ -12,8 +12,6 @@
   <div class="ldap-overlay"></div>
   <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
     <div fxFlex="nogrow" fxLayout="row">
-      <mat-slide-toggle fxFlex='nogrow' class="ldap-toggle">
-      </mat-slide-toggle>
       <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>
@@ -38,8 +36,6 @@
 <ng-template #LDAP>
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="LDAPObject.$formGroup">
-      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="ldap-toggle">
-      </mat-slide-toggle>
       <div class="ldap-title authpolicy-config-title">
         LDAP
       </div>

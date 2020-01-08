@@ -17,7 +17,6 @@ import (
 func authenticationPoliciesData(config *LdapConfig) map[string]*auth.Ldap {
 	ldapdata := make(map[string]*auth.Ldap)
 	ldapdata["TLS Enabled"] = &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -44,7 +43,6 @@ func authenticationPoliciesData(config *LdapConfig) map[string]*auth.Ldap {
 		},
 	}
 	ldapdata["TLS Skip Server Verification"] = &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -72,7 +70,6 @@ func authenticationPoliciesData(config *LdapConfig) map[string]*auth.Ldap {
 		},
 	}
 	ldapdata["Without TLS"] = &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -103,10 +100,7 @@ func authenticationPoliciesData(config *LdapConfig) map[string]*auth.Ldap {
 // createDefaultAuthenticationPolicy creates an authentication policy with LDAP with TLS enabled
 func createDefaultAuthenticationPolicy(config *LdapConfig) *auth.AuthenticationPolicy {
 	return MustCreateAuthenticationPolicy(tinfo.apicl,
-		&auth.Local{
-			Enabled: true,
-		}, &auth.Ldap{
-			Enabled: true,
+		&auth.Local{}, &auth.Ldap{
 			Domains: []*auth.LdapDomain{
 				{
 					Servers: []*auth.LdapServer{
@@ -134,12 +128,12 @@ func createDefaultAuthenticationPolicy(config *LdapConfig) *auth.AuthenticationP
 				},
 			},
 		},
-		&auth.Radius{Enabled: false})
+		nil)
 }
 
 func testAuthenticate(t *testing.T, config *LdapConfig) {
 	for testtype, ldapconf := range authenticationPoliciesData(config) {
-		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, ldapconf)
+		_, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, ldapconf)
 		if err != nil {
 			t.Errorf("err %s in CreateAuthenticationPolicy", err)
 			return
@@ -194,8 +188,7 @@ func testIncorrectUserAuthentication(t *testing.T, config *LdapConfig) {
 }
 
 func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, &auth.Ldap{
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -238,8 +231,7 @@ func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
 }
 
 func testIncorrectBaseDN(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, &auth.Ldap{
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -282,8 +274,7 @@ func testIncorrectBaseDN(t *testing.T, config *LdapConfig) {
 }
 
 func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: true,
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, &auth.Ldap{
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{
@@ -326,8 +317,7 @@ func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
 }
 
 func testDisabledLdapAuthenticator(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{Enabled: true}, &auth.Ldap{
-		Enabled: false,
+	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, &auth.Ldap{
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{

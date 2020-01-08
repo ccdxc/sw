@@ -46,10 +46,6 @@ func NewPasswordAuthenticator(name, apiServer string, rslver resolver.Interface,
 //   error authn.ErrInvalidCredentialType if invalid credential type is passed, ErrInvalidCredential if user doesn't exist,
 //         errors returned by hash comparison function
 func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
-	if !a.authConfig.GetEnabled() {
-		return nil, false, nil
-	}
-
 	passwdcred, found := credential.(*auth.PasswordCredential)
 	if !found {
 		log.Errorf("Incorrect credential type: expected '*authn.PasswordCredential', got [%T]", credential)

@@ -43,7 +43,6 @@ func TestGetADPrimaryGroup(t *testing.T) {
 		},
 	}
 	ldapConf := &auth.Ldap{
-		Enabled: true,
 		Domains: []*auth.LdapDomain{
 			{
 				Servers: []*auth.LdapServer{

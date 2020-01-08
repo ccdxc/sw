@@ -266,9 +266,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 					TokenExpiry: "24h",
@@ -301,9 +299,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()},
 					},
 					TokenExpiry: "24h",
@@ -320,11 +316,8 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local: &auth.Local{},
 						Radius: &auth.Radius{
-							Enabled: true,
 							Domains: []*auth.RadiusDomain{
 								{
 									Servers: []*auth.RadiusServer{
@@ -352,11 +345,8 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local: &auth.Local{},
 						Radius: &auth.Radius{
-							Enabled: true,
 							Domains: []*auth.RadiusDomain{
 								{
 									NasID: "Venice",
@@ -379,11 +369,8 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local: &auth.Local{},
 						Radius: &auth.Radius{
-							Enabled: true,
 							Domains: []*auth.RadiusDomain{
 								{
 									NasID: "Venice",
@@ -411,12 +398,8 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: true,
-						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Ldap:  &auth.Ldap{},
+						Local: &auth.Local{},
 					},
 					TokenExpiry: "24h",
 				},
@@ -448,9 +431,7 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 					},
 					TokenExpiry: "1m",
@@ -468,11 +449,30 @@ func TestValidateAuthenticatorConfigHook(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: false,
+							Domains: []*auth.LdapDomain{
+								{
+									Servers: []*auth.LdapServer{
+										{
+											Url: "localhost:389",
+											TLSOptions: &auth.TLSOptions{
+												StartTLS:                   false,
+												SkipServerCertVerification: true,
+											},
+										},
+									},
+									BaseDN:       "dc=pensando,dc=io",
+									BindDN:       "cn=admin,dc=pensando,dc=io",
+									BindPassword: "password",
+									AttributeMapping: &auth.LdapAttributeMapping{
+										User:             "uid",
+										UserObjectClass:  "inetOrgPerson",
+										Group:            "ou",
+										GroupObjectClass: "group",
+									},
+								},
+							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 					TokenExpiry: "24h",
@@ -511,7 +511,6 @@ func TestValidateBindPassword(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{
 								{
 									Servers: []*auth.LdapServer{
@@ -536,9 +535,7 @@ func TestValidateBindPassword(t *testing.T) {
 								},
 							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 					TokenExpiry: "24h",
@@ -601,9 +598,7 @@ func TestGenerateSecret(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 					},
 				},

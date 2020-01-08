@@ -19,7 +19,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Invalid LDAP config",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						AttributeMapping: &auth.LdapAttributeMapping{},
@@ -37,7 +36,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "No LDAP attribute mapping",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{{}},
 			},
 			errs: []error{errors.New("base DN not defined"),
@@ -48,7 +46,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Valid LDAP Config",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{
@@ -81,7 +78,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Valid LDAP Config, takes default port",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{
@@ -114,7 +110,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Missing LDAP Server",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{},
@@ -136,7 +131,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Valid LDAP config, missing server URL",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{
@@ -169,7 +163,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Invalid TLS Config",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{
@@ -202,7 +195,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "Missing TLS Options ",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{
 					{
 						Servers: []*auth.LdapServer{
@@ -230,7 +222,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "No ldap domains",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{},
 			},
 
@@ -239,7 +230,6 @@ func TestValidateLdapConfig(t *testing.T) {
 		{
 			name: "More than one ldap domains",
 			in: &auth.Ldap{
-				Enabled: true,
 				Domains: []*auth.LdapDomain{{}, {}},
 			},
 

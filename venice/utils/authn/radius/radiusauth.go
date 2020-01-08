@@ -37,9 +37,6 @@ func NewRadiusAuthenticator(config *auth.Radius) authn.Authenticator {
 }
 
 func (a *authenticator) Authenticate(credential authn.Credential) (*auth.User, bool, error) {
-	if !a.radiusConfig.GetEnabled() {
-		return nil, false, nil
-	}
 	var response *radius.Packet
 	var err error
 	for _, server := range a.radiusConfig.Domains[0].Servers {

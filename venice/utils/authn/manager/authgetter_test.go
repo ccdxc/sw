@@ -60,7 +60,6 @@ func TestGetAuthenticators(t *testing.T) {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -87,9 +86,7 @@ func TestGetAuthenticators(t *testing.T) {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),
@@ -117,7 +114,6 @@ func TestGetTokenManager(t *testing.T) {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -144,9 +140,7 @@ func TestGetTokenManager(t *testing.T) {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: expiration.String(),

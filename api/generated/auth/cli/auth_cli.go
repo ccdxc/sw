@@ -29,13 +29,6 @@ var CreateAuthenticationPolicyFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
-		ID:     "enabled",
-		Type:   "Bool",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
 		ID:     "fullname",
 		Type:   "StringSlice",
 		Help:   "",

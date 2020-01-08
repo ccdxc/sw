@@ -185,9 +185,7 @@ func (c *ConfigService) ConfigureAuth(ctx context.Context, req *iota.AuthMsg) (*
 		},
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{"LOCAL"},
 			},
 		},

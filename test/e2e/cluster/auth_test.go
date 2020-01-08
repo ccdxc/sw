@@ -38,7 +38,6 @@ var _ = Describe("auth tests", func() {
 			}, 10, 1).Should(BeNil())
 			// add radius config
 			authPolicy.Spec.Authenticators.Radius = &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{

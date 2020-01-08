@@ -9,8 +9,6 @@
   <div class="radius-overlay"></div>
   <div fxFlex fxLayout="column" fxLayoutAlign="center stretch">
     <div fxFlex="nogrow" fxLayout="row">
-      <mat-slide-toggle fxFlex='nogrow' class="radius-toggle">
-      </mat-slide-toggle>
       <div class="radius-title  authpolicy-config-title">
         Radius
       </div>
@@ -35,8 +33,6 @@
 <ng-template #Radius>
   <div fxFlex fxLayout="column">
     <div fxFlex="nogrow" fxLayout="row" [formGroup]="radiusObject.$formGroup">
-      <mat-slide-toggle formControlName="enabled" fxFlex='nogrow' class="radius-toggle">
-      </mat-slide-toggle>
       <div class="radius-title  authpolicy-config-title">
         Radius
       </div>

@@ -53,7 +53,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -72,7 +71,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -91,7 +89,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -110,7 +107,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     "incorrectUser",
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -129,7 +125,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: "incorrectPassword",
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -148,7 +143,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     CreateAlphabetString(254),
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -167,7 +161,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: CreateAlphabetString(129),
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{{
@@ -186,7 +179,6 @@ func testAuthenticator(t *testing.T, config *RadiusConfig) {
 			user:     config.User,
 			password: config.Password,
 			policy: &auth.Radius{
-				Enabled: true,
 				Domains: []*auth.RadiusDomain{
 					{
 						Servers: []*auth.RadiusServer{
@@ -242,7 +234,6 @@ func TestACSAuthentication(t *testing.T) {
 
 func testNoGroupUser(t *testing.T, config *RadiusConfig) {
 	radiusConf := &auth.Radius{
-		Enabled: true,
 		Domains: []*auth.RadiusDomain{
 			{
 				Servers: []*auth.RadiusServer{{

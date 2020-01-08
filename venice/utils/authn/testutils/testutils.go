@@ -209,7 +209,17 @@ func CreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, lda
 
 // MustCreateAuthenticationPolicy creates an authentication policy with local, ldap and radius auth config
 func MustCreateAuthenticationPolicy(apicl apiclient.Services, local *auth.Local, ldap *auth.Ldap, radius *auth.Radius) *auth.AuthenticationPolicy {
-	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, radius, []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String(), auth.Authenticators_RADIUS.String()}, ExpiryDuration)
+	var authOrder []string
+	if local != nil {
+		authOrder = append(authOrder, auth.Authenticators_LOCAL.String())
+	}
+	if ldap != nil {
+		authOrder = append(authOrder, auth.Authenticators_LDAP.String())
+	}
+	if radius != nil {
+		authOrder = append(authOrder, auth.Authenticators_RADIUS.String())
+	}
+	pol, err := CreateAuthenticationPolicyWithOrder(apicl, local, ldap, radius, authOrder, ExpiryDuration)
 	if err != nil {
 		panic(fmt.Sprintf("CreateAuthenticationPolicy failed with err %s", err))
 	}

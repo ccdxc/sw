@@ -324,13 +324,9 @@ func TestUserCreateCheck(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: true,
-						},
-						Local: &auth.Local{
-							Enabled: false,
-						},
-						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
+						Ldap:               &auth.Ldap{},
+						Local:              &auth.Local{},
+						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String()},
 					},
 				},
 			}, false),
@@ -359,12 +355,8 @@ func TestUserCreateCheck(t *testing.T) {
 				},
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
-						Ldap: &auth.Ldap{
-							Enabled: true,
-						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Ldap:               &auth.Ldap{},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -557,7 +549,6 @@ func TestLdapConnectionCheck(t *testing.T) {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -584,9 +575,7 @@ func TestLdapConnectionCheck(t *testing.T) {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
@@ -653,7 +642,6 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{
 								{
 									Servers: []*auth.LdapServer{
@@ -679,9 +667,7 @@ func TestLdapConnectionCheck(t *testing.T) {
 								},
 							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -702,7 +688,6 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{
 								{
 									Servers:      []*auth.LdapServer{},
@@ -718,9 +703,7 @@ func TestLdapConnectionCheck(t *testing.T) {
 								},
 							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -746,12 +729,9 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -775,12 +755,9 @@ func TestLdapConnectionCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{{}, {}},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -842,7 +819,6 @@ func TestLdapBindCheck(t *testing.T) {
 		Spec: auth.AuthenticationPolicySpec{
 			Authenticators: auth.Authenticators{
 				Ldap: &auth.Ldap{
-					Enabled: true,
 					Domains: []*auth.LdapDomain{
 						{
 							Servers: []*auth.LdapServer{
@@ -869,9 +845,7 @@ func TestLdapBindCheck(t *testing.T) {
 						},
 					},
 				},
-				Local: &auth.Local{
-					Enabled: true,
-				},
+				Local:              &auth.Local{},
 				AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 			},
 		},
@@ -938,7 +912,6 @@ func TestLdapBindCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{
 								{
 									Servers:      []*auth.LdapServer{},
@@ -954,9 +927,7 @@ func TestLdapBindCheck(t *testing.T) {
 								},
 							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -982,7 +953,6 @@ func TestLdapBindCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{
 								{
 									Servers: []*auth.LdapServer{
@@ -1008,9 +978,7 @@ func TestLdapBindCheck(t *testing.T) {
 								},
 							},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -1031,12 +999,9 @@ func TestLdapBindCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},
@@ -1060,12 +1025,9 @@ func TestLdapBindCheck(t *testing.T) {
 				Spec: auth.AuthenticationPolicySpec{
 					Authenticators: auth.Authenticators{
 						Ldap: &auth.Ldap{
-							Enabled: true,
 							Domains: []*auth.LdapDomain{{}, {}},
 						},
-						Local: &auth.Local{
-							Enabled: true,
-						},
+						Local:              &auth.Local{},
 						AuthenticatorOrder: []string{auth.Authenticators_LDAP.String(), auth.Authenticators_LOCAL.String()},
 					},
 				},

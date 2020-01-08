@@ -94,7 +94,7 @@ func SetupAuth(apiServerAddr string, enableLocalAuth bool, ldapConf *auth.Ldap, 
 	// create tenant
 	authntestutils.MustCreateTenant(apiClient, creds.GetTenant())
 	// create authentication policy
-	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{Enabled: enableLocalAuth}, ldapConf, radiusConf)
+	authntestutils.MustCreateAuthenticationPolicy(apiClient, &auth.Local{}, ldapConf, radiusConf)
 	// create local user
 	if enableLocalAuth && creds != nil {
 		authntestutils.MustCreateTestUser(apiClient, creds.GetUsername(), creds.GetPassword(), creds.GetTenant())

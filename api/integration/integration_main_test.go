@@ -234,7 +234,7 @@ func TestMain(m *testing.M) {
 	// update admin role binding
 	testutils.MustUpdateRoleBinding(apicl, globals.AdminRoleBinding, globals.DefaultTenant, globals.AdminRole, []string{testUser}, nil)
 	// create authentication policy with local auth enabled
-	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{Enabled: true}, &auth.Ldap{Enabled: false}, &auth.Radius{Enabled: false})
+	testutils.MustCreateAuthenticationPolicy(apicl, &auth.Local{}, nil, nil)
 	// set auth bootstrap flag to true
 	testutils.MustSetAuthBootstrapFlag(apicl)
 
