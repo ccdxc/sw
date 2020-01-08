@@ -3,6 +3,7 @@
  */
 
 #include "includes.h"
+#include "pdsa_vpp_cfg.h"
 
 // *INDENT-OFF* 
 VLIB_PLUGIN_REGISTER () = {
@@ -538,6 +539,8 @@ pds_dhcp_relay_init (vlib_main_t * vm)
     dhcp_register_client_next_node_tx(vm, (u8 *) "pds-dhcp-relay-client-tx");
 
     dhcp_register_custom_options_cb(&pds_dhcp_options_callback);
+
+    pds_dhcp_relay_cfg_init();
 
     return 0;
 }

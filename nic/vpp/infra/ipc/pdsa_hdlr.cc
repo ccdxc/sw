@@ -5,19 +5,19 @@
 #include <assert.h>
 #include <nic/sdk/lib/ipc/ipc.hpp>
 #include "pdsa_hdlr.hpp"
+#include "pdsa_vpp_cfg.hpp"
 #include "pdsa_vpp_hdlr.h"
 #include <map>
 
-
+// maps storing the callback functions and context associated with a file
+// descriptor. multiple file descriptors are provided to be monitored by the
+// IPC infra. when poll reports a descriptor is ready, these maps provide the
+// callback and context for the specific FD
 static std::map<int, sdk::ipc::handler_cb> g_cb_func;
 static std::map<int, const void *> g_cb_ctx;
 
-// message handing callbacks
-static pds_ipc_msg_cb msg_handle[PDS_IPC_MSG_OP_MAX][PDS_MSG_ID_MAX] = {0};
-
-// message rx counter
+// message rx counters for debugging
 static unsigned int g_type_count[PDS_MSG_TYPE_MAX] = {0};
-static unsigned int g_id_count[PDS_MSG_ID_MAX] = {0};
 
 // called from VPP main poll loop, whenere data is available on the zmq
 // IPC file descriptor. Calls the SDK IPC library to read messages and
@@ -31,6 +31,8 @@ pds_ipc_read_fd (int fd) {
         ipc_log_error("Attempting read on unknown fd %d", fd);
         return;
     }
+
+    ipc_log_notice("Data available on fd %d", fd);
 
     sdk::ipc::handler_cb cb_func = cb_func_it->second;
     const void *cb_ctx = cb_ctx_it->second;
@@ -90,126 +92,40 @@ pds_ipc_invalid_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 // return 0 indicates  registered successfully
 // return non-zero indicates registration fail (invalid param)
 int
-pds_ipc_register_callback (pds_msg_id_t msgid,
-                          pds_ipc_msg_op_t operation,
-                          pds_ipc_msg_cb cb_fn) {
-    if ((msgid >= PDS_MSG_ID_MAX) || (operation >= PDS_IPC_MSG_OP_MAX)) {
+pds_ipc_register_callbacks (obj_id_t id,
+                            pds_cfg_set_cb set_cb_fn,
+                            pds_cfg_del_cb del_cb_fn,
+                            pds_cfg_act_cb act_cb_fn ) {
+    if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
+        ipc_log_error("Registration request for obj id %d"
+                      " has invalid function pointers", id);
         return -1;
     }
 
-    msg_handle[operation][msgid] = cb_fn;
+    if ((id != OBJ_ID_VNIC) &&
+        (id != OBJ_ID_SUBNET) &&
+        (id != OBJ_ID_DHCP_RELAY) &&
+        (id != OBJ_ID_DHCP_POLICY) &&
+        (id != OBJ_ID_NAT_PORT_BLOCK) &&
+        (id != OBJ_ID_SECURITY_PROFILE)) {
+        ipc_log_error("Registration request for invalid obj id %d", id);
+        return -1;
+    }
+
+    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn);
+
+    ipc_log_notice("Callbacks registered for obj id %d", id);
+
     return 0;
 }
 
-// stage one of batch processing. reserve resources for all messages in batch.
-// Any failures will trigger release of resources already allocated prior to
-// failure
-static sdk::sdk_ret_t
-msglist_reserve (pds_msg_list_t *msglist) {
-    uint32_t rsv_count;
-    sdk::sdk_ret_t ret = sdk::SDK_RET_OK;
-
-    for (rsv_count = 0; rsv_count < msglist->num_msgs; rsv_count++) {
-        pds_msg_t *msg = &msglist->msgs[rsv_count];
-        pds_ipc_msg_cb reserve_fn = msg_handle[PDS_IPC_MSG_OP_RESERVE][msg->id];
-
-        if (msg->id > PDS_MSG_ID_MAX) {
-            goto release;
-        }
-
-        g_id_count[msg->id]++;
-
-        if (reserve_fn) {
-            ret = reserve_fn(msg, NULL);
-            // if reserve fails, release all reserved ops
-            if (ret != sdk::SDK_RET_OK) {
-                ipc_log_error("Reserve fail for msg indx:%d id:%d [count:%d] "
-                              "ret:%d epoch:%u", rsv_count, msg->id,
-                              g_id_count[msg->id], ret, msglist->epoch);
-                goto release;
-            }
-        }
-    }
-
-    ipc_log_notice("Reserve completed for %d messages [epoch:%u]",
-                   msglist->num_msgs, msglist->epoch);
-    return ret;
-
-release:
-    ipc_log_notice("Releasing resources for %d messages [epoch:%u]", rsv_count,
-                   msglist->epoch);
-    // release resources only up to point of failure
-    for (uint32_t i = 0; i < rsv_count; i++) {
-        pds_msg_t *msg = &msglist->msgs[i];
-        pds_ipc_msg_cb release_fn = msg_handle[PDS_IPC_MSG_OP_RELEASE][msg->id];
-
-        if (release_fn) {
-            // TODO: how do we handle release failures
-            release_fn(msg, NULL);
-        }
-    }
-    return ret;
-}
-
-// stage two of batch processing. proces all messages in batch.  Any failures
-// will trigger rollback of already processed messages, and release of
-// resources for messages
-static sdk::sdk_ret_t
-msglist_process (pds_msg_list_t *msglist) {
-    uint32_t run_count;
-    sdk::sdk_ret_t ret = sdk::SDK_RET_OK;
-
-    for (run_count = 0; run_count < msglist->num_msgs; run_count++) {
-        pds_msg_t *msg = &msglist->msgs[run_count];
-        pds_ipc_msg_cb run_fn = msg_handle[PDS_IPC_MSG_OP_PROCESS][msg->id];
-
-        if (run_fn) {
-            ret = run_fn(msg, NULL);
-            // if process fails, rollback & release
-            if (ret != sdk::SDK_RET_OK) {
-                ipc_log_error("Processing fail for msg indx:%d id:%d ret:%d "
-                              "[epoch:%u]", run_count, msg->id, ret,
-                              msglist->epoch);
-                goto rollback;
-            }
-        }
-    }
-
-    return ret;
-
-rollback:
-    // rollback operations only up to point of failure
-    ipc_log_notice("Rollback operation for %d messages [epoch:%u]", run_count,
-                   msglist->epoch);
-    for (uint32_t i = 0; i < run_count; i++) {
-        pds_msg_t *msg = &msglist->msgs[i];
-        pds_ipc_msg_cb rollbk_fn = msg_handle[PDS_IPC_MSG_OP_ROLLBACK][msg->id];
-
-        if (rollbk_fn) {
-            // TODO: how do we handle rollback failure
-            rollbk_fn(msg, NULL);
-        }
-    }
-    // release resources for all
-    ipc_log_notice("Releasing resources for %d messages [epoch:%u]",
-                   msglist->num_msgs, msglist->epoch);
-    for (uint32_t i = 0; i < msglist->num_msgs; i++) {
-        pds_msg_t *msg = &msglist->msgs[i];
-        pds_ipc_msg_cb release_fn = msg_handle[PDS_IPC_MSG_OP_RELEASE][msg->id];
-
-        if (release_fn) {
-            // TODO: how do we handle release failure
-            release_fn(msg, NULL);
-        }
-    }
-    return ret;
-}
 
 // handler for batch messages from HAL
 static void
 pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     sdk::sdk_ret_t  ret;
     pds_msg_list_t *msglist = NULL;
+    auto config_batch = vpp_config_batch::get();
 
     if (ipc_msg->length() < sizeof(pds_msg_list_t)) {
         ret = sdk::SDK_RET_INVALID_ARG;
@@ -222,16 +138,22 @@ pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     ipc_log_notice("Received msglist with %d message(s) [epoch:%u]",
                    msglist->num_msgs, msglist->epoch);
 
-    // Stage 1: Reserve resources
-    ret = msglist_reserve(msglist);
+    // Stage 1: setup batch
+    ret = config_batch.create(msglist);
     if (ret != sdk::SDK_RET_OK) {
+        ipc_log_error("Reserve failed [epoch:%u]", msglist->epoch);
         goto error;
     }
 
-    // Stage 2: Process
-    ret = msglist_process(msglist);
+    // Stage 2: Publish
+    ret = config_batch.commit();
+    if (ret != sdk::SDK_RET_OK) {
+        ipc_log_error("Commit failed [epoch:%u]", msglist->epoch);
+    }
 
 error:
+    // clear batch on both success and failure
+    config_batch.clear();
     if (ret != sdk::SDK_RET_OK) {
         ipc_log_error("Execution fail of msglist [epoch:%u] ret:%d",
                       (msglist ? msglist->epoch : 0), ret);
@@ -248,7 +170,7 @@ static void
 pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     pds_msg_t *msg, response;
     sdk::sdk_ret_t retcode;
-    pds_ipc_msg_cb command_fn;
+    auto config_data = vpp_config_data::get();
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
 
@@ -264,21 +186,18 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
         goto error;
     }
 
-    // if callback is not registered, return invalid operation
-    command_fn = msg_handle[PDS_IPC_MSG_OP_COMMAND][msg->id];
-    if (command_fn == NULL) {
-        retcode = sdk::SDK_RET_INVALID_OP;
+    if (!config_data.exists(msg->cfg_msg)) {
+        retcode = sdk::SDK_RET_ENTRY_NOT_FOUND;
         goto error;
     }
 
-    // actually execute the callback, and get response
-    retcode = command_fn(msg, &response);
-    if (retcode == sdk::SDK_RET_OK) {
-        ipc_log_notice("Execution success of command msg [count:%d]",
-                      g_type_count[PDS_MSG_TYPE_CMD]);
-        sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(pds_msg_t));
-        return;
-    }
+    memcpy(&response.cfg_msg, &msg->cfg_msg, sizeof(pds_cfg_msg_t));
+    config_data.get(response.cfg_msg);
+
+    ipc_log_notice("Execution success of command msg [count:%d]",
+                   g_type_count[PDS_MSG_TYPE_CMD]);
+    sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(pds_msg_t));
+    return;
 
 error:
     ipc_log_error("Execution fail of command msg [count:%d] ret:%d",

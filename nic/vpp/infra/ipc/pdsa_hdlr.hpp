@@ -9,24 +9,16 @@
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/api/core/msg.h"
 
-// types for msg processing
-typedef enum pds_ipc_msg_op_e {
-    PDS_IPC_MSG_OP_RESERVE,
-    PDS_IPC_MSG_OP_RELEASE,
-    PDS_IPC_MSG_OP_PROCESS,
-    PDS_IPC_MSG_OP_ROLLBACK,
-    PDS_IPC_MSG_OP_COMMAND,
-
-    PDS_IPC_MSG_OP_MAX
-} pds_ipc_msg_op_t;
-
 // callback function prototype
-typedef sdk::sdk_ret_t (*pds_ipc_msg_cb)(const pds_msg_t *msg, pds_msg_t *ret);
+typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
 
 // function prototypes
-//int pds_vpp_ipc_init(void);
-int pds_ipc_register_callback(pds_msg_id_t msgid,
-                              pds_ipc_msg_op_t operation,
-                              pds_ipc_msg_cb cb_fn);
+int pds_ipc_register_callbacks(obj_id_t id,
+                               pds_cfg_set_cb set_cb_fn,
+                               pds_cfg_del_cb del_cb_fn,
+                               pds_cfg_act_cb act_cb_fn);
+
 
 #endif    // __VPP_INFRA_IPC_HPP__

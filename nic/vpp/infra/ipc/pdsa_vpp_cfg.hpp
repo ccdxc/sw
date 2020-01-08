@@ -1,0 +1,98 @@
+//
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//
+
+#ifndef __VPP_INFRA_IPC_VPPCFG_HPP__
+#define __VPP_INFRA_IPC_VPPCFG_HPP__
+
+#include "nic/sdk/include/sdk/base.hpp"
+#include "nic/apollo/core/msg.h"
+#include "nic/apollo/api/core/msg.h"
+#include "pdsa_hdlr.hpp"
+#include <map>
+#include <vector>
+#include <list>
+
+typedef struct {
+    obj_id_t      obj_id;
+    bool          deleted;
+    pds_cfg_msg_t modified;
+    pds_cfg_msg_t original;
+} batch_op_t;
+
+typedef struct {
+    obj_id_t       obj_id;
+    pds_cfg_set_cb set_cb;
+    pds_cfg_del_cb del_cb;
+    pds_cfg_act_cb act_cb;
+} commit_cbs_t;
+
+// represents all the configuration data that is required by all VPP plugins.
+// this is the authoritative copy, and plugins are notified (through
+// registered callbacks) when this config changes
+class vpp_config_data {
+    // containers are ordered map, instance to spec
+    std::map<pds_vnic_id_t, pds_vnic_spec_t> vnic;
+    std::map<pds_subnet_id_t, pds_subnet_spec_t> subnet;
+    std::map<pds_dhcp_relay_id_t, pds_dhcp_relay_spec_t> dhcp_relay;
+    std::map<pds_dhcp_policy_id_t, pds_dhcp_policy_spec_t> dhcp_policy;
+    std::map<pds_nat_port_block_id_t, pds_nat_port_block_spec_t> nat_port_block;
+    std::map<pds_security_profile_id_t, pds_security_profile_spec_t>
+        security_profile;
+
+    static vpp_config_data singleton;
+
+public:
+    // instance accessor
+    static vpp_config_data &get(void) { return singleton; }
+
+    // constant operations
+    int size(obj_id_t obj_id) const;
+    bool exists(pds_cfg_msg_t const& cfg_msg) const;
+    bool get(pds_cfg_msg_t &value) const;
+
+    // modifiers
+    void set(pds_cfg_msg_t const& cfg_msg);
+    void unset(obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg);
+};
+
+
+// list of operations in a single msglist received from
+// HAL. each instance in the msglist has a batch_op_t entry in here, which is
+// executed once all entries are created.
+class vpp_config_batch {
+    std::list<batch_op_t> batch_op;
+    std::map<obj_id_t, size_t> pool_sz;
+
+    static std::list<commit_cbs_t> commit_cbs;
+    static vpp_config_batch singleton;
+
+private:
+    // internal operations
+    void init(void);
+    void publish(void);
+    void unpublish(void);
+    bool reserve(pds_cfg_msg_t const& msg);
+    sdk::sdk_ret_t add(pds_cfg_msg_t const& cfg_msg);
+    void set(pds_cfg_msg_t const& msg);
+    void del(obj_id_t obj_id, pds_cfg_msg_t const& msg);
+
+    // constant operations
+    bool exists(pds_cfg_msg_t const& msg) const;
+    static size_t maxsize(obj_id_t ob_id);
+
+public:
+    static void register_cbs(obj_id_t id,
+                             pds_cfg_set_cb set_cb_fn,
+                             pds_cfg_del_cb del_cb_fn,
+                             pds_cfg_act_cb act_cb_fn);
+
+    static vpp_config_batch &get(void) { return singleton; }
+public:
+    sdk::sdk_ret_t create(const pds_msg_list_t *msglist);
+    sdk::sdk_ret_t commit(void);
+    void clear(void);
+};
+
+
+#endif // __VPP_INFRA_IPC_VPPCFG_HPP__

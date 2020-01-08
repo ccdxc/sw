@@ -89,16 +89,13 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_read) {
            sizeof(pds_security_profile_cfg_msg_t));
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
     request.cfg_msg.security_profile.key.id = 9999;
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
-    EXPECT_TRUE(reply.is_msg);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.key.id == 9999);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout == 0);
+    EXPECT_FALSE(reply.is_msg);
+    EXPECT_EQ(reply.code, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 /// \brief configure flow plugin using a security profile and a CREATE op.
@@ -108,6 +105,7 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_create) {
     sdk::sdk_ret_t ret_val;
     pds_security_profile_spec_t spec;
 
+    spec.key.id = 1234;
     spec.tcp_idle_timeout = 100;
     spec.udp_idle_timeout = 200;
     spec.icmp_idle_timeout = 300;
@@ -124,6 +122,7 @@ TEST_F(ipc_flow_test, ipc_flow_cfg_create) {
            sizeof(pds_security_profile_cfg_msg_t));
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
     request.cfg_msg.security_profile.key.id = 1234;
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
@@ -143,6 +142,7 @@ TEST_F(ipc_flow_test, ipc_flow_update) {
     sdk::sdk_ret_t ret_val;
     pds_security_profile_spec_t spec;
 
+    spec.key.id = 1234;
     spec.tcp_idle_timeout = 1000;
     spec.udp_idle_timeout = 2000;
     spec.icmp_idle_timeout = 3000;
@@ -158,12 +158,13 @@ TEST_F(ipc_flow_test, ipc_flow_update) {
            sizeof(pds_security_profile_cfg_msg_t));
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
-    request.cfg_msg.security_profile.key.id = 5555;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
+    request.cfg_msg.security_profile.key.id = 1234;
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_TRUE(reply.is_msg);
-    EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.key.id, 5555);
+    EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.key.id, 1234);
     EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout, 1000);
     EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout, 2000);
     EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout, 3000);
@@ -192,9 +193,24 @@ TEST_F(ipc_flow_test, ipc_flow_batch_test) {
         pds_security_profile_create(&spec, ctxt);
     }
     ret_val = pds_batch_commit(ctxt);
+    EXPECT_FALSE(ret_val == sdk::SDK_RET_OK);
+
+    batch_params.epoch = 2345;
+    ctxt = pds_batch_start(&batch_params);
+
+    for (int i = 0; i < TEST_BATCH_SIZE; i++) {
+        pds_security_profile_spec_t spec;
+
+        spec.key.id = 1234;
+        spec.tcp_idle_timeout = i * 100;
+        spec.udp_idle_timeout = i * 200;
+        spec.icmp_idle_timeout = i * 300;
+        spec.other_idle_timeout = i * 400;
+        pds_security_profile_update(&spec, ctxt);
+    }
+    ret_val = pds_batch_commit(ctxt);
     EXPECT_TRUE(ret_val == sdk::SDK_RET_OK);
 
-    //pds_batch_destroy(ctxt);
 
     // Read data and verify that it is last configured value
     pds_msg_t request;
@@ -203,12 +219,13 @@ TEST_F(ipc_flow_test, ipc_flow_batch_test) {
            sizeof(pds_security_profile_cfg_msg_t));
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
-    request.cfg_msg.security_profile.key.id = 2222;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
+    request.cfg_msg.security_profile.key.id = 1234;
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_TRUE(reply.is_msg);
-    EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.key.id, 2222);
+    EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.key.id, 1234);
     EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout,
                 (TEST_BATCH_SIZE - 1) * 100);
     EXPECT_EQ(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout,
@@ -241,16 +258,13 @@ TEST_F(ipc_flow_test, ipc_flow_delete) {
            sizeof(pds_security_profile_cfg_msg_t));
     request.id = PDS_CFG_MSG_ID_SECURITY_PROFILE;
     request.cfg_msg.op = API_OP_NONE;
-    request.cfg_msg.security_profile.key.id = 4321;
+    request.cfg_msg.obj_id = OBJ_ID_SECURITY_PROFILE;
+    request.cfg_msg.security_profile.key.id = 1234;
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
-    EXPECT_TRUE(reply.is_msg);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.key.id == 4321);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.tcp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.udp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.icmp_idle_timeout == 0);
-    EXPECT_TRUE(reply.msg.cfg_msg.security_profile.spec.other_idle_timeout == 0);
+    EXPECT_FALSE(reply.is_msg);
+    EXPECT_EQ(reply.code, sdk::SDK_RET_ENTRY_NOT_FOUND);
 }
 
 

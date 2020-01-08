@@ -21,12 +21,12 @@ map_pds_address_type(address_type_t address_type)
 
 // callback function to process configuration message. C/U/D
 static sdk::sdk_ret_t
-pds_nat_cfg_reserve(const pds_msg_t *msg, pds_msg_t *unused) {
+pds_nat_cfg_set(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret;
 
-    nat_msg = &msg->cfg_msg.nat_port_block;
+    nat_msg = &cfg_msg->nat_port_block;
 
     SDK_ASSERT(nat_msg->spec.nat_ip_range.af == IP_AF_IPV4);
     SDK_ASSERT(nat_msg->spec.nat_ip_range.ip_lo.v4_addr ==
@@ -34,36 +34,22 @@ pds_nat_cfg_reserve(const pds_msg_t *msg, pds_msg_t *unused) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    switch (msg->cfg_msg.op) {
-    case API_OP_CREATE:
+    if (cfg_msg->op == API_OP_CREATE) {
         ret = nat_port_block_add(nat_msg->key.id, nat_msg->spec.vpc.id,
                                  nat_msg->spec.nat_ip_range.ip_lo.v4_addr,
                                  nat_msg->spec.ip_proto,
                                  nat_msg->spec.nat_port_range.port_lo,
                                  nat_msg->spec.nat_port_range.port_hi,
                                  nat_type);
-        break;
-    case API_OP_UPDATE:
+    } else {
+        SDK_ASSERT(cfg_msg->op == API_OP_UPDATE);
         ret = nat_port_block_update(nat_msg->key.id, nat_msg->spec.vpc.id,
                                     nat_msg->spec.nat_ip_range.ip_lo.v4_addr,
                                     nat_msg->spec.ip_proto,
                                     nat_msg->spec.nat_port_range.port_lo,
                                     nat_msg->spec.nat_port_range.port_hi,
                                     nat_type);
-        break;
-    case API_OP_DELETE:
-        ret = nat_port_block_del(nat_msg->key.id, nat_msg->spec.vpc.id,
-                                 nat_msg->spec.nat_ip_range.ip_lo.v4_addr,
-                                 nat_msg->spec.ip_proto,
-                                 nat_msg->spec.nat_port_range.port_lo,
-                                 nat_msg->spec.nat_port_range.port_hi,
-                                 nat_type);
-        break;
-    default:
-        // don't do anything
-        return sdk::SDK_RET_OK;
     }
-
     if (ret == NAT_ERR_OK) {
         return sdk::SDK_RET_OK;
     } else {
@@ -71,14 +57,14 @@ pds_nat_cfg_reserve(const pds_msg_t *msg, pds_msg_t *unused) {
     }
 }
 
-// callback function for restoring changed config on batch failure
+// callback function for deleting a nat port block entry 
 static sdk::sdk_ret_t
-pds_nat_cfg_rollback(const pds_msg_t *msg, pds_msg_t *unused) {
+pds_nat_cfg_del(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret;
 
-    nat_msg = &msg->cfg_msg.nat_port_block;
+    nat_msg = &cfg_msg->nat_port_block;
 
     SDK_ASSERT(nat_msg->spec.nat_ip_range.af == IP_AF_IPV4);
     SDK_ASSERT(nat_msg->spec.nat_ip_range.ip_lo.v4_addr ==
@@ -86,13 +72,12 @@ pds_nat_cfg_rollback(const pds_msg_t *msg, pds_msg_t *unused) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    ret = nat_port_block_rollback(nat_msg->key.id, nat_msg->spec.vpc.id,
-                                  nat_msg->spec.nat_ip_range.ip_lo.v4_addr,
-                                  nat_msg->spec.ip_proto,
-                                  nat_msg->spec.nat_port_range.port_lo,
-                                  nat_msg->spec.nat_port_range.port_hi,
-                                  nat_type);
-
+    ret = nat_port_block_del(nat_msg->key.id, nat_msg->spec.vpc.id,
+                             nat_msg->spec.nat_ip_range.ip_lo.v4_addr,
+                             nat_msg->spec.ip_proto,
+                             nat_msg->spec.nat_port_range.port_lo,
+                             nat_msg->spec.nat_port_range.port_hi,
+                             nat_type);
     if (ret == NAT_ERR_OK) {
         return sdk::SDK_RET_OK;
     } else {
@@ -102,12 +87,12 @@ pds_nat_cfg_rollback(const pds_msg_t *msg, pds_msg_t *unused) {
 
 // callback function for commiting config
 static sdk::sdk_ret_t
-pds_nat_cfg_process(const pds_msg_t *msg, pds_msg_t *unused) {
+pds_nat_cfg_process(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret;
 
-    nat_msg = &msg->cfg_msg.nat_port_block;
+    nat_msg = &cfg_msg->nat_port_block;
 
     SDK_ASSERT(nat_msg->spec.nat_ip_range.af == IP_AF_IPV4);
     SDK_ASSERT(nat_msg->spec.nat_ip_range.ip_lo.v4_addr ==
@@ -135,17 +120,10 @@ pds_nat_cfg_process(const pds_msg_t *msg, pds_msg_t *unused) {
 //
 void
 pds_nat_ipc_init(void) {
-    pds_ipc_register_callback(PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
-                              PDS_IPC_MSG_OP_RESERVE,
-                              pds_nat_cfg_reserve);
-
-    pds_ipc_register_callback(PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
-                              PDS_IPC_MSG_OP_PROCESS,
-                              pds_nat_cfg_process);
-
-    pds_ipc_register_callback(PDS_CFG_MSG_ID_NAT_PORT_BLOCK,
-                              PDS_IPC_MSG_OP_ROLLBACK,
-                              pds_nat_cfg_rollback);
+    pds_ipc_register_callbacks(OBJ_ID_NAT_PORT_BLOCK,
+                               pds_nat_cfg_set,
+                               pds_nat_cfg_del,
+                               pds_nat_cfg_process);
 }
 
 } // extern "C"
