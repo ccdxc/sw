@@ -11,7 +11,7 @@ class multi_thread: public FtlGtestBase {
 
 };
 
-TEST_F(multi_thread, DISABLED_insert_iterate_remove) {
+TEST_F(multi_thread, insert_iterate_remove) {
     sdk_ret_t rs;
 
     // Insert 16k entries

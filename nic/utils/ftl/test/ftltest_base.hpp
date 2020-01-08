@@ -14,7 +14,7 @@
 #include "include/sdk/table.hpp"
 #include "p4pd_mock/ftl_p4pd_mock.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 #include "gen/p4gen/p4/include/ftl_table.hpp"
 
 #include "ftltest_common.hpp"

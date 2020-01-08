@@ -75,7 +75,7 @@
 //::
 //:: #include <cstring>
 //:: #include "gen/p4gen/p4/include/ftl.h"
-//:: #include "nic/utils/ftl/ftl_base.hpp"
+//:: #include "lib/table/ftl/ftl_base.hpp"
 //::
 //:: #define FTL_MAX_RECIRCS 8
 //::

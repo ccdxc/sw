@@ -5,8 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <cinttypes>
-#include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "ftl_base.hpp"
 #include "ftl_includes.hpp"
 
 thread_local uint8_t hint_table::nctx_ = 0;

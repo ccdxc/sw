@@ -11,7 +11,7 @@
 #ifndef __FTL_WRAPPER_H__
 #define __FTL_WRAPPER_H__
 
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 
 #ifdef __cplusplus

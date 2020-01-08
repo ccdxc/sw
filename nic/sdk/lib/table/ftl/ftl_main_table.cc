@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <cinttypes>
-#include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_includes.hpp"
 
 #define MASK(_nbits) ((1 << (_nbits)) - 1)

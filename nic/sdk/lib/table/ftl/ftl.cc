@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <cinttypes>
-#include "gen/p4gen/p4/include/ftl.h"
 #include "ftl_base.hpp"
 
 std::map<int, sdk::table::ftl_table_info *>

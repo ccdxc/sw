@@ -30,7 +30,7 @@
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "trace.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 
 namespace core {

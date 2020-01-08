@@ -14,12 +14,12 @@
 #include "lib/table/common/table.hpp"
 #include "lib/utils/crc_fast.hpp"
 #include "lib/p4/p4_api.hpp"
-#include "nic/sdk/asic/pd/pd.hpp"
-#include "nic/sdk/lib/pal/pal.hpp"
-#include "nic/sdk/platform/pal/include/pal_mem.h"
-#include "nic/sdk/include/sdk/platform.hpp"
-#include "nic/sdk/platform/capri/capri_tbl_rw.hpp"
-#include "nic/sdk/lib/utils/time_profile.hpp"
+#include "asic/pd/pd.hpp"
+#include "lib/pal/pal.hpp"
+#include "platform/pal/include/pal_mem.h"
+#include "include/sdk/platform.hpp"
+#include "platform/capri/capri_tbl_rw.hpp"
+#include "lib/utils/time_profile.hpp"
 
 #ifdef USE_ARM64_SIMD
 #include <arm_neon.h>

@@ -13,7 +13,7 @@
 #include "ftl_p4pd_mock.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 
 typedef struct ftl_mock_table_s {
     base_table_entry_t *entries;

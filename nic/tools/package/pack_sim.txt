@@ -104,7 +104,7 @@ nic/build/x86_64/iris/lib/libdropstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/libflowstatsproto.so                      /nic/lib/
 nic/build/x86_64/iris/lib/librulestatsproto.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                         /nic/lib/
-nic/build/x86_64/iris/lib/libftl.so                                 /nic/lib/
+nic/build/x86_64/iris/lib/libsdkftl.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgr.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgr_iris.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libpciemgr_if.so                          /nic/lib/

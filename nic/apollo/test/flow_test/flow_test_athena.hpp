@@ -19,7 +19,7 @@
 #include "include/sdk/table.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "gen/p4gen/p4/include/ftl.h"

@@ -55,7 +55,7 @@
 #include "nic/apollo/fte/fte.hpp"
 #include "gen/p4gen/p4/include/ftl.h"
 #include "gen/p4gen/p4/include/ftl_table.hpp"
-#include "nic/utils/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
 #include <impl.h>
 
 namespace fte {
