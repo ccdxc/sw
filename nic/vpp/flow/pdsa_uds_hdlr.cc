@@ -9,7 +9,7 @@
 #include <gen/proto/session.pb.h>
 #include <nic/sdk/include/sdk/table.hpp>
 #include <gen/p4gen/p4/include/ftl.h>
-#include <nic/utils/ftl/ftl_base.hpp>
+#include <lib/table/ftl/ftl_base.hpp>
 
 static void
 ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
