@@ -36,8 +36,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/staticroute_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_interface_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
 
 using std::string;
 using grpc::Server;
@@ -78,8 +78,8 @@ svc_reg (void)
     NatSvcImpl            nat_svc;
     BGPSvcImpl            bgp_svc;
     EvpnSvcImpl           evpn_svc;
-    StaticRouteSvcImpl    staticroute_svc;
     CPInterfaceSvcImpl    cp_if_svc;
+    CPRouteSvcImpl        cp_route_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -115,8 +115,8 @@ svc_reg (void)
     server_builder->RegisterService(&nat_svc);
     server_builder->RegisterService(&bgp_svc);
     server_builder->RegisterService(&evpn_svc);
-    server_builder->RegisterService(&staticroute_svc);
     server_builder->RegisterService(&cp_if_svc);
+    server_builder->RegisterService(&cp_route_svc);
 
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());

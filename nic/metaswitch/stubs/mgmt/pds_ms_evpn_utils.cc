@@ -51,7 +51,7 @@ NBB_VOID
 evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
                           AMB_GEN_IPS           *mib_msg,
                           AMB_EVPN_IP_VRF_RT    *data,
-                          NBB_LONG         row_status)
+                          NBB_LONG              row_status)
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -59,6 +59,13 @@ evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
     data->entity_index                  = PDS_MS_EVPN_ENT_INDEX;
     oid[AMB_EVPN_IP_VRF_RT_ENT_INDEX]   = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IV_RT_ENT_IX);
+}
+
+
+NBB_VOID
+evpn_mac_ip_get_fill_func (EvpnMacIpSpec& req, NBB_ULONG *oid)
+{
+    oid[AMB_EVPN_MAC_IP_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
 }
 
 NBB_VOID

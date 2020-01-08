@@ -6,7 +6,7 @@
 
 namespace pds {
 NBB_VOID
-rtm_strt_fill_func (StaticRouteSpec&        req,
+rtm_strt_fill_func (CPStaticRouteSpec&      req,
                     AMB_GEN_IPS             *mib_msg,
                     AMB_CIPR_RTM_STATIC_RT  *data,
                     NBB_LONG                row_status)
@@ -14,11 +14,7 @@ rtm_strt_fill_func (StaticRouteSpec&        req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    // for now static routes are added on default VRF
-    data->fte_index                   = PDS_MS_RTM_ENT_INDEX;
-    oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDS_MS_RTM_ENT_INDEX;
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_FTE_INDEX);
-    
+    // Let the DC-RTM decide the outgoing interface of this route 
     data->if_index                    = 0;
     oid[AMB_QCR_STRT_IF_INDEX_INDEX]  = 0;
     AMB_SET_FIELD_PRESENT (mib_msg,AMB_OID_QCR_STRT_IF_INDEX);

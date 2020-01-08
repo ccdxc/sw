@@ -43,6 +43,8 @@ service BGPSvc {
   rpc BGPPeerAfDelete (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfGet (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
   rpc BGPPeerAfGetAll (BGPPeerAfRequest) returns (BGPPeerAfResponse) {}
+  rpc BGPNLRIPrefixGet (BGPNLRIPrefixRequest) returns (BGPNLRIPrefixSpecResponse) {}
+  rpc BGPNLRIPrefixGetAll (BGPNLRIPrefixRequest) returns (BGPNLRIPrefixSpecResponse) {}
 }
 
 // BGP address family identifier
@@ -86,9 +88,9 @@ message BGPGlobalSpec {
       Mib:    "bgpRmEntTable"
   };
   // The local autonomous system number
-  uint32  LocalASN = 1 [(venice.pdsaFields) = {Field: "local_as"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32  LocalASN = 1 [(venice.pdsaFields) = {Field: "local_as"}];
   // VRF id for this bgp instance
-  uint32  VRFId    = 2 [(venice.pdsaFields) = {Field: "index", SetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32  VRFId    = 2 [(venice.pdsaFields) = {Field: "index", SetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX"}];
   // Router ID for this bgp instance
   fixed32 RouterId = 3 [(venice.pdsaFields) = {Field: "local_identifier"}];
 }
@@ -169,40 +171,50 @@ message BGPPeerSpec {
       Mib:    "bgpPeerStatusTable"
   };
   // The local autonomous system number
-  uint32          LocalASN     = 1 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          LocalASN     = 1 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}];
   // VRF id for this bgp instance
-  uint32          VRFId        = 2 [(venice.pdsaFields) = {Field: "rm_ent_index", SetKeyOidIndex: "AMB_BGP_PER_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_RM_ENT_INDEX_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          VRFId        = 2 [(venice.pdsaFields) = {Field: "rm_ent_index", SetKeyOidIndex: "AMB_BGP_PER_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_RM_ENT_INDEX_INDEX"}];
   // Whether BGP peer is enabled ? If peer is not enabled then
   // local router must not initiate connections to the neighbor
   // and must not respond to TCP connections attempts from
   // neighbor
   AdminSt         AdminEn      = 3 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
-  types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr"}, (gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr"}];
   // BGP Peer Port Address
-  uint32          PeerPort     = 5 [(venice.pdsaFields) = {Field: "remote_port", SetKeyOidIndex: "AMB_BGP_PER_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_REMOTE_PORT_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          PeerPort     = 5 [(venice.pdsaFields) = {Field: "remote_port", SetKeyOidIndex: "AMB_BGP_PER_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_REMOTE_PORT_INDEX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr    = 6 [(venice.pdsaFields) = {Field: "local_addr"}, (gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress LocalAddr    = 6 [(venice.pdsaFields) = {Field: "local_addr"}];
   // BGP Local Port Address
-  uint32          LocalPort    = 7 [(venice.pdsaFields) = {Field: "local_port", SetKeyOidIndex: "AMB_BGP_PER_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_LOCAL_PORT_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          LocalPort    = 7 [(venice.pdsaFields) = {Field: "local_port", SetKeyOidIndex: "AMB_BGP_PER_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_LOCAL_PORT_INDEX"}];
   // IfId
-  uint32          IfId         = 8 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          IfId         = 8 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
   // Remote 4-byte (32-bit) AS number
   uint32          RemoteASN    = 9 [(venice.pdsaFields) = {Field: "remote_as"}];
   // Send regular community attributes to neighbor
-  AMBBool         SendComm     = 10 [(venice.pdsaFields) = {Field: "send_comm"}, (gogoproto.moretags) = "meta:default=false"];
+  AMBBool         SendComm     = 10 [(venice.pdsaFields) = {Field: "send_comm"}];
   // Send extended community attributes to neighbor
-  AMBBool         SendExtComm  = 11 [(venice.pdsaFields) = {Field: "send_ext_comm"}, (gogoproto.moretags) = "meta:default=false"];
+  AMBBool         SendExtComm  = 11 [(venice.pdsaFields) = {Field: "send_ext_comm"}];
   // Peer is a route reflector client
-  BGPPeerRRClient RRClient     = 12 [(venice.pdsaFields) = {Field: "reflector_client"}, (gogoproto.moretags) = "meta:default=false"];
+  BGPPeerRRClient RRClient     = 12 [(venice.pdsaFields) = {Field: "reflector_client"}];
   // Update source address for peering
   types.IPAddress UpdateSrc    = 13;
   // BGP session connect-retry timer in seconds
-  uint32          ConnectRetry = 14 [(venice.pdsaFields) = {Field: "connect_retry_interval"}, (gogoproto.moretags) = "range:1-65535"];
+  uint32          ConnectRetry = 14 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
   // BGP session holdtime timer in seconds
-  uint32          HoldTime     = 15 [(venice.pdsaFields) = {Field: "hold_time_configd"}, (gogoproto.moretags) = "range:0-0, 3-65535"];
+  uint32          HoldTime     = 15 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
   // BGP session keepalive timer in seconds
-  uint32          KeepAlive    = 16 [(venice.pdsaFields) = {Field: "keep_alive_configd"}, (gogoproto.moretags) = "range:0-65535"];
+  uint32          KeepAlive    = 16 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
+  
+  // Get-Only fields follows
+  // BGP session Status
+  uint32          Status       = 17 [(venice.pdsaFields) = {Field: "state"}];
+  // BGP session Prev Status
+  uint32          PrevStatus   = 18 [(venice.pdsaFields) = {Field: "last_state"}];
+  // Last Error Received
+  bytes           LastErrorRcvd = 19 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  // Last Error Sent
+  bytes           LastErrorSent = 20 [(venice.pdsaFields) = {Field: "last_error_sent"}];
 }
 
 // BGP PeerAF configurations
@@ -216,26 +228,77 @@ message BGPPeerAf {
       Mib:    "bgpPeerAfiSafiStatusTable"
   };
   // VRF id for this bgp instance
-  uint32          VRFId       = 1 [(venice.pdsaFields) = {Field: "rm_ent_index",  SetKeyOidIndex: "AMB_BGP_PAS_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_RM_ENT_INDEX_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          VRFId       = 1 [(venice.pdsaFields) = {Field: "rm_ent_index",  SetKeyOidIndex: "AMB_BGP_PAS_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_RM_ENT_INDEX_INDEX"}];
   // BGP Peer IP Address
-  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}, (gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
   // BGP Peer Port Address
-  uint32          PeerPort    = 3 [(venice.pdsaFields) = {Field: "remote_port",  SetKeyOidIndex: "AMB_BGP_PAS_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_REMOTE_PORT_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          PeerPort    = 3 [(venice.pdsaFields) = {Field: "remote_port",  SetKeyOidIndex: "AMB_BGP_PAS_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_REMOTE_PORT_INDEX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr   = 4 [(venice.pdsaFields) = {Field: "local_addr"}, (gogoproto.moretags) = "meta:mandatory"];
+  types.IPAddress LocalAddr   = 4 [(venice.pdsaFields) = {Field: "local_addr"}];
   // BGP Local Port Address
-  uint32          LocalPort   = 5 [(venice.pdsaFields) = {Field: "local_port",  SetKeyOidIndex: "AMB_BGP_PAS_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_LOCAL_PORT_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          LocalPort   = 5 [(venice.pdsaFields) = {Field: "local_port",  SetKeyOidIndex: "AMB_BGP_PAS_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_LOCAL_PORT_INDEX"}];
   // IfId
-  uint32          IfId        = 6 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+  uint32          IfId        = 6 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}];
   // BGP Address family
   BGPAfi          Afi         = 7 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
   // BGP Sub-Address family
   BGPSafi         Safi        = 8 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
   // Disable AFI SAFI
   AMBBool         Disable     = 9 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
-
   // Enforce this router to set self as next-hop for advertised routes
   AMBBool         NHself      = 10 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // Originate a default route to this peer
   AMBBool         DefaultOrig = 11 [(venice.pdsaFields) = {Field: "originate_default"}];
+}
+
+enum NLRISrc {
+  NLRI_NONE = 0;
+  NLRI_PEER = 1; // Learned from Peer
+  NLRI_AFM  = 2; // Learned from AFM
+  NLRI_SELF = 3; // created by itself
+
+}
+message BGPNLRIPrefixSpec {
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_BGP_NL_PF_OID_LEN",
+    Mib:    "bgpNlriPrefixTable"
+  };
+
+  // BGP Address family
+  BGPAfi     Afi                = 1 [(venice.pdsaFields) = {Field: "afi", GetKeyOidIndex: "AMB_BGP_NLPF_AFI_INDEX"}];
+  // BGP Sub-Address family
+  BGPSafi    Safi               = 2 [(venice.pdsaFields) = {Field: "safi", GetKeyOidIndex: "AMB_BGP_NLPF_SAFI_INDEX"}];
+  // Prefix in NLRI
+  bytes      Prefix             = 3 [(venice.pdsaFields) = {Field: "prfx", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_INDEX" GetKeyOidLenIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
+  // Prefix Length
+  uint32     PrefixLen          = 4 [(venice.pdsaFields) = {Field: "prefxlen", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
+  // Route Source (learned from BGP Peer or AFM)
+  NLRISrc    RouteSource        = 5 [(venice.pdsaFields) = {Field: "peer_or_afm", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_OR_AFM_INDEX"}];
+  // Route Source Index
+  uint32     RouteSourceIndex   = 6 [(venice.pdsaFields) = {Field: "peer_afm_index", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_AFM_IX_INDEX"}];
+  // Path ID
+  uint32     PathID             = 7 [(venice.pdsaFields) = {Field: "path_id", GetKeyOidIndex: "AMB_BGP_NLPF_PATH_ID_INDEX"}];
+  // Chosen as BGP best route or not
+  AMBBool    BestRoute          = 8 [(venice.pdsaFields) = {Field: "best"}];
+  // AS Path String
+  bytes      ASPathStr          = 9 [(venice.pdsaFields) = {Field: "aspath_str"}];
+  // Originator ID
+  bytes      PathOrigId         = 10 [(venice.pdsaFields) = {Field: "path_attr_orig_id"}];
+  // Next-Hop Address
+  bytes      NextHopAddr        = 11 [(venice.pdsaFields) = {Field: "path_attr_next_hop"}];
+}
+
+// BGP NLRI Prefix create and update request
+message BGPNLRIPrefixRequest {
+  option (venice.pdsaGetGlobOpts) = {
+      Mib: "bgpNlriPrefixTable"
+  };
+  // requests
+  repeated BGPNLRIPrefixSpec Request = 1;
+}
+
+// BGPPeerSpec get response
+message BGPNLRIPrefixSpecResponse {
+  types.ApiStatus            ApiStatus = 1;
+  repeated BGPNLRIPrefixSpec Response  = 2;
 }

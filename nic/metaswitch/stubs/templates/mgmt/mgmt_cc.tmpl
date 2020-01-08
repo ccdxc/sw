@@ -538,7 +538,7 @@
         /* Invoke custom fill function registered by the user                      */
         /***************************************************************************/
         {{if not (eq $fillFn "")}}
-        {{$fillFn}}(req, mib_msg, data, row_status);
+        {{$fillFn}}(req, oid);
         {{end}}
 
         /***************************************************************************/
@@ -614,7 +614,7 @@
         /* Invoke custom fill function registered by the user                      */
         /***************************************************************************/
         {{if not (eq $fillFn "")}}
-        {{$fillFn}}(req, mib_msg, data, row_status);
+        {{$fillFn}}(req, oid);
         {{end}}
 
         /***************************************************************************/

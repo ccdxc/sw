@@ -31,7 +31,7 @@ extern "C" {
 #include "gen/proto/bgp.pb.h"
 #include "gen/proto/evpn.pb.h"
 #include "gen/proto/cp_interface.pb.h"
-#include "gen/proto/staticroute.pb.h"
+#include "gen/proto/cp_route.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 
 #define PDS_MS_CTM_GRPC_CORRELATOR 0x101
@@ -144,6 +144,7 @@ NBB_VOID evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
                                    AMB_GEN_IPS           *mib_msg,
                                    AMB_EVPN_IP_VRF_RT    *data,
                                    NBB_LONG         row_status);
+NBB_VOID evpn_mac_ip_get_fill_func (EvpnMacIpSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_fill_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_fill_name_field (EvpnIpVrfSpec& req, AMB_GEN_IPS *mib_msg);
 NBB_VOID evpn_ip_vrf_rt_fill_name_field (EvpnIpVrfRtSpec& req,
@@ -152,7 +153,7 @@ NBB_VOID evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data);
 NBB_VOID evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req,
                                         AMB_EVPN_IP_VRF_RT *data);
-NBB_VOID rtm_strt_fill_func (StaticRouteSpec&        req,
+NBB_VOID rtm_strt_fill_func (CPStaticRouteSpec&      req,
                              AMB_GEN_IPS             *mib_msg,
                              AMB_CIPR_RTM_STATIC_RT  *data,
                              NBB_LONG                row_status);

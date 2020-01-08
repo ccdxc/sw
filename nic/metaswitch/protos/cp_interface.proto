@@ -35,10 +35,10 @@ message CPInterfaceAddrSpec {
     FillFn: "lim_intf_addr_fill_func"
   };
 
-    CPIntfType      IfType      = 1 [(gogoproto.moretags) = "meta:mandatory"]; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
-    uint32          IfId        = 2 [(gogoproto.moretags) = "meta:mandatory"]; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
-    types.IPAddress IPAddr      = 3 [(venice.pdsaFields) = {Field:"ipaddress"}, (gogoproto.moretags) = "meta:mandatory"];
-    uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field:"prefix_len"}, (gogoproto.moretags) = "meta:mandatory"];
+    CPIntfType      IfType      = 1; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
+    uint32          IfId        = 2; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
+    types.IPAddress IPAddr      = 3 [(venice.pdsaFields) = {Field:"ipaddress"}];
+    uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field:"prefix_len"}];
 }
 
 // This spec should be used to create only LIF and Loopback interfaces.
@@ -50,8 +50,8 @@ message CPInterfaceSpec {
     FillFn: "lim_sw_intf_fill_func"
   };
 
-    CPIntfType  IfType  = 1 [(gogoproto.moretags) = "meta:mandatory"]; // Interface Type should be converted to MS interface type/subtype, cannot be autogen
-    uint32      IfId    = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}, (gogoproto.moretags) = "meta:mandatory"];
+    CPIntfType  IfType  = 1; // Interface Type should be converted to MS interface type/subtype, cannot be autogen
+    uint32      IfId    = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
 }
 
 // CRUD request messages

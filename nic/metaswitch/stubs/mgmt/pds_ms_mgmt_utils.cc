@@ -13,7 +13,7 @@ ip_addr_to_spec (const ip_addr_t *ip_addr,
     if (ip_addr->af == IP_AF_IPV4) {
         ip_addr_spec->set_af(types::IP_AF_INET);
         ip_addr_spec->set_v4addr(ip_addr->addr.v4_addr);
-    } else {
+    } else if (ip_addr->af == IP_AF_IPV6) {
         ip_addr_spec->set_af(types::IP_AF_INET6);
         ip_addr_spec->set_v6addr(ip_addr->addr.v6_addr.addr8, IP6_ADDR8_LEN);
     }
@@ -89,6 +89,9 @@ pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
         case AMB_INETWK_ADDR_TYPE_IPV6:
             proto_ip_addr->af = IP_AF_IPV6;
             break;
+
+        case AMB_INETWK_ADDR_TYPE_OTHER:
+            return;
 
         default:
             assert(0);
@@ -376,6 +379,37 @@ pds_ms_get_address(const NBB_CHAR  *tableName,
             pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
                                                   data->local_addr_type,
                                                   data->local_addr_len,
+                                                  &pds_ms_ip_addr);
+        } else {
+            assert(0);
+        }
+    } else if (strcmp(tableName, "rtmRibTable") == 0) {
+        AMB_CIPR_RTM_RIB *data = (AMB_CIPR_RTM_RIB*)src;
+        if (strcmp(fieldName, "dest") == 0) {
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->dest,
+                                                  data->dest_addr_type,
+                                                  data->dest_addr_len,
+                                                  &pds_ms_ip_addr);
+        } else if (strcmp(fieldName, "next_hop") == 0) {
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->next_hop,
+                                                  data->next_hop_type,
+                                                  data->next_hop_len,
+                                                  &pds_ms_ip_addr);
+        } else {
+            assert(0);
+        }
+    } else if (strcmp(tableName, "evpnMacIpTable") == 0) {
+        AMB_EVPN_MAC_IP *data = (AMB_EVPN_MAC_IP*)src;
+        if (strcmp(fieldName, "ip_address") == 0) {
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->ip_address,
+                                                  data->ip_address_type,
+                                                  data->ip_address_len,
+                                                  &pds_ms_ip_addr);
+        } else if (strcmp(fieldName, "bgp_nh_addr") == 0) {
+            AMB_EVPN_MAC_IP *data = (AMB_EVPN_MAC_IP*)src;
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->bgp_nh_addr,
+                                                  data->bgp_nh_addr_type,
+                                                  data->bgp_nh_addr_len,
                                                   &pds_ms_ip_addr);
         } else {
             assert(0);
