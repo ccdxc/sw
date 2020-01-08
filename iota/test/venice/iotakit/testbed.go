@@ -1390,6 +1390,28 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 	return nil
 }
 
+
+
+/*
+ * Create system config file to eanble cosole with out triggering
+ * authentivcation.  
+ */
+const NaplesConfigSpecLocal = "/tmp/system-config.json"
+type ConsoleMode struct {
+    Console  string  `json:"console"`
+}
+
+func CreateConfigConsoleNoAuth() {
+    var ConfigSpec = []byte(`
+        {"console":"enable"}`)
+
+    consolemode := ConsoleMode{}
+    json.Unmarshal(ConfigSpec, &consolemode)
+
+    ConfigSpecJson, _ := json.Marshal(consolemode)
+    ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
+}
+
 func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 
 	if os.Getenv("REBOOT_ONLY") != "" {
@@ -1420,8 +1442,14 @@ func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 				// disable watchdog for naples
 				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
 
-				// make sure console is enabled
-				trig.AddCommand(fmt.Sprintf("touch /sysconfig/config0/.console"), node.NodeName+"_naples", node.NodeName)
+				// Set up config file to enable console unconditionally (i.e.
+				// with out triggering authentication). 
+				CreateConfigConsoleNoAuth()
+				err = sm.tb.CopyToNaples(node.NodeName, []string{NaplesConfigSpecLocal}, globals.NaplesConfig)
+				if err != nil {
+					return fmt.Errorf("Error copying config spec file to Naples. Err: %v", err)
+				}
+
 				// trigger mode switch
 				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
 					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)

@@ -7,6 +7,14 @@ import iota.test.iris.testcases.penctl.common as common
 import iota.test.iris.utils.hal_show as hal_show_utils
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
+NAPLES_CONFIG_SPEC_LOCAL        = "/tmp/system-config.json"
+
+# Create system config file to enable console with out triggering
+# authentication. 
+def CreateConfigConsoleNoAuth():
+    console_enable = {'console': 'enable'}
+    with open(NAPLES_CONFIG_SPEC_LOCAL, 'w') as outfile:
+        json.dump(console_enable, outfile, indent=4)
 
 def Main(step):
     if GlobalOptions.skip_setup:
@@ -20,7 +28,9 @@ def Main(step):
         cmd = "touch /data/iota-emulation"
         api.Trigger_AddNaplesCommand(req, n, cmd)
         # Make sure console is enabled
-        cmd = "touch /sysconfig/config0/.console"
+        CreateConfigConsoleNoAuth()
+        api.CopyToNaples(n, [NAPLES_CONFIG_SPEC_LOCAL], "")
+        cmd = "mv /system-config.json /sysconfig/config0/system-config.json"
         api.Trigger_AddNaplesCommand(req, n, cmd)
 
         if common.PenctlGetModeStatus(n) != "NETWORK" or common.PenctlGetTransitionPhaseStatus(n) != "VENICE_REGISTRATION_DONE":

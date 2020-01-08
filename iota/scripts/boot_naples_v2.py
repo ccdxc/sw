@@ -21,6 +21,7 @@ NAPLES_TMP_DIR                  = "/data"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
 NAPLES_OOB_NIC                  = "oob_mnic0"
 UPGRADE_TIMEOUT                 = 600
+NAPLES_CONFIG_SPEC_LOCAL        = "/tmp/system-config.json"
 
 def GetPrimaryIntNicMgmtIpNext():
     nxt = str((int(re.search('\.([\d]+)$',GlobalOptions.mnic_ip).group(1))+1)%255)
@@ -137,6 +138,14 @@ def IpmiReset():
     cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
               (GlobalOptions.cimc_ip, GlobalOptions.cimc_username, GlobalOptions.cimc_password)
     subprocess.check_call(cmd, shell=True)
+
+
+# Create system config file to enable console with out triggering
+# authentication. 
+def CreateConfigConsoleNoAuth():
+    console_enable = {'console': 'enable'}
+    with open(NAPLES_CONFIG_SPEC_LOCAL, 'w') as outfile:
+        json.dump(console_enable, outfile, indent=4)
 
 # Error codes for all module exceptions
 @unique
@@ -604,17 +613,16 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
-        # Make sure console is enabled
-        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
-
-
-    def SetUpInitFiles(self):
-        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
-        
+        # Make sure console is enabled, with no need of authentication.
+        # Setup config spec json file to do just that.
+        CreateConfigConsoleNoAuth()
+        self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
+                    entity_dir = "/sysconfig/config0")
 
     def SetUpInitFiles(self):
-        self.SendlineExpect("touch /sysconfig/config0/.console", "#")
-        
+        CreateConfigConsoleNoAuth()
+        self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
+                    entity_dir = "/sysconfig/config0")
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Init for upgrade failed")
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
@@ -787,7 +795,9 @@ class HostManagement(EntityManagement):
         self.RunNaplesCmd("rm -rf /data/*.dat && sync")
 
     def SetUpInitFiles(self):
-        self.RunNaplesCmd("touch /sysconfig/config0/.console")
+        CreateConfigConsoleNoAuth()
+        self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
+                    entity_dir = "/sysconfig/config0")
 
 
 class EsxHostManagement(HostManagement):
