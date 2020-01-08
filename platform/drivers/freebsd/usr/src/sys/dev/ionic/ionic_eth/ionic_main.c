@@ -794,8 +794,14 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	if(def_pcp != -1)
 		qos->dot1q_pcp = def_pcp;
 
-	IONIC_NETDEV_DEBUG(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d\n", 
-				tc, qos->pause_type, qos->dot1q_pcp);
+	// default to DWRR
+	qos->sched_type = QOS_SCHED_TYPE_DWRR;
+	qos->dwrr_weight = 25; // TODO: set this to 0 when bw_perc is enabled
+
+	IONIC_NETDEV_DEBUG(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d "
+				"sched_type: %d wt: %d\n", 
+				tc, qos->pause_type, qos->dot1q_pcp, 
+				qos->sched_type, qos->dwrr_weight);
 
 }
 
