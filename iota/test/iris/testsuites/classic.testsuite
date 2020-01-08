@@ -60,6 +60,7 @@ testbundles:
         - linktest/linktest.testbundle
         - classic/driver-features-oob-1g-sanity.testbundle
         - linktest/linktest.testbundle
+        - tso/tso.testbundle
         - classic/driver-features-sanity.testbundle
         - linktest/linktest.testbundle
         - storage/storage.testbundle
@@ -80,6 +81,7 @@ testbundles:
         # Relative paths from iota/test/iris/testbundles/
         - classic/rdma_reg.testbundle
         - classic/rdma_stress.testbundle
+        - tso/tso_regr.testbundle
         - classic/driver-features.testbundle
         - storage/regression.testbundle
 

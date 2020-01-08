@@ -1,0 +1,71 @@
+meta:
+    name    : tso
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 32
+
+testcases:
+    -   name    : TSO_REGR
+        testcase: testcases.drivers.drivertso
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            tso_offload        : [ 'on', 'off']
+            mtu                : [ '1500', '4096', '9000']
+            pktsize            : [  2048, 8192, 32768 ]
+            vlantag            : [ 'off']
+            vxlan              : [ 'off']
+            proto              : [ 'tcp', 'udp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+            iperfthreads     :  1
+    -   name    : TSO_REGR_VLAN
+        testcase: testcases.drivers.drivertso
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            tso_offload        : [ 'on', 'off']
+            mtu                : [ '1500', '4096', '9000']
+            pktsize            : [  2048, 8192, 32768 ]
+            vlantag            : [ 'on' ]
+            vxlan              : [ 'off']
+            proto              : [ 'tcp', 'udp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+            iperfthreads     :  1
+    -   name    : TSO_REGR_VXLAN
+        testcase: testcases.drivers.drivertso
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            tso_offload        : [ 'on', 'off']
+            mtu                : [ '1500', '4096', '9000']
+            pktsize            : [  2048, 8192, 32768 ]
+            vlantag            : [ 'off' ]
+            vxlan              : [ 'on']
+            proto              : [ 'tcp', 'udp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+            iperfthreads     :  1
+    -   name    : TSO_REGR_VLAN_VXLAN
+        testcase: testcases.drivers.drivertso
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            tso_offload        : [ 'on', 'off']
+            mtu                : [ '1500', '4096', '9000']
+            pktsize            : [  2048, 8192, 32768 ]
+            vlantag            : [ 'on' ]
+            vxlan              : [ 'on']
+            proto              : [ 'tcp', 'udp']
+            ipproto            : [ 'v4', 'v6']
+        args    :
+            type: host
+            iperfthreads     :  1
