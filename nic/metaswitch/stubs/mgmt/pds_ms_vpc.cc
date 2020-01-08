@@ -143,7 +143,7 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process vpc %d create (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("vpc %d create is successfully processed\n", 
@@ -159,7 +159,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process vpc %d delete (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("vpc %d delete is successfully processed\n", 

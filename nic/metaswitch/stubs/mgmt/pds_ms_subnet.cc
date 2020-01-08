@@ -309,7 +309,7 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process subnet %d create (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("subnet %d create is successfully processed\n", 
@@ -326,7 +326,7 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process subnet %d delete (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     cache_subnet_spec (spec, true /* Delete */);
@@ -397,7 +397,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             SDK_TRACE_ERR ("Failed to process subnet %d field update (error=%d)\n", 
                             spec->key.id, ret_status);
-            return SDK_RET_ERR;                        
+            return pds_ms_api_to_sdk_ret (ret_status);
         }
 
         SDK_TRACE_DEBUG ("subnet %d field update is successfully processed\n", 

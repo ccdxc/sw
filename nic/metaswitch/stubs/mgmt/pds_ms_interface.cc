@@ -82,7 +82,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process interface 0x%X create (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("interface 0x%X create is successfully processed\n", 
@@ -99,7 +99,7 @@ interface_delete (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process interface 0x%X delete (error=%d)\n", 
                         spec->key.id, ret_status);
-        return SDK_RET_ERR;                        
+        return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("interface 0x%X delete is successfully processed\n", 

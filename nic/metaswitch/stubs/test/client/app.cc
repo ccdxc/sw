@@ -180,6 +180,7 @@ static void create_route_proto_grpc () {
     Status                ret_status;
 
     auto proto_spec = request.add_request ();
+    proto_spec->set_vrfid(1);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
     dest_addr->set_v4addr (0);
