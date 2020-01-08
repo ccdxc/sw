@@ -119,11 +119,11 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit policy"
-              class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
+    <mat-icon *roleGuard="'workloadworkload_update'" matTooltip="Edit workload"
+              class="global-table-action-icon workload-table-action-icon-edit"
               (click)="expandRowRequest($event, rowData)">
       edit</mat-icon>
-    <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete policy"
+    <mat-icon *roleGuard="'workloadworkload_delete'" matTooltip="Delete workload"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>

@@ -254,8 +254,6 @@
 /*----- alert notification icon -----*/
 
 /*====== header left =====*/
-$sidenavWidth: 200px;
-
 .app-shell-header-logo-div {
   min-width: $sidenavWidth;
 }
@@ -279,9 +277,14 @@ $sidenavWidth: 200px;
   display: flex;
   align-items: top;
   justify-content: center;
-  width: 300px;
   background: #c5cae9;
   padding: 0px;
+}
+
+.app-shell-left-sidenav {
+  .mat-drawer-inner-container {
+    overflow-x: hidden;
+  }
 }
 
 .app-shell-right-sidenav {

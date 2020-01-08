@@ -1,3 +1,5 @@
+@import 'src/global-mixins';
+
 /* ---------------------------------------------------
     SIDEBAR STYLE
 ----------------------------------------------------- */
@@ -8,8 +10,7 @@
 }
 
 #app-sidebar {
-  min-width: 200px;
-  max-width: 200px;
+  width: $sidenavWidth;
   -webkit-transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665) !important;
   -moz-transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665) !important;
   -o-transition: all 0.6s cubic-bezier(0.945, 0.020, 0.270, 0.665) !important;
