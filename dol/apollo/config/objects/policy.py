@@ -225,7 +225,9 @@ class PolicyObject(base.ConfigObjectBase):
         numrules = len(rules)
         if numrules == 0:
             return None
-        return random.choice(rules)
+        # TODO: Disabling randomness for debug - remove once rfc job is stable
+        # return random.choice(rules)
+        return rules[0]
 
     def __get_non_default_random_rule(self):
         """
@@ -403,8 +405,12 @@ class PolicyObjectClient(base.ConfigClientBase):
         return rules
 
     def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
-        # TODO: make it random. Add allow all for now
-        return self.Generate_Allow_All_Rules(subnetpfx, subnetpfx)
+        # TODO: make it random. Add allow all with default pfx for now
+        if af == utils.IP_VERSION_6:
+            pfx = utils.IPV6_DEFAULT_ROUTE
+        else:
+            pfx = utils.IPV4_DEFAULT_ROUTE
+        return self.Generate_Allow_All_Rules(pfx, pfx)
 
     def GenerateVnicPolicies(self, numPolicy, subnet, direction, is_v6=False):
         if not self.__supported:

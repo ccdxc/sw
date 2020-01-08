@@ -591,7 +591,6 @@ def DumpObject(obj):
     parentObj = getattr(obj, 'Parent', None)
     if parentObj:
         DumpObject(parentObj)
-        return
     logger.info(" === Selected %s === " % (obj.ObjType.name))
     obj.Show()
     return

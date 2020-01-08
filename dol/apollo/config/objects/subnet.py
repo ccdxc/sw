@@ -108,8 +108,6 @@ class SubnetObject(base.ConfigObjectBase):
     def __fill_default_rules(self, policyobj):
         rules = []
         pfx = None
-        srcPfx = None
-        dstPfx = None
         if policyobj.AddrFamily == 'IPV4':
             if policyobj.PolicyType == 'default':
                 pfx = utils.IPV4_DEFAULT_ROUTE
@@ -120,7 +118,7 @@ class SubnetObject(base.ConfigObjectBase):
                 pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[0])
-        policyobj.rules = PolicyClient.Generate_Allow_All_Rules(srcPfx, dstPfx)
+        policyobj.rules = PolicyClient.Generate_Allow_All_Rules(pfx, pfx)
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
