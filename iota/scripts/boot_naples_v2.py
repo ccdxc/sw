@@ -23,7 +23,8 @@ NAPLES_OOB_NIC                  = "oob_mnic0"
 UPGRADE_TIMEOUT                 = 600
 
 def GetPrimaryIntNicMgmtIpNext():
-    return  re.sub('\.1$','.2',GlobalOptions.mnic_ip)
+    nxt = str((int(re.search('\.([\d]+)$',GlobalOptions.mnic_ip).group(1))+1)%255)
+    return re.sub('\.([\d]+)$','.'+nxt,GlobalOptions.mnic_ip)
 
 def GetPrimaryIntNicMgmtIp():
     return GlobalOptions.mnic_ip
@@ -524,6 +525,7 @@ class NaplesManagement(EntityManagement):
 
     def __read_ip(self):
         self.__run_dhclient()
+        print(self.RunCommoandOnConsoleWithOutput("ifconfig"))
         output = self.RunCommoandOnConsoleWithOutput("ifconfig oob_mnic0")
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         x = re.findall(ifconfig_regexp.encode(), output)
@@ -674,7 +676,6 @@ class HostManagement(EntityManagement):
     def Init(self, driver_pkg = None, cleanup = True):
         self.WaitForSsh()
         os.system("date")
-
         nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
 
         if GlobalOptions.skip_driver_install:
@@ -682,6 +683,9 @@ class HostManagement(EntityManagement):
 
         if cleanup:
             nodeinit_args += " --cleanup"
+            self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
+            self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
+            self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
             print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
 

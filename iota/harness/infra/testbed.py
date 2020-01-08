@@ -13,6 +13,7 @@ import iota.harness.infra.types as types
 import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.store as store
 import iota.harness.infra.resmgr as resmgr
+import iota.harness.infra.getNicHostInfo as gnhi
 
 import iota.protos.pygen.topo_svc_pb2 as topo_pb2
 import iota.protos.pygen.iota_types_pb2 as types_pb2
@@ -46,6 +47,29 @@ def setUpSwitchQos(switch_ctx):
     qosClass.mtu = 9216
     qosClass.pause_pfc_cos = 0
 
+def updateMultiNicInfo():
+    try:
+        nicInfo = gnhi.getNicHostInfo(GlobalOptions.testbed_json)
+        nicInfo = nicInfo['Instances']
+        if len(nicInfo) == 0:
+            Logger.debug('no instance found in testbed topology file {0}'.format(GlobalOptions.testbed_json))
+        elif len(nicInfo[0]['Nics']) == 0:
+            Logger.debug('no nics found for instance 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
+        elif len(nicInfo[0]['Nics'][0]['Ports']) == 0:
+            Logger.debug('no ports found for multi nic 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
+        else:
+            ip = nicInfo[0]['Nics'][0]['Ports'][0].get('IP',None) 
+            if not ip:
+                Logger.debug('no ip found for multi nic 0 / port 0 in testbed topology file {0}'.format(GlobalOptions.testbed_json))
+            else:
+                msg = 'determined multi nic mgmt ip to be: {0}'.format(ip)
+                print(msg)
+                Logger.info(msg)
+                store.SetPrimaryIntNicMgmtIp(ip)
+    except:
+        Logger.debug('failed to determine internal mnic ip. error was: {0}'.format(traceback.format_exc()))
+        Logger.warn('setting nic int mgmt ip to default of 169.254.0.1')
+        store.SetPrimaryIntNicMgmtIp('169.254.0.1')
 
 class _Testbed:
     def __init__(self):
@@ -110,6 +134,7 @@ class _Testbed:
             print(msg)
             Logger.debug(msg)
             sys.exit(types.status.OFFLINE_TESTBED)
+        updateMultiNicInfo()
         try:
             for instance in self.__tbspec.Instances:
                 if hasattr(self.__tbspec.Provision, "Vars") and hasattr(self.__tbspec.Provision.Vars, 'BmOs') and instance.Type == "bm":
@@ -357,6 +382,9 @@ class _Testbed:
         if GlobalOptions.only_firmware_upgrade:
             Logger.info("Stopping after firmware upgrade based on cmdline options.")
             sys.exit(0)
+
+        #read multi nic info again in case ip changed after running boot naples
+        updateMultiNicInfo()
         return
 
 

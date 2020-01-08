@@ -23,6 +23,7 @@ import iota.harness.infra.utils.loader as loader
 
 from iota.harness.infra.glopts import GlobalOptions
 
+
 DEFAULT_COMMAND_TIMEOUT = 30
 
 HOST_NAPLES_DIR         = "/naples"
@@ -266,7 +267,8 @@ def GetPrimaryIntNicMgmtIp():
 
 def GetPrimaryIntNicMgmtIpNext():
     ip=store.GetPrimaryIntNicMgmtIp()
-    ip=re.sub('\.1$','.2',ip)
+    nxt = str((int(re.search('\.([\d]+)$',ip).group(1))+1)%255)  
+    ip=re.sub('\.([\d]+)$','.'+nxt,ip)
     return ip
 
 def GetVeniceMgmtIpAddresses():

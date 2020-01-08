@@ -11,8 +11,8 @@ import ipaddress
 import re
 
 ip_prefix = 24
-mgmtIp = store.GetPrimaryIntNicMgmtIp()
-nextIp = re.sub('\.1$','.2',mgmtIp)
+mgmtIp = api.GetPrimaryIntNicMgmtIp()
+nextIp = api.GetPrimaryIntNicMgmtIpNext()
 
 IntMgmtIpAllocator = resmgr.IpAddressStep(nextIp, "0.0.0.1")
 IntMgmtIpAllocator = resmgr.IpAddressStep("192.169.1.2", "0.0.0.1")

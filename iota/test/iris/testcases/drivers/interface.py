@@ -16,8 +16,8 @@ INTF_TEST_TYPE_HOST         = "host"
 
 ip_prefix = 24
 
-mgmtIp = store.GetPrimaryIntNicMgmtIp()
-nextIp = re.sub('\.1$','.2',mgmtIp)
+mgmtIp = api.GetPrimaryIntNicMgmtIp()
+nextIp = api.GetPrimaryIntNicMgmtIpNext()
 
 ip_map =  {
     INTF_TEST_TYPE_HOST: ("1.1.1.1", "1.1.1.2"),
@@ -236,7 +236,7 @@ def RestoreIntMmgmtInterfaceConfig():
     node_intfs = {}
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
     mgmtIp = store.GetPrimaryIntNicMgmtIp()
-    nextIp = re.sub('\.1$','.2',mgmtIp)
+    nextIp = api.GetPrimaryIntNicMgmtIpNext()
     for node in nodes:
         node_if_info = GetNodeInterface(node)
         for intf in node_if_info.HostIntIntfs():
