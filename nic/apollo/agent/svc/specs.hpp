@@ -226,6 +226,8 @@ ipaddr_api_spec_to_proto_spec (types::IPAddress *out_ipaddr,
         out_ipaddr->set_v6addr(
                     std::string((const char *)&in_ipaddr->addr.v6_addr.addr8,
                                 IP6_ADDR8_LEN));
+    } else {
+        SDK_ASSERT(FALSE);
     }
     return;
 }
@@ -1282,8 +1284,11 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     proto_spec->set_id(api_spec->key.id);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
                                   &api_spec->remote_ip);
-    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
-                                  &api_spec->ip_addr);
+    if (api_spec->ip_addr.af != IP_AF_NIL) {
+        // local IP is optional
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_localip(),
+                                      &api_spec->ip_addr);
+    }
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
                              &api_spec->encap);
@@ -1441,9 +1446,12 @@ pds_service_api_spec_to_proto (pds::SvcMappingSpec *proto_spec,
                 proto_key->mutable_backendip(), &api_spec->key.backend_ip);
     ipaddr_api_spec_to_proto_spec(
                 proto_spec->mutable_ipaddr(), &api_spec->vip);
-    ipaddr_api_spec_to_proto_spec(
-                proto_spec->mutable_providerip(),
-                &api_spec->backend_provider_ip);
+    // provider IP is optional
+    if (api_spec->backend_provider_ip.af != IP_AF_NIL) {
+        ipaddr_api_spec_to_proto_spec(
+                    proto_spec->mutable_providerip(),
+                    &api_spec->backend_provider_ip);
+    }
     proto_spec->set_svcport(api_spec->svc_port);
 }
 
