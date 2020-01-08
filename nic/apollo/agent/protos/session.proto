@@ -33,6 +33,11 @@ message Flow {
   uint32  Epoch      = 5;
 }
 
+message FlowMsg {
+  uint32 FlowEntryCount = 1;
+  Flow FlowEntry        = 2;
+}
+
 message Session {
   Flow InitiatorFlow = 1;
   Flow ResponderFlow = 2;

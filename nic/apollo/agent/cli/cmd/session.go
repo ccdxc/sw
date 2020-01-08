@@ -250,38 +250,58 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	client := pds.NewSessionSvcClient(c)
+	filter := cmd.Flags().Changed("vpcid") || cmd.Flags().Changed("srcip") ||
+		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
+		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto")
 
-	var empty *pds.Empty
+	// If a filter is specified, use GRPC, otherwise use UDS to get the flow
+	// data
+	if filter {
+		client := pds.NewSessionSvcClient(c)
 
-	// PDS call
-	stream, err := client.FlowGet(context.Background(), empty)
-	if err != nil {
-		fmt.Printf("Getting flows failed. %v\n", err)
-		return
-	}
+		var empty *pds.Empty
 
-	flowPrintHeader()
-
-	for {
-		respMsg, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
+		// PDS call
+		stream, err := client.FlowGet(context.Background(), empty)
 		if err != nil {
-			fmt.Printf("Getting flow stream failure. %v\n", err)
+			fmt.Printf("Getting flows failed. %v\n", err)
 			return
 		}
 
-		if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
-			fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
-			return
-		}
-		// Print flows
-		for _, flow := range respMsg.GetFlow() {
-			if flowMatchFilter(cmd, flow) {
-				flowPrintEntry(flow)
+		flowPrintHeader()
+
+		for {
+			respMsg, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
+			if err != nil {
+				fmt.Printf("Getting flow stream failure. %v\n", err)
+				return
+			}
+
+			if respMsg.ApiStatus != pds.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
+				return
+			}
+			// Print flows
+			for _, flow := range respMsg.GetFlow() {
+				if flowMatchFilter(cmd, flow) {
+					flowPrintEntry(flow)
+				}
+			}
+		}
+	} else {
+		var cmdCtxt *pds.CommandCtxt
+
+		cmdCtxt = &pds.CommandCtxt{
+			Version: 1,
+			Cmd:     pds.Command_CMD_FLOW_DUMP,
+		}
+
+		err := HandleFlowDumpCommand(cmdCtxt)
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
 		}
 	}
 }

@@ -15,6 +15,8 @@ VLIB_PLUGIN_REGISTER () = {
 
 // ipc init routine
 extern int pds_vpp_ipc_init(void);
+// VPP UDS init
+extern int vpp_uds_init(void);
 
 vlib_node_registration_t pds_p4cpu_hdr_lookup_node;
 
@@ -311,6 +313,10 @@ pds_infra_init (vlib_main_t * vm)
     }
 
     if (0 != initialize_pds()) {
+        ASSERT(0);
+    }
+
+    if (0 != vpp_uds_init()) {
         ASSERT(0);
     }
 

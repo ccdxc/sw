@@ -4,6 +4,7 @@
 
 #include "includes.h"
 #include "pdsa_hdlr.h"
+#include "pdsa_uds_hdlr.h"
 
 pds_flow_main_t pds_flow_main;
 
@@ -998,6 +999,7 @@ pds_flow_init (vlib_main_t * vm)
 
     pdsa_flow_hdlr_init();
     pds_flow_cfg_init();
+    pds_flow_dump_init();
 
     pds_flow_pipeline_init();
     return 0;
