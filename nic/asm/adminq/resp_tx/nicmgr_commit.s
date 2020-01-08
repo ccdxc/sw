@@ -54,7 +54,7 @@ nicmgr_commit_completion:
 
   // DMA nicmgr response completion
   DMA_CMD_PTR(_r_ptr, _r_index, r7)
-  DMA_HBM_PHV2MEM_WF(_r_ptr, !_c_intr_enable, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_resp_comp_desc_color), CAPRI_PHV_END_OFFSET(nicmgr_resp_comp_desc_color), r7)
+  DMA_HBM_PHV2MEM_WF(_r_ptr, !_c_intr_enable, _r_cq_desc_addr, CAPRI_PHV_START_OFFSET(nicmgr_resp_comp_desc_color), CAPRI_PHV_END_OFFSET(nicmgr_resp_comp_desc_rsvd), r7)
   DMA_CMD_NEXT(_r_index)
 
   bcf             [!_c_intr_enable], nicmgr_commit_done
