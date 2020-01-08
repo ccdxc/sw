@@ -17,6 +17,8 @@ message ImageInfo {
     string KernelCompatVersion = 6[(gogoproto.jsontag) = "kernel_compat_version,omitempty"];
     string PcieCompatVersion = 7[(gogoproto.jsontag) = "pcie_compat_version,omitempty"];
     string DevConfCompatVersion = 8[(gogoproto.jsontag) = "dev_conf_compat_version,omitempty"];
+    // Field needed for Boot0 added in release A
+    int32 ImageVersion = 9[(gogoproto.jsontag) = "image_version,omitempty"];
 }
 
 message UbootFw {
@@ -25,11 +27,13 @@ message UbootFw {
 
 message GoldFw {
    ImageInfo Image = 1[(gogoproto.jsontag) = "kernel_fit,omitempty"];
+   ImageInfo Uboot = 2[(gogoproto.jsontag) = "uboot,omitempty"];
 }
 
 message FwVersion {
     ImageInfo SystemImage = 1[(gogoproto.jsontag) = "system_image,omitempty"];
     ImageInfo KernelFit = 2[(gogoproto.jsontag) = "kernel_fit,omitempty"];
+    ImageInfo Uboot = 3[(gogoproto.jsontag) = "uboot,omitempty"];
 }
 
 // DSC Software object
@@ -38,13 +42,16 @@ message DSCInstalledSoftware {
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
     GoldFw GoldFw = 4 [(gogoproto.jsontag) = "goldfw,omitempty"];
-    ImageInfo DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
+    FwVersion DiagFw = 5 [(gogoproto.jsontag) = "diagfw,omitempty"];
+    // Needed for release A
+    UbootFw Boot0 = 6 [(gogoproto.jsontag) = "boot0,omitempty"];
 }
 
 message DSCRunningSoftware {
     UbootFw Uboot = 1 [(gogoproto.jsontag) = "uboot,omitempty"];
     FwVersion MainFwA = 2 [(gogoproto.jsontag) = "mainfwa,omitempty"];
     FwVersion MainFwB = 3 [(gogoproto.jsontag) = "mainfwb,omitempty"];
+    UbootFw Boot0 = 4 [(gogoproto.jsontag) = "boot0,omitempty"];
 }
 
 message DSCSoftwareVersionInfo {

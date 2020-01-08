@@ -76,6 +76,16 @@ func getInstalledSoftware() (*nmd.DSCInstalledSoftware, error) {
 					SoftwareVersion: "1.0E",
 				},
 			},
+			MainFwB: &nmd.FwVersion{
+				SystemImage: &nmd.ImageInfo{
+					SoftwareVersion: "1.0E",
+				},
+			},
+			Boot0: &nmd.UbootFw{
+				Image: &nmd.ImageInfo{
+					BaseVersion: "1.0E",
+				},
+			},
 		}
 		return n, nil
 	}
@@ -107,6 +117,11 @@ func GetRunningFirmware() *nmd.DSCRunningSoftware {
 			MainFwA: &nmd.FwVersion{
 				SystemImage: &nmd.ImageInfo{
 					SoftwareVersion: "1.0E",
+				},
+			},
+			Boot0: &nmd.UbootFw{
+				Image: &nmd.ImageInfo{
+					BaseVersion: "1.0E",
 				},
 			},
 		}
@@ -171,14 +186,34 @@ func (n *NMD) GetNaplesSoftwareInfo() (*nmd.DSCSoftwareVersionInfo, error) {
 		return nil, err
 	}
 
+	if n.RunningFirmware.Uboot != nil && installedImages.Uboot != nil {
+		return &nmd.DSCSoftwareVersionInfo{
+			RunningFw:           n.RunningFirmwareName,
+			RunningFwVersion:    n.RunningFirmwareVersion,
+			StartupFw:           startupFw,
+			StartupFwVersion:    startupFirmwareVersion,
+			RunningUbootVersion: n.RunningFirmware.Uboot.Image.BaseVersion,
+			StartupUbootVersion: installedImages.Uboot.Image.BaseVersion,
+			InstalledImages:     installedImages,
+		}, nil
+	} else if n.RunningFirmware.Boot0 != nil && installedImages.Boot0 != nil {
+		return &nmd.DSCSoftwareVersionInfo{
+			RunningFw:           n.RunningFirmwareName,
+			RunningFwVersion:    n.RunningFirmwareVersion,
+			StartupFw:           startupFw,
+			StartupFwVersion:    startupFirmwareVersion,
+			RunningUbootVersion: n.RunningFirmware.Boot0.Image.BaseVersion,
+			StartupUbootVersion: installedImages.Boot0.Image.BaseVersion,
+			InstalledImages:     installedImages,
+		}, nil
+	}
+
 	return &nmd.DSCSoftwareVersionInfo{
-		RunningFw:           n.RunningFirmwareName,
-		RunningFwVersion:    n.RunningFirmwareVersion,
-		StartupFw:           startupFw,
-		StartupFwVersion:    startupFirmwareVersion,
-		RunningUbootVersion: n.RunningFirmware.Uboot.Image.BaseVersion,
-		StartupUbootVersion: installedImages.Uboot.Image.BaseVersion,
-		InstalledImages:     installedImages,
+		RunningFw:        n.RunningFirmwareName,
+		RunningFwVersion: n.RunningFirmwareVersion,
+		StartupFw:        startupFw,
+		StartupFwVersion: startupFirmwareVersion,
+		InstalledImages:  installedImages,
 	}, nil
 }
 
@@ -400,6 +435,12 @@ func UpdateNaplesInfo() *cmd.DSCInfo {
 // updateBiosInfo - queries cardconfig and gets the BIOS information
 func updateBiosInfo(naplesVersion *nmd.DSCRunningSoftware) *cmd.BiosInfo {
 	log.Info("updating Bios Info in SmartNIC object")
+	if naplesVersion.Boot0 != nil {
+		return &cmd.BiosInfo{
+			Version: naplesVersion.Boot0.Image.BaseVersion,
+		}
+	}
+
 	return &cmd.BiosInfo{
 		Version: naplesVersion.Uboot.Image.BaseVersion,
 	}
