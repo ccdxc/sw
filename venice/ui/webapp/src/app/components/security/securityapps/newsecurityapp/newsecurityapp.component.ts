@@ -219,6 +219,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
       this.resetSunRPC();
       this.resetMSRPC();
       this.resetICMPValues();
+      this.resetALG();
       return;
     }
     if (this.selectedType === SecurityALG_type.icmp) {
@@ -262,6 +263,10 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     }
     this.processALGValues();
 
+  }
+
+  resetALG() {
+    this.securityForm.get(['spec', 'alg', 'type']).setValue(null);
   }
 
   resetICMPValues() {
