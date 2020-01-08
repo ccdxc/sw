@@ -232,7 +232,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                 SDK_ASSERT(send_response);
                 SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                 " Send Async IPS reply %s stateless mode",
-                                 l_tep_ip, l_vni, key,
+                                 ipaddr2str(&l_tep_ip), l_vni, key,
                                  (pds_status) ? "Success": "Failure");
                 li::Fte::get().get_lipi_join()->
                     send_ips_reply(&vxlan_port_add_upd_ips->ips_hdr);
@@ -241,12 +241,12 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                 if (pds_status) {
                     SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                     " Send Async IPS Reply success stateful mode",
-                                     l_tep_ip, l_vni, key);
+                                     ipaddr2str(&l_tep_ip), l_vni, key);
                     (*it)->update_complete(ATG_OK);
                 } else {
                     SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
                                     " Send Async IPS Reply failure stateful mode",
-                                     l_tep_ip, l_vni, key);
+                                     ipaddr2str(&l_tep_ip), l_vni, key);
                     (*it)->update_failed(ATG_UNSUCCESSFUL);
                 }
             }
@@ -267,7 +267,7 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                     .append(" err=").append(std::to_string(ret)));
     }
     vxlan_port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("Type5 TEP %s VNI %s Add/Upd PDS Batch commit successful", 
+    SDK_TRACE_DEBUG ("Type5 TEP %s VNI %d Add/Upd PDS Batch commit successful", 
                      ipaddr2str(&ips_info_.tep_ip), ips_info_.vni);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode

@@ -46,45 +46,15 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     SDK_ASSERT (add_upd_ecmp_ips->pathset_id.correlator2 == 0);
     NBB_CORR_GET_VALUE (ips_info_.pathset_id, add_upd_ecmp_ips->pathset_id);
 
-    bool process = true;
     auto list_p = &add_upd_ecmp_ips->next_hop_objects;
-    ATG_NHPI_APPENDED_NEXT_HOP appended_next_hop;
-
     for (auto next_hop = NHPI_GET_FIRST_NH(add_upd_ecmp_ips, list_p);
          next_hop != NULL;
          next_hop = NHPI_GET_NEXT_NH(add_upd_ecmp_ips, list_p, next_hop)) {
-
-        if (next_hop->next_hop_properties.destination_type == 
-            ATG_NHPI_NEXT_HOP_DEST_NH) {
-                // Indirect NH Needed for VXLAN Tunnel - 
-                // Copy to programmed to make MS think it is programmed in HW
-                NBB_MEMSET(&appended_next_hop, 0, sizeof(ATG_NHPI_APPENDED_NEXT_HOP));
-
-                appended_next_hop.total_length = sizeof(ATG_NHPI_APPENDED_NEXT_HOP);
-                appended_next_hop.next_hop_properties = next_hop->next_hop_properties;
-                NTL_OFF_LIST_APPEND(add_upd_ecmp_ips,
-                                    &add_upd_ecmp_ips->programmed_next_hop_objects,
-                                    appended_next_hop.total_length,
-                                    (NBB_VOID *)&appended_next_hop,
-                                    NULL);
-                // Inherit the lower level DP correlator
-                add_upd_ecmp_ips->dp_correlator =
-                    next_hop->next_hop_properties.indirect_next_hop_properties.
-                    lower_level_dp_correlator;
-                uint32_t corr;
-                NBB_CORR_GET_VALUE(corr, next_hop->next_hop_properties.
-                                   indirect_next_hop_properties.
-                                   lower_level_dp_correlator);
-                SDK_TRACE_VERBOSE("Indirect NH Copy lower level DP Correlator %d",
-                                  corr);
-                // Skip processing Indirect NH
-                process = false;
-        }
-        else if (next_hop->next_hop_properties.destination_type != 
-            ATG_NHPI_NEXT_HOP_DEST_PORT) {
-            // Ignore other types of next-hops
-            SDK_TRACE_DEBUG("Ignoring non-direct nexthops");
-            return false;
+         if (next_hop->next_hop_properties.destination_type != 
+             ATG_NHPI_NEXT_HOP_DEST_PORT) {
+             // Ignore other types of next-hops
+             SDK_TRACE_DEBUG("Ignoring non-direct nexthops");
+             return false;
         }
         ATG_NHPI_NEIGHBOR_PROPERTIES& prop = 
             next_hop->next_hop_properties.direct_next_hop_properties.neighbor;
@@ -102,7 +72,7 @@ bool hals_ecmp_t::parse_ips_info_(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips) {
     ips_info_.num_deleted_nh = 
         NTL_OFF_LIST_GET_LEN(add_upd_ecmp_ips,
                              &add_upd_ecmp_ips->deleted_next_hop_objects);
-    return process;
+    return true;
 }
 
 void hals_ecmp_t::fetch_store_info_(state_t* state) {
@@ -353,6 +323,8 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     dp_corr = pathset_obj->hal_oecmp_idx_guard->idx();
                 }
             }
+            SDK_TRACE_DEBUG("Return Overlay Pathset %d dp_correlator %d",
+                            pathset_id, dp_corr);
             NBB_CORR_PUT_VALUE(add_upd_ecmp_ips->dp_correlator, dp_corr);
            
             // Copy all nexthops to the programmed next_hop_objects

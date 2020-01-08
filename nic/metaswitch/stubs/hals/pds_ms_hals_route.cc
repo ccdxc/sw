@@ -137,6 +137,16 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
     add_upd_route_ips->return_code = ATG_OK;
 
     parse_ips_info_(add_upd_route_ips);
+
+    SDK_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d",
+                     ips_info_.vrf_id, ipaddr2str(&ips_info_.pfx.addr),
+                     add_upd_route_ips->route_properties.type);
+    if ((add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_CONNECTED) ||
+        (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
+        SDK_TRACE_DEBUG("Ignore connected route");
+        return;
+    }
+
     // Alloc new cookie and cache IPS
     cookie_uptr_.reset (new cookie_t);
 

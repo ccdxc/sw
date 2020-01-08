@@ -43,6 +43,8 @@ static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
 
+static constexpr int k_vpc_id = 2;
+
 static void create_device_proto_grpc () {
     ClientContext   context;
     DeviceRequest   request;
@@ -304,7 +306,7 @@ static void create_subnet_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(1);
-    proto_spec->set_vpcid(1);
+    proto_spec->set_vpcid(k_vpc_id);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -334,7 +336,7 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(1);
+    proto_spec->set_id(k_vpc_id);
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -342,6 +344,48 @@ static void create_vpc_proto_grpc () {
 
     printf ("Pushing VPC proto...\n");
     ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_evpn_ip_vrf_proto_grpc () {
+    EvpnIpVrfRequest request;
+    EvpnResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_vrfid (k_vpc_id);
+    proto_spec->set_vni(200);
+
+    printf ("Pushing EVPN IP VRF proto...\n");
+    ret_status = g_evpn_stub_->EvpnIpVrfSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_evpn_ip_vrf_rt_proto_grpc () {
+    EvpnIpVrfRtRequest request;
+    EvpnResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_vrfid (k_vpc_id);
+    NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
+    proto_spec->set_rt(rt,8);
+    proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
+
+    printf ("Pushing EVPN IP VRF RT proto...\n");
+    ret_status = g_evpn_stub_->EvpnIpVrfRtSpecCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -503,10 +547,12 @@ int main(int argc, char** argv)
         create_bgp_global_proto_grpc();
         create_bgp_peer_proto_grpc();
         create_bgp_peer_af_proto_grpc();
-        sleep(40);
+        sleep(5);
         create_bgp_peer_proto_grpc(true /* loopback */);
         create_bgp_peer_af_proto_grpc(true /* loopback */);
         create_vpc_proto_grpc();
+        create_evpn_ip_vrf_proto_grpc();
+        create_evpn_ip_vrf_rt_proto_grpc();
         create_subnet_proto_grpc();
         create_evpn_evi_proto_grpc();
         if (g_test_conf_.manual_rt) {

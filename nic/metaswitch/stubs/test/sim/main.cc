@@ -49,29 +49,11 @@ static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
+static constexpr int k_vpc_id = 2;
+
 namespace pds_ms_test {
 
 static test_config_t  g_test_conf;
-static NBB_VOID
-pds_ms_sim_test_mac_ip()
-{
-
-    ip_addr_t ip_addr;
-    auto host_ifindex = pds_ms::pds_to_ms_ifindex (g_test_conf.lif_if_index, IF_TYPE_LIF);
-
-    // Start CTM
-    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
-
-    ip_addr.af = IP_AF_IPV4;
-    ip_addr.addr.v4_addr = g_test_conf.local_mai_ip;
-    pds_ms_test_row_update_l2f_mac_ip_cfg (ip_addr, host_ifindex);
-
-    // End CTM transaction
-    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
-
-    // Wait for MS response
-    pds_ms::mgmt_state_t::ms_response_wait();
-}
 
 static NBB_VOID
 pds_ms_sim_test_loopback ()
@@ -272,7 +254,7 @@ pds_ms_sim_test_config ()
     cout << "Config thread: BGP Proto is done!\n";
     cout << "Config thread: Waiting for BGP underlay convergence before configuring overlay!\n";
 
-    sleep(40);
+    sleep(5);
 
     // BGP Overlay Update
     pds_ms_sim_test_overlay_bgp_update();
@@ -280,16 +262,40 @@ pds_ms_sim_test_config ()
 
     // VPC update
     pds_vpc_spec_t vpc_spec = {0};
-    vpc_spec.key.id = 1;
+    vpc_spec.key.id = 2;
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
     pds_ms::vpc_create (&vpc_spec, 0);
     cout << "Config thread: VPC Proto is done!\n";
 
+    // Start CTM
+    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
+
+    pds::EvpnIpVrfSpec evpn_ip_vrf_spec;
+    evpn_ip_vrf_spec.set_vrfid (k_vpc_id);
+    evpn_ip_vrf_spec.set_vni(200);
+    NBB_BYTE rd[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    evpn_ip_vrf_spec.set_rd((char*)rd,8);
+    pds_ms_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+
+    pds::EvpnIpVrfRtSpec evpn_ip_vrf_rt_spec;
+    evpn_ip_vrf_rt_spec.set_vrfid (k_vpc_id);
+    NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
+    evpn_ip_vrf_rt_spec.set_rt(rt,8);
+    evpn_ip_vrf_rt_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
+    pds_ms_set_amb_evpn_ip_vrf_rt (evpn_ip_vrf_rt_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // End CTM transaction
+    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // Wait for MS response
+    pds_ms::mgmt_state_t::ms_response_wait();
+    cout << "Config thread: EVPN IP VRF & RT Proto is done!\n";
+
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
     subnet_spec.key.id = 1;
-    subnet_spec.vpc.id = 1;
+    subnet_spec.vpc.id = k_vpc_id;
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
     subnet_spec.host_ifindex = g_test_conf.lif_if_index;
@@ -301,10 +307,7 @@ pds_ms_sim_test_config ()
     // Evpn Evi Update
     pds_ms_sim_test_evpn_evi_update();
 
-    // Push MAC-IP
- //   pds_ms_sim_test_mac_ip();
-    cout << "Config thread: pushed a mac-ip entry to l2fMacIpCfgTable\n";
-    sleep(40);
+    sleep(2);
 
     // Simulate MAC IP learn
     if (g_node_id == 1) {

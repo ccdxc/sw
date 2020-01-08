@@ -320,4 +320,16 @@ pds_ms_evpn_create (pds_ms_config_t *conf)
     NBB_TRC_EXIT();
     return;
 }
+
+void
+pds_ms_evpn_rtm_join (pds_ms_config_t *conf, int rtm_entity_index)
+{
+    conf->entity_index  = PDS_MS_EVPN_ENT_INDEX;
+    conf->interface_id   = AMB_EVPN_IF_ATG_RPI;
+    conf->partner_type   = AMB_EVPN_MJ_PARTNER_DFLT;
+    conf->partner_index  = rtm_entity_index;
+    conf->sub_index      = AMB_INETWK_ADDR_TYPE_IPV4;
+    pds_ms_row_update_evpn_mj (conf);
+}
+
 }

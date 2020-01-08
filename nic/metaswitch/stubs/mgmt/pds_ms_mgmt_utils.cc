@@ -296,7 +296,7 @@ pds_ms_set_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_
 {
     oid[setKeyOidLenIdx] = (NBB_ULONG)in_str.length();
 
-    const char* str = in_str.c_str();
+    auto str = (const unsigned char*) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
     }
@@ -313,7 +313,7 @@ NBB_VOID
 pds_ms_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx, NBB_LONG getKeyOidLenIdx)
 {
     oid[getKeyOidLenIdx] = (NBB_ULONG)in_str.length();
-    const char* str = in_str.c_str();
+    auto str = (const unsigned char* ) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[getKeyOidIdx + i] = (NBB_ULONG)str[i];
     }
@@ -328,7 +328,7 @@ pds_ms_set_string_in_byte_array(NBB_BYTE *field, string in_str)
 NBB_VOID
 pds_ms_set_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG setKeyOidIdx)
 {
-    const char* str = in_str.c_str();
+    auto str = (const unsigned char*) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[setKeyOidIdx + i] = (NBB_ULONG)str[i];
     }
@@ -344,7 +344,7 @@ pds_ms_get_string_in_byte_array(NBB_BYTE *val, NBB_ULONG len)
 NBB_VOID
 pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid, string in_str, NBB_LONG getKeyOidIdx)
 {
-    const char* str = in_str.c_str();
+    auto str = (const unsigned char*) in_str.c_str();
     for (NBB_ULONG i=0; i<in_str.length(); i++) {
         oid[getKeyOidIdx + i] = (NBB_ULONG)str[i];
     }

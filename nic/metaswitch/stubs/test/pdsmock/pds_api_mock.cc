@@ -484,6 +484,9 @@ catalog* catalog::factory(std::string catalog_file_path,
     return &g_ctlg_;
 }
 catalog::~catalog() {};
+port_type_t  catalog::port_type_fp(uint32_t fp_port) {
+    return sdk::types::port_type_t::PORT_TYPE_ETH;
+}
 } // End namespace lib
 } // End namespace sdk
 

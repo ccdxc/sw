@@ -225,7 +225,7 @@ pds_ms_lim_create (pds_ms_config_t *conf)
     // limMjTable - BDII to EVPN
     conf->interface_id   = AMB_LIM_IF_ATG_BDII;
     conf->partner_type   = AMB_LIM_MJ_PARTNER_EVPN;
-    conf->partner_index  = 1;
+    conf->partner_index  = PDS_MS_EVPN_ENT_INDEX;
     conf->sub_index      = 0;
     pds_ms_row_update_lim_mj (conf);
 

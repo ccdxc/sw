@@ -61,8 +61,19 @@ pds_ms_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
         data->addr_family = AMB_INETWK_ADDR_TYPE_IPV4;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_ADDR_FAM);
 
-        data->i3_index = PDS_MS_I3_ENT_INDEX; 
+        data->i3_index = PDS_MS_LIM_ENT_INDEX;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_I3_INDEX);
+
+        data->partner_wait_time = 1000; // millisec
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_PRTNR_WAIT_TIME);
+
+        if (conf->entity_index != PDS_MS_RTM_DEF_ENT_INDEX) {
+            auto vrf_name = std::to_string(conf->entity_index);
+            strcpy((char*)data->vrf_name, vrf_name.c_str());
+            data->vrf_name_len = vrf_name.size();
+            SDK_TRACE_DEBUG("RTM VRF name = %s", vrf_name.c_str());
+            AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_VRF_NAME);
+        }
     }
 
     NBB_TRC_EXIT();
@@ -213,46 +224,44 @@ NBB_VOID pds_ms_rtm_redis_connected (pds_ms_config_t *conf)
 }
 
 NBB_VOID
-pds_ms_rtm_create (pds_ms_config_t *conf)
+pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
 {
     NBB_TRC_ENTRY ("pds_ms_rtm_create");
 
     // rtmEntityTable - Admin Down                                
-    conf->entity_index          = PDS_MS_RTM_ENT_INDEX;
-    conf->admin_status          = AMB_ADMIN_STATUS_DOWN;
-    pds_ms_row_update_rtm (conf);
-
-    // rtmMjTable - AMB_RTM_ARI_PARTNER_BGP
-    conf->slave_entity_index    = PDS_MS_BGP_RM_ENT_INDEX;
-    conf->slave_type            = AMB_RTM_ARI_PARTNER_BGP;
-    conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pds_ms_row_update_rtm_mj (conf);
-
-    // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
-    conf->slave_entity_index    = PDS_MS_FT_ENT_INDEX;
-    conf->slave_type            = AMB_RTM_ARI_PARTNER_FT;
-    conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pds_ms_row_update_rtm_mj (conf);
-
-    // rtmMjTable -AMB_RTM_ARI_PARTNER_FTM
-    conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;
-    conf->slave_type            = AMB_RTM_ARI_PARTNER_FTM;
-    conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pds_ms_row_update_rtm_mj (conf);
-
-    // rtmMjTable -AMB_RTM_ARI_PARTNER_PSM 
-    conf->slave_entity_index    = PDS_MS_PSM_ENT_INDEX;
-    conf->slave_type            = AMB_RTM_ARI_PARTNER_PSM;
-    conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pds_ms_row_update_rtm_mj (conf);
-
-    // rtmEntityTable - Admin UP                                
+    conf->entity_index          = entity_index;
     conf->admin_status          = AMB_ADMIN_STATUS_UP;
     pds_ms_row_update_rtm (conf);
 
-    // rtm Redistribute connected
-    conf->admin_status          = AMB_ADMIN_STATUS_UP;
-    pds_ms_rtm_redis_connected (conf);
+    if (is_default) {
+        // rtmMjTable - AMB_RTM_ARI_PARTNER_BGP
+        conf->slave_entity_index    = PDS_MS_BGP_RM_ENT_INDEX;
+        conf->slave_type            = AMB_RTM_ARI_PARTNER_BGP;
+        conf->admin_status          = AMB_ADMIN_STATUS_UP;
+        pds_ms_row_update_rtm_mj (conf);
+
+        // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
+        conf->slave_entity_index    = PDS_MS_FT_ENT_INDEX;
+        conf->slave_type            = AMB_RTM_ARI_PARTNER_FT;
+        conf->admin_status          = AMB_ADMIN_STATUS_UP;
+        pds_ms_row_update_rtm_mj (conf);
+
+        // rtmMjTable -AMB_RTM_ARI_PARTNER_PSM 
+        conf->slave_entity_index    = PDS_MS_PSM_ENT_INDEX;
+        conf->slave_type            = AMB_RTM_ARI_PARTNER_PSM;
+        conf->admin_status          = AMB_ADMIN_STATUS_UP;
+        pds_ms_row_update_rtm_mj (conf);
+
+        // rtm Redistribute connected
+        conf->admin_status          = AMB_ADMIN_STATUS_UP;
+        pds_ms_rtm_redis_connected (conf);
+    } else {
+        // Join FTM only for Tenant VRF to configure Type 5 routes to ROPI stub 
+        conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;
+        conf->slave_type            = AMB_RTM_ARI_PARTNER_FTM;
+        conf->admin_status          = AMB_ADMIN_STATUS_UP;
+        pds_ms_row_update_rtm_mj (conf);
+    }
 
     NBB_TRC_EXIT();
     return;

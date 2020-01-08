@@ -402,7 +402,7 @@ pds_ms_bgp_create (pds_ms_config_t *conf)
     // bgpRmAfmJoinTable
     conf->entity_index       = PDS_MS_BGP_RM_ENT_INDEX;
     conf->admin_status       = AMB_ADMIN_STATUS_UP;
-    conf->partner_index      = 1;
+    conf->partner_index      = PDS_MS_RTM_DEF_ENT_INDEX;
 
     // AFM: AMB_BGP_AFI_IPV4
     conf->join_index         = 1;
@@ -414,6 +414,7 @@ pds_ms_bgp_create (pds_ms_config_t *conf)
     conf->join_index         = 2;
     conf->afi                = AMB_BGP_AFI_L2VPN;
     conf->safi               = AMB_BGP_EVPN;
+    conf->partner_index      = PDS_MS_EVPN_ENT_INDEX;
     pds_ms_row_update_bgp_rm_afm_join (conf);
 
     // bgpRmAfiSafiTable

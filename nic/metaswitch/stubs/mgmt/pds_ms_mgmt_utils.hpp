@@ -45,13 +45,15 @@ extern "C" {
 #define PDS_MS_L2F_ENT_INDEX      1
 #define PDS_MS_NAR_ENT_INDEX      1
 #define PDS_MS_NRM_ENT_INDEX      1
-#define PDS_MS_RTM_ENT_INDEX      1
+#define PDS_MS_RTM_DEF_ENT_INDEX  1 // Default VRF
 #define PDS_MS_PSM_ENT_INDEX      1
 #define PDS_MS_SMI_ENT_INDEX      1
 #define PDS_MS_FTM_ENT_INDEX      1
 #define PDS_MS_FT_ENT_INDEX       1
 #define PDS_MS_HALS_ENT_INDEX     1
-#define PDS_MS_EVPN_ENT_INDEX     1
+#define PDS_MS_EVPN_ENT_INDEX     2 // Use a different entity id than BGP
+                                    // Required to redistribute routes to EVPN
+                                    // (Type 5 test) 
 
 using namespace std;
 
@@ -181,9 +183,11 @@ NBB_VOID pds_ms_lim_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_ftm_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_nrm_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_psm_create (pds_ms_config_t *conf);
-NBB_VOID pds_ms_rtm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index,
+                            bool is_default);
 NBB_VOID pds_ms_bgp_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_evpn_create (pds_ms_config_t *conf);
+void pds_ms_evpn_rtm_join(pds_ms_config_t *conf, int rtm_entity_index);
 }
 
 namespace pds_ms_test {

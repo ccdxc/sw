@@ -119,7 +119,16 @@ process_vpc_update (pds_vpc_spec_t *vpc_spec,
                     NBB_LONG       row_status)
 {
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
-    
+   
+    // Create new instance of RTM and initiate Joins
+    pds_ms_config_t   conf = {0};
+    auto entity_index = vpc_spec->key.id; 
+    SDK_TRACE_INFO("Creating new VRF MS RTM instance %d", entity_index);
+    conf.correlator  = PDS_MS_CTM_GRPC_CORRELATOR;
+    conf.row_status  = AMB_ROW_ACTIVE;
+    pds_ms_rtm_create (&conf, entity_index, false);
+    pds_ms_evpn_rtm_join(&conf, entity_index);
+
     // LIM VRF Row Update
     pds::LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vpc_spec, lim_vrf_spec);

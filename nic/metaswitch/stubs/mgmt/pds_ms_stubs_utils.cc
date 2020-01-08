@@ -38,7 +38,8 @@ void pds_ms_stubs_create ()
     pds_ms_nrm_create (&conf);        // NR Mgr
     pds_ms_psm_create (&conf);        // PS Mgr
     pds_ms_ft_stub_create (&conf);    // FT stub
-    pds_ms_rtm_create (&conf);        // RT Mgr
+    pds_ms_rtm_create (&conf, PDS_MS_RTM_DEF_ENT_INDEX,
+                       true /* Default VRF */);  // RTM
     pds_ms_bgp_create (&conf);        // BGP component
     pds_ms_evpn_create (&conf);       // EVPN component
 
