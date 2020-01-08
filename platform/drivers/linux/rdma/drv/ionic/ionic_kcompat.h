@@ -14,20 +14,135 @@
 /* marks code inserted to silence false positive warnings */
 #define IONIC_STATIC_ANALYSIS_HINTS_NOT_FOR_UPSTREAM 1
 
+/****************************************************************************
+ *
+ * Compatibility for kernel-only features (not affected by OFA version)
+ *
+ */
+#if defined(RHEL_RELEASE_VERSION)
+#define IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
+	(RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(RH_MAJ, RH_MIN))
+#else
+#define IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN) \
+	(LINUX_VERSION_CODE < KERNEL_VERSION(LX_MAJ, LX_MIN, 0))
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99)
+#else /* 4.14.0 and later */
+#define HAVE_GET_VECTOR_AFFINITY
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 99,99)
+#define netdev_notifier_info_to_dev(ptr) (ptr)
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99)
+#else /* 4.10.0 and later */
+#define HAVE_NETDEV_MAX_MTU
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 99,99)
+/* XXX: Later stable versions of 4.9 and 4.10 added refcount_t */
+#define refcount_t            atomic_t
+#define refcount_set          atomic_set
+#define refcount_dec_and_test atomic_dec_and_test
+#define refcount_inc          atomic_inc
+#endif
+
+#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99)
+/* Create an xarray that includes a radix_tree_root and a spinlock */
+#include <linux/radix-tree.h>
+
+struct xarray {
+	spinlock_t x_lock;
+	struct radix_tree_root x_tree;
+};
+#define xa_tree(_xa) &(_xa)->x_tree
+
+#define xa_lock(_xa) spin_lock(&(_xa)->x_lock)
+#define xa_unlock(_xa) spin_unlock(&(_xa)->x_lock)
+#define xa_lock_irq(_xa) spin_lock_irq(&(_xa)->x_lock)
+#define xa_unlock_irq(_xa) spin_unlock_irq(&(_xa)->x_lock)
+#define xa_lock_irqsave(_xa, _flags)					\
+	spin_lock_irqsave(&(_xa)->x_lock, _flags)
+#define xa_unlock_irqrestore(_xa, _flags)				\
+	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
+
+static inline void xa_init(struct xarray *xa)
+{
+	spin_lock_init(&xa->x_lock);
+	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
+}
+
+#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99)
+/* 4.17, 4.18, 4.19: A radix_tree now includes a spinlock called xa_lock */
+#include <linux/radix-tree.h>
+
+#define xarray       radix_tree_root
+#define xa_tree
+#define xa_init(_xa) INIT_RADIX_TREE(xa_tree(_xa), GFP_KERNEL)
+
+#elif IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99)
+#define HAVE_XARRAY
+
+/* 4.20: xa_for_each() has extra arguments */
+#include <linux/xarray.h>
+#undef xa_for_each
+#define xa_for_each(xa, index, entry)					\
+	for (entry = xa_find(xa, &index, ULONG_MAX, XA_PRESENT); entry;	\
+	     entry = xa_find_after(xa, &index, ULONG_MAX, XA_PRESENT))
+
+#else /* 5.0 and later */
+#define HAVE_XARRAY
+#endif
+
+#ifndef HAVE_XARRAY
+
+#define xa_iter radix_tree_iter
+#define xa_for_each_slot(_xa, _slot, _iter)				\
+	radix_tree_for_each_slot((_slot), xa_tree(_xa), (_iter), 0)
+#define xa_load(_xa, _idx) radix_tree_lookup(xa_tree(_xa), _idx)
+#define xa_destroy(_xa)
+
+static inline void *xa_store_irq(struct xarray *xa, unsigned long idx,
+				 void *item, gfp_t unused)
+{
+	int ret;
+
+	xa_lock_irq(xa);
+	ret = radix_tree_insert(xa_tree(xa), idx, item);
+	xa_unlock_irq(xa);
+
+	return (ret ? ERR_PTR(ret) : item);
+}
+
+static inline int xa_err(void *item)
+{
+	return (IS_ERR(item) ? PTR_ERR(item) : 0);
+}
+
+static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
+{
+	xa_lock_irq(xa);
+	radix_tree_delete(xa_tree(xa), idx);
+	xa_unlock_irq(xa);
+}
+
+#endif /* HAVE_XARRAY */
+
+
+/****************************************************************************
+ *
+ * Compatibility for OFED features that may be affected by OFA version
+ *
+ */
 #if defined(OFA_KERNEL)
 #include "ionic_kcompat_ofa.h"
 #define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
 	OFA_COMPAT_CHECK(OFA_KERNEL, OFA)
-#elif defined(RHEL_RELEASE_VERSION)
-#define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
-	(RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(RH_MAJ, RH_MIN))
 #else
 #define IONIC_KCOMPAT_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN, OFA) \
-	(LINUX_VERSION_CODE < KERNEL_VERSION(LX_MAJ, LX_MIN, 0))
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 3,11, /* RHEL */ 99,99, /* OFA */ 3_11)
-#define netdev_notifier_info_to_dev(ptr) (ptr)
+	IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(LX_MAJ, LX_MIN, RH_MAJ, RH_MIN)
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,8, /* RHEL */ 7,6, /* OFA */ 4_8)
@@ -65,11 +180,6 @@ static inline enum ib_mtu ib_mtu_int_to_enum(int mtu)
 #define HAVE_CREATE_AH_UDATA
 #define HAVE_EX_CMD_MODIFY_QP
 #define HAVE_QP_RATE_LIMIT
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99, /* OFA */ 4_10b)
-#else /* 4.10.0 and later */
-#define HAVE_NETDEV_MAX_MTU
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 7,5, /* OFA */ 4_11)
@@ -142,7 +252,6 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 99,99, /* OFA */ 4_14c)
 #else /* 4.14.0 and later */
-#define HAVE_GET_VECTOR_AFFINITY
 #define HAVE_QP_INIT_SRC_QPN
 #endif
 
@@ -438,95 +547,6 @@ static inline void ib_set_device_ops(struct ib_device *dev,
 #else
 #define HAVE_CREATE_AH_FLAGS
 #endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 99,99, /* OFA */ 4_11b)
-/* XXX: Later stable versions of 4.9 and 4.10 added refcount_t */
-#define refcount_t            atomic_t
-#define refcount_set          atomic_set
-#define refcount_dec_and_test atomic_dec_and_test
-#define refcount_inc          atomic_inc
-#endif
-
-#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99, /* OFA */ support)
-/* Create an xarray that includes a radix_tree_root and a spinlock */
-#include <linux/radix-tree.h>
-
-struct xarray {
-	spinlock_t x_lock;
-	struct radix_tree_root x_tree;
-};
-#define xa_tree(_xa) &(_xa)->x_tree
-
-#define xa_lock(_xa) spin_lock(&(_xa)->x_lock)
-#define xa_unlock(_xa) spin_unlock(&(_xa)->x_lock)
-#define xa_lock_irq(_xa) spin_lock_irq(&(_xa)->x_lock)
-#define xa_unlock_irq(_xa) spin_unlock_irq(&(_xa)->x_lock)
-#define xa_lock_irqsave(_xa, _flags)					\
-	spin_lock_irqsave(&(_xa)->x_lock, _flags)
-#define xa_unlock_irqrestore(_xa, _flags)				\
-	spin_unlock_irqrestore(&(_xa)->x_lock, _flags)
-
-static inline void xa_init(struct xarray *xa)
-{
-	spin_lock_init(&xa->x_lock);
-	INIT_RADIX_TREE(xa_tree(xa), GFP_KERNEL);
-}
-
-#elif IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99, /* OFA */ support)
-/* 4.17, 4.18, 4.19: A radix_tree now includes a spinlock called xa_lock */
-#include <linux/radix-tree.h>
-
-#define xarray       radix_tree_root
-#define xa_tree
-#define xa_init(_xa) INIT_RADIX_TREE(xa_tree(_xa), GFP_KERNEL)
-
-#elif IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ support)
-#define HAVE_XARRAY
-
-/* 4.20: xa_for_each() has extra arguments */
-#include <linux/xarray.h>
-#undef xa_for_each
-#define xa_for_each(xa, index, entry)					\
-	for (entry = xa_find(xa, &index, ULONG_MAX, XA_PRESENT); entry;	\
-	     entry = xa_find_after(xa, &index, ULONG_MAX, XA_PRESENT))
-
-#else /* 5.0 and later */
-#define HAVE_XARRAY
-#endif
-
-#ifndef HAVE_XARRAY
-
-#define xa_iter radix_tree_iter
-#define xa_for_each_slot(_xa, _slot, _iter)				\
-	radix_tree_for_each_slot((_slot), xa_tree(_xa), (_iter), 0)
-#define xa_load(_xa, _idx) radix_tree_lookup(xa_tree(_xa), _idx)
-#define xa_destroy(_xa)
-
-static inline void *xa_store_irq(struct xarray *xa, unsigned long idx,
-				 void *item, gfp_t unused)
-{
-	int ret;
-
-	xa_lock_irq(xa);
-	ret = radix_tree_insert(xa_tree(xa), idx, item);
-	xa_unlock_irq(xa);
-
-	return (ret ? ERR_PTR(ret) : item);
-}
-
-static inline int xa_err(void *item)
-{
-	return (IS_ERR(item) ? PTR_ERR(item) : 0);
-}
-
-static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
-{
-	xa_lock_irq(xa);
-	radix_tree_delete(xa_tree(xa), idx);
-	xa_unlock_irq(xa);
-}
-
-#endif /* HAVE_XARRAY */
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,1, /* RHEL */ 99,99, /* OFA */ 5_0)
 #else /* 5.1 and later */

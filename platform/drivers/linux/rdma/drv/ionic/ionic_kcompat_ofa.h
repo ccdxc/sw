@@ -32,8 +32,6 @@
 
 #define MLNX_OFED_4_2__support		1
 #define MLNX_OFED_4_2__umem_get		1
-#define MLNX_OFED_4_2__4_10b		1
-#define MLNX_OFED_4_2__4_11b		1
 #define MLNX_OFED_4_2__4_14a		1
 #define MLNX_OFED_4_2__4_14c		1
 #define MLNX_OFED_4_2__4_15		1
@@ -50,8 +48,6 @@
 #define MLNX_OFED_4_5__support		1
 #define MLNX_OFED_4_5__umem_get		1
 #define MLNX_OFED_4_5__reg_user_mr	1
-#define MLNX_OFED_4_5__4_10b		1
-#define MLNX_OFED_4_5__4_11b		1
 #define MLNX_OFED_4_5__4_19b		1
 #define MLNX_OFED_4_5__4_20		1
 #define MLNX_OFED_4_5__5_0		1
