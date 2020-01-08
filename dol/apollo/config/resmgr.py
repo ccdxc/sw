@@ -55,6 +55,7 @@ InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
 PortIdAllocator = iter(irange(1, 2))
 DhcpIdAllocator = iter(irange(1, 16))
+NatPoolIdAllocator = iter(irange(1, 1000))
 
 # ---------------------------------------------------------------------------------
 # Artemis specific configs
@@ -127,6 +128,7 @@ MAX_METER = 64
 MAX_UNDERLAY_NHS = 2
 MAX_OVERLAY_NHS = 8
 MAX_DHCP_RELAY = 16
+MAX_NAT_PB = 1024
 
 NumVnicPolicyAllocator = utils.rrobiniter(range(MAX_POLICY_PER_VNIC+1))
 UnderlayNumNexthopsAllocator = utils.rrobiniter(range(1, MAX_UNDERLAY_NHS+1))
@@ -263,6 +265,17 @@ VPC_V6_PREFIX_OVERLAP_DIST=128
 def GetVpcIPv6Prefix(vpcid):
     pfxstr = '%s:%04x::/48'%(VPC_V6_BASE, ((vpcid%VPC_V6_PREFIX_OVERLAP_DIST)+VPC_V6_PREFIX_BASE))
     return ipaddress.IPv6Network(pfxstr)
+
+def GetVpcInternetNatPoolPfx(vpcid):
+    pfxstr = '%d.5.20.0/24'%(vpcid)
+    return ipaddress.IPv4Network(pfxstr)
+
+def GetVpcInfraNatPoolPfx(vpcid):
+    pfxstr = '10.%d.199.0/24'%(vpcid)
+    return ipaddress.IPv4Network(pfxstr)
+
+def GetNatPoolPortRange():
+    return 10000,20000
 
 def __hostmemmgr_init():
     global HostMemoryAllocator

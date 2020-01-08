@@ -21,3 +21,10 @@ modules:
         ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+
+    - module:
+        name    : IPV4_UDP_NAPT
+        spec    : local2igw.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
+

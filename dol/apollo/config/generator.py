@@ -26,6 +26,7 @@ import apollo.config.objects.vpc as vpc
 import apollo.config.objects.interface as interface
 import apollo.config.objects.port as port
 import apollo.config.objects.dhcprelay as dhcp_relay
+import apollo.config.objects.nat_pb as nat_pb
 import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
@@ -44,6 +45,7 @@ def __initialize_object_info():
     ObjectInfo[agentapi.ObjectTypes.POLICY] = policy
     ObjectInfo[agentapi.ObjectTypes.MIRROR] = mirror
     ObjectInfo[agentapi.ObjectTypes.DHCPRELAY] = dhcp_relay
+    ObjectInfo[agentapi.ObjectTypes.NAT_PB] = nat_pb
     return
 
 def __validate_object_config(objid):
@@ -134,6 +136,7 @@ def __read():
     tag.client.ReadObjects()
     route.client.ReadObjects()
     #dhcp_relay.client.ReadObjects()
+    nat_pb.client.ReadObjects()
     # lmapping.client.ReadObjects()
     # rmapping.client.ReadObjects()
     return

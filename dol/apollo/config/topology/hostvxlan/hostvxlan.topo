@@ -147,6 +147,10 @@ vpc:
               tagged  : false
           rmap:
             - count : 4
+      nat:
+        count : 2
+        addrtype : PUBLIC_AND_SERVICE
+        protocol : tcp,udp
       nexthop:
         - type : underlay
           count : 8

@@ -20,6 +20,7 @@ import tags_pb2_grpc as tags_pb2_grpc
 import meter_pb2_grpc as meter_pb2_grpc
 import interface_pb2_grpc as interface_pb2_grpc
 import dhcp_pb2_grpc as dhcp_pb2_grpc
+import nat_pb2_grpc as nat_pb2_grpc
 
 import device_pb2 as device_pb2
 import interface_pb2 as interface_pb2
@@ -35,6 +36,7 @@ import tunnel_pb2 as tunnel_pb2
 import vpc_pb2 as vpc_pb2
 import vnic_pb2 as vnic_pb2
 import dhcp_pb2 as dhcp_pb2
+import nat_pb2 as nat_pb2
 
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
@@ -71,7 +73,8 @@ class ObjectTypes(enum.IntEnum):
     TAG = 15
     INTERFACE = 16
     DHCPRELAY = 17
-    MAX = 18
+    NAT_PB = 18
+    MAX = 19
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -200,6 +203,8 @@ class ApolloAgentClient:
                                                       self.__channel, 'Meter')
         self.__stubs[ObjectTypes.DHCPRELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
                                                       self.__channel, 'DHCPRelay')
+        self.__stubs[ObjectTypes.NAT_PB] = ClientStub(nat_pb2_grpc.NatSvcStub,
+                                                      self.__channel, 'NatPortBlock')
         return
 
     def __create_msgreq_table(self):
@@ -218,6 +223,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
         self.__msgreqs[ObjectTypes.DHCPRELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
+        self.__msgreqs[ObjectTypes.NAT_PB] = ClientModule(nat_pb2, 'NatPortBlock')
         return
 
     def GetGRPCMsgReq(self, objtype, op):

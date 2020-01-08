@@ -45,6 +45,9 @@ IPV6_MAXADDR = ipaddress.ip_address("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
 IPV4_DEFAULT_ROUTE = ipaddress.ip_network("0.0.0.0/0")
 IPV6_DEFAULT_ROUTE = ipaddress.ip_network("0::/0")
 
+NAT_ADDR_TYPE_PUBLIC = 0
+NAT_ADDR_TYPE_SERVICE = 1
+
 IPPROTO_TO_NAME_TBL = {num:name[8:] for name,num in vars(socket).items() if name.startswith("IPPROTO")}
 
 IF_TYPE_SHIFT = 28

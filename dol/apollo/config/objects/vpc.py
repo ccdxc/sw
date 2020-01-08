@@ -20,6 +20,7 @@ import apollo.config.objects.meter as meter
 from apollo.config.objects.vnic import client as VnicClient
 import artemis.config.objects.cfgjson as cfgjson
 import apollo.config.utils as utils
+import apollo.config.objects.nat_pb as nat_pb
 
 import vpc_pb2 as vpc_pb2
 
@@ -124,6 +125,21 @@ class VpcObject(base.ConfigObjectBase):
         if getattr(spec, 'subnet', None) != None:
             subnet.client.GenerateObjects(self, spec)
         self.DeriveOperInfo()
+
+        # Generate NAT Port Block configuration
+        if getattr(spec, 'nat', None) != None:
+            self.NatPrefix = {}
+            self.__nat_pool = {}
+            self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC] = \
+                resmgr.GetVpcInternetNatPoolPfx(self.VPCId)
+            self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE] = \
+                resmgr.GetVpcInfraNatPoolPfx(self.VPCId)
+            self.__nat_pool[utils.NAT_ADDR_TYPE_PUBLIC] = \
+                resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC])
+            self.__nat_pool[utils.NAT_ADDR_TYPE_SERVICE] = \
+                resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
+            nat_pb.client.GenerateObjects(self, spec)
+
         return
 
     def __repr__(self):
@@ -148,6 +164,9 @@ class VpcObject(base.ConfigObjectBase):
 
     def AllocIPv4SubnetPrefix(self, poolid):
         return next(self.__ip_subnet_prefix_pool[1][poolid])
+
+    def AllocNatAddr(self, nat_type):
+        return next(self.__nat_pool[nat_type])
 
     def GetProviderIPAddr(self, count):
         assert self.Type == vpc_pb2.VPC_TYPE_UNDERLAY
@@ -339,6 +358,9 @@ class VpcObjectClient(base.ConfigClientBase):
 
         # Create Subnet Objects after policy & route
         subnet.client.CreateObjects()
+
+        # Create NAT Port Block Objects
+        nat_pb.client.CreateObjects()
         return
 
 client = VpcObjectClient()
