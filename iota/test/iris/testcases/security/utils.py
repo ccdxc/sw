@@ -12,16 +12,31 @@ import iota.test.iris.utils.ip_rule_db.util.proto as proto
 import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
 import time
 
-def DisableHalLogs(workload):
-    cmd = 'halctl debug trace --level none'
+def SetHalLogsLevel(node_name, level):
+    cmd = '/nic/bin/halctl debug trace --level %s'%level
     req = api.Trigger_CreateExecuteCommandsRequest()
-    result = api.types.status.SUCCESS
 
-    api.Trigger_AddNaplesCommand(req, workload.node_name,
-                                 workload.workload_name, cmd)
-    api.Logger.info("Running COMMAND {}".format(cmd))
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    resp = api.Trigger(req)
+    api.PrintCommandResults(resp.commands[0])
+    if resp.commands[0].exit_code != 0:
+        raise Exception("Failed to set the HAL trace level to %s on %s"%(level, node_name))
 
-    api.Trigger(req)
+def GetHalLogsLevel(node_name):
+    cmd = '/nic/bin/halctl show trace'
+
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    resp = api.Trigger(req)
+    api.PrintCommandResults(resp.commands[0])
+    if resp.commands[0].exit_code != 0:
+        raise Exception("Failed to get the HAL trace level from %s"%node_name)
+
+    try:
+        return resp.commands[0].stdout.split(" ")[-1].split("_")[-1].lower().replace('\n','').replace('\r','').replace('','')
+    except:
+        raise Exception("Failed to parse the trace level from %s on %s"%
+                        (resp.commands[0].stdout, node_name))
 
 def GetSecurityPolicy(workload=None, node_name=None):
     if not node_name:

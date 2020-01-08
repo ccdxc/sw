@@ -1,0 +1,29 @@
+meta:
+    name    : cps
+    os      : [ esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : Trex_Local_Workloads
+        testcase: testcases.networking.conn_per_sec
+        stress  : True
+        ignore  : True
+        args    :
+            type: local_only
+        iterators:
+            type      : simple
+            proto     : [ tcp, udp ]
+            cps       : [ 600, 700 ]
+            duration  : [ 300, 300 ]
+    -   name    : Trex_Remote_Workloads
+        testcase: testcases.networking.conn_per_sec
+        stress  : True
+        ignore  : True
+        args    :
+            type: remote_only
+        iterators:
+            type      : simple
+            proto     : [ tcp, udp ]
+            cps       : [ 600, 700 ]
+            duration  : [ 300, 300 ]
+         

@@ -40,6 +40,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - networking/connectivity.testbundle
+        - networking/cps.testbundle
         - flowstats/flowstats.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - networking/upgrade.testbundle
@@ -59,7 +60,7 @@ testbundles:
         - sysmon/interrupts.testbundle
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
-
+        
     regression:
         - firewall/policy_scale.testbundle
         - alg/alg_regression.testbundle

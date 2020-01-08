@@ -20,6 +20,8 @@ for p in paths:
     fullpath = os.path.join(topdir, p)
     sys.path.append(fullpath)
 
+sys.path.append('/opt/trex/v2.65/automation/trex_control_plane/interactive/')
+
 __iota_server_port = 60000
 
 # This import will parse all the command line options.

@@ -72,6 +72,7 @@ class Workload:
             self.uplink_vlan = msg.uplink_vlan
             self.cpus = msg.cpus
             self.memory = msg.memory
+            self.mgmt_ip = msg.mgmt_ip
         return
 
     def init(self, workload_name, node_name, ip_address, interface=None):
