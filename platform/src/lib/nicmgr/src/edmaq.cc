@@ -51,6 +51,8 @@ EdmaQ::EdmaQ(
         name, ring_base, comp_base);
 
     pending = (struct edmaq_ctx *)calloc(1, sizeof(struct edmaq_ctx) * ring_size);
+
+    init = false;
 }
 
 bool
@@ -63,6 +65,9 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     comp_tail = 0;
     exp_color = 1;
 
+    NIC_LOG_INFO("{}: Initializing edmaq lif {} qtype {} qid {}",
+        name, lif, qtype, qid);
+
     // Init rings
     MEM_SET(ring_base, 0, (sizeof(struct edma_cmd_desc) * ring_size), 0);
     MEM_SET(comp_base, 0, (sizeof(struct edma_comp_desc) * ring_size), 0);
@@ -74,6 +79,8 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
             name);
         return false;
     }
+
+    NIC_LOG_DEBUG("{}: Initializing edma qstate {:#x}", name, addr);
 
     uint8_t off;
     if (pd->get_pc_offset("txdma_stage0.bin", "edma_stage0", &off, NULL) < 0) {
@@ -102,6 +109,8 @@ EdmaQ::Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     PAL_barrier();
     p4plus_invalidate_cache(addr, sizeof(edma_qstate_t), P4PLUS_CACHE_INVALIDATE_TXDMA);
 
+    init = true;
+
     return true;
 }
 
@@ -110,13 +119,19 @@ EdmaQ::Reset()
 {
     uint64_t addr, req_db_addr;
 
+    NIC_LOG_INFO("{}: Resetting edmaq lif {} qtype {} qid {}",
+        name, lif, qtype, qid);
+
+    if (!init)
+        return true;
+
     addr = pd->lm_->get_lif_qstate_addr(lif, qtype, qid);
     if (addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for edma queue",
             name);
         return false;
     }
-    NIC_LOG_DEBUG("{}: resetting edma qstate {:#x}", name, addr);
+    NIC_LOG_DEBUG("{}: Resetting edma qstate {:#x}", name, addr);
 
     MEM_SET(addr, 0, fldsiz(edma_qstate_t, pc_offset), 0);
     PAL_barrier();
@@ -132,6 +147,8 @@ EdmaQ::Reset()
                 (qtype << 3);
 
     WRITE_DB64(req_db_addr, qid << 24);
+
+    init = false;
 
     return true;
 }

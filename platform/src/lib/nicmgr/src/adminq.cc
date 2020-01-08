@@ -55,6 +55,9 @@ AdminQ::AdminQ(const char *name, PdClient *pd, uint16_t lif, uint8_t req_qtype, 
         throw;
     }
     NIC_LOG_DEBUG("{}: response completion queue address {:#x}", name, resp_comp_base);
+
+    req_init = false;
+    resp_init = false;
 }
 
 bool
@@ -86,6 +89,9 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     req_tail = 0;
     req_comp_tail = 0;
     req_exp_color = 1;
+
+    NIC_LOG_INFO("{}: Initializing AdminRequestQ lif {} qtype {} qid {}",
+        name, lif, req_qtype, req_qid);
 
     // Init rings
     MEM_SET(req_ring_base, 0, sizeof(struct nicmgr_req_desc) * req_ring_size, 0);
@@ -127,6 +133,8 @@ AdminQ::AdminRequestQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     p4plus_invalidate_cache(req_qstate_addr, sizeof(nicmgr_req_qstate_t),
                             P4PLUS_CACHE_INVALIDATE_TXDMA);
 
+    req_init = true;
+
     return true;
 }
 
@@ -139,6 +147,9 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     resp_tail = 0;
     resp_comp_tail = 0;
     resp_exp_color = 1;
+
+    NIC_LOG_INFO("{}: Initializing AdminResponseQ lif {} qtype {} qid {}",
+        name, lif, resp_qtype, resp_qid);
 
     // Init rings
     MEM_SET(resp_ring_base, 0, sizeof(struct nicmgr_resp_desc) * resp_ring_size, 0);
@@ -180,6 +191,8 @@ AdminQ::AdminResponseQInit(uint8_t cos_sel, uint8_t cosA, uint8_t cosB)
     p4plus_invalidate_cache(resp_qstate_addr, sizeof(nicmgr_resp_qstate_t),
                             P4PLUS_CACHE_INVALIDATE_TXDMA);
 
+    resp_init = true;
+
     return true;
 }
 
@@ -208,6 +221,9 @@ AdminQ::AdminRequestQReset()
 {
     uint64_t req_qstate_addr, req_db_addr;
 
+    if (!req_init)
+        return true;
+
     req_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, req_qtype, req_qid);
     if (req_qstate_addr < 0) {
         NIC_LOG_ERR("{}: Failed to get qstate address for request queue", name);
@@ -228,6 +244,8 @@ AdminQ::AdminRequestQReset()
 
     WRITE_DB64(req_db_addr, req_qid << 24);
 
+    req_init = false;
+
     return true;
 }
 
@@ -235,6 +253,9 @@ bool
 AdminQ::AdminResponseQReset()
 {
     uint64_t resp_qstate_addr, resp_db_addr;
+
+    if (!resp_init)
+        return true;
 
     resp_qstate_addr = pd->lm_->get_lif_qstate_addr(lif, resp_qtype, resp_qid);
     if (resp_qstate_addr < 0) {
@@ -255,6 +276,8 @@ AdminQ::AdminResponseQReset()
         CAP_WA_CSR_DHS_LOCAL_DOORBELL_BYTE_ADDRESS + (0b0 << 17) + (lif << 6) + (resp_qtype << 3);
 
     WRITE_DB64(resp_db_addr, resp_qid << 24);
+
+    resp_init = false;
 
     return true;
 }

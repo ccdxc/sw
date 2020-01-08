@@ -40,7 +40,7 @@ edma_completion_interrupt:
 
     // DMA Interrupt
     DMA_CMD_PTR(_r_ptr, _r_index, r7)
-    DMA_HBM_PHV2MEM_WF(_r_ptr, c0, _r_intr_addr, CAPRI_PHV_START_OFFSET(edma_t0_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(edma_t0_s2s_intr_assert_data), r7)
+    DMA_HBM_PHV2MEM_WF(_r_ptr, _C_TRUE, _r_intr_addr, CAPRI_PHV_START_OFFSET(edma_t0_s2s_intr_assert_data), CAPRI_PHV_END_OFFSET(edma_t0_s2s_intr_assert_data), r7)
     DMA_CMD_NEXT(_r_index)
 
 edma_completion_done:

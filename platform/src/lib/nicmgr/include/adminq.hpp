@@ -53,6 +53,7 @@ private:
     uint8_t req_qtype, resp_qtype;
     uint32_t req_qid, resp_qid;
     uint16_t req_ring_size, resp_ring_size;
+    bool req_init, resp_init;
 
     adminq_cb_t handler;
     void *handler_obj;

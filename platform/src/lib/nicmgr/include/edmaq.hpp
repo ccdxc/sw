@@ -40,9 +40,6 @@ public:
     bool Init(uint8_t cos_sel, uint8_t cosA, uint8_t cosB);
     bool Reset();
     bool Debug(bool enable);
-    bool Empty();
-    bool Poll();
-    void Flush();
 
     bool Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
         struct edmaq_ctx *ctx);
@@ -52,6 +49,7 @@ private:
     const char *name;
     PdClient *pd;
     bool skip_hwinit;
+    bool init;
 
     uint16_t lif;
     uint8_t qtype;
@@ -70,6 +68,10 @@ private:
     // Tasks
     EV_P;
     evutil_prepare prepare = {0};
+
+    bool Empty();
+    bool Poll();
+    void Flush();
 };
 
 #endif    /* __EDMAQ_HPP__ */
