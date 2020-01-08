@@ -40,7 +40,7 @@ subnet_impl::factory(pds_subnet_spec_t *spec) {
         return NULL;
     }
     impl = subnet_impl_db()->alloc();
-    new (impl) subnet_impl();
+    new (impl) subnet_impl(spec);
     return impl;
 }
 
@@ -248,6 +248,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
                           "err %u", spec->host_ifindex, spec->key.id, ret);
         }
     }
+    subnet_impl_db()->insert(hw_id_, this);
     return ret;
 }
 
@@ -275,6 +276,7 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
         PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
                       subnet->key().id, ret);
     }
+    subnet_impl_db()->remove(hw_id_);
     return ret;
 }
 
@@ -347,6 +349,9 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
             }
         }
     }
+    // delete old impl and insert cloned impl into ht
+    subnet_impl_db()->remove(hw_id_);
+    subnet_impl_db()->insert(hw_id_, this);
     return SDK_RET_OK;
 }
 

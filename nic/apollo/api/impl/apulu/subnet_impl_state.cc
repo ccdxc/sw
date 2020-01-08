@@ -26,10 +26,16 @@ subnet_impl_state::subnet_impl_state(pds_state *state) {
     // create indexer for subnet hw id allocation and reserve 0th entry
     subnet_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(subnet_idxr_ != NULL);
+
+    impl_ht_ = ht::factory(PDS_MAX_SUBNET >> 2,
+                           subnet_impl::key_get,
+                           sizeof(uint16_t));
+    SDK_ASSERT(impl_ht_ != NULL);
 }
 
 subnet_impl_state::~subnet_impl_state() {
     rte_indexer::destroy(subnet_idxr_);
+    ht::destroy(impl_ht_);
 }
 
 subnet_impl *
@@ -55,6 +61,29 @@ subnet_impl_state::table_transaction_end(void) {
 
 sdk_ret_t
 subnet_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_impl_state::insert(uint16_t hw_id, subnet_impl *impl) {
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+subnet_impl *
+subnet_impl_state::find(uint16_t hw_id) {
+    return (subnet_impl *)impl_ht_->lookup(&hw_id);
+}
+
+sdk_ret_t
+subnet_impl_state::remove(uint16_t hw_id) {
+    subnet_impl *subnet = NULL;
+
+    subnet = (subnet_impl *) impl_ht_->remove(&hw_id);
+    if (!subnet) {
+        PDS_TRACE_ERR("subnet impl not found for hw id %u", hw_id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
     return SDK_RET_OK;
 }
 

@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 
 #ifndef __SUBNET_IMPL_STATE_HPP__
-#define __SUBNET_IMPL_STATEHPP__
+#define __SUBNET_IMPL_STATE_HPP__
 
 #include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
@@ -53,19 +53,35 @@ public:
     /// \return #SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_transaction_end(void);
 
-    /// \brief     API to get table stats
+    /// \brief      API to get table stats
     /// \param[in]  cb    callback to be called on stats
     ///             ctxt    opaque ctxt passed to the callback
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief      API to insert subnet impl into hash table
+    /// \param[in]  key     subnet key
+    /// \param[in]  impl    subnet impl object
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(uint16_t hw_id, subnet_impl *impl);
+
+    /// \brief      API to find subnet impl obj using hw id
+    /// \return     subnet impl object
+    subnet_impl *find(uint16_t hw_id);
+
+    /// \brief      API to remove hw id and subnet key from the hash table
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t remove(uint16_t hw_id);
+
 private:
     rte_indexer *subnet_idxr(void) const { return subnet_idxr_; }
+    ht *impl_ht(void) const { return impl_ht_; }
     // subnet_impl class is friend of subnet_impl_state
     friend class subnet_impl;
 
 private:
     rte_indexer *subnet_idxr_;    ///< indexer to allocate hw subnet id
+    ht *impl_ht_;                 ///< Hash table for hw_id to subnet key
 };
 
 /// @}

@@ -176,11 +176,34 @@ public:
     /// \param[out] status status
     void fill_status_(pds_subnet_status_t *status);
 
+    /// \brief      get the key from entry in hash table context
+    /// \param[in]  entry in the hash table context
+    /// \return     hw id from the entry
+    static void *key_get(void *entry) {
+        subnet_impl *subnet = (subnet_impl *) entry;
+        return (void *)&(subnet->hw_id_);
+    }
+
+    /// \brief      accessor API for key
+    pds_subnet_key_t *key(void) { return &key_; }
+
+    /// \brief      accessor API for hash table context
+    ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
+
 private:
     /// \brief  constructor
     subnet_impl() {
         hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
+        ht_ctxt_.reset();
+    }
+
+    /// \brief  constructor with spec
+    subnet_impl(pds_subnet_spec_t *spec) {
+        hw_id_ = 0xFFFF;
+        vni_hdl_ = handle_t::null();
+        key_.id = spec->key.id;
+        ht_ctxt_.reset();
     }
 
     /// \brief  destructor
@@ -203,7 +226,8 @@ private:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
-                               subnet_entry *orig_subnet, api_obj_ctxt_t *obj_ctxt);
+                               subnet_entry *orig_subnet,
+                               api_obj_ctxt_t *obj_ctxt);
 
     /// \brief      program subnet related tables during subnet delete by
     ///             disabling stage0 tables corresponding to the new epoch
@@ -213,8 +237,13 @@ private:
     sdk_ret_t activate_delete_(pds_epoch_t epoch, subnet_entry *subnet);
 
 private:
-    uint16_t    hw_id_;
-    handle_t    vni_hdl_;
+    uint16_t hw_id_;
+    handle_t vni_hdl_;
+    /// PI specific info
+    struct {
+        pds_subnet_key_t key_;
+    };
+    ht_ctxt_t ht_ctxt_;
 };
 
 /// @}
