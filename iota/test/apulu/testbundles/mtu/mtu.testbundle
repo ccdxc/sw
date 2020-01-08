@@ -1,0 +1,17 @@
+meta:
+    name    : mtu
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : MTU_Def_Min_Max
+        testcase: testcases.mtu.mtu
+        stress  : True
+        disable : False
+        ignore  : False
+        iterators :
+            type    : simple
+            #XXX want to test 9100, but vpp panic with pkt size > 5000
+            #mtu     : [ 1500, 9100, 68 ]
+            mtu     : [ 1500, 68 ]
+

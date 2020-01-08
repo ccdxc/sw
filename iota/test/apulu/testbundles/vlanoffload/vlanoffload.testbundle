@@ -1,0 +1,65 @@
+meta:
+    name    : vlan_offload
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : tx_on_rx_off
+        testcase: testcases.vlanoffload.vlanoffload
+        stress  : False
+        iterators:
+            ipaf: [ ipv4 ]
+            type: nested
+            pktsize: [ 64 ]
+        args    :
+            type: remote_only
+            tx: True
+            rx: False
+
+    -   name    : tx_off_rx_off
+        testcase: testcases.vlanoffload.vlanoffload
+        stress  : False
+        iterators:
+            ipaf: [ ipv4 ]
+            type: nested
+            pktsize: [ 128 ]
+        args    :
+            type: remote_only
+            tx: False
+            rx: False
+
+    -   name    : tx_on_rx_on
+        testcase: testcases.vlanoffload.vlanoffload
+        stress  : False
+        iterators:
+            ipaf: [ ipv4 ]
+            type: nested
+            pktsize: [ 512 ]
+        args    :
+            type: remote_only
+            tx: True
+            rx: True
+
+    -   name    : tx_off_rx_on
+        testcase: testcases.vlanoffload.vlanoffload
+        stress  : False
+        iterators:
+            ipaf: [ ipv4 ]
+            type: nested
+            pktsize: [ 1024 ]
+        args    :
+            type: remote_only
+            tx: False
+            rx: True
+
+    -   name    : tx_random_rx_random
+        testcase: testcases.vlanoffload.vlanoffload
+        stress  : False
+        iterators:
+            ipaf: [ ipv4 ]
+            type: nested
+            pktsize: [ 1024 ]
+        args    :
+            type: remote_only
+            tx: 0
+            rx: 0

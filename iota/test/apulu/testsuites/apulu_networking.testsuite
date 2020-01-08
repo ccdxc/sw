@@ -45,10 +45,12 @@ testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/connectivity.testbundle
-
+        - mtu/mtu.testbundle
+        - vlanoffload/vlanoffload.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/
+        #- classic/driver-features.testbundle
 
 teardown:
     #- step      : verif.utils.collect_logs_and_cores

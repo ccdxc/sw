@@ -6,6 +6,13 @@ import iota.test.iris.utils.iperf as iperf
 __PING_CMD = "ping"
 __PING6_CMD = "ping6"
 
+__IPV4_HEADER_SIZE = 20
+__IPV6_HEADER_SIZE = 40
+__ICMP_HEADER_SIZE = 8
+__VLAN_HEADER_SIZE = 4
+__IPV4_ENCAP_OVERHEAD = __IPV4_HEADER_SIZE + __ICMP_HEADER_SIZE
+__IPV6_ENCAP_OVERHEAD = __IPV6_HEADER_SIZE + __ICMP_HEADER_SIZE
+
 def __sleep(timeout):
     if api.GlobalOptions.dryrun:
         return
@@ -30,15 +37,29 @@ def __ping_addr_substitution(ping_base_cmd, addr):
     ping_cmd = ping_base_cmd + ping_addr_options
     return ping_cmd
 
-def __get_ping_base_cmd(af, packet_size, count, interval):
-    ping_cmd = __PING_CMD if __is_ipv4(af) else __PING6_CMD
-    ping_options = " -A -W 1 -c %d -i %f -s %d " %(count, interval, packet_size)
-    ping_base_cmd = ping_cmd + ping_options
-    return ping_base_cmd
+def __get_ping_base_cmd(w, af, packet_size, count, interval, do_pmtu_disc):
+    if __is_ipv4(af):
+        ping_cmd = __PING_CMD
+        packet_size -= __IPV4_ENCAP_OVERHEAD
+    else:
+        ping_cmd = __PING6_CMD
+        packet_size -= __IPV6_ENCAP_OVERHEAD
 
-def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0.2):
+    if w.uplink_vlan != 0:
+        packet_size -= __VLAN_HEADER_SIZE
+
+    if do_pmtu_disc is True:
+        if api.GetNodeOs(w.node_name) == "freebsd":
+            ping_cmd += " -D "
+        else:
+            ping_cmd += " -M do"
+
+    ping_cmd += " -A -W 1 -c %d -i %f -s %d " %(count, interval, packet_size)
+
+    return ping_cmd
+
+def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0.2, do_pmtu_disc=False):
     cmd_cookies = []
-    ping_base_cmd = __get_ping_base_cmd(af, packet_size, count, interval)
 
     if not api.IsSimulation():
         req = api.Trigger_CreateAllParallelCommandsRequest()
@@ -48,8 +69,11 @@ def pingWorkloads(workload_pairs, af="ipv4", packet_size=64, count=3, interval=0
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
+
+        ping_base_cmd = __get_ping_base_cmd(w1, af, packet_size, count, interval, do_pmtu_disc)
         addr = __get_workload_address(w2, af)
         ping_cmd = __ping_addr_substitution(ping_base_cmd, addr)
+
         api.Logger.verbose(" Ping cmd %s " % (ping_cmd))
         api.Trigger_AddCommand(req, w1.node_name, w1.workload_name, ping_cmd)
         cmd_cookies.append(ping_cmd)

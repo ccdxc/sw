@@ -119,8 +119,6 @@ jobs:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/linux:
     labels: ["precommit", "2xhourly"]
-  iota/test/standalone/sanity/apulu-linux:
-    labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/apulu-networking:
     labels: ["precommit", "2xhourly"]
 #  iota/test/standalone/regression/esx:
@@ -189,8 +187,6 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["test/venice", "test/apollo"]
-    - reference: iota/test/standalone/sanity/apulu-linux
-      exclude_dirs: ["test/venice", "test/iris"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["test/venice", "test/iris"]
   metrics:
@@ -202,7 +198,6 @@ dependencies:
   #  - reference: iota/test/standalone/sanity/esx
   #  - reference: iota/test/standalone/sanity/freebsd
   #  - reference: iota/test/standalone/sanity/linux
-     - reference: iota/test/standalone/sanity/apulu-linux
      - reference: iota/test/standalone/sanity/apulu-networking
   nic/agent:
     - reference: iota/test/venice
@@ -219,12 +214,10 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
-    - reference: iota/test/standalone/sanity/apulu-linux
     - reference: iota/test/standalone/sanity/apulu-networking
   nic/conf:
     - reference: iota/test/standalone/sanity/linux
   nic/conf/apulu:
-    - reference: iota/test/standalone/sanity/apulu-linux
     - reference: iota/test/standalone/sanity/apulu-networking
   nic/debug_cli:
     - reference: iota/test/standalone/sanity/linux
@@ -237,13 +230,12 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
-    - reference: iota/test/standalone/sanity/apulu-linux
   nic/include:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
-    - reference: iota/test/standalone/sanity/apulu-linux
+    - reference: iota/test/standalone/sanity/apulu-networking
   nic/linkmgr:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -251,7 +243,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
   nic/metaswitch:
     - reference: nic/apollo
-    - reference: iota/test/standalone/sanity/apulu-linux
+    - reference: iota/test/standalone/sanity/apulu-networking
   nic/p4-hlir:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
@@ -289,7 +281,6 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
   nic/vpp:
     - reference: nic/apollo
-    - reference: iota/test/standalone/sanity/apulu-linux
     - reference: iota/test/standalone/sanity/apulu-networking
   nic/conf/apollo:
     - reference: nic/apollo
@@ -311,8 +302,6 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["linux","esxi"]
     - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["freebsd","esxi"]
-    - reference: iota/test/standalone/sanity/apulu-linux
       exclude_dirs: ["freebsd","esxi"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["freebsd","esxi"]
