@@ -8,7 +8,7 @@ import { SearchResultPayload , SearchResultCategoryUI} from '@app/components/sea
 
 import { SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { EventsEvent } from '@sdk/v1/models/generated/events';
-import { AuditEvent } from '@sdk/v1/models/generated/audit';
+import { AuditAuditEvent } from '@sdk/v1/models/generated/audit';
 import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
 import { Router } from '@angular/router';
 
@@ -350,12 +350,12 @@ export class SearchresultComponent extends BaseComponent implements OnInit, OnDe
   * @param eventKey
   */
   displayAuditEventValue(event, eventValue): string {
-    const value = Utility.getObjectValueByPropertyPath(new AuditEvent(event), eventValue);
+    const value = Utility.getObjectValueByPropertyPath(new AuditAuditEvent(event), eventValue);
     if (typeof value === 'string') {
       return value;
     }
     if (value instanceof Object) {
-      return this.getObjectValues(new AuditEvent(event)[eventValue]);
+      return this.getObjectValues(new AuditAuditEvent(event)[eventValue]);
     }
     return JSON.stringify(value);
   }

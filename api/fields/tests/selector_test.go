@@ -119,13 +119,13 @@ func TestDeterministicParse(t *testing.T) {
 func TestParseWithValidation(t *testing.T) {
 	ti := time.Now()
 	tests := []struct {
-		kind       string
+		schemaType string
 		selStr     string
 		expSuccess bool
 		selector   Selector
 	}{
 		{
-			kind:       "cluster.Cluster",
+			schemaType: "cluster.Cluster",
 			selStr:     "spec.quorum-nodes=192.168.30.11",
 			expSuccess: true,
 			selector: Selector{
@@ -139,7 +139,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "cluster.Cluster",
+			schemaType: "cluster.Cluster",
 			selStr:     "spec.quorum-nodes notin (192.168.30.11,192.168.30.12),spec.virtual-ip!=192.168.30.11",
 			expSuccess: true,
 			selector: Selector{
@@ -158,7 +158,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "bookstore.Book",
+			schemaType: "bookstore.Book",
 			selStr:     "spec.editions[*].reviews[abc].review in (excellent,good)",
 			expSuccess: true,
 			selector: Selector{
@@ -172,7 +172,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "security.NetworkSecurityPolicy",
+			schemaType: "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules.apps in (mongo,redis)",
 			expSuccess: true,
 			selector: Selector{
@@ -186,7 +186,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "network.Service",
+			schemaType: "network.Service",
 			selStr:     "spec.tls-client-policy.tls-client-certificates-selector[test]=good",
 			expSuccess: true,
 			selector: Selector{
@@ -200,7 +200,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "network.LbPolicy",
+			schemaType: "network.LbPolicy",
 			selStr:     "spec.health-check.max-timeouts<60,spec.health-check.max-timeouts>50",
 			expSuccess: true,
 			selector: Selector{
@@ -218,7 +218,7 @@ func TestParseWithValidation(t *testing.T) {
 				},
 			},
 		}, {
-			kind:       "network.LbPolicy",
+			schemaType: "network.LbPolicy",
 			selStr:     "spec.type=Round Robin,spec.health-check.max-timeouts<60",
 			expSuccess: true,
 			selector: Selector{
@@ -237,7 +237,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "monitoring.Alert",
+			schemaType: "monitoring.Alert",
 			selStr:     fmt.Sprintf("status.resolved.time=%v", ti.Format(time.RFC3339Nano)),
 			expSuccess: true,
 			selector: Selector{
@@ -251,7 +251,7 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "monitoring.Alert",
+			schemaType: "monitoring.Alert",
 			selStr:     fmt.Sprintf("status.resolved.time>=%v,spec.state=OPEN,status.resolved.time<%v", ti.Format(time.RFC3339Nano), ti.Add(10*time.Second).Format(time.RFC3339Nano)),
 			expSuccess: true,
 			selector: Selector{
@@ -275,33 +275,33 @@ func TestParseWithValidation(t *testing.T) {
 			},
 		},
 		{
-			kind:       "network.LbPolicy",
+			schemaType: "network.LbPolicy",
 			selStr:     "spec.health-check.max-timeouts>test",
 			expSuccess: false,
 		},
 		{
-			kind:       "monitoring.Alert",
+			schemaType: "monitoring.Alert",
 			selStr:     "status.resolved.time>test",
 			expSuccess: false,
 		},
 		{
-			kind:       "security.NetworkSecurityPolicy",
+			schemaType: "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules[*].apps in (mongo,redis)", // Slices cant be indexed
 			expSuccess: false,
 		},
 		{
-			kind:       "security.NetworkSecurityPolicy",
+			schemaType: "security.NetworkSecurityPolicy",
 			selStr:     "spec.inrules.apps in (mongo,redis)", // Non-existent field
 			expSuccess: false,
 		},
 		{
-			kind:       "security.NetworkSecurityPolicy",
+			schemaType: "security.NetworkSecurityPolicy",
 			selStr:     "spec.rules in (mongo,redis)", // Non-leaf field
 			expSuccess: false,
 		},
 	}
 	for ii := range tests {
-		sel, err := ParseWithValidation(tests[ii].kind, tests[ii].selStr)
+		sel, err := ParseWithValidation(tests[ii].schemaType, tests[ii].selStr)
 		if !tests[ii].expSuccess {
 			if err == nil {
 				t.Fatalf("Expected %v to fail, found %v", tests[ii].selStr, sel)

@@ -17,7 +17,7 @@ import (
 
 // AuditEntry is a test struct to un-marshal event entry returned by Search REST API
 type AuditEntry struct {
-	Object audit.Event `json:"object"`
+	Object audit.AuditEvent `json:"object"`
 }
 
 // AuditEntryList is list of search result entries
@@ -149,7 +149,7 @@ func Search(ctx context.Context, apigw string, query *search.SearchRequest, resp
 }
 
 // GetAuditEvent returns audit event details given its UUID
-func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.Event) error {
+func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.AuditEvent) error {
 	auditURL := fmt.Sprintf("https://%s/audit/v1/events/%s", apiGwAddr, eventID)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -162,7 +162,7 @@ func GetAuditEvent(ctx context.Context, apiGwAddr, eventID string, resp *audit.E
 		return fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
-	status, err := restcl.Req("GET", auditURL, &audit.EventRequest{}, resp)
+	status, err := restcl.Req("GET", auditURL, &audit.AuditEventRequest{}, resp)
 	if status != http.StatusOK {
 		return fmt.Errorf("GET request failed with http status code (%d) for event (%s)", status, auditURL)
 	}

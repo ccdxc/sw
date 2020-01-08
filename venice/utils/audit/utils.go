@@ -24,7 +24,7 @@ const (
 
 // NewRequestObjectPopulator populates audit event with request object. This will body from http request if API Gateway acts as a reverse proxy for instance for object store
 func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
-	return func(event *audit.Event) error {
+	return func(event *audit.AuditEvent) error {
 		if reqObj == nil {
 			return nil
 		}
@@ -70,7 +70,7 @@ func NewRequestObjectPopulator(reqObj interface{}, body bool) EventPopulator {
 
 // NewResponseObjectPopulator populates audit event with response object. This will body from http response if API Gateway acts as a reverse proxy for instance for object store
 func NewResponseObjectPopulator(resObj interface{}, body bool) EventPopulator {
-	return func(event *audit.Event) error {
+	return func(event *audit.AuditEvent) error {
 		if resObj == nil {
 			return nil
 		}
@@ -105,7 +105,7 @@ func NewResponseObjectPopulator(resObj interface{}, body bool) EventPopulator {
 
 // NewErrorPopulator adds error information to Data map in audit event
 func NewErrorPopulator(apierr error) EventPopulator {
-	return func(event *audit.Event) error {
+	return func(event *audit.AuditEvent) error {
 		if apierr == nil {
 			return nil
 		}
@@ -136,7 +136,7 @@ func NewErrorPopulator(apierr error) EventPopulator {
 
 type policyChecker struct{}
 
-func (p *policyChecker) PopulateEvent(event *audit.Event, populators ...EventPopulator) (bool, bool, error) {
+func (p *policyChecker) PopulateEvent(event *audit.AuditEvent, populators ...EventPopulator) (bool, bool, error) {
 	failOp := true
 	switch event.Resource.Kind {
 	// do not log search, events, audit, metrics queries, fwlogs queries

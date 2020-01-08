@@ -51,7 +51,7 @@ type adapterAuditV1 struct {
 	gw      apigw.APIGateway
 }
 
-func (a adapterAuditV1) GetEvent(oldctx oldcontext.Context, t *audit.EventRequest, options ...grpc.CallOption) (*audit.Event, error) {
+func (a adapterAuditV1) GetEvent(oldctx oldcontext.Context, t *audit.AuditEventRequest, options ...grpc.CallOption) (*audit.AuditEvent, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
 	defer func() {
@@ -64,14 +64,14 @@ func (a adapterAuditV1) GetEvent(oldctx oldcontext.Context, t *audit.EventReques
 	}
 
 	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
-		in := i.(*audit.EventRequest)
+		in := i.(*audit.AuditEventRequest)
 		return a.service.GetEvent(ctx, in)
 	}
 	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
 	if ret == nil {
 		return nil, err
 	}
-	return ret.(*audit.Event), err
+	return ret.(*audit.AuditEvent), err
 }
 
 func (a adapterAuditV1) AutoWatchSvcAuditV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (audit.AuditV1_AutoWatchSvcAuditV1Client, error) {

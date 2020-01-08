@@ -8,14 +8,14 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
-export interface IAuditEventRequest {
+export interface IAuditAuditEventRequest {
     'uuid'?: string;
 }
 
 
-export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
+export class AuditAuditEventRequest extends BaseModel implements IAuditAuditEventRequest {
     'uuid': string = null;
-    public static propInfo: { [prop in keyof IAuditEventRequest]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuditAuditEventRequest]: PropInfoItem } = {
         'uuid': {
             required: false,
             type: 'string'
@@ -23,19 +23,19 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return AuditEventRequest.propInfo[propName];
+        return AuditAuditEventRequest.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return AuditEventRequest.propInfo;
+        return AuditAuditEventRequest.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (AuditEventRequest.propInfo[prop] != null &&
-                        AuditEventRequest.propInfo[prop].default != null);
+        return (AuditAuditEventRequest.propInfo[prop] != null &&
+                        AuditAuditEventRequest.propInfo[prop].default != null);
     }
 
     /**
@@ -55,8 +55,8 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
-        } else if (fillDefaults && AuditEventRequest.hasDefaultValue('uuid')) {
-            this['uuid'] = AuditEventRequest.propInfo['uuid'].default;
+        } else if (fillDefaults && AuditAuditEventRequest.hasDefaultValue('uuid')) {
+            this['uuid'] = AuditAuditEventRequest.propInfo['uuid'].default;
         } else {
             this['uuid'] = null
         }
@@ -67,7 +67,7 @@ export class AuditEventRequest extends BaseModel implements IAuditEventRequest {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'uuid': CustomFormControl(new FormControl(this['uuid']), AuditEventRequest.propInfo['uuid']),
+                'uuid': CustomFormControl(new FormControl(this['uuid']), AuditAuditEventRequest.propInfo['uuid']),
             });
         }
         return this._formGroup;

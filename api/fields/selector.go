@@ -470,7 +470,7 @@ func Parse(selector string) (*Selector, error) {
 	}, nil
 }
 
-// ParseWithValidation uses the provided kind (ex: cluster.Cluster) to look
+// ParseWithValidation uses the provided schema type (ex: cluster.Cluster) to look
 // up the default schema to:
 // 1) Validate the selector string
 //    a) Field should be present
@@ -486,13 +486,13 @@ func Parse(selector string) (*Selector, error) {
 //   spec.networks[*].ipaddresses[*].gateway => Spec.Networks[*].IpAddresses[*].Gateway
 //   spec.networkMap[abc].vlan               => Spec.NetworkMap[abc].Vlan
 //
-func ParseWithValidation(kind string, selector string) (*Selector, error) {
+func ParseWithValidation(schemaType string, selector string) (*Selector, error) {
 	sel, err := Parse(selector)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := sel.ValidateRequirements(kind); err != nil {
+	if err := sel.ValidateRequirements(schemaType, false); err != nil {
 		return nil, err
 	}
 
@@ -506,33 +506,36 @@ func ParseWithValidation(kind string, selector string) (*Selector, error) {
 // 	op     : Operator_lt, Operator_gt, Operator_lte, Operator_gte
 // 	values : should be of type INT32
 //
-func (s *Selector) ValidateRequirements(kind string) error {
+func (s *Selector) ValidateRequirements(schemaType string, ignoreNonExistentFields bool) error {
 	for ii := range s.Requirements {
 		if _, found := Operator_value[s.Requirements[ii].GetOperator()]; !found {
 			return fmt.Errorf("operator %v not supported", s.Requirements[ii].GetOperator())
 		}
 
-		result, err := ref.FieldByJSONTag(kind, s.Requirements[ii].Key)
+		result, err := ref.FieldByJSONTag(schemaType, s.Requirements[ii].Key)
+		if err != nil {
+			if ignoreNonExistentFields && strings.Contains(err.Error(), "Did not find field") {
+				continue
+			}
+			return err
+		}
+
+		fieldType, err := ref.GetScalarFieldType(schemaType, result)
 		if err != nil {
 			return err
 		}
 
 		switch Operator(Operator_value[s.Requirements[ii].GetOperator()]) {
 		case Operator_lt, Operator_gt, Operator_lte, Operator_gte:
-			fieldType, err := ref.GetScalarFieldType(kind, result)
-			if err != nil {
-				return err
-			}
-
 			if fieldType == "TYPE_STRING" || fieldType == "TYPE_BOOL" { // not supported for relational operators
-				return fmt.Errorf("operator not supported on the key")
+				return fmt.Errorf("operator not supported on the key [%s]", s.Requirements[ii].Key)
 			}
-
-			if !ref.ParseableVal(fieldType, s.Requirements[ii].Values[0]) {
-				return fmt.Errorf("given value does not match the key's actual type")
-			}
+			fallthrough
 		default:
-			break
+			if !ref.ParseableVal(fieldType, s.Requirements[ii].Values[0]) {
+				return fmt.Errorf("given value [%s] does not match the key's [%s] actual type [%s]",
+					s.Requirements[ii].Values[0], s.Requirements[ii].Key, fieldType)
+			}
 		}
 
 		s.Requirements[ii].Key = result

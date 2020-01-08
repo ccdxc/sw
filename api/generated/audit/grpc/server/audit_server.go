@@ -37,9 +37,10 @@ func (s *sauditAuditBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme) {
 	l.Infof("registering message for sauditAuditBackend")
 	s.Messages = map[string]apiserver.Message{
 
-		"audit.Event":           apisrvpkg.NewMessage("audit.Event"),
-		"audit.EventAttributes": apisrvpkg.NewMessage("audit.EventAttributes"),
-		"audit.EventRequest":    apisrvpkg.NewMessage("audit.EventRequest"),
+		"audit.AuditEvent":        apisrvpkg.NewMessage("audit.AuditEvent"),
+		"audit.AuditEventList":    apisrvpkg.NewMessage("audit.AuditEventList"),
+		"audit.AuditEventRequest": apisrvpkg.NewMessage("audit.AuditEventRequest"),
+		"audit.EventAttributes":   apisrvpkg.NewMessage("audit.EventAttributes"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

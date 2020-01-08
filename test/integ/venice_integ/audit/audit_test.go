@@ -50,14 +50,14 @@ func TestAuditManager(t *testing.T) {
 	ts1 := api.Timestamp{Timestamp: *ts}
 	tests := []struct {
 		name   string
-		events []*auditapi.Event
+		events []*auditapi.AuditEvent
 		err    bool
 		query  es.Query
 		hits   int
 	}{
 		{
 			name: "single audit event",
-			events: []*auditapi.Event{
+			events: []*auditapi.AuditEvent{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 					ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
@@ -82,7 +82,7 @@ func TestAuditManager(t *testing.T) {
 		},
 		{
 			name: "multiple audit events",
-			events: []*auditapi.Event{
+			events: []*auditapi.AuditEvent{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 					ObjectMeta: api.ObjectMeta{Name: "auditevent2", UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
@@ -123,13 +123,13 @@ func TestAuditManager(t *testing.T) {
 		},
 		{
 			name:   "nil event slice",
-			events: []*auditapi.Event{},
+			events: []*auditapi.AuditEvent{},
 			err:    false,
 			query:  nil,
 		},
 		{
 			name:   "nil events",
-			events: []*auditapi.Event{nil, nil},
+			events: []*auditapi.AuditEvent{nil, nil},
 			err:    false,
 			query:  nil,
 		},
@@ -169,7 +169,7 @@ func TestElasticServerDown(t *testing.T) {
 	AssertOk(t, err, "error starting elastic auditor")
 	// shutdown elastic server and test ProcessEvents
 	testutils.StopElasticsearch(ti.elasticSearchName, ti.elasticSearchDir)
-	event := &auditapi.Event{
+	event := &auditapi.AuditEvent{
 		TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 		ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
 		EventAttributes: auditapi.EventAttributes{
@@ -219,7 +219,7 @@ func TestAuditLogs(t *testing.T) {
 	superAdminCtx, err := NewLoggedInContext(context.Background(), ti.apiGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	// test audit log for successful login
-	loginEventObj := &auditapi.Event{}
+	loginEventObj := &auditapi.AuditEvent{}
 	AssertEventually(t, func() (bool, interface{}) {
 		query := es.NewBoolQuery().Must(es.NewTermQuery("resource.kind.keyword", string(auth.KindUser)),
 			es.NewTermQuery("action.keyword", svc.LoginAction),
@@ -244,7 +244,7 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, "expected audit log for user login", "100ms")
 	AssertEventually(t, func() (bool, interface{}) {
-		resp := &auditapi.Event{}
+		resp := &auditapi.AuditEvent{}
 		err := getEvent(superAdminCtx, ti.apiGwAddr, loginEventObj.SelfLink, resp)
 		if err != nil {
 			return false, err.Error()
@@ -329,7 +329,7 @@ func TestAuditLogs(t *testing.T) {
 		return true, nil
 	}, fmt.Sprintf("expected one audit log for [%s] tenant creation authorization failure", testTenant), "100ms")
 	// test authorization check in spyglass controller when audit event is fetched given UUID
-	Assert(t, getEvent(unauthzCtx, ti.apiGwAddr, loginEventObj.SelfLink, &auditapi.Event{}) != nil, "testtenant user should not be able to get event in default tenant")
+	Assert(t, getEvent(unauthzCtx, ti.apiGwAddr, loginEventObj.SelfLink, &auditapi.AuditEvent{}) != nil, "testtenant user should not be able to get event in default tenant")
 	// test audit log for call failure
 	_, err = ti.restcl.ClusterV1().Tenant().Create(superAdminCtx, tenant)
 	Assert(t, err != nil, "call to create duplicate tenant should fail")
@@ -797,7 +797,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 	}
 	defer auditor.Shutdown()
 	sgPolicy := getNetworkSecurityPolicyData(nRules)
-	event := &auditapi.Event{
+	event := &auditapi.AuditEvent{
 		TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 		ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
 		EventAttributes: auditapi.EventAttributes{
@@ -830,7 +830,7 @@ func benchmarkProcessEvents(nRules int, b *testing.B) {
 	})
 }
 
-func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.Event) error {
+func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.AuditEvent) error {
 	auditURL := fmt.Sprintf("https://%s%s", apiGwAddr, selfLink)
 	restcl := netutils.NewHTTPClient()
 	restcl.WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
@@ -843,7 +843,7 @@ func getEvent(ctx context.Context, apiGwAddr, selfLink string, resp *auditapi.Ev
 		return fmt.Errorf("no authorization header in context")
 	}
 	restcl.SetHeader("Authorization", authzHeader)
-	status, err := restcl.Req("GET", auditURL, &auditapi.EventRequest{}, resp)
+	status, err := restcl.Req("GET", auditURL, &auditapi.AuditEventRequest{}, resp)
 	if status != http.StatusOK {
 		return fmt.Errorf("GET request failed with http status code (%d) for event (%s)", status, auditURL)
 	}

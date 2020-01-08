@@ -18,7 +18,7 @@ type logger struct {
 	simulateError bool
 }
 
-func (s *logger) ProcessEvents(events ...*auditapi.Event) error {
+func (s *logger) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	if s.simulateError {
 		return errors.New("auditing failure")
 	}

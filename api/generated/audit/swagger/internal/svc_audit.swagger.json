@@ -24,7 +24,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/auditEvent"
+              "$ref": "#/definitions/auditAuditEvent"
             }
           }
         },
@@ -332,7 +332,7 @@
         }
       }
     },
-    "auditEvent": {
+    "auditAuditEvent": {
       "type": "object",
       "properties": {
         "kind": {
@@ -413,6 +413,15 @@
           }
         }
       }
+    },
+    "auditAuditEventRequest": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string"
+        }
+      },
+      "title": "Request for an audit event"
     },
     "auditEventAttributes": {
       "type": "object",
@@ -506,15 +515,6 @@
         }
       },
       "title": "Attributes contains all the audit log attributes"
-    },
-    "auditEventRequest": {
-      "type": "object",
-      "properties": {
-        "uuid": {
-          "type": "string"
-        }
-      },
-      "title": "Request for an audit event"
     },
     "googleprotobufAny": {
       "type": "object",

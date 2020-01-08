@@ -24,7 +24,7 @@ import { MonitoringMirrorSession } from './monitoring';
 import { MonitoringTechSupportRequest } from './monitoring';
 import { MonitoringArchiveRequest } from './monitoring';
 import { EventsEvent } from './events';
-import { AuditEvent } from './audit';
+import { AuditAuditEvent } from './audit';
 import { NetworkNetwork } from './network';
 import { NetworkService } from './network';
 import { NetworkLbPolicy } from './network';
@@ -197,7 +197,7 @@ export const CategoryMapping: CatMap  = {
       actions:  [] ,
     },
     "AuditEvent" : {
-      instance: new AuditEvent(),
+      instance: new AuditAuditEvent(),
       scopes: [] ,
       actions:  [] ,
     },

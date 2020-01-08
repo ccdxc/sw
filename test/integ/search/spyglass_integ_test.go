@@ -2209,12 +2209,12 @@ func performSearchTests(t *testing.T, searchMethod SearchMethod) {
 							{
 								Key:      "meta.creation-time",
 								Operator: "gte",
-								Values:   []string{time.Now().Add(-24 * time.Hour).Format("2006-01-02")},
+								Values:   []string{time.Now().Add(-24 * time.Hour).Format(time.RFC3339Nano)},
 							},
 							{
 								Key:      "meta.creation-time",
 								Operator: "lte",
-								Values:   []string{time.Now().Add(24 * time.Hour).Format("2006-01-02")},
+								Values:   []string{time.Now().Add(24 * time.Hour).Format(time.RFC3339Nano)},
 							},
 						},
 					},

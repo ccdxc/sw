@@ -57,7 +57,7 @@ enum Outcome {
     Failure = 1;
 }
 
-message Event {
+message AuditEvent {
     api.TypeMeta T              = 1 [(gogoproto.embed) = true,
                                     (gogoproto.nullable) = false,
                                     (gogoproto.jsontag) = ",inline"];
@@ -122,7 +122,16 @@ message EventAttributes {
 }
 
 // Request for an audit event
-message EventRequest {
+message AuditEventRequest {
     string UUID   = 1 [(gogoproto.jsontag) = "uuid,omitempty"];
 }
 
+// list of events
+message AuditEventList {
+  api.TypeMeta T                = 1 [(gogoproto.nullable) = false,
+                                     (gogoproto.embed) = true];
+  api.ListMeta ListMeta         = 2 [(gogoproto.nullable) = false,
+                                     (gogoproto.embed) = true];
+  repeated AuditEvent Items     = 3 [(gogoproto.nullable) = true,
+                                     (gogoproto.jsontag) = "items,omitempty"];
+}

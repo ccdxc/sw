@@ -29,7 +29,7 @@ func (e *auditHooks) operations(ctx context.Context, in interface{}) (context.Co
 	}
 	var resource authz.Resource
 	switch in.(type) {
-	case *audit.EventRequest: // when fetching event by UUID
+	case *audit.AuditEventRequest: // when fetching event by UUID
 		resource = authz.NewResource(
 			user.Tenant,
 			"",
@@ -52,7 +52,7 @@ func (e *auditHooks) operations(ctx context.Context, in interface{}) (context.Co
 func (e *auditHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
 	e.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
 	switch in.(type) {
-	case *audit.EventRequest:
+	case *audit.AuditEventRequest:
 	default:
 		return ctx, in, true, errors.New("invalid input type")
 	}

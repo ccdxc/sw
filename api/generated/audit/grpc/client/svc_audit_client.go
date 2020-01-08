@@ -29,9 +29,9 @@ func NewAuditV1(conn *grpc.ClientConn, logger log.Logger) audit.ServiceAuditV1Cl
 			conn,
 			"audit.AuditV1",
 			"GetEvent",
-			audit.EncodeGrpcReqEventRequest,
-			audit.DecodeGrpcRespEvent,
-			&audit.Event{},
+			audit.EncodeGrpcReqAuditEventRequest,
+			audit.DecodeGrpcRespAuditEvent,
+			&audit.AuditEvent{},
 			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()

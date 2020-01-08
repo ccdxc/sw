@@ -1831,6 +1831,8 @@ func TestParseableVal(t *testing.T) {
 		{"TYPE_UINT32", "123123", true},
 		{"TYPE_UINT32", "4294967296", false},
 		{"TYPE_UINT32", "-123123", false},
+		{"api.Timestamp", "2018-11-09T23:16:17Z", true},
+		{"api.Timestamp", "12345", false},
 	}
 	for ii := range tests {
 		if found := ref.ParseableVal(tests[ii].kind, tests[ii].value); found != tests[ii].expSuccess {

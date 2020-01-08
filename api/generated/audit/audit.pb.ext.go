@@ -96,26 +96,75 @@ var _ validators.DummyVar
 var validatorMapAudit = make(map[string]map[string][]func(string, interface{}) error)
 
 // Clone clones the object into into or creates one of into is nil
-func (m *Event) Clone(into interface{}) (interface{}, error) {
-	var out *Event
+func (m *AuditEvent) Clone(into interface{}) (interface{}, error) {
+	var out *AuditEvent
 	var ok bool
 	if into == nil {
-		out = &Event{}
+		out = &AuditEvent{}
 	} else {
-		out, ok = into.(*Event)
+		out, ok = into.(*AuditEvent)
 		if !ok {
 			return nil, fmt.Errorf("mismatched object types")
 		}
 	}
-	*out = *(ref.DeepCopy(m).(*Event))
+	*out = *(ref.DeepCopy(m).(*AuditEvent))
 	return out, nil
 }
 
 // Default sets up the defaults for the object
-func (m *Event) Defaults(ver string) bool {
+func (m *AuditEvent) Defaults(ver string) bool {
 	var ret bool
 	ret = m.EventAttributes.Defaults(ver) || ret
 	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AuditEventList) Clone(into interface{}) (interface{}, error) {
+	var out *AuditEventList
+	var ok bool
+	if into == nil {
+		out = &AuditEventList{}
+	} else {
+		out, ok = into.(*AuditEventList)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AuditEventList))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuditEventList) Defaults(ver string) bool {
+	var ret bool
+	for k := range m.Items {
+		if m.Items[k] != nil {
+			i := m.Items[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
+	return ret
+}
+
+// Clone clones the object into into or creates one of into is nil
+func (m *AuditEventRequest) Clone(into interface{}) (interface{}, error) {
+	var out *AuditEventRequest
+	var ok bool
+	if into == nil {
+		out = &AuditEventRequest{}
+	} else {
+		out, ok = into.(*AuditEventRequest)
+		if !ok {
+			return nil, fmt.Errorf("mismatched object types")
+		}
+	}
+	*out = *(ref.DeepCopy(m).(*AuditEventRequest))
+	return out, nil
+}
+
+// Default sets up the defaults for the object
+func (m *AuditEventRequest) Defaults(ver string) bool {
+	return false
 }
 
 // Clone clones the object into into or creates one of into is nil
@@ -147,34 +196,13 @@ func (m *EventAttributes) Defaults(ver string) bool {
 	return ret
 }
 
-// Clone clones the object into into or creates one of into is nil
-func (m *EventRequest) Clone(into interface{}) (interface{}, error) {
-	var out *EventRequest
-	var ok bool
-	if into == nil {
-		out = &EventRequest{}
-	} else {
-		out, ok = into.(*EventRequest)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*EventRequest))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *EventRequest) Defaults(ver string) bool {
-	return false
-}
-
 // Validators and Requirements
 
-func (m *Event) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+func (m *AuditEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
 
-func (m *Event) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+func (m *AuditEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
 
 	{
@@ -191,11 +219,54 @@ func (m *Event) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) [
 	return ret
 }
 
-func (m *Event) Normalize() {
+func (m *AuditEvent) Normalize() {
 
 	m.EventAttributes.Normalize()
 
 	m.ObjectMeta.Normalize()
+
+}
+
+func (m *AuditEventList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AuditEventList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	for k, v := range m.Items {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
+	return ret
+}
+
+func (m *AuditEventList) Normalize() {
+
+	for k, v := range m.Items {
+		if v != nil {
+			v.Normalize()
+			m.Items[k] = v
+		}
+	}
+
+}
+
+func (m *AuditEventRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
+
+}
+
+func (m *AuditEventRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
+	var ret []error
+	return ret
+}
+
+func (m *AuditEventRequest) Normalize() {
 
 }
 
@@ -228,19 +299,6 @@ func (m *EventAttributes) Normalize() {
 	m.Outcome = Outcome_normal[strings.ToLower(m.Outcome)]
 
 	m.Stage = Stage_normal[strings.ToLower(m.Stage)]
-
-}
-
-func (m *EventRequest) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *EventRequest) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	return ret
-}
-
-func (m *EventRequest) Normalize() {
 
 }
 

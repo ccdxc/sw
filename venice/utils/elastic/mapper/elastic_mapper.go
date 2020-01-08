@@ -40,6 +40,7 @@ var fieldOrTypeOverride = map[string]map[string]string{
 		"name":    "keyword",
 		"id":      "keyword", // dsc.spec.id
 		"version": "keyword", // desc.status.version
+		"host":    "keyword", // desc.status.host
 
 		// special types mapping
 		"Timestamp": "date",

@@ -60,9 +60,9 @@ func WithAuditors(auditor ...audit.Auditor) audit.Auditor {
 	return auditMgr
 }
 
-func (a *auditManager) ProcessEvents(events ...*auditapi.Event) error {
+func (a *auditManager) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	// remove nil events
-	var nEvents []*auditapi.Event
+	var nEvents []*auditapi.AuditEvent
 	for _, event := range events {
 		if event != nil {
 			nEvents = append(nEvents, event)

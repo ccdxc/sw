@@ -47,7 +47,7 @@ func TestAuditOperationsHook(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			in: &audit.EventRequest{
+			in: &audit.AuditEventRequest{
 				UUID: "event1",
 			},
 			expectedOperations: []authz.Operation{
@@ -56,7 +56,7 @@ func TestAuditOperationsHook(t *testing.T) {
 					globals.DefaultNamespace, ""),
 					auth.Permission_Read.String()),
 			},
-			out: &audit.EventRequest{
+			out: &audit.AuditEventRequest{
 				UUID: "event1",
 			},
 			err: false,
@@ -64,11 +64,11 @@ func TestAuditOperationsHook(t *testing.T) {
 		{
 			name: "no user in context",
 			user: nil,
-			in: &audit.EventRequest{
+			in: &audit.AuditEventRequest{
 				UUID: "event1",
 			},
 			expectedOperations: nil,
-			out: &audit.EventRequest{
+			out: &audit.AuditEventRequest{
 				UUID: "event1",
 			},
 			err: true,
@@ -144,7 +144,7 @@ func TestAuditUserContextHook(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			in: &audit.EventRequest{},
+			in: &audit.AuditEventRequest{},
 			expectedPerms: []auth.Permission{login.NewPermission(
 				"testTenant",
 				"",
@@ -153,16 +153,16 @@ func TestAuditUserContextHook(t *testing.T) {
 				"",
 				auth.Permission_Read.String()),
 			},
-			out:      &audit.EventRequest{},
+			out:      &audit.AuditEventRequest{},
 			skipCall: false,
 			err:      false,
 		},
 		{
 			name:          "no user in context",
 			user:          nil,
-			in:            &audit.EventRequest{},
+			in:            &audit.AuditEventRequest{},
 			expectedPerms: nil,
-			out:           &audit.EventRequest{},
+			out:           &audit.AuditEventRequest{},
 			skipCall:      true,
 			err:           true,
 		},
@@ -202,9 +202,9 @@ func TestAuditUserContextHook(t *testing.T) {
 					Type:     auth.UserSpec_Local.String(),
 				},
 			},
-			in:            &audit.EventRequest{},
+			in:            &audit.AuditEventRequest{},
 			expectedPerms: nil,
-			out:           &audit.EventRequest{},
+			out:           &audit.AuditEventRequest{},
 			skipCall:      false,
 			err:           false,
 		},

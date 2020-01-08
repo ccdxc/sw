@@ -7,9 +7,10 @@ Input file: audit.proto
 
 The following Messages are defined.
 
-  Event
+  AuditEvent
+  AuditEventList
+  AuditEventRequest
   EventAttributes
-  EventRequest
 
 The following Services and Methods are defined.
 

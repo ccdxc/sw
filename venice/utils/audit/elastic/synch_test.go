@@ -58,12 +58,12 @@ func TestProcessEvents(t *testing.T) {
 	defer shutdown()
 	tests := []struct {
 		name   string
-		events []*audit.Event
+		events []*audit.AuditEvent
 		err    bool
 	}{
 		{
 			name: "single audit event",
-			events: []*audit.Event{
+			events: []*audit.AuditEvent{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 					ObjectMeta: api.ObjectMeta{Name: "auditevent1", UUID: uuid.NewV4().String(), Tenant: "default"},
@@ -85,7 +85,7 @@ func TestProcessEvents(t *testing.T) {
 		},
 		{
 			name: "multiple audit events",
-			events: []*audit.Event{
+			events: []*audit.AuditEvent{
 				{
 					TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 					ObjectMeta: api.ObjectMeta{Name: "auditevent2", UUID: uuid.NewV4().String(), Tenant: "default"},

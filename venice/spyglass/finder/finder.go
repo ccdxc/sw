@@ -192,12 +192,17 @@ func (fdr *Finder) validate(in *search.SearchRequest) error {
 		}
 	}
 
-	// Verify categories
 	if in.Query != nil {
+		// validate categories
 		for _, cat := range in.Query.Categories {
 			if cat != "" && len(globals.Category2Kinds(cat)) == 0 {
 				errorStrings = append(errorStrings, fmt.Sprintf("%s is not a valid category", cat))
 			}
+		}
+
+		// validate requirements
+		if err := validateQueryRequirements(in.Query.Kinds, in.Query.Fields); err != nil {
+			errorStrings = append(errorStrings, err.Error())
 		}
 	}
 
@@ -534,7 +539,7 @@ func (fdr *Finder) searchResultProcessor(id int, entries <-chan *es.SearchHit, l
 				})
 				l.Unlock()
 			case "AuditEvent":
-				eObj := &audit.Event{}
+				eObj := &audit.AuditEvent{}
 				err = json.Unmarshal([]byte(dataBytes), eObj)
 				if err != nil {
 					fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)
@@ -884,7 +889,7 @@ func (fdr *Finder) processAggregatedResults(req *search.SearchRequest, result *e
 												}
 
 											case "AuditEvent":
-												eObj := &audit.Event{}
+												eObj := &audit.AuditEvent{}
 												err = json.Unmarshal([]byte(databytes), eObj)
 												if err != nil {
 													fdr.logger.Errorf("Error un-marshalling json data to search result audit event entry : %+v", err)

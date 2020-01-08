@@ -76,7 +76,7 @@ var _ = Describe("audit tests", func() {
 					event.Object.Resource.Kind == auth.Permission_TokenAuth.String() &&
 					event.Object.Outcome == audit.Outcome_Success.String() &&
 					event.Object.Stage == audit.Stage_RequestProcessing.String()).Should(BeTrue())
-				eventDetails := &audit.Event{}
+				eventDetails := &audit.AuditEvent{}
 				Eventually(func() error {
 					return testutils.GetAuditEvent(ts.loggedInCtx, ts.tu.APIGwAddr, event.Object.UUID, eventDetails)
 				}, 10, 1).Should(BeNil())

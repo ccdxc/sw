@@ -8,22 +8,22 @@ import { minValueValidator, maxValueValidator, minLengthValidator, maxLengthVali
 import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 import { ApiObjectMeta, IApiObjectMeta } from './api-object-meta.model';
-import { AuditEvent_stage,  } from './enums';
-import { AuditEvent_level,  } from './enums';
+import { AuditAuditEvent_stage,  } from './enums';
+import { AuditAuditEvent_level,  } from './enums';
 import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
-import { AuditEvent_outcome,  } from './enums';
+import { AuditAuditEvent_outcome,  } from './enums';
 
-export interface IAuditEvent {
+export interface IAuditAuditEvent {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
-    'stage'?: AuditEvent_stage;
-    'level'?: AuditEvent_level;
+    'stage'?: AuditAuditEvent_stage;
+    'level'?: AuditAuditEvent_level;
     'user'?: IApiObjectRef;
     'client-ips'?: Array<string>;
     'resource'?: IApiObjectRef;
     'action'?: string;
-    'outcome'?: AuditEvent_outcome;
+    'outcome'?: AuditAuditEvent_outcome;
     'request-uri'?: string;
     'request-object'?: string;
     'response-object'?: string;
@@ -34,18 +34,18 @@ export interface IAuditEvent {
 }
 
 
-export class AuditEvent extends BaseModel implements IAuditEvent {
+export class AuditAuditEvent extends BaseModel implements IAuditAuditEvent {
     'kind': string = null;
     'api-version': string = null;
     /** ObjectMeta.Name will be the UUID for an audit log object. */
     'meta': ApiObjectMeta = null;
-    'stage': AuditEvent_stage = null;
-    'level': AuditEvent_level = null;
+    'stage': AuditAuditEvent_stage = null;
+    'level': AuditAuditEvent_level = null;
     'user': ApiObjectRef = null;
     'client-ips': Array<string> = null;
     'resource': ApiObjectRef = null;
     'action': string = null;
-    'outcome': AuditEvent_outcome = null;
+    'outcome': AuditAuditEvent_outcome = null;
     /** should be a valid URI */
     'request-uri': string = null;
     'request-object': string = null;
@@ -54,7 +54,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     'gateway-ip': string = null;
     'service-name': string = null;
     'data': object = null;
-    public static propInfo: { [prop in keyof IAuditEvent]: PropInfoItem } = {
+    public static propInfo: { [prop in keyof IAuditAuditEvent]: PropInfoItem } = {
         'kind': {
             required: false,
             type: 'string'
@@ -69,13 +69,13 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
             type: 'object'
         },
         'stage': {
-            enum: AuditEvent_stage,
+            enum: AuditAuditEvent_stage,
             default: 'requestauthorization',
             required: false,
             type: 'string'
         },
         'level': {
-            enum: AuditEvent_level,
+            enum: AuditAuditEvent_level,
             default: 'basic',
             required: false,
             type: 'string'
@@ -97,7 +97,7 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
             type: 'string'
         },
         'outcome': {
-            enum: AuditEvent_outcome,
+            enum: AuditAuditEvent_outcome,
             default: 'success',
             required: false,
             type: 'string'
@@ -135,19 +135,19 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     }
 
     public getPropInfo(propName: string): PropInfoItem {
-        return AuditEvent.propInfo[propName];
+        return AuditAuditEvent.propInfo[propName];
     }
 
     public getPropInfoConfig(): { [key:string]:PropInfoItem } {
-        return AuditEvent.propInfo;
+        return AuditAuditEvent.propInfo;
     }
 
     /**
      * Returns whether or not there is an enum property with a default value
     */
     public static hasDefaultValue(prop) {
-        return (AuditEvent.propInfo[prop] != null &&
-                        AuditEvent.propInfo[prop].default != null);
+        return (AuditAuditEvent.propInfo[prop] != null &&
+                        AuditAuditEvent.propInfo[prop].default != null);
     }
 
     /**
@@ -171,15 +171,15 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     setValues(values: any, fillDefaults = true): void {
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('kind')) {
-            this['kind'] = AuditEvent.propInfo['kind'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('kind')) {
+            this['kind'] = AuditAuditEvent.propInfo['kind'].default;
         } else {
             this['kind'] = null
         }
         if (values && values['api-version'] != null) {
             this['api-version'] = values['api-version'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('api-version')) {
-            this['api-version'] = AuditEvent.propInfo['api-version'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('api-version')) {
+            this['api-version'] = AuditAuditEvent.propInfo['api-version'].default;
         } else {
             this['api-version'] = null
         }
@@ -190,15 +190,15 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         }
         if (values && values['stage'] != null) {
             this['stage'] = values['stage'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('stage')) {
-            this['stage'] = <AuditEvent_stage>  AuditEvent.propInfo['stage'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('stage')) {
+            this['stage'] = <AuditAuditEvent_stage>  AuditAuditEvent.propInfo['stage'].default;
         } else {
             this['stage'] = null
         }
         if (values && values['level'] != null) {
             this['level'] = values['level'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('level')) {
-            this['level'] = <AuditEvent_level>  AuditEvent.propInfo['level'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('level')) {
+            this['level'] = <AuditAuditEvent_level>  AuditAuditEvent.propInfo['level'].default;
         } else {
             this['level'] = null
         }
@@ -209,8 +209,8 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         }
         if (values && values['client-ips'] != null) {
             this['client-ips'] = values['client-ips'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('client-ips')) {
-            this['client-ips'] = [ AuditEvent.propInfo['client-ips'].default];
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('client-ips')) {
+            this['client-ips'] = [ AuditAuditEvent.propInfo['client-ips'].default];
         } else {
             this['client-ips'] = [];
         }
@@ -221,64 +221,64 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
         }
         if (values && values['action'] != null) {
             this['action'] = values['action'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('action')) {
-            this['action'] = AuditEvent.propInfo['action'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('action')) {
+            this['action'] = AuditAuditEvent.propInfo['action'].default;
         } else {
             this['action'] = null
         }
         if (values && values['outcome'] != null) {
             this['outcome'] = values['outcome'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('outcome')) {
-            this['outcome'] = <AuditEvent_outcome>  AuditEvent.propInfo['outcome'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('outcome')) {
+            this['outcome'] = <AuditAuditEvent_outcome>  AuditAuditEvent.propInfo['outcome'].default;
         } else {
             this['outcome'] = null
         }
         if (values && values['request-uri'] != null) {
             this['request-uri'] = values['request-uri'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('request-uri')) {
-            this['request-uri'] = AuditEvent.propInfo['request-uri'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('request-uri')) {
+            this['request-uri'] = AuditAuditEvent.propInfo['request-uri'].default;
         } else {
             this['request-uri'] = null
         }
         if (values && values['request-object'] != null) {
             this['request-object'] = values['request-object'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('request-object')) {
-            this['request-object'] = AuditEvent.propInfo['request-object'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('request-object')) {
+            this['request-object'] = AuditAuditEvent.propInfo['request-object'].default;
         } else {
             this['request-object'] = null
         }
         if (values && values['response-object'] != null) {
             this['response-object'] = values['response-object'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('response-object')) {
-            this['response-object'] = AuditEvent.propInfo['response-object'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('response-object')) {
+            this['response-object'] = AuditAuditEvent.propInfo['response-object'].default;
         } else {
             this['response-object'] = null
         }
         if (values && values['gateway-node'] != null) {
             this['gateway-node'] = values['gateway-node'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('gateway-node')) {
-            this['gateway-node'] = AuditEvent.propInfo['gateway-node'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('gateway-node')) {
+            this['gateway-node'] = AuditAuditEvent.propInfo['gateway-node'].default;
         } else {
             this['gateway-node'] = null
         }
         if (values && values['gateway-ip'] != null) {
             this['gateway-ip'] = values['gateway-ip'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('gateway-ip')) {
-            this['gateway-ip'] = AuditEvent.propInfo['gateway-ip'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('gateway-ip')) {
+            this['gateway-ip'] = AuditAuditEvent.propInfo['gateway-ip'].default;
         } else {
             this['gateway-ip'] = null
         }
         if (values && values['service-name'] != null) {
             this['service-name'] = values['service-name'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('service-name')) {
-            this['service-name'] = AuditEvent.propInfo['service-name'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('service-name')) {
+            this['service-name'] = AuditAuditEvent.propInfo['service-name'].default;
         } else {
             this['service-name'] = null
         }
         if (values && values['data'] != null) {
             this['data'] = values['data'];
-        } else if (fillDefaults && AuditEvent.hasDefaultValue('data')) {
-            this['data'] = AuditEvent.propInfo['data'].default;
+        } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('data')) {
+            this['data'] = AuditAuditEvent.propInfo['data'].default;
         } else {
             this['data'] = null
         }
@@ -289,23 +289,23 @@ export class AuditEvent extends BaseModel implements IAuditEvent {
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'kind': CustomFormControl(new FormControl(this['kind']), AuditEvent.propInfo['kind']),
-                'api-version': CustomFormControl(new FormControl(this['api-version']), AuditEvent.propInfo['api-version']),
-                'meta': CustomFormGroup(this['meta'].$formGroup, AuditEvent.propInfo['meta'].required),
-                'stage': CustomFormControl(new FormControl(this['stage'], [enumValidator(AuditEvent_stage), ]), AuditEvent.propInfo['stage']),
-                'level': CustomFormControl(new FormControl(this['level'], [enumValidator(AuditEvent_level), ]), AuditEvent.propInfo['level']),
-                'user': CustomFormGroup(this['user'].$formGroup, AuditEvent.propInfo['user'].required),
-                'client-ips': CustomFormControl(new FormControl(this['client-ips']), AuditEvent.propInfo['client-ips']),
-                'resource': CustomFormGroup(this['resource'].$formGroup, AuditEvent.propInfo['resource'].required),
-                'action': CustomFormControl(new FormControl(this['action']), AuditEvent.propInfo['action']),
-                'outcome': CustomFormControl(new FormControl(this['outcome'], [enumValidator(AuditEvent_outcome), ]), AuditEvent.propInfo['outcome']),
-                'request-uri': CustomFormControl(new FormControl(this['request-uri']), AuditEvent.propInfo['request-uri']),
-                'request-object': CustomFormControl(new FormControl(this['request-object']), AuditEvent.propInfo['request-object']),
-                'response-object': CustomFormControl(new FormControl(this['response-object']), AuditEvent.propInfo['response-object']),
-                'gateway-node': CustomFormControl(new FormControl(this['gateway-node']), AuditEvent.propInfo['gateway-node']),
-                'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditEvent.propInfo['gateway-ip']),
-                'service-name': CustomFormControl(new FormControl(this['service-name']), AuditEvent.propInfo['service-name']),
-                'data': CustomFormControl(new FormControl(this['data']), AuditEvent.propInfo['data']),
+                'kind': CustomFormControl(new FormControl(this['kind']), AuditAuditEvent.propInfo['kind']),
+                'api-version': CustomFormControl(new FormControl(this['api-version']), AuditAuditEvent.propInfo['api-version']),
+                'meta': CustomFormGroup(this['meta'].$formGroup, AuditAuditEvent.propInfo['meta'].required),
+                'stage': CustomFormControl(new FormControl(this['stage'], [enumValidator(AuditAuditEvent_stage), ]), AuditAuditEvent.propInfo['stage']),
+                'level': CustomFormControl(new FormControl(this['level'], [enumValidator(AuditAuditEvent_level), ]), AuditAuditEvent.propInfo['level']),
+                'user': CustomFormGroup(this['user'].$formGroup, AuditAuditEvent.propInfo['user'].required),
+                'client-ips': CustomFormControl(new FormControl(this['client-ips']), AuditAuditEvent.propInfo['client-ips']),
+                'resource': CustomFormGroup(this['resource'].$formGroup, AuditAuditEvent.propInfo['resource'].required),
+                'action': CustomFormControl(new FormControl(this['action']), AuditAuditEvent.propInfo['action']),
+                'outcome': CustomFormControl(new FormControl(this['outcome'], [enumValidator(AuditAuditEvent_outcome), ]), AuditAuditEvent.propInfo['outcome']),
+                'request-uri': CustomFormControl(new FormControl(this['request-uri']), AuditAuditEvent.propInfo['request-uri']),
+                'request-object': CustomFormControl(new FormControl(this['request-object']), AuditAuditEvent.propInfo['request-object']),
+                'response-object': CustomFormControl(new FormControl(this['response-object']), AuditAuditEvent.propInfo['response-object']),
+                'gateway-node': CustomFormControl(new FormControl(this['gateway-node']), AuditAuditEvent.propInfo['gateway-node']),
+                'gateway-ip': CustomFormControl(new FormControl(this['gateway-ip']), AuditAuditEvent.propInfo['gateway-ip']),
+                'service-name': CustomFormControl(new FormControl(this['service-name']), AuditAuditEvent.propInfo['service-name']),
+                'data': CustomFormControl(new FormControl(this['data']), AuditAuditEvent.propInfo['data']),
             });
             // We force recalculation of controls under a form group
             Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {

@@ -35,6 +35,7 @@ import (
 	"github.com/pensando/sw/venice/utils/testutils/serviceutils"
 	"github.com/pensando/sw/venice/utils/trace"
 
+	_ "github.com/pensando/sw/api/generated/audit"
 	. "github.com/pensando/sw/test/utils"
 )
 

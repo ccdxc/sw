@@ -4,7 +4,7 @@ import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
 import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
 
-import { IAuditEvent,AuditEvent } from '../../models/generated/audit';
+import { IAuditAuditEvent,AuditAuditEvent } from '../../models/generated/audit';
 
 @Injectable()
 export class Auditv1Service extends AbstractService {
@@ -21,15 +21,15 @@ export class Auditv1Service extends AbstractService {
   }
 
   /** Fetches an audit event given its uuid */
-  public GetGetEvent(UUID, queryParam: any = null):Observable<{body: IAuditEvent | Error, statusCode: number}> {
+  public GetGetEvent(UUID, queryParam: any = null):Observable<{body: IAuditAuditEvent | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/audit/v1/events/{UUID}';
     url = url.replace('{UUID}', UUID);
     const opts = {
       eventID: 'GetGetEvent',
-      objType: 'AuditEvent',
+      objType: 'AuditAuditEvent',
       isStaging: false,
     }
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuditEvent | Error, statusCode: number}>;
+    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IAuditAuditEvent | Error, statusCode: number}>;
   }
   
 }

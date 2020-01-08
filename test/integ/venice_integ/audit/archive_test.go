@@ -315,7 +315,7 @@ func createAuditLogs(t *testing.T, ti tInfo, count int) int {
 	for i := 0; i < count; i++ {
 		ts, _ := types.TimestampProto(time.Now())
 		ts1 := api.Timestamp{Timestamp: *ts}
-		evt := &auditapi.Event{
+		evt := &auditapi.AuditEvent{
 			TypeMeta:   api.TypeMeta{Kind: "AuditEvent"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("auditevent-%d", i), UUID: uuid.NewV4().String(), Tenant: "default", CreationTime: ts1, ModTime: ts1},
 			EventAttributes: auditapi.EventAttributes{

@@ -78,7 +78,7 @@ func fieldChangeSelectorFilterFn(selectors []string) filterFn {
 	}
 }
 
-func getFilters(opts api.ListWatchOptions, kind string) ([]filterFn, error) {
+func getFilters(opts api.ListWatchOptions, schemaType string) ([]filterFn, error) {
 	var filters []filterFn
 	if opts.ResourceVersion != "" {
 		ver, err := strconv.ParseUint(opts.ResourceVersion, 10, 64)
@@ -111,8 +111,8 @@ func getFilters(opts api.ListWatchOptions, kind string) ([]filterFn, error) {
 	if opts.FieldSelector != "" {
 		var selector *fields.Selector
 		var err error
-		if kind != "" {
-			selector, err = fields.ParseWithValidation(kind, opts.FieldSelector)
+		if schemaType != "" {
+			selector, err = fields.ParseWithValidation(schemaType, opts.FieldSelector)
 			if err != nil {
 				return nil, fmt.Errorf("invalid field selector specification(%s)", err)
 			}

@@ -338,7 +338,7 @@ func (s *loginV1GwService) audit(user *auth.User, clientIPs []string, reqURI str
 	if err == nil {
 		addrStr = addr.String()
 	}
-	event := &auditapi.Event{
+	event := &auditapi.AuditEvent{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_AuditEvent.String()},
 		ObjectMeta: api.ObjectMeta{
 			Name:   eventID,

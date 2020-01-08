@@ -52,7 +52,7 @@ func NewSynchAuditor(elasticServer string, rslver resolver.Interface, logger log
 	return auditor
 }
 
-func (a *synchAuditor) ProcessEvents(events ...*auditapi.Event) error {
+func (a *synchAuditor) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
 	defer cancel()
 	// index single audit event; it is costly to perform bulk operation for a single event (doc)
@@ -110,7 +110,7 @@ func (a *synchAuditor) Shutdown() {
 // createAuditLogsElasticTemplate helper function to create index template for audit logs.
 func (a *synchAuditor) createAuditLogsElasticTemplate() error {
 	docType := elastic.GetDocType(globals.AuditLogs)
-	mapping, err := mapper.ElasticMapper(auditapi.Event{
+	mapping, err := mapper.ElasticMapper(auditapi.AuditEvent{
 		EventAttributes: auditapi.EventAttributes{
 			// Need to make sure pointer fields are valid to
 			// generate right mappings using reflect
@@ -125,7 +125,7 @@ func (a *synchAuditor) createAuditLogsElasticTemplate() error {
 		mapper.WithIndexPatterns(fmt.Sprintf("*.%s.*", docType)),
 		mapper.WithCharFilter())
 	if err != nil {
-		a.logger.Errorf("failed to get elastic mapping for audit log object (%v), err: %v", auditapi.Event{}, err)
+		a.logger.Errorf("failed to get elastic mapping for audit log object (%v), err: %v", auditapi.AuditEvent{}, err)
 		return err
 	}
 

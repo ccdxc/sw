@@ -18,19 +18,19 @@ export enum ApiListWatchOptions_sort_order {
     'by-mod-time-reverse' = "by-mod-time-reverse",
 }
 
-export enum AuditEvent_stage {
+export enum AuditAuditEvent_stage {
     'requestauthorization' = "requestauthorization",
     'requestprocessing' = "requestprocessing",
 }
 
-export enum AuditEvent_level {
+export enum AuditAuditEvent_level {
     'basic' = "basic",
     'request' = "request",
     'response' = "response",
     'request-response' = "request-response",
 }
 
-export enum AuditEvent_outcome {
+export enum AuditAuditEvent_outcome {
     'success' = "success",
     'failure' = "failure",
 }
@@ -97,9 +97,9 @@ export class AllEnums {
     }
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
-    AuditEvent_stage = AuditEvent_stage;
-    AuditEvent_level = AuditEvent_level;
-    AuditEvent_outcome = AuditEvent_outcome;
+    AuditAuditEvent_stage = AuditAuditEvent_stage;
+    AuditAuditEvent_level = AuditAuditEvent_level;
+    AuditAuditEvent_outcome = AuditAuditEvent_outcome;
     AuditEventAttributes_stage = AuditEventAttributes_stage;
     AuditEventAttributes_level = AuditEventAttributes_level;
     AuditEventAttributes_outcome = AuditEventAttributes_outcome;

@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = apiutils.CtxKeyObjKind
 
 func request_AuditV1_GetEvent_0(ctx context.Context, marshaler runtime.Marshaler, client AuditV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &EventRequest{}
+	protoReq := &AuditEventRequest{}
 	var smetadata runtime.ServerMetadata
 
 	ver := req.Header.Get("Grpc-Metadata-Req-Version")

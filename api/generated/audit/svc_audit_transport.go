@@ -39,14 +39,14 @@ func MakeGRPCServerAuditV1(ctx context.Context, endpoints EndpointsAuditV1Server
 		Endpoints: endpoints,
 		GetEventHdlr: grpctransport.NewServer(
 			endpoints.GetEventEndpoint,
-			DecodeGrpcReqEventRequest,
-			EncodeGrpcRespEvent,
+			DecodeGrpcReqAuditEventRequest,
+			EncodeGrpcRespAuditEvent,
 			append(options, grpctransport.ServerBefore(trace.FromGRPCRequest("GetEvent", logger)))...,
 		),
 	}
 }
 
-func (s *grpcServerAuditV1) GetEvent(ctx oldcontext.Context, req *EventRequest) (*Event, error) {
+func (s *grpcServerAuditV1) GetEvent(ctx oldcontext.Context, req *AuditEventRequest) (*AuditEvent, error) {
 	_, resp, err := s.GetEventHdlr.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func decodeHTTPrespAuditV1GetEvent(_ context.Context, r *http.Response) (interfa
 	if r.StatusCode != http.StatusOK {
 		return nil, errorDecoder(r)
 	}
-	var resp Event
+	var resp AuditEvent
 	err := json.NewDecoder(r.Body).Decode(&resp)
 	return &resp, err
 }

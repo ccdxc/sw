@@ -836,7 +836,7 @@ func (a *apiGw) audit(eventID string, user *auth.User, reqObj interface{}, resOb
 	resource := ops[0].GetResource()
 	creationTime, _ := types.TimestampProto(time.Now())
 	eventUUID := uuid.NewV4().String()
-	event := &auditapi.Event{
+	event := &auditapi.AuditEvent{
 		TypeMeta: api.TypeMeta{Kind: auth.Permission_AuditEvent.String()},
 		ObjectMeta: api.ObjectMeta{
 			Name:   eventID,

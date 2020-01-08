@@ -62,7 +62,7 @@ function generateCatKind() {
             };
             catObj["AuditEvent"] = {
                 "importPath": "./audit",
-                "importName": "AuditEvent",
+                "importName": "AuditAuditEvent",
             };
         }
     });

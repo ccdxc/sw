@@ -576,6 +576,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         if ( key === 'status.DSCVersion') {
           requirement.key = 'status.DSCVersion.keyword';
         }
+       if ( key === 'status.host') {
+         requirement.key = 'status.host.keyword';
+       }
      }
      return searchSearchRequest;
   }

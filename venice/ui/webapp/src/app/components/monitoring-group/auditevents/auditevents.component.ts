@@ -11,7 +11,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SearchService } from '@app/services/generated/search.service';
 import {AuditService} from '@app/services/generated/audit.service';
 import {LRUMap} from 'lru_map';
-import {AuditEvent, IAuditEvent, AuditEvent_outcome} from '@sdk/v1/models/generated/audit';
+import {AuditAuditEvent, IAuditAuditEvent, AuditAuditEvent_outcome} from '@sdk/v1/models/generated/audit';
 import { SearchSearchRequest, SearchSearchRequest_sort_order, SearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { LazyLoadEvent } from 'primeng/primeng';
 import {Observable, Subscription, zip} from 'rxjs';
@@ -29,13 +29,13 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEvent> {
+export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, AuditAuditEvent> {
   public static AUDITEVENT: string = 'AuditEvent';
   @ViewChild(TablevieweditHTMLComponent) tableWrapper: TablevieweditHTMLComponent;
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
   @ViewChild('auditeventSearchPanel') auditeventSearchExpansionPanel: MatExpansionPanel;
 
-  dataObjects: ReadonlyArray<AuditEvent> = [];
+  dataObjects: ReadonlyArray<AuditAuditEvent> = [];
   isTabComponent = false;
   disableTableWhenRowExpanded = false;
 
@@ -54,10 +54,10 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
   startingSortOrder: number = -1;
 
   loading: boolean = false;
-  auditEventDetail: AuditEvent;
+  auditEventDetail: AuditAuditEvent;
 
   // This will be a map from meta.name to AuditEvent
-  cache = new LRUMap<String, AuditEvent>(Utility.getAuditEventCacheSize());  // cache with limit 10
+  cache = new LRUMap<String, AuditAuditEvent>(Utility.getAuditEventCacheSize());  // cache with limit 10
 
   lastUpdateTime: string = '';
 
@@ -206,14 +206,14 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
    * It will also preserve uuids in a list for getting request and response
    * @param entries
    */
-  mergeEntriesByName(entries: IAuditEvent[]): AuditEvent[] {
+  mergeEntriesByName(entries: IAuditAuditEvent[]): AuditAuditEvent[] {
       const tmpMap = {};
       entries.forEach(ele => {
         const eleCopy = Utility.getLodash().cloneDeep(ele);
         const key = ele.meta.name;
           if (tmpMap.hasOwnProperty(key)) {
-            if (tmpMap[key].outcome === AuditEvent_outcome.failure) {
-              eleCopy.outcome = AuditEvent_outcome.failure;
+            if (tmpMap[key].outcome === AuditAuditEvent_outcome.failure) {
+              eleCopy.outcome = AuditAuditEvent_outcome.failure;
             }
             tmpMap[key] = Utility.getLodash().merge(tmpMap[key], eleCopy);
             tmpMap[key]['uuids'].push(eleCopy.meta.uuid);
@@ -261,8 +261,8 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
    * @param auditEvent
    * @param event
    */
-  fetchAuditEventDetailByUUIDs(uuids: string[], auditEvent: AuditEvent, event: RowClickEvent) {
-    this.auditEventDetail = {} as AuditEvent;
+  fetchAuditEventDetailByUUIDs(uuids: string[], auditEvent: AuditAuditEvent, event: RowClickEvent) {
+    this.auditEventDetail = {} as AuditAuditEvent;
     const obs: Observable<any>[] = [];
     uuids.forEach(uuid => {
       const sub = this.auditService.GetGetEvent(uuid);
@@ -270,12 +270,12 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditEvent, AuditEv
     });
     // wait till all observable resolved
     zip(...obs).subscribe(all => {
-      this.auditEventDetail = {} as AuditEvent;
+      this.auditEventDetail = {} as AuditAuditEvent;
       all.forEach(ele => {
-        if (this.auditEventDetail.outcome === AuditEvent_outcome.failure) {
-          ele.body.outcome = AuditEvent_outcome.failure;
+        if (this.auditEventDetail.outcome === AuditAuditEvent_outcome.failure) {
+          ele.body.outcome = AuditAuditEvent_outcome.failure;
         }
-        this.auditEventDetail = Utility.getLodash().merge(this.auditEventDetail, (ele.body as AuditEvent));
+        this.auditEventDetail = Utility.getLodash().merge(this.auditEventDetail, (ele.body as AuditAuditEvent));
       });
       this.cache.set(auditEvent.meta.name, this.auditEventDetail);
       this.expandRowRequest(event.event, event.rowData);

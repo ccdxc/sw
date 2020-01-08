@@ -64,16 +64,16 @@ type EndpointsAuditV1Server struct {
 }
 
 // GetEvent is endpoint for GetEvent
-func (e EndpointsAuditV1Client) GetEvent(ctx context.Context, in *EventRequest) (*Event, error) {
+func (e EndpointsAuditV1Client) GetEvent(ctx context.Context, in *AuditEventRequest) (*AuditEvent, error) {
 	resp, err := e.GetEventEndpoint(ctx, in)
 	if err != nil {
-		return &Event{}, err
+		return &AuditEvent{}, err
 	}
-	return resp.(*Event), nil
+	return resp.(*AuditEvent), nil
 }
 
 type respAuditV1GetEvent struct {
-	V   Event
+	V   AuditEvent
 	Err error
 }
 
@@ -82,18 +82,18 @@ func (e EndpointsAuditV1Client) AutoWatchSvcAuditV1(ctx context.Context, in *api
 }
 
 // GetEvent implementation on server Endpoint
-func (e EndpointsAuditV1Server) GetEvent(ctx context.Context, in EventRequest) (Event, error) {
+func (e EndpointsAuditV1Server) GetEvent(ctx context.Context, in AuditEventRequest) (AuditEvent, error) {
 	resp, err := e.GetEventEndpoint(ctx, in)
 	if err != nil {
-		return Event{}, err
+		return AuditEvent{}, err
 	}
-	return *resp.(*Event), nil
+	return *resp.(*AuditEvent), nil
 }
 
 // MakeAuditV1GetEventEndpoint creates  GetEvent endpoints for the service
 func MakeAuditV1GetEventEndpoint(s ServiceAuditV1Server, logger log.Logger) endpoint.Endpoint {
 	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(*EventRequest)
+		req := request.(*AuditEventRequest)
 		v, err := s.GetEvent(ctx, *req)
 		return respAuditV1GetEvent{
 			V:   v,
@@ -149,7 +149,7 @@ type loggingAuditV1MiddlewareServer struct {
 	next   ServiceAuditV1Server
 }
 
-func (m loggingAuditV1MiddlewareClient) GetEvent(ctx context.Context, in *EventRequest) (resp *Event, err error) {
+func (m loggingAuditV1MiddlewareClient) GetEvent(ctx context.Context, in *AuditEventRequest) (resp *AuditEvent, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -167,7 +167,7 @@ func (m loggingAuditV1MiddlewareClient) AutoWatchSvcAuditV1(ctx context.Context,
 	return nil, errors.New("not implemented")
 }
 
-func (m loggingAuditV1MiddlewareServer) GetEvent(ctx context.Context, in EventRequest) (resp Event, err error) {
+func (m loggingAuditV1MiddlewareServer) GetEvent(ctx context.Context, in AuditEventRequest) (resp AuditEvent, err error) {
 	defer func(begin time.Time) {
 		var rslt string
 		if err == nil {
@@ -214,7 +214,7 @@ func makeURIAuditV1AutoWatchSvcAuditV1WatchOper(in *api.ListWatchOptions) string
 
 }
 
-func (r *EndpointsAuditV1RestClient) AuditV1GetEventEndpoint(ctx context.Context, in *EventRequest) (*Event, error) {
+func (r *EndpointsAuditV1RestClient) AuditV1GetEventEndpoint(ctx context.Context, in *AuditEventRequest) (*AuditEvent, error) {
 	return nil, errors.New("not allowed")
 }
 

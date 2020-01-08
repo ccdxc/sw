@@ -24,7 +24,7 @@ service AuditV1 {
     option (venice.apiVersion) = "v1";
 
     // Fetches an audit event given its uuid
-    rpc GetEvent (EventRequest) returns (Event) {
+    rpc GetEvent (AuditEventRequest) returns (AuditEvent) {
         option (google.api.http) = {
         get: "/events/{UUID}"
       };

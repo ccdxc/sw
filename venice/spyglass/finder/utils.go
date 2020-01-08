@@ -10,6 +10,8 @@ import (
 	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/labels"
+	"github.com/pensando/sw/venice/utils"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // QueryBuilder builds Elastic Bool query based on search requirements
@@ -142,4 +144,34 @@ func QueryBuilder(req *search.SearchRequest) (es.Query, error) {
 	}
 
 	return query, nil
+}
+
+// validate the given field selector against the kinds
+func validateQueryRequirements(kinds []string, fieldSel *fields.Selector) error {
+	if fieldSel != nil {
+		fs := &fields.Selector{}
+
+		// remove ".keyword" from the keys
+		for _, req := range fieldSel.Requirements {
+			key := req.Key
+			if strings.Contains(key, ".keyword") {
+				key = strings.Replace(key, ".keyword", "", -1)
+			}
+			fs.Requirements = append(fs.Requirements, &fields.Requirement{
+				Key:      key,
+				Operator: req.Operator,
+				Values:   req.Values})
+		}
+
+		for _, kind := range kinds {
+			schemaType := runtime.GetDefaultScheme().Kind2SchemaType(kind)
+			if utils.IsEmpty(schemaType) {
+				return fmt.Errorf("could not find the schema for kind[%s]", kind)
+			}
+			if err := fs.ValidateRequirements(schemaType, true); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

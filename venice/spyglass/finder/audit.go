@@ -24,7 +24,7 @@ type auditHandler struct {
 }
 
 // GetAuditEvent returns the audit event identified by given UUID
-func (a *auditHandler) GetEvent(ctx context.Context, r *audit.EventRequest) (*audit.Event, error) {
+func (a *auditHandler) GetEvent(ctx context.Context, r *audit.AuditEventRequest) (*audit.AuditEvent, error) {
 	// construct query
 	query := es.NewMatchPhraseQuery("meta.uuid", r.GetUUID())
 
@@ -48,7 +48,7 @@ func (a *auditHandler) GetEvent(ctx context.Context, r *audit.EventRequest) (*au
 		return nil, status.Errorf(codes.NotFound, "audit event not found")
 	}
 
-	res := audit.Event{}
+	res := audit.AuditEvent{}
 	if err := json.Unmarshal(*result.Hits.Hits[0].Source, &res); err != nil {
 		a.fdr.logger.Errorf("failed to unmarshal audit log from ElasticSearch result, err: %+v", err)
 		return nil, status.Errorf(codes.Internal, "could not get the audit event")
