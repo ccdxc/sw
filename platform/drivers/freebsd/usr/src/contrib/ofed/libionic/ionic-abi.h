@@ -40,13 +40,12 @@
 
 struct uionic_ctx {
 	struct ibv_get_context ibv_cmd;
-	__u32 fallback;
-	__u32 rsvd;
+	__u32 rsvd[2];
 };
 
 struct uionic_ctx_resp {
 	struct ibv_get_context_resp ibv_resp;
-	__u32 fallback;
+	__u32 rsvd2;
 	__u32 page_shift;
 
 	__u64 dbell_offset;
@@ -121,4 +120,4 @@ struct uionic_srq_resp {
 	__u64 rq_cmb_offset;
 };
 
-#endif
+#endif /* __IONIC_ABI_H__ */

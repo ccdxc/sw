@@ -61,7 +61,6 @@
 struct ionic_ctx {
 	struct verbs_context	vctx;
 
-	bool			fallback;
 	bool			lockfree;
 	int			spec;
 	uint32_t		pg_shift;

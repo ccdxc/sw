@@ -63,6 +63,133 @@
 		pthread_spin_unlock(lock);		\
 } while (0)
 
+static int ionic_query_device(struct ibv_context *ibctx,
+			      struct ibv_device_attr *dev_attr)
+{
+	struct ibv_query_device req = {};
+	uint64_t fw_ver;
+	int rc;
+
+	rc = ibv_cmd_query_device(ibctx, dev_attr, &fw_ver,
+				  &req, sizeof(req));
+	if (rc)
+		return rc;
+
+	rc = ibv_read_sysfs_file(ibctx->device->ibdev_path, "fw_ver",
+				 dev_attr->fw_ver, sizeof(dev_attr->fw_ver));
+	if (rc < 0)
+		dev_attr->fw_ver[0] = 0;
+
+	return 0;
+}
+
+static int ionic_query_port(struct ibv_context *ibctx, uint8_t port,
+			    struct ibv_port_attr *port_attr)
+{
+	struct ibv_query_port req = {};
+
+	return ibv_cmd_query_port(ibctx, port, port_attr,
+				  &req, sizeof(req));
+}
+
+static struct ibv_pd *ionic_alloc_pd(struct ibv_context *ibctx)
+{
+	struct ibv_pd *ibpd;
+	struct ibv_alloc_pd req = {};
+	struct ib_uverbs_alloc_pd_resp resp = {};
+	int rc;
+
+	ibpd = calloc(1, sizeof(*ibpd));
+	if (!ibpd) {
+		rc = errno;
+		goto err_pd;
+	}
+
+	rc = ibv_cmd_alloc_pd(ibctx, ibpd,
+			      &req, sizeof(req),
+			      &resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	return ibpd;
+
+err_cmd:
+	free(ibpd);
+err_pd:
+	errno = rc;
+	return NULL;
+}
+
+static int ionic_dealloc_pd(struct ibv_pd *ibpd)
+{
+	int rc;
+
+	rc = ibv_cmd_dealloc_pd(ibpd);
+	if (rc)
+		return rc;
+
+	free(ibpd);
+
+	return 0;
+}
+
+static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibpd,
+				   void *addr, size_t len, int access)
+{
+	struct verbs_mr *vmr;
+	struct ibv_reg_mr req = {};
+	struct ib_uverbs_reg_mr_resp resp = {};
+	int rc;
+
+	vmr = calloc(1, sizeof(*vmr));
+	if (!vmr) {
+		rc = errno;
+		goto err_mr;
+	}
+
+	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, vmr,
+			    &req, sizeof(req),
+			    &resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	return &vmr->ibv_mr;
+
+err_cmd:
+	free(vmr);
+err_mr:
+	errno = rc;
+	return NULL;
+}
+
+static int ionic_rereg_mr(struct verbs_mr *vmr, int flags, struct ibv_pd *pd,
+			  void *addr, size_t length, int access)
+{
+	struct ibv_rereg_mr cmd;
+	struct ib_uverbs_rereg_mr_resp resp;
+
+	if (flags & IBV_REREG_MR_KEEP_VALID)
+		return ENOTSUP;
+
+	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
+				(uintptr_t)addr, access, pd,
+				&cmd, sizeof(cmd),
+				&resp, sizeof(resp));
+}
+
+static int ionic_dereg_mr(struct verbs_mr *vmr)
+{
+	int rc;
+
+	rc = ibv_cmd_dereg_mr(vmr);
+	if (rc)
+		return rc;
+
+	free(vmr);
+
+	return 0;
+}
+
 static struct ibv_cq *ionic_create_cq(struct ibv_context *ibctx, int ncqe,
 				      struct ibv_comp_channel *channel,
 				      int vec)
@@ -146,6 +273,26 @@ static int ionic_destroy_cq(struct ibv_cq *ibcq)
 	free(cq);
 
 	return 0;
+}
+
+static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibpd,
+					struct ibv_srq_init_attr *attr)
+{
+	struct verbs_context *vctx =
+		container_of(ibpd->context, struct verbs_context, context);
+	struct ibv_srq_init_attr_ex ex = {
+		.srq_context = attr->srq_context,
+		.attr = attr->attr,
+		.srq_type = IBV_SRQT_BASIC,
+		.pd = ibpd,
+	};
+	struct ibv_srq *ibsrq;
+
+	ibsrq = vctx->create_srq_ex(&vctx->context, &ex);
+
+	attr->attr = ex.attr;
+
+	return ibsrq;
 }
 
 static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
@@ -2307,6 +2454,31 @@ static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 	return ionic_post_recv_common(ctx, cq, qp, wr, bad);
 }
 
+static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
+				      struct ibv_qp_init_attr *attr)
+{
+	struct verbs_context *vctx =
+		container_of(ibpd->context, struct verbs_context, context);
+	struct ibv_qp_init_attr_ex ex = {
+		.qp_context = attr->qp_context,
+		.send_cq = attr->send_cq,
+		.recv_cq = attr->recv_cq,
+		.srq = attr->srq,
+		.cap = attr->cap,
+		.qp_type = attr->qp_type,
+		.sq_sig_all = attr->sq_sig_all,
+		.comp_mask = IBV_QP_INIT_ATTR_PD,
+		.pd = ibpd,
+	};
+	struct ibv_qp *ibqp;
+
+	ibqp = vctx->create_qp_ex(&vctx->context, &ex);
+
+	attr->cap = ex.cap;
+
+	return ibqp;
+}
+
 static struct ibv_ah *ionic_create_ah(struct ibv_pd *ibpd,
 				      struct ibv_ah_attr *attr)
 {
@@ -2350,6 +2522,35 @@ static int ionic_destroy_ah(struct ibv_ah *ibah)
 	return 0;
 }
 
+static struct ibv_mw *ionic_alloc_mw(struct ibv_pd *ibpd,
+				     enum ibv_mw_type type)
+{
+	struct ibv_mw *ibmw;
+	struct ibv_alloc_mw cmd;
+	struct ib_uverbs_alloc_mw_resp resp;
+	int rc;
+
+	ibmw = calloc(1, sizeof(*ibmw));
+	if (!ibmw) {
+		rc = errno;
+		goto err_mw;
+	}
+
+	rc = ibv_cmd_alloc_mw(ibpd, type, ibmw,
+			      &cmd, sizeof(cmd),
+			      &resp, sizeof(resp));
+	if (rc)
+		goto err_cmd;
+
+	return ibmw;
+
+err_cmd:
+	free(ibmw);
+err_mw:
+	errno = rc;
+	return NULL;
+}
+
 static int ionic_bind_mw(struct ibv_qp *ibqp, struct ibv_mw *ibmw,
 			 struct ibv_mw_bind *bind)
 {
@@ -2379,18 +2580,40 @@ static int ionic_bind_mw(struct ibv_qp *ibqp, struct ibv_mw *ibmw,
 	return rc;
 }
 
+static int ionic_dealloc_mw(struct ibv_mw *ibmw)
+{
+	int rc;
+
+	rc = ibv_cmd_dealloc_mw(ibmw);
+	if (rc)
+		return rc;
+
+	free(ibmw);
+
+	return 0;
+}
+
 const struct verbs_context_ops ionic_ctx_ops = {
+	.query_device		= ionic_query_device,
+	.query_port		= ionic_query_port,
+	.alloc_pd		= ionic_alloc_pd,
+	.dealloc_pd		= ionic_dealloc_pd,
+	.reg_mr			= ionic_reg_mr,
+	.rereg_mr		= ionic_rereg_mr,
+	.dereg_mr		= ionic_dereg_mr,
 	.create_cq		= ionic_create_cq,
 	.poll_cq		= ionic_poll_cq,
 	.req_notify_cq		= ionic_req_notify_cq,
 	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
+	.create_srq		= ionic_create_srq,
 	.create_srq_ex		= ionic_create_srq_ex,
 	.get_srq_num		= ionic_get_srq_num,
 	.modify_srq		= ionic_modify_srq,
 	.query_srq		= ionic_query_srq,
 	.destroy_srq		= ionic_destroy_srq,
 	.post_srq_recv		= ionic_post_srq_recv,
+	.create_qp		= ionic_create_qp,
 	.create_qp_ex		= ionic_create_qp_ex,
 	.query_qp		= ionic_query_qp,
 	.modify_qp		= ionic_modify_qp,
@@ -2399,5 +2622,7 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.post_recv		= ionic_post_recv,
 	.create_ah		= ionic_create_ah,
 	.destroy_ah		= ionic_destroy_ah,
+	.alloc_mw		= ionic_alloc_mw,
 	.bind_mw		= ionic_bind_mw,
+	.dealloc_mw		= ionic_dealloc_mw,
 };

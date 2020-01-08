@@ -429,4 +429,4 @@ static inline int ionic_v1_use_spec_sge(int min_sge, int spec)
 	return spec;
 }
 
-#endif
+#endif /* IONIC_FW_H */

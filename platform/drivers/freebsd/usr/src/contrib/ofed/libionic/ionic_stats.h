@@ -448,4 +448,4 @@ static inline void ionic_lats_print(FILE *file, struct ionic_latencies *lats)
 
 }
 
-#endif
+#endif /* IONIC_STATS_H */

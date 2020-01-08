@@ -50,4 +50,4 @@ DECLARE_DRV_CMD(uionic_qp, IB_USER_VERBS_EX_CMD_CREATE_QP,
 DECLARE_DRV_CMD(uionic_srq, IB_USER_VERBS_CMD_CREATE_XSRQ,
 		ionic_srq_req, ionic_srq_resp);
 
-#endif
+#endif /* __IONIC_ABI_H__ */

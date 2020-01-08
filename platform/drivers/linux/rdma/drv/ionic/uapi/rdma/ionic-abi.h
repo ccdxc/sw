@@ -39,12 +39,11 @@
 #define IONIC_ABI_VERSION	2
 
 struct ionic_ctx_req {
-	__u32 fallback;
-	__u32 rsvd;
+	__u32 rsvd[2];
 };
 
 struct ionic_ctx_resp {
-	__u32 fallback;
+	__u32 rsvd2;
 	__u32 page_shift;
 
 	__aligned_u64 dbell_offset;

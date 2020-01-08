@@ -37,7 +37,6 @@
 #include "ionic_dbg.h"
 #include "ionic_stats.h"
 
-extern void ionic_set_fallback_ops(struct ibv_context *ibctx);
 extern void ionic_set_ops(struct ibv_context *ibctx);
 
 FILE *IONIC_DEBUG_FILE;
@@ -88,11 +87,6 @@ static int ionic_env_val(const char *name)
 	return ionic_env_val_def(name, 0);
 }
 
-static int ionic_env_fallback(void)
-{
-	return ionic_env_val("IONIC_FALLBACK");
-}
-
 static int ionic_env_debug(void)
 {
 	if (!(IONIC_DEBUG))
@@ -139,8 +133,6 @@ static int ionic_init_context(struct verbs_device *vdev,
 
 	ionic_debug_file_init();
 
-	req.fallback = ionic_env_fallback();
-
 	ibctx->cmd_fd = cmd_fd;
 
 	rc = ibv_cmd_get_context(ibctx, &req.ibv_cmd, sizeof(req),
@@ -148,60 +140,53 @@ static int ionic_init_context(struct verbs_device *vdev,
 	if (rc)
 		goto out;
 
-	ionic_set_fallback_ops(ibctx);
-
-	ctx->fallback = resp.fallback != 0;
 	ctx->pg_shift = resp.page_shift;
 
-	if (!ctx->fallback) {
-		version = resp.version;
-
-		if (version < IONIC_MIN_RDMA_VERSION) {
-			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
-				version);
-			fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
-				IONIC_MIN_RDMA_VERSION);
-			rc = EINVAL;
-			goto out;
-		}
-
-		if (version > IONIC_MAX_RDMA_VERSION) {
-			fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
-				version);
-			fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
-				IONIC_MAX_RDMA_VERSION);
-			rc = EINVAL;
-			goto out;
-		}
-
-		ctx->version = version;
-		ctx->opcodes = resp.qp_opcodes;
-
-		if (ctx->opcodes <= IONIC_V1_OP_BIND_MW) {
-			fprintf(stderr, "ionic: qp opcodes %d want min %d\n",
-				ctx->opcodes, IONIC_V1_OP_BIND_MW + 1);
-			rc = EINVAL;
-			goto out;
-		}
-
-		ctx->sq_qtype = resp.sq_qtype;
-		ctx->rq_qtype = resp.rq_qtype;
-		ctx->cq_qtype = resp.cq_qtype;
-
-		ctx->max_stride = resp.max_stride;
-
-		ctx->dbpage = ionic_map_device(1u << ctx->pg_shift, cmd_fd,
-					       resp.dbell_offset);
-		if (!ctx->dbpage) {
-			rc = errno;
-			goto out;
-		}
-
-		pthread_mutex_init(&ctx->mut, NULL);
-		ionic_tbl_init(&ctx->qp_tbl);
-
-		ionic_set_ops(ibctx);
+	version = resp.version;
+	if (version < IONIC_MIN_RDMA_VERSION) {
+		fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+			version);
+		fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
+			IONIC_MIN_RDMA_VERSION);
+		rc = EINVAL;
+		goto out;
 	}
+
+	if (version > IONIC_MAX_RDMA_VERSION) {
+		fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
+			version);
+		fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
+			IONIC_MAX_RDMA_VERSION);
+		rc = EINVAL;
+		goto out;
+	}
+
+	ctx->version = version;
+	ctx->opcodes = resp.qp_opcodes;
+	if (ctx->opcodes <= IONIC_V1_OP_BIND_MW) {
+		fprintf(stderr, "ionic: qp opcodes %d want min %d\n",
+			ctx->opcodes, IONIC_V1_OP_BIND_MW + 1);
+		rc = EINVAL;
+		goto out;
+	}
+
+	ctx->sq_qtype = resp.sq_qtype;
+	ctx->rq_qtype = resp.rq_qtype;
+	ctx->cq_qtype = resp.cq_qtype;
+
+	ctx->max_stride = resp.max_stride;
+
+	ctx->dbpage = ionic_map_device(1u << ctx->pg_shift, cmd_fd,
+				       resp.dbell_offset);
+	if (!ctx->dbpage) {
+		rc = errno;
+		goto out;
+	}
+
+	pthread_mutex_init(&ctx->mut, NULL);
+	ionic_tbl_init(&ctx->qp_tbl);
+
+	ionic_set_ops(ibctx);
 
 	ctx->lockfree = ionic_env_lockfree();
 

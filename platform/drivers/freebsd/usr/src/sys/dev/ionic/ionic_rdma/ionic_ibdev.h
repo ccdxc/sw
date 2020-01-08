@@ -241,9 +241,6 @@ struct ionic_aq {
 struct ionic_ctx {
 	struct ib_ucontext	ibctx;
 
-	/* fallback to kernel-impl verbs for this user context */
-	bool			fallback;
-
 	u32			dbid;
 
 	struct mutex		mmap_mut; /* for mmap_list */
@@ -436,32 +433,18 @@ static inline struct ionic_ctx *to_ionic_ctx(struct ib_ucontext *ibctx)
 
 static inline struct ionic_ctx *to_ionic_ctx_fb(struct ib_ucontext *ibctx)
 {
-	struct ionic_ctx *ctx;
-
 	if (!ibctx)
 		return NULL;
 
-	ctx = to_ionic_ctx(ibctx);
-
-	if (ctx->fallback)
-		return NULL;
-
-	return ctx;
+	return to_ionic_ctx(ibctx);
 }
 
 static inline struct ionic_ctx *to_ionic_ctx_uobj(struct ib_uobject *uobj)
 {
-	struct ionic_ctx *ctx;
-
 	if (!uobj)
 		return NULL;
 
-	ctx = to_ionic_ctx(uobj->context);
-
-	if (ctx->fallback)
-		return NULL;
-
-	return ctx;
+	return to_ionic_ctx(uobj->context);
 }
 
 static inline struct ionic_pd *to_ionic_pd(struct ib_pd *ibpd)

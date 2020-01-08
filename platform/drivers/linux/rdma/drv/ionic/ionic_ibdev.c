@@ -1474,22 +1474,12 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	}
 #endif
 
-	/* maybe force fallback to kernel space */
-	ctx->fallback = req.fallback > 1;
-	if (!ctx->fallback) {
-		/* try to allocate dbid for user ctx */
-		rc = ionic_api_get_dbid(dev->handle, &ctx->dbid, &db_phys);
-		if (rc < 0) {
-			/* maybe allow fallback to kernel space */
-			ctx->fallback = req.fallback > 0;
-			if (!ctx->fallback)
-				goto err_dbid;
-		}
-	}
-	if (ctx->fallback)
-		dev_dbg(&dev->ibdev.dev, "fallback kernel space\n");
-	else
-		dev_dbg(&dev->ibdev.dev, "user space dbid %u\n", ctx->dbid);
+	/* try to allocate dbid for user ctx */
+	rc = ionic_api_get_dbid(dev->handle, &ctx->dbid, &db_phys);
+	if (rc < 0)
+		goto err_dbid;
+
+	dev_dbg(&dev->ibdev.dev, "user space dbid %u\n", ctx->dbid);
 
 	mutex_init(&ctx->mmap_mut);
 	ctx->mmap_off = PAGE_SIZE;
@@ -1501,7 +1491,6 @@ static struct ib_ucontext *ionic_alloc_ucontext(struct ib_device *ibdev,
 	ctx->mmap_dbell.writecombine = false;
 	list_add(&ctx->mmap_dbell.ctx_ent, &ctx->mmap_list);
 
-	resp.fallback = ctx->fallback;
 	resp.page_shift = PAGE_SHIFT;
 
 	resp.dbell_offset = 0;

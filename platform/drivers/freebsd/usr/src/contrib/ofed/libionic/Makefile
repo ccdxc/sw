@@ -7,7 +7,6 @@ MK_PROFILE=	no
 
 SRCS= \
 	ionic.c \
-	ionic_fallback.c \
 	ionic_memory.c \
 	ionic_queue.c \
 	ionic_verbs.c

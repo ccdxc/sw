@@ -36,9 +36,10 @@
 #include <infiniband/verbs.h>
 
 #undef verbs_set_ctx_op
-#define verbs_set_ctx_op(_vctx, op, ptr) ({ \
-	struct verbs_context *__vctx = _vctx; \
-	if (__vctx && (__vctx->sz >= sizeof(*__vctx) - offsetof(struct verbs_context, op))) \
+#define verbs_set_ctx_op(_vctx, op, ptr) ({				\
+	struct verbs_context *__vctx = _vctx;				\
+	if (__vctx &&							\
+	    (__vctx->sz >= sizeof(*__vctx) - offsetof(struct verbs_context, op))) \
 		__vctx->op = ptr; })
 
-#endif
+#endif /* IONIC_IBVCOMPAT_H */
