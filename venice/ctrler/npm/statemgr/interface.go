@@ -4,7 +4,7 @@ package statemgr
 
 // FeatureStateMgr interface is implemented by feature specific statemgrs to register feature specific handlers to watch
 type FeatureStateMgr interface {
-	CompleteRegistration(flags uint32)
+	CompleteRegistration()
 }
 
 // Server interface is implemented by statemgr used by feature specific statemgrs to register their callbacks during init()

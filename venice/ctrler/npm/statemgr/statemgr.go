@@ -11,7 +11,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
@@ -329,7 +329,7 @@ func (sm *Statemgr) setDefaultReactors(reactor ctkit.CtrlDefReactor) {
 }
 
 // Run calls the feature statemgr callbacks and eastablishes the Watches
-func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, flags uint32, options ...Option) error {
+func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr resolver.Interface, mserver *nimbus.MbusServer, logger log.Logger, options ...Option) error {
 
 	sm.mbus = mserver
 
@@ -355,13 +355,13 @@ func (sm *Statemgr) Run(rpcServer *rpckit.RPCServer, apisrvURL string, rslvr res
 	// init the watch reactors
 	sm.setDefaultReactors(defReactor)
 
-	for name, svc := range featuremgrs {
-		logger.Info("svc", name, "complete registration")
-		svc.CompleteRegistration(flags)
-	}
-
 	// Fetch feature flags if available before proceeding.
 	featureflags.Initialize(globals.Npm, apisrvURL, rslvr)
+
+	for name, svc := range featuremgrs {
+		logger.Info("svc", name, "complete registration")
+		svc.CompleteRegistration()
+	}
 
 	// start all object watches
 	// there is a specific order we do these watches to meet dependency requirements

@@ -102,7 +102,7 @@ func NewNetctrler(serverURL, restURL, apisrvURL string, resolver resolver.Interf
 	stateMgr := statemgr.MustGetStatemgr()
 
 	// TODO: Update once featuresflag api is implemented
-	err = stateMgr.Run(rpcServer, apisrvURL, resolver, msrv, logger, 0, options...)
+	err = stateMgr.Run(rpcServer, apisrvURL, resolver, msrv, logger, options...)
 	if err != nil {
 		logger.Errorf("Could not create network manager. Err: %v", err)
 		return nil, err

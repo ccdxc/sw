@@ -3,7 +3,7 @@
 package statemgr
 
 // CompleteRegistration is the callback function statemgr calls after init is done
-func (sm *Statemgr) CompleteRegistration(flags uint32) {
+func (sm *Statemgr) CompleteRegistration() {
 	sm.SetModuleReactor(sm)
 	sm.SetTenantReactor(sm)
 	sm.SetSecurityGroupReactor(sm)

@@ -18,6 +18,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
@@ -2592,8 +2593,17 @@ func TestVirtualRouterCreateDelete(t *testing.T) {
 
 func TestIPAMPolicyCreateDelete(t *testing.T) {
 	name := "testPolicy"
+
+	// enable overlayrouting feature
+	errs := enableOverlayRouting()
+
+	if len(errs) != 0 {
+		t.Fatalf("TestRoutingConfigCreateDelete: enableOverlayRouting failed: %v", errs)
+		return
+	}
+
 	// create network state manager
-	stateMgr, err := newStatemgr1()
+	stateMgr, err := newStatemgr()
 	if err != nil {
 		t.Fatalf("Could not create network manager. Err: %v", err)
 		return
@@ -2658,8 +2668,35 @@ func TestIPAMPolicyCreateDelete(t *testing.T) {
 	}, "ipampolicy still foud", "1ms", "1s")
 }
 
+func enableOverlayRouting() []error {
+	fflags := []cluster.Feature{
+		{FeatureKey: featureflags.OverlayRouting},
+	}
+	_, errs := featureflags.Validate(fflags)
+
+	if len(errs) != 0 {
+		return errs
+	}
+
+	errs = featureflags.Update(fflags)
+
+	if len(errs) != 0 {
+		return errs
+	}
+	return nil
+}
+
 func TestRoutingConfigCreateDelete(t *testing.T) {
 	name := "testCfg"
+
+	// enable overlayrouting feature
+	errs := enableOverlayRouting()
+
+	if len(errs) != 0 {
+		t.Fatalf("TestRoutingConfigCreateDelete: enableOverlayRouting failed: %v", errs)
+		return
+	}
+
 	// create network state manager
 	stateMgr, err := newStatemgr()
 	if err != nil {
