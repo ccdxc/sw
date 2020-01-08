@@ -44,7 +44,6 @@ private:
     ips_info_t  ips_info_;
     bool op_delete_ = false;
     bool op_create_ = false;
-    void *routes_ptr_ = nullptr;
     pds_route_t route_ = {0};
     pds_route_t prev_route_ = {0};
     pds_route_table_key_t rttbl_key_ = {0};
@@ -53,7 +52,7 @@ private:
     pds_batch_ctxt_guard_t make_batch_pds_spec_(void);
     void populate_route_id(ATG_ROPI_ROUTE_ID* route_id);
     bool parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* route_add_upd);
-    pds_route_table_spec_t make_pds_rttable_spec_(void);
+    void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl);
     pds_route_table_key_t make_pds_rttable_key_(void);
 };
 

@@ -50,8 +50,7 @@ pds_route_table_key_t hals_route_t::make_pds_rttable_key_(void) {
     return (rttbl_key_);
 }
 
-pds_route_table_spec_t hals_route_t::make_pds_rttable_spec_(void) {
-    pds_route_table_spec_t rttable;
+void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable) {
     memset(&rttable, 0, sizeof(pds_route_table_spec_t));
     rttable.key = make_pds_rttable_key_();
     rttable.af = IP_AF_IPV4;
@@ -83,21 +82,12 @@ pds_route_table_spec_t hals_route_t::make_pds_rttable_spec_(void) {
         }
         // Get the current number of routes
         rttable.num_routes = rttbl_store->num_routes();
-        // Allocate memory. We need to alloc and copy the routes since we
-        // cannot pass the buffer to PDS layer asynchronously and block NBASE
-        // for any subsequent add/updates
-        rttable.routes = (pds_route_t *)
-                    calloc(rttable.num_routes, sizeof(pds_route_t));
-        if (rttable.routes == nullptr) {
-            throw Error("Could not allocate memory for route " 
-                                                + rttable.num_routes);
-        }
-        memcpy(rttable.routes, rttbl_store->routes(),
-                              (rttable.num_routes * sizeof(pds_route_t)));
-        // Cache the allocated ptr for free-ing up later
-        routes_ptr_ = (void *) rttable.routes;
+        // Get the routes pointer. PDS API will make a copy of the
+        // route table and free it up once api processing is complete
+        // after batch commit
+        rttable.routes = rttbl_store->routes();
     }
-    return rttable;
+    return;
 }
 
 pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(void) {
@@ -114,13 +104,17 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(void) {
                     .append(ippfx2str(&ips_info_.pfx)));
     }
     bctxt_guard_.set(bctxt);
-
+    
+    pds_route_table_spec_t rttbl_spec;
     // Delete is a route table update with the deleted route.
     // The route table is ONLY deleted when VRF gets deleted
-    auto rttbl_spec = make_pds_rttable_spec_();
+    make_pds_rttable_spec_(rttbl_spec);
     if (!PDS_MOCK_MODE()) {
         ret = pds_route_table_update(&rttbl_spec, bctxt);
     }
+    // Reset the route ptr to avoid free since the destructor
+    // of pds_route_table_spec_t calls free
+    rttbl_spec.routes = NULL;
     if (op_delete_) { // Delete
         if (unlikely (ret != SDK_RET_OK)) {
             throw Error(std::string("PDS Route Delete failed for pfx ")
@@ -154,23 +148,18 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
     } // End of state thread_context
       // Do Not access/modify global state after this
     
-    auto l_ptr = routes_ptr_;
     auto l_prev_route = prev_route_;
     auto l_ips_info_ = ips_info_;
     auto l_rttbl_key_ = rttbl_key_;
     auto l_op_create_ = op_create_;
     cookie_uptr_->send_ips_reply = 
-        [add_upd_route_ips, l_ips_info_, l_ptr, l_prev_route,
+        [add_upd_route_ips, l_ips_info_, l_prev_route,
          l_op_create_, l_rttbl_key_]
         (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
 
-            // Free up the allocated memory for routes
-            if (l_ptr) {
-                free(l_ptr);
-            }
             // Rollback the store incase of failure
             if (!pds_status) {
                 auto state = pds_ms::state_t::thread_context().state();
