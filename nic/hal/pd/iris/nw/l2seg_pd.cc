@@ -932,10 +932,10 @@ pd_l2seg_update_pinned_uplink (pd_func_args_t *pd_func_args)
     pd_l2seg_update_pinned_uplink_args_t *args =
         pd_func_args->pd_l2seg_update_pinned_uplink;
     l2seg_t *l2seg = args->l2seg;
-    hal_handle_t *p_hdl_id = NULL;
-    intf::IfType if_type;
-    pd_add_l2seg_uplink_args_t  up_args = {0};
-    if_t *hal_if = NULL;
+    // hal_handle_t *p_hdl_id = NULL;
+    // intf::IfType if_type;
+    // pd_add_l2seg_uplink_args_t  up_args = {0};
+    // if_t *hal_if = NULL;
 
     // Update cpu entry 
     l2seg_pd_upd_cpu_inp_prop_tbl((pd_l2seg_t *)l2seg->pd);
@@ -1439,7 +1439,6 @@ l2seg_pd_pgm_inp_prop_tbl (pd_l2seg_t *l2seg_pd, bool is_upgrade)
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata_t data          = { 0 };
-    l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
@@ -1475,12 +1474,10 @@ end:
 hal_ret_t
 l2seg_pd_upd_cpu_inp_prop_tbl (pd_l2seg_t *l2seg_pd)
 {
-    sdk_ret_t                   sdk_ret;
-    hal_ret_t                   ret           = HAL_RET_OK;
-    sdk_hash                    *inp_prop_tbl = NULL;
-    input_properties_swkey_t    key           = { 0 };
+    sdk_ret_t                     sdk_ret;
+    hal_ret_t                     ret           = HAL_RET_OK;
+    sdk_hash                      *inp_prop_tbl = NULL;
     input_properties_actiondata_t data          = { 0 };
-    l2seg_t                     *l2seg        = (l2seg_t *)l2seg_pd->l2seg;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);

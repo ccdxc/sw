@@ -3154,6 +3154,7 @@ create_l2segments(uint64_t   l2seg_id_start,
     return 0;
 }
 
+#if 0
 static uint32_t
 max_uint32 (void)
 {
@@ -3165,6 +3166,7 @@ max_uint64 (void)
 {
     return std::numeric_limits<unsigned long long>::max();
 }
+#endif
 
 int proxy_parse_args(int argc, char** argv,
         uint64_t *vrf_id,

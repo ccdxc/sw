@@ -578,7 +578,7 @@ ep_pd_program_hw(pd_ep_t *pd_ep, bool is_upgrade)
 {
     hal_ret_t           ret = HAL_RET_OK;
     ep_t                *pi_ep = (ep_t *)pd_ep->pi_ep;
-    l2seg_t             *l2seg = NULL;
+    // l2seg_t             *l2seg = NULL;
     nwsec_profile_t     *nwsec_profile;
 
     // Program IPSG Table
@@ -967,7 +967,6 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
     uint32_t                            hash_idx = INVALID_INDEXER_INDEX;
     bool                                direct_to_otcam = false;
     lif_t                               *lif = NULL;
-    uint32_t                            lif_id = 0;
     l2seg_t                             *cl_l2seg = NULL, *hp_l2seg = NULL;
 
     memset(&key, 0, sizeof(key));
