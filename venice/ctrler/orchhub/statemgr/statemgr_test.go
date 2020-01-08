@@ -63,7 +63,7 @@ func TestNetworkCreateList(t *testing.T) {
 	Assert(t, (err == nil), "network could not be created")
 
 	nw, err := sm.ctrler.Network().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all networks, found [%v] networks", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all networks")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"
@@ -140,7 +140,7 @@ func TestWorkloadCreateList(t *testing.T) {
 	Assert(t, (err == nil), "Workload could not be created")
 
 	nw, err := sm.ctrler.Workload().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all Workloads, found [%v] Workloads", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all Workloads")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"
@@ -217,7 +217,7 @@ func TestHostCreateList(t *testing.T) {
 	Assert(t, (err == nil), "Host could not be created")
 
 	nw, err := sm.ctrler.Host().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all Hosts, found [%v] Hosts", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all Hosts")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"
@@ -295,7 +295,7 @@ func TestEndpointCreateList(t *testing.T) {
 	Assert(t, (err == nil), "Endpoint could not be created")
 
 	nw, err := sm.ctrler.Endpoint().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all Endpoints, found [%v] Endpoints", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all Endpoints")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"
@@ -372,7 +372,7 @@ func TestDistributedServiceCardCreateList(t *testing.T) {
 	Assert(t, (err == nil), "DistributedServiceCard could not be created")
 
 	nw, err := sm.ctrler.DistributedServiceCard().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all DistributedServiceCards, found [%v] DistributedServiceCards", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all DistributedServiceCards")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"
@@ -440,19 +440,17 @@ func TestOrchestratorCreateList(t *testing.T) {
 	defer im.watchCancel()
 
 	err = createOrchestrator(sm, "default", "prod-beef", nil)
-	Assert(t, (err == nil), "Orchestrator could not be created")
-
-	err = createOrchestrator(sm, "default", "prod-beef", nil)
+	AssertOk(t, err, "Orchestrator could not be created")
 
 	err = createOrchestrator(sm, "default", "prod-bebe", nil)
-	Assert(t, (err == nil), "Orchestrator could not be created")
+	AssertOk(t, err, "Orchestrator could not be created")
 
 	labels := map[string]string{"color": "green"}
 	err = createOrchestrator(sm, "default", "dev-caca", labels)
-	Assert(t, (err == nil), "Orchestrator could not be created")
+	AssertOk(t, err, "Orchestrator could not be created")
 
 	nw, err := sm.ctrler.Orchestrator().List(context.Background(), &api.ListWatchOptions{})
-	Assert(t, len(nw) == 2, "did not find all Orchestrators, found [%v] Orchestrators", len(nw))
+	AssertEquals(t, 3, len(nw), "did not find all Orchestrators")
 
 	opts := api.ListWatchOptions{}
 	opts.LabelSelector = "color=green"

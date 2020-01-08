@@ -796,7 +796,15 @@ func (ct *ctrlerCtx) List(kind string, ctx context.Context, opts *api.ListWatchO
 			return nil, err
 		}
 
-		if labels.Equals(labels.Set(labelMap), meta.Labels) {
+		toAdd := true
+		for k, v := range labels.Set(labelMap) {
+			if meta.Labels[k] != v {
+				toAdd = false
+				break
+			}
+		}
+
+		if toAdd {
 			objlist = append(objlist, obj.RuntimeObject())
 		}
 	}
