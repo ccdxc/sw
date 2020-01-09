@@ -51,12 +51,6 @@ nat_err_t nat_port_block_commit(uint32_t id, uint32_t vpc_id, uint32_t addr,
 nat_err_t nat_port_block_del(uint32_t id, uint32_t vpc_id, uint32_t addr,
                              uint8_t protocol, uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
-nat_err_t nat_port_block_commit(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                                uint8_t protocol, uint16_t start_port, uint16_t end_port,
-                                nat_type_t nat_type);
-nat_err_t nat_port_block_rollback(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                                  uint8_t protocol, uint16_t start_port, uint16_t end_port,
-                                  nat_type_t nat_type);
 #else
 void nat_init(void);
 nat_err_t nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
@@ -71,12 +65,6 @@ nat_err_t nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
 nat_err_t nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
                              u8 protocol, u16 start_port, u16 end_port,
                              nat_type_t nat_type);
-nat_err_t nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
-                                u8 protocol, u16 start_port, u16 end_port,
-                                nat_type_t nat_type);
-nat_err_t nat_port_block_rollback(u32 id, u32 vpc_id, ip4_address_t addr,
-                                  u8 protocol, u16 start_port, u16 end_port,
-                                  nat_type_t nat_type);
 
 nat_err_t nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
                          u8 protocol, ip4_address_t pvt_ip, u16 pvt_port,

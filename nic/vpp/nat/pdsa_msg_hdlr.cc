@@ -87,7 +87,7 @@ pds_nat_cfg_del(const pds_cfg_msg_t *cfg_msg) {
 
 // callback function for commiting config
 static sdk::sdk_ret_t
-pds_nat_cfg_process(const pds_cfg_msg_t *cfg_msg) {
+pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret;
@@ -123,7 +123,7 @@ pds_nat_ipc_init(void) {
     pds_ipc_register_callbacks(OBJ_ID_NAT_PORT_BLOCK,
                                pds_nat_cfg_set,
                                pds_nat_cfg_del,
-                               pds_nat_cfg_process);
+                               pds_nat_cfg_act);
 }
 
 } // extern "C"

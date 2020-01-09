@@ -36,11 +36,6 @@ typedef struct nat_port_block_s {
     u32 *ref_count;
     u32 *nat_tx_hw_index;
     uword *port_bitmap;
-
-    // cache
-    ip4_address_t addr_new;
-    u16 start_port_new;
-    u16 end_port_new;
 } nat_port_block_t;
 
 typedef struct nat_vpc_config_s {
@@ -177,6 +172,7 @@ nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
     ({
         if (pb->id == id)
             // Entry already exists
+            // This can happen in rollback case
             return NAT_ERR_EXISTS;
     }));
 
@@ -250,9 +246,6 @@ nat_port_block_update(u32 id, u32 vpc_id, ip4_address_t addr,
 
     clib_spinlock_lock(&vpc->lock);
     pb->state = NAT_PB_STATE_UPDATED;
-    pb->addr_new = addr;
-    pb->start_port_new = start_port;
-    pb->end_port_new = end_port;
     clib_spinlock_unlock(&vpc->lock);
 
     return NAT_ERR_OK;
@@ -297,7 +290,7 @@ nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
     ({
-        if (pb->id == id && pb->state == NAT_PB_STATE_OK) {
+        if (pb->id == id) {
             found = 1;
             break;
         }
@@ -350,50 +343,9 @@ nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
                 nat_port_block_del_inline(vpc, pb, nat_proto, nat_type);
                 return NAT_ERR_OK;
             } else if (pb->state == NAT_PB_STATE_UPDATED) {
-                pb->addr = pb->addr_new;
-                pb->start_port = pb->start_port_new;
-                pb->end_port = pb->end_port_new;
-                pb->state = NAT_PB_STATE_OK;
-                return NAT_ERR_OK;
-            }
-        }
-    }));
-
-    return NAT_ERR_OK;
-}
-
-//
-// Rollback SNAT port block
-//
-nat_err_t
-nat_port_block_rollback(u32 id, u32 vpc_id, ip4_address_t addr,
-                        u8 protocol, u16 start_port, u16 end_port,
-                        nat_type_t nat_type)
-{
-    nat_port_block_t *pb;
-    nat_vpc_config_t *vpc;
-    nat_proto_t nat_proto;
-
-    ASSERT(vpc_id < PDS_MAX_VPC);
-    ASSERT(nat_type < NAT_TYPE_NUM);
-
-    vpc = &nat_main.vpc_config[vpc_id];
-
-    nat_proto = nat_main.proto_map[protocol];
-    if (nat_proto == NAT_PROTO_UNKNOWN) {
-        return NAT_ERR_INVALID_PROTOCOL;
-    }
-
-    pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
-    ({
-        if (pb->id == id) {
-            if (pb->state == NAT_PB_STATE_ADDED) {
-                nat_port_block_del_inline(vpc, pb, nat_proto, nat_type);
-                return NAT_ERR_OK;
-            } else if (pb->state == NAT_PB_STATE_DELETED) {
-                pb->state = NAT_PB_STATE_OK;
-                return NAT_ERR_OK;
-            } else if (pb->state == NAT_PB_STATE_UPDATED) {
+                pb->addr = addr;
+                pb->start_port = start_port;
+                pb->end_port = end_port;
                 pb->state = NAT_PB_STATE_OK;
                 return NAT_ERR_OK;
             }
