@@ -410,7 +410,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 				Tenant: "testTenant",
 			},
 			errMsgs: []string{
-				"Queries[0].GroupbyField failed validation",
+				"Queries[0].GroupbyField failed validation: Value must start",
 			},
 			errCode: 400,
 			pass:    false,
@@ -452,7 +452,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 				Tenant: "testTenant",
 			},
 			errMsgs: []string{
-				"Queries[0].GroupbyTime failed validation",
+				"failed to parse groupby-time",
 			},
 			errCode: 400,
 			pass:    false,
@@ -544,6 +544,26 @@ func TestValidateMetricsQueryList(t *testing.T) {
 			pass:    false,
 		},
 		{
+			desc: "valid query with groupby-time < 1m",
+			ql: &telemetry_query.MetricsQueryList{
+				Queries: []*telemetry_query.MetricsQuerySpec{
+					&telemetry_query.MetricsQuerySpec{
+						TypeMeta: api.TypeMeta{
+							Kind: "Node",
+						},
+						Function:    "last",
+						SortOrder:   telemetry_query.SortOrder_Ascending.String(),
+						GroupbyTime: "30s",
+					},
+				},
+				Tenant: "testTenant",
+			},
+			errMsgs: []string{"too low groupby-time"},
+			pass:    false,
+			errCode: 400,
+		},
+
+		{
 			desc: "valid query with pagination",
 			ql: &telemetry_query.MetricsQueryList{
 				Queries: []*telemetry_query.MetricsQuerySpec{
@@ -576,7 +596,7 @@ func TestValidateMetricsQueryList(t *testing.T) {
 		} else if err != nil {
 			errStatus := apierrors.FromError(err)
 			if !strings.HasPrefix(errStatus.GetMessage()[0], i.errMsgs[0]) {
-				t.Errorf("%s: Expected error message to be %v but error was %v", i.desc, i.errMsgs, errStatus.GetMessage())
+				t.Errorf("test:%s, Expected error message to be %v but error was %v", i.desc, i.errMsgs, errStatus.GetMessage())
 			}
 			if i.errCode != errStatus.GetCode() {
 				t.Errorf("%s: Expected error code to be %d but error was %v", i.desc, i.errCode, errStatus.GetCode())
@@ -817,7 +837,7 @@ func TestValidateQuerySpec(t *testing.T) {
 		if i.pass && len(err) != 0 {
 			t.Errorf("%s: Expected error to be nil but was %v", i.desc, err)
 		} else if !i.pass && len(err) == 0 {
-			t.Errorf("%s: Expected test to fail but err was nil", i.desc)
+			t.Errorf("test:%s,Expected test to fail but err was nil", i.desc)
 		} else if err != nil {
 			if !reflect.DeepEqual(i.errMsgs, err) {
 				t.Errorf("%s: Expected error message to be %v but error was %v", i.desc, i.errMsgs, err)

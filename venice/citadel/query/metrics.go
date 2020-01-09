@@ -67,6 +67,17 @@ func (q *Server) validateMetricsQuerySpec(qs *telemetry_query.MetricsQuerySpec) 
 		qs.Function = telemetry_query.TsdbFunctionType_NONE.String()
 	}
 
+	if qs.GroupbyTime != "" {
+		dur, err := time.ParseDuration(qs.GroupbyTime)
+		if err != nil {
+			errorStrings = append(errorStrings, fmt.Sprintf("failed to parse groupby-time, %v", err))
+		} else {
+			if dur < time.Minute {
+				errorStrings = append(errorStrings, fmt.Sprintf("too low groupby-time, %v", dur))
+			}
+		}
+	}
+
 	switch qs.Function {
 	case telemetry_query.TsdbFunctionType_MAX.String():
 		// Can only specify one field when using MAX
