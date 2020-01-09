@@ -489,7 +489,30 @@ func portXcvrShowResp(resp *halproto.PortGetResponse) {
 
 func portShowOneResp(resp *halproto.PortGetResponse) {
 	spec := resp.GetSpec()
-	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), resp.GetStatus().GetLinkStatus().GetNumLanes())
+	status := resp.GetStatus()
+	linkStatus := status.GetLinkStatus()
+	stats := resp.GetStats()
+	if spec == nil {
+		fmt.Printf("Error! Port spec cannot be nil\n")
+		return
+	}
+	if spec.GetKeyOrHandle() == nil {
+		fmt.Printf("Error! Port key handle cannot be nil\n")
+		return
+	}
+	if status == nil {
+		fmt.Printf("Error! Port status cannot be nil\n")
+		return
+	}
+	if linkStatus == nil {
+		fmt.Printf("Error! Port link status cannot be nil\n")
+		return
+	}
+	if stats == nil {
+		fmt.Printf("Error! Port stats cannot be nil\n")
+		return
+	}
+	macStr := fmt.Sprintf("%d/%d/%d", spec.GetMacId(), spec.GetMacCh(), linkStatus.GetNumLanes())
 	speedStr := strings.Replace(spec.GetPortSpeed().String(), "PORT_SPEED_", "", -1)
 	fecStr := strings.Replace(spec.GetFecType().String(), "PORT_FEC_TYPE_", "", -1)
 	linkSmStr := strings.Replace(resp.GetLinksmState().String(), "PORT_LINK_SM_", "", -1)
@@ -502,16 +525,16 @@ func portShowOneResp(resp *halproto.PortGetResponse) {
 	portStr := strings.ToLower(strings.Replace(spec.GetPortType().String(), "PORT_TYPE_", "", -1))
 	portStr = fmt.Sprintf("%s/%d", portStr, spec.GetKeyOrHandle().GetPortId())
 	pauseStr := strings.ToLower(strings.Replace(spec.GetPause().String(), "PORT_PAUSE_TYPE_", "", -1))
-	adminStateStr := strings.Replace(resp.GetSpec().GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
-	operStatusStr := strings.Replace(resp.GetStatus().GetLinkStatus().GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
+	adminStateStr := strings.Replace(spec.GetAdminState().String(), "PORT_ADMIN_STATE_", "", -1)
+	operStatusStr := strings.Replace(linkStatus.GetOperState().String(), "PORT_OPER_STATUS_", "", -1)
 
 	fmt.Printf("%-12s%-7s%-10s%-10s"+"%-12t%-15t"+"%-6d"+"%-6s%-8t%-8t"+"%-10d%-12s%-12s"+"%-12d%-20s%-10s\n",
 		portStr, speedStr, macStr, fecStr,
-		spec.GetAutoNegEnable(), resp.GetStatus().GetLinkStatus().GetAutoNegEnable(),
+		spec.GetAutoNegEnable(), linkStatus.GetAutoNegEnable(),
 		spec.GetMtu(),
 		pauseStr, spec.GetTxPauseEnable(), spec.GetRxPauseEnable(),
 		spec.GetDebounceTime(), adminStateStr, operStatusStr,
-		resp.GetStats().GetNumLinkDown(), linkSmStr, loopbackStr)
+		stats.GetNumLinkDown(), linkSmStr, loopbackStr)
 }
 
 func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
