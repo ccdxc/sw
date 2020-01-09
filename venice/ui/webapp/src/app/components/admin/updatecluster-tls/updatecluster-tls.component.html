@@ -3,17 +3,42 @@
     <ng-container>
       <div class="updateclustertls-container">
         <mat-icon fxFlex="nogrow" class="updateclustertls-failed-icon">error_outline</mat-icon>
-        <div fxFlex="nogrow" class="updateclustertls-failed-text">Update server certificate changes
+        <div fxFlex="nogrow" class="updateclustertls-failed-text">Updating the server certificate
+          changes
           the HTTPS certificate used by the server. This action can not be reversed!</div>
       </div>
     </ng-container>
-    <div [@slideInOut] *ngIf="certMode" fxFlex="none" fxLayout="column">
+    <div [@slideInOut] fxFlex="none" fxLayout="column">
       <ng-container table *ngTemplateOutlet="createTemplate"></ng-container>
-
     </div>
   </div>
 
   <ng-template #createTemplate>
-    <app-updateclustertls (cancelEvent)="onCertificateCancel($event)"></app-updateclustertls>
+    <div fxFlex="auto" fxLayout="column">
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start"
+           class="updateclustertlsCert-container">
+        <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
+        <div fxFlex fxLayout="row" [style.max-width]="'1300px'"
+             fxLayoutAlign="start stretch" class="updateclustertlsCert-content">
+          <div fxFlex="10px"></div>
+          <div fxFlex fxLayout="column" [formGroup]="newCert.$formGroup">
+            <div fxFlex="nogrow" fxLayout="row" class="">
+              <textarea fxFlex="100" formControlName="key" class="updateclustertlsCert-key"
+                        appErrorTooltip
+                        spellcheck="false" type="text" pInputTextarea autoResize="autoResize"
+                        placeholder="Key"></textarea>
+            </div>
+            <div class="updateclustertlsCert-divider"></div>
+            <div fxFlex="nogrow" fxLayout="row" class="">
+              <textarea fxFlex="100" formControlName="certs" class="updateclustertlsCert-certs"
+                        appErrorTooltip
+                        spellcheck="false" type="text" pInputTextarea autoResize="autoResize"
+                        placeholder="Certs"></textarea>
+            </div>
+          </div>
+          <div fxFlex="10px"></div>
+        </div>
+      </div>
+    </div>
   </ng-template>
 </app-pagebody>

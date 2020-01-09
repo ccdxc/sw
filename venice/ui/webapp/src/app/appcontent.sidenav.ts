@@ -162,6 +162,7 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'app-l-side-nav-monitoring-fwlogs'
         },
+        featureGuard: Features.fwlogs,
         roleGuard: UIRolePermissions.fwlogsquery_read,
         link: ['/monitoring', 'fwlogs']
       }

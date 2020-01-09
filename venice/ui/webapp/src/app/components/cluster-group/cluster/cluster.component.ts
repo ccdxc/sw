@@ -28,7 +28,6 @@ import { NodeConditionValues } from '@app/components/cluster-group/naples';
   styleUrls: ['./cluster.component.scss']
 })
 export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy {
-  certMode = false;
   bodyicon: any = {
     margin: {
       top: '9px',

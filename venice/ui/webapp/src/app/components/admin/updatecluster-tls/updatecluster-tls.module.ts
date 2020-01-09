@@ -1,17 +1,17 @@
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {FormsModule, ReactiveFormsModule} from '@angular/forms';
-import { UpdateclusterTLSRoutingModule } from './updatecluster-tls.route';
+import { NgModule } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 import { ClusterModule } from '@app/components/cluster-group/cluster/cluster.module';
 import { SharedModule } from '@app/components/shared/shared.module';
-import { FlexLayoutModule } from '@angular/flex-layout';
-
-import { UpdateclustertlsComponent } from './updateclustertls/updateclustertls.component';
-import { UpdateclusterTlsComponent } from './updatecluster-tls.component';
-import { PrimengModule } from '@lib/primeng.module';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { PrimengModule } from '@lib/primeng.module';
+import { UpdateclusterTlsComponent } from './updatecluster-tls.component';
+import { UpdateclusterTLSRoutingModule } from './updatecluster-tls.route';
+
 @NgModule({
-  declarations: [UpdateclusterTlsComponent, UpdateclustertlsComponent],
+  declarations: [UpdateclusterTlsComponent],
   imports: [
     CommonModule,
     UpdateclusterTLSRoutingModule,

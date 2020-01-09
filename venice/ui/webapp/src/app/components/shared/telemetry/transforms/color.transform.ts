@@ -112,6 +112,10 @@ export class ColorTransform extends MetricTransform<ColorTransformConfig> {
   transformName = TransformNames.ColorTransform;
 
   public static getColor() {
+    if (!this.globalColorUseMap) {
+      this.globalColorUseMap = {};
+    }
+
     let color = this.allColors.find( (c) => {
       if (this.globalColorUseMap[c] == null || this.globalColorUseMap[c] === 0) {
         return true;

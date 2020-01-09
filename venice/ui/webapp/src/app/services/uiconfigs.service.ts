@@ -11,6 +11,7 @@ import { Utility } from '@app/common/Utility';
 import { AuthService } from './auth.service';
 
 export enum Features {
+  fwlogs = 'fwlogs',
   help = 'help',
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
@@ -119,11 +120,17 @@ export class UIConfigsService {
       ]
     },
     'monitoring/fwlogs': {
+      requiredFeatures: [
+        Features.fwlogs,
+      ],
       requiredPerm: [
         UIRolePermissions.fwlogsquery_read,
       ],
     },
     'monitoring/fwlogs/fwlogpolicies': {
+      requiredFeatures: [
+        Features.fwlogs,
+      ],
       requiredPerm: [
         UIRolePermissions.monitoringfwlogpolicy_read,
       ],
