@@ -20,7 +20,7 @@ xdescribe('venice-ui auth-policy', () => {
 
   beforeEach(async (done) => {
     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
     appPage = new AppPage();
     authPolicyPage = new AuthPolicy();
     loginPage = new LoginPage();

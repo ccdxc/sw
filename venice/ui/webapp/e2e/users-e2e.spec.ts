@@ -55,7 +55,7 @@ describe('venice-ui RBAC management', () => {
   let originalTimeout;
   beforeEach(async (done) => {
     originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
     appPage = new AppPage();
     usersPage = new UsersPage();
     loginPage = new LoginPage();

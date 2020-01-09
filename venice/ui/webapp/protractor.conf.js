@@ -7,7 +7,7 @@ const tsConfig = require("./e2e/tsconfig.e2e.json");
 const E2E_BASE_URL = process.env['E2E_BASE_URL'] || 'https://localhost:4200/';
 const DISABLE_FOCUS_TESTS = process.env['DISABLE_FOCUS_TESTS'] || 'false';
 exports.config = {
-  allScriptsTimeout: 11000,
+  allScriptsTimeout: 22000,
   specs: [
     './e2e/**/*.spec.ts'
   ],
@@ -52,7 +52,7 @@ exports.config = {
   framework: 'jasmine',
   jasmineNodeOpts: {
     showColors: true,
-    defaultTimeoutInterval: 60000,
+    defaultTimeoutInterval: 120000,
     print: function () { }
   },
   onPrepare() {

@@ -43,7 +43,7 @@ describe('venice-ui Search', () => {
         searchPage.sendKeyStroke(protractor.Key.ENTER);
         const until = protractor.ExpectedConditions;
         // await loginPage.verifyInVenice();
-        await browser.wait(until.presenceOf(element(by.css('.searchresult'))), 5000, 'test-1 .searchresult take too long to appear in DOM');
+        await browser.wait(until.presenceOf(element(by.css('.searchresult'))), 10000, 'test-1 .searchresult take too long to appear in DOM');
          expect(browser.getCurrentUrl()).toMatch('#/searchresult');
         // Element exists.
         expect(element(by.css('.searchresult')).isPresent()).toBeTruthy();
@@ -52,7 +52,7 @@ describe('venice-ui Search', () => {
     it('should display guided-search overlay panel -2', async () => {
         await searchPage.setSearchInputString('is:Cluster');
         await searchPage.openGuideSearchPanel();
-        await browser.wait(element(by.css('.global-button-primary.guidesearch-search')).isPresent(), 5000);
+        await browser.wait(element(by.css('.global-button-primary.guidesearch-search')).isPresent(), 10000);
         const guidedSearchButton = await  element(by.css('.global-button-primary.guidesearch-search'));
         expect(guidedSearchButton.getText()).toContain('SEARCH');
         let clusterChkbox = null;
@@ -64,7 +64,7 @@ describe('venice-ui Search', () => {
                         clusterChkbox.click();
                         guidedSearchButton.click();
                         const until = protractor.ExpectedConditions;   // wait until suggestion overlay panel open
-                        await browser.wait(until.presenceOf(element(by.css('.searchresult'))), 5000, 'test-2 ' + i + ' .searchresult take too long to appear in DOM');
+                        await browser.wait(until.presenceOf(element(by.css('.searchresult'))), 10000, 'test-2 ' + i + ' .searchresult take too long to appear in DOM');
                         expect(browser.getCurrentUrl()).toMatch('#/searchresult');
                         // Element exists.
                         expect(element(by.css('.searchresult')).isPresent()).toBeTruthy();

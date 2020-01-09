@@ -40,7 +40,7 @@ describe('routing and guards', () => {
     // alertpolicies page is currently disabled so the following is commented out
     // Check nested pages -
     browser.get('/#/monitoring/alertsevents/alertpolicies');
-    browser.wait(until.urlContains('/monitoring/alertsevents/alertpolicies'), 5000);
+    browser.wait(until.urlContains('/monitoring/alertsevents/alertpolicies'), 10000);
 
     browser.refresh();
     loginPage.verifyPage();
@@ -48,8 +48,8 @@ describe('routing and guards', () => {
     // // After login we should be on alertpolicies page
     loginPage.login();
     browser.waitForAngularEnabled(false);
-    browser.wait(until.presenceOf(element(by.css('.app-shell-container'))), 5000, 'Element taking too long to appear in the DOM');
-    browser.wait(until.urlContains('/monitoring/alertsevents/alertpolicies'), 5000);
+    browser.wait(until.presenceOf(element(by.css('.app-shell-container'))), 10000, 'Element taking too long to appear in the DOM');
+    browser.wait(until.urlContains('/monitoring/alertsevents/alertpolicies'), 10000);
   });
 
   it('should not load any pages protected by route guard', async () => {
@@ -57,17 +57,17 @@ describe('routing and guards', () => {
     await browser.waitForAngularEnabled(false);
     await browser.get('/#/workload');
     await loginPage.login();
-    await browser.wait(until.urlContains('/workload'), 5000, 'url did not contain /workload');
+    await browser.wait(until.urlContains('/workload'), 10000, 'url did not contain /workload');
     // Should be redirected to dashboard
     await browser.get('/#/monitoring/alertsevents/alertpolicies');
-    // await browser.wait(until.urlContains('/cluster/cluster'), 5000, 'did not reroute to /cluster/cluster as expected');
+    // await browser.wait(until.urlContains('/cluster/cluster'), 10000, 'did not reroute to /cluster/cluster as expected');
     expect(await element(by.css('alertpolicies')).isPresent()).toBeFalsy('app-alertpolicies was present when expected to be false');
 
     // check reroute from login screen
     await appPage.logout();
     await browser.get('/#/monitoring/alertsevents/alertpolicies');
     await loginPage.login();
-    await browser.wait(until.urlContains('/alertsevents/alertpolicies'), 5000, 'did not reroute to /alertsevents/alertpolicies as expected');
+    await browser.wait(until.urlContains('/alertsevents/alertpolicies'), 10000, 'did not reroute to /alertsevents/alertpolicies as expected');
 
   });
 
