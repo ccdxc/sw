@@ -31,7 +31,7 @@ testcases:
         testcase: testcases.filters.multicast_mac_filter
         stress  : True
         disable : False
-        ignore  : False
+        ignore  : True
         args :
             timeout : 7200
 
