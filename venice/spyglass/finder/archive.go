@@ -62,6 +62,19 @@ func (j *archiveJob) Run(ctx context.Context) error {
 		j.logger.ErrorLog("method", "Run", "msg", "unable to create archive query", "error", err)
 		return err
 	}
+	if j.esClient == nil {
+		result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+			return elastic.NewAuthenticatedClient("", j.rslvr, j.logger)
+		}, elasticWaitIntvl, maxElasticRetries)
+		if err != nil {
+			j.logger.ErrorLog("method", "Run", "msg", "failed to create elastic client", "error", err)
+			j.archiveReq.Status.Status = monitoring.ArchiveRequestStatus_Failed.String()
+			j.archiveReq.Status.Reason = err.Error()
+			return err
+		}
+		j.esClient = result.(elastic.ESClient)
+		j.logger.DebugLog("method", "Run", "msg", "created Elastic client")
+	}
 	var index string
 	switch j.archiveReq.Spec.Type {
 	case monitoring.ArchiveRequestSpec_Event.String():
@@ -133,26 +146,13 @@ func NewArchiveJob(archiveReq *monitoring.ArchiveRequest, exporter archive.Expor
 
 // CreateJobCb is a callback from archive service to create archive job
 func CreateJobCb(req *monitoring.ArchiveRequest, exporter archive.Exporter, rslvr resolver.Interface, logger log.Logger) archive.Job {
-	var elasticClient elastic.ESClient
-	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return elastic.NewAuthenticatedClient("", rslvr, logger)
-	}, elasticWaitIntvl, maxElasticRetries)
-	if err != nil {
-		logger.ErrorLog("method", "CreateJobCb", "msg", "failed to create elastic client", "error", err)
-		req.Status.Status = monitoring.ArchiveRequestStatus_Failed.String()
-		req.Status.Reason = err.Error()
-		return NewArchiveJob(req, exporter, elasticClient, rslvr, logger)
-	}
-	elasticClient = result.(elastic.ESClient)
-	logger.DebugLog("method", "CreateJobCb", "msg", "created Elastic client")
-
 	if exporter == nil {
 		req.Status.Status = monitoring.ArchiveRequestStatus_Failed.String()
 		req.Status.Reason = "no exporter specified to archive"
-		return NewArchiveJob(req, exporter, elasticClient, rslvr, logger)
+		return NewArchiveJob(req, exporter, nil, rslvr, logger)
 
 	}
-	return NewArchiveJob(req, exporter, elasticClient, rslvr, logger)
+	return NewArchiveJob(req, exporter, nil, rslvr, logger)
 }
 
 func validateArchiveRequest(req *monitoring.ArchiveRequest) error {

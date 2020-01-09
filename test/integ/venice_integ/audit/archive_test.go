@@ -115,7 +115,7 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 	superAdminCtx, err := NewLoggedInContext(context.TODO(), ti.apiGwAddr, adminCred)
 	AssertOk(t, err, "error creating logged in context")
 	var waitgrp sync.WaitGroup
-	numReqs := 50
+	numReqs := 20
 	for i := 0; i < numReqs; i++ {
 		waitgrp.Add(1)
 		go func(j int) {
@@ -136,7 +136,7 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 	}
 	waitgrp.Wait()
 	var mutex sync.RWMutex
-	var failedCount, successCount int
+	var failedCount, failedDupCount, successCount, cancelCount int
 	for i := 0; i < numReqs; i++ {
 		waitgrp.Add(1)
 		go func(j int) {
@@ -158,29 +158,40 @@ func TestDuplicateArchiveRequests(t *testing.T) {
 				if err != nil {
 					return false, err
 				}
-				if fetchedReq.Status.Status == monitoring.ArchiveRequestStatus_Failed.String() && strings.Contains(fetchedReq.Status.Reason, "already running for log type") {
+				switch fetchedReq.Status.Status {
+				case monitoring.ArchiveRequestStatus_Failed.String():
 					mutex.Lock()
-					failedCount++
+					if strings.Contains(fetchedReq.Status.Reason, "already running for log type") {
+						failedDupCount++
+					} else {
+						failedCount++
+					}
 					mutex.Unlock()
 					return true, fetchedReq
-				}
-				if fetchedReq.Status.Status == monitoring.ArchiveRequestStatus_Completed.String() {
+				case monitoring.ArchiveRequestStatus_Completed.String():
 					mutex.Lock()
 					successCount++
 					mutex.Unlock()
 					return true, fetchedReq
+				case monitoring.ArchiveRequestStatus_Canceled.String():
+					mutex.Lock()
+					cancelCount++
+					mutex.Unlock()
+					return true, fetchedReq
+				default:
+					return false, fetchedReq
 				}
-				return false, fetchedReq
 			}, "1s", "30s") {
 				t.Logf("unexpected archive request status for %v", fetchedReq)
 			}
 		}(i)
 	}
 	waitgrp.Wait()
-	Assert(t, failedCount > 0, fmt.Sprintf("unexpected failed count %d", failedCount))
+	Assert(t, failedDupCount > 0, fmt.Sprintf("unexpected failed count due to duplicate requests %d", failedCount))
 	Assert(t, successCount > 0, fmt.Sprintf("unexpected success count %d", successCount))
-	Assert(t, failedCount+successCount == numReqs, fmt.Sprintf("unexpected total of failed [%d] and success [%d] count", failedCount, successCount))
-	t.Logf("failed count %d, success count %d", failedCount, successCount)
+	Assert(t, failedCount+failedDupCount+successCount+cancelCount == numReqs,
+		fmt.Sprintf("unexpected total of failed [%d], dup failed [%d], success [%d], cancel [%d] count", failedCount, failedDupCount, successCount, cancelCount))
+	t.Logf("failed %d, dup failed %d, success %d, cancel %d", failedCount, failedDupCount, successCount, cancelCount)
 	for i := 0; i < numReqs; i++ {
 		req := &monitoring.ArchiveRequest{
 			TypeMeta: api.TypeMeta{Kind: string(monitoring.KindArchiveRequest)},
