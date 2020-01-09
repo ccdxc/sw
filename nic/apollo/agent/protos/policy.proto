@@ -40,7 +40,7 @@ message SecurityRule {
   // rule match criteria
   types.RuleMatch    Match    = 2;
   // priority of this rule (lower the numeric value, higher the priority is)
-  uint32             Priority = 3 [(gogoproto.moretags) = "meta:range:0-1023"];
+  uint32             Priority = 3 [(gogoproto.moretags) = "meta:range:0-1022"];
   // action to take when this rule is matched
   SecurityRuleAction Action   = 4 [(gogoproto.moretags) = "meta:mandatory"];
 }

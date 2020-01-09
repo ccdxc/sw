@@ -131,7 +131,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : allow
                     v4pfx: '0.0.0.0\0'
                     v6pfx: '0::0\0'
@@ -141,7 +141,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '0.0.0.0'
@@ -159,7 +159,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : allow
                     srctype : tag           #Only for artemis. Coverts the prefix to tag
                     dsttype : tag
@@ -171,7 +171,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : deny
                     srctype : tag
                     dsttype : tag
@@ -183,7 +183,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : deny
                     srctype : pfxrange
                     v4srciplow : '0.0.0.0'
@@ -201,7 +201,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 0            # only ARTEMIS
+                    priority: 'MINPRIO'            # only ARTEMIS
                     action  : deny         # only ARTEMIS
                     v4pfx: '0.0.0.0\0'
                     v6pfx: '0::0\0'
@@ -211,7 +211,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: icmp
-                    priority: 0
+                    priority: 'MINPRIO'
                     action  : allow
                     v4pfx: '0.0.0.0\0'
                     v6pfx: '0::0\0'
@@ -223,7 +223,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '99.88.77.66\32'
                     v6pfx: 'e1ba:aced:a11:face:b00c::bade\128'
@@ -233,7 +233,7 @@ vpc:
                     dporthigh: 8888
 
                   - protocol: tcp                #rule with IPv6 address first 64bits different
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '99.88.77.67\32'
                     v6pfx: 'ba1e:900d:90d:b055:b00c::bade\128'
@@ -267,7 +267,7 @@ vpc:
                 direction : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '99.88.77.66'
@@ -307,7 +307,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     srctype : tag
                     dsttype : tag
@@ -337,13 +337,13 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '11.11.0.0\16'
                     v6pfx: '1e7:a11:bad:b075:d1e::0\80'
@@ -354,7 +354,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: udp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -364,7 +364,7 @@ vpc:
                     dporthigh: 25
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '30.30.0.0\16'
                     v6pfx: '1234:a11:bad:b075:d1e::0\80'
@@ -379,7 +379,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: udp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '10.10.0.0'
@@ -397,7 +397,7 @@ vpc:
                     dporthigh: 25
 
                   - protocol: tcp
-                    priority: 0122
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '30.30.0.0'
@@ -420,7 +420,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: udp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -435,7 +435,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -445,7 +445,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '11.11.0.0\16'
                     v6pfx: '1e7:a11:bad:b075:d1e::0\80'
@@ -460,7 +460,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -470,7 +470,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '10.10.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\90'
@@ -541,7 +541,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '11.0.0.0\8'
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v6pfx: '1234:5678:4321:8765:1111::\80'
                     sportlow: 10
@@ -550,7 +550,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '11.255.0.0\16'
                     v6pfx: '1234:5678:4321:8765:1111:3333::\96'
@@ -560,7 +560,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1021
+                    priority: 'MAXPRIO - 2'
                     action  : allow
                     v4pfx: '11.255.255.0\24'
                     v6pfx: '1234:5678:4321:8765:1111:3333:4444::\112'
@@ -611,7 +611,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '10.0.0.0\8'
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
                     sportlow: 10
@@ -620,7 +620,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '10.0.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -630,7 +630,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1021
+                    priority: 'MAXPRIO - 2'
                     action  : allow
                     v4pfx: '10.0.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\112'
@@ -646,7 +646,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '10.0.0.0\8'
-                    priority: 1021
+                    priority: 'MAXPRIO - 2'
                     action  : allow
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
                     sportlow: 10
@@ -655,7 +655,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '10.0.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -665,7 +665,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.0.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\112'
@@ -806,7 +806,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -816,7 +816,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '10.10.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -831,7 +831,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '99.88.1.1'
@@ -849,7 +849,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '99.88.91.1'
@@ -872,7 +872,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : allow
                     v4pfx: '1.1.1.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c:91::0\96'
@@ -882,7 +882,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '1.1.1.200'
@@ -905,7 +905,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     srctype : pfx
                     v4srcpfx: '1.1.1.0\24'
@@ -921,7 +921,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '1.1.1.200'
@@ -944,7 +944,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 1022
+                    priority: 'MAXPRIO - 1'
                     action  : allow
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -954,7 +954,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 1021
+                    priority: 'MAXPRIO - 2'
                     action  : allow
                     v4pfx: '10.10.11.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00d::0\80'
@@ -964,7 +964,7 @@ vpc:
                     dporthigh: 30
 
                   - protocol: tcp
-                    priority: 1020
+                    priority: 'MAXPRIO - 3'
                     action  : allow
                     v4pfx: '10.10.12.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00e::0\80'
@@ -1367,7 +1367,7 @@ vpc:
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -1435,7 +1435,7 @@ vpc:
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'

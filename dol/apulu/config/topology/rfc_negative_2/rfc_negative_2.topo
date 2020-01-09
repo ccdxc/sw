@@ -255,7 +255,7 @@ vpc:
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -323,7 +323,7 @@ vpc:
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 1023
+                    priority: 'MAXPRIO'
                     action  : deny
                     v4pfx: '10.10.10.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'

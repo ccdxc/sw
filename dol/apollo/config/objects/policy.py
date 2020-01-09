@@ -22,7 +22,7 @@ import types_pb2 as types_pb2
 
 class RulePriority(enum.IntEnum):
     MIN = 0
-    MAX = 1023
+    MAX = 1022
 
 class SupportedIPProtos(enum.IntEnum):
     TCP = 6
@@ -607,8 +607,17 @@ class PolicyObjectClient(base.ConfigClientBase):
                 # random priority
                 priority = random.randint(RulePriority.MIN, RulePriority.MAX)
             else:
-                # configured priority
-                priority = prio
+                if isinstance(prio, str):
+                    try:
+                        specprio = prio.replace("MAXPRIO", str(RulePriority.MAX))
+                        specprio = specprio.replace("MINPRIO", str(RulePriority.MIN))
+                        priority = int(eval(specprio))
+                    except:
+                        logger.error("Invalid policy priority in spec ", prio)
+                        priority = 0
+                else:
+                    # configured priority
+                    priority = prio
             return __get_valid_priority(priority), basePrio
 
         def __get_l3_rules_from_rule_base(af, rulespec, overlaptype):
