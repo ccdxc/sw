@@ -134,7 +134,10 @@ static int ionic_dealloc_pd(struct ibv_pd *ibpd)
 }
 
 static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibpd,
-				   void *addr, size_t len, int access)
+				   void *addr,
+				   size_t len,
+				   uint64_t hca_va,
+				   int access)
 {
 	struct verbs_mr *vmr;
 	struct ibv_reg_mr req = {};
@@ -147,7 +150,7 @@ static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibpd,
 		goto err_mr;
 	}
 
-	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, vmr,
+	rc = ibv_cmd_reg_mr(ibpd, addr, len, hca_va, access, vmr,
 			    &req, sizeof(req),
 			    &resp, sizeof(resp));
 	if (rc)
