@@ -38,17 +38,23 @@ var systemShowCmd = &cobra.Command{
 	Run:   systemShowCmdHandler,
 }
 
+var systemStatsShowCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show system statistics",
+	Long:  "show system statistics",
+}
+
 var queueStatsCmd = &cobra.Command{
-	Use:   "queue-statistics",
-	Short: "show system queue-statistics",
-	Long:  "show system queue-statistics",
+	Use:   "queue",
+	Short: "show system statistics queue",
+	Long:  "show system statistics queue",
 	Run:   systemQueueStatsCmdHandler,
 }
 
 var systemQueueCreditsShowCmd = &cobra.Command{
 	Use:   "queue-credits",
-	Short: "show system packet-buffer-stats queue-credits",
-	Long:  "show system packet-buffer-stats queue-credits",
+	Short: "show system statistics packet-buffer queue-credits",
+	Long:  "show system statistics packet-buffer queue-credits",
 	Run:   systemQueueCreditsShowCmdHandler,
 }
 
@@ -74,37 +80,37 @@ var llcDebugCmd = &cobra.Command{
 }
 
 var llcShowCmd = &cobra.Command{
-	Use:   "llc-stats",
-	Short: "show last level cache stats",
-	Long:  "show last level cache stats",
+	Use:   "llc",
+	Short: "show last level cache statistics",
+	Long:  "show last level cache statistics",
 	Run:   llcShowCmdHandler,
 }
 
 var pbShowCmd = &cobra.Command{
-	Use:   "packet-buffer-stats",
-	Short: "show packet buffer stats",
-	Long:  "show packet buffer stats",
+	Use:   "packet-buffer",
+	Short: "show packet buffer statistics",
+	Long:  "show packet buffer statistics",
 	Run:   pbShowCmdHandler,
 }
 
 var dropShowCmd = &cobra.Command{
-	Use:   "drop-stats",
-	Short: "show system drop stats",
-	Long:  "show system drop stats",
+	Use:   "drop",
+	Short: "show system drop statistics",
+	Long:  "show system drop statistics",
 	Run:   dropShowCmdHandler,
 }
 
 var pbDetailShowCmd = &cobra.Command{
 	Use:   "detail",
-	Short: "show packet buffer stats detail",
-	Long:  "show packet buffer stats detail",
+	Short: "show packet buffer statistics detail",
+	Long:  "show packet buffer statistics detail",
 	Run:   pbDetailShowCmdHandler,
 }
 
 var tableShowCmd = &cobra.Command{
-	Use:   "table-stats",
-	Short: "show system table stats",
-	Long:  "show system table stats",
+	Use:   "table",
+	Short: "show system table statistics",
+	Long:  "show system table statistics",
 	Run:   tableShowCmdHandler,
 }
 
@@ -132,14 +138,15 @@ func init() {
 	memoryDebugCmd.Flags().Bool("memory-trim", false, "Reclaim free memory from malloc")
 	memoryDebugCmd.MarkFlagRequired("memory-trim")
 
-	systemShowCmd.AddCommand(llcShowCmd)
-	systemShowCmd.AddCommand(tableShowCmd)
-	systemShowCmd.AddCommand(pbShowCmd)
+	systemShowCmd.AddCommand(systemStatsShowCmd)
+	systemStatsShowCmd.AddCommand(llcShowCmd)
+	systemStatsShowCmd.AddCommand(tableShowCmd)
+	systemStatsShowCmd.AddCommand(pbShowCmd)
 
 	pbShowCmd.AddCommand(systemQueueCreditsShowCmd)
 	pbShowCmd.AddCommand(pbDetailShowCmd)
 
-	systemShowCmd.AddCommand(dropShowCmd)
+	systemStatsShowCmd.AddCommand(dropShowCmd)
 }
 
 func dropShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -163,7 +170,7 @@ func dropShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.DeviceGet(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Getting drop stats failed. %v\n", err)
+		fmt.Printf("Getting drop statistics failed. %v\n", err)
 		return
 	}
 
@@ -184,18 +191,18 @@ func printDropStatsHeader() {
 }
 
 func printDropStats(resp *pds.DeviceGetResponse) {
-	stats := resp.GetResponse().GetStats()
-	ingress := stats.GetIngress()
-	egress := stats.GetEgress()
+	statistics := resp.GetResponse().GetStats()
+	ingress := statistics.GetIngress()
+	egress := statistics.GetEgress()
 
-	fmt.Printf("Ingress drop stats\n")
+	fmt.Printf("Ingress drop statistics\n")
 	printDropStatsHeader()
 	for _, entry := range ingress {
 		fmt.Printf("%-50s%-12d\n",
 			entry.GetName(),
 			entry.GetCount())
 	}
-	fmt.Printf("\nEgress drop stats\n")
+	fmt.Printf("\nEgress drop statistics\n")
 	printDropStatsHeader()
 	for _, entry := range egress {
 		fmt.Printf("%-50s%-12d\n",
@@ -322,7 +329,7 @@ func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB stats get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed. %v\n", err)
 		return
 	}
 
@@ -525,7 +532,7 @@ func pbShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB stats get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed. %v\n", err)
 		return
 	}
 
@@ -810,7 +817,7 @@ func tableShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.TableStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("Table stats get failed. %v\n", err)
+		fmt.Printf("Table statistics get failed. %v\n", err)
 		return
 	}
 
@@ -829,8 +836,8 @@ func tableStatsPrintHeader() {
 	fmt.Println(hdrLine)
 }
 
-func tableStatsPrintResp(stats []*pds.TableStatsResponse) {
-	for _, resp := range stats {
+func tableStatsPrintResp(statistics []*pds.TableStatsResponse) {
+	for _, resp := range statistics {
 		fmt.Printf("Table Name: %s\n", resp.GetTableName())
 		tableStatsPrintHeader()
 		for _, entry := range resp.GetApiStats().GetEntry() {
@@ -891,9 +898,9 @@ func llcGetPrintHeader() {
 }
 
 func llcGetPrintResp(resp *pds.LlcStatsGetResponse) {
-	stats := resp.GetStats()
-	count := stats.GetCount()
-	str := strings.ToLower(strings.Replace(stats.GetType().String(), "LLC_COUNTER_", "", -1))
+	statistics := resp.GetStats()
+	count := statistics.GetCount()
+	str := strings.ToLower(strings.Replace(statistics.GetType().String(), "LLC_COUNTER_", "", -1))
 	str = strings.Replace(str, "_", "-", -1)
 	for i := 0; i < 16; i++ {
 		fmt.Printf("%-10d%-20s%-10d\n",
@@ -1438,7 +1445,7 @@ func pbDetailShowCmdHandler(cmd *cobra.Command, args []string) {
 	// PDS call
 	resp, err := client.PbStatsGet(context.Background(), empty)
 	if err != nil {
-		fmt.Printf("PB stats get failed. %v\n", err)
+		fmt.Printf("PB statistics get failed. %v\n", err)
 		return
 	}
 

@@ -66,7 +66,7 @@ pds_state::destroy(pds_state *ps) {
     if (ps->pginfo_) {
         sdk::platform::utils::program_info::destroy(ps->pginfo_);
     }
-    for (uint32_t i = PDS_STATE_MIN; i < PDS_STATE_MAX; i++) {
+    for (uint32_t i = PDS_STATE_MIN + 1; i < PDS_STATE_MAX; i++) {
         if (ps->state_[i]) {
             delete ps->state_[i];
         }
@@ -75,8 +75,22 @@ pds_state::destroy(pds_state *ps) {
 
 sdk_ret_t
 pds_state::slab_walk(state_walk_cb_t walk_cb, void *ctxt) {
-    for (uint32_t i = PDS_STATE_MIN; i < PDS_STATE_MAX; i ++) {
+    for (uint32_t i = PDS_STATE_MIN + 1; i < PDS_STATE_MAX; i ++) {
         state_[i]->slab_walk(walk_cb, ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+pds_state::state_walk(state_walk_cb_t walk_cb, void *ctxt) {
+    state_walk_ctxt_t walk_ctxt;
+
+    for (uint32_t i = PDS_STATE_MIN + 1; i < PDS_STATE_MAX; i ++) {
+        if (state_[i]) {
+            walk_ctxt.obj_state.assign(PDS_STATE_str(pds_state_t(i)));
+            walk_ctxt.state = state_[i];
+            walk_cb(&walk_ctxt, ctxt);
+        }
     }
     return SDK_RET_OK;
 }

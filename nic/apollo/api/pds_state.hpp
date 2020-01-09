@@ -40,30 +40,39 @@ using std::string;
 namespace api {
 
 /// \brief s/w state/db types
-enum {
-    PDS_STATE_MIN,
-    PDS_STATE_DEVICE = PDS_STATE_MIN,
-    PDS_STATE_LIF,
-    PDS_STATE_IF,
-    PDS_STATE_TEP,
-    PDS_STATE_VPC,
-    PDS_STATE_SUBNET,
-    PDS_STATE_VNIC,
-    PDS_STATE_MAPPING,
-    PDS_STATE_ROUTE_TABLE,
-    PDS_STATE_POLICY,
-    PDS_STATE_MIRROR,
-    PDS_STATE_METER,
-    PDS_STATE_TAG,
-    PDS_STATE_SVC_MAPPING,
-    PDS_STATE_VPC_PEER,
-    PDS_STATE_NEXTHOP,
-    PDS_STATE_NEXTHOP_GROUP,
-    PDS_STATE_POLICER,
-    PDS_STATE_NAT,
-    PDS_STATE_DHCP,
-    PDS_STATE_MAX,
-};
+#define PDS_STATE(ENTRY)                                            \
+    ENTRY(PDS_STATE_MIN,            0,             "min")           \
+    ENTRY(PDS_STATE_DEVICE,         1,             "device")        \
+    ENTRY(PDS_STATE_LIF,            2,             "lif")           \
+    ENTRY(PDS_STATE_IF,             3,             "if")            \
+    ENTRY(PDS_STATE_TEP,            4,             "tep")           \
+    ENTRY(PDS_STATE_VPC,            5,             "vpc")           \
+    ENTRY(PDS_STATE_SUBNET,         6,             "subnet")        \
+    ENTRY(PDS_STATE_VNIC,           7,             "vnic")          \
+    ENTRY(PDS_STATE_MAPPING,        8,             "mapping")       \
+    ENTRY(PDS_STATE_ROUTE_TABLE,    9,             "route-table")   \
+    ENTRY(PDS_STATE_POLICY,         10,            "policy")        \
+    ENTRY(PDS_STATE_MIRROR,         11,            "mirror")        \
+    ENTRY(PDS_STATE_METER,          12,            "meter")         \
+    ENTRY(PDS_STATE_TAG,            13,            "tag")           \
+    ENTRY(PDS_STATE_SVC_MAPPING,    14,            "svc-mapping")   \
+    ENTRY(PDS_STATE_VPC_PEER,       15,            "vpc-peer")      \
+    ENTRY(PDS_STATE_NEXTHOP,        16,            "nexthop")       \
+    ENTRY(PDS_STATE_NEXTHOP_GROUP,  17,            "nexthop-group") \
+    ENTRY(PDS_STATE_POLICER,        18,            "policer")       \
+    ENTRY(PDS_STATE_NAT,            19,            "nat")           \
+    ENTRY(PDS_STATE_DHCP,           20,            "dhcp")          \
+    ENTRY(PDS_STATE_MAX,            21,            "max")
+
+SDK_DEFINE_ENUM(pds_state_t, PDS_STATE)
+SDK_DEFINE_ENUM_TO_STR(pds_state_t, PDS_STATE)
+#undef PDS_STATE
+
+/// \brief ctxt passed as argument to state_walk cb
+typedef struct state_walk_ctxt_s {
+    std::string obj_state;
+    state_base  *state;
+} state_walk_ctxt_t;
 
 /**
  * @defgroup PDS_STATE - Internal state
@@ -106,6 +115,7 @@ public:
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
     platform_type_t platform_type(void) const { return platform_type_; }
     sdk_ret_t slab_walk(state_walk_cb_t walk_cb, void *ctxt);
+    sdk_ret_t state_walk(state_walk_cb_t walk_cb, void *ctxt);
     void set_scale_profile(pds_scale_profile_t profile) {
         scale_profile_ = profile;
     }

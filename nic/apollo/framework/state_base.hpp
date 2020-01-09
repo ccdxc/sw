@@ -49,7 +49,9 @@ typedef struct state_counters_s {
 class state_base : public obj_base {
 public:
     /// \brief constructor
-    state_base() {};
+    state_base() {
+        memset(&counters_, 0, sizeof(state_counters_t));
+    };
 
     /// \brief destructor
     ~state_base(){};

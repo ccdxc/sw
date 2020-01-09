@@ -93,6 +93,34 @@ clear_interrupts (int fd)
     return SDK_RET_OK;
 }
 
+bool
+state_base_counters_dump (void *obj, void *ctxt)
+{
+    api::state_walk_ctxt_t *walk_ctxt = (api::state_walk_ctxt_t *)obj;
+    api::state_base *state = (api::state_base *)walk_ctxt->state;
+    auto ctrs = state->counters();
+    int fd = *(int *)ctxt;
+
+    dprintf(fd, "%-25s%-10u%-10u%-10u%-10u%-10u%-10u%-10u\n",
+            walk_ctxt->obj_state.c_str(),
+            ctrs.num_elems, ctrs.insert_ok, ctrs.insert_err,
+            ctrs.remove_ok, ctrs.remove_err,
+            ctrs.update_ok, ctrs.update_err);
+    return false;
+}
+
+sdk_ret_t
+dump_state_base_stats (int fd)
+{
+    dprintf(fd, "%s\n", std::string(95, '-').c_str());
+    dprintf(fd, "%-25s%-10s%-10s%-10s%-10s%-10s%-10s%-10s\n",
+            "Store", "NumElem", "InsertOK", "InsertErr",
+            "RemoveOK", "RemoveErr", "UpdateOK", "UpdateErr");
+    dprintf(fd, "%s\n", std::string(95, '-').c_str());
+    api::g_pds_state.state_walk(state_base_counters_dump, (void *)&fd);
+    return SDK_RET_OK;
+}
+
 /**
  * @brief       Handles command based on ctxt
  * @param[in]   ctxt  Context for CLI handler
@@ -112,6 +140,9 @@ pds_handle_cmd (cmd_ctxt_t *ctxt)
         break;
     case CLI_CMD_API_ENGINE_STATS_DUMP:
         api::api_engine_get()->dump_api_counters(ctxt->fd);
+        break;
+    case CLI_CMD_STORE_STATS_DUMP:
+        dump_state_base_stats(ctxt->fd);
         break;
     default:
         return SDK_RET_INVALID_ARG;
