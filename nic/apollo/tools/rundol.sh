@@ -70,12 +70,11 @@ function setup () {
 }
 setup
 
-if [ $PIPELINE == 'apollo' ];then
-    $NICDIR/apollo/tools/start-agent-sim.sh > agent.log 2>&1 &
-else
+if [ $PIPELINE == 'artemis' ];then
     export AGENT_TEST_HOOKS_LIB='libdolagenthooks.so'
-    $NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
 fi
+
+$NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
 $NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
 
 export CONFIG_PATH=$NICDIR/conf

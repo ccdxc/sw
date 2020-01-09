@@ -2,7 +2,7 @@
 
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
-NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../`
+NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../..`
 #GDB='gdb --args'
 export CONFIG_PATH=$NIC_DIR/conf/
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
