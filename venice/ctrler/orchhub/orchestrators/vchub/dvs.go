@@ -17,7 +17,9 @@ type PenDVS struct {
 	DcName  string
 	DvsName string
 	// Map from PG display name to PenPG
-	Pgs     map[string]*PenPG
+	Pgs map[string]*PenPG
+	// Map from PG ID to PenPG
+	pgIDMap map[string]*PenPG
 	UsegMgr useg.Inf
 	probe   vcprobe.ProbeInf
 }
@@ -56,6 +58,7 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 		DvsName: dvsName,
 		UsegMgr: useg,
 		Pgs:     map[string]*PenPG{},
+		pgIDMap: map[string]*PenPG{},
 	}
 
 	d.DvsMap[dvsName] = penDVS
@@ -77,98 +80,47 @@ func (d *PenDC) getPenDVS(dvsName string) *PenDVS {
 	return dvs
 }
 
-// Commenting out for now as this function isn't called by anyone
-// RemovePenDVS removes PenDVS from the DC
-// func (d *PenDC) RemovePenDVS(dvsName string) error {
-
-// 	d.Lock()
-// 	defer d.Unlock()
-
-// 	if _, ok := d.DvsMap[dvsName]; ok {
-
-// 		err := d.probe.RemovePenDVS(d.Name, dvsName)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		delete(d.DvsMap, dvsName)
-// 	} else {
-// 		err := fmt.Errorf("Received remove dvs call for DVS we don't have state for: %s", dvsName)
-// 		d.Log.Errorf("%s", err)
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
-/*
-// TODO: Need to re-enable it.
-// This test works fine with real VC. However, in vcsim environment,
-// after adding portgroups to DVS, pg.PortKeys[i] (pg is mo.DistributedVirtualPortgroup)
-// is not initialized properly. I already filed a ticket to VMware for future assistant.
-// Since this is unit testing and can't expect my real VC stand up forever,
-// we temporarily skip it. Once we hear from VMware or we figure out why this happens
-// by ourselves, we can unlock it.
-
-// UpdatePorts updates port(s) on a given DVS based on the input mapping(portsSetting)
-func (d *PenDVS) UpdatePorts(portsSetting *PenDVSPortSettings) ([]types.DistributedVirtualPort, error) {
-	numPorts := len(*portsSetting)
-
-	portKeys := make([]string, numPorts)
-	portSpecs := make([]types.DVPortConfigSpec, numPorts)
-
-	for k := range *portsSetting {
-		portKeys = append(portKeys, k)
-	}
-
-	criteria := types.DistributedVirtualSwitchPortCriteria{
-		PortKey: portKeys,
-	}
-
-	d.DvsMutex.Lock()
-	defer d.DvsMutex.Unlock()
-
-	ports, err := d.ObjDvs.FetchDVPorts(d.ctx, &criteria)
-	if err != nil {
-		d.log.Errorf("Can't find ports, err: %s", err)
-		return nil, err
-	}
-
-	for i := 0; i < numPorts; i++ {
-		portSpecs[i].ConfigVersion = ports[i].Config.ConfigVersion
-		portSpecs[i].Key = ports[i].Key
-		portSpecs[i].Operation = string("edit")
-		portSpecs[i].Scope = ports[i].Config.Scope
-		portSpecs[i].Setting = (*portsSetting)[ports[i].Key]
-	}
-
-	task, err := d.ObjDvs.ReconfigureDVPort(d.ctx, portSpecs)
-	if err != nil {
-		d.log.Errorf("Failed at reconfig DVS ports, err: %s", err)
-		return ports, err
-	}
-
-	_, err = task.WaitForResult(d.ctx, nil)
-	if err != nil {
-		d.log.Errorf("Failed at modifying DVS ports, err: %s", err)
-		return ports, err
-	}
-
-	return ports, nil
+// GetPortSettings returns the port settings of the dvs
+func (d *PenDVS) GetPortSettings() ([]types.DistributedVirtualPort, error) {
+	return d.probe.GetPenDVSPorts(d.DcName, d.DvsName, &types.DistributedVirtualSwitchPortCriteria{})
 }
-*/
 
-// getMoDVSRef converts object.DistributedVirtualSwitch to mo.DistributedVirtualSwitch
-// func (d *PenDVS) getMoDVSRef() (*mo.DistributedVirtualSwitch, error) {
-// 	d.DvsMutex.Lock()
-// 	defer d.DvsMutex.Unlock()
+// SetVlanOverride overrides the port settings with the given vlan
+func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
+	ports := vcprobe.PenDVSPortSettings{
+		port: &types.VmwareDistributedVirtualSwitchVlanIdSpec{
+			VlanId: int32(vlan),
+		},
+	}
+	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, ports)
+	if err != nil {
+		d.Log.Errorf("Failed to set vlan override for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
+		return err
+	}
+	return nil
+}
 
-// 	var dvs mo.DistributedVirtualSwitch
-// 	err := d.ObjDvs.Properties(d.ctx, d.ObjDvs.Reference(), nil, &dvs)
-// 	if err != nil {
-// 		d.log.Errorf("Failed at getting DVS properties, err: %s", err)
-// 		return nil, err
-// 	}
-
-// 	return &dvs, nil
-// }
+// SetPvlanForPorts undoes the vlan override and restores the given ports with the pvlan of the given pg
+// Input is a map from pg name to ports to set
+func (d *PenDVS) SetPvlanForPorts(pgMap map[string][]string) error {
+	portSetting := vcprobe.PenDVSPortSettings{}
+	for pg, ports := range pgMap {
+		_, vlan2, err := d.UsegMgr.GetVlansForPG(pg)
+		if err != nil {
+			// Don't have assignments for this PG.
+			d.Log.Infof("PG %s had no vlans, err %s", pg, err)
+			continue
+		}
+		for _, p := range ports {
+			portSetting[p] = &types.VmwareDistributedVirtualSwitchPvlanSpec{
+				PvlanId: int32(vlan2),
+			}
+		}
+	}
+	err := d.probe.UpdateDVSPortsVlan(d.DcName, d.DvsName, portSetting)
+	if err != nil {
+		d.Log.Errorf("Failed to set pvlans back for DC %s - dvs %s, err %s", d.DcName, d.DvsName, err)
+		return err
+	}
+	return nil
+}

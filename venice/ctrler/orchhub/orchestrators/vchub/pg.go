@@ -15,6 +15,7 @@ type PenPG struct {
 	*defs.State
 	probe       vcprobe.ProbeInf
 	PgName      string
+	PgID        string
 	NetworkMeta api.ObjectMeta
 	PgMutex     sync.Mutex
 }
@@ -31,6 +32,7 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 			}
 		}
 	}
+	d.Log.Debugf("Adding PG %s with pvlan of %d and %d", pgName, primaryVlan, secondaryVlan)
 	return d.AddPenPGWithVlan(pgName, networkMeta, primaryVlan, secondaryVlan)
 }
 
@@ -73,14 +75,21 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		return err
 	}
 
+	pg, err := d.probe.GetPenPG(d.DcName, pgName)
+	if err != nil {
+		return err
+	}
+
 	penPG := &PenPG{
 		State:       d.State,
 		probe:       d.probe,
 		PgName:      pgName,
+		PgID:        pg.Reference().Value,
 		NetworkMeta: networkMeta,
 	}
 
 	d.Pgs[pgName] = penPG
+	d.pgIDMap[pg.Reference().Value] = penPG
 
 	return nil
 }
@@ -100,6 +109,17 @@ func (d *PenDVS) getPenPG(pgName string) *PenPG {
 	return pg
 }
 
+// GetPenPGByID fetches the pen PG object by ID
+func (d *PenDVS) GetPenPGByID(pgID string) *PenPG {
+	d.Lock()
+	defer d.Unlock()
+	pg, ok := d.pgIDMap[pgID]
+	if !ok {
+		return nil
+	}
+	return pg
+}
+
 // RemovePenPG removes the pg from the dvs
 func (d *PenDVS) RemovePenPG(pgName string) error {
 	d.Lock()
@@ -110,8 +130,15 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 		return err
 	}
 
-	if _, ok := d.Pgs[pgName]; ok {
+	if penPG, ok := d.Pgs[pgName]; ok {
+		id := penPG.PgID
 		delete(d.Pgs, pgName)
+
+		if _, ok := d.pgIDMap[id]; ok {
+			delete(d.pgIDMap, id)
+		} else {
+			d.Log.Errorf("Removed entry in PG map that wasn't in pgIDMap, pgName %s", pgName)
+		}
 	}
 	return nil
 

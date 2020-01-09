@@ -40,6 +40,7 @@ type ProbeInf interface {
 	ListDC() []mo.Datacenter
 	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
 	ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup
+	ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 
 	// port_group.go functions
 	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error
@@ -49,6 +50,8 @@ type ProbeInf interface {
 	// distributed_vswitch.go functions
 	AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error
 	GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error)
+	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error
+	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error)
 }
 
 // NewVCProbe returns a new probe
@@ -91,7 +94,6 @@ func (v *VCProbe) run() {
 
 	// Context must have been cancelled
 	v.waitForExit()
-
 }
 
 // WaitForExit stops the sessions
@@ -184,17 +186,25 @@ func (v *VCProbe) StartWatchers() {
 				func(update types.ObjectUpdate, kind defs.VCObject) {
 					// Sending dc event
 					v.sendVCEvent(update, kind)
+					var dcName string
+					for _, prop := range update.ChangeSet {
+						dcName = prop.Val.(string)
+					}
+					if v.ForceDCname != "" && dcName != v.ForceDCname {
+						v.Log.Infof("Skipping DC event for DC %s", dcName)
+						return
+					}
 
 					// Starting watches on objects inside the given DC
-					go tryForever(func() {
+					tryForever(func() {
 						v.Log.Debugf("Host watch Started")
-						v.startWatch(defs.HostSystem, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value), &update.Obj)
+						v.startWatch(defs.HostSystem, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
 					})
 
-					go tryForever(func() {
+					tryForever(func() {
 						v.Log.Debugf("VM watch Started")
 						vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
-						v.startWatch(defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(update.Obj.Value), &update.Obj)
+						v.startWatch(defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
 					})
 				}, nil)
 		})
@@ -280,27 +290,30 @@ func (v *VCProbe) sendVCEvent(update types.ObjectUpdate, kind defs.VCObject) {
 			VcObject:   kind,
 			Key:        key,
 			Changes:    update.ChangeSet,
+			UpdateType: update.Kind,
 			Originator: v.VcID,
 		},
 	}
-	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, kind)
+	v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: %+v", key, kind, update.ChangeSet)
 	v.outbox <- m
 }
 
-func (v *VCProbe) vcEventHandlerForDC(dc string) func(update types.ObjectUpdate, kind defs.VCObject) {
+func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update types.ObjectUpdate, kind defs.VCObject) {
 	return func(update types.ObjectUpdate, kind defs.VCObject) {
 		key := update.Obj.Value
 		m := defs.Probe2StoreMsg{
 			MsgType: defs.VCEvent,
 			Val: defs.VCEventMsg{
 				VcObject:   kind,
-				DC:         dc,
+				DcID:       dcID,
+				DcName:     dcName,
 				Key:        key,
 				Changes:    update.ChangeSet,
+				UpdateType: update.Kind,
 				Originator: v.VcID,
 			},
 		}
-		v.Log.Debugf("Sending message to store, key: %s, obj: %s, props: ", key, kind)
+		v.Log.Debugf("Sending message to store, key: %s, obj: %s, update: %+v", key, kind, update)
 		v.outbox <- m
 	}
 }
@@ -366,13 +379,21 @@ func (v *VCProbe) ListDC() []mo.Datacenter {
 // ListDVS returns a list of DVS objects
 func (v *VCProbe) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
 	var dcs []mo.VmwareDistributedVirtualSwitch
-	v.ListObj(defs.VmwareDistributedVirtualSwitch, []string{"name"}, &dcs, dcRef)
+	// any properties changed here need to be changed in probe's mock.go
+	v.ListObj(defs.VmwareDistributedVirtualSwitch, []string{"name", "config"}, &dcs, dcRef)
 	return dcs
 }
 
 // ListPG returns a list of PGs
 func (v *VCProbe) ListPG(dcRef *types.ManagedObjectReference) []mo.DistributedVirtualPortgroup {
 	var dcs []mo.DistributedVirtualPortgroup
-	v.ListObj(defs.DistributedVirtualPortgroup, []string{"config", "name"}, &dcs, dcRef)
+	v.ListObj(defs.DistributedVirtualPortgroup, []string{"config", "name", "tag"}, &dcs, dcRef)
 	return dcs
+}
+
+// ListHosts returns a list of Hosts
+func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
+	var hosts []mo.HostSystem
+	v.ListObj(defs.HostSystem, []string{"config", "name"}, &hosts, dcRef)
+	return hosts
 }

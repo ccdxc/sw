@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
@@ -61,7 +62,7 @@ func TestListAndWatch(t *testing.T) {
 	AssertOk(t, err, "failed dc create")
 	_, err = dc.AddHost("host1")
 	AssertOk(t, err, "failed host create")
-	_, err = dc.AddVM("vm1", "host1")
+	_, err = dc.AddVM("vm1", "host1", []sim.VNIC{})
 	AssertOk(t, err, "failed vm create")
 
 	sm, _, err := smmock.NewMockStateManager()
@@ -142,6 +143,10 @@ func TestListAndWatch(t *testing.T) {
 		}
 	}
 
+	// Test host list
+	hosts := vcp.ListHosts(nil)
+	AssertEquals(t, 1, len(hosts), "List Host response length did not match exp")
+
 	// Create DVS for listing
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(testParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(testParams, pvlanConfigSpecArray)
@@ -166,6 +171,19 @@ func TestListAndWatch(t *testing.T) {
 		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
 		AssertOk(t, err, "Failed to add new PG")
 	}
+
+	ports := PenDVSPortSettings{
+		"1": &types.VmwareDistributedVirtualSwitchVlanIdSpec{
+			VlanId: int32(10),
+		},
+	}
+	// Call will fail, added to increase coverage
+	err = vcp.UpdateDVSPortsVlan(testParams.TestDCName, testParams.TestDVSName, ports)
+	// Don't check err since it is
+	// ServerFaultCode: DistributedVirtualSwitch:dvs-28 does not implement: ReconfigureDVPort_Task
+
+	_, err = vcp.GetPenDVSPorts(testParams.TestDCName, testParams.TestDVSName, &types.DistributedVirtualSwitchPortCriteria{})
+	AssertOk(t, err, "Failed to get DVS Ports")
 
 	// List PGs
 

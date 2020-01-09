@@ -134,13 +134,16 @@ func (v *VlanMgr) SetVlanOwner(owner string, vlan int) error {
 	if assignment, ok := v.ownerMap[owner]; ok {
 		if vlan == assignment {
 			// owner already has the given vlan
+			v.Unlock()
 			return nil
 		}
+		v.Unlock()
 		return fmt.Errorf("owner %s is already assigned to vlan %d", owner, assignment)
 	}
 	index := vlan - v.StartingVlan
 	err := v.assignVlan(owner, vlan, index)
 	if err != nil {
+		v.Unlock()
 		return err
 	}
 

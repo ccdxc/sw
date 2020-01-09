@@ -130,7 +130,7 @@ func (u *Allocator) GetVlanForVnic(vnicKey string, host string) (int, error) {
 	defer u.hostLock.Unlock()
 	vlanMgr, ok := u.hostMgrs[host]
 	if !ok {
-		return -1, nil
+		return -1, fmt.Errorf("No assignment was found for vnic %s, host %s", vnicKey, host)
 	}
 
 	return vlanMgr.GetVlan(vnicKey)

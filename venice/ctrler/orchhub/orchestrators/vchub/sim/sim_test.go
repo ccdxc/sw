@@ -32,7 +32,12 @@ func TestList(t *testing.T) {
 	AssertOk(t, err, "failed to create host1")
 	err = host.AddNic("testNIC", "aaaa:bbbb:cccc")
 	AssertOk(t, err, "failed to add nic")
-	_, err = dc.AddVM("testVM", "host1")
+	vnicMac := "aaaa.bbbb.cccc"
+	_, err = dc.AddVM("testVM", "host1", []VNIC{
+		VNIC{
+			MacAddress: vnicMac,
+		},
+	})
 	AssertOk(t, err, "failed to create vm")
 
 	var dvsCreateSpec types.DVSCreateSpec
@@ -116,11 +121,18 @@ func TestList(t *testing.T) {
 
 	// Check VMs
 	var vms []mo.VirtualMachine
-	getKind(t, c, "VirtualMachine", []string{"name"}, &vms)
-	AssertEquals(t, 1, len(vms), "Recieved incorrect amount of dcs")
+	getKind(t, c, "VirtualMachine", []string{"name", "config"}, &vms)
+	AssertEquals(t, 1, len(vms), "Recieved incorrect amount of vms")
 	AssertEquals(t, "testVM", vms[0].Name, "VM had incorrect name")
+	for _, d := range vms[0].Config.Hardware.Device {
+		device, ok := d.(types.BaseVirtualEthernetCard)
+		if !ok {
+			continue
+		}
+		AssertEquals(t, device.GetVirtualEthernetCard().MacAddress, vnicMac, "vnic mac was not equal")
+	}
 
-	// Check DVSs, TODO: Now we just create one DVS and check the first one, need to cover multi DVSs cases
+	// Check DVSs
 	var dvss []mo.DistributedVirtualSwitch
 	getKind(t, c, "DistributedVirtualSwitch", []string{"name", "summary"}, &dvss)
 	AssertEquals(t, "dvs1", dvss[0].Name, "DVS had incorrect name")

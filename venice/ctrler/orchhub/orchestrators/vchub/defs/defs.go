@@ -2,6 +2,7 @@ package defs
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"sync"
 
@@ -12,11 +13,14 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// DefaultDVSName is the name DVS objects created by venice will be given
-const DefaultDVSName = "Pen-DVS"
+// DefaultPrefix is the naming prefix for objects we create in vcenter
+const DefaultPrefix = "#Pen-"
 
 // DefaultPGPrefix is the prefix given to PG objects created by Venice
-const DefaultPGPrefix = "Pen-"
+var DefaultPGPrefix = fmt.Sprintf("%sPG-", DefaultPrefix)
+
+// DefaultDVSPrefix is the prefix given to DVS objects created by Venice
+var DefaultDVSPrefix = fmt.Sprintf("%sDVS-", DefaultPrefix)
 
 const (
 	// VCEvent indicates a vc event
@@ -89,7 +93,9 @@ type VCEventMsg struct {
 	VcObject   VCObject
 	Key        string // vSphere key for the object
 	Changes    []types.PropertyChange
-	DC         string
+	UpdateType types.ObjectUpdateKind
+	DcID       string
+	DcName     string
 	Originator string // Identifier for the VC that originated the update
 }
 
@@ -115,4 +121,7 @@ type State struct {
 	StateMgr   *statemgr.Statemgr
 	OrchConfig *orchestration.Orchestrator
 	Wg         *sync.WaitGroup
+	// If supplied, we only process events if the DC name matches this
+	// TODO: for testing locally only, remove eventually
+	ForceDCname string
 }

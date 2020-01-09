@@ -30,9 +30,6 @@ type VCHub struct {
 	DcMapLock    sync.Mutex
 	// TODO: don't use DC display name as key, use ID instead
 	DcMap map[string]*PenDC
-	// If supplied, we only process events if the DC name matches this
-	// TODO: for testing locally only, remove eventually
-	forceDCname string
 	// Opts is options used during creation of this instance
 	opts []Option
 }
@@ -71,27 +68,30 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	}
 	vcURL.User = url.UserPassword(config.Spec.Credentials.UserName, config.Spec.Credentials.Password)
 
-	state := defs.State{
-		VcURL:      vcURL,
-		VcID:       config.GetName(),
-		Ctx:        ctx,
-		Log:        logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
-		StateMgr:   stateMgr,
-		OrchConfig: config,
-		Wg:         &sync.WaitGroup{},
-	}
-
 	// TODO: remove forceDC
+	if config.Labels == nil {
+		config.Labels = map[string]string{}
+	}
 	forceDC, ok := config.Labels["force-dc-name"]
 	if ok {
 		logger.Infof("Foced DC %s: Only events for this DC will be processed", forceDC)
+	}
+
+	state := defs.State{
+		VcURL:       vcURL,
+		VcID:        config.GetName(),
+		Ctx:         ctx,
+		Log:         logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
+		StateMgr:    stateMgr,
+		OrchConfig:  config,
+		Wg:          &sync.WaitGroup{},
+		ForceDCname: forceDC,
 	}
 
 	v.State = &state
 	v.cancel = cancel
 	v.DcMap = map[string]*PenDC{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
-	v.forceDCname = forceDC
 	v.opts = opts
 	v.setupPCache()
 
@@ -108,7 +108,7 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	// Store must be created before probe for sync to work properly
 	v.createProbe(config)
 
-	v.Sync()
+	v.sync()
 
 	v.Wg.Add(1)
 	go v.probe.StartWatchers()
@@ -144,7 +144,10 @@ func (v *VCHub) Sync() {
 	v.Log.Debugf("VCHub Sync starting")
 	// Bring useg to VCHub struct
 	v.Wg.Add(1)
-	go v.sync()
+	go func() {
+		defer v.Wg.Done()
+		v.sync()
+	}()
 
 	// Resync the inventory
 	// Sync api server state needed for store.

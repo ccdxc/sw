@@ -39,14 +39,15 @@ func (v *VCHub) NewPenDC(dcName string) (*PenDC, error) {
 		v.DcMap[dcName] = dc
 	}
 
-	dvsName := defs.DefaultDVSName
+	dvsName := createDVSName(dcName)
 
 	// Create a pen dvs
 	// Pvlan allocations on the dvs
 	pvlanConfigSpecArray := []types.VMwareDVSPvlanConfigSpec{}
 
 	// Setup all the pvlan allocations now
-	for i := 1; i < useg.ReservedPGVlanCount; i += 2 {
+	// vlans 0 and 1 are reserved
+	for i := 2; i < useg.ReservedPGVlanCount; i += 2 {
 		PvlanEntryProm := types.VMwareDVSPvlanMapEntry{
 			PrimaryVlanId:   int32(i),
 			PvlanType:       "promiscuous",
@@ -123,6 +124,19 @@ func (d *PenDC) GetPG(pgName string, dvsName string) *PenPG {
 			if pg != nil {
 				return pg
 			}
+		}
+	}
+	return nil
+}
+
+// GetPGByID returns the Pen PG object with the given vcenter ID
+func (d *PenDC) GetPGByID(pgID string) *PenPG {
+	d.Lock()
+	defer d.Unlock()
+	for _, penDVS := range d.DvsMap {
+		pg := penDVS.GetPenPGByID(pgID)
+		if pg != nil {
+			return pg
 		}
 	}
 	return nil

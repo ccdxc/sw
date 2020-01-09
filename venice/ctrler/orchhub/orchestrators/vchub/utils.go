@@ -54,5 +54,13 @@ func createNetworkName(name string) string {
 }
 
 func isPensandoDVS(name string) bool {
-	return strings.HasPrefix(name, defs.DefaultDVSName)
+	return strings.HasPrefix(name, defs.DefaultDVSPrefix)
+}
+
+func createDVSName(dcName string) string {
+	return fmt.Sprintf("%s%s", defs.DefaultDVSPrefix, dcName)
+}
+
+func isObjForDC(key string, vcID string, dcID string) bool {
+	return strings.HasPrefix(key, utils.CreateGlobalKeyPrefix(vcID, dcID))
 }

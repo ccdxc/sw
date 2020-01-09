@@ -11,7 +11,7 @@ import (
 // PenDVSPortSettings represents a group of DVS port settings
 // The key of this map represents the key of port on a DVS
 // The value of this map represents the new setting of this port
-type PenDVSPortSettings map[string]*types.VMwareDVSPortSetting
+type PenDVSPortSettings map[string]types.BaseVmwareDistributedVirtualSwitchVlanSpec
 
 // AddPenDVS adds a new PenDVS to the given vcprobe instance
 func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) error {
@@ -109,37 +109,57 @@ func (v *VCProbe) RemovePenDVS(dcName, dvsName string) error {
 	return nil
 }
 
-/*
-// TODO: Need to re-enable it.
-// This test works fine with real VC. However, in vcsim environment,
-// after adding portgroups to DVS, pg.PortKeys[i] (pg is mo.DistributedVirtualPortgroup)
-// is not initialized properly. I already filed a ticket to VMware for future assistant.
-// Since this is unit testing and can't expect my real VC stand up forever,
-// we temporarily skip it. Once we hear from VMware or we figure out why this happens
-// by ourselves, we can unlock it.
+// GetPenDVSPorts returns the port configuration of the given dvs
+func (v *VCProbe) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error) {
+	_, finder, _ := v.GetClientWithRLock()
+	defer v.ReleaseClientRLock()
+	return v.getPenDVSPorts(dcName, dvsName, criteria, finder)
+}
 
-// UpdatePorts updates port(s) on a given DVS based on the input mapping(portsSetting)
-func (d *PenDVS) UpdatePorts(portsSetting *PenDVSPortSettings) ([]types.DistributedVirtualPort, error) {
-	numPorts := len(*portsSetting)
+func (v *VCProbe) getPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria, finder *find.Finder) ([]types.DistributedVirtualPort, error) {
+
+	dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+	if err != nil {
+		return nil, err
+	}
+	ret, err := dvsObj.FetchDVPorts(v.ClientCtx, criteria)
+	if err != nil {
+		v.Log.Errorf("Can't find ports, err: %s", err)
+		return nil, err
+	}
+	return ret, nil
+}
+
+// UpdateDVSPortsVlan updates the port settings
+func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error {
+	numPorts := len(portsSetting)
+	if numPorts == 0 {
+		// Nothing to do
+		return nil
+	}
 
 	portKeys := make([]string, numPorts)
 	portSpecs := make([]types.DVPortConfigSpec, numPorts)
 
-	for k := range *portsSetting {
+	_, finder, _ := v.GetClientWithRLock()
+	defer v.ReleaseClientRLock()
+
+	dvsObj, err := v.getPenDVS(dcName, dvsName, finder)
+	if err != nil {
+		return err
+	}
+
+	for k := range portsSetting {
 		portKeys = append(portKeys, k)
 	}
 
-	criteria := types.DistributedVirtualSwitchPortCriteria{
+	criteria := &types.DistributedVirtualSwitchPortCriteria{
 		PortKey: portKeys,
 	}
 
-	d.DvsMutex.Lock()
-	defer d.DvsMutex.Unlock()
-
-	ports, err := d.ObjDvs.FetchDVPorts(d.ctx, &criteria)
+	ports, err := v.getPenDVSPorts(dcName, dvsName, criteria, finder)
 	if err != nil {
-		d.log.Errorf("Can't find ports, err: %s", err)
-		return nil, err
+		return err
 	}
 
 	for i := 0; i < numPorts; i++ {
@@ -147,36 +167,25 @@ func (d *PenDVS) UpdatePorts(portsSetting *PenDVSPortSettings) ([]types.Distribu
 		portSpecs[i].Key = ports[i].Key
 		portSpecs[i].Operation = string("edit")
 		portSpecs[i].Scope = ports[i].Config.Scope
-		portSpecs[i].Setting = (*portsSetting)[ports[i].Key]
+		setting, ok := portSpecs[i].Setting.(*types.VMwareDVSPortSetting)
+		if !ok {
+			setting = &types.VMwareDVSPortSetting{}
+		}
+		setting.Vlan = portsSetting[ports[i].Key]
+		portSpecs[i].Setting = setting
 	}
 
-	task, err := d.ObjDvs.ReconfigureDVPort(d.ctx, portSpecs)
+	task, err := dvsObj.ReconfigureDVPort(v.ClientCtx, portSpecs)
 	if err != nil {
-		d.log.Errorf("Failed at reconfig DVS ports, err: %s", err)
-		return ports, err
+		v.Log.Errorf("Failed at reconfig DVS ports, err: %s", err)
+		return err
 	}
 
-	_, err = task.WaitForResult(d.ctx, nil)
+	_, err = task.WaitForResult(v.ClientCtx, nil)
 	if err != nil {
-		d.log.Errorf("Failed at modifying DVS ports, err: %s", err)
-		return ports, err
+		v.Log.Errorf("Failed at modifying DVS ports, err: %s", err)
+		return err
 	}
 
-	return ports, nil
+	return nil
 }
-*/
-
-// getMoDVSRef converts object.DistributedVirtualSwitch to mo.DistributedVirtualSwitch
-// func (d *PenDVS) getMoDVSRef() (*mo.DistributedVirtualSwitch, error) {
-// 	d.DvsMutex.Lock()
-// 	defer d.DvsMutex.Unlock()
-
-// 	var dvs mo.DistributedVirtualSwitch
-// 	err := d.ObjDvs.Properties(d.ctx, d.ObjDvs.Reference(), nil, &dvs)
-// 	if err != nil {
-// 		d.log.Errorf("Failed at getting DVS properties, err: %s", err)
-// 		return nil, err
-// 	}
-
-// 	return &dvs, nil
-// }

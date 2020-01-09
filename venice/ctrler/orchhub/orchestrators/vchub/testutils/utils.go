@@ -116,20 +116,12 @@ func GenDVSCreateSpec(testParams *TestParams, pvlanConfigSpecArray []types.VMwar
 	return &dvsCreateSpec
 }
 
-// GenPGConfigSpecArray generates port group configuration array
-func GenPGConfigSpecArray(testParams *TestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) []types.DVPortgroupConfigSpec {
-	pgConfigSpecArray := make([]types.DVPortgroupConfigSpec, testParams.TestNumPG)
-	pvlanPGConfigSpecArray := make([]types.VmwareDistributedVirtualSwitchPvlanSpec, testParams.TestNumPG)
-	pgDefaultPortSettingArray := make([]types.VMwareDVSPortSetting, testParams.TestNumPG)
-
-	j := 1
-
-	// We have validated before, the number of port group equals to number of PVLAN pair at testDVSSetup()
-	for i := 0; i < testParams.TestNumPG; i++ {
-		pgConfigSpecArray[i].Name = fmt.Sprint(testParams.TestPGNameBase, i)
-		pgConfigSpecArray[i].Type = string(types.DistributedVirtualPortgroupPortgroupTypeEarlyBinding)
-		pgConfigSpecArray[i].NumPorts = int32(testParams.TestNumPortsPerPG)
-		pgConfigSpecArray[i].Policy = &types.VMwareDVSPortgroupPolicy{
+// GenPGConfigSpec creates PG config with the given pvlan info
+func GenPGConfigSpec(pgName string, primaryVlan, secondaryVlan int) types.DVPortgroupConfigSpec {
+	spec := types.DVPortgroupConfigSpec{
+		Name: pgName,
+		Type: string(types.DistributedVirtualPortgroupPortgroupTypeEarlyBinding),
+		Policy: &types.VMwareDVSPortgroupPolicy{
 			DVPortgroupPolicy: types.DVPortgroupPolicy{
 				BlockOverrideAllowed:               true,
 				ShapingOverrideAllowed:             false,
@@ -143,11 +135,24 @@ func GenPGConfigSpecArray(testParams *TestParams, pvlanConfigSpecArray []types.V
 			UplinkTeamingOverrideAllowed:  false,
 			SecurityPolicyOverrideAllowed: false,
 			IpfixOverrideAllowed:          types.NewBool(false),
-		}
+		},
+		DefaultPortConfig: &types.VMwareDVSPortSetting{
+			Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+				PvlanId: int32(secondaryVlan),
+			},
+		},
+	}
+	return spec
+}
 
-		pvlanPGConfigSpecArray[i].PvlanId = pvlanConfigSpecArray[j].PvlanEntry.SecondaryVlanId
-		pgDefaultPortSettingArray[i].Vlan = &pvlanPGConfigSpecArray[i]
-		pgConfigSpecArray[i].DefaultPortConfig = &pgDefaultPortSettingArray[i]
+// GenPGConfigSpecArray generates port group configuration array
+func GenPGConfigSpecArray(testParams *TestParams, pvlanConfigSpecArray []types.VMwareDVSPvlanConfigSpec) []types.DVPortgroupConfigSpec {
+	pgConfigSpecArray := make([]types.DVPortgroupConfigSpec, testParams.TestNumPG)
+
+	j := 1
+	// We have validated before, the number of port group equals to number of PVLAN pair at testDVSSetup()
+	for i := 0; i < testParams.TestNumPG; i++ {
+		pgConfigSpecArray[i] = GenPGConfigSpec(fmt.Sprint(testParams.TestPGNameBase, i), int(pvlanConfigSpecArray[j].PvlanEntry.PrimaryVlanId), int(pvlanConfigSpecArray[j].PvlanEntry.SecondaryVlanId))
 		j = j + 2
 	}
 

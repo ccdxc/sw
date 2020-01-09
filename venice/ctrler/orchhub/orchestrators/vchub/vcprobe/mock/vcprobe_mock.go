@@ -11,6 +11,8 @@ import (
 	object "github.com/vmware/govmomi/object"
 	mo "github.com/vmware/govmomi/vim25/mo"
 	types "github.com/vmware/govmomi/vim25/types"
+
+	vcprobe "github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 )
 
 // MockProbeInf is a mock of ProbeInf interface
@@ -128,6 +130,18 @@ func (mr *MockProbeInfMockRecorder) ListPG(dcRef interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPG", reflect.TypeOf((*MockProbeInf)(nil).ListPG), dcRef)
 }
 
+// ListHosts mocks base method
+func (m *MockProbeInf) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
+	ret := m.ctrl.Call(m, "ListHosts", dcRef)
+	ret0, _ := ret[0].([]mo.HostSystem)
+	return ret0
+}
+
+// ListHosts indicates an expected call of ListHosts
+func (mr *MockProbeInfMockRecorder) ListHosts(dcRef interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListHosts", reflect.TypeOf((*MockProbeInf)(nil).ListHosts), dcRef)
+}
+
 // AddPenPG mocks base method
 func (m *MockProbeInf) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error {
 	ret := m.ctrl.Call(m, "AddPenPG", dcName, dvsName, pgConfigSpec)
@@ -188,4 +202,29 @@ func (m *MockProbeInf) GetPenDVS(dcName, dvsName string) (*object.DistributedVir
 // GetPenDVS indicates an expected call of GetPenDVS
 func (mr *MockProbeInfMockRecorder) GetPenDVS(dcName, dvsName interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVS", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVS), dcName, dvsName)
+}
+
+// UpdateDVSPortsVlan mocks base method
+func (m *MockProbeInf) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings) error {
+	ret := m.ctrl.Call(m, "UpdateDVSPortsVlan", dcName, dvsName, portsSetting)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDVSPortsVlan indicates an expected call of UpdateDVSPortsVlan
+func (mr *MockProbeInfMockRecorder) UpdateDVSPortsVlan(dcName, dvsName, portsSetting interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDVSPortsVlan", reflect.TypeOf((*MockProbeInf)(nil).UpdateDVSPortsVlan), dcName, dvsName, portsSetting)
+}
+
+// GetPenDVSPorts mocks base method
+func (m *MockProbeInf) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error) {
+	ret := m.ctrl.Call(m, "GetPenDVSPorts", dcName, dvsName, criteria)
+	ret0, _ := ret[0].([]types.DistributedVirtualPort)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPenDVSPorts indicates an expected call of GetPenDVSPorts
+func (mr *MockProbeInfMockRecorder) GetPenDVSPorts(dcName, dvsName, criteria interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVSPorts", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVSPorts), dcName, dvsName, criteria)
 }

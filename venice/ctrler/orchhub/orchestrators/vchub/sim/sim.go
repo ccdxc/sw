@@ -35,14 +35,14 @@ type datastore struct {
 
 // Host contains info of a simulator host instance
 type Host struct {
-	obj *simulator.HostSystem
+	Obj *simulator.HostSystem
 }
 
 // DVS contains info of a simulator distributed virtual switch instance
 // This struct is not expected to be parallely accessed
 type DVS struct {
 	client       *vim25.Client
-	obj          *simulator.DistributedVirtualSwitch
+	Obj          *simulator.DistributedVirtualSwitch
 	portgroupMap map[string]*Portgroup
 }
 
@@ -179,7 +179,7 @@ func (v *Datacenter) AddDVS(dvsCreateSpec *types.DVSCreateSpec) (*DVS, error) {
 		if dvs.Entity().Name == dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name {
 			ret := &DVS{
 				client:       v.client,
-				obj:          dvs.(*simulator.DistributedVirtualSwitch),
+				Obj:          dvs.(*simulator.DistributedVirtualSwitch),
 				portgroupMap: make(map[string]*Portgroup),
 			}
 			return ret, nil
@@ -204,7 +204,7 @@ func (v *DVS) AddPortgroup(pgConfigSpec []types.DVPortgroupConfigSpec) ([]Portgr
 	ret := make([]Portgroup, numPortgroup)
 	ctx := context.Background()
 
-	dvs := object.NewDistributedVirtualSwitch(v.client, v.obj.Reference())
+	dvs := object.NewDistributedVirtualSwitch(v.client, v.Obj.Reference())
 
 	task, err := dvs.AddPortgroup(ctx, pgConfigSpec)
 	if err != nil {
@@ -238,7 +238,7 @@ func (v *Datacenter) AddHost(name string) (*Host, error) {
 	host, _ := simulator.CreateStandaloneHost(folder, spec)
 
 	entry := &Host{
-		obj: host,
+		Obj: host,
 	}
 
 	v.hostMap[name] = entry
@@ -267,11 +267,11 @@ func (v *Datacenter) GetHost(name string) (*Host, bool) {
 func (v *Host) AddNic(name string, mac string) error {
 	key := "key-vim.host.PhysicalNic-" + name
 	pnic := types.PhysicalNic{Key: key, Device: name, Mac: mac}
-	v.obj.Config.Network.Pnic = append(v.obj.Config.Network.Pnic, pnic)
+	v.Obj.Config.Network.Pnic = append(v.Obj.Config.Network.Pnic, pnic)
 
-	h := simulator.Map.Get(v.obj.Reference())
+	h := simulator.Map.Get(v.Obj.Reference())
 	simulator.Map.Update(h, []types.PropertyChange{
-		{Name: "config", Val: v.obj.Config},
+		{Name: "config", Val: v.Obj.Config},
 	})
 
 	return nil
@@ -281,7 +281,7 @@ func (v *Host) AddNic(name string, mac string) error {
 func (v *Host) RemoveNic(name string) {
 	match := -1
 
-	for ix, p := range v.obj.Config.Network.Pnic {
+	for ix, p := range v.Obj.Config.Network.Pnic {
 		if p.Device == name {
 			match = ix
 			break
@@ -289,17 +289,24 @@ func (v *Host) RemoveNic(name string) {
 	}
 
 	if match != -1 {
-		v.obj.Config.Network.Pnic = append(v.obj.Config.Network.Pnic[:match], v.obj.Config.Network.Pnic[match+1:]...)
+		v.Obj.Config.Network.Pnic = append(v.Obj.Config.Network.Pnic[:match], v.Obj.Config.Network.Pnic[match+1:]...)
 	}
 
-	h := simulator.Map.Get(v.obj.Reference())
+	h := simulator.Map.Get(v.Obj.Reference())
 	simulator.Map.Update(h, []types.PropertyChange{
-		{Name: "config", Val: v.obj.Config},
+		{Name: "config", Val: v.Obj.Config},
 	})
 }
 
+// VNIC is a VMs vnic
+type VNIC struct {
+	MacAddress   string
+	PortKey      string
+	PortgroupKey string
+}
+
 // AddVM creates a VM with the given display name on the given host
-func (v *Datacenter) AddVM(name string, hostName string) (*simulator.VirtualMachine, error) {
+func (v *Datacenter) AddVM(name string, hostName string, vnics []VNIC) (*simulator.VirtualMachine, error) {
 	// TODO: take in vnic config
 	config := types.VirtualMachineConfigSpec{
 		Name:    name,
@@ -328,20 +335,26 @@ func (v *Datacenter) AddVM(name string, hostName string) (*simulator.VirtualMach
 		config.Files.VmPathName+" "+path.Join(name, "disk1.vmdk"))
 	disk.CapacityInKB = 1024
 
-	// Create a vnic
-	Backing := &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
-		VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
-		Port: types.DistributedVirtualSwitchPortConnection{
-			PortKey: "10",
-			// TODO: fill out switchUUID and portgroupkey
-		},
-	}
+	devices = append(devices, scsi, cdrom, disk)
 
-	vnicDevice, err := devices.CreateEthernetCard("e1000", Backing)
-	if err != nil {
-		return nil, err
+	// Create a vnic
+	for _, vnic := range vnics {
+		Backing := &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
+			VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
+			Port: types.DistributedVirtualSwitchPortConnection{
+				PortKey:      vnic.PortKey,
+				PortgroupKey: vnic.PortgroupKey,
+			},
+		}
+
+		vnicDevice, err := devices.CreateEthernetCard("e1000", Backing)
+		vnicDeviceCard := vnicDevice.(types.BaseVirtualEthernetCard)
+		vnicDeviceCard.GetVirtualEthernetCard().MacAddress = vnic.MacAddress
+		if err != nil {
+			return nil, err
+		}
+		devices = append(devices, vnicDevice)
 	}
-	devices = append(devices, scsi, cdrom, disk, vnicDevice)
 
 	config.DeviceChange, _ = devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
 
@@ -353,7 +366,7 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	ctx := context.Background()
 	host := v.hostMap[hostName]
 
-	hostObj := object.NewHostSystem(v.client, host.obj.Reference())
+	hostObj := object.NewHostSystem(v.client, host.Obj.Reference())
 	pool, err := hostObj.ResourcePool(ctx)
 	if err != nil {
 		return nil, err

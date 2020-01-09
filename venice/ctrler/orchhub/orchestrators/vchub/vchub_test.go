@@ -20,15 +20,15 @@ import (
 )
 
 var defaultTestParams = &testutils.TestParams{
-	// TestHostName: "jingyiz-vcsa67new.pensando.io",
-	// TestUser:     "administrator@vsphere.local",
+	// TestHostName: "barun-vc.pensando.io",
+	// TestUser:     "administrator@pensando.io",
 	// TestPassword: "N0isystem$",
 	TestHostName: "127.0.0.1:8989",
 	TestUser:     "user",
 	TestPassword: "pass",
 
 	TestDCName:             "PenTestDC",
-	TestDVSName:            defs.DefaultDVSName,
+	TestDVSName:            createDVSName("PenTestDC"),
 	TestPGNameBase:         defs.DefaultPGPrefix,
 	TestMaxPorts:           4096,
 	TestNumStandalonePorts: 512,
@@ -63,7 +63,6 @@ func TestVCWrite(t *testing.T) {
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	_, err = s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 	dc2 := "DC2"
@@ -85,7 +84,10 @@ func TestVCWrite(t *testing.T) {
 	// Give time for VCHub to come up
 	time.Sleep(2 * time.Second)
 
-	defer vchub.Destroy()
+	defer func() {
+		vchub.Destroy()
+		defer s.Destroy()
+	}()
 
 	orchInfo1 := []*network.OrchestratorInfo{
 		{
@@ -111,23 +113,30 @@ func TestVCWrite(t *testing.T) {
 			for name, pgNames := range dcPgMap {
 				dc := vchub.GetDC(name)
 				if dc == nil {
-					return false, fmt.Errorf("Failed to find DC %s", name)
+					err := fmt.Errorf("Failed to find DC %s", name)
+					logger.Errorf("%s", err)
+					return false, err
 				}
-				dvs := dc.GetPenDVS(defs.DefaultDVSName)
+				dvs := dc.GetPenDVS(createDVSName(name))
 				if dvs == nil {
-					return false, fmt.Errorf("Failed to find dvs in DC %s", name)
+					err := fmt.Errorf("Failed to find dvs in DC %s", name)
+					logger.Errorf("%s", err)
+					return false, err
 				}
 
 				for _, pgName := range pgNames {
 					pgObj := dvs.GetPenPG(pgName)
 					if pgObj == nil {
-						return false, fmt.Errorf("Failed to find %s in DC %s", pgName, name)
+						err := fmt.Errorf("Failed to find %s in DC %s", pgName, name)
+						logger.Errorf("%s", err)
+						return false, err
 					}
 				}
 				dvs.Lock()
 				if len(dvs.Pgs) != len(pgNames) {
 					err := fmt.Errorf("PG length didn't match: exp %v, actual %v", pgNames, dvs.Pgs)
 					dvs.Unlock()
+					logger.Errorf("%s", err)
 					return false, err
 				}
 				dvs.Unlock()

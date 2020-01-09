@@ -56,6 +56,7 @@ func (v *VCHub) handleVCEvent(m defs.VCEventMsg) {
 }
 
 func (v *VCHub) handleDC(m defs.VCEventMsg) {
+	// TODO: HANDLE RENAME
 	// Check if we have a DC object
 	v.Log.Infof("Handle DC called")
 	for _, prop := range m.Changes {
@@ -64,7 +65,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		v.DcMapLock.Lock()
 		if penDc, ok := v.DcMap[m.Key]; ok {
 			penDc.Lock()
-			if _, ok := penDc.DvsMap[defs.DefaultDVSName]; ok {
+			if _, ok := penDc.DvsMap[createDVSName(name)]; ok {
 				v.DcMapLock.Unlock()
 				penDc.Unlock()
 				return
@@ -73,7 +74,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		}
 		v.DcMapLock.Unlock()
 		// We create DVS and check networks
-		if v.forceDCname != "" && name != v.forceDCname {
+		if v.ForceDCname != "" && name != v.ForceDCname {
 			v.Log.Infof("Skipping DC event for DC %s", name)
 			continue
 		}

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/vmware/govmomi/vim25/types"
 	"golang.org/x/net/context"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
@@ -39,6 +41,7 @@ func TestStore(t *testing.T) {
 	testCases := []struct {
 		name   string
 		events []defs.Probe2StoreMsg
+		setup  func(*VCHub, *gomock.Controller)
 		verify func(*VCHub)
 	}{
 		{
@@ -50,7 +53,7 @@ func TestStore(t *testing.T) {
 						VcObject:   defs.VirtualMachine,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
-						DC:         "DC1",
+						DcID:       "DC1",
 					},
 				},
 			},
@@ -87,7 +90,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -111,7 +114,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -164,8 +167,34 @@ func TestStore(t *testing.T) {
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						DcID:       "DC1",
+						DcName:     "DC1",
+						Key:        "hostsystem-21",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: "aa:bb:cc:dd:ee:ff",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
+						DcName:     "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -210,6 +239,11 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+				mockProbe := mock.NewMockProbeInf(mockCtrl)
+				v.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -262,7 +296,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -286,7 +320,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -319,15 +353,11 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
-						Changes: []types.PropertyChange{
-							types.PropertyChange{
-								Op:   types.PropertyChangeOpRemove,
-								Name: "config",
-							},
-						},
+						Changes:    []types.PropertyChange{},
+						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
 			},
@@ -352,7 +382,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -376,7 +406,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-40",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -442,7 +472,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -466,7 +496,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -475,7 +505,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -541,7 +571,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -565,7 +595,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -619,7 +649,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -628,15 +658,11 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
-						Changes: []types.PropertyChange{
-							types.PropertyChange{
-								Op:   types.PropertyChangeOpRemove,
-								Name: "config",
-							},
-						},
+						Changes:    []types.PropertyChange{},
+						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
 			},
@@ -661,7 +687,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -733,7 +759,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-44",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -792,7 +818,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -816,7 +842,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -892,7 +918,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -951,7 +977,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -975,15 +1001,11 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
-						Changes: []types.PropertyChange{
-							types.PropertyChange{
-								Op:   types.PropertyChangeOpRemove,
-								Name: "config",
-							},
-						},
+						Changes:    []types.PropertyChange{},
+						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
 			},
@@ -1008,7 +1030,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DC:         "DC1",
+						DcID:       "DC1",
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1076,10 +1098,15 @@ func TestStore(t *testing.T) {
 		vchub.StateMgr.SetAPIClient(nil)
 		inbox := make(chan defs.Probe2StoreMsg)
 		vchub.vcReadCh = inbox
+		if tc.setup != nil {
+			mockCtrl := gomock.NewController(t)
+			tc.setup(vchub, mockCtrl)
+			defer mockCtrl.Finish()
+		}
 
 		// Setup state for DC1
 		dcName := "DC1"
-		dvsName := defs.DefaultDVSName
+		dvsName := createDVSName(dcName)
 		useg, err := useg.NewUsegAllocator()
 		AssertOk(t, err, "Failed to create useg")
 		penDVS := &PenDVS{
@@ -1088,13 +1115,14 @@ func TestStore(t *testing.T) {
 			DvsName: dvsName,
 			UsegMgr: useg,
 			Pgs:     map[string]*PenPG{},
+			probe:   vchub.probe,
 		}
 		vchub.DcMap[dcName] = &PenDC{
 			State: vchub.State,
 			// probe:  v.probe,
 			Name: dcName,
 			DvsMap: map[string]*PenDVS{
-				defs.DefaultDVSName: penDVS,
+				createDVSName(dcName): penDVS,
 			},
 		}
 

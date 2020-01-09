@@ -32,11 +32,15 @@ func newStateManager() (*statemgr.Statemgr, error) {
 }
 
 func TestPcache(t *testing.T) {
+	logConfig.LogToStdout = true
+	logConfig.Filter = log.AllowAllFilter
+	logger := log.SetConfig(logConfig)
 	// Set should check validator before writing to statemgr
 	// Call to statemgr should be update/create
 	stateMgr, err := newStateManager()
 	AssertOk(t, err, "failed to create statemgr")
 	pCache := NewPCache(stateMgr, logger)
+	pCache.retryInterval = 1 * time.Second
 
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}

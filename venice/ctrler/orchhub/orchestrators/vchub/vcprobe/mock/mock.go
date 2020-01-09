@@ -15,13 +15,16 @@ type ProbeMock struct {
 	*vcprobe.VCProbe
 	// dc -> pgName -> config
 	pgStateMap map[string](map[string]*types.DVPortgroupConfigSpec)
+	// dc -> dvsName -> portKey -> port info
+	dvsStateMap map[string](map[string](map[string]types.DistributedVirtualPort))
 }
 
 // NewProbeMock creates a mock wrapper around the given probe
 func NewProbeMock(probe *vcprobe.VCProbe) *ProbeMock {
 	return &ProbeMock{
-		VCProbe:    probe,
-		pgStateMap: map[string](map[string]*types.DVPortgroupConfigSpec){},
+		VCProbe:     probe,
+		pgStateMap:  map[string](map[string]*types.DVPortgroupConfigSpec){},
+		dvsStateMap: map[string](map[string](map[string]types.DistributedVirtualPort)){},
 	}
 }
 
@@ -90,11 +93,93 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 func (v *ProbeMock) ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch {
 	var dvsObjs []mo.DistributedVirtualSwitch
 	var ret []mo.VmwareDistributedVirtualSwitch
-	v.VCProbe.ListObj("DistributedVirtualSwitch", []string{"name"}, &dvsObjs, dcRef)
+	v.VCProbe.ListObj("DistributedVirtualSwitch", []string{"name", "config"}, &dvsObjs, dcRef)
 	for _, obj := range dvsObjs {
 		ret = append(ret, mo.VmwareDistributedVirtualSwitch{
 			DistributedVirtualSwitch: obj,
 		})
 	}
 	return ret
+}
+
+// UpdateDVSPortsVlan stores the changes locally since vcsim does not support reconfigureDVS
+func (v *ProbeMock) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting vcprobe.PenDVSPortSettings) error {
+	dc := v.dvsStateMap[dcName]
+	portConfigs := map[string]types.DistributedVirtualPort{}
+	if dc == nil {
+		dc = map[string](map[string]types.DistributedVirtualPort){}
+	} else {
+		portConfigs = dc[dvsName]
+	}
+
+	for key, settings := range portsSetting {
+		switch vlanConfig := settings.(type) {
+		case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+			// Vlan override
+			portConfig := types.DistributedVirtualPort{
+				Key: key,
+				Config: types.DVPortConfigInfo{
+					Setting: &types.VMwareDVSPortSetting{
+						Vlan: vlanConfig,
+					},
+				},
+			}
+			portConfigs[key] = portConfig
+		case *types.VmwareDistributedVirtualSwitchPvlanSpec:
+			// Pvlan settings
+			portConfig := types.DistributedVirtualPort{
+				Key: key,
+				Config: types.DVPortConfigInfo{
+					Setting: &types.VMwareDVSPortSetting{
+						Vlan: vlanConfig,
+					},
+				},
+			}
+			portConfigs[key] = portConfig
+		default:
+			fmt.Printf("unknown type %T!\n", vlanConfig)
+		}
+	}
+
+	dc[dvsName] = portConfigs
+	v.dvsStateMap[dcName] = dc
+
+	return nil
+}
+
+// GetPenDVSPorts returns port settings
+func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error) {
+	dc := v.dvsStateMap[dcName]
+	portsRet := []types.DistributedVirtualPort{}
+
+	portSettings := map[string]types.DistributedVirtualPort{}
+	if dc != nil {
+		portSettings = dc[dvsName]
+	}
+	portSettingsUsed := map[string]bool{}
+
+	// Get existing port info
+	ports, err := v.VCProbe.GetPenDVSPorts(dcName, dvsName, criteria)
+	if err != nil {
+		return ports, err
+	}
+	// Override setting for any ports we have local info about
+	for _, p := range ports {
+		setting, ok := portSettings[p.Key]
+		if ok {
+			portSettingsUsed[p.Key] = true
+			setting.PortgroupKey = p.PortgroupKey
+			portsRet = append(portsRet, setting)
+		} else {
+			portsRet = append(portsRet, p)
+		}
+	}
+
+	// Add any other local info we have
+	for key, p := range portSettings {
+		if used, ok := portSettingsUsed[key]; !ok || !used {
+			portsRet = append(portsRet, p)
+		}
+	}
+	return portsRet, nil
 }

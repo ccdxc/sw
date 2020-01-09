@@ -36,7 +36,7 @@ import (
 
 const (
 	// PCacheRetryInterval is the cadence of retry for pcache retries
-	PCacheRetryInterval = 1
+	PCacheRetryInterval = 10 * time.Second
 )
 
 type kindEntry struct {
@@ -50,20 +50,22 @@ type ValidatorFn func(in interface{}) (isValid bool, commitIfValid bool)
 // PCache is the structure for pcache
 type PCache struct {
 	sync.RWMutex
-	Log        log.Logger
-	stateMgr   *statemgr.Statemgr
-	kinds      map[string]*kindEntry
-	validators map[string]ValidatorFn
+	Log           log.Logger
+	stateMgr      *statemgr.Statemgr
+	kinds         map[string]*kindEntry
+	validators    map[string]ValidatorFn
+	retryInterval time.Duration
 }
 
 // NewPCache creates a new instance of pcache
 func NewPCache(stateMgr *statemgr.Statemgr, logger log.Logger) *PCache {
 	logger.Debugf("Creating pcache")
 	return &PCache{
-		stateMgr:   stateMgr,
-		Log:        logger,
-		kinds:      make(map[string]*kindEntry),
-		validators: make(map[string]ValidatorFn),
+		stateMgr:      stateMgr,
+		Log:           logger,
+		kinds:         make(map[string]*kindEntry),
+		validators:    make(map[string]ValidatorFn),
+		retryInterval: PCacheRetryInterval,
 	}
 }
 
@@ -272,7 +274,7 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 
 // Run runs loop to periodically push pending objects to apiserver
 func (p *PCache) Run(ctx context.Context, wg *sync.WaitGroup) {
-	ticker := time.NewTicker(PCacheRetryInterval * time.Second)
+	ticker := time.NewTicker(p.retryInterval)
 	inProgress := false
 	defer wg.Done()
 

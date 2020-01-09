@@ -15,6 +15,11 @@ func CreateGlobalKey(orchID, namespace, objName string) string {
 	return fmt.Sprintf("%s-%s-%s", orchID, namespace, objName)
 }
 
+// CreateGlobalKeyPrefix creates the key prefix
+func CreateGlobalKeyPrefix(orchID, namespace string) string {
+	return fmt.Sprintf("%s-%s", orchID, namespace)
+}
+
 // AddOrchNameLabel adds orchestrator name into the labels
 func AddOrchNameLabel(labels map[string]string, name string) {
 	labels[OrchNameKey] = name
