@@ -28,7 +28,7 @@ def Trigger(tc):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
-        common.AddPenctlCommand(req, n, "system tech-support --skip-cores")
+        common.AddPenctlCommand(req, n, "system tech-support --skip-core")
 
     tc.resp = api.Trigger(req)
 
