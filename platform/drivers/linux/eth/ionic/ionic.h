@@ -16,7 +16,7 @@ struct ionic_lif;
 
 #define IONIC_DRV_NAME		"ionic"
 #define IONIC_DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
-#define IONIC_DRV_VERSION	"1.2.0"
+#define IONIC_DRV_VERSION	"1.4.0"
 
 // TODO: register these with the official include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
@@ -73,8 +73,9 @@ struct ionic {
 #ifdef IONIC_DEVLINK
 	struct devlink_port dl_port;
 #endif
+	struct rw_semaphore vf_op_lock;	/* lock for VF operations */
+	struct ionic_vf *vfs;
 	int num_vfs;
-	struct ionic_vf **vf;
 
 	struct timer_list watchdog_timer;
 	int watchdog_period;

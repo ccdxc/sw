@@ -169,10 +169,113 @@ phys_addr_t ionic_bus_phys_dbpage(struct ionic *ionic, int page_num)
 		((phys_addr_t)page_num << PAGE_SHIFT);
 }
 
+static void ionic_vf_dealloc_locked(struct ionic *ionic)
+{
+	struct ionic_vf *v;
+	dma_addr_t dma = 0;
+	int i;
+
+	if (!ionic->vfs)
+		return;
+
+	for (i = ionic->num_vfs - 1; i >= 0; i--) {
+		v = &ionic->vfs[i];
+
+		if (v->stats_pa) {
+			(void)ionic_set_vf_config(ionic, i,
+						  IONIC_VF_ATTR_STATSADDR,
+						  (u8 *)&dma);
+			dma_unmap_single(ionic->dev, v->stats_pa,
+					 sizeof(v->stats), DMA_FROM_DEVICE);
+			v->stats_pa = 0;
+		}
+	}
+
+	kfree(ionic->vfs);
+	ionic->vfs = NULL;
+	ionic->num_vfs = 0;
+}
+
+static void ionic_vf_dealloc(struct ionic *ionic)
+{
+	down_write(&ionic->vf_op_lock);
+	ionic_vf_dealloc_locked(ionic);
+	up_write(&ionic->vf_op_lock);
+}
+
+static int ionic_vf_alloc(struct ionic *ionic, int num_vfs)
+{
+	struct ionic_vf *v;
+	int err = 0;
+	int i;
+
+	down_write(&ionic->vf_op_lock);
+
+	ionic->vfs = kcalloc(num_vfs, sizeof(struct ionic_vf), GFP_KERNEL);
+	if (!ionic->vfs) {
+		err = -ENOMEM;
+		goto out;
+	}
+
+	for (i = 0; i < num_vfs; i++) {
+		v = &ionic->vfs[i];
+		v->stats_pa = dma_map_single(ionic->dev, &v->stats,
+					     sizeof(v->stats), DMA_FROM_DEVICE);
+		if (dma_mapping_error(ionic->dev, v->stats_pa)) {
+			dev_err(ionic->dev, "DMA mapping failed for vf[%d] stats\n", i);
+			v->stats_pa = 0;
+			err = -ENODEV;
+			goto out;
+		}
+
+		/* ignore failures from older FW, we just won't get stats */
+		(void)ionic_set_vf_config(ionic, i, IONIC_VF_ATTR_STATSADDR,
+					  (u8 *)&v->stats_pa);
+		ionic->num_vfs++;
+	}
+
+out:
+	if (err)
+		ionic_vf_dealloc_locked(ionic);
+	up_write(&ionic->vf_op_lock);
+	return err;
+}
+
+static int ionic_sriov_configure(struct pci_dev *pdev, int num_vfs)
+{
+	struct ionic *ionic = pci_get_drvdata(pdev);
+	struct device *dev = ionic->dev;
+	int ret = 0;
+
+	if (num_vfs > 0) {
+		ret = pci_enable_sriov(pdev, num_vfs);
+		if (ret) {
+			dev_err(dev, "Cannot enable SRIOV: %d\n", ret);
+			goto out;
+		}
+
+		ret = ionic_vf_alloc(ionic, num_vfs);
+		if (ret) {
+			dev_err(dev, "Cannot alloc VFs: %d\n", ret);
+			pci_disable_sriov(pdev);
+			goto out;
+		}
+
+		ret = num_vfs;
+	} else {
+		pci_disable_sriov(pdev);
+		ionic_vf_dealloc(ionic);
+	}
+
+out:
+	return ret;
+}
+
 static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 {
 	struct device *dev = &pdev->dev;
 	struct ionic *ionic;
+	int num_vfs;
 	int err;
 
 	ionic = ionic_devlink_alloc(dev);
@@ -294,6 +397,15 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		goto err_out_free_eqs;
 	}
 
+	init_rwsem(&ionic->vf_op_lock);
+	num_vfs = pci_num_vf(pdev);
+	if (num_vfs) {
+		dev_info(dev, "%d VFs found already enabled\n", num_vfs);
+		err = ionic_vf_alloc(ionic, num_vfs);
+		if (err)
+			dev_err(dev, "Cannot enable existing VFs: %d\n", err);
+	}
+
 	err = ionic_lifs_register(ionic);
 	if (err) {
 		dev_err(dev, "Cannot register LIFs: %d, aborting\n", err);
@@ -358,86 +470,10 @@ static void ionic_remove(struct pci_dev *pdev)
 	ionic_unmap_bars(ionic);
 	pci_release_regions(pdev);
 	pci_clear_master(pdev);
-	pci_disable_sriov(pdev);
 	pci_disable_device(pdev);
 	ionic_debugfs_del_dev(ionic);
 	mutex_destroy(&ionic->dev_cmd_lock);
 	ionic_devlink_free(ionic);
-}
-
-static int ionic_sriov_configure(struct pci_dev *pdev, int num_vfs)
-{
-	struct ionic *ionic = pci_get_drvdata(pdev);
-	struct device *dev = ionic->dev;
-	unsigned int size;
-	int i, err = 0;
-
-	if (!ionic_is_pf(ionic))
-		return -ENODEV;
-
-	if (num_vfs > 0) {
-		err = pci_enable_sriov(pdev, num_vfs);
-		if (err) {
-			dev_err(&pdev->dev, "Cannot enable SRIOV, err=%d\n",
-				err);
-			return err;
-		}
-
-		size = sizeof(struct ionic_vf *) * num_vfs;
-		ionic->vf = kzalloc(size, GFP_KERNEL);
-		if (!ionic->vf) {
-			pci_disable_sriov(pdev);
-			return -ENOMEM;
-		}
-
-		for (i = 0; i < num_vfs; i++) {
-			struct ionic_vf *v;
-
-			v = kzalloc(sizeof(*v), GFP_KERNEL);
-			if (!v) {
-				err = -ENOMEM;
-				num_vfs = 0;
-				goto remove_vfs;
-			}
-
-			v->stats_pa = dma_map_single(dev, &v->stats,
-						     sizeof(struct lif_stats),
-						     DMA_FROM_DEVICE);
-			if (dma_mapping_error(dev, v->stats_pa)) {
-				err = -ENODEV;
-				kfree(v);
-				ionic->vf[i] = NULL;
-				num_vfs = 0;
-				goto remove_vfs;
-			}
-
-			ionic->vf[i] = v;
-			ionic->num_vfs++;
-		}
-
-		return num_vfs;
-	}
-
-remove_vfs:
-	if (num_vfs == 0) {
-		if (err)
-			dev_err(&pdev->dev, "Enable SRIOV failed: %d\n", err);
-
-		pci_disable_sriov(pdev);
-
-		for (i = 0; i < ionic->num_vfs; i++) {
-			dma_unmap_single(dev, ionic->vf[i]->stats_pa,
-					 sizeof(struct lif_stats),
-					 DMA_FROM_DEVICE);
-			kfree(ionic->vf[i]);
-		}
-
-		kfree(ionic->vf);
-		ionic->vf = NULL;
-		ionic->num_vfs = 0;
-	}
-
-	return err;
 }
 
 static struct pci_driver ionic_driver = {
