@@ -1209,16 +1209,10 @@ api_engine::batch_commit(api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg) {
         goto error;
     }
 
-#if 0
-//#ifdef APULU
-    // if this API batch contains any config messages that are of interest
-    // to other components, send a batched config msg now
-    if (batch_ctxt_.pds_msgs) {
-        pds_msg_send_(batch_ctxt_.pds_msgs);
-        return sdk::SDK_RET_IN_PROGRESS;
+    ret = pds_msg_send_(batch_ctxt_.pds_msgs);
+    if (ret != SDK_RET_OK) {
+        return ret;
     }
-//#endif
-#endif
 
     // this batch of APIs can be processed further as we don't need to wait to
     // hear from other components

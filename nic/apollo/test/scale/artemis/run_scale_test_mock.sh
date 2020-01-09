@@ -6,6 +6,7 @@ export NON_PERSISTENT_LOGDIR=${NICDIR}
 export ZMQ_SOC_DIR=${NICDIR}
 export CAPRI_MOCK_MODE=1
 export CAPRI_MOCK_MEMORY_MODE=1
+export VPP_IPC_MOCK_MODE=1
 export SKIP_VERIFY=1
 export BUILD_DIR=${NICDIR}/build/x86_64/artemis/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results

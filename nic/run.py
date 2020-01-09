@@ -653,6 +653,7 @@ def run_apollo_test(args):
 # Run Artemis Scale tests
 def run_artemis_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
+    os.environ["VPP_IPC_MOCK_MODE"] = "1"
     os.chdir(nic_dir)
     try:
         os.remove(nic_dir + "/conf/pipeline.json")
@@ -670,6 +671,7 @@ def run_artemis_scale_test(args):
 def run_apollo_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.environ["SKIP_VERIFY"] = "1"
+    os.environ["VPP_IPC_MOCK_MODE"] = "1"
     os.chdir(nic_dir)
     try:
         os.remove(nic_dir + "/conf/pipeline.json")
@@ -688,6 +690,7 @@ def run_apollo_vxlan_scale_test(args):
     os.environ["HAL_CONFIG_PATH"] = nic_dir + "/conf/"
     os.environ["SKIP_VERIFY"] = "1"
     os.environ["APOLLO_TEST_TEP_ENCAP"] = "vxlan"
+    os.environ["VPP_IPC_MOCK_MODE"] = "1"
     os.chdir(nic_dir)
     try:
         os.remove(nic_dir + "/conf/pipeline.json")
