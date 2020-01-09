@@ -10,10 +10,8 @@ struct dnat_d         d;
 %%
 
 dnat:
-    phvwr     p.txdma_to_p4e_dnat_ip[127:64], d.dnat_d.dnat_address[127:64]
-    phvwr     p.txdma_to_p4e_dnat_ip[63:0], d.dnat_d.dnat_address[63:0]
     phvwr.e   p.txdma_control_lpm1_key[127:64], d.dnat_d.dnat_address[127:64]
-    phvwr     p.txdma_control_lpm1_key[63:0], d.dnat_d.dnat_address[63:0]
+    phvwr.f   p.txdma_control_lpm1_key[63:0], d.dnat_d.dnat_address[63:0]
 
 
 /*****************************************************************************/

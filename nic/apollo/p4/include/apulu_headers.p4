@@ -33,7 +33,6 @@ header_type apulu_txdma_to_p4e_header_t {
         snat_type       : 2;
         dnat_en         : 1;
         dnat_idx        : 13;
-        dnat_ip         :128;
     }
 }
 
@@ -69,6 +68,10 @@ header_type apulu_p4_to_arm_header_t {
         sacl_root           : 3;
         nexthop_type        : 2;
         drop                : 1;
+
+        snat_type           : 2;
+        dnat_en             : 1;
+        dnat_id             : 13;
     }
 }
 

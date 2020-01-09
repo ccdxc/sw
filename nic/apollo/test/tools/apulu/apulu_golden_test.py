@@ -40,7 +40,10 @@ class P4ToARM(Packet):
             BitField("sacl_root", 0, 3),
             BitEnumField("nexthop_type", 0, 2,
                 {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
-            BitField("drop", 0, 1) ]
+            BitField("drop", 0, 1),
+            BitField("snat_type", 0, 2),
+            BitField("dnat_en", 0, 1),
+            BitField("dnat_id", 0, 13) ]
 
 def dump_pkt(pkt, sname):
     print('uint8_t %s[] = {' % sname)
@@ -86,7 +89,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
 opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0x1891f5c3, l2_1_offset=0x11, l3_1_offset=0x23, \
+               flow_hash=0x41f250eb, l2_1_offset=0x11, l3_1_offset=0x23, \
                l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
                nexthop_id=0x1ef, nexthop_type='Tunnel', \
                vpc_id=0x2ec, vnic_id=0x2fe, mapping_hit=1) / \
@@ -137,7 +140,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678, flags='F') / payload
 opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0xf1919111, l2_1_offset=0x11, l3_1_offset=0x23, \
+               flow_hash=0x9e185097, l2_1_offset=0x11, l3_1_offset=0x23, \
                l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
                session_id=0x55e51, tcp_flags=0x1, \
                nexthop_id=0x1ef, nexthop_type='Tunnel', \

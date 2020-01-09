@@ -73,11 +73,8 @@ ingress_to_rxdma:
     phvwr           p.p4i_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
     phvwr           p.p4i_to_arm_flow_hash, k.p4i_i2e_entropy_hash
     phvwr           p.p4i_to_arm_payload_offset, k.offset_metadata_payload_offset
-    or              r1, k.p4i_i2e_xlate_id, k.capri_intrinsic_lif, 48
-    phvwr           p.{p4i_to_arm_lif, \
-                        p4i_to_arm_egress_bd_id,\
-                        p4i_to_arm_service_xlate_id, \
-                        p4i_to_arm_mapping_xlate_id}, r1
+    phvwr           p.p4i_to_arm_lif, k.capri_intrinsic_lif
+    phvwr           p.p4i_to_arm_mapping_xlate_id, k.p4i_i2e_xlate_id
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
     seq             c1, k.control_metadata_rx_packet, r0

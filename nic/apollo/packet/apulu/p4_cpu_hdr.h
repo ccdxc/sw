@@ -52,6 +52,20 @@ typedef struct p4_rx_cpu_hdr_s {
 #endif
         };
     };
+    union {
+        uint16_t nat;
+        struct {
+#if __BYTE_ORDER == __BIG_ENDIAN
+            uint16_t snat_type          : 2;
+            uint16_t dnat_en            : 1;
+            uint16_t dnat_id            : 13;
+#else
+            uint16_t dnat_id            : 13;
+            uint16_t dnat_en            : 1;
+            uint16_t snat_type          : 2;
+#endif
+        };
+    };
 } __attribute__ ((packed)) p4_rx_cpu_hdr_t;
 
 // Meta sent to P4 for tx packet
@@ -59,10 +73,10 @@ typedef struct p4_tx_cpu_hdr_s {
     union {
         uint16_t lif_flags;
         struct {
-            uint16_t lif_sbit0_ebit7 : 8;
-            uint16_t lif_sbit8_ebit10 : 3;
-            uint16_t nexthop_valid : 1;
-            uint16_t pad : 4;
+            uint16_t lif_sbit0_ebit7    : 8;
+            uint16_t lif_sbit8_ebit10   : 3;
+            uint16_t nexthop_valid      : 1;
+            uint16_t pad                : 4;
         };
     };
     uint8_t nexthop_type;

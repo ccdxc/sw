@@ -11,7 +11,6 @@ struct setup_rfc_k_    k;
 %%
 
 setup_rfc:
-    // Load the correct sacl_base_address into r1 based on recirc count
     seq              c1, k.txdma_control_recirc_count, 1
     bcf              [c1], load1
     phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr1
@@ -19,8 +18,10 @@ setup_rfc:
     bcf              [c1], load2
     phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr2
     seq              c1, k.txdma_control_recirc_count, 5
+    or               r1, k.rx_to_tx_hdr_sacl_base_addr3_s32_e39, \
+                         k.rx_to_tx_hdr_sacl_base_addr3_s0_e31, 8
     bcf              [c1], load3
-    phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr3
+    phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, r1
     seq              c1, k.txdma_control_recirc_count, 7
     bcf              [c1], load4
     phvwr.c1         p.rx_to_tx_hdr_sacl_base_addr0, k.rx_to_tx_hdr_sacl_base_addr4

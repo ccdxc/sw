@@ -47,7 +47,6 @@ action ingress_to_rxdma() {
     modify_field(offset_metadata.l4_2, offset_metadata.l4_2);
     modify_field(p4i_to_arm.payload_offset, offset_metadata.payload_offset);
     modify_field(p4i_to_arm.lif, capri_intrinsic.lif);
-    modify_field(p4i_to_arm.service_xlate_id, 0);
     modify_field(p4i_to_arm.mapping_xlate_id, p4i_i2e.xlate_id);
 
     modify_field(scratch_metadata.cpu_flags, 0);
@@ -160,6 +159,10 @@ action egress_to_rxdma() {
         modify_field(p4e_to_arm.egress_bd_id, vnic_metadata.egress_bd_id);
         modify_field(p4e_to_arm.sacl_action, txdma_to_p4e.sacl_action);
         modify_field(p4e_to_arm.sacl_root, txdma_to_p4e.sacl_root_num);
+        modify_field(p4e_to_arm.drop, txdma_to_p4e.drop);
+        modify_field(p4e_to_arm.snat_type, txdma_to_p4e.snat_type);
+        modify_field(p4e_to_arm.dnat_en, txdma_to_p4e.dnat_en);
+        modify_field(p4e_to_arm.dnat_id, txdma_to_p4e.dnat_idx);
     } else {
         if (control_metadata.rx_packet == TRUE) {
             modify_field(capri_intrinsic.tm_span_session,

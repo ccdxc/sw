@@ -29,13 +29,23 @@ egress_to_rxdma:
     phvwr           p.{p4e_to_p4plus_classic_nic_ip_valid, \
                         p4e_to_p4plus_classic_nic_valid}, 0x3
     seq             c1, k.p4e_to_arm_valid, TRUE
+    bcf             [c1], egress_to_rxdma_arm
     add             r6, r0, r7
-    add.c1          r6, r6, APULU_P4_TO_ARM_HDR_SZ
-    phvwr.c1        p.capri_p4_intrinsic_packet_len, r6
-    phvwr.c1        p.{p4e_to_arm_sacl_action,p4e_to_arm_sacl_root}, \
+    seq             c1, k.control_metadata_rx_packet, TRUE
+    b               egress_to_rxdma_common
+    phvwr.c1       p.capri_intrinsic_tm_span_session, k.p4e_i2e_mirror_session
+
+egress_to_rxdma_arm:
+    add             r6, r6, APULU_P4_TO_ARM_HDR_SZ
+    phvwr           p.capri_p4_intrinsic_packet_len, r6
+    phvwr           p.{p4e_to_arm_sacl_action,p4e_to_arm_sacl_root}, \
                         k.{txdma_to_p4e_sacl_action,txdma_to_p4e_sacl_root_num}
-    sne.!c1         c1, k.control_metadata_rx_packet, TRUE
-    phvwr.!c1       p.capri_intrinsic_tm_span_session, k.p4e_i2e_mirror_session
+    .assert((offsetof(p, p4e_to_arm_drop) - offsetof(p, p4e_to_arm_dnat_id)) == \
+            (offsetof(k, txdma_to_p4e_drop) - offsetof(k, txdma_to_p4e_dnat_idx)))
+    phvwr           p.{p4e_to_arm_drop...p4e_to_arm_dnat_id}, \
+                        k.{txdma_to_p4e_drop...txdma_to_p4e_dnat_idx}
+
+egress_to_rxdma_common:
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC
