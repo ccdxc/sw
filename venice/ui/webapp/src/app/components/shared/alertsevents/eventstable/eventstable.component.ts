@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ChangeDetectorRef, SimpleChanges, OnChanges, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectorRef, SimpleChanges, OnChanges, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
 import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, EventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
@@ -15,12 +15,15 @@ import { ControllerService } from '@app/services/controller.service';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { IApiStatus } from '@sdk/v1/models/generated/search';
-
+import { Animations } from '@app/animations';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 @Component({
   selector: 'app-eventstable',
   templateUrl: './eventstable.component.html',
-  styleUrls: ['./eventstable.component.scss']
+  styleUrls: ['./eventstable.component.scss'],
+  animations: [Animations],
+  encapsulation: ViewEncapsulation.None
 })
 export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, EventsEvent> implements OnChanges, OnDestroy {
 
@@ -35,6 +38,7 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
   // If provided, will only show alerts and events
   // where the source node matches
   @Input() selector: AlertsEventsSelector;
+  @Input() searchedEvent: string;
 
   currentEventSeverityFilter = null;
   showDebugEvents: boolean = false;
@@ -97,6 +101,8 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
 
   exportMap: CustomExportMap = {};
 
+  selectedEvent: EventsEvent = null;
+
   constructor(protected eventsService: EventsService,
     protected searchService: SearchService,
     protected uiconfigsService: UIConfigsService,
@@ -128,6 +134,22 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     if (!this.eventsSubscription) {
       this.getEvents();
     }
+
+    if (this.searchedEvent) {
+      this.getSearchedEvent();
+    }
+  }
+
+  getSearchedEvent() {
+    this.eventsService.GetEvent(this.searchedEvent).subscribe(
+      (response) => {
+        this.selectedEvent = response.body as EventsEvent;
+      }
+    );
+  }
+
+  closeDetails() {
+    this.selectedEvent = null;
   }
 
   getEvents() {
@@ -319,6 +341,19 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     if (this.eventsSubscription != null) {
       this.eventsSubscription.unsubscribe();
     }
+  }
+
+  selectEvent($event) {
+    if ( this.selectedEvent && $event.rowData.meta.name === this.selectedEvent.meta.name ) {
+      this.selectedEvent = null;
+    } else {
+      this.selectedEvent = $event.rowData;
+    }
+  }
+
+  dateToString(date) {
+    const prettyDate = new PrettyDatePipe('en-US');
+    return prettyDate.transform(date);
   }
 
   setDefaultToolbar(): void {

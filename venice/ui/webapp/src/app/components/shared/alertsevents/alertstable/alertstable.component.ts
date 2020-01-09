@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewChild, ChangeDetectorRef, SimpleChanges, OnChanges, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ChangeDetectorRef, SimpleChanges, OnChanges, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { IMonitoringAlert, MonitoringAlert, MonitoringAlertSpec_state, MonitoringAlertStatus_severity, MonitoringAlertSpec_state_uihint } from '@sdk/v1/models/generated/monitoring';
 import { EventsEvent_severity, EventsEventAttributes_severity, IApiListWatchOptions, IEventsEvent, ApiListWatchOptions_sort_order } from '@sdk/v1/models/generated/events';
 import { TimeRange } from '@app/components/shared/timerange/utility';
@@ -16,11 +16,15 @@ import { TablevieweditHTMLComponent, TablevieweditAbstract } from '@app/componen
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { AlertsEventsSelector } from '@app/components/shared/alertsevents/alertsevents.component';
 import { IApiStatus } from '@sdk/v1/models/generated/search';
+import { Animations } from '@app/animations';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 
 @Component({
   selector: 'app-alertstable',
   templateUrl: './alertstable.component.html',
-  styleUrls: ['./alertstable.component.scss']
+  styleUrls: ['./alertstable.component.scss'],
+  animations: [Animations],
+  encapsulation: ViewEncapsulation.None
 })
 export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert, MonitoringAlert> implements OnChanges, OnDestroy {
 
@@ -31,6 +35,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   // If provided, will only show alerts and events
   // where the source node matches
   @Input() selector: AlertsEventsSelector;
+  @Input() searchedAlert: string;
 
   // this property indicate if user is authorized to update alerts
   alertUpdatable: boolean = true;
@@ -52,11 +57,11 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   severityEnum: any = EventsEventAttributes_severity;
 
   cols: TableCol[] = [
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true },
-    { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false },
-    { field: 'status.message', header: 'Message', class: 'alertsevents-column-message', sortable: false },
-    { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'alertsevents-column-date', sortable: true, width: 15 },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'alertsevents-column-date', sortable: true, width: 15 },
+    { field: 'status.severity', header: 'Severity', class: 'alertsevents-column-severity', sortable: false, width: 10 },
+    { field: 'status.message', header: 'Message', class: 'alertsevents-column-message', sortable: false, width: 25 },
+    { field: 'spec.state', header: 'State', class: 'alertsevents-column-state', sortable: false, width: 15 },
     { field: 'status.source', header: 'Source Node & Component', class: 'alerts-column-source', sortable: false },
   ];
 
@@ -90,6 +95,8 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
 
   exportMap: CustomExportMap = {};
 
+  selectedAlert: MonitoringAlert = null;
+
   constructor(protected _controllerService: ControllerService,
     protected _alerttableService: AlerttableService,
     protected uiconfigsService: UIConfigsService,
@@ -107,6 +114,21 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     if (!this.alertSubscription) {
       this.getAlerts();
     }
+    if (this.searchedAlert) {
+      this.getSearchedAlert();
+    }
+  }
+
+  getSearchedAlert() {
+    this.monitoringService.GetAlert(this.searchedAlert).subscribe(
+      response => {
+        this.selectedAlert = response.body as MonitoringAlert;
+      }
+    );
+  }
+
+  closeDetails() {
+    this.selectedAlert = null;
   }
 
   getAlerts() {
@@ -361,6 +383,24 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     }
 
     this.alertQuery['field-selector']  = fieldSelectorOptions.join(',');
+  }
+
+  selectAlert($event) {
+    if ( this.selectedAlert && $event.rowData.meta.name === this.selectedAlert.meta.name ) {
+      this.selectedAlert = null;
+    } else {
+      this.selectedAlert = $event.rowData;
+    }
+  }
+
+  dateToString(date) {
+    const prettyDate = new PrettyDatePipe('en-US');
+    return prettyDate.transform(date);
+  }
+
+  getEventNameFromURI(uri) {
+    const split_uri = uri.split('/');
+    return split_uri[split_uri.length - 1];
   }
 
   ngOnChanges(change: SimpleChanges) {
