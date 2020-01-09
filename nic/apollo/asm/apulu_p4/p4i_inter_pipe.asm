@@ -17,6 +17,8 @@ p4i_inter_pipe:
     seq             c1, k.control_metadata_tunneled_packet, TRUE
 
 ingress_to_egress:
+    seq             c2, k.control_metadata_rx_packet, FALSE
+    phvwr.c2        p.capri_intrinsic_tm_span_session, k.p4i_i2e_mirror_session
     balcf           r7, [c1], tunnel_decap
     add             r6, r0, k.capri_p4_intrinsic_packet_len
     /*

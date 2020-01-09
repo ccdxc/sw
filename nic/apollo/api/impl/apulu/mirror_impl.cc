@@ -133,8 +133,10 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     switch (spec->type) {
     case PDS_MIRROR_SESSION_TYPE_RSPAN:
         mirror_data.action_id = MIRROR_RSPAN_ID;
+#if 0
         mirror_data.rspan_action.tm_oport =
             g_pds_state.catalogue()->ifindex_to_tm_port(spec->rspan_spec.interface);
+#endif
         mirror_data.rspan_action.ctag = spec->rspan_spec.encap.val.vlan_tag;
         mirror_data.rspan_action.truncate_len = spec->snap_len;
         break;
@@ -151,7 +153,9 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 return SDK_RET_INVALID_ARG;
             }
             // TODO: what if this TEP is local TEP itself ?
+#if 0
             mirror_data.erspan_action.tm_oport = TM_PORT_UPLINK_1;
+#endif
             mirror_data.erspan_action.ctag = 0;
             memcpy(mirror_data.erspan_action.dmac, tep->mac(), ETH_ADDR_LEN);
             memcpy(mirror_data.erspan_action.smac,
@@ -249,8 +253,10 @@ mirror_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     case MIRROR_RSPAN_ID:
         minfo->spec.type = PDS_MIRROR_SESSION_TYPE_RSPAN;
         minfo->spec.snap_len = mirror_data.rspan_action.truncate_len;
+#if 0
         minfo->spec.rspan_spec.interface =
             g_pds_state.catalogue()->tm_port_to_ifindex(mirror_data.rspan_action.tm_oport);
+#endif
         minfo->spec.rspan_spec.encap.type = PDS_ENCAP_TYPE_DOT1Q;
         minfo->spec.rspan_spec.encap.val.vlan_tag =
             mirror_data.rspan_action.ctag;

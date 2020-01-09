@@ -172,6 +172,27 @@ table vni_otcam {
     size : VNI_OTCAM_TABLE_SIZE;
 }
 
+action vnic_info(meter_enabled, rx_mirror_session, tx_mirror_session) {
+    modify_field(p4i_i2e.meter_enabled, meter_enabled);
+    if (control_metadata.rx_packet == TRUE) {
+        modify_field(p4i_i2e.mirror_session, rx_mirror_session);
+    } else {
+        modify_field(p4i_i2e.mirror_session, tx_mirror_session);
+    }
+}
+
+@pragma stage 4
+@pragma index_table
+table vnic {
+    reads {
+        vnic_metadata.vnic_id   : exact;
+    }
+    actions {
+        vnic_info;
+    }
+    size : VNIC_TABLE_SIZE;
+}
+
 control input_properties {
     if (arm_to_p4i.valid == TRUE) {
         apply(lif2);
@@ -189,6 +210,7 @@ control input_properties {
     } else {
         apply(vlan);
     }
+    apply(vnic);
 }
 
 /******************************************************************************/

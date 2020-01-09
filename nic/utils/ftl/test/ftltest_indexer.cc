@@ -6,8 +6,8 @@
 #include <assert.h>
 #include <string.h>
 #include <cinttypes>
-#include "nic/utils/ftl/ftl_base.hpp"
-#include "nic/utils/ftl/ftl_indexer.hpp"
+#include "lib/table/ftl/ftl_base.hpp"
+#include "lib/table/ftl/ftl_indexer.hpp"
 
 using namespace sdk::table::ftlint;
 

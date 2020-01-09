@@ -9,6 +9,17 @@ struct phv_         p;
 
 %%
 
+lspan:
+    add             r6, r0, d.u.lspan_d.truncate_len
+    bal             r7, mirror_truncate
+    sne             c7, r0, r0
+    phvwr           p.capri_p4_intrinsic_packet_len, r5
+    phvwr           p.rewrite_metadata_nexthop_type, d.u.lspan_d.nexthop_type
+    phvwr           p.p4e_i2e_nexthop_id, d.u.lspan_d.nexthop_id
+    phvwr.e         p.mirror_blob_valid, FALSE
+    phvwr.f         p.capri_intrinsic_tm_span_session, 0
+
+.align
 rspan:
     phvwr           p.ctag_1_valid, 1
     add             r1, k.ethernet_1_etherType, d.u.rspan_d.ctag, 16
@@ -18,7 +29,8 @@ rspan:
     bal             r7, mirror_truncate
     sne             c7, r0, r0
     phvwr           p.capri_p4_intrinsic_packet_len, r5
-    phvwr           p.capri_intrinsic_tm_oport, d.u.rspan_d.tm_oport
+    phvwr           p.rewrite_metadata_nexthop_type, d.u.rspan_d.nexthop_type
+    phvwr           p.p4e_i2e_nexthop_id, d.u.rspan_d.nexthop_id
     phvwr.e         p.mirror_blob_valid, FALSE
     phvwr.f         p.capri_intrinsic_tm_span_session, 0
 
@@ -70,7 +82,8 @@ erspan:
 
     add             r1, r5, 54
     phvwr           p.capri_p4_intrinsic_packet_len, r1
-    phvwr           p.capri_intrinsic_tm_oport, d.u.erspan_d.tm_oport
+    phvwr           p.rewrite_metadata_nexthop_type, d.u.rspan_d.nexthop_type
+    phvwr           p.p4e_i2e_nexthop_id, d.u.rspan_d.nexthop_id
     phvwr           p.ctag_1_valid, FALSE
     phvwr.e         p.mirror_blob_valid, FALSE
     phvwr.f         p.capri_intrinsic_tm_span_session, 0

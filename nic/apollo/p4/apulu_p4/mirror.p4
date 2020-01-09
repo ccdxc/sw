@@ -12,7 +12,17 @@ action mirror_truncate(truncate_len, is_erspan) {
     }
 }
 
-action rspan(tm_oport, ctag, truncate_len) {
+action lspan(nexthop_type, nexthop_id, truncate_len) {
+    mirror_truncate(truncate_len, FALSE);
+
+    remove_header(mirror_blob);
+    remove_header(ctag_1);
+    modify_field(capri_intrinsic.tm_span_session, 0);
+    modify_field(rewrite_metadata.nexthop_type, nexthop_type);
+    modify_field(p4e_i2e.nexthop_id, nexthop_id);
+}
+
+action rspan(nexthop_type, nexthop_id, ctag, truncate_len) {
     add_header(ctag_1);
     modify_field(ctag_1.vid, ctag);
     modify_field(ctag_1.dei, 0);
@@ -25,10 +35,12 @@ action rspan(tm_oport, ctag, truncate_len) {
 
     remove_header(mirror_blob);
     modify_field(capri_intrinsic.tm_span_session, 0);
-    modify_field(capri_intrinsic.tm_oport, tm_oport);
+    modify_field(rewrite_metadata.nexthop_type, nexthop_type);
+    modify_field(p4e_i2e.nexthop_id, nexthop_id);
 }
 
-action erspan(tm_oport, ctag, truncate_len, dmac, smac, sip, dip) {
+action erspan(nexthop_type, nexthop_id, ctag, truncate_len, dmac, smac,
+              sip, dip) {
     add_header(ethernet_0);
     add_header(ctag_0);
     add_header(ipv4_0);
@@ -78,7 +90,8 @@ action erspan(tm_oport, ctag, truncate_len, dmac, smac, sip, dip) {
     remove_header(mirror_blob);
     remove_header(ctag_1);
     modify_field(capri_intrinsic.tm_span_session, 0);
-    modify_field(capri_intrinsic.tm_oport, tm_oport);
+    modify_field(rewrite_metadata.nexthop_type, nexthop_type);
+    modify_field(p4e_i2e.nexthop_id, nexthop_id);
 }
 
 @pragma stage 0
@@ -87,6 +100,7 @@ table mirror {
         capri_intrinsic.tm_span_session : exact;
     }
     actions {
+        lspan;
         rspan;
         erspan;
     }

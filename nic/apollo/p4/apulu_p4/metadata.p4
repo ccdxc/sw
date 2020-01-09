@@ -93,6 +93,14 @@ header_type rewrite_metadata_t {
     }
 }
 
+header_type meter_metadata_t {
+    fields {
+        meter_enabled           : 1;
+        meter_id                : 11;
+        meter_len               : 16;
+    }
+}
+
 header_type scratch_metadata_t {
     fields {
         flag                : 1;
@@ -133,6 +141,7 @@ header_type scratch_metadata_t {
         encap_type          : 2;
         key_type            : 2;
         binding_id          : 16;
+        meter_id            : 10;
 
         // policer
         policer_valid       : 1;
@@ -170,6 +179,7 @@ metadata key_metadata_t         key_metadata;
 metadata vnic_metadata_t        vnic_metadata;
 metadata control_metadata_t     control_metadata;
 metadata rewrite_metadata_t     rewrite_metadata;
+metadata meter_metadata_t       meter_metadata;
 
 @pragma parser_end_offset payload_offset
 metadata offset_metadata_t      offset_metadata;

@@ -2,6 +2,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "EGRESS_session_k.h"
+#include "nic/apollo/p4/include/apulu_table_sizes.h"
 
 struct session_k_   k;
 struct session_d    d;
@@ -30,8 +31,17 @@ session_info:
 
     // recirc packet, skip TCP session management
     bbeq            k.egress_recirc_valid, TRUE, session_info_common
-    seq             c1, k.tcp_valid, 1
-    bcf             [!c1], session_info_common
+    seq             c1, k.p4e_i2e_meter_enabled, TRUE
+    sne.c1          c1, d.session_info_d.meter_id, r0
+    bcf             [!c1], session_tcp
+    add             r1, r0, d.session_info_d.meter_id
+    seq             c1, k.p4e_i2e_rx_packet, TRUE
+    add.c1          r1, r1, (METER_TABLE_SIZE >> 1)
+    phvwr           p.meter_metadata_meter_id, r1
+    phvwr           p.meter_metadata_meter_len, k.capri_p4_intrinsic_packet_len
+
+session_tcp:
+    bbne            k.tcp_valid, FALSE, session_info_common
     seq             c1, k.p4e_i2e_flow_role, TCP_FLOW_RESPONDER
     bcf             [c1], session_tcp_responder
 session_tcp_initiator:

@@ -13,6 +13,9 @@ action tunnel_decap() {
 }
 
 action ingress_to_egress() {
+    if (control_metadata.rx_packet == FALSE) {
+        modify_field(capri_intrinsic.tm_span_session, p4i_i2e.mirror_session);
+    }
     add_header(capri_p4_intrinsic);
     add_header(p4i_i2e);
     remove_header(capri_txdma_intrinsic);
@@ -157,6 +160,11 @@ action egress_to_rxdma() {
         modify_field(p4e_to_arm.egress_bd_id, vnic_metadata.egress_bd_id);
         modify_field(p4e_to_arm.sacl_action, txdma_to_p4e.sacl_action);
         modify_field(p4e_to_arm.sacl_root, txdma_to_p4e.sacl_root_num);
+    } else {
+        if (control_metadata.rx_packet == TRUE) {
+            modify_field(capri_intrinsic.tm_span_session,
+                         p4e_i2e.mirror_session);
+        }
     }
 
     modify_field(p4e_to_p4plus_classic_nic.packet_len,
@@ -166,9 +174,6 @@ action egress_to_rxdma() {
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
                  (CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_RXDMA_INTRINSIC_HDR_SZ +
                   P4PLUS_CLASSIC_NIC_HDR_SZ));
-
-    if (ctag_1.valid == TRUE) {
-    }
 
     modify_field(key_metadata.sport, key_metadata.sport);
     modify_field(key_metadata.dport, key_metadata.dport);

@@ -34,6 +34,8 @@ egress_to_rxdma:
     phvwr.c1        p.capri_p4_intrinsic_packet_len, r6
     phvwr.c1        p.{p4e_to_arm_sacl_action,p4e_to_arm_sacl_root}, \
                         k.{txdma_to_p4e_sacl_action,txdma_to_p4e_sacl_root_num}
+    sne.!c1         c1, k.control_metadata_rx_packet, TRUE
+    phvwr.!c1       p.capri_intrinsic_tm_span_session, k.p4e_i2e_mirror_session
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6
     phvwr           p.p4e_to_p4plus_classic_nic_p4plus_app_id, \
                         P4PLUS_APPTYPE_CLASSIC_NIC

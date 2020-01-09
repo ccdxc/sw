@@ -23,6 +23,7 @@
 #include "checksum.p4"
 #include "policers.p4"
 #include "stats.p4"
+#include "meter.p4"
 #include "inter_pipe.p4"
 #include "offloads.p4"
 
@@ -68,6 +69,7 @@ control egress {
         output_properties();
         nat();
         rx_policers();
+        meter_stats();
     }
     nexthops();
     update_checksums();
