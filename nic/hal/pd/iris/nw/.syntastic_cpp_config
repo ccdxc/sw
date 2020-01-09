@@ -20,4 +20,5 @@
 -I ../../../../build/iris/gen/datapath/p4/include
 -I ../../../../hal/third-party/spdlog/include
 -D__FNAME__
+-DIRIS
 -std=c++11

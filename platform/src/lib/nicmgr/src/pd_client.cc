@@ -493,7 +493,7 @@ void PdClient::update(void)
 }
 
 PdClient* PdClient::factory(sdk::platform::platform_type_t platform,
-                            sdk::lib::dev_forwarding_mode_t fwd_mode)
+                            std::string mpart_file)
 {
     int ret;
     PdClient *pdc = new PdClient();
@@ -507,7 +507,7 @@ PdClient* PdClient::factory(sdk::platform::platform_type_t platform,
     pdc->gen_dir_path_ = pdc->hal_cfg_path_ + "/gen";
     NIC_LOG_INFO("GEN directory path {}", pdc->gen_dir_path_);
 
-    pdc->mpart_cfg_path_ = mpart_cfg_path(pdc->hal_cfg_path_, fwd_mode);
+    pdc->mpart_cfg_path_ = mpart_file;
     NIC_LOG_INFO("MPART config path {}", pdc->mpart_cfg_path_);
 
     ret = pdc->create_dirs();

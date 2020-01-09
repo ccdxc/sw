@@ -68,7 +68,8 @@ nicmgr_if_init(void)
     utils::logger::init(false);
     sdk_init();
     devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
-                    sdk::lib::FORWARDING_MODE_NONE, false);
+                               FLAGS_nicmgr_config_file,
+                               sdk::lib::FORWARDING_MODE_NONE, false);
     if (!devmgr) {
         fprintf(stderr, "Failed to init device manager\n");
         return -1;

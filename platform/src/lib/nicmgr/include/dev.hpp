@@ -95,6 +95,7 @@ class DeviceManager
 {
 public:
     DeviceManager(sdk::platform::platform_type_t platform,
+                  std::string device_conf_file,
                   sdk::lib::dev_forwarding_mode_t fwd_mode,
                   bool micro_seg_en, EV_P = NULL);
 
@@ -121,6 +122,7 @@ public:
     void SetHalClient(devapi *dev_api);
 
     int GenerateQstateInfoJson(std::string qstate_info_file);
+    void GetConfigFiles(string device_conf_file, string &hbm_mem_json_file, string &device_json_file);
     PdClient *GetPdClient(void) { return pd; }
     devapi *DevApi(void) { return dev_api; }
 
@@ -160,6 +162,7 @@ private:
     sdk::platform::platform_type_t platform;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     bool micro_seg_en;
+    string device_json_file;
 
     std::vector<struct EthDevInfo *> eth_dev_info_list;
 

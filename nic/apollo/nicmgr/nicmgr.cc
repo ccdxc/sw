@@ -60,7 +60,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     // initialize device manager
     PDS_TRACE_INFO("Initializing device manager ...");
-    g_devmgr = new DeviceManager(state->platform_type(),
+    g_devmgr = new DeviceManager(state->platform_type(), "",
                                  sdk::lib::FORWARDING_MODE_NONE, false,
                                  curr_thread->ev_loop());
     g_devmgr->LoadProfile(config_file, true);

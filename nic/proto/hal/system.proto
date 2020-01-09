@@ -421,8 +421,9 @@ enum ForwardingMode {
 
 enum FeatureProfile {
   FEATURE_PROFILE_NONE                  = 0;
-  FEATURE_PROFILE_CLASSIC_DEFAULT       = 1;
-  FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE = 2;
+  FEATURE_PROFILE_BASE                  = 1;
+  FEATURE_PROFILE_CLASSIC_DEFAULT       = 2;
+  FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE = 3;
 }
 
 message ForwardingModeResponse {

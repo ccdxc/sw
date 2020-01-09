@@ -7,6 +7,7 @@ nic/conf/bullseye/                                                  /nic/conf/bu
 nic/conf/iris/plugins.json                                          /nic/conf/iris/
 nic/conf/iris/classic-plugins.json                                  /nic/conf/iris/
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
+nic/conf/iris/hbm_mem_base.json                                     /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json

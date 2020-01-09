@@ -117,7 +117,8 @@ nicmgr_init()
     utils::logger::init(false);
     sdk_init();
     devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
-                    sdk::lib::FORWARDING_MODE_NONE, false);
+                               "",
+                               sdk::lib::FORWARDING_MODE_NONE, false);
     EXPECT_TRUE(devmgr != NULL);
     devmgr->LoadProfile("../platform/src/app/nicmgrd/etc/eth.json", false);
     devmgr->HalEventHandler(true);

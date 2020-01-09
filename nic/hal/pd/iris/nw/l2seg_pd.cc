@@ -2123,9 +2123,12 @@ l2seg_pd_get_shared_mgmt_l2seg (l2seg_t *l2seg,
 uint8_t
 get_nic_mode (l2seg_t *l2seg)
 {
+#if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
         l2seg_is_mgmt(l2seg))) {
+#endif
+    if (l2seg_is_mgmt(l2seg)) {
         return NIC_MODE_CLASSIC;
     } else {
         return NIC_MODE_SMART;
@@ -2145,9 +2148,12 @@ get_clear_prom_repl (l2seg_t *l2seg, uint32_t num_prom_lifs,
     *clear_prom = 0;
     *dst_lport = 0;
 
+#if 0
     if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
         (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
         l2seg_is_mgmt(l2seg))) {
+#endif
+    if (l2seg_is_mgmt(l2seg)) {
         if (l2seg->single_wire_mgmt && l2seg_is_oob_mgmt(l2seg)) {
             *clear_prom = 0;
         } else {

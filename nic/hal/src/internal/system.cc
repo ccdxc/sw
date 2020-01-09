@@ -697,6 +697,9 @@ feature_profile_get (FeatureProfileResponse *rsp)
     case HAL_FEATURE_PROFILE_NONE:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_NONE);
         break;
+    case HAL_FEATURE_PROFILE_BASE:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_BASE);
+        break;
     case HAL_FEATURE_PROFILE_CLASSIC_DEFAULT:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_CLASSIC_DEFAULT);
         break;

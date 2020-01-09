@@ -104,9 +104,13 @@ DevPcieEvHandler::reset(const int port, uint32_t rsttype, const uint32_t lifb, c
  * Device Manager
  */
 DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
+                             std::string device_conf_file,
                              sdk::lib::dev_forwarding_mode_t fwd_mode,
-                             bool micro_seg_en, EV_P)
+                             bool micro_seg_en,
+                             EV_P)
 {
+    string device_json_file, hbm_mem_json_file;
+
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
     instance = this;
@@ -116,12 +120,15 @@ DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
 
     sdk::lib::pal_init(platform);
 
+    GetConfigFiles(device_conf_file, hbm_mem_json_file, device_json_file);
+
     this->loop = (loop == NULL) ? EV_DEFAULT : loop;
     this->fwd_mode = fwd_mode;
     this->micro_seg_en = micro_seg_en;
+    this->device_json_file = device_json_file;
     this->dev_api = NULL;
 
-    pd = PdClient::factory(platform, fwd_mode);
+    pd = PdClient::factory(platform, hbm_mem_json_file);
     assert(pd);
     this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
 
@@ -145,6 +152,56 @@ DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
         pciemgr = new class pciemgr("nicmgrd", pcie_evhandler, EV_A);
     }
 }
+
+static std::string
+hal_cfg_path()
+{
+    std::string hal_cfg_path;
+    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
+        hal_cfg_path = "/nic/conf/";
+    } else {
+        hal_cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    }
+
+    return hal_cfg_path;
+}
+
+void
+DeviceManager::GetConfigFiles(string device_conf_file, string &hbm_mem_json_file,
+                              string &device_json_file)
+{
+    sdk::lib::device *device = NULL;
+    sdk::lib::dev_feature_profile_t feature_profile;
+    string profile_name;
+    std::string hal_cfg_dir = hal_cfg_path();
+
+    device = sdk::lib::device::factory(device_conf_file);
+    feature_profile = device->get_feature_profile();
+
+     profile_name = std::string(DEV_FEATURE_PROFILE_str(feature_profile));
+     profile_name.replace(0, std::string("FEATURE_PROFILE").length(), "");
+     std::transform(profile_name.begin(), profile_name.end(),
+                    profile_name.begin(), ::tolower);
+
+    // Handle for other pipelines
+#if defined(APOLLO)
+     hbm_mem_json_file = hal_cfg_dir + "/apollo/hbm_mem.json";
+#elif defined(ARTEMIS)
+     hbm_mem_json_file = hal_cfg_dir + "/artemis/hbm_mem.json";
+#elif defined(APULU)
+     hbm_mem_json_file = hal_cfg_dir + "/apulu/8g/hbm_mem.json";
+#elif defined(ATHENA)
+     hbm_mem_json_file = hal_cfg_dir + "/athena/hbm_mem.json";
+#else
+     hbm_mem_json_file =  hal_cfg_dir + "/" +
+         "iris" + "/hbm_mem" + profile_name + ".json";
+     device_json_file = string("/platform/etc/nicmgrd/device" + profile_name + ".json");
+#endif
+
+    NIC_LOG_DEBUG("HBM json file: {}, Device json file: {}",
+                  hbm_mem_json_file, device_json_file);
+}
+
 
 void
 DeviceManager::CreateUplink(uint32_t id, uint32_t port, bool is_oob)
@@ -259,13 +316,16 @@ deadbeef_mac_base(uint64_t &mac_base, uint32_t &mac_count)
 }
 
 int
-DeviceManager::LoadProfile(string path, bool init_pci)
+DeviceManager::LoadProfile(string device_json_file, bool init_pci)
 {
     struct eth_devspec *eth_spec;
 
     NIC_HEADER_TRACE("Loading Config");
-    NIC_LOG_DEBUG("Json: {}", path);
-    boost::property_tree::read_json(path, spec);
+    if (!device_json_file.empty()) {
+        this->device_json_file = device_json_file;
+    }
+    NIC_LOG_DEBUG("Json: {}", this->device_json_file);
+    boost::property_tree::read_json(this->device_json_file, spec);
 
     // Determine the base mac address
     uint64_t host_mac_base = 0;

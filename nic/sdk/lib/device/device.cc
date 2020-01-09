@@ -161,6 +161,7 @@ device::populate_device(ptree &pt)
         }
 
         if (it->first == FEATURE_PROFILE_KEY_STR) {
+            printf("Assigning feature profile\n");
             if (is_integer_(it->second.get_value<std::string>())) {
                 device_db_.feature_profile = (dev_feature_profile_t)pt.get<int>(FEATURE_PROFILE_KEY_STR);
             } else {
@@ -168,12 +169,15 @@ device::populate_device(ptree &pt)
                 if (DEV_FEATURE_PROFILE_map.find(feature_profile) == DEV_FEATURE_PROFILE_map.end()) {
                     SDK_TRACE_ERR("Unable to find %s: %s ... setting default: %s",
                                   FEATURE_PROFILE_KEY_STR, feature_profile.c_str(),
-                                  DEV_FEATURE_PROFILE_str(FEATURE_PROFILE_CLASSIC_DEFAULT));
+                                  DEV_FEATURE_PROFILE_str(FEATURE_PROFILE_BASE));
 
                 } else {
                     device_db_.feature_profile =
                         DEV_FEATURE_PROFILE_map[pt.get<std::string>(FEATURE_PROFILE_KEY_STR)];
                 }
+            }
+            if (device_db_.feature_profile == FEATURE_PROFILE_NONE) {
+                device_db_.feature_profile = FEATURE_PROFILE_BASE;
             }
         }
 
@@ -234,7 +238,7 @@ void
 device::populate_device_defaults_(void)
 {
     device_db_.fwd_mode = FORWARDING_MODE_CLASSIC;
-    device_db_.feature_profile = FEATURE_PROFILE_CLASSIC_DEFAULT;
+    device_db_.feature_profile = FEATURE_PROFILE_BASE;
     device_db_.port_admin_state = PORT_ADMIN_STATE_ENABLE;
     device_db_.mgmt_if_mac = 0;
     device_db_.mgmt_vlan = 0;

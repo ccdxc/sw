@@ -152,6 +152,7 @@ nicmgr_init (platform_type_t platform,
     feature_profile = device->get_feature_profile();
     micro_seg_en = (device->get_micro_seg_en() == device::MICRO_SEG_ENABLE);
 
+#if 0
     // TODO: Profile should be independent of forwarding mode.
     // TODO: No need to figure out the profile while upgrading.
     if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
@@ -165,11 +166,12 @@ nicmgr_init (platform_type_t platform,
         }
     }
 
-dev_init:
     NIC_LOG_INFO("Forwarding Mode {}", fwd_mode);
     NIC_LOG_INFO("Micro-segmentation {}", micro_seg_en);
     NIC_LOG_INFO("Feature Profile {} {}", feature_profile, profile);
+#endif
 
+dev_init:
     // Are we in the middle of an upgrade?
     if (rollback_in_progress()) {
         upg_mode = FW_MODE_ROLLBACK;
@@ -183,7 +185,7 @@ dev_init:
 
     register_for_events();
 
-    devmgr = new DeviceManager(platform, fwd_mode, micro_seg_en,
+    devmgr = new DeviceManager(platform, device_file, fwd_mode, micro_seg_en,
                                thread->ev_loop());
     devmgr->SetUpgradeMode(upg_mode);
     devmgr->SetThread((sdk::lib::thread *)thread);
