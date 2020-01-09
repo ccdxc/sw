@@ -813,7 +813,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *net
 					Match: &halproto.RuleMatch{
 						SrcAddress: []*halproto.IPAddressObj{srcAddrObj},
 						DstAddress: []*halproto.IPAddressObj{destAddrObj},
-						Protocol:   halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto),
+						Protocol:   halproto.IPProtocol_value[halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto).String()],
 						AppMatch:   appMatchObj,
 					},
 					Action: &halproto.MonitorAction{
@@ -902,7 +902,7 @@ func (tsa *Tagent) createFlowMonitorRuleIDMatchingHALProtoObj(mirrorSession *net
 					Match: &halproto.RuleMatch{
 						SrcMacAddress: []uint64{macRule.SrcMAC},
 						DstMacAddress: []uint64{macRule.DestMAC},
-						Protocol:      halproto.IPProtocol(macRule.AppPortObj.Ipproto),
+						Protocol:      halproto.IPProtocol_value[halproto.IPProtocol(macRule.AppPortObj.Ipproto).String()],
 						AppMatch:      appMatchObj,
 					},
 					Action: &halproto.MonitorAction{
@@ -1035,7 +1035,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *netproto.Mir
 				Match: &halproto.RuleMatch{
 					SrcAddress: []*halproto.IPAddressObj{srcAddrObj},
 					DstAddress: []*halproto.IPAddressObj{destAddrObj},
-					Protocol:   halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto),
+					Protocol:   halproto.IPProtocol_value[halproto.IPProtocol(ipFmRule.AppPortObj.Ipproto).String()],
 					AppMatch:   appMatchObj,
 				},
 				Action: &halproto.MonitorAction{
@@ -1112,7 +1112,7 @@ func (tsa *Tagent) createHALFlowMonitorRulesProtoObj(mirrorSession *netproto.Mir
 				Match: &halproto.RuleMatch{
 					SrcMacAddress: []uint64{macRule.SrcMAC},
 					DstMacAddress: []uint64{macRule.DestMAC},
-					Protocol:      halproto.IPProtocol(macRule.AppPortObj.Ipproto),
+					Protocol:      halproto.IPProtocol_value[halproto.IPProtocol(macRule.AppPortObj.Ipproto).String()],
 					AppMatch:      appMatchObj,
 				},
 				Action: &halproto.MonitorAction{

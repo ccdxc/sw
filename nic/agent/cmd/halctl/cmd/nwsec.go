@@ -286,10 +286,7 @@ func nwsecPolicyShowOneResp(resp *halproto.SecurityPolicyGetResponse) {
 			}
 			fmt.Println(",")
 		}
-		proto := strings.Replace(rule.Match.GetProtocol().String(), "IPPROTO_", "", -1)
-		if proto == "NONE" {
-			proto = "ANY\n"
-		}
+		proto := rule.Match.GetProtocol()
 		fmt.Println("   Protocol: ", proto)
 		switch rule.Match.AppMatch.App.(type) {
 		case *halproto.RuleMatch_AppMatch_PortInfo:

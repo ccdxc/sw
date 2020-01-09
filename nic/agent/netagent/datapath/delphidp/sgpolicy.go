@@ -274,7 +274,7 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 				},
 			}
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = dstProtocols[i]
+			ruleMatch.Protocol = halproto.IPProtocol_value[dstProtocols[i].String()]
 			ruleMatches = append(ruleMatches, &ruleMatch)
 		}
 		return ruleMatches, nil
@@ -293,7 +293,7 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 				},
 			}
 			ruleMatch.AppMatch = &appMatch
-			ruleMatch.Protocol = srcProtocols[i]
+			ruleMatch.Protocol = halproto.IPProtocol_value[srcProtocols[i].String()]
 			ruleMatches = append(ruleMatches, &ruleMatch)
 		}
 		return ruleMatches, nil
@@ -316,7 +316,7 @@ func convertMatchCriteria(src, dst *netproto.MatchSelector) ([]*halproto.RuleMat
 					},
 				}
 				ruleMatch.AppMatch = &appMatch
-				ruleMatch.Protocol = dstProtocols[i]
+				ruleMatch.Protocol = halproto.IPProtocol_value[dstProtocols[i].String()]
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}

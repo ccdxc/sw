@@ -429,7 +429,7 @@ message RuleMatch {
   repeated types.IPAddressObj   dst_address     = 4;     // Match on the dst address range
   repeated fixed64              dst_mac_address = 5;     // Match on the dst mac addresses
   repeated uint32               dst_sg          = 6;     // Match on the dst sg
-  types.IPProtocol              protocol        = 7;     // Match protocol
+  int32                         protocol        = 7;     // Match protocol
   uint32                        ether_type      = 8;     // Match Ethertype
   AppMatch                      app_match       = 9;     // apps that the rules are matching
 }

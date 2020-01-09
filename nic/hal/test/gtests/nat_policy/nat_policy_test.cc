@@ -156,7 +156,7 @@ typedef struct nat_test_rule_match_s {
     int                num_src_port;
     port_range_t       dst_port[TEST_NAT_CFG_MAX_ENTRIES];
     int                num_dst_port;
-    types::IPProtocol  proto;
+    uint16_t           proto;
 } nat_test_rule_match_t;
 
 typedef struct nat_test_rule_action_s {

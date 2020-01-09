@@ -796,7 +796,7 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 		},
 
 		Match: &halproto.RuleMatch{
-			Protocol: halproto.IPProtocol(appPortObj.Ipproto),
+			Protocol: halproto.IPProtocol_value[halproto.IPProtocol(appPortObj.Ipproto).String()],
 		},
 		CollectorKeyHandle: collectorKeys,
 

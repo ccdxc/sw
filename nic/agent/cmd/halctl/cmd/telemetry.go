@@ -175,10 +175,7 @@ func flowMonitorShowCmdHandler(cmd *cobra.Command, args []string) {
 			}
 			fmt.Println(",")
 		}
-		proto := strings.Replace(resp.GetSpec().GetMatch().GetProtocol().String(), "IPPROTO_", "", -1)
-		if proto == "NONE" {
-			proto = "ANY\n"
-		}
+		proto := resp.GetSpec().GetMatch().GetProtocol()
 		fmt.Println("   Protocol: ", proto)
 		switch resp.GetSpec().GetMatch().AppMatch.App.(type) {
 		case *halproto.RuleMatch_AppMatch_PortInfo:

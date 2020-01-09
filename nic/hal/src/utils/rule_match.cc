@@ -638,7 +638,7 @@ construct_rule_fields (addr_list_elem_t *sa_entry, addr_list_elem_t *da_entry,
                        mac_addr_list_elem_t *mac_da_entry,
                        port_list_elem_t *sp_entry, port_list_elem_t *dp_entry,
                        sg_list_elem_t *src_sg_entry, sg_list_elem_t *dst_sg_entry,
-                       IPProtocol proto, uint32_t icmp_type, uint32_t icmp_code, uint32_t spi,  
+                       uint16_t proto, uint32_t icmp_type, uint32_t icmp_code, uint32_t spi,  
                        uint16_t ethertype)
 {
     ipv4_rule_t     *rule = NULL;

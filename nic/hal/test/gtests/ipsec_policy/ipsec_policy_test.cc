@@ -164,7 +164,7 @@ typedef struct ipsec_test_rule_match_s {
     int                num_src_port;
     port_range_t       dst_port[TEST_IPSEC_CFG_MAX_ENTRIES];
     int                num_dst_port;
-    types::IPProtocol  proto;
+    uint16_t           proto;
 } ipsec_test_rule_match_t;
 
 typedef struct ipsec_test_rule_action_s {

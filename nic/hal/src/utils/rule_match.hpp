@@ -52,7 +52,7 @@ typedef struct rule_match_s {
     dllist_ctxt_t         src_mac_addr_list;
     dllist_ctxt_t         dst_mac_addr_list;
     uint16_t              ethertype;
-    IPProtocol            proto;
+    uint16_t              proto;
     rule_match_app_t      app;
 } __PACK__ rule_match_t;
 

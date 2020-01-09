@@ -131,7 +131,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			log.Errorf("Failed to convert rule. Err: %v", err)
 			return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 		}
-		ruleMatch.Protocol = halProtocol
+		ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
 		ruleMatches = append(ruleMatches, &ruleMatch)
 		return ruleMatches, nil
 
@@ -177,7 +177,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleMatch.Protocol = halProtocol
+			ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
 
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
@@ -226,7 +226,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleMatch.Protocol = halProtocol
+			ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
 		}
@@ -289,7 +289,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 					log.Errorf("Failed to convert rule. Err: %v", err)
 					return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 				}
-				ruleMatch.Protocol = halProtocol
+				ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}
