@@ -39,6 +39,7 @@ mkdir -p /host/var/lib/pensando
 cp -f /target/etc/pensando/pen-influx/influxdb.conf /host/etc/pensando/configs/pen-influx/influxdb.conf
 cp -f /target/etc/pensando/shared/common/venice.json /host/etc/pensando/configs/shared/common/venice.json
 cp -f /target/etc/pensando/shared/common/venice.conf /host/etc/pensando/configs/shared/common/venice.conf
+cp -f /target/usr/bin/gettechsupport.sh /host/usr/pensando/bin/gettechsupport.sh
 
 
 #move to directories that are expected by the various services

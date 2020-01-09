@@ -152,6 +152,8 @@ installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-re
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="systemctl-reload-running", data="pen-cmd.service", comment="restart pen-cmd"))
 installInfo['LoadAndInstall'].append(InstallationItem(install_type="inline-script", data="echo done", comment="done"))
 
+ExecuteCommand("cp tools/scripts/gettechsupport.sh tools/docker-files/install/target/usr/bin/ ")
+
 with open("bin/venice-install.json", 'w') as f:
     json.dump(installInfo, f, indent=True, sort_keys=True, cls=MyEncoder)
 
