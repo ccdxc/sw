@@ -761,6 +761,19 @@ func getFieldIdxFromCam(cam *CamInfo, table string, field string) string {
 	return ""
 }
 
+func getRowStatusOid(cam *CamInfo, table string) string {
+	for _, mibInfo := range cam.Mibs.MibInfo {
+		if mibInfo.CodeName == table {
+			for _, fieldInfo := range mibInfo.FieldInfo {
+				if fieldInfo.CodeName == "row_status" {
+					return fieldInfo.Oid
+				}
+			}
+		}
+	}
+	return ""
+}
+
 func getFieldDataTypeFromCam(cam *CamInfo, table string, field string) string {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
@@ -3950,6 +3963,7 @@ func init() {
 	reg.RegisterFunc("getPdsaCastSetFunc", getPdsaCastSetFunc)
 	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
 	reg.RegisterFunc("getCppTypeFieldFromProto", getCppTypeFieldFromProto)
+	reg.RegisterFunc("getRowStatusOid", getRowStatusOid)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

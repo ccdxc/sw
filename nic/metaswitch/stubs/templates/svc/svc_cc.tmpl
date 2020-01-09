@@ -31,6 +31,19 @@ Status
     }
   {{if (HasSuffix $rpc "Delete")}}
     //Delete request
+    uint correlator = PDS_MS_CTM_GRPC_CORRELATOR;
+    PDS_MS_START_TXN(correlator);
+    {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
+      {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
+      {{$struct := $param.Struct}}
+    for (int i = 0; i < req->request_size(); i ++) {
+        auto proto_spec = req->request(i);
+        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+    }
+    {{end}}
+    PDS_MS_END_TXN(correlator);
   {{end}}
   {{if (HasSuffix $rpc "Get")}}
     PDS_MS_GET_SHARED_START();

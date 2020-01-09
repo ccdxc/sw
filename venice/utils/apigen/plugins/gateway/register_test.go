@@ -4490,6 +4490,12 @@ func TestApis(t *testing.T) {
 	if isFieldInCamTable(cam, "AMB_BGP_RM_ENT", "local_as") != true {
 		t.Errorf("Got wrong value")
 	}
+	if getRowStatusOid(cam, "AMB_BGP_PEER") != "4" {
+		t.Errorf("Got wrong value")
+	}
+	if getRowStatusOid(cam, "AMB_BGP_PEER_AFI_SAFI") != "" {
+		t.Errorf("Got wrong value")
+	}
 	opt := pdsaFieldOpt{}
 	opt.SetKeyOidLenIndex = ""
 	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_FIXED32, "byteArray", opt) != "NBB_PUT_LONG" {

@@ -96,6 +96,15 @@
         /***************************************************************************/
         AMB_SET_ALL_FIELDS_NOT_PRESENT(mib_msg);
 
+        {{$rowStOid := (getRowStatusOid $cam $struct)}}
+        {{if not (eq $rowStOid "") }}
+        /***************************************************************************/
+        /* We always want to set the row status.                                   */
+        /***************************************************************************/
+        v_{{$struct | ToLower}}->row_status = row_status;
+        AMB_SET_FIELD_PRESENT(mib_msg, {{$rowStOid}});
+        {{end}}
+
         {{$fields := .Fields}}
         {{range $fields}}
           {{if hasExtension "venice.pdsaFields" .}}

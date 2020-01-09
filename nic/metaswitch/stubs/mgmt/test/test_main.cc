@@ -55,14 +55,18 @@ class Client {
         auto ent = req.add_request();
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
-        peeraddr->set_v4addr(inet_addr("172.17.0.25"));
+        peeraddr->set_v4addr(1);
         ent->set_vrfid(1);
-        ent->set_peerport(0);
+        ent->set_adminen(pds::ADMIN_UP);
+        ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
-        localaddr->set_v4addr(inet_addr("172.17.0.23"));
-        ent->set_localport(0);
+        localaddr->set_v4addr(1);
+        ent->set_localport(3);
         ent->set_ifid(0);
+        ent->set_remoteasn(33);
+        ent->set_localasn(1);
+
         grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
 
         if (status.ok()) {
@@ -86,6 +90,35 @@ class Client {
                 std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
                 std::cout << "localasn: " << resp.localasn() << std::endl;
             }
+        } else {
+            std::cout << status.error_code() << ": " << status.error_message()
+                      << std::endl;
+        }
+    }
+
+    void peerDelete() {
+        pds::BGPPeerRequest req;
+        pds::BGPResponse res;
+        grpc::ClientContext context;
+
+        auto ent = req.add_request();
+        auto peeraddr = ent->mutable_peeraddr();
+        peeraddr->set_af(types::IP_AF_INET);
+        peeraddr->set_v4addr(1);
+        ent->set_vrfid(1);
+        ent->set_adminen(pds::ADMIN_UP);
+        ent->set_peerport(3);
+        auto localaddr = ent->mutable_localaddr();
+        localaddr->set_af(types::IP_AF_INET);
+        localaddr->set_v4addr(1);
+        ent->set_localport(3);
+        ent->set_ifid(0);
+        ent->set_remoteasn(33);
+        ent->set_localasn(1);
+        grpc::Status status = stub_->BGPPeerSpecDelete(&context, req, &res);
+
+        if (status.ok()) {
+            std::cout << "deleted 1 entry" << std::endl;
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
                       << std::endl;
@@ -149,6 +182,8 @@ int main(int argc, char** argv) {
     client.peerCreate();
     client.peerGet();
 //    sleep(25);
+    client.peerGetAll();
+    client.peerDelete();
     client.peerGetAll();
 
     return 0;
