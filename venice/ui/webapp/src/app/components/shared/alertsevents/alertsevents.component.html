@@ -2,8 +2,7 @@
   <!-- Since we are resizing lazy rendered tables manually, it needs to be called
         when tabs change so it knows to resize itself -->
   <mat-tab-group fxFlex [disableRipple]="true"
-                 (selectedIndexChange)="selectedIndexChangeEvent($event)"
-                 [selectedIndex]="tabIndex">
+                 (selectedIndexChange)="selectedIndexChangeEvent($event)">
     <mat-tab *roleGuard="'monitoringAlert_read'" label="ALERTS">
       <ng-container *ngTemplateOutlet="AlertsTableTemplate"></ng-container>
     </mat-tab>
@@ -16,12 +15,10 @@
 <ng-template #EventsTableTemplate>
   <div class="alertsevents-events-table">
     <app-eventstable style="height: 100%" [selector]="selector"
-                     [pollingServiceKey]="pollingServiceKey" [searchedEvent]="this.searchedEvent">
-    </app-eventstable>
+                     [pollingServiceKey]="pollingServiceKey"></app-eventstable>
   </div>
 </ng-template>
 
 <ng-template #AlertsTableTemplate>
-  <app-alertstable style="height: 100%" [selector]="selector" [searchedAlert]="this.searchedAlert">
-  </app-alertstable>
+  <app-alertstable style="height: 100%" [selector]="selector"></app-alertstable>
 </ng-template>

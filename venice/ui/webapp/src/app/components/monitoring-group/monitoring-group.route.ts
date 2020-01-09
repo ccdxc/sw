@@ -13,14 +13,6 @@ const routes: Routes = [
       {
         path: '',
         loadChildren: '@app/components/monitoring-group/alertsevents/alertseventspage.module#AlertsEventsPageModule'
-      },
-      {
-        path: 'alert/:alertname',
-        loadChildren: '@app/components/monitoring-group/alertsevents/alertseventspage.module#AlertsEventsPageModule'
-      },
-      {
-        path: 'event/:eventname',
-        loadChildren: '@app/components/monitoring-group/alertsevents/alertseventspage.module#AlertsEventsPageModule'
       }
     ]
   },

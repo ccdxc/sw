@@ -21,8 +21,6 @@ import { Observable, forkJoin, throwError, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
-import { ActivatedRoute } from '@angular/router';
-
 
 export interface AlertsEventsSelector {
   alertSelector: {
@@ -63,29 +61,12 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   @Input() selector: AlertsEventsSelector;
   @Output() activeTab: EventEmitter<string> = new EventEmitter<string>();
 
-  tabIndex: number = 0;
-  searchedAlert: string = '';
-  searchedEvent: string = '';
-
-  constructor(protected _controllerService: ControllerService,
-    private _route: ActivatedRoute
+  constructor(protected _controllerService: ControllerService
   ) {
     super(_controllerService);
   }
 
   ngOnInit() {
-    this._route.paramMap.subscribe(params => {
-      if (params.has('alertname')) {
-        // alerttab selected
-        this.searchedAlert = params.get('alertname');
-        this.tabIndex = 0;
-      }
-      if (params.has('eventname')) {
-        // eventtab selected
-        this.tabIndex = 1;
-        this.searchedEvent = params.get('eventname');
-      }
-    });
   }
 
   emitActiveTab(tabIndex) {
@@ -97,7 +78,6 @@ export class AlertseventsComponent extends BaseComponent implements OnInit {
   }
 
   selectedIndexChangeEvent(event) {
-    this.tabIndex = event;
     this.emitActiveTab(event);
   }
 }

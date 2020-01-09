@@ -1,161 +1,64 @@
 <div class="alertsevents-events-table" style="height: 100%">
-  <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
+  <app-tableviewedit
+                     style="height: 100%"
+                     fxLayout="column"
+                     [data]="dataObjects"
                      [showRowExpand]="showRowExpand"
-                     [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
-                     [dataKey]="'meta.name'" [sortOrder]="-1"
-                     [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
-                     (rowClick)="selectEvent($event)">
+                     [cols]="cols"
+                     [virtualRowHeight]="36"
+                     [sortField]="'meta.mod-time'"
+                     [dataKey]="'meta.name'"
+                     [sortOrder]="-1"
+                     [captionTemplate]="captionTemplate"
+                     [bodyTemplate]="bodyTemplate">
   </app-tableviewedit>
 </div>
 <ng-template #captionTemplate>
-  <div fxFlex fxLayout="column">
-    <div *ngIf="this.selectedEvent" [@slideInOut] fxFlex="auto" fxLayout="row"
-         class="eventdetail-container">
-      <ng-container *ngTemplateOutlet="selectedEventDetail;"></ng-container>
-    </div>
-    <div fxFlex fxLayout="row">
-      <div fxFlex fxLayout="row" fxLayoutAlign="center center">
-        <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
-                         [icon]="eventsIcon"
-                         width="250px">
-        </app-tableheader>
-        <div fxFlex></div>
-      </div>
-      <div fxFlex fxLayout="row" fxLayoutAlign="end center">
-        <!-- All events are currently informational, so we do not display severity filters or search filter -->
-        <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
-        <!-- Find Event by:  -->
-        <!-- <mat-form-field fxFlex="nogrow" floatLabel="never"> -->
-        <!-- Max length is picked to be the same as Elastic search limit -->
-        <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
-        <!-- </mat-form-field> -->
-        <!-- </div> -->
-        <div *ngIf="selector && selector.eventSelector && selector.eventSelector.name"
-             class="alertsevents-filter-sourcenode eventstable-filterby">
-          Filtering by {{selector.eventSelector.name}}
-        </div>
-        <!-- Removing the all button -->
-        <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number alertsevents-disabled"
-                  (click)="onEventNumberClick($event, null)" [matTooltip]="'All Events'"
-                  *ngIf="currentEventSeverityFilter != null">All</div> -->
-        <div class="global-button global-alert-critical alertsevents-main-menu-number "
-             [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
-             (click)="onEventNumberClick($event, 'critical')" [matTooltip]="'Critical Events'"
-             *ngIf="eventNumbers.critical>0 && eventNumbers.critical !== events.length">
-          {{ eventNumbers.critical }}</div>
-        <div class="global-button global-alert-warning alertsevents-main-menu-number "
-             [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
-             (click)="onEventNumberClick($event, 'warn')" [matTooltip]="'Warning Events'"
-             *ngIf="eventNumbers.warn>0 && eventNumbers.warn !== events.length">
-          {{ eventNumbers.warn }}</div>
-        <div class="global-button global-alert-info alertsevents-main-menu-number "
-             [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
-             (click)="onEventNumberClick($event, 'info')" [matTooltip]="'Infomational Events'"
-             *ngIf="eventNumbers.info>0 && eventNumbers.info !== events.length">
-          {{ eventNumbers.info }}</div>
-        <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
-                    labelStyleClass="alertsevents-checkbox-label" binary="true"
-                    label="Show Debug Events"
-                    [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
-        <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
-                       (timeRange)="setEventsTimeRange($event)"></app-timerange>
-      </div>
-    </div>
+  <div fxFlex fxLayout="row" fxLayoutAlign="center center">
+    <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
+                     [icon]="eventsIcon"
+                     width="250px">
+    </app-tableheader>
+    <div fxFlex></div>
   </div>
-</ng-template>
-
-<ng-template #selectedEventDetail>
-  <div fxFlex class="eventdetail-container">
-    <div fxFlex fxLayout="column">
-      <div class="eventdetail-header" fxFlex fxLayout="row">
-        <a fxFlex fxLayoutAlign="start center">Event Details:</a>
-        <mat-icon class="eventdetail-close" (click)="closeDetails()">close</mat-icon>
-      </div>
-      <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Severity:</a>
-            <a fxFlex fxLayoutAlign="start center"
-               class="eventdetail-value">{{this.selectedEvent.severity}}</a>
-          </div>
-        </div>
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Type:</a>
-            <a fxFlex fxLayoutAlign="start center"
-               class="eventdetail-value">{{this.selectedEvent.type}}</a>
-          </div>
-        </div>
-      </div>
-
-      <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Object Ref:</a>
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-value">
-              <ng-container *ngIf="this.selectedEvent['object-ref'] != null">
-                {{ this.selectedEvent['object-ref'].kind }} :
-                {{ this.selectedEvent['object-ref'].name }}
-              </ng-container>
-            </a>
-          </div>
-        </div>
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Count:</a>
-            <a fxFlex fxLayoutAlign="start center"
-               class="eventdetail-value">{{this.selectedEvent.count}}</a>
-          </div>
-        </div>
-      </div>
-
-      <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Modification Time:</a>
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-value">
-              {{ dateToString(this.selectedEvent.meta['mod-time']) | PrettyDate}}
-            </a>
-          </div>
-        </div>
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Creation Time:</a>
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-value">
-              {{ dateToString(this.selectedEvent.meta['creation-time']) | PrettyDate}}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-key">Source Node &
-              Component:</a>
-            <a fxFlex fxLayoutAlign="start center" class="eventdetail-value">
-              {{ this.selectedEvent.source['node-name'] }} :
-              {{ this.selectedEvent.source.component }}
-            </a>
-          </div>
-        </div>
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-          </div>
-        </div>
-      </div>
-
-      <div fxFlex fxLayout="row">
-        <div fxFlex fxLayout="column">
-          <div fxLayout="row">
-            <a fxFlex="25" fxLayoutAlign="start center" class="eventdetail-key">Message:</a>
-            <a fxFlex="75" fxLayoutAlign="start center" class="eventdetail-value">
-              {{ this.selectedEvent.message}}
-            </a>
-          </div>
-        </div>
-      </div>
+  <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+    <!-- All events are currently informational, so we do not display severity filters or search filter -->
+    <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
+    <!-- Find Event by:  -->
+    <!-- <mat-form-field fxFlex="nogrow" floatLabel="never"> -->
+    <!-- Max length is picked to be the same as Elastic search limit -->
+    <!-- <input matInput [formControl]="eventSearchFormControl" placeholder="Leader, Service, ... " maxlength="256" autocomplete="off"> -->
+    <!-- </mat-form-field> -->
+    <!-- </div> -->
+    <div *ngIf="selector && selector.eventSelector && selector.eventSelector.name"
+         class="alertsevents-filter-sourcenode eventstable-filterby">
+      Filtering by {{selector.eventSelector.name}}
     </div>
+    <!-- Removing the all button -->
+    <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number alertsevents-disabled"
+            (click)="onEventNumberClick($event, null)" [matTooltip]="'All Events'"
+            *ngIf="currentEventSeverityFilter != null">All</div> -->
+    <div class="global-button global-alert-critical alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'critical')" [matTooltip]="'Critical Events'"
+         *ngIf="eventNumbers.critical>0 && eventNumbers.critical !== events.length">
+      {{ eventNumbers.critical }}</div>
+    <div class="global-button global-alert-warning alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'warn')" [matTooltip]="'Warning Events'"
+         *ngIf="eventNumbers.warn>0 && eventNumbers.warn !== events.length">
+      {{ eventNumbers.warn }}</div>
+    <div class="global-button global-alert-info alertsevents-main-menu-number "
+         [ngClass]="currentEventSeverityFilter != null && currentEventSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+         (click)="onEventNumberClick($event, 'info')" [matTooltip]="'Infomational Events'"
+         *ngIf="eventNumbers.info>0 && eventNumbers.info !== events.length">
+      {{ eventNumbers.info }}</div>
+    <p-checkbox name="Show Debug Events" styleClass="alertsevents-checkbox"
+                labelStyleClass="alertsevents-checkbox-label" binary="true"
+                label="Show Debug Events"
+                [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
+    <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
+                   (timeRange)="setEventsTimeRange($event)"></app-timerange>
   </div>
 </ng-template>
 

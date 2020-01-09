@@ -6,7 +6,6 @@ import { IEventsEvent, IEventsEventList, ApiListWatchOptions, IApiListWatchOptio
 import { PollUtility, PollingInstance } from '@app/services/PollUtility';
 import { Utility } from '@app/common/Utility';
 import { UIConfigsService } from './uiconfigs.service';
-import { Observable } from 'rxjs';
 
 /**
  * Events polling
@@ -35,17 +34,6 @@ export class EventsService extends EventGenService {
         this.pollingFetchData(key, body, useRealData);
       },
       this.POLLING_INTERVAL);
-  }
-
-  public GetEvent(UUID, queryParam: any = null): Observable<{body: IEventsEvent | Error, statusCode: number}> {
-    let url = this['baseUrlAndPort'] + '/events/v1/events/{UUID}';
-    url = url.replace('{UUID}', UUID);
-    const opts = {
-      eventID: 'GetEvent',
-      objType: 'EventsEvent',
-      isStaging: false,
-    };
-    return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IEventsEvent | Error, statusCode: number}>;
   }
 
   pollEvents(key: string, body: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.none }) {

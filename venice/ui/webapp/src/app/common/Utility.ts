@@ -1090,9 +1090,8 @@ export class Utility {
       case 'Endpoint':
         return 'workload';  // VS-363, when search is:Workload or is:Endpoint, we should /workload page
       case 'Alert':
-        return cat + '/alertsevents/alert/' + name;
       case 'Event':
-        return cat + '/alertsevents/event/' + name;
+        return cat + '/alertsevents';
       case 'AlertPolicy':
         return cat + '/alertsevents/alertpolicies';
       case 'AlertDestination':
