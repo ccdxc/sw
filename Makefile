@@ -687,6 +687,9 @@ naples-firmware-tarball-apulu: naples-firmware-tarball
 naples-protos-apulu:
 	tar -zcf naples-protos-apulu.tgz nic/build/aarch64/${PIPELINE}/gen/proto/
 
+naples-firmware-tarball-athena: NAPLES_FW_TAR=naples_fw_all_athena.tgz
+naples-firmware-tarball-athena: naples-firmware-tarball
+
 e2e-iota: e2e-naples
 	$(MAKE) venice-image
 	$(MAKE) venice-upgrade-image

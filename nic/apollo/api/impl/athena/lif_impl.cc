@@ -222,7 +222,9 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     memset(&mask, 0, sizeof(mask));
     memset(&data, 0, sizeof(data));
 
-    // uplink -> ARM
+    // uplink -> ARM on flow miss
+    key.control_metadata_flow_miss = 1;
+    mask.control_metadata_flow_miss_mask = 1;
     key.capri_intrinsic_lif =
         sdk::lib::catalog::ifindex_to_logical_port(pinned_if_idx_);
     mask.capri_intrinsic_lif_mask = 0xFFFF;

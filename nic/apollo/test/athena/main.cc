@@ -30,8 +30,7 @@
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "trace.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
-#include "lib/table/ftl/ftl_base.hpp"
-#include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 
 namespace core {
 // number of trace files to keep
@@ -127,6 +126,7 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 } // namespace core
 
 using sdk::table::ftl_base;
+using sdk::table::flow_hash;
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
@@ -158,7 +158,7 @@ flow_table_init(void)
     factory_params.appdata2str = NULL;
     factory_params.entry_trace_en = true;
     factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
-    flow_table = ftl_base::factory(&factory_params);
+    flow_table = flow_hash::factory(&factory_params);
     assert(flow_table);
     return SDK_RET_OK;
 }

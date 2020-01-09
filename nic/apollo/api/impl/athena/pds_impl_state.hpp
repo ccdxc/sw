@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/slab/slab.hpp"
 #include "nic/apollo/api/impl/athena/athena_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
+#include "nic/apollo/api/impl/athena/if_impl_state.hpp"
 
 namespace api {
 namespace impl {
@@ -36,10 +37,12 @@ public:
     ~pds_impl_state();
     athena_impl_state *athena_impl_db(void) const { return athena_impl_db_; }
     lif_impl_state *lif_impl_db(void) const { return lif_impl_db_; }
+    if_impl_state *if_impl_db(void) const { return if_impl_db_; }
 
 private:
     athena_impl_state          *athena_impl_db_;
     lif_impl_state             *lif_impl_db_;
+    if_impl_state              *if_impl_db_; 
 };
 extern pds_impl_state g_pds_impl_state;
 
@@ -47,6 +50,12 @@ static inline athena_impl_state *
 athena_impl_db (void)
 {
     return  g_pds_impl_state.athena_impl_db();
+}
+
+static inline if_impl_state *
+if_impl_db (void)
+{
+    return g_pds_impl_state.if_impl_db();
 }
 
 /// \@}

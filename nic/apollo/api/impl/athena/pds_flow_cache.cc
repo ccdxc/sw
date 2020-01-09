@@ -119,7 +119,7 @@ pds_flow_cache_create (uint32_t core_id)
     factory_params.thread_id = core_id;
     factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
 
-    if ((ftl_table = ftl_base::factory(&factory_params)) == NULL) {
+    if ((ftl_table = flow_hash::factory(&factory_params)) == NULL) {
         PDS_TRACE_ERR("Table creation failed in thread %u", core_id);
         return SDK_RET_OOM;
     }

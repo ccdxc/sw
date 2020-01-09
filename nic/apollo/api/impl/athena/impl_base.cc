@@ -12,6 +12,7 @@
 #include "nic/apollo/framework/impl.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/impl/athena/if_impl.hpp"
 
 namespace api {
 namespace impl {
@@ -55,6 +56,8 @@ impl_base::destroy(void) {
 impl_base *
 impl_base::factory(impl_obj_id_t obj_id, void *args) {
     switch (obj_id) {
+    case IMPL_OBJ_ID_IF:
+        return if_impl::factory((pds_if_spec_t *)args);
     default:
         break;
     }

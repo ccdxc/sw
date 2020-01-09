@@ -47,6 +47,16 @@ builds:
     artifacts:
       - /sw/naples_fw_all_apulu.tgz
       - /sw/naples-protos-apulu.tgz
+  build-athena-x86:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw; make ws-tools && go install ./asset-build/... && make pull-assets && cd nic && make PIPELINE=athena package && find ./build -name '*.o'  | xargs rm && tar -zvcf /sw/build_athena_x86.tar.gz /usr/src/github.com/pensando/sw/nic/build"]
+    owners: ["email:sw-team@pensando.io"]
+    artifacts:
+      - /sw/build_athena_x86.tar.gz
+  build-athena-arm:
+    commands: ["sh", "-c", "cd /usr/src/github.com/pensando/sw && ls -al && make ws-tools && go install ./asset-build/... && make pull-assets && make PIPELINE=athena naples-firmware && make PIPELINE=athena naples-firmware-tarball-athena"]
+    owners: ["email:sw-team@pensando.io"]
+    artifacts:
+      - /sw/naples_fw_all_athena.tgz
   build-venice-image:
     commands: ["bash", "-c", "mkdir -p /sw/bin; cd /usr/src/github.com/pensando/sw/test/ci_targets/e2e-venice-image; GIT_VERSION=$(git describe --tags --dirty --always) GIT_COMMIT=$(git rev-list -1 HEAD --abbrev-commit) go run make-venice-image.go"]
     owners: ["email:sw-team@pensando.io"]

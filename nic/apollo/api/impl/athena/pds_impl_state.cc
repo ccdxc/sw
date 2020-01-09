@@ -29,6 +29,7 @@ sdk_ret_t
 pds_impl_state::init(pds_state *state) {
     athena_impl_db_ = new athena_impl_state(state);
     lif_impl_db_ = new lif_impl_state(state);
+    if_impl_db_ = new if_impl_state(state);
 
     return SDK_RET_OK;
 }
