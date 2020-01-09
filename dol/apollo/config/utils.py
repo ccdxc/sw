@@ -184,6 +184,7 @@ def ValidateUpdate(obj, resps):
         for status in resp.ApiStatus:
             if status == types_pb2.API_STATUS_OK:
                 obj.SetHwHabitant(True)
+                InformDependents(obj, 'UpdateNotify')
             else:
                 logger.error("Update failed for %s" %(obj.__repr__()))
                 obj.PrepareRollbackUpdate()

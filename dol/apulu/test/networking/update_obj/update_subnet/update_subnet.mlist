@@ -30,27 +30,13 @@ modules:
         name    : LOCAL2REMOTE
         mlist   : local2remote.mlist
 
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
+# Rollback update to subnet. packet is not constructed with old values here since mutable fields in subnet dont contribute to decision making in pipeline.
     - module:
-        name    : PREPARE_ROLLBACK
+        name    : ROLLBACK
         spec    : crud_cfg_object.testspec
         args    :
             - object    : subnet
-              operation : PrepareRollbackUpdate
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-
-    - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
-
-    - module:
-        name    : COMMIT_ROLLBACK
-        spec    : crud_cfg_object.testspec
-        args    :
-            - object    : subnet
-              operation : CommitUpdate
+              operation : RollbackUpdate
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

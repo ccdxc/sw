@@ -114,6 +114,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
         utils.DeleteObject(self)
         return
 
+    def UpdateNotify(self, dObj):
+        return
+
     def RollbackMany(self, attrlist):
         if self.HasPrecedent():
             for attr in attrlist:

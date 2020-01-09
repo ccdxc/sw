@@ -13,6 +13,10 @@ modules:
         name    : DEVICE_WORKFLOW_START
         spec    : crud_workflow.testspec
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
@@ -30,7 +34,7 @@ modules:
         name    : LOCAL2REMOTE
         mlist   : local2remote.mlist
 
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
+# this triggers a packet from igw with old device ip which is expected to be dropped
     - module:
         name    : PREPARE_ROLLBACK
         spec    : crud_cfg_object.testspec
@@ -38,12 +42,14 @@ modules:
             - object    : device
               operation : PrepareRollbackUpdate
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
 
     - module:
         name    : COMMIT_ROLLBACK
@@ -52,12 +58,14 @@ modules:
             - object    : device
               operation : CommitUpdate
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
 
     - module:
         name    : DEVICE_WORKFLOW_END

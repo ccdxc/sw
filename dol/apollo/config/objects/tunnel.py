@@ -95,18 +95,11 @@ class TunnelObject(base.ConfigObjectBase):
                 self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
                 self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
-                if self.DEVICE.IsEncapTypeMPLS():
-                    self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
-                else:
-                    self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
-            elif self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
-                self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.stack):
                     self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 else:
                     self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
-                #TODO: Update nh and nhgroups
             if self.IsUnderlay():
                 self.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
             elif self.IsUnderlayEcmp():
@@ -116,7 +109,7 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def RollbackAttributes(self):
-        attrlist = ["RemoteIPAddr", "EncapValue", "NEXTHOP", "NEXTHOPGROUP", "RemoteIP", "MACAddr"]
+        attrlist = ["RemoteIPAddr", "NEXTHOP", "NEXTHOPGROUP", "RemoteIP", "MACAddr"]
         self.RollbackMany(attrlist)
         return
 

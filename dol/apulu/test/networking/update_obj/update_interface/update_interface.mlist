@@ -13,8 +13,14 @@ modules:
         name    : INTERFACE_WORKFLOW_START
         spec    : crud_workflow.testspec
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
     - module:
         name    : UPD_INTERFACE
@@ -24,7 +30,9 @@ modules:
               operation : Update
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
     - module:
         name    : LOCAL2REMOTE
@@ -38,12 +46,14 @@ modules:
             - object    : interface
               operation : PrepareRollbackUpdate
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
 
     - module:
         name    : COMMIT_ROLLBACK
@@ -52,16 +62,19 @@ modules:
             - object    : interface
               operation : CommitUpdate
         iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
     - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
+        name    : IGW2LOCAL
+        mlist   : igw2local.mlist
 
     - module:
         name    : INTERFACE_WORKFLOW_END
         spec    : crud_workflow.testspec
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING

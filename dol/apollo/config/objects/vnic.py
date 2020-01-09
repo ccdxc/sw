@@ -101,11 +101,13 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def UpdateAttributes(self):
-        self.MACAddr = resmgr.VnicMacAllocator.get()
+        if self.dot1Qenabled:
+            self.VlanId = next(resmgr.VnicVlanIdAllocator)
         return
 
     def RollbackAttributes(self):
-        self.MACAddr = self.GetPrecedent().MACAddr
+        if self.dot1Qenabled:
+            self.VlanId = self.GetPrecedent().VlanId
         return
 
     def PopulateKey(self, grpcmsg):
@@ -207,9 +209,9 @@ class VnicObject(base.ConfigObjectBase):
     def GetDependees(self):
         """
         depender/dependent - vnic
-        dependee - meter, mirror & policy
+        dependee - subnet, meter, mirror & policy
         """
-        dependees = [ ]
+        dependees = [ self.SUBNET ]
         meterids = [ self.V4MeterId, self.V6MeterId ]
         meterobjs = MeterClient.GetObjectsByKeys(meterids)
         dependees.extend(meterobjs)
@@ -277,11 +279,17 @@ class VnicObject(base.ConfigObjectBase):
             elif cObj.IsV6():
                 self.V6MeterId = cObj.MeterId
         else:
-            logger.error(" - ERROR: %s not handling %s restoration" %\
-                         (self.ObjType.name, cObj.ObjType))
-            cObj.Show()
-            assert(0)
+            logger.info("%s ignoring %s restoration" %\
+                        (self.ObjType.name, cObj.ObjType))
+            return
         # self.Update()
+        return
+
+    def UpdateNotify(self, dObj):
+        logger.info("Notify %s for %s update" % (self, dObj))
+        if dObj.ObjType == api.ObjectTypes.SUBNET:
+            logger.info("Updating vnic hostIf since subnet is updated" % (self, dObj))
+            self.Update()
         return
 
     def DeleteNotify(self, dObj):
@@ -330,10 +338,9 @@ class VnicObject(base.ConfigObjectBase):
                              (dObj, self))
                 assert(0)
         else:
-            logger.error(" - ERROR: %s not handling %s deletion" %\
-                         (self.ObjType.name, dObj.ObjType))
-            dObj.Show()
-            assert(0)
+            logger.info("%s ignoring %s deletion" %\
+                        (self.ObjType.name, dObj.ObjType))
+            return
         # self.Update()
         return
 
