@@ -1,5 +1,5 @@
 // const URL = "10.7.100.108:10001"  // Rohan's
-const URL = "10.7.100.21:10001"  // Jeff's dev
+ const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.7.100.76:10001"; // Titus
 // const URL = "10.7.100.75:10001"  // For CalSoftInc
 // const URL = "192.168.71.124:10001" // Ubuntu Box
@@ -7,24 +7,12 @@ const URL = "10.7.100.21:10001"  // Jeff's dev
 // const URL = "10.7.100.53:10001"; // Jay
 // const URL = "10.7.100.44:10001"; // Rishabh's vm
 // const URL = "10.7.100.24:10001";  // Barun
-// const URL = "192.168.78.211";  // sys-test team (admin, Systest-1$
-// const URL = "192.168.78.198"   // india test team server with LDAP.  admin/N0isystem (Systest-1$) as admin access, sunil/N0isystem$ as LSDAP external user
-// const URL = "192.168.129.55"  // systest Qixin's box  admin/N0isystem$
-// const URL = "192.168.78.237";    // systest  ambish's box
-// const URL = "192.168.78.195"; // systest Yonatan's box. root/N0isystem$
-// const URL = "192.168.129.19"; // systest Swami's appliance. root/centos
-// const URL = "192.168.129.176"; // systest Amar's appliance. root/centos
-// const URL = "192.168.68.224"  // Vinod's appliance box. There are real DSC NIC. admin/Pensando0$ 
-// const URL = "192.168.129.38";
-// const URL =  "192.168.78.243"
-// const URL =  "192.168.129.42";  // many NICS
-// const URL =  "192.168.76.201"
-// const URL =  "192.168.76.201"
-// const URL =  "192.168.76.198"
 
 // Since 2019-12-20, all above 192.xxx servers are not avaible. 
 // const URL =  "10.8.100.11"  // QA admin/Pensando0$
 // const URL =  "10.30.2.173"  // QA Ambish's large scale setup  admin/Pensando0$
+// const URL =  "10.30.2.174"  
+// const URL = "10.30.1.175"  // Srividhya Swaminathan
 
 const PROXY_CONFIG =
   {

@@ -15,7 +15,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { HttpEventUtility } from '@common/HttpEventUtility';
 import { Utility } from '@common/Utility';
 import { TablevieweditAbstract } from '@components/shared/tableviewedit/tableviewedit.component';
-import { ClusterDistributedServiceCard, IApiStatus, ClusterHostList } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, IApiStatus, ClusterHostList, ClusterDistributedServiceCardList } from '@sdk/v1/models/generated/cluster';
 import { ClusterHost, IClusterHost } from '@sdk/v1/models/generated/cluster/cluster-host.model';
 import { FieldsRequirement, SearchTextRequirement } from '@sdk/v1/models/generated/search';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
@@ -78,8 +78,8 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'hosts-column-host-name', sortable: true, width: 15 },
-    { field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: true, width: 25 },
-    { field: 'workloads', header: 'Associated Workloads', class: 'hosts-column-workloads', sortable: true, width: 25 },
+    { field: 'spec.dscs', header: 'Distributed Services Cards', class: 'hosts-column-dscs', sortable: false, width: 25 },
+    { field: 'workloads', header: 'Associated Workloads', class: 'hosts-column-workloads', sortable: false, width: 25 },
     { field: 'meta.mod-time', header: 'Modification Time', class: 'hosts-column-date', sortable: true, width: '180px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: 'hosts-column-date', sortable: true, width: '180px' },
   ];
@@ -95,6 +95,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   hostWorkloadsTuple: { [hostKey: string]: HostWorkloadTuple; };
 
   maxWorkloadsPerRow: number = 8;
+  naplesList: ClusterDistributedServiceCard[] = [];
 
   constructor(private clusterService: ClusterService,
     private workloadService: WorkloadService,
@@ -105,7 +106,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     super(controllerService, cdr, uiconfigsService);
   }
 
-  getHosts() {
+  watchHosts() {
     this.tableLoading = true;
     const getSubscription = this.clusterService.ListHost().subscribe(
       response => {
@@ -158,16 +159,49 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   }
 
-  getNaples() {
+  fetchDSCs() {
+    const fetchDSCSubscription  = this.clusterService.ListDistributedServiceCard().subscribe(
+        (response) => {
+            if (response && response.body && response.body ) {
+                const body = response.body as ClusterDistributedServiceCardList;
+                if (body.items && body.items.length > 0) {
+                  this.naplesList = body.items;
+                  const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naplesList );
+                  this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
+                  this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
+                }
+            }
+        },
+        (error) => {
+          this.controllerService.invokeRESTErrorToaster('Error', 'Failed to get Fetch DSC');
+        },
+        () => {
+          this.watchNaples();
+          this.watchWorkloads();
+          this.watchHosts();
+        }
+    );
+    this.subscriptions.push(fetchDSCSubscription);
+  }
+
+  updateMaps(oldMap: { [key: string]: string; } , newMap: { [key: string]: string; } )  {
+      Object.keys(newMap).forEach( (key) => {
+        if (!oldMap[key]) {
+          oldMap[key] = newMap[key];
+        }
+      });
+  }
+
+  watchNaples() {
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
     this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         const _myDSCnameToMacMap: DSCsNameMacMap = ObjectsRelationsUtility.buildDSCsNameMacMap(this.naples);
-        this.nameToMacMap = _myDSCnameToMacMap.nameToMacMap;
-        this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
 
+       this.updateMaps(this.nameToMacMap, _myDSCnameToMacMap.nameToMacMap);
+       this.updateMaps(this.macToNameMap, _myDSCnameToMacMap.macToNameMap);
         this.naplesWithoutHosts = [];
         for (const dsc of this.naples) {
           if (!dsc.status.host) {
@@ -176,14 +210,14 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
         }
         this.notAdmittedCount = this.naplesWithoutHosts.length;
       },
-      this.controllerService.webSocketErrorHandler('Failed to get NAPLES info')
+      this.controllerService.webSocketErrorHandler('Failed to get DSC info')
     );
     this.subscriptions.push(subscription); // add subscription to list, so that it will be cleaned up when component is destroyed.
   }
   /**
    * Fetch workloads.
    */
-  getWorkloads() {
+  watchWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
@@ -295,12 +329,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
 
 
   postNgInit() {
-    this.getWorkloads();
-    this.getNaples();
-    this.getHosts();
+    // VS-1080.  We have to load up DSCs first then watch other objects. So far, this is the only call arrangement that works in both scale setup and small setup.
+    // TODO: Loading up hundreds of record in table is not the right UX/UI.  We should present top-Ns to give user big picture and encourage data searching.
+    this.fetchDSCs();  // fetchDSCs call watchNaples(), watchWorkloads(), watchHosts  // 2020 release-A
     this.buildAdvSearchCols();
-
-
   }
 
   deleteRecord(object: ClusterHost): Observable<{ body: IClusterHost | IApiStatus | Error | IClusterHost; statusCode: number }> {

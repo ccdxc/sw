@@ -1,35 +1,33 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { configureTestSuite } from 'ng-bullet';
-
-import { HostsComponent } from './hosts.component';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { PrimengModule } from '@lib/primeng.module';
-import { WidgetsModule } from 'web-app-framework';
-import { MaterialdesignModule } from '@lib/materialdesign.module';
-import { RouterTestingModule } from '@angular/router/testing';
-import { SharedModule } from '@components/shared/shared.module';
-import { ControllerService } from '@app/services/controller.service';
-import { ConfirmationService } from 'primeng/api';
-import { LogService } from '@app/services/logging/log.service';
-import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { DebugElement } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatIconRegistry } from '@angular/material';
-import { MessageService } from '@app/services/message.service';
-import { ClusterService } from '@app/services/generated/cluster.service';
-import { BehaviorSubject } from 'rxjs';
-import { SearchService } from '@app/services/generated/search.service';
 import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
+import { AuthService } from '@app/services/auth.service';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { SearchService } from '@app/services/generated/search.service';
+import { WorkloadService } from '@app/services/generated/workload.service';
+import { LogPublishersService } from '@app/services/logging/log-publishers.service';
+import { LogService } from '@app/services/logging/log.service';
+import { MessageService } from '@app/services/message.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterLinkStubDirective } from '@common/RouterLinkStub.directive.spec';
 import { TestingUtility } from '@common/TestingUtility';
+import { SharedModule } from '@components/shared/shared.module';
+import { MaterialdesignModule } from '@lib/materialdesign.module';
+import { PrimengModule } from '@lib/primeng.module';
 import { ClusterHost } from '@sdk/v1/models/generated/cluster';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
-import { WorkloadService } from '@app/services/generated/workload.service';
-import { DebugElement } from '@angular/core';
-import { AuthService } from '@app/services/auth.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { configureTestSuite } from 'ng-bullet';
+import { ConfirmationService } from 'primeng/api';
+import { WidgetsModule } from 'web-app-framework';
+import { HostsComponent } from './hosts.component';
 import { NewhostComponent } from './newhost/newhost.component';
+
 
 describe('HostsComponent', () => {
   let component: HostsComponent;
@@ -266,19 +264,27 @@ describe('HostsComponent', () => {
 
   it('should populate table', () => {
     TestingUtility.setAllPermissions();
-    const service = TestBed.get(ClusterService);
-    spyOn(service, 'WatchHost').and.returnValue(
+    const serviceCluster = TestBed.get(ClusterService);
+    const serviceWorkload = TestBed.get(WorkloadService);
+    const subject = TestingUtility.createWatchEventsSubject([
+      naple1
+    ]);
+    spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
+      subject
+    );
+    spyOn(serviceCluster, 'WatchHost').and.returnValue(
       TestingUtility.createWatchEventsSubject([
         host1, host2
       ])
     );
 
-    const serviceWorkload = TestBed.get(WorkloadService);
     spyOn(serviceWorkload, 'WatchWorkload').and.returnValue(
       TestingUtility.createWatchEventsSubject([
         workload1, workload2
       ])
     );
+
+    subject.complete();
 
     fixture.detectChanges();
 
@@ -306,12 +312,27 @@ describe('HostsComponent', () => {
           expect(fieldElem.nativeElement.textContent.length).toEqual(0);
         }
       }
-    }, 'edit delete ', true);
+    }, 'delete ', true);
   });
 
+  /**
+   *  hosts.c.ts  call fetchDSC --> onComplete ( call watch-A, watch-B, watch-C).
+   *  So we do
+   *  1. set up subject
+   *  2. set up spyOn
+   *  3. subject.complete
+   *  4. test....
+   */
   it('should have correct router links', () => {
     TestingUtility.setAllPermissions();
     const serviceCluster = TestBed.get(ClusterService);
+
+    const subject = TestingUtility.createWatchEventsSubject([
+      naple1
+    ]);
+    spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
+      subject
+    );
     spyOn(serviceCluster, 'WatchHost').and.returnValue(
       TestingUtility.createWatchEventsSubject([
         host1, host2, host3
@@ -323,6 +344,9 @@ describe('HostsComponent', () => {
         naple1
       ])
     );
+
+    subject.complete();
+
     fixture.detectChanges();
 
     // find DebugElements with an attached RouterLinkStubDirective
@@ -332,25 +356,36 @@ describe('HostsComponent', () => {
     // using each DebugElement's injector
     const routerLinks = linkDes.map(de => de.injector.get(RouterLinkStubDirective));
     expect(routerLinks.length).toBe(2, 'Should have 2 routerLinks');
-
     expect(routerLinks[0].linkParams).toBe('/cluster/dscs/00ae.cd00.1142');
     expect(routerLinks[1].linkParams).toBe('/cluster/dscs/0242.c0a8.1c02');
   });
 
+
+
   describe('RBAC', () => {
     beforeEach(() => {
-      const service = TestBed.get(ClusterService);
-      spyOn(service, 'WatchHost').and.returnValue(
+      const serviceCluster = TestBed.get(ClusterService);
+      const serviceWorkload = TestBed.get(WorkloadService);
+
+      const subject = TestingUtility.createWatchEventsSubject([
+        naple1
+      ]);
+      spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
+        subject
+      );
+      spyOn(serviceCluster, 'WatchHost').and.returnValue(
         TestingUtility.createWatchEventsSubject([
           host1, host2, host3
         ])
       );
 
-      spyOn(service, 'WatchDistributedServiceCard').and.returnValue(
+      spyOn(serviceCluster, 'WatchDistributedServiceCard').and.returnValue(
         TestingUtility.createWatchEventsSubject([
           naple1
         ])
       );
+
+      subject.complete();
     });
 
     it('naples read permission', () => {
