@@ -74,7 +74,7 @@ vpc:
                 direction   : bidir
                 rule:
                   - protocol    : tcp
-                    prioritybase : 4294967295
+                    prioritybase : 1023
                     priority    : -2                 # -1 increasing, -2 decreasing, -3 random, +x x priority
                     action      : random             # random action (allow / deny)
                     v4base      : '99.0.0.0\16'

@@ -74,7 +74,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -84,7 +84,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     v4pfx: '10.10.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\90'
@@ -100,7 +100,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '11.0.0.0\8'
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v6pfx: '1234:5678:4321:8765:1111::\80'
                     sportlow: 10
@@ -109,7 +109,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     v4pfx: '11.255.0.0\16'
                     v6pfx: '1234:5678:4321:8765:1111:3333::\96'
@@ -119,7 +119,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967293
+                    priority: 1021
                     action  : allow
                     v4pfx: '11.255.255.0\24'
                     v6pfx: '1234:5678:4321:8765:1111:3333:4444::\112'
@@ -135,7 +135,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '11.0.0.0\8'
-                    priority: 4294967290
+                    priority: 1018
                     action  : allow
                     v6pfx: '1234:5678:4321:8765:1111::\80'
                     sportlow: 10
@@ -144,7 +144,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967291
+                    priority: 1019
                     action  : allow
                     v4pfx: '11.255.0.0\16'
                     v6pfx: '1234:5678:4321:8765:1111:3333::\96'
@@ -154,7 +154,7 @@ vpc:
                     dporthigh: 40
 
                   - protocol: tcp
-                    priority: 4294967292
+                    priority: 1020
                     action  : allow
                     v4pfx: '11.255.255.0\24'
                     v6pfx: '1234:5678:4321:8765:1111:3333:4444::\112'
@@ -170,7 +170,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '10.0.0.0\8'
-                    priority: 4294967295
+                    priority: 1023
                     action  : deny
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
                     sportlow: 10
@@ -179,7 +179,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     v4pfx: '10.0.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -189,7 +189,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967293
+                    priority: 1021
                     action  : allow
                     v4pfx: '10.0.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\112'
@@ -205,7 +205,7 @@ vpc:
                 rule:
                   - protocol: tcp
                     v4pfx: '10.0.0.0\8'
-                    priority: 4294967293
+                    priority: 1021
                     action  : allow
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
                     sportlow: 10
@@ -214,7 +214,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     v4pfx: '10.0.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -224,7 +224,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v4pfx: '10.0.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\112'

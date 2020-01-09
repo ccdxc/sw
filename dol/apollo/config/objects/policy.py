@@ -20,6 +20,10 @@ import apollo.config.topo as topo
 import policy_pb2 as policy_pb2
 import types_pb2 as types_pb2
 
+class RulePriority(enum.IntEnum):
+    MIN = 0
+    MAX = 1023
+
 class SupportedIPProtos(enum.IntEnum):
     TCP = 6
     UDP = 17
@@ -582,10 +586,10 @@ class PolicyObjectClient(base.ConfigClientBase):
             return action
 
         def __get_valid_priority(prio):
-            if prio < utils.UINT32_MIN:
-                return utils.UINT32_MIN
-            elif prio > utils.UINT32_MAX:
-                return utils.UINT32_MAX
+            if prio < RulePriority.MIN:
+                return RulePriority.MIN
+            elif prio > RulePriority.MAX:
+                return RulePriority.MAX
             else:
                 return prio
 
@@ -601,7 +605,7 @@ class PolicyObjectClient(base.ConfigClientBase):
                 priority = basePrio
             elif prio == -3:
                 # random priority
-                priority = random.randint(utils.UINT32_MIN, utils.UINT32_MAX)
+                priority = random.randint(RulePriority.MIN, RulePriority.MAX)
             else:
                 # configured priority
                 priority = prio

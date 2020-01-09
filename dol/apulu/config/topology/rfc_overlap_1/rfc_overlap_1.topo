@@ -74,13 +74,13 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : deny
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     v4pfx: '11.11.0.0\16'
                     v6pfx: '1e7:a11:bad:b075:d1e::0\80'
@@ -91,7 +91,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v4pfx: '10.10.0.0\16'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\80'
@@ -101,7 +101,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v4pfx: '10.10.0.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c::0\96'
@@ -116,7 +116,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '99.88.1.1'
@@ -134,7 +134,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '99.88.91.1'
@@ -157,7 +157,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : allow
                     v4pfx: '1.1.1.0\24'
                     v6pfx: 'e1ba:aced:a11:face:b00c:91::0\96'
@@ -167,7 +167,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '1.1.1.200'
@@ -190,7 +190,7 @@ vpc:
                 direction  : bidir
                 rule:
                   - protocol: tcp
-                    priority: 4294967295
+                    priority: 1023
                     action  : deny
                     srctype : pfx
                     v4srcpfx: '1.1.1.0\24'
@@ -206,7 +206,7 @@ vpc:
                     dporthigh: 20
 
                   - protocol: tcp
-                    priority: 4294967294
+                    priority: 1022
                     action  : allow
                     srctype : pfxrange
                     v4srciplow : '1.1.1.200'

@@ -16,9 +16,6 @@ import apollo.config.topo as topo
 import apollo.config.agent.api as api
 from infra.common.glopts import GlobalOptions
 
-UINT32_MIN = 0
-UINT32_MAX = 4294967295
-
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
 
