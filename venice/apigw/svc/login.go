@@ -298,10 +298,8 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 				if err != nil {
 					return nil, err
 				}
-				// set user plaintext password for local user before updating user status; user object retrieved from API server contains hashed password.
-				storedUser.Spec.Password = password
 				storedUser.Status = user.Status
-				return apicl.AuthV1().User().Update(ctx, storedUser)
+				return apicl.AuthV1().User().UpdateStatus(ctx, storedUser)
 			}, 100*time.Millisecond, 20)
 			if err != nil {
 				return nil, err
