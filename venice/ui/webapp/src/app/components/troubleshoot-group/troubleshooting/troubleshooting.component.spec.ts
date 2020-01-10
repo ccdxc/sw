@@ -4,6 +4,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
  Angular imports
  ------------------*/
  import { HttpClientTestingModule } from '@angular/common/http/testing';
+ import { HttpClientModule } from '@angular/common/http';
  import { Component } from '@angular/core';
  import { configureTestSuite } from 'ng-bullet';
  import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -39,7 +40,7 @@ describe('TroubleshootingComponent', () => {
   let component: TroubleshootingComponent;
   let fixture: ComponentFixture<TroubleshootingComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ TroubleshootingComponent, NetworkgraphComponent ],
       imports: [
@@ -48,6 +49,7 @@ describe('TroubleshootingComponent', () => {
         NoopAnimationsModule,
         SharedModule,
         HttpClientTestingModule,
+        HttpClientModule,
         PrimengModule,
         MaterialdesignModule,
         RouterTestingModule,
@@ -68,7 +70,7 @@ describe('TroubleshootingComponent', () => {
       ]
     })
     .compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TroubleshootingComponent);

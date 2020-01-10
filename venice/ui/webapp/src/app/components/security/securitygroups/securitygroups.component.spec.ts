@@ -28,7 +28,7 @@ describe('SecuritygroupsComponent', () => {
   let component: SecuritygroupsComponent;
   let fixture: ComponentFixture<SecuritygroupsComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ SecuritygroupsComponent, NewsecuritygroupComponent ],
       imports: [
@@ -56,7 +56,7 @@ describe('SecuritygroupsComponent', () => {
       ]
     })
     .compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SecuritygroupsComponent);

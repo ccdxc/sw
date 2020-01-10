@@ -1,7 +1,9 @@
+import { configureTestSuite } from 'ng-bullet';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {NoopAnimationsModule} from '@angular/platform-browser/animations';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
+import { HttpClientModule } from '@angular/common/http';
 import {PrimengModule} from '@lib/primeng.module';
 import {WidgetsModule} from 'web-app-framework';
 import {MaterialdesignModule} from '@lib/materialdesign.module';
@@ -24,7 +26,7 @@ describe('NewmirrorsessionComponent', () => {
   let component: NewmirrorsessionComponent;
   let fixture: ComponentFixture<NewmirrorsessionComponent>;
 
-  beforeEach(async(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [ NewmirrorsessionComponent ],
       imports: [
@@ -32,6 +34,7 @@ describe('NewmirrorsessionComponent', () => {
         ReactiveFormsModule,
         NoopAnimationsModule,
         HttpClientTestingModule,
+        HttpClientModule,
         PrimengModule,
         WidgetsModule,
         MaterialdesignModule,
@@ -52,7 +55,7 @@ describe('NewmirrorsessionComponent', () => {
       ]
     })
     .compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewmirrorsessionComponent);

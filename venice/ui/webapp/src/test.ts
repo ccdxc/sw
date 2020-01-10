@@ -18,6 +18,8 @@ import 'hammerjs';
 declare const __karma__: any;
 declare const require: any;
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
+
 // Prevent Karma from running prematurely.
 __karma__.loaded = function() { };
 

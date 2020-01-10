@@ -46,7 +46,7 @@ import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from './services/uiconfigs.service';
 
 describe('AppComponent', () => {
-    configureTestSuite(() => {
+  configureTestSuite(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent,
@@ -84,8 +84,7 @@ describe('AppComponent', () => {
         UIConfigsService,
       ],
     });
-
-    });
+  });
 
   it('should create the app', () => {
     const fixture = TestBed.createComponent(AppComponent);
