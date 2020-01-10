@@ -348,6 +348,7 @@ func (ros *RolloutState) stop() {
 	if ros.stopped {
 		return
 	}
+	preUpgradeTimeout = dSCTimeoutSeconds * time.Second
 	ros.stopped = true
 	close(ros.stopChan)
 	ros.Wait()

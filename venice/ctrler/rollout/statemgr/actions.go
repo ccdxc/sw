@@ -470,6 +470,11 @@ Loop:
 				ros.setSmartNICPhase(snicState.Name, "", "", phase)
 
 				// Wait for response from  the NIC
+				// Change the preUpgradeTimeout based on scale
+				if ros.Spec.MaxParallel > 10 {
+					naplesTimeoutSeconds := int(ros.Spec.MaxParallel/10) * dSCTimeoutSeconds
+					preUpgradeTimeout = time.Duration(naplesTimeoutSeconds) * time.Second
+				}
 				timer := time.NewTimer(preUpgradeTimeout)
 				defer timer.Stop()
 			WaitLoop:

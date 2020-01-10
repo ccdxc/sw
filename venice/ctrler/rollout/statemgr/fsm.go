@@ -12,9 +12,10 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const defaultNumParallel = 2 // if user has not specified parallelism in Spec, we do do many SmartNICs in parallel. We can change this logic in future as needed..
+const defaultNumParallel = 2  // if user has not specified parallelism in Spec, we do do many SmartNICs in parallel. We can change this logic in future as needed..
+const dSCTimeoutSeconds = 480 // 8 mins of timeout for DSC preUpgrade..
 
-var preUpgradeTimeout = 480 * time.Second
+var preUpgradeTimeout = dSCTimeoutSeconds * time.Second
 var veniceUpgradeTimeout = 15 * time.Minute
 var rolloutRetryTimeout = 5 * time.Minute
 var maxRetriesBeforeAbort uint32 = 5
