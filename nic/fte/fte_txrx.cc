@@ -28,6 +28,7 @@
 #define FTE_MAX_SOFTQ_BATCH_SZ    128
 namespace hal {
 extern hal::session_stats_t  *g_session_stats;
+extern hal_state *g_hal_state;
 
 }
 namespace fte {
@@ -972,7 +973,12 @@ void inst_t::process_arq_new ()
                 drop_pkt = true;
                 ctx_->set_drop();
             }
-            if ((drop_pkt == false) &&  hal::g_session_stats[id_].total_active_sessions >= max_sessions_) {
+            if (hal::g_hal_state->forwarding_mode() == hal::HAL_FORWARDING_MODE_CLASSIC) {
+                HAL_TRACE_ERR("FTE should not receive any pkts in classic mode. Revisit.");
+                continue;
+            }
+            if ((drop_pkt == false) && hal::g_session_stats && 
+                hal::g_session_stats[id_].total_active_sessions >= max_sessions_) {
                 drop_pkt = true;
                 stats_.fte_hbm_stats->qstats.max_session_drop_pkts++;
                 ctx_->set_drop();
