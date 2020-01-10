@@ -3,7 +3,7 @@ feature:
     sub         : update_subnet
     package     : test.networking
     module      : networking
-    runorder    : 66000
+    runorder    : 8080
     enable      : False
     ignore      : True
 

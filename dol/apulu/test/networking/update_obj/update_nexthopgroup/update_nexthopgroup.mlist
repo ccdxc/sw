@@ -3,7 +3,7 @@ feature:
     sub         : update_nhgroup
     package     : test.networking
     module      : networking
-    runorder    : 71000
+    runorder    : 8050
 # no test case in dol as of now, to test nhgroup. adding it as a template
     enable      : False
     ignore      : True

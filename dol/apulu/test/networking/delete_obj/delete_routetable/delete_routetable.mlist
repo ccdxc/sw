@@ -3,7 +3,7 @@ feature:
     sub         : delete_routetable
     package     : test.networking
     module      : networking
-    runorder    : 55000
+    runorder    : 9070
     enable      : True
     ignore      : True
 

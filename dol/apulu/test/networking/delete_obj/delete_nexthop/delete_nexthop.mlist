@@ -3,7 +3,7 @@ feature:
     sub         : delete_nexthop
     package     : test.networking
     module      : networking
-    runorder    : 9000
+    runorder    : 9040
     enable      : True
     ignore      : True
 

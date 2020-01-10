@@ -1,52 +1,55 @@
 feature:
     id          : networking
-    sub         : update_tunnel
+    sub         : delete_lmapping
     package     : test.networking
     module      : networking
-    runorder    : 8060
+    runorder    : 9000
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : TUNNEL_WORKFLOW_START
+        name    : LMAPPING_WORKFLOW_START
         spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_TUNNEL
+        name    : DEL_LMAPPING
         spec    : crud_cfg_object.testspec
         args    :
-            - object    : tunnel
-              operation : Update
+            - object    : localmapping
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post localmapping deletion
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostLMappingDelete
         mlist   : local2remote.mlist
+        ignore  : True
 
-# Rollback update to tunnel. packet is not constructed with old values here since mutable fields in tunnel dont contribute to decision making in pipeline.
     - module:
-        name    : ROLLBACK
+        name    : RESTORE_LMAPPING
         spec    : crud_cfg_object.testspec
         args    :
-            - object    : tunnel
-              operation : RollbackUpdate
+            - object    : localmapping
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
+    # mlists to run post localmapping restore
     - module:
-        name    : LOCAL2REMOTE
+        name    : Local2Remote_PostLMappingRestore
         mlist   : local2remote.mlist
+        ignore  : True
 
     - module:
-        name    : TUNNEL_WORKFLOW_END
+        name    : LMAPPING_WORKFLOW_END
         spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING

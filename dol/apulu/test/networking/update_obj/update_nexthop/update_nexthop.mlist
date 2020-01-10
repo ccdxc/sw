@@ -3,7 +3,7 @@ feature:
     sub         : update_nexthop
     package     : test.networking
     module      : networking
-    runorder    : 70000
+    runorder    : 8040
 # TODO fix nh PopulateKey for GET before enabling
     enable      : False
     ignore      : True

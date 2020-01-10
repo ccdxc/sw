@@ -25,6 +25,10 @@ def GetCfgObject(tc):
         cfgObject =  tc.config.devicecfg
     elif objname == 'vnic':
         cfgObject =  tc.config.localmapping.VNIC
+    elif objname == 'localmapping':
+        cfgObject =  tc.config.localmapping
+    elif objname == 'remotemapping':
+        cfgObject =  tc.config.remotemapping
     elif objname == 'subnet':
         cfgObject = tc.config.localmapping.VNIC.SUBNET
     elif objname == 'tunnel':

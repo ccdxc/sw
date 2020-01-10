@@ -3,7 +3,7 @@ feature:
     sub         : delete_interface
     package     : test.networking
     module      : networking
-    runorder    : 8000
+    runorder    : 9030
     enable      : True
     ignore      : True
 

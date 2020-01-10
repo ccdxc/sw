@@ -3,8 +3,8 @@ feature:
     sub         : update_vnic
     package     : test.networking
     module      : networking
-    runorder    : 67000
 # enable it when vlan tagging is enabled in apulu. Vlan id is the only mutable field that makes sense for networking dol.
+    runorder    : 8020
     enable      : False
     ignore      : True
 

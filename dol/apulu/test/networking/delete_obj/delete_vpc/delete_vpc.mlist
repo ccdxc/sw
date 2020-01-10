@@ -3,7 +3,7 @@ feature:
     sub         : delete_vpc
     package     : test.networking
     module      : networking
-    runorder    : 60000
+    runorder    : 9090
     enable      : True
     ignore      : True
 

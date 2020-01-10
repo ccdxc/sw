@@ -3,7 +3,7 @@ feature:
     sub         : delete_nexthopgroup
     package     : test.networking
     module      : networking
-    runorder    : 9500
+    runorder    : 9050
     enable      : False
     ignore      : True
 

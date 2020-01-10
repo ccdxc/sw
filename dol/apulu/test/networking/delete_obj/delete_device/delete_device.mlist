@@ -1,80 +1,64 @@
 feature:
     id          : networking
-    sub         : update_interface
+    sub         : delete_device
     package     : test.networking
     module      : networking
-    runorder    : 8030
+    runorder    : 9100
     enable      : False
     ignore      : True
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
     - module:
-        name    : INTERFACE_WORKFLOW_START
+        name    : DEVICE_WORKFLOW_START
         spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
     - module:
-        name    : UPD_INTERFACE
+        name    : DEL_DEVICE
         spec    : crud_cfg_object.testspec
         args    :
-            - object    : interface
-              operation : Update
-        iterate :
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
-
-    - module:
-        name    : LOCAL2REMOTE
-        mlist   : local2remote.mlist
-
-# this triggers a packet with old values which is expected to fail since hwHabitant is False
-    - module:
-        name    : PREPARE_ROLLBACK
-        spec    : crud_cfg_object.testspec
-        args    :
-            - object    : interface
-              operation : PrepareRollbackUpdate
+            - object    : device
+              operation : Delete
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
+    # mlists to run post device deletion
     - module:
-        name    : IGW2LOCAL
+        name    : IGW2Local_PostDeviceDelete
         mlist   : igw2local.mlist
+        ignore  : True
 
     - module:
-        name    : COMMIT_ROLLBACK
+        name    : RESTORE_DEVICE
         spec    : crud_cfg_object.testspec
         args    :
-            - object    : interface
-              operation : CommitUpdate
+            - object    : device
+              operation : Create
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING
 
+    # mlists to run post device restore
     - module:
-        name    : IGW2LOCAL
+        name    : IGW2Local_PostDeviceRestore
         mlist   : igw2local.mlist
+        ignore  : True
 
     - module:
-        name    : INTERFACE_WORKFLOW_END
+        name    : DEVICE_WORKFLOW_END
         spec    : crud_workflow.testspec
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
-            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW_NAT,Label=NETWORKING

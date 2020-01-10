@@ -3,7 +3,7 @@ feature:
     sub         : update_device
     package     : test.networking
     module      : networking
-    runorder    : 65000
+    runorder    : 8100
     enable      : False
     ignore      : True
 

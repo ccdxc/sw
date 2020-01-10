@@ -3,7 +3,7 @@ feature:
     sub         : delete_tunnel
     package     : test.networking
     module      : networking
-    runorder    : 10000
+    runorder    : 9060
     enable      : True
     ignore      : True
 
