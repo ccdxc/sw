@@ -3,7 +3,9 @@ package agent
 import (
 	"context"
 	"fmt"
+	"net"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,7 +20,14 @@ import (
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	Workload "github.com/pensando/sw/iota/svcs/agent/workload"
 	Common "github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/iota/svcs/common/copier"
 	"github.com/pensando/sw/iota/svcs/common/vmware"
+)
+
+var (
+	fileName                = filepath.Base(Common.DstEsxNicFinderScript)
+	esxNicFinderHostdstDir  = "/tmp"
+	esxNicFinderHostdstFile = esxNicFinderHostdstDir + "/" + fileName
 )
 
 type esxHwNode struct {
@@ -213,6 +222,13 @@ func (node *esxHwNode) getDataIntfs(nicType, hint string) ([]string, error) {
 		return nil, err
 	}
 	fullCmd := []string{cmd}
+	if hint != "" {
+		if err := node.setupUpEsxNicFinder(); err != nil {
+			return nil, err
+		}
+		fullCmd = []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "data-nic", "--op", "vmnics"}
+	}
+
 	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, 0, false, true)
 	node.logger.Printf("naples data intf find out %s", cmdResp.Stdout)
 	node.logger.Printf("naples data intf find err %s", cmdResp.Stderr)
@@ -231,11 +247,9 @@ func (node *esxHwNode) getDataIntfs(nicType, hint string) ([]string, error) {
 	return intfs, nil
 }
 
-func (node *esxHwNode) getNaplesMgmtIntf() (string, error) {
+func (node *esxHwNode) getHostSSHCfg() *ssh.ClientConfig {
 
-	var sshHandle *ssh.Client
-	var err error
-	sshConfig := &ssh.ClientConfig{
+	return &ssh.ClientConfig{
 		User: node.hostUsername,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(node.hostPassword),
@@ -250,11 +264,57 @@ func (node *esxHwNode) getNaplesMgmtIntf() (string, error) {
 		}, HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	sshHandle, err = ssh.Dial("tcp", node.hostIP+":"+strconv.Itoa(sshPort), sshConfig)
+}
+func (node *esxHwNode) setupUpEsxNicFinder() error {
+
+	addr := node.hostIP + ":" + strconv.Itoa(sshPort)
+	sshConfig := node.getHostSSHCfg()
+
+	cmd := []string{"rm", esxNicFinderHostdstFile}
+
+	sshHandle, err := ssh.Dial("tcp", addr, sshConfig)
+	if err != nil {
+		return errors.Wrap(err, "Unable to connect to ssh")
+	}
+
+	Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
+
+	copyHandle := copier.NewCopierWithSSHClient(sshHandle, sshConfig)
+
+	if err := copyHandle.CopyTo(addr, esxNicFinderHostdstDir, []string{Common.DstEsxNicFinderScript}); err != nil {
+		return errors.Wrap(err, "Copy failed for esx nic finder script")
+	}
+
+	return nil
+}
+
+func (node *esxHwNode) getNaplesMgmtIntf(hint string) (string, error) {
+
+	var sshHandle *ssh.Client
+	var err error
+	sshConfig := node.getHostSSHCfg()
+
+	addr := node.hostIP + ":" + strconv.Itoa(sshPort)
+	sshHandle, err = ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
 		return "", err
 	}
 
+	if hint != "" {
+		if err := node.setupUpEsxNicFinder(); err != nil {
+			return "", err
+		}
+
+		cmd := []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "vmnics"}
+		cmdResp, _ := Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
+
+		if cmdResp.Ctx.ExitCode != 0 {
+			return "", errors.Errorf("Running command failed %s: %s", strings.Join(cmd, " "), cmdResp.Ctx.Stderr)
+		}
+
+		return strings.TrimSpace(strings.Split(cmdResp.Ctx.Stdout, "\n")[0]), nil
+
+	}
 	cmd := []string{"esxcfg-nics", "-l", "|", "grep 'Pensando Ethernet Management'", "|", "cut -f1 -d ' '"}
 	cmdResp, _ := Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
 
@@ -267,11 +327,12 @@ func (node *esxHwNode) getNaplesMgmtIntf() (string, error) {
 	}
 
 	return strings.TrimSpace(strings.Split(cmdResp.Ctx.Stdout, "\n")[0]), nil
+
 }
 
-func (node *esxHwNode) createNaplesMgmtSwitch() error {
+func (node *esxHwNode) createNaplesMgmtSwitch(hint string) error {
 
-	naplesMgmtIntf, err := node.getNaplesMgmtIntf()
+	naplesMgmtIntf, err := node.getNaplesMgmtIntf(hint)
 	if err != nil || naplesMgmtIntf == "" {
 		return errors.New("No naples management interfaces discovered")
 	}
@@ -292,9 +353,9 @@ func (node *esxHwNode) createNaplesMgmtSwitch() error {
 	return err
 }
 
-func (node *esxHwNode) createNaplesDataSwitch(index int, naplesConfig *iota.NaplesConfig) error {
+func (node *esxHwNode) createNaplesDataSwitch(index int, nicType, hint string) error {
 
-	naplesDataIntfs, err := node.getDataIntfs(naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+	naplesDataIntfs, err := node.getDataIntfs(nicType, hint)
 	if err != nil || len(naplesDataIntfs) == 0 {
 		return errors.New("No naples data interfaces discovered")
 	}
@@ -309,25 +370,60 @@ func (node *esxHwNode) createNaplesDataSwitch(index int, naplesConfig *iota.Napl
 	return node.host.AddVswitch(vsspec)
 }
 
-func (node *esxHwNode) setUpNaplesMgmtIP() error {
+func incrementIP(ipRaw string) string {
+	ip := net.ParseIP(ipRaw)
+	ip = ip.To4()
+	ip[3]++
+
+	return ip.String()
+}
+
+func (node *esxHwNode) setUpNaplesMgmtIP(hint string) (string, error) {
 
 	cmd := []string{"ip", "link", "set", "dev", Common.EsxCtrlVMNaplesMgmtInterface, "up"}
 	if retCode, stdout, err := Utils.Run(cmd, 0, false, true, nil); retCode != 0 {
-		return errors.Wrap(err, stdout)
+		return "", errors.Wrap(err, stdout)
 	}
 
-	cmd = []string{"ip", "addr", "add", Common.CtrlVMNaplesInterfaceIP, "dev", Common.EsxCtrlVMNaplesMgmtInterface}
+	intfIP := Common.CtrlVMNaplesInterfaceIP
+	naplesIP := Common.NaplesMnicIP
+	if hint != "" {
+
+		addr := node.hostIP + ":" + strconv.Itoa(sshPort)
+		sshConfig := node.getHostSSHCfg()
+
+		if err := node.setupUpEsxNicFinder(); err != nil {
+			return "", err
+		}
+
+		sshHandle, err := ssh.Dial("tcp", addr, sshConfig)
+		if err != nil {
+			return "", errors.Wrap(err, "Unable to connect to ssh")
+		}
+
+		cmd := []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "mnic-ip"}
+		cmdResp, _ := Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
+
+		if cmdResp.Ctx.ExitCode != 0 {
+			return "", errors.Errorf("Running command failed %s: %s", strings.Join(cmd, " "), cmdResp.Ctx.Stderr)
+		}
+
+		naplesIP = strings.TrimSpace(strings.Split(cmdResp.Ctx.Stdout, "\n")[0])
+		intfIP = incrementIP(naplesIP) + "/24"
+
+	}
+	cmd = []string{"ip", "addr", "add", intfIP, "dev", Common.EsxCtrlVMNaplesMgmtInterface}
 	if retCode, stdout, err := Utils.Run(cmd, 0, false, true, nil); retCode != 0 {
-		return errors.Wrap(err, stdout)
+		return "", errors.Wrap(err, stdout)
 	}
 
-	node.logger.Println("Setting complete for naples Mgmt IP")
-	return nil
+	node.logger.Infof("Setting complete for naples Mgmt IP, point to %v , set to %v", naplesIP, intfIP)
+	return naplesIP, nil
 }
 
-func (node *esxHwNode) setUpNaplesMgmtNetwork() error {
+func (node *esxHwNode) setUpNaplesMgmtNetwork(hint string) error {
 
-	if err := node.createNaplesMgmtSwitch(); err != nil {
+	if err := node.createNaplesMgmtSwitch(hint); err != nil {
 		return errors.Wrap(err, "Failed to create naples mgmt switch")
 	}
 
@@ -379,15 +475,27 @@ func (node *esxHwNode) addHostEntity(in *iota.Node) error {
 }
 
 func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
+	var ip string
+	var err error
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
-			if !in.Reload {
-				if err := node.setUpNaplesMgmtNetwork(); err != nil {
-					return err
+			for _, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
+				if naplesCfg.Name == entityEntry.Name {
+					if !in.Reload {
+						if err := node.setUpNaplesMgmtNetwork(naplesCfg.NicHint); err != nil {
+							return err
+						}
+					}
+					if ip, err = node.setUpNaplesMgmtIP(naplesCfg.NicHint); err != nil {
+						return err
+					}
+					//Send the IP back in case it is different
+					naplesCfg.NaplesIpAddress = ip
+
 				}
 			}
-			node.setUpNaplesMgmtIP()
+
 			/*It is like running in a vm as its accesible only by ssh */
 			wload = Workload.NewWorkload(Workload.WorkloadTypeRemote, entityEntry.GetName(), node.name, node.logger)
 			for _, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
@@ -454,6 +562,27 @@ func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		return resp, err
 	}
 
+	for index, naplesConfig := range in.GetNaplesConfigs().GetConfigs() {
+		if !in.Reload {
+			err = naples.createNaplesDataSwitch(index, naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+			if err != nil {
+				msg := "failed to create naples data switch"
+				naples.logger.Error(msg)
+				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+			}
+
+		}
+
+		nodeUUID, err := naples.getHwUUID(naples.naplesEntityKey[index])
+		if err != nil {
+			msg := fmt.Sprintf("Error in reading naples hw uuid : %s", err.Error())
+			naples.logger.Error(msg)
+			//For now ignore the error
+			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+		naplesConfig.NodeUuid = nodeUUID
+	}
+
 	newResp := &iota.Node{NodeStatus: apiSuccess,
 		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
 		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
@@ -471,6 +600,16 @@ func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	resp, err := thirdParty.esxHwNode.Init(in)
 	if err != nil {
 		return resp, err
+	}
+
+	if !in.Reload {
+		err = thirdParty.createNaplesDataSwitch(0, in.GetThirdPartyNicConfig().GetNicType(), "")
+		if err != nil {
+			msg := "failed to create naples data switch"
+			thirdParty.logger.Error(msg)
+			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+
 	}
 
 	newResp := &iota.Node{NodeStatus: apiSuccess,
@@ -508,27 +647,6 @@ func (node *esxHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		msg := fmt.Sprintf("Adding node entities failed : %s", err.Error())
 		node.logger.Error(msg)
 		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-	}
-
-	for index, naplesConfig := range in.GetNaplesConfigs().GetConfigs() {
-		if !in.Reload {
-			err = node.createNaplesDataSwitch(index, naplesConfig)
-			if err != nil {
-				msg := "failed to create naples data switch"
-				node.logger.Error(msg)
-				return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-			}
-
-		}
-
-		nodeUUID, err := node.getHwUUID(node.naplesEntityKey[index])
-		if err != nil {
-			msg := fmt.Sprintf("Error in reading naples hw uuid : %s", err.Error())
-			node.logger.Error(msg)
-			//For now ignore the error
-			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
-		}
-		naplesConfig.NodeUuid = nodeUUID
 	}
 
 	resp := &iota.Node{NodeStatus: apiSuccess,

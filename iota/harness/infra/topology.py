@@ -66,6 +66,7 @@ class Node(object):
         def __init__(self, name):
             self.__name = name
             self.__uuid = None
+            self.__mac = None
             self.__host_intfs = None
             self.__host_if_alloc_idx = 0
             self.__nic_mgmt_ip = None
@@ -86,6 +87,12 @@ class Node(object):
         def SetUuid(self, uuid):
             self.__uuid = formatMac(uuid)
         
+        def SetMac(self, mac):
+            self.__mac = mac
+
+        def Mac(self):
+            return self.__mac
+
         def SetHostIntfs(self, host_intfs):
             self.__host_intfs = host_intfs
 
@@ -163,17 +170,36 @@ class Node(object):
 
         self.__dev_index = 1
         self.__devices = {}
-        for index in range(1):
-               name = self.GetNicType() + str(self.__dev_index)
-               device = Node.NicDevice(name)
-               self.__dev_index = self.__dev_index + 1
-               self.__devices[name] = device
-               device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
-               device.SetNicConsoleIP(getattr(self.__inst, "NicConsoleIP", ""))
-               device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
-               device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
-               device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
-               device.read_mgmt_ip_from_console()
+
+        nics = getattr(self.__inst, "Nics", None)
+        if nics != None and len(nics) != 0:
+            for nic in nics:
+                name = self.GetNicType() + str(self.__dev_index)
+                device = Node.NicDevice(name)
+                self.__dev_index = self.__dev_index + 1
+                self.__devices[name] = device
+                device.SetNicMgmtIP(getattr(nic, "MgmtIP", None))
+                device.SetNicConsoleIP(getattr(nic, "ConsoleIP", ""))
+                device.SetNicConsolePort(getattr(nic, "NicConsolePort", ""))
+                device.SetNicIntMgmtIP(getattr(nic, "IntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
+                device.SetNicMgmtIntf(getattr(nic, "NicMgmtIntf", "oob_mnic0"))
+                for port in getattr(nic, "Ports", []):
+                    device.SetMac(port.MAC)
+                    break
+                device.read_mgmt_ip_from_console()       
+
+        else:
+            for index in range(1):
+                name = self.GetNicType() + str(self.__dev_index)
+                device = Node.NicDevice(name)
+                self.__dev_index = self.__dev_index + 1
+                self.__devices[name] = device
+                device.SetNicMgmtIP(getattr(self.__inst, "NicMgmtIP", None))
+                device.SetNicConsoleIP(getattr(self.__inst, "NicConsoleIP", ""))
+                device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
+                device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
+                device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
+                device.read_mgmt_ip_from_console()
 
         self.__nic_pci_info = {}
         self.__nic_info = {}
@@ -435,6 +461,8 @@ class Node(object):
                     naples_config.name = device.Name()
                     naples_config.naples_username = "root"
                     naples_config.naples_password = "pen123"
+                    #Enable this with Brad's PR
+                    #naples_config.nic_hint = device.GetMac()
 
                     if device.GetNicIntMgmtIP() == "N/A" or self.IsNaplesCloudPipeline():
                         naples_config.naples_ip_address = device.GetNicMgmtIP()

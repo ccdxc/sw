@@ -798,7 +798,7 @@ def CopyToNaples(node_name, files, dest_dir, via_oob=False):
     if copy_resp.api_response.api_status == types_pb2.API_STATUS_OK:
         req = Trigger_CreateExecuteCommandsRequest()
         for f in files:
-            copy_cmd = "sshpass -p %s scp -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', mgmtip)
+            copy_cmd = "sshpass -p %s scp -o  UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s %s@%s:/" % ("pen123", os.path.basename(f), 'root', mgmtip)
             Trigger_AddHostCommand(req, node_name, copy_cmd)
         tresp = Trigger(req)
         for cmd in tresp.commands:
@@ -813,7 +813,7 @@ def CopyFromHost(node_name, files, dest_dir):
 def CopyFromNaples(node_name, files, dest_dir):
     req = Trigger_CreateExecuteCommandsRequest()
     for f in files:
-        copy_cmd = "sshpass -p %s scp -p -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', GetNicIntMgmtIP(node_name), f)
+        copy_cmd = "sshpass -p %s scp -p -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s@%s:%s ." % ("pen123", 'root', GetNicIntMgmtIP(node_name), f)
         Trigger_AddHostCommand(req, node_name, copy_cmd)
     tresp = Trigger(req)
     for cmd in tresp.commands:

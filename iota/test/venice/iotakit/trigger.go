@@ -283,13 +283,20 @@ func (tb *TestBed) CopyToNaples(nodeName string, files []string, destDir string)
 	}
 
 	//now copy to naples from host
-	naplesIP := "169.254.0.1"
 	naplesPasswd := "pen123"
 	trig := tb.NewTrigger()
 	for _, f := range files {
 		fullSrcPath := hostTmpDir + filepath.Base(f)
-		copyCmd := fmt.Sprintf("sshpass -p %v scp -o StrictHostKeyChecking=no  %s %s@%s:%s", naplesPasswd, fullSrcPath, "root", naplesIP, destDir)
-		trig.AddCommand(copyCmd, nodeName+"_host", nodeName)
+
+		for _, tb := range tb.Nodes {
+			if tb.NodeName == nodeName {
+				//Copy to all naples
+				for _, config := range tb.NaplesConfigs.Configs {
+					copyCmd := fmt.Sprintf("sshpass -p %v scp -o StrictHostKeyChecking=no  %s %s@%s:%s", naplesPasswd, fullSrcPath, "root", config.NaplesIpAddress, destDir)
+					trig.AddCommand(copyCmd, nodeName+"_host", nodeName)
+				}
+			}
+		}
 	}
 
 	// trigger commands

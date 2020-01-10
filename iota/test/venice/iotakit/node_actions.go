@@ -383,7 +383,7 @@ func (act *ActionCtx) DisconnectNaples(npc *NaplesCollection) error {
 		for _, naplesConfig := range naples.iotaNode.GetNaplesConfigs().Configs {
 			if naplesConfig.NodeUuid == naples.nodeuuid {
 				cmd := fmt.Sprintf("ifconfig %s down", naplesConfig.ControlIntf)
-				trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+				trig.AddCommand(cmd, naplesConfig.Name, naples.iotaNode.Name)
 			}
 		}
 	}
@@ -420,7 +420,7 @@ func (act *ActionCtx) ConnectNaples(npc *NaplesCollection) error {
 		for _, naplesConfig := range naples.iotaNode.GetNaplesConfigs().Configs {
 			if naplesConfig.NodeUuid == naples.nodeuuid {
 				cmd := fmt.Sprintf("ifconfig %s %s/16 up", naplesConfig.ControlIntf, naplesConfig.ControlIp)
-				trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+				trig.AddCommand(cmd, naplesConfig.Name, naples.iotaNode.Name)
 			}
 		}
 	}
@@ -458,7 +458,7 @@ func (act *ActionCtx) RunNaplesCommand(npc *NaplesCollection, cmd string) ([]str
 	trig := act.model.tb.NewTrigger()
 
 	for _, naples := range npc.nodes {
-		trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+		trig.AddCommand(cmd, naples.name, naples.iotaNode.Name)
 	}
 
 	// run the trigger
@@ -609,7 +609,7 @@ func (act *ActionCtx) GetNaplesEndpoints(npc *NaplesCollection) (map[string]map[
 	})
 	for _, naples := range npc.nodes {
 		cmd := "/nic/bin/halctl show endpoint brief"
-		trig.AddCommand(cmd, naples.iotaNode.Name+"_naples", naples.iotaNode.Name)
+		trig.AddCommand(cmd, naples.name, naples.iotaNode.Name)
 	}
 	resp, err := trig.Run()
 	if err != nil {
@@ -654,7 +654,7 @@ func (act *ActionCtx) GetNaplesEndpoints(npc *NaplesCollection) (map[string]map[
 func (act *ActionCtx) runCommandOnGivenNaples(np *Naples, cmd string) (string, error) {
 	trig := act.model.tb.NewTrigger()
 
-	trig.AddCommand(cmd, np.iotaNode.Name+"_naples", np.iotaNode.Name)
+	trig.AddCommand(cmd, np.name, np.iotaNode.Name)
 	resp, err := trig.Run()
 	if err != nil {
 		return "", err

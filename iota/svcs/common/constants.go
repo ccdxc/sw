@@ -28,6 +28,9 @@ const (
 	//NicFinderConfFileName
 	NicFinderConfFileName = "nic.conf"
 
+	//NicFinderConfFileName
+	EsxPenNicFinderScriptName = "esx_pen_nics.py"
+
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 36
 
@@ -77,7 +80,10 @@ const (
 	EsxControlVMImage = "build-114"
 
 	//DstNicFinderConf file to be used on node.
-	DstNicFinderConf = DstIotaAgentDir + "/nic.conf"
+	DstNicFinderConf = DstIotaAgentDir + "/" + NicFinderConfFileName
+
+	//DstEsxNicFinderScript file to be used on node.
+	DstEsxNicFinderScript = DstIotaAgentDir + "/" + EsxPenNicFinderScriptName
 
 	// EsxControlVmCpus Esx Control VM Cpus
 	EsxControlVMCpus = 4
@@ -174,6 +180,8 @@ var (
 
 	//NicFinderConf nic finder conf
 	NicFinderConf = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), NicFinderConfFileName)
+
+	EsxNicFinderScript = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), EsxPenNicFinderScriptName)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)

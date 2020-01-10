@@ -228,6 +228,12 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []
 		return err
 	}
 
+	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v Nic Finder Script: %v", n.Node.Name, n.Node.IpAddress, constants.EsxNicFinderScript)
+	if err := n.CopyTo(c, constants.DstIotaAgentDir, []string{constants.EsxNicFinderScript}); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to TestNode: %v, at IPAddress: %v", constants.EsxNicFinderScript, n.Node.Name, n.Node.IpAddress)
+		return err
+	}
+
 	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
 	if err := n.StartAgent(sudoAgtCmd, c); err != nil {

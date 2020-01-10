@@ -42,6 +42,27 @@ type DataNetworkParams struct {
 	SwitchPassword string // switch password
 }
 
+//Port of nic
+type Port struct {
+	Name           string
+	IP             string
+	MAC            string
+	SwitchIP       string
+	SwitchPort     int
+	SwitchUsername string
+	SwitchPassword string
+}
+
+//Nic def
+type Nic struct {
+	MgmtIP          string
+	Type            string
+	ConsoleIP       string
+	ConsolePort     string
+	ConsolePassword string
+	Ports           []Port
+}
+
 // InstanceParams contains information about vm/baremetal nodes
 type InstanceParams struct {
 	Name           string // node name
@@ -66,6 +87,7 @@ type InstanceParams struct {
 		}
 	}
 	DataNetworks []DataNetworkParams // data networks
+	Nics         []Nic
 }
 
 // TestBedParams to be parsed from warmd.json file
@@ -427,20 +449,26 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 				}
 			}
 
-			node.NaplesConfigs = iota.NaplesConfigs{
-				Configs: []*iota.NaplesConfig{
-					&iota.NaplesConfig{
+			node.NaplesConfigs = iota.NaplesConfigs{Configs: []*iota.NaplesConfig{}}
+			for nicID, nic := range node.instParams.Nics {
+				for _, port := range nic.Ports {
+
+					config := &iota.NaplesConfig{
 						ControlIntf:     "eth1",
 						ControlIp:       fmt.Sprintf("172.16.100.%d", len(tb.Nodes)+1), //FIXME
 						DataIntfs:       []string{"eth2", "eth3"},
-						NaplesIpAddress: "169.254.0.1",
+						NaplesIpAddress: "169.254.0.1", //Default
 						NaplesUsername:  "root",
 						NaplesPassword:  "pen123",
 						NicType:         "naples",
-						//Todo change this
-						Name: node.NodeName + "_naples",
-					},
-				},
+						Name:            node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
+						//Enable this with BRAD PR
+						//NicHint: port.MAC,
+					}
+					log.Infof("Using MaC Hinst %v", port.MAC)
+					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
+					break
+				}
 			}
 
 		default:
@@ -733,6 +761,7 @@ func (tb *TestBed) AddNodes(personality iota.PersonalityType, names []string) ([
 			for iter, naplesConfig := range addNodeResp.Nodes[index].GetNaplesConfigs().GetConfigs() {
 				node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 				node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
+				node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
 			}
 		}
 
@@ -1274,6 +1303,7 @@ func (tb *TestBed) setupTestBed() error {
 					for iter, naplesConfig := range nr.GetNaplesConfigs().GetConfigs() {
 						node.NodeUUID = append(node.NodeUUID, naplesConfig.NodeUuid)
 						node.NaplesConfigs.Configs[iter].NodeUuid = naplesConfig.NodeUuid
+						node.NaplesConfigs.Configs[iter].NaplesIpAddress = naplesConfig.NaplesIpAddress
 					}
 				}
 			}
@@ -1373,7 +1403,9 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 	//Make sure we can run command on naples
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
-			trig.AddCommand(fmt.Sprintf("date"), node.NodeName+"_naples", node.NodeName)
+			for _, naples := range node.NaplesConfigs.Configs {
+				trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
+			}
 		}
 	}
 
@@ -1390,26 +1422,25 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 	return nil
 }
 
-
-
 /*
  * Create system config file to eanble cosole with out triggering
- * authentivcation.  
+ * authentivcation.
  */
 const NaplesConfigSpecLocal = "/tmp/system-config.json"
+
 type ConsoleMode struct {
-    Console  string  `json:"console"`
+	Console string `json:"console"`
 }
 
 func CreateConfigConsoleNoAuth() {
-    var ConfigSpec = []byte(`
+	var ConfigSpec = []byte(`
         {"console":"enable"}`)
 
-    consolemode := ConsoleMode{}
-    json.Unmarshal(ConfigSpec, &consolemode)
+	consolemode := ConsoleMode{}
+	json.Unmarshal(ConfigSpec, &consolemode)
 
-    ConfigSpecJson, _ := json.Marshal(consolemode)
-    ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
+	ConfigSpecJson, _ := json.Marshal(consolemode)
+	ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
 }
 
 func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
@@ -1437,13 +1468,13 @@ func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 
 				// clean up roots of trust, if any
-				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naplesConfig.Name, node.NodeName)
 
 				// disable watchdog for naples
-				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), node.NodeName+"_naples", node.NodeName)
+				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), naplesConfig.Name, node.NodeName)
 
 				// Set up config file to enable console unconditionally (i.e.
-				// with out triggering authentication). 
+				// with out triggering authentication).
 				CreateConfigConsoleNoAuth()
 				err = sm.tb.CopyToNaples(node.NodeName, []string{NaplesConfigSpecLocal}, globals.NaplesConfig)
 				if err != nil {
@@ -1460,7 +1491,7 @@ func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 			for _, naplesConfig := range node.NaplesConfigs.Configs {
 				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
 				cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --managed-by network --management-network oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --id %s --localhost", veniceIPs, naplesConfig.ControlIp, naplesConfig.NodeUuid, naplesConfig.Name)
-				trig.AddCommand(cmd, node.iotaNode.Name+"_naples", node.iotaNode.Name)
+				trig.AddCommand(cmd, naplesConfig.Name, node.iotaNode.Name)
 			}
 		}
 	}
@@ -1518,10 +1549,13 @@ func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {
 	trig := tb.NewTrigger()
 	for _, node := range nodes {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
+			for _, naples := range node.NaplesConfigs.Configs {
+				trig.AddCommand(fmt.Sprintf("rm -rf /sysconfig/config0/*.db"), naples.Name, node.NodeName)
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naples.Name, node.NodeName)
+				cmds++
+
+			}
 			// cleaning up db is good for now.
-			trig.AddCommand(fmt.Sprintf("rm -rf /sysconfig/config0/*.db"), node.NodeName+"_naples", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
-			cmds++
 		}
 	}
 
@@ -1589,7 +1623,9 @@ func (sm *SysModel) reassociateNaplestoVenice(nodes []*TestNode) error {
 			}
 			cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), node.NodeName+"_naples", node.NodeName)
+			for _, naples := range node.NaplesConfigs.Configs {
+				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naples.Name, node.NodeName)
+			}
 			cmds++
 		}
 	}
