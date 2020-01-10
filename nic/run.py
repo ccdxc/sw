@@ -277,38 +277,63 @@ def run_model(args):
 #    log.close()
 
 # HAL
+def wait_for_hal_and_fte(timeout=600):
+     print "Waiting for hal and fte to be UP..."
+     sys.stdout.flush()
+     hal_up = False
+     fte_up = False
+     t_end = time.time() + timeout
+     while not hal_up or not fte_up:
+         #print "Check files: " + str(glob.glob(nic_dir + "/hal.log*"))
+         for filename in  glob.glob(nic_dir + "/hal.log*"):
+             #print "Checking in : " + filename
+             log2 = open(filename, "r")
+             if not hal_up or not fte_up:
+                 for line in log2.readlines():
+                     #print "Checking in line: " + line
+                     if "listening on" in line:
+                         hal_up = True
+                     if "Starting FTE instance" in line:
+                         fte_up = True
+                     if hal_up and fte_up:
+                         print "Both hal_up " + str(hal_up) + " and fte_up: " + \
+                             str(fte_up) + " are UP"
+                         sys.stdout.flush()
+                         return
+             log2.close()
+         time.sleep(2)
+         print ".",
+         sys.stdout.flush()
+         if t_end and time.time() > t_end:
+             print "Timeout waiting for HAL : " + str(hal_up) + " and FTE : " + str(fte_up)
+             raise Exception("Timeout Waiting for HAL %d and FTE : %d" %(hal_up, fte_up))
 
-def wait_for_hal_and_fte():
-    # Wait until gRPC is listening on port
-    print "Waiting for hal and FTE to be UP..."
-    sys.stdout.flush()
-    log2 = open(hal_log, "r")
-    loop = 1
-    hal_up = False
-    fte_up = False
-    while loop == 1:
-        for line in log2.readlines():
-            if "listening on" in line:
-                hal_up = True
-            if "Starting FTE instance" in line:
-                fte_up = True
-            if hal_up and fte_up:
-                loop = 0
-    log2.close()
-    return
-
-def wait_for_hal():
-    # Wait until gRPC is listening on port
-    print "Waiting for hal to be UP..."
-    sys.stdout.flush()
-    log2 = open(hal_log, "r")
-    loop = 1
-    while loop == 1:
-        for line in log2.readlines():
-            if "listening on" in line:
-                loop = 0
-    log2.close()
-    return
+def wait_for_hal(timeout=600):
+     print "Waiting for hal to be UP..."
+     sys.stdout.flush()
+     hal_up = False
+     t_end = time.time() + timeout
+     while not hal_up:
+         #print "Check files: " + str(glob.glob(nic_dir + "/hal.log*"))
+         for filename in  glob.glob(nic_dir + "/hal.log*"):
+             #print "Checking in : " + filename
+             log2 = open(filename, "r")
+             if not hal_up:
+                 for line in log2.readlines():
+                     #print "Checking in line: " + line
+                     if "listening on" in line:
+                         hal_up = True
+                     if hal_up:
+                         print "hal is up"
+                         sys.stdout.flush()
+                         return
+             log2.close()
+         time.sleep(2)
+         print ".",
+         sys.stdout.flush()
+         if t_end and time.time() > t_end:
+             print "Timeout waiting for HAL : " + str(hal_up)
+             raise Exception("Timeout Waiting for HAL %d" %(hal_up))
 
 def demote():
     if 'SUDO_USER' in os.environ:
