@@ -58,4 +58,30 @@ pds_dnat_tbl_write_ip4(int nat_index, uint32_t ip, uint16_t port)
     return 0;
 }
 
+int
+pds_snat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port)
+{
+    // TODO : change to more efficient mmap and write
+    nat_actiondata_t nat_data = { 0 };
+
+    p4pd_entry_read(P4TBL_ID_NAT, nat_index, NULL, NULL, &nat_data);
+    *ip = *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0];
+    *port = ntohs(nat_data.action_u.nat_nat_rewrite.port);
+
+    return 0;
+}
+
+int
+pds_dnat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port)
+{
+    // TODO : change to more efficient mmap and write
+    nat_actiondata_t nat_data = { 0 };
+
+    p4pd_entry_read(P4TBL_ID_NAT2, nat_index, NULL, NULL, &nat_data);
+    *ip = *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0];
+    *port = ntohs(nat_data.action_u.nat_nat_rewrite.port);
+
+    return 0;
+}
+
 }

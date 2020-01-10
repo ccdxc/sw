@@ -18,6 +18,8 @@ typedef struct vnic_s {
 
 int pds_snat_tbl_write_ip4(int nat_index, uint32_t ip, uint16_t port);
 int pds_dnat_tbl_write_ip4(int nat_index, uint32_t ip, uint16_t port);
+int pds_snat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port);
+int pds_dnat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port);
 
 
 #ifdef __cplusplus

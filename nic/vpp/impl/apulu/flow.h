@@ -8,6 +8,7 @@
 #include <gen/p4gen/apulu/include/p4pd.h>
 #include <api.h>
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
+#include <nat_pd.h>
 
 always_inline u32
 pds_session_get_max (void)
@@ -32,11 +33,24 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
 {
     p4_rx_cpu_hdr_t *ses_info0 = vlib_buffer_get_current(b0);
     p4_rx_cpu_hdr_t *ses_info1 = vlib_buffer_get_current(b1);
-    static session_actiondata_t actiondata = {0};
+    session_actiondata_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
+    u16 tx_rewrite_flags0 = 0, tx_rewrite_flags1 = 0;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
+    if (vnet_buffer(b0)->pds_data.xlate_idx) {
+        // This only handles static NAT from host for now.
+        // TODO: service mapping, napt, flow miss from uplink
+        tx_rewrite_flags0 =
+            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START));
+        actiondata.action_u.session_session_info.tx_xlate_id =
+            vnet_buffer(b0)->pds_data.xlate_idx;
+        actiondata.action_u.session_session_info.rx_xlate_id =
+            vnet_buffer(b0)->pds_data.xlate_idx + 1;
+    }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
+        tx_rewrite_flags0 |
         vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_data.nexthop) >> 16);
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
@@ -49,7 +63,20 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         vnet_buffer(b0)->pds_data.flow_hash =
                 clib_net_to_host_u16(ses_info0->lif);
     }
+    clib_memset(&actiondata, 0, sizeof(actiondata));
+    if (vnet_buffer(b1)->pds_data.xlate_idx) {
+        // This only handles static NAT from host for now.
+        // TODO: service mapping, napt, flow miss from uplink
+        tx_rewrite_flags1 =
+            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START));
+        actiondata.action_u.session_session_info.tx_xlate_id =
+            vnet_buffer(b1)->pds_data.xlate_idx;
+        actiondata.action_u.session_session_info.rx_xlate_id =
+            vnet_buffer(b1)->pds_data.xlate_idx + 1;
+    }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
+        tx_rewrite_flags1 |
         vec_elt(fm->nh_flags, (vnet_buffer(b1)->pds_data.nexthop) >> 16);
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         *next1 = SESSION_PROG_NEXT_DROP;
@@ -71,11 +98,24 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
                      u16 *next, u32 *counter)
 {
     p4_rx_cpu_hdr_t *ses_info0 = vlib_buffer_get_current(b);
-    static session_actiondata_t actiondata = {0};
+    session_actiondata_t actiondata = {0};
     pds_flow_main_t *fm = &pds_flow_main;
+    u16 tx_rewrite_flags = 0;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
+    if (vnet_buffer(b)->pds_data.xlate_idx) {
+        // This only handles static NAT from host for now.
+        // TODO: service mapping, napt, flow miss from uplink
+        tx_rewrite_flags =
+            ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
+             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START));
+        actiondata.action_u.session_session_info.tx_xlate_id =
+            vnet_buffer(b)->pds_data.xlate_idx;
+        actiondata.action_u.session_session_info.rx_xlate_id =
+            vnet_buffer(b)->pds_data.xlate_idx + 1;
+    }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
+        tx_rewrite_flags |
         vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_data.nexthop) >> 16);
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
@@ -240,6 +280,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     p4_rx_cpu_hdr_t *hdr1 = vlib_buffer_get_current(p1);
     u8 flag_orig0, flag_orig1;
     u32 nexthop;
+    u16 xlate_id0, xlate_id1;
 
     flag_orig0 = hdr0->flags;
     flag_orig1 = hdr1->flags;
@@ -286,6 +327,23 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
 
     vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
     vlib_buffer_advance(p1, pds_flow_classify_get_advance_offset(p1));
+
+    xlate_id0 = clib_net_to_host_u16(hdr0->mapping_xlate_id);
+    xlate_id1 = clib_net_to_host_u16(hdr1->mapping_xlate_id);
+    if (xlate_id0) {
+        u32 ip;
+        u16 port;
+        pds_snat_tbl_read_ip4(xlate_id0, &ip, &port);
+        vnet_buffer(p0)->pds_data.xlate_idx = xlate_id0;
+        vnet_buffer(p0)->pds_data.xlate_addr = ip;
+    }
+    if (xlate_id1) {
+        u32 ip;
+        u16 port;
+        pds_snat_tbl_read_ip4(xlate_id1, &ip, &port);
+        vnet_buffer(p1)->pds_data.xlate_idx = xlate_id1;
+        vnet_buffer(p1)->pds_data.xlate_addr = ip;
+    }
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags0 == flags1)) {
@@ -349,6 +407,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     p4_rx_cpu_hdr_t *hdr = vlib_buffer_get_current(p);
     u8 flag_orig;
     u32 nexthop;
+    u16 xlate_id;
 
     flag_orig = hdr->flags;
     //flag_orig = VPP_CPU_FLAGS_IPV4_1_VALID;
@@ -374,6 +433,15 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer (p)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr->ingress_bd_id);
 
     vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p));
+
+    xlate_id = clib_net_to_host_u16(hdr->mapping_xlate_id);
+    if (xlate_id) {
+        u32 ip;
+        u16 port;
+        pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
+        vnet_buffer(p)->pds_data.xlate_idx = xlate_id;
+        vnet_buffer(p)->pds_data.xlate_addr = ip;
+    }
 
     /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags == VPP_CPU_FLAGS_IPV4_1_VALID)) {
