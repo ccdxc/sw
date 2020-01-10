@@ -376,3 +376,6 @@ dependencies:
     - reference: api
     - reference: venice
     - reference: test/ci_targets/e2e
+  penctl:
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/linux
