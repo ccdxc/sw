@@ -116,7 +116,7 @@ def get_rule(dst_ip, src_ip, protocol, port, action):
 
 parser = argparse.ArgumentParser(description = "Policy Rules Generator.")
 parser.add_argument('-s', '--scale', help='delimited list of scale', type=str, required=True)
-parser.add_argument('-t', '--topology', help='Path of topology directory', default="/sw/iota/test/iris/topologies/container/", type=str)
+parser.add_argument('-t', '--topology', help='Path of topology directory', default="/usr/src/github.com/pensando/sw/iota/test/iris/topologies/container/", type=str)
 parser.add_argument('-e', '--endpoints', help='Relative path of endpoints.json', default="endpoints.json", type=str)
 parser.add_argument('-i', '--ips', help='Destination EPs for every rule in the policy', default=4, type=int)
 parser.add_argument('-x', '--expansion', help='Generate expansion policies', default=True, type=bool)
