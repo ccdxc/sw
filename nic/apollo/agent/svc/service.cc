@@ -49,7 +49,7 @@ SvcImpl::SvcMappingCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.vpc.id = request.key().vpcid();
+        pds_obj_key_proto_to_api_spec(&key.vpc, request.key().vpcid());
         key.backend_port = request.key().backendport();
         ipaddr_proto_spec_to_api_spec(&key.backend_ip,
                                       request.key().backendip());
@@ -117,7 +117,7 @@ SvcImpl::SvcMappingUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.vpc.id = request.key().vpcid();
+        pds_obj_key_proto_to_api_spec(&key.vpc, request.key().vpcid());
         key.backend_port = request.key().backendport();
         ipaddr_proto_spec_to_api_spec(&key.backend_ip,
                                       request.key().backendip());
@@ -175,7 +175,7 @@ SvcImpl::SvcMappingDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->key_size(); i++) {
-        key.vpc.id = proto_req->key(i).vpcid();
+        pds_obj_key_proto_to_api_spec(&key.vpc, proto_req->key(i).vpcid());
         key.backend_port = proto_req->key(i).backendport();
         ipaddr_proto_spec_to_api_spec(&key.backend_ip,
                                       proto_req->key(i).backendip());
@@ -220,7 +220,7 @@ SvcImpl::SvcMappingGet(ServerContext *context,
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->key_size(); i++) {
-        key.vpc.id = proto_req->key(i).vpcid();
+        pds_obj_key_proto_to_api_spec(&key.vpc, proto_req->key(i).vpcid());
         key.backend_port = proto_req->key(i).backendport();
         ipaddr_proto_spec_to_api_spec(&key.backend_ip,
                                       proto_req->key(i).backendip());

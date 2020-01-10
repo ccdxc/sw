@@ -215,7 +215,7 @@ public:
          * to copy key bytes into this class)
          */
         if (key_.type == PDS_MAPPING_TYPE_L3) {
-            return "mapping-(" + std::to_string(key_.vpc.id) + ", " +
+            return "mapping-(" + std::string(key_.vpc.tostr()) + ", " +
                        std::string(ipaddr2str(&key_.ip_addr)) + ")";
         } else if (key_.type == PDS_MAPPING_TYPE_L2) {
             return "mapping-(" + std::to_string(key_.subnet.id) + ", " +

@@ -43,7 +43,7 @@ message NatRule {
 
 message NatPolicySpec {
   // unique identifier of NAT policy
-  uint32                Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes                 Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IPv4 or IPv6 policy
   types.IPAF            AddrFamily = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // direction in which the policy should be enforced
@@ -84,7 +84,7 @@ message NatPolicyResponse {
 
 // NAT policy get request
 message NatPolicyGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // NAT policy get response
@@ -97,7 +97,7 @@ message NatPolicyGetResponse {
 message NatPolicyDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes Id         = 2;
 }
 
 // NAT policy delete response
@@ -108,9 +108,9 @@ message NatPolicyDeleteResponse {
 // NAT port block specification
 message NatPortBlockSpec {
   // unique key identifying the port block
-  uint32            Id          = 1;
+  bytes             Id          = 1;
   // VPC identifier this port block is tied to
-  uint32            VpcId       = 2;
+  bytes             VpcId       = 2;
   // IP protocol this port block is to be used for
   uint32            Protocol    = 3;
   // NAT address to be used with this port block
@@ -157,7 +157,7 @@ message NatPortBlockResponse {
 
 // NAT port block get request
 message NatPortBlockGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // NAT port block get response
@@ -170,7 +170,7 @@ message NatPortBlockGetResponse {
 message NatPortBlockDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // NAT port block delete response

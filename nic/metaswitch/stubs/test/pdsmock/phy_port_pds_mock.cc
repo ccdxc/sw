@@ -47,7 +47,6 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
                                               ETH_IF_DEFAULT_CHILD_PORT);
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE;
     spec.l3_if_info.encap.val.vnid = 0;
-    spec.l3_if_info.vpc.id = 0;
     pds_batch.emplace_back (OBJ_ID_IF, op);
     auto& if_spec = pds_batch.back().intf;
     if_spec = spec;

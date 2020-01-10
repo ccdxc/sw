@@ -179,12 +179,10 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        std::string ret("svc-(");
+        return "svc-(" + std::string(key_.vpc.tostr()) + "," +
+                    ipaddr2str(&key_.backend_ip) + ":" +
+                    std::to_string(key_.backend_port) + ")";
 
-        ret += std::to_string(key_.vpc.id) + "," + ipaddr2str(&key_.backend_ip);
-        ret += ":" + std::to_string(key_.backend_port) + ")";
-
-        return ret;
     }
 
     /// \brief   helper function to get size of key

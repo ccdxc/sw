@@ -28,7 +28,7 @@ public:
     nexthop_feeder(const nexthop_feeder& feeder) {
         init(ipaddr2str(&feeder.spec.ip), MAC_TO_UINT64(feeder.spec.mac),
              feeder.num_obj, feeder.spec.key.id, feeder.spec.type,
-             feeder.spec.vlan, feeder.spec.vpc.id, feeder.spec.l3_if.id,
+             feeder.spec.vlan, feeder.spec.vpc, feeder.spec.l3_if.id,
              feeder.spec.tep.id);
     }
 
@@ -38,7 +38,7 @@ public:
               uint32_t num_obj=PDS_MAX_NEXTHOP,
               pds_nexthop_id_t id=1,
               pds_nh_type_t type=k_nh_type,
-              uint16_t vlan=1, pds_vpc_id_t vpc_id=1,
+              uint16_t vlan=1, pds_vpc_key_t vpc=int2pdsobjkey(1),
               pds_if_id_t if_id = k_l3_if_id,
               pds_tep_id_t tep_id = 1);
 
@@ -69,7 +69,7 @@ operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
         os << " ip: " << spec->ip
            << " mac: " << macaddr2str(spec->mac)
            << " vlan: " << spec->vlan
-           << " vpc: " << spec->vpc.id;
+           << " vpc: " << std::string(spec->vpc.tostr());
     } else if (spec->type == PDS_NH_TYPE_UNDERLAY) {
         os << " underlay mac:" << macaddr2str(spec->underlay_mac)
            << " l3 if: " << std::hex << spec->l3_if.id;

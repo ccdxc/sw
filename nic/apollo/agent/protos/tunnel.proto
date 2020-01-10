@@ -38,7 +38,7 @@ message TunnelSpec {
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
   uint32          Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // virtual private cloud this is tunnel belongs to
-  uint32          VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes           VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
   types.IPAddress LocalIP               = 3;
   // remote IP of the tunnel (used as outer DIP in tunneled packets)

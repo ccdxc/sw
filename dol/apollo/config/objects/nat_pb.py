@@ -35,12 +35,12 @@ class NatPbObject(base.ConfigObjectBase):
         logger.info("- AddrType:%d" % self.AddrType)
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.Id)
+        grpcmsg.Id.append(str.encode(str(self.Id)))
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.Id
-        spec.VpcId = self.VPC.VPCId
+        spec.Id = str.encode(str(self.Id))
+        spec.VpcId = str.encode(str(self.VPC.VPCId))
         spec.Protocol = self.ProtoNum
         spec.NatAddress.Prefix.IPv4Subnet.Addr.Af = types_pb2.IP_AF_INET
         spec.NatAddress.Prefix.IPv4Subnet.Addr.V4Addr = int(self.Addr)
@@ -53,13 +53,17 @@ class NatPbObject(base.ConfigObjectBase):
             spec.AddressType = types_pb2.ADDR_TYPE_SERVICE
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.Id:
+        if int(spec.Id) != self.Id:
             return False
         return True
 
 class NatPbObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.NAT_PB, resmgr.MAX_NAT_PB)
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml: return int(spec['id'])
+        return int(spec.Id)
 
     def GenerateObjects(self, parent, vpc_spec_obj):
         nat_spec = vpc_spec_obj.nat

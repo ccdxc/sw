@@ -15,10 +15,10 @@ namespace api {
 
 void
 svc_mapping_feeder::init(std::string vip_str, uint16_t svc_port,
-                         int backend_vpc_id, std::string backend_ip_str,
+                         pds_vpc_key_t backend_vpc, std::string backend_ip_str,
                          uint16_t backend_port, std::string backend_pip_str,
                          uint32_t num_svc_mapping) {
-    spec.key.vpc.id = backend_vpc_id;
+    spec.key.vpc = backend_vpc;
     test::extract_ip_addr(backend_ip_str.c_str(), &spec.key.backend_ip);
     spec.key.backend_port = backend_port;
     test::extract_ip_addr(vip_str.c_str(), &spec.vip);
@@ -29,7 +29,8 @@ svc_mapping_feeder::init(std::string vip_str, uint16_t svc_port,
 
 void
 svc_mapping_feeder::iter_next(int width) {
-    spec.key.vpc.id = (spec.key.vpc.id + width) % PDS_MAX_VPC + 1;
+    spec.key.vpc =
+        int2pdsobjkey((pdsobjkey2int(spec.key.vpc) + width) % PDS_MAX_VPC + 1);
     spec.key.backend_ip.addr.v6_addr.addr64[1] += width;
     spec.key.backend_port += width;
     spec.vip.addr.v6_addr.addr64[1] += width;
@@ -41,8 +42,7 @@ svc_mapping_feeder::iter_next(int width) {
 
 void
 svc_mapping_feeder::key_build(pds_svc_mapping_key_t *key) const {
-    memset(key, 0, sizeof(pds_svc_mapping_key_t));
-    *key = spec.key;
+    memcpy(key, &this->spec.key, sizeof(pds_svc_mapping_key_t));
 }
 
 void
@@ -56,7 +56,7 @@ svc_mapping_feeder::spec_build(pds_svc_mapping_spec_t *spec) const {
 
 bool
 svc_mapping_feeder::key_compare(const pds_svc_mapping_key_t *key) const {
-    return (*key == this->spec.key);
+    return (memcmp(key, &this->spec.key, sizeof(pds_svc_mapping_key_t)) == 0);
 }
 
 bool

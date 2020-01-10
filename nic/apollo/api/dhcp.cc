@@ -85,7 +85,7 @@ dhcp_relay::soft_delete(dhcp_relay *relay) {
 
 sdk_ret_t
 dhcp_relay::init_config(api_ctxt_t *api_ctxt) {
-    key_.id = api_ctxt->api_params->dhcp_relay_spec.key.id;
+    key_ = api_ctxt->api_params->dhcp_relay_spec.key;
     return SDK_RET_OK;
 }
 
@@ -204,7 +204,7 @@ dhcp_policy::soft_delete(dhcp_policy *policy) {
 
 sdk_ret_t
 dhcp_policy::init_config(api_ctxt_t *api_ctxt) {
-    key_.id = api_ctxt->api_params->dhcp_policy_spec.key.id;
+    key_ = api_ctxt->api_params->dhcp_policy_spec.key;
     return SDK_RET_OK;
 }
 

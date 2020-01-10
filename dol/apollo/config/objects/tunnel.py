@@ -120,7 +120,7 @@ class TunnelObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.Id
-        spec.VPCId = 0 # TODO: Create Underlay VPC
+        spec.VPCId = str.encode(str(0)) # TODO: Create Underlay VPC
         utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
         utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)

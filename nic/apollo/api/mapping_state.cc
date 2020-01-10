@@ -48,6 +48,7 @@ mapping_state::alloc(void) {
 
 sdk_ret_t
 mapping_state::insert(mapping_entry *mapping) {
+#if 0
     PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%u, %s) to db",
                       mapping->key().type,
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
@@ -55,12 +56,24 @@ mapping_state::insert(mapping_entry *mapping) {
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(mapping->key().mac_addr) :
                           ipaddr2str(&mapping->key().ip_addr));
+#endif
+    if (mapping->key().type == PDS_MAPPING_TYPE_L2) {
+        PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%u, %s) to db",
+                          mapping->key().type, mapping->key().subnet.id,
+                          macaddr2str(mapping->key().mac_addr));
+    } else if (mapping->key().type == PDS_MAPPING_TYPE_L3) {
+        PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%s, %s) to db",
+                          mapping->key().type,
+                          std::string(mapping->key().vpc.tostr()),
+                          ipaddr2str(&mapping->key().ip_addr));
+    }
     return mapping_ht_->insert_with_key(&mapping->key_, mapping,
                                         &mapping->ht_ctxt_);
 }
 
 mapping_entry *
 mapping_state::remove(mapping_entry *mapping) {
+#if 0
     PDS_TRACE_VERBOSE("Removing mapping - type %u, (%u, %s) to db",
                       mapping->key().type,
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
@@ -68,6 +81,17 @@ mapping_state::remove(mapping_entry *mapping) {
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(mapping->key().mac_addr) :
                           ipaddr2str(&mapping->key().ip_addr));
+#endif
+    if (mapping->key().type == PDS_MAPPING_TYPE_L2) {
+        PDS_TRACE_VERBOSE("Removing mapping - type %u, (%u, %s) to db",
+                          mapping->key().type, mapping->key().subnet.id,
+                          macaddr2str(mapping->key().mac_addr));
+    } else if (mapping->key().type == PDS_MAPPING_TYPE_L3) {
+        PDS_TRACE_VERBOSE("Removing mapping - type %u, (%s, %s) to db",
+                          mapping->key().type,
+                          std::string(mapping->key().vpc.tostr()),
+                          ipaddr2str(&mapping->key().ip_addr));
+    }
     return (mapping_entry *)(mapping_ht_->remove(&mapping->key_));
 }
 
@@ -78,6 +102,7 @@ mapping_state::free(mapping_entry *mapping) {
 
 mapping_entry *
 mapping_state::find(pds_mapping_key_t *key) const {
+#if 0
     PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%u, %s) to db",
                       key->type,
                       (key->type == PDS_MAPPING_TYPE_L2) ?
@@ -85,6 +110,16 @@ mapping_state::find(pds_mapping_key_t *key) const {
                       (key->type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(key->mac_addr) :
                           ipaddr2str(&key->ip_addr));
+#endif
+    if (key->type == PDS_MAPPING_TYPE_L2) {
+        PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%u, %s) to db",
+                          key->type, key->subnet.id,
+                          macaddr2str(key->mac_addr));
+    } else if (key->type == PDS_MAPPING_TYPE_L3) {
+        PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%s, %s) to db",
+                          key->type, std::string(key->vpc.tostr()),
+                          macaddr2str(key->mac_addr));
+    }
     return (mapping_entry *)(mapping_ht_->lookup(key));
 }
 

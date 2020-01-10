@@ -26,6 +26,8 @@
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "platform/sysmon/sysmon.hpp"
 
+const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
+
 namespace api {
 
 /**

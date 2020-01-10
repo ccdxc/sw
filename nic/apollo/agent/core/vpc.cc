@@ -14,7 +14,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
 {
     switch (spec->type) {
     case PDS_VPC_TYPE_UNDERLAY:
-        if (agent_state::state()->underlay_vpc_id() != PDS_VPC_ID_INVALID) {
+        if (agent_state::state()->underlay_vpc() != PDS_VPC_ID_INVALID) {
             PDS_TRACE_ERR("Failed to create vpc {}, only one underlay vpc "
                           "allowed", spec->key.id);
             return SDK_RET_ENTRY_EXISTS;
@@ -62,7 +62,7 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         return ret;
     }
     if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        agent_state::state()->underlay_vpc_id_set(spec->key.id);
+        agent_state::state()->set_underlay_vpc(spec->key);
     }
     return SDK_RET_OK;
 }
@@ -121,8 +121,8 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     }
 
     if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        agent_state::state()->underlay_vpc_id_reset();
-        agent_state::state()->underlay_vpc_id_set(spec->key.id);
+        agent_state::state()->reset_underlay_vpc();
+        agent_state::state()->set_underlay_vpc(spec->key);
     }
 
     return SDK_RET_OK;
@@ -152,7 +152,7 @@ vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
         }
     }
     if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        agent_state::state()->underlay_vpc_id_reset();
+        agent_state::state()->reset_underlay_vpc();
     }
     if (agent_state::state()->del_from_vpc_db(key) == false) {
         PDS_TRACE_ERR("Failed to delete vpc {} from db", key->id);

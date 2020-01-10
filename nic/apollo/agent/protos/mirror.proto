@@ -29,7 +29,7 @@ message RSpanSpec {
 // ERSpanSpec is the configuration specification for ERSPAN
 message ERSpanSpec {
   // VPC id
-  uint32          VPCId  = 1;
+  bytes           VPCId  = 1;
   oneof erspandst {
       // tunnel (aka. TEP) as the ERSPAN destination
       uint32    TunnelId = 2;

@@ -81,13 +81,13 @@ class LocalMappingObject(base.ConfigObjectBase):
 
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
-        key.IPKey.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        key.IPKey.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.IPKey.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        spec.Id.IPKey.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
@@ -104,7 +104,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         grpcmsg = service_pb2.SvcMappingRequest()
         grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
-        spec.Key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        spec.Key.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Key.BackendIP)
         spec.Key.BackendPort = self.LBPort
         utils.GetRpcIPAddr(self.SvcIPAddr, spec.IPAddr)

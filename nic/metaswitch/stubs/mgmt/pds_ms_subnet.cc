@@ -84,6 +84,7 @@ populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
 {
     req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_eviindex (subnet_spec->key.id);
+   // req.set_eviindex (pdsobjkey2msidx(subnet_spec->key));
     req.set_vni (subnet_spec->fabric_encap.val.vnid);
 }
 
@@ -93,6 +94,7 @@ populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
 {
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_bdindex (subnet_spec->key.id);
+   // req.set_bdindex (pdsobjkey2msidx(subnet_spec->key));
     req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
 } 
 
@@ -104,10 +106,11 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     std::string vrf_name;
 
     // Convert VRF ID to name
-    vrf_name = std::to_string (subnet_spec->vpc.id);
+    auto vrf_id = pdsobjkey2msidx(subnet_spec->vpc);
+    vrf_name = std::to_string (vrf_id);
 
     SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X VRF name %s len %d", 
-                    subnet_spec->key.id, if_index, vrf_name.c_str(), vrf_name.length());
+                    vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_ifindex (if_index);

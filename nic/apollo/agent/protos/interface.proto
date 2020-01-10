@@ -60,7 +60,7 @@ message UplinkPCSpec {
 // L3 interface configuration
 message L3IfSpec {
   // vpc/vrf this L3 interface belongs to
-  uint32         VpcId      = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes          VpcId      = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address, prefix of this L3 interface
   types.IPPrefix Prefix     = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // ethernet) ifindex corresponding to the physical port of the this L3 interface

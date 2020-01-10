@@ -25,7 +25,7 @@ mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
     this->encap.type = PDS_ENCAP_TYPE_DOT1Q;
     this->encap.val.vlan_tag = vlan_tag;
     this->num_obj  = max_ms;
-    this->vpc_id = 1;
+    this->vpc = int2pdsobjkey(1);
     this->tep_id = tep_id;
     memset(&this->src_ip, 0x0, sizeof(ip_addr_t));
     test::extract_ip_addr((char *)src_ip.c_str(), &this->src_ip);
@@ -75,7 +75,7 @@ mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
         spec->rspan_spec.interface = interface;
         memcpy(&spec->rspan_spec.encap, &encap, sizeof(pds_encap_t));
     } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
-        spec->erspan_spec.vpc.id = vpc_id;
+        spec->erspan_spec.vpc = vpc;
         spec->erspan_spec.dscp = dscp;
         spec->erspan_spec.span_id = span_id;
         spec->erspan_spec.tep.id = tep_id;
@@ -106,7 +106,7 @@ mirror_session_feeder::spec_compare(
 
     } else if (type == PDS_MIRROR_SESSION_TYPE_ERSPAN) {
         // validate erspan spec
-        if ((spec->erspan_spec.vpc.id != vpc_id) ||
+        if ((spec->erspan_spec.vpc != vpc) ||
             (spec->erspan_spec.dscp != dscp) ||
             (spec->erspan_spec.span_id != span_id) ||
              (spec->erspan_spec.tep.id != tep_id))

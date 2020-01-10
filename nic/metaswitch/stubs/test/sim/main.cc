@@ -4,7 +4,7 @@
 //----------------------------------------------------------------------------
 ///
 /// \file
-/// This is the main entry point for the SIM that runs Metasswitch stack with the 
+/// This is the main entry point for the SIM that runs Metasswitch stack with the
 //  pds stub integration code and mocks the PDS HAL
 //----------------------------------------------------------------------------
 
@@ -18,6 +18,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
@@ -32,7 +33,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 
 namespace pds_ms_test {
-test_params_t* test_params() {    
+test_params_t* test_params() {
     static test_params_t  g_test_params;
     return &g_test_params;
 }
@@ -44,6 +45,7 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+using namespace pds_ms;
 
 static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
@@ -58,7 +60,7 @@ static test_config_t  g_test_conf;
 static NBB_VOID
 pds_ms_sim_test_loopback ()
 {
-    // Start CTM 
+    // Start CTM
     PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Loopback interface
@@ -87,13 +89,13 @@ pds_ms_sim_test_loopback ()
 static NBB_VOID
 pds_ms_sim_test_bgp_update ()
 {
-    // Start CTM 
+    // Start CTM
     PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_vrfid (PDS_MS_BGP_RM_ENT_INDEX);
+    bgp_global_spec.set_uuid (msidx2pdsobjkey(1).tostr());
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
     pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -102,7 +104,7 @@ pds_ms_sim_test_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_vrfid(1);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).tostr());
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -115,14 +117,14 @@ pds_ms_sim_test_bgp_update ()
     localaddr->set_v4addr(0);
     bgp_peer_spec.set_localport(0);
     bgp_peer_spec.set_ifid(0);
-    
+
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
-    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR); 
+    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_vrfid(1);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).tostr());
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -139,8 +141,8 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_af.set_disable(pds::BOOL_TRUE);
     bgp_peer_af.set_nhself(pds::BOOL_FALSE);
     bgp_peer_af.set_defaultorig(pds::BOOL_FALSE);
-    
-    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR); 
+
+    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -152,14 +154,14 @@ pds_ms_sim_test_bgp_update ()
 static NBB_VOID
 pds_ms_sim_test_overlay_bgp_update ()
 {
-    // Start CTM 
+    // Start CTM
     PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_vrfid(1);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).tostr());
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -172,14 +174,14 @@ pds_ms_sim_test_overlay_bgp_update ()
     localaddr->set_v4addr(g_test_conf.local_lo_ip_addr);
     bgp_peer_spec.set_localport(0);
     bgp_peer_spec.set_ifid(0);
-    
+
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
-    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR); 
+    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_vrfid(1);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).tostr());
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -196,8 +198,8 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_af.set_disable(pds::BOOL_TRUE);
     bgp_peer_af.set_nhself(pds::BOOL_FALSE);
     bgp_peer_af.set_defaultorig(pds::BOOL_FALSE);
-    
-    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR); 
+
+    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -233,7 +235,7 @@ pds_ms_sim_test_config ()
     cout << "Config thread is waiting for Nbase....\n";
     while (!g_routing_thread->ready()) {
          pthread_yield();
-    }    
+    }
     cout << "Nbase is ready!\n";
 
     // Create L3 interface
@@ -244,7 +246,7 @@ pds_ms_sim_test_config ()
     l3_if_spec.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_ms::interface_create (&l3_if_spec, 0);
     cout << "Config thread: L3 Interface Config is done!\n";
-    
+
     // Loopback Update
     pds_ms_sim_test_loopback();
     cout << "Config thread: Loopback Proto is done!\n";
@@ -262,7 +264,7 @@ pds_ms_sim_test_config ()
 
     // VPC update
     pds_vpc_spec_t vpc_spec = {0};
-    vpc_spec.key.id = 2;
+    vpc_spec.key = msidx2pdsobjkey(k_vpc_id);
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
     pds_ms::vpc_create (&vpc_spec, 0);
@@ -295,7 +297,7 @@ pds_ms_sim_test_config ()
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
     subnet_spec.key.id = 1;
-    subnet_spec.vpc.id = k_vpc_id;
+    subnet_spec.vpc = pds_ms::msidx2pdsobjkey(k_vpc_id);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
     subnet_spec.host_ifindex = g_test_conf.lif_if_index;

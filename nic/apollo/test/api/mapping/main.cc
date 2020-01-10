@@ -138,7 +138,7 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
     int num_ips = 2;
 #endif
     // first set
-    feeders[0].init(k_vpc_key.id, k_subnet_key.id, "10.0.0.2/8",
+    feeders[0].init(k_vpc_key, k_subnet_key.id, "10.0.0.2/8",
                 0x000000030b020a01, g_encap_type, g_encap_val, 1, true,
                 "12.0.0.0/16", num_vnics, num_ips, PDS_MAPPING_TYPE_L3);
 
@@ -167,7 +167,7 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
 #endif
 
     // first set
-    feeders[0].init(k_vpc_key.id, k_subnet_key.id, "10.80.0.2/8",
+    feeders[0].init(k_vpc_key, k_subnet_key.id, "10.80.0.2/8",
                 0x000000140b020a01, g_encap_type, g_encap_val,
                 PDS_NH_TYPE_OVERLAY, 2, num_teps, num_vnics,
                 PDS_MAPPING_TYPE_L3);

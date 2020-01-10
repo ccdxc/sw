@@ -3,7 +3,9 @@
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "qb0mib.h"
+using namespace pds_ms;
 
 namespace pds {
 
@@ -13,7 +15,15 @@ bgp_peer_fill_func (pds::BGPPeerSpec&   req,
                     AMB_BGP_PEER        *v_amb_bgp_peer,
                     NBB_LONG            row_status)
 {
-    // This fill API get called as part of BGP GLobal Spec config after init.
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    // TODO: Convert UUID to entity_index;
+    v_amb_bgp_peer->rm_ent_index        = strtol (req.uuid().c_str(), NULL, 0);
+    oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer->rm_ent_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_RM_ENT_INDEX);
+
+   
     // Always set admin status to UP
     if (row_status != AMB_ROW_DESTROY) {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying peer: fill in field Local_NM"));
@@ -45,7 +55,14 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
                       AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent,
                       NBB_LONG           row_status)
 {
-    // This fill API get called as part of BGP GLobal Spec config after init.
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    // TODO: Convert UUID to entity_index;
+    v_amb_bgp_rm_ent->index     = strtol (req.uuid().c_str(), NULL, 0);
+    oid[AMB_BGP_RM_INDEX_INDEX] = v_amb_bgp_rm_ent->index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_INDEX);
+
     // Always set admin status to UP
     if (row_status != AMB_ROW_DESTROY) {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying RM: fill in field admin_status and I3 in AMB_BGP_RM_ENT"));
@@ -56,6 +73,20 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_I3_ENT_INDEX);
 
     }
+}
+
+NBB_VOID 
+bgp_peer_af_fill_func (pds::BGPPeerAf        &req,
+                       AMB_GEN_IPS           *mib_msg,
+                       AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
+                       NBB_LONG               row_status)
+{
+    // Local variables
+    NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+
+    v_amb_bgp_peer_af->rm_ent_index     = strtol (req.uuid().c_str(), NULL, 0); 
+    oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer_af->rm_ent_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_RM_ENT_INDEX);
 }
 } // end namespace pds
 

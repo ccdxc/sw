@@ -363,15 +363,15 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_DHCP_RELAY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return dhcp_db()->find(&api_ctxt->api_params->dhcp_relay_key);
+            return dhcp_db()->find_dhcp_relay(&api_ctxt->api_params->dhcp_relay_key);
         }
-        return dhcp_db()->find(&api_ctxt->api_params->dhcp_relay_spec.key);
+        return dhcp_db()->find_dhcp_relay(&api_ctxt->api_params->dhcp_relay_spec.key);
 
     case OBJ_ID_DHCP_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_key);
+            return dhcp_db()->find_dhcp_policy(&api_ctxt->api_params->dhcp_policy_key);
         }
-        return dhcp_db()->find(&api_ctxt->api_params->dhcp_policy_spec.key);
+        return dhcp_db()->find_dhcp_policy(&api_ctxt->api_params->dhcp_policy_spec.key);
 
     case OBJ_ID_SECURITY_PROFILE:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -464,11 +464,11 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        api_obj = dhcp_db()->find((pds_dhcp_relay_key_t *)key);
+        api_obj = dhcp_db()->find_dhcp_relay((pds_dhcp_relay_key_t *)key);
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        api_obj = dhcp_db()->find((pds_dhcp_policy_key_t *)key);
+        api_obj = dhcp_db()->find_dhcp_policy((pds_dhcp_policy_key_t *)key);
         break;
 
     case OBJ_ID_SECURITY_PROFILE:

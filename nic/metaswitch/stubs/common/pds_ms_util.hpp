@@ -24,7 +24,7 @@ namespace pds_ms {
 
 constexpr size_t VRF_PREF_LEN = 4;
 
-static inline unsigned long 
+static inline unsigned long
 vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 {
     auto vrfname_ = (const char*) vrfname;
@@ -37,7 +37,7 @@ vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
     return vrf_id;
 }
 
-static inline void 
+static inline void
 ms_to_pds_ipaddr (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
 {
     switch (in_ip.type) {
@@ -60,7 +60,7 @@ ms_to_pds_ipaddr (const ATG_INET_ADDRESS& in_ip, ip_addr_t* out_ip)
     }
 }
 
-static inline void 
+static inline void
 pds_to_ms_ipaddr (ip_addr_t   in_ip, ATG_INET_ADDRESS*  out_ip)
 {
     if (in_ip.af == IP_AF_IPV4) {
@@ -93,10 +93,10 @@ pds_to_ms_ipaddr (ip_addr_t   in_ip, ATG_INET_ADDRESS*  out_ip)
 struct mac_addr_wr_t {
     mac_addr_t m_mac;
     mac_addr_wr_t(void) {
-        memset(m_mac, 0, ETH_ADDR_LEN); 
+        memset(m_mac, 0, ETH_ADDR_LEN);
     }
     mac_addr_wr_t(const mac_addr_t& mac) {
-        memcpy(m_mac, mac, ETH_ADDR_LEN); 
+        memcpy(m_mac, mac, ETH_ADDR_LEN);
     }
     bool operator<(const mac_addr_wr_t& mac) const {
         int i = 0;
@@ -130,7 +130,7 @@ public:
         return *this;
     }
     // Prohibit copy
-    pds_batch_ctxt_guard_t(const pds_batch_ctxt_guard_t& bg)=delete; 
+    pds_batch_ctxt_guard_t(const pds_batch_ctxt_guard_t& bg)=delete;
     pds_batch_ctxt_guard_t& operator=(const pds_batch_ctxt_guard_t& bg)=delete;
     void set (pds_batch_ctxt_t bctxt) {
         if (bctxt_ != 0) {pds_batch_destroy (bctxt_);}
@@ -163,6 +163,18 @@ public:
         return hash_algo::fnv_hash((void *)&pfx, sizeof(pfx));
     }
 };
+
+static inline pds_obj_key_t
+msidx2pdsobjkey (uint32_t id) {
+    pds_obj_key_t key = { 0 };
+    memcpy(key.id, &id, sizeof(id));
+    return key;
+}
+
+static inline uint32_t
+pdsobjkey2msidx (const pds_obj_key_t& key) {
+    return (*(uint32_t *)&key);
+}
 
 } // End namespace
 #endif

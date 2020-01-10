@@ -119,7 +119,7 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 
     // TODO: move to memcmp
 
-    if (this->spec.vpc.id != spec->vpc.id)
+    if (this->spec.vpc != spec->vpc)
         return false;
 
     if (!IPADDR_EQ(&tep_dipi, &spec_ip))

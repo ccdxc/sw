@@ -13,6 +13,7 @@
 #include <arpa/inet.h>
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
@@ -32,6 +33,7 @@ using grpc::Status;
 using namespace pds_ms_test;
 using namespace std;
 using namespace pds;
+using namespace pds_ms;
 
 static test_config_t g_test_conf_;
 static unique_ptr<pds::DeviceSvc::Stub> g_device_stub_;
@@ -82,7 +84,7 @@ static void create_l3_intf_proto_grpc () {
     pds_if.key.id = g_test_conf_.eth_if_index;
     pds_if.type = PDS_IF_TYPE_L3;
     pds_if.admin_state = PDS_IF_STATE_UP;
-    pds_if.l3_if_info.vpc.id = 1;
+    pds_if.l3_if_info.vpc = msidx2pdsobjkey(1);
     pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
     pds_if.l3_if_info.ip_prefix.len = 16;
@@ -108,7 +110,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_vrfid (PDS_MS_BGP_RM_ENT_INDEX);
+    proto_spec->set_uuid (msidx2pdsobjkey(1).tostr());
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -218,7 +220,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_vrfid(PDS_MS_BGP_RM_ENT_INDEX);
+    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
     proto_spec->set_adminen(pds::ADMIN_UP);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
@@ -261,7 +263,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_vrfid(PDS_MS_BGP_RM_ENT_INDEX);
+    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -306,7 +308,7 @@ static void create_subnet_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(1);
-    proto_spec->set_vpcid(k_vpc_id);
+    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).tostr());
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -336,7 +338,7 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(k_vpc_id);
+    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).tostr());
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -444,7 +446,7 @@ static void get_peer_status_all() {
     Status               ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_vrfid (PDS_MS_BGP_RM_ENT_INDEX);
+    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
 
     ret_status = g_bgp_stub_->BGPPeerSpecGetAll (&context, request, &response);
     if (ret_status.ok()) {
@@ -453,7 +455,7 @@ static void get_peer_status_all() {
             auto resp = response.response(i);
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
-            printf ("  VRF Id               : %d\n", resp.vrfid());
+            printf ("  VRF Id               : %d\n", 1); // TODO: how to convert UUID to VrfID.. auto-gen wont support fillFn in get
             printf ("  Local Port           : %d\n",resp.localport());
             auto paddr = resp.localaddr().v4addr();
             struct in_addr ip_addr;
@@ -503,7 +505,7 @@ static void get_evpn_mac_ip_all () {
             printf ("  EVI Id       : %d\n", resp.eviid());
             uint8_t mac[6];
             memcpy(mac, resp.macaddress().c_str(),6);
-            printf ("  MAC Address  : 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X\n", 
+            printf ("  MAC Address  : 0x%X 0x%X 0x%X 0x%X 0x%X 0x%X\n",
                     mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
             auto ipaddr = resp.ipaddress().v4addr();
             struct in_addr ip_addr;
@@ -536,7 +538,7 @@ int main(int argc, char** argv)
     g_route_stub_   = CPRouteSvc::NewStub (channel);
     g_intf_stub_    = CPInterfaceSvc::NewStub (channel);
 
-    if (argc == 1) 
+    if (argc == 1)
     {
         // Send protos to grpc server
         create_device_proto_grpc();

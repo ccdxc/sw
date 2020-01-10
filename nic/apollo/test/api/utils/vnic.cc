@@ -78,7 +78,7 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
                   pds_encap_type_t fabric_encap_type,
                   bool src_dst_check, bool configure_policy) {
     this->id = id;
-    this->vpc_id = 1;
+    this->vpc = int2pdsobjkey(1);
     this->subnet_id = 1;
     this->mac_u64 = mac | (id << 24);
     vnic_feeder_encap_init(id, vnic_encap_type, &vnic_encap);

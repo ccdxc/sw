@@ -169,7 +169,7 @@ pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
     memset(&key, 0, sizeof(key));
     if (ips_info_.has_ip) {
         key.type = PDS_MAPPING_TYPE_L3;
-        key.vpc.id = store_info_.bd_obj->properties().vpc_id;
+        key.vpc = store_info_.bd_obj->properties().vpc;
         key.ip_addr = ips_info_.ip_address;
     } else {
         key.type = PDS_MAPPING_TYPE_L2;

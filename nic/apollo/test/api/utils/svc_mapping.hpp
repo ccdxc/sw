@@ -22,7 +22,7 @@ public:
     svc_mapping_feeder() { };
     svc_mapping_feeder(const svc_mapping_feeder& feeder) {
         init(ipaddr2str(&feeder.spec.vip),
-             feeder.spec.svc_port, feeder.spec.key.vpc.id,
+             feeder.spec.svc_port, feeder.spec.key.vpc,
              ipaddr2str(&feeder.spec.key.backend_ip),
              feeder.spec.key.backend_port,
              ipaddr2str(&feeder.spec.backend_provider_ip), feeder.num_obj);
@@ -30,7 +30,7 @@ public:
 
     // Initialize feeder with the base set of values
     void init(std::string vip_str, uint16_t svc_port,
-              int backend_vpc_id, std::string backend_ip,
+              pds_vpc_key_t backend_vpc, std::string backend_ip,
               uint16_t backend_port, std::string backend_pip,
               uint32_t num_svc_mapping=100);
 
@@ -49,7 +49,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_svc_mapping_key_t *key) {
-    os << " vpc: " << key->vpc.id
+    os << " vpc: " << key->vpc.tostr()
        << " backend ip: " << key->backend_ip
        << " backend port: " << key->backend_port;
     return os;

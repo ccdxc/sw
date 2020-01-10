@@ -114,7 +114,7 @@ pds_vpc_mock_validate (const spec_t&  expected_pds,
                           const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
-        if (expected_pds.vpc.key.id != rcvd_pds.vpc.key.id) {
+        if (expected_pds.vpc.key != rcvd_pds.vpc.key) {
             std::cout << "VPC delete key compare failed" << std::endl;
             std::cout << "Expected: " << expected_pds.vpc.key.id <<std::endl;
             std::cout << "Rcvd: " << rcvd_pds.vpc.key.id << std::endl;
@@ -122,8 +122,9 @@ pds_vpc_mock_validate (const spec_t&  expected_pds,
         }
         return true;;
     }
-    test::api::vpc_feeder feeder;
 #if 0
+    test::api::vpc_feeder feeder;
+
     feeder.spec = expected_pds.vpc; 
     if (!feeder.spec_compare (&rcvd_pds.vpc)) {
         std::cout << "VPC compare failed" << std::endl;

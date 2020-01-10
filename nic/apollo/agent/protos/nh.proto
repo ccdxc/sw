@@ -33,7 +33,7 @@ enum NexthopType {
 // IP nexthop information
 message IPNhSpec {
   // egress VRF id
-  uint32           VPCId = 1;
+  bytes            VPCId = 1;
   // nexthop's IP address
   types.IPAddress  IP    = 2;
   // egress vlan

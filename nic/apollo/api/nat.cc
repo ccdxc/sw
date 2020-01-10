@@ -85,7 +85,7 @@ nat_port_block::soft_delete(nat_port_block *port_block) {
 
 sdk_ret_t
 nat_port_block::init_config(api_ctxt_t *api_ctxt) {
-    key_.id = api_ctxt->api_params->nat_port_block_spec.key.id;
+    key_ = api_ctxt->api_params->nat_port_block_spec.key;
     return SDK_RET_OK;
 }
 

@@ -87,10 +87,10 @@ message BGPGlobalSpec {
       OidLen: "AMB_BGP_RM_OID_LEN",
       Mib:    "bgpRmEntTable"
   };
+  // unique key/identifier of BGP global config
+  bytes   UUID     = 1; // FillFn to convert UUID to uint32 MS Ent index
   // The local autonomous system number
-  uint32  LocalASN = 1 [(venice.pdsaFields) = {Field: "local_as"}];
-  // VRF id for this bgp instance
-  uint32  VRFId    = 2 [(venice.pdsaFields) = {Field: "index", SetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_RM_INDEX_INDEX"}];
+  uint32  LocalASN = 2 [(venice.pdsaFields) = {Field: "local_as"}];
   // Router ID for this bgp instance
   fixed32 RouterId = 3 [(venice.pdsaFields) = {Field: "local_identifier"}];
 }
@@ -170,10 +170,10 @@ message BGPPeerSpec {
       OidLen: "AMB_BGP_PRST_OID_LEN",
       Mib:    "bgpPeerStatusTable"
   };
+  // unique key/identifier of peer
+  bytes          UUID          = 1; // FillFn to convert UUID to uint32 MS Ent index
   // The local autonomous system number
-  uint32          LocalASN     = 1 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}];
-  // VRF id for this bgp instance
-  uint32          VRFId        = 2 [(venice.pdsaFields) = {Field: "rm_ent_index", SetKeyOidIndex: "AMB_BGP_PER_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_RM_ENT_INDEX_INDEX"}];
+  uint32          LocalASN     = 2 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}];
   // Whether BGP peer is enabled ? If peer is not enabled then
   // local router must not initiate connections to the neighbor
   // and must not respond to TCP connections attempts from
@@ -222,13 +222,15 @@ message BGPPeerAf {
   option (venice.pdsaSetGlobOpts) = {
       OidLen: "AMB_BGP_PAS_OID_LEN",
       Mib:    "bgpPeerAfiSafiTable"
+      FillFn: "bgp_peer_af_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_PAST_OID_LEN",
       Mib:    "bgpPeerAfiSafiStatusTable"
   };
-  // VRF id for this bgp instance
-  uint32          VRFId       = 1 [(venice.pdsaFields) = {Field: "rm_ent_index",  SetKeyOidIndex: "AMB_BGP_PAS_RM_ENT_INDEX_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_RM_ENT_INDEX_INDEX"}];
+
+  // unique key/identifier of peer AF config
+  bytes           UUID        = 1; // FillFn to convert UUID to uint32 MS Ent index
   // BGP Peer IP Address
   types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
   // BGP Peer Port Address

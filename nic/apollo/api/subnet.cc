@@ -159,16 +159,16 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
     PDS_TRACE_VERBOSE(
-        "Initializing subnet (vpc %u, subnet %u), v4/v6 pfx %s/%s,\n"
+        "Initializing subnet (vpc %s, subnet %u), v4/v6 pfx %s/%s,\n"
         "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
         "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
-        "vnid %u", spec->vpc.id, spec->key.id, ipv4pfx2str(&spec->v4_prefix),
-        ippfx2str(&spec->v6_prefix), ipv4addr2str(spec->v4_vr_ip),
-        ipaddr2str(&spec->v6_vr_ip), macaddr2str(spec->vr_mac),
-        spec->v4_route_table.id, spec->v6_route_table.id,
-        spec->num_ing_v4_policy, spec->num_ing_v6_policy,
-        spec->num_egr_v4_policy, spec->num_egr_v6_policy,
-        spec->fabric_encap.val.vnid);
+        "vnid %u", spec->vpc.tostr(), spec->key.id,
+        ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
+        ipv4addr2str(spec->v4_vr_ip), ipaddr2str(&spec->v6_vr_ip),
+        macaddr2str(spec->vr_mac), spec->v4_route_table.id,
+        spec->v6_route_table.id, spec->num_ing_v4_policy,
+        spec->num_ing_v6_policy, spec->num_egr_v4_policy,
+        spec->num_egr_v6_policy, spec->fabric_encap.val.vnid);
 
     key_.id = spec->key.id;
     vpc_ = spec->vpc;
@@ -241,10 +241,10 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_subnet_spec_t *spec = &obj_ctxt->api_params->subnet_spec;
 
     obj_ctxt->upd_bmap = 0;
-    if (vpc_.id != spec->vpc.id) {
+    if (vpc_ != spec->vpc) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"vpc\" "
-                      "from %u to %u on subnet %s",
-                      vpc_.id, spec->vpc.id, key2str().c_str());
+                      "from %s to %s on subnet %s",
+                      vpc_.tostr(), spec->vpc.tostr(), key2str().c_str());
             return SDK_RET_INVALID_ARG;
     }
     if ((fabric_encap_.type != spec->fabric_encap.type) ||

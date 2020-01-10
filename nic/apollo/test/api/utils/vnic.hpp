@@ -22,7 +22,7 @@ class vnic_feeder : public feeder {
 public:
     // TODO: move to vnic_spec_t instead of below variables
     pds_vnic_id_t id;
-    pds_vpc_id_t vpc_id;
+    pds_vpc_key_t vpc;
     pds_subnet_id_t subnet_id;
     pds_encap_t vnic_encap;
     pds_encap_t fabric_encap;
@@ -33,7 +33,9 @@ public:
     bool configure_policy;
 
     // Constructor
-    vnic_feeder() { };
+    vnic_feeder() {
+        vpc.reset();
+    }
     vnic_feeder(const vnic_feeder& feeder) {
         init(feeder.id, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
              feeder.fabric_encap.type, feeder.src_dst_check,

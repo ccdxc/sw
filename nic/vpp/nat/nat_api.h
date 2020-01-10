@@ -39,17 +39,23 @@ typedef enum {
 
 // API
 #ifdef __cplusplus
-nat_err_t nat_port_block_add(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                             uint8_t protocol, uint16_t start_port, uint16_t end_port,
+nat_err_t nat_port_block_add(const pds_obj_key_t& key, const pds_obj_key_t& vpc,
+                             uint32_t addr, uint8_t protocol,
+                             uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
-nat_err_t nat_port_block_update(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                                uint8_t protocol, uint16_t start_port, uint16_t end_port,
+nat_err_t nat_port_block_update(const pds_obj_key_t& key,
+                                const pds_obj_key_t& vpc,
+                                uint32_t addr, uint8_t protocol,
+                                uint16_t start_port, uint16_t end_port,
                                 nat_type_t nat_type);
-nat_err_t nat_port_block_commit(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                                uint8_t protocol, uint16_t start_port, uint16_t end_port,
+nat_err_t nat_port_block_commit(const pds_obj_key_t& key,
+                                const pds_obj_key_t& vpc,
+                                uint32_t addr, uint8_t protocol,
+                                uint16_t start_port, uint16_t end_port,
                                 nat_type_t nat_type);
-nat_err_t nat_port_block_del(uint32_t id, uint32_t vpc_id, uint32_t addr,
-                             uint8_t protocol, uint16_t start_port, uint16_t end_port,
+nat_err_t nat_port_block_del(const pds_obj_key_t& key, const pds_obj_key_t& vpc,
+                             uint32_t addr, uint8_t protocol,
+                             uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
 #else
 void nat_init(void);

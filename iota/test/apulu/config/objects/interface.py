@@ -199,7 +199,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                       spec.MACAddr = ifspec.macaddress
                   else:
                       spec.MACAddr = resmgr.DeviceMacAllocator.get()
-                  spec.vpcid = parent.VPCId    
+                  spec.vpcid = parent.VPCId
                   ifobj = InterfaceObject(spec, ifspec)
                   self.Objs[node].update({ifobj.InterfaceId: ifobj})
                   self.__uplinkl3ifs[node].update({ifobj.InterfaceId: ifobj})

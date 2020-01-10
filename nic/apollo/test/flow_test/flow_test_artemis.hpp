@@ -15,16 +15,17 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
-#include "gen/p4gen/p4/include/ftl.h"
-#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "lib/table/ftl/ftl_base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
 #include "nic/apollo/test/scale/test_common.hpp"
-#include "gen/p4gen/artemis/include/p4pd.h"
 #include "nic/apollo/p4/include/artemis_defines.h"
+#include "gen/p4gen/artemis/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 
 using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
@@ -348,7 +349,7 @@ public:
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
-        uint32_t vpc_id = local_spec->key.vpc.id;
+        uint32_t vpc_id = test::pdsobjkey2int(local_spec->key.vpc);
         ip_addr_t ip_addr = local_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -404,7 +405,7 @@ public:
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
-        uint32_t vpc_id = remote_spec->key.vpc.id;
+        uint32_t vpc_id = test::pdsobjkey2int(remote_spec->key.vpc);
         ip_addr_t ip_addr = remote_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -477,9 +478,9 @@ public:
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             epdb[vpc].vpc_id = vpc;
             local_spec.key.type = PDS_MAPPING_TYPE_L3;
-            local_spec.key.vpc.id = vpc;
+            local_spec.key.vpc = test::int2pdsobjkey(vpc);
             remote_spec.key.type = PDS_MAPPING_TYPE_L3;
-            remote_spec.key.vpc.id = vpc;
+            remote_spec.key.vpc = test::int2pdsobjkey(vpc);
             for (uint32_t lid = 0; lid < MAX_LOCAL_EPS; lid++) {
                 local_spec.key.ip_addr.af = IP_AF_IPV4;
                 local_spec.key.ip_addr.addr.v4_addr = 0x0a000001 + lid;

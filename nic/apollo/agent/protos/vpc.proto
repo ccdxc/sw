@@ -31,7 +31,7 @@ enum VPCType {
 // VPCSpec captures VPC configuration
 message VPCSpec {
   // unique key/identifier of VPC
-  uint32         Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes          Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // type of the VPC
   VPCType        Type             = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // identifier of the IPv4 route table to be used and this route table is
@@ -97,7 +97,8 @@ message VPCResponse {
 
 // VPC get request
 message VPCGetRequest {
-  repeated uint32 Id = 1;
+  // list of keys of interest
+  repeated bytes Id = 1;
 }
 
 // VPC get response
@@ -110,7 +111,7 @@ message VPCGetResponse {
 message VPCDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // VPC delete response
@@ -121,11 +122,11 @@ message VPCDeleteResponse {
 // VPCPeerSpec captures configuration for a VPC peering relation
 message VPCPeerSpec {
   // unique id/key idenitifying this VPC peering relation
-  uint32    Id   = 1;
+  uint32 Id   = 1;
   // unique key/identifier of VPC1
-  uint32    Vpc1 = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes  Vpc1 = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // unique key/identifier of VPC2
-  uint32    Vpc2 = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes  Vpc2 = 3 [(gogoproto.moretags) = "meta:mandatory"];
 }
 
 // operational status of a VPC peering, if any

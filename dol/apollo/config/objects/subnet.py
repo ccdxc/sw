@@ -152,7 +152,7 @@ class SubnetObject(base.ConfigObjectBase):
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
         spec.Id = self.SubnetId
-        spec.VPCId = self.VPC.VPCId
+        spec.VPCId = str.encode(str(self.VPC.VPCId))
         utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
         utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
         spec.IPv4VirtualRouterIP = int(self.VirtualRouterIPAddr[1])
@@ -177,7 +177,7 @@ class SubnetObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id != self.SubnetId:
             return False
-        if spec.VPCId != self.VPC.VPCId:
+        if int(spec.VPCId) != self.VPC.VPCId:
             return False
         if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
             return False

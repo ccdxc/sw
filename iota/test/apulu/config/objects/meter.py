@@ -108,7 +108,7 @@ class MeterObject(base.ConfigObjectBase):
     def __init__(self, parent, af, rules):
         super().__init__(api.ObjectTypes.METER)
         ################# PUBLIC ATTRIBUTES OF METER OBJECT #####################
-        self.VPCId = parent.VPCId
+        self.VPCId = str.encode(str(parent.VPCId))
         if af == utils.IP_VERSION_6:
             self.MeterId = next(resmgr.V6MeterIdAllocator)
             self.Af = 'IPV6'

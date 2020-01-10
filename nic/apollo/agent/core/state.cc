@@ -7,6 +7,31 @@
 
 namespace core {
 
+#define ADD_TO_OBJ_DB(obj, key, value) {                                       \
+    if (key == NULL) {                                                         \
+        return SDK_RET_ERR;                                                    \
+    }                                                                          \
+    obj##_map()->insert(make_pair(*(key), value));                             \
+    return SDK_RET_OK;                                                         \
+}
+
+#define FIND_IN_OBJ_DB(obj, key) {                                             \
+    if (key == NULL) {                                                         \
+        return NULL;                                                           \
+    }                                                                          \
+    obj##_db_t::const_iterator iterator =                                      \
+        obj##_map()->find(*key);                                               \
+    if (iterator == obj##_map()->end()) {                                      \
+        return NULL;                                                           \
+    }                                                                          \
+    return iterator->second;                                                   \
+}
+
+#define DEL_FROM_OBJ_DB(obj, key) {                                            \
+    obj##_map()->erase(*key);                                                  \
+    return true;                                                               \
+}
+
 #define ADD_TO_DB(obj, key, value) {                                           \
     if (key == NULL) {                                                         \
         return SDK_RET_ERR;                                                    \
@@ -331,12 +356,12 @@ agent_state::del_from_tep_db(uint32_t key) {
 
 sdk_ret_t
 agent_state::add_to_vpc_db(pds_vpc_key_t *key, pds_vpc_spec_t *spec) {
-    ADD_TO_DB(vpc, key, spec);
+    ADD_TO_OBJ_DB(vpc, key, spec);
 }
 
 pds_vpc_spec_t *
 agent_state::find_in_vpc_db(pds_vpc_key_t *key) {
-    FIND_IN_DB(vpc, key);
+    FIND_IN_OBJ_DB(vpc, key);
 }
 
 sdk_ret_t
@@ -353,7 +378,7 @@ agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
 
 bool
 agent_state::del_from_vpc_db(pds_vpc_key_t *key) {
-    DEL_FROM_DB(vpc, key);
+    DEL_FROM_OBJ_DB(vpc, key);
 }
 
 sdk_ret_t

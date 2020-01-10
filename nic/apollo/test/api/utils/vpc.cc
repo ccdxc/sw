@@ -22,7 +22,7 @@ vpc_feeder::init(pds_vpc_key_t key, pds_vpc_type_t type,
     this->cidr_str = cidr_str;
     this->vr_mac = vr_mac;
     this->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    this->fabric_encap.val.vnid = key.id + 9999;
+    this->fabric_encap.val.vnid = pdsobjkey2int(key) + 9999;
     SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
     num_obj = num_vpc;
 }
@@ -33,7 +33,7 @@ vpc_feeder::iter_next(int width) {
 
     ip_prefix_ip_next(&pfx, &ipaddr);
     memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
-    key.id += width;
+    key = int2pdsobjkey(pdsobjkey2int(key) + width);
     if (artemis() || apulu())
         fabric_encap.val.vnid += width;
     cur_iter_pos++;
@@ -42,7 +42,7 @@ vpc_feeder::iter_next(int width) {
 void
 vpc_feeder::key_build(pds_vpc_key_t *key) const {
     memset(key, 0, sizeof(pds_vpc_key_t));
-    key->id = this->key.id;
+    *key = this->key;
 }
 
 void
@@ -88,7 +88,7 @@ vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-pds_vpc_key_t k_vpc_key = {.id = 1};
+pds_vpc_key_t k_vpc_key = int2pdsobjkey(1);
 static vpc_feeder k_vpc_feeder;
 
 void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {

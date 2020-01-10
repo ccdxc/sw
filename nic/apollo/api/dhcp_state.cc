@@ -64,7 +64,7 @@ dhcp_state::free(dhcp_relay *relay) {
 }
 
 dhcp_relay *
-dhcp_state::find(pds_dhcp_relay_key_t *key) const {
+dhcp_state::find_dhcp_relay(pds_dhcp_relay_key_t *key) const {
     return (dhcp_relay *)(dhcp_relay_ht_->lookup(key));
 }
 
@@ -90,7 +90,7 @@ dhcp_state::free(dhcp_policy *policy) {
 }
 
 dhcp_policy *
-dhcp_state::find(pds_dhcp_policy_key_t *key) const {
+dhcp_state::find_dhcp_policy(pds_dhcp_policy_key_t *key) const {
     return (dhcp_policy *)(dhcp_policy_ht_->lookup(key));
 }
 

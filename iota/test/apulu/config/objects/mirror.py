@@ -75,7 +75,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID
-            spec.ErspanSpec.VPCId = self.VPCId
+            spec.ErspanSpec.VPCId = str.encode(str(self.VPCId))
         else:
             assert(0)
         return

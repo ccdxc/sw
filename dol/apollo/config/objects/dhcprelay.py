@@ -33,21 +33,21 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.Id)
+        grpcmsg.Id.append(str.encode(str(self.Id)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.Id
-        spec.VPCId = self.Vpc
+        spec.Id = str.encode(str(self.Id))
+        spec.VPCId = str.encode(str([self.Vpc]))
         utils.GetRpcIPAddr(self.ServerIp, spec.ServerIP)
         utils.GetRpcIPAddr(self.AgentIp, spec.AgentIP)
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.Id:
+        if int(spec.Id) != self.Id:
             return False
-        if spec.VPCId != self.Vpc:
+        if int(spec.VPCId) != self.Vpc:
             return False
         if spec.ServerIP != self.ServerIp:
             return False
@@ -56,7 +56,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.Id:
+        if int(spec['id']) != self.Id:
             return False
         return True
 
@@ -64,6 +64,10 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.DHCPRELAY, resmgr.MAX_DHCP_RELAY)
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml: return int(spec['id'])
+        return int(spec.Id)
 
     def GetDhcpRelayObject(self):
         return self.GetObjectByKey(1)

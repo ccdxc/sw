@@ -16,14 +16,15 @@
 #include "include/sdk/base.hpp"
 #include "include/sdk/ip.hpp"
 #include "include/sdk/table.hpp"
-#include "gen/p4gen/p4/include/ftl.h"
-#include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "lib/table/ftl/ftl_base.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
+#include "nic/sdk/lib/utils/utils.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/pds_state.hpp"
-#include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/artemis/include/p4pd.h"
+#include "gen/p4gen/p4/include/ftl.h"
+#include "gen/p4gen/p4/include/ftl_table.hpp"
 
 //#define DUMP_FLOW_SESSION_INFO 1
 #if 0
@@ -490,7 +491,7 @@ public:
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
-        uint32_t vpc_id = local_spec->key.vpc.id;
+        uint32_t vpc_id = test::pdsobjkey2int(local_spec->key.vpc);
         ip_addr_t ip_addr = local_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -540,7 +541,7 @@ public:
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
-        uint32_t vpc_id = remote_spec->key.vpc.id;
+        uint32_t vpc_id = test::pdsobjkey2int(remote_spec->key.vpc);
         ip_addr_t ip_addr = remote_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -603,12 +604,16 @@ public:
     }
 
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
-        assert(subnet_spec->key.id < DOL_MAX_SUBNET);
-        assert(subnet_spec->vpc.id < DOL_MAX_VPC);
-        DBG_PRINT("Subnet tblid %u, rtid %u:%u\n", subnet_spec->key.id,
-                  subnet_spec->v4_route_table.id, subnet_spec->v6_route_table.id);
-        subnetdb[subnet_spec->vpc.id][subnet_spec->key.id].v4_routetbl_id = subnet_spec->v4_route_table.id + 1;
-        subnetdb[subnet_spec->vpc.id][subnet_spec->key.id].v6_routetbl_id = subnet_spec->v6_route_table.id + 1;
+        uint32_t subnet_id = subnet_spec->key.id;
+        uint32_t vpc_id = test::pdsobjkey2int(subnet_spec->vpc);
+
+        assert(subnet_id < DOL_MAX_SUBNET);
+        assert(vpc_id < DOL_MAX_VPC);
+        DBG_PRINT("Subnet tblid %u, rtid %u:%u\n", subnet_id,
+                  subnet_spec->v4_route_table.id,
+                  subnet_spec->v6_route_table.id);
+        subnetdb[vpc_id][subnet_id].v4_routetbl_id = subnet_spec->v4_route_table.id + 1;
+        subnetdb[vpc_id][subnet_id].v6_routetbl_id = subnet_spec->v6_route_table.id + 1;
     }
 
     void add_tep(pds_tep_spec_t *tep_spec) {
@@ -624,7 +629,7 @@ public:
            (ip1.addr.v6_addr.addr64[1] == ip2.addr.v6_addr.addr64[1])))
 
     void add_svc_mapping(pds_svc_mapping_spec_t *svc_spec) {
-        uint32_t vpc = svc_spec->key.vpc.id;
+        uint32_t vpc = test::pdsobjkey2int(svc_spec->key.vpc);
         uint32_t af = svc_spec->vip.af;
         uint32_t lid;
 

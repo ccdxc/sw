@@ -56,7 +56,7 @@ public:
     }
 
     // initialize feeder with base set of values
-    void init(pds_vpc_id_t vpc_id = 1,
+    void init(pds_vpc_key_t vpc = int2pdsobjkey(1),
               pds_subnet_id_t subnet_id = 1,
               std::string vnic_ip_str= "0.0.0.0/0",
               uint64_t vnic_mac = 0x00030b020a02,
@@ -88,7 +88,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const local_mapping_feeder& obj) {
     os << "local mapping feeder =>"
-        << " vpc_id: " << obj.vpc.id
+        << " vpc: " << obj.vpc.tostr()
         << " subnet_id: " << obj.subnet.id
         << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
         << " vnic_id: " << obj.vnic.id

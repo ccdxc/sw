@@ -64,7 +64,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def GetGrpcCreateMessage(self):
         grpcmsg = mapping_pb2.MappingRequest()
         spec = grpcmsg.Request.add()
-        spec.Id.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        spec.Id.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.SubnetId
         spec.VnicId = self.VNIC.VnicId
@@ -132,7 +132,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def GetGrpcCreateMessage(self):
         grpcmsg = mapping_pb2.MappingRequest()
         spec = grpcmsg.Request.add()
-        spec.Id.VPCId = self.SUBNET.VPC.VPCId
+        spec.Id.VPCId = str.encode(str(self.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPAddr)
         spec.SubnetId = self.SUBNET.SubnetId
         utils.GetRpcIPAddr(self.TunIPAddr, spec.TunnelIP)

@@ -209,6 +209,20 @@ increment_encap (pds_encap_t *encap, int width)
     }
 }
 
+static inline pds_obj_key_t
+int2pdsobjkey (uint32_t id) {
+    pds_obj_key_t key = { 0 };
+    std::string id_str = std::to_string(id);
+
+    memcpy(key.id, id_str.data(), id_str.length());
+    return key;
+}
+
+static inline uint32_t
+pdsobjkey2int (pds_obj_key_t& key) {
+    return (uint32_t)atoi((const char *)key.id);
+}
+
 // function prototypes
 void send_packet(const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
                  const uint8_t *exp_rx_pkt, uint32_t exp_rx_pkt_len,

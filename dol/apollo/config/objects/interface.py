@@ -119,7 +119,7 @@ class InterfaceObject(base.ConfigObjectBase):
             spec.Type = interface_pb2.IF_TYPE_L3
             spec.L3IfSpec.EthIfIndex = self.IfInfo.ethifidx
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
-            spec.L3IfSpec.VpcId = self.IfInfo.VpcId
+            spec.L3IfSpec.VpcId = str.encode(str(self.IfInfo.VpcId))
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
         return
 

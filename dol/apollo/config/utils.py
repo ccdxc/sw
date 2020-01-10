@@ -80,6 +80,10 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
+def GetYamlSpecAttr(spec, attr):
+    val = spec[attr]
+    return int("".join(map(chr, val)))
+
 def ValidateRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:
         if dstaddr.Af != types_pb2.IP_AF_INET6:
@@ -214,7 +218,7 @@ def CreateObject(obj):
         logger.info("Already restored %s" % (obj))
         return
     batchClient = EzAccessStore.GetBatchClient()
-    
+
     def RestoreObj(robj):
         logger.info("Recreating object %s" % (robj))
         batchClient.Start()
@@ -251,7 +255,7 @@ def DeleteObject(obj):
         logger.info("Already deleted %s" % (obj))
         return
     batchClient = EzAccessStore.GetBatchClient()
-    
+
     def DelObj(dobj):
         InformDependents(dobj, 'DeleteNotify')
         logger.info("Deleting object %s" % (dobj))

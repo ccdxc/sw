@@ -80,7 +80,7 @@ subnet_feeder::key_compare(const pds_subnet_key_t *key) const {
 // TODO: fix for multiple policies
 bool
 subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
-    if (spec->vpc.id != this->spec.vpc.id) {
+    if (spec->vpc != this->spec.vpc) {
         return false;
     }
 

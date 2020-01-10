@@ -248,8 +248,8 @@ create_nat_port_block_grpc (pds_nat_port_block_spec_t *spec)
         status = g_nat_stub_->NatPortBlockCreate(&context, g_nat_port_block_req, &response);
         if (!status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
-            printf("create nat port block failed id %u status %u response %u err %u\n",
-                   spec ? spec->key.id : 0, status.ok(),
+            printf("create nat port block %s failed, status %u response %u "
+                   "err %u\n", spec ? spec->key.tostr() : "", status.ok(),
                    response.apistatus(), status.error_code());
             return SDK_RET_ERR;
         }
@@ -272,8 +272,8 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
         ret_status = g_vpc_stub_->VPCCreate(&context, g_vpc_req, &response);
         if (!ret_status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
-            printf("create vpc failed id:%u ret_status:%u response:%u err:%u\n",
-                   spec ? spec->key.id : 0, ret_status.ok(),
+            printf("create vpc %s failed, status %u, response %u, err %u\n",
+                   spec ? spec->key.tostr() : "", ret_status.ok(),
                    response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
@@ -297,9 +297,9 @@ update_vpc_grpc (pds_vpc_spec_t *vpc)
         ret_status = g_vpc_stub_->VPCUpdate(&context, g_vpc_req, &response);
         if (!ret_status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
-            printf("update vpc failed id:%u ret_status:%u response:%u err:%u\n",
-                   vpc?vpc->key.id:0, ret_status.ok(), response.apistatus(),
-                   ret_status.error_code());
+            printf("update vpc %s failed, status %u, response %u, err %u\n",
+                   vpc ? vpc->key.tostr() : "", ret_status.ok(),
+                   response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
         g_vpc_req.clear_request();
@@ -350,9 +350,9 @@ read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
     if ((g_vpc_req_get.id_size() >= APP_GRPC_BATCH_COUNT) || !key || 1) {
         ret_status = g_vpc_stub_->VPCGet(&context, g_vpc_req_get, &response);
         if (!ret_status.ok()) {
-            printf("get vpc failed :%u ret_status:%u response:%u err:%u\n",
-                   key ? key->id : 0, ret_status.ok(), response.apistatus(),
-                   ret_status.error_code());
+            printf("get vpc %s failed,status %u, response %u, err %u\n",
+                   key ? key->tostr() : "", ret_status.ok(),
+                   response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
         g_vpc_req_get.clear_id();

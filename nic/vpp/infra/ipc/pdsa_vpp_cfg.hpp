@@ -5,13 +5,14 @@
 #ifndef __VPP_INFRA_IPC_VPPCFG_HPP__
 #define __VPP_INFRA_IPC_VPPCFG_HPP__
 
+#include <map>
+#include <unordered_map>
+#include <vector>
+#include <list>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/api/core/msg.h"
 #include "pdsa_hdlr.hpp"
-#include <map>
-#include <vector>
-#include <list>
 
 typedef struct {
     obj_id_t      obj_id;
@@ -34,9 +35,9 @@ class vpp_config_data {
     // containers are ordered map, instance to spec
     std::map<pds_vnic_id_t, pds_vnic_spec_t> vnic;
     std::map<pds_subnet_id_t, pds_subnet_spec_t> subnet;
-    std::map<pds_dhcp_relay_id_t, pds_dhcp_relay_spec_t> dhcp_relay;
-    std::map<pds_dhcp_policy_id_t, pds_dhcp_policy_spec_t> dhcp_policy;
-    std::map<pds_nat_port_block_id_t, pds_nat_port_block_spec_t> nat_port_block;
+    std::unordered_map<pds_dhcp_relay_key_t, pds_dhcp_relay_spec_t, pds_obj_key_hash> dhcp_relay;
+    std::unordered_map<pds_dhcp_policy_key_t, pds_dhcp_policy_spec_t, pds_obj_key_hash> dhcp_policy;
+    std::unordered_map<pds_nat_port_block_key_t, pds_nat_port_block_spec_t, pds_obj_key_hash> nat_port_block;
     std::map<pds_security_profile_id_t, pds_security_profile_spec_t>
         security_profile;
 
@@ -95,4 +96,4 @@ public:
 };
 
 
-#endif // __VPP_INFRA_IPC_VPPCFG_HPP__
+#endif    // __VPP_INFRA_IPC_VPPCFG_HPP__

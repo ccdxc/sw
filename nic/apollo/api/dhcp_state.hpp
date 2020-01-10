@@ -52,7 +52,7 @@ public:
     /// \brief      lookup a DHCP relay entry in database given the key
     /// \param[in]  key DHCP relay entry key
     /// \return     pointer to the DHCP relay entry found or NULL
-    dhcp_relay *find(pds_dhcp_relay_key_t *key) const;
+    dhcp_relay *find_dhcp_relay(pds_dhcp_relay_key_t *key) const;
 
     /// \brief      allocate memory required for a DHCP policy entry
     /// \return     pointer to the allocated DHCP policy entry, NULL if no memory
@@ -75,7 +75,7 @@ public:
     /// \brief      lookup a DHCP policy entry in database given the key
     /// \param[in]  key DHCP policy entry key
     /// \return     pointer to the DHCP policy entry found or NULL
-    dhcp_policy *find(pds_dhcp_policy_key_t *key) const;
+    dhcp_policy *find_dhcp_policy(pds_dhcp_policy_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab

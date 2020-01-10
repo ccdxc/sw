@@ -20,7 +20,7 @@ service MappingSvc {
 
 message L3MappingKey {
   // virtual private cloud mapping belongs to
-  uint32 VPCId           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes           VPCId = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // private/overlay IP of the mapping
   types.IPAddress IPAddr = 2;
 }

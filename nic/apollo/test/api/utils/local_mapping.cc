@@ -16,7 +16,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-local_mapping_feeder::init(pds_vpc_id_t vpc_id, pds_subnet_id_t subnet_id,
+local_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_id_t subnet_id,
                            std::string vnic_ip_cidr_str, uint64_t vnic_mac,
                            pds_encap_type_t encap_type, uint32_t encap_val,
                            pds_vnic_id_t vnic_id, bool public_ip_valid,
@@ -25,7 +25,7 @@ local_mapping_feeder::init(pds_vpc_id_t vpc_id, pds_subnet_id_t subnet_id,
                            pds_mapping_type_t map_type) {
 
     this->map_type = map_type;
-    this->vpc.id = vpc_id;
+    this->vpc = vpc;
     this->subnet.id = subnet_id;
     test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
     this->vnic.id = vnic_id;
@@ -102,7 +102,7 @@ local_mapping_feeder::key_compare(const pds_mapping_key_t *key) const {
         return false;
 
     if (map_type == PDS_MAPPING_TYPE_L3)
-        return ((vpc.id == key->vpc.id) &&
+        return ((vpc == key->vpc) &&
                 IPADDR_EQ(&vnic_ip_pfx.addr, &key->ip_addr));
 
     // L2 key type

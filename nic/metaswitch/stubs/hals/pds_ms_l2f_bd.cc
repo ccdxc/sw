@@ -187,7 +187,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         bd_obj_uptr_t bd_obj_uptr; 
         if (op_create_) {
             auto& spec = store_info_.subnet_obj->spec();
-            bd_obj_uptr.reset(new bd_obj_t(ips_info_.bd_id, spec.vpc.id));
+            bd_obj_uptr.reset(new bd_obj_t(ips_info_.bd_id, spec.vpc));
             store_info_.bd_obj = bd_obj_uptr.get();
         }
         store_info_.bd_obj->properties().fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;

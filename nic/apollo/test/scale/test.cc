@@ -6,6 +6,7 @@
 #include <math.h>
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/api.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -187,7 +188,7 @@ create_svc_mappings (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
-                    svc_mapping.key.vpc.id = i;
+                    svc_mapping.key.vpc = test::int2pdsobjkey(i);
                     // backend IP is one of the local IP mappings
                     svc_mapping.key.backend_ip.af = IP_AF_IPV4;
                     svc_mapping.key.backend_ip.addr.v4_addr =
@@ -290,7 +291,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 for (uint32_t l = 1; l <= num_ip_per_vnic; l++) {
                     memset(&pds_local_mapping, 0, sizeof(pds_local_mapping));
                     pds_local_mapping.key.type = PDS_MAPPING_TYPE_L3;
-                    pds_local_mapping.key.vpc.id = i;
+                    pds_local_mapping.key.vpc = test::int2pdsobjkey(i);
                     pds_local_mapping.key.ip_addr.af = IP_AF_IPV4;
                     pds_local_mapping.key.ip_addr.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
@@ -390,7 +391,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
             for (uint32_t k = 1; k <= num_remote_mappings; k++) {
                 memset(&pds_remote_mapping, 0, sizeof(pds_remote_mapping));
                 pds_remote_mapping.key.type = PDS_MAPPING_TYPE_L3;
-                pds_remote_mapping.key.vpc.id = i;
+                pds_remote_mapping.key.vpc = test::int2pdsobjkey(i);
                 pds_remote_mapping.key.ip_addr.af = IP_AF_IPV4;
                 pds_remote_mapping.key.ip_addr.addr.v4_addr =
                     (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
@@ -603,7 +604,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID((vpc_id - 1), num_subnets, i);
-        pds_subnet.vpc.id = vpc_id;
+        pds_subnet.vpc = test::int2pdsobjkey(vpc_id);
         pds_subnet.v4_prefix = *vpc_pfx;
         pds_subnet.v4_prefix.v4_addr =
             (pds_subnet.v4_prefix.v4_addr) | ((i - 1) << 14);
@@ -660,7 +661,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_TENANT;
-        pds_vpc.key.id = i;
+        pds_vpc.key = test::int2pdsobjkey(i);
         pds_vpc.v4_prefix.v4_addr = ipv4_prefix->addr.addr.v4_addr & 0xFF000000;
         pds_vpc.v4_prefix.len = 8; // fix this to /8
         pds_vpc.v6_prefix = *ipv6_prefix;
@@ -681,7 +682,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
         // create infra/underlay/provider VPC
         memset(&pds_vpc, 0, sizeof(pds_vpc));
         pds_vpc.type = PDS_VPC_TYPE_UNDERLAY;
-        pds_vpc.key.id = num_vpcs + 1;
+        pds_vpc.key = test::int2pdsobjkey(num_vpcs + 1);
         pds_vpc.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         pds_vpc.fabric_encap.val.vnid = TESTAPP_UNDERLAY_VNID;
         rv = create_vpc(&pds_vpc);
@@ -691,7 +692,7 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
         memset(&pds_subnet, 0, sizeof(pds_subnet));
         pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
         pds_subnet.v4_vr_ip = g_test_params.device_gw_ip.addr.v4_addr;
-        pds_subnet.vpc.id = num_vpcs + 1;
+        pds_subnet.vpc = test::int2pdsobjkey(num_vpcs + 1);
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, underlay_vr_mac);
         rv = create_subnet(&pds_subnet);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
@@ -725,8 +726,8 @@ create_nat_port_blocks (uint32_t num_vpcs, ip_prefix_t *napt_prefix)
     ip_range.ip_hi.v4_addr = hi_addr.addr.v4_addr;
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         memset(&pds_napt, 0, sizeof(pds_napt));
-        pds_napt.key.id = i;
-        pds_napt.vpc.id = i;
+        pds_napt.key = test::int2pdsobjkey(i);
+        pds_napt.vpc = test::int2pdsobjkey(i);
         pds_napt.ip_proto = IP_PROTO_UDP;
         pds_napt.nat_ip_range = ip_range;
         pds_napt.nat_port_range.port_lo = 1024;
@@ -766,8 +767,8 @@ create_vpc_peers (uint32_t num_vpcs)
     for (uint32_t i = 1; i <= num_vpcs; i+=2) {
         memset(&pds_vpc_peer, 0, sizeof(pds_vpc_peer));
         pds_vpc_peer.key.id = vpc_peer_id++;
-        pds_vpc_peer.vpc1.id = i;
-        pds_vpc_peer.vpc2.id = i+1;
+        pds_vpc_peer.vpc1 = test::int2pdsobjkey(i);
+        pds_vpc_peer.vpc2 = test::int2pdsobjkey(i + 1);
         rv = create_vpc_peer(&pds_vpc_peer);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
                                 "create vpc peer %u failed, ret %u",
@@ -1462,7 +1463,7 @@ create_l3_intfs (uint32_t num_if)
         pds_if.key.id = i;
         pds_if.type = PDS_IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
-        pds_if.l3_if_info.vpc.id = i;
+        pds_if.l3_if_info.vpc = test::int2pdsobjkey(i);
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr =
             (g_test_params.tep_pfx.addr.addr.v4_addr | 0x01200000) + i;

@@ -205,12 +205,12 @@ class VpcObject(base.ConfigObjectBase):
     #    self.VirtualRouterMACAddr = self.GetPrecedent().VirtualRouterMACAddr
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.VPCId)
+        grpcmsg.Id.append(str.encode(str(self.VPCId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.VPCId
+        spec.Id = str.encode(str(self.VPCId))
         spec.Type = self.Type
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId
@@ -221,7 +221,7 @@ class VpcObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.VPCId:
+        if int(spec.Id) != self.VPCId:
             return False
         if spec.Type != self.Type:
             return False
@@ -233,7 +233,7 @@ class VpcObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.VPCId:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.VPCId:
             return False
         if spec['type'] != self.Type:
             return False
@@ -304,6 +304,11 @@ class VpcObjectClient(base.ConfigClientBase):
     # TODO: move to GetObjectByKey
     def GetVpcObject(self, vpcid):
         return self.GetObjectByKey(vpcid)
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml:
+            return utils.GetYamlSpecAttr(spec, 'id')
+        return int(spec.Id)
 
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()

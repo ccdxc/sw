@@ -251,7 +251,7 @@ sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        PDS_TRACE_VERBOSE("Activating vpc %u config", key_.id);
+        PDS_TRACE_VERBOSE("Activating vpc %s config", key_.tostr());
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;

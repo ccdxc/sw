@@ -19,6 +19,6 @@
 extern test_case_params_t g_tc_params;
 
 // function prototypes
-int api_test_program_run (int argc, char **argv);
+int api_test_program_run(int argc, char **argv);
 
 #endif  // __TEST_API_UTILS_BASE_HPP__

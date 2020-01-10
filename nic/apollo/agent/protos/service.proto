@@ -22,7 +22,7 @@ service Svc {
 // SvcKey uniquely identifies a service
 message SvcKey {
   // virtual private cloud where the backend is running
-  uint32          VPCId       = 1;
+  bytes           VPCId       = 1;
   // overlay/private IP of the backend serving the (VIP, port), i.e., DIP
   // NOTE: this must be one of the local IP mappings
   types.IPAddress BackendIP   = 2;

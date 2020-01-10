@@ -58,7 +58,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_b1) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 1);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", 1);
     workflow_b1<svc_mapping_feeder>(feeder);
 }
 
@@ -69,8 +70,10 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_b2) {
 
     svc_mapping_feeder feeder1, feeder1A;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", 1);
-    feeder1A.init("10.1.1.2", 10, 2, "20.1.1.1", 20, "30.1.1.2", 1);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", 1);
+    feeder1A.init("10.1.1.2", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.2", 1);
     workflow_b2<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
@@ -81,7 +84,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_1) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", g_num_svc_map);
     workflow_1<svc_mapping_feeder>(feeder);
 }
 
@@ -92,7 +96,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_2) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", g_max_svc_map);
     workflow_2<svc_mapping_feeder>(feeder);
 }
 
@@ -103,9 +108,12 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_3) {
 
     svc_mapping_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
-    feeder2.init("10.2.1.1", 10, 3, "20.2.1.1", 20, "30.2.1.1", g_num_svc_map);
-    feeder3.init("10.3.1.1", 10, 4, "20.3.1.1", 20, "30.3.1.1", g_num_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_num_svc_map);
+    feeder2.init("10.2.1.1", 10, int2pdsobjkey(3), "20.2.1.1", 20,
+                 "30.2.1.1", g_num_svc_map);
+    feeder3.init("10.3.1.1", 10, int2pdsobjkey(4), "20.3.1.1", 20,
+                 "30.3.1.1", g_num_svc_map);
     workflow_3<svc_mapping_feeder>(feeder1, feeder2, feeder3);
 }
 
@@ -116,7 +124,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_4) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", g_max_svc_map);
     workflow_4<svc_mapping_feeder>(feeder);
 }
 
@@ -127,9 +136,12 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_5) {
 
     svc_mapping_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
-    feeder2.init("10.2.1.1", 10, 3, "20.2.1.1", 20, "30.2.1.1", g_num_svc_map);
-    feeder3.init("10.3.1.1", 10, 4, "20.3.1.1", 20, "30.3.1.1", g_num_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_num_svc_map);
+    feeder2.init("10.2.1.1", 10, int2pdsobjkey(3), "20.2.1.1", 20,
+                 "30.2.1.1", g_num_svc_map);
+    feeder3.init("10.3.1.1", 10, int2pdsobjkey(4), "20.3.1.1", 20,
+                 "30.3.1.1", g_num_svc_map);
     workflow_5<svc_mapping_feeder>(feeder1, feeder2, feeder3);
 }
 
@@ -140,9 +152,12 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_6) {
 
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1A.init("10.2.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1B.init("10.3.1.1", 5000, 2, "20.1.1.1", 20, "30.1.1.1",
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_max_svc_map);
+    feeder1A.init("10.2.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
+    feeder1B.init("10.3.1.1", 5000, int2pdsobjkey(2), "20.1.1.1",
+                  20, "30.1.1.1",
                   g_max_svc_map);
     workflow_6<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
@@ -154,10 +169,12 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow7) {
 
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1A.init("10.2.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1B.init("10.3.1.1", 5000, 2, "20.1.1.1", 20, "30.1.1.1",
-                  g_max_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_max_svc_map);
+    feeder1A.init("10.2.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
+    feeder1B.init("10.3.1.1", 5000, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
     workflow_7<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
 
@@ -168,10 +185,12 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow8) {
 
     svc_mapping_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1A.init("10.2.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1B.init("10.3.1.1", 5000, 2, "20.1.1.1", 20, "30.1.1.1",
-                  g_max_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_max_svc_map);
+    feeder1A.init("10.2.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
+    feeder1B.init("10.3.1.1", 5000, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
     workflow_8<svc_mapping_feeder>(feeder1, feeder1A, feeder1B);
 }
 
@@ -182,9 +201,10 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow9) {
 
     svc_mapping_feeder feeder1, feeder1A;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
-    feeder1A.init("10.3.1.1", 5000, 2, "20.1.1.1", 20, "30.1.1.1",
-                  g_max_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_max_svc_map);
+    feeder1A.init("10.3.1.1", 5000, int2pdsobjkey(2), "20.1.1.1", 20,
+                  "30.1.1.1", g_max_svc_map);
     workflow_9<svc_mapping_feeder>(feeder1, feeder1A);
 }
 
@@ -195,14 +215,18 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow10) {
 
     svc_mapping_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
-    feeder2.init("10.2.1.1", 10, 3, "20.2.1.1", 20, "30.2.1.1", g_num_svc_map);
-    feeder2A.init("10.2.1.1", 10, 3, "20.2.20.1", 2020, "30.2.30.1",
-                  g_num_svc_map);
-    feeder3.init("10.3.1.1", 10, 4, "20.3.1.1", 20, "30.3.1.1", g_num_svc_map);
-    feeder3A.init("10.3.1.1", 10, 4, "20.3.30.1", 3030, "30.3.30.1",
-                  g_num_svc_map);
-    feeder4.init("10.4.1.1", 10, 5, "20.4.1.1", 20, "30.4.1.1", g_num_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_num_svc_map);
+    feeder2.init("10.2.1.1", 10, int2pdsobjkey(3), "20.2.1.1", 20,
+                 "30.2.1.1", g_num_svc_map);
+    feeder2A.init("10.2.1.1", 10, int2pdsobjkey(3), "20.2.20.1", 2020,
+                  "30.2.30.1", g_num_svc_map);
+    feeder3.init("10.3.1.1", 10, int2pdsobjkey(4), "20.3.1.1", 20,
+                 "30.3.1.1", g_num_svc_map);
+    feeder3A.init("10.3.1.1", 10, int2pdsobjkey(4), "20.3.30.1", 3030,
+                  "30.3.30.1", g_num_svc_map);
+    feeder4.init("10.4.1.1", 10, int2pdsobjkey(5), "20.4.1.1", 20,
+                 "30.4.1.1", g_num_svc_map);
     workflow_10<svc_mapping_feeder>(feeder1, feeder2, feeder2A,
                             feeder3, feeder3A, feeder4);
 }
@@ -214,7 +238,8 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_neg_1) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_max_svc_map);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", g_max_svc_map);
     workflow_neg_1<svc_mapping_feeder>(feeder);
 }
 
@@ -225,7 +250,7 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_2) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1",
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20, "30.1.1.1",
                 g_max_svc_map + 1);
     workflow_neg_2<svc_mapping_feeder>(feeder);
 }
@@ -237,7 +262,8 @@ TEST_F(svc_mapping_test, DISABLED_svc_mapping_workflow_neg_3) {
 
     svc_mapping_feeder feeder;
 
-    feeder.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
+    feeder.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                "30.1.1.1", g_num_svc_map);
     workflow_neg_3<svc_mapping_feeder>(feeder);
 }
 
@@ -248,8 +274,10 @@ TEST_F(svc_mapping_test, svc_mapping_workflow_neg_4) {
 
     svc_mapping_feeder feeder1, feeder2;
 
-    feeder1.init("10.1.1.1", 10, 2, "20.1.1.1", 20, "30.1.1.1", g_num_svc_map);
-    feeder2.init("10.2.1.1", 10, 3, "20.2.1.1", 20, "30.2.1.1", g_num_svc_map);
+    feeder1.init("10.1.1.1", 10, int2pdsobjkey(2), "20.1.1.1", 20,
+                 "30.1.1.1", g_num_svc_map);
+    feeder2.init("10.2.1.1", 10, int2pdsobjkey(3), "20.2.1.1", 20,
+                 "30.2.1.1", g_num_svc_map);
     workflow_neg_4<svc_mapping_feeder>(feeder1, feeder2);
 }
 

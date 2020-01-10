@@ -120,7 +120,7 @@ class RouteObject(base.ConfigObjectBase):
             rtspec = spec.Routes.add()
             utils.GetRpcIPPrefix(route, rtspec.Prefix)
             if self.NextHopType == "vpcpeer":
-                rtspec.VPCId = self.PeerVPCId
+                rtspec.VPCId = str.encode(str(self.PeerVPCId))
             elif self.NextHopType == "tep":
                 rtspec.TunnelId = self.TunnelId
             elif self.NextHopType == "nh":

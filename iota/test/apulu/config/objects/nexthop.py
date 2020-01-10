@@ -88,7 +88,7 @@ class NexthopObject(base.ConfigObjectBase):
     def FillSpec(self, spec):
         spec.Id = self.NexthopId
         if self.__type == utils.NhType.IP:
-            spec.IPNhInfo.VPCId = self.VPC.VPCId
+            spec.IPNhInfo.VPCId = str.encode(str(self.VPC.VPCId))
             spec.IPNhInfo.Mac = self.MACAddr.getnum()
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)

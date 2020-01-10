@@ -164,7 +164,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vpc-" + std::to_string(key_.id);
+        return "vpc-" + std::string(key_.tostr());
     }
 
     /// \brief     helper function to get key given VPC entry

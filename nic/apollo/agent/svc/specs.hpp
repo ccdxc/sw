@@ -332,6 +332,23 @@ iprange_api_spec_to_proto_spec (types::AddressRange *out_iprange,
     return SDK_RET_OK;
 }
 
+// TODO: optimize to avoid to full walk on all key bytes
+static inline sdk_ret_t
+pds_obj_key_proto_to_api_spec (pds_obj_key_t *api_spec,
+                               const ::std::string& proto_key)
+{
+    if (proto_key.length() > PDS_MAX_KEY_LEN) {
+        return SDK_RET_INVALID_ARG;
+    }
+    // set all the key bytes to 0 1st and hash on the full key can't include
+    // uninitialized memory
+    memset(api_spec->id, 0, sizeof(api_spec->id));
+    // set the key bytes
+    memcpy(api_spec->id, proto_key.data(),
+           MIN(proto_key.length(), PDS_MAX_KEY_LEN));
+    return SDK_RET_OK;
+}
+
 static inline sdk_ret_t
 pds_encap_to_proto_encap (types::Encap *proto_encap,
                           const pds_encap_t *pds_encap)
@@ -587,7 +604,8 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
     api_spec->admin_state =
         proto_admin_state_to_pds_admin_state(proto_spec.adminstatus());
 
-    api_spec->l3_if_info.vpc.id = proto_spec.l3ifspec().vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
+                                  proto_spec.l3ifspec().vpcid());
     api_spec->l3_if_info.eth_ifindex = proto_spec.l3ifspec().ethifindex();
     api_spec->l3_if_info.encap =
         proto_encap_to_pds_encap(proto_spec.l3ifspec().encap());
@@ -673,7 +691,8 @@ pds_cmd_proto_to_cmd_ctxt (cmd_ctxt_t *cmd_ctxt,
         if (proto_ctxt->mappingdumpfilter().has_key()) {
             auto key = proto_ctxt->mappingdumpfilter().key();
             cmd_ctxt->args.mapping_dump.key_valid = true;
-            cmd_ctxt->args.mapping_dump.key.vpc.id = key.ipkey().vpcid();
+            pds_obj_key_proto_to_api_spec(&cmd_ctxt->args.mapping_dump.key.vpc,
+                                          key.ipkey().vpcid());
             ipaddr_proto_spec_to_api_spec(&cmd_ctxt->args.mapping_dump.key.ip_addr,
                                           key.ipkey().ipaddr());
         }
@@ -1273,8 +1292,8 @@ pds_vpc_peer_proto_to_api_spec (pds_vpc_peer_spec_t *api_spec,
         return;
     }
     api_spec->key.id = proto_spec.id();
-    api_spec->vpc1.id = proto_spec.vpc1();
-    api_spec->vpc2.id = proto_spec.vpc2();
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc1, proto_spec.vpc1());
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc2, proto_spec.vpc2());
 }
 
 // populate proto buf spec from tep API spec
@@ -1384,7 +1403,7 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
     ipaddr_proto_spec_to_api_spec(&api_spec->ip_addr,
                                   proto_spec.localip());
     MAC_UINT64_TO_ADDR(api_spec->mac, proto_spec.macaddress());
-    api_spec->vpc.id = proto_spec.vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc, proto_spec.vpcid());
 
     switch (proto_spec.type()) {
     case pds::TUNNEL_TYPE_IGW:
@@ -1494,7 +1513,7 @@ static inline void
 pds_service_proto_to_api_spec (pds_svc_mapping_spec_t *api_spec,
                                const pds::SvcMappingSpec &proto_spec)
 {
-    api_spec->key.vpc.id = proto_spec.key().vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->key.vpc, proto_spec.key().vpcid());
     api_spec->key.backend_port = proto_spec.key().backendport();
     ipaddr_proto_spec_to_api_spec(&api_spec->key.backend_ip,
                                   proto_spec.key().backendip());
@@ -2126,7 +2145,8 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
     switch (proto_spec.nhinfo_case()) {
     case pds::NexthopSpec::kIPNhInfo:
         api_spec->type = PDS_NH_TYPE_IP;
-        api_spec->vpc.id = proto_spec.ipnhinfo().vpcid();
+        pds_obj_key_proto_to_api_spec(&api_spec->vpc,
+                                      proto_spec.ipnhinfo().vpcid());
         ipaddr_proto_spec_to_api_spec(&api_spec->ip,
                                       proto_spec.ipnhinfo().ip());
         api_spec->vlan = proto_spec.ipnhinfo().vlan();
@@ -2295,8 +2315,8 @@ static inline sdk_ret_t
 pds_dhcp_relay_proto_to_api_spec (pds_dhcp_relay_spec_t *api_spec,
                                   const pds::DHCPRelaySpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
-    api_spec->vpc.id = proto_spec.vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc, proto_spec.vpcid());
     ipaddr_proto_spec_to_api_spec(&api_spec->server_ip, proto_spec.serverip());
     ipaddr_proto_spec_to_api_spec(&api_spec->agent_ip, proto_spec.agentip());
     return SDK_RET_OK;
@@ -2349,7 +2369,7 @@ static inline sdk_ret_t
 pds_dhcp_policy_proto_to_api_spec (pds_dhcp_policy_spec_t *api_spec,
                                    const pds::DHCPPolicySpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     ipaddr_proto_spec_to_api_spec(&api_spec->server_ip, proto_spec.serverip());
     api_spec->mtu = proto_spec.mtu();
     ipaddr_proto_spec_to_api_spec(&api_spec->gateway_ip,
@@ -2422,8 +2442,8 @@ static inline sdk_ret_t
 pds_nat_port_block_proto_to_api_spec (pds_nat_port_block_spec_t *api_spec,
                                       const pds::NatPortBlockSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
-    api_spec->vpc.id = proto_spec.vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc, proto_spec.vpcid());
     api_spec->ip_proto = proto_spec.protocol();
     if (proto_spec.nataddress().has_prefix()) {
         ipsubnet_proto_spec_to_ipvx_range(&api_spec->nat_ip_range,
@@ -2556,7 +2576,8 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
             api_spec->routes[i].nh_group.id = proto_route.nexthopgroupid();
             break;
         case pds::Route::kVPCId:
-            api_spec->routes[i].vpc.id = proto_route.vpcid();
+            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vpc,
+                                          proto_route.vpcid());
             api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
             break;
         case pds::Route::kVnicId:
@@ -3091,7 +3112,8 @@ pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.src_ip, srcip);
         api_spec->erspan_spec.dscp = proto_spec.erspanspec().dscp();
         api_spec->erspan_spec.span_id = proto_spec.erspanspec().spanid();
-        api_spec->erspan_spec.vpc.id = proto_spec.erspanspec().vpcid();
+        pds_obj_key_proto_to_api_spec(&api_spec->erspan_spec.vpc,
+                                      proto_spec.erspanspec().vpcid());
     } else {
         PDS_TRACE_ERR("rspan & erspan config missing in mirror session {} spec",
                       api_spec->key.id);
@@ -3268,7 +3290,7 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                               const pds::SubnetSpec &proto_spec)
 {
     api_spec->key.id = proto_spec.id();
-    api_spec->vpc.id = proto_spec.vpcid();
+    pds_obj_key_proto_to_api_spec(&api_spec->vpc, proto_spec.vpcid());
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
     ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->v6_prefix,
                                          proto_spec.v6prefix());
@@ -3330,7 +3352,7 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
 {
     pds::VPCType type;
 
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     type = proto_spec.type();
     if (type == pds::VPC_TYPE_TENANT) {
         api_spec->type = PDS_VPC_TYPE_TENANT;
@@ -3457,7 +3479,8 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
     switch (key.keyinfo_case()) {
     case pds::MappingKey::kIPKey:
         local_spec->key.type = PDS_MAPPING_TYPE_L3;
-        local_spec->key.vpc.id = key.ipkey().vpcid();
+        pds_obj_key_proto_to_api_spec(&local_spec->key.vpc,
+                                      key.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
                                       key.ipkey().ipaddr());
         local_spec->subnet.id = proto_spec.subnetid();
@@ -3616,7 +3639,8 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
 
     case pds::MappingKey::kIPKey:
         remote_spec->key.type = PDS_MAPPING_TYPE_L3;
-        remote_spec->key.vpc.id = key.ipkey().vpcid();
+        pds_obj_key_proto_to_api_spec(&remote_spec->key.vpc,
+                                      key.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
                                       key.ipkey().ipaddr());
         remote_spec->subnet.id = proto_spec.subnetid();

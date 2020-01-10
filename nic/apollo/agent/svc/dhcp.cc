@@ -156,7 +156,7 @@ DHCPSvcImpl::DHCPRelayDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_dhcp_relay_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -201,7 +201,7 @@ DHCPSvcImpl::DHCPRelayGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_dhcp_relay_read(&key, &info);
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         if (ret != SDK_RET_OK) {
@@ -359,7 +359,7 @@ DHCPSvcImpl::DHCPPolicyDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_dhcp_policy_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -404,7 +404,7 @@ DHCPSvcImpl::DHCPPolicyGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_dhcp_policy_read(&key, &info);
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         if (ret != SDK_RET_OK) {

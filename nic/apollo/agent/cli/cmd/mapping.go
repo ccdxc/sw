@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	vpcID       uint32
+	vpcID       string
 	mappingIP   string
 	mappingType string
 )
@@ -28,7 +28,7 @@ var mappingShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(mappingShowCmd)
-	mappingShowCmd.Flags().Uint32Var(&vpcID, "vpc-id", 0, "Specify VPC ID")
+	mappingShowCmd.Flags().StringVar(&vpcID, "VPC id", "", "Specify VPC ID")
 	mappingShowCmd.Flags().StringVar(&mappingIP, "ip", "0", "Specify mapping IP address")
 	mappingShowCmd.Flags().StringVar(&mappingType, "type", "all", "Specify mapping type - all, local or remote")
 }
@@ -74,7 +74,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		key = &pds.MappingKey{
 			Keyinfo: &pds.MappingKey_IPKey{
 				IPKey: &pds.L3MappingKey{
-					VPCId:  vpcID,
+					VPCId:  []byte(vpcID),
 					IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
 				},
 			},

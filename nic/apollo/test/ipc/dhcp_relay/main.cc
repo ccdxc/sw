@@ -84,8 +84,8 @@ TEST_F(ipc_dhcp_relay_test, ipc_dhcp_relay_cfg_create) {
     pds_dhcp_relay_spec_t spec;
     pds_dhcp_relay_key_t  key;
 
-    spec.key.id = 1234;
-    spec.vpc.id = 200;
+    spec.key = int2pdsobjkey(1234);
+    spec.vpc = int2pdsobjkey(200);
     str2ipaddr("1.2.3.4", &spec.server_ip);
     str2ipaddr("5.6.7.8", &spec.agent_ip);
 
@@ -101,13 +101,13 @@ TEST_F(ipc_dhcp_relay_test, ipc_dhcp_relay_cfg_create) {
     request.id = PDS_CFG_MSG_ID_DHCP_RELAY;
     request.cfg_msg.op = API_OP_NONE;
     request.cfg_msg.obj_id = OBJ_ID_DHCP_RELAY;
-    request.cfg_msg.dhcp_relay.key.id = 1234;
+    request.cfg_msg.dhcp_relay.key = int2pdsobjkey(1234);
 
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_TRUE(reply.is_msg);
-    EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.key.id, 1234);
-    EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.vpc.id, 200);
+    EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.key, int2pdsobjkey(1234));
+    EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.vpc, int2pdsobjkey(200));
     EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.server_ip.af, IP_AF_IPV4);
     EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.agent_ip.af, IP_AF_IPV4);
     EXPECT_EQ(reply.msg.cfg_msg.dhcp_relay.spec.server_ip.addr.v4_addr,
@@ -116,7 +116,7 @@ TEST_F(ipc_dhcp_relay_test, ipc_dhcp_relay_cfg_create) {
               spec.agent_ip.addr.v4_addr);
 
     // now delete the entry, it should succeed
-    key.id = 1234;
+    key = int2pdsobjkey(1234);
     pds_dhcp_relay_delete(&key);
     EXPECT_EQ(ret_val, sdk::SDK_RET_OK);
 
@@ -124,7 +124,7 @@ TEST_F(ipc_dhcp_relay_test, ipc_dhcp_relay_cfg_create) {
     request.id = PDS_CFG_MSG_ID_DHCP_RELAY;
     request.cfg_msg.op = API_OP_NONE;
     request.cfg_msg.obj_id = OBJ_ID_DHCP_RELAY;
-    request.cfg_msg.dhcp_relay.key.id = 1234;
+    request.cfg_msg.dhcp_relay.key = int2pdsobjkey(1234);
     sdk::ipc::request(PDS_IPC_ID_VPP, PDS_MSG_TYPE_CMD, &request,
                       sizeof(pds_msg_t), read_handler_cb, (const void *)&reply);
     EXPECT_FALSE(reply.is_msg);

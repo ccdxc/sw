@@ -21,14 +21,14 @@ class bd_obj_t : public slab_obj_t<bd_obj_t>,
 public:
     struct properties_t {
         ms_bd_id_t         bd_id;
-        pds_vpc_id_t       vpc_id;
+        pds_vpc_key_t      vpc;
         pds_encap_t        fabric_encap;
         pds_ifindex_t      host_ifindex = 0;
-        properties_t(ms_bd_id_t b, pds_vpc_id_t v) 
-            : bd_id(b), vpc_id(v) {};
+        properties_t(ms_bd_id_t b, const pds_vpc_key_t& k)
+            : bd_id(b), vpc(k) {};
     };
 
-    bd_obj_t(ms_bd_id_t b, pds_vpc_id_t v) : prop_(b, v) {};
+    bd_obj_t(ms_bd_id_t b, const pds_vpc_key_t& k) : prop_(b, k) {};
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
     ms_bd_id_t key(void) const {return prop_.bd_id;}
@@ -37,7 +37,7 @@ public:
     mac_store_t& mac_store(void) {return mac_store_;}
     void walk_macs(std::function<bool(const mac_addr_t& mac)>);
 
-private:  
+private:
     properties_t   prop_;
     mac_store_t    mac_store_;
 };

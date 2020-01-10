@@ -54,7 +54,7 @@ message Route {
       // ECMP nexthop for this route
       uint32          NexthopGroupId = 5;
       // peer VPC in case of VPC peering
-      uint32          VPCId          = 6;
+      bytes           VPCId          = 6;
       // Tunnel this prefix is pointing to
       uint32          TunnelId       = 7;
       // vnic this prefix is pointing to

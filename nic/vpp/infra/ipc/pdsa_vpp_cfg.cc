@@ -50,19 +50,19 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        if (dhcp_relay.find(cfg_msg.dhcp_relay.key.id) != dhcp_relay.end()) {
+        if (dhcp_relay.find(cfg_msg.dhcp_relay.key) != dhcp_relay.end()) {
             return true;
         }
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        if (dhcp_policy.find(cfg_msg.dhcp_policy.key.id) != dhcp_policy.end()) {
+        if (dhcp_policy.find(cfg_msg.dhcp_policy.key) != dhcp_policy.end()) {
             return true;
         }
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
-        if (nat_port_block.find(cfg_msg.nat_port_block.key.id) !=
+        if (nat_port_block.find(cfg_msg.nat_port_block.key) !=
             nat_port_block.end()) {
             return true;
         }
@@ -113,7 +113,7 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        dhcp_relay_it = dhcp_relay.find(cfg_msg.dhcp_relay.key.id);
+        dhcp_relay_it = dhcp_relay.find(cfg_msg.dhcp_relay.key);
         if (dhcp_relay_it == dhcp_relay.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
@@ -122,7 +122,7 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        dhcp_policy_it = dhcp_policy.find(cfg_msg.dhcp_policy.key.id);
+        dhcp_policy_it = dhcp_policy.find(cfg_msg.dhcp_policy.key);
         if (dhcp_policy_it == dhcp_policy.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
@@ -131,7 +131,7 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
-        nat_it = nat_port_block.find(cfg_msg.nat_port_block.key.id);
+        nat_it = nat_port_block.find(cfg_msg.nat_port_block.key);
         if (nat_it == nat_port_block.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
@@ -169,15 +169,15 @@ vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        dhcp_relay[cfg_msg.dhcp_relay.spec.key.id] = cfg_msg.dhcp_relay.spec;
+        dhcp_relay[cfg_msg.dhcp_relay.spec.key] = cfg_msg.dhcp_relay.spec;
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        dhcp_policy[cfg_msg.dhcp_policy.spec.key.id] = cfg_msg.dhcp_policy.spec;
+        dhcp_policy[cfg_msg.dhcp_policy.spec.key] = cfg_msg.dhcp_policy.spec;
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
-        nat_port_block[cfg_msg.nat_port_block.spec.key.id] =
+        nat_port_block[cfg_msg.nat_port_block.spec.key] =
             cfg_msg.nat_port_block.spec;
         break;
 
@@ -204,15 +204,15 @@ vpp_config_data::unset (obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg) {
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        dhcp_relay.erase(cfg_msg.dhcp_relay.key.id);
+        dhcp_relay.erase(cfg_msg.dhcp_relay.key);
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        dhcp_policy.erase(cfg_msg.dhcp_policy.key.id);
+        dhcp_policy.erase(cfg_msg.dhcp_policy.key);
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
-        nat_port_block.erase(cfg_msg.nat_port_block.key.id);
+        nat_port_block.erase(cfg_msg.nat_port_block.key);
         break;
 
     case OBJ_ID_SECURITY_PROFILE:
@@ -248,29 +248,29 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
 
     case OBJ_ID_DHCP_RELAY:
         if (right.op != API_OP_DELETE) {
-            return (left.dhcp_relay.spec.key.id ==
-                    right.dhcp_relay.spec.key.id);
+            return (left.dhcp_relay.spec.key ==
+                    right.dhcp_relay.spec.key);
         } else {
-            return (left.dhcp_relay.spec.key.id == right.dhcp_relay.key.id);
+            return (left.dhcp_relay.spec.key == right.dhcp_relay.key);
         }
         break;
 
     case OBJ_ID_DHCP_POLICY:
         if (right.op != API_OP_DELETE) {
-            return (left.dhcp_policy.spec.key.id ==
-                    right.dhcp_policy.spec.key.id);
+            return (left.dhcp_policy.spec.key ==
+                    right.dhcp_policy.spec.key);
         } else {
-            return (left.dhcp_policy.spec.key.id == right.dhcp_policy.key.id);
+            return (left.dhcp_policy.spec.key == right.dhcp_policy.key);
         }
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
         if (right.op != API_OP_DELETE) {
-            return (left.nat_port_block.spec.key.id ==
-                    right.nat_port_block.spec.key.id);
+            return (left.nat_port_block.spec.key ==
+                    right.nat_port_block.spec.key);
         } else {
-            return (left.nat_port_block.spec.key.id ==
-                    right.nat_port_block.key.id);
+            return (left.nat_port_block.spec.key ==
+                    right.nat_port_block.spec.key);
         }
         break;
 

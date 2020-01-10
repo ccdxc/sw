@@ -17,7 +17,7 @@ namespace api {
 class mirror_session_feeder : public feeder {
 public:
     pds_mirror_session_key_t key;
-    pds_vpc_id_t vpc_id;
+    pds_vpc_key_t vpc;
     pds_mirror_session_type_t type;
     uint32_t snap_len;
     uint32_t tep_id;

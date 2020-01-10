@@ -134,6 +134,10 @@ NBB_VOID bgp_peer_fill_func (pds::BGPPeerSpec&   req,
                              AMB_GEN_IPS         *mib_msg,
                              AMB_BGP_PEER        *v_amb_bgp_peer,
                              NBB_LONG            row_status);
+NBB_VOID bgp_peer_af_fill_func (pds::BGPPeerAf&        req,
+                                AMB_GEN_IPS           *mib_msg,
+                                AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
+                                NBB_LONG               row_status);
 NBB_VOID evpn_evi_fill_func (EvpnEviSpec&    req,
                              AMB_GEN_IPS     *mib_msg,
                              AMB_EVPN_EVI    *data,

@@ -26,7 +26,7 @@ if_feeder::init(pds_if_id_t id, std::string ip_pfx_str,
 
     if (type == PDS_IF_TYPE_L3) {
         spec_feeder.key.id = L3_IFINDEX(id);
-        l3_info.vpc.id = 1;
+        l3_info.vpc = int2pdsobjkey(1);
         str2ipv4pfx((char *)ip_pfx_str.c_str(), &l3_info.ip_prefix);
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,
                            (uint64_t)l3_info.ip_prefix.addr.addr.v4_addr);

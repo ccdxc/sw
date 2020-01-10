@@ -48,7 +48,7 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_vpc_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_create(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -111,7 +111,7 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_vpc_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_update(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -165,7 +165,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vpc_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -205,7 +205,7 @@ VPCSvcImpl::VPCGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vpc_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
@@ -357,6 +357,7 @@ VPCSvcImpl::VPCPeerGet(ServerContext *context,
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
         key.id = proto_req->id(i);
+        //pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vpc_peer_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);

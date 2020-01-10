@@ -18,7 +18,10 @@
 /// \defgroup PDS_VPC VPC API
 /// @{
 
-#define PDS_VPC_ID_INVALID 0     ///< invalid VPC id
+//#define PDS_VPC_ID_INVALID 0     ///< invalid VPC id
+
+///< invalid VPC key
+#define PDS_VPC_ID_INVALID    k_pds_obj_key_invalid
 #define PDS_MAX_VPC        64    ///< max VPC
 
 /// \brief VPC type

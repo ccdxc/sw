@@ -119,7 +119,7 @@ local_mapping_dump_cb (sdk_table_api_params_t *params)
     mapping_appdata_t       mapping_data;
     local_mapping_swkey_t   *key;
     local_mapping_appdata_t *data;
-    pds_vpc_id_t            vpc_id;
+    uint16_t                vpc_id;
     sdk_table_api_params_t  api_params;
     int                     fd = *(int *)(params->cbdata);
     p4pd_error_t            p4pd_ret;
@@ -189,7 +189,7 @@ remote_mapping_dump_cb (sdk_table_api_params_t *params)
 {
     mapping_swkey_t         *mapping_key;
     mapping_appdata_t       *mapping_data;
-    pds_vpc_id_t            vpc_id;
+    uint16_t                vpc_id;
     int                     fd = *(int *)(params->cbdata);
     p4pd_error_t            p4pd_ret;
     sdk_ret_t               ret;
@@ -273,9 +273,11 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             local_mapping_swkey_t       local_ip_mapping_key;
             local_mapping_appdata_t     local_ip_mapping_data;
             sdk_ret_t                   ret;
+            vpc_entry                   *vpc;
 
+            vpc = vpc_db()->find(&mapping_args->key.vpc);
             PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
-                                                 mapping_args->key.vpc.id,
+                                                 vpc->hw_id(),
                                                  &mapping_args->key.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                            NULL, &local_ip_mapping_data, 0,
@@ -291,10 +293,12 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
             type == MAPPING_DUMP_TYPE_REMOTE) {
             mapping_swkey_t       mapping_key = { 0 };
             mapping_appdata_t     mapping_data = { 0 };
-            sdk_ret_t                   ret;
+            sdk_ret_t             ret;
+            vpc_entry             *vpc;
 
-            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                           mapping_args->key.vpc.id,
+            vpc = vpc_db()->find(&mapping_args->key.vpc);
+
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
                                            &mapping_args->key.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key, NULL,
                                            &mapping_data, 0,

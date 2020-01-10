@@ -29,9 +29,55 @@
 #define PDS_MAX_HOST_NAME_LEN         128
 #define PDS_MAX_DOMAIN_NAME_LEN       128
 
-// Basic PDS data types
+// 16B keys for the objects
+#define PDS_MAX_KEY_LEN               16
+#define PDSM_MAX_KEY_STR_LEN          36
+
+// generic API object key
+typedef struct pds_obj_key_s pds_obj_key_t;
+struct pds_obj_key_s {
+    char id[PDS_MAX_KEY_LEN + 1];
+    void reset(void) {
+        memset(id, 0, sizeof(id));
+    }
+    char *tostr(void) const {
+        char *buf;
+        static thread_local uint8_t next_str = 0;
+        static thread_local char key_str[4][PDSM_MAX_KEY_STR_LEN + 1];
+
+        buf = key_str[next_str++ & 0x3];
+        buf[PDSM_MAX_KEY_STR_LEN] = '\0';
+        snprintf(buf, PDSM_MAX_KEY_STR_LEN,
+                 "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+                 id[0], id[1], id[2], id[3], id[4], id[5], id[6], id[7],
+                 id[8], id[9], id[10], id[11], id[12], id[13], id[14], id[15]);
+        return buf;
+    }
+    bool operator==(const pds_obj_key_t& other) const {
+        if(!memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
+            return true;
+        }
+        return false;
+    }
+    bool operator!=(const pds_obj_key_t& other) const {
+        if(memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
+            return true;
+        }
+        return false;
+    }
+} __PACK__;
+extern const pds_obj_key_t k_pds_obj_key_invalid;
+
+// helper class for hash computation of the object key
+class pds_obj_key_hash {
+public:
+    std::size_t operator()(const pds_obj_key_t& key) const {
+        return hash_algo::fnv_hash((void *)&key, sizeof(key));
+    }
+};
+
+// basic PDS data types
 typedef uint64_t    pds_batch_ctxt_t;          ///< opaque batch context
-typedef uint32_t    pds_vpc_id_t;              ///< vpc id
 typedef uint32_t    pds_subnet_id_t;           ///< subnet id
 typedef uint16_t    pds_vnic_id_t;             ///< vnic id
 typedef uint32_t    pds_rule_id_t;             ///< rule identifier
@@ -55,9 +101,6 @@ typedef uint32_t    pds_nexthop_group_id_t;    ///< nexthop group table index
 typedef uint32_t    pds_tep_id_t;              ///< TEP table index
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 typedef uint32_t    pds_policer_id_t;          ///< policer id
-typedef uint32_t    pds_dhcp_relay_id_t;       ///< DHCP relay policy id
-typedef uint32_t    pds_dhcp_policy_id_t;      ///< DHCP policy id
-typedef uint32_t    pds_nat_port_block_id_t;   ///< NAT port block id
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
@@ -138,10 +181,10 @@ typedef struct pds_nat_action_s {
     ip_addr_t      dst_nat_ip;
 } pds_nat_action_t;
 
-/// \brief    VPC key
-typedef struct pds_vpc_key_s {
-    pds_vpc_id_t id;    ///< VPC id
-} __PACK__ pds_vpc_key_t;
+typedef pds_obj_key_t pds_vpc_key_t;
+typedef pds_obj_key_t pds_nat_port_block_key_t;
+typedef pds_obj_key_t pds_dhcp_relay_key_t;
+typedef pds_obj_key_t pds_dhcp_policy_key_t;
 
 /// \brief    subnet key
 /// \remark subnet id is not scoped under a vpc, it is globally unique id
@@ -231,21 +274,6 @@ typedef struct pds_nexthop_group_key_s {
 typedef struct pds_policer_key_s {
     pds_policer_id_t id;
 } __PACK__ pds_policer_key_t;
-
-/// \brief    NAT port block key
-typedef struct pds_nat_port_block_key_s {
-    pds_nat_port_block_id_t id;
-} __PACK__ pds_nat_port_block_key_t;
-
-/// \brief    DHCP relay policy key
-typedef struct pds_dhcp_relay_key_s {
-    pds_dhcp_relay_id_t id;
-} __PACK__ pds_dhcp_relay_key_t;
-
-/// \brief    DHCP suppression policy key
-typedef struct pds_dhcp_policy_key_s {
-    pds_dhcp_policy_id_t id;
-} pds_dhcp_policy_key_t;
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {

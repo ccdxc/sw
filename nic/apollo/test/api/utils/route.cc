@@ -115,7 +115,7 @@ route_table_feeder::fill_spec(pds_nh_type_t type,
         break;
     case PDS_NH_TYPE_PEER_VPC:
         num = (index % PDS_MAX_VPC);
-        spec->routes[index].vpc.id = base_id + num;
+        spec->routes[index].vpc = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_VNIC:
         num = (index % PDS_MAX_VNIC);

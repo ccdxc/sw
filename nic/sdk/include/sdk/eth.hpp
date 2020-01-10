@@ -62,8 +62,8 @@ static inline void
 mac_str_to_addr (char *str, mac_addr_t mac_addr)
 {
     unsigned char* mac = (unsigned char*) mac_addr;
-    sscanf(str, "%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8,
-           &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+    sscanf(str, "%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%" SCNx8 ":%"
+           SCNx8, &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
 }
 
 static inline bool

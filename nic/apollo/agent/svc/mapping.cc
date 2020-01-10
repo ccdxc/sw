@@ -197,7 +197,7 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
         switch (proto_key.keyinfo_case()) {
         case pds::MappingKey::kIPKey:
             key.type = PDS_MAPPING_TYPE_L3;
-            key.vpc.id = proto_key.ipkey().vpcid();
+            pds_obj_key_proto_to_api_spec(&key.vpc, proto_key.ipkey().vpcid());
             ipaddr_proto_spec_to_api_spec(&key.ip_addr,
                                           proto_key.ipkey().ipaddr());
             break;
@@ -254,7 +254,7 @@ MappingSvcImpl::MappingGet(ServerContext *context,
         switch (proto_key.keyinfo_case()) {
         case pds::MappingKey::kIPKey:
             key.type = PDS_MAPPING_TYPE_L3;
-            key.vpc.id = proto_key.ipkey().vpcid();
+            pds_obj_key_proto_to_api_spec(&key.vpc, proto_key.ipkey().vpcid());
             ipaddr_proto_spec_to_api_spec(&key.ip_addr,
                                           proto_key.ipkey().ipaddr());
             break;

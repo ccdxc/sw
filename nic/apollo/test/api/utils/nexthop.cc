@@ -22,7 +22,7 @@ const uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
                      pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
-                     pds_vpc_id_t vpc_id, pds_if_id_t if_id,
+                     pds_vpc_key_t vpc, pds_if_id_t if_id,
                      pds_tep_id_t tep_id) {
     this->spec.key.id = id;
     this->spec.type = type;
@@ -30,7 +30,7 @@ nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
     if (type == PDS_NH_TYPE_IP) {
         test::extract_ip_addr(ip_str.c_str(), &this->spec.ip);
         this->spec.vlan = vlan;
-        this->spec.vpc.id = vpc_id;
+        this->spec.vpc = vpc;
         MAC_UINT64_TO_ADDR(this->spec.mac, mac);
     } else if (type == PDS_NH_TYPE_UNDERLAY) {
         this->spec.l3_if.id = L3_IFINDEX(if_id);
@@ -70,7 +70,7 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
     spec->type = this->spec.type;
     if (this->spec.type == PDS_NH_TYPE_IP) {
         spec->ip = this->spec.ip;
-        spec->vpc.id = this->spec.vpc.id;
+        spec->vpc = this->spec.vpc;
         spec->vlan = this->spec.vlan;
         MAC_UINT64_TO_ADDR(spec->mac, MAC_TO_UINT64(this->spec.mac));
     } else if (this->spec.type == PDS_NH_TYPE_UNDERLAY) {

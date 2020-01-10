@@ -156,6 +156,10 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
+def GetYamlSpecAttr(spec, attr):
+    val = spec[attr]
+    return int("".join(map(chr, val)))
+
 def ValidateRpcIPAddr(srcaddr, dstaddr):
     if srcaddr.version == IP_VERSION_6:
         if dstaddr.Af != types_pb2.IP_AF_INET6:

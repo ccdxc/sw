@@ -155,7 +155,7 @@ class RouteTableObject(base.ConfigObjectBase):
 
     def PopulateNh(self, rtspec, route):
         if route.NextHopType == "vpcpeer":
-            rtspec.VPCId = route.PeerVPCId
+            rtspec.VPCId = str.encode(str(route.PeerVPCId))
         elif route.NextHopType == "tep":
             rtspec.TunnelId = route.TunnelId
         elif route.NextHopType == "nh":

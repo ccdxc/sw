@@ -14,14 +14,14 @@ namespace pds_ms_test{
 
 class vrf_input_params_t : public test_input_base_t {
 public:
-    uint32_t           vrf_id;
+    uint32_t        vrf_id;
     pds_vpc_spec_t  vpc_spec = {0};
 
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 
    virtual void init() {
     vrf_id = 1;
-    vpc_spec.key.id = vrf_id;
+    vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
     vpc_spec.type = PDS_VPC_TYPE_TENANT;
     vpc_spec.v4_prefix.len = 24; 
     str2ipv4addr("23.1.10.1", &vpc_spec.v4_prefix.v4_addr);
@@ -40,7 +40,7 @@ public:
    void next(void) override {
        // Set an initial subnet spec in the BD store 
        vrf_id = vrf_id+1;
-       vpc_spec.key.id = vrf_id;
+       vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
        str2ipv4addr("25.2.10.1", &vpc_spec.v4_prefix.v4_addr);
        mac_str_to_addr((char*) "04:26:23:29:20:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table.id = vrf_id;
@@ -61,7 +61,7 @@ public:
    virtual void init_direct_update() {
        // Set an initial subnet spec in the BD store 
        vrf_id = vrf_id+1;
-       vpc_spec.key.id = vrf_id;
+       vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
        str2ipv4addr("33.3.10.1", &vpc_spec.v4_prefix.v4_addr);
        mac_str_to_addr((char*) "04:66:63:69:60:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table.id = vrf_id;
