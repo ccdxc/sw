@@ -94,11 +94,12 @@ type ServiceParams struct {
 
 // PdsaGlobalOpts holds raw venice.pdsaSetGlobOpts
 type PdsaGlobalOpts struct {
-	OidLen string
-	OidFam string
-	Struct string
-	Mib    string
-	FillFn string
+	OidLen   string
+	OidFam   string
+	Struct   string
+	Mib      string
+	FillFn   string
+	ActionFn string
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -1110,6 +1111,7 @@ func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
 	pdsaGlobOpts.FillFn = r.FillFn
+	pdsaGlobOpts.ActionFn = r.ActionFn
 	return pdsaGlobOpts, nil
 }
 
@@ -1122,6 +1124,7 @@ func getPdsaGetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.Struct = getStructFromCam(cam, r.Mib)
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
 	pdsaGlobOpts.FillFn = r.FillFn
+	pdsaGlobOpts.ActionFn = r.ActionFn
 	return pdsaGlobOpts, nil
 }
 
