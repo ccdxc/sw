@@ -28,6 +28,7 @@ message PdsaFields {
   string SetKeyOidLenIndex = 8;
   string GetKeyOidLenIndex = 9;
   bool   IgnoreIfEmpty     = 10;
+  bool   IsZeroIPValid     = 11;
 }
 
 // PDSA Option extensions applicable to Fields

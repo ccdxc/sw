@@ -63,21 +63,23 @@ NBB_VOID pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
                                                 NBB_ULONG     len,
                                                 ip_addr_t     *pds_ms_ip_addr);
 NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr, 
-                                                 NBB_LONG      *type, 
-                                                 NBB_ULONG     *len, 
-                                                 NBB_BYTE      *amb_ip_addr,
-                                                 uint8_t        is_zero_ip_valid);
+                                               NBB_LONG      *type, 
+                                               NBB_ULONG     *len, 
+                                               NBB_BYTE      *amb_ip_addr,
+                                               bool          is_zero_ip_valid);
 
 NBB_VOID pds_ms_set_address_oid(NBB_ULONG *oid,
                               const NBB_CHAR  *tableName,
                               const NBB_CHAR  *fieldName,
-                              const types::IPAddress &addr);
+                              const types::IPAddress &addr,
+                              bool is_zero_ip_valid);
 
 NBB_VOID pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
                                 const NBB_CHAR  *tableName,
                                 const NBB_CHAR  *fieldName,
                                 NBB_VOID        *dest,
-                                const types::IPAddress &addr);
+                                const types::IPAddress &addr,
+                                bool is_zero_ip_valid);
 
 NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
 

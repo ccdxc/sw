@@ -42,13 +42,12 @@ ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
     return true;
 }
 
-//TODO: we may need to revisit 'is_zero_ip_valid' flag
-NBB_VOID 
-pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr, 
-                                       NBB_LONG      *type, 
-                                       NBB_ULONG     *len, 
-                                       NBB_BYTE      *amb_ip_addr,
-                                       uint8_t       is_zero_ip_valid)
+NBB_VOID
+pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t   pds_ms_ip_addr, 
+                                     NBB_LONG      *type, 
+                                     NBB_ULONG     *len, 
+                                     NBB_BYTE      *amb_ip_addr,
+                                     bool          is_zero_ip_valid)
 {
     switch (pds_ms_ip_addr.af)
     {
@@ -107,7 +106,8 @@ NBB_VOID
 pds_ms_set_address_oid(NBB_ULONG *oid,
                      const NBB_CHAR  *tableName,
                      const NBB_CHAR  *fieldName,
-                     const types::IPAddress &addr)
+                     const types::IPAddress &addr,
+                     bool is_zero_ip_valid)
 {
     NBB_ULONG       oidAddrTypeIdx;
     NBB_ULONG       oidAddrIdx;
@@ -116,7 +116,6 @@ pds_ms_set_address_oid(NBB_ULONG *oid,
     NBB_BYTE        ambAddr[AMB_BGP_MAX_IP_PREFIX_LEN];
     ip_addr_t       outAddr;
     NBB_ULONG       ii = 0;
-    uint8_t         is_zero_ip_valid = FALSE;
 
     if (strcmp(fieldName, "remote_addr") == 0) {
         if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
@@ -191,7 +190,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
                        const NBB_CHAR  *tableName,
                        const NBB_CHAR  *fieldName,
                        NBB_VOID        *dest,
-                       const types::IPAddress &addr)
+                       const types::IPAddress &addr,
+                       bool is_zero_ip_valid)
 {
     NBB_ULONG       addrIdx;
     NBB_ULONG       addrType;
@@ -205,7 +205,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
             pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
                                                 &data->remote_addr_len,
-                                                data->remote_addr, FALSE);
+                                                data->remote_addr,
+                                                is_zero_ip_valid);
             addrIdx = AMB_OID_BGP_PAS_REMOTE_ADDR;
             addrType = AMB_OID_BGP_PAS_REMOTE_ADDR_TYP;
         } else if (strcmp(tableName, "bgpPeerTable") == 0) {
@@ -213,7 +214,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
             pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->remote_addr_type,
                                                 &data->remote_addr_len,
-                                                data->remote_addr, FALSE);
+                                                data->remote_addr,
+                                                is_zero_ip_valid);
             addrIdx = AMB_OID_BGP_PER_REMOTE_ADDR;
             addrType = AMB_OID_BGP_PER_REMOTE_DDR_TYP;
         } else {
@@ -225,7 +227,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
             pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
                                                 &data->local_addr_len,
-                                                data->local_addr, FALSE);
+                                                data->local_addr,
+                                                is_zero_ip_valid);
             addrIdx = AMB_OID_BGP_PAS_LOCAL_ADDR;
             addrType = AMB_OID_BGP_PAS_LOCAL_ADDR_TYP;
         } else if (strcmp(tableName, "bgpPeerTable") == 0) {
@@ -233,7 +236,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
             pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr,
                                                 &data->local_addr_type,
                                                 &data->local_addr_len,
-                                                data->local_addr, FALSE);
+                                                data->local_addr,
+                                                is_zero_ip_valid);
             addrIdx = AMB_OID_BGP_PER_LOCAL_ADDR;
             addrType = AMB_OID_BGP_PER_LOCAL_ADDR_TYP;
         } else {
@@ -245,7 +249,8 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
             pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
                                                  &data->ipaddr_type, 
                                                  &data->ipaddress_len,
-                                                 data->ipaddress, FALSE);
+                                                 data->ipaddress,
+                                                 is_zero_ip_valid);
             addrIdx  = AMB_OID_LIM_L3_ADDR_IPADDR;
             addrType = AMB_OID_LIM_L3_ADDR_TYPE; 
         }
@@ -253,9 +258,10 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
         if (strcmp(tableName, "rtmStaticRtTable") == 0) {
             AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
             pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
-                                                   &data->dest_addr_type,
-                                                   &data->dest_addr_len,
-                                                   data->dest_addr, TRUE);
+                                                 &data->dest_addr_type, 
+                                                 &data->dest_addr_len,
+                                                 data->dest_addr,
+                                                 is_zero_ip_valid);
             addrType = AMB_OID_QCR_STRT_DEST_ADDR_TYP;
             addrIdx  = AMB_OID_QCR_STRT_DEST_ADDR;
          }
@@ -263,9 +269,10 @@ pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
         if (strcmp(tableName, "rtmStaticRtTable") == 0) {
             AMB_CIPR_RTM_STATIC_RT *data = (AMB_CIPR_RTM_STATIC_RT *)dest;
             pds_ms_convert_ip_addr_to_amb_ip_addr (outAddr,
-                                                   &data->next_hop_type,
-                                                   &data->next_hop_len,
-                                                   data->next_hop, TRUE);
+                                                 &data->next_hop_type, 
+                                                 &data->next_hop_len,
+                                                 data->next_hop,
+                                                 is_zero_ip_valid);
             addrType = AMB_OID_QCR_STRT_NEXT_HOP_TYP;
             addrIdx  = AMB_OID_QCR_STRT_NEXT_HOP;
         }

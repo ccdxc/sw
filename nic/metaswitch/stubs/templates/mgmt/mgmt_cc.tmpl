@@ -59,7 +59,7 @@
         // MSFieldType: {{$fieldOpt.CppDataType}} ProtoFieldTypeName: {{.GetTypeName}}
                 {{if (eq $fieldOpt.SetKeyOidFn "")}}
                   {{if (eq .GetTypeName ".types.IPAddress")}}
-        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
+        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
                   {{else}}
                     {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                     {{if (eq $castFn "")}}
@@ -125,7 +125,7 @@
                   {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                   {{if (eq $castFn "")}}
                     {{if (eq .GetTypeName ".types.IPAddress")}}
-                pds_ms_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}());
+                pds_ms_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
                     {{else}}
                 v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
@@ -496,7 +496,7 @@
         // MSFieldType: {{$fieldOpt.CppDataType}} ProtoFieldTypeName: {{.GetTypeName}}
                 {{if (eq $fieldOpt.GetKeyOidFn "")}}
                   {{if (eq .GetTypeName ".types.IPAddress")}}
-        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}());
+        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
                   {{else}}
                     {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                     {{if (eq $castFn "")}}

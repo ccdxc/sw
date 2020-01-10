@@ -132,7 +132,7 @@ pds_ms_fill_amb_l2f_mac_ip_cfg (AMB_GEN_IPS *mib_msg,
     pds_ms_convert_ip_addr_to_amb_ip_addr(ip_addr,
                                         &data->ip_address_type, 
                                         &data->ip_address_len,
-                                        data->ip_address, FALSE);
+                                        data->ip_address, false);
     oid[AMB_L2F_MAC_IP_CFG_IP_TYP_INDEX] = data->ip_address_type;
     oid[AMB_L2F_MAC_IP_CFG_IP_ADD_INDEX] = data->ip_address_len;
     for (ii = 0; ii < data->ip_address_len; ii++)

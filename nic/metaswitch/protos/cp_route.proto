@@ -83,11 +83,11 @@ message CPStaticRouteSpec {
   // VRF ID
   uint32          VRFId         = 1 [(venice.pdsaFields) = {Field: "fte_index", SetKeyOidIndex: "AMB_QCR_STRT_FTE_INDEX_INDEX"}];
   // Destination Address 
-  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field: "dest_addr"}];
+  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
   // Destination Address Prefix Length
   uint32          PrefixLen     = 3 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
   // NextHop Address
-  types.IPAddress NextHopAddr   = 4 [(venice.pdsaFields) = {Field: "next_hop"}];
+  types.IPAddress NextHopAddr   = 4 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
   // Admin Status
   AdminSt         AdminStatus   = 5 [(venice.pdsaFields) = {Field: "admin_stat"}];
   // Override Admin Distance
