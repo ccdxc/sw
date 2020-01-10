@@ -39,7 +39,7 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return []byte("null"), err
 	}
-	if stdTime.Second() == 0 && stdTime.Nanosecond() == 0 {
+	if stdTime.Equal(time.Unix(0, 0)) {
 		return json.Marshal("")
 	}
 	return json.Marshal(stdTime.Format(time.RFC3339Nano))
