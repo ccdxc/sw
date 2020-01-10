@@ -60,7 +60,7 @@ storage_tx_seq_xts_status_desc0_handler:
 possible_status_dma:
 
    // Set up further status xfer if applicable
-   bbeq         d.status_dma_en, 0, tbl_load
+   bbeq         d.status_dma_en, 0, possible_tbl_load
    add          r_status_len, r0, d.status_len    // delay slot
    
    // Set up the status DMA:
@@ -71,7 +71,21 @@ possible_status_dma:
                             r_status_len, dma_m2m_1)
    SEQ_METRICS_SET(status_pdma_xfers)
 
-tbl_load:
+possible_tbl_load:
+
+   // Status addr is not to be read when crypto chaining is only
+   // used for raising interrupt + doorbell (since the crypto
+   // engine is not capable of generating 2 "opaque" writes on its own)
+if2:   
+   sne          c1, d.status_addr0, r0
+   bcf          [c1], endif2
+   CLEAR_TABLE0                                         // delay slot
+
+   // Setup the start and end DMA pointers
+   DMA_PTR_SETUP_e(dma_p2m_0_dma_cmd_pad,
+                   dma_p2m_19_dma_cmd_eop,
+                   p4_txdma_intr_dma_cmd_ptr)
+endif2:
 
    // Set the table and program address 
    LOAD_TABLE_FOR_ADDR_PC_IMM(d.status_addr0, STORAGE_TBL_LOAD_SIZE_64_BITS,
