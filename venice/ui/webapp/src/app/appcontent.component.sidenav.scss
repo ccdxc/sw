@@ -106,8 +106,9 @@
 a[aria-expanded="true"]::before {
   content: '\f107';
   display: block;
-  position: absolute;
-  right: 20px;
+  position: relative;
+  left: 180px;
+  height: 0px;
   font-family: 'FontAwesome';
   font-size: 16px;
 }

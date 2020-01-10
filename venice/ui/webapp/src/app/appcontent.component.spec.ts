@@ -302,7 +302,7 @@ describe('UIBlock during rollout progress', () => {
     );
     fixture.detectChanges();
     // check if sidenav menu is served
-    expect(debugElement.query(By.css('mat-sidenav.app-shell-left-sidenav')).children[0].children[0].children.length).toBe(0);
+    expect(debugElement.query(By.css('mat-sidenav.app-shell-left-sidenav')).children[0].children[0].children.length).toBe(1);
     // check if redirected to progressing rollout page
     expect (mockRouter.navigate).toHaveBeenCalledWith (['/maintenance']);
   });
@@ -314,7 +314,7 @@ describe('UIBlock during rollout progress', () => {
     );
     fixture.detectChanges();
     // check if sidenav menu is served
-    expect(debugElement.query(By.css('mat-sidenav.app-shell-left-sidenav')).children[0].children[0].children.length).toBe(0);
+    expect(debugElement.query(By.css('mat-sidenav.app-shell-left-sidenav')).children[0].children[0].children.length).toBe(1);
     // check if uiblock is up
     expect(debugElement.query(By.css('div.ui-blockui'))).toBeTruthy();
   });

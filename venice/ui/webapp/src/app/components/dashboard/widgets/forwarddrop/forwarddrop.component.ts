@@ -20,20 +20,19 @@ export class ForwardDropComponent implements OnInit {
             id: 'forwarded-dropped-chart',
             graphTransforms: {
                 transforms: {
-                    GraphTitle: { title: 'Forwarded vs Dropped Sessions (past 1 hour)' },
+                    GraphTitle: { title: 'Dropped Counts (past 1 hour)' },
                 },
             },
             dataTransforms: [{
                 transforms: {
                     ColorTransform: {
                         colors: {
-                            'SessionSummaryMetrics-TotalActiveSessions': '#61b3a0',
                             'SessionSummaryMetrics-NumDropSessions': '#ff9cee',
                         }
                     },
                 },
                 measurement: 'SessionSummaryMetrics',
-                fields: ['TotalActiveSessions', 'NumDropSessions']
+                fields: ['NumDropSessions']
             }]
         };
     }

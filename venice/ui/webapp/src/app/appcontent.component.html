@@ -108,10 +108,12 @@
         <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true"
                      id="app-sidebar">
           <!-- Side Nav Items -->
-          <ul class="list-unstyled components">
-            <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
-            </ng-container>
-          </ul>
+          <div id="app-sidebar-container" class="panel-scroll" (scroll)="onScroll($event)">
+            <ul class="list-unstyled components">
+              <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:sideNavMenu}">
+              </ng-container>
+            </ul>
+          </div>
         </mat-sidenav>
 
         <mat-sidenav-content>
@@ -225,15 +227,16 @@
             <span class="app-l-side-nav-item-label">{{item.label}}</span>
           </a>
 
-          <a *ngIf="item.children != null" class="app-sidenav-group-header" data-toggle="collapse"
-             [attr.aria-expanded]="isSubMenuShown(item.link)" [href]="'#' + item.label + 'Submenu'">
+          <a *ngIf="item.children != null" class="app-sidenav-group-header"
+             (click)="onMenuItemClick($event, item.link[0]);"
+             [attr.aria-expanded]="isSubMenuShown(item.link[0])">
             <i
                [class]="'glyphicon app-l-side-nav-li ' + item.icon.cssClass">{{item.icon.matIconName}}</i>
             <span class="app-l-side-nav-item-label">{{item.label}}</span>
           </a>
 
           <ul *ngIf="item.children != null && item.children.length > 0"
-              class="list-unstyled app-l-side-nav-ul-submenu {{isSubMenuShown(item.link) ? 'show' : 'collapse'}} "
+              class="list-unstyled app-l-side-nav-ul-submenu {{isSubMenuShown(item.link[0]) ? 'show' : 'collapse'}} "
               [id]="item.label + 'Submenu'">
             <ng-container *ngTemplateOutlet="SideNavMenu; context:{items:item.children}">
             </ng-container>

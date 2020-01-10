@@ -39,6 +39,7 @@ export interface GetUserObjRequest {
   err: (err: IAuthUser | IApiStatus | Error) => void;
 }
 
+const SIDE_MENU_INFO: string = 'SIDE_MENU_INFO';
 /**
  * This is the entry point component of Pensando-Venice Web-Application
  */
@@ -85,6 +86,10 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   alertQuery = {};
 
   sideNavMenu: SideNavItem[] = sideNavMenu;
+  openedMenuItems = {};
+  scrollTop: number = 0;
+  // debounce event for scroll change
+  scrollChanged: Subject<string> = new Subject<string>();
 
   userName: string = '';
 
@@ -141,6 +146,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     const browserObj = Utility.getBrowserInfomation();
     this.browsertype = browserObj['browserName'];
     this.browserversion = browserObj['browserName'] + browserObj['majorVersion'];
+    this.retrieveMenuInfo();
     this._initAppData();
     this.getVersion();
     this.getCluster();
@@ -159,7 +165,19 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         this.hourDifference = '+' + -(this.hourDifference);
       }
     }, 1000);
+
+    this.scrollChanged
+      .debounceTime(200)
+      .subscribe(scrollTop => {
+        this.scrollTop = parseInt(scrollTop, 10);
+        this.storeMenuInfo();
+      });
   }
+
+  onScroll(event) {
+    this.scrollChanged.next(event.target.scrollTop);
+  }
+
 
   updateRolloutUIBlock() {
     this.isUINavigationBlocked = true;
@@ -254,6 +272,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     //   // template: this.helpTemplate
     //   id: 'authpolicy'
     // });
+    this.initializeScrollTop();
   }
 
   redirectHome() {
@@ -493,12 +512,45 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this._currentComponent = null;
   }
 
-  isSubMenuShown(menuLink: string[]) {
-    const currentUrl: string = this._controllerService.getCurrentRoute();
-    if (currentUrl && menuLink && menuLink.length > 0) {
-      return currentUrl.indexOf(menuLink[0] + '/') === 0;
+  isSubMenuShown(menuLink: string) {
+    return this.openedMenuItems[menuLink] ? true : false;
+  }
+
+  onMenuItemClick(event, itemLink) {
+    if (this.openedMenuItems[itemLink]) {
+      delete this.openedMenuItems[itemLink];
+    } else {
+      this.openedMenuItems[itemLink] = true;
     }
-    return false;
+    this.storeMenuInfo();
+    event.stopPropagation();
+  }
+
+  // put openedMenuItems and scroll top into session storage on destroy
+  // and read it back on initialize
+  storeMenuInfo() {
+    sessionStorage.setItem(SIDE_MENU_INFO, JSON.stringify({
+      menuItiems: this.openedMenuItems,
+      menuScrollTop: this.scrollTop
+    }));
+  }
+
+  retrieveMenuInfo() {
+    const menuInfo = JSON.parse(sessionStorage.getItem(SIDE_MENU_INFO));
+    if (menuInfo) {
+      if (menuInfo.menuItiems) {
+        this.openedMenuItems = menuInfo.menuItiems;
+      }
+      if (menuInfo.menuScrollTop) {
+        this.scrollTop = parseInt(menuInfo.menuScrollTop, 10);
+      }
+    }
+  }
+
+  initializeScrollTop() {
+    if (this.scrollTop !== 0) {
+      document.getElementById('app-sidebar-container').scrollTop = this.scrollTop;
+    }
   }
 
   /**
