@@ -7,12 +7,14 @@ meta:
 testcases:
     -   name    : CompileInsmodSonicPencake
         testcase: testcases.storage.compile_install_drivers
+        ignore  : True
         args    :
             package: storage/gen/storage-offload.tar.xz
             maxcpus: 4
 
     -   name: ACCEL_METRICS
         testcase    : testcases.penctl.accel_metrics
+        ignore  : True
         iterators   :
             type        : nested
             #cpumask     :  [ 1 ]
