@@ -133,13 +133,13 @@ class VnicObject(base.ConfigObjectBase):
         spec.V4MeterId = self.V4MeterId
         spec.V6MeterId = self.V6MeterId
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(policyid)
+            spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(policyid)
+            spec.IngV6SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(policyid)
+            spec.EgV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(policyid)
+            spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
                 spec.HostIfIndex = utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id)

@@ -185,6 +185,7 @@ typedef pds_obj_key_t pds_vpc_key_t;
 typedef pds_obj_key_t pds_nat_port_block_key_t;
 typedef pds_obj_key_t pds_dhcp_relay_key_t;
 typedef pds_obj_key_t pds_dhcp_policy_key_t;
+typedef pds_obj_key_t pds_policy_key_t;
 
 /// \brief    subnet key
 /// \remark subnet id is not scoped under a vpc, it is globally unique id
@@ -248,11 +249,6 @@ typedef struct pds_mapping_key_s {
 typedef struct pds_route_table_key_s {
     pds_route_table_id_t    id;    ///< route table id
 } __PACK__ pds_route_table_key_t;
-
-/// \brief    policy key
-typedef struct pds_policy_key_s {
-    pds_policy_id_t    id;    ///< unique id for the policy
-} __PACK__ pds_policy_key_t;
 
 /// \brief    mirror session key
 typedef struct pds_mirror_session_key_s {

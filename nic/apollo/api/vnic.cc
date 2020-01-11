@@ -146,19 +146,19 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     }
     num_ing_v4_policy_ = spec->num_ing_v4_policy;
     for (uint8_t i = 0; i < num_ing_v4_policy_; i++) {
-        ing_v4_policy_[i].id = spec->ing_v4_policy[i].id;
+        ing_v4_policy_[i] = spec->ing_v4_policy[i];
     }
     num_ing_v6_policy_ = spec->num_ing_v6_policy;
     for (uint8_t i = 0; i < num_ing_v6_policy_; i++) {
-        ing_v6_policy_[i].id = spec->ing_v6_policy[i].id;
+        ing_v6_policy_[i] = spec->ing_v6_policy[i];
     }
     num_egr_v4_policy_ = spec->num_egr_v4_policy;
     for (uint8_t i = 0; i < num_egr_v4_policy_; i++) {
-        egr_v4_policy_[i].id = spec->egr_v4_policy[i].id;
+        egr_v4_policy_[i] = spec->egr_v4_policy[i];
     }
     num_egr_v6_policy_ = spec->num_egr_v6_policy;
     for (uint8_t i = 0; i < num_egr_v6_policy_; i++) {
-        egr_v6_policy_[i].id = spec->egr_v6_policy[i].id;
+        egr_v6_policy_[i] = spec->egr_v6_policy[i];
     }
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);

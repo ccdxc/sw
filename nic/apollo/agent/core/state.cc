@@ -621,12 +621,12 @@ agent_state::route_table_db_walk(route_table_walk_cb_t cb, void *ctxt) {
 
 sdk_ret_t
 agent_state::add_to_policy_db(pds_policy_key_t *key, pds_policy_spec_t *spec) {
-    ADD_TO_DB(policy, key, spec);
+    ADD_TO_OBJ_DB(policy, key, spec);
 }
 
 pds_policy_spec_t *
 agent_state::find_in_policy_db(pds_policy_key_t *key) {
-    FIND_IN_DB(policy, key);
+    FIND_IN_OBJ_DB(policy, key);
 }
 
 sdk_ret_t
@@ -643,7 +643,7 @@ agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
 
 bool
 agent_state::del_from_policy_db(pds_policy_key_t *key) {
-    DEL_FROM_DB(policy, key);
+    DEL_FROM_OBJ_DB(policy, key);
 }
 
 sdk_ret_t

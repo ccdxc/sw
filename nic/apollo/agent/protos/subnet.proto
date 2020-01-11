@@ -43,16 +43,16 @@ message SubnetSpec {
   uint32           V6RouteTableId        = 9;
   // identifier of ingress IPv4 security policy to be enforced
   // NOTE: max. of 2 policies supported currently
-  repeated uint32  IngV4SecurityPolicyId = 10;
+  repeated bytes   IngV4SecurityPolicyId = 10;
   // identifier of ingress IPv6 security policy to be enforced
   // NOTE: max. of 2 policies supported currently
-  repeated uint32  IngV6SecurityPolicyId = 11;
+  repeated bytes   IngV6SecurityPolicyId = 11;
   // identifier of egress IPv4 security policy to be enforced
   // NOTE: max. of 2 policies supported currently
-  repeated uint32  EgV4SecurityPolicyId  = 12;
+  repeated bytes   EgV4SecurityPolicyId  = 12;
   // identifier of egress IPv6 security policy to be enforced
   // NOTE: max. of 2 policies supported currently
-  repeated uint32  EgV6SecurityPolicyId  = 13;
+  repeated bytes   EgV6SecurityPolicyId  = 13;
   // encapped traffic coming with the specified encap from fabric side will be
   // mapped to this subnet and traffic from workloads in this subnet will carry
   // this encap towards the fabric side
@@ -62,7 +62,7 @@ message SubnetSpec {
   // HostIfIndex is the interface index of such VF/PF
   uint32           HostIfIndex           = 15;
   // DHCP policy to be applied in this subnet
-  uint32           DHCPPolicyId          = 16;
+  bytes            DHCPPolicyId          = 16;
   // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
   // header or in the Traffic Class field of IPv6 outer header, this value will
   // be written as-is (i.e., not interpreted) during encap time by the dataplane

@@ -621,13 +621,13 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             route_table_id + (num_subnets * num_vpcs);
         pds_subnet.v4_route_table.id = route_table_id++;
         pds_subnet.num_egr_v4_policy = 1;
-        pds_subnet.egr_v4_policy[0].id = policy_id;
+        pds_subnet.egr_v4_policy[0] = test::int2pdsobjkey(policy_id);
         pds_subnet.num_ing_v4_policy = 1;
-        pds_subnet.ing_v4_policy[0].id = policy_id + (num_subnets * num_vpcs);
+        pds_subnet.ing_v4_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs));
         pds_subnet.num_egr_v6_policy = 1;
-        pds_subnet.egr_v6_policy[0].id = policy_id + (num_subnets * num_vpcs) * 2;
+        pds_subnet.egr_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 2);
         pds_subnet.num_ing_v6_policy = 1;
-        pds_subnet.ing_v6_policy[0].id = policy_id + (num_subnets * num_vpcs) * 3;
+        pds_subnet.ing_v6_policy[0] = test::int2pdsobjkey(policy_id + (num_subnets * num_vpcs) * 3);
         if (apulu()) {
             pds_subnet.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
             pds_subnet.fabric_encap.val.vnid =
@@ -1301,7 +1301,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
     for (uint32_t i = 1; i <= num_vpcs; i++) {
         for (uint32_t j = 1, idx = 0; j <= num_subnets; idx = 0, j++) {
             memset(policy.rules, 0, num_rules * sizeof(rule_t));
-            policy.key.id = policy_id++;
+            policy.key = test::int2pdsobjkey(policy_id++);
             done = false;
             priority = 0;
             priority_step = TESTAPP_POLICY_PRIORITY_STEP;

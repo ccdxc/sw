@@ -70,7 +70,7 @@ vpc_entry::clone(api_ctxt_t *api_ctxt) {
         if (impl_) {
             cloned_vpc->impl_ = impl_->clone();
             if (unlikely(cloned_vpc->impl_ == NULL)) {
-                PDS_TRACE_ERR("Failed to clone vpc %u impl", key_.id);
+                PDS_TRACE_ERR("Failed to clone vpc %s impl", key2str().c_str());
                 goto error;
             }
         }
@@ -100,7 +100,8 @@ sdk_ret_t
 vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_spec_t *spec = &api_ctxt->api_params->vpc_spec;
 
-    PDS_TRACE_VERBOSE("Initializing vpc %u, type %u", spec->key.id, spec->type);
+    PDS_TRACE_VERBOSE("Initializing vpc %s, type %u",
+                      spec->key.tostr(), spec->type);
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
     type_ = spec->type;
     fabric_encap_ = spec->fabric_encap;
@@ -198,7 +199,7 @@ vpc_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
         (fabric_encap_.val.value != spec->fabric_encap.val.value)) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"fabric encap\" "
                       "from %u to %u on vpc %s", pds_encap2str(&fabric_encap_),
-                      pds_encap2str(&spec->fabric_encap));
+                      pds_encap2str(&spec->fabric_encap), key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
     if ((v4_route_table_.id != spec->v4_route_table.id) ||
@@ -223,7 +224,7 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     vpc_upd_ctxt_t *upd_ctxt = (vpc_upd_ctxt_t *)ctxt;
 
     subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
-    if (subnet->vpc().id == upd_ctxt->vpc->key().id) {
+    if (subnet->vpc() == upd_ctxt->vpc->key()) {
         if ((subnet->v4_route_table().id == PDS_ROUTE_TABLE_ID_INVALID) ||
             (subnet->v6_route_table().id == PDS_ROUTE_TABLE_ID_INVALID)) {
             // this subnet inherited the vpc's routing table(s)

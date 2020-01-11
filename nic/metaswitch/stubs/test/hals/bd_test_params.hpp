@@ -32,16 +32,16 @@ public:
     subnet_spec.v4_vr_ip = subnet_spec.v4_prefix.v4_addr;
     mac_str_to_addr((char*) "04:06:03:09:00:03", subnet_spec.vr_mac);
     subnet_spec.num_ing_v4_policy = 2;
-    subnet_spec.ing_v4_policy[0].id = 1;
-    subnet_spec.ing_v4_policy[1].id = 2;
+    subnet_spec.ing_v4_policy[0] = pds_ms::msidx2pdsobjkey(1);
+    subnet_spec.ing_v4_policy[1] = pds_ms::msidx2pdsobjkey(2);
     subnet_spec.num_egr_v4_policy = 3;
-    subnet_spec.egr_v4_policy[0].id = 5;
-    subnet_spec.egr_v4_policy[1].id = 6;
-    subnet_spec.egr_v4_policy[2].id = 7;
+    subnet_spec.egr_v4_policy[0] = pds_ms::msidx2pdsobjkey(5);
+    subnet_spec.egr_v4_policy[1] = pds_ms::msidx2pdsobjkey(6);
+    subnet_spec.egr_v4_policy[2] = pds_ms::msidx2pdsobjkey(7);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid  = 100;
     subnet_spec.host_ifindex = 0;
-    subnet_spec.dhcp_policy.id = 10;
+    subnet_spec.dhcp_policy = pds_ms::msidx2pdsobjkey(10);
     subnet_spec.tos = 5;
 
     auto state_ctxt = pds_ms::state_t::thread_context(); 
@@ -92,21 +92,21 @@ public:
 
        // And then change it to simulate Direct Update
        subnet_spec.num_ing_v4_policy = 3;
-       subnet_spec.ing_v4_policy[0].id = 4;
-       subnet_spec.ing_v4_policy[1].id = 2;
-       subnet_spec.ing_v4_policy[2].id = 3;
+       subnet_spec.ing_v4_policy[0] = pds_ms::msidx2pdsobjkey(4);
+       subnet_spec.ing_v4_policy[1] = pds_ms::msidx2pdsobjkey(2);
+       subnet_spec.ing_v4_policy[2] = pds_ms::msidx2pdsobjkey(3);
        subnet_spec.num_egr_v4_policy = 1;
-       subnet_spec.egr_v4_policy[0].id = 9;
+       subnet_spec.egr_v4_policy[0] = pds_ms::msidx2pdsobjkey(9);
    }
    virtual void send_direct_update() {
        pds_ms::subnet_update(&subnet_spec, 0);
    }
    void modify_direct_update(void) {
        subnet_spec.num_ing_v4_policy = 1;
-       subnet_spec.ing_v4_policy[0].id = 10;
+       subnet_spec.ing_v4_policy[0] = pds_ms::msidx2pdsobjkey(10);
        subnet_spec.num_egr_v4_policy = 2;
-       subnet_spec.egr_v4_policy[0].id = 11;
-       subnet_spec.egr_v4_policy[1].id = 13;
+       subnet_spec.egr_v4_policy[0] = pds_ms::msidx2pdsobjkey(11);
+       subnet_spec.egr_v4_policy[1] = pds_ms::msidx2pdsobjkey(13);
    }
 };
 

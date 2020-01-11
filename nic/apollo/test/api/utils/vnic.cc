@@ -111,10 +111,10 @@ vnic_feeder::key_build(pds_vnic_key_t *key) const {
 
 static void
 fill_policy_ids (pds_policy_key_t *pol_arr,
-                 pds_policy_id_t start_key, uint8_t num_policy)
+                 uint32_t start_key, uint8_t num_policy)
 {
     for (int i = 0; i < num_policy; i++) {
-        pol_arr[i].id = start_key++;
+        pol_arr[i] = int2pdsobjkey(start_key++);
     }
 }
 

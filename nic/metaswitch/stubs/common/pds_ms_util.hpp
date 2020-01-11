@@ -167,13 +167,15 @@ public:
 static inline pds_obj_key_t
 msidx2pdsobjkey (uint32_t id) {
     pds_obj_key_t key = { 0 };
-    memcpy(key.id, &id, sizeof(id));
+    std::string id_str = std::to_string(id);
+
+    memcpy(key.id, id_str.data(), id_str.length());
     return key;
 }
 
 static inline uint32_t
 pdsobjkey2msidx (const pds_obj_key_t& key) {
-    return (*(uint32_t *)&key);
+    return (uint32_t)atoi((const char *)key.id);
 }
 
 } // End namespace

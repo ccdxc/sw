@@ -180,12 +180,12 @@ class PolicyObject(base.ConfigObjectBase):
                 specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.PolicyId)
+        grpcmsg.Id.append(str.encode(str(self.PolicyId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.PolicyId
+        spec.Id = str.encode(str(self.PolicyId))
         spec.Direction = utils.GetRpcDirection(self.Direction)
         spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.rules:
@@ -193,7 +193,7 @@ class PolicyObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.PolicyId:
+        if int(spec.Id) != self.PolicyId:
             return False
         if spec.Direction != utils.GetRpcDirection(self.Direction):
             return False
@@ -269,6 +269,11 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.__v6epolicyiter = defaultdict(dict)
         self.__supported = __isObjSupported()
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml:
+            return utils.GetYamlSpecAttr(spec, 'id')
+        return int(spec.Id)
 
     def PdsctlRead(self):
         # pdsctl show not supported for policy

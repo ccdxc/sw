@@ -159,13 +159,13 @@ class SubnetObject(base.ConfigObjectBase):
         spec.V4RouteTableId = self.V4RouteTableId
         spec.V6RouteTableId = self.V6RouteTableId
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(policyid)
+            spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(policyid)
+            spec.IngV6SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(policyid)
+            spec.EgV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(policyid)
+            spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.HostIfIdx:
             spec.HostIfIndex = self.HostIfIdx
@@ -184,13 +184,13 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.V6RouteTableId != self.V6RouteTableId:
             return False
-        if spec.IngV4SecurityPolicyId[0] != self.IngV4SecurityPolicyIds[0]:
+        if int(spec.IngV4SecurityPolicyId[0]) != self.IngV4SecurityPolicyIds[0]:
             return False
-        if spec.IngV6SecurityPolicyId[0] != self.IngV6SecurityPolicyIds[0]:
+        if int(spec.IngV6SecurityPolicyId[0]) != self.IngV6SecurityPolicyIds[0]:
             return False
-        if spec.EgV4SecurityPolicyId[0] !=  self.EgV4SecurityPolicyIds[0]:
+        if int(spec.EgV4SecurityPolicyId[0]) !=  self.EgV4SecurityPolicyIds[0]:
             return False
-        if spec.EgV6SecurityPolicyId[0] != self.EgV6SecurityPolicyIds[0]:
+        if int(spec.EgV6SecurityPolicyId[0]) != self.EgV6SecurityPolicyIds[0]:
             return False
         if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
             return False

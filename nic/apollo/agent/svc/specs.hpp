@@ -1115,7 +1115,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->num_ing_v4_policy = proto_spec.ingv4securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
-        api_spec->ing_v4_policy[i].id = proto_spec.ingv4securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->ing_v4_policy[i],
+                                      proto_spec.ingv4securitypolicyid(i));
     }
     if (proto_spec.ingv6securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
         PDS_TRACE_ERR("No. of IPv6 ingress security policies on vnic can't "
@@ -1124,7 +1125,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->num_ing_v6_policy = proto_spec.ingv6securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
-        api_spec->ing_v6_policy[i].id = proto_spec.ingv6securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->ing_v6_policy[i],
+                                      proto_spec.ingv6securitypolicyid(i));
     }
     if (proto_spec.egv4securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
         PDS_TRACE_ERR("No. of IPv4 egress security policies on vnic can't "
@@ -1133,7 +1135,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->num_egr_v4_policy = proto_spec.egv4securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
-        api_spec->egr_v4_policy[i].id = proto_spec.egv4securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->egr_v4_policy[i],
+                                      proto_spec.egv4securitypolicyid(i));
     }
     if (proto_spec.egv6securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
         PDS_TRACE_ERR("No. of IPv6 egress security policies on vnic can't "
@@ -1142,7 +1145,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
     }
     api_spec->num_egr_v6_policy = proto_spec.egv6securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
-        api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->egr_v6_policy[i],
+                                      proto_spec.egv6securitypolicyid(i));
     }
     api_spec->host_ifindex = proto_spec.hostifindex();
     api_spec->tx_policer.id = proto_spec.txpolicerid();
@@ -1740,7 +1744,7 @@ pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
 }
 
 static inline sdk_ret_t
-pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
+pds_policy_rule_match_proto_to_api_spec (pds_policy_key_t policy,
                                          uint32_t rule_id, uint8_t af,
                                          rule_match_t *match,
                                          const pds::SecurityRule &proto_rule)
@@ -1748,14 +1752,14 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
     if (unlikely(proto_rule.has_match() == false)) {
         PDS_TRACE_ERR("Security policy {}, rule {} has no match condition, "
                       "IP protocol is a mandatory match condition",
-                      policy_id, rule_id);
+                      policy.tostr(), rule_id);
         return SDK_RET_INVALID_ARG;
     }
 
     if (unlikely(proto_rule.match().has_l3match() == false)) {
         PDS_TRACE_ERR("Security policy {}, rule {} has no L3 match condition, "
                       "IP protocol is a mandatory match condition",
-                      policy_id, rule_id);
+                      policy.tostr(), rule_id);
         return SDK_RET_INVALID_ARG;
     }
 
@@ -1767,7 +1771,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
         (match->l3_match.ip_proto != IP_PROTO_ICMP) &&
         (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
         PDS_TRACE_ERR("Security policy {}, rule {} with unsupported IP "
-                      "protocol {}", policy_id, rule_id,
+                      "protocol {}", policy.tostr(), rule_id,
                       match->l3_match.ip_proto);
         return SDK_RET_INVALID_ARG;
     }
@@ -1812,7 +1816,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
             if ((match->l3_match.ip_proto != IP_PROTO_UDP) &&
                 (match->l3_match.ip_proto != IP_PROTO_TCP)) {
                 PDS_TRACE_ERR("Invalid port config in security policy {}, "
-                              "rule {}", policy_id, rule_id);
+                              "rule {}", policy.tostr(), rule_id);
                 return SDK_RET_INVALID_ARG;
             }
             if (proto_l4_match.ports().has_srcportrange()) {
@@ -1823,7 +1827,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                 if (unlikely(match->l4_match.sport_range.port_lo >
                              match->l4_match.sport_range.port_hi)) {
                     PDS_TRACE_ERR("Invalid src port range in security "
-                                  "policy {}, rule {}", policy_id, rule_id);
+                                  "policy {}, rule {}",
+                                  policy.tostr(), rule_id);
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -1838,7 +1843,8 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
                 if (unlikely(match->l4_match.dport_range.port_lo >
                              match->l4_match.dport_range.port_hi)) {
                     PDS_TRACE_ERR("Invalid dst port range in security "
-                                  "policy {}, rule {}", policy_id, rule_id);
+                                  "policy {}, rule {}",
+                                  policy.tostr(), rule_id);
                     return SDK_RET_INVALID_ARG;
                 }
             } else {
@@ -1849,7 +1855,7 @@ pds_policy_rule_match_proto_to_api_spec (pds_policy_id_t policy_id,
             if ((match->l3_match.ip_proto != IP_PROTO_ICMP) &&
                 (match->l3_match.ip_proto != IP_PROTO_ICMPV6)) {
                 PDS_TRACE_ERR("Invalid ICMP config in security policy {}, "
-                              "rule {}", policy_id, rule_id);
+                              "rule {}", policy.tostr(), rule_id);
                 return SDK_RET_INVALID_ARG;
             }
             const types::ICMPMatch& typecode = proto_l4_match.typecode();
@@ -1880,7 +1886,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
     uint32_t num_rules = 0;
     sdk_ret_t ret;
 
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->policy_type = POLICY_TYPE_FIREWALL;
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.addrfamily());
     if (unlikely(ret != SDK_RET_OK)) {
@@ -1905,7 +1911,7 @@ pds_policy_proto_to_api_spec (pds_policy_spec_t *api_spec,
         api_spec->rules[i].stateful = proto_rule.stateful();
         api_spec->rules[i].action_data.fw_action.action =
                                       pds_proto_action_to_rule_action(proto_rule.action());
-        ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key.id, i + 1,
+        ret = pds_policy_rule_match_proto_to_api_spec(api_spec->key, i + 1,
                                                       api_spec->af,
                                                       &api_spec->rules[i].match,
                                                       proto_rule);
@@ -3309,7 +3315,8 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     }
     api_spec->num_ing_v4_policy = proto_spec.ingv4securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
-        api_spec->ing_v4_policy[i].id = proto_spec.ingv4securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->ing_v4_policy[i],
+                                      proto_spec.ingv4securitypolicyid(i));
     }
     if (proto_spec.ingv6securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
         PDS_TRACE_ERR("No. of IPv6 ingress security policies on subnet can't "
@@ -3318,7 +3325,8 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     }
     api_spec->num_ing_v6_policy = proto_spec.ingv6securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
-        api_spec->ing_v6_policy[i].id = proto_spec.ingv6securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->ing_v6_policy[i],
+                                      proto_spec.ingv6securitypolicyid(i));
     }
     if (proto_spec.egv4securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
         PDS_TRACE_ERR("No. of IPv4 egress security policies on subnet can't "
@@ -3327,7 +3335,8 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     }
     api_spec->num_egr_v4_policy = proto_spec.egv4securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
-        api_spec->egr_v4_policy[i].id = proto_spec.egv4securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->egr_v4_policy[i],
+                                      proto_spec.egv4securitypolicyid(i));
     }
     if (proto_spec.egv6securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
         PDS_TRACE_ERR("No. of IPv6 egress security policies on subnet can't "
@@ -3336,11 +3345,13 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     }
     api_spec->num_egr_v6_policy = proto_spec.egv6securitypolicyid_size();
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
-        api_spec->egr_v6_policy[i].id = proto_spec.egv6securitypolicyid(i);
+        pds_obj_key_proto_to_api_spec(&api_spec->egr_v6_policy[i],
+                                      proto_spec.egv6securitypolicyid(i));
     }
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     api_spec->host_ifindex = proto_spec.hostifindex();
-    api_spec->dhcp_policy.id = proto_spec.dhcppolicyid();
+    pds_obj_key_proto_to_api_spec(&api_spec->dhcp_policy,
+                                  proto_spec.dhcppolicyid());
     api_spec->tos = proto_spec.tos();
     return SDK_RET_OK;
 }

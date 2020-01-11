@@ -122,7 +122,7 @@ security_policy_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                    PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY;
     policy.num_rules = spec->num_rules;
     policy.rules = spec->rules;
-    PDS_TRACE_DEBUG("Processing security policy %u", spec->key.id);
+    PDS_TRACE_DEBUG("Processing security policy %s", spec->key.tostr());
     ret = rfc_policy_create(&policy, security_policy_root_addr_,
               security_policy_impl_db()->security_policy_table_size(spec->af,
                                              spec->direction));

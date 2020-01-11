@@ -41,14 +41,13 @@ policy_feeder::init(pds_policy_key_t key,
 
 void
 policy_feeder::iter_next(int width) {
-    spec.key.id += width;
+    this->spec.key = int2pdsobjkey(pdsobjkey2int(this->spec.key) + width);
     cur_iter_pos++;
 }
 
 void
 policy_feeder::key_build(pds_policy_key_t *key) const {
-    memset(key, 0, sizeof(pds_policy_key_t));
-    key->id = this->spec.key.id;
+    memcpy(key, &this->spec.key, sizeof(pds_policy_key_t));
 }
 
 void
@@ -159,48 +158,48 @@ policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
 static policy_feeder k_pol_feeder;
 
 void sample_policy_setup(pds_batch_ctxt_t bctxt) {
-    pds_policy_key_t pol_key = {.id = 1};
+    pds_policy_key_t pol_key = int2pdsobjkey(1);
 
     // setup and teardown parameters should be in sync
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV4, "10.0.0.1/16", 5);
     many_create(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV6, "2001::1/64", 5);
     many_create(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV4, "20.0.0.1/16", 5);
     many_create(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV6, "3001::1/64", 5);
     many_create(bctxt, k_pol_feeder);
 }
 
 void sample_policy_teardown(pds_batch_ctxt_t bctxt) {
-    pds_policy_key_t pol_key = {.id = 1};
+    pds_policy_key_t pol_key = int2pdsobjkey(1);
 
     // this feeder base values doesn't matter in case of deletes
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV4, "10.0.0.1/16", 5);
     many_delete(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV6, "2001::1/64", 5);
     many_delete(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV4, "20.0.0.1/16", 5);
     many_delete(bctxt, k_pol_feeder);
 
-    pol_key.id += 5;
+    pol_key = int2pdsobjkey(pdsobjkey2int(pol_key) + 5);
     k_pol_feeder.init(pol_key, 512, RULE_DIR_EGRESS, POLICY_TYPE_FIREWALL,
                       IP_AF_IPV6, "3001::1/64", 5);
     many_delete(bctxt, k_pol_feeder);

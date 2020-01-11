@@ -32,13 +32,13 @@ subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
                                             // for IPv4 rt table
     // TODO: fix for multiple policies
     spec.num_ing_v4_policy = 1;
-    spec.ing_v4_policy[0].id = 1;
+    spec.ing_v4_policy[0] = int2pdsobjkey(1);
     spec.num_ing_v6_policy = 1;
-    spec.ing_v6_policy[0].id = 6;
+    spec.ing_v6_policy[0] = int2pdsobjkey(6);
     spec.num_egr_v4_policy = 1;
-    spec.egr_v4_policy[0].id = 11;
+    spec.egr_v4_policy[0] = int2pdsobjkey(11);
     spec.num_egr_v6_policy = 1;
-    spec.egr_v6_policy[0].id = 16;
+    spec.egr_v6_policy[0] = int2pdsobjkey(16);
     spec.fabric_encap.val.vnid = key.id + 512;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
 
@@ -92,19 +92,19 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
         return false;
     }
 
-    if (spec->ing_v4_policy[0].id != this->spec.ing_v4_policy[0].id) {
+    if (spec->ing_v4_policy[0] != this->spec.ing_v4_policy[0]) {
         return false;
     }
 
-    if (spec->ing_v6_policy[0].id != this->spec.ing_v6_policy[0].id) {
+    if (spec->ing_v6_policy[0] != this->spec.ing_v6_policy[0]) {
         return false;
     }
 
-    if (spec->egr_v4_policy[0].id != this->spec.egr_v4_policy[0].id) {
+    if (spec->egr_v4_policy[0] != this->spec.egr_v4_policy[0]) {
         return false;
     }
 
-    if (spec->egr_v6_policy[0].id != this->spec.egr_v6_policy[0].id) {
+    if (spec->egr_v6_policy[0] != this->spec.egr_v6_policy[0]) {
         return false;
     }
 

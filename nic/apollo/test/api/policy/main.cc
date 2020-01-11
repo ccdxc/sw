@@ -59,7 +59,7 @@ protected:
 TEST_F(policy, policy_workflow_b1) {
     if (!apulu()) return;
 
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     // v4 policy
@@ -78,7 +78,7 @@ TEST_F(policy, policy_workflow_b1) {
 TEST_F(policy, policy_workflow_b2) {
     if (!apulu()) return;
 
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A;
 
     // v4 policy
@@ -99,7 +99,7 @@ TEST_F(policy, policy_workflow_b2) {
 /// \brief Policy WF_1
 /// \ref WF_1
 TEST_F(policy, policy_workflow_1) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -118,7 +118,7 @@ TEST_F(policy, policy_workflow_1) {
 /// \brief Policy WF_2
 /// \ref WF_2
 TEST_F(policy, policy_workflow_2) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     // setup
@@ -139,7 +139,9 @@ TEST_F(policy, policy_workflow_2) {
 /// \brief Policy WF_3
 /// \ref WF_3
 TEST_F(policy, policy_workflow_3) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
+    pds_policy_key_t key1 = int2pdsobjkey(10);
+    pds_policy_key_t key2 = int2pdsobjkey(40);
+    pds_policy_key_t key3 = int2pdsobjkey(70);
     policy_feeder feeder1, feeder2, feeder3;
 
     // setup
@@ -167,7 +169,7 @@ TEST_F(policy, policy_workflow_3) {
 /// \brief Policy WF_4
 /// \ref WF_4
 TEST_F(policy, policy_workflow_4) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -184,7 +186,9 @@ TEST_F(policy, policy_workflow_4) {
 /// \brief Policy WF_5
 /// \ref WF_5
 TEST_F(policy, policy_workflow_5) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70};
+    pds_policy_key_t key1 = int2pdsobjkey(10);
+    pds_policy_key_t key2 = int2pdsobjkey(40);
+    pds_policy_key_t key3 = int2pdsobjkey(70);
     policy_feeder feeder1, feeder2, feeder3;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -209,7 +213,7 @@ TEST_F(policy, policy_workflow_5) {
 /// \brief Policy WF_6
 /// \ref WF_6
 TEST_F(policy, policy_workflow_6) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -240,7 +244,7 @@ TEST_F(policy, policy_workflow_6) {
 /// \brief Policy WF_7
 /// \ref WF_7
 TEST_F(policy, policy_workflow_7) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -273,7 +277,7 @@ TEST_F(policy, policy_workflow_7) {
 /// NOTE: this test case is incorrect, we can't update more than 1 policy table
 ///       in batch because of N+1 update scheme
 TEST_F(policy, DISABLED_policy_workflow_8) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -306,7 +310,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
 /// NOTE: this test case is incorrect, we can't update more than 1 policy table
 ///       in batch because of N+1 update scheme
 TEST_F(policy, DISABLED_policy_workflow_9) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -331,8 +335,10 @@ TEST_F(policy, DISABLED_policy_workflow_9) {
 /// \brief Policy WF_10
 /// \ref WF_10
 TEST_F(policy, DISABLED_policy_workflow_10) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
-                  key4 = {.id = 100};
+    pds_policy_key_t key1 = int2pdsobjkey(10);
+    pds_policy_key_t key2 = int2pdsobjkey(40);
+    pds_policy_key_t key3 = int2pdsobjkey(70);
+    pds_policy_key_t key4 = int2pdsobjkey(100);
     policy_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
     uint32_t num_policy = 20;
 
@@ -384,7 +390,7 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
 /// \brief Policy WF_N_1
 /// \ref WF_N_1
 TEST_F(policy, policy_workflow_neg_1) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -408,7 +414,7 @@ TEST_F(policy, policy_workflow_neg_1) {
 // for g_max_policy assignmnet at the top. If I use PDS_MAX_SUBNET, things
 // are crashing, so left it at 1024 for now.
 TEST_F(policy, policy_workflow_neg_2) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -427,7 +433,7 @@ TEST_F(policy, policy_workflow_neg_2) {
 /// \brief Policy WF_N_3
 /// \ref WF_N_3
 TEST_F(policy, policy_workflow_neg_3) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder;
 
     feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -446,7 +452,7 @@ TEST_F(policy, policy_workflow_neg_3) {
 /// \brief Policy WF_N_4
 /// \ref WF_N_4
 TEST_F(policy, policy_workflow_neg_4) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
+    pds_policy_key_t key1 = int2pdsobjkey(10), key2 = int2pdsobjkey(40);
     policy_feeder feeder1, feeder2;
     uint32_t num_policy = 20;
 
@@ -470,7 +476,7 @@ TEST_F(policy, policy_workflow_neg_4) {
 /// \brief Policy WF_N_5
 /// \ref WF_N_5
 TEST_F(policy, DISABLED_policy_workflow_neg_5) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -495,7 +501,7 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
 /// \brief Policy WF_N_6
 /// \ref WF_N_6
 TEST_F(policy, policy_workflow_neg_6) {
-    pds_policy_key_t key = {.id = 1};
+    pds_policy_key_t key = int2pdsobjkey(1);
     policy_feeder feeder1, feeder1A;
 
     feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -520,7 +526,7 @@ TEST_F(policy, policy_workflow_neg_6) {
 /// \brief Policy WF_N_7
 /// \ref WF_N_7
 TEST_F(policy, policy_workflow_neg_7) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
+    pds_policy_key_t key1 = int2pdsobjkey(10), key2 = int2pdsobjkey(40);
     policy_feeder feeder1, feeder1A, feeder2;
 
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
@@ -551,7 +557,7 @@ TEST_F(policy, policy_workflow_neg_7) {
 /// \brief Policy WF_N_8
 /// \ref WF_N_8
 TEST_F(policy, policy_workflow_neg_8) {
-    pds_policy_key_t key1 = {.id = 10}, key2 = {.id = 40};
+    pds_policy_key_t key1 = int2pdsobjkey(10), key2 = int2pdsobjkey(40);
     policy_feeder feeder1, feeder2;
     uint32_t num_policy = 20;
 
@@ -577,7 +583,8 @@ TEST_F(policy, policy_workflow_neg_8) {
 TEST_F(policy, policy_workflow_neg_9) {
     policy_feeder feeder1, feeder2;
     uint32_t num_policy = 341;
-    pds_policy_key_t key1 = {.id = 1}, key2 = {.id = 1 + num_policy};
+    pds_policy_key_t key1 = int2pdsobjkey(1);
+    pds_policy_key_t key2 = int2pdsobjkey(1 + num_policy);
 
     // setup
     feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,

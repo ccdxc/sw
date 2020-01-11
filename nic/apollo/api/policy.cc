@@ -83,7 +83,7 @@ policy::clone(api_ctxt_t *api_ctxt) {
         new (cloned_policy) policy();
         cloned_policy->impl_ = impl_->clone();
         if (unlikely(cloned_policy->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone policy %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone policy %s impl", key2str().c_str());
             goto error;
         }
         cloned_policy->init_config(api_ctxt);
@@ -135,8 +135,8 @@ policy::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 policy::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming security policy %u, af %u, dir %u",
-                    key_.id, af_, dir_);
+    PDS_TRACE_DEBUG("Programming security policy %s, af %u, dir %u",
+                    key2str().c_str(), af_, dir_);
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -146,8 +146,8 @@ policy::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
     if ((af_ != spec->af) || (dir_ != spec->direction)) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
-                      "or \"direction\" from %u to %u on policy table %u",
-                      dir_, spec->direction, key_.id);
+                      "or \"direction\" from %u to %u on policy table %s",
+                      dir_, spec->direction, key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
     // in all other cases we have to recompute the policy table and program in
@@ -164,8 +164,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     if (upd_ctxt->policy_obj->dir() == RULE_DIR_INGRESS) {
         if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
             for (uint8_t i = 0; i < subnet->num_ing_v4_policy(); i++) {
-                if (subnet->ing_v4_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (subnet->ing_v4_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_SUBNET,
                                         upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
@@ -175,8 +175,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             }
         } else {
             for (uint8_t i = 0; i < subnet->num_ing_v6_policy(); i++) {
-                if (subnet->ing_v6_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (subnet->ing_v6_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_SUBNET,
                                         upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
@@ -188,8 +188,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     } else {
         if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
             for (uint8_t i = 0; i < subnet->num_egr_v4_policy(); i++) {
-                if (subnet->egr_v4_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (subnet->egr_v4_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_SUBNET,
                                         upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
@@ -199,8 +199,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
             }
         } else {
             for (uint8_t i = 0; i < subnet->num_egr_v6_policy(); i++) {
-                if (subnet->egr_v6_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (subnet->egr_v6_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_SUBNET,
                                         upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
@@ -225,8 +225,8 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     if (upd_ctxt->policy_obj->dir() == RULE_DIR_INGRESS) {
         if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
             for (uint8_t i = 0; i < vnic->num_ing_v4_policy(); i++) {
-                if (vnic->ing_v4_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (vnic->ing_v4_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
@@ -235,8 +235,8 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             }
         } else {
             for (uint8_t i = 0; i < vnic->num_ing_v6_policy(); i++) {
-                if (vnic->ing_v6_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (vnic->ing_v6_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
@@ -247,8 +247,8 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     } else {
         if (upd_ctxt->policy_obj->af() == IP_AF_IPV4) {
             for (uint8_t i = 0; i < vnic->num_egr_v4_policy(); i++) {
-                if (vnic->egr_v4_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (vnic->egr_v4_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);
@@ -257,8 +257,8 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
             }
         } else {
             for (uint8_t i = 0; i < vnic->num_egr_v6_policy(); i++) {
-                if (vnic->egr_v6_policy(i).id ==
-                        upd_ctxt->policy_obj->key().id) {
+                if (vnic->egr_v6_policy(i) ==
+                        upd_ctxt->policy_obj->key()) {
                     api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                                         (api_base *)api_obj,
                                         upd_ctxt->upd_bmap);

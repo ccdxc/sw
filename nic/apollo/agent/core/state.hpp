@@ -71,7 +71,7 @@ typedef unordered_map<uint32_t, pds_vnic_spec_t *> vnic_db_t;
 typedef unordered_map<uint32_t, pds_meter_spec_t *> meter_db_t;
 typedef unordered_map<uint32_t, pds_tag_spec_t *> tag_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
-typedef unordered_map<uint32_t, pds_policy_spec_t*> policy_db_t;
+typedef unordered_map<pds_vpc_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 typedef unordered_map<uint32_t, pds_nexthop_spec_t *> nh_db_t;
 typedef unordered_map<uint32_t, pds_nexthop_group_spec_t *> nh_group_db_t;

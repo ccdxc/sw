@@ -48,7 +48,7 @@ message SecurityRule {
 // security policy configuration
 message SecurityPolicySpec {
   // unique identifier of security policy
-  uint32                Id              = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes                 Id              = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 or IPv6 policy
   types.IPAF            AddrFamily      = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // direction in which the policy should be enforced
@@ -94,7 +94,7 @@ message SecurityPolicyResponse {
 
 // security policy get request
 message SecurityPolicyGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // security policy get response
@@ -107,7 +107,7 @@ message SecurityPolicyGetResponse {
 message SecurityPolicyDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // security policy delete response
