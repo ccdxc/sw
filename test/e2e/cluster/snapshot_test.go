@@ -8,6 +8,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/venice/ctrler/tsm/statemgr"
+
 	"github.com/pensando/sw/api/generated/security"
 
 	"github.com/pensando/sw/api/generated/network"
@@ -26,6 +29,7 @@ var _ = Describe("Config SnapShot and restore", func() {
 	var grpcClient apiclient.Services
 	var restClient apiclient.Services
 	var lctx context.Context
+	var mirrorRestIf monitoring.MonitoringV1MirrorSessionInterface
 
 	BeforeEach(func() {
 		var err error
@@ -35,7 +39,18 @@ var _ = Describe("Config SnapShot and restore", func() {
 
 		apigwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 		restClient, err = apiclient.NewRestAPIClient(apigwAddr)
+		mirrorRestIf = restClient.MonitoringV1().MirrorSession()
 		Expect(err).To(BeNil())
+
+		ctx := ts.tu.MustGetLoggedInContext(context.Background())
+		ms, err := mirrorRestIf.List(ctx, &api.ListWatchOptions{})
+		if err == nil {
+			for _, m := range ms {
+				m := m
+				mirrorRestIf.Delete(ctx, &m.ObjectMeta)
+			}
+		}
+
 	})
 
 	AfterEach(func() {
@@ -68,6 +83,176 @@ var _ = Describe("Config SnapShot and restore", func() {
 
 	Context("Snapshot and Restore", func() {
 		Context("SnapShot", func() {
+			It("Test mirror snapshots/restore operations", func() {
+				// test restoring 8 mirror sessions to Venice running with 8 mirror sessions
+				ctx := ts.tu.MustGetLoggedInContext(context.Background())
+				ms := monitoring.MirrorSession{
+
+					ObjectMeta: api.ObjectMeta{
+						Name:   "TestMirrorSession1",
+						Tenant: "default",
+					},
+					TypeMeta: api.TypeMeta{
+						Kind:       "MirrorSession",
+						APIVersion: "v1",
+					},
+					Spec: monitoring.MirrorSessionSpec{
+						PacketSize:    128,
+						PacketFilters: []string{monitoring.MirrorSessionSpec_ALL_PKTS.String()},
+						Collectors: []monitoring.MirrorCollector{
+							{
+								Type: "ERSPAN",
+								ExportCfg: &monitoring.MirrorExportConfig{
+									Destination: "100.1.1.1",
+								},
+							},
+						},
+						MatchRules: []monitoring.MatchRule{
+							{
+								Src: &monitoring.MatchSelector{
+									IPAddresses: []string{"10.1.1.10"},
+								},
+								AppProtoSel: &monitoring.AppProtoSelector{
+									ProtoPorts: []string{"TCP/5555"},
+								},
+							},
+							{
+								Src: &monitoring.MatchSelector{
+									IPAddresses: []string{"10.2.2.20"},
+								},
+								AppProtoSel: &monitoring.AppProtoSelector{
+									ProtoPorts: []string{"UDP/5555"},
+								},
+							},
+						},
+					},
+				}
+
+				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
+					ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+					ms.Spec.Collectors = []monitoring.MirrorCollector{
+						{
+							Type: "ERSPAN",
+							ExportCfg: &monitoring.MirrorExportConfig{
+								Destination: fmt.Sprintf("192.168.30.1"),
+							},
+						},
+					}
+					By(fmt.Sprintf("Creating MirrorSession %v", ms.Name))
+					_, err := mirrorRestIf.Create(ctx, &ms)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+
+				cfg := cluster.ConfigurationSnapshot{
+					ObjectMeta: api.ObjectMeta{
+						Name: "MirrorSnapshot",
+					},
+					Spec: cluster.ConfigurationSnapshotSpec{
+						Destination: cluster.SnapshotDestination{
+							Type: cluster.SnapshotDestinationType_ObjectStore.String(),
+						},
+					},
+				}
+
+				By(fmt.Sprintf("create snapshot %v", cfg.Name))
+				if _, err := restClient.ClusterV1().ConfigurationSnapshot().Get(lctx, &api.ObjectMeta{}); err == nil {
+					restClient.ClusterV1().ConfigurationSnapshot().Delete(lctx, &api.ObjectMeta{})
+				}
+				_, err := restClient.ClusterV1().ConfigurationSnapshot().Create(lctx, &cfg)
+				Expect(err).To(BeNil())
+
+				req := cluster.ConfigurationSnapshotRequest{}
+				var resp *cluster.ConfigurationSnapshot
+
+				// Sometimes it takes time for the Object store to be ready, hence the eventually
+				Eventually(func() bool {
+					resp, err = restClient.ClusterV1().ConfigurationSnapshot().Save(lctx, &req)
+					if err != nil {
+						return false
+					}
+					return true
+				}, 120, 10).Should(BeTrue(), "Snapshot did not succeed in the given time")
+				Expect(err).To(BeNil())
+				Expect(resp.Status.LastSnapshot).ToNot(BeNil())
+				By(fmt.Sprintf("+++status %+v", resp.Status.LastSnapshot))
+
+				name := resp.Status.LastSnapshot.URI[strings.LastIndex(resp.Status.LastSnapshot.URI, "/")+1:]
+				wrbuf, len, err := downloadSnapshot(lctx, name)
+				Expect(err).To(BeNil())
+
+				metadata := map[string]string{
+					"Description": "First Save",
+				}
+				By(fmt.Sprintf("Read file [%s] [%d]bytes", name, len))
+
+				len, err = uploadFile(lctx, "snapshots", "mirror-snapshot", metadata, wrbuf.Bytes())
+				By(fmt.Sprintf("Wrote [mirror-snapshot] [%d] (%s)", len, err))
+
+				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
+					ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+					By(fmt.Sprintf("delete MirrorSession %v", ms.Name))
+					_, err := mirrorRestIf.Delete(ctx, &ms.ObjectMeta)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+
+				for i := 0; i < statemgr.MaxMirrorSessions; i++ {
+					ms.Name = fmt.Sprintf("new-mirror-%d", i+1)
+					ms.Spec.Collectors = []monitoring.MirrorCollector{
+						{
+							Type: "ERSPAN",
+							ExportCfg: &monitoring.MirrorExportConfig{
+								Destination: fmt.Sprintf("192.168.30.1"),
+							},
+						},
+					}
+
+					By(fmt.Sprintf("Creating new MirrorSession %v", ms.Name))
+					_, err := mirrorRestIf.Create(ctx, &ms)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+
+				// restore
+				resReq := cluster.SnapshotRestore{
+					ObjectMeta: api.ObjectMeta{
+						Name: "MirrorSnapshot",
+					},
+					Spec: cluster.SnapshotRestoreSpec{
+						SnapshotPath: "mirror-snapshot",
+					},
+				}
+
+				restClient.ClusterV1().SnapshotRestore().Delete(ctx, &resReq.ObjectMeta)
+				resResp, err := restClient.ClusterV1().SnapshotRestore().Restore(ctx, &resReq)
+				Expect(err).To(BeNil())
+
+				By(fmt.Sprintf("restore %v", resReq.Name))
+				Eventually(func() bool {
+					lctx = ts.tu.MustGetLoggedInContext(context.Background())
+					r, err := restClient.ClusterV1().SnapshotRestore().Get(lctx, &resResp.ObjectMeta)
+					Expect(err).To(BeNil())
+					if r.Status.Status == "completed" {
+						return true
+					}
+					return false
+				}, 60, 1).Should(BeTrue(), "Restore did not reach success in time")
+
+				Eventually(func() error {
+					for i := 0; i < statemgr.MaxMirrorSessions; i++ {
+						ms.Name = fmt.Sprintf("max-mirror-%d", i+1)
+						By(fmt.Sprintf("GET MirrorSession %v", ms.Name))
+						mc, err := mirrorRestIf.Get(ctx, &ms.ObjectMeta)
+						if err != nil {
+							return err
+						}
+						if mc.Status.ScheduleState != monitoring.MirrorSessionState_ACTIVE.String() {
+							return fmt.Errorf("%s state: %v", ms.Name, mc.Status.ScheduleState)
+						}
+					}
+					return nil
+				}, 180, 1).Should(BeNil(), "mirror session restore failed")
+
+			})
+
 			It("Test Multiple snapshots and restore operations", func() {
 				By("Save a snapshot")
 				{

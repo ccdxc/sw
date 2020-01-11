@@ -58,14 +58,14 @@ func TestListFwlogPolicy(t *testing.T) {
 	Assert(t, client != nil, "invalid telemetry client ")
 	defer client.Stop()
 
-	handler.EXPECT().DeleteFwlogPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
-	handler.EXPECT().ListFwlogPolicy(gomock.Any()).Times(1).Return([]*tpmprotos.FwlogPolicy{
+	handler.EXPECT().DeleteFwlogPolicy(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+	handler.EXPECT().ListFwlogPolicy(gomock.Any()).AnyTimes().Return([]*tpmprotos.FwlogPolicy{
 		{
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "exp-3", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
 		},
 	}, nil)
-	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).Times(1).Return(nil, nil)
+	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).AnyTimes().Return(nil, nil)
 
 	ct := time.Now()
 	AssertEventually(t, func() (bool, interface{}) {
@@ -82,7 +82,7 @@ func TestListFwlogPolicy(t *testing.T) {
 			}
 
 			if tt.Sub(ct) > 0 {
-				time.Sleep(time.Second * 5) // delay a bit
+				time.Sleep(time.Second * 10) // delay a bit
 				return true, nil
 			}
 		}
@@ -246,14 +246,14 @@ func TestListFlowExportPolicy(t *testing.T) {
 	Assert(t, client != nil, "invalid telemetry client ")
 	defer client.Stop()
 
-	handler.EXPECT().DeleteFlowExportPolicy(gomock.Any(), gomock.Any()).Times(1).Return(nil)
-	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).Times(1).Return([]*tpmprotos.FlowExportPolicy{
+	handler.EXPECT().DeleteFlowExportPolicy(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+	handler.EXPECT().ListFlowExportPolicy(gomock.Any()).AnyTimes().Return([]*tpmprotos.FlowExportPolicy{
 		{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "exp-3", Tenant: globals.DefaultTenant, Namespace: globals.DefaultNamespace},
 		},
 	}, nil)
-	handler.EXPECT().ListFwlogPolicy(gomock.Any()).Times(1).Return(nil, nil)
+	handler.EXPECT().ListFwlogPolicy(gomock.Any()).AnyTimes().Return(nil, nil)
 
 	ct := time.Now()
 	AssertEventually(t, func() (bool, interface{}) {
@@ -270,7 +270,7 @@ func TestListFlowExportPolicy(t *testing.T) {
 			}
 
 			if tt.Sub(ct) > 0 {
-				time.Sleep(time.Second * 5) // delay a bit
+				time.Sleep(time.Second * 10) // delay a bit
 				return true, nil
 			}
 		}

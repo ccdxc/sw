@@ -74,12 +74,9 @@ func (wr *APISrvWriter) WriteMirrorSession(ms *monitoring.MirrorSession) error {
 	}
 	log.Infof("Updating MirrorSession %v Status %v Version %v", ms.Name, ms.Status.ScheduleState, ms.ResourceVersion)
 
-	// Don't clear the revision - it can endup overwriting new(updated) object, or even a newer object if delete-create
-	// is done
-	// ms.ObjectMeta.ResourceVersion = ""
-
+	// update status
 	for i := 0; i < 5; i++ {
-		_, err = apicl.MonitoringV1().MirrorSession().Update(context.Background(), ms)
+		_, err = apicl.MonitoringV1().MirrorSession().UpdateStatus(context.Background(), ms)
 		if err == nil {
 			break
 		}

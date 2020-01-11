@@ -105,7 +105,6 @@ func (sm *Statemgr) runMirrorSessionWatcher() {
 			}
 
 			log.Infof("Watcher: Got Mirror session  watch event(%s): %v - ver %v", evt.Type, ms.Name, ms.ResourceVersion)
-
 			sm.handleMirrorSessionEvent(evt.Type, ms)
 
 		case evt, ok := <-sm.mirrorTimerWatcher:

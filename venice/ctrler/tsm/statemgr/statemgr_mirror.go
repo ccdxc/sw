@@ -250,6 +250,21 @@ func (sm *Statemgr) DeleteMirrorSession(ms *monitoring.MirrorSession) {
 		return
 	}
 	sm.deleteMirrorSession(mss)
+
+	// bring-up any of the mirror session in failed state
+	ml, err := sm.ListMirrorSessions()
+	if err == nil {
+		for _, m := range ml {
+			if m.Status.ScheduleState == monitoring.MirrorSessionState_ERR_NO_MIRROR_SESSION.String() {
+				log.Infof("retry session %v in state:%v ", m.Name, m.Status.ScheduleState)
+				m.Mutex.Lock()
+				m.State = monitoring.MirrorSessionState_SCHEDULED
+				m.Mutex.Unlock()
+				sm.scheduleMirrorSession(m)
+				return
+			}
+		}
+	}
 }
 
 func (sm *Statemgr) deleteMirrorSession(mss *MirrorSessionState) {
@@ -291,7 +306,9 @@ func (sm *Statemgr) scheduleMirrorSession(mss *MirrorSessionState) {
 	sm.memDB.UpdateObject(mss)
 	log.Infof("scheduleMirrorSession(): Mirror Session %v - %v", mss.Name, mss.Status.ScheduleState)
 	mss.schTimer = nil
-	sm.writer.WriteMirrorSession(mss.MirrorSession)
+	if err := sm.writer.WriteMirrorSession(mss.MirrorSession); err != nil {
+		log.Errorf("failed to update %v status, %v", mss.Name, err)
+	}
 }
 
 func (sm *Statemgr) stopMirrorSession(mss *MirrorSessionState) {
