@@ -4,7 +4,7 @@ feature:
     package     : test.networking
     module      : networking
     runorder    : 9090
-    enable      : True
+    enable      : False
     ignore      : True
 
 modules:
