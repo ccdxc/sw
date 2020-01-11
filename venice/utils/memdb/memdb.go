@@ -371,7 +371,7 @@ func (md *Memdb) UpdateObjectWithReferences(key string, obj Object, refs map[str
 	ostate.obj = obj
 
 	if md.dbAddResolver.resolvedCheck(key, obj) {
-		log.Infof("Update Object key %v resolved", key)
+		//log.Infof("Update Object key %v resolved", key)
 		event := UpdateEvent
 		if ostate.isAddUnResolved() {
 			//It was not resolved before, hence set it to create now
@@ -383,7 +383,7 @@ func (md *Memdb) UpdateObjectWithReferences(key string, obj Object, refs map[str
 		od.watchEvent(obj, event)
 		md.dbAddResolver.trigger(key, obj)
 	} else {
-		log.Infof("Update Object key %v unresolved", key)
+		//log.Infof("Update Object key %v unresolved", key)
 		ostate.updateUnResolved()
 		ostate.Unlock()
 	}

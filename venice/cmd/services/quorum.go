@@ -17,8 +17,13 @@ import (
 )
 
 var (
-	jt                     = NewDefragJobTicker()
-	quorumClientNumRetries = 3
+	jt = NewDefragJobTicker()
+	// If etcd is reachable but there's no quorum or is in the middle of an election,
+	// it will return an error immediately instead of timing out.
+	// We need to sleep between retries to give it time to finish leader election,
+	// or get over the condition that caused the transient error.
+	quorumClientNumRetries    = 3
+	quorumClientRetryInterval = 3 * time.Second
 )
 
 //update Ticker with new duration
@@ -128,15 +133,16 @@ func getQuorumStatus(q quorum.Interface) *cmd.QuorumStatus {
 	}
 
 	var members []quorum.Member
-	var err error
 	var i int
 
 	for i = 0; i < quorumClientNumRetries; i++ {
-		members, err = q.List()
+		m, err := q.List()
 		if err == nil {
+			members = m
 			break
 		}
 		log.Errorf("Error getting quorum members list: %v", err)
+		time.Sleep(quorumClientRetryInterval)
 	}
 	if i == quorumClientNumRetries {
 		log.Errorf("Error getting quorum members list, retries exhausted")
@@ -162,12 +168,14 @@ func getQuorumStatus(q quorum.Interface) *cmd.QuorumStatus {
 		}
 
 		for i = 0; i < quorumClientNumRetries; i++ {
-			if statusResp, err := q.GetStatus(&m); err == nil {
+			statusResp, err := q.GetStatus(&m)
+			if err == nil {
 				status := statusResp.(*etcd.StatusResponse).Header
 				qms.Term = fmt.Sprintf("%d", status.RaftTerm)
 				break
 			}
 			log.Errorf("Error getting status for quorum member %+v: %v", m, err)
+			time.Sleep(quorumClientRetryInterval)
 		}
 		if i == quorumClientNumRetries {
 			log.Errorf("Error getting status for quorum member %+v, retries exhausted", m)
@@ -175,7 +183,8 @@ func getQuorumStatus(q quorum.Interface) *cmd.QuorumStatus {
 		}
 
 		for i = 0; i < quorumClientNumRetries; i++ {
-			if healthy, err := q.GetHealth(&m); err == nil {
+			healthy, err := q.GetHealth(&m)
+			if err == nil {
 				if healthy {
 					qms.Conditions[0].Status = cmd.ConditionStatus_TRUE.String()
 				} else {
@@ -183,6 +192,7 @@ func getQuorumStatus(q quorum.Interface) *cmd.QuorumStatus {
 				}
 				break
 			}
+			time.Sleep(quorumClientRetryInterval)
 			log.Errorf("Error getting health for quorum member %+v: %v", m, err)
 		}
 		if i == quorumClientNumRetries {
