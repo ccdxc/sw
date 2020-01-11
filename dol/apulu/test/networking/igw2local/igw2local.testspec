@@ -40,9 +40,9 @@ packets:
                 tos     : 0
                 id      : 0
             vxlan:
-                vni     : ref://testcase/config/localmapping/VNIC/Vnid
+                vni     : ref://testcase/config/route/VPC/Vnid
             eth:
-                src     : 00:02:00:00:00:00
+                src     : ref://testcase/config/route/TUNNEL/MACAddr
                 dst     : ref://testcase/config/localmapping/VNIC/MACAddr
             ipv4:
                 dst     : callback://networking/packets/GetIPFromLocalMapping
