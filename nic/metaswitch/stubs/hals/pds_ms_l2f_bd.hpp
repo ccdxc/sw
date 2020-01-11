@@ -26,6 +26,7 @@ public:
    void handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex);
    // Synchronous HAL update completion
    sdk_ret_t update_pds_synch(state_t::context_t&& state_ctxt,
+                              uint32_t bd_id,
                               subnet_obj_t* subnet_obj);
 
 private:
@@ -59,6 +60,7 @@ private:
 // API to update HAL directly bypassing Metaswitch
 // Synchronous HAL update completion
 sdk_ret_t l2f_bd_update_pds_synch(state_t::context_t&& state_ctxt,
+                                  uint32_t bd_id,      
                                   subnet_obj_t* subnet_obj);
 
 } // End namespace

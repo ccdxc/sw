@@ -69,12 +69,12 @@ class NexthopGroupObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.Id)
+        grpcmsg.Id.append(str.encode(str(self.Id)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.Id
+        spec.Id = str.encode(str(self.Id))
         spec.Type = self.Type
         for i in range(self.NumNexthops):
             nhspec = spec.Members.add()
@@ -131,6 +131,10 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         self.__num_nhgs_per_vpc = []
         self.__supported = __isObjSupported()
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml: return utils.GetYamlSpecAttr(spec, 'id')
+        return int(spec.Id)
 
     def GetNumNextHopGroupsPerVPC(self):
         return self.__num_nhgs_per_vpc

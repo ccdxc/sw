@@ -64,8 +64,8 @@ typedef struct pds_remote_mapping_spec_s {
 
 /// \brief    mapping status
 typedef struct pds_mapping_status_s {
-    pds_subnet_id_t subnet_hw_id; ///< subnet hw id
-    pds_vnic_id_t   vnic_hw_id;   ///< vnic hw id
+    uint16_t subnet_hw_id; ///< subnet hw id
+    uint16_t vnic_hw_id;   ///< vnic hw id
 } __PACK__ pds_mapping_status_t;
 
 /// \brief    mapping statistics

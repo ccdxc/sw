@@ -54,11 +54,11 @@ message UnderlayNhSpec {
 // nexthop specification
 message NexthopSpec {
   // unique nexthop id
-  uint32           Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes            Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // nexthop can be one of different types
   oneof nhinfo {
     // Tunnel/TEP member is used for overlay routing
-    uint32         TunnelId       = 2;
+    bytes          TunnelId       = 2;
     // Underlay nexthop info is used for a resolved underlay IP
     UnderlayNhSpec UnderlayNhInfo = 3;
     // IP nexthop is used when VTEP IP is to be resolved by PDS
@@ -106,7 +106,7 @@ message NexthopGetRequest {
     // nexthop type to be retrieved
     NexthopType Type = 1;
     // nexthop to be retrieved
-    uint32      Id   = 2;
+    bytes       Id   = 2;
   }
 }
 
@@ -123,7 +123,7 @@ message NexthopDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // list of nexthops to delete
-  repeated uint32 Id        = 2;
+  repeated bytes Id         = 2;
 }
 
 // nexthop delete response
@@ -144,7 +144,7 @@ enum NhGroupType {
 // nexthop group specification - a nextgroup consists of bunch of nexthops
 message NhGroupSpec {
   // unique nexthop group id
-  uint32            Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes             Id         = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the nexthop
   NhGroupType       Type       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // zero or more member nexthops or nexthop groups
@@ -187,7 +187,7 @@ message NhGroupResponse {
 // nexthop group get request
 message NhGroupGetRequest {
   // list of nexthop groups of interest
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // nexthop group get response
@@ -203,7 +203,7 @@ message NhGroupDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // list of nexthop groups to delete
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // nexthop group delete response

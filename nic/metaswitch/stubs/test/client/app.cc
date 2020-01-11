@@ -307,7 +307,7 @@ static void create_subnet_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(1);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).tostr());
     proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).tostr());
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);

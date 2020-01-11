@@ -32,7 +32,7 @@ extern int l2f_proc_id;
 namespace pds_ms {
 
 void 
-l2f_local_mac_ip_add (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
+l2f_local_mac_ip_add (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex)
 {
     NBB_CREATE_THREAD_CONTEXT
@@ -40,26 +40,27 @@ l2f_local_mac_ip_add (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
     NBS_GET_SHARED_DATA();
 
     ms_ifindex_t ms_lif_index = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
+    ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
     if (ip_addr_is_zero(&ip)) {
-        SDK_TRACE_DEBUG("Advertise MAC learn for BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
-                        subnet_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
+        SDK_TRACE_DEBUG("Advertise MAC learn for Subnet %s BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
+                        subnet_key.tostr(), bd_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
     } else {
-        SDK_TRACE_DEBUG("Advertise IP-MAC learn for BD %d IP %s MAC %s"
+        SDK_TRACE_DEBUG("Advertise IP-MAC learn for Subnet %s BD %d IP %s MAC %s"
                         " LIF 0x%x MS-LIF 0x%x",
-                        subnet_id, ipaddr2str(&ip), macaddr2str(mac),
+                        subnet_key.tostr(), bd_id, ipaddr2str(&ip), macaddr2str(mac),
                         lif_ifindex, ms_lif_index);
     }
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
     mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;
-    mac_ip_id.bd_id.bd_id = subnet_id;
+    mac_ip_id.bd_id.bd_id = bd_id;
     memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
 
     // Notify MAC only first
     auto ret = l2f::l2f_cc_is_mac_add_update(&mac_ip_id, ms_lif_index);
     if (ret != ATG_OK) {
         SDK_TRACE_ERR("Adding local MAC to MS failed for BD %d MAC %s",
-                      subnet_id, macaddr2str(mac));
+                      bd_id, macaddr2str(mac));
     }
 
     if (!ip_addr_is_zero(&ip)) {
@@ -68,7 +69,7 @@ l2f_local_mac_ip_add (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
         ret = l2f::l2f_cc_is_mac_add_update(&mac_ip_id, ms_lif_index);
         if (ret != ATG_OK) {
             SDK_TRACE_ERR("Adding local IP-MAC to MS failed for BD %d IP %s MAC %s",
-                          subnet_id, ipaddr2str(&ip), macaddr2str(mac));
+                          bd_id, ipaddr2str(&ip), macaddr2str(mac));
         }
     }
 
@@ -78,24 +79,25 @@ l2f_local_mac_ip_add (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
 }
 
 void 
-l2f_local_mac_ip_del (pds_subnet_id_t subnet_id, const ip_addr_t& ip,
+l2f_local_mac_ip_del (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac)
 {
     NBB_CREATE_THREAD_CONTEXT
     NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
     NBS_GET_SHARED_DATA();
 
+    ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
     if (ip_addr_is_zero(&ip)) {
-        SDK_TRACE_DEBUG("Received MAC remove for BD %d MAC %s",
-                        subnet_id, macaddr2str(mac));
+        SDK_TRACE_DEBUG("Received MAC remove for Subnet %s BD %d MAC %s",
+                        subnet_key, bd_id, macaddr2str(mac));
     } else {
-        SDK_TRACE_DEBUG("Received MAC-IP remove for BD %d IP %s MAC %s",
-                        subnet_id, ipaddr2str(&ip), macaddr2str(mac));
+        SDK_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
+                        subnet_key, bd_id, ipaddr2str(&ip), macaddr2str(mac));
     }
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
     mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;
-    mac_ip_id.bd_id.bd_id = subnet_id;
+    mac_ip_id.bd_id.bd_id = bd_id;
     memcpy(mac_ip_id.mac_address, mac, ETH_ADDR_LEN);
     if (!ip_addr_is_zero(&ip)) {
         pds_ms::pds_to_ms_ipaddr(ip, &mac_ip_id.ip_address);
@@ -143,6 +145,7 @@ void l2f_mai_t::fetch_store_info_(state_t* state) {
     if (ips_info_.has_ip || !op_delete_) {
         store_info_.mac_obj = store_info_.bd_obj->mac_store().get
             (mac_obj_t::key_t(ips_info_.bd_id, ips_info_.mac_address));
+        store_info_.subnet_obj = state->subnet_store().get(ips_info_.bd_id);
     }
 }
 
@@ -173,7 +176,7 @@ pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
         key.ip_addr = ips_info_.ip_address;
     } else {
         key.type = PDS_MAPPING_TYPE_L2;
-        key.subnet.id = ips_info_.bd_id;
+        key.subnet = msidx2pdsobjkey(ips_info_.bd_id);
         MAC_ADDR_COPY(key.mac_addr, ips_info_.mac_address);
     }
     return key;
@@ -183,9 +186,9 @@ pds_remote_mapping_spec_t l2f_mai_t::make_pds_mapping_spec_(void) {
     pds_remote_mapping_spec_t spec;
     memset(&spec, 0, sizeof(spec));
     spec.key = make_pds_mapping_key_();
-    spec.subnet.id = ips_info_.bd_id;
+    spec.subnet = store_info_.subnet_obj->spec().key;
     spec.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-    spec.nh_group.id = store_info_.hal_oecmp_idx;
+    spec.nh_group = msidx2pdsobjkey(store_info_.hal_oecmp_idx);
     if(ips_info_.has_ip) {
         MAC_ADDR_COPY(spec.vnic_mac,ips_info_.mac_address);
     }
@@ -270,6 +273,11 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         auto state_ctxt = state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
+        if (store_info_.subnet_obj == nullptr) {
+            SDK_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d MAC %s add-upd",
+                            ips_info_.bd_id, macaddr2str(ips_info_.mac_address));
+            return;
+        }
         if (store_info_.mac_obj == nullptr) {
             // New FDB entry - Populate cache
             mac_obj_t::key_t key (ips_info_.bd_id, ips_info_.mac_address);
@@ -467,6 +475,12 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
         auto state_ctxt = state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
 
+        if (store_info_.subnet_obj == nullptr) {
+            SDK_TRACE_DEBUG("Missing Subnet Obj for MAI BD %d IP %s MAC %s add-upd",
+                            ips_info_.bd_id, ipaddr2str(&ips_info_.ip_address),
+                            macaddr2str(ips_info_.mac_address));
+            return;
+        }
         // Check out-of-seq: IP ahead of MAC from MS L2F stub
         if (store_info_.mac_obj == nullptr) {
             // MAC FDB entry does not exist for this IP - cache now

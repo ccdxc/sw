@@ -23,7 +23,7 @@ public:
     subnet_obj_t(const pds_subnet_spec_t& spec) : pds_spec_(spec) {};
     pds_subnet_spec_t& spec(void) {return pds_spec_;}
     const pds_subnet_spec_t& spec(void) const {return pds_spec_;}
-    ms_bd_id_t key(void) const {return pds_spec_.key.id;}
+//    ms_bd_id_t key(void) const {return pds_spec_.key.id;}
 
 private:  
     pds_subnet_spec_t  pds_spec_;  // PDS owned

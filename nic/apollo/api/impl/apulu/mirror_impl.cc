@@ -147,7 +147,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
         // if the vpc is underlay VPC, dst IP must be a known TEP
         if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
-            tep_key.id = spec->erspan_spec.tep.id;
+            tep_key = spec->erspan_spec.tep;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
                 PDS_TRACE_ERR("Unknown TEP IP %u", tep_key.id);
                 return SDK_RET_INVALID_ARG;

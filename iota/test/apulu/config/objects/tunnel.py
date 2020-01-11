@@ -95,12 +95,12 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.Id)
+        grpcmsg.Id.append(str.encode(str(self.Id)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.Id
+        spec.Id = str.encode(str(self.Id))
         spec.VPCId = str.encode(str(0)) # TODO: Create Underlay VPC
         utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
@@ -117,15 +117,15 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
             if self.NextHopId is not None:
-                spec.NexthopId = self.NextHopId
+                spec.NexthopId = str.encode(str(self.NextHopId))
             else:
-                spec.NexthopId = self.NEXTHOP.NexthopId
+                spec.NexthopId = str.encode(str(self.NEXTHOP.NexthopId))
         elif self.IsUnderlayEcmp():
-            spec.NexthopGroupId = self.NEXTHOPGROUP.Id
+            spec.NexthopGroupId = str.encode(str(self.NEXTHOPGROUP.Id))
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.Id:
+        if int(spec.Id) != self.Id:
             return False
         if utils.ValidateTunnelEncap(self.EncapValue, spec.Encap) == False:
             return False
@@ -151,7 +151,7 @@ class TunnelObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.Id:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.Id:
             return False
         return True
 

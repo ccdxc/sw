@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	tunnelID uint32
+	tunnelID string
 )
 
 var tunnelShowCmd = &cobra.Command{
@@ -31,7 +31,7 @@ var tunnelShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(tunnelShowCmd)
 	tunnelShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	tunnelShowCmd.Flags().Uint32VarP(&tunnelID, "id", "i", 0, "Specify Tunnel ID")
+	tunnelShowCmd.Flags().StringVarP(&tunnelID, "id", "i", "", "Specify Tunnel ID")
 }
 
 func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -54,12 +54,12 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Tunnel
 		req = &pds.TunnelGetRequest{
-			Id: []uint32{tunnelID},
+            Id: [][]byte{[]byte(tunnelID)},
 		}
 	} else {
 		// Get all Tunnels
 		req = &pds.TunnelGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -92,9 +92,9 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printTunnelHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 120)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-16s%-16s%-16s\n",
+	fmt.Printf("%-36s%-36s%-16s%-16s%-16s\n",
 		"ID", "VpcID", "Encap", "LocalIP", "RemoteIP")
 	fmt.Println(hdrLine)
 }
@@ -102,9 +102,8 @@ func printTunnelHeader() {
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
-	fmt.Printf("%-6d%-6d%-16s%-16s%-16s\n",
-		spec.GetId(), spec.GetVPCId(),
-		encapStr,
-		utils.IPAddrToStr(spec.GetLocalIP()),
+	fmt.Printf("%-36s%-36s%-16s%-16s%-16s\n",
+		string(spec.GetId()), string(spec.GetVPCId()),
+		encapStr, utils.IPAddrToStr(spec.GetLocalIP()),
 		utils.IPAddrToStr(spec.GetRemoteIP()))
 }

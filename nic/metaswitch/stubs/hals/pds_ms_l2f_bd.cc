@@ -90,7 +90,7 @@ void l2f_bd_t::fetch_store_info_(pds_ms::state_t* state) {
 }
 
 pds_subnet_key_t l2f_bd_t::make_pds_subnet_key_(void) {
-    return pds_subnet_key_t {ips_info_.bd_id};
+    return pds_subnet_key_t {msidx2pdsobjkey(ips_info_.bd_id)};
 }
 
 pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
@@ -475,13 +475,14 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
 
 // ------- Fastpath - Direct call from Mgmt Stub initiator thread ---------
 sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
+                                     uint32_t      bd_id,
                                      subnet_obj_t* subnet_obj) {
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
 
     { // Continue thread-safe context passed in to access/modify global state
         state_t::context_t state_ctxt (std::move(in_state_ctxt));
 
-        ips_info_.bd_id = subnet_obj->key();
+        ips_info_.bd_id = bd_id;
         store_info_.subnet_obj = subnet_obj;
         store_info_.bd_obj = state_ctxt.state()->bd_store().get(ips_info_.bd_id);
 
@@ -514,11 +515,12 @@ sdk_ret_t l2f_bd_t::update_pds_synch(state_t::context_t&& in_state_ctxt,
 
 sdk_ret_t
 l2f_bd_update_pds_synch (state_t::context_t&& state_ctxt, 
+                         uint32_t  bd_id,
                          subnet_obj_t* subnet_obj)
 {
     try {
         l2f_bd_t bd;
-        return bd.update_pds_synch(std::move(state_ctxt), subnet_obj);
+        return bd.update_pds_synch(std::move(state_ctxt), bd_id, subnet_obj);
     } catch (Error& e) {
         SDK_TRACE_ERR ("BD Direct Update processing failed %s", e.what());
         return SDK_RET_ERR;

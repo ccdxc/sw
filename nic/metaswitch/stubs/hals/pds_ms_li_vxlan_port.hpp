@@ -62,9 +62,7 @@ private:
 
     pds_tep_key_t make_pds_tep_key_
         (const if_obj_t::vxlan_port_properties_t& vxp_prop) {
-        pds_tep_key_t key; 
-        key.id = vxp_prop.hal_tep_idx;
-        return key;
+        return pds_tep_key_t(vxp_prop.hal_tep_idx);
     }
 };
 

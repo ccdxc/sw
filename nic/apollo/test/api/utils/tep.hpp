@@ -59,12 +59,6 @@ public:
 
 // Dump prototypes
 inline std::ostream&
-operator<<(std::ostream& os, const pds_tep_key_t *key) {
-    os << " ID: " << key->id;
-    return os;
-}
-
-inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
     os << &spec->key
        << " vpc: " << spec->vpc.id

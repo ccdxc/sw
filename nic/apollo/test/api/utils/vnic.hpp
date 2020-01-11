@@ -21,9 +21,9 @@ extern const uint32_t k_max_vnic;
 class vnic_feeder : public feeder {
 public:
     // TODO: move to vnic_spec_t instead of below variables
-    pds_vnic_id_t id;
+    pds_vnic_key_t key;
     pds_vpc_key_t vpc;
-    pds_subnet_id_t subnet_id;
+    pds_subnet_key_t subnet;
     pds_encap_t vnic_encap;
     pds_encap_t fabric_encap;
     uint64_t mac_u64;
@@ -37,13 +37,13 @@ public:
         vpc.reset();
     }
     vnic_feeder(const vnic_feeder& feeder) {
-        init(feeder.id, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
+        init(feeder.key, feeder.num_obj, feeder.mac_u64, feeder.vnic_encap.type,
              feeder.fabric_encap.type, feeder.src_dst_check,
              feeder.configure_policy);
     }
 
     // Initialize feeder with the base set of values
-    void init(uint32_t id, uint32_t num_vnic = k_max_vnic,
+    void init(pds_vnic_key_t key, uint32_t num_vnic = k_max_vnic,
               uint64_t mac = k_feeder_mac,
               pds_encap_type_t vnic_encap_type = PDS_ENCAP_TYPE_DOT1Q,
               pds_encap_type_t fabric_encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
@@ -63,15 +63,9 @@ public:
 
 // Dump prototypes
 inline std::ostream&
-operator<<(std::ostream& os, const pds_vnic_key_t *key) {
-    os << " id: " << key->id;
-    return os;
-}
-
-inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
     os << &spec->key
-       << " subnet id: " << spec->subnet.id
+       << " subnet id: " << std::string(spec->subnet.tostr())
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
@@ -112,7 +106,7 @@ operator<<(std::ostream& os, const pds_vnic_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vnic_feeder& obj) {
     os << "VNIC feeder =>"
-       << " id: " << obj.id;
+       << " key: " << std::string(obj.key.tostr());
     return os;
 }
 

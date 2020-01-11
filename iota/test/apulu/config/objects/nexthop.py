@@ -82,11 +82,11 @@ class NexthopObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.NexthopId)
+        grpcmsg.Id.append(str.encode(str(self.NexthopId)))
         return
 
     def FillSpec(self, spec):
-        spec.Id = self.NexthopId
+        spec.Id = str.encode(str(self.NexthopId))
         if self.__type == utils.NhType.IP:
             spec.IPNhInfo.VPCId = str.encode(str(self.VPC.VPCId))
             spec.IPNhInfo.Mac = self.MACAddr.getnum()
@@ -96,7 +96,7 @@ class NexthopObject(base.ConfigObjectBase):
             spec.UnderlayNhInfo.L3InterfaceId = self.L3Interface.InterfaceId
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == utils.NhType.OVERLAY:
-            spec.TunnelId = self.TunnelId
+            spec.TunnelId = str.encode(str(self.TunnelId))
         return
 
     def PopulateSpec(self, grpcmsg):
@@ -105,14 +105,14 @@ class NexthopObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.NexthopId:
+        if int(spec.Id) != self.NexthopId:
             return False
         if self.__type == utils.NhType.IP:
             if spec.IPNhInfo.Mac != self.MACAddr.getnum():
                 return False
             if spec.IPNhInfo.Vlan != self.VlanId:
                 return False
-            if spec.IPNhInfo.VPCId != self.VPC.VPCId:
+            if int(spec.IPNhInfo.VPCId) != self.VPC.VPCId:
                 return False
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
@@ -122,7 +122,7 @@ class NexthopObject(base.ConfigObjectBase):
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
         elif self.__type != utils.NhType.OVERLAY:
-            if spec.TunnelId != self.TunnelId:
+            if int(spec.TunnelId) != self.TunnelId:
                 return False
         return True
 

@@ -16,6 +16,7 @@
 #include "nic/apollo/test/api/utils/vnic.hpp"
 #include "nic/apollo/test/api/utils/vpc.hpp"
 #include "nic/apollo/test/api/utils/vpc_peer.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/apollo/framework/api.h"
 #include "nic/metaswitch/stubs/test/hals/test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"

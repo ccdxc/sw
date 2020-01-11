@@ -102,7 +102,7 @@ class RouteTableObject(base.ConfigObjectBase):
         return "RouteTableID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s"\
                %(self.RouteTblId, self.VPCId, self.AddrFamily,\
                  len(self.routes), self.RouteType)
-    
+
     def Show(self):
         logger.info("RouteTable object:", self)
         logger.info("- %s" % repr(self))
@@ -157,11 +157,11 @@ class RouteTableObject(base.ConfigObjectBase):
         if route.NextHopType == "vpcpeer":
             rtspec.VPCId = str.encode(str(route.PeerVPCId))
         elif route.NextHopType == "tep":
-            rtspec.TunnelId = route.TunnelId
+            rtspec.TunnelId = str.encode(str(route.TunnelId))
         elif route.NextHopType == "nh":
-            rtspec.NexthopId = route.NexthopId
+            rtspec.NexthopId = str.encode(str(route.NexthopId))
         elif route.NextHopType == "nhg":
-            rtspec.NexthopGroupId = route.NexthopGroupId
+            rtspec.NexthopGroupId = str.encode(str(route.NexthopGroupId))
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()

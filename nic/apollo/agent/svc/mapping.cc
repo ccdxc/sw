@@ -46,7 +46,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i++) {
         pds_local_mapping_spec_t local_spec;
         pds_remote_mapping_spec_t remote_spec;
-        if (proto_req->request(i).tunnelid() == 0) {
+        if (proto_req->request(i).tunnelid().empty()) {
             memset(&local_spec, 0, sizeof(local_spec));
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
@@ -59,7 +59,7 @@ MappingSvcImpl::MappingCreate(ServerContext *context,
         }
 
         if (!core::agent_state::state()->pds_mock_mode()) {
-            if (proto_req->request(i).tunnelid() == 0) {
+            if (proto_req->request(i).tunnelid().empty()) {
                 ret = pds_local_mapping_create(&local_spec, bctxt);
                 if (ret != SDK_RET_OK) {
                     goto end;
@@ -122,7 +122,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
     for (int i = 0; i < proto_req->request_size(); i++) {
         pds_local_mapping_spec_t local_spec;
         pds_remote_mapping_spec_t remote_spec;
-        if (proto_req->request(i).tunnelid() == 0) {
+        if (proto_req->request(i).tunnelid().empty()) {
             memset(&local_spec, 0, sizeof(local_spec));
             pds_local_mapping_proto_to_api_spec(&local_spec,
                                                 proto_req->request(i));
@@ -132,7 +132,7 @@ MappingSvcImpl::MappingUpdate(ServerContext *context,
                                                  proto_req->request(i));
         }
         if (!core::agent_state::state()->pds_mock_mode()) {
-            if (proto_req->request(i).tunnelid() == 0) {
+            if (proto_req->request(i).tunnelid().empty()) {
                 ret = pds_local_mapping_update(&local_spec, bctxt);
                 if (ret != SDK_RET_OK) {
                     goto end;
@@ -204,7 +204,8 @@ MappingSvcImpl::MappingDelete(ServerContext *context,
 
         case pds::MappingKey::kMACKey:
             key.type = PDS_MAPPING_TYPE_L2;
-            key.subnet.id = proto_key.mackey().subnetid();
+            pds_obj_key_proto_to_api_spec(&key.subnet,
+                                          proto_key.mackey().subnetid());
             MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
             break;
 
@@ -261,7 +262,8 @@ MappingSvcImpl::MappingGet(ServerContext *context,
 
         case pds::MappingKey::kMACKey:
             key.type = PDS_MAPPING_TYPE_L2;
-            key.subnet.id = proto_key.mackey().subnetid();
+            pds_obj_key_proto_to_api_spec(&key.subnet,
+                                          proto_key.mackey().subnetid());
             MAC_UINT64_TO_ADDR(key.mac_addr, proto_key.mackey().macaddr());
             break;
 

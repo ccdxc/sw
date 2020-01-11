@@ -59,7 +59,7 @@ public:
 
     // initialize feeder with base set of values
     void init(pds_vpc_key_t vpc = int2pdsobjkey(1),
-              pds_subnet_id_t subnet_id = 1,
+              pds_subnet_key_t subnet = int2pdsobjkey(1),
               std::string vnic_ip_str= "0.0.0.0/0",
               uint64_t vnic_mac = 0x00030b020a02,
               pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,

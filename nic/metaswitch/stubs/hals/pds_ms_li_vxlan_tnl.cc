@@ -49,7 +49,7 @@ pds_tep_spec_t li_vxlan_tnl::make_pds_tep_spec_(void) {
     spec.remote_ip = tep_prop.tep_ip;
     spec.ip_addr = ips_info_.src_ip;
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-    spec.nh_group.id = tep_prop.hal_uecmp_idx;
+    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx);
     spec.type = PDS_TEP_TYPE_WORKLOAD;
     spec.nat = false;
     return spec;
@@ -61,10 +61,9 @@ pds_nexthop_group_spec_t li_vxlan_tnl::make_pds_nhgroup_spec_(void) {
     spec.key = make_pds_nhgroup_key_();
     spec.type = PDS_NHGROUP_TYPE_OVERLAY_ECMP;
     spec.num_nexthops = 1;
-    spec.nexthops[0].key.id = 1; // Unused for NHs pointing to TEPs
     spec.nexthops[0].type = PDS_NH_TYPE_OVERLAY;
     // Use the TEP MS IfIndex as the TEP Index
-    spec.nexthops[0].tep.id = tep_prop.hal_tep_idx;
+    spec.nexthops[0].tep = msidx2pdsobjkey(tep_prop.hal_tep_idx);
     return spec;
 }
 

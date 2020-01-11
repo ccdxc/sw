@@ -144,12 +144,12 @@ class SubnetObject(base.ConfigObjectBase):
         return next(self.__ip_address_pool[1])
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.SubnetId)
+        grpcmsg.Id.append(str.encode(str(self.SubnetId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.SubnetId
+        spec.Id = str.encode(str(self.SubnetId))
         spec.VPCId = str.encode(str(self.VPC.VPCId))
         utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
         utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
@@ -174,7 +174,7 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.SubnetId:
+        if int(spec.Id) != self.SubnetId:
             return False
         if int(spec.VPCId) != self.VPC.VPCId:
             return False
@@ -201,7 +201,7 @@ class SubnetObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.SubnetId:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.SubnetId:
             return False
         return True
 

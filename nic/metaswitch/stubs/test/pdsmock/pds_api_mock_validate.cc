@@ -12,10 +12,10 @@ pds_tep_mock_validate (const spec_t&  expected_pds,
                        const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
-        if (expected_pds.tep.key.id != rcvd_pds.tep.key.id) {
+        if (expected_pds.tep.key != rcvd_pds.tep.key) {
             std::cout << "TEP delete key compare failed" << std::endl;
-            std::cout << "Expected: " << expected_pds.tep.key.id <<std::endl;
-            std::cout << "Rcvd: " << rcvd_pds.tep.key.id << std::endl;
+            std::cout << "Expected: " << expected_pds.tep.key.tostr() <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.tep.key.tostr() << std::endl;
             return false;
         }
         return true;;
@@ -36,10 +36,10 @@ pds_nhgroup_mock_validate (const spec_t&  expected_pds,
                            const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
-        if (expected_pds.nhgroup.key.id != rcvd_pds.nhgroup.key.id) {
+        if (expected_pds.nhgroup.key != rcvd_pds.nhgroup.key) {
             std::cout << "NHGroup delete key compare failed" << std::endl;
-            std::cout << "Expected: " << expected_pds.nhgroup.key.id <<std::endl;
-            std::cout << "Rcvd: " << rcvd_pds.nhgroup.key.id << std::endl;
+            std::cout << "Expected: " << expected_pds.nhgroup.key.tostr() <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.nhgroup.key.tostr() << std::endl;
             return false;
         }
         return true;;
@@ -84,10 +84,10 @@ pds_subnet_mock_validate (const spec_t&  expected_pds,
                           const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
-        if (expected_pds.subnet.key.id != rcvd_pds.subnet.key.id) {
+        if (expected_pds.subnet.key != rcvd_pds.subnet.key) {
             std::cout << "Subnet delete key compare failed" << std::endl;
-            std::cout << "Expected: " << expected_pds.subnet.key.id <<std::endl;
-            std::cout << "Rcvd: " << rcvd_pds.subnet.key.id << std::endl;
+            std::cout << "Expected: " << expected_pds.subnet.key.tostr() <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.subnet.key.tostr() << std::endl;
             return false;
         }
         return true;;
@@ -116,8 +116,8 @@ pds_vpc_mock_validate (const spec_t&  expected_pds,
     if (rcvd_pds.op == API_OP_DELETE) {
         if (expected_pds.vpc.key != rcvd_pds.vpc.key) {
             std::cout << "VPC delete key compare failed" << std::endl;
-            std::cout << "Expected: " << expected_pds.vpc.key.id <<std::endl;
-            std::cout << "Rcvd: " << rcvd_pds.vpc.key.id << std::endl;
+            std::cout << "Expected: " << expected_pds.vpc.key.tostr() <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.vpc.key.tostr() << std::endl;
             return false;
         }
         return true;;

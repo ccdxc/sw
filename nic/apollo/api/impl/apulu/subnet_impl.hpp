@@ -202,7 +202,7 @@ private:
     subnet_impl(pds_subnet_spec_t *spec) {
         hw_id_ = 0xFFFF;
         vni_hdl_ = handle_t::null();
-        key_.id = spec->key.id;
+        key_ = spec->key;
         ht_ctxt_.reset();
     }
 

@@ -21,10 +21,10 @@ const uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 
 void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
-                     pds_nexthop_id_t id, pds_nh_type_t type, uint16_t vlan,
+                     pds_nexthop_key_t key, pds_nh_type_t type, uint16_t vlan,
                      pds_vpc_key_t vpc, pds_if_id_t if_id,
-                     pds_tep_id_t tep_id) {
-    this->spec.key.id = id;
+                     pds_tep_key_t tep) {
+    this->spec.key = key;
     this->spec.type = type;
     this->num_obj = num_obj;
     if (type == PDS_NH_TYPE_IP) {
@@ -36,13 +36,13 @@ nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
         this->spec.l3_if.id = L3_IFINDEX(if_id);
         MAC_UINT64_TO_ADDR(this->spec.underlay_mac, mac);
     } else if (type == PDS_NH_TYPE_OVERLAY) {
-        this->spec.tep.id = tep_id;
+        this->spec.tep = tep;
     }
 }
 
 void
 nexthop_feeder::iter_next(int width) {
-    spec.key.id += width;
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
     cur_iter_pos++;
     if (spec.type == PDS_NH_TYPE_IP) {
         spec.ip.addr.v4_addr += width;
@@ -52,14 +52,14 @@ nexthop_feeder::iter_next(int width) {
         // spec.l3_if.id += width;
         test::increment_mac_addr(spec.underlay_mac, width);
     } else if (spec.type == PDS_NH_TYPE_OVERLAY) {
-        spec.tep.id += width;
+        spec.tep = int2pdsobjkey(pdsobjkey2int(spec.tep) + width);
     }
 }
 
 void
 nexthop_feeder::key_build(pds_nexthop_key_t *key) const {
     memset(key, 0, sizeof(pds_nexthop_key_t));
-    key->id = this->spec.key.id;
+    *key = this->spec.key;
 }
 
 void
@@ -78,13 +78,13 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
         MAC_UINT64_TO_ADDR(spec->underlay_mac,
                            MAC_TO_UINT64(this->spec.underlay_mac));
     } else if (this->spec.type == PDS_NH_TYPE_OVERLAY) {
-        spec->tep.id = this->spec.tep.id;
+        spec->tep = this->spec.tep;
     }
 }
 
 bool
 nexthop_feeder::key_compare(const pds_nexthop_key_t *key) const {
-    return (this->spec.key.id == key->id);
+    return (this->spec.key == *key);
 }
 
 bool
@@ -106,14 +106,13 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
         if (MAC_TO_UINT64(this->spec.mac) != MAC_TO_UINT64(spec->mac))
             return false;
         // validate NH vpc
-        if (this->spec.vpc.id != spec->vpc.id)
+        if (this->spec.vpc != spec->vpc)
             return false;
         // validate NH ip
         if (!IPADDR_EQ(&this->spec.ip, &spec->ip))
             return false;
 
     } else if (this->spec.type == PDS_NH_TYPE_UNDERLAY) {
-
         if (MAC_TO_UINT64(this->spec.underlay_mac) !=
                           MAC_TO_UINT64(spec->underlay_mac))
             return false;
@@ -122,7 +121,7 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
 
     } else if (this->spec.type == PDS_NH_TYPE_OVERLAY) {
 
-        if (this->spec.tep.id != spec->tep.id)
+        if (this->spec.tep != spec->tep)
             return false;
 
     }
@@ -144,12 +143,14 @@ void sample_nexthop_setup(pds_batch_ctxt_t bctxt) {
 }
 
 void sample_underlay_nexthop_setup(pds_batch_ctxt_t bctxt) {
-    k_unh_feeder.init("", 0x1, k_max_nh, 1, PDS_NH_TYPE_UNDERLAY);
+    k_unh_feeder.init("", 0x1, k_max_nh, int2pdsobjkey(1),
+                      PDS_NH_TYPE_UNDERLAY);
     many_create(bctxt, k_unh_feeder);
 }
 
 void sample_underlay_nexthop_teardown(pds_batch_ctxt_t bctxt) {
-    k_unh_feeder.init("", 0x1, k_max_nh, 1, PDS_NH_TYPE_UNDERLAY);
+    k_unh_feeder.init("", 0x1, k_max_nh, int2pdsobjkey(1),
+                      PDS_NH_TYPE_UNDERLAY);
     many_delete(bctxt, k_unh_feeder);
 }
 

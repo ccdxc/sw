@@ -16,19 +16,19 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-local_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_id_t subnet_id,
+local_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_key_t subnet,
                            std::string vnic_ip_cidr_str, uint64_t vnic_mac,
                            pds_encap_type_t encap_type, uint32_t encap_val,
-                           pds_vnic_id_t vnic_id, bool public_ip_valid,
+                           pds_vnic_key_t vnic, bool public_ip_valid,
                            std::string pub_ip_cidr_str, uint32_t num_vnics,
                            uint32_t num_ip_per_vnic,
                            pds_mapping_type_t map_type) {
 
     this->map_type = map_type;
     this->vpc = vpc;
-    this->subnet.id = subnet_id;
+    this->subnet = subnet;
     test::extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
-    this->vnic.id = vnic_id;
+    this->vnic = vnic;
     this->vnic_mac_u64 = vnic_mac;
 
     this->fabric_encap.type = encap_type;
@@ -61,7 +61,7 @@ local_mapping_feeder::iter_next(int width) {
 
     curr_vnic_ip_cnt++;
     if (curr_vnic_ip_cnt == num_ip_per_vnic) {
-        vnic.id += width;
+        vnic = int2pdsobjkey(pdsobjkey2int(vnic) + width);
         vnic_mac_u64 += width;
         curr_vnic_ip_cnt = 0;
     }

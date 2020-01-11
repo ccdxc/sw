@@ -52,9 +52,9 @@ public:
         ms_ifindex_t   ifindex;
         ip_addr_t      tep_ip;
         pds_vnid_id_t  vni;
-        pds_tep_id_t   hal_tep_idx;
+        pds_tep_key_t  hal_tep_idx;
         mac_addr_t     dmaci;        // Inner DMAC
-        vxlan_port_properties_t(ms_ifindex_t ifi, ip_addr_t tip, pds_vnid_id_t v, pds_tep_id_t ht) 
+        vxlan_port_properties_t(ms_ifindex_t ifi, ip_addr_t tip, pds_vnid_id_t v, const pds_tep_key_t& ht) 
             : ifindex(ifi), tep_ip(tip), vni(v), hal_tep_idx(ht) {
             memset(dmaci, 0, ETH_ADDR_LEN);
         }

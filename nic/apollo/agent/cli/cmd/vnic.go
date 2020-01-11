@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	vnicID uint32
+	vnicID string
 )
 
 var vnicShowCmd = &cobra.Command{
@@ -31,7 +31,7 @@ var vnicShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(vnicShowCmd)
 	vnicShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	vnicShowCmd.Flags().Uint32VarP(&vnicID, "id", "i", 0, "Specify Vnic ID")
+	vnicShowCmd.Flags().StringVarP(&vnicID, "id", "i", "", "Specify Vnic ID")
 }
 
 func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -54,12 +54,12 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Vnic
 		req = &pds.VnicGetRequest{
-			VnicId: []uint32{vnicID},
+			VnicId: [][]byte{[]byte(vnicID)},
 		}
 	} else {
 		// Get all Vnics
 		req = &pds.VnicGetRequest{
-			VnicId: []uint32{},
+			VnicId: [][]byte{},
 		}
 	}
 
@@ -92,9 +92,9 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 165)
+	hdrLine := strings.Repeat("-", 225)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-7s%-9s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s%-10s%-10s\n",
+	fmt.Printf("%-36s%-36s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s%-10s%-10s\n",
 		"VnicID", "SubnetID", "VnicEncap", "MAC", "SrcGuard", "FabricEncap",
 		"RxMirrorSessionID", "TxMirrorSessionID", "SwitchVnic", "V4MeterId",
 		"V6MeterID", "HostIf")
@@ -120,8 +120,8 @@ func printVnic(vnic *pds.Vnic) {
 		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
 	}
 
-	fmt.Printf("%-7d%-9d%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10d%-10d%-10s\n",
-		spec.GetVnicId(), spec.GetSubnetId(), vnicEncapStr,
+	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10d%-10d%-10s\n",
+		string(spec.GetVnicId()), string(spec.GetSubnetId()), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
 		spec.GetSwitchVnic(), spec.GetV4MeterId(), spec.GetV6MeterId(), lifName)

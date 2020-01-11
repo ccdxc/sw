@@ -73,7 +73,7 @@ pds_local_spec_to_mapping_spec (pds_mapping_spec_t *spec,
     // local mapping always point to local VTEP (i.e., MyTEP) IP
     spec->nh_type = PDS_NH_TYPE_OVERLAY;
     spec->is_local = true;
-    spec->vnic.id = local_spec->vnic.id;
+    spec->vnic = local_spec->vnic;
     spec->public_ip_valid = local_spec->public_ip_valid;
     spec->public_ip = local_spec->public_ip;
     spec->provider_ip_valid = local_spec->provider_ip_valid;
@@ -117,7 +117,7 @@ pds_mapping_spec_to_local_spec (pds_local_mapping_spec_t *local_spec,
     local_spec->subnet = spec->subnet;
     local_spec->fabric_encap = spec->fabric_encap;
     memcpy(&local_spec->vnic_mac, &spec->overlay_mac, sizeof(mac_addr_t));
-    local_spec->vnic.id = spec->vnic.id;
+    local_spec->vnic = spec->vnic;
     local_spec->public_ip_valid = spec->public_ip_valid;
     local_spec->public_ip = spec->public_ip;
     local_spec->provider_ip_valid = spec->provider_ip_valid;

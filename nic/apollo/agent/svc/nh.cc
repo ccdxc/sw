@@ -50,7 +50,7 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_create(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -114,7 +114,7 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_nh_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_update(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -169,7 +169,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::nh_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -216,7 +216,7 @@ NhSvcImpl::NexthopGet(ServerContext *context,
         }
         break;
     case pds::NexthopGetRequest::kId:
-        key.id = proto_req->id();
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id());
         ret = core::nh_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
@@ -272,7 +272,7 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_group_create(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -331,7 +331,7 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
         ret = core::nh_group_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -380,9 +380,8 @@ NhSvcImpl::NhGroupDelete(ServerContext *context,
         batched_internally = true;
     }
 
-
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::nh_group_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -417,7 +416,7 @@ NhSvcImpl::NhGroupGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::nh_group_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);

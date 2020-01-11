@@ -604,7 +604,7 @@ public:
     }
 
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
-        uint32_t subnet_id = subnet_spec->key.id;
+        uint32_t subnet_id = test::pdsobjkey2int(subnet_spec->key);
         uint32_t vpc_id = test::pdsobjkey2int(subnet_spec->vpc);
 
         assert(subnet_id < DOL_MAX_SUBNET);
@@ -994,7 +994,7 @@ public:
                     }
                     // create V4 session
                     ret = create_session_info(
-                        vpc, local_gw_mapping[i].remotes[rc].route.nh.id,
+                        vpc, test::pdsobjkey2int(local_gw_mapping[i].remotes[rc].route.nh),
                         VNET_TO_INTERNET_SLB);
                     if (ret != SDK_RET_OK) {
                         local_gw_mapping[i].remote_count = 0;

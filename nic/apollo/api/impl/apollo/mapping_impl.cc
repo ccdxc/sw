@@ -1042,7 +1042,7 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, pds_mapping_spec_t *spec) {
         // Fill overlay mac and subnet ID
         sdk::lib::memrev(spec->overlay_mac, remote_vnic_mapping_rx_data.overlay_mac,
                          ETH_ADDR_LEN);
-        spec->subnet.id = remote_vnic_mapping_rx_data.subnet_id;
+        //spec->subnet.id = remote_vnic_mapping_rx_data.subnet_id;
         // Make sure the VPC are matching , return error otherwise
         if (remote_vnic_mapping_rx_data.vpc_id != vpc->hw_id()) {
             PDS_TRACE_ERR("REMOTE_VNIC_MAPPING_RX table, vpc value mismatch read %u, expected %u",

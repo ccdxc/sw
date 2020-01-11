@@ -15,9 +15,9 @@ tep_create_validate (pds_tep_spec_t *spec)
         // service TEPs must have vxlan encap
         if ((spec->encap.type != PDS_ENCAP_TYPE_VXLAN) ||
             (spec->encap.val.vnid == 0)) {
-            PDS_TRACE_ERR("Service TEP id {}, tunnel ip {} has invalid "
+            PDS_TRACE_ERR("Service tunnel {}, tunnel ip {} has invalid "
                           "vxlan encap ({}, {})",
-                          spec->key.id,
+                          spec->key.tostr(),
                           ipaddr2str(&spec->remote_ip),
                           spec->encap.type, spec->encap.val.vnid);
             return sdk::SDK_RET_INVALID_ARG;
@@ -27,17 +27,18 @@ tep_create_validate (pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-tep_create (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+tep_create (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_tep_db(key) != NULL) {
-        PDS_TRACE_ERR("Tunnel {} create failed, key exists already", key);
+        PDS_TRACE_ERR("Tunnel {} create failed, key exists already",
+                      key->tostr());
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = tep_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create tunnel id {}, tunnel ip {}, err {}",
-                      spec->key.id, ipaddr2str(&spec->remote_ip), ret);
+        PDS_TRACE_ERR("Failed to create tunnel {}, tunnel ip {}, err {}",
+                      spec->key.tostr(), ipaddr2str(&spec->remote_ip), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
@@ -52,7 +53,7 @@ tep_create (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_update (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+tep_update (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -73,7 +74,7 @@ tep_update (uint32_t key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_delete (uint32_t key, pds_batch_ctxt_t bctxt)
+tep_delete (pds_tep_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;
@@ -94,7 +95,7 @@ tep_delete (uint32_t key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_get (uint32_t key, pds_tep_info_t *info)
+tep_get (pds_tep_key_t *key, pds_tep_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_tep_spec_t *spec;

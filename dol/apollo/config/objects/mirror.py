@@ -70,7 +70,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.RspanSpec.Encap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.RspanSpec.Encap.value.VlanId = self.VlanId
         elif self.SpanType == 'ERSPAN':
-            spec.ErspanSpec.TunnelId = self.TunnelId
+            spec.ErspanSpec.TunnelId = str.encode(str(self.TunnelId))
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID

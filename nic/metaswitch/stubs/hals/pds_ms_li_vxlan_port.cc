@@ -64,8 +64,8 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     spec.ip_addr = ips_info_.src_ip;
     auto& tep_prop = store_info_.tep_obj->properties();
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-    spec.nh_group.id = tep_prop.hal_uecmp_idx; // Underlay NH is shared
-                                               // with Type 2 TEP
+    // Underlay NH is shared with Type 2 TEP
+    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx);
     spec.nat = false;
     return spec;
 }
@@ -104,7 +104,7 @@ void li_vxlan_port::cache_obj_in_cookie_(void) {
                       {ips_info_.if_index, 
                        ips_info_.tep_ip,
                        ips_info_.vni,
-                       ips_info_.if_index // HAL TEP Index
+                       msidx2pdsobjkey(ips_info_.if_index) // HAL TEP Index
                       }));
     // Update the local store info context so that the make_pds_spec 
     // refers to the latest fields

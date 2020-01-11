@@ -1072,7 +1072,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
 {
     uint32_t msid;
 
-    api_spec->key.id = proto_spec.vnicid();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.vnicid());
     if (proto_spec.hostname().empty()) {
         api_spec->hostname[0] = '\0';
     } else {
@@ -1080,7 +1080,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
                 PDS_MAX_HOST_NAME_LEN);
          api_spec->hostname[PDS_MAX_HOST_NAME_LEN] = '\0';
     }
-    api_spec->subnet.id = proto_spec.subnetid();
+    pds_obj_key_proto_to_api_spec(&api_spec->subnet, proto_spec.subnetid());
     api_spec->vnic_encap = proto_encap_to_pds_encap(proto_spec.vnicencap());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->mac_addr, proto_spec.macaddress());
@@ -1401,7 +1401,7 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
                            const pds::TunnelSpec &proto_spec)
 {
     memset(api_spec, 0, sizeof(pds_tep_spec_t));
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     ipaddr_proto_spec_to_api_spec(&api_spec->remote_ip,
                                   proto_spec.remoteip());
     ipaddr_proto_spec_to_api_spec(&api_spec->ip_addr,
@@ -1438,15 +1438,17 @@ pds_tep_proto_to_api_spec (pds_tep_spec_t *api_spec,
     switch (proto_spec.nh_case()) {
     case pds::TunnelSpec::kNexthopId:
         api_spec->nh_type = PDS_NH_TYPE_UNDERLAY;
-        api_spec->nh.id = proto_spec.nexthopid();
+        pds_obj_key_proto_to_api_spec(&api_spec->nh, proto_spec.nexthopid());
         break;
     case pds::TunnelSpec::kNexthopGroupId:
         api_spec->nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-        api_spec->nh_group.id = proto_spec.nexthopgroupid();
+        pds_obj_key_proto_to_api_spec(&api_spec->nh_group,
+                                      proto_spec.nexthopgroupid());
         break;
     case pds::TunnelSpec::kTunnelId:
         api_spec->nh_type = PDS_NH_TYPE_OVERLAY;
-        api_spec->tep.id = proto_spec.tunnelid();
+        pds_obj_key_proto_to_api_spec(&api_spec->tep,
+                                      proto_spec.tunnelid());
         break;
     default:
         PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
@@ -2147,7 +2149,7 @@ static inline void
 pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
                           const pds::NexthopSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     switch (proto_spec.nhinfo_case()) {
     case pds::NexthopSpec::kIPNhInfo:
         api_spec->type = PDS_NH_TYPE_IP;
@@ -2163,7 +2165,7 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
 
     case pds::NexthopSpec::kTunnelId:
         api_spec->type = PDS_NH_TYPE_OVERLAY;
-        api_spec->tep.id = proto_spec.tunnelid();
+        pds_obj_key_proto_to_api_spec(&api_spec->tep, proto_spec.tunnelid());
         break;
 
     case pds::NexthopSpec::kUnderlayNhInfo:
@@ -2234,7 +2236,7 @@ static inline sdk_ret_t
 pds_nh_group_proto_to_api_spec (pds_nexthop_group_spec_t *api_spec,
                                 const pds::NhGroupSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->num_nexthops = proto_spec.members_size();
     switch (proto_spec.type()) {
     case pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
@@ -2574,12 +2576,14 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
         case pds::Route::kNextHop:
         case pds::Route::kTunnelId:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY;
-            api_spec->routes[i].tep.id = proto_route.tunnelid();
+            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].tep,
+                                          proto_route.tunnelid());
             break;
         case pds::Route::kNexthopGroupId:
             // NOTE: UNDERLAY_ECMP is not done in the datapath
             api_spec->routes[i].nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-            api_spec->routes[i].nh_group.id = proto_route.nexthopgroupid();
+            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh_group,
+                                          proto_route.nexthopgroupid());
             break;
         case pds::Route::kVPCId:
             pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vpc,
@@ -2587,12 +2591,14 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
             api_spec->routes[i].nh_type = PDS_NH_TYPE_PEER_VPC;
             break;
         case pds::Route::kVnicId:
-            api_spec->routes[i].vnic.id = proto_route.vnicid();
+            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].vnic,
+                                          proto_route.vnicid());
             api_spec->routes[i].nh_type = PDS_NH_TYPE_VNIC;
             break;
         case pds::Route::kNexthopId:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_IP;
-            api_spec->routes[i].nh.id = proto_route.nexthopid();
+            pds_obj_key_proto_to_api_spec(&api_spec->routes[i].nh,
+                                          proto_route.nexthopid());
             break;
         default:
             api_spec->routes[i].nh_type = PDS_NH_TYPE_BLACKHOLE;
@@ -3106,15 +3112,15 @@ pds_mirror_session_proto_to_api_spec (pds_mirror_session_spec_t *api_spec,
         api_spec->rspan_spec.interface =
             proto_spec.rspanspec().interfaceid();
     } else if (proto_spec.has_erspanspec()) {
-        if ((proto_spec.erspanspec().tunnelid() == 0) ||
-            !proto_spec.erspanspec().has_srcip()) {
-            PDS_TRACE_ERR("src IP or dst ID missing in mirror session {} spec",
+        if (!proto_spec.erspanspec().has_srcip()) {
+            PDS_TRACE_ERR("Source IP missing in mirror session {} spec",
                           api_spec->key.id);
             return SDK_RET_INVALID_ARG;
         }
         types::IPAddress srcip = proto_spec.erspanspec().srcip();
         api_spec->type = PDS_MIRROR_SESSION_TYPE_ERSPAN;
-        api_spec->erspan_spec.tep.id = proto_spec.erspanspec().tunnelid();
+        pds_obj_key_proto_to_api_spec(&api_spec->erspan_spec.tep,
+                                      proto_spec.erspanspec().tunnelid());
         ipaddr_proto_spec_to_api_spec(&api_spec->erspan_spec.src_ip, srcip);
         api_spec->erspan_spec.dscp = proto_spec.erspanspec().dscp();
         api_spec->erspan_spec.span_id = proto_spec.erspanspec().spanid();
@@ -3295,7 +3301,7 @@ static inline sdk_ret_t
 pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                               const pds::SubnetSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     pds_obj_key_proto_to_api_spec(&api_spec->vpc, proto_spec.vpcid());
     ipv4pfx_proto_spec_to_api_spec(&api_spec->v4_prefix, proto_spec.v4prefix());
     ipv6pfx_proto_spec_to_ippfx_api_spec(&api_spec->v6_prefix,
@@ -3494,7 +3500,8 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                       key.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
                                       key.ipkey().ipaddr());
-        local_spec->subnet.id = proto_spec.subnetid();
+        pds_obj_key_proto_to_api_spec(&local_spec->subnet,
+                                      proto_spec.subnetid());
         break;
 
     case pds::MappingKey::kMACKey:
@@ -3507,7 +3514,7 @@ pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
         PDS_TRACE_ERR("Mandatory vnic attribute not set for local mapping");
         return SDK_RET_INVALID_ARG;
     }
-    local_spec->vnic.id = proto_spec.vnicid();
+    pds_obj_key_proto_to_api_spec(&local_spec->vnic, proto_spec.vnicid());
     if (proto_spec.has_publicip()) {
         if (proto_spec.publicip().af() == types::IP_AF_INET ||
             proto_spec.publicip().af() == types::IP_AF_INET6) {
@@ -3642,10 +3649,11 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     switch (key.keyinfo_case()) {
     case pds::MappingKey::kMACKey:
         remote_spec->key.type = PDS_MAPPING_TYPE_L2;
-        remote_spec->key.subnet.id = key.mackey().subnetid();
+        pds_obj_key_proto_to_api_spec(&remote_spec->key.subnet,
+                                      key.mackey().subnetid());
         MAC_UINT64_TO_ADDR(remote_spec->key.mac_addr,
                            key.mackey().macaddr());
-        remote_spec->subnet.id = remote_spec->key.subnet.id;
+        remote_spec->subnet = remote_spec->key.subnet;
         break;
 
     case pds::MappingKey::kIPKey:
@@ -3654,7 +3662,8 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                       key.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
                                       key.ipkey().ipaddr());
-        remote_spec->subnet.id = proto_spec.subnetid();
+        pds_obj_key_proto_to_api_spec(&remote_spec->subnet,
+                                      proto_spec.subnetid());
         break;
 
     default:
@@ -3664,12 +3673,14 @@ pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
     switch (proto_spec.dstinfo_case()) {
     case pds::MappingSpec::kTunnelId:
         remote_spec->nh_type = PDS_NH_TYPE_OVERLAY;
-        remote_spec->tep.id = proto_spec.tunnelid();
+        pds_obj_key_proto_to_api_spec(&remote_spec->tep,
+                                      proto_spec.tunnelid());
         break;
 
     case pds::MappingSpec::kNexthopGroupId:
         remote_spec->nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-        remote_spec->nh_group.id = proto_spec.nexthopgroupid();
+        pds_obj_key_proto_to_api_spec(&remote_spec->nh_group,
+                                      proto_spec.nexthopgroupid());
         break;
 
     case pds::MappingSpec::kVnicId:

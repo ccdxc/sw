@@ -229,6 +229,12 @@ void send_packet(const uint8_t *tx_pkt, uint32_t tx_pkt_len, uint32_t tx_port,
                  uint32_t exp_rx_port);
 void dump_packet(std::vector<uint8_t> data);
 
+inline std::ostream&
+operator<<(std::ostream& os, const pds_obj_key_t *key) {
+    os << " id: " << std::string(key->tostr());
+    return os;
+}
+
 }    // namespace test
 
 #endif    // __TEST_BASE_UTILS_HPP__

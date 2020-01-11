@@ -89,8 +89,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id.IPKey.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
-        spec.SubnetId = self.VNIC.SUBNET.SubnetId
-        spec.VnicId = self.VNIC.VnicId
+        spec.SubnetId = str.encode(str(self.VNIC.SUBNET.SubnetId))
+        spec.VnicId = str.encode(str(self.VNIC.VnicId))
         spec.MACAddr = self.VNIC.MACAddr.getnum()
         utils.GetRpcEncap(self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE

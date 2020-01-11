@@ -61,12 +61,12 @@ class NexthopGroupObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.Id)
+        grpcmsg.Id.append(str.encode(str(self.Id)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.Id
+        spec.Id = str.encode(str(self.Id))
         spec.Type = self.Type
         for i in range(self.NumNexthops):
             nhspec = spec.Members.add()

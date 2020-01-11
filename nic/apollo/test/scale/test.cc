@@ -69,7 +69,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 // In apollo, use TEPs as nexthop
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 120);
-                v6route_table.routes[j].tep.id = tep_id++;
+                v6route_table.routes[j].tep = test::int2pdsobjkey(tep_id++);
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
@@ -78,7 +78,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
                 compute_ipv6_prefix(&v6route_table.routes[j].prefix,
                                     v6_route_pfx, v6rtnum++, 124);
                 v6route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
-                v6route_table.routes[j].nh.id = nh_id++;
+                v6route_table.routes[j].nh = test::int2pdsobjkey(nh_id++);
                 if (nh_id > num_nh) {
                     nh_id = 1;
                 }
@@ -127,7 +127,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 route_table.routes[j].prefix.addr.addr.v4_addr =
                         ((0xC << 28) | (rtnum++ << 8));
                 route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                route_table.routes[j].tep.id = tep_id++;
+                route_table.routes[j].tep = test::int2pdsobjkey(tep_id++);
                 if (tep_id == tep_id_max) {
                     tep_id = tep_id_start;
                 }
@@ -139,13 +139,15 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 rtnum++;
                 if (i == TEST_APP_S1_SVC_TUNNEL_IN_OUT) {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                    route_table.routes[j].tep.id = svc_tep_id++;
+                    route_table.routes[j].tep =
+                        test::int2pdsobjkey(svc_tep_id++);
                 } else if (i == TEST_APP_S1_REMOTE_SVC_TUNNEL_IN_OUT) {
                    route_table.routes[j].nh_type = PDS_NH_TYPE_OVERLAY;
-                   route_table.routes[j].tep.id = num_svc_teps + ++svc_tep_id;
+                   route_table.routes[j].tep =
+                       test::int2pdsobjkey(num_svc_teps + ++svc_tep_id);
                 } else {
                     route_table.routes[j].nh_type = PDS_NH_TYPE_IP;
-                    route_table.routes[j].nh.id = nh_id++;
+                    route_table.routes[j].nh = test::int2pdsobjkey(nh_id++);
                     if (nh_id > num_nh) {
                         nh_id = 1;
                     }
@@ -296,8 +298,9 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     pds_local_mapping.key.ip_addr.addr.v4_addr =
                         (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                         (((k - 1) * num_ip_per_vnic) + l);
-                    pds_local_mapping.subnet.id =
-                        PDS_SUBNET_ID((i - 1), num_subnets, j);
+                    pds_local_mapping.subnet =
+                        test::int2pdsobjkey((PDS_SUBNET_ID((i - 1),
+                                                           num_subnets, j)));
                     if (g_test_params.fabric_encap.type ==
                             PDS_ENCAP_TYPE_VXLAN) {
                         pds_local_mapping.fabric_encap.type =
@@ -311,7 +314,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     MAC_UINT64_TO_ADDR(pds_local_mapping.vnic_mac,
                                        (((((uint64_t)i & 0x7FF) << 22) |
                                          ((j & 0x7FF) << 11) | (k & 0x7FF))));
-                    pds_local_mapping.vnic.id = vnic_key;
+                    pds_local_mapping.vnic = test::int2pdsobjkey(vnic_key);
                     if (natpfx) {
                         pds_local_mapping.public_ip_valid = true;
                         pds_local_mapping.public_ip.af = IP_AF_IPV4;
@@ -396,8 +399,8 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                 pds_remote_mapping.key.ip_addr.addr.v4_addr =
                     (g_test_params.vpc_pfx.addr.addr.v4_addr | ((j - 1) << 14)) |
                     ip_base++;
-                pds_remote_mapping.subnet.id =
-                    PDS_SUBNET_ID((i - 1), num_subnets, j);
+                pds_remote_mapping.subnet =
+                    test::int2pdsobjkey(PDS_SUBNET_ID((i - 1), num_subnets, j));
                 if (g_test_params.fabric_encap.type == PDS_ENCAP_TYPE_VXLAN) {
                     pds_remote_mapping.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
                     pds_remote_mapping.fabric_encap.val.vnid = remote_slot++;
@@ -408,7 +411,7 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                         remote_slot++;
                 }
                 pds_remote_mapping.nh_type = PDS_NH_TYPE_OVERLAY;
-                pds_remote_mapping.tep.id = tep_offset;
+                pds_remote_mapping.tep = test::int2pdsobjkey(tep_offset);
                 MAC_UINT64_TO_ADDR(
                     pds_remote_mapping.vnic_mac,
                     (((((uint64_t)i & 0x7FF) << 22) | ((j & 0x7FF) << 11) |
@@ -440,9 +443,11 @@ create_mappings (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
                     CONVERT_TO_V4_MAPPED_V6_ADDRESS(pds_remote_v6_mapping.key.ip_addr.addr.v6_addr,
                                                     pds_remote_mapping.key.ip_addr.addr.v4_addr);
                     if (g_test_params.v4_outer) {
-                        pds_remote_v6_mapping.tep.id = v6_tep_offset;
+                        pds_remote_v6_mapping.tep =
+                            test::int2pdsobjkey(v6_tep_offset);
                     } else {
-                        pds_remote_v6_mapping.tep.id = tep_offset;
+                        pds_remote_v6_mapping.tep =
+                            test::int2pdsobjkey(tep_offset);
                     }
                     if (artemis() && i == TEST_APP_S3_VNET_IN_OUT_V6_OUTER) {
                         pds_remote_v6_mapping.provider_ip_valid = true;
@@ -495,8 +500,9 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
         for (uint32_t j = 1; j <= num_subnets; j++) {
             for (uint32_t k = 1; k <= num_vnics; k++) {
                 memset(&pds_vnic, 0, sizeof(pds_vnic));
-                pds_vnic.subnet.id = PDS_SUBNET_ID((i - 1), num_subnets, j);
-                pds_vnic.key.id = vnic_key;
+                pds_vnic.subnet =
+                    test::int2pdsobjkey(PDS_SUBNET_ID((i - 1), num_subnets, j));
+                pds_vnic.key = test::int2pdsobjkey(vnic_key);
                 if (g_test_params.tag_vnics) {
                     pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
                     pds_vnic.vnic_encap.val.vlan_tag =
@@ -565,8 +571,9 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     if (artemis()) {
         // create a bridge vnic in the infra/provider/public vrf
         memset(&pds_vnic, 0, sizeof(pds_vnic));
-        pds_vnic.subnet.id = PDS_SUBNET_ID(((num_vpcs + 1) - 1), 1, 1);
-        pds_vnic.key.id = vnic_key;
+        pds_vnic.subnet =
+            test::int2pdsobjkey(PDS_SUBNET_ID(((num_vpcs + 1) - 1), 1, 1));
+        pds_vnic.key = test::int2pdsobjkey(vnic_key);
         pds_vnic.vnic_encap.type = PDS_ENCAP_TYPE_NONE;
         pds_vnic.vnic_encap.val.value = 0;
         pds_vnic.fabric_encap.type = PDS_ENCAP_TYPE_DOT1Q;
@@ -603,7 +610,8 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
 
     for (uint32_t i = 1; i <= num_subnets; i++) {
         memset(&pds_subnet, 0, sizeof(pds_subnet));
-        pds_subnet.key.id = PDS_SUBNET_ID((vpc_id - 1), num_subnets, i);
+        pds_subnet.key =
+            test::int2pdsobjkey(PDS_SUBNET_ID((vpc_id - 1), num_subnets, i));
         pds_subnet.vpc = test::int2pdsobjkey(vpc_id);
         pds_subnet.v4_prefix = *vpc_pfx;
         pds_subnet.v4_prefix.v4_addr =
@@ -690,7 +698,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
                                 "create vpc %u failed, rv %u", num_vpcs + 1, rv);
         // create a subnet under infra/underlay/provider VPC
         memset(&pds_subnet, 0, sizeof(pds_subnet));
-        pds_subnet.key.id = PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1);
+        pds_subnet.key =
+            test::int2pdsobjkey(PDS_SUBNET_ID(((num_vpcs + 1)- 1), 1, 1));
         pds_subnet.v4_vr_ip = g_test_params.device_gw_ip.addr.v4_addr;
         pds_subnet.vpc = test::int2pdsobjkey(num_vpcs + 1);
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, underlay_vr_mac);
@@ -1107,7 +1116,7 @@ create_nexthops (uint32_t num_nh, ip_prefix_t *ip_pfx, uint32_t num_vpcs)
 
     for (uint32_t nh = 1; nh <= num_nh; nh++) {
         memset(&pds_nh, 0, sizeof(pds_nexthop_spec_t));
-        pds_nh.key.id = id++;
+        pds_nh.key = test::int2pdsobjkey(id++);
         pds_nh.type = PDS_NH_TYPE_IP;
         pds_nh.ip.af = IP_AF_IPV4;
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
@@ -1161,7 +1170,7 @@ create_service_teps (uint32_t num_teps, ip_prefix_t *svc_tep_pfx,
 
     for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        pds_tep.key.id = tep_id;
+        pds_tep.key = test::int2pdsobjkey(tep_id);
         v6_ipaddr_offset = remote_svc ? TESTAPP_MAX_SERVICE_TEP + (i-1) : (i-1);
         compute_remote46_addr(&pds_tep.remote_ip, svc_tep_pfx, v6_ipaddr_offset);
         MAC_UINT64_TO_ADDR(pds_tep.mac, (((uint64_t)0x0303 << 22) | tep_id));
@@ -1203,7 +1212,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
     // leave the 1st IP in this prefix for MyTEP
     for (uint32_t i = 1; i <= num_teps; i++, tep_id++) {
         memset(&pds_tep, 0, sizeof(pds_tep));
-        pds_tep.key.id = tep_id;
+        pds_tep.key = test::int2pdsobjkey(tep_id);
         // 1st IP in the TEP prefix is gateway IP, 2nd is MyTEP IP,
         // so we skip the 1st (even for MyTEP we create a TEP)
         ipaddr_offset = i + 1;
@@ -1227,7 +1236,7 @@ create_teps (uint32_t num_teps, ip_prefix_t *ip_pfx)
         }
         if (apulu()) {
             pds_tep.nh_type = PDS_NH_TYPE_UNDERLAY;
-            pds_tep.nh.id = unh++;
+            pds_tep.nh = test::int2pdsobjkey(unh++);
             if (unh > g_test_params.max_underlay_nh) {
                 unh = 1;
             }
@@ -1493,14 +1502,14 @@ create_underlay_nexthops (uint32_t num_nh)
 
     // create an underlay nexthop group object
     memset(&pds_nhgroup, 0, sizeof(pds_nhgroup));
-    pds_nhgroup.key.id = 1;
+    pds_nhgroup.key = test::int2pdsobjkey(1);
     pds_nhgroup.type = PDS_NHGROUP_TYPE_UNDERLAY_ECMP;
     pds_nhgroup.num_nexthops =
         (num_nh > PDS_MAX_ECMP_NEXTHOP) ? PDS_MAX_ECMP_NEXTHOP : num_nh;
 
     for (uint32_t i = 1; i <= num_nh; i++) {
         memset(&pds_nh, 0, sizeof(pds_nh));
-        pds_nh.key.id = i;
+        pds_nh.key = test::int2pdsobjkey(i);
         pds_nh.type = PDS_NH_TYPE_UNDERLAY;
         pds_nh.l3_if.id = i;
         MAC_UINT64_TO_ADDR(pds_nh.underlay_mac, (peer_mac + i));

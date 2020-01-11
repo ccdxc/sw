@@ -78,8 +78,6 @@ public:
 
 // basic PDS data types
 typedef uint64_t    pds_batch_ctxt_t;          ///< opaque batch context
-typedef uint32_t    pds_subnet_id_t;           ///< subnet id
-typedef uint16_t    pds_vnic_id_t;             ///< vnic id
 typedef uint32_t    pds_rule_id_t;             ///< rule identifier
 typedef uint32_t    pds_rsc_pool_id_t;         ///< resource pool id
 typedef uint32_t    pds_epoch_t;               ///< epoch id
@@ -96,9 +94,6 @@ typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_meter_id_t;            ///< meter table index
 typedef uint32_t    pds_tag_id_t;              ///< tag table index
 typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
-typedef uint32_t    pds_nexthop_id_t;          ///< nexthop table index
-typedef uint32_t    pds_nexthop_group_id_t;    ///< nexthop group table index
-typedef uint32_t    pds_tep_id_t;              ///< TEP table index
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 typedef uint32_t    pds_policer_id_t;          ///< policer id
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
@@ -181,32 +176,21 @@ typedef struct pds_nat_action_s {
     ip_addr_t      dst_nat_ip;
 } pds_nat_action_t;
 
+typedef pds_obj_key_t pds_tep_key_t;
 typedef pds_obj_key_t pds_vpc_key_t;
+typedef pds_obj_key_t pds_subnet_key_t;
+typedef pds_obj_key_t pds_vnic_key_t;
+typedef pds_obj_key_t pds_nexthop_key_t;
+typedef pds_obj_key_t pds_nexthop_group_key_t;
 typedef pds_obj_key_t pds_nat_port_block_key_t;
 typedef pds_obj_key_t pds_dhcp_relay_key_t;
 typedef pds_obj_key_t pds_dhcp_policy_key_t;
 typedef pds_obj_key_t pds_policy_key_t;
 
-/// \brief    subnet key
-/// \remark subnet id is not scoped under a vpc, it is globally unique id
-typedef struct pds_subnet_key_s {
-    pds_subnet_id_t id;    ///< subnet id
-} __PACK__ pds_subnet_key_t;
-
-/// \brief    TEP key
-typedef struct pds_tep_key_s {
-    pds_tep_id_t id;    ///< TEP ID
-} __PACK__ pds_tep_key_t;
-
 /// \brief    interface key
 typedef struct pds_if_key_s {
     pds_if_id_t id;    ///< interface id
 } __PACK__ pds_if_key_t;
-
-/// \brief VNIC key
-typedef struct pds_vnic_key_s {
-    pds_vnic_id_t id;    ///< unique VNIC id (in the range 0 to 1024)
-} __PACK__ pds_vnic_key_t;
 
 /// \brief Meter key
 typedef struct pds_meter_key_s {
@@ -255,16 +239,6 @@ typedef struct pds_mirror_session_key_s {
     ///< unique mirror session id in the range [1-8]
     pds_mirror_session_id_t id;
 } __PACK__ pds_mirror_session_key_t;
-
-/// \brief nexthop key
-typedef struct pds_nexthop_key_s {
-    pds_nexthop_id_t  id;    ///< unique id of nexthop
-} __PACK__ pds_nexthop_key_t;
-
-/// \brief nexthop group key
-typedef struct pds_nexthop_group_key_s {
-    pds_nexthop_group_id_t  id;    ///< unique id of nexthop group
-} __PACK__ pds_nexthop_group_key_t;
 
 /// \brief    policer key
 typedef struct pds_policer_key_s {

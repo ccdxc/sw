@@ -47,7 +47,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.vnicid();
+        pds_obj_key_proto_to_api_spec(&key, request.vnicid());
         ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
@@ -114,7 +114,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.vnicid();
+        pds_obj_key_proto_to_api_spec(&key, request.vnicid());
         ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
@@ -172,7 +172,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        key.id = proto_req->vnicid(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->vnicid(i));
         ret = core::vnic_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -209,7 +209,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        key.id = proto_req->vnicid(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->vnicid(i));
         ret = core::vnic_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

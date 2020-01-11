@@ -80,21 +80,21 @@ namespace pds_ms {
 
 static void
 populate_evpn_bd_spec (pds_subnet_spec_t *subnet_spec,
+                       uint32_t          bd_id,
                        pds::EvpnBdSpec&  req)
 {
     req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
-    req.set_eviindex (subnet_spec->key.id);
-   // req.set_eviindex (pdsobjkey2msidx(subnet_spec->key));
+    req.set_eviindex (bd_id);
     req.set_vni (subnet_spec->fabric_encap.val.vnid);
 }
 
 static void
 populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
+                       uint32_t          bd_id,
                        pds::LimGenIrbIfSpec& req)
 {
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
-    req.set_bdindex (subnet_spec->key.id);
-   // req.set_bdindex (pdsobjkey2msidx(subnet_spec->key));
+    req.set_bdindex (bd_id);
     req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
 } 
 
@@ -126,11 +126,12 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
 static void
 populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
                                 pds::EvpnIfBindCfgSpec&  req, 
+                                uint32_t                 bd_id,
                                 uint32_t                 if_index)
 {
     req.set_entityindex (PDS_MS_EVPN_ENT_INDEX);
     req.set_ifindex (if_index);
-    req.set_eviindex (subnet_spec->key.id);
+    req.set_eviindex (bd_id);
 }
 
 
@@ -158,6 +159,7 @@ populate_lim_soft_if_spec (pds::CPInterfaceSpec& req,
 
 static types::ApiStatus
 process_subnet_update (pds_subnet_spec_t   *subnet_spec,
+                       uint32_t             bd_id,
                        NBB_LONG            row_status)
 {
     uint32_t if_index;
@@ -166,18 +168,18 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
     // EVPN BD Row Update
     pds::EvpnBdSpec evpn_bd_spec;
-    populate_evpn_bd_spec (subnet_spec, evpn_bd_spec);
+    populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
     pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // limGenIrbInterfaceTable Row Update
     pds::LimGenIrbIfSpec irb_spec;
-    populate_lim_irb_spec (subnet_spec, irb_spec);
+    populate_lim_irb_spec (subnet_spec, bd_id, irb_spec);
     pds_ms_set_amb_lim_gen_irb_if (irb_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Get IRB If Index
-    if_index = bd_id_to_ms_ifindex (subnet_spec->key.id);
-    SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X", 
-                    subnet_spec->key.id, if_index);
+    if_index = bd_id_to_ms_ifindex (bd_id);
+    SDK_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X", 
+                     bd_id, if_index);
 
     // Update IRB to VRF binding
     pds::LimInterfaceCfgSpec lim_if_spec;
@@ -191,7 +193,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
     pds::CPInterfaceAddrSpec lim_addr_spec;
     populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
-                            pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
+                            pds::CP_IF_TYPE_IRB, bd_id);
     pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     if (subnet_spec->host_ifindex != IFINDEX_INVALID) {
@@ -212,7 +214,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, if_index);
+        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, if_index);
         pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
@@ -234,6 +236,7 @@ struct subnet_upd_flags_t {
 static types::ApiStatus
 process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                              const subnet_upd_flags_t& ms_upd_flags,
+                             uint32_t             bd_id,
                              NBB_LONG             row_status)
 {
     uint32_t lif_ifindex;
@@ -242,15 +245,15 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
-        SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS BD Update", subnet_spec->key.id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.tostr(), bd_id);  
         pds::EvpnBdSpec evpn_bd_spec;
-        populate_evpn_bd_spec (subnet_spec, evpn_bd_spec);
+        populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
         pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
-        SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS BD If Update", subnet_spec->key.id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.tostr(), bd_id);  
         pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -267,12 +270,12 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, lif_ifindex);
+        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, lif_ifindex);
         pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     if (ms_upd_flags.irb) {
-        SDK_TRACE_DEBUG("Subnet %d Update: Trigger MS IRB Update", subnet_spec->key.id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.tostr(), bd_id);  
         // Configure IRB IP Address
         ip_prefix_t ip_prefix;
         ip_prefix.len = subnet_spec->v4_prefix.len;
@@ -280,7 +283,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
         pds::CPInterfaceAddrSpec lim_addr_spec;
         populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
-                                pds::CP_IF_TYPE_IRB, subnet_spec->key.id);
+                                pds::CP_IF_TYPE_IRB, bd_id);
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
@@ -291,15 +294,15 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 }
 
 static void 
-cache_subnet_spec(pds_subnet_spec_t* spec, bool op_delete) 
+cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete) 
 {
     auto state_ctxt = state_t::thread_context();
     if (op_delete) {
-        state_ctxt.state()->subnet_store().erase(spec->key.id);
+        state_ctxt.state()->subnet_store().erase(bd_id);
         return;
     }
     subnet_obj_uptr_t subnet_obj_uptr (new subnet_obj_t(*spec));
-    state_ctxt.state()->subnet_store().add_upd(spec->key.id, std::move(subnet_obj_uptr));
+    state_ctxt.state()->subnet_store().add_upd(bd_id, std::move(subnet_obj_uptr));
 }
 
 sdk_ret_t
@@ -307,16 +310,18 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
 
-    cache_subnet_spec (spec, false /* Create new*/);
-    ret_status = process_subnet_update (spec, AMB_ROW_ACTIVE);
+    auto bd_id = pdsobjkey2msidx(spec->key);
+    cache_subnet_spec (spec, bd_id, false /* Create new*/);
+
+    ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process subnet %d create (error=%d)\n", 
-                        spec->key.id, ret_status);
+        SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
+                       spec->key.tostr(), bd_id, ret_status);
         return pds_ms_api_to_sdk_ret (ret_status);
     }
 
-    SDK_TRACE_DEBUG ("subnet %d create is successfully processed\n", 
-                      spec->key.id);
+    SDK_TRACE_DEBUG ("subnet %s bd %d create is successfully processed\n", 
+                     spec->key.tostr(), bd_id);
     return SDK_RET_OK;
 }
 
@@ -325,16 +330,17 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
 
-    ret_status = process_subnet_update (spec, AMB_ROW_DESTROY);
+    auto bd_id = pdsobjkey2msidx(spec->key);
+    ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process subnet %d delete (error=%d)\n", 
-                        spec->key.id, ret_status);
+        SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
+                       spec->key.tostr(), bd_id, ret_status);
         return pds_ms_api_to_sdk_ret (ret_status);
     }
 
-    cache_subnet_spec (spec, true /* Delete */);
-    SDK_TRACE_DEBUG ("subnet %d delete is successfully processed\n", 
-                      spec->key.id);
+    cache_subnet_spec (spec, bd_id, true /* Delete */);
+    SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed\n", 
+                      spec->key.tostr(), bd_id);
     return SDK_RET_OK;
 }
 
@@ -344,12 +350,15 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     subnet_upd_flags_t  ms_upd_flags;
     bool fastpath = false;
     types::ApiStatus ret_status;
+    uint32_t bd_id;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
-        auto subnet_obj = state_ctxt.state()->subnet_store().get(spec->key.id);
+        bd_id = pdsobjkey2msidx(spec->key);
+        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
         if (subnet_obj == nullptr) {
-            SDK_TRACE_ERR("Update for unknown subnet %d", spec->key.id);
+            SDK_TRACE_ERR("Update for unknown subnet %s bd %d",
+                          spec->key.tostr(), bd_id);
             return SDK_RET_ENTRY_NOT_FOUND;
         }
 
@@ -357,16 +366,17 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap, 
                     sizeof(state_pds_spec.fabric_encap)) != 0) {
             ms_upd_flags.bd = true;
-            SDK_TRACE_INFO("Subnet %d VNI change - Old %d New %d", spec->key.id,
+            SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
+                           spec->key.tostr(), bd_id,
                            state_pds_spec.fabric_encap.val.vnid,
                            spec->fabric_encap.val.vnid);
             state_pds_spec.fabric_encap = spec->fabric_encap;
         }
         if (state_pds_spec.host_ifindex != spec->host_ifindex) {
             ms_upd_flags.bd_if = true;
-            SDK_TRACE_INFO("Subnet %d Host If change - Old 0x%x New 0x%x",
-                           spec->key.id, state_pds_spec.host_ifindex, 
-                           spec->host_ifindex);
+            SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old 0x%x New 0x%x",
+                            spec->key.tostr(), bd_id, state_pds_spec.host_ifindex, 
+                            spec->host_ifindex);
             state_pds_spec.host_ifindex = spec->host_ifindex;
         }
         if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
@@ -375,7 +385,8 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         }
         // Diff in any other property needs to be driven through fastpath
         if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
-            SDK_TRACE_INFO("Subnet %d fastpath parameter change", spec->key.id);
+            SDK_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
+                            spec->key.tostr(), bd_id);
             fastpath = true;
         }
         // Update the cached subnet spec with the new info
@@ -384,11 +395,13 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (fastpath) {
             // Stub takes care of sequencing if create has not yet been
             // received from MS.
-            auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt), subnet_obj);
+            auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt),
+                                               bd_id, subnet_obj);
             // Do not state_ctxt has been released above 
             // Do not access global state beyond this
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Subnet update fastpath fields failed %d", ret);
+                SDK_TRACE_ERR("Subnet %s BD %d update fastpath fields failed %d",
+                               spec->key.tostr(), bd_id, ret);
                 return ret;
             }
         }
@@ -396,15 +409,15 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
       // Do Not access/modify global state after this
 
     if (ms_upd_flags) {
-        ret_status = process_subnet_field_update(spec, ms_upd_flags, AMB_ROW_ACTIVE);
+        ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id, AMB_ROW_ACTIVE);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process subnet %d field update (error=%d)\n", 
-                            spec->key.id, ret_status);
+            SDK_TRACE_ERR ("Failed to process subnet %s field update (error=%d)\n", 
+                            spec->key.tostr(), ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
 
-        SDK_TRACE_DEBUG ("subnet %d field update is successfully processed\n", 
-                          spec->key.id);
+        SDK_TRACE_DEBUG ("subnet %s field update is successfully processed\n", 
+                          spec->key.tostr());
     }
     return SDK_RET_OK;
 }

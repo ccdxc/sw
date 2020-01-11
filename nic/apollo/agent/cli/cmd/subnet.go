@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	subnetID uint32
+	subnetID string
 )
 
 var subnetShowCmd = &cobra.Command{
@@ -31,7 +31,7 @@ var subnetShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(subnetShowCmd)
 	subnetShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	subnetShowCmd.Flags().Uint32VarP(&subnetID, "id", "i", 0, "Specify Subnet ID")
+	subnetShowCmd.Flags().StringVarP(&subnetID, "id", "i", "", "Specify Subnet ID")
 }
 
 func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -54,12 +54,12 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Subnet
 		req = &pds.SubnetGetRequest{
-			Id: []uint32{subnetID},
+            Id: [][]byte{[]byte(subnetID)},
 		}
 	} else {
 		// Get all Subnets
 		req = &pds.SubnetGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -92,13 +92,13 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 155)
+	hdrLine := strings.Repeat("-", 215)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
 	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3s\n",
+	fmt.Printf("%-36s%-36s%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3s\n",
 		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VR IPv4", "VR IPv6", "VR MAC",
 		"RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
@@ -113,8 +113,8 @@ func printSubnet(subnet *pds.Subnet) {
 	rtTblID := fmt.Sprintf("%d/%d", spec.GetV4RouteTableId(), spec.GetV6RouteTableId())
 	ingSGID := fmt.Sprintf("%d/%d", spec.GetIngV4SecurityPolicyId(), spec.GetIngV6SecurityPolicyId())
 	egSGID := fmt.Sprintf("%d/%d", spec.GetEgV4SecurityPolicyId(), spec.GetEgV6SecurityPolicyId())
-	fmt.Printf("%-6d%-6d%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3d\n",
-		spec.GetId(), spec.GetVPCId(), lifName,
+	fmt.Printf("%-36s%-36d%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3d\n",
+		string(spec.GetId()), string(spec.GetVPCId()), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),

@@ -50,15 +50,15 @@ message Route {
       // TODO: this should be obsoleted in apollo, TunnelId should be used
       types.IPAddress NextHop        = 3;
       // nexthop for this route
-      uint32          NexthopId      = 4;
+      bytes           NexthopId      = 4;
       // ECMP nexthop for this route
-      uint32          NexthopGroupId = 5;
+      bytes           NexthopGroupId = 5;
       // peer VPC in case of VPC peering
       bytes           VPCId          = 6;
       // Tunnel this prefix is pointing to
-      uint32          TunnelId       = 7;
+      bytes           TunnelId       = 7;
       // vnic this prefix is pointing to
-      uint32          VnicId         = 8;
+      bytes           VnicId         = 8;
   }
   // if NATAction is set, source and/or destination NAT will be performed on
   // the packet and if destination NAT is performed, another route lookup

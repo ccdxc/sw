@@ -837,8 +837,8 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     } else {
         spec->vnic_encap.type = PDS_ENCAP_TYPE_NONE;
     }
-    spec->subnet.id =
-        egress_vnic_data.egress_local_vnic_info_action.subnet_id;
+    //spec->subnet.id =
+        //egress_vnic_data.egress_local_vnic_info_action.subnet_id;
     if (egress_vnic_data.egress_local_vnic_info_action.mirror_en == true) {
         spec->rx_mirror_session_bmap =
             egress_vnic_data.egress_local_vnic_info_action.mirror_session;

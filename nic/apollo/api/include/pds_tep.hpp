@@ -19,7 +19,9 @@
 /// \defgroup PDS_TEP Tunnel End Point API
 /// @{
 
-#define PDS_MAX_TEP 1023    ///< Maximum tunnels
+/// invalid tunnel id
+#define PDS_VPC_ID_INVALID k_pds_obj_key_invalid
+#define PDS_MAX_TEP 1023    ///< maximum tunnels
 
 /// \brief type of the TEP
 typedef enum pds_tep_type_e {

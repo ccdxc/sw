@@ -27,20 +27,20 @@ public:
     nexthop_feeder() { };
     nexthop_feeder(const nexthop_feeder& feeder) {
         init(ipaddr2str(&feeder.spec.ip), MAC_TO_UINT64(feeder.spec.mac),
-             feeder.num_obj, feeder.spec.key.id, feeder.spec.type,
+             feeder.num_obj, feeder.spec.key, feeder.spec.type,
              feeder.spec.vlan, feeder.spec.vpc, feeder.spec.l3_if.id,
-             feeder.spec.tep.id);
+             feeder.spec.tep);
     }
 
     // Initialize feeder with the base set of values
     void init(std::string ip_str="0.0.0.0",
               uint64_t mac=0x0E0D0A0B0200,
               uint32_t num_obj=PDS_MAX_NEXTHOP,
-              pds_nexthop_id_t id=1,
+              pds_nexthop_key_t key=int2pdsobjkey(1),
               pds_nh_type_t type=k_nh_type,
               uint16_t vlan=1, pds_vpc_key_t vpc=int2pdsobjkey(1),
               pds_if_id_t if_id = k_l3_if_id,
-              pds_tep_id_t tep_id = 1);
+              pds_tep_key_t tep = int2pdsobjkey(1));
 
     // Iterate helper routines
     void iter_next(int width = 1);
@@ -57,7 +57,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_key_t *key) {
-    os << " id: " << key->id;
+    os << " id: " << std::string(key->tostr());
     return os;
 }
 
@@ -74,7 +74,7 @@ operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
         os << " underlay mac:" << macaddr2str(spec->underlay_mac)
            << " l3 if: " << std::hex << spec->l3_if.id;
     } else if (spec->type == PDS_NH_TYPE_OVERLAY) {
-        os << " tep: " << spec->tep.id;
+        os << " tep: " << std::string(spec->tep.tostr());
     }
     return os;
 }

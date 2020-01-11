@@ -122,11 +122,11 @@ class RouteObject(base.ConfigObjectBase):
             if self.NextHopType == "vpcpeer":
                 rtspec.VPCId = str.encode(str(self.PeerVPCId))
             elif self.NextHopType == "tep":
-                rtspec.TunnelId = self.TunnelId
+                rtspec.TunnelId = str.encode(str(self.TunnelId))
             elif self.NextHopType == "nh":
-                rtspec.NexthopId = self.NexthopId
+                rtspec.NexthopId = str.encode(str(self.NexthopId))
             elif self.NextHopType == "nhg":
-                rtspec.NexthopGroupId = self.NexthopGroupId
+                rtspec.NexthopGroupId = str.encode(str(self.NexthopGroupId))
         return
 
     def ValidateSpec(self, spec):

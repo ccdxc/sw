@@ -38,13 +38,13 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
     // the key, we don't verify whether a key or spec is passed here
     switch(cfg_msg.obj_id) {
     case OBJ_ID_VNIC:
-        if (vnic.find(cfg_msg.vnic.key.id) != vnic.end()) {
+        if (vnic.find(cfg_msg.vnic.key) != vnic.end()) {
             return true;
         }
         break;
 
     case OBJ_ID_SUBNET:
-        if (subnet.find(cfg_msg.subnet.key.id) != subnet.end()) {
+        if (subnet.find(cfg_msg.subnet.key) != subnet.end()) {
             return true;
         }
         break;
@@ -95,7 +95,7 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
 
     switch(cfg_msg.obj_id) {
     case OBJ_ID_VNIC:
-        vnic_it = vnic.find(cfg_msg.vnic.key.id);
+        vnic_it = vnic.find(cfg_msg.vnic.key);
         if (vnic_it == vnic.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
@@ -104,7 +104,7 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
         break;
 
     case OBJ_ID_SUBNET:
-        subnet_it = subnet.find(cfg_msg.subnet.key.id);
+        subnet_it = subnet.find(cfg_msg.subnet.key);
         if (subnet_it == subnet.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
@@ -161,11 +161,11 @@ void
 vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
     switch(cfg_msg.obj_id) {
     case OBJ_ID_VNIC:
-        vnic[cfg_msg.vnic.spec.key.id] = cfg_msg.vnic.spec;
+        vnic[cfg_msg.vnic.spec.key] = cfg_msg.vnic.spec;
         break;
 
     case OBJ_ID_SUBNET:
-        subnet[cfg_msg.subnet.spec.key.id] = cfg_msg.subnet.spec;
+        subnet[cfg_msg.subnet.spec.key] = cfg_msg.subnet.spec;
         break;
 
     case OBJ_ID_DHCP_RELAY:
@@ -196,11 +196,11 @@ void
 vpp_config_data::unset (obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg) {
     switch(obj_id) {
     case OBJ_ID_VNIC:
-        vnic.erase(cfg_msg.vnic.key.id);
+        vnic.erase(cfg_msg.vnic.key);
         break;
 
     case OBJ_ID_SUBNET:
-        subnet.erase(cfg_msg.subnet.key.id);
+        subnet.erase(cfg_msg.subnet.key);
         break;
 
     case OBJ_ID_DHCP_RELAY:
@@ -232,17 +232,17 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
     switch(left.obj_id) {
     case OBJ_ID_VNIC:
         if (right.op != API_OP_DELETE) {
-            return (left.vnic.spec.key.id == right.vnic.spec.key.id);
+            return (left.vnic.spec.key == right.vnic.spec.key);
         } else {
-            return (left.vnic.spec.key.id == right.vnic.key.id);
+            return (left.vnic.spec.key == right.vnic.key);
         }
         break;
 
     case OBJ_ID_SUBNET:
         if (right.op != API_OP_DELETE) {
-            return (left.subnet.spec.key.id == right.subnet.spec.key.id);
+            return (left.subnet.spec.key == right.subnet.spec.key);
         } else {
-            return (left.subnet.spec.key.id == right.subnet.key.id);
+            return (left.subnet.spec.key == right.subnet.key);
         }
         break;
 

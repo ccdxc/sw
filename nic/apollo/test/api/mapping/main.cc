@@ -51,7 +51,7 @@ protected:
 
         if (apulu()) {
             g_encap_type = PDS_ENCAP_TYPE_VXLAN;
-            g_encap_val = k_subnet_key.id + 512;
+            g_encap_val = pdsobjkey2int(k_subnet_key) + 512;
         }
 
         pds_batch_ctxt_t bctxt = batch_start();
@@ -80,7 +80,7 @@ protected:
 
         // create VNICs
         vnic_feeder vnic_feeder;
-        vnic_feeder.init(1, k_max_vnic, 0x000000030b020a01,
+        vnic_feeder.init(int2pdsobjkey(1), k_max_vnic, 0x000000030b020a01,
                          PDS_ENCAP_TYPE_DOT1Q,
                          g_encap_type, true, false);
         many_create(bctxt, vnic_feeder);
@@ -94,7 +94,7 @@ protected:
 
         // delete VNICs
         vnic_feeder vnic_feeder;
-        vnic_feeder.init(1, k_max_vnic, 0x000000030b020a01,
+        vnic_feeder.init(int2pdsobjkey(1), k_max_vnic, 0x000000030b020a01,
                          PDS_ENCAP_TYPE_DOT1Q,
                          g_encap_type, true, false);
         many_delete(bctxt, vnic_feeder);
@@ -138,9 +138,9 @@ static void create_local_mapping_feeders(local_mapping_feeder feeders[],
     int num_ips = 2;
 #endif
     // first set
-    feeders[0].init(k_vpc_key, k_subnet_key.id, "10.0.0.2/8",
-                0x000000030b020a01, g_encap_type, g_encap_val, 1, true,
-                "12.0.0.0/16", num_vnics, num_ips, PDS_MAPPING_TYPE_L3);
+    feeders[0].init(k_vpc_key, k_subnet_key, "10.0.0.2/8",
+                0x000000030b020a01, g_encap_type, g_encap_val, int2pdsobjkey(1),
+                true, "12.0.0.0/16", num_vnics, num_ips, PDS_MAPPING_TYPE_L3);
 
     // subsequent sets can be copied from first set and iterated to
     // required position.
@@ -167,7 +167,7 @@ static void create_remote_mapping_feeders(remote_mapping_feeder feeders[],
 #endif
 
     // first set
-    feeders[0].init(k_vpc_key, k_subnet_key.id, "10.80.0.2/8",
+    feeders[0].init(k_vpc_key, k_subnet_key, "10.80.0.2/8",
                 0x000000140b020a01, g_encap_type, g_encap_val,
                 PDS_NH_TYPE_OVERLAY, 2, num_teps, num_vnics,
                 PDS_MAPPING_TYPE_L3);

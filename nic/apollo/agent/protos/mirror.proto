@@ -32,7 +32,7 @@ message ERSpanSpec {
   bytes           VPCId  = 1;
   oneof erspandst {
       // tunnel (aka. TEP) as the ERSPAN destination
-      uint32    TunnelId = 2;
+      bytes     TunnelId = 2;
       // local/remote mapping as the ERSPAN destination
       MappingKey Mapping = 3;
   }

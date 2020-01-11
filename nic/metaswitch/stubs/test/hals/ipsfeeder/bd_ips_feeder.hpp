@@ -26,7 +26,7 @@ public:
     ATG_BDPI_UPDATE_BD generate_add_upd_ips(void) {
         ATG_BDPI_UPDATE_BD add_upd {0};
       // generate_ips_header (add_upd); 
-        add_upd.bd_id.bd_id = subnet_spec.key.id;
+        add_upd.bd_id.bd_id = bd_id;
         add_upd.bd_properties.vni = subnet_spec.fabric_encap.val.vnid;
         return add_upd;
     }
@@ -38,8 +38,8 @@ public:
 
     void trigger_delete(void) override {
         bd_input_params_t::trigger_delete();
-        ATG_L2_BD_ID bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, subnet_spec.key.id, 0};
-        l2f_is.delete_bd(&bd_id, NBB_CORRELATOR{0});
+        ATG_L2_BD_ID ms_bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, bd_id, 0};
+        l2f_is.delete_bd(&ms_bd_id, NBB_CORRELATOR{0});
     }
 
     void trigger_update(void) override {
@@ -47,16 +47,16 @@ public:
             pds_ms::l2f_bd_t  bd;
             auto ms_ifindex = pds_ms::pds_to_ms_ifindex(subnet_spec.host_ifindex,
                                                         IF_TYPE_LIF);
-            bd.handle_add_if(subnet_spec.key.id, ms_ifindex);
+            bd.handle_add_if(bd_id, ms_ifindex);
             prev_if_bind = ms_ifindex;
             test_if_bind = false;
             return;
         }
         if (test_if_unbind) {
             ATG_BDPI_INTERFACE_BIND if_bind;
-            ATG_L2_BD_ID bd_id; bd_id.bd_id = subnet_spec.key.id;
+            ATG_L2_BD_ID ms_bd_id; ms_bd_id.bd_id = bd_id;
             if_bind.if_index = prev_if_bind;
-            l2f_is.delete_bd_if(&bd_id, NBB_CORRELATOR(), &if_bind);
+            l2f_is.delete_bd_if(&ms_bd_id, NBB_CORRELATOR(), &if_bind);
             test_if_unbind = false;
             return;
         }

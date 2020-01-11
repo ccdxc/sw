@@ -66,10 +66,12 @@ TEST_F(nh_group_test, nh_group_workflow_b1) {
 
     nexthop_group_feeder feeder;
 
-    feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs, 10, 1);
+    feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
+                int2pdsobjkey(10), 1);
     workflow_b1<nexthop_group_feeder>(feeder);
 
-    feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps, 10, 1);
+    feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
+                int2pdsobjkey(10), 1);
     workflow_b1<nexthop_group_feeder>(feeder);
 }
 
@@ -80,8 +82,10 @@ TEST_F(nh_group_test, DISABLED_nh_workflow_b2) {
 
     nexthop_group_feeder feeder1, feeder1A;
 
-    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs, 10, 1);
-    feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps, 10, 1);
+    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
+                 int2pdsobjkey(10), 1);
+    feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
+                  int2pdsobjkey(10), 1);
     workflow_b2<nexthop_group_feeder>(feeder1, feeder1A);
 }
 
@@ -115,19 +119,19 @@ TEST_F(nh_group_test, nh_group_workflow_3) {
     nexthop_group_feeder feeder1, feeder2, feeder3;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 10, k_num_groups);
+                 int2pdsobjkey(10), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 30, k_num_groups);
+                 int2pdsobjkey(30), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 50, k_num_groups);
+                 int2pdsobjkey(50), k_num_groups);
     workflow_3<nexthop_group_feeder>(feeder1, feeder2, feeder3);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 10, k_num_groups);
+                 int2pdsobjkey(10), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 30, k_num_groups);
+                 int2pdsobjkey(30), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 50, k_num_groups);
+                 int2pdsobjkey(50), k_num_groups);
     workflow_3<nexthop_group_feeder>(feeder1, feeder2, feeder3);
 }
 
@@ -149,19 +153,19 @@ TEST_F(nh_group_test, nh_group_workflow_5) {
     nexthop_group_feeder feeder1, feeder2, feeder3;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 500, k_num_groups);
+                 int2pdsobjkey(500), k_num_groups);
     workflow_5<nexthop_group_feeder>(feeder1, feeder2, feeder3);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 500, k_num_groups);
+                 int2pdsobjkey(500), k_num_groups);
     workflow_5<nexthop_group_feeder>(feeder1, feeder2, feeder3);
 }
 
@@ -171,19 +175,19 @@ TEST_F(nh_group_test, nh_group_workflow_6) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_6<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_6<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 }
 
@@ -193,19 +197,19 @@ TEST_F(nh_group_test, nh_group_workflow_7) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_7<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_7<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 }
 
@@ -215,19 +219,19 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_8) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_8<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     feeder1B.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-2),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_8<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 }
 
@@ -237,15 +241,15 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_9) {
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_9<nexthop_group_feeder>(feeder1, feeder1A);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_9<nexthop_group_feeder>(feeder1, feeder1A);
 }
 
@@ -256,32 +260,32 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
 
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     feeder2A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  300, k_num_groups);
+                  int2pdsobjkey(300), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 500, k_num_groups);
+                 int2pdsobjkey(500), k_num_groups);
     feeder3A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  500, k_num_groups);
+                  int2pdsobjkey(500), k_num_groups);
     feeder4.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 700, k_num_groups);
+                 int2pdsobjkey(700), k_num_groups);
     workflow_10<nexthop_group_feeder>(feeder1, feeder2, feeder2A,
                                       feeder3, feeder3A, feeder4);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     feeder2A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  300, k_num_groups);
+                  int2pdsobjkey(300), k_num_groups);
     feeder3.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 500, k_num_groups);
+                 int2pdsobjkey(500), k_num_groups);
     feeder3A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  500, k_num_groups);
+                  int2pdsobjkey(500), k_num_groups);
     feeder4.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 700, k_num_groups);
+                 int2pdsobjkey(700), k_num_groups);
     workflow_10<nexthop_group_feeder>(feeder1, feeder2, feeder2A,
                                       feeder3, feeder3A, feeder4);
 }
@@ -304,11 +308,11 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_2) {
     nexthop_group_feeder feeder;
 
     feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                1, k_max_groups+1);
+                int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_2<nexthop_group_feeder>(feeder);
 
     feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                1, k_max_groups+1);
+                int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_2<nexthop_group_feeder>(feeder);
 }
 
@@ -330,15 +334,15 @@ TEST_F(nh_group_test, nh_group_workflow_neg_4) {
     nexthop_group_feeder feeder1, feeder2;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_4<nexthop_group_feeder>(feeder1, feeder2);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_4<nexthop_group_feeder>(feeder1, feeder2);
 }
 
@@ -348,15 +352,15 @@ TEST_F(nh_group_test, nh_group_workflow_neg_5) {
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_neg_5<nexthop_group_feeder>(feeder1, feeder1A);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                  1, k_max_groups);
+                  int2pdsobjkey(1), k_max_groups);
     workflow_neg_5<nexthop_group_feeder>(feeder1, feeder1A);
 }
 
@@ -366,15 +370,15 @@ TEST_F(nh_group_test, nh_group_workflow_neg_6) {
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                  1, k_max_groups+1);
+                  int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_6<nexthop_group_feeder>(feeder1, feeder1A);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 1, k_max_groups);
+                 int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                  1, k_max_groups+1);
+                  int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_6<nexthop_group_feeder>(feeder1, feeder1A);
 }
 
@@ -384,19 +388,19 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_7) {
     nexthop_group_feeder feeder1, feeder1A, feeder2;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
-                  100, k_num_groups);
+                  int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_7<nexthop_group_feeder>(feeder1, feeder1A, feeder2);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
-                  100, k_num_groups);
+                  int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_7<nexthop_group_feeder>(feeder1, feeder1A, feeder2);
 }
 
@@ -406,15 +410,15 @@ TEST_F(nh_group_test, nh_group_workflow_neg_8) {
     nexthop_group_feeder feeder1, feeder2;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_8<nexthop_group_feeder>(feeder1, feeder2);
 
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 100, k_num_groups);
+                 int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
-                 300, k_num_groups);
+                 int2pdsobjkey(300), k_num_groups);
     workflow_neg_8<nexthop_group_feeder>(feeder1, feeder2);
 }
 

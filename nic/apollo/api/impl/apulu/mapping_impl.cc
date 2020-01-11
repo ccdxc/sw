@@ -367,11 +367,11 @@ mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     // reserve all remote MAC or IP mapping resources
     PDS_TRACE_DEBUG("Reserving resources for mapping %s local %u, subnet %u, "
-                    "nh type %s-%u", mapping->key2str().c_str(), spec->is_local,
+                    "nh type %s-%s", mapping->key2str().c_str(), spec->is_local,
                     spec->subnet.id,
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
-                        spec->tep.id : spec->nh_group.id);
+                        spec->tep.tostr() : spec->nh_group.tostr());
     if (spec->key.type == PDS_MAPPING_TYPE_L2) {
         vpc = NULL;
         subnet = subnet_find(&spec->key.subnet);

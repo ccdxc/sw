@@ -20,7 +20,7 @@ public:
     pds_vpc_key_t vpc;
     pds_mirror_session_type_t type;
     uint32_t snap_len;
-    uint32_t tep_id;
+    pds_tep_key_t tep;
     ip_addr_t dst_ip;
     ip_addr_t src_ip;
     uint32_t span_id;
@@ -34,7 +34,7 @@ public:
     // initalize feeder with base set of values
     void init(pds_mirror_session_key_t key, uint8_t max_ms,
               pds_ifindex_t interface, uint16_t vlan_tag,
-              std::string src_ip, uint32_t tep_id,
+              std::string src_ip, pds_tep_key_t tep,
               uint32_t span_id = 1, uint32_t dscp = 1);
 
     // Iterate helper routines

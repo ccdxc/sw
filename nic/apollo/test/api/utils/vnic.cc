@@ -73,16 +73,17 @@ vnic_feeder_encap_next (pds_encap_t *encap, int width = 1)
 //----------------------------------------------------------------------------
 
 void
-vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
+vnic_feeder::init(pds_vnic_key_t key, uint32_t num_vnic, uint64_t mac,
                   pds_encap_type_t vnic_encap_type,
                   pds_encap_type_t fabric_encap_type,
                   bool src_dst_check, bool configure_policy) {
-    this->id = id;
+    this->key = key;
     this->vpc = int2pdsobjkey(1);
-    this->subnet_id = 1;
-    this->mac_u64 = mac | (id << 24);
-    vnic_feeder_encap_init(id, vnic_encap_type, &vnic_encap);
-    vnic_feeder_encap_init(id, fabric_encap_type, &fabric_encap);
+    this->subnet = int2pdsobjkey(1);
+    this->mac_u64 = mac | (pdsobjkey2int(key) << 24);
+    vnic_feeder_encap_init(pdsobjkey2int(key), vnic_encap_type, &vnic_encap);
+    vnic_feeder_encap_init(pdsobjkey2int(key), fabric_encap_type,
+                           &fabric_encap);
     this->src_dst_check = src_dst_check;
     this->tx_mirror_session_bmap = 0;
     this->rx_mirror_session_bmap = 0;
@@ -92,7 +93,7 @@ vnic_feeder::init(uint32_t id, uint32_t num_vnic, uint64_t mac,
 
 void
 vnic_feeder::iter_next(int width) {
-    id += width;
+    key = int2pdsobjkey(pdsobjkey2int(key) + width);
     vnic_feeder_encap_next(&vnic_encap);
     if (apollo()) {
         vnic_feeder_encap_next(&fabric_encap);
@@ -105,8 +106,7 @@ vnic_feeder::iter_next(int width) {
 
 void
 vnic_feeder::key_build(pds_vnic_key_t *key) const {
-    memset(key, 0, sizeof(pds_vnic_key_t));
-    key->id = this->id;
+    *key = this->key;
 }
 
 static void
@@ -135,7 +135,7 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
     memset(spec, 0, sizeof(pds_vnic_spec_t));
     this->key_build(&spec->key);
 
-    spec->subnet.id = subnet_id;
+    spec->subnet = subnet;
     spec->vnic_encap = vnic_encap;
     spec->fabric_encap = fabric_encap;
     MAC_UINT64_TO_ADDR(spec->mac_addr, mac_u64);
@@ -169,7 +169,7 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
 
 bool
 vnic_feeder::key_compare(const pds_vnic_key_t *key) const {
-    if (id != key->id)
+    if (this->key != *key)
         return false;
     return true;
 }
@@ -206,13 +206,13 @@ static vnic_feeder k_vnic_feeder;
 
 void sample_vnic_setup(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_vnic_feeder.init(1);
+    k_vnic_feeder.init(int2pdsobjkey(1));
     many_create(bctxt, k_vnic_feeder);
 }
 
 void sample_vnic_teardown(pds_batch_ctxt_t bctxt) {
     // setup and teardown parameters should be in sync
-    k_vnic_feeder.init(1);
+    k_vnic_feeder.init(int2pdsobjkey(1));
     many_delete(bctxt, k_vnic_feeder);
 }
 

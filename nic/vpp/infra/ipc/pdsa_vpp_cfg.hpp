@@ -33,8 +33,8 @@ typedef struct {
 // registered callbacks) when this config changes
 class vpp_config_data {
     // containers are ordered map, instance to spec
-    std::map<pds_vnic_id_t, pds_vnic_spec_t> vnic;
-    std::map<pds_subnet_id_t, pds_subnet_spec_t> subnet;
+    std::unordered_map<pds_vnic_key_t, pds_vnic_spec_t, pds_obj_key_hash> vnic;
+    std::unordered_map<pds_subnet_key_t, pds_subnet_spec_t, pds_obj_key_hash> subnet;
     std::unordered_map<pds_dhcp_relay_key_t, pds_dhcp_relay_spec_t, pds_obj_key_hash> dhcp_relay;
     std::unordered_map<pds_dhcp_policy_key_t, pds_dhcp_policy_spec_t, pds_obj_key_hash> dhcp_policy;
     std::unordered_map<pds_nat_port_block_key_t, pds_nat_port_block_spec_t, pds_obj_key_hash> nat_port_block;

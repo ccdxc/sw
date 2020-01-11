@@ -18,9 +18,9 @@
 
 namespace pds_ms {
 
-void l2f_local_mac_ip_add(pds_subnet_id_t subnet_id, const ip_addr_t& ip,
+void l2f_local_mac_ip_add(const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex);
-void l2f_local_mac_ip_del(pds_subnet_id_t subnet_id, const ip_addr_t& ip,
+void l2f_local_mac_ip_del(const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
                           mac_addr_t mac);
 void l2f_del_remote_macs_for_bd(state_t::context_t& state_ctxt, ms_bd_id_t bd_id,
                                 pds_batch_ctxt_t bctxt);
@@ -46,8 +46,9 @@ private:
     struct store_info_t {
         bd_obj_t*       bd_obj = nullptr;
         mac_obj_t*      mac_obj = nullptr;
+        subnet_obj_t*   subnet_obj = nullptr;
         std::vector<tep_obj_t*>  tep_obj_list;
-        pds_nexthop_group_id_t  hal_oecmp_idx; 
+        ms_hw_tbl_id_t  hal_oecmp_idx; 
     };
 
 private:

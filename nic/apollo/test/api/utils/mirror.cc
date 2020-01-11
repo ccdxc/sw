@@ -15,7 +15,7 @@ namespace api {
 void
 mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
                             pds_ifindex_t interface, uint16_t vlan_tag,
-                            std::string src_ip, uint32_t tep_id,
+                            std::string src_ip, pds_tep_key_t tep,
                             uint32_t span_id, uint32_t dscp) {
 
     this->key =  key;
@@ -26,7 +26,7 @@ mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
     this->encap.val.vlan_tag = vlan_tag;
     this->num_obj  = max_ms;
     this->vpc = int2pdsobjkey(1);
-    this->tep_id = tep_id;
+    this->tep = tep;
     memset(&this->src_ip, 0x0, sizeof(ip_addr_t));
     test::extract_ip_addr((char *)src_ip.c_str(), &this->src_ip);
     this->span_id = span_id;
@@ -78,7 +78,7 @@ mirror_session_feeder::spec_build(pds_mirror_session_spec_t *spec) const {
         spec->erspan_spec.vpc = vpc;
         spec->erspan_spec.dscp = dscp;
         spec->erspan_spec.span_id = span_id;
-        spec->erspan_spec.tep.id = tep_id;
+        spec->erspan_spec.tep = tep;
         // todo: need to handle mapping key
     }
 }
@@ -109,7 +109,7 @@ mirror_session_feeder::spec_compare(
         if ((spec->erspan_spec.vpc != vpc) ||
             (spec->erspan_spec.dscp != dscp) ||
             (spec->erspan_spec.span_id != span_id) ||
-             (spec->erspan_spec.tep.id != tep_id))
+             (spec->erspan_spec.tep != tep))
             return false;
     }
     return true;

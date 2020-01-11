@@ -20,10 +20,10 @@ class ecmp_idx_guard_t : public slab_obj_t<ecmp_idx_guard_t> {
 public:
     ecmp_idx_guard_t(void); // Allocates a new index
     ~ecmp_idx_guard_t(void); // Frees the index back to rte_indexer
-    pds_nexthop_group_id_t idx(void) {return ecmp_idx_;}
+    ms_hw_tbl_id_t idx(void) {return ecmp_idx_;}
 
 private:  
-    pds_nexthop_group_id_t ecmp_idx_; 
+    ms_hw_tbl_id_t ecmp_idx_; 
     uint32_t   filler; // SLAB requires at least 8 bytes
 };
 

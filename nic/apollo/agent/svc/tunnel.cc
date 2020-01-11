@@ -15,6 +15,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_tep_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t *api_spec;
     bool batched_internally = false;
@@ -40,7 +41,6 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
         batched_internally = true;
     }
     for (int i = 0; i < proto_req->request_size(); i ++) {
-
         api_spec = (pds_tep_spec_t *)
                     core::agent_state::state()->tep_slab()->alloc();
         if (api_spec == NULL) {
@@ -48,9 +48,10 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         pds_tep_proto_to_api_spec(api_spec, request);
         hooks::tunnel_create(api_spec);
-        ret = core::tep_create(request.id(), api_spec, bctxt);
+        ret = core::tep_create(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -79,6 +80,7 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_tep_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t *api_spec;
     bool batched_internally = false;
@@ -111,8 +113,9 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         pds_tep_proto_to_api_spec(api_spec, request);
-        ret = core::tep_update(request.id(), api_spec, bctxt);
+        ret = core::tep_update(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -140,6 +143,7 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
                             const pds::TunnelDeleteRequest *proto_req,
                             pds::TunnelDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_tep_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -163,7 +167,8 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        ret = core::tep_delete(proto_req->id(i), bctxt);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = core::tep_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
         }
@@ -190,6 +195,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
                          const pds::TunnelGetRequest *proto_req,
                          pds::TunnelGetResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_tep_key_t key;
     pds_tep_info_t info = {0};
 
     if (proto_req == NULL) {
@@ -197,12 +203,12 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
         return Status::OK;
     }
     if (proto_req->id_size() == 0) {
-        // get all
         ret = core::tep_get_all(pds_tep_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        ret = core::tep_get(proto_req->id(i), &info);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = core::tep_get(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
             break;

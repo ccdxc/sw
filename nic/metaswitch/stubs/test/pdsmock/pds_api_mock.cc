@@ -388,7 +388,7 @@ sdk_ret_t pds_mirror_session_create(pds_mirror_session_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
+sdk_ret_t pds_subnet_create(pds_subnet_spec_t *spec,
                             pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
@@ -399,7 +399,7 @@ sdk_ret_t pds_subnet_create(pds_subnet_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_subnet_update(pds_subnet_spec_s *spec,
+sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec,
                             pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     if (pds_mock->mock_pds_spec_op_fail_) {
@@ -410,7 +410,7 @@ sdk_ret_t pds_subnet_update(pds_subnet_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_subnet_delete(pds_subnet_key_s *key,
+sdk_ret_t pds_subnet_delete(pds_subnet_key_t *key,
                             pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_SUBNET, API_OP_DELETE);

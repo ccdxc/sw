@@ -13,8 +13,8 @@ namespace api {
 constexpr pds_encap_t k_default_tep_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 100};
 constexpr pds_encap_t k_zero_encap = {PDS_ENCAP_TYPE_NONE, 0};
 constexpr uint64_t k_tep_mac = 0x0E0D0A0B0200;
-constexpr pds_nexthop_key_t k_base_nh_key = {1};
-constexpr pds_nexthop_group_key_t k_base_nh_group_key = {1};
+const pds_nexthop_key_t k_base_nh_key = int2pdsobjkey(1);
+const pds_nexthop_group_key_t k_base_nh_group_key = int2pdsobjkey(1);
 const uint16_t k_max_tep = apulu() ? 2048 : PDS_MAX_TEP;
 static constexpr bool k_nat = FALSE;
 static const std::string k_base_dipi = "50::50:1:1";
@@ -29,7 +29,7 @@ tep_feeder::init(uint32_t id, std::string ip_str, uint32_t num_tep,
                  pds_encap_t encap, bool nat, pds_tep_type_t type,
                  std::string dipi_str, uint64_t dmac) {
     memset(&this->spec, 0, sizeof(pds_tep_spec_t));
-    this->spec.key.id = id;
+    this->spec.key = int2pdsobjkey(id);
     this->spec.type = type;
     extract_ip_addr(ip_str.c_str(), &this->spec.remote_ip);
     extract_ip_addr(dipi_str.c_str(), &this->spec.ip_addr);
@@ -45,7 +45,7 @@ tep_feeder::init(uint32_t id, uint64_t dmac, std::string ip_str,
                  pds_nexthop_key_t base_nh,
                  pds_nexthop_group_key_t base_nh_group) {
     memset(&this->spec, 0, sizeof(pds_tep_spec_t));
-    this->spec.key.id = id;
+    this->spec.key = int2pdsobjkey(id);
     extract_ip_addr(ip_str.c_str(), &this->spec.remote_ip);
     MAC_UINT64_TO_ADDR(this->spec.mac, dmac);
     this->spec.nh_type = nh_type;
@@ -64,7 +64,7 @@ tep_feeder::init(uint32_t id, uint64_t dmac, std::string ip_str,
 
 void
 tep_feeder::iter_next(int width) {
-    this->spec.key.id += width;
+    this->spec.key = int2pdsobjkey(pdsobjkey2int(this->spec.key) + width);
     if (!ip_addr_is_zero(&this->spec.ip_addr))
         test::increment_ip_addr(&this->spec.ip_addr, width);
     increment_ip_addr(&this->spec.remote_ip, width);
@@ -74,15 +74,15 @@ tep_feeder::iter_next(int width) {
         test::increment_ip_addr(&this->spec.remote_svc_public_ip, width);
     switch (this->spec.nh_type) {
     case PDS_NH_TYPE_UNDERLAY_ECMP:
-        this->spec.nh_group.id += width;
-        if (this->spec.nh_group.id >= PDS_MAX_NEXTHOP_GROUP) {
-            this->spec.nh_group.id = 1;
+        this->spec.nh_group = int2pdsobjkey(pdsobjkey2int(this->spec.nh_group) + width);
+        if (pdsobjkey2int(this->spec.nh_group) >= PDS_MAX_NEXTHOP_GROUP) {
+            this->spec.nh_group = int2pdsobjkey(1);
         }
         break;
     case PDS_NH_TYPE_UNDERLAY:
-        this->spec.nh.id += width;
-        if (this->spec.nh.id >= PDS_MAX_NEXTHOP) {
-            this->spec.nh.id = 1;
+        this->spec.nh = int2pdsobjkey(pdsobjkey2int(this->spec.nh) + width);
+        if (pdsobjkey2int(this->spec.nh) >= PDS_MAX_NEXTHOP) {
+            this->spec.nh = int2pdsobjkey(1);
         }
         break;
     default:
@@ -103,7 +103,7 @@ tep_feeder::spec_build(pds_tep_spec_t *spec) const {
 
 bool
 tep_feeder::key_compare(const pds_tep_key_t *key) const {
-    return key->id == this->spec.key.id;
+    return *key == this->spec.key;
 }
 
 bool

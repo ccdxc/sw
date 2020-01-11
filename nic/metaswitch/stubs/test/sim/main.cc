@@ -296,7 +296,7 @@ pds_ms_sim_test_config ()
 
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
-    subnet_spec.key.id = 1;
+    subnet_spec.key = pds_ms::msidx2pdsobjkey(1);
     subnet_spec.vpc = pds_ms::msidx2pdsobjkey(k_vpc_id);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
@@ -318,13 +318,13 @@ pds_ms_sim_test_config ()
         mac_addr_t  mac;
         str2ipaddr((char*) "99.0.0.1", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "99.0.0.2", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "99.0.0.5", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -333,7 +333,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (1, ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -342,7 +342,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_del (1, ip, mac);
+        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(1), ip, mac);
     }
 }
 } // End of pds_ms_test  namespace

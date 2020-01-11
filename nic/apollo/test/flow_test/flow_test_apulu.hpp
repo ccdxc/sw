@@ -393,7 +393,7 @@ public:
             memcpy(epdb[vpc_id].leps[epdb[vpc_id].v4_lcount].mac,
                    local_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].leps[epdb[vpc_id].v4_lcount].bd_id =
-                local_spec->subnet.id;
+                test::pdsobjkey2int(local_spec->subnet);
             epdb[vpc_id].v4_lcount++;
         } else {
             if (epdb[vpc_id].v6_lcount >= MAX_LOCAL_EPS) {
@@ -405,7 +405,7 @@ public:
             memcpy(epdb[vpc_id].lep6s[epdb[vpc_id].v6_lcount].mac,
                    local_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].lep6s[epdb[vpc_id].v6_lcount].bd_id =
-                local_spec->subnet.id;
+                test::pdsobjkey2int(local_spec->subnet);
             epdb[vpc_id].v6_lcount++;
         }
         //printf("Adding Local EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);
@@ -430,7 +430,7 @@ public:
             memcpy(epdb[vpc_id].reps[epdb[vpc_id].v4_rcount].mac,
                    remote_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].reps[epdb[vpc_id].v4_rcount].bd_id =
-                remote_spec->subnet.id;
+                test::pdsobjkey2int(remote_spec->subnet);
             epdb[vpc_id].v4_rcount++;
         } else {
             if (epdb[vpc_id].v6_rcount >= MAX_REMOTE_EPS) {
@@ -442,7 +442,7 @@ public:
             memcpy(epdb[vpc_id].rep6s[epdb[vpc_id].v6_rcount].mac,
                    remote_spec->vnic_mac, ETH_ADDR_LEN);
             epdb[vpc_id].rep6s[epdb[vpc_id].v6_rcount].bd_id =
-                remote_spec->subnet.id;
+                test::pdsobjkey2int(remote_spec->subnet);
             epdb[vpc_id].v6_rcount++;
         }
         //printf("Adding Remote EP: Vcn=%d IP=%#x\n", vpc_id, ip_addr);

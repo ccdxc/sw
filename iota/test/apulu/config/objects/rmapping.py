@@ -87,13 +87,13 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id.IPKey.VPCId = str.encode(str(self.SUBNET.VPC.VPCId))
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
-        spec.SubnetId = self.SUBNET.SubnetId
-        spec.TunnelId = self.TunID
+        spec.SubnetId = str.encode(str(self.SUBNET.SubnetId))
+        spec.TunnelId = str.encode(str(self.TunID))
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
-        spec.TunnelId = self.TunID
+        spec.TunnelId = str.encode(str(self.TunID))
         return
 
 

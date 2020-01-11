@@ -29,13 +29,13 @@ class tep_obj_t : public slab_obj_t<tep_obj_t>,
                   public base_obj_t {
 public:
     struct properties_t {
-        ip_addr_t               tep_ip;
-        pds_nexthop_group_id_t  hal_uecmp_idx;
-        pds_tep_id_t            hal_tep_idx;
+        ip_addr_t            tep_ip;
+        ms_hw_tbl_id_t       hal_uecmp_idx;
+        ms_hw_tbl_id_t       hal_tep_idx;
 
         properties_t(ip_addr_t tep_ip_,
-                     pds_nexthop_group_id_t hal_uecmp_idx,
-                     pds_tep_id_t hal_tep_idx_) 
+                     const ms_hw_tbl_id_t hal_uecmp_idx,
+                     const ms_hw_tbl_id_t hal_tep_idx_) 
             : tep_ip(tep_ip_), hal_uecmp_idx(hal_uecmp_idx),
               hal_tep_idx(hal_tep_idx_) {}
     };
@@ -56,8 +56,8 @@ public:
     // in destructor as part of update
     std::shared_ptr<ecmp_idx_guard_t> hal_oecmp_idx_guard;
 
-    tep_obj_t(ip_addr_t tep_ip_, pds_nexthop_group_id_t hal_uecmp_idx,
-              pds_tep_id_t hal_tep_idx_); 
+    tep_obj_t(ip_addr_t tep_ip_, ms_hw_tbl_id_t hal_uecmp_idx,
+              ms_hw_tbl_id_t hal_tep_idx_); 
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
     void set_properties(const properties_t& prop) {prop_ = prop;}

@@ -27,8 +27,8 @@ tep_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
     tep_obj_t::set_slab(slabs_[slab_id].get());
 }
 
-tep_obj_t::tep_obj_t(ip_addr_t tep_ip_, pds_nexthop_group_id_t hal_uecmp_idx_,
-                     pds_tep_id_t hal_tep_idx_) 
+tep_obj_t::tep_obj_t(ip_addr_t tep_ip_, ms_hw_tbl_id_t hal_uecmp_idx_,
+                     ms_hw_tbl_id_t hal_tep_idx_) 
         : prop_(tep_ip_, hal_uecmp_idx_, hal_tep_idx_) 
 {
     hal_oecmp_idx_guard = std::make_shared<ecmp_idx_guard_t>();
@@ -40,7 +40,7 @@ void tep_obj_t::update_store (state_t* state, bool op_delete)
 {
     if (!op_delete) {
         state->tep_store().add_upd(this->key(), this);
-        SDK_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %ld, "
+        SDK_TRACE_DEBUG ("Add TEP %s to store: hal_tep_idx_ %d, "
                          "hal_uecmp_idx_ %ld, hal_oecmp_idx_ %ld", 
                          ipaddr2str(&prop_.tep_ip), prop_.hal_tep_idx, 
                          prop_.hal_uecmp_idx, hal_oecmp_idx_guard->idx());

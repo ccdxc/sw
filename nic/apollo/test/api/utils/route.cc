@@ -107,11 +107,11 @@ route_table_feeder::fill_spec(pds_nh_type_t type,
     switch (type) {
     case PDS_NH_TYPE_OVERLAY:
         num = (index % PDS_MAX_TEP);
-        spec->routes[index].tep.id = base_tep_id + num;
+        spec->routes[index].tep = int2pdsobjkey(base_tep_id + num);
         break;
     case PDS_NH_TYPE_OVERLAY_ECMP:
         num = (index % PDS_MAX_NEXTHOP_GROUP);
-        spec->routes[index].nh_group.id = base_id + num;
+        spec->routes[index].nh_group = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_PEER_VPC:
         num = (index % PDS_MAX_VPC);
@@ -119,11 +119,11 @@ route_table_feeder::fill_spec(pds_nh_type_t type,
         break;
     case PDS_NH_TYPE_VNIC:
         num = (index % PDS_MAX_VNIC);
-        spec->routes[index].vnic.id = base_id + num;
+        spec->routes[index].vnic = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_IP:
         num = (index % PDS_MAX_NEXTHOP);
-        spec->routes[index].nh.id = base_id + num;
+        spec->routes[index].nh = int2pdsobjkey(base_id + num);
         break;
     case PDS_NH_TYPE_BLACKHOLE:
     default:

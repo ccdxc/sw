@@ -7,6 +7,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 
 namespace pds_ms_test {
 
@@ -27,7 +28,7 @@ void vxlan_pds_mock_t::generate_addupd_specs(const vxlan_input_params_t& input,
                      PDS_MAX_TEP, 
                      PDS_NH_TYPE_UNDERLAY_ECMP,
                      {0},   // NH Index 
-                     {input.unh_dp_idx});  // NH Group index
+                     {pds_ms::msidx2pdsobjkey(input.unh_dp_idx)});  // NH Group index
     tep_feeder.spec.type = PDS_TEP_TYPE_WORKLOAD;
     tep_feeder.spec.ip_addr = input.source_ip;
     pds_batch.emplace_back (OBJ_ID_TEP, op);
@@ -37,9 +38,9 @@ void vxlan_pds_mock_t::generate_addupd_specs(const vxlan_input_params_t& input,
     test::api::nexthop_group_feeder nhgroup_feeder;
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP,
                         1, //Num Nexthops
-                        hal_oecmp_idx_,    // ID
+                        pds_ms::msidx2pdsobjkey(hal_oecmp_idx_),    // ID
                         PDS_MAX_NEXTHOP_GROUP);
-    nhgroup_feeder.spec.nexthops[0].tep.id = input.tnl_ifindex;
+    nhgroup_feeder.spec.nexthops[0].tep = pds_ms::msidx2pdsobjkey(input.tnl_ifindex);
     pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, op);
     auto& nhgroup_spec = pds_batch.back().nhgroup;
     nhgroup_spec = nhgroup_feeder.spec; 
@@ -49,9 +50,9 @@ void vxlan_pds_mock_t::generate_del_specs(const vxlan_input_params_t& input,
                                           batch_spec_t& pds_batch) 
 {
     pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, API_OP_DELETE);
-    pds_batch.back().nhgroup.key.id = hal_oecmp_idx_;
+    pds_batch.back().nhgroup.key = pds_ms::msidx2pdsobjkey(hal_oecmp_idx_);
     pds_batch.emplace_back (OBJ_ID_TEP, API_OP_DELETE);
-    pds_batch.back().tep.key.id = input.tnl_ifindex;
+    pds_batch.back().tep.key = pds_ms::msidx2pdsobjkey(input.tnl_ifindex);
 }
 
 void vxlan_pds_mock_t::validate_()

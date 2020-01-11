@@ -19,7 +19,7 @@ import (
 
 var (
 	// nhID holds Nexthop ID
-	nhID   uint32
+	nhID   string
 	nhType string
 )
 
@@ -34,7 +34,7 @@ func init() {
 	showCmd.AddCommand(nhShowCmd)
 	nhShowCmd.Flags().Bool("yaml", false, "Output in yaml")
 	nhShowCmd.Flags().StringVar(&nhType, "type", "overlay", "Specify nexthop type (overlay, underlay or ip)")
-	nhShowCmd.Flags().Uint32VarP(&nhID, "id", "i", 0, "Specify nexthop ID")
+	nhShowCmd.Flags().StringVarP(&nhID, "id", "i", "", "Specify nexthop ID")
 }
 
 func nhShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -58,7 +58,7 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 		// Get specific Nexthop
 		req = &pds.NexthopGetRequest{
 			Gettype: &pds.NexthopGetRequest_Id{
-				Id: nhID,
+				Id: []byte(nhID),
 			},
 		}
 	} else if cmd.Flags().Changed("type") {
@@ -136,23 +136,23 @@ func nhTypeToPdsNhType(nh string) pds.NexthopType {
 }
 
 func printNexthopIPHeader() {
-	hdrLine := strings.Repeat("-", 67)
+	hdrLine := strings.Repeat("-", 127)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-10s%-6s%-18s%-7s%-20s\n", "Id", "Type", "VPCId", "IP", "Vlan", "MAC")
+	fmt.Printf("%-36s%-10s%-i36s%-18s%-7s%-20s\n", "Id", "Type", "VPCId", "IP", "Vlan", "MAC")
 	fmt.Println(hdrLine)
 }
 
 func printNexthopOverlayHeader() {
-	hdrLine := strings.Repeat("-", 14)
+	hdrLine := strings.Repeat("-", 74)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-8s\n", "Id", "TunnelId")
+	fmt.Printf("%-36s%-36s\n", "Id", "TunnelId")
 	fmt.Println(hdrLine)
 }
 
 func printNexthopUnderlayHeader() {
-	hdrLine := strings.Repeat("-", 36)
+	hdrLine := strings.Repeat("-", 66)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-10s%-20s\n", "Id", "L3IntfId", "UnderlayMAC")
+	fmt.Printf("%-36s%-10s%-20s\n", "Id", "L3IntfId", "UnderlayMAC")
 	fmt.Println(hdrLine)
 }
 
@@ -174,7 +174,7 @@ func printNexthop(nh *pds.Nexthop) {
 	case *pds.NexthopSpec_IPNhInfo:
 		{
 			nhInfo := spec.GetIPNhInfo()
-			fmt.Printf("%-6d%-10s%-6d%-18s%-7d%-20s\n",
+			fmt.Printf("%-36s%-10s%-36s%-18s%-7d%-20s\n",
 				spec.GetId(), "IP", nhInfo.GetVPCId(),
 				utils.IPAddrToStr(nhInfo.GetIP()),
 				nhInfo.GetVlan(),
@@ -182,14 +182,14 @@ func printNexthop(nh *pds.Nexthop) {
 		}
 	case *pds.NexthopSpec_TunnelId:
 		{
-			fmt.Printf("%-6d%-8d\n",
-				spec.GetId(), spec.GetTunnelId())
+			fmt.Printf("%-36s%-36s\n",
+				string(spec.GetId()), string(spec.GetTunnelId()))
 		}
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{
 			info := spec.GetUnderlayNhInfo()
-			fmt.Printf("%-6d%-10d%-20s\n",
-				spec.GetId(), info.GetL3InterfaceId(),
+			fmt.Printf("%-36s%-10d%-20s\n",
+				string(spec.GetId()), info.GetL3InterfaceId(),
 				utils.MactoStr(info.GetUnderlayMAC()))
 		}
 	}

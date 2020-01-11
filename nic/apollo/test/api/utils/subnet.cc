@@ -27,8 +27,9 @@ subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
     spec.v4_prefix.len = pfx.len;
     spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)vrmac_str.c_str(), spec.vr_mac);
-    spec.v4_route_table.id = key.id;
-    spec.v6_route_table.id = key.id + 1024; // Unique id, 1-1024 reserved
+    spec.v4_route_table.id = pdsobjkey2int(key);
+    // Unique id, 1-1024 reserved
+    spec.v6_route_table.id = pdsobjkey2int(key) + 1024;
                                             // for IPv4 rt table
     // TODO: fix for multiple policies
     spec.num_ing_v4_policy = 1;
@@ -39,7 +40,7 @@ subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
     spec.egr_v4_policy[0] = int2pdsobjkey(11);
     spec.num_egr_v6_policy = 1;
     spec.egr_v6_policy[0] = int2pdsobjkey(16);
-    spec.fabric_encap.val.vnid = key.id + 512;
+    spec.fabric_encap.val.vnid = pdsobjkey2int(key) + 512;
     spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
 
     num_obj = num_subnet;
@@ -52,7 +53,7 @@ subnet_feeder::subnet_feeder(const subnet_feeder& feeder) {
 
 void
 subnet_feeder::iter_next(int width) {
-    spec.key.id += width;
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
     spec.v4_prefix.v4_addr += (1 << spec.v4_prefix.len);
     spec.v4_route_table.id += width;
     spec.v6_route_table.id += width;
@@ -64,7 +65,7 @@ subnet_feeder::iter_next(int width) {
 void
 subnet_feeder::key_build(pds_subnet_key_t *key) const {
     memset(key, 0, sizeof(pds_subnet_key_t));
-    key->id = spec.key.id;
+    *key = spec.key;
 }
 
 void
@@ -124,7 +125,7 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-pds_subnet_key_t k_subnet_key = {.id = 1};
+pds_subnet_key_t k_subnet_key = int2pdsobjkey(1);
 static subnet_feeder k_subnet_feeder;
 
 void sample_subnet_setup(pds_batch_ctxt_t bctxt) {

@@ -81,13 +81,13 @@ void hals_ecmp_t::fetch_store_info_(state_t* state) {
 }
 
 pds_nexthop_group_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
-    pds_nexthop_group_key_t key; 
+    ms_hw_tbl_id_t idx;
     if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
-        key.id = ips_info_.pathset_id;
+        idx = ips_info_.pathset_id;
     } else {
-        key.id = store_info_.pathset_obj->hal_oecmp_idx_guard->idx();
+        idx = store_info_.pathset_obj->hal_oecmp_idx_guard->idx();
     }
-    return key;
+    return msidx2pdsobjkey(idx);
 }
 
 void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
@@ -130,7 +130,6 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
     int i = 0;
     for (auto& nh: ips_info_.nexthops) {
         nhgroup_spec.nexthops[i].type = PDS_NH_TYPE_OVERLAY;
-        nhgroup_spec.nexthops[i].key.id = 0; // Unused for NHs pointing to TEPs
 
         auto vxp_if_obj = state_ctxt.state()->if_store().get(nh.ms_ifindex);
         SDK_ASSERT(vxp_if_obj != nullptr);
@@ -152,10 +151,12 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
                             ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                             vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
         }
-        nhgroup_spec.nexthops[i].tep.id = tep_obj->properties().hal_tep_idx;
-        SDK_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx %x to Overlay NHGroup %d",
+        nhgroup_spec.nexthops[i].tep = msidx2pdsobjkey(tep_obj->properties().hal_tep_idx);
+        SDK_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %sto Overlay NHGroup %d",
                         ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
-                        nhgroup_spec.nexthops[i].tep.id, nhgroup_spec.key.id);
+                        tep_obj->properties().hal_tep_idx,
+                        nhgroup_spec.nexthops[i].tep.tostr(),
+                        nhgroup_spec.key.id);
         ++i;
     }
 }

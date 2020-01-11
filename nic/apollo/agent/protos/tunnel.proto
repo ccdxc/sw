@@ -36,7 +36,7 @@ enum TunnelType {
 message TunnelSpec {
   // unique tunnel identifier
   // NOTE: Tunnel id of 0 is reserve for local TEP/host
-  uint32          Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes           Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // virtual private cloud this is tunnel belongs to
   bytes           VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // local IP of the tunnel (used as outer SIP in tunneled packets)
@@ -53,14 +53,14 @@ message TunnelSpec {
   // Tunnel points to a underlay nexthop/nexthop group (ECMP)/another Tunnel
   oneof nh {
     // underlay nexthop for this tunnel
-    uint32        NexthopId             = 8;
+    bytes         NexthopId             = 8;
     // underlay nexthop group for this tunnel
-    uint32        NexthopGroupId        = 9;
+    bytes         NexthopGroupId        = 9;
     // a tunnel can point to another tunnel for double encap
     // NOTE:
     // 1. currently the 2nd tunnel is expected to be MPLSoUDP only
     // 2. more than 2 tunnels can't be supported in a chain
-    uint32        TunnelId              = 10;
+    bytes         TunnelId              = 10;
   }
   // MAC address of the remote IP (i.e., remote side of the tunnel)
   // NOTE: if dataplane is supposed to resolve this, set to 0
@@ -112,7 +112,7 @@ message TunnelResponse {
 
 // tunnel get request
 message TunnelGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // tunnel get response
@@ -125,7 +125,7 @@ message TunnelGetResponse {
 message TunnelDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // tunnel delete response

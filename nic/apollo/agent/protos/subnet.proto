@@ -21,7 +21,7 @@ service SubnetSvc {
 // SubnetSpec captures subnet specific coniguration
 message SubnetSpec {
   // unique identifier of the subnet
-  uint32           Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes            Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // virtual private cloud this subnet is belongs to
   bytes            VPCId                 = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IPv4 prefix of this subnet, this must be a sub prefix of VPC's prefix
@@ -103,7 +103,7 @@ message SubnetResponse {
 
 // subnet get request
 message SubnetGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // subnet get response
@@ -116,7 +116,7 @@ message SubnetGetResponse {
 message SubnetDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // subnet delete response

@@ -112,13 +112,13 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.VnicId.append(self.VnicId)
+        grpcmsg.VnicId.append(str.encode(str(self.VnicId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.VnicId = self.VnicId
-        spec.SubnetId = self.SUBNET.SubnetId
+        spec.VnicId = str.encode(str(self.VnicId))
+        spec.SubnetId = str.encode(str(self.SUBNET.SubnetId))
         if self.dot1Qenabled:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.VnicEncap.value.VlanId = self.VlanId
@@ -148,9 +148,9 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.VnicId != self.VnicId:
+        if int(spec.VnicId) != self.VnicId:
             return False
-        # if spec.SubnetId != self.SUBNET.SubnetId:
+        # if int(spec.SubnetId) != self.SUBNET.SubnetId:
         #     return False
         if Store.IsDeviceEncapTypeMPLS():
             if utils.ValidateTunnelEncap(self.MplsSlot, spec.FabricEncap) is False:
@@ -174,7 +174,7 @@ class VnicObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['vnicid'] != self.VnicId:
+        if  utils.GetYamlSpecAttr(spec, 'vnicid') != self.VnicId:
             return False
         if utils.IsPipelineApulu():
             if self.HostIf:

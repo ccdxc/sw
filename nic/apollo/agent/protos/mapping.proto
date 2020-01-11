@@ -27,7 +27,7 @@ message L3MappingKey {
 
 message L2MappingKey {
   // subnet id of this MAC
-  uint32 SubnetId = 1;
+  bytes  SubnetId = 1;
   // MAC address of this mapping
   uint64 MACAddr  = 2;
 }
@@ -48,15 +48,15 @@ message MappingSpec {
   // key to identify the mapping
   MappingKey          Id             = 1;
   // subnet this mapping is in
-  uint32              SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes               SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // dstinfo is expected to empty for local mappings
   oneof dstinfo {
       // if IP is that of local vnic, corresponding vnic id
-      uint32          VnicId         = 3;
+      bytes           VnicId         = 3;
       // Tunnel ID of the remote TEP for remote mapping
-      uint32          TunnelId       = 4;
+      bytes           TunnelId       = 4;
       // overlay nexthop/TEP group for remote mappings
-      uint32          NexthopGroupId = 5;
+      bytes           NexthopGroupId = 5;
   }
   // overlay MAC address of this mapping
   uint64              MACAddr        = 6 [(gogoproto.moretags) = "meta:mandatory"];

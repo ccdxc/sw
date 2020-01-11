@@ -17,11 +17,11 @@ namespace api {
 static constexpr uint64_t k_mac_addr = 0x010203040506;
 
 static void
-nh_spec_fill(pds_nexthop_spec_t *spec, pds_nexthop_id_t id,
+nh_spec_fill(pds_nexthop_spec_t *spec, pds_nexthop_key_t key,
              pds_nh_type_t type, mac_addr_t mac)
 {
     if (spec == NULL) assert(0);
-    spec->key.id = id;
+    spec->key = key;
     spec->type = type;
     switch (type) {
     case PDS_NH_TYPE_IP:
@@ -32,7 +32,7 @@ nh_spec_fill(pds_nexthop_spec_t *spec, pds_nexthop_id_t id,
         memcpy(spec->underlay_mac, mac, ETH_ADDR_LEN);
         break;
     case PDS_NH_TYPE_OVERLAY:
-        spec->tep.id = id + 1;
+        spec->tep = int2pdsobjkey(pdsobjkey2int(key) + 1);
         break;
     default:
         assert(0);
@@ -53,18 +53,18 @@ nh_groups_fill(pds_nexthop_group_spec_t *spec)
         type = PDS_NH_TYPE_OVERLAY;
     }
     for (int i = 0; i < spec->num_nexthops; i++) {
-        nh_spec_fill(&spec->nexthops[i], i+1, type, mac);
+        nh_spec_fill(&spec->nexthops[i], int2pdsobjkey(i+1), type, mac);
     }
 }
 
 void
 nexthop_group_feeder::init(pds_nexthop_group_type_t type,
                            uint8_t num_nexthops,
-                           pds_nexthop_group_id_t id,
+                           pds_nexthop_group_key_t key,
                            uint32_t num_objs) {
     memset(&spec, 0, sizeof(pds_nexthop_group_spec_t));
     spec.type = type;
-    spec.key.id = id;
+    spec.key = key;
     spec.num_nexthops = num_nexthops;
     nh_groups_fill(&spec);
     num_obj = num_objs;
@@ -77,14 +77,13 @@ nexthop_group_feeder::nexthop_group_feeder(const nexthop_group_feeder& feeder) {
 
 void
 nexthop_group_feeder::iter_next(int width) {
-    spec.key.id += width;
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
     cur_iter_pos++;
 }
 
 void
 nexthop_group_feeder::key_build(pds_nexthop_group_key_t *key) const {
-    memset(key, 0, sizeof(pds_nexthop_group_key_t));
-    key->id = spec.key.id;
+    *key = spec.key;
 }
 
 void
@@ -94,7 +93,7 @@ nexthop_group_feeder::spec_build(pds_nexthop_group_spec_t *nhg_spec) const {
 
 bool
 nexthop_group_feeder::key_compare(const pds_nexthop_group_key_t *key) const {
-    return (spec.key.id == key->id);
+    return (spec.key == *key);
 }
 
 bool nh_spec_compare(pds_nexthop_spec_t spec1, pds_nexthop_spec_t spec2)
@@ -111,7 +110,7 @@ bool nh_spec_compare(pds_nexthop_spec_t spec1, pds_nexthop_spec_t spec2)
             return false;
         break;
     case PDS_NH_TYPE_OVERLAY:
-        if (spec1.tep.id != spec2.tep.id)
+        if (spec1.tep != spec2.tep)
             return false;
         break;
     default:

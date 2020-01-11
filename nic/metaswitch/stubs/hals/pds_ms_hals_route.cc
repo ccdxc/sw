@@ -58,7 +58,7 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable) {
     // Populate the new route
     route_.prefix = ips_info_.pfx;
     route_.nh_type = PDS_NH_TYPE_OVERLAY_ECMP;
-    route_.nh_group.id = ips_info_.overlay_ecmp_id;
+    route_.nh_group = msidx2pdsobjkey(ips_info_.overlay_ecmp_id);
     { // Enter thread-safe context to access/modify global state
         auto state = pds_ms::state_t::thread_context().state();
         auto rttbl_store = state->route_table_store().get(ips_info_.vrf_id);

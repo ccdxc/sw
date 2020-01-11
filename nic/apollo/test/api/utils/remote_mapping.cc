@@ -17,7 +17,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-remote_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_id_t subnet_id,
+remote_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_key_t subnet,
                             std::string vnic_ip_cidr_str, uint64_t vnic_mac,
                             pds_encap_type_t encap_type, uint32_t encap_val,
                             pds_nh_type_t nh_type, uint32_t nh_id,
@@ -26,7 +26,7 @@ remote_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_id_t subnet_id,
 
     this->map_type = map_type;
     this->vpc = vpc;
-    this->subnet.id = subnet_id;
+    this->subnet = subnet;
     extract_ip_pfx(vnic_ip_cidr_str.c_str(), &this->vnic_ip_pfx);
     this->vnic_mac_u64 = vnic_mac;
 
@@ -85,9 +85,9 @@ remote_mapping_feeder::spec_build(pds_remote_mapping_spec_t *spec) const {
     MAC_UINT64_TO_ADDR(spec->vnic_mac, vnic_mac_u64);
     spec->nh_type = nh_type;
     if (nh_type == PDS_NH_TYPE_OVERLAY)
-        spec->tep.id = nh_id;
+        spec->tep = int2pdsobjkey(nh_id);
     else
-        spec->nh_group.id = nh_id;
+        spec->nh_group = int2pdsobjkey(nh_id);
 }
 
 bool

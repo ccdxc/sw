@@ -13,6 +13,7 @@ using ms_ps_id_t = uint32_t; // Pathset ID
 using ms_vrf_id_t = uint32_t;
 using ms_ifindex_t = NBB_ULONG;
 using ms_bd_id_t = NBB_ULONG;
+using ms_hw_tbl_id_t = uint32_t; // Used as DP correlator in MS
 }
 
 #endif

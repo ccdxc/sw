@@ -28,7 +28,7 @@ public:
     // Initialize feeder with the base set of values
     void init(pds_nexthop_group_type_t type,
               uint8_t num_nexthops,
-              pds_nexthop_group_id_t id = 1,
+              pds_nexthop_group_key_t key = int2pdsobjkey(1),
               uint32_t num_obj = k_max_groups);
 
     // Iterate helper routines
@@ -44,12 +44,6 @@ public:
 };
 
 // Dump prototypes
-inline std::ostream&
-operator<<(std::ostream& os, const pds_nexthop_group_key_t *key) {
-    os << " id " << key->id;
-    return os;
-}
-
 inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_group_spec_t *spec) {
     os << &spec->key
