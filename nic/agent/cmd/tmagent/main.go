@@ -204,6 +204,7 @@ func main() {
 		logToFile       = flag.String("logtofile", fmt.Sprintf("%s.log", filepath.Join(globals.LogDir, globals.Tmagent)), "Redirect logs to file")
 		logToStdoutFlag = flag.Bool("logtostdout", false, "enable logging to stdout")
 		restURL         = flag.String("rest-url", "127.0.0.1:"+globals.TmAGENTRestPort, "specify telemetry agent REST URL")
+		datapath        = flag.String("datapath", "hal", "specify the agent datapath type either mock or hal")
 	)
 	flag.Parse()
 
@@ -255,7 +256,7 @@ func main() {
 
 	tmAgent.tpState = tpState
 
-	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL, tpState)
+	tmAgent.restServer, err = restapi.NewRestServer(ctx, *restURL, tpState, *datapath)
 	if err != nil {
 		log.Fatalf("failed to create tmagent rest API server, Err: %v", err)
 	}

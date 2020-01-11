@@ -836,7 +836,7 @@ func (it *veniceIntegSuite) startAgent() {
 
 			it.fwlogGen(shmPath)
 
-			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i), tpState)
+			res, err := tmrestapi.NewRestServer(it.ctx, fmt.Sprintf("localhost:%d", it.config.TmAgentRestPort+i), tpState, "mock")
 			if err != nil {
 				log.Fatalf("Error creating tmagent rest server. Err: %v", err)
 			}

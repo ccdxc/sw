@@ -219,7 +219,7 @@ class NaplesNode(Node):
             runCommand("""docker exec -d {} /ntsa -config /naples-tsa.json &""".format(self.name))
             runCommand("""docker exec -d {} /nmd -updinterval 2 & """.format(self.name, self.name))
             runCommand("""docker exec -d {} /netagent -datapath mock &""".format(self.name))
-            runCommand("""docker exec -d {} /tmagent """.format(self.name))
+            runCommand("""docker exec -d {} /tmagent  -datapath mock""".format(self.name))
             runCommand("""docker exec -d {} /nevtsproxy &""".format(self.name))
             runCommand("""docker exec -d {} /fwgen  & """.format(self.name))
 

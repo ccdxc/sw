@@ -9,8 +9,13 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"os"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/connectivity"
+
+	"github.com/pensando/sw/venice/utils/rpckit"
 
 	"github.com/gorilla/mux"
 
@@ -39,6 +44,7 @@ type RestServer struct {
 	httpServer    *http.Server           // HTTP server
 	keyTranslator *ntranslate.Translator // key to objMeta translator
 	gensrv        *genapi.RestServer     // generated rest server
+	datapath      string                 // datapath mode
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -65,7 +71,7 @@ type routeAddFunc func(*mux.Router)
 type getPointsFunc func() ([]*tsdb.Point, error)
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerIntf) (*RestServer, error) {
+func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerIntf, datapath string) (*RestServer, error) {
 
 	ctx, cancel := context.WithCancel(pctx)
 
@@ -75,6 +81,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 		ctx:       ctx,
 		cancel:    cancel,
 		TpAgent:   tpAgent,
+		datapath:  datapath,
 	}
 	// if no URL was specified, just return (used during unit/integ tests)
 	if listenURL == "" {
@@ -177,6 +184,36 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 		tsdbObj[kind] = obj
 	}
 
+	srvURL := "localhost:50054"
+	var rpcClient *rpckit.RPCClient
+
+	if halPort := os.Getenv("HAL_GRPC_PORT"); halPort != "" {
+		srvURL = halPort
+	}
+
+	// check hal status
+	checkHalStatus := func() bool {
+		// mock mode mode
+		if s.datapath != "hal" {
+			return true
+		}
+
+		if rpcClient == nil {
+			rc, err := rpckit.NewRPCClient("tmagent", srvURL, rpckit.WithTLSProvider(nil))
+			if err != nil || rc == nil {
+				log.Errorf("failed to connect to hal, URL: %s, err:%s", srvURL, err)
+				return false
+			}
+			rpcClient = rc
+		}
+
+		if rpcClient.ClientConn.GetState() == connectivity.Ready {
+			return true
+		}
+		log.Errorf("hal status %v", rpcClient.ClientConn.GetState())
+		return false
+	}
+
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -184,6 +221,12 @@ func (s *RestServer) ReportMetrics(frequency time.Duration, dclient clientApi.Cl
 
 			select {
 			case <-time.After(frequency):
+
+				// skip if hal is down
+				if checkHalStatus() != true {
+					continue
+				}
+
 				ts := time.Now()
 
 				for kind, obj := range tsdbObj {
