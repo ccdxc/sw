@@ -5,6 +5,10 @@
 #ifndef __VPP_NAT_API_H__
 #define __VPP_NAT_API_H__
 
+#ifndef __cplusplus
+#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -39,47 +43,49 @@ typedef enum {
 
 // API
 #ifdef __cplusplus
-nat_err_t nat_port_block_add(const pds_obj_key_t& key, const pds_obj_key_t& vpc,
+nat_err_t nat_port_block_add(const uint8_t key[PDS_MAX_KEY_LEN],
+                             uint32_t vpc_hw_id,
                              uint32_t addr, uint8_t protocol,
                              uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
-nat_err_t nat_port_block_update(const pds_obj_key_t& key,
-                                const pds_obj_key_t& vpc,
+nat_err_t nat_port_block_update(const uint8_t key[PDS_MAX_KEY_LEN],
+                                uint32_t vpc_hw_id,
                                 uint32_t addr, uint8_t protocol,
                                 uint16_t start_port, uint16_t end_port,
                                 nat_type_t nat_type);
-nat_err_t nat_port_block_commit(const pds_obj_key_t& key,
-                                const pds_obj_key_t& vpc,
+nat_err_t nat_port_block_commit(const uint8_t key[PDS_MAX_KEY_LEN],
+                                uint32_t vpc_hw_id,
                                 uint32_t addr, uint8_t protocol,
                                 uint16_t start_port, uint16_t end_port,
                                 nat_type_t nat_type);
-nat_err_t nat_port_block_del(const pds_obj_key_t& key, const pds_obj_key_t& vpc,
+nat_err_t nat_port_block_del(const uint8_t key[PDS_MAX_KEY_LEN],
+                             uint32_t vpc_hw_id,
                              uint32_t addr, uint8_t protocol,
                              uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
 #else
 void nat_init(void);
-nat_err_t nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
-                             u8 protocol, u16 start_port, u16 end_port,
-                             nat_type_t nat_type);
-nat_err_t nat_port_block_update(u32 id, u32 vpc_id, ip4_address_t addr,
-                                u8 protocol, u16 start_port, u16 end_port,
-                                nat_type_t nat_type);
-nat_err_t nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
-                                u8 protocol, u16 start_port, u16 end_port,
-                                nat_type_t nat_type);
-nat_err_t nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
-                             u8 protocol, u16 start_port, u16 end_port,
-                             nat_type_t nat_type);
+nat_err_t nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
+                             ip4_address_t addr, u8 protocol, u16 start_port,
+                             u16 end_port, nat_type_t nat_type);
+nat_err_t nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
+                                ip4_address_t addr, u8 protocol, u16 start_port,
+                                u16 end_port, nat_type_t nat_type);
+nat_err_t nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
+                                ip4_address_t addr, u8 protocol, u16 start_port,
+                                u16 end_port, nat_type_t nat_type);
+nat_err_t nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
+                             ip4_address_t addr, u8 protocol, u16 start_port,
+                             u16 end_port, nat_type_t nat_type);
 
-nat_err_t nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
+nat_err_t nat_flow_alloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport,
                          u8 protocol, ip4_address_t pvt_ip, u16 pvt_port,
                          nat_type_t nat_type,
                          ip4_address_t *sip, u16 *sport);
-nat_err_t nat_flow_dealloc(u32 vpc_id, ip4_address_t dip, u16 dport, u8 protocol,
+nat_err_t nat_flow_dealloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport, u8 protocol,
                            ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
                            u16 pvt_port, nat_type_t nat_type);
-nat_err_t nat_usage(u32 vpc_id, u8 protocol, nat_type_t nat_type,
+nat_err_t nat_usage(u32 vpc_hw_id, u8 protocol, nat_type_t nat_type,
                     u32 *num_ports_total, u32 *num_ports_alloc,
                     u32 *num_flows_alloc);
 nat_err_t nat_hw_usage(u32 *total_hw_indices, u32 *total_alloc_indices);

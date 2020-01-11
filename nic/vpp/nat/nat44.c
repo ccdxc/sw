@@ -8,6 +8,7 @@
 #include "nat_api.h"
 #include "nat_pd.h"
 
+// TODO move to right place
 #define PDS_MAX_VPC 64
 #define PDS_MAX_DYNAMIC_NAT 32768
 
@@ -25,7 +26,7 @@ typedef enum {
 
 typedef struct nat_port_block_s {
     // configured
-    u32 id;
+    u8 id[PDS_MAX_KEY_LEN];
     ip4_address_t addr;
     u16 start_port;
     u16 end_port;
@@ -150,7 +151,7 @@ nat_init(void)
 // Add SNAT port block
 //
 nat_err_t
-nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
+nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
                    u8 protocol, u16 start_port, u16 end_port,
                    nat_type_t nat_type)
 {
@@ -170,7 +171,7 @@ nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
     ({
-        if (pb->id == id)
+        if (pds_id_equals(pb->id, id))
             // Entry already exists
             // This can happen in rollback case
             return NAT_ERR_EXISTS;
@@ -190,7 +191,7 @@ nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
     clib_spinlock_lock(&vpc->lock);
     pool_get_zero(vpc->nat_pb[nat_type][nat_proto - 1], pb);
     vpc->num_port_blocks++;
-    pb->id = id;
+    pds_id_set(pb->id, id);
     pb->addr = addr;
     pb->start_port = start_port;
     pb->end_port = end_port;
@@ -204,9 +205,9 @@ nat_port_block_add(u32 id, u32 vpc_id, ip4_address_t addr,
 // Update SNAT port block
 //
 nat_err_t
-nat_port_block_update(u32 id, u32 vpc_id, ip4_address_t addr,
-                      u8 protocol, u16 start_port, u16 end_port,
-                      nat_type_t nat_type)
+nat_port_block_update(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
+                      ip4_address_t addr, u8 protocol, u16 start_port,
+                      u16 end_port, nat_type_t nat_type)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
@@ -228,7 +229,7 @@ nat_port_block_update(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, nat_pb,
     ({
-        if (pb->id == id) {
+        if (pds_id_equals(pb->id, id)) {
             found = 1;
             break;
         }
@@ -270,9 +271,9 @@ nat_port_block_del_inline(nat_vpc_config_t *vpc, nat_port_block_t *pb,
 // Delete SNAT port block
 //
 nat_err_t
-nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
-                   u8 protocol, u16 start_port, u16 end_port,
-                   nat_type_t nat_type)
+nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
+                   ip4_address_t addr, u8 protocol, u16 start_port,
+                   u16 end_port, nat_type_t nat_type)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
@@ -290,7 +291,7 @@ nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
     ({
-        if (pb->id == id) {
+        if (pds_id_equals(pb->id, id)) {
             found = 1;
             break;
         }
@@ -315,9 +316,9 @@ nat_port_block_del(u32 id, u32 vpc_id, ip4_address_t addr,
 // Commit SNAT port block
 //
 nat_err_t
-nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
-                      u8 protocol, u16 start_port, u16 end_port,
-                      nat_type_t nat_type)
+nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
+                      ip4_address_t addr, u8 protocol, u16 start_port,
+                      u16 end_port, nat_type_t nat_type)
 {
     nat_port_block_t *pb;
     nat_vpc_config_t *vpc;
@@ -335,7 +336,7 @@ nat_port_block_commit(u32 id, u32 vpc_id, ip4_address_t addr,
 
     pool_foreach (pb, vpc->nat_pb[nat_type][nat_proto - 1],
     ({
-        if (pb->id == id) {
+        if (pds_id_equals(pb->id, id)) {
             if (pb->state == NAT_PB_STATE_ADDED) {
                 pb->state = NAT_PB_STATE_OK;
                 return NAT_ERR_OK;

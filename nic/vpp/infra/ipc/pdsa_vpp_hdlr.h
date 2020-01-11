@@ -21,6 +21,25 @@ void pds_vpp_fd_register(int fd);
 void pds_ipc_init(void);
 void pds_ipc_read_fd(int fd);
 
+#ifndef __cplusplus
+
+#define PDS_MAX_KEY_LEN 16
+
+// inline functions
+always_inline u8
+pds_id_equals(const u8 id1[PDS_MAX_KEY_LEN], const u8 id2[PDS_MAX_KEY_LEN])
+{
+    return !memcmp(id1, id2, PDS_MAX_KEY_LEN);
+}
+
+always_inline void
+pds_id_set(u8 id1[PDS_MAX_KEY_LEN], const u8 id2[PDS_MAX_KEY_LEN])
+{
+    clib_memcpy(id1, id2, PDS_MAX_KEY_LEN);
+}
+#endif
+
+
 #ifdef __cplusplus
 }
 #endif

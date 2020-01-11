@@ -23,7 +23,10 @@ test_nat_add_pb (vlib_main_t *vm,
     u32 start_port, end_port;
     u8 vpc_id_set = 0, ip_set = 0, proto_set = 0, start_port_set = 0, end_port_set = 0;
     nat_err_t ret;
+    static unsigned char id_str[16];
     static int id = 1;
+
+    memcpy(id_str, &id, sizeof(id));
 
     while (unformat_check_input(input) != UNFORMAT_END_OF_INPUT) {
         if (unformat (input, "vpc %u", &vpc_id)) {
@@ -50,20 +53,21 @@ test_nat_add_pb (vlib_main_t *vm,
         goto done;
     }
 
-    ret = nat_port_block_add(id, vpc_id, ip, proto, start_port, end_port,
+    ret = nat_port_block_add(id_str, vpc_id, ip, proto, start_port, end_port,
                              NAT_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
         goto done;
     }
 
-    ret = nat_port_block_commit(id++, vpc_id, ip, proto, start_port, end_port,
+    ret = nat_port_block_commit(id_str, vpc_id, ip, proto, start_port, end_port,
                              NAT_TYPE_INTERNET);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat pb add failed! ret = %d\n", ret);
     } else {
         vlib_cli_output(vm, "nat pb add success!\n");
     }
+    id++;
 
 done:
     return 0;
