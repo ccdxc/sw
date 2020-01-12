@@ -9,8 +9,8 @@ TOPDIR=$(dirname `pwd`)
 USERNAME=$(id -nu)
 BUILDROOT_HASH=`grep buildroot $TOPDIR/minio/VERSIONS | cut -d' ' -f2`
 
-#max goldimg size is 59*1024*1024 i.e. 60M
-max_gold_img_sz=61865984
+#max goldimg size is 60MiB
+max_gold_img_sz=62914560
 
 echo "BUILDROOT_HASH is: $BUILDROOT_HASH"
 
@@ -69,6 +69,9 @@ docker_exec "rm -rf /sw/nic/buildroot/output_gold"
 echo 'Generating gold config'
 docker_exec "cd /sw/nic/buildroot && make capri_goldimg_defconfig O=output_gold"
 
+echo 'Copying u-boot files'
+docker_exec "cd /sw/nic/buildroot && mkdir -p output_gold/images && cp output/images/u-boot* output_gold/images/"
+
 echo 'Building gold buildroot'
 PLATFORM_LINUX_DIR=/sw/nic/buildroot/output/build/platform-linux/
 docker_exec "rm -rf $PLATFORM_LINUX_DIR && mkdir -p $PLATFORM_LINUX_DIR && cd $PLATFORM_LINUX_DIR && tar -xf /sw/nic/buildroot/output/build/platform-linux.tar.gz"
@@ -85,7 +88,7 @@ docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchai
 docker_exec "cd /usr/src/github.com/pensando/sw/ && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ws-tools"
 docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PLATFORM=hw FWTYPE=gold gold-firmware"
 
-image_sz=`stat -c %s $TOPDIR/nic/buildroot/output_gold/images/naples_goldfw.tar`
+image_sz=`stat -c %s $TOPDIR/nic/buildroot/output_gold/images/kernel.img`
 
 if [ $image_sz -gt $max_gold_img_sz ]; then
     echo "Error: GoldFW size($image_sz bytes) is more than allowed size($max_gold_img_sz bytes) for Naples"

@@ -148,6 +148,7 @@ nic/tools/fwupdate                                                /nic/tools/
 nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
 nic/tools/pcie_hostdn.sh                                          /nic/tools/
+nic/tools/bflog_sync.sh                                           /nic/tools/
 
 # system level tools needed for cpld upgrade
 platform/src/app/cpld/cpldapp.sh                                  /nic/tools/
@@ -155,8 +156,13 @@ platform/src/app/cpld/reboot.sh                                   /nic/tools/
 platform/src/app/cpld/bin/*.bin                                   /nic/etc/cpld/
 nic/build/$ARCH/$PIPELINE/bin/cpldapp                             /nic/bin/
 
+# include boot0.bin in the package
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin             /boot0/
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
+
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/

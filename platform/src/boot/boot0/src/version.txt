@@ -1,0 +1,1 @@
+1 30670fb12059dbe85569c0c3e84b7a89  boot0.bin

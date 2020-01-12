@@ -19,6 +19,9 @@ IMAGE_B_PARTUUID=E2FD6D28-3300-4979-8062-B8AB599F3898
 # mtd partition names
 # The image partitions are similar to their fwnames, but don't rely on that
 MTDPART_UBOOT=boot0
+MTDPART_UBOOTA=uboota
+MTDPART_UBOOTB=ubootb
+MTDPART_GOLDUBOOT=golduboot
 MTDPART_MAINFWA=mainfwa
 MTDPART_MAINFWB=mainfwb
 MTDPART_GOLDFW=goldfw
@@ -167,6 +170,7 @@ PKG=""
 DRY_RUN=""
 INSTALL_IMAGES=""
 IGNORE_MISSING=0
+INSTALL_BOOT0_UPG=0
 WANT_STARTUP=""
 FROM_LEGACY=0
 TO_LEGACY=0
@@ -174,12 +178,10 @@ IS_CUSTOM_INSTALLER=0
 VERIFY_FWNAME=""
 SKIP_BITFILES=0
 CPLD_IGNORE_REV=0
+PACKAGE_VERSION=rev1
+FWLIST_NAMES=""
+INSTALL_NAMES=""
 D=""
-
-# Legacy support
-fwobj_to_fwtype=fwobj_to_fwtype
-fwtype_to_files=fwtype_to_files
-file_to_target=file_to_target
 
 CPLDRESET=$R/tmp/cpldreset
 CACHEFILE=$R/var/run/fwupdate.cache
@@ -217,9 +219,6 @@ main()
         shift
     elif [ "X-$1" = "X---to-legacy" ]; then
         TO_LEGACY=1
-        fwobj_to_fwtype=legacy_fwobj_to_fwtype
-        fwtype_to_files=legacy_fwtype_to_files
-        file_to_target=legacy_file_to_target
         shift
     elif [ "X-$1" = "X---init-emmc" ]; then
         action=INIT_EMMC
@@ -287,6 +286,9 @@ main()
             export FWUPDATE_RESOURCES=$D
         fi
     fi
+
+    # Set package strategy
+    set_package_strategy $need_pkg
 
     # Skip cpld operations for systems with missing or incompatible cpldapp
     if which cpldapp >/dev/null 2>&1; then
@@ -366,6 +368,534 @@ main()
     esac
 }
 
+set_package_strategy()
+{
+    local need_pkg=$1 s b_type b_ver
+
+    if [ $TO_LEGACY -eq 1 ]; then
+        PACKAGE_VERSION=legacy
+    elif [ $need_pkg -ne 0 ]; then
+        s=`mani_opt_value .package_version`
+        case "$s" in
+        null) PACKAGE_VERSION=rev1; ;;
+        2)    PACKAGE_VERSION=rev2; ;;
+        *)    log_error "Unknown package type"; return 1; ;;
+        esac
+    else
+        s=`get_boot0_info`
+        set -- $s; b_type=$1; b_ver=$2
+        if [ "$b_type" = "boot0" ]; then
+            PACKAGE_VERSION=rev2
+        fi
+    fi
+
+    fwname_to_fwobj=${PACKAGE_VERSION}_fwname_to_fwobj
+    fwobj_to_fwtype=${PACKAGE_VERSION}_fwobj_to_fwtype
+    fwtype_to_files=${PACKAGE_VERSION}_fwtype_to_files
+    file_to_target=${PACKAGE_VERSION}_file_to_target
+    is_file_valid_for_fwname=${PACKAGE_VERSION}_is_file_valid_for_fwname
+    fwname_to_inv_file=${PACKAGE_VERSION}_fwname_to_inv_file
+    check_install_list=${PACKAGE_VERSION}_check_install_list
+    is_update_required=${PACKAGE_VERSION}_is_update_required
+    FWLIST_NAMES=`eval echo \\$${PACKAGE_VERSION}_FWLIST_NAMES`
+}
+
+#------------------------------------------------------------------------------
+# legacy support
+
+legacy_fwtype_to_files()
+{
+    fwtype=$1
+    case "$fwtype" in
+    uboot)      echo "image"; ;;
+    linux)      echo "device_tree kernel"; ;;
+    *)          fatal "legecy_fwtype_to_files: unknown fwtype $fwtype"; ;;
+    esac
+}
+
+legacy_fwobj_to_fwtype()
+{
+    fwobj=$1
+    case "$fwobj" in
+    boot)       echo "uboot"; ;;
+    main)       echo "linux"; ;;
+    gold)       echo "linux"; ;;
+    diags)      echo "linux"; ;;
+    *)          fatal "legacy_fwobj_to_fwtype: unknown fwobj $fwobj"
+    esac
+}
+
+# Given a fwname and fileobj, returns the device and partition name
+legacy_file_to_target()
+{
+    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+
+    case "$fwname" in
+    uboot)
+        case "$fileobj" in
+        image)
+            dev=mtd
+            part=$MTDPART_UBOOT
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwa)
+        case "$fileobj" in
+        kernel)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            offs=65536
+            ;;
+        device_tree)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    goldfw)
+        case "$fileobj" in
+        kernel)
+            dev=mtd
+            part=$MTDPART_GOLDFW
+            ;;
+        device_tree)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    *)
+        ;;
+    esac
+    if [ -z "$dev" -o -z "$part" ]; then
+        fatal "legacy_file_to_target: Unknown file object $fwname $fileobj"
+    fi
+    echo "$dev $part $offs"
+}
+
+legacy_is_update_required()
+{
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# rev1 support
+
+rev1_FWLIST_NAMES="uboot mainfwa mainfwb goldfw diagfw"
+
+# Map a specific firmware name to an fwobj in the MANIFEST
+rev1_fwname_to_fwobj()
+{
+    case "$1" in
+    mainfwa)    echo main; ;;
+    mainfwb)    echo main; ;;
+    goldfw)     echo gold; ;;
+    diagfw)     echo diags; ;;
+    uboot)      echo boot; ;;
+    *)          fatal "rev1_fwname_to_fwobj: unknown fwname $1"
+    esac
+}
+
+# Map an fwobj to an fwtype
+rev1_fwobj_to_fwtype()
+{
+    fwobj=$1
+    case "$fwobj" in
+    boot)       echo "uboot"; ;;
+    main)       echo "syslinux"; ;;
+    gold)       echo "linux"; ;;
+    diags)      echo "linux"; ;;
+    *)          fatal "rev1_fwobj_to_fwtype: unknown fwobj $fwobj"
+    esac
+}
+
+# Return the component files of a firmware type, in the order they are
+# installed (mtd last).  The last object will be the one invalidated before
+# the others are installed, and thus validates the whole install.
+rev1_fwtype_to_files()
+{
+    fwtype=$1
+    case "$fwtype" in
+    uboot)      echo "image"; ;;
+    syslinux)   echo "system_image kernel_fit"; ;;
+    linux)      echo "kernel_fit"; ;;
+    *)          fatal "rev1_fwtype_to_files: unknown fwtype $fwtype"; ;;
+    esac
+}
+
+# Rev1 systems do not contain invalid file combinations
+rev1_is_file_valid_for_fwname()
+{
+    return 0
+}
+
+rev1_file_to_target()
+{
+    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+
+    case "$fwname" in
+    uboot)
+        case "$fileobj" in
+        image)
+            dev=mtd
+            part=$MTDPART_UBOOT
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwa)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWA
+            if [ $FROM_LEGACY -eq 1 ]; then
+                fatal "mainfwa not supported"
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_A_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwb)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWB
+            if [ $FROM_LEGACY -eq 1 ]; then
+                offs=14680064
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_B_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    goldfw)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_GOLDFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    diagfw)
+        case "$fileobj" in
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_DIAGFW
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    *)
+        ;;
+    esac
+    if [ -z "$dev" -o -z "$part" ]; then
+        fatal "rev1_file_to_target: Unknown file object $fwname $fileobj"
+    fi
+    echo "$dev $part $offs"
+}
+
+rev1_fwname_to_inv_file()
+{
+    local fwname=$1 fwtype=$2
+
+    case "$fwtype" in
+    uboot)              echo "image"; ;;
+    syslinux|linux)     echo "kernel_fit"; ;;
+    *)                  fatal "rev1_fwname_to_invalidate: unknown $fwname"; ;;
+    esac
+}
+
+rev1_check_install_list()
+{
+    local fwname
+
+    for fwname in $INSTALL_IMAGES; do
+        case $fwname in
+        mainfwa|mainfwb)
+            if [ $RUNNING_FW = $fwname ]; then
+                fatal "rev1_check_install_list: Cannot install over running firmware"
+            fi
+            ;;
+        altfw|goldfw|diagfw|uboot|cpld)
+            ;;
+        all)
+            INSTALL_IMAGES="altfw goldfw diagfw uboot cpld"
+            IGNORE_MISSING=1
+            ;;
+        *)
+            fatal "rev1_check_install_list: Unknown firmware name $fwname"
+            ;;
+        esac
+    done
+}
+
+rev1_is_update_required()
+{
+    return 0
+}
+
+#------------------------------------------------------------------------------
+# rev2 support
+
+rev2_FWLIST_NAMES="boot0 mainfwa mainfwb goldfw diagfw"
+
+# Map a specific firmware name to an fwobj in the MANIFEST
+rev2_fwname_to_fwobj()
+{
+    case "$1" in
+    mainfwa)    echo main; ;;
+    mainfwb)    echo main; ;;
+    goldfw)     echo gold; ;;
+    diagfw)     echo diags; ;;
+    boot0)      echo boot0; ;;
+    ubootpack)  echo ubootpack; ;;
+    *)          fatal "rev2_fwname_to_fwobj: unknown fwname $1"
+    esac
+}
+
+# Map an fwobj to an fwtype
+rev2_fwobj_to_fwtype()
+{
+    fwobj=$1
+    case "$fwobj" in
+    boot0)      echo "boot0"; ;;
+    ubootpack)  echo "ubootpack"; ;;
+    main)       echo "syslinux"; ;;
+    gold)       echo "goldlinux"; ;;
+    diags)      echo "linux"; ;;
+    *)          fatal "rev2_fwobj_to_fwtype: unknown fwobj $fwobj"
+    esac
+}
+
+# Return the component files of a firmware type, in the order they are
+# installed (mtd last).  The last object will be the one invalidated before
+# the others are installed, and thus validates the whole install.
+rev2_fwtype_to_files()
+{
+    fwtype=$1
+    case "$fwtype" in
+    boot0)      echo "image"; ;;
+    ubootpack)  echo "golduboot uboota ubootb"; ;;
+    syslinux)   echo "system_image kernel_fit uboota ubootb"; ;;
+    goldlinux)  echo "kernel_fit golduboot"; ;;
+    linux)      echo "kernel_fit"; ;;
+    *)          fatal "rev2_fwtype_to_files: unknown fwtype $fwtype"; ;;
+    esac
+}
+
+rev2_fwname_to_inv_file()
+{
+    local fwname=$1 fwtype=$2
+
+    case "$fwname" in
+    boot0)      echo "none"; ;;
+    ubootpack)  echo "none"; ;;
+    mainfwa)    echo "uboota"; ;;
+    mainfwb)    echo "ubootb"; ;;
+    goldfw)     echo "golduboot"; ;;
+    diagfw)     echo "kernel_fit"; ;;
+    *)          fatal "rev2_fwname_to_inv_file: unknown $fwname"; ;;
+    esac
+}
+
+# Omit uboota being considered valid for mainfwb, or ubootb for mainfwa.
+rev2_is_file_valid_for_fwname()
+{
+    local fwname=$1 f=$2
+    [ "$fwname" = "mainfwa" -a "$f" = "ubootb" ] && return 1
+    [ "$fwname" = "mainfwb" -a "$f" = "uboota" ] && return 1
+    return 0
+}
+
+# Given a fwname and fileobj, returns the device and partition name
+rev2_file_to_target()
+{
+    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+
+    case "$fwname" in
+    boot0)
+        dev=mtd
+        case "$fileobj" in
+        image)     part=$MTDPART_UBOOT; ;;
+        *) ;;
+        esac
+        ;;
+    ubootpack)
+        dev=mtd
+        case "$fileobj" in
+        uboota)    part=$MTDPART_UBOOTA; ;;
+        ubootb)    part=$MTDPART_UBOOTB; ;;
+        golduboot) part=$MTDPART_GOLDUBOOT; ;;
+        *) ;;
+        esac
+        ;;
+    mainfwa)
+        case "$fileobj" in
+        uboota)
+            dev=mtd
+            part=$MTDPART_UBOOTA
+            ;;
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWA
+            if [ $FROM_LEGACY -eq 1 ]; then
+                fatal "mainfwa not supported"
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_A_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    mainfwb)
+        case "$fileobj" in
+        ubootb)
+            dev=mtd
+            part=$MTDPART_UBOOTB
+            ;;
+        kernel_fit)
+            dev=mtd
+            part=$MTDPART_MAINFWB
+            if [ $FROM_LEGACY -eq 1 ]; then
+                offs=14680064
+            fi
+            ;;
+        system_image)
+            dev=mmc
+            part=$IMAGE_B_PARTUUID
+            ;;
+        *)
+            ;;
+        esac
+        ;;
+    goldfw)
+        dev=mtd
+        case "$fileobj" in
+        golduboot)  part=$MTDPART_GOLDUBOOT; ;;
+        kernel_fit) part=$MTDPART_GOLDFW; ;;
+        *) ;;
+        esac
+        ;;
+    diagfw)
+        dev=mtd
+        case "$fileobj" in
+        kernel_fit) part=$MTDPART_DIAGFW; ;;
+        *) ;;
+        esac
+        ;;
+    *)
+        ;;
+    esac
+    if [ -z "$dev" -o -z "$part" ]; then
+        fatal "rev2_file_to_target: Unknown file object $fwname $fileobj"
+    fi
+    echo "$dev $part $offs"
+}
+
+rev2_check_install_list()
+{
+    local fwname
+
+    for fwname in $INSTALL_IMAGES; do
+        case $fwname in
+        mainfwa|mainfwb)
+            if [ $RUNNING_FW = $fwname ]; then
+                fatal "rev2_check_install_list: Cannot install over running firmware"
+            fi
+            ;;
+        altfw|goldfw|diagfw|boot0|ubootpack|cpld)
+            ;;
+        all)
+            INSTALL_IMAGES="boot0 altfw goldfw diagfw cpld"
+            INSTALL_BOOT0_UPG=1
+            IGNORE_MISSING=1
+            ;;
+        *)
+            fatal "rev2_check_install_list: Unknown firmware name $fwname"
+            ;;
+        esac
+    done
+}
+
+#
+# rev2_is_update_required returns 0 if it is valid to install the supplied
+# file.  For most files this is trivially 0, but when issuing -i all,
+# boot0 is only updated if required for the board (via the min_version
+# field of the board_map array.
+#
+rev2_is_update_required()
+{
+    local fwobj=$1 fwname=$2 pn
+
+    if [ $fwobj != "boot0" -o $INSTALL_BOOT0_UPG -eq 0 ]; then
+        # Upgrade of this file is ok
+        return 0
+    fi
+
+    # Compare the version of the installed boot0 with the minversion
+    # for this board.
+    if [ ! -f $FRU ]; then
+        # No update for unknown board
+        log_info "$FRU not found; skipping boot0 upgrade"
+        return 1
+    fi
+    this_pn=`jq -r '.["part-number"]' $FRU | awk -F'[ -]' '{print $1"-"$2}'`
+    log_info "Considering boot0 upgrade for board $this_pn"
+
+    s=`get_boot0_info`
+    set -- $s; b_type=$1; cur_ver=$2
+    if [ "$b_type" != "boot0" ]; then
+        # Should not happen.  Quietly log it and reject the update
+        log_error "rev2_is_update_required: b_type $b_type != boot0"
+        return 1
+    fi
+
+    # Try to find a matching part_number entry in the board_map[].
+    min_ver=0
+    l=`mani_length ".firmware.boot0.board_map"`
+    for i in `seq $l`; do
+        pn=`mani_value ".firmware.boot0.board_map[$i - 1].part_number"`
+        if [ "$pn" = "$this_pn" ]; then
+            min_ver=`mani_value ".firmware.boot0.board_map[$i - 1].min_version"`
+            break
+        fi
+    done
+    new_ver=`mani_fileobj_value $fwobj image .image_version`
+    # Install if the file has a higher version than what's installed AND
+    # the installed version is less than the board-type minimum.
+    if [ $new_ver -gt $cur_ver -a $cur_ver -lt $min_ver ]; then
+        log_info "boot0 cur=$cur_ver, min=$min_ver, new=$new_ver, install=YES"
+        return 0
+    else
+        log_info "boot0 cur=$cur_ver, min=$min_ver, new=$new_ver, install=NO"
+        return 1
+    fi
+}
+
+#------------------------------------------------------------------------------
+
 dry_run()
 {
     echo "(no action)"
@@ -396,7 +926,7 @@ uptime_secs()
 take_lock()
 {
     local wait_op="$1"
-    local pid s t_now t_lock t_held log_first
+    local pid s t_now t_lock t_held log_first err
 
     log_info "Taking lock"
     log_first=0
@@ -412,7 +942,7 @@ take_lock()
             if [ "$wait_op" = "break" -o \
                  $t_held -gt $LOCK_TIMEOUT_SECS -o \
                  $t_held -lt 0 ]; then
-                log_error "Breaking lock held for $t_held seconds" 
+                log_error "Breaking lock held for $t_held seconds"
                 break
             fi
             if [ "$wait_op" = "nowait" ]; then
@@ -430,7 +960,12 @@ take_lock()
         fi
     done
     t_now=`uptime_secs`
-    echo "$$ $t_now" > $PIDFILE
+    err=0
+    echo "$$ $t_now" > $PIDFILE 2>/dev/null || err=1
+    if [ $err -eq 1 ]; then
+        rm -f $PIDFILE
+        fatal "Failed to write lockfile"
+    fi
     log_info "Lock taken"
 }
 
@@ -660,137 +1195,31 @@ mani_length()
     jq -r "$cmd" $MANIFEST
 }
 
-# Given a fwname and fileobj, returns the device and partition name
-file_to_target()
+mani_fileobj_key()
 {
-    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+    local fwobj=$1 $fileobj=$2 ref
 
-    case "$fwname" in
-    uboot)
-        case "$fileobj" in
-        image)
-            dev=mtd
-            part=$MTDPART_UBOOT
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    mainfwa)
-        case "$fileobj" in
-        kernel_fit)
-            dev=mtd
-            part=$MTDPART_MAINFWA
-            if [ $FROM_LEGACY -eq 1 ]; then
-                fatal "mainfwa not supported"
-            fi
-            ;;
-        system_image)
-            dev=mmc
-            part=$IMAGE_A_PARTUUID
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    mainfwb)
-        case "$fileobj" in
-        kernel_fit)
-            dev=mtd
-            part=$MTDPART_MAINFWB
-            if [ $FROM_LEGACY -eq 1 ]; then
-                offs=14680064
-            fi
-            ;;
-        system_image)
-            dev=mmc
-            part=$IMAGE_B_PARTUUID
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    goldfw)
-        case "$fileobj" in
-        kernel_fit)
-            dev=mtd
-            part=$MTDPART_GOLDFW
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    diagfw)
-        case "$fileobj" in
-        kernel_fit)
-            dev=mtd
-            part=$MTDPART_DIAGFW
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    *)
-        ;;
-    esac
-    if [ -z "$dev" -o -z "$part" ]; then
-        fatal "file_to_target: Unknown file object $fwname $fileobj"
+    ref=`mani_opt_value ".firmware.$fwobj.files.$fileobj.ref"`
+    if [ "$ref" = "null" ]; then
+        ref=".firmware.$fwobj.files.$fileobj"
     fi
-    echo "$dev $part $offs"
+    echo $ref
 }
 
-# Given a fwname and fileobj, returns the device and partition name
-legacy_file_to_target()
+mani_fileobj_opt_value()
 {
-    local fwname=$1 fileobj=$2 dev="" part="" offs=0
+    local fwobj=$1 fileobj=$2 key=$3 ref
 
-    case "$fwname" in
-    uboot)
-        case "$fileobj" in
-        image)
-            dev=mtd
-            part=$MTDPART_UBOOT
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    mainfwa)
-        case "$fileobj" in
-        kernel)
-            dev=mtd
-            part=$MTDPART_DIAGFW
-            offs=65536
-            ;;
-        device_tree)
-            dev=mtd
-            part=$MTDPART_DIAGFW
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    goldfw)
-        case "$fileobj" in
-        kernel)
-            dev=mtd
-            part=$MTDPART_GOLDFW
-            ;;
-        device_tree)
-            dev=mtd
-            part=$MTDPART_DIAGFW
-            ;;
-        *)
-            ;;
-        esac
-        ;;
-    *)
-        ;;
-    esac
-    if [ -z "$dev" -o -z "$part" ]; then
-        fatal "file_to_target: Unknown file object $fwname $fileobj"
-    fi
-    echo "$dev $part $offs"
+    ref=`mani_fileobj_key $fwobj $fileobj`
+    mani_opt_value "$ref$key"
+}
+
+mani_fileobj_value()
+{
+    local fwobj=$1 fileobj=$2 key=$3 ref
+
+    ref=`mani_fileobj_key $fwobj $fileobj`
+    mani_value "$ref$key"
 }
 
 check_hash_algo()
@@ -876,59 +1305,13 @@ install_mmc()
     set -e
 }
 
-# Return the component files of a firmware type, in the order they are
-# installed (mtd last).  The last object will be the one invalidated before
-# the others are installed, and thus validates the whole install.
-fwtype_to_files()
-{
-    fwtype=$1
-    case "$fwtype" in
-    uboot)      echo "image"; ;;
-    syslinux)   echo "system_image kernel_fit"; ;;
-    linux)      echo "kernel_fit"; ;;
-    *)          fatal "fwtype_to_files: unknown fwtype $fwtype"; ;;
-    esac
-}
 
-fwobj_to_fwtype()
-{
-    fwobj=$1
-    case "$fwobj" in
-    boot)       echo "uboot"; ;;
-    main)       echo "syslinux"; ;;
-    gold)       echo "linux"; ;;
-    diags)      echo "linux"; ;;
-    *)          fatal "fwobj_to_fwtype: unknown fwobj $fwobj"
-    esac
-}
-
-legacy_fwtype_to_files()
-{
-    fwtype=$1
-    case "$fwtype" in
-    uboot)      echo "image"; ;;
-    linux)      echo "device_tree kernel"; ;;
-    *)          fatal "legecy_fwtype_to_files: unknown fwtype $fwtype"; ;;
-    esac
-}
-
-legacy_fwobj_to_fwtype()
-{
-    fwobj=$1
-    case "$fwobj" in
-    boot)       echo "uboot"; ;;
-    main)       echo "linux"; ;;
-    gold)       echo "linux"; ;;
-    diags)      echo "linux"; ;;
-    *)          fatal "legacy_fwobj_to_fwtype: unknown fwobj $fwobj"
-    esac
-}
 
 # Verify the contents of a naples_fw.tar file
 verify_package_firmware()
 {
     local fwobj want_type want_files remainder found i fileobj
-    local fileobj path algo want_hash got_hash
+    local fileobj path algo want_hash got_hash ref
 
     for fwobj in `mani_keys .firmware`; do
         #
@@ -962,6 +1345,15 @@ verify_package_firmware()
         # File data verification
         #
         for fileobj in `mani_keys ".firmware.$fwobj.files"`; do
+            ref=`mani_opt_value ".firmware.$fwobj.files.$fileobj.ref"`
+            if [ "$ref" != "null" ]; then
+                # Verify link is valid.  File content validated elsewhere
+                path=`mani_opt_value "${ref}.name"`
+                if [ "$path" = "null" ]; then
+                    fatal "verify_package_firmware: $fwobj: required file data not found"
+                fi
+                continue
+            fi
             path=`mani_opt_value ".firmware.$fwobj.files.$fileobj.name"`
             if [ "$path" = "null" ]; then
                 fatal "verify_package_firmware: $fwobj: required file data not found"
@@ -1077,10 +1469,11 @@ do_verify_image()
     local s dev part offs f path devsz ersz
     local algo hash got_hash blks dblks
 
-    fwobj=`fwname_to_fwobj $fwname`
+    fwobj=`$fwname_to_fwobj $fwname`
     fwtype=`$fwobj_to_fwtype $fwobj`
     files=`$fwtype_to_files $fwtype`
     for f in $files; do
+        ! $is_file_valid_for_fwname $fwname $f && continue
         echo "Verifying $f..."
         s=`$file_to_target $fwname $f`; set -- $s; dev=$1; part=$2; offs=$3
         case "$dev" in
@@ -1096,9 +1489,12 @@ do_verify_image()
         esac
         case "$f" in
         image)
-            if [ $fwname != uboot ]; then
+            if [ $fwname != uboot -a $fwname != boot0 ]; then
                 fatal "verify_image: non-uboot image not supported"
             fi
+            s=`get_uboot_info $path`; set -- $s; size=$1; algo=$2; hash=$3
+            ;;
+        uboota|ubootb|golduboot)
             s=`get_uboot_info $path`; set -- $s; size=$1; algo=$2; hash=$3
             ;;
         system_image)
@@ -1139,7 +1535,7 @@ verify_image()
     local fwname=$VERIFY_FWNAME
 
     case "$fwname" in
-    uboot|mainfwa|mainfwb|goldfw|diagfw)
+    boot0|uboot|mainfwa|mainfwb|goldfw|diagfw)
         ;;
     altfw)
         fwname=$ALT_FW
@@ -1182,8 +1578,11 @@ invalidate_fwname()
     local fwname=$1 fwtype=$2 files last_fileobj dev ersz part offs s
 
     files=`$fwtype_to_files $fwtype`
-    last_fileobj=`echo $files | awk '{ print $NF }'`
-    s=`$file_to_target $fwname $last_fileobj`; set -- $s; dev=$1; part=$2; offs=$3
+    inv_file=`$fwname_to_inv_file $fwname $fwtype`
+    if [ $inv_file = "none" ]; then
+        return
+    fi
+    s=`$file_to_target $fwname $inv_file`; set -- $s; dev=$1; part=$2; offs=$3
     case "$dev" in
     mtd)
         s=`find_mtdpart_byname $part`; set -- $s; dev=$1; ersz=$3
@@ -1259,7 +1658,8 @@ critical_section_begin()
         return
     fi
     case "$fwtype" in
-    uboot|cpld)
+    boot0|uboot|cpld)
+        log_info "BEGIN CRITICAL SECTION"
         pcie_reset_hold || true
         ;;
     *)
@@ -1274,7 +1674,8 @@ critical_section_end()
         return
     fi
     case "$fwtype" in
-    uboot|cpld)
+    boot0|uboot|cpld)
+        log_info "END CRITICAL SECTION"
         pcie_reset_release
         ;;
     *)
@@ -1294,14 +1695,21 @@ install_fwobj()
         fi
         return
     fi
+
+    if ! $is_update_required $fwobj $fwname; then
+        echo "===> Skipping $fwname; update not required"
+        return
+    fi
+
     echo "===> Installing $fwname"
     critical_section_begin $fwtype
     invalidate_fwname $fwname $fwtype
     for fileobj in `$fwtype_to_files $fwtype`; do
-        path=`mani_value ".firmware.$fwobj.files.$fileobj.name"`
-        algo=`mani_value ".firmware.$fwobj.files.$fileobj.verify.algorithm"`
+        ! $is_file_valid_for_fwname $fwname $fileobj && continue
+        path=`mani_fileobj_value $fwobj $fileobj .name`
+        algo=`mani_fileobj_value $fwobj $fileobj .verify.algorithm`
         check_hash_algo "$algo"
-        hash=`mani_value ".firmware.$fwobj.files.$fileobj.verify.hash"`
+        hash=`mani_fileobj_value $fwobj $fileobj .verify.hash`
         do_install_file $fwname $fwobj $fileobj $path $hash $algo
     done
     critical_section_end $fwtype || fatal "Aborted due to pending reset"
@@ -1336,42 +1744,6 @@ install_cpld_bitfile()
     set -e
 }
 
-fwname_to_fwobj()
-{
-    case "$1" in
-    mainfwa)    echo main;  ;;
-    mainfwb)    echo main;  ;;
-    goldfw)     echo gold;  ;;
-    diagfw)     echo diags; ;;
-    uboot)      echo boot;  ;;
-    *)          fatal "fwname_to_fwobj: unknown fwname $1"
-    esac
-}
-
-check_install_list()
-{
-    local fwname
-
-    for fwname in $INSTALL_IMAGES; do
-        case $fwname in
-        mainfwa|mainfwb)
-            if [ $RUNNING_FW = $fwname ]; then
-                fatal "check_install_list: Cannot install over running firmware"
-            fi
-            ;;
-        altfw|goldfw|diagfw|uboot|cpld)
-            ;;
-        all)
-            INSTALL_IMAGES="altfw goldfw diagfw uboot cpld"
-            IGNORE_MISSING=1
-            ;;
-        *)
-            fatal "check_install_list: Unknown firmware name $fwname"
-            ;;
-        esac
-    done
-}
-
 do_install_firmware_images()
 {
     local fwname fwobj
@@ -1381,7 +1753,7 @@ do_install_firmware_images()
         if [ $fwname = "altfw" ]; then
             fwname=$ALT_FW
         fi
-        fwobj=`fwname_to_fwobj $fwname`
+        fwobj=`$fwname_to_fwobj $fwname`
         install_fwobj $fwobj $fwname
     done
 }
@@ -1440,6 +1812,11 @@ do_install_images()
 {
     local fwname fwobj
 
+    # Check for rev2 transition
+    if [ $PACKAGE_VERSION = "rev2" ]; then
+        check_rev2_transition
+    fi
+
     # Iterate over the desired images
     for fwname in $INSTALL_IMAGES; do
         if [ $fwname = "altfw" ]; then
@@ -1450,10 +1827,36 @@ do_install_images()
                 do_install_bitfile_images
             fi
         else
-            fwobj=`fwname_to_fwobj $fwname`
+            fwobj=`$fwname_to_fwobj $fwname`
             install_fwobj $fwobj $fwname
         fi
     done
+}
+
+check_rev2_transition()
+{
+    local s b_type b_ver p=$INSTALL_BOOT0_UPG
+
+    # Read the boot0 type
+    s=`get_boot0_info`
+    set -- $s; b_type=$1; b_ver=$2
+    if [ "$b_type" = "boot0" ]; then
+        return 0
+    fi
+
+    log_info "Performing first-time install of new boot path"
+    echo "===> Performing first-time install of new boot path"
+    INSTALL_BOOT0_UPG=0
+    $DRY_RUN do_rev2_pre_install
+    INSTALL_BOOT0_UPG=$p
+}
+
+# Perform the one-time installation of all the boot images for transition
+# from the rev1 package flow (single u-boot) to rev2 (a/b/gold uboot)
+do_rev2_pre_install()
+{
+    install_fwobj ubootpack ubootpack
+    install_fwobj boot0 boot0
 }
 
 install_images()
@@ -1466,7 +1869,7 @@ install_images()
         IGNORE_MISSING=1
     else
         # Check the install list to make sure its ok
-        check_install_list
+        $check_install_list
     fi
 
     # Verify the package
@@ -1558,10 +1961,20 @@ extract_meta()
     set -- `dd if=$infile bs=1 skip=$offs count=8 status=none | od -t x4 | head -1`
     magic=0x$2
     if [ $magic != $FILE_META_MAGIC ]; then
+        log_error "metadata magic not found"
         return 1
     fi
     len=$((0x$3))
     dd if=$infile bs=1 skip=$(($offs + 8)) count=$len status=none > $outfile
+    if ! jq -M . < $outfile > /dev/null 2>&1; then
+        log_error "metadata parse error"
+        return 1
+    fi
+    if [ `jq -M . < $outfile 2>&1 | wc -l` = 0 ]; then
+        log_error "metadata incomplete"
+        return 1
+    fi
+    return 0
 }
 
 get_uboot_info()
@@ -1581,6 +1994,24 @@ get_uboot_info()
     else
         log_error -e "uboot metadata not found"
         return 1
+    fi
+}
+
+get_boot0_info()
+{
+    local UBOOT_SIZE_MAGIC=0xfb89090a
+    local BOOT0_MAGIC=0x30f29e8b
+    local s dev devsz ersz magic ver
+
+    s=`find_mtdpart_byname $MTDPART_UBOOT`; set -- $s; dev=$1; devsz=$2; ersz=$3
+    set -- `dd if=$dev bs=16 count=1 status=none | od -t x4 | head -1`
+    magic=0x$5
+    if [ $magic = $BOOT0_MAGIC ]; then
+        set -- `dd if=$dev bs=16 skip=1 count=1 status=none | od -t x4 | head -1`
+        ver=$((0x$4))
+        echo boot0 $ver
+    else
+        echo uboot 0
     fi
 }
 
@@ -1636,10 +2067,10 @@ JPREF=""
 JFPREF=""
 do_list_uboot_image()
 {
-    local dev=$1
+    local dev=$1 label=$2
     if get_uboot_info $dev >/dev/null 2>&1; then
         cat << EOF
-        $JPREF "image": {
+        $JPREF "$label": {
             `show_meta`
         }
 EOF
@@ -1678,10 +2109,11 @@ do_list_firmware()
     local fwname=$1 fwobj fwtype files dev part f s
 
     echo "    $JFPREF \"$fwname\": {"
-    fwobj=`fwname_to_fwobj $fwname`
+    fwobj=`$fwname_to_fwobj $fwname`
     fwtype=`$fwobj_to_fwtype $fwobj`
     files=`$fwtype_to_files $fwtype`
     for f in $files; do
+        ! $is_file_valid_for_fwname $fwname $f && continue
         s=`$file_to_target $fwname $f`; set -- $s; dev=$1; part=$2
         case "$dev" in
         mtd)
@@ -1696,10 +2128,10 @@ do_list_firmware()
         esac
         case $f in
         image)
-            if [ $fwtype != uboot ]; then
-                fatal "do_list_firmware: non-uboot image not supported"
-            fi
-            do_list_uboot_image $dev
+            do_list_uboot_image $dev image
+            ;;
+        uboota|ubootb|golduboot)
+            do_list_uboot_image $dev uboot
             ;;
         system_image)
             do_list_system_image $dev
@@ -1735,7 +2167,7 @@ list_firmware()
 
     (
     echo "{"
-    for fwname in uboot mainfwa mainfwb goldfw diagfw; do
+    for fwname in $FWLIST_NAMES; do
         JPREF=""
         do_list_firmware $fwname
     done
@@ -1761,11 +2193,16 @@ list_loaded_firmware()
         fatal "$CACHEFILE not found"
         exit 1
     fi
-    local fwname s
+    local fwname s v
     (
-        echo "{ \"uboot\":"
+        s=`jq -r -M .boot0 $CACHEFILE`
+        if [ "$s" != "null" ]; then
+            echo "{ \"boot0\":" $s
+        else
+            echo "{ \"uboot\":"
+            jq -r -M .uboot $CACHEFILE
+        fi
         fwname=`get_kernel_fwname`
-        jq -r -M .uboot $CACHEFILE
         echo ","
         case "$fwname" in
         mainfwa|mainfwb)
@@ -1780,7 +2217,12 @@ list_loaded_firmware()
                 do_list_firmware $RUNNING_FW
                 echo }
             ) | jq -r -M .$RUNNING_FW.system_image
-            echo }
+            s=`jq -r -M ".$fwname.uboot" $CACHEFILE`
+            if [ "$s" != "null" ]; then
+                echo ', "uboot":'
+                jq -r -M .$fwname.uboot $CACHEFILE
+            fi
+            echo "}"
             ;;
         *)
             echo "\"$fwname\":"

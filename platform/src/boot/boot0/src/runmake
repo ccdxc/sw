@@ -1,0 +1,6 @@
+#!/bin/sh
+
+export NICDIR=../../../../../nic
+export BLD_OUT_DIR=$NICDIR/build/aarch64/iris/out
+mkdir -p $BLD_OUT_DIR
+exec make "$@"

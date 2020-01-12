@@ -1,5 +1,6 @@
 
 # Programs
+nic/build/aarch64/iris/bin/bflog                                                /nic/bin/
 nic/build/aarch64/iris/bin/capview                                              /platform/bin/
 nic/build/aarch64/iris/bin/palreg                                               /platform/bin/
 nic/build/$ARCH/$PIPELINE/bin/cpldapp                                           /nic/bin/
@@ -68,6 +69,10 @@ nic/tools/pcie_hostdn.sh                                                        
 platform/src/app/cpld/cpldapp.sh                                                /nic/tools/
 platform/src/app/cpld/reboot.sh                                                 /nic/tools/
 platform/src/app/sysmond/sysmondebug.sh                                         /nic/tools/
+
+# include boot0.bin in the package
+nic/build/aarch64/iris/out/boot0_submake/boot0.bin                              /boot0/
+nic/build/aarch64/iris/out/boot0_submake/boards.json                            /boot0/
 
 # Oprom
 nic/build/aarch64/iris/bin/ionic.efirom                                         /platform/oprom/

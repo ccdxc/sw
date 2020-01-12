@@ -149,9 +149,11 @@ nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 nic/tools/postinstall.sh                                          /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
+nic/tools/bflog_sync.sh                                           /nic/tools/
 
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
@@ -191,6 +193,10 @@ nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
 
 # platform config files
 nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
+
+# include boot0.bin in the package
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin             /boot0/
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/

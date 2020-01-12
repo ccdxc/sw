@@ -1,0 +1,1 @@
+#define BOOT0_VERSION 1

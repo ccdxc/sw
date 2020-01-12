@@ -142,6 +142,7 @@ nic/tools/sysupdate.sh                                               /nic/tools/
 nic/$PIPELINE/tools/sysinit.sh                                       /nic/tools/
 nic/$PIPELINE/tools/bringup_mgmt_ifs.sh                              /nic/tools/
 nic/tools/sysreset.sh                                                /nic/tools/
+nic/tools/bflog_sync.sh                                              /nic/tools/
 
 # linkmgr
 nic/build/$ARCH/$PIPELINE/bin/port_client                            /nic/bin/
@@ -167,6 +168,7 @@ nic/tools/speed_change.sh                                            /nic/tools/
 # platform modules, scripts etc.
 nic/tools/fwupdate                                                   /nic/tools/
 nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                          /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/bflog                                  /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                                /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool                            /nic/bin/
@@ -203,6 +205,10 @@ nic/build/$ARCH/$PIPELINE/lib/libpacket_parser.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/*upgrade*                              /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsysmgr.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpenlog.so                           /nic/lib/
+
+# include boot0.bin in the package
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin                /boot0/
+nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json              /boot0/
 
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                     /nic/conf/captrace/

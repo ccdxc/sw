@@ -74,6 +74,11 @@ if [[ ! -r /var/run/fwupdate.cache ]]; then
     /nic/tools/fwupdate -C &
 fi
 
+# Sync the boot fault log
+if [[ -f /nic/tools/bflog_sync.sh ]]; then
+    /nic/tools/bflog_sync.sh &
+fi
+
 # check for all the binaries
 if [[ ! -f $NIC_DIR/bin/hal ]]; then
     echo "Aborting Sysinit - HAL binary not found"
