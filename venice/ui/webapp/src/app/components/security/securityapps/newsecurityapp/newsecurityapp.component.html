@@ -137,8 +137,8 @@
     </div>
     <div fxFlex="20px"></div>
     <div fxFlex *ngIf="selectedType != null" fxLayout="row" style="margin-bottom: 10px;">
-      <ng-container [ngSwitch]="selectedType" [formGroupName]="selectedType.toLowerCase()">
-        <ng-container *ngSwitchCase="algEnumOptions.icmp">
+      <ng-container [ngSwitch]="selectedType">
+        <ng-container *ngSwitchCase="algEnumOptions.icmp" [formGroupName]="'icmp'">
           <div fxFlex fxLayout="row">
             <div fxFlex>
               <div class="newsecurityapp-text-margin">Type:</div>
@@ -158,7 +158,7 @@
           </div>
 
         </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.dns">
+        <ng-container *ngSwitchCase="algEnumOptions.dns" [formGroupName]="'dns'">
           <div fxFlex="nogrow" fxLayout="column">
             <div fxFlex="nogrow" fxLayout="row">
               <div fxFlex="auto" fxLayout="row wrap">
@@ -211,7 +211,7 @@
             </div>
           </div>
         </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.ftp">
+        <ng-container *ngSwitchCase="algEnumOptions.ftp" [formGroupName]="'ftp'">
           <div fxFlex="auto" fxLayout="row">
             <mat-slide-toggle [checked]=false formControlName="allow-mismatch-ip-address"
                               class="newsecurityapp-toggle-color">
@@ -219,12 +219,12 @@
             </mat-slide-toggle>
           </div>
         </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.sunrpc">
+        <ng-container *ngSwitchCase="algEnumOptions.sunrpc" [formGroupName]="'sunrpc'">
           <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
             <ng-container *ngTemplateOutlet="SunRPCTemplate"></ng-container>
           </div>
         </ng-container>
-        <ng-container *ngSwitchCase="algEnumOptions.msrpc">
+        <ng-container *ngSwitchCase="algEnumOptions.msrpc" [formGroupName]="'msrpc'">
           <div fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
             <ng-container *ngTemplateOutlet="MSRPCTemplate"></ng-container>
           </div>

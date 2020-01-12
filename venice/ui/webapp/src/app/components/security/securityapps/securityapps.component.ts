@@ -64,9 +64,9 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'securityapps-column-metaname', sortable: true, width: 15 },
+    { field: 'meta.mod-time', header: 'Modification Time', class: 'securityapps-column-date', sortable: true, width: '175px' },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'securityapps-column-date', sortable: true, width: '175px' },
     { field: 'spec.alg.type', header: 'Configuration', class: 'securityapps-column-host-name', sortable: false, width: 35 },
-    { field: 'meta.mod-time', header: 'Modification Time', class: 'securityapps-column-date', sortable: true, width: 25 },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'securityapps-column-date', sortable: true, width: 25 },
   ];
 
   constructor(protected _controllerService: ControllerService,
@@ -185,27 +185,34 @@ export class SecurityappsComponent extends TablevieweditAbstract<ISecurityApp, S
   }
 
   displayColumn(Data, col, hasUiHintMap: boolean = true): any {
-    let fields = col.field.split('.');
+    const fields = col.field.split('.');
     if (fields.includes('alg')) {
       if (Data.spec == null) {
         return '';
       }
-      if (Data.spec.alg == null) {
-        fields = ['spec', 'proto-ports'];
-      }
     }
-    let value = Utility.getObjectValueByPropertyPath(Data, fields);
+    let value = null;
+    if (!fields.includes('alg') || Data.spec.alg) {
+      value = Utility.getObjectValueByPropertyPath(Data, fields);
+    }
     const column = col.field;
     if (fields.includes('alg')) {
-
-      value = 'ALG Type:   ' + value;
-    }
-    if (fields.includes('proto-ports')) {
-      const protoarray = [];
-      for (const i of value) {
-        protoarray.push('Protocol: ' + i.protocol + ' Ports: ' + i.ports);
+      if (Data.spec.alg == null) {
+        value = '';
+      } else {
+        value = 'ALG Type: ' + value;
       }
-      value =  protoarray.join(', ');
+      const protocolValues = Utility.getObjectValueByPropertyPath(Data, ['spec', 'proto-ports']);
+      if (protocolValues) {
+        const protoarray = [];
+        for (const i of protocolValues) {
+          protoarray.push('Protocol: ' + i.protocol + ' Ports: ' + i.ports);
+        }
+        if (value) {
+          value += '; ';
+        }
+        value +=  protoarray.join(', ');
+      }
     }
     if (fields.includes('mod-time') || fields.includes('creation-time')) {
       value = new PrettyDatePipe('en-US').transform(value);
