@@ -707,7 +707,7 @@ func (ros *RolloutState) computeProgressDelta() {
 		numNaples += int(ros.numSkipped) //include the skipped ones
 	}
 
-	ros.completionDelta = float32(100 / (2*numVenice + 2*numNaples + 2))
+	ros.completionDelta = float32(100 / float32(2*numVenice+2*numNaples+2))
 	log.Infof("Completion Delta %+v NumNaples %v NumVenice %+v", ros.completionDelta, numNaples, numVenice)
 }
 
