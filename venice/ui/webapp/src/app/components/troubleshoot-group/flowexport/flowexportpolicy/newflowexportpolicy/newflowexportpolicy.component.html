@@ -1,90 +1,280 @@
-<div fxFlex="auto" fxLayout="column">
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start"
-       class="newflowexportpolicy-container">
-    <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1400px' : '1300px'"
-         fxLayoutAlign="start stretch"
-         class="newflowexportpolicy-content">
-      <div fxFlex fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" [formGroup]="newObject.$formGroup.get(['meta'])">
-          <input fxFlex="300px" formControlName="name" class="newflowexportpolicy-name"
-                 appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
-        </div>
-        <div fxFlex="15px"></div>
-        <!-- Buffer -->
-        <div fxFlex="noshrink" fxLayout="row" [formGroup]="newObject.$formGroup.get(['spec'])">
-          <!-- Commented out because VRF is not exposed in the UI for now. -->
-          <!-- <div fxFlex="nogrow" fxLayout="column">
-            <div class="newflowexportpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>VRF Name:</span>
-            </div>
-          </div>
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
-              <input fxFlex="nogrow" appErrorTooltip formControlName="vrf-name"
-                     class="newflowexportpolicy-input"
-                     spellcheck="false" type="text" pInputText
-                     placeholder="">
-            </div>
-          </div> -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div class="newflowexportpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Interval:</span>
-            </div>
-          </div>
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
-              <input fxFlex="nogrow" appErrorTooltip formControlName="interval"
-                     class="newflowexportpolicy-input"
-                     spellcheck="false" type="text" pInputText placeholder="0h0m10s">
-            </div>
-          </div>
-
-          <div fxFlex="nogrow" fxLayout="column">
-            <div class="newflowexportpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Template Refresh Rate:</span>
-            </div>
-          </div>
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="newflowexportpolicy-value">
-              <input fxFlex="nogrow" appErrorTooltip formControlName="template-interval"
-                     class="newflowexportpolicy-input" spellcheck="false" type="text" pInputText
-                     placeholder="0h0m10s">
-            </div>
-          </div>
-
-        </div>
-        <div fxFlex="15px"></div>
-        <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-        <div fxFlex="noshrink" fxLayout="row">
-          <div fxFlex="nogrow" class="newflowexportpolicy-text">EXPORT PACKET IF:</div>
-          <app-matchrule #matchRules
-                         [rules]="newObject.$formGroup.get(['spec', 'match-rules']).value">
-          </app-matchrule>
-        </div>
-
-        <div fxFlex="noshrink" fxLayout="row">
-          <app-syslog #syslogComponent [syslogExport]="syslogConfig" [formatOptions]="formatOptions"
-                      targetTransport="UDP/<port>" [showSyslogOptions]="false"
+<div fxFlex="auto" fxLayout="column" class="new-flow-export-container">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxFlex="5px"></div>
+  <div fxFlex="auto" fxLayout="row wrap">
+    <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
+         class="new-flow-export-row">
+      <ng-container *ngTemplateOutlet="metaSpec"></ng-container>
+      <ng-container>
+        <div class="newflow-export-policy-packet">
+          <app-syslog #syslogComponent
+                      [syslogExport]="syslogConfig"
+                      [formatOptions]="formatOptions"
+                      targetTransport="UDP/<port>"
+                      [showSyslogOptions]="false"
+                      [syslogRequiredOption]="true"
+                      [syslogFieldsetWidth]="true"
                       [maxTargets]="maxTargets" fxFlex="nogrow"
-                      fxLayout="column"></app-syslog>
+                      fxLayout="column">
+          </app-syslog>
         </div>
+      </ng-container>
+    </div>
+    <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center"
+         class="new-flow-export-row">
+      <ng-container *ngTemplateOutlet="match_rules"></ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="flow-export-policy-button-container"
+       fxFlex="nogrow"
+       fxLayout="row" fxLayoutAlign="end">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div fxFlex="nogrow">
+        <span (click)="saveObject()"
+              class="global-button-primary new-flow-export-inline-save"
+              [ngClass]="computeInlineButtonClass()">SAVE</span>
       </div>
-      <div *ngIf="isInline" class="newflowexportpolicy-buttoncontainer" fxFlex="nogrow"
-           fxLayout="row wrap"
-           fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <button [disabled]="!isFormValid()" (click)="saveObject()"
-                  class="global-button-primary newflowexportpolicy-save">SAVE</button>
-          <div fxFlex="nogrow">
-            <button (click)="cancelObject()"
-                    class="global-button-neutral newflowexportpolicy-cancel">CANCEL</button>
-          </div>
-        </div>
+      <div fxFlex="nogrow">
+        <span (click)="cancelObject()"
+              class="global-button-neutral global-button-padding new-flow-export-inline-cancel">CANCEL</span>
       </div>
     </div>
   </div>
+</ng-template>
+
+<ng-template #metaSpec>
+  <div class="meta-spec-form-group">
+    <div fxFlex="191px" class="new-flow-export-policy-form"
+         [formGroup]="newObject.$formGroup.get(['meta'])">
+      <div class="new-flow-export-policy-input-group">
+        <span [ngClass]="{
+              'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+            }">
+          <input
+                 formControlName="name"
+                 class="new-flow-export-policy-input"
+                 spellcheck="false" type="text"
+                 appFloatLabel="Unique Policy Name"
+                 pInputText
+                 appErrorTooltip>
+        </span>
+      </div>
+    </div>
+    <div class="new-flow-export-policy-form" [formGroup]="newObject.$formGroup.get(['spec'])">
+      <div class="new-flow-export-policy-input-group">
+        <span>
+          <input
+                 formControlName="interval"
+                 class="new-flow-export-policy-input"
+                 spellcheck="false" type="text"
+                 appFloatLabel="Interval"
+                 pInputText
+                 appErrorTooltip>
+        </span>
+      </div>
+
+      <div class="new-flow-export-policy-input-group">
+        <span>
+          <input
+                 formControlName="template-interval"
+                 class="new-flow-export-policy-input"
+                 spellcheck="false" type="text"
+                 appFloatLabel="Template Refresh Rate"
+                 appErrorTooltip
+                 pInputText>
+        </span>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #match_rules>
+  <div fxFlex="none" fxLayout="column">
+    <div fxFlex="none" fxLayout="row">
+      <div fxFlex="none" [ngClass]="{'requiredLabel': areAllRulesEmpty()}">Export Packet:</div>
+      <div fxFlex="5px"></div>
+      <div fxFlex="none" class="export-policy-subtext">(specify one or more)</div>
+    </div>
+    <div fxFlex="10px">
+
+    </div>
+    <app-orderedlist
+                     [dataArray]="ExportPolicyRules" [template]="ruleTemplate"
+                     (itemClick)="orderedListClick($event)"></app-orderedlist>
+    <div fxFlex="none" (click)="addRule()" class="export-policy-add-rule">+ RULE</div>
+  </div>
+</ng-template>
+
+<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
+  <div fxFlex="auto" fxLayout="column">
+    <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
+      <ng-container
+                    *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
+      </ng-container>
+    </div>
+    <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
+      <ng-container
+                    *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
+      </ng-container>
+    </div>
+  </div>
+</ng-template>
+
+
+<ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
+  <!-- data is MonitoringMatchRule -->
+
+  <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px"
+       fxLayoutAlign="center none" class="new-export-policy-rule-template"
+       [ngClass]="{'newmirrorsession-hide-primeng-panel': !ExportPolicyRules[index].inEdit}">
+    <div fxFlex="none">
+      <fieldset>
+        <legend>Source</legend>
+        <div fxFlex="none" fxLayout="row">
+          <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
+            <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
+                           boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" appErrorTooltip>
+            </app-formchips>
+          </div>
+          <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
+            <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['source', 'mac-addresses'])"
+                           boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidMAC"
+                           [itemErrorMsg]="MACS_ERRORMSG" appErrorTooltip>
+            </app-formchips>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div fxFlex="none">
+      <fieldset>
+        <legend>Target</legend>
+        <div fxFlex="none" fxLayout="row">
+          <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
+            <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['destination', 'ip-addresses'])"
+                           boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
+                           [itemErrorMsg]="IPS_ERRORMSG" appErrorTooltip>
+            </app-formchips>
+          </div>
+          <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
+            <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
+                           [formControl]="data.rule.$formGroup.get(['destination', 'mac-addresses'])"
+                           boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidMAC"
+                           [itemErrorMsg]="MACS_ERRORMSG" appErrorTooltip>
+            </app-formchips>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div fxFlex="none">
+      <fieldset>
+        <legend>Protocol</legend>
+
+        <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
+          <app-formchips fxFlex="none" [chipsLabel]="protoAppOptions[0]['value']"
+                         [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
+                         boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidProto"
+                         [itemErrorMsg]="PORTS_ERRORMSG" appErrorTooltip>
+          </app-formchips>
+        </div>
+      </fieldset>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #ruleTemplateView let-data="data" let-index="index" let-inEdit="inEdit">
+  <div fxFlex="auto" fxLayout="row"
+       fxLayoutAlign="start none" class="new-export-policy-rule-template"
+       [ngClass]="{'newsgpolicy-hide-primeng-panel': !ExportPolicyRules[index].inEdit}">
+    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
+      <div fxFlex="10px"></div>
+      <div fxFlex="90%" fxLayout="row wrap" fxLayoutAlign="space-between start">
+        <div fxFlex="33" fxLayout="column" fxLayouAlign="start start">
+          <div fxFlex="none" class="new-export-policy-bold">Source</div>
+          <div *ngIf="data.rule.$formGroup.get(['source', 'ip-addresses']).value.length !== 0"
+               fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-export-policy-bold-subtext-ipmac">IP:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span *ngFor="let ip of getDataArray(data, 'source', 'ip-addresses')"
+                    class="new-export-policy-rule-content">
+                {{ip}}
+              </span>
+            </div>
+          </div>
+          <div *ngIf="data.rule.$formGroup.get(['source', 'mac-addresses']).value.length !== 0"
+               fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-export-policy-bold-subtext-ipmac">MAC:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span *ngFor="let mac of getDataArray(data, 'source', 'mac-addresses')"
+                    class="new-export-policy-rule-content">
+                {{mac}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div fxFlex="33" fxLayout="column" fxLayouAlign="start start">
+          <div fxFlex="none" class="new-export-policy-bold">Destination</div>
+          <div *ngIf="data.rule.$formGroup.get(['destination', 'ip-addresses']).value.length !== 0"
+               fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-export-policy-bold-subtext-ipmac">IP:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span *ngFor="let ip of getDataArray(data, 'destination', 'ip-addresses')"
+                    class="new-export-policy-rule-content">
+                {{ip}}
+              </span>
+            </div>
+          </div>
+          <div *ngIf="data.rule.$formGroup.get(['destination', 'mac-addresses']).value.length !== 0"
+               fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-export-policy-bold-subtext-ipmac">MAC:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span *ngFor="let mac of getDataArray(data, 'destination', 'mac-addresses')"
+                    class="new-export-policy-rule-content">
+                {{mac}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div fxFlex="34" fxLayout="column" fxLayouAlign="start start">
+          <div fxFlex="none" class="new-export-policy-bold">PROTO-PORTS</div>
+          <div *ngIf="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports']).value.length !== 0"
+               fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-export-policy-bold-subtext-proto">Proto-ports:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span *ngFor="let proto of getDataArray(data, 'app-protocol-selectors', 'proto-ports')"
+                    class="new-export-policy-rule-content">
+                {{proto}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+    <ng-container *ngTemplateOutlet="ruleEditDeleteOption;context:{ index: index}"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #ruleEditDeleteOption let-index="index">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div>
+        <mat-icon class="new-export-policy-edit-hoverbuttons" [matTooltip]="'Edit'"
+                  fxFlex="nogrow" (click)="editRule(index)">edit
+        </mat-icon>
+        <mat-icon class="new-export-policy-edit-hoverbuttons" [matTooltip]="'Delete'"
+                  fxFlex="nogrow" (click)="deleteRule(index)">delete
+        </mat-icon>
+      </div>
+    </div>
+  </div>
+</ng-template>

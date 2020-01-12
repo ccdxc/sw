@@ -1,3 +1,4 @@
+import { WidgetsModule } from 'web-app-framework';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -17,7 +18,7 @@ import { SharedModule } from '../shared/shared.module';
     FormsModule,
     ReactiveFormsModule,
     FlexLayoutModule,
-
+    WidgetsModule,
     PrimengModule,
     MaterialdesignModule,
     TroubleshootRoutingModule,

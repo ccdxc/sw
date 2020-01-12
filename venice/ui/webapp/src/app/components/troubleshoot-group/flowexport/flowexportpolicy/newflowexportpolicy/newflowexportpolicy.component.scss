@@ -1,71 +1,148 @@
-@import 'src/global-mixins';
+@import "src/global-mixins";
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
 
-.newflowexportpolicy-container {
-  background: white;
+.new-flow-export-container {
+  padding: 10px 0;
 
-  &:hover {
-    background: white;
+  .newflow-export-policy-packet {
+    fieldset {
+      border: 1px solid $dary-grey;
+      padding: 5px;
+    }
+
+    legend {
+      width: auto;
+      padding: 0 2px;
+      font-size: 14px;
+      color: #676763;
+    }
+
+    .policy-required-match-rule {
+      padding: 10px 0;
+
+      .export-packet-subtext {
+        margin-top: 2px;
+        @include primary-font(12px, #b2b3b4, 300);
+      }
+    }
   }
-}
 
-.newflowexportpolicy-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  height: 30px !important;
-}
+  .flow-export-policy-button-container {
+    margin-top: 1.5 * $vertical-gutter;
 
-.newflowexportpolicy-value {
-  margin: $vertical-gutter $horizontal-gutter;
-}
-
-.newflowexportpolicy-fieldtitle {
-  margin: $vertical-gutter $horizontal-gutter;
-}
-
-.newflowexportpolicy-input {
-  width: 155px;
-}
-
-.newflowexportpolicy-content {
-  background: white;
-  min-height: 180px;
-  margin-top: 4* $vertical-gutter;
-  @include primary-font();
-}
-
-.newflowexportpolicy-text {
-  margin-top: 15px;
-  margin-left: $horizontal-gutter;
-  margin-right: $horizontal-gutter;
-  height: 30px;
-  @include primary-font();
-}
-
-.newflowexportpolicy-divider {
-  border-bottom: 1px solid #dddddd;
-}
-
-.newflowexportpolicy-filter {
-  margin: $vertical-gutter $horizontal-gutter;
-  height: 30px !important;
-}
-
-.newflowexportpolicy-save,
-.newflowexportpolicy-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-
-  &:disabled {
-    opacity: 0.3;
-    cursor: default;
+    .new-flow-export-inline-save,
+    .new-flow-export-inline-cancel {
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      padding: 4px 10px;
+      line-height: 25px;
+      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+    }
   }
-}
 
-.newflowexportpolicy-buttoncontainer {
-  margin-top: 1.5 * $vertical-gutter;
+  .new-flow-export-row {
+    padding: 10px;
+
+    .new-flow-export-policy-form {
+      flex-direction: row;
+      display: flex;
+
+      .new-flow-export-policy-input {
+        width: 160px !important;
+        height: 30px;
+      }
+
+      .new-flow-export-policy-input-group {
+        padding: 10px;
+      }
+    }
+
+    .meta-spec-form-group {
+      display: flex;
+      flex-direction: row;
+    }
+  }
+
+  .new-export-policy-rule-template {
+    cursor: pointer;
+
+    fieldset>legend {
+      width: auto;
+    }
+
+    .export-policy-rule-boxes {
+      ul {
+        width: 240px;
+        white-space: nowrap;
+        overflow: hidden !important;
+        font-size: 14px !important;
+        height: 30px !important;
+      }
+    }
+
+    .flow-export-policy-rule-inputs {
+      justify-content: space-between;
+      padding: 0px 10px 10px;
+
+      .flow-export-policy-multiSelect {
+        width: 240px;
+      }
+    }
+
+    .flow-export-policy-attach-radio {
+      margin-left: 5px;
+      margin-top: 6px;
+      @include global-mat-radio(16px);
+
+      .mat-radio-label-content {
+        @include primary-font(14px);
+        padding-top: 2px;
+      }
+    }
+
+    .new-export-policy-edit-hoverbuttons {
+      display: none;
+    }
+
+    &:hover {
+      .new-export-policy-edit-hoverbuttons {
+        display: inherit;
+      }
+    }
+
+    .new-export-policy-bold {
+      @include primary-font(16px, #383838, 500);
+    }
+
+    .newmirrnew-export-policyorsession-bold-subtext-ipmac {
+      @include primary-font(14px, #383838, 200);
+      width: 40px;
+    }
+
+    .new-export-policy-bold-subtext-proto {
+      @include primary-font(14px, #383838, 200);
+      width: 80px;
+    }
+  }
+
+  .export-policy-subtext {
+    margin-top: 2px;
+    @include primary-font(12px, #b2b3b4, 300);
+  }
+
+  .export-policy-add-rule {
+    @include primary-font(16px, #6ba0e5, 400);
+    margin-top: 5px;
+    cursor: pointer;
+  }
+
+  app-orderedlist {
+    width: 95%;
+    min-width: 600px;
+    max-width: 600px;
+  }
 }
