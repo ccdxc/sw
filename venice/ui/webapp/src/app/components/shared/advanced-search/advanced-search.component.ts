@@ -464,21 +464,25 @@ export class AdvancedSearchComponent implements OnInit {
       err: false
     };
     searchReq.query.forEach(q => {
-      if (!res.err && q.key in searchObj) {
-        if (this.localSearchFields[q.key] && q.values.length !== 1) {
-          res.err = true;
-        } else {
-          let conditionRes: Array<string> = [];
-          q.values.forEach( value => {
-            const val = value.toLowerCase();
-            const valRes = searchObj[q.key][val];
-            conditionRes = (conditionRes && conditionRes.length ) > 0 ? _.union(conditionRes, valRes) : valRes;
-          });
-          res.searchRes = (res && res.searchRes && res.searchRes.length) > 0 ? _.intersection(res.searchRes, conditionRes) : conditionRes;
-        }
-      }
+      this.localSearchQueryRequirement(res, q, searchObj);
     });
     return res;
+  }
+
+   localSearchQueryRequirement(res: LocalSearchResult, q: FieldsRequirement | IFieldsRequirement, searchObj: { [key: string]: any; }) {
+    if (!res.err && q.key in searchObj) {
+      if (this.localSearchFields[q.key] && q.values.length !== 1) {
+        res.err = true;
+      } else {
+        let conditionRes: Array<string> = [];
+        q.values.forEach(value => {
+          const val = value.toLowerCase();
+          const valRes = searchObj[q.key][val];
+          conditionRes = (conditionRes && conditionRes.length) > 0 ? _.union(conditionRes, valRes) : valRes;
+        });
+        res.searchRes = (res && res.searchRes && res.searchRes.length) > 0 ? _.intersection(res.searchRes, conditionRes) : conditionRes;
+      }
+    }
   }
 
   /**

@@ -27,6 +27,7 @@ import { ConfirmationService } from 'primeng/api';
 import { WidgetsModule } from 'web-app-framework';
 import { HostsComponent } from './hosts.component';
 import { NewhostComponent } from './newhost/newhost.component';
+import { WorkloadsComponent } from '@app/components/dashboard/workloads/workloads.component';
 
 
 describe('HostsComponent', () => {
@@ -312,7 +313,7 @@ describe('HostsComponent', () => {
           expect(fieldElem.nativeElement.textContent.length).toEqual(0);
         }
       }
-    }, 'delete ', true);
+    }, '', true);
   });
 
   /**

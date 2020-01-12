@@ -429,14 +429,18 @@ export class TableUtility {
   }
 
   public static convertOperator(operator: string): string {
-    if (operator && operator.toLocaleLowerCase() === 'in') {
+    if (!operator) {
       return 'contains';
     }
-    if (operator && operator.toLocaleLowerCase() === 'notin') {
-      return 'notcontains';
+
+    const operatorStr = operator.toLocaleLowerCase();
+    switch (operatorStr) {
+      case 'notin':
+      case 'not equals':
+        return 'notcontains';
+      case 'in':
+      default:
+        return 'contains';
     }
-    return 'contains';
   }
-
-
 }

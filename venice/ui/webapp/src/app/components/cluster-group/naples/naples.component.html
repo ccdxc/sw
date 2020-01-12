@@ -63,7 +63,7 @@
                            [formArray]="fieldFormArray" [cols]="advSearchCols"
                            [customQueryOptions]="customQueryOptions"
                            (cancelEmitter)="onCancelSearch($event)"
-                           (searchEmitter)="getDistributedServiceCards()"
+                           (searchEmitter)="onSearchDSCs()"
                            kind="DistributedServiceCard"
                            fxFlex="grow">
       </app-advanced-search>

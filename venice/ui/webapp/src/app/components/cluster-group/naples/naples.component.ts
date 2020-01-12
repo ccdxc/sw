@@ -26,6 +26,9 @@ import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResul
 import { forkJoin, Observable, Subscription } from 'rxjs';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
+import { FieldsRequirement } from '@sdk/v1/models/generated/search';
+import * as _ from 'lodash';
 
 @Component({
   selector: 'app-naples',
@@ -46,8 +49,8 @@ import { NaplesCondition, NaplesConditionValues } from '.';
 
 export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedServiceCard, ClusterDistributedServiceCard> implements OnInit, OnDestroy {
 
-  public static  NAPLES_FIELD_WORKLOADS: string  = 'associatedWorkloads';
-  public static  NAPLES_FIELD_CONDITIONSTATUS: string  = 'associatedConditionStatus';
+  public static NAPLES_FIELD_WORKLOADS: string = 'associatedWorkloads';
+  public static NAPLES_FIELD_CONDITIONSTATUS: string = 'associatedConditionStatus';
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
@@ -59,7 +62,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   // Used for processing the stream events
   naplesEventUtility: HttpEventUtility<ClusterDistributedServiceCard>;
   naplesMap: { [napleName: string]: ClusterDistributedServiceCard };
-  searchObject: { [field: string]: any} = {};
+  searchObject: { [field: string]: any } = {};
   conditionNaplesMap: { [condition: string]: Array<string> };
 
   fieldFormArray = new FormArray([]);
@@ -79,11 +82,12 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     { field: 'status.primary-mac', header: 'MAC Address', class: '', sortable: true, width: 10 },
     { field: 'status.DSCVersion', header: 'Version', class: '', sortable: true, width: '80px' },
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: '160px' },
-    { field: 'spec.admit', header: 'Admit', class: '', sortable: false, width: 5 },
+    { field: 'spec.admit', header: 'Admit', class: '', sortable: false, localSearch: true, width: 5, filterfunction: this.searchAdmits },
     { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: '120px' },
-    { field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10},
-    { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10},
-    { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7},
+    { field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10,
+        filterfunction: this.searchConditions},
+    { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10 },
+    { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 },
     { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 10 },
     { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: '160px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: '180px' },
@@ -187,9 +191,16 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   buildAdvSearchCols() {
-   this.advSearchCols =  this.cols.filter( (col: TableCol) => {
-       return (col.field !== 'workloads' && col.field !== 'meta.labels'); // TODO: don't add workloads and labels in advanced-search
-   });
+    this.advSearchCols = this.cols.filter((col: TableCol) => {
+      return (col.field !== 'meta.mod-time' && col.field !== 'meta.creation-time' && col.field !== 'workloads');
+    });
+    this.advSearchCols.push(
+      {
+        field: 'workloads', header: 'Workloads', localSearch: true, kind: 'Workload',
+        filterfunction: this.searchWorkloads,
+        advancedSearchOperator: SearchUtil.stringOperators
+      }
+    );
   }
 
   /**
@@ -220,7 +231,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   provideCustomOptions() {
     this.customQueryOptions = [
       {
-        key: {label: 'Condition', value: 'Condition'},
+        key: { label: 'Condition', value: 'Condition' },
         operators: SearchUtil.stringOperators,
         valueType: ValueType.multiSelect,
         values: [
@@ -252,7 +263,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     const getSubscription = this.clusterService.ListDistributedServiceCard().subscribe(
       response => {
         const nicsList: ClusterDistributedServiceCardList = response.body as ClusterDistributedServiceCardList;
-        if (! ( nicsList && nicsList.items && nicsList.items.length === 0 ) ) {
+        if (!(nicsList && nicsList.items && nicsList.items.length === 0)) {
           // Where there is no DSC, we turn off loading indicator.
           this.tableLoading = false;
         }
@@ -280,27 +291,27 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           // Create search object for condition
           switch (dscHealthCond.condition.toLowerCase()) {
             case NaplesConditionValues.HEALTHY:
-                (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.HEALTHY] = [])).push(naple.meta.name);
+              break;
             case NaplesConditionValues.UNHEALTHY:
-                (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] || (this.conditionNaplesMap[NaplesConditionValues.UNHEALTHY] = [])).push(naple.meta.name);
+              break;
             case NaplesConditionValues.UNKNOWN:
-                (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] || (this.conditionNaplesMap[NaplesConditionValues.UNKNOWN] = [])).push(naple.meta.name);
+              break;
             case NaplesConditionValues.NOTADMITTED:
-                (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] || (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] || (this.conditionNaplesMap[NaplesConditionValues.NOTADMITTED] = [])).push(naple.meta.name);
+              break;
             case NaplesConditionValues.REBOOT_NEEDED:
-                (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] || (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] || (this.conditionNaplesMap[NaplesConditionValues.REBOOT_NEEDED] = [])).push(naple.meta.name);
+              break;
             case NaplesConditionValues.EMPTY:
-                (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
-                break;
+              (this.conditionNaplesMap['empty'] || (this.conditionNaplesMap['empty'] = [])).push(naple.meta.name);
+              break;
           }
           naple[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] = {
             dscCondStr: dscHealthCond.condition.toLowerCase(),
-            dscNeedReboot:  dscHealthCond.rebootNeeded
+            dscNeedReboot: dscHealthCond.rebootNeeded
           };
           naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
         }
@@ -335,19 +346,19 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   isNICHealthy(data: ClusterDistributedServiceCard): boolean {
     return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
       data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-        === NaplesConditionValues.HEALTHY;
+      === NaplesConditionValues.HEALTHY;
   }
 
   isNICUnhealthy(data: ClusterDistributedServiceCard): boolean {
     return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
       data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-        === NaplesConditionValues.UNHEALTHY;
+      === NaplesConditionValues.UNHEALTHY;
   }
 
   isNICHealthUnknown(data: ClusterDistributedServiceCard): boolean {
     return data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS] &&
       data[NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr
-        === NaplesConditionValues.UNKNOWN;
+      === NaplesConditionValues.UNKNOWN;
   }
 
   isNicNeedReboot(data: ClusterDistributedServiceCard): boolean {
@@ -430,9 +441,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   private tryGenCharts() {
-      this.genCharts('CPUUsedPercent', this.cpuChartData);
-      this.genCharts('MemUsedPercent', this.memChartData);
-      this.genCharts('DiskUsedPercent', this.diskChartData);
+    this.genCharts('CPUUsedPercent', this.cpuChartData);
+    this.genCharts('MemUsedPercent', this.memChartData);
+    this.genCharts('DiskUsedPercent', this.diskChartData);
   }
 
   private genCharts(fieldName: string, heroCard: HeroCardOptions) {
@@ -488,7 +499,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
           const thirdStatName = thirdStatNaples.spec.id;
           let thirdStat: string = thirdStatName;
           if (thirdStat.length > 0) {
-             // VS-736 start
+            // VS-736 start
             thirdStat = Utility.getHeroCardDisplayValue(thirdStat);
             Utility.customizeHeroCardThirdStat(thirdStat, heroCard, thirdStatName);
             // VS-736 end
@@ -523,6 +534,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    * Generates Local and Remote search queries. Later, calls Local and Remote Search Function
    * @param field Field by which to sort data
    * @param order Sort order (ascending = 1/descending = -1)
+   *
+   * plug in <app-advanced-search  (searchEmitter)="getDistributedServiceCards()"
    */
   getDistributedServiceCards(field = this.tableContainer.sortField,
     order = this.tableContainer.sortOrder) {
@@ -534,17 +547,17 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
       return;
     }
-    if ((searchSearchRequest.query != null &&  (searchSearchRequest.query.fields != null && searchSearchRequest.query.fields.requirements != null
-       && searchSearchRequest.query.fields.requirements.length > 0) || (searchSearchRequest.query.texts != null
-         && searchSearchRequest.query.texts[0].text.length > 0)) || this.cancelSearch) {
-          if (this.cancelSearch) {this.cancelSearch = false; }
-          this._callSearchRESTAPI(searchSearchRequest, localSearchResult.searchRes);
+    if ((searchSearchRequest.query != null && (searchSearchRequest.query.fields != null && searchSearchRequest.query.fields.requirements != null
+      && searchSearchRequest.query.fields.requirements.length > 0) || (searchSearchRequest.query.texts != null
+        && searchSearchRequest.query.texts[0].text.length > 0)) || this.cancelSearch) {
+      if (this.cancelSearch) { this.cancelSearch = false; }
+      this._callSearchRESTAPI(searchSearchRequest, localSearchResult.searchRes);
     } else {
-        // This case executed when only local search is required
-        this.dataObjects = this.generateFilteredNaples(localSearchResult.searchRes);
-        if (this.dataObjects.length === 0) {
-          this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
-        }
+      // This case executed when only local search is required
+      this.dataObjects = this.generateFilteredNaples(localSearchResult.searchRes);
+      if (this.dataObjects.length === 0) {
+        this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
+      }
     }
   }
 
@@ -566,21 +579,18 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   //   ]
   // }
   customizeSearchRequest(searchSearchRequest: SearchSearchRequest): SearchSearchRequest {
-     const requirements =  (searchSearchRequest.query.fields && searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : null;
-     for (let i = 0; requirements && i < requirements.length; i++) {
-        const requirement = requirements[i];
-        const key = requirement.key;
-        if ( key === 'spec.id') {
-          requirement.key = 'spec.id.keyword';
-        }
-        if ( key === 'status.DSCVersion') {
-          requirement.key = 'status.DSCVersion.keyword';
-        }
-       if ( key === 'status.host') {
-         requirement.key = 'status.host.keyword';
-       }
-     }
-     return searchSearchRequest;
+    const requirements = (searchSearchRequest.query.fields && searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : null;
+    for (let i = 0; requirements && i < requirements.length; i++) {
+      const requirement = requirements[i];
+      const key = requirement.key;
+      if (key === 'spec.id') {
+        requirement.key = 'spec.id.keyword';
+      }
+      if (key === 'status.DSCVersion') {
+        requirement.key = 'status.DSCVersion.keyword';
+      }
+    }
+    return searchSearchRequest;
   }
 
   /**
@@ -600,10 +610,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.fieldFormArray = new FormArray([]);
   }
 
-    /**
-   * This serves HTML API. It clear naples search and refresh data.
-   * @param $event
-   */
+  /**
+ * This serves HTML API. It clear naples search and refresh data.
+ * @param $event
+ */
   onCancelSearch($event) {
     this.populateFieldSelector();
     this.cancelSearch = true;
@@ -651,7 +661,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       tmpMap[ele] = this.naplesMap[ele];
     });
     return Object.values(tmpMap);
-}
+  }
 
   editLabels() {
     this.labelEditorMetaData = {
@@ -664,7 +674,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       cancel: true,
     };
 
-  if (!this.inLabelEditMode) {
+    if (!this.inLabelEditMode) {
       this.inLabelEditMode = true;
     }
   }
@@ -685,10 +695,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
     const summary = 'Distributed Services Card update';
     const objectType = 'naples';
-    this.handleForkJoin(observables, summary, objectType );
+    this.handleForkJoin(observables, summary, objectType);
   }
 
-  private handleForkJoin(observables: Observable<any>[] , summary: string, objectType: string) {
+  private handleForkJoin(observables: Observable<any>[], summary: string, objectType: string) {
     forkJoin(observables).subscribe((results: any[]) => {
       let successCount: number = 0;
       let failCount: number = 0;
@@ -696,7 +706,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       for (let i = 0; i < results.length; i++) {
         if (results[i]['statusCode'] === 200) {
           successCount += 1;
-        }  else {
+        } else {
           failCount += 1;
           errors.push(results[i].body.message);
         }
@@ -710,7 +720,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         this._controllerService.invokeRESTErrorToaster(summary, errors.join('\n'));
       }
     },
-    this._controllerService.restErrorHandler(summary + ' Failed'));
+      this._controllerService.restErrorHandler(summary + ' Failed'));
   }
 
   // The save emitter from labeleditor returns the updated objects here.
@@ -731,14 +741,14 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   buildMoreWorkloadTooltip(dsc: ClusterDistributedServiceCard): string {
     const wltips = [];
-     const workloads = dsc[NaplesComponent.NAPLES_FIELD_WORKLOADS] ;
-     for ( let i = 0; i < workloads.length ; i ++ ) {
-       if (i >= this.maxWorkloadsPerRow) {
-         const workload = workloads[i];
-         wltips.push(workload.meta.name);
-       }
-     }
-     return wltips.join(' , ');
+    const workloads = dsc[NaplesComponent.NAPLES_FIELD_WORKLOADS];
+    for (let i = 0; i < workloads.length; i++) {
+      if (i >= this.maxWorkloadsPerRow) {
+        const workload = workloads[i];
+        wltips.push(workload.meta.name);
+      }
+    }
+    return wltips.join(' , ');
   }
 
   onDecommissionCard(event, object: ClusterDistributedServiceCard) {
@@ -776,33 +786,128 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   invokeUpdateCard(updatedObject: ClusterDistributedServiceCard,
-                  oldObject: ClusterDistributedServiceCard,
-                  successMsg: string,
-                  actionType: string) {
+    oldObject: ClusterDistributedServiceCard,
+    successMsg: string,
+    actionType: string) {
     const sub = this.clusterService.UpdateDistributedServiceCard(updatedObject.meta.name, updatedObject, null,
-        oldObject, false).subscribe(
-      () => {
-        this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
-          successMsg);
-      },
-      (error) => {
-        if (error.body instanceof Error) {
-          console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
-        } else {
-          console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+      oldObject, false).subscribe(
+        () => {
+          this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY,
+            successMsg);
+        },
+        (error) => {
+          if (error.body instanceof Error) {
+            console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <Error>error.body);
+          } else {
+            console.error(actionType + ' returned code: ' + error.statusCode + ' data: ' + <IApiStatus>error.body);
+          }
+          this.controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
         }
-        this.controllerService.invokeRESTErrorToaster(Utility.UPDATE_FAILED_SUMMARY, error);
-      }
-    );
+      );
     this.subscriptions.push(sub);
   }
 
-  showAdmissionButton(rowData: ClusterDistributedServiceCard): boolean {
-    return !rowData.spec.admit;
-  }
+  showAdmissionButton(rowData: ClusterDistributedServiceCard): boolean {
+    return !rowData.spec.admit;
+  }
 
-  showDecommissionButton(rowData: ClusterDistributedServiceCard): boolean {
+  showDecommissionButton(rowData: ClusterDistributedServiceCard): boolean {
     return rowData.spec.admit && rowData.status['admission-phase'] ===
-        ClusterDistributedServiceCardStatus_admission_phase.admitted;
-  }
+      ClusterDistributedServiceCardStatus_admission_phase.admitted;
+  }
+
+  onSearchDSCs(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
+    const searchResults = this.onSearchDataObjects(field, order, 'DistributedServiceCard', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent);
+    if (searchResults && searchResults.length > 0) {
+      this.dataObjects = [];
+      this.dataObjects = searchResults;
+    }
+  }
+
+  searchWorkloads(requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      const workloads = data[i][NaplesComponent.NAPLES_FIELD_WORKLOADS];
+      // workloads[i] is a full object
+      for (let k = 0; k < workloads.length; k++) {
+        const recordValue = _.get(workloads[k], ['meta', 'name']);
+        const searchValues = requirement.values;
+        let operator = String(requirement.operator);
+        operator = TableUtility.convertOperator(operator);
+        for (let j = 0; j < searchValues.length; j++) {
+          const activateFunc = TableUtility.filterConstraints[operator];
+          if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+            outputs.push(data[i]);
+          }
+        }
+      }
+    }
+    return outputs;
+  }
+
+  searchConditions(requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      let found = false;
+      const conditions = data[i].status.conditions;
+      for (let k = 0; k < conditions.length; k++) {
+        // datat[i].associatedConditionStatus is  {dscCondStr: "healthy", dscNeedReboot: true}
+        const recordValueStr = data[i][NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscCondStr;
+        const recordValueReboot = data[i][NaplesComponent.NAPLES_FIELD_CONDITIONSTATUS].dscNeedReboot;
+        const searchValues = requirement.values;
+        let operator = String(requirement.operator);
+        operator = TableUtility.convertOperator(operator);
+        for (let j = 0; j < searchValues.length; j++) {
+          const searchValue = searchValues[j];
+          // special case empty string
+          if (searchValue === NaplesConditionValues.EMPTY) {
+            if (operator === 'contains' && recordValueStr === searchValue) {
+              found = true;
+            } else if (operator === 'notcontains') {
+              found = recordValueStr !== searchValue;
+            }
+          } else {
+            const activateFunc = TableUtility.filterConstraints[operator];
+            const activateFuncValue = activateFunc && activateFunc(recordValueStr, searchValue);
+
+            if (operator === 'contains' && activateFuncValue) {
+              found = true;
+            } else if (operator === 'notcontains') {
+              found = activateFuncValue;
+            }
+          }
+
+          // check reboot condition
+          if (searchValues[j] === NaplesConditionValues.REBOOT_NEEDED) {
+            if (operator === 'contains' && recordValueReboot) {
+              found = true;
+            } else if (operator === 'notcontains') {
+              found = !recordValueReboot;
+            }
+          }
+        }
+      }
+      if (found) {
+        outputs.push(data[i]);
+      }
+    }
+    return outputs;
+  }
+
+  searchAdmits(requirement: FieldsRequirement, data = this.dataObjects): any[] {
+    const outputs: any[] = [];
+    for (let i = 0; data && i < data.length; i++) {
+      const recordValue = String(data[i].spec.admit);
+      const searchValues = requirement.values;
+      let operator = String(requirement.operator);
+      operator = TableUtility.convertOperator(operator);
+      for (let j = 0; j < searchValues.length; j++) {
+        const activateFunc = TableUtility.filterConstraints[operator];
+        if (activateFunc && activateFunc(recordValue, searchValues[j])) {
+          outputs.push(data[i]);
+        }
+      }
+    }
+    return outputs;
+  }
 }

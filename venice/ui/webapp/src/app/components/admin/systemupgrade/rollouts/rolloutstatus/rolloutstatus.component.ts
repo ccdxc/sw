@@ -2,23 +2,21 @@
 import { Component, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Animations } from '@app/animations';
-
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { BaseComponent } from '@components/base/base.component';
-import { ControllerService } from '@app/services/controller.service';
-import { RolloutService } from '@app/services/generated/rollout.service';
-import { ClusterService } from '@app/services/generated/cluster.service';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-
-import { Utility } from '@common/Utility';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
-import { Eventtypes } from '@app/enum/eventtypes.enum';
-import { RolloutRollout, RolloutRolloutStatus_state, IRolloutRolloutPhase } from '@sdk/v1/models/generated/rollout';
-import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
-import { RolloutUtil } from '../RolloutUtil';
-import { EnumRolloutOptions } from '../';
 import { TableCol } from '@app/components/shared/tableviewedit';
+import { Eventtypes } from '@app/enum/eventtypes.enum';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { Utility } from '@common/Utility';
+import { BaseComponent } from '@components/base/base.component';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IRolloutRolloutPhase, RolloutRollout, RolloutRolloutPhase_phase, RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { EnumRolloutOptions } from '../';
+import { RolloutUtil } from '../RolloutUtil';
 
 /**
  * This component let user monitor a rollout status.
@@ -426,7 +424,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
   }
 
   getStatusReasonHelper(node: IRolloutRolloutPhase , isDSC: boolean  = false): string {
-    if (node.reason === RolloutRolloutStatus_state.failure) {
+    if (node.phase === RolloutRolloutPhase_phase.fail) {
       const name = (isDSC) ? this.getNICID(node.name) : node.name;
       return name + ' - ' + node.message;
     }

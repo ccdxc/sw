@@ -107,13 +107,14 @@
 <!-- TABLE ACTION -->
 <ng-template #actionTemplate let-rowData>
 
-  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <!--  comment ouf host edit, per backend request 2020-01-06
-    <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px"
+       *ngIf="!(rowData['processedWorkloads'] && rowData['processedWorkloads'].length > 0)">
+    <!-- 2020-01-08 backend does not support host edit 
+      <mat-icon matTooltip="Edit host" *roleGuard="'clusterhost_update'"
               class="global-table-action-icon"
               (click)="expandRowRequest($event, rowData)">edit
-    </mat-icon>
-     -->
+    </mat-icon> 
+    -->
     <mat-icon matTooltip="Delete host" *roleGuard="'clusterhost_delete'"
               class="global-table-action-icon"
               (click)="onDeleteRecord($event, rowData)">delete
