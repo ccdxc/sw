@@ -26,9 +26,10 @@ var _ = Describe("techsupport tests", func() {
 					Kind: "TechSupportRequest",
 				},
 				ObjectMeta: api.ObjectMeta{
-					Name:"techsupport-test",
+					Name: "techsupport-test",
 				},
 				Spec: monitoring.TechSupportRequestSpec{
+					NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{},
 				},
 			}
 			err := ts.model.Action().PerformTechsupport(techsupport)
