@@ -5,6 +5,7 @@ $vertical-gutter: 5px;
 
 .newfwlogpolicy-container {
   background: white;
+  padding: 10px;
 
   &:hover {
     background: white;
@@ -12,7 +13,6 @@ $vertical-gutter: 5px;
 }
 
 .newfwlogpolicy-name {
-  margin: $vertical-gutter $horizontal-gutter;
   height: 30px !important;
 }
 
@@ -51,24 +51,57 @@ $vertical-gutter: 5px;
 }
 
 .newfwlogpolicy-filter {
-  margin: $vertical-gutter $horizontal-gutter;
+  margin: 4px 3px 4px 0px;
   height: 30px !important;
-}
-
-.newfwlogpolicy-save,
-.newfwlogpolicy-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  width: 255px;
 }
 
 .newfwlogpolicy-buttoncontainer {
-  margin-top: 1.5 * $vertical-gutter;
+
+  .button-container {
+    position: relative;
+    top: 10px;
+    max-height: 0px;
+  }
+
+  .newfwlogpolicy-save,
+  .newfwlogpolicy-cancel {
+    font-size: 16px;
+    display: inline-block;
+    padding: 4px 10px;
+    line-height: 25px;
+    margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+  }
 }
 
 .newfwlogpolicy-container .syslog-fieldtitle-prefix-label,
 .newfwlogpolicy-container .syslog-fieldtitle-prefix-value {
   display: none !important;
+}
+
+.newfwlogpolicy-row {
+  .newfwlogpolicy-name {
+    width: 250px;
+  }
+}
+
+.newfwlog-general-box {
+  :first-child {
+    height: 30px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .ui-multiselect-label-container {
+    height: 25px;
+  }
+}
+
+.newfwlog-general-box {
+  width: 255px;
+}
+
+.newfwlog-export-box {
+  margin-top: 14px;
+  margin-left: 20px
 }

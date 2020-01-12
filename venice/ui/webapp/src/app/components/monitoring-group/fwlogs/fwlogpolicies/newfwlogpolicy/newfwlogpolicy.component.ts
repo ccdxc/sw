@@ -9,6 +9,7 @@ import { SyslogComponent } from '@app/components/shared/syslog/syslog.component'
 import { Utility } from '@app/common/Utility';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { AbstractControl } from '@angular/forms';
 
 @Component({
   selector: 'app-newfwlogpolicy',
@@ -20,7 +21,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy, MonitoringFwlogPolicy> implements OnInit, AfterViewInit {
   public static LOGOPTIONS_ALL = 'FIREWALL_ACTION_ALL';
   public static LOGOPTIONS_NONE = 'FIREWALL_ACTION_NONE';
-
+  createButtonTooltip: string ;
   @ViewChild('syslogComponent') syslogComponent: SyslogComponent;
   @ViewChild('logOptions') logOptionsMultiSelect: MultiSelect;
 
@@ -44,7 +45,13 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
 
   // Empty Hook
   isFormValid(): boolean {
-    return true;
+    this.createButtonTooltip = null;
+     if (!this.syslogComponent.isSyLogFormValid()['valid']) {
+       this.createButtonTooltip = this.syslogComponent.isSyLogFormValid()['errorMessage'];
+       return false;
+     }
+     this.createButtonTooltip = 'Ready to save Firewall log Policy.';
+     return true;
   }
 
   setToolbar() {
@@ -54,6 +61,7 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
         cssClass: 'global-button-primary fwlogpolicies-button fwlogpolicies-button-SAVE',
         text: 'CREATE FIREWALL LOG POLICY',
         callback: () => { this.saveObject(); },
+        genTooltip: () => this.getTooltip(),
         computeClass: () => this.computeButtonClass()
       },
       {
@@ -111,5 +119,17 @@ export class NewfwlogpolicyComponent extends CreationForm<IMonitoringFwlogPolicy
         this.logOptionsMultiSelect.value = values;
       }
     }
+  }
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
+  }
+  getTooltip() {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Name field is empty.';
+    }
+    if (!this.newObject.$formGroup.get(['meta', 'name']).valid)  {
+      return 'Error: Name field is invalid.';
+    }
+    return this.createButtonTooltip;
   }
 }

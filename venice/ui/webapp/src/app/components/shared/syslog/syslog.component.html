@@ -1,245 +1,242 @@
 <div fxFlex="auto" fxLayout="row" [formGroup]="syslogServerForm">
   <div fxFlex="nogrow" fxLayout="column">
-    <div fxFlex="auto" class="syslog-syslog" fxLayout="column" formArrayName="targets">
-      <div fxFlex="10px"></div>
+    <div fxFlex="auto" class="syslog-syslog" fxLayout="column" formArrayName="targets"
+         [ngStyle]="syslogFieldsetWidth?{'width': '530px'} : {'width': ''}">
       <!-- Buffer, creating as a div so there are no hiccups in the animation-->
-      <div *ngIf="showSyslogOptions" fxFlex="30px" class="syslog-fieldtitle">SYSLOG EXPORT
-        CONFIGURATION</div>
-      <div *ngIf="!showSyslogOptions" fxFlex="30px" class="syslog-fieldtitle">EXPORT CONFIGURATION
-      </div>
-      <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
+      <fieldset *ngIf="!showSyslogOptions" class="syslog-export-config">
+        <legend>EXPORT CONFIGURATION</legend>
+        <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
+      </fieldset>
+      <fieldset *ngIf="showSyslogOptions" class="syslog-export-config">
+        <legend>SYSLOG EXPORT CONFIGURATION</legend>
+        <ng-container *ngTemplateOutlet="syslogOptions"></ng-container>
+      </fieldset>
       <div fxFlex="10px"></div>
-      <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
-           *ngFor="let target of targets; let index = index; let first = first"
-           [formGroupName]="index">
-        <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="10px">
-          <ng-container *ngTemplateOutlet="syslogTargets; context:{index:index}"></ng-container>
-          <!-- Commenting out as it is not currently implemented in the backend -->
-          <!-- <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container> -->
-          <div fxFlex="nogrow" fxLayout="row">
-            <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start start">
-              <div fxFlex="55px" fxLayout="column" fxLayoutAlign="start end"
-                   class="syslog-fieldtitle syslog-and">
-                <span fxFlex="nogrow" *ngIf="first && maxTargets > targets.length"
-                      (click)="addTarget()">+ ADD</span>
-                <mat-icon fxFlex="nogrow" [style.color]="'#767676'"
-                          *ngIf="controlAsFormArray(syslogServerForm.get(['targets'])).length > 1"
-                          (click)="removeTarget(index)">delete</mat-icon>
+      <fieldset class="syslog-target">
+        <legend>TARGET:</legend>
+        <div fxFlex="nogrow" fxLayout="column" [@slideInOut]
+             *ngFor="let target of targets; let index = index; let first = first ;let last=last"
+             [formGroupName]="index">
+          <div fxFlex="nogrow" fxLayout="row wrap" fxLayoutGap="10px">
+            <ng-container *ngTemplateOutlet="syslogTargets; context:{index:index}"></ng-container>
+            <!-- Commenting out as it is not currently implemented in the backend -->
+            <!-- <ng-container *ngTemplateOutlet="syslogCredentials; context:{index:index}"></ng-container> -->
+            <div fxFlex="nogrow" fxLayout="row">
+              <div fxFlex="nogrow" fxLayout="column" class="syslog-add-delete-container">
+                <div fxFlex="none" fxLayout="row"
+                     class="syslog-fieldtitle syslog-and">
+                  <mat-icon fxFlex="nogrow" class="syslog-delete" [style.color]="'#767676'"
+                            *ngIf="controlAsFormArray(syslogServerForm.get(['targets'])).length > 1"
+                            (click)="removeTarget(index)">
+                    delete</mat-icon>
+                  <span fxFlex="nogrow" *ngIf="last" class="syslog-add" (click)="addTarget()">+
+                    ADD</span>
+                </div>
               </div>
             </div>
           </div>
+          <div fxFlex="none"></div>
+          <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         </div>
-      </div>
-      <div fxFlex="10px" class="syslog-divider"></div>
-      <!-- Buffer, creating as a div so there are no hiccups in the animation-->
+      </fieldset>
     </div>
   </div>
-</div>
 
-
-<ng-template #syslogOptions>
-  <div fxFlex="nogrow" fxLayout="row wrap" [formGroup]="syslogServerForm">
-    <ng-container *ngIf="showSyslogOptions" formGroupName="config">
-      <div fxFlex="nogrow" fxLayout="column">
-        <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-          <span>Facility Override:</span>
+  <ng-template #syslogOptions>
+    <div fxFlex="nogrow" fxLayout="row wrap" [formGroup]="syslogServerForm">
+      <ng-container *ngIf="showSyslogOptions" formGroupName="config">
+        <div fxFlex="nogrow" fxLayout="column">
+          <div fxFlex="30px" fxLayout="row" class="syslog-value">
+            <p-dropdown fxFlex="nogrow" appFloatLabel="Facility Override" class="syslog-override"
+                        appErrorTooltip
+                        formControlName="facility-override" styleClass="syslog-font"
+                        [options]="syslogOverrideOptions"></p-dropdown>
+          </div>
         </div>
-      </div>
-      <div fxFlex="nogrow" fxLayout="column">
-        <div fxFlex="30px" fxLayout="row" class="syslog-value">
-          <p-dropdown fxFlex="nogrow" class="syslog-override" appErrorTooltip
-                      formControlName="facility-override" styleClass="syslog-font"
-                      [options]="syslogOverrideOptions"></p-dropdown>
-        </div>
-      </div>
 
-      <div fxFlex="nogrow" fxLayout="column" class="syslog-fieldtitle-prefix-label">
-        <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-          <span>Prefix:</span>
+        <div fxFlex="nogrow" fxLayout="column" class="syslog-fieldtitle-prefix-value">
+          <div fxFlex="30px" fxLayout="row" class="syslog-value">
+            <input appErrorTooltip formControlName="prefix" appFloatLabel="Prefix" fxFlex="nogrow"
+                   class="syslog-input syslog-prefix"
+                   spellcheck="false" type="text" pInputText>
+          </div>
         </div>
-      </div>
-      <div fxFlex="nogrow" fxLayout="column" class="syslog-fieldtitle-prefix-value">
-        <div fxFlex="30px" fxLayout="row" class="syslog-value">
-          <input appErrorTooltip formControlName="prefix" fxFlex="nogrow"
-                 class="syslog-input syslog-prefix"
-                 spellcheck="false" type="text" pInputText
-                 placeholder="">
+      </ng-container>
+      <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
+        <div class="syslog-fieldtitle syslog-format-container" fxFlex="nogrow" fxLayout="column"
+             fxLayoutAlign="start start">
+          <span class="syslog-format-title">Format</span>
         </div>
-      </div>
-    </ng-container>
-    <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-      <div class="syslog-fieldtitle" fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
-        <span>Format:</span>
-      </div>
-      <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
-                       fxLayoutGap="10px" class="syslog-format" appErrorTooltip
-                       formControlName="format">
-        <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class=""
-                          *ngFor="let option of formatOptions"
-                          [value]="option.value">
-          {{option.label}}
-        </mat-radio-button>
-      </mat-radio-group>
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #syslogTargets let-index="index">
-  <div fxFlex="nogrow" fxLayout="row" [formGroup]="syslogServerForm.get(['targets', index])">
-    <div fxFlex="nogrow" fxLayout="column">
-
-      <div fxFlex="10px"></div>
-      <div fxFlex="30px" class="syslog-fieldtitle">TARGET</div>
-      <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-        <span>Destination:</span>
-      </div>
-      <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row" fxLayoutAlign="start center">
-        <span>Transport:</span>
+        <mat-radio-group fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center"
+                         fxLayoutGap="10px" class="syslog-format" appErrorTooltip
+                         formControlName="format">
+          <mat-radio-button fxFlex="nogrow" color="primary" [disableRipple]="true" class=""
+                            *ngFor="let option of formatOptions"
+                            [value]="option.value">
+            {{option.label}}
+          </mat-radio-button>
+        </mat-radio-group>
       </div>
     </div>
-    <div fxFlex="nogrow" fxLayout="column">
-      <div fxFlex="10px"></div>
-      <div fxFlex="30px" class="syslog-fieldtitle"></div>
-      <div fxFlex="30px" fxLayout="row" class="syslog-value">
-        <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
-               class="syslog-input syslog-destination"
-               spellcheck="false" type="text" pInputText
-               placeholder="IP address/URL...">
-      </div>
-      <div fxFlex="30px" fxLayout="row" class="syslog-value">
-        <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
-               class="syslog-input syslog-transport"
-               spellcheck="false" type="text" pInputText
-               [placeholder]="targetTransport">
+  </ng-template>
+
+  <ng-template #syslogTargets let-index="index">
+    <div fxFlex="10vh" fxFlex="nogrow" fxLayout="row"
+         [formGroup]="syslogServerForm.get(['targets', index])">
+      <div fxFlex="nogrow" fxLayout="row">
+        <div fxFlex="none" fxLayout="row" class="syslog-value">
+          <span *ngIf="syslogRequiredOption" [ngClass]="{
+                          'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['destination'])
+                        }">
+          </span>
+          <span>
+            <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
+                   class="syslog-input syslog-destination"
+                   spellcheck="false" type="text" pInputText appFloatLabel="Destination">
+          </span>
+        </div>
+        <div fxFlex="none" fxLayout="row" class="syslog-value">
+          <span *ngIf="syslogRequiredOption" [ngClass]="{
+                      'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['transport'])
+                    }">
+          </span>
+          <span>
+            <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
+                   class="syslog-input syslog-transport"
+                   spellcheck="false" type="text" pInputText appFloatLabel="Transport">
+          </span>
+        </div>
+
       </div>
     </div>
-  </div>
-</ng-template>
+  </ng-template>
 
-<ng-template #syslogCredentials let-index="index">
-  <div fxFlex="nogrow" fxLayout="column" class="syslog-group"
-       [formGroup]="syslogServerForm.get(['targets', index, 'credentials'])">
-    <!-- Credentials -->
-    <div fxFlex="30px" class="syslog-fieldtitle">CREDENTIALS</div>
-    <div fxFlex="auto" fxLayout="row">
+  <ng-template #syslogCredentials let-index="index">
+    <div fxFlex="nogrow" fxLayout="column" class="syslog-group"
+         [formGroup]="syslogServerForm.get(['targets', index, 'credentials'])">
+      <!-- Credentials -->
+      <div fxFlex="30px" class="syslog-fieldtitle">CREDENTIALS</div>
+      <div fxFlex="auto" fxLayout="row">
 
-      <mat-radio-group fxFlex="nogrow" fxLayout="column" fxLayoutGap="5px"
-                       class="syslog-fieldtitle syslog-credential-radio" appErrorTooltip
-                       formControlName="auth-type">
-        <mat-radio-button fxFlex="none" color="primary" [disableRipple]="true" class=""
-                          *ngFor="let option of syslogCredentialOptions"
-                          [value]="option.value">
-          {{option.label}}
-        </mat-radio-button>
-      </mat-radio-group>
+        <mat-radio-group fxFlex="nogrow" fxLayout="column" fxLayoutGap="5px"
+                         class="syslog-fieldtitle syslog-credential-radio" appErrorTooltip
+                         formControlName="auth-type">
+          <mat-radio-button fxFlex="none" color="primary" [disableRipple]="true" class=""
+                            *ngFor="let option of syslogCredentialOptions"
+                            [value]="option.value">
+            {{option.label}}
+          </mat-radio-button>
+        </mat-radio-group>
 
-      <!-- we use getSelectedCredentialMethod(syslog) to control switch on displaying auth-type UI -->
-      <div fxFlex="auto" fxLayout="row" [ngSwitch]="getSelectedCredentialMethod(index)">
-        <ng-container *ngSwitchCase="'AUTHTYPE_USERNAMEPASSWORD'">
-          <!-- Field Title -->
-          <div fxFlex="nogrow" fxLayout="column">
+        <!-- we use getSelectedCredentialMethod(syslog) to control switch on displaying auth-type UI -->
+        <div fxFlex="auto" fxLayout="row" [ngSwitch]="getSelectedCredentialMethod(index)">
+          <ng-container *ngSwitchCase="'AUTHTYPE_USERNAMEPASSWORD'">
+            <!-- Field Title -->
+            <div fxFlex="nogrow" fxLayout="column">
 
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Username:</span>
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Username:</span>
+              </div>
+
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Password:</span>
+              </div>
+            </div>
+            <!-- Field Values -->
+            <div fxFlex="nogrow" fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" class="syslog-value">
+                <input appErrorTooltip formControlName="username" fxFlex="nogrow"
+                       class="syslog-input"
+                       spellcheck="false" type="text" pInputText
+                       placeholder="">
+              </div>
+              <div fxFlex="30px" fxLayout="row" class="syslog-value">
+                <input appErrorTooltip formControlName="password" fxFlex="nogrow"
+                       class="syslog-input"
+                       spellcheck="false" type="password" pInputText
+                       placeholder="">
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="'AUTHTYPE_TOKEN'">
+            <!-- Field Title -->
+            <div fxFlex="nogrow" fxLayout="column">
+
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Token:</span>
+              </div>
+
+            </div>
+            <!-- Field Values -->
+            <div fxFlex="nogrow" fxLayout="column">
+              <div fxFlex="30px" fxLayout="row" class="syslog-value">
+                <input appErrorTooltip formControlName="bearer-token" fxFlex="nogrow"
+                       class="syslog-input" spellcheck="false" type="text" pInputText
+                       placeholder="">
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngSwitchCase="'AUTHTYPE_CERTS'">
+            <!-- Field Title -->
+            <div fxFlex="nogrow" fxLayout="column">
+
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Client Cert:</span>
+              </div>
+
+            </div>
+            <!-- Field Values -->
+            <div fxFlex="nogrow" fxLayout="column">
+              <div fxFlex="120px" fxLayout="row" class="syslog-value">
+                <textarea appErrorTooltip formControlName="cert-data" fxFlex="nogrow"
+                          class="syslog-input" spellcheck="false" type="text"
+                          pInputTextarea placeholder=""></textarea>
+              </div>
             </div>
 
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Password:</span>
-            </div>
-          </div>
-          <!-- Field Values -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input appErrorTooltip formControlName="username" fxFlex="nogrow" class="syslog-input"
-                     spellcheck="false" type="text" pInputText
-                     placeholder="">
-            </div>
-            <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input appErrorTooltip formControlName="password" fxFlex="nogrow" class="syslog-input"
-                     spellcheck="false" type="password" pInputText
-                     placeholder="">
-            </div>
-          </div>
-        </ng-container>
-        <ng-container *ngSwitchCase="'AUTHTYPE_TOKEN'">
-          <!-- Field Title -->
-          <div fxFlex="nogrow" fxLayout="column">
+            <!-- Field Title -->
+            <div fxFlex="nogrow" fxLayout="column">
 
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Token:</span>
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Key Data:</span>
+              </div>
+
+            </div>
+            <!-- Field Values -->
+            <div fxFlex="nogrow" fxLayout="column">
+              <div fxFlex="120px" fxLayout="row" class="syslog-value">
+                <textarea appErrorTooltip formControlName="key-data" fxFlex="nogrow"
+                          class="syslog-input" spellcheck="false" type="text" pInputTextarea
+                          placeholder=""></textarea>
+              </div>
             </div>
 
-          </div>
-          <!-- Field Values -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="syslog-value">
-              <input appErrorTooltip formControlName="bearer-token" fxFlex="nogrow"
-                     class="syslog-input" spellcheck="false" type="text" pInputText
-                     placeholder="">
+            <!-- Field Title -->
+            <div fxFlex="nogrow" fxLayout="column">
+
+              <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
+                   fxLayoutAlign="start center">
+                <span>Server Cert:</span>
+              </div>
+
             </div>
-          </div>
-        </ng-container>
-        <ng-container *ngSwitchCase="'AUTHTYPE_CERTS'">
-          <!-- Field Title -->
-          <div fxFlex="nogrow" fxLayout="column">
-
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Client Cert:</span>
+            <!-- Field Values -->
+            <div fxFlex="nogrow" fxLayout="column">
+              <div fxFlex="120px" fxLayout="row" class="syslog-value">
+                <textarea appErrorTooltip formControlName="ca-data" fxFlex="nogrow"
+                          class="syslog-input" spellcheck="false" type="text" pInputTextarea
+                          placeholder=""></textarea>
+              </div>
             </div>
+          </ng-container>
+        </div>
 
-          </div>
-          <!-- Field Values -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea appErrorTooltip formControlName="cert-data" fxFlex="nogrow"
-                        class="syslog-input" spellcheck="false" type="text"
-                        pInputTextarea placeholder=""></textarea>
-            </div>
-          </div>
-
-          <!-- Field Title -->
-          <div fxFlex="nogrow" fxLayout="column">
-
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Key Data:</span>
-            </div>
-
-          </div>
-          <!-- Field Values -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea appErrorTooltip formControlName="key-data" fxFlex="nogrow"
-                        class="syslog-input" spellcheck="false" type="text" pInputTextarea
-                        placeholder=""></textarea>
-            </div>
-          </div>
-
-          <!-- Field Title -->
-          <div fxFlex="nogrow" fxLayout="column">
-
-            <div class="syslog-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>Server Cert:</span>
-            </div>
-
-          </div>
-          <!-- Field Values -->
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="120px" fxLayout="row" class="syslog-value">
-              <textarea appErrorTooltip formControlName="ca-data" fxFlex="nogrow"
-                        class="syslog-input" spellcheck="false" type="text" pInputTextarea
-                        placeholder=""></textarea>
-            </div>
-          </div>
-        </ng-container>
       </div>
 
     </div>
-
-  </div>
-</ng-template>
+  </ng-template>

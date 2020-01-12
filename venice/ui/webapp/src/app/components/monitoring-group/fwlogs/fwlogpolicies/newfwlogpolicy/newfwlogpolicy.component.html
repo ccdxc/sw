@@ -1,71 +1,82 @@
 <div fxFlex="auto" fxLayout="column">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
   <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newfwlogpolicy-container">
+    <ng-container *ngTemplateOutlet="meta"></ng-container>
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
-         fxLayoutAlign="start stretch" class="newfwlogpolicy-content">
-      <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+  </div>
+</div>
+<ng-template #meta>
+  <div fxLayout="row" class="newfwlogpolicy-content">
+    <div fxFlex fxLayout="column" [formGroup]="newObject.$formGroup">
+      <div fxFlex="nogrow" fxLayout="row">
         <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newfwlogpolicy-row">
-          <input fxFlex="300px" formControlName="name" class="newfwlogpolicy-name" appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Unique Policy Name...">
+          <span fxLayoutAlign="center center" [ngClass]="{
+                            'newfwlog-general-box': true,
+                            'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+                          }">
+            <input fxFlex="none" formControlName="name" class="newfwlogpolicy-name" appErrorTooltip
+                   spellcheck="false"
+                   type="text" pInputText appFloatLabel="Unique Policy Name...">
+          </span>
         </div>
 
         <!-- Commented out because VRF is not exposed in the UI for now. -->
         <!-- <div fxFlex="25px"></div> -->
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
         <!-- <div fxFlex="noshrink" fxLayout="row" [formGroup]="newObject.$formGroup.get(['spec'])">
-          <div fxFlex="nogrow" fxLayout="column">
-            <div class="newfwlogpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
-                 fxLayoutAlign="start center">
-              <span>VRF Name:</span>
+              <div fxFlex="nogrow" fxLayout="column">
+                <div class="newfwlogpolicy-fieldtitle" fxFlex="30px" fxLayout="row"
+                     fxLayoutAlign="start center">
+                  <span>VRF Name:</span>
+                </div>
+              </div>
+              <div fxFlex="nogrow" fxLayout="column">
+                <div fxFlex="30px" fxLayout="row" class="newfwlogpolicy-value">
+                  <input fxFlex="nogrow" appErrorTooltip formControlName="vrf-name"
+                         class="newfwlogpolicy-input"
+                         spellcheck="false" type="text" pInputText
+                         placeholder="">
+                </div>
+              </div>
             </div>
-          </div>
-          <div fxFlex="nogrow" fxLayout="column">
-            <div fxFlex="30px" fxLayout="row" class="newfwlogpolicy-value">
-              <input fxFlex="nogrow" appErrorTooltip formControlName="vrf-name"
-                     class="newfwlogpolicy-input"
-                     spellcheck="false" type="text" pInputText
-                     placeholder="">
-            </div>
-          </div>
-        </div>
-        <div fxFlex="25px"></div> -->
-
-        <div fxFlex="noshrink" fxLayout="row" formGroupName="spec">
-          <div fxFlex="nogrow" class="newfwlogpolicy-text">EXPORT:</div>
-          <p-multiSelect #logOptions class="newfwlogpolicy-filter" fxFlex="300px"
+            <div fxFlex="25px"></div> -->
+        <span formGroupName="spec" class="newfwlog-export-box">
+          <p-multiSelect appFloatLabel="EXPORT" #logOptions class="newfwlogpolicy-filter"
+                         fxFlex="none"
                          formControlName="filter" appendTo="body" styleClass="newfwlogpolicy-font"
                          [filter]="false"
-                         [showToggleAll]="false"
-                         [showHeader]="false"
-                         defaultLabel="All Logs"
+                         [showToggleAll]="false" [showHeader]="false" defaultLabel="All Logs"
                          [options]="filterOptions"
                          (onChange)="onLogOptionChange($event)"></p-multiSelect>
-        </div>
-        <!-- Buffer -->
-        <div fxFlex="20px" fxLayout="row">
-          <div fxFlex="30px"></div>
-          <div fxFlex="auto" class="newfwlogpolicy-divider"></div>
-          <div fxFlex="30px"></div>
-        </div>
-
-        <div fxFlex="noshrink" fxLayout="row">
-          <app-syslog #syslogComponent
-                      [syslogExport]="newObject.$formGroup.get(['spec']).value"
-                      targetTransport="<TCP/UDP>/<port>"
-                      [maxTargets]="maxTargets"
-                      fxFlex="nogrow" fxLayout="column"></app-syslog>
-        </div>
+        </span>
       </div>
-      <div *ngIf="isInline" class="newfwlogpolicy-buttoncontainer" fxFlex="nogrow"
-           fxLayout="row wrap" fxLayoutAlign="start start">
-        <div fxFlex="nogrow">
-          <span (click)="saveObject()" class="global-button-primary newfwlogpolicy-save">SAVE</span>
-        </div>
-        <div fxFlex="nogrow">
-          <span (click)="cancelObject()"
-                class="global-button-neutral newfwlogpolicy-cancel">CANCEL</span>
-        </div>
+      <!-- Buffer -->
+      <div fxFlex="10px" fxLayout="column">
+      </div>
+
+      <div fxFlex="noshrink" fxLayout="row">
+        <app-syslog #syslogComponent
+                    [syslogFieldsetWidth]="true"
+                    [syslogRequiredOption]="true"
+                    [syslogExport]="newObject.$formGroup.get(['spec']).value"
+                    targetTransport="<TCP/UDP>/<port>"
+                    [maxTargets]="maxTargets" fxFlex="nogrow" fxLayout="column"></app-syslog>
       </div>
     </div>
   </div>
-</div>
+</ng-template>
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="newfwlogpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row"
+       fxLayoutAlign="start end">
+    <div fxFlex="auto" fxLayoutAlign="end center" [style.max-height]="'0px'">
+      <div fxFlex="nogrow" class="button-container">
+        <span (click)="saveObject()"
+              class="global-button-primary global-button-padding newfwlogpolicy-save">SAVE</span>
+      </div>
+      <div fxFlex="nogrow" class="button-container">
+        <span (click)="cancelObject()"
+              class="global-button-primary global-button-padding newfwlogpolicy-cancel">CANCEL</span>
+      </div>
+    </div>
+  </div>
+</ng-template>

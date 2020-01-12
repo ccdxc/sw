@@ -1,14 +1,14 @@
 <div fxFlex="auto" style="padding: 0px 10px;" fxLayout="column">
+  <div *ngIf="isInline">
+    <ng-container *ngTemplateOutlet="editButtonContainer;">
+    </ng-container>
+  </div>
   <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" class="newhost-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
     <div fxFlex fxLayout="row"
          fxLayoutAlign="center" class="newhost-content">
       <div *ngIf="isInline || notAdmittedCount==0">
         <ng-container *ngTemplateOutlet="singleMode;"></ng-container>
-      </div>
-      <div *ngIf="isInline">
-        <ng-container *ngTemplateOutlet="editButtonContainer;">
-        </ng-container>
       </div>
       <div *ngIf="!isInline && notAdmittedCount!=0">
         <ng-container *ngTemplateOutlet="multiAddMode;"></ng-container>
@@ -87,12 +87,12 @@
 
 <ng-template #editButtonContainer>
   <div class="newhost-buttoncontainer" fxLayout="row">
-    <div fxFlex="auto" fxLayoutAlign="end center">
-      <div fxFlex="nogrow" [matTooltip]="getFieldTooltip()">
+    <div fxFlex="auto" fxLayoutAlign="end center" [style.max-height]="'0px'">
+      <div fxFlex="nogrow" class="button-container" [matTooltip]="getFieldTooltip()">
         <button [disabled]="!isFormValid()" (click)="saveObject()"
                 class="global-button-primary newhost-save">SAVE</button>
       </div>
-      <div fxFlex="nogrow">
+      <div fxFlex="nogrow" class="button-container">
         <button (click)="cancelObject()"
                 class="global-button-neutral newhost-cancel">CANCEL</button>
       </div>

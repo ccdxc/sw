@@ -3,7 +3,7 @@ import { Animations } from '@app/animations';
 import { SelectItem } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
 import { MonitoringSyslogExport, MonitoringExternalCred, IMonitoringSyslogExport, MonitoringExportConfig, MonitoringSyslogExportConfig } from '@sdk/v1/models/generated/monitoring';
-import { FormArray, FormGroup, AbstractControl } from '@angular/forms';
+import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { BaseComponent } from '@app/components/base/base.component';
 import { ControllerService } from '@app/services/controller.service';
 
@@ -19,8 +19,10 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   @Input() showSyslogOptions: boolean = true;
   @Input() targetTransport: String = '<protocol>/<port>';
   @Input() formatOptions: SelectItem[] = Utility.convertEnumToSelectItem(MonitoringSyslogExport.propInfo['format'].enum);
-  @Input() maxTargets: number = 2;
-  @Input() customizedValidator: () => boolean  = null;
+  @Input() maxTargets: number;
+  @Input() customizedValidator: () => boolean = null;
+  @Input() syslogRequiredOption: boolean;
+  @Input() syslogFieldsetWidth: boolean;
 
   syslogServerForm: FormGroup;
 
@@ -69,6 +71,11 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   addTarget() {
     const targets = this.syslogServerForm.get('targets') as FormArray;
     targets.insert(0, new MonitoringExportConfig().$formGroup);
+    const targetArr = (<any>this.syslogServerForm.get(['targets'])).controls;
+    for (let i = 0; i < targetArr.length; i++) {
+      this.syslogServerForm.get(['targets', i]).get('transport').setValidators([
+        this.isTransportFieldValue(this.syslogServerForm.get(['targets', i]).get('transport'))]);
+    }
   }
 
   removeTarget(index) {
@@ -83,23 +90,23 @@ export class SyslogComponent extends BaseComponent implements OnInit {
    * If there is @input va
    */
   isValid(): boolean {
-     if (! this.customizedValidator) {
-       return this.allTargetsEmpty();
-     } else {
-       return this.customizedValidator();
-     }
+    if (!this.customizedValidator) {
+      return this.allTargetsEmpty();
+    } else {
+      return this.customizedValidator();
+    }
   }
 
   getNumberOfEmptyTarget(): number {
     const targets = this.syslogServerForm.get('targets').value;  // return an array
     let countEmptyRule: number = 0;
-    for (let i = 0; i < targets.length; i++ ) {
+    for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
       // content is like
       // "{"destination":null,"transport":null,"credentials":{"auth-type":"none","username":null,"password":null,"bearer-token":null,"cert-data":null,"key-data":null,"ca-data":null}}"
       const content = Utility.TrimDefaultsAndEmptyFields(target);
       if (Utility.isEmpty(content.destination) || Utility.isEmpty(content.transport)) {
-        countEmptyRule  += 1;
+        countEmptyRule += 1;
       }
     }
     return countEmptyRule;
@@ -115,6 +122,54 @@ export class SyslogComponent extends BaseComponent implements OnInit {
     const targets = this.syslogServerForm.get('targets').value;  // return an array
     const countEmptyRule = this.getNumberOfEmptyTarget();
     return (countEmptyRule < targets.length);
- }
-
+  }
+  isTargetFieldEmpty(): boolean {
+    const countEmptyRule = this.getNumberOfEmptyTarget();
+    if (countEmptyRule > 0) {
+      return true;
+    }
+  }
+  isFieldEmptySysLog(field: boolean): boolean {
+    return Utility.isEmpty(field);
+  }
+  isSyLogFormValid(): object {
+    const returnObject = {
+      errorMessage: '',
+      valid: true
+    };
+    if (this.isTargetFieldEmpty()) {
+      returnObject.errorMessage = 'Error: Target field is required.';
+      returnObject.valid = false;
+      return returnObject;
+    }
+    if (!this.syslogServerForm.get(['targets']).valid) {
+      returnObject.errorMessage = 'Error:Transport Field is Invalid.';
+      returnObject.valid = false;
+      return returnObject;
+    }
+    return returnObject;
+  }
+  isTransportFieldValue(transportVal): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val: string = control.value;
+      let protocolVal: string;
+      let port: string;
+      if (val) {
+        protocolVal = val.split('/')[0];
+        port = val.split('/')[1];
+      }
+      if (!val) {
+        return null;
+      }
+      if ((protocolVal.toLowerCase() === 'tcp' || protocolVal.toLowerCase() === 'udp') && (val.includes('/')) && (Utility.isPortValid(port))) {
+        return null;
+      }
+      return {
+        fieldProtocol: {
+          required: false,
+          message: 'Invalid Protocol. Only tcp and udp are allowed,port should be a number between 1 to 65536.'
+        }
+      };
+    };
+  }
 }

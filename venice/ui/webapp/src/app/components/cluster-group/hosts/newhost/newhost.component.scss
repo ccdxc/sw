@@ -78,6 +78,10 @@ $dary-grey: #a9a9a9;
 }
 
 .newhost-buttoncontainer {
+  .button-container {
+    position: relative;
+    max-height: 0px;
+  }
 
   .newhost-save,
   .newhost-cancel {
