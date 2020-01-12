@@ -465,8 +465,8 @@ func (tsa *Tagent) createHALMirrorSessionProtoObj(mirrorSession *netproto.Mirror
 			},
 		},
 		VrfKeyHandle: vrfKey,
-		//Snaplen:      mirrorSession.Spec.PacketSize,
-		Destination: erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
+		Snaplen:      mirrorSession.Spec.PacketSize,
+		Destination:  erspanCollectors[0], // HAL accepts only one collector per mirrorSessionSpec. TODO
 	}
 	ReqMsg := halproto.MirrorSessionRequestMsg{
 		Request: []*halproto.MirrorSessionSpec{&mirrorSpec},

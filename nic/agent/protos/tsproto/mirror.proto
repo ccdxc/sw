@@ -33,12 +33,21 @@ message MirrorSession {
     MirrorSessionStatus     Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
+enum MirrorDir {
+    BOTH = 0;
+    INGRESS = 1;
+    EGRESS = 2;
+}
+
 message MirrorSessionSpec {
     string                   VrfName        = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
     // Mirrored packet collectors
     repeated MirrorCollector Collectors     = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "collectors,inline"];
     // Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions
     repeated MatchRule   MatchRules         = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,inline"];
+
+    uint32                  PacketSize      = 4 [(gogoproto.jsontag) = "packet-size,omitempty"];
+    MirrorDir               MirrorDirection = 5 [(gogoproto.jsontag) = "mirror-direction,omitempty", (venice.check) = "StrEnum(MirrorDir)"];
 }
 
 // MatchRule : This is used to select packets that need to be monitored (mirrored)
