@@ -27,12 +27,14 @@ session_info_rewrite:
         nop
 
         .brcase L3REWRITE_SNAT
+        phvwr           p.control_metadata_update_checksum, TRUE
         phvwr.c1        p.ipv4_1_srcAddr,\
                         d.session_info_rewrite_d.user_pkt_rewrite_ip[31:0]
         b               session_info_pkt_rewrite_done
         phvwr.!c1       p.ipv6_1_srcAddr, d.session_info_rewrite_d.user_pkt_rewrite_ip
 
         .brcase L3REWRITE_DNAT
+        phvwr           p.control_metadata_update_checksum, TRUE
         phvwr.c1        p.ipv4_1_dstAddr,\
                         d.session_info_rewrite_d.user_pkt_rewrite_ip[31:0]
         b               session_info_pkt_rewrite_done
@@ -40,6 +42,8 @@ session_info_rewrite:
 
         .brcase 3
         /* Unused */
+        b               session_info_pkt_rewrite_done
+        nop
 
     .brend
 
@@ -86,7 +90,16 @@ session_info_pkt_rewrite_done:
 
         phvwr           p.{udp_0_srcPort...udp_0_dstPort}, \
                         d.{session_info_rewrite_d.udp_sport...session_info_rewrite_d.udp_dport}
-        phvwr           p.{udp_0_valid...ipv4_0_valid}, 0x5
+        /*
+        phvwr           p.udp_0_valid, TRUE
+        phvwr           p.ipv6_0_valid, FALSE
+        phvwr           p.ipv4_0_valid, TRUE
+        phvwr           p.ipv4_0_udp_csum, FALSE
+        phvwr           p.ipv4_0_tcp_csum, FALSE
+        phvwr           p.ipv4_0_csum, TRUE
+        */
+        phvwr           p.{udp_0_valid...ipv4_0_csum}, 0x29
+        phvwr           p.capri_deparser_len_ipv4_0_hdr_len, 20
 
         phvwr           p.mpls_label1_0_label, d.session_info_rewrite_d.mpls1_label
         /* TODO: Confirm TTL value */

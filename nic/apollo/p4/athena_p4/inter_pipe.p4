@@ -43,6 +43,7 @@ action p4i_to_p4e_state() {
     if (p4i_to_p4e_header.valid == TRUE) {
         modify_field(control_metadata.forward_to_uplink, p4i_to_p4e_header.forward_to_uplink);
         modify_field(control_metadata.redir_to_rxdma, p4i_to_p4e_header.redir_to_rxdma);
+        modify_field(control_metadata.update_checksum, p4i_to_p4e_header.update_checksum);
     }
 }
 

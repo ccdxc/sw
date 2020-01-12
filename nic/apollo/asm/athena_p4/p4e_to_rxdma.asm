@@ -1,8 +1,9 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "athena.h"
+#include "EGRESS_p4e_to_rxdma_k.h"
 
-struct p4e_to_rxdma_k  k;
+struct p4e_to_rxdma_k_  k;
 struct phv_             p;
 
 %%
@@ -26,8 +27,7 @@ p4e_to_rxdma:
 
 
     phvwr           p.capri_intrinsic_tm_oport, TM_PORT_DMA
-    phvwr           p.capri_intrinsic_lif,\
-                    k.{p4i_to_p4e_header_nacl_redir_lif_sbit0_ebit7...p4i_to_p4e_header_nacl_redir_lif_sbit8_ebit10}
+    phvwr           p.capri_intrinsic_lif, k.p4i_to_p4e_header_nacl_redir_lif
     phvwr           p.capri_rxdma_intrinsic_qtype, k.p4i_to_p4e_header_nacl_redir_qtype
     phvwr           p.capri_rxdma_intrinsic_qid, k.p4i_to_p4e_header_nacl_redir_qid
     phvwr           p.capri_rxdma_intrinsic_rx_splitter_offset, \
@@ -43,8 +43,7 @@ p4e_to_rxdma:
     nop.!c1.e
 
 p4e_to_rxdma_ipv6:
-    phvwr           p.p4e_to_p4plus_classic_nic_ip_ip_sa, \
-                    k.{ipv6_1_srcAddr_sbit0_ebit31,ipv6_1_srcAddr_sbit32_ebit63,ipv6_1_srcAddr_sbit64_ebit127}
+    phvwr           p.p4e_to_p4plus_classic_nic_ip_ip_sa, k.ipv6_1_srcAddr
     phvwr           p.p4e_to_p4plus_classic_nic_ip_ip_da, k.ipv6_1_dstAddr
     seq             c3, k.udp_1_valid, TRUE
     phvwr.c2.e      p.p4e_to_p4plus_classic_nic_pkt_type, \

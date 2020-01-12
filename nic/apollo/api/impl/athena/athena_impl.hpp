@@ -174,6 +174,10 @@ private:
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t nacl_init_(void);
 
+    /// \brief  initialize checksum table
+    /// \return #SDK_RET_OK on success, failure status code on error
+    sdk_ret_t checksum_init_(void);
+
     /// \brief  init routine to initialize ingress to rxdma table
     /// \return SDK_RET_OK on success, failure status code on error
     sdk_ret_t ingress_to_rxdma_init_(void);

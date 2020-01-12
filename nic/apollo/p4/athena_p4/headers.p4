@@ -277,7 +277,8 @@ header_type p4i_to_p4e_header_t {
         forward_to_uplink       : 1;
         redir_to_rxdma          : 1;
         direction               : 1;
-        pad1                    : 2;
+        update_checksum         : 1;
+        pad1                    : 1;
     }
 }
 

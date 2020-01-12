@@ -429,6 +429,98 @@ athena_impl::stats_init_(void) {
 }
 
 sdk_ret_t
+athena_impl::checksum_init_(void) {
+    uint64_t idx;
+    p4pd_error_t p4pd_ret;
+    checksum_swkey_t key;
+    checksum_actiondata_t data;
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv4_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV4_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.udp_1_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_UDP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.tcp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_TCP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.ipv6_1_valid = 1;
+    key.icmp_valid = 1;
+    data.action_id = CHECKSUM_UPDATE_IPV6_ICMP_CHECKSUM_ID;
+    idx = p4pd_index_to_hwindex_map(P4TBL_ID_CHECKSUM, &key);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_CHECKSUM,
+                                       idx, NULL, NULL, &data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 athena_impl::table_init_(void) {
     sdk_ret_t     ret;
 

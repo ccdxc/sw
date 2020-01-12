@@ -10,6 +10,7 @@
 #include "metadata.p4"
 
 #include "key.p4"
+#include "offloads.p4"
 #include "flow.p4"
 #include "nacl.p4"
 #include "session.p4"
@@ -17,6 +18,7 @@
 #include "config_verify.p4"
 #include "inter_pipe.p4"
 #include "policers.p4"
+#include "checksum.p4"
 
 action nop() {
 }
@@ -30,6 +32,7 @@ action drop_packet() {
 /*****************************************************************************/
 control ingress {
     key_init();
+    offloads();
     flow_lookup();
     nacl();
     session_info_lookup();
@@ -44,5 +47,6 @@ control ingress {
 control egress {
     session_info_encap_lookup();
     //statistics();
+    update_checksums();
     egress_inter_pipe();
 }

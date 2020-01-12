@@ -106,6 +106,8 @@ header_type parser_ohi_t {
         tcp___start_off     : 16;
         udp_1___start_off   : 16;
         udp_2___start_off   : 16;
+        gso_start           : 16;
+        gso_offset          : 16;
     }
 }
 @pragma parser_write_only
@@ -131,22 +133,23 @@ parser start {
 @pragma xgress ingress
 parser parse_txdma_to_ingress {
     extract(capri_txdma_intrinsic);
+    extract(p4plus_to_p4);
+    extract(p4plus_to_p4_vlan);
     /* Skip flow lookup for now for packets injected from ARM */
     set_metadata(control_metadata.skip_flow_lkp, TRUE);
-    return select(current(72, 4)) { /* p4plus_to_p4_classic_header_t: p4plus_app_id*/
-        //0 : parse_ingress_pass2; /* FIXME: Not a scenario ? */
-        default : parse_txdma_app;
+    set_metadata(ohi.gso_start, p4plus_to_p4.gso_start + 0);
+    set_metadata(ohi.gso_offset, p4plus_to_p4.gso_offset + 0);
+    return select(p4plus_to_p4.gso_valid, p4plus_to_p4.p4plus_app_id) {
+        0x10 mask 0x10 : parse_txdma_gso;
+        P4PLUS_APPTYPE_CPU : parse_packet;
+        default : parse_packet;
     }
 }
 
 @pragma xgress ingress
-parser parse_txdma_app {
-    extract(p4plus_to_p4);
-    extract(p4plus_to_p4_vlan);
-    return select(p4plus_to_p4.p4plus_app_id) {
-        P4PLUS_APPTYPE_CPU : parse_cpu_packet;
-        default : parse_packet_from_host; /* TODO: Not a scenario for OCI */
-    }
+@pragma generic_checksum_start capri_gso_csum.gso_checksum
+parser parse_txdma_gso {
+    return parse_packet;
 }
 
 @pragma xgress ingress
@@ -890,6 +893,42 @@ calculated_field udp_1.checksum {
     update ipv6_1_udp_checksum_egress;
 }
 
+field_list ipv4_1_icmp_checksum_list {
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv4_1_icmp_checksum {
+    input {
+        ipv4_1_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+field_list ipv6_1_icmp_checksum_list {
+    ipv6_1.srcAddr;
+    ipv6_1.dstAddr;
+    ipv6_1.nextHdr;
+    ipv6_1.payloadLen;
+    payload;
+}
+
+@pragma checksum update_len capri_deparser_len.l4_payload_len
+field_list_calculation ipv6_1_icmp_checksum {
+    input {
+        ipv6_1_icmp_checksum_list;
+    }
+    algorithm : csum16;
+    output_width : 16;
+}
+
+
+calculated_field icmp.hdrChecksum {
+    update ipv4_1_icmp_checksum;
+    update ipv6_1_icmp_checksum;
+}
+
 /******************************************************************************
  * Checksums : Layer 2 (verify only in ingress)
  *****************************************************************************/
@@ -1027,4 +1066,27 @@ field_list_calculation ipv6_2_udp_checksum_ingress {
 calculated_field udp_2.checksum {
     verify ipv4_2_udp_checksum_ingress;
     verify ipv6_2_udp_checksum_ingress;
+}
+
+/******************************************************************************
+ * Checksums : Partial checksum                                               *
+ *****************************************************************************/
+field_list gso_checksum_list {
+    p4plus_to_p4.gso_start;
+    payload;
+}
+
+@pragma checksum update_len capri_gso_csum.gso_checksum
+@pragma checksum gso_checksum_offset p4plus_to_p4.gso_offset
+@pragma checksum gress ingress
+field_list_calculation gso_checksum {
+    input {
+        gso_checksum_list;
+    }
+    algorithm : gso;
+    output_width : 16;
+}
+
+calculated_field capri_gso_csum.gso_checksum {
+    update gso_checksum;
 }

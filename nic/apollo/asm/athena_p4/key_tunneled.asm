@@ -49,7 +49,8 @@ tunneled_ipv6_packet:
     phvwr           p.key_metadata_tcp_flags, k.tcp_flags
     phvwr           p.key_metadata_src, \
                         k.ipv6_2_srcAddr
-    phvwr           p.key_metadata_dst, k.ipv6_2_dstAddr
+    phvwr           p.key_metadata_dst[127:120], k.ipv6_2_dstAddr_s120_e127
+    phvwr           p.key_metadata_dst[119:0], k.ipv6_2_dstAddr_s0_e119
     seq             c1, k.udp_2_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_2_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_2_dstPort

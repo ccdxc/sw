@@ -9,6 +9,8 @@
 
 #define NACL_TABLE_SIZE                                     512
 
+#define CHECKSUM_TABLE_SIZE                                 32
+
 #define FLOW_CACHE_TABLE_SIZE                               1048576     // 1M
 
 #define VNIC_TABLE_SIZE                                     1024

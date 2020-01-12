@@ -41,6 +41,7 @@ header_type control_metadata_t {
         counterset1_valid                   : 1;
         counterset2_valid                   : 1;
         histogram_valid                     : 1;
+        update_checksum                     : 1;
         launch_v4                           : 1; // Dummy - never set
         p4plus_app_id                       : 8;
         config1_epoch                       : 32;
@@ -125,6 +126,7 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
+        packet_len          : 16;
     }
 }
 
@@ -141,6 +143,12 @@ header_type offset_metadata_t {
     }
 }
 
+header_type capri_gso_csum_phv_loc_t {
+    fields {
+        gso_checksum            : 16;
+    }
+}
+
 metadata key_metadata_t         key_metadata;
 metadata control_metadata_t     control_metadata;
 
@@ -150,6 +158,10 @@ metadata offset_metadata_t      offset_metadata;
 @pragma deparser_variable_length_header
 @pragma dont_trim
 metadata capri_deparser_len_t   capri_deparser_len;
+
+@pragma gso_csum_header
+@pragma dont_trim
+metadata capri_gso_csum_phv_loc_t   capri_gso_csum;
 
 @pragma scratch_metadata
 metadata scratch_metadata_t     scratch_metadata;
