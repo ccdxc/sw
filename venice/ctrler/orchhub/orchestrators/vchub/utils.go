@@ -6,6 +6,10 @@ import (
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/netutils"
+	conv "github.com/pensando/sw/venice/utils/strconv"
+
+	"github.com/vmware/govmomi/vim25/mo"
 )
 
 var (
@@ -63,4 +67,29 @@ func createDVSName(dcName string) string {
 
 func isObjForDC(key string, vcID string, dcID string) bool {
 	return strings.HasPrefix(key, utils.CreateGlobalKeyPrefix(vcID, dcID))
+}
+
+func isPensandoHost(host *mo.HostSystem) bool {
+	for _, pnic := range host.Config.Network.Pnic {
+		macStr, err := conv.ParseMacAddr(pnic.Mac)
+		if err != nil {
+			continue
+		}
+		if netutils.IsPensandoMACAddress(macStr) {
+			return true
+		}
+	}
+	return false
+}
+
+func createVmkWorkLoadName(orchID, namespace, objName string) string {
+	return fmt.Sprintf("VmkWorkLoad%s%s", utils.Delim, utils.CreateGlobalKey(orchID, namespace, objName))
+}
+
+func createVmkWorkLoadNameFromHostName(hostName string) string {
+	return fmt.Sprintf("VmkWorkLoad%s%s", utils.Delim, hostName)
+}
+
+func createHostName(orchID, namespace, objName string) string {
+	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, namespace, objName))
 }

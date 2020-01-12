@@ -151,6 +151,21 @@ func (v *VcSim) AddDC(name string) (*Datacenter, error) {
 // GetDVS returns the distributed virtual switch by name
 func (v *Datacenter) GetDVS(name string) (*DVS, bool) {
 	entry, ok := v.dvsMap[name]
+	if ok {
+		return entry, ok
+	}
+	dvss := simulator.Map.All("DistributedVirtualSwitch")
+	for _, dvs := range dvss {
+		if dvs.Entity().Name == name {
+			ret := &DVS{
+				client:       v.client,
+				Obj:          dvs.(*simulator.DistributedVirtualSwitch),
+				portgroupMap: make(map[string]*Portgroup),
+			}
+			v.dvsMap[name] = ret
+			return ret, true
+		}
+	}
 	return entry, ok
 }
 
@@ -182,6 +197,7 @@ func (v *Datacenter) AddDVS(dvsCreateSpec *types.DVSCreateSpec) (*DVS, error) {
 				Obj:          dvs.(*simulator.DistributedVirtualSwitch),
 				portgroupMap: make(map[string]*Portgroup),
 			}
+			v.dvsMap[dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name] = ret
 			return ret, nil
 		}
 	}
@@ -305,6 +321,44 @@ type VNIC struct {
 	PortgroupKey string
 }
 
+// AddVmkNic adds a Vmknic to the host
+func (v *Host) AddVmkNic(spec *types.HostVirtualNicSpec, name string) error {
+	key := "key-vim.host.VirtualNic-" + name
+	vnic := types.HostVirtualNic{Key: key, Device: name, Spec: *spec}
+	v.Obj.Config.Network.Vnic = append(v.Obj.Config.Network.Vnic, vnic)
+
+	// fmt.Printf("Added vmkNic %s on %s host, total nics %d\n", name, v.Obj.Self.Value, len(v.Obj.Config.Network.Vnic))
+
+	h := simulator.Map.Get(v.Obj.Reference())
+	simulator.Map.Update(h, []types.PropertyChange{
+		{Name: "config", Val: v.Obj.Config},
+	})
+
+	return nil
+}
+
+// RemoveVmkNic removes the nic from the host
+func (v *Host) RemoveVmkNic(name string) {
+	match := -1
+
+	for ix, p := range v.Obj.Config.Network.Vnic {
+		if p.Device == name {
+			match = ix
+			break
+		}
+	}
+
+	if match != -1 {
+		v.Obj.Config.Network.Vnic = append(v.Obj.Config.Network.Vnic[:match], v.Obj.Config.Network.Vnic[match+1:]...)
+		// fmt.Printf("Removed vmkNic %s from %s host, total nics %d\n", name, v.Obj.Self.Value, len(v.Obj.Config.Network.Vnic))
+
+		h := simulator.Map.Get(v.Obj.Reference())
+		simulator.Map.Update(h, []types.PropertyChange{
+			{Name: "config", Val: v.Obj.Config},
+		})
+	}
+}
+
 // AddVM creates a VM with the given display name on the given host
 func (v *Datacenter) AddVM(name string, hostName string, vnics []VNIC) (*simulator.VirtualMachine, error) {
 	// TODO: take in vnic config
@@ -396,4 +450,25 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	}
 
 	return nil, fmt.Errorf("VM create was successful but couldn't be found in inventory")
+}
+
+// AddHost adds a host to the DVS
+func (v *DVS) AddHost(host *Host) error {
+	ref := host.Obj.Reference()
+	for _, member := range v.Obj.Config.GetDVSConfigInfo().Host {
+		if member.Config.Host.Value == ref.Value {
+			return fmt.Errorf("Host already Added")
+		}
+	}
+	newMember := types.DistributedVirtualSwitchHostMember{
+		Config: types.DistributedVirtualSwitchHostMemberConfigInfo{
+			Host: &ref,
+		},
+	}
+	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)
+	d := simulator.Map.Get(v.Obj.Reference())
+	simulator.Map.Update(d, []types.PropertyChange{
+		{Name: "config", Val: v.Obj.Config},
+	})
+	return nil
 }

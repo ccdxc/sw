@@ -3,7 +3,9 @@ package vchub
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -23,7 +25,9 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -142,7 +146,6 @@ func TestVCSyncPG(t *testing.T) {
 	verifyPg(dcPgMap)
 
 }
-
 func TestVCSyncHost(t *testing.T) {
 	// Stale hosts should be deleted
 	// New hosts should be created
@@ -185,8 +188,27 @@ func TestVCSyncHost(t *testing.T) {
 
 	hostSystem1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed host1 create")
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xaa)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
+
 	hostSystem2, err := dc1.AddHost("host2")
 	AssertOk(t, err, "failed host2 create")
+	pNicMac = net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xbb)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	// Make it Pensando host
+	err = hostSystem2.AddNic("vmnic0", conv.MacString(pNicMac))
 
 	// CREATING HOSTS
 	staleHost := cluster.Host{
@@ -322,6 +344,15 @@ func TestVCSyncVM(t *testing.T) {
 
 	hostSystem1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed host1 create")
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xaa)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	// Make it Pensando host
+	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
 
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
@@ -532,6 +563,221 @@ func TestVCSyncVM(t *testing.T) {
 		return true, nil
 	}, "Override was not set back")
 
+}
+
+func TestSyncVmkNics(t *testing.T) {
+	err := testutils.ValidateParams(defaultTestParams)
+	if err != nil {
+		t.Fatalf("Failed at validating test parameters")
+	}
+
+	// SETTING UP LOGGER
+	config := log.GetDefaultConfig("sync_test")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	// SETTING UP STATE MANAGER
+	sm, _, err := smmock.NewMockStateManager()
+	if err != nil {
+		t.Fatalf("Failed to create state manager. Err : %v", err)
+		return
+	}
+
+	// CREATING ORCH CONFIG
+	orchConfig := smmock.GetOrchestratorConfig(defaultTestParams.TestHostName, defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	err = sm.Controller().Orchestrator().Create(orchConfig)
+
+	// SETTING UP VCSIM
+	vcURL := &url.URL{
+		Scheme: "http",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	vcURL.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+	// SETTING UP MOCK
+	// Real probe that will be used by mock probe when possible
+	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start()
+	defer vchub.Destroy()
+
+	for !mockProbe.IsSessionReady() {
+		time.Sleep(1 * time.Second)
+	}
+
+	// Add DC
+	dc, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+	// Add it using vcHub so mockProbe gets the needed info ???
+	// This will also create PenDVS
+	logger.Infof("Creating PenDC for %s\n", dc.Obj.Reference().Value)
+	_, err = vchub.NewPenDC(defaultTestParams.TestDCName)
+	// Add DVS
+	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc.GetDVS(dvsName)
+	if !ok {
+		logger.Info("GetDVS Failed")
+		os.Exit(1)
+	}
+	Assert(t, ok, "failed dvs create")
+
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+	// Create one PG for vmkNic
+	pgConfigSpec := []types.DVPortgroupConfigSpec{
+		types.DVPortgroupConfigSpec{
+			Name:     createPGName("vMotion_PG"),
+			NumPorts: 8,
+			DefaultPortConfig: &types.VMwareDVSPortSetting{
+				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+					PvlanId: int32(100),
+				},
+			},
+		},
+	}
+
+	smmock.CreateNetwork(sm, "default", "vMotion_PG", "11.1.1.0/24", "11.1.1.1", 500, nil, orchInfo1)
+	// Add PG to mockProbe (this is weird, this should be part of sim)
+	// vcHub should provide this function ??
+	mockProbe.AddPenPG(defaultTestParams.TestDCName, dvsName, &pgConfigSpec[0])
+	pg, err := mockProbe.GetPenPG(defaultTestParams.TestDCName, createPGName("vMotion_PG"))
+	AssertOk(t, err, "failed to add portgroup")
+
+	// Create Host
+	host, err := dc.AddHost("host1")
+	AssertOk(t, err, "failed to add Host to DC")
+	err = dvs.AddHost(host)
+	AssertOk(t, err, "failed to add Host to DVS")
+
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xbb)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	// Make it Pensando host
+	err = host.AddNic("vmnic0", conv.MacString(pNicMac))
+	AssertOk(t, err, "failed to add pNic")
+
+	type testEP struct {
+		mac  string
+		vlan uint32
+	}
+
+	type WlMap map[string]map[string]testEP
+	testWorkloadMap := WlMap{}
+	testNICs := map[string]testEP{}
+
+	// Create vmkNIC
+	var spec types.HostVirtualNicSpec
+	spec.Mac = "0011.2233.0001"
+	var dvPort types.DistributedVirtualSwitchPortConnection
+	dvPort.PortgroupKey = pg.Reference().Value
+	dvPort.PortKey = "10" // use some port number
+	spec.DistributedVirtualPort = &dvPort
+	err = host.AddVmkNic(&spec, "vmk1")
+	testNICs[spec.Mac] = testEP{
+		mac:  spec.Mac,
+		vlan: 500,
+	}
+	AssertOk(t, err, "failed to add vmkNic")
+
+	spec.Mac = "0011.2233.0002"
+	var dvPort2 types.DistributedVirtualSwitchPortConnection
+	dvPort2.PortgroupKey = pg.Reference().Value
+	dvPort2.PortKey = "11" // use some port number
+	spec.DistributedVirtualPort = &dvPort2
+	err = host.AddVmkNic(&spec, "vmk2")
+	AssertOk(t, err, "failed to add vmkNic")
+	testNICs[spec.Mac] = testEP{
+		mac:  spec.Mac,
+		vlan: 500,
+	}
+
+	logger.Infof("===== Sync1 =====")
+	vchub.Sync()
+
+	wlName := createVmkWorkLoadName(orchInfo1[0].Name, dc.Obj.Self.Value, host.Obj.Self.Value)
+	testWorkloadMap[wlName] = testNICs
+
+	// Add Validations
+	// Check that workload for the host with its vmknics as EPs is created
+	verifyVmkworkloads := func(testWlEPMap WlMap, msg string) {
+		AssertEventually(t, func() (bool, interface{}) {
+			opts := api.ListWatchOptions{}
+			wls, err := sm.Controller().Workload().List(context.Background(), &opts)
+			if err != nil {
+				return false, nil
+			}
+			if len(wls) != len(testWlEPMap) {
+				return false, nil
+			}
+			for wlname, testEPs := range testWlEPMap {
+				meta := &api.ObjectMeta{
+					Name:      wlname,
+					Tenant:    "default",
+					Namespace: "default",
+				}
+				wl, err := sm.Controller().Workload().Find(meta)
+				if err != nil {
+					logger.Infof("Workload not found %s", wlname)
+					return false, nil
+				}
+				for _, ep := range wl.Workload.Spec.Interfaces {
+					_, ok := testEPs[ep.MACAddress]
+					if !ok {
+						logger.Infof("EP not found %s", ep.MACAddress)
+						return false, nil
+					}
+				}
+				if len(wl.Workload.Spec.Interfaces) != len(testEPs) {
+					return false, nil
+				}
+			}
+			return true, nil
+		}, msg, "5s", "1s")
+	}
+	verifyVmkworkloads(testWorkloadMap, "WL with 2EPs create failed")
+	host.RemoveVmkNic("vmk2")
+	delete(testNICs, "0011.2233.0002")
+	spec.Mac = "0011.2233.0003"
+	var dvPort3 types.DistributedVirtualSwitchPortConnection
+	dvPort3.PortgroupKey = pg.Reference().Value
+	dvPort3.PortKey = "12" // use some port number
+	spec.DistributedVirtualPort = &dvPort3
+	err = host.AddVmkNic(&spec, "vmk3")
+	AssertOk(t, err, "failed to add vmkNic")
+	testNICs[spec.Mac] = testEP{
+		mac:  spec.Mac,
+		vlan: 500,
+	}
+	logger.Infof("===== Sync2 =====")
+	vchub.Sync()
+	verifyVmkworkloads(testWorkloadMap, "WL delete 1 EP failed")
+
+	// Delete all vmkNics from a host, WL should be deleted
+	time.Sleep(5 * time.Second)
+
+	host.RemoveVmkNic("vmk1")
+	host.RemoveVmkNic("vmk3")
+	delete(testWorkloadMap, wlName)
+
+	logger.Infof("===== Sync3 =====")
+	vchub.Sync()
+	verifyVmkworkloads(testWorkloadMap, "WL delete all EPs failed")
 }
 
 func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {

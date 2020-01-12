@@ -2,7 +2,9 @@ package vchub
 
 import (
 	"reflect"
+	"sort"
 
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 
 	"github.com/pensando/sw/api"
@@ -62,8 +64,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 				APIVersion: "v1",
 			},
 			ObjectMeta: *meta,
-			// TODO : Remove the hardcoded values
-			Spec: workload.WorkloadSpec{},
+			Spec:       workload.WorkloadSpec{},
 		}
 	} else {
 		// Copying to prevent modifying of ctkit state
@@ -224,8 +225,8 @@ func (v *VCHub) processVMRuntime(prop types.PropertyChange, vcID string, dcID st
 		v.Log.Errorf("Runtime's host property was empty")
 		return
 	}
-	host := utils.CreateGlobalKey(vcID, dcID, rt.Host.Value)
-	workload.Spec.HostName = host
+	hostName := createHostName(vcID, dcID, rt.Host.Value)
+	workload.Spec.HostName = hostName
 }
 
 func (v *VCHub) processVMName(prop types.PropertyChange, vcID string, dcID string, dcName string, workload *workload.Workload) {
@@ -361,4 +362,134 @@ func getStoreOp(op types.PropertyChangeOp) defs.VCOp {
 	default:
 		return defs.VCOpSet
 	}
+}
+
+func (v *VCHub) getWorkload(wlName string) *workload.Workload {
+	meta := &api.ObjectMeta{
+		Name: wlName,
+		// TODO: Don't use default tenant
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+	}
+	// Check if already exists
+	var workloadObj *workload.Workload
+	existingWorkload := v.pCache.GetWorkload(meta)
+	if existingWorkload != nil {
+		// Each time Get is called, we endup creating a copy, if the retruned pointer is used
+		// then we may have a copy in pCache and another being modied.
+		temp := ref.DeepCopy(*existingWorkload).(workload.Workload)
+		workloadObj = &temp
+	}
+	return workloadObj
+}
+
+func (v *VCHub) deleteWorkloadByName(dcID, wlName string) {
+	meta := &api.ObjectMeta{
+		Name: wlName,
+		// TODO: Don't use default tenant
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+	}
+	// Check if already exists
+	workload, err := v.StateMgr.Controller().Workload().Find(meta)
+	if err == nil {
+		v.deleteWorkload(&(*workload).Workload, dcID)
+	}
+}
+
+func (v *VCHub) getVmkWorkload(dc *mo.Datacenter, wlName, hostName string) *workload.Workload {
+	// Check if already exists
+	workloadObj := v.getWorkload(wlName)
+	if workloadObj == nil {
+		meta := &api.ObjectMeta{
+			Name: wlName,
+			// TODO: Don't use default tenant
+			Tenant:    globals.DefaultTenant,
+			Namespace: globals.DefaultNamespace,
+			Labels:    make(map[string]string),
+		}
+		workloadObj = &workload.Workload{
+			TypeMeta: api.TypeMeta{
+				Kind:       workloadKind,
+				APIVersion: "v1",
+			},
+			ObjectMeta: *meta,
+			Spec: workload.WorkloadSpec{
+				HostName: hostName,
+			},
+		}
+	}
+	return workloadObj
+}
+
+func (v *VCHub) syncHostVmkNics(dc *mo.Datacenter, dvs *mo.VmwareDistributedVirtualSwitch, host *mo.HostSystem, vmknics []vnicStruct) {
+	// workload name in the vnicStruct is set to WL name created for this host.
+	wlName := createVmkWorkLoadName(v.VcID, dc.Self.Value, host.Self.Value)
+	hostName := createHostName(v.VcID, dc.Self.Value, host.Self.Value)
+	workloadObj := v.getVmkWorkload(dc, wlName, hostName)
+	penDC := v.GetDC(dc.Name)
+	newNicMap := map[string]bool{}
+	oldNicMap := map[string]bool{}
+
+	for _, vmknic := range vmknics {
+		newNicMap[vmknic.Name] = true
+	}
+	for _, intf := range workloadObj.Spec.Interfaces {
+		oldNicMap[intf.MACAddress] = true
+		if _, ok := newNicMap[intf.MACAddress]; ok {
+			// also in new.. so mark it as not new and not old
+			newNicMap[intf.MACAddress] = false
+			oldNicMap[intf.MACAddress] = false
+		}
+	}
+
+	interfaces := []workload.WorkloadIntfSpec{}
+
+	for _, existingNic := range workloadObj.Spec.Interfaces {
+		if oldNicMap[existingNic.MACAddress] == true {
+			// Delete this interface from workload
+			v.Log.Infof("Deleting stale interface %v from workload %v", existingNic.MACAddress, wlName)
+			// Remove useg vlan allocation for this
+			penDC.GetPenDVS(createDVSName(dc.Name)).UsegMgr.ReleaseVlanForVnic(existingNic.MACAddress, workloadObj.Spec.HostName)
+		}
+	}
+	for _, vmknic := range vmknics {
+		// Find external vlan from venice network for the PG
+		penPG := penDC.GetPGByID(vmknic.PG)
+		var externalVlan uint32
+		nw, err := v.StateMgr.Controller().Network().Find(&penPG.NetworkMeta)
+		if err == nil {
+			externalVlan = nw.Spec.VlanID
+			v.Log.Infof("Setting vlan %v for vnic %s", externalVlan, vmknic.ObjectMeta.Name)
+		} else {
+			v.Log.Infof("No venice network for PG %s", vmknic.PG)
+			continue
+		}
+		interfaces = append(interfaces, workload.WorkloadIntfSpec{
+			MACAddress:   vmknic.ObjectMeta.Name,
+			ExternalVlan: externalVlan,
+		})
+		// needed later by assignUsegs
+		v.setVNIC(&vmknic)
+	}
+	if len(interfaces) == 0 {
+		// vmkNics became zero, delete the workload
+		v.Log.Infof("Delete vmkWorkLoad %s due to no EPs", wlName)
+		v.deleteWorkloadByName(dc.Self.Value, wlName)
+		return
+	}
+	sort.Slice(interfaces, func(i, j int) bool {
+		return interfaces[i].MACAddress < interfaces[j].MACAddress
+	})
+	workloadObj.Spec.Interfaces = interfaces
+	// Allocate useg vlans for all interface added to workload
+	v.assignUsegs(dc.Self.Value, dc.Name, wlName, workloadObj)
+	v.addWorkloadLabels(workloadObj, host.Name)
+	v.Log.Infof("Create vmkWorkLoad %s", wlName)
+	v.pCache.Set(workloadKind, workloadObj)
+}
+
+func (v *VCHub) addWorkloadLabels(workloadObj *workload.Workload, name string) {
+	addVMNameLabel(workloadObj.Labels, name)
+	utils.AddOrchNameLabel(workloadObj.Labels, v.OrchConfig.GetName())
 }

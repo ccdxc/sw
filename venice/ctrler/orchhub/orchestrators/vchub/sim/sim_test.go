@@ -40,6 +40,15 @@ func TestList(t *testing.T) {
 	})
 	AssertOk(t, err, "failed to create vm")
 
+	var spec types.HostVirtualNicSpec
+	spec.Mac = "0011.2233.0001"
+	var dvPort types.DistributedVirtualSwitchPortConnection
+	dvPort.PortKey = "10" // use some port number
+	spec.DistributedVirtualPort = &dvPort
+	err = host.AddVmkNic(&spec, "vmk1")
+	AssertOk(t, err, "failed to add vmkNic")
+	host.RemoveVmkNic("vmk1")
+
 	var dvsCreateSpec types.DVSCreateSpec
 	var dvsConfigSpec types.DVSConfigSpec
 	dvsConfigSpec.GetDVSConfigSpec().Name = "dvs1"
@@ -50,6 +59,7 @@ func TestList(t *testing.T) {
 	}
 	dvs, err := dc.AddDVS(&dvsCreateSpec)
 	AssertOk(t, err, "failed to create DVS")
+	_ = dvs.AddHost(host)
 
 	pgConfigSpec0 := []types.DVPortgroupConfigSpec{
 		types.DVPortgroupConfigSpec{

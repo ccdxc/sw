@@ -55,15 +55,14 @@ func (v *VCHub) sync() {
 
 	/**
 		1. List DCs
-		2. Per DC, list DVS, list VMS
+		2. Per DC, list DVS, list VMS, list Hosts
 		3. Per DVS,
 				- list PGs
 				- Build Useg Mgr
 				- assign PG Vlans and workload vlans
-	  4.
 		4, Delete stale venice objects push oper to store
 		5. Push existing objects and creates.
-	*/
+	**/
 	dcs := v.probe.ListDC()
 	for _, dc := range dcs {
 		// TODO: Remove
@@ -82,11 +81,12 @@ func (v *VCHub) sync() {
 		dvsObjs := v.probe.ListDVS(&dcRef)
 		pgs := v.probe.ListPG(&dcRef)
 		vms := v.probe.ListVM(&dcRef)
-		vcHosts := v.probe.ListHosts(&dcRef)
+		vcHosts := v.ListPensandoHosts(&dcRef)
 
-		v.syncHosts(dc, vcHosts, hosts)
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
+		v.syncHosts(dc, vcHosts, hosts)
 		v.syncVMs(workloads, dc, dvsObjs, vms, pgs)
+		v.syncVmkNics(&dc, dvsObjs, vcHosts, pgs)
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
@@ -96,7 +96,7 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 	v.Log.Debug("Syncing hosts")
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {
-		hostName := utils.CreateGlobalKey(v.VcID, dc.Self.Value, vcHost.Self.Value)
+		hostName := createHostName(v.VcID, dc.Self.Value, vcHost.Self.Value)
 		vcHostMap[hostName] = true
 	}
 
@@ -109,6 +109,10 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 		}
 		if _, ok := vcHostMap[host.Name]; !ok {
 			// host no longer exists
+			// Delete vmkWorkload if created for this host
+			wlName := createVmkWorkLoadNameFromHostName(host.Name)
+			v.deleteWorkloadByName(dc.Self.Value, wlName)
+
 			v.Log.Debugf("Deleting host %s", host.Name)
 			v.deleteHost(&host.Host)
 		}
@@ -133,7 +137,6 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 		v.Log.Debugf("Creating host %s", host.Name)
 		v.handleHost(m)
 	}
-
 }
 
 func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, pgs []mo.DistributedVirtualPortgroup) {
@@ -431,4 +434,61 @@ func (v *VCHub) extractOverrides(ports []types.DistributedVirtualPort) map[strin
 		overrides[portKey] = int(vlanSpec.VlanId)
 	}
 	return overrides
+}
+
+func (v *VCHub) syncVmkNics(dc *mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vcHosts []mo.HostSystem, pgs []mo.DistributedVirtualPortgroup) {
+	vcHostRefMap := make(map[types.ManagedObjectReference]mo.HostSystem)
+	for _, host := range vcHosts {
+		vcHostRefMap[host.Reference()] = host
+	}
+	v.Log.Infof("SyncVmkNics found %d hosts", len(vcHostRefMap))
+
+	penDC := v.GetDC(dc.Name)
+	for _, dvs := range dvsObjs {
+		if !isPensandoDVS(dvs.Name) {
+			v.Log.Debugf("Skipping dvs %s", dvs.Name)
+			continue
+		}
+		for _, hostMember := range dvs.Config.GetDVSConfigInfo().Host {
+			host, ok := vcHostRefMap[*(hostMember.Config.Host)]
+			if !ok {
+				// non-pensando host
+				continue
+			}
+			vmkNics := []vnicStruct{}
+			wlName := createVmkWorkLoadName(v.VcID, dc.Self.Value, host.Self.Value)
+			for _, vmkNic := range host.Config.Network.Vnic {
+				v.Log.Infof("Processing VmkNic %s on host %s", vmkNic.Key, host.Name)
+				if vmkNic.Portgroup != "" {
+					// standard (non-DV) port gorup is not supported
+					v.Log.Infof("Skip vnic - not in DV Port group")
+					continue
+				}
+				pgKey := vmkNic.Spec.DistributedVirtualPort.PortgroupKey
+				portKey := vmkNic.Spec.DistributedVirtualPort.PortKey
+				if !ok {
+					// Error
+					v.Log.Errorf("PG not found for %s", pgKey)
+					continue
+				}
+				penPG := penDC.GetPGByID(pgKey)
+				if penPG == nil {
+					// not a venice network
+					v.Log.Errorf("PenPG not found for PG Id %s", pgKey)
+					continue
+				}
+				macStr := vmkNic.Spec.Mac
+				vmkNics = append(vmkNics, vnicStruct{
+					ObjectMeta: *createVNICMeta(macStr),
+					PG:         pgKey,
+					Port:       portKey,
+					Workload:   wlName,
+				})
+				v.Log.Infof("vmkInterface %s Port %s", vmkNic.Device, portKey)
+			}
+			// reconcile vmknics - Add all new vmknics, remove stale
+			// Create workload if does not exists and add EPs to it
+			v.syncHostVmkNics(dc, &dvs, &host, vmkNics)
+		}
+	}
 }

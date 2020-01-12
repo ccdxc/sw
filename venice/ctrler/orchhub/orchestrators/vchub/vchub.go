@@ -6,6 +6,9 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/vmware/govmomi/vim25/mo"
+	"github.com/vmware/govmomi/vim25/types"
+
 	"github.com/pensando/sw/api/generated/orchestration"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
@@ -156,4 +159,18 @@ func (v *VCHub) Sync() {
 	// Gets diffs
 	// Pushes deletes/creates as watch events
 	// v.probe.Sync()
+}
+
+// ListPensandoHosts List only Pensando Hosts from vCenter
+func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem {
+	hosts := v.probe.ListHosts(dcRef)
+	var penHosts []mo.HostSystem
+	for _, host := range hosts {
+		if !isPensandoHost(&host) {
+			v.Log.Debugf("Skipping non-Pensando Host %s", host.Name)
+			continue
+		}
+		penHosts = append(penHosts, host)
+	}
+	return penHosts
 }

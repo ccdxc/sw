@@ -55,7 +55,7 @@ func TestVCWrite(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	u := &url.URL{
-		Scheme: "https",
+		Scheme: "http",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
@@ -206,7 +206,7 @@ func TestVCHub(t *testing.T) {
 	logger := log.SetConfig(config)
 
 	u := &url.URL{
-		Scheme: "https",
+		Scheme: "http",
 		Host:   defaultTestParams.TestHostName,
 		Path:   "/sdk",
 	}
