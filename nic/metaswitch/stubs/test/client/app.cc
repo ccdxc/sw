@@ -110,7 +110,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_uuid (msidx2pdsobjkey(1).tostr());
+    proto_spec->set_uuid (msidx2pdsobjkey(1).str());
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -220,7 +220,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
     proto_spec->set_adminen(pds::ADMIN_UP);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
@@ -263,7 +263,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -307,8 +307,8 @@ static void create_subnet_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).tostr());
-    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).tostr());
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).str());
+    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).str());
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -338,7 +338,7 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).tostr());
+    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).str());
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -446,7 +446,7 @@ static void get_peer_status_all() {
     Status               ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_uuid(msidx2pdsobjkey(1).tostr());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
 
     ret_status = g_bgp_stub_->BGPPeerSpecGetAll (&context, request, &response);
     if (ret_status.ok()) {

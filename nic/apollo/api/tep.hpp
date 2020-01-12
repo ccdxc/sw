@@ -162,7 +162,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "tep-"  + std::string(key_.tostr()) + "-" +
+        return "tep-"  + std::string(key_.str()) + "-" +
                         string(ipaddr2str(&remote_ip_));
     }
 

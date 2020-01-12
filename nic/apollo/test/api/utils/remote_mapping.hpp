@@ -89,7 +89,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const remote_mapping_feeder& obj) {
     os << "remote mapping feeder =>"
-        << " vpc: " << obj.vpc.tostr()
+        << " vpc: " << obj.vpc.str()
         << " subnet_id: " << obj.subnet.id
         << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
         << " vnic_mac: " << mac2str(obj.vnic_mac_u64)

@@ -249,7 +249,7 @@ create_nat_port_block_grpc (pds_nat_port_block_spec_t *spec)
         if (!status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
             printf("create nat port block %s failed, status %u response %u "
-                   "err %u\n", spec ? spec->key.tostr() : "", status.ok(),
+                   "err %u\n", spec ? spec->key.str() : "", status.ok(),
                    response.apistatus(), status.error_code());
             return SDK_RET_ERR;
         }
@@ -273,7 +273,7 @@ create_vpc_grpc (pds_vpc_spec_t *spec)
         if (!ret_status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
             printf("create vpc %s failed, status %u, response %u, err %u\n",
-                   spec ? spec->key.tostr() : "", ret_status.ok(),
+                   spec ? spec->key.str() : "", ret_status.ok(),
                    response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
@@ -298,7 +298,7 @@ update_vpc_grpc (pds_vpc_spec_t *vpc)
         if (!ret_status.ok() ||
             (response.apistatus() != types::API_STATUS_OK)) {
             printf("update vpc %s failed, status %u, response %u, err %u\n",
-                   vpc ? vpc->key.tostr() : "", ret_status.ok(),
+                   vpc ? vpc->key.str() : "", ret_status.ok(),
                    response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }
@@ -351,7 +351,7 @@ read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
         ret_status = g_vpc_stub_->VPCGet(&context, g_vpc_req_get, &response);
         if (!ret_status.ok()) {
             printf("get vpc %s failed,status %u, response %u, err %u\n",
-                   key ? key->tostr() : "", ret_status.ok(),
+                   key ? key->str() : "", ret_status.ok(),
                    response.apistatus(), ret_status.error_code());
             return SDK_RET_ERR;
         }

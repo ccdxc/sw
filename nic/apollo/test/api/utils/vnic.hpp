@@ -65,7 +65,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
     os << &spec->key
-       << " subnet id: " << std::string(spec->subnet.tostr())
+       << " subnet id: " << std::string(spec->subnet.str())
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
@@ -106,7 +106,7 @@ operator<<(std::ostream& os, const pds_vnic_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vnic_feeder& obj) {
     os << "VNIC feeder =>"
-       << " key: " << std::string(obj.key.tostr());
+       << " key: " << std::string(obj.key.str());
     return os;
 }
 

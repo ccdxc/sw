@@ -49,7 +49,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_svc_mapping_key_t *key) {
-    os << " vpc: " << key->vpc.tostr()
+    os << " vpc: " << key->vpc.str()
        << " backend ip: " << key->backend_ip
        << " backend port: " << key->backend_port;
     return os;

@@ -17,7 +17,7 @@ tep_create_validate (pds_tep_spec_t *spec)
             (spec->encap.val.vnid == 0)) {
             PDS_TRACE_ERR("Service tunnel {}, tunnel ip {} has invalid "
                           "vxlan encap ({}, {})",
-                          spec->key.tostr(),
+                          spec->key.str(),
                           ipaddr2str(&spec->remote_ip),
                           spec->encap.type, spec->encap.val.vnid);
             return sdk::SDK_RET_INVALID_ARG;
@@ -33,12 +33,12 @@ tep_create (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     if (agent_state::state()->find_in_tep_db(key) != NULL) {
         PDS_TRACE_ERR("Tunnel {} create failed, key exists already",
-                      key->tostr());
+                      key->str());
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = tep_create_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to create tunnel {}, tunnel ip {}, err {}",
-                      spec->key.tostr(), ipaddr2str(&spec->remote_ip), ret);
+                      spec->key.str(), ipaddr2str(&spec->remote_ip), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {

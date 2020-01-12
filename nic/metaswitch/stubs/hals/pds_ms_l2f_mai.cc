@@ -43,11 +43,11 @@ l2f_local_mac_ip_add (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
     ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
     if (ip_addr_is_zero(&ip)) {
         SDK_TRACE_DEBUG("Advertise MAC learn for Subnet %s BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
-                        subnet_key.tostr(), bd_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
+                        subnet_key.str(), bd_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
     } else {
         SDK_TRACE_DEBUG("Advertise IP-MAC learn for Subnet %s BD %d IP %s MAC %s"
                         " LIF 0x%x MS-LIF 0x%x",
-                        subnet_key.tostr(), bd_id, ipaddr2str(&ip), macaddr2str(mac),
+                        subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac),
                         lif_ifindex, ms_lif_index);
     }
 

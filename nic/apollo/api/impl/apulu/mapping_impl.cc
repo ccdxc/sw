@@ -371,7 +371,7 @@ mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                     spec->subnet.id,
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
-                        spec->tep.tostr() : spec->nh_group.tostr());
+                        spec->tep.str() : spec->nh_group.str());
     if (spec->key.type == PDS_MAPPING_TYPE_L2) {
         vpc = NULL;
         subnet = subnet_find(&spec->key.subnet);

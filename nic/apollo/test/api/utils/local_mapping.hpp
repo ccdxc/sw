@@ -88,7 +88,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const local_mapping_feeder& obj) {
     os << "local mapping feeder =>"
-        << " vpc: " << obj.vpc.tostr()
+        << " vpc: " << obj.vpc.str()
         << " subnet_id: " << obj.subnet.id
         << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
         << " vnic_id: " << obj.vnic.id

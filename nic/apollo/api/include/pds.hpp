@@ -37,10 +37,11 @@
 typedef struct pds_obj_key_s pds_obj_key_t;
 struct pds_obj_key_s {
     char id[PDS_MAX_KEY_LEN + 1];
+
     void reset(void) {
         memset(id, 0, sizeof(id));
     }
-    char *tostr(void) const {
+    char *str(void) const {
         char *buf;
         static thread_local uint8_t next_str = 0;
         static thread_local char key_str[4][PDSM_MAX_KEY_STR_LEN + 1];
@@ -54,19 +55,19 @@ struct pds_obj_key_s {
         return buf;
     }
     bool operator==(const pds_obj_key_t& other) const {
-        if(!memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
+        if (!memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
             return true;
         }
         return false;
     }
     bool operator!=(const pds_obj_key_t& other) const {
-        if(memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
+        if (memcmp(id, other.id, PDS_MAX_KEY_LEN)) {
             return true;
         }
         return false;
     }
 } __PACK__;
-extern const pds_obj_key_t k_pds_obj_key_invalid;
+extern const pds_obj_key_t k_pds_obj_key_invalid;    // invalid key (all 0s)
 
 // helper class for hash computation of the object key
 class pds_obj_key_hash {

@@ -162,7 +162,7 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
         "Initializing subnet (vpc %s, subnet %u), v4/v6 pfx %s/%s,\n"
         "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
         "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
-        "vnid %u", spec->vpc.tostr(), spec->key.id,
+        "vnid %u", spec->vpc.str(), spec->key.id,
         ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
         ipv4addr2str(spec->v4_vr_ip), ipaddr2str(&spec->v6_vr_ip),
         macaddr2str(spec->vr_mac), spec->v4_route_table.id,
@@ -244,7 +244,7 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (vpc_ != spec->vpc) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"vpc\" "
                       "from %s to %s on subnet %s",
-                      vpc_.tostr(), spec->vpc.tostr(), key2str().c_str());
+                      vpc_.str(), spec->vpc.str(), key2str().c_str());
             return SDK_RET_INVALID_ARG;
     }
     if ((fabric_encap_.type != spec->fabric_encap.type) ||

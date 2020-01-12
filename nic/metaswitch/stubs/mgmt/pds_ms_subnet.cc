@@ -245,7 +245,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.tostr(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);  
         pds::EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
         pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -253,7 +253,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.tostr(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);  
         pds::CPInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -275,7 +275,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     }
 
     if (ms_upd_flags.irb) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.tostr(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);  
         // Configure IRB IP Address
         ip_prefix_t ip_prefix;
         ip_prefix.len = subnet_spec->v4_prefix.len;
@@ -316,12 +316,12 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
-                       spec->key.tostr(), bd_id, ret_status);
+                       spec->key.str(), bd_id, ret_status);
         return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     SDK_TRACE_DEBUG ("subnet %s bd %d create is successfully processed\n", 
-                     spec->key.tostr(), bd_id);
+                     spec->key.str(), bd_id);
     return SDK_RET_OK;
 }
 
@@ -334,13 +334,13 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
     if (ret_status != types::ApiStatus::API_STATUS_OK) {
         SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
-                       spec->key.tostr(), bd_id, ret_status);
+                       spec->key.str(), bd_id, ret_status);
         return pds_ms_api_to_sdk_ret (ret_status);
     }
 
     cache_subnet_spec (spec, bd_id, true /* Delete */);
     SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed\n", 
-                      spec->key.tostr(), bd_id);
+                      spec->key.str(), bd_id);
     return SDK_RET_OK;
 }
 
@@ -358,7 +358,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
         if (subnet_obj == nullptr) {
             SDK_TRACE_ERR("Update for unknown subnet %s bd %d",
-                          spec->key.tostr(), bd_id);
+                          spec->key.str(), bd_id);
             return SDK_RET_ENTRY_NOT_FOUND;
         }
 
@@ -367,7 +367,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
                     sizeof(state_pds_spec.fabric_encap)) != 0) {
             ms_upd_flags.bd = true;
             SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
-                           spec->key.tostr(), bd_id,
+                           spec->key.str(), bd_id,
                            state_pds_spec.fabric_encap.val.vnid,
                            spec->fabric_encap.val.vnid);
             state_pds_spec.fabric_encap = spec->fabric_encap;
@@ -375,7 +375,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         if (state_pds_spec.host_ifindex != spec->host_ifindex) {
             ms_upd_flags.bd_if = true;
             SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old 0x%x New 0x%x",
-                            spec->key.tostr(), bd_id, state_pds_spec.host_ifindex, 
+                            spec->key.str(), bd_id, state_pds_spec.host_ifindex, 
                             spec->host_ifindex);
             state_pds_spec.host_ifindex = spec->host_ifindex;
         }
@@ -386,7 +386,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         // Diff in any other property needs to be driven through fastpath
         if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
             SDK_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
-                            spec->key.tostr(), bd_id);
+                            spec->key.str(), bd_id);
             fastpath = true;
         }
         // Update the cached subnet spec with the new info
@@ -401,7 +401,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
             // Do not access global state beyond this
             if (ret != SDK_RET_OK) {
                 SDK_TRACE_ERR("Subnet %s BD %d update fastpath fields failed %d",
-                               spec->key.tostr(), bd_id, ret);
+                               spec->key.str(), bd_id, ret);
                 return ret;
             }
         }
@@ -412,12 +412,12 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id, AMB_ROW_ACTIVE);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             SDK_TRACE_ERR ("Failed to process subnet %s field update (error=%d)\n", 
-                            spec->key.tostr(), ret_status);
+                            spec->key.str(), ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
 
         SDK_TRACE_DEBUG ("subnet %s field update is successfully processed\n", 
-                          spec->key.tostr());
+                          spec->key.str());
     }
     return SDK_RET_OK;
 }

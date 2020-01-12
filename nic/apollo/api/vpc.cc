@@ -101,7 +101,7 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_spec_t *spec = &api_ctxt->api_params->vpc_spec;
 
     PDS_TRACE_VERBOSE("Initializing vpc %s, type %u",
-                      spec->key.tostr(), spec->type);
+                      spec->key.str(), spec->type);
     memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
     type_ = spec->type;
     fabric_encap_ = spec->fabric_encap;
@@ -252,7 +252,7 @@ sdk_ret_t
 vpc_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        PDS_TRACE_VERBOSE("Activating vpc %s config", key_.tostr());
+        PDS_TRACE_VERBOSE("Activating vpc %s config", key_.str());
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;

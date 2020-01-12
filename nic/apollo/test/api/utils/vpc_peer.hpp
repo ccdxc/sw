@@ -52,8 +52,8 @@ operator<<(std::ostream& os, const pds_vpc_peer_key_t *key) {
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vpc_peer_spec_t *spec) {
     os << &spec->key
-       << " vpc1: " << spec->vpc1.tostr()
-       << " vpc2: " << spec->vpc2.tostr();
+       << " vpc1: " << spec->vpc1.str()
+       << " vpc2: " << spec->vpc2.str();
     return os;
 }
 
@@ -77,8 +77,8 @@ inline std::ostream&
 operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
     os << "VPC Peer feeder =>"
         << " id: " << obj.key.id
-        << " vpc1 : " << obj.vpc1.tostr()
-        << " vpc2 : " << obj.vpc2.tostr() << " ";
+        << " vpc1 : " << obj.vpc1.str()
+        << " vpc2 : " << obj.vpc2.str() << " ";
     return os;
 }
 

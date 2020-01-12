@@ -179,7 +179,7 @@ public:
 
     /// \brief    return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "svc-(" + std::string(key_.vpc.tostr()) + "," +
+        return "svc-(" + std::string(key_.vpc.str()) + "," +
                     ipaddr2str(&key_.backend_ip) + ":" +
                     std::to_string(key_.backend_port) + ")";
 

@@ -163,7 +163,7 @@ public:
 
     /**< @brief    return stringified key of the object (for debugging) */
     virtual string key2str(void) const override {
-        return "policy-"  + std::string(key_.tostr());
+        return "policy-"  + std::string(key_.str());
     }
 
     /**

@@ -106,7 +106,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "nat-port-block-" + std::string(key_.tostr());
+        return "nat-port-block-" + std::string(key_.str());
     }
 
     /// \brief          helper function to get key given NAT port block

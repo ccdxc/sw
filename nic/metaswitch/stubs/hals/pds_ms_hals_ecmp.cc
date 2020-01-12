@@ -155,7 +155,7 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
         SDK_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %sto Overlay NHGroup %d",
                         ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
                         tep_obj->properties().hal_tep_idx,
-                        nhgroup_spec.nexthops[i].tep.tostr(),
+                        nhgroup_spec.nexthops[i].tep.str(),
                         nhgroup_spec.key.id);
         ++i;
     }

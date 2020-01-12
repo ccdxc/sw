@@ -136,7 +136,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "nh-group-" + std::string(key_.tostr());
+        return "nh-group-" + std::string(key_.str());
     }
 
     /// \brief     helper function to get key given nexthop group
