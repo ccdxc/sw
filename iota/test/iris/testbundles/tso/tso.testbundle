@@ -7,7 +7,7 @@ meta:
 testcases:
     -   name    : TSO
         testcase: testcases.drivers.drivertso
-        disable : False
+        disable : True
         ignore  : True
         iterators :
             type               : nested
@@ -23,7 +23,7 @@ testcases:
             iperfthreads     :  1
     -   name    : TSO_VLAN
         testcase: testcases.drivers.drivertso
-        disable : False
+        disable : True
         ignore  : True
         iterators :
             type               : nested
