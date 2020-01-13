@@ -18,11 +18,12 @@ type apiRequirements struct {
 	sync.Mutex
 	reqs []apiintf.Requirement
 	// tracks the reference requirement for a key
-	reqIdx  map[string]int
-	reqKey  []string
-	overlay apiintf.OverlayInterface
-	graphdb graph.Interface
-	apisrv  apiserver.Server
+	reqIndxMu sync.Mutex
+	reqIdx    map[string]int
+	reqKey    []string
+	overlay   apiintf.OverlayInterface
+	graphdb   graph.Interface
+	apisrv    apiserver.Server
 }
 
 // NewRequirementSet returns a new initialized API Requirements object.
@@ -50,6 +51,8 @@ func (r *apiRequirements) NewConsUpdateRequirement(reqs []apiintf.ConstUpdateIte
 }
 
 func (r *apiRequirements) addRequirement(tpe apiintf.ReqType, key string, in apiintf.Requirement) {
+	r.reqIndxMu.Lock()
+	defer r.reqIndxMu.Unlock()
 	if id, ok := r.reqIdx[key]; ok {
 		r.reqs[id] = in
 		return
@@ -61,6 +64,8 @@ func (r *apiRequirements) addRequirement(tpe apiintf.ReqType, key string, in api
 }
 
 func (r *apiRequirements) delRequirement(tpe apiintf.ReqType, key string) {
+	r.reqIndxMu.Lock()
+	defer r.reqIndxMu.Unlock()
 	if id, ok := r.reqIdx[key]; ok {
 		r.reqs = append(r.reqs[:id], r.reqs[id+1:]...)
 		r.reqKey = append(r.reqKey[:id], r.reqKey[id+1:]...)

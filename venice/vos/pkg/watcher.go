@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	gogoproto "github.com/gogo/protobuf/types"
 	"github.com/minio/minio-go"
 
 	"github.com/pensando/sw/api"
@@ -184,23 +183,14 @@ func (w *storeWatcher) makeEvent(event minio.NotificationEvent) (kvstore.WatchEv
 	obj := &objstore.Object{}
 	obj.Defaults("v1")
 
-	// TODO: Since we don't have the meta in minio event,
-	// currently there is no way to get the actual creation time of the object.
-	// This is a shortcut fix to make elastic index this object with valid creation and mod-times.
-	c, _ := gogoproto.TimestampProto(time.Now())
-	obj.CreationTime = api.Timestamp{
-		Timestamp: *c,
-	}
-	obj.ModTime = api.Timestamp{
-		Timestamp: *c,
-	}
-
+	stat, err := w.client.StatObject(event.S3.Bucket.Name, event.S3.Object.Key, minio.StatObjectOptions{})
 	parts := strings.Split(event.S3.Bucket.Name, ".")
 	if len(parts) == 2 {
 		obj.Tenant = parts[0]
 		obj.Namespace = parts[1]
 	}
 	obj.Name = event.S3.Object.Key
+	updateObjectMeta(&stat, &obj.ObjectMeta)
 	obj.Status.Digest = event.S3.Object.ETag
 	obj.Status.Size_ = event.S3.Object.Size
 	t, err := time.Parse(time.RFC3339, event.EventTime)

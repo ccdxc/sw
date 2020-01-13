@@ -2417,6 +2417,120 @@ func TestStaging(t *testing.T) {
 			t.Fatalf("commit should have succeeded (%s)", err)
 		}
 	}
+	{ // Test Scale commit with 1000 hosts and 4k Workloads
+		makeMac := func(in int) string {
+			var b = make([]byte, 6)
+			b[5] = byte(in % 256)
+			b[4] = byte((in / 256) % 256)
+			b[3] = byte((in / (256 * 256)) % 256)
+			b[2] = byte((in / (256 * 256 * 256)) % 256)
+			return fmt.Sprintf("%02x%02x.%02x%02x.%02x%02x", b[0], b[1], b[2], b[3], b[4], b[5])
+		}
+		numHosts := 1000
+		numWLs := 4000
+		HostCreateFunc := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+			host := cluster.Host{
+				ObjectMeta: api.ObjectMeta{
+					Name: fmt.Sprintf("scaleHost-%d", iter),
+				},
+				Spec: cluster.HostSpec{
+					DSCs: []cluster.DistributedServiceCardID{
+						{MACAddress: makeMac(iter)},
+					},
+				},
+			}
+			_, err := apicl.ClusterV1().Host().Create(ctx, &host)
+			if err != nil {
+				log.Errorf("failed to create Host [%v](%s)", host.Name, err)
+			}
+			return nil
+		}
+		wf := workfarm.New(20, time.Second*60, HostCreateFunc)
+		statsCh, err := wf.Run(ctx, numHosts, 0, time.Second*60, nil)
+		AssertOk(t, err, "failed to start work farm (%s)", err)
+		stats := <-statsCh
+		t.Logf("Host create stats [%v]", stats)
+
+		wlCreateFn := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+			wl := workload.Workload{
+				ObjectMeta: api.ObjectMeta{
+					Name:      fmt.Sprintf("scaleWL-%d", iter),
+					Tenant:    globals.DefaultTenant,
+					Namespace: globals.DefaultNamespace,
+				},
+				Spec: workload.WorkloadSpec{
+					HostName: fmt.Sprintf("scaleHost-%d", (iter % numHosts)),
+					Interfaces: []workload.WorkloadIntfSpec{
+						{
+							ExternalVlan: uint32((iter % 4000) + 1),
+							MicroSegVlan: uint32((iter % 4000) + 1),
+							MACAddress:   makeMac(iter),
+						},
+					},
+				},
+			}
+			_, err := stagecl.WorkloadV1().Workload().Create(ctx, &wl)
+			if err != nil {
+				log.Errorf("failed to create Workload [%v](%s)", wl.Name, err)
+			}
+			return nil
+		}
+		wf1 := workfarm.New(20, time.Second*90, wlCreateFn)
+		statsCh, err = wf1.Run(ctx, numWLs, 0, time.Second*90, nil)
+		AssertOk(t, err, "failed to start work farm (%s)", err)
+		stats = <-statsCh
+		t.Logf("WL create stats [%v]", stats)
+
+		// We should be able to commit the buffer
+		caction := staging.CommitAction{}
+		caction.Name = bufName
+		caction.Tenant = tenantName
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+		if err != nil {
+			t.Fatalf("commit should have succeeded (%s)", err)
+		}
+
+		// Clean up
+		hostDelFunc := func(ctx context.Context, id, iter int, userctx interface{}) error {
+			objm := &api.ObjectMeta{
+				Name: fmt.Sprintf("scaleHost-%d", iter),
+			}
+			stagecl.ClusterV1().Host().Delete(ctx, objm)
+			return nil
+		}
+		wlDelFn := func(ctx context.Context, id, iter int, userCtx interface{}) error {
+			objm := &api.ObjectMeta{
+				Tenant:    globals.DefaultTenant,
+				Namespace: globals.DefaultNamespace,
+				Name:      fmt.Sprintf("scaleWL-%d", iter),
+			}
+			stagecl.WorkloadV1().Workload().Delete(ctx, objm)
+			return nil
+		}
+
+		wf1 = workfarm.New(20, time.Second*90, wlDelFn)
+		statsCh, err = wf1.Run(ctx, numWLs, 0, time.Second*90, nil)
+		AssertOk(t, err, "failed to start work farm (%s)", err)
+		stats = <-statsCh
+		t.Logf("WL delete stats [%v]", stats)
+
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+		if err != nil {
+			t.Fatalf("commit should have succeeded (%s)", err)
+		}
+
+		wf = workfarm.New(20, time.Second*60, hostDelFunc)
+		statsCh, err = wf.Run(ctx, numHosts, 0, time.Second*60, nil)
+		AssertOk(t, err, "failed to start work farm (%s)", err)
+		stats = <-statsCh
+		t.Logf("Host delete stats [%v]", stats)
+
+		_, err = restcl.StagingV1().Buffer().Commit(ctx, &caction)
+		if err != nil {
+			t.Fatalf("commit should have succeeded (%s)", err)
+		}
+
+	}
 	{ // test restore path
 		lopts := api.ListWatchOptions{}
 		lst, err := restcl.BookstoreV1().Customer().List(ctx, &lopts)
@@ -3483,7 +3597,7 @@ func TestWatcherEviction(t *testing.T) {
 		for i := range books {
 			_, err := apicl.BookstoreV1().Book().Delete(ctx, &books[i].ObjectMeta)
 			if err != nil {
-				t.Errorf("failed to delete order [%v](%s)\n", books[i].Name, err)
+				log.Errorf("failed to delete order [%v](%s)\n", books[i].Name, err)
 			}
 		}
 		t.Logf("done deleting current objects")

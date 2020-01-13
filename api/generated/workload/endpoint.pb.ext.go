@@ -300,7 +300,7 @@ func (m *EndpointStatus) References(tenant string, path string, resp map[string]
 		uref, ok := resp[tag]
 		if !ok {
 			uref = apiintf.ReferenceObj{
-				RefType: apiintf.ReferenceType("NamedRef"),
+				RefType: apiintf.ReferenceType("WeakRef"),
 				RefKind: "Network",
 			}
 		}

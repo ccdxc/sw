@@ -1252,13 +1252,15 @@ func TestLargeBufferCommit(t *testing.T) {
 	}
 
 	ov.maxOvEntries = 4
-	// Verify Commit should pass
+	// Verify Commit should fail
 	err := ov.Commit(ctx, nil)
 	Assert(t, err != nil, "expecting Commit to fail")
 	txn.Ops = nil
 
+	// Verify Commit should pass
 	lctx := apiutils.SetVar(ctx, apiutils.CtxKeyAPISrvLargeBuffer, true)
-	err = ov.Commit(lctx, nil)
+	otxn := ov.NewTxn()
+	_, err = otxn.Commit(lctx)
 	AssertOk(t, err, "expecting Commit to pass")
 	Assert(t, len(txn.Ops) == 100, "expecgting 100 operations in the transaction got %v", len(txn.Ops))
 

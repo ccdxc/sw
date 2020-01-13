@@ -112,7 +112,7 @@
   ],
   "workload.EndpointStatus": [
     {
-      "Type": "NamedRef",
+      "Type": "WeakRef",
       "To": "network/Network",
       "Field": "Network"
     }

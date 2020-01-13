@@ -2402,6 +2402,12 @@ func addRelations(f *descriptor.Field) error {
 		glog.V(1).Infof("Checking relation to %s", *f.Name)
 		name := f.Message.File.GoPkg.Name + "." + *f.Message.Name
 		if fr, ok := r.(venice.ObjectRln); ok {
+			for _, v := range relMap[name] {
+				if fr.Type == v.Type && fr.To == v.To && v.Field == *f.Name {
+					glog.V(1).Infof("relation already added [%v]", v)
+					return nil
+				}
+			}
 			glog.V(1).Infof("adding relation to %s.%s", name, *f.Name)
 			m := relationRef{Type: fr.Type, To: fr.To, Field: *f.Name}
 			relMap[name] = append(relMap[name], m)
@@ -2426,8 +2432,18 @@ func getRelMap(path string) error {
 			glog.V(1).Infof("Json Unmarshall of rel map file failed ignoring current file")
 		} else {
 			for k, v := range rmap {
-				if _, ok := relMap[k]; ok {
-					relMap[k] = append(relMap[k], v...)
+				if v1, ok := relMap[k]; ok {
+					for _, rv1 := range v1 {
+						found := false
+						for _, rv := range v {
+							if rv1.To == rv.To && rv1.Type == rv.Type && rv1.Field == rv.Field {
+								found = true
+							}
+						}
+						if !found {
+							relMap[k] = append(relMap[k], rv1)
+						}
+					}
 				} else {
 					relMap[k] = v
 				}
@@ -2469,6 +2485,7 @@ func genRelMapGo(path string) (relationsMap, error) {
 	sort.Strings(keys)
 	ret.Keys = keys
 	ret.Map = relMap
+	glog.V(1).Infof("returning Relations map [%v]", ret)
 	return ret, nil
 }
 

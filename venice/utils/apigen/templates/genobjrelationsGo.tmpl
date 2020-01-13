@@ -1,4 +1,4 @@
-{{range .Messages}}{{range .Fields}}{{$ignore := addRelations .}}{{end}}{{end}}{{$out := (genRelMapGo "../generated/relations/schema.json")}}
+{{$out := (genRelMapGo "../generated/relations/schema.json")}}
 package relations
 
 import apiintf "github.com/pensando/sw/api/interfaces"

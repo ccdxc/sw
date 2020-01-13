@@ -742,7 +742,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		rstat.Spec = obj.Spec
 	}
 
-	log.Infof("[config-restore] starting restore config restore operation to snapshot [%v]", obj.Spec.SnapshotPath)
+	log.Infof("[config-restore] snapshot [%v] is valid, proceeding to restore", obj.Spec.SnapshotPath)
 
 	// Lock the apiserver to stop processing any more API calls
 	ctrl := apiserver.Controls{MaintMode: true, MaintReason: "Configuration restore operation"}
@@ -770,7 +770,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 					log.Errorf("[config-restore] failed to stat objects for [%v/%v](%v)", g, k, err)
 					return fmt.Errorf("failed to stat objects for [%v/%v](%v)", g, k, err)
 				}
-				log.Infof("[config-restore] deleting [%v/%v]", g, k)
+				log.Debugf("[config-restore] deleting [%v/%v]", g, k)
 				for i := range stat {
 					if stat[i].Valid {
 						kvi.Delete(ictx, stat[i].Key, nil)
@@ -824,7 +824,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		}
 	}
 
-	log.Infof("[config-restore] starting write to overlay for snapshot [%v]", obj.Spec.SnapshotPath)
+	log.Infof("[config-restore] [%v] delete from overlay succeeded, starting write to overlay", obj.Spec.SnapshotPath)
 	writer := apisrvcache.SnapshotWriter(rdr)
 	err = writer.Write(pctx, kvs)
 	if err != nil || failWrite {
@@ -838,8 +838,6 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		}
 		return rstat, false, &retErr
 	}
-
-	log.Infof("[config-restore] Committing Snapshot for restore [%v]", obj.Spec.SnapshotPath)
 
 	// Prepare to commit the restore buffer
 	if backupName == "" {
@@ -863,6 +861,8 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 			}
 		}
 	}
+
+	log.Infof("[config-restore] Committing restore overlay [%v]", obj.Spec.SnapshotPath)
 	rstat.TypeMeta = obj.TypeMeta
 	rstat.Spec = obj.Spec
 	rstat.Status = cluster.SnapshotRestoreStatus{}
@@ -950,7 +950,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		ov.ClearBuffer(ctx, nil)
 	}
 	log.Infof("Restore operation completed successfully for [%s][%v]", obj.Name, obj.Spec.SnapshotPath)
-	recorder.Event(eventtypes.CONFIG_RESTORED, fmt.Sprintf("configuration was restored to snapshot [%v]", obj.Name), &obj)
+	recorder.Event(eventtypes.CONFIG_RESTORED, fmt.Sprintf("configuration was restored to snapshot [%v]", obj.Spec.SnapshotPath), &obj)
 	return rstat, false, nil
 }
 

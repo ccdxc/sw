@@ -57,6 +57,7 @@ type MemKv struct {
 	listVersioner runtime.Versioner
 	returnErr     bool // when set, all interface methods will return an error
 	revMode       RevisionMode
+	maxTxnOps     int
 }
 
 // Cluster memkv cluster (equivalent to an etcd backend cluster)
@@ -587,6 +588,11 @@ func (f *MemKv) commitTxn(t *txn) (kvstore.TxnResponse, error) {
 		return ret, errors.New("returnErr set")
 	}
 
+	// Check for max ops
+	if f.maxTxnOps > 0 && (len(t.ops)+len(t.cmps) > f.maxTxnOps) {
+		return ret, errors.New("too many operations in transaction")
+	}
+
 	err := compCheck(f, t.cmps...)
 	if err != nil {
 		return ret, err
@@ -718,6 +724,11 @@ func (f *MemKv) SetErrorState(state bool) {
 // SetRevMode sets the revision mode
 func (f *MemKv) SetRevMode(val RevisionMode) {
 	f.revMode = val
+}
+
+// SetMaxTxnOps sets the maximum number of elements in the txn allowed
+func (f *MemKv) SetMaxTxnOps(val int) {
+	f.maxTxnOps = val
 }
 
 // Lease takes a lease on a key and renews in background

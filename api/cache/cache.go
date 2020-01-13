@@ -152,7 +152,7 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 	r.Lock()
 
 	defer func() {
-		log.Infof("returning [%v] (%v)", n, err)
+		log.Debugf("returning [%v] (%v)", n, err)
 	}()
 	written := 0
 	total := len(p)
@@ -180,7 +180,7 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 				log.Infof("Skipping kind [%s][%s]", grp, kind)
 				continue
 			}
-			log.Infof("processing group[%v] kind [%v]", grp, kind)
+			log.Debugf("processing group[%v] kind [%v]", grp, kind)
 			lknd := r.sch.GetSchema(grp + "." + kind + "List")
 			if lknd == nil {
 				r.curType++
@@ -214,7 +214,7 @@ func (r *snapshotReader) Read(p []byte) (n int, err error) {
 				continue
 			}
 			if len(robjs) > 0 {
-				log.Infof("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
+				log.Debugf("Prefix is [%v]  of [%d] objects", prefix, len(robjs))
 			}
 
 			r.curObjs = robjs
@@ -787,6 +787,7 @@ func (c *cache) Start() error {
 			// We have to set the revision mode to cluster mode.
 			mkv := k.(*memkv.MemKv)
 			mkv.SetRevMode(memkv.ClusterRevision)
+			mkv.SetMaxTxnOps(12 * 1024)
 		}
 		c.pool.AddToPool(k)
 	}

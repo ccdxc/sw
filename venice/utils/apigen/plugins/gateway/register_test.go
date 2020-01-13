@@ -3352,6 +3352,20 @@ func TestGetMsgMap(t *testing.T) {
 		location:<path:4 path:3 path:2 path:0 leading_comments:"cli-tags: verbose-only=false ins=test\ncli-help: Test Status string">
 		location:<path:4 path:3 path:2 path:1 leading_comments:"cli-tags: ins=test1 id=TestKey2" >
 		>
+		`, `
+		name: 'example2.proto'
+		package: 'example'
+		syntax: 'proto3'
+		options:<[venice.fileApiServerBacked]: false>
+		message_type <
+			name: 'msg1'
+			field <
+				name: 'type1'
+				type: TYPE_INT32
+				number: 1
+				options:<[venice.storageTransformer]: "OneStr(str)">
+			>
+		>
 		`,
 	} {
 		var fd descriptor.FileDescriptorProto
@@ -3483,6 +3497,15 @@ func TestGetMsgMap(t *testing.T) {
 		t.Fatalf("cli flags not found %+v", cliFlagMap)
 	} else if len(cf) != 1 && cf[0].ID != "TestKey" && cf[0].Type != "String" {
 		t.Fatalf("invalid cli flag %+v", cliFlagMap)
+	}
+
+	file2, err := r.LookupFile("example2.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	_, err = getMsgMap(file2)
+	if err != nil {
+		t.Fatalf("failed to getMsgMap")
 	}
 }
 

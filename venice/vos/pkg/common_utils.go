@@ -20,10 +20,19 @@ func updateObjectMeta(info *minio.ObjectInfo, ometa *api.ObjectMeta) {
 		if err == nil {
 			ometa.CreationTime.Timestamp = *ts
 		}
+	} else {
+		log.Errorf("[%v]failed to parse creation time [%s](%s)", ometa.Name, info.Metadata.Get(key), err)
 	}
-	ts, err := types.TimestampProto(info.LastModified)
-	if err == nil {
-		ometa.ModTime.Timestamp = *ts
+	if !info.LastModified.IsZero() {
+		ts, err := types.TimestampProto(info.LastModified)
+		if err == nil {
+			ometa.ModTime.Timestamp = *ts
+		}
+	} else {
+		// minio failed to give the mod time. Log error and do the next best thing to mark mod time as creationtime
+		log.Errorf("failed to parse modification time [%s](%s)", info.LastModified, err)
+		ometa.ModTime.Timestamp = ometa.CreationTime.Timestamp
+
 	}
 	ometa.Labels = make(map[string]string)
 	for k, v := range info.Metadata {

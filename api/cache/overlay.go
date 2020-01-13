@@ -1224,6 +1224,31 @@ func (c *overlay) verify(ctx context.Context, server apiserver.Server, maxErrors
 	return ret, c.verVer
 }
 
+func (c *overlay) verifyRestoreBuffer(ctx context.Context, maxErrors int) error {
+	c.comparators = nil
+	c.reqs.Clear(ctx)
+	for k, v := range c.overlay {
+		switch v.oper {
+		case operCreate:
+			refs := requirement.GetRefRequirements(ctx, k, apiintf.CreateOper, v.val, c.server, c)
+			if refs != nil {
+				c.reqs.AddRequirement(apiintf.Reference, k, refs)
+			}
+		case operUpdate:
+			refs := requirement.GetRefRequirements(ctx, k, apiintf.UpdateOper, v.val, c.server, c)
+			if refs != nil {
+				c.reqs.AddRequirement(apiintf.Reference, k, refs)
+			}
+		case operDelete:
+			refs := requirement.GetRefRequirements(ctx, k, apiintf.DeleteOper, v.val, c.server, c)
+			if refs != nil {
+				c.reqs.AddRequirement(apiintf.Reference, k, refs)
+			}
+		}
+	}
+	return nil
+}
+
 func (c *overlay) Verify(ctx context.Context) (apiintf.OverlayStatus, error) {
 	defer c.Unlock()
 	c.Lock()
@@ -1275,12 +1300,19 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 		parent: c.CacheInterface.(*cache),
 	}
 	applyComps := func(ctxn *cacheTxn) {
+		cmap := make(map[string]bool)
 		// Add all comparators
 		if lb {
 			// This is applied with the cache locked. Comparators ane not needed in this case
 			return
 		}
 		for _, cp := range c.comparators {
+			ckey := fmt.Sprintf("%v-%v-%v-%v", cp.Key, cp.Version, cp.Operator, cp.Target)
+			if _, ok := cmap[ckey]; ok {
+				log.Infof("existing Comparator, skipping")
+				continue
+			}
+			cmap[ckey] = true
 			// Filter comparators before ading them
 			//  - comparator for version > 0 and overlay is creating the object.
 			if ovobj, ok := c.overlay[cp.Key]; ok {
@@ -1292,6 +1324,12 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 			ctxn.AddComparator(cp)
 		}
 		for _, cp := range c.preCommitComps {
+			ckey := fmt.Sprintf("%v-%v-%v-%v", cp.Key, cp.Version, cp.Operator, cp.Target)
+			if _, ok := cmap[ckey]; ok {
+				log.Infof("existing Comparator, skipping")
+				continue
+			}
+			cmap[ckey] = true
 			// Filter comparators before ading them
 			//  - comparator for version > 0 and overlay is creating the object.
 			if ovobj, ok := c.overlay[cp.Key]; ok {
@@ -1368,7 +1406,11 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 		} else {
 			sCount++
 		}
-		log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, v.oper)
+		oper := string(v.oper)
+		if v.touch {
+			oper = "touch"
+		}
+		log.Infof("[%v]Adding key [%v] oper [%v] to txn", c.id, k, oper)
 		switch v.oper {
 		case operCreate:
 			ctxn.Create(k, v.val)
@@ -1666,9 +1708,20 @@ func (t *overlayTxn) Commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	if kv == nil {
 		return kvstore.TxnResponse{}, errors.New("no backend KV store connection")
 	}
+	lb := false
+	if lbi, ok := apiutils.GetVar(ctx, apiutils.CtxKeyAPISrvLargeBuffer); ok {
+		lb = lbi.(bool)
+	}
 	t.context = setPreCommitApply(ctx)
 	defer t.ov.Unlock()
 	t.ov.Lock()
+	if lb {
+		err := t.ov.verifyRestoreBuffer(ctx, maxErrorReport)
+		if err != nil {
+			return kvstore.TxnResponse{}, err
+		}
+	}
+
 	ret, err := t.ov.commit(ctx, 0, t)
 	return ret, err
 }
