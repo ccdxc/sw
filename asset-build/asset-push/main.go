@@ -32,10 +32,8 @@ func main() {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:   "assets-server-colo, ac",
-			Value:  asset.EndpointColo,
-			EnvVar: "ASSETS_HOST_COLO",
-			Usage:  "host name of colo asset server. if hostname is NULL, it means not push to colo",
+			Name:  "assets-server-colo, ac",
+			Usage: "host name of colo asset server",
 		},
 		cli.StringFlag{
 			Name:   "assets-server-hq, ah",
@@ -71,7 +69,7 @@ func action(ctx *cli.Context) error {
 	bucket := ctx.Args()[0]
 	dirName, version, filename := ctx.Args()[1], ctx.Args()[2], ctx.Args()[3]
 	remote := []string{}
-	if ctx.GlobalString("assets-server-colo") != "NULL" {
+	if ctx.GlobalString("assets-server-colo") != "" {
 		remote = append(remote, ctx.GlobalString("assets-server-colo"))
 	}
 	if ctx.GlobalString("assets-server-hq") != "NULL" {
