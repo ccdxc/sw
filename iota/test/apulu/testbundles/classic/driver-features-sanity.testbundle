@@ -1,0 +1,204 @@
+meta:
+    name    : ionicdrv
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+
+testcases:
+    -   name    : UplinkIntf_INTR_COAL
+        testcase: testcases.drivers.interruptcoalescing
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            pktsize            : [ 64 ]
+            coales_interval    : [ 0, 2, 3, 189, 193]
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            coales_period        : 3
+            max_coales_interval  : 192
+            type           : remote_only
+            #capture_pcap  : True
+
+    -   name    : IntfNames
+        testcase: testcases.drivers.intf_names
+        enable  : True
+
+    #XXX maybe needs a larger mtu to make this work?
+    #-   name    : TxSG
+    #    testcase: testcases.drivers.txsg
+    #    enable  : True
+    #    ignore  : True
+
+    -   name    : UplinkIntf_TX_RING_SIZE
+        testcase: testcases.drivers.features
+        enable  : True
+        iterators :
+            type               : nested
+            tx_ring_size       : [ 64, 2048, 8192]
+            mtu                : [ '1500']
+            pktsize            : [ 1024]
+            proto              : [ 'udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type         : host
+            iperfthreads      : 1
+            #capture_pcap : True
+
+    -   name    : UplinkIntf_RX_RING_SIZE
+        testcase: testcases.drivers.features
+        enable  : True
+        iterators :
+            type               : nested
+            rx_ring_size       : [ 64, 2048, 8192]
+            mtu                : [ '1500']
+            pktsize            : [ 1024 ]
+            proto              : [ 'udp', 'tcp']
+            ipproto            : [ 'v4']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_TX_QUEUE_SIZE
+        testcase: testcases.drivers.features
+        enable  : False
+        iterators :
+            type               : nested
+            tx_queue_size      : [ 4 ]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_RX_QUEUE_SIZE
+        testcase: testcases.drivers.features
+        enable  : False
+        iterators :
+            type               : nested
+            rx_queue_size      : [ 4]
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_TX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            tx_check_sum       : [ 'off', 'on']
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads   : 2
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_RX_CHECKSUM
+        testcase: testcases.drivers.features
+        disable : False
+        iterators :
+            type               : nested
+            rx_check_sum       : [ 'off', 'on']
+            mtu                : [ '1500' ]
+            pktsize            : [ 1024 ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_TSO
+        testcase: testcases.drivers.features
+        disable : True
+        iterators :
+            type               : nested
+            mtu                : [ '1500']
+            tso_offload        : [ 'off', 'on']
+            #Sg seems to be on for TSO testing.
+            sg_offload         : [ 'on']
+            #TSO requires rx and tx cheksum
+            rx_check_sum       : [ 'on']
+            tx_check_sum       : [ 'on']
+            pktsize            : [ '1024' ]
+            proto              : ['udp', 'tcp']
+            ipproto            : [ 'v4']
+            vlantag            : ['on', 'off']
+        args    :
+            test-type    : host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : UplinkIntf_RSS
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : False
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+            hkey               : [ 'symmetric']
+            indirection_table  : [ 'equal', 'default']
+            rx-flow-hash       : [ 'tcp4']
+            vlantag            : ['on', 'off']
+        args    :
+            type: host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : VLAN_RX_OFFLOAD
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+            rx-vlan-offload    : [ 'on', 'off']
+            vlantag            : [ 'on']
+        args    :
+            type: host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : VLAN_TX_OFFLOAD
+        testcase: testcases.drivers.features
+        disable : False
+        ignore  : True
+        iterators :
+            type               : nested
+            proto              : [ 'tcp']
+            ipproto            : [ 'v4']
+            tx-vlan-offload    : [ 'on', 'off']
+            vlantag            : [ 'on']
+        args    :
+            type: host
+            iperfthreads     :  1
+            #capture_pcap : true
+
+    -   name    : FLR_simple
+        testcase: testcases.drivers.flr
+        enable : true
+
+    -   name    : DriverReloadStress
+        testcase: testcases.drivers.driverreload
+        disable : False
+        iterators :
+        args      :
+            loops     : 10

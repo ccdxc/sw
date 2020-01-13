@@ -6,55 +6,52 @@ import os
 
 from infra.common.logging import logger
 
+import iota.harness.api as api
 import iota.test.apulu.config.utils as utils
 
-__CMDTYPE_SHOW  = ' show '
-__CMDTYPE_CLEAR = ' clear '
+__CMDBASE  = '/nic/bin/pdsctl'
+__CMDSEP  = ' '
 
-__CMDFLAG_YAML = ' --yaml '
-__CMDFLAG_ID   = ' --id '
+__CMDTYPE_SHOW  = 'show'
+__CMDTYPE_CLEAR = 'clear'
 
-def __get_pdsctl_path():
-    rel_path = "nic/build/aarch64/%s/bin/pdsctl" % (utils.GetPipelineName())
-    abs_path = os.path.join(os.environ['WS_TOP'], rel_path)
-    return abs_path
+__CMDFLAG_YAML = '--yaml'
+__CMDFLAG_ID   = '--id'
 
-def __execute_pdsctl(cmd):
+def __execute_pdsctl(host, cmd):
     retval = True
-    try:
-        op = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        output = op.stdout.read().decode('utf-8', 'ignore')
-        # pdsctl does not exit with non-zero code in case of failure
-        # so check for "rpc error" in output and fix retval
-        if 'rpc error' in output:
-            retval = False
-    except subprocess.CalledProcessError as e:
-        output = "Command execution failed."
-        retval = False
-    logger.info("pdsctl: command[%s], output[%s], retval[%d]" \
-                % (cmd, output, retval))
-    return retval, output
 
-def ExecutePdsctlCommand(cmd, args=None, yaml=True):
-    pdsctl = __get_pdsctl_path()
-    finalCmd = pdsctl + cmd
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    api.Trigger_AddNaplesCommand(req, host, cmd)
+
+    resp = api.Trigger(req)
+    resp_cmd = resp.commands[0]
+
+    api.PrintCommandResults(resp_cmd)
+
+    return resp_cmd.exit_code == 0, resp_cmd.stdout
+
+def ExecutePdsctlCommand(host, cmd, args=None, yaml=True):
+    cmd = __CMDBASE + __CMDSEP + cmd
     if args is not None:
-        finalCmd = finalCmd + ' ' + args
+        cmd = cmd + __CMDSEP + args
     if yaml:
-        finalCmd = finalCmd + __CMDFLAG_YAML
-    return __execute_pdsctl(finalCmd)
+        cmd = cmd + __CMDSEP + __CMDFLAG_YAML
+    return __execute_pdsctl(host, cmd)
 
-def ExecutePdsctlShowCommand(cmd, args=None, yaml=True):
-    cmd = __CMDTYPE_SHOW + cmd
-    return ExecutePdsctlCommand(cmd, args, yaml)
+def ExecutePdsctlShowCommand(host, cmd, args=None, yaml=True):
+    cmd = __CMDTYPE_SHOW + __CMDSEP + cmd
+    return ExecutePdsctlCommand(host, cmd, args, yaml)
 
 def GetObjects(objtype):
     # get object name
     objName = objtype.name.lower()
-    return ExecutePdsctlShowCommand(objName)
+    # XXX for each host?
+    return ExecutePdsctlShowCommand(None, objName)
 
 def GetObject(objtype, keyid):
     # get object name
     objName = objtype.name.lower()
-    args = __CMDFLAG_ID + keyid
-    return ExecutePdsctlShowCommand(objName, args)
+    args = __CMDFLAG_ID + __CMDSEP + keyid
+    # XXX for each host?
+    return ExecutePdsctlShowCommand(None, objName, args)

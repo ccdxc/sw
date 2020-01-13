@@ -1,0 +1,17 @@
+meta:
+    name    : ethtool
+    os      : [ linux, freebsd ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+
+testcases:
+    -   name    : info
+        testcase: testcases.drivers.ethtool.info
+        enable  : True
+        args    :
+            type         : remote_only
+
+    -   name    : privflags
+        testcase: testcases.drivers.ethtool.privflags
+        enable  : True
+        args    :
+            type         : remote_only

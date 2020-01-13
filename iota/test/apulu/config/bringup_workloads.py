@@ -15,8 +15,8 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc
 def __add_workloads():
 
     req = topo_svc.WorkloadMsg()
-
     req.workload_op = topo_svc.ADD
+
     for ep in config_api.GetEndpoints():
         wl_msg = req.workloads.add()
         # Make the workload_name unique across nodes by appending node-name
@@ -40,7 +40,58 @@ def __add_workloads():
         if resp is None:
             sys.exit(1)
 
+def __delete_classic_workloads(target_node = None):
 
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.DELETE
+
+    for wl in api.GetWorkloads():
+        if target_node and target_node != wl.node_name:
+            api.Logger.debug("Skipping delete workload for node %s" % wl.node_name)
+            continue
+
+        wl_msg = req.workloads.add()
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+
+    if len(req.workloads):
+        resp = api.DeleteWorkloads(req, skip_store=True)
+        if resp is None:
+            sys.exit(1)
+
+def __readd_classic_workloads(target_node = None):
+
+    req = topo_svc.WorkloadMsg()
+    req.workload_op = topo_svc.ADD
+
+    for wl in api.GetWorkloads():
+        if target_node and target_node != wl.node_name:
+            api.Logger.debug("Skipping add classic workload for node %s" % wl.node_name)
+            continue
+
+        wl_msg = req.workloads.add()
+        wl_msg.ip_prefix = wl.ip_prefix
+        wl_msg.ipv6_prefix = wl.ipv6_prefix
+        wl_msg.mac_address = wl.mac_address
+        wl_msg.encap_vlan = wl.encap_vlan
+        wl_msg.uplink_vlan = wl.uplink_vlan
+        wl_msg.workload_name = wl.workload_name
+        wl_msg.node_name = wl.node_name
+        wl_msg.pinned_port = wl.pinned_port
+        wl_msg.interface_type = wl.interface_type
+        wl_msg.interface = wl.parent_interface
+        wl_msg.parent_interface = wl.parent_interface
+        wl_msg.workload_type = wl.workload_type
+        wl_msg.workload_image = wl.workload_image
+
+    if len(req.workloads):
+        resp = api.AddWorkloads(req, skip_store=True)
+        if resp is None:
+            sys.exit(1)
+
+def ReAddWorkloads(node):
+    __delete_classic_workloads(node)
+    __readd_classic_workloads(node)
 
 def Main(step):
     api.Logger.info("Adding Workloads")
