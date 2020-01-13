@@ -806,13 +806,10 @@ duplicate_rd_atomic:
     phvwr           p.{s2.bt_info.va...s2.bt_info.r_key}, CAPRI_RXDMA_RETH_VA_R_KEY //Exit Slot
     
 drop_duplicate_rd_atomic:
+    phvwr.e     p.common.p4_intr_global_drop, 1
     phvwrpair   CAPRI_PHV_FIELD(TO_S_STATS_INFO_P, dup_rd_atomic_drop), 1, \
                 CAPRI_PHV_RANGE(TO_S_STATS_INFO_P, lif_error_id_vld, lif_error_id), \
-                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET))
-    //Generate DMA command to skip to payload end
-    DMA_CMD_STATIC_BASE_GET_E(DMA_CMD_BASE, RESP_RX_DMA_CMD_RD_ATOMIC_START_FLIT_ID, RESP_RX_DMA_CMD_SKIP_PLD)
-    DMA_SKIP_CMD_SETUP(DMA_CMD_BASE, 1 /*CMD_EOP*/, 1 /*SKIP_TO_EOP*/) //Exit Slot
-
+                    ((1 << 4) | LIF_STATS_RDMA_RESP_STAT(LIF_STATS_RESP_RX_DUP_REQUEST_OFFSET)) // Exit Slot
 
 /****** Logic for NAKs ******/
 inv_req_nak_serv_type:
