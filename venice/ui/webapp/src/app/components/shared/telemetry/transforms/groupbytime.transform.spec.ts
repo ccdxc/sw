@@ -22,7 +22,7 @@ describe('Group by time transform', () => {
       {
         startTime: moment().subtract('1', 'h').toISOString(),
         endTime: moment().toISOString(),
-        expGroupByTime: '30s',
+        expGroupByTime: '60s', //  VS-1098, VS-1121
       },
       {
         startTime: moment().subtract('6', 'h').toISOString(),

@@ -73,6 +73,8 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   @ViewChild('checkboxSetDuration') checkboxSetDuration: Checkbox;
   @Input() existingObjects: IRolloutRollout[] = [];
 
+  DEFAULT_ROLLOUT_DURATION: number = 40;
+
   orders: RolloutOrder[] = [];
   repeaterList: RepeaterItem[] = [];
   newRollout: RolloutRollout;
@@ -279,7 +281,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   }
 
   computeDefaultEndTimeByStartTime(startTime: number): number {
-    return startTime + 1800 * 1000; // set default 30 minutes rollout duration.
+    return startTime + this.DEFAULT_ROLLOUT_DURATION * 60 * 1000; // set default this.DEFAULT_ROLLOUT_DURATION 35 minutes rollout duration.
   }
 
 
@@ -383,13 +385,18 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         }
       }
     }
+
+    if (this.rolloutDurationcheck === true && !this.newRollout.$formGroup.get(['spec', 'scheduled-end-time']).value) {
+      this.validationMessage = 'Must specify end-time or uncheck rollout duration checkbox.';
+      return false;
+    }
     if (!this.isStartTimeEndTimeValuesCorrect()) {
       this.validationMessage = 'Start time should be less than end time. Check inputs ';
       return false;
     }
     const diff = this.computeDuration();
-    if (diff !== null && diff < 30) {
-      this.validationMessage = 'Rollout duration should be at least 30 minutes.';
+    if (diff !== null && diff < this.DEFAULT_ROLLOUT_DURATION) {
+      this.validationMessage = 'Rollout duration should be at least ' + this.DEFAULT_ROLLOUT_DURATION + ' minutes.';
       return false;
     }
     if (Utility.isEmpty(this.newRollout.$formGroup.get(['spec', 'version']).value)) {

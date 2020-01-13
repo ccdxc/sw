@@ -6,8 +6,10 @@ import * as moment from 'moment';
  * transforms the dataset label to include node name
  */
 export class GroupByTimeTransform extends MetricTransform<{}> {
+
   transformName = TransformNames.GroupByTime;
   maxPoints: number = 500;
+  minimumGroupByTime: string = '60s';
 
 
   transformQuery(opts: TransformQuery) {
@@ -19,7 +21,7 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
     let numPoints = duration.asMinutes() * 2;
 
     if (numPoints < this.maxPoints) {
-      opts.query['group-by-time'] = '30s';
+      opts.query['group-by-time'] =  this.minimumGroupByTime; // VS-1098. Set to be the multiple of 30s
       return;
     }
 

@@ -231,8 +231,11 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         this.onRolloutComplete();
       }
     }
-    Utility.getInstance().setCurrentRollout(this.currentRollout);
-    this._controllerService.navigate(['/maintenance']);
+    if (this.currentRollout) {
+      // Set current rollout only if it exists
+      Utility.getInstance().setCurrentRollout(this.currentRollout);
+      this._controllerService.navigate(['/maintenance']);
+    }
   }
 
   setMomentJSSettings() {
@@ -290,8 +293,8 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   handleWatchVersionResponse(response) {
     this.versionEventUtility.processEvents(response);
     // When latest Venice.version.status changes, UI acts on it.
-    if (this.versionArray.length > 0 ) {
-      if (! Utility.isEmpty(this.versionArray[0].status['rollout-build-version'])) {
+    if (this.versionArray.length > 0) {
+      if (!Utility.isEmpty(this.versionArray[0].status['rollout-build-version'])) {
         // Rollout is still in progress.  UI gets status update. We still want to stay in maintenance mode.
         this.updateRolloutUIBlock();
         Utility.getInstance().setMaintenanceMode(true);
@@ -312,7 +315,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   getCluster() {
     const sub = this.clusterService.GetCluster().subscribe(
       (response) => {
-          this.cluster = response.body as ClusterCluster;
+        this.cluster = response.body as ClusterCluster;
       },
       (error) => {
         this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get cluster ');
@@ -607,11 +610,11 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         isRolloutSucceeded = true;
       } else if (this.currentRollout.status.state === RolloutRolloutStatus_state.failure) {
         msg = 'Rollout failed';
-      }  else if (Utility.isEmpty(this.versionArray[0].status['rollout-build-version1']) && this.currentRollout.status.state === RolloutRolloutStatus_state.progressing) {
+      } else if (Utility.isEmpty(this.versionArray[0].status['rollout-build-version1']) && this.currentRollout.status.state === RolloutRolloutStatus_state.progressing) {
         // Per VS-932, rollout venice part is done, DSC upgrades are in progress. We consider rollout is successful.
         msg = 'Venice rollout is completed. DSC upgrades are still in progress.';
         isRolloutSucceeded = true;
-      }  else {
+      } else {
         msg = 'Rollout status ' + this.currentRollout.status.state;
       }
       this.currentRollout = null;

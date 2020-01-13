@@ -96,7 +96,7 @@ export class HttpEventUtility<T> {
               this.deleteItem(objName);
               this.addItem(obj, objName);
             } else {
-              console.error('Update event received but object was not found');
+              console.error('Update event received but object was not found ', JSON.stringify(event));
             }
             break;
           default:

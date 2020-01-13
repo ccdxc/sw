@@ -105,8 +105,13 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
     this._route.paramMap.subscribe(params => {
       let id = '';
       if (this.router.url === '/maintenance') {
-        id = Utility.getInstance().getCurrentRollout().meta.name;
-        this.selectedRolloutId = id;
+        if (Utility.getInstance().getCurrentRollout()) {
+          id = Utility.getInstance().getCurrentRollout().meta.name;
+          this.selectedRolloutId = id;
+        } else {
+          // This should never happen
+          this._controllerService.invokeErrorToaster('Rollout rollout', 'Cannot switch to /maintenance page, no current rollout found');
+        }
       } else {
         this.selectedRolloutId = params.get('id');
       }
