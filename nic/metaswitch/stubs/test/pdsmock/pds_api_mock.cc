@@ -240,6 +240,9 @@ sdk_ret_t pds_nexthop_delete(pds_obj_key_t *key,
 
 sdk_ret_t pds_route_table_create(pds_route_table_spec_s *spec,
                                  pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_ROUTE_TABLE, API_OP_CREATE);
+    pds_mock->rcvd_pds.back().route_table = *spec;
     return SDK_RET_OK;
 }
 
@@ -250,11 +253,20 @@ sdk_ret_t pds_route_table_read(pds_route_table_key_t *key,
 
 sdk_ret_t pds_route_table_update(pds_route_table_spec_s *spec,
                                  pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
+    if (pds_mock->mock_pds_spec_op_fail_) {
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_ROUTE_TABLE, API_OP_UPDATE);
+    pds_mock->rcvd_pds.back().route_table = *spec;
     return SDK_RET_OK;
 }
 
 sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key,
                                  pds_batch_ctxt_t bctxt) {
+    auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
+    pds_mock->rcvd_pds.emplace_back(OBJ_ID_ROUTE_TABLE, API_OP_DELETE);
+    pds_mock->rcvd_pds.back().route_table.key = *key;
     return SDK_RET_OK;
 }
 

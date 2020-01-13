@@ -27,6 +27,7 @@ struct spec_t {
     obj_id_t               obj_id;
     api_op_t               op;
     bool                   mock_fail = false;
+    pds_route_table_spec_t      route_table;
     union {
         pds_device_spec_t       device;
         pds_nexthop_group_spec_t nhgroup;

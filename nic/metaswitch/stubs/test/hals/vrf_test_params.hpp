@@ -16,6 +16,7 @@ class vrf_input_params_t : public test_input_base_t {
 public:
     uint32_t        vrf_id;
     pds_vpc_spec_t  vpc_spec = {0};
+    pds_route_table_spec_t  route_table;
 
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 
@@ -30,6 +31,9 @@ public:
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid  = 100;
     vpc_spec.tos = 5;
+
+    route_table.key = vpc_spec.v4_route_table;
+    route_table.num_routes = 0;
 
     auto state_ctxt = pds_ms::state_t::thread_context(); 
     state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));

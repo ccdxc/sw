@@ -27,13 +27,13 @@ void hals_route_t::populate_route_id(ATG_ROPI_ROUTE_ID* route_id) {
     ATG_INET_ADDRESS& ms_addr = route_id->destination_address;
     ms_to_pds_ipaddr(ms_addr, &ips_info_.pfx.addr);
     ips_info_.pfx.len = route_id->prefix_length;
+    // Populate VRF
+    ips_info_.vrf_id = vrfname_2_vrfid(route_id->vrf_name,
+                                       route_id->vrf_name_len);
 }
 
 bool hals_route_t::parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
     populate_route_id(&add_upd_route_ips->route_id);
-    // Populate VRF
-    ips_info_.vrf_id = vrfname_2_vrfid(add_upd_route_ips->route_id.vrf_name,
-                                      add_upd_route_ips->route_id.vrf_name_len);
     // Populate the correlator
     NBB_CORR_GET_VALUE(ips_info_.overlay_ecmp_id, add_upd_route_ips->
                        route_properties.dp_pathset_correlator);
@@ -262,7 +262,7 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
     // if there is a subsequent create from MS.
 
     populate_route_id(&route_id);
-    SDK_TRACE_INFO ("MS Route %d: Delete IPS", ippfx2str(&ips_info_.pfx));
+    SDK_TRACE_INFO ("MS Route %s: Delete IPS", ippfx2str(&ips_info_.pfx));
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();

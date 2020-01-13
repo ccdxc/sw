@@ -22,6 +22,7 @@ extern "C"
 #include "nic/metaswitch/stubs/test/hals/underlay_ecmp_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/bd_test_params.hpp"
 #include "nic/metaswitch/stubs/test/hals/vrf_test_params.hpp"
+#include "nic/metaswitch/stubs/test/hals/route_test_params.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state_init.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
@@ -393,6 +394,32 @@ TEST_F(pds_ms_hals_test, vrf_test) {
     test_output->validate();
 }
 
+TEST_F(pds_ms_hals_test, route_test) {
+    pds_ms_test::load_route_test();
+    auto test_input = pds_ms_test::test_params()->test_input;
+    auto test_output = pds_ms_test::test_params()->test_output;
+
+    // Initialize
+    auto route_input = dynamic_cast<pds_ms_test::route_input_params_t*>
+                              (test_input);
+    route_input->init("10.1.1.1", 24);
+
+    // Create
+    std::cout << "=== ROUTE Create test ===" << std::endl;
+    test_output->expect_create();
+    test_input->trigger_create();
+    test_output->validate();
+    // Update
+    std::cout << "=== ROUTE Update test ===" << std::endl;
+    test_output->expect_update();
+    test_input->trigger_update();
+    test_output->validate();
+    // Delete
+    std::cout << "=== ROUTE Delete test ===" << std::endl;
+    test_output->expect_delete();
+    test_input->trigger_delete();
+    test_output->validate();
+}
 
 //----------------------------------------------------------------------------
 // Entry point
