@@ -38,12 +38,14 @@ egress_to_rxdma:
 egress_to_rxdma_arm:
     add             r6, r6, APULU_P4_TO_ARM_HDR_SZ
     phvwr           p.capri_p4_intrinsic_packet_len, r6
+    phvwr           p.p4e_to_arm_rx_packet, k.control_metadata_rx_packet
+    phvwr           p.p4e_to_arm_egress_bd_id, k.{vnic_metadata_egress_bd_id}.hx
     phvwr           p.{p4e_to_arm_sacl_action,p4e_to_arm_sacl_root}, \
                         k.{txdma_to_p4e_sacl_action,txdma_to_p4e_sacl_root_num}
-    .assert((offsetof(p, p4e_to_arm_drop) - offsetof(p, p4e_to_arm_dnat_id)) == \
-            (offsetof(k, txdma_to_p4e_drop) - offsetof(k, txdma_to_p4e_dnat_idx)))
-    phvwr           p.{p4e_to_arm_drop...p4e_to_arm_dnat_id}, \
-                        k.{txdma_to_p4e_drop...txdma_to_p4e_dnat_idx}
+    phvwr           p.p4e_to_arm_drop, k.txdma_to_p4e_drop
+    phvwr           p.{p4e_to_arm_snat_type,p4e_to_arm_dnat_en}, \
+                        k.{txdma_to_p4e_snat_type,txdma_to_p4e_dnat_en}
+    phvwr           p.p4e_to_arm_dnat_id, k.{txdma_to_p4e_dnat_idx}.hx
 
 egress_to_rxdma_common:
     phvwr           p.p4e_to_p4plus_classic_nic_packet_len, r6

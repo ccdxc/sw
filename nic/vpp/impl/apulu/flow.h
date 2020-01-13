@@ -60,8 +60,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         /* Reuse flowhash field to store lif id for packet tx
          * as we have limited packet metadata fields
          */
-        vnet_buffer(b0)->pds_data.flow_hash =
-                clib_net_to_host_u16(ses_info0->lif);
+        vnet_buffer(b0)->pds_data.flow_hash = ses_info0->lif;
     }
     clib_memset(&actiondata, 0, sizeof(actiondata));
     if (vnet_buffer(b1)->pds_data.xlate_idx) {
@@ -85,8 +84,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         /* Reuse flowhash field to store lif id for packet tx
          * as we have limited packet metadata fields
          */
-        vnet_buffer(b1)->pds_data.flow_hash =
-                clib_net_to_host_u16(ses_info1->lif);
+        vnet_buffer(b1)->pds_data.flow_hash = ses_info1->lif;
     }
 
     vlib_buffer_advance(b0, pds_session_get_advance_offset());
@@ -125,8 +123,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         /* Reuse flowhash field to store lif id for packet tx
          * as we have limited packet metadata fields
          */
-        vnet_buffer(b)->pds_data.flow_hash =
-                clib_net_to_host_u16(ses_info0->lif);
+        vnet_buffer(b)->pds_data.flow_hash = ses_info0->lif;
     }
     vlib_buffer_advance(b, pds_session_get_advance_offset());
 }
@@ -293,9 +290,9 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
-    vnet_buffer (p0)->pds_data.flow_hash = clib_net_to_host_u32(hdr0->flow_hash);
+    vnet_buffer (p0)->pds_data.flow_hash = hdr0->flow_hash;
     vnet_buffer (p0)->pds_data.flags = flag_orig0;
-    nexthop = clib_net_to_host_u16(hdr0->nexthop_id);
+    nexthop = hdr0->nexthop_id;
     if (!hdr0->mapping_hit && !hdr0->drop) {
         vnet_buffer(p0)->pds_data.nexthop = nexthop |
                                             (hdr0->nexthop_type << 16);
@@ -307,11 +304,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
     vnet_buffer (p0)->l4_hdr_offset =
             hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-    vnet_buffer (p0)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr0->ingress_bd_id);
+    vnet_buffer (p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
 
-    vnet_buffer (p1)->pds_data.flow_hash = clib_net_to_host_u32(hdr1->flow_hash);
+    vnet_buffer (p1)->pds_data.flow_hash = hdr1->flow_hash;
     vnet_buffer (p1)->pds_data.flags = flag_orig1;
-    nexthop = clib_net_to_host_u16(hdr1->nexthop_id);
+    nexthop = hdr1->nexthop_id;
     if (!hdr1->mapping_hit && !hdr1->drop) {
         vnet_buffer(p1)->pds_data.nexthop = nexthop |
                                             (hdr1->nexthop_type << 16);
@@ -323,13 +320,13 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
     vnet_buffer (p1)->l4_hdr_offset =
             hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-    vnet_buffer (p1)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr1->ingress_bd_id);
+    vnet_buffer (p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
 
     vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
     vlib_buffer_advance(p1, pds_flow_classify_get_advance_offset(p1));
 
-    xlate_id0 = clib_net_to_host_u16(hdr0->mapping_xlate_id);
-    xlate_id1 = clib_net_to_host_u16(hdr1->mapping_xlate_id);
+    xlate_id0 = hdr0->mapping_xlate_id;
+    xlate_id1 = hdr1->mapping_xlate_id;
     if (xlate_id0) {
         u32 ip;
         u16 port;
@@ -415,9 +412,9 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
-    vnet_buffer (p)->pds_data.flow_hash = clib_net_to_host_u32(hdr->flow_hash);
+    vnet_buffer (p)->pds_data.flow_hash = hdr->flow_hash;
     vnet_buffer (p)->pds_data.flags = flag_orig;
-    nexthop = clib_net_to_host_u16(hdr->nexthop_id);
+    nexthop = hdr->nexthop_id;
     if (!hdr->mapping_hit && !hdr->drop) {
         vnet_buffer(p)->pds_data.nexthop = nexthop |
                                             (hdr->nexthop_type << 16);
@@ -430,11 +427,11 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     vnet_buffer (p)->l4_hdr_offset =
             hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
 
-    vnet_buffer (p)->sw_if_index[VLIB_TX] = clib_net_to_host_u16(hdr->ingress_bd_id);
+    vnet_buffer (p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
 
     vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p));
 
-    xlate_id = clib_net_to_host_u16(hdr->mapping_xlate_id);
+    xlate_id = hdr->mapping_xlate_id;
     if (xlate_id) {
         u32 ip;
         u16 port;

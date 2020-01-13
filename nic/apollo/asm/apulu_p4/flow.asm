@@ -65,14 +65,13 @@ label_flow_hit_nexthop_done:
 label_force_flow_miss:
     phvwr       p.control_metadata_flow_miss, TRUE
     phvwr       p.control_metadata_force_flow_miss, TRUE
-    phvwr       p.p4i_to_arm_session_id, d.flow_hash_d.session_index
-    phvwr       p.p4i_to_arm_tcp_flags, k.tcp_flags
+    phvwr       p.p4i_to_arm_session_id, d.{flow_hash_d.session_index}.wx
     nop.!c1.e
     seq         c1, d.flow_hash_d.nexthop_type, NEXTHOP_TYPE_VPC
     phvwr.c1    p.p4i_i2e_mapping_lkp_id, d.flow_hash_d.nexthop_id
     phvwr.!c1   p.p4i_i2e_mapping_bypass, TRUE
     phvwr.e     p.p4i_to_arm_nexthop_type, d.flow_hash_d.nexthop_type
-    phvwr.!c1   p.p4i_to_arm_nexthop_id, d.flow_hash_d.nexthop_id
+    phvwr.!c1   p.p4i_to_arm_nexthop_id, d.{flow_hash_d.nexthop_id}.hx
 
 label_flow_hash_hit:
     // Set bit 31 for overflow hash lookup to work

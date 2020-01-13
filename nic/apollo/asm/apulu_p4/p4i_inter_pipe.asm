@@ -70,11 +70,14 @@ ingress_to_rxdma:
     or              r1, r1, k.ipv6_2_valid, \
                         APULU_CPU_FLAGS_IPV6_2_VALID_BIT_POS
     phvwr           p.p4i_to_arm_flags, r1
-    phvwr           p.p4i_to_arm_packet_len, k.capri_p4_intrinsic_packet_len
-    phvwr           p.p4i_to_arm_flow_hash, k.p4i_i2e_entropy_hash
+    phvwr           p.p4i_to_arm_packet_len, k.{capri_p4_intrinsic_packet_len}.hx
+    phvwr           p.p4i_to_arm_flow_hash, k.{p4i_i2e_entropy_hash}.wx
+    phvwr           p.p4i_to_arm_vnic_id, k.{vnic_metadata_vnic_id}.hx
+    phvwr           p.p4i_to_arm_ingress_bd_id, k.{vnic_metadata_bd_id}.hx
+    phvwr           p.p4i_to_arm_vpc_id, k.{vnic_metadata_vpc_id}.hx
     phvwr           p.p4i_to_arm_payload_offset, k.offset_metadata_payload_offset
-    phvwr           p.p4i_to_arm_lif, k.capri_intrinsic_lif
-    phvwr           p.p4i_to_arm_mapping_xlate_id, k.p4i_i2e_xlate_id
+    phvwr           p.p4i_to_arm_lif, k.{capri_intrinsic_lif}.hx
+    phvwr           p.p4i_to_arm_mapping_xlate_id, k.{p4i_i2e_xlate_id}.hx
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
     seq             c1, k.control_metadata_rx_packet, r0

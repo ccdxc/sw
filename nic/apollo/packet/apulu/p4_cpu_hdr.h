@@ -22,7 +22,7 @@ typedef struct p4_rx_cpu_hdr_s {
     uint8_t  l3_inner_offset;
     uint8_t  l4_inner_offset;
     uint8_t  payload_offset;
-    uint8_t  pad;
+    uint8_t  tcp_flags;
 
     uint32_t session_id;
     uint16_t lif;
@@ -33,36 +33,33 @@ typedef struct p4_rx_cpu_hdr_s {
     uint16_t nexthop_id;
     uint16_t vpc_id;
     uint16_t vnic_id;
-    uint8_t  tcp_flags;
+    uint16_t dnat_id;
     union {
-        uint8_t flags_octet;
+        uint16_t flags_short;
         struct {
 #if __BYTE_ORDER == __BIG_ENDIAN
-            uint8_t mapping_hit         : 1;
-            uint8_t sacl_action         : 1;
-            uint8_t sacl_root           : 3;
-            uint8_t nexthop_type        : 2;
-            uint8_t drop                : 1;
+            uint8_t  pad                : 4;
+            uint8_t  rx_packet          : 1;
+            uint8_t  snat_type          : 2;
+            uint8_t  dnat_en            : 1;
 #else
-            uint8_t drop                : 1;
-            uint8_t nexthop_type        : 2;
-            uint8_t sacl_root           : 3;
-            uint8_t sacl_action         : 1;
-            uint8_t mapping_hit         : 1;
+            uint8_t  dnat_en            : 1;
+            uint8_t  snat_type          : 2;
+            uint8_t  rx_packet          : 1;
+            uint8_t  pad                : 4;
 #endif
-        };
-    };
-    union {
-        uint16_t nat;
-        struct {
 #if __BYTE_ORDER == __BIG_ENDIAN
-            uint16_t snat_type          : 2;
-            uint16_t dnat_en            : 1;
-            uint16_t dnat_id            : 13;
+            uint8_t  mapping_hit        : 1;
+            uint8_t  sacl_action        : 1;
+            uint8_t  sacl_root          : 3;
+            uint8_t  nexthop_type       : 2;
+            uint8_t  drop               : 1;
 #else
-            uint16_t dnat_id            : 13;
-            uint16_t dnat_en            : 1;
-            uint16_t snat_type          : 2;
+            uint8_t  drop               : 1;
+            uint8_t  nexthop_type       : 2;
+            uint8_t  sacl_root          : 3;
+            uint8_t  sacl_action        : 1;
+            uint8_t  mapping_hit        : 1;
 #endif
         };
     };

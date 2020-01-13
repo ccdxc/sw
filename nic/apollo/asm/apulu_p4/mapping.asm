@@ -20,9 +20,9 @@ mapping_info:
 
     seq             c7, k.p4e_to_arm_valid, TRUE
     seq.c7          c7, k.txdma_to_p4e_nexthop_type, NEXTHOP_TYPE_VPC
+    phvwr.c7        p.p4e_to_arm_nexthop_id, k.{txdma_to_p4e_nexthop_id}.hx
     bcf             [c7], mapping_done
-    phvwrpair.c7    p.p4e_to_arm_nexthop_id, k.txdma_to_p4e_nexthop_id, \
-                        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
+    phvwr.c7        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
 
     bbne            d.mapping_info_d.entry_valid, TRUE, mapping_miss
     // Set bit 31 for overflow hash lookup to work
@@ -76,8 +76,8 @@ mapping_info:
     add             r2, r2, d.mapping_info_d.more_hints
 mapping_miss:
     seq             c7, k.p4e_to_arm_valid, TRUE
-    phvwrpair.c7    p.p4e_to_arm_nexthop_id, k.txdma_to_p4e_nexthop_id, \
-                        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
+    phvwr.c7        p.p4e_to_arm_nexthop_id, k.{txdma_to_p4e_nexthop_id}.hx
+    phvwr.c7        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
 
 mapping_done:
     phvwr.e         p.egress_recirc_mapping_done, TRUE
@@ -92,8 +92,8 @@ mapping_hit:
     phvwr.!c7.e     p.rewrite_metadata_nexthop_type, \
                         d.mapping_info_d.nexthop_type
     phvwr.!c7.f     p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
-    phvwrpair.c7.e  p.p4e_to_arm_nexthop_id, d.mapping_info_d.nexthop_id, \
-                        p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr           p.p4e_to_arm_nexthop_id, d.{mapping_info_d.nexthop_id}.hx
+    phvwr.e         p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
     phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 
 mapping_hash_hit:

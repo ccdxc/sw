@@ -39,7 +39,7 @@ header_type apulu_txdma_to_p4e_header_t {
 header_type apulu_p4_to_arm_header_t {
     fields {
         packet_len          : 16;
-        data                : 8;
+        nacl_data           : 8;
         flags               : 8;
         ingress_bd_id       : 16;
         flow_hash           : 32;
@@ -51,7 +51,7 @@ header_type apulu_p4_to_arm_header_t {
         l3_2_offset         : 8;
         l4_2_offset         : 8;
         payload_offset      : 8;
-        pad                 : 8;
+        tcp_flags           : 8;
 
         session_id          : 32;
         lif                 : 16;
@@ -62,16 +62,16 @@ header_type apulu_p4_to_arm_header_t {
         nexthop_id          : 16;
         vpc_id              : 16;
         vnic_id             : 16;
-        tcp_flags           : 8;
+        dnat_id             : 16;
+        pad                 : 4;
+        rx_packet           : 1;
+        snat_type           : 2;
+        dnat_en             : 1;
         mapping_hit         : 1;
         sacl_action         : 1;
         sacl_root           : 3;
         nexthop_type        : 2;
         drop                : 1;
-
-        snat_type           : 2;
-        dnat_en             : 1;
-        dnat_id             : 13;
     }
 }
 

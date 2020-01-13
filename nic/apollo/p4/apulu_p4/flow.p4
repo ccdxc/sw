@@ -22,7 +22,6 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
                 modify_field(control_metadata.force_flow_miss, TRUE);
                 modify_field(p4i_to_arm.session_id,
                              scratch_metadata.session_id);
-                modify_field(p4i_to_arm.tcp_flags, tcp.flags);
                 if (nexthop_valid == TRUE) {
                     modify_field(p4i_to_arm.nexthop_type, nexthop_type);
                     if (nexthop_type == NEXTHOP_TYPE_VPC) {
@@ -153,7 +152,6 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
                 modify_field(control_metadata.force_flow_miss, TRUE);
                 modify_field(p4i_to_arm.session_id,
                              scratch_metadata.session_id);
-                modify_field(p4i_to_arm.tcp_flags, tcp.flags);
                 if (nexthop_valid == TRUE) {
                     modify_field(p4i_to_arm.nexthop_type, nexthop_type);
                     if (nexthop_type == NEXTHOP_TYPE_VPC) {

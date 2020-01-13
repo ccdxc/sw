@@ -53,13 +53,13 @@ format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)
                "\n\tservice_xlate_id[%d], mapping_xlate_id[%d],"
                " tx_meter_id[%d],"
                "\n\tnexthop_id[%d], vpc_id[%d], vnic_id[%d],"
-               " flags_octet[0x%x]",
+               " flags_short[0x%x]",
                t->packet_len, t->flags, t->nacl_data, t->ingress_bd_id, t->flow_hash,
                t->l2_offset, t->l3_offset, t->l4_offset, t->l2_inner_offset,
                t->l3_inner_offset, t->l4_inner_offset, t->payload_offset,
                t->lif, t->egress_bd_id, t->service_xlate_id, t->mapping_xlate_id,
                t->tx_meter_id, t->nexthop_id, t->vpc_id, t->vnic_id,
-               t->flags_octet);
+               t->flags_short);
     return s;
 }
 

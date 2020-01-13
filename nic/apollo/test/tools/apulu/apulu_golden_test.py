@@ -8,6 +8,7 @@ sys.path.insert(0, '../dol')
 sys.path.insert(0, '../dol/third_party')
 from infra.penscapy.penscapy import *
 from scapy.packet import *
+from socket import ntohs, ntohl
 
 class P4ToARM(Packet):
     name = "P4ToARM"
@@ -24,7 +25,7 @@ class P4ToARM(Packet):
             ByteField("l3_2_offset", 0),
             ByteField("l4_2_offset", 0),
             ByteField("payload_offset", 0),
-            ByteField("pad", 0),
+            ByteField("tcp_flags", 0),
             IntField("session_id", 0),
             ShortField("lif", 0),
             ShortField("egress_bd_id", 0),
@@ -34,16 +35,17 @@ class P4ToARM(Packet):
             ShortField("nexthop_id", 0),
             ShortField("vpc_id", 0),
             ShortField("vnic_id", 0),
-            ByteField("tcp_flags", 0),
+            ShortField("dnat_id", 0),
+            BitField("pad", 0, 4),
+            BitField("rx_packet", 0, 1),
+            BitField("snat_type", 0, 2),
+            BitField("dnat_en", 0, 1),
             BitField("mapping_hit", 0, 1),
             BitField("sacl_action", 0, 1),
             BitField("sacl_root", 0, 3),
             BitEnumField("nexthop_type", 0, 2,
                 {0: 'VPC', 1: 'ECMP', 2: 'Tunnel', 3: 'Nexthop'}),
-            BitField("drop", 0, 1),
-            BitField("snat_type", 0, 2),
-            BitField("dnat_en", 0, 1),
-            BitField("dnat_id", 0, 13) ]
+            BitField("drop", 0, 1) ]
 
 def dump_pkt(pkt, sname):
     print('uint8_t %s[] = {' % sname)
@@ -88,11 +90,12 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
         TCP(sport=0x1234, dport=0x5678) / payload
-opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0x41f250eb, l2_1_offset=0x11, l3_1_offset=0x23, \
-               l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
-               nexthop_id=0x1ef, nexthop_type='Tunnel', \
-               vpc_id=0x2ec, vnic_id=0x2fe, mapping_hit=1) / \
+opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
+        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x41f250eb), \
+        l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
+        payload_offset=0x4b, lif=ntohs(0x1), nexthop_id=ntohs(0x1ef), \
+        nexthop_type='Tunnel', vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2fe), \
+        tcp_flags=0x2, mapping_hit=1) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.10.10', src='11.11.11.11') / \
@@ -139,12 +142,12 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678, flags='F') / payload
-opkt = P4ToARM(packet_len=0x6e, flags='VLAN+IPv4', ingress_bd_id=0x02ed, \
-               flow_hash=0x9e185097, l2_1_offset=0x11, l3_1_offset=0x23, \
-               l4_2_offset=0x37, payload_offset=0x4b, lif=0x1, \
-               session_id=0x55e51, tcp_flags=0x1, \
-               nexthop_id=0x1ef, nexthop_type='Tunnel', \
-               vpc_id=0x2ec, vnic_id=0x2ee, mapping_hit=1) / \
+opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
+        ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x9e185097), \
+        l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
+        payload_offset=0x4b, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
+        tcp_flags=0x1, nexthop_id=ntohs(0x1ef), nexthop_type='Tunnel', \
+        vpc_id=ntohs(0x2ec), vnic_id=ntohs(0x2ee), mapping_hit=1) / \
         Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \

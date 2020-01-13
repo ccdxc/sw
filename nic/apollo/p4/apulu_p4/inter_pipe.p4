@@ -39,6 +39,10 @@ action ingress_to_rxdma() {
 
     modify_field(p4i_to_arm.packet_len, capri_p4_intrinsic.packet_len);
     modify_field(p4i_to_arm.flow_hash, p4i_i2e.entropy_hash);
+    modify_field(p4i_to_arm.vnic_id, vnic_metadata.vnic_id);
+    modify_field(p4i_to_arm.ingress_bd_id, vnic_metadata.bd_id);
+    modify_field(p4i_to_arm.vpc_id, vnic_metadata.vpc_id);
+
     modify_field(offset_metadata.l2_1, offset_metadata.l2_1);
     modify_field(offset_metadata.l2_2, offset_metadata.l2_2);
     modify_field(offset_metadata.l3_1, offset_metadata.l3_1);
@@ -156,6 +160,7 @@ action egress_to_rxdma() {
 
     if (p4e_to_arm.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
+        modify_field(p4e_to_arm.rx_packet, control_metadata.rx_packet);
         modify_field(p4e_to_arm.egress_bd_id, vnic_metadata.egress_bd_id);
         modify_field(p4e_to_arm.sacl_action, txdma_to_p4e.sacl_action);
         modify_field(p4e_to_arm.sacl_root, txdma_to_p4e.sacl_root_num);
