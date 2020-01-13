@@ -128,10 +128,10 @@ pds_dst_mac_get (void *hdr, mac_addr_t mac_addr, bool remote,
     uint16_t bd_id;
 
     if (remote) {
-        vpc_id = ntohs(((p4_rx_cpu_hdr_t *)hdr)->vpc_id);
+        vpc_id = ((p4_rx_cpu_hdr_t *)hdr)->vpc_id;
         pds_mapping_dmac_get(mac_addr, dst_addr, vpc_id);
     } else {
-        bd_id = ntohs(((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id);
+        bd_id = ((p4_rx_cpu_hdr_t *)hdr)->ingress_bd_id;
         pds_bd_vr_mac_get(mac_addr, bd_id);
     }
     return SDK_RET_OK;
