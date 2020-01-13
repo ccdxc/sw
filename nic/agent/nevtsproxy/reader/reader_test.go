@@ -146,13 +146,21 @@ func TestReaderInstantiation(t *testing.T) {
 	dir, err := ioutil.TempDir("", "shm")
 	AssertOk(t, err, "failed to create temp dir")
 
-	f, err := ioutil.TempFile(dir, "*tfile")
+	f1, err := ioutil.TempFile(dir, "*tfile.events")
 	AssertOk(t, err, "failed to create temp file")
-	f.Close()
+	defer f1.Close()
 
 	rdr = NewReader(t.Name(), dir, time.Second, nil, tLogger)
 	err = rdr.Start()
 	AssertOk(t, err, "failed to start file watcher, err: %v", err)
+
+	// invalid file name, files should end with ".events"
+	f2, err := ioutil.TempFile(dir, "*tfile")
+	AssertOk(t, err, "failed to create temp file")
+	defer f2.Close()
+
+	// wait for file readers to be created
+	time.Sleep(1 * time.Second)
 
 	// delete the directory under watch
 	// watcher should be intact event after the directory is deleted; watcher will receive the REMOVE event on the directory
