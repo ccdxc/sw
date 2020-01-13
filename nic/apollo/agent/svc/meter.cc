@@ -16,7 +16,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     Status status = Status::OK;
-    pds_meter_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_meter_spec_t *api_spec = NULL;
@@ -49,7 +49,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.id();
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_meter_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->meter_slab()->free(api_spec);
@@ -89,7 +89,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
                           pds::MeterResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_meter_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_meter_spec_t *api_spec = NULL;
@@ -122,7 +122,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.id();
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_meter_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->meter_slab()->free(api_spec);
@@ -162,7 +162,7 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
                           pds::MeterDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_meter_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -186,7 +186,7 @@ MeterSvcImpl::MeterDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::meter_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -215,7 +215,7 @@ MeterSvcImpl::MeterGet(ServerContext *context,
                        const pds::MeterGetRequest *proto_req,
                        pds::MeterGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_meter_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_meter_info_t info;
 
     if (proto_req == NULL) {
@@ -224,7 +224,7 @@ MeterSvcImpl::MeterGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::meter_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

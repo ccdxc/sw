@@ -50,9 +50,10 @@ class MeterStatsHelper:
             return
         stats = self.PreStats if pre else self.PostStats
         for entry in resp.Response:
-            assert entry.Stats.MeterId != 0
-            stats[entry.Stats.MeterId].RxBytes = entry.Stats.RxBytes
-            stats[entry.Stats.MeterId].TxBytes = entry.Stats.TxBytes
+            meterid = int(entry.Spec.Id)
+            assert meterid != 0
+            stats[meterid].RxBytes = entry.Stats.RxBytes
+            stats[meterid].TxBytes = entry.Stats.TxBytes
         return
 
     def IncrMeterStats(self, meterid, rxbytes, txbytes):
@@ -150,7 +151,7 @@ class MeterObject(base.ConfigObjectBase):
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.MeterId
+        spec.Id = str.encode(str(self.MeterId))
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.Rules:
             self.FillMeterRuleSpec(spec, rule)
@@ -303,7 +304,7 @@ class MeterObjectClient(base.ConfigClientBase):
         return
 
     def ReadObjects(self):
-        # TODO: Fix spec 2 proto in agent and enable validation
+        # TODO: Add validation
         msg = self.GetGrpcReadAllMessage()
         api.client.Get(self.ObjType, [msg])
         return

@@ -858,7 +858,7 @@ pds_meter_proto_to_api_spec (pds_meter_spec_t *api_spec,
 {
     sdk_ret_t ret;
 
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.af());
     if (ret != SDK_RET_OK) {
         return SDK_RET_INVALID_ARG;
@@ -971,11 +971,11 @@ pds_meter_api_info_to_proto (const pds_meter_info_t *api_info, void *ctxt)
 {
     pds::MeterGetResponse *proto_rsp = (pds::MeterGetResponse *)ctxt;
     auto meter = proto_rsp->add_response();
-    //pds::MeterSpec *proto_spec = meter->mutable_spec();
+    pds::MeterSpec *proto_spec = meter->mutable_spec();
     pds::MeterStatus *proto_status = meter->mutable_status();
     pds::MeterStats *proto_stats = meter->mutable_stats();
 
-    //pds_meter_api_spec_to_proto(proto_spec, &api_info->spec);
+    pds_meter_api_spec_to_proto(proto_spec, &api_info->spec);
     pds_meter_api_status_to_proto(proto_status, &api_info->status);
     pds_meter_api_stats_to_proto(proto_stats, &api_info->stats);
 }
@@ -1105,8 +1105,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
         }
         api_spec->rx_mirror_session_bmap |= (1 << (msid - 1));
     }
-    api_spec->v4_meter.id = proto_spec.v4meterid();
-    api_spec->v6_meter.id = proto_spec.v6meterid();
+    pds_obj_key_proto_to_api_spec(&api_spec->v4_meter, proto_spec.v4meterid());
+    pds_obj_key_proto_to_api_spec(&api_spec->v6_meter, proto_spec.v6meterid());
     api_spec->switch_vnic = proto_spec.switchvnic();
     if (proto_spec.ingv4securitypolicyid_size() > PDS_MAX_VNIC_POLICY) {
         PDS_TRACE_ERR("No. of IPv4 ingress security policies on vnic can't "

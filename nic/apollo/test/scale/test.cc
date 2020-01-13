@@ -491,8 +491,8 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
     sdk_ret_t rv = SDK_RET_OK;
     pds_vnic_spec_t pds_vnic;
     uint16_t vnic_key = 1;
-    static pds_meter_id_t v4_meter_id = 1;
-    static pds_meter_id_t v6_meter_id = num_meter+1;
+    static uint16_t v4_meter_id = 1;
+    static uint16_t v6_meter_id = num_meter+1;
     static uint32_t lif_id = HOST_LIF_ID_MIN;
 
     SDK_ASSERT(num_vpcs * num_subnets * num_vnics <= PDS_MAX_VNIC);
@@ -544,11 +544,11 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
                 pds_vnic.rx_mirror_session_bmap =
                     g_test_params.rspan_bmap | g_test_params.erspan_bmap;
-                pds_vnic.v4_meter.id = v4_meter_id++;
+                pds_vnic.v4_meter = test::int2pdsobjkey(v4_meter_id++);
                 if (v4_meter_id > num_meter) {
                     v4_meter_id = 1;
                 }
-                pds_vnic.v6_meter.id = v6_meter_id++;
+                pds_vnic.v6_meter = test::int2pdsobjkey(v6_meter_id++);
                 if (v6_meter_id > (2 * num_meter)) {
                     v6_meter_id = num_meter+1;
                 }
@@ -921,7 +921,7 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
 }
 
 static inline void
-populate_meter_api_rule_spec (uint32_t id, pds_meter_rule_t *api_rule_spec,
+populate_meter_api_rule_spec (pds_obj_key_t id, pds_meter_rule_t *api_rule_spec,
                               pds_meter_type_t type, uint64_t pps_bps,
                               uint64_t burst, uint32_t num_prefixes,
                               uint32_t *meter_pfx_count,
@@ -994,7 +994,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
     uint32_t step = 0;
 
     // unique IDs across meters
-    static pds_meter_id_t id = 1;
+    static uint16_t id = 1;
     static uint32_t meter_pfx_count = 0;
 
     if (num_meter == 0) {
@@ -1022,7 +1022,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                             (pds_meter.num_rules * sizeof(pds_meter_rule_t)));
 
     for (uint32_t i = 0; i < num_meter; i++) {
-        pds_meter.key.id = id++;
+        pds_meter.key = test::int2pdsobjkey(id++);
 
         // priority is per meter
         priority = 0;
@@ -1033,7 +1033,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                 priority = rule + (step - 1);
             }
             populate_meter_api_rule_spec(
-                pds_meter.key.id, api_rule_spec, type, pps_bps,
+                pds_meter.key, api_rule_spec, type, pps_bps,
                 burst, num_prefixes, &meter_pfx_count, ip_af,
                 v6_route_pfx, priority);
             priority--;
@@ -1049,7 +1049,7 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
                 priority = rule + (step - 1);
             }
             populate_meter_api_rule_spec(
-                pds_meter.key.id, api_rule_spec, type, pps_bps,
+                pds_meter.key, api_rule_spec, type, pps_bps,
                 burst, 1, &meter_pfx_count, ip_af,
                 v6_route_pfx, priority);
             priority--;

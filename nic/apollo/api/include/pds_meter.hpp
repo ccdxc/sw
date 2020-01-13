@@ -54,7 +54,7 @@ typedef struct pds_meter_rule_s {
 typedef struct pds_meter_spec_s    pds_meter_spec_t;
 /// \brief metering configuration
 struct pds_meter_spec_s {
-    pds_meter_key_t  key;          ///< key
+    pds_obj_key_t  key;          ///< key
     uint8_t          af;           ///< address family - v4 or v6
     uint32_t         num_rules;    ///< number of metering rules in this policy
     pds_meter_rule_t *rules;       ///< metering rules
@@ -141,7 +141,7 @@ sdk_ret_t pds_meter_create(pds_meter_spec_t *spec,
 /// \param[in]  key key
 /// \param[out] info meter information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_read(pds_meter_key_t *key, pds_meter_info_t *info);
+sdk_ret_t pds_meter_read(pds_obj_key_t *key, pds_meter_info_t *info);
 
 /// \brief     update meter
 /// \param[in] spec meter configuration
@@ -154,7 +154,7 @@ sdk_ret_t pds_meter_update(pds_meter_spec_t *spec,
 /// \param[in] key key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_meter_delete(pds_meter_key_t *key,
+sdk_ret_t pds_meter_delete(pds_obj_key_t *key,
                            pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

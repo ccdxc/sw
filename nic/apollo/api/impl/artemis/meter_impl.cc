@@ -215,7 +215,7 @@ meter_impl::fill_stats_(pds_meter_info_t *info) {
     uint64_t tx_offset = 0, rx_offset = 0;
     uint64_t start_addr = 0;
 
-    info->spec.num_rules = num_stats_entries_;
+    //info->spec.num_rules = num_stats_entries_;
     start_addr = api::g_pds_state.mempartition()->start_addr("meter_stats");
     for (uint32_t idx = stats_base_hw_idx_; idx < stats_base_hw_idx_
                                                 + num_stats_entries_; idx++) {
@@ -244,9 +244,9 @@ meter_impl::read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) {
     sdk_ret_t ret;
     pds_meter_info_t *meter_info = (pds_meter_info_t *)info;
-    pds_meter_key_t *meter_key = (pds_meter_key_t *)key;
+    pds_obj_key_t *meter_key = (pds_obj_key_t *)key;
 
-    meter_info->stats.idx = meter_key->id;
+    meter_info->stats.idx = stats_base_hw_idx_;
     ret = fill_stats_(meter_info);
 
     return ret;

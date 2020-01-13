@@ -43,9 +43,9 @@ message VnicSpec {
   // and can have many MACs in the same VLAN, so SMAC check will be disabled
   bool            SwitchVnic            = 9;
   // metering policy to apply for IPv4 traffic coming in and going out of vnic
-  uint32          V4MeterId             = 10;
+  bytes           V4MeterId             = 10;
   // metering policy to apply for IPv6 traffic coming in and going out of vnic
-  uint32          V6MeterId             = 11;
+  bytes           V6MeterId             = 11;
   // identifier of ingress IPv4 security policy to be enforced
   repeated bytes  IngV4SecurityPolicyId = 12;
   // identifier of ingress IPv6 security policy to be enforced

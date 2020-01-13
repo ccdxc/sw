@@ -68,7 +68,7 @@ typedef unordered_map<pds_obj_key_t , pds_subnet_spec_t *, pds_obj_key_hash> sub
 typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_mapping_hash_fn> service_db_t;
 typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
 typedef unordered_map<pds_obj_key_t, pds_vnic_spec_t *, pds_obj_key_hash> vnic_db_t;
-typedef unordered_map<uint32_t, pds_meter_spec_t *> meter_db_t;
+typedef unordered_map<pds_obj_key_t, pds_meter_spec_t *, pds_obj_key_hash> meter_db_t;
 typedef unordered_map<uint32_t, pds_tag_spec_t *> tag_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
 typedef unordered_map<pds_obj_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
@@ -238,11 +238,11 @@ public:
 
     slab_ptr_t if_slab(void) const { return cfg_db_->if_slab(); }
 
-    pds_meter_spec_t *find_in_meter_db(pds_meter_key_t *key);
-    sdk_ret_t add_to_meter_db(pds_meter_key_t *key,
+    pds_meter_spec_t *find_in_meter_db(pds_obj_key_t *key);
+    sdk_ret_t add_to_meter_db(pds_obj_key_t *key,
                               pds_meter_spec_t *spec);
     sdk_ret_t meter_db_walk(meter_walk_cb_t cb, void *ctxt);
-    bool del_from_meter_db(pds_meter_key_t *key);
+    bool del_from_meter_db(pds_obj_key_t *key);
     slab_ptr_t meter_slab(void) const { return cfg_db_->meter_slab(); }
 
     pds_tag_spec_t *find_in_tag_db(pds_tag_key_t *key);

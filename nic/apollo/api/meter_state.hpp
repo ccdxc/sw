@@ -58,7 +58,7 @@ public:
 
     /// \brief     lookup a meter entry in database given the key
     /// \param[in] key meter entry key
-    meter_entry *find(pds_meter_key_t *key) const;
+    meter_entry *find(pds_obj_key_t *key) const;
 
     friend void slab_delay_delete_cb(void *timer, uint32_t slab_id, void *elem);
 
@@ -73,7 +73,7 @@ private:
 };
 
 static inline meter_entry *
-meter_find (pds_meter_key_t *key)
+meter_find (pds_obj_key_t *key)
 {
     return (meter_entry *)api_base::find_obj(OBJ_ID_METER, key);
 }

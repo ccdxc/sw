@@ -104,7 +104,7 @@ meter_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_meter_spec_t    *spec;
 
     spec = &api_ctxt->api_params->meter_spec;
-    memcpy(&this->key_, &spec->key, sizeof(pds_meter_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->af_ = spec->af;
     return SDK_RET_OK;
 }
@@ -191,7 +191,9 @@ meter_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
 
 void
 meter_entry::fill_spec_(pds_meter_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_meter_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
+    spec->af = af_;
+    spec->num_rules = 0;
 }
 
 sdk_ret_t

@@ -534,13 +534,13 @@ agent_state::del_from_vnic_db(pds_obj_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_meter_db(pds_meter_key_t *key, pds_meter_spec_t *spec) {
-    ADD_TO_DB(meter, key, spec);
+agent_state::add_to_meter_db(pds_obj_key_t *key, pds_meter_spec_t *spec) {
+    ADD_TO_OBJ_DB(meter, key, spec);
 }
 
 pds_meter_spec_t *
-agent_state::find_in_meter_db(pds_meter_key_t *key) {
-    FIND_IN_DB(meter, key);
+agent_state::find_in_meter_db(pds_obj_key_t *key) {
+    FIND_IN_OBJ_DB(meter, key);
 }
 
 sdk_ret_t
@@ -555,8 +555,8 @@ agent_state::meter_db_walk(meter_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_meter_db(pds_meter_key_t *key) {
-    DEL_FROM_DB(meter, key);
+agent_state::del_from_meter_db(pds_obj_key_t *key) {
+    DEL_FROM_OBJ_DB(meter, key);
 }
 
 sdk_ret_t

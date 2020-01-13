@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_meter_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                      pds_meter_key_t *key, pds_meter_spec_t *spec)
+                      pds_obj_key_t *key, pds_meter_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -41,7 +41,7 @@ pds_meter_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline meter_entry *
-pds_meter_entry_find (pds_meter_key_t *key)
+pds_meter_entry_find (pds_obj_key_t *key)
 {
     return (meter_db()->find(key));
 }
@@ -57,7 +57,7 @@ pds_meter_create (_In_ pds_meter_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_meter_read (_In_ pds_meter_key_t *key, _Out_ pds_meter_info_t *info)
+pds_meter_read (_In_ pds_obj_key_t *key, _Out_ pds_meter_info_t *info)
 {
     meter_entry *entry;
 
@@ -79,7 +79,7 @@ pds_meter_update (_In_ pds_meter_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_meter_delete (_In_ pds_meter_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_meter_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_meter_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

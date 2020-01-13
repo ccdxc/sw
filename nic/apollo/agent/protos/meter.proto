@@ -42,7 +42,7 @@ message MeterRuleSpec {
 //       prefixes in the metering policy is supported)
 message MeterSpec {
   // unique meter policy id
-  uint32                 Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes                  Id    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
   types.IPAF             Af    = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // meter rules
@@ -86,7 +86,7 @@ message MeterResponse {
 // meter table get request
 message MeterGetRequest {
   // batched request
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // meter table get response
@@ -100,7 +100,7 @@ message MeterDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated uint32 Id        = 2;
+  repeated bytes Id         = 2;
 }
 
 // meter table delete response

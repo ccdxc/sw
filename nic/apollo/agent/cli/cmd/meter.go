@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	meterID uint32
+	meterID string
 	statsID string
 )
 
@@ -39,7 +39,7 @@ var meterStatsShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(meterShowCmd)
 	meterShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	meterShowCmd.Flags().Uint32VarP(&meterID, "id", "i", 0, "Specify meter policy ID")
+	meterShowCmd.Flags().StringVarP(&meterID, "id", "i", "", "Specify meter policy ID")
 
 	meterShowCmd.AddCommand(meterStatsShowCmd)
 	meterStatsShowCmd.Flags().StringVarP(&statsID, "meter-stats-index", "i", "", "Specify meter stats index. Ex: 1-20 or 10")
@@ -141,12 +141,12 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Meter
 		req = &pds.MeterGetRequest{
-			Id: []uint32{meterID},
+			Id: [][]byte{[]byte(meterID)},
 		}
 	} else {
 		// Get all Meters
 		req = &pds.MeterGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 

@@ -120,9 +120,9 @@ func printVnic(vnic *pds.Vnic) {
 		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
 	}
 
-	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10d%-10d%-10s\n",
+	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-36s%-36s%-10s\n",
 		string(spec.GetVnicId()), string(spec.GetSubnetId()), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
-		spec.GetSwitchVnic(), spec.GetV4MeterId(), spec.GetV6MeterId(), lifName)
+		spec.GetSwitchVnic(), string(spec.GetV4MeterId()), string(spec.GetV6MeterId()), lifName)
 }

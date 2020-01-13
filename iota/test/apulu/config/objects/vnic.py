@@ -131,8 +131,8 @@ class VnicObject(base.ConfigObjectBase):
             spec.RxMirrorSessionId.append(int(rxmirror))
         for txmirror in self.TxMirror:
             spec.TxMirrorSessionId.append(int(txmirror))
-        spec.V4MeterId = self.V4MeterId
-        spec.V6MeterId = self.V6MeterId
+        spec.V4MeterId = str.encode(str(self.V4MeterId))
+        spec.V6MeterId = str.encode(str(self.V6MeterId))
         for policyid in self.IngV4SecurityPolicyIds:
             spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.IngV6SecurityPolicyIds:
@@ -166,9 +166,9 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if spec.SourceGuardEnable != self.SourceGuard:
             return False
-        if spec.V4MeterId != self.V4MeterId:
+        if int(spec.V4MeterId) != self.V4MeterId:
             return False
-        if spec.V6MeterId != self.V6MeterId:
+        if int(spec.V6MeterId) != self.V6MeterId:
             return False
         # TODO: validate policyid, policer
         return True
@@ -186,9 +186,9 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if spec['sourceguardenable'] != self.SourceGuard:
             return False
-        if spec['v4meterid'] != self.V4MeterId:
+        if utils.GetYamlSpecAttr(spec, 'v4meterid') != self.V4MeterId:
             return False
-        if spec['v6meterid'] != self.V6MeterId:
+        if utils.GetYamlSpecAttr(spec, 'v6meterid') != self.V6MeterId:
             return False
         return True
 

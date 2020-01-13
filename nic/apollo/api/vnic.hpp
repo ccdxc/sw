@@ -211,7 +211,7 @@ public:
     /// \brief     return meter policy of this vnic
     /// \param[in] af    IP address family
     /// \return    key of the meter policy being applied
-    pds_meter_key_t meter(uint8_t af) {
+    pds_obj_key_t meter(uint8_t af) {
         if (af == IP_AF_IPV4) {
             return v4_meter_;
         }
@@ -308,15 +308,15 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t    key_;              ///< vnic key
-    pds_obj_key_t  subnet_;           ///< subnet of this vnic
-    pds_meter_key_t   v4_meter_;         ///< IPv4 metering policy
-    pds_meter_key_t   v6_meter_;         ///< IPv6 metering policy
-    pds_encap_t       vnic_encap_;       ///< vnic's vlan encap
-    pds_encap_t       fabric_encap_;     ///< fabric encap information
-    bool              switch_vnic_;      ///< TRUE if this is switch vnic
-    mac_addr_t        mac_;              ///< MAC address of this vnic
-    pds_ifindex_t     host_ifindex_;     ///< PF/VF this vnic is behind
+    pds_obj_key_t key_;             ///< vnic key
+    pds_obj_key_t subnet_;          ///< subnet of this vnic
+    pds_obj_key_t v4_meter_;        ///< IPv4 metering policy
+    pds_obj_key_t v6_meter_;        ///< IPv6 metering policy
+    pds_encap_t   vnic_encap_;      ///< vnic's vlan encap
+    pds_encap_t   fabric_encap_;    ///< fabric encap information
+    bool          switch_vnic_;     ///< TRUE if this is switch vnic
+    mac_addr_t    mac_;             ///< MAC address of this vnic
+    pds_ifindex_t host_ifindex_;    ///< PF/VF this vnic is behind
     ///< number of ingress IPv4 policies
     uint8_t           num_ing_v4_policy_;
     ///< ingress IPv4 policies

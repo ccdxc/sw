@@ -25,7 +25,7 @@ meter_create_validate (pds_meter_spec_t *spec)
 }
 
 sdk_ret_t
-meter_create (pds_meter_key_t *key, pds_meter_spec_t *spec,
+meter_create (pds_obj_key_t *key, pds_meter_spec_t *spec,
               pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -75,7 +75,7 @@ meter_update_validate (pds_meter_spec_t *spec)
 }
 
 sdk_ret_t
-meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec,
+meter_update (pds_obj_key_t *key, pds_meter_spec_t *spec,
               pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -114,7 +114,7 @@ meter_update (pds_meter_key_t *key, pds_meter_spec_t *spec,
 }
 
 sdk_ret_t
-meter_delete (pds_meter_key_t *key, pds_batch_ctxt_t bctxt)
+meter_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -138,7 +138,7 @@ meter_delete (pds_meter_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-meter_get (pds_meter_key_t *key, pds_meter_info_t *info)
+meter_get (pds_obj_key_t *key, pds_meter_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_meter_spec_t *spec;
