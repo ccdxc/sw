@@ -32,12 +32,17 @@ public:
     }
 
     void trigger_create(void) override {
+        // TODO: Fix Subnet-BD Gtest
+        // For now generate both proto create and IPS create
+        // since BD oper status since MS is not sending create to L2F
+        pds_ms::subnet_create(&subnet_spec, 0);
         auto add_upd = generate_add_upd_ips();
         l2f_is.add_upd_bd(&add_upd);
     }
 
     void trigger_delete(void) override {
         bd_input_params_t::trigger_delete();
+        pds_ms::subnet_delete(&subnet_spec, 0);
         ATG_L2_BD_ID ms_bd_id = {ATG_L2_BRIDGE_DOMAIN_EVPN, bd_id, 0};
         l2f_is.delete_bd(&ms_bd_id, NBB_CORRELATOR{0});
     }

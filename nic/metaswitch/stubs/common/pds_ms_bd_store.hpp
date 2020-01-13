@@ -22,13 +22,16 @@ public:
     struct properties_t {
         ms_bd_id_t         bd_id;
         pds_obj_key_t      vpc;
+        pds_obj_key_t      subnet;
         pds_encap_t        fabric_encap;
         pds_ifindex_t      host_ifindex = 0;
-        properties_t(ms_bd_id_t b, const pds_obj_key_t& k)
-            : bd_id(b), vpc(k) {};
+        properties_t(ms_bd_id_t b, const pds_obj_key_t& k,
+                     const pds_obj_key_t& s)
+            : bd_id(b), vpc(k), subnet(s) {};
     };
 
-    bd_obj_t(ms_bd_id_t b, const pds_obj_key_t& k) : prop_(b, k) {};
+    bd_obj_t(ms_bd_id_t b, const pds_obj_key_t& k, const pds_obj_key_t& s)
+        : prop_(b, k, s) {};
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}
     ms_bd_id_t key(void) const {return prop_.bd_id;}

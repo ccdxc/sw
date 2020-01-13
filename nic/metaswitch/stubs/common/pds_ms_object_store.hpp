@@ -31,6 +31,9 @@ public:
     void erase(const KEY& key) {
         store_.erase(key);
     }
+    void clear() {
+        store_.clear();
+    }
 
     OBJECT* get(const KEY& k) {
         auto it = store_.find(k);

@@ -1,6 +1,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //Purpose: Helper APIs for metaswitch BGP-RM/NM components
 
+#include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
@@ -8,6 +10,70 @@
 using namespace pds_ms;
 
 namespace pds {
+
+static NBB_VOID 
+bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
+{
+    auto bgp_peer_uuid_obj = (bgp_peer_uuid_obj_t*) uuid_obj;
+    auto localaddr = req.mutable_localaddr();
+    localaddr->set_af(types::IP_AF_INET);
+    ip_addr_to_spec(&bgp_peer_uuid_obj->ms_id().local_ip, localaddr);
+    auto peeraddr = req.mutable_peeraddr();
+    peeraddr->set_af(types::IP_AF_INET);
+    ip_addr_to_spec(&bgp_peer_uuid_obj->ms_id().peer_ip, peeraddr);
+    SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
+                      uuid_obj->uuid().str(),
+                      ipaddr2str(&bgp_peer_uuid_obj->ms_id().local_ip),
+                      ipaddr2str(&bgp_peer_uuid_obj->ms_id().peer_ip));
+}
+
+NBB_VOID
+bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlator) 
+{
+    uuid_t uuid;
+    pds_ms_get_uuid(&uuid, req.uuid());
+
+    // Always set admin status to UP
+    if (row_status != AMB_ROW_DESTROY) {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+        if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+            // BGP Peer Update - Fill keys
+            bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+        } else {
+            // BGP Peer Create - store UUID to key mapping pending confirmation
+            ip_addr_t local_ipaddr, peer_ipaddr;
+            ip_addr_spec_to_ip_addr (req.localaddr(), &local_ipaddr);
+            ip_addr_spec_to_ip_addr (req.peeraddr(), &peer_ipaddr);
+            bgp_peer_uuid_obj_uptr_t bgp_peer_uuid_obj 
+                (new bgp_peer_uuid_obj_t (uuid,
+                                          local_ipaddr,
+                                          peer_ipaddr));
+            {
+                auto mgmt_ctxt = mgmt_state_t::thread_context();
+                mgmt_ctxt.state()->set_pending_uuid_create(uuid,
+                                                           std::move(bgp_peer_uuid_obj));
+            }
+            SDK_TRACE_VERBOSE("BGP Peer Create Pre-set UUID %s Local IP %s Peer IP %s",
+                              uuid.str(), ipaddr2str(&local_ipaddr),
+                              ipaddr2str(&peer_ipaddr));
+        }
+    } else {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+        if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+            bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+            mgmt_ctxt.state()->set_pending_uuid_delete(uuid);
+        } else {
+            // Venice may send the same UUID for 
+            // BGP Global, Peer and PeerAF protos
+            // in which case it will fill the appropriate keys
+            // and the UUID need not be deleted
+            SDK_TRACE_VERBOSE("Received BGP Peer Delete request with invalid UUID type %s",
+                              uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    }
+}
 
 NBB_VOID 
 bgp_peer_fill_func (pds::BGPPeerSpec&   req,
@@ -18,12 +84,16 @@ bgp_peer_fill_func (pds::BGPPeerSpec&   req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    // TODO: Convert UUID to entity_index;
-    v_amb_bgp_peer->rm_ent_index        = strtol (req.uuid().c_str(), NULL, 0);
+    // ASSUMPTION - There is only a single BGP instance ever.
+    // So the BGP instance UUID is not included in the BGP Peer Proto. 
+    // Harcoding the BGP entity index.
+    v_amb_bgp_peer->rm_ent_index        = PDS_MS_BGP_RM_ENT_INDEX;
     oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer->rm_ent_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_RM_ENT_INDEX);
 
-   
+    uuid_t uuid;
+    pds_ms_get_uuid(&uuid, req.uuid());
+
     // Always set admin status to UP
     if (row_status != AMB_ROW_DESTROY) {
         NBB_TRC_FLOW ((NBB_FORMAT "Not destroying peer: fill in field Local_NM"));

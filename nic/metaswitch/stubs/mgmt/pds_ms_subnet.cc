@@ -3,6 +3,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_subnet.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
@@ -306,22 +307,72 @@ cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete)
 }
 
 sdk_ret_t
+subnet_uuid_2_idx_alloc (const pds_obj_key_t& key, ms_bd_id_t* bd_id)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    // Subnet Create - Allocate a new index
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj != nullptr) {
+        SDK_TRACE_ERR("Subnet Create for existing UUID %s containing %s",
+                      key.str(), uuid_obj->str());
+        return SDK_RET_ENTRY_EXISTS;
+    }
+    subnet_uuid_obj_uptr_t subnet_uuid_obj (new subnet_uuid_obj_t(key));
+    *bd_id = subnet_uuid_obj->ms_id();
+    mgmt_ctxt.state()->set_pending_uuid_create(key,
+                                               std::move(subnet_uuid_obj));
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+subnet_uuid_2_idx_fetch (const pds_obj_key_t& key, ms_bd_id_t* bd_id)
+{
+    // Update or Delete - fetch the BD ID
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj == nullptr) {
+        SDK_TRACE_ERR("Unknown UUID %s in Subnet Request", key.str());
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
+        SDK_TRACE_ERR("Wrong UUID %s containing %s in Subnet request",
+                      key.str(), uuid_obj->str());
+        return SDK_RET_INVALID_ARG;
+    }
+    auto subnet_uuid_obj = (subnet_uuid_obj_t*) uuid_obj;
+    *bd_id = subnet_uuid_obj->ms_id();
+    SDK_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d", bd_id);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
 
-    auto bd_id = pdsobjkey2msidx(spec->key);
-    cache_subnet_spec (spec, bd_id, false /* Create new*/);
+    try {
+        ms_bd_id_t bd_id;
+        auto ret = subnet_uuid_2_idx_alloc(spec->key, &bd_id);
+        if (ret != SDK_RET_OK) {return ret;}
 
-    ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
-    if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
-                       spec->key.str(), bd_id, ret_status);
-        return pds_ms_api_to_sdk_ret (ret_status);
+        cache_subnet_spec (spec, bd_id, false /* Create new*/);
+
+        ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
+                           spec->key.str(), bd_id, ret_status);
+
+            // Internal BD ID already release - Delete the cached subnet spec
+            cache_subnet_spec (spec, bd_id, true /* Delete */);
+            return pds_ms_api_to_sdk_ret (ret_status);
+        }
+        SDK_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed", 
+                         spec->key.str(), bd_id);
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Subnet %s creation failed %s", 
+                        spec->key.str(), e.what());
+        return SDK_RET_ERR;
     }
-
-    SDK_TRACE_DEBUG ("subnet %s bd %d create is successfully processed\n", 
-                     spec->key.str(), bd_id);
     return SDK_RET_OK;
 }
 
@@ -330,17 +381,87 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     types::ApiStatus ret_status;
 
-    auto bd_id = pdsobjkey2msidx(spec->key);
-    ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
-    if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)\n", 
-                       spec->key.str(), bd_id, ret_status);
-        return pds_ms_api_to_sdk_ret (ret_status);
+    try {
+        ms_bd_id_t bd_id;
+        auto ret = subnet_uuid_2_idx_fetch(spec->key, &bd_id);
+        if (ret != SDK_RET_OK) {return ret;}
+
+        ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
+                           spec->key.str(), bd_id, ret_status);
+            return pds_ms_api_to_sdk_ret (ret_status);
+        }
+
+        cache_subnet_spec (spec, bd_id, true /* Delete */);
+        SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed",
+                         spec->key.str(), bd_id);
+    
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Subnet %s deletion failed %s",
+                        spec->key.str(), e.what());
+    }
+    return SDK_RET_OK;
+}
+
+static sdk_ret_t
+parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
+                     subnet_upd_flags_t& ms_upd_flags)
+{
+    bool fastpath = false;
+    // Enter thread-safe context to access/modify global state
+    auto state_ctxt = state_t::thread_context();
+    bd_id = pdsobjkey2msidx(spec->key);
+    auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
+    if (subnet_obj == nullptr) {
+        SDK_TRACE_ERR("Update for unknown subnet %s bd %d",
+                      spec->key.str(), bd_id);
+        return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    cache_subnet_spec (spec, bd_id, true /* Delete */);
-    SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed\n", 
-                      spec->key.str(), bd_id);
+    auto& state_pds_spec = subnet_obj->spec();
+    if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap, 
+                sizeof(state_pds_spec.fabric_encap)) != 0) {
+        ms_upd_flags.bd = true;
+        SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
+                       spec->key.str(), bd_id,
+                       state_pds_spec.fabric_encap.val.vnid,
+                       spec->fabric_encap.val.vnid);
+        state_pds_spec.fabric_encap = spec->fabric_encap;
+    }
+    if (state_pds_spec.host_ifindex != spec->host_ifindex) {
+        ms_upd_flags.bd_if = true;
+        SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old 0x%x New 0x%x",
+                       spec->key.str(), bd_id, state_pds_spec.host_ifindex, 
+                       spec->host_ifindex);
+        state_pds_spec.host_ifindex = spec->host_ifindex;
+    }
+    if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
+        ms_upd_flags.irb = true;
+        // Diff in IP address needs to be driven through fast and slowpath
+    }
+    // Diff in any other property needs to be driven through fastpath
+    if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
+        SDK_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
+                       spec->key.str(), bd_id);
+        fastpath = true;
+    }
+    // Update the cached subnet spec with the new info
+    state_pds_spec = *spec;
+
+    if (fastpath) {
+        // Stub takes care of sequencing if create has not yet been
+        // received from MS.
+        auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt),
+                                           bd_id, subnet_obj);
+        // Do not state_ctxt has been released above 
+        // Do not access global state beyond this
+        if (ret != SDK_RET_OK) {
+            SDK_TRACE_ERR("Subnet %s BD %d update fastpath fields failed %d",
+                          spec->key.str(), bd_id, ret);
+            return ret;
+        }
+    }
     return SDK_RET_OK;
 }
 
@@ -348,77 +469,33 @@ sdk_ret_t
 subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     subnet_upd_flags_t  ms_upd_flags;
-    bool fastpath = false;
     types::ApiStatus ret_status;
-    uint32_t bd_id;
+    ms_bd_id_t bd_id;
 
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = state_t::thread_context();
-        bd_id = pdsobjkey2msidx(spec->key);
-        auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
-        if (subnet_obj == nullptr) {
-            SDK_TRACE_ERR("Update for unknown subnet %s bd %d",
-                          spec->key.str(), bd_id);
-            return SDK_RET_ENTRY_NOT_FOUND;
-        }
+    try {
+        auto ret = subnet_uuid_2_idx_fetch(spec->key, &bd_id);
+        if (ret != SDK_RET_OK) {return ret;}
 
-        auto& state_pds_spec = subnet_obj->spec();
-        if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap, 
-                    sizeof(state_pds_spec.fabric_encap)) != 0) {
-            ms_upd_flags.bd = true;
-            SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
-                           spec->key.str(), bd_id,
-                           state_pds_spec.fabric_encap.val.vnid,
-                           spec->fabric_encap.val.vnid);
-            state_pds_spec.fabric_encap = spec->fabric_encap;
-        }
-        if (state_pds_spec.host_ifindex != spec->host_ifindex) {
-            ms_upd_flags.bd_if = true;
-            SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old 0x%x New 0x%x",
-                            spec->key.str(), bd_id, state_pds_spec.host_ifindex, 
-                            spec->host_ifindex);
-            state_pds_spec.host_ifindex = spec->host_ifindex;
-        }
-        if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
-            ms_upd_flags.irb = true;
-            // Diff in IP address needs to be driven through fast and slowpath
-        }
-        // Diff in any other property needs to be driven through fastpath
-        if (memcmp(&state_pds_spec, spec, sizeof(*spec)) != 0) {
-            SDK_TRACE_INFO("Subnet %s BD %d fastpath parameter change",
-                            spec->key.str(), bd_id);
-            fastpath = true;
-        }
-        // Update the cached subnet spec with the new info
-        state_pds_spec = *spec;
+        ret = parse_subnet_update(spec, bd_id, ms_upd_flags);
+        if (ret != SDK_RET_OK) {return ret;}
 
-        if (fastpath) {
-            // Stub takes care of sequencing if create has not yet been
-            // received from MS.
-            auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt),
-                                               bd_id, subnet_obj);
-            // Do not state_ctxt has been released above 
-            // Do not access global state beyond this
-            if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("Subnet %s BD %d update fastpath fields failed %d",
-                               spec->key.str(), bd_id, ret);
-                return ret;
+        if (ms_upd_flags) {
+            ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id,
+                                                     AMB_ROW_ACTIVE);
+            if (ret_status != types::ApiStatus::API_STATUS_OK) {
+                SDK_TRACE_ERR ("Failed to process subnet %s field update err %d",
+                               spec->key.str(), ret_status);
+                return pds_ms_api_to_sdk_ret (ret_status);
             }
+            SDK_TRACE_DEBUG ("Subnet %s field update successfully processed",
+                             spec->key.str());
         }
-    } // End of state thread_context
-      // Do Not access/modify global state after this
-
-    if (ms_upd_flags) {
-        ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id, AMB_ROW_ACTIVE);
-        if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process subnet %s field update (error=%d)\n", 
-                            spec->key.str(), ret_status);
-            return pds_ms_api_to_sdk_ret (ret_status);
-        }
-
-        SDK_TRACE_DEBUG ("subnet %s field update is successfully processed\n", 
-                          spec->key.str());
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Subnet %s update failed %s", 
+                        spec->key.str(), e.what());
+        return SDK_RET_ERR;
     }
+
     return SDK_RET_OK;
 }
 };    // namespace pds_ms

@@ -69,8 +69,10 @@ pds_ms_fill_amb_cipr_rtm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 
         if (conf->entity_index != PDS_MS_RTM_DEF_ENT_INDEX) {
             auto vrf_name = std::to_string(conf->entity_index);
-            strcpy((char*)data->vrf_name, vrf_name.c_str());
-            data->vrf_name_len = vrf_name.size();
+            auto vrf_max_sz = sizeof(data->vrf_name);
+            strncpy((char*)data->vrf_name, vrf_name.c_str(), vrf_max_sz);
+            data->vrf_name_len = (vrf_name.size() > vrf_max_sz)
+                                 ? vrf_max_sz : vrf_name.size();
             SDK_TRACE_DEBUG("RTM VRF name = %s", vrf_name.c_str());
             AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_ENT_VRF_NAME);
         }

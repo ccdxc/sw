@@ -95,7 +95,7 @@ pds_ms_sim_test_bgp_update ()
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_uuid (msidx2pdsobjkey(1).str());
+    bgp_global_spec.set_uuid (msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).str());
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
     pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -121,6 +121,7 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
+    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
@@ -178,6 +179,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
+    pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
@@ -316,13 +318,13 @@ pds_ms_sim_test_config ()
         std::cout << " Simulate MAC and IP learn on Node " << g_node_id << std::endl;
         ip_addr_t   ip;
         mac_addr_t  mac;
-        str2ipaddr((char*) "99.0.0.1", &ip);
+        str2ipaddr((char*) "10.17.0.1", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
         pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
-        str2ipaddr((char*) "99.0.0.2", &ip);
+        str2ipaddr((char*) "10.17.0.2", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
         pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
-        str2ipaddr((char*) "99.0.0.5", &ip);
+        str2ipaddr((char*) "10.17.0.5", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
         pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
     }

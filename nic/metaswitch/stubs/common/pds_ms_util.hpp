@@ -24,6 +24,8 @@ namespace pds_ms {
 
 constexpr size_t VRF_PREF_LEN = 4;
 
+using uuid_t = pds_obj_key_t;
+
 static inline unsigned long
 vrfname_2_vrfid (const NBB_BYTE* vrfname, NBB_ULONG len)
 {
@@ -161,6 +163,13 @@ class ip_prefix_hash {
 public:
     std::size_t operator()(const ip_prefix_t &pfx) const {
         return hash_algo::fnv_hash((void *)&pfx, sizeof(pfx));
+    }
+};
+
+class uuid_hash {
+public:
+    std::size_t operator()(const uuid_t &uuid) const {
+        return hash_algo::fnv_hash((void *)&uuid, sizeof(uuid));
     }
 };
 

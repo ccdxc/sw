@@ -100,6 +100,8 @@ nbase_init ()
     A0_USER_REG_LOCAL_IF_MAP_FN (pds_ms::ms_to_lnx_ifindex);
     A0_USER_REG_SYSTEM_IF_MAP_FN(pds_ms::lnx_to_ms_ifindex);
 
+    pds_ms_reg_pre_set_amb_bgp_peer(pds::bgp_peer_pre_set);
+
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */
     /*                                                                         */

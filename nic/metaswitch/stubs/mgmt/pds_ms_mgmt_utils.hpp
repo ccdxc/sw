@@ -25,13 +25,16 @@ extern "C" {
 #include "psm_mgmt_if.h"
 #include "include/sdk/ip.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_config.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_config.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "gen/proto/types.pb.h"
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
 #include "gen/proto/evpn.pb.h"
 #include "gen/proto/cp_interface.pb.h"
 #include "gen/proto/cp_route.pb.h"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 
 #define PDS_MS_CTM_GRPC_CORRELATOR 0x101
@@ -58,6 +61,12 @@ extern "C" {
 using namespace std;
 
 sdk_ret_t pds_ms_api_to_sdk_ret (types::ApiStatus api_err);
+
+void ip_addr_to_spec(const ip_addr_t *ip_addr,
+                     types::IPAddress *ip_addr_spec);
+bool ip_addr_spec_to_ip_addr(const types::IPAddress& in_ipaddr,
+                             ip_addr_t *out_ipaddr);
+
 NBB_VOID pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
                                                 NBB_LONG      type,
                                                 NBB_ULONG     len,
@@ -82,6 +91,9 @@ NBB_VOID pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
                                 bool is_zero_ip_valid);
 
 NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
+
+NBB_VOID
+pds_ms_get_uuid(pds_ms::uuid_t *out_uuid, const string& in_str);
 
 NBB_VOID
 pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field,
@@ -130,6 +142,10 @@ NBB_VOID bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
                                AMB_GEN_IPS        *mib_msg, 
                                AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
                                NBB_LONG           row_status);
+
+NBB_VOID bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
+                          NBB_ULONG correlator);
+
 NBB_VOID bgp_peer_fill_func (pds::BGPPeerSpec&   req,
                              AMB_GEN_IPS         *mib_msg,
                              AMB_BGP_PEER        *v_amb_bgp_peer,

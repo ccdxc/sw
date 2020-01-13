@@ -100,7 +100,7 @@ pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
     spec.fabric_encap = store_info_.bd_obj->properties().fabric_encap;
     spec.host_ifindex = store_info_.bd_obj->properties().host_ifindex;
     SDK_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x",
-                    spec.key.id, spec.fabric_encap.val.vnid, spec.host_ifindex);
+                    ips_info_.bd_id, spec.fabric_encap.val.vnid, spec.host_ifindex);
 
     return spec;
 }
@@ -157,8 +157,8 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_
 pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
     auto& pds_spec = store_info_.subnet_obj->spec();
-    SDK_TRACE_INFO ("MS BD %d: VPC %d VNI %d IP %s Host IfIndex 0x%x",
-                    pds_spec.key.id, pds_spec.vpc.id, 
+    SDK_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s Host IfIndex 0x%x",
+                    ips_info_.bd_id, pds_spec.key.str(), pds_spec.vpc.str(), 
                     pds_spec.fabric_encap.val.vnid,
                     ipv4addr2str(pds_spec.v4_vr_ip), pds_spec.host_ifindex);
 
@@ -187,7 +187,7 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         bd_obj_uptr_t bd_obj_uptr; 
         if (op_create_) {
             auto& spec = store_info_.subnet_obj->spec();
-            bd_obj_uptr.reset(new bd_obj_t(ips_info_.bd_id, spec.vpc));
+            bd_obj_uptr.reset(new bd_obj_t(ips_info_.bd_id, spec.vpc, spec.key));
             store_info_.bd_obj = bd_obj_uptr.get();
         }
         store_info_.bd_obj->properties().fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
@@ -308,10 +308,19 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // if there is a subsequent create from MS.
 
     ips_info_.bd_id = bd_id;
+    uuid_t  subnet_uuid;
     SDK_TRACE_INFO ("MS BD %d: Delete IPS", ips_info_.bd_id);
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
+        fetch_store_info_(state_ctxt.state());
+        if (unlikely(store_info_.bd_obj == nullptr)) {
+            // The prev IPS response could have possibly been delayed
+            // beyond Subnet Spec delete - Ignore and return success to MS
+            SDK_TRACE_INFO ("Delete IPS for unknown MS BD %d", bd_id);
+            return;
+        }
+        subnet_uuid = store_info_.bd_obj->properties().subnet;
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);
@@ -331,13 +340,14 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
 
     auto l_bd_id = ips_info_.bd_id; 
     cookie_uptr_->send_ips_reply = 
-        [l_bd_id] (bool pds_status, bool ips_mock) -> void {
+        [l_bd_id, subnet_uuid] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
             SDK_TRACE_DEBUG("MS BD %d Delete: Rcvd Async PDS response %s",
                             l_bd_id, (pds_status) ? "Success" : "Failure");
-
+            auto mgmt_ctxt = mgmt_state_t::thread_context();
+            mgmt_ctxt.state()->remove_uuid(subnet_uuid);
         };
     // All processing complete, only batch commit remains - 
     // safe to release the cookie_uptr_ unique_ptr
