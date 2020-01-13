@@ -79,6 +79,7 @@ traverse_interrupts (intr_reg_t &reg)
     intr_field_t *field;
 
     switch (reg.id) {
+    case 137: // pp_pp_int_pp
     case 140:
     case 142:
     case 144:
@@ -87,12 +88,12 @@ traverse_interrupts (intr_reg_t &reg)
     case 150:
     case 152:
     case 154:
+    case 155 ... 178: // pp_pp_port_c_X_{int_c_mac,int_c_ecc,int_groups_intreg}
     case 362:
     case 363:
         // Skip BX block
     case 477 ... 482:
         //Skip MX blocks
-        // TODO skip PCIE ports for now
         return;
     }
 
