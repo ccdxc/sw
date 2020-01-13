@@ -138,6 +138,15 @@ def ValidateObject(obj, resp, yaml=False):
         return ValidateYamlValues(obj, resp)
     return ValidateGrpcValues(obj, resp)
 
+def GetAttrFromResponse(obj, resp, attr):
+    result = getattr(resp, attr, None)
+    if result is None:
+        logger.error(f"Error fetching {attr} from {resp}")
+        assert(0)
+    if obj.IsSingleton():
+        return [result]
+    return result
+
 def ValidateCreate(obj, resps):
     if IsDryRun():
         # assume creation was fine in case of dry run
@@ -161,7 +170,8 @@ def ValidateRead(obj, resps):
     for resp in resps:
         if ValidateGrpcResponse(resp, expApiStatus):
             if ValidateGrpcResponse(resp):
-                for response in resp.Response:
+                readresponse = GetAttrFromResponse(obj, resp, 'Response')
+                for response in readresponse:
                     if not ValidateObject(obj, response):
                         return False
         else:
@@ -174,7 +184,8 @@ def ValidateDelete(obj, resps):
         obj.SetHwHabitant(False)
         return
     for resp in resps:
-        for status in resp.ApiStatus:
+        respStatus = GetAttrFromResponse(obj, resp, 'ApiStatus')
+        for status in respStatus:
             if status == types_pb2.API_STATUS_OK:
                 obj.SetHwHabitant(False)
             else:

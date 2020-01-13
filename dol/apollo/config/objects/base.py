@@ -29,6 +29,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         super().__init__()
         self.Origin = topo.OriginTypes.FIXED
         self.HwHabitant = True
+        self.Singleton = False
         self.ObjType = objtype
         self.Parent = None
         self.Children = []
@@ -90,6 +91,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def IsHwHabitant(self):
         return self.HwHabitant
+
+    def SetSingleton(self, value):
+        self.Singleton = value
+
+    def IsSingleton(self):
+        return self.Singleton
 
     def SetOrigin(self, origintype):
         self.Origin = origintype

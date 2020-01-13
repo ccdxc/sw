@@ -42,11 +42,10 @@ def TestCaseStepTeardown(tc, step):
     return True
 
 def TestCaseVerify(tc):
-    if tc.module.name.find("WORKFLOW"):
-        generator.__read();
     if 'WORKFLOW_START' in tc.module.name:
         topo.ChosenFlowObjs.select_objs = False
         topo.ChosenFlowObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
         topo.ChosenFlowObjs.reset()
+        generator.__read();
     return True

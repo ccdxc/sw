@@ -18,8 +18,8 @@ import types_pb2 as types_pb2
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, spec):
         super().__init__(api.ObjectTypes.DEVICE)
+        self.SetSingleton(True)
         self.GID("Device1")
-
         self.stack = getattr(spec, 'stack', 'ipv4')
         ################# PUBLIC ATTRIBUTES OF DEVICE OBJECT #####################
         self.Mode = getattr(spec, 'mode', 'auto')
@@ -27,6 +27,8 @@ class DeviceObject(base.ConfigObjectBase):
             self.Mode = utils.GetDefaultDeviceMode()
         self.BridgingEnabled = getattr(spec, 'bridging', False)
         self.LearningEnabled = getattr(spec, 'learning', False)
+        self.LearnAgeTimeout = getattr(spec, 'learningagetimeout', 300)
+        self.OverlayRoutingEnabled = getattr(spec, 'overlayrouting', False)
         #TODO: based on stack, get ip & gw addr
         self.IPAddr = next(resmgr.TepIpAddressAllocator)
         self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
@@ -67,17 +69,20 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def PopulateSpec(self, grpcmsg):
-        grpcmsg.Request.IPAddr.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.IPAddr.V4Addr = int(self.IPAddr)
-        grpcmsg.Request.GatewayIP.Af = types_pb2.IP_AF_INET
-        grpcmsg.Request.GatewayIP.V4Addr = int(self.GatewayAddr)
-        grpcmsg.Request.MACAddr = self.MACAddr.getnum()
+        spec = grpcmsg.Request
+        spec.IPAddr.Af = types_pb2.IP_AF_INET
+        spec.IPAddr.V4Addr = int(self.IPAddr)
+        spec.GatewayIP.Af = types_pb2.IP_AF_INET
+        spec.GatewayIP.V4Addr = int(self.GatewayAddr)
+        spec.MACAddr = self.MACAddr.getnum()
         if self.Mode == "bitw":
-            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_BITW
+            spec.DevOperMode = device_pb2.DEVICE_OPER_MODE_BITW
         elif self.Mode == "host":
-            grpcmsg.Request.DevOperMode = device_pb2.DEVICE_OPER_MODE_HOST
-        grpcmsg.Request.BridgingEn = self.BridgingEnabled
-        grpcmsg.Request.LearningEn = self.LearningEnabled
+            spec.DevOperMode = device_pb2.DEVICE_OPER_MODE_HOST
+        spec.BridgingEn = self.BridgingEnabled
+        spec.LearningEn = self.LearningEnabled
+        spec.LearnAgeTimeout = self.LearnAgeTimeout
+        spec.OverlayRoutingEn = self.OverlayRoutingEnabled
         return
 
     def ValidateSpec(self, spec):
@@ -85,27 +90,49 @@ class DeviceObject(base.ConfigObjectBase):
             return False
         if utils.ValidateRpcIPAddr(self.GatewayAddr, spec.GatewayIP) is False:
             return False
-        # TODO: fix this
-        if utils.IsPipelineApollo() is True:
+        if utils.IsPipelineApollo():
+            # TODO: Fix read for artemis
+            # in Apulu, device mac addr will come from uplink l3 interface
             if spec.MACAddr != self.MACAddr.getnum():
                 return False
-        if utils.IsPipelineApulu() is True:
+        if utils.IsPipelineApulu():
             if self.Mode == "bitw":
                 if spec.DevOperMode != device_pb2.DEVICE_OPER_MODE_BITW:
                     return False
             elif self.Mode == "host":
                 if spec.DevOperMode != device_pb2.DEVICE_OPER_MODE_HOST:
                     return False
+        if spec.BridgingEn != self.BridgingEnabled:
+            return False
+        if spec.LearningEn != self.LearningEnabled:
+            return False
+        if spec.LearnAgeTimeout != self.LearnAgeTimeout:
+            return False
+        if spec.OverlayRoutingEn != self.OverlayRoutingEnabled:
+            return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.IsPipelineApulu() is True:
+        if utils.IsPipelineApulu():
             if self.Mode == "bitw":
                 if spec['devopermode'] != device_pb2.DEVICE_OPER_MODE_BITW:
                     return False
             elif self.Mode == "host":
                 if spec['devopermode'] != device_pb2.DEVICE_OPER_MODE_HOST:
                     return False
+        if utils.IsPipelineApollo():
+            # TODO: Fix read for artemis
+            # in Apulu, device mac addr will come from uplink l3 interface
+            if spec['macaddr'] != self.MACAddr.getnum():
+                return False
+        if spec['bridgingen'] != self.BridgingEnabled:
+            return False
+        if spec['learningen'] != self.LearningEnabled:
+            return False
+        if spec['learnagetimeout'] != self.LearnAgeTimeout:
+            return False
+        if spec['overlayroutingen'] != self.OverlayRoutingEnabled:
+            return False
         return True
 
     def GetGrpcReadMessage(self):

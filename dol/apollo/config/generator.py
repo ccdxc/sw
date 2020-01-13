@@ -92,6 +92,7 @@ def __generate(topospec):
     return
 
 def __create():
+    logger.info("Creating objects in Agent")
     # Start the Batch
     batch.client.Start()
 
@@ -123,6 +124,7 @@ def __create():
 
 def __read():
     # Read all objects
+    logger.info("Reading objects via Agent")
     interface.client.ReadObjects()
     device.client.ReadObjects()
     vpc.client.ReadObjects()
@@ -180,10 +182,8 @@ def Main():
     topospec = __get_topo_spec()
     __generate(topospec)
 
-    logger.info("Creating objects in Agent")
     __create()
 
-    logger.info("Reading objects via Agent")
     __read()
 
     timeprofiler.ConfigTimeProfiler.Stop()
