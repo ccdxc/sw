@@ -53,11 +53,11 @@ public:
         } while (w != I2W(last_alloc));
         return SDK_RET_NO_RESOURCE;
     }
-    
+
     void free(uint32_t index) {
         uint64_t w = I2W(index);
         auto i = index % WORDSIZE;
-        pool[w] &= ~((uint64_t)1<<(i-1));
+        pool[w] &= ~((uint64_t)1 << i);
         last_free = index;
     }
 
