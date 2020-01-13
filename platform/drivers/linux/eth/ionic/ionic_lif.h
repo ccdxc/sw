@@ -122,16 +122,16 @@ struct ionic_lif_sw_stats {
 };
 
 enum ionic_lif_state_flags {
-	IONIC_LIF_INITED,
-	IONIC_LIF_SW_DEBUG_STATS,
-	IONIC_LIF_UP,
-	IONIC_LIF_LINK_CHECK_REQUESTED,
-	IONIC_LIF_QUEUE_RESET,
+	IONIC_LIF_F_INITED,
+	IONIC_LIF_F_SW_DEBUG_STATS,
+	IONIC_LIF_F_UP,
+	IONIC_LIF_F_LINK_CHECK_REQUESTED,
+	IONIC_LIF_F_QUEUE_RESET,
 	IONIC_LIF_F_FW_READY,
 	IONIC_LIF_F_RDMA_SNIFFER,
 
 	/* leave this as last */
-	IONIC_LIF_STATE_SIZE
+	IONIC_LIF_F_STATE_SIZE
 };
 
 struct ionic_lif_cfg {
@@ -157,7 +157,7 @@ struct ionic_qtype_info {
 struct ionic_lif {
 	struct net_device *netdev;
 	struct net_device *upper_dev;
-	DECLARE_BITMAP(state, IONIC_LIF_STATE_SIZE);
+	DECLARE_BITMAP(state, IONIC_LIF_F_STATE_SIZE);
 	struct ionic *ionic;
 	unsigned int index;
 	unsigned int hw_index;
@@ -169,7 +169,6 @@ struct ionic_lif {
 	struct ionic_deferred deferred;
 	struct work_struct tx_timeout_work;
 	u64 last_eid;
-	u32 flags;
 	unsigned int kern_pid;
 	u64 __iomem *kern_dbpage;
 	unsigned int nrdma_eqs;
