@@ -521,11 +521,26 @@ def GetTunnelIPFromRoute(testcase, packet, args=None):
     return str(testcase.config.route.TUNNEL.RemoteIPAddr)
 
 def __is_any_cfg_deleted(tc):
-    vnic = tc.config.localmapping.VNIC
-    tunnel = tc.config.tunnel
+    nexthop = None
+    nexthopgroup = None
+    interface = None
+    device = tc.config.devicecfg
     vpc = tc.config.localmapping.VNIC.SUBNET.VPC
+    routetable = tc.config.route
     subnet = tc.config.localmapping.VNIC.SUBNET
-    objs = [vnic, tunnel, vpc, subnet]
+    vnic = tc.config.localmapping.VNIC
+    lmapping = tc.config.localmapping
+    rmapping = tc.config.remotemapping
+    tunnel = tc.config.tunnel
+    if tunnel is None:
+        pass
+    elif tunnel.IsUnderlayEcmp():
+        nexthopgroup = tunnel.NEXTHOPGROUP
+    elif tunnel.IsUnderlay():
+        nexthop = tunnel.NEXTHOP
+        interface = nexthop.L3Interface
+    objs = [device, vpc, routetable, subnet, vnic, lmapping]
+    objs.extend([rmapping, tunnel, nexthop, nexthopgroup, interface])
     values = list(map(lambda x: not(x.IsHwHabitant()), list(filter(None, objs))))
     if any(values):
         return True

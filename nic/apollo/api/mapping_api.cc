@@ -198,6 +198,7 @@ pds_local_mapping_read (pds_mapping_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
+    memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
     entry->set_local(true);
     rv = entry->read(key, &info);
@@ -223,6 +224,7 @@ pds_remote_mapping_read (pds_mapping_key_t *key,
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
+    memset(&info, 0, sizeof(pds_mapping_info_t));
     info.spec.key = *key;
     entry->set_local(false);
     rv = entry->read(key, &info);

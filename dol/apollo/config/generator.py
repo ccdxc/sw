@@ -139,6 +139,7 @@ def __read():
     route.client.ReadObjects()
     #dhcp_relay.client.ReadObjects()
     nat_pb.client.ReadObjects()
+    # TODO: get all NOT supported
     # lmapping.client.ReadObjects()
     # rmapping.client.ReadObjects()
     return

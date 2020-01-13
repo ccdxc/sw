@@ -2,7 +2,9 @@
 selectors:
     root: ref://store/templates/id=FLOW
     maxlimits: 1
-    flow: filter://any
+    # if route table has a default route,
+    # then the packet might end up going to internet gateway instead of getting dropped.
+    flow: filter://HasDefaultRoute=False
 
 packets:
     - packet:

@@ -84,6 +84,15 @@ class RemoteMappingObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return
 
+    def ValidateSpec(self, spec):
+        if int(spec.Id.IPKey.VPCId) != self.SUBNET.VPC.VPCId:
+            return False
+        if not utils.ValidateRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr):
+            return False
+        if spec.MACAddr != self.MACAddr.getnum():
+            return False
+        return True
+
     def GetDependees(self):
         """
         depender/dependent - remote mapping
@@ -125,6 +134,10 @@ class RemoteMappingObject(base.ConfigObjectBase):
 class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.MAPPING)
+        return
+
+    def PdsctlRead(self):
+        # pdsctl show not supported for remote mapping
         return
 
     def GenerateObjects(self, parent, subnet_spec_obj):

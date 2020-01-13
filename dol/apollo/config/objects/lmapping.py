@@ -100,6 +100,13 @@ class LocalMappingObject(base.ConfigObjectBase):
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return
 
+    def ValidateSpec(self, spec):
+        if int(spec.Id.IPKey.VPCId) != self.VNIC.SUBNET.VPC.VPCId:
+            return False
+        if not utils.ValidateRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr):
+            return False
+        return True
+
     def GetGrpcSvcMappingCreateMessage(self, cookie):
         grpcmsg = service_pb2.SvcMappingRequest()
         grpcmsg.BatchCtxt.BatchCookie = cookie
@@ -124,6 +131,10 @@ class LocalMappingObject(base.ConfigObjectBase):
 class LocalMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.MAPPING)
+        return
+
+    def PdsctlRead(self):
+        # pdsctl show not supported for local mapping
         return
 
     def GenerateObjects(self, parent, vnic_spec_obj):
