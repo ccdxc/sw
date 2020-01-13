@@ -8,9 +8,19 @@ DST='/sw/apollo_sw'
 LIBDIR=$DST/nic/sdk/third-party/libs
 agent=$1
 buildarch=$2
+pipeline=$3
 SWMNTDIR='/usr/src/github.com/pensando/sw'
 CDIR=`pwd`
 set -x
+
+copy_job_files() {
+    cp /sw/.job.yml $DST
+    cp /sw/nic/.job.yml $DST/nic
+    cp /sw/box* $DST
+    cp /sw/nic/box* $DST/nic
+    cp /sw/nic/run.py $DST/nic
+}
+
 copy_files() {
     # Add a space in end of each line.
     nicd='nic/sdk nic/buildroot nic/mkdefs nic/tools/ncc nic/utils/pack_bytes '
@@ -23,12 +33,20 @@ copy_files() {
     p4d+='nic/include/hal_pd_error.hpp nic/p4/eth nic/asm/eth '
     p4d+='nic/p4/adminq nic/p4/edma nic/p4/notify nic/asm/adminq nic/asm/edma nic/asm/notify '
 
-    pkgf='nic/tools/package/package.py nic/tools/package/pack_host.txt nic/tools/package/pack_apollo.txt '
+    pkgf='nic/tools/package/package.py nic/tools/package/pack_host.txt '
     pkgf+='nic/tools/update_version.sh nic/tools/core_count_check.sh nic/tools/package/pack_platform.txt '
     pkgf+='nic/tools/package/pack_debug.txt nic/tools/upgrade_version.sh nic/tools/gen_version.py '
     pkgf+='nic/tools/package/pack_test_utils.txt nic/tools/hal/mem_parser.py nic/hal/module_memrgns.mk '
 
-    apollod='nic/apollo nic/conf/apollo '
+    apollod='nic/apollo '
+    
+    if [ "$pipeline" == "apulu" ];then
+        pkgf+='nic/tools/package/pack_apulu.txt '
+        apollod+='nic/conf/apulu '
+    elif [ "$pipeline" == "apollo" ];then
+        pkgf+='nic/tools/package/pack_apollo.txt '
+        apollod+='nic/conf/apollo '
+    fi
 
     utilsd='nic/utils/ftlite '
 
@@ -117,12 +135,12 @@ build() {
     rb=$1
     cd $2
     if [[ "$buildarch" == "aarch64" || $buildarch == "all" ]];then
-        make PIPELINE=apollo  PLATFORM=hw ARCH=aarch64 firmware
+        make PIPELINE=$pipeline  PLATFORM=hw ARCH=aarch64 firmware
         [[ $? -ne 0 ]] && echo "Aborting make!" && script_exit $rb 1
     fi
 
     if [[ "$buildarch" == "x86_64" || "$buildarch" == "all" ]];then
-        make PIPELINE=apollo
+        make PIPELINE=$pipeline
         [[ $? -ne 0 ]] && echo "Aborting make!" && script_exit $rb 1
     fi
 }
@@ -148,7 +166,7 @@ remove_files() {
 
 save_files() {
     # Mention the .so to be saved and restored'
-    files='libsdkcapri_csrint.so libnicmgr_apollo.so libpciemgr_if.so librdmamgr_apollo.so'
+    files='libsdkcapri_csrint.so libnicmgr_'$pipeline'.so libpciemgr_if.so librdmamgr_apollo.so '
     # Platform includes used by nicmgr
     platform_inc='pciemgr_if/include/pciemgr_if.hpp '
     platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
@@ -175,9 +193,16 @@ save_files() {
     done
 }
 
-remove_hiddens() {
+remove_all_job_files() {
     cd $DST
     rm -rf .job*
+    rm box*
+}
+
+remove_hiddens() {
+    echo "Skip .job removal"
+    cd $DST
+    #rm -rf .job*
     rm -rf .clang*
     rm -rf .appro*
     rm -rf .warmd*
@@ -200,21 +225,24 @@ rebuild_and_runtest() {
     mount --bind /sw/apollo_sw $SWMNTDIR
     mount --bind /sw/apollo_sw /sw
 
-    build 1 /sw/nic
+    #build 1 /sw/nic
 
-    cd /sw/nic
-    if [[ "$buildarch" == "x86_64" || "$buildarch" == "all" ]];then
-        ./apollo/test/scale/run_scale_test_mock.sh --cfg scale_cfg_1vpc.json
-        [[ $? -ne 0 ]] && echo "Test failed!" && script_exit 1 1
-    fi
+    #Dont need tests here in this script
+    #cd /sw/nic
+    #if [[ "$buildarch" == "x86_64" || "$buildarch" == "all" ]];then
+    #    ./apollo/test/scale/run_scale_test_mock.sh --cfg scale_cfg_1vpc.json
+    #    [[ $? -ne 0 ]] && echo "Test failed!" && script_exit 1 1
+    #fi
 }
 
-if [ $# != 2 ];then
-    echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)"
+if [ $# != 3 ];then
+    echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)> <pipeline(apollo/apulu)"
     exit;
 fi
 
 copy_files
+copy_job_files
+#remove_all_job_files
 build 0 $DST/nic
 # TODO check for build success before removing the asic files
 save_files

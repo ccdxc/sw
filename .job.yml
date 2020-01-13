@@ -149,6 +149,8 @@ jobs:
     labels: ["precommit", "hourly"]
   nic/apollo:
     labels: ["precommit", "hourly"]
+  nic/apollo/tools/apulu/customer-docker: 
+    labels: ["precommit", "hourly"]
   nic/sdk:
     labels: ["precommit", "hourly", "2xhourly"]
   nic/utils/ftlite:

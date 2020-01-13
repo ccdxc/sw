@@ -1,0 +1,26 @@
+---
+version: 2.0
+targets:
+ apollo/tools/apulu/gtest_a:
+  commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_1"]
+  owners: ["email:jcruz@pensando.io"]
+  area:
+  sub-area:
+  feature:
+
+ apollo/tools/apulu/gtest_b:
+  commands: ["make", "PIPELINE=apulu", "jobd/apulu/gtest_2"]
+  owners: ["email:jcruz@pensando.io"]
+  area:
+  sub-area:
+  feature:
+
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+
+logfiles:
+  - /sw/nic/apollo/tools/dev-docker-sanity/nic_sanity_logs.tar.gz

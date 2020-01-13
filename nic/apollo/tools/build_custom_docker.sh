@@ -16,21 +16,21 @@ copy_libs()
 
 build_x86() {
     copy_libs x86_64
-    make PIPELINE=$pipeline "${@:1}"
+    make PIPELINE=$pipeline "${@:2}"
 }
 
 build_arm() {
     copy_libs aarch64
-    make PIPELINE=$pipeline ARCH=aarch64 PLATFORM=hw "${@:1}"
+    make PIPELINE=$pipeline ARCH=aarch64 PLATFORM=hw "${@:2}"
 }
 
 build_fw() {
     copy_libs aarch64
-    make PIPELINE=$pipeline ARCH=aarch64 PLATFORM=hw firmware  "${@:1}"
+    make PIPELINE=$pipeline ARCH=aarch64 PLATFORM=hw firmware  "${@:2}"
 }
 
 print_usage() {
-    echo "./build.sh <arch(x86_64/aarch64/firmware/clean)> <pipeline(apollo/apulu)> <extra make params>"
+    echo "./build_custom_docker.sh <arch(x86_64/aarch64/firmware/clean)> <pipeline(apollo/apulu)> <extra make params>"
     echo "                   extra make params : V=1, -d etc"
 }
 
