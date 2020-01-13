@@ -7,7 +7,7 @@ import pdb
 
 TCP_TICKLE_GAP = 15
 NUM_TICKLES = 4 
-GRACE_TIME = 30 
+GRACE_TIME = 50 
 
 def Setup(tc):
     return api.types.status.SUCCESS
@@ -94,6 +94,10 @@ def Trigger(tc):
     api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --dstport {} --dstip {} | grep ESTABLISHED".format(server_port, server.ip_address))
     tc.cmd_cookies.append(cmd_cookie)
 
+    cmd_cookie = "show session yaml"
+    api.Trigger_AddNaplesCommand(req2, naples.node_name, "/nic/bin/halctl show session --yaml".format(server_port, server.ip_address))
+    tc.cmd_cookies.append(cmd_cookie)
+
     trig_resp2 = api.Trigger(req2)
     term_resp2 = api.Trigger_TerminateAllCommands(trig_resp2)
     tc.resp2 = api.Trigger_AggregateCommandsResponse(trig_resp2, term_resp2)
@@ -127,6 +131,8 @@ def Verify(tc):
         if cmd.exit_code != 0 and not api.Trigger_IsBackgroundCommand(cmd):
             #This is expected so dont set failure for this case
             if tc.cmd_cookies[cookie_idx].find("After aging") != -1 and cmd.stdout == '':
+               result = api.types.status.SUCCESS
+            elif tc.cmd_cookies[cookie_idx].find("show session yaml") != -1:
                result = api.types.status.SUCCESS
             else:
                result = api.types.status.FAILURE
