@@ -33,7 +33,7 @@ function stop_process () {
         sudo $NICDIR/vpp/tools/stop-vpp-sim.sh $NICDIR $PIPELINE
     fi
     #dump backtrace of agent process to file, useful for debugging if process hangs
-    gdb -batch -p `pgrep pdsagent` -ex "thread apply all bt" > $NICDIR/pdsagent_bt.log
+    gdb -batch -p `pgrep pdsagent` -ex "thread apply all bt" &> $NICDIR/pdsagent_bt.log
     pkill agent
     pkill cap_model
 }
