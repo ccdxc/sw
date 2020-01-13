@@ -32,7 +32,9 @@ Status
   {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
     {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
     {{if not (eq $param.ActionFn "")}}
-    {{$param.ActionFn}}(req, resp);
+    auto ret = {{$param.ActionFn}}(req, resp);
+    resp->set_apistatus(ret);
+    return Status::OK;
     {{else}}
       {{if (HasSuffix $rpc "Delete")}}
     //Delete request
@@ -92,10 +94,10 @@ Status
         {{end}}
     PDS_MS_END_TXN(correlator);
       {{end}}
-    {{end}}
-  {{end}}
     resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
     return Status::OK;
+    {{end}}
+  {{end}}
 } 
 
 {{end}}
