@@ -10,9 +10,9 @@ import (
 
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -347,6 +347,11 @@ func (s *securityHooks) validateApp(in interface{}, ver string, ignoreStatus, ig
 	app, ok := in.(security.App)
 	if !ok {
 		return []error{fmt.Errorf("invalid input type")}
+	}
+
+	// disallow apps that don't have at least one of ProtoPorts and ALG
+	if (app.Spec.ProtoPorts == nil || len(app.Spec.ProtoPorts) == 0) && (app.Spec.ALG == nil || app.Spec.ALG.Type == "") {
+		return []error{fmt.Errorf("app doesn't have at least one of ProtoPorts and ALG")}
 	}
 
 	appProtos := []string{}

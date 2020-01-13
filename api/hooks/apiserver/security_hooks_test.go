@@ -2823,7 +2823,7 @@ func TestAppProtoPortConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create app with empty protocol. Error: %v", errs)
+	Assert(t, len(errs) != 0, "create app with empty protocol must fail. Error: %v", errs)
 
 	// protocol number
 	app = security.App{
@@ -3060,7 +3060,7 @@ func TestAppAlgConfig(t *testing.T) {
 	}
 
 	errs = s.validateApp(app, "v1", false, false)
-	Assert(t, len(errs) == 0, "failed to create app with empty ALG. Error: %v", errs)
+	Assert(t, len(errs) != 0, "create app with empty ALG must fail. Error: %v", errs)
 
 	// icmp ALG
 	app = security.App{
@@ -3935,4 +3935,64 @@ func TestNetworkSecurityPolicySingleton0_0PortApp(t *testing.T) {
 
 	errs := s.validateApp(app, "v1", false, false)
 	Assert(t, len(errs) != 0, "specifying ports 0 as a single rule must fail. Error: %v", errs)
+}
+
+func TestAppWithEmptyProtoAndEmptyALG(t *testing.T) {
+	t.Parallel()
+	logConfig := log.GetDefaultConfig(t.Name())
+	s := &securityHooks{
+		svc:    mocks.NewFakeService(),
+		logger: log.GetNewLogger(logConfig),
+	}
+
+	// app with both empty proto and empty ALG
+	app := security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{},
+	}
+
+	errs := s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "create app with both empty proto and empty ALG must fail. Error: %v", errs)
+
+	// app with both empty proto and empty ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ProtoPorts: []security.ProtoPort{},
+		},
+	}
+
+	errs = s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "create app with both empty proto and empty ALG must fail. Error: %v", errs)
+
+	// app with both empty proto and empty ALG
+	app = security.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "testApp",
+		},
+		Spec: security.AppSpec{
+			ALG: &security.ALG{
+				Type: "",
+				Ftp: &security.Ftp{
+					AllowMismatchIPAddress: true,
+				},
+			},
+		},
+	}
+
+	errs = s.validateApp(app, "v1", false, false)
+	Assert(t, len(errs) != 0, "create app with both empty proto and empty ALG must fail. Error: %v", errs)
 }
