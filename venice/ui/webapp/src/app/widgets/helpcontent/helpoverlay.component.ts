@@ -89,12 +89,22 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
     let route = this.route;
     let url = '';
     while (route != null) {
-      const urlItem = route.routeConfig != null ? route.routeConfig.path : '';
+      let urlItem = '';
+      if (route.routeConfig != null) {
+        if (route.routeConfig.path != null) {
+          // If url is using a route param, it will be picked up (ex. ":id")
+          urlItem = route.routeConfig.path;
+        } else if (route.snapshot != null && route.snapshot.url != null && route.snapshot.url.length !== 0) {
+          // If a url is using a url matcher, this will pick it up
+          urlItem = route.snapshot.url[0].path;
+        }
+      }
       if (urlItem.length !== 0) {
         url += '/' + urlItem;
       }
       route = route.firstChild;
     }
+    console.log('generated url ', url);
     return url;
   }
 
