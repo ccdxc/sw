@@ -15,7 +15,7 @@ nh_create_validate (pds_nexthop_spec_t *spec)
 }
 
 sdk_ret_t
-nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+nh_create (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -43,13 +43,13 @@ nh_create (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
 }
 
 static inline sdk_ret_t
-nh_update_validate (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
+nh_update_validate (pds_obj_key_t *key, pds_nexthop_spec_t *spec)
 {
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
+nh_update (pds_obj_key_t *key, pds_nexthop_spec_t *spec,
            pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -75,7 +75,7 @@ nh_update (pds_nexthop_key_t *key, pds_nexthop_spec_t *spec,
 }
 
 sdk_ret_t
-nh_delete (pds_nexthop_key_t *key, pds_batch_ctxt_t bctxt)
+nh_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_nexthop_spec_t *spec;
@@ -98,7 +98,7 @@ nh_delete (pds_nexthop_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-nh_get (pds_nexthop_key_t *key, pds_nexthop_info_t *info)
+nh_get (pds_obj_key_t *key, pds_nexthop_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_nexthop_spec_t *spec;

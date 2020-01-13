@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                    pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+                    pds_obj_key_t *key, pds_vpc_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -42,7 +42,7 @@ pds_vpc_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline vpc_entry *
-pds_vpc_entry_find (pds_vpc_key_t *key)
+pds_vpc_entry_find (pds_obj_key_t *key)
 {
     return (vpc_db()->find(key));
 }
@@ -58,7 +58,7 @@ pds_vpc_create (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_vpc_read (_In_ pds_vpc_key_t *key, _Out_ pds_vpc_info_t *info)
+pds_vpc_read (_In_ pds_obj_key_t *key, _Out_ pds_vpc_info_t *info)
 {
     vpc_entry *entry;
 
@@ -80,7 +80,7 @@ pds_vpc_update (_In_ pds_vpc_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_vpc_delete (_In_ pds_vpc_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_vpc_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vpc_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

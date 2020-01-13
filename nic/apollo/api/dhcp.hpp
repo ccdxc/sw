@@ -57,7 +57,7 @@ public:
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
     /// \return    DHCP relay object instance corresponding to the key
-    static dhcp_relay *build(pds_dhcp_relay_key_t *key);
+    static dhcp_relay *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -130,7 +130,7 @@ private:
 
 private:
     /// DHCP relay entry key
-    pds_dhcp_relay_key_t key_;
+    pds_obj_key_t key_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;
@@ -175,7 +175,7 @@ public:
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
     /// \return    DHCP policy object instance corresponding to the key
-    static dhcp_policy *build(pds_dhcp_policy_key_t *key);
+    static dhcp_policy *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -248,7 +248,7 @@ private:
 
 private:
     /// DHCP policy entry key
-    pds_dhcp_policy_key_t key_;
+    pds_obj_key_t key_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

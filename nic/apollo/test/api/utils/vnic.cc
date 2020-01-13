@@ -73,7 +73,7 @@ vnic_feeder_encap_next (pds_encap_t *encap, int width = 1)
 //----------------------------------------------------------------------------
 
 void
-vnic_feeder::init(pds_vnic_key_t key, uint32_t num_vnic, uint64_t mac,
+vnic_feeder::init(pds_obj_key_t key, uint32_t num_vnic, uint64_t mac,
                   pds_encap_type_t vnic_encap_type,
                   pds_encap_type_t fabric_encap_type,
                   bool src_dst_check, bool configure_policy) {
@@ -105,12 +105,12 @@ vnic_feeder::iter_next(int width) {
 }
 
 void
-vnic_feeder::key_build(pds_vnic_key_t *key) const {
+vnic_feeder::key_build(pds_obj_key_t *key) const {
     *key = this->key;
 }
 
 static void
-fill_policy_ids (pds_policy_key_t *pol_arr,
+fill_policy_ids (pds_obj_key_t *pol_arr,
                  uint32_t start_key, uint8_t num_policy)
 {
     for (int i = 0; i < num_policy; i++) {
@@ -168,7 +168,7 @@ vnic_feeder::spec_build(pds_vnic_spec_t *spec) const {
 }
 
 bool
-vnic_feeder::key_compare(const pds_vnic_key_t *key) const {
+vnic_feeder::key_compare(const pds_obj_key_t *key) const {
     if (this->key != *key)
         return false;
     return true;

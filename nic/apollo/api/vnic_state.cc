@@ -18,7 +18,7 @@ namespace api {
 vnic_state::vnic_state() {
     vnic_ht_ = ht::factory(PDS_MAX_VNIC >> 2,
                            vnic_entry::vnic_key_func_get,
-                           sizeof(pds_vnic_key_t));
+                           sizeof(pds_obj_key_t));
     SDK_ASSERT(vnic_ht_ != NULL);
 
     vnic_slab_ = slab::factory("vnic", PDS_SLAB_ID_VNIC, sizeof(vnic_entry),
@@ -53,7 +53,7 @@ vnic_state::free(vnic_entry *vnic) {
 }
 
 vnic_entry *
-vnic_state::find(pds_vnic_key_t *vnic_key) const {
+vnic_state::find(pds_obj_key_t *vnic_key) const {
     return (vnic_entry *)(vnic_ht_->lookup(vnic_key));
 }
 

@@ -53,7 +53,7 @@ public:
     /// \brief      lookup a subnet in database given the key
     /// \param[in]  subnet_key subnet key
     /// \return     pointer to the subnet instance found or NULL
-    subnet_entry *find(pds_subnet_key_t *subnet_key) const;
+    subnet_entry *find(pds_obj_key_t *subnet_key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -77,7 +77,7 @@ private:
 };
 
 static inline subnet_entry *
-subnet_find (pds_subnet_key_t *key)
+subnet_find (pds_obj_key_t *key)
 {
     return (subnet_entry *)api_base::find_obj(OBJ_ID_SUBNET, key);
 }

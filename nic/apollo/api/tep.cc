@@ -125,7 +125,7 @@ tep_entry::init_config(api_ctxt_t *api_ctxt) {
     PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s encap %s",
                     spec->key.id, ipaddr2str(&spec->remote_ip),
                     pds_encap2str(&spec->encap));
-    memcpy(&this->key_, &spec->key, sizeof(pds_tep_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->type_ = spec->type;
     this->remote_ip_ = spec->remote_ip;
     this->remote_svc_ = spec->remote_svc;
@@ -187,7 +187,7 @@ tep_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
 static bool
 tep_upd_walk_cb_ (void *api_obj, void *ctxt) {
-    pds_tep_key_t tep_key;
+    pds_obj_key_t tep_key;
     tep_entry *tep = (tep_entry *)api_obj;
     tep_update_ctxt_t *upd_ctxt = (tep_update_ctxt_t *)ctxt;
 
@@ -245,7 +245,7 @@ tep_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
 
 void
 tep_entry::fill_spec_(pds_tep_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_tep_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
 }
 
 sdk_ret_t

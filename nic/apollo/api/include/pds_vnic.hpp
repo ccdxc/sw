@@ -23,11 +23,11 @@
 
 /// \brief VNIC specification
 typedef struct pds_vnic_spec_s {
-    pds_vnic_key_t key;                        ///< vnic's key
+    pds_obj_key_t key;                         ///< vnic's key
     char hostname[PDS_MAX_HOST_NAME_LEN + 1];  ///< hostname of this workload,
                                                ///< if any (expected to be empty
                                                ///< for 2nd-ary vnics)
-    pds_subnet_key_t subnet;                   ///< subnet of this vnic
+    pds_obj_key_t subnet;                      ///< subnet of this vnic
     pds_encap_t vnic_encap;                    ///< vnic encap for this vnic
     pds_encap_t fabric_encap;                  ///< fabric encap for this vnic
     mac_addr_t mac_addr;                       ///< vnic's overlay mac address
@@ -42,16 +42,16 @@ typedef struct pds_vnic_spec_s {
                                                ///< vnic
     /// ingress IPv4 policy table(s)
     uint8_t num_ing_v4_policy;
-    pds_policy_key_t ing_v4_policy[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t ing_v4_policy[PDS_MAX_VNIC_POLICY];
     /// ingress IPv6 policy table(s)
     uint8_t num_ing_v6_policy;
-    pds_policy_key_t ing_v6_policy[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t ing_v6_policy[PDS_MAX_VNIC_POLICY];
     /// egress IPv4 policy table(s)
     uint8_t num_egr_v4_policy;
-    pds_policy_key_t egr_v4_policy[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t egr_v4_policy[PDS_MAX_VNIC_POLICY];
     /// egress IPv6 policy table(s)
     uint8_t num_egr_v6_policy;
-    pds_policy_key_t egr_v6_policy[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t egr_v6_policy[PDS_MAX_VNIC_POLICY];
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, datapath should be told which VF/PF (aka. lif or
     /// host interface) a particular vnic is attached to by passing
@@ -110,7 +110,7 @@ sdk_ret_t pds_vnic_create(pds_vnic_spec_t *spec,
 /// \param[in] key Key
 /// \param[out] info Information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vnic_read(pds_vnic_key_t *key, pds_vnic_info_t *info);
+sdk_ret_t pds_vnic_read(pds_obj_key_t *key, pds_vnic_info_t *info);
 
 /// \brief Update VNIC specification
 /// \param[in] spec Specififcation
@@ -123,7 +123,7 @@ sdk_ret_t pds_vnic_update(pds_vnic_spec_t *spec,
 /// \param[in] key Key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key,
+sdk_ret_t pds_vnic_delete(pds_obj_key_t *key,
                           pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

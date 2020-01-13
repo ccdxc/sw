@@ -36,27 +36,27 @@ public:
     void init(std::string ip_str="0.0.0.0",
               uint64_t mac=0x0E0D0A0B0200,
               uint32_t num_obj=PDS_MAX_NEXTHOP,
-              pds_nexthop_key_t key=int2pdsobjkey(1),
+              pds_obj_key_t key=int2pdsobjkey(1),
               pds_nh_type_t type=k_nh_type,
-              uint16_t vlan=1, pds_vpc_key_t vpc=int2pdsobjkey(1),
+              uint16_t vlan=1, pds_obj_key_t vpc=int2pdsobjkey(1),
               pds_if_id_t if_id = k_l3_if_id,
-              pds_tep_key_t tep = int2pdsobjkey(1));
+              pds_obj_key_t tep = int2pdsobjkey(1));
 
     // Iterate helper routines
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_nexthop_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_nexthop_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_nexthop_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_nexthop_spec_t *spec) const;
 };
 
 // Dump prototypes
 inline std::ostream&
-operator<<(std::ostream& os, const pds_nexthop_key_t *key) {
+operator<<(std::ostream& os, const pds_obj_key_t *key) {
     os << " id: " << std::string(key->str());
     return os;
 }

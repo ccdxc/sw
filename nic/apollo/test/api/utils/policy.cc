@@ -17,7 +17,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-policy_feeder::init(pds_policy_key_t key,
+policy_feeder::init(pds_obj_key_t key,
                     uint16_t stateful_rules,
                     rule_dir_t direction,
                     policy_type_t type,
@@ -46,8 +46,8 @@ policy_feeder::iter_next(int width) {
 }
 
 void
-policy_feeder::key_build(pds_policy_key_t *key) const {
-    memcpy(key, &this->spec.key, sizeof(pds_policy_key_t));
+policy_feeder::key_build(pds_obj_key_t *key) const {
+    memcpy(key, &this->spec.key, sizeof(pds_obj_key_t));
 }
 
 void
@@ -136,8 +136,8 @@ policy_feeder::spec_build(pds_policy_spec_t *spec) const {
 }
 
 bool
-policy_feeder::key_compare(const pds_policy_key_t *key) const {
-    return (memcmp(key, &this->spec.key, sizeof(pds_policy_key_t)) == 0);
+policy_feeder::key_compare(const pds_obj_key_t *key) const {
+    return (memcmp(key, &this->spec.key, sizeof(pds_obj_key_t)) == 0);
 }
 
 bool
@@ -158,7 +158,7 @@ policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
 static policy_feeder k_pol_feeder;
 
 void sample_policy_setup(pds_batch_ctxt_t bctxt) {
-    pds_policy_key_t pol_key = int2pdsobjkey(1);
+    pds_obj_key_t pol_key = int2pdsobjkey(1);
 
     // setup and teardown parameters should be in sync
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,
@@ -182,7 +182,7 @@ void sample_policy_setup(pds_batch_ctxt_t bctxt) {
 }
 
 void sample_policy_teardown(pds_batch_ctxt_t bctxt) {
-    pds_policy_key_t pol_key = int2pdsobjkey(1);
+    pds_obj_key_t pol_key = int2pdsobjkey(1);
 
     // this feeder base values doesn't matter in case of deletes
     k_pol_feeder.init(pol_key, 512, RULE_DIR_INGRESS, POLICY_TYPE_FIREWALL,

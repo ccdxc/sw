@@ -85,9 +85,9 @@ operator<<(std::ostream& os, const tag_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(tag);
-API_READ(tag);
+API_READ_TMP(tag);
 API_UPDATE(tag);
-API_DELETE(tag);
+API_DELETE_TMP(tag);
 
 }    // namespace api
 }    // namespace test

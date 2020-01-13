@@ -115,7 +115,7 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
      pds_lif_key_t lif_key = { 0 };
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
-    memcpy(&key_, &spec->key, sizeof(pds_vnic_key_t));
+    memcpy(&key_, &spec->key, sizeof(pds_obj_key_t));
     subnet_ = spec->subnet;
     v4_meter_ = spec->v4_meter;
     v6_meter_ = spec->v6_meter;
@@ -293,7 +293,7 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
-    memcpy(&spec->key, &key_, sizeof(pds_vnic_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->subnet = subnet_;
     memcpy(&spec->mac_addr, &mac_, ETH_ADDR_LEN);
     spec->fabric_encap = fabric_encap_;

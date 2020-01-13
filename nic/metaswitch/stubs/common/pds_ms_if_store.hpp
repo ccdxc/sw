@@ -27,12 +27,12 @@ enum class ms_iftype_t
     UNKNOWN
 };
 
-class if_obj_t : public slab_obj_t<if_obj_t>, 
+class if_obj_t : public slab_obj_t<if_obj_t>,
                  public base_obj_t {
 public:
-    // *** WARNING 
-    // Ensure that ifindex is always the first member in any of the 
-    // xxx_properties_t struct below sinhce the key() member function 
+    // *** WARNING
+    // Ensure that ifindex is always the first member in any of the
+    // xxx_properties_t struct below sinhce the key() member function
     // directly accesses this without checking for the struct type
 
     struct phy_port_properties_t { // Uplink L3 ports
@@ -52,9 +52,10 @@ public:
         ms_ifindex_t   ifindex;
         ip_addr_t      tep_ip;
         pds_vnid_id_t  vni;
-        pds_tep_key_t  hal_tep_idx;
+        pds_obj_key_t  hal_tep_idx;
         mac_addr_t     dmaci;        // Inner DMAC
-        vxlan_port_properties_t(ms_ifindex_t ifi, ip_addr_t tip, pds_vnid_id_t v, const pds_tep_key_t& ht) 
+        vxlan_port_properties_t(ms_ifindex_t ifi, ip_addr_t tip,
+                                pds_vnid_id_t v, const pds_obj_key_t& ht)
             : ifindex(ifi), tep_ip(tip), vni(v), hal_tep_idx(ht) {
             memset(dmaci, 0, ETH_ADDR_LEN);
         }
@@ -90,7 +91,7 @@ public:
         SDK_ASSERT (prop_.iftype_ == ms_iftype_t::IRB);
         return prop_.irb_;
     }
-    ms_ifindex_t key(void) const {return prop_.vxt_.ifindex;} // Accessing any of the union types 
+    ms_ifindex_t key(void) const {return prop_.vxt_.ifindex;} // Accessing any of the union types
                                                           // should be fine since this is always
                                                           // the first member
     void update_store(state_t* state, bool op_delete) override;
@@ -123,17 +124,17 @@ class if_store_t : public obj_store_t <ms_ifindex_t, if_obj_t> {
 
 void if_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 
-class host_lif_obj_t: public slab_obj_t<host_lif_obj_t>, 
+class host_lif_obj_t: public slab_obj_t<host_lif_obj_t>,
                  public base_obj_t {
 public:
     struct properties_t {
         pds_lif_key_t host_lif;
         ms_bd_id_t  bd_id;
         ms_ifindex_t ifindex;
-        properties_t(pds_lif_key_t host_lif_, ms_bd_id_t bd_id_, ms_ifindex_t ifindex_) 
+        properties_t(pds_lif_key_t host_lif_, ms_bd_id_t bd_id_, ms_ifindex_t ifindex_)
             : host_lif(host_lif_), bd_id(bd_id_), ifindex(ifindex_) {};
     };
-    host_lif_obj_t(const properties_t& prop) 
+    host_lif_obj_t(const properties_t& prop)
         : prop_(prop) {};
 
     properties_t& properties(void) {return prop_;}

@@ -15,7 +15,7 @@ namespace api {
 void
 mirror_session_feeder::init(pds_mirror_session_key_t key, uint8_t max_ms,
                             pds_ifindex_t interface, uint16_t vlan_tag,
-                            std::string src_ip, pds_tep_key_t tep,
+                            std::string src_ip, pds_obj_key_t tep,
                             uint32_t span_id, uint32_t dscp) {
 
     this->key =  key;

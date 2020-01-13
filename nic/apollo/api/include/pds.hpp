@@ -177,17 +177,6 @@ typedef struct pds_nat_action_s {
     ip_addr_t      dst_nat_ip;
 } pds_nat_action_t;
 
-typedef pds_obj_key_t pds_tep_key_t;
-typedef pds_obj_key_t pds_vpc_key_t;
-typedef pds_obj_key_t pds_subnet_key_t;
-typedef pds_obj_key_t pds_vnic_key_t;
-typedef pds_obj_key_t pds_nexthop_key_t;
-typedef pds_obj_key_t pds_nexthop_group_key_t;
-typedef pds_obj_key_t pds_nat_port_block_key_t;
-typedef pds_obj_key_t pds_dhcp_relay_key_t;
-typedef pds_obj_key_t pds_dhcp_policy_key_t;
-typedef pds_obj_key_t pds_policy_key_t;
-
 /// \brief    interface key
 typedef struct pds_if_key_s {
     pds_if_id_t id;    ///< interface id
@@ -216,13 +205,13 @@ typedef struct pds_mapping_key_s {
     union {
         ///< L3 key
         struct {
-            pds_vpc_key_t vpc;    ///< VPC this IP belongs to
+            pds_obj_key_t vpc;    ///< VPC this IP belongs to
             ip_addr_t ip_addr;    ///< IP address of the mapping
         };
         ///< L2 key
         struct {
-            pds_subnet_key_t subnet;    ///< subnet of the mapping
-            mac_addr_t mac_addr;        ///< MAC address of the mapping
+            pds_obj_key_t subnet; ///< subnet of the mapping
+            mac_addr_t mac_addr;  ///< MAC address of the mapping
         };
     };
 } __PACK__ pds_mapping_key_t;
@@ -248,7 +237,7 @@ typedef struct pds_policer_key_s {
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {
-    pds_vpc_key_t vpc;       ///< VPC of the backend
+    pds_obj_key_t vpc;       ///< VPC of the backend
     ip_addr_t backend_ip;    ///< IP address of the backend
     uint16_t backend_port;   ///< backend's L4 port
 

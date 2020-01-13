@@ -18,7 +18,7 @@ namespace api {
 subnet_state::subnet_state() {
     subnet_ht_ =
         ht::factory(PDS_MAX_SUBNET >> 1, subnet_entry::subnet_key_func_get,
-                    sizeof(pds_subnet_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(subnet_ht_ != NULL);
     // we should accomodate one extra subnet of type provider/underlay/internet
     subnet_idxr_ = indexer::factory(PDS_MAX_SUBNET + 1);
@@ -56,7 +56,7 @@ subnet_state::free(subnet_entry *subnet) {
 }
 
 subnet_entry *
-subnet_state::find(pds_subnet_key_t *subnet_key) const {
+subnet_state::find(pds_obj_key_t *subnet_key) const {
     return (subnet_entry *)(subnet_ht_->lookup(subnet_key));
 }
 

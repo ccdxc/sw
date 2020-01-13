@@ -53,7 +53,7 @@ public:
 
     /// \brief     lookup a TEP in database given the key
     /// \param[in] tep_key TEP key
-    tep_entry *find(pds_tep_key_t *tep_key) const;
+    tep_entry *find(pds_obj_key_t *tep_key) const;
 
     /// \brief API to walk all the db elements
     /// \param[in] walk_cb    callback to be invoked for every node
@@ -81,7 +81,7 @@ private:
 };
 
 static inline tep_entry *
-tep_find (pds_tep_key_t *key)
+tep_find (pds_obj_key_t *key)
 {
     return (tep_entry *)api_base::find_obj(OBJ_ID_TEP, key);
 }

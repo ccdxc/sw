@@ -31,7 +31,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
+vpc_create (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -68,7 +68,7 @@ vpc_create (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 static inline sdk_ret_t
-vpc_update_validate (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
+vpc_update_validate (pds_obj_key_t *key, pds_vpc_spec_t *spec)
 {
     pds_vpc_spec_t *existing_spec;
 
@@ -88,7 +88,7 @@ vpc_update_validate (pds_vpc_key_t *key, pds_vpc_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
+vpc_update (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -129,7 +129,7 @@ vpc_update (pds_vpc_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
+vpc_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_vpc_spec_t *spec;
@@ -162,7 +162,7 @@ vpc_delete (pds_vpc_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-vpc_get (pds_vpc_key_t *key, pds_vpc_info_t *info)
+vpc_get (pds_obj_key_t *key, pds_vpc_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_vpc_spec_t *spec;

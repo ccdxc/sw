@@ -17,7 +17,7 @@ VPCSvcImpl::VPCCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_vpc_spec_t *api_spec;
-    pds_vpc_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -80,7 +80,7 @@ VPCSvcImpl::VPCUpdate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_vpc_spec_t *api_spec;
-    pds_vpc_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -142,7 +142,7 @@ VPCSvcImpl::VPCDelete(ServerContext *context,
                       pds::VPCDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_vpc_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -194,7 +194,7 @@ VPCSvcImpl::VPCGet(ServerContext *context,
                    const pds::VPCGetRequest *proto_req,
                    pds::VPCGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_vpc_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("VPC Get Received")

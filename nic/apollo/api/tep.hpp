@@ -181,7 +181,7 @@ public:
 
     /// \brief    return TEP's key
     /// \return    key of the TEP
-    pds_tep_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief    return TEP's type
     /// \return    type of the TEP
@@ -205,15 +205,15 @@ public:
 
     /// \brief    return the nexthop of this TEP
     /// \return    nexthop this TEP is pointing to
-    pds_nexthop_key_t nh(void) const { return nh_; }
+    pds_obj_key_t nh(void) const { return nh_; }
 
     /// \brief    return the nexthop group of this TEP
     /// \return    nexthop group this TEP is pointing to
-    pds_nexthop_group_key_t nh_group(void) const { return nh_group_; }
+    pds_obj_key_t nh_group(void) const { return nh_group_; }
 
     /// \brief    return the TEP this TEP points to
     /// \return    TEP this TEP is pointing to
-    pds_tep_key_t tep(void) const { return tep_; }
+    pds_obj_key_t tep(void) const { return tep_; }
 
     /// \brief    return impl instance of this TEP object
     /// \return    impl instance of the TEP object
@@ -239,7 +239,7 @@ private:
     /// \NOTE: the mac address for this TEP will be learnt in the datapath from
     ///        ARP traffic in the underlay, but we don't need to store it in
     ///        s/w, we will directly refresh the TEP_TX table
-    pds_tep_key_t  key_;             ///< TEP key
+    pds_obj_key_t  key_;             ///< TEP key
     pds_tep_type_t type_;            ///< TEP type
     ip_addr_t      remote_ip_;       ///< TEP IP
     bool           remote_svc_;      ///< true if this is remote (service) TEP
@@ -248,9 +248,9 @@ private:
     pds_nh_type_t  nh_type_;         ///< type of the nexthop for this TEP
     ///< one of possible nexthop types
     union {
-        pds_tep_key_t tep_;
-        pds_nexthop_key_t nh_;
-        pds_nexthop_group_key_t nh_group_;
+        pds_obj_key_t tep_;
+        pds_obj_key_t nh_;
+        pds_obj_key_t nh_group_;
     };
     ht_ctxt_t      ht_ctxt_;    ///< hash table context
     impl_base      *impl_;      ///< impl object instance

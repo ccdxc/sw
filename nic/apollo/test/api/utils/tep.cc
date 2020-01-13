@@ -13,8 +13,8 @@ namespace api {
 constexpr pds_encap_t k_default_tep_encap = {PDS_ENCAP_TYPE_MPLSoUDP, 100};
 constexpr pds_encap_t k_zero_encap = {PDS_ENCAP_TYPE_NONE, 0};
 constexpr uint64_t k_tep_mac = 0x0E0D0A0B0200;
-const pds_nexthop_key_t k_base_nh_key = int2pdsobjkey(1);
-const pds_nexthop_group_key_t k_base_nh_group_key = int2pdsobjkey(1);
+const pds_obj_key_t k_base_nh_key = int2pdsobjkey(1);
+const pds_obj_key_t k_base_nh_group_key = int2pdsobjkey(1);
 const uint16_t k_max_tep = apulu() ? 2048 : PDS_MAX_TEP;
 static constexpr bool k_nat = FALSE;
 static const std::string k_base_dipi = "50::50:1:1";
@@ -42,8 +42,8 @@ tep_feeder::init(uint32_t id, std::string ip_str, uint32_t num_tep,
 void
 tep_feeder::init(uint32_t id, uint64_t dmac, std::string ip_str,
                  uint32_t num_tep, pds_nh_type_t nh_type,
-                 pds_nexthop_key_t base_nh,
-                 pds_nexthop_group_key_t base_nh_group) {
+                 pds_obj_key_t base_nh,
+                 pds_obj_key_t base_nh_group) {
     memset(&this->spec, 0, sizeof(pds_tep_spec_t));
     this->spec.key = int2pdsobjkey(id);
     extract_ip_addr(ip_str.c_str(), &this->spec.remote_ip);
@@ -92,8 +92,8 @@ tep_feeder::iter_next(int width) {
 }
 
 void
-tep_feeder::key_build(pds_tep_key_t *key) const {
-    memcpy(key, &this->spec.key, sizeof(pds_tep_key_t));
+tep_feeder::key_build(pds_obj_key_t *key) const {
+    memcpy(key, &this->spec.key, sizeof(pds_obj_key_t));
 }
 
 void
@@ -102,7 +102,7 @@ tep_feeder::spec_build(pds_tep_spec_t *spec) const {
 }
 
 bool
-tep_feeder::key_compare(const pds_tep_key_t *key) const {
+tep_feeder::key_compare(const pds_obj_key_t *key) const {
     return *key == this->spec.key;
 }
 

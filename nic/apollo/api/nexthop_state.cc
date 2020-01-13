@@ -21,7 +21,7 @@ namespace api {
 nexthop_state::nexthop_state() {
     nexthop_ht_ = ht::factory(PDS_MAX_NEXTHOP >> 1,
                               nexthop::nexthop_key_func_get,
-                              sizeof(pds_nexthop_key_t));
+                              sizeof(pds_obj_key_t));
     SDK_ASSERT(nexthop_ht_ != NULL);
     nexthop_slab_ = slab::factory("nexthop", PDS_SLAB_ID_NEXTHOP,
                                   sizeof(nexthop), 256, true, true, NULL);
@@ -54,7 +54,7 @@ nexthop_state::free(nexthop *nh) {
 }
 
 nexthop *
-nexthop_state::find(pds_nexthop_key_t *key) const {
+nexthop_state::find(pds_obj_key_t *key) const {
     return (nexthop *)(nexthop_ht_->lookup(key));
 }
 

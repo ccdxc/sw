@@ -18,7 +18,7 @@
 
 static inline sdk_ret_t
 pds_vnic_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                     pds_vnic_key_t *key, pds_vnic_spec_t *spec)
+                     pds_obj_key_t *key, pds_vnic_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -40,7 +40,7 @@ pds_vnic_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline vnic_entry *
-pds_vnic_entry_find (pds_vnic_key_t *key)
+pds_vnic_entry_find (pds_obj_key_t *key)
 {
     return (vnic_db()->find(key));
 }
@@ -55,7 +55,7 @@ pds_vnic_create (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_vnic_read (_In_ pds_vnic_key_t *key, _Out_ pds_vnic_info_t *info)
+pds_vnic_read (_In_ pds_obj_key_t *key, _Out_ pds_vnic_info_t *info)
 {
     vnic_entry *entry;
 
@@ -77,7 +77,7 @@ pds_vnic_update (_In_ pds_vnic_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_vnic_delete (_In_ pds_vnic_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_vnic_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_vnic_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

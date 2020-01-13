@@ -183,7 +183,7 @@ public:
 
     /// \brief     return the policy key/id
     /// \return    key/id of the policy
-    pds_policy_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /**
      * @brief     return IP address family for this policy
@@ -222,7 +222,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_policy_key_t    key_;        /**< security policy key */
+    pds_obj_key_t    key_;        /**< security policy key */
     uint8_t             af_;         /**< IP address family of this policy */
     rule_dir_t          dir_;        /**< traffic direction in which this policy is applied on */
 

@@ -25,7 +25,7 @@ public:
     subnet_feeder(const subnet_feeder& feeder);
 
     // Initialize feeder with the base set of values
-    void init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
+    void init(pds_obj_key_t key, pds_obj_key_t vpc_key,
               std::string cidr_str, std::string vrmac_str,
               int num_subnet = 1);
 
@@ -33,11 +33,11 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_subnet_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_subnet_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_subnet_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_subnet_spec_t *spec) const;
 };
 
@@ -78,7 +78,7 @@ API_UPDATE(subnet);
 API_DELETE(subnet);
 
 // Export variables
-extern pds_subnet_key_t k_subnet_key;
+extern pds_obj_key_t k_subnet_key;
 
 // Misc function prototypes
 void sample_subnet_setup(pds_batch_ctxt_t bctxt);

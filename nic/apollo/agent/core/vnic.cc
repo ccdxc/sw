@@ -22,7 +22,7 @@ vnic_create_validate (pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-vnic_create (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
+vnic_create (pds_obj_key_t *key, pds_vnic_spec_t *spec,
              pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -68,7 +68,7 @@ vnic_update_validate (pds_vnic_spec_t *spec)
 }
 
 sdk_ret_t
-vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
+vnic_update (pds_obj_key_t *key, pds_vnic_spec_t *spec,
              pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -107,7 +107,7 @@ vnic_update (pds_vnic_key_t *key, pds_vnic_spec_t *spec,
 }
 
 sdk_ret_t
-vnic_delete (pds_vnic_key_t *key, pds_batch_ctxt_t bctxt)
+vnic_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -131,7 +131,7 @@ vnic_delete (pds_vnic_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-vnic_get (pds_vnic_key_t *key, pds_vnic_info_t *info)
+vnic_get (pds_obj_key_t *key, pds_vnic_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_vnic_spec_t *spec;

@@ -14,7 +14,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-vpc_feeder::init(pds_vpc_key_t key, pds_vpc_type_t type,
+vpc_feeder::init(pds_obj_key_t key, pds_vpc_type_t type,
                  std::string cidr_str, std::string vr_mac,
                  uint32_t num_vpc) {
     this->key = key;
@@ -40,8 +40,8 @@ vpc_feeder::iter_next(int width) {
 }
 
 void
-vpc_feeder::key_build(pds_vpc_key_t *key) const {
-    memset(key, 0, sizeof(pds_vpc_key_t));
+vpc_feeder::key_build(pds_obj_key_t *key) const {
+    memset(key, 0, sizeof(pds_obj_key_t));
     *key = this->key;
 }
 
@@ -58,8 +58,8 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
 }
 
 bool
-vpc_feeder::key_compare(const pds_vpc_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_vpc_key_t)) == 0);
+vpc_feeder::key_compare(const pds_obj_key_t *key) const {
+    return (memcmp(key, &this->key, sizeof(pds_obj_key_t)) == 0);
 }
 
 bool
@@ -88,7 +88,7 @@ vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-pds_vpc_key_t k_vpc_key = int2pdsobjkey(1);
+pds_obj_key_t k_vpc_key = int2pdsobjkey(1);
 static vpc_feeder k_vpc_feeder;
 
 void sample_vpc_setup(pds_batch_ctxt_t bctxt, pds_vpc_type_t type) {

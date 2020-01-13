@@ -88,7 +88,7 @@ sdk_ret_t
 tag_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t         ret;
     pds_tag_spec_t    *spec;
-    pds_vpc_key_t     vpc_key;
+    pds_obj_key_t     vpc_key;
     route_table_t     *rtable;
     vpc_entry         *vpc;
     tag_entry         *tag;

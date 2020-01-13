@@ -154,7 +154,7 @@ public:
 
     /// \brief     return the key of the nexthop group
     /// \return    nexthop group key
-    pds_nexthop_group_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief     return the type of the nexthop group
     /// \return    nexthop group type
@@ -185,7 +185,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_nexthop_group_key_t key_;        ///< nexthop group key
+    pds_obj_key_t key_;        ///< nexthop group key
     pds_nexthop_group_type_t type_;      ///< nexthop group type
     uint8_t num_nexthops_;              ///< number of nexthops in this group
     ht_ctxt_t ht_ctxt_;                  ///< hash table context

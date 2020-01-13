@@ -248,21 +248,21 @@ private:
     /// \param[in] subnet    subnet id of the mapping
     /// \param[in] mac_addr    MAC address of the mapping
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t deactivate_l2_mapping_entry_(pds_subnet_key_t subnet,
+    sdk_ret_t deactivate_l2_mapping_entry_(pds_obj_key_t subnet,
                                            mac_addr_t mac_addr);
 
     /// \brief     deactivate mapping entry for a given overlay or public ip
     /// \param[in] vpc    vpc id of the mapping
     /// \param[in] ip     pointer to the (overlay/public) IP address
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t deactivate_ip_mapping_entry_(pds_vpc_key_t vpc, ip_addr_t *ip);
+    sdk_ret_t deactivate_ip_mapping_entry_(pds_obj_key_t vpc, ip_addr_t *ip);
 
     /// \brief     deactivate local mapping and mapping entries for a given
     ///            overlay or public ip
     /// \param[in] vpc    vpc id of the mapping
     /// \param[in] ip     pointer to the (overlay/public) IP address
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t deactivate_ip_local_mapping_entry_(pds_vpc_key_t vpc,
+    sdk_ret_t deactivate_ip_local_mapping_entry_(pds_obj_key_t vpc,
                                                  ip_addr_t *ip);
 
 private:

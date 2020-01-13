@@ -15,7 +15,7 @@ TunnelSvcImpl::TunnelCreate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_key_t key;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t *api_spec;
     bool batched_internally = false;
@@ -80,7 +80,7 @@ TunnelSvcImpl::TunnelUpdate(ServerContext *context,
                             const pds::TunnelRequest *proto_req,
                             pds::TunnelResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_key_t key;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     pds_tep_spec_t *api_spec;
     bool batched_internally = false;
@@ -143,7 +143,7 @@ TunnelSvcImpl::TunnelDelete(ServerContext *context,
                             const pds::TunnelDeleteRequest *proto_req,
                             pds::TunnelDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_key_t key;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -195,7 +195,7 @@ TunnelSvcImpl::TunnelGet(ServerContext *context,
                          const pds::TunnelGetRequest *proto_req,
                          pds::TunnelGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_tep_key_t key;
+    pds_obj_key_t key;
     pds_tep_info_t info = {0};
 
     if (proto_req == NULL) {

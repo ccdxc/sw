@@ -177,7 +177,7 @@ public:
 
     /// \brief  return the key of VPC
     /// \return key of the VPC
-    pds_vpc_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief  return the type of VPC
     /// \return PDS_VPC_TYPE_UNDERLAY or PDS_VPC_TYPE_TENANT
@@ -228,7 +228,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vpc_key_t key_;                       ///< VPC key
+    pds_obj_key_t key_;                       ///< VPC key
     pds_vpc_type_t type_;                     ///< VPC type
     pds_encap_t fabric_encap_;                ///< fabric encap information
     pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id

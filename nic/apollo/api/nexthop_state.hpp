@@ -52,7 +52,7 @@ public:
     /// \brief     lookup a nexthop in database given the key
     /// \param[in] key key for the nexthop object
     /// \return    pointer to the nexthop instance found or NULL
-    nexthop *find(pds_nexthop_key_t *key) const;
+    nexthop *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -72,7 +72,7 @@ private:
     slab    *nexthop_slab_;    ///< slab for allocating nexthop entry
 };
 static inline nexthop *
-nexthop_find (pds_nexthop_key_t *key)
+nexthop_find (pds_obj_key_t *key)
 {
     return (nexthop *)api_base::find_obj(OBJ_ID_NEXTHOP, key);
 }

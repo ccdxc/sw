@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_nexthop_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                        pds_nexthop_key_t *key, pds_nexthop_spec_t *spec)
+                        pds_obj_key_t *key, pds_nexthop_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -41,7 +41,7 @@ pds_nexthop_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline nexthop *
-pds_nexthop_find (pds_nexthop_key_t *key)
+pds_nexthop_find (pds_obj_key_t *key)
 {
     return (nexthop_db()->find(key));
 }
@@ -57,7 +57,7 @@ pds_nexthop_create (_In_ pds_nexthop_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_nexthop_read (_In_ pds_nexthop_key_t *key, _Out_ pds_nexthop_info_t *info)
+pds_nexthop_read (_In_ pds_obj_key_t *key, _Out_ pds_nexthop_info_t *info)
 {
     nexthop *entry;
 
@@ -79,7 +79,7 @@ pds_nexthop_update (_In_ pds_nexthop_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_nexthop_delete (_In_ pds_nexthop_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_nexthop_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_nexthop_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

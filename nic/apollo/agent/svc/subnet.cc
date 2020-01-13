@@ -16,7 +16,7 @@ SubnetSvcImpl::SubnetCreate(ServerContext *context,
                             pds::SubnetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_subnet_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_subnet_spec_t *api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -81,8 +81,8 @@ SubnetSvcImpl::SubnetUpdate(ServerContext *context,
                             pds::SubnetResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_subnet_spec_t *api_spec;
-    pds_subnet_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -144,7 +144,7 @@ SubnetSvcImpl::SubnetDelete(ServerContext *context,
                             pds::SubnetDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_subnet_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -196,7 +196,7 @@ SubnetSvcImpl::SubnetGet(ServerContext *context,
                          const pds::SubnetGetRequest *proto_req,
                          pds::SubnetGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_subnet_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_subnet_info_t info = { 0 };
 
     if (proto_req == NULL) {

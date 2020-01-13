@@ -89,8 +89,8 @@ void l2f_bd_t::fetch_store_info_(pds_ms::state_t* state) {
     }
 }
 
-pds_subnet_key_t l2f_bd_t::make_pds_subnet_key_(void) {
-    return pds_subnet_key_t {msidx2pdsobjkey(ips_info_.bd_id)};
+pds_obj_key_t l2f_bd_t::make_pds_subnet_key_(void) {
+    return pds_obj_key_t {msidx2pdsobjkey(ips_info_.bd_id)};
 }
 
 pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {

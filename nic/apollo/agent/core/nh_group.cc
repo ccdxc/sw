@@ -15,7 +15,7 @@ nh_group_create_validate (pds_nexthop_group_spec_t *spec)
 }
 
 sdk_ret_t
-nh_group_create (pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
+nh_group_create (pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
                  pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -47,7 +47,7 @@ nh_group_create (pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
 }
 
 static inline sdk_ret_t
-nh_group_update_validate (pds_nexthop_group_key_t *key,
+nh_group_update_validate (pds_obj_key_t *key,
                           pds_nexthop_group_spec_t *spec)
 {
     if ((spec = agent_state::state()->find_in_nh_group_db(key)) == NULL) {
@@ -59,7 +59,7 @@ nh_group_update_validate (pds_nexthop_group_key_t *key,
 }
 
 sdk_ret_t
-nh_group_update (pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
+nh_group_update (pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
                  pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -89,7 +89,7 @@ nh_group_update (pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
 }
 
 sdk_ret_t
-nh_group_delete (pds_nexthop_group_key_t *key, pds_batch_ctxt_t bctxt)
+nh_group_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_nexthop_group_spec_t *spec;
@@ -113,7 +113,7 @@ nh_group_delete (pds_nexthop_group_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-nh_group_get (pds_nexthop_group_key_t *key, pds_nexthop_group_info_t *info)
+nh_group_get (pds_obj_key_t *key, pds_nexthop_group_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_nexthop_group_spec_t *spec;

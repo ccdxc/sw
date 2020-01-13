@@ -16,12 +16,12 @@ typedef struct nh_group_db_cb_ctxt_s {
     void       *ctxt;
 } nh_group_db_cb_ctxt_t;
 
-sdk_ret_t nh_group_create(pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
+sdk_ret_t nh_group_create(pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
                           pds_batch_ctxt_t bctxt);
-sdk_ret_t nh_group_update(pds_nexthop_group_key_t *key, pds_nexthop_group_spec_t *spec,
+sdk_ret_t nh_group_update(pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
                           pds_batch_ctxt_t bctxt);
-sdk_ret_t nh_group_delete(pds_nexthop_group_key_t *key, pds_batch_ctxt_t bctxt);
-sdk_ret_t nh_group_get(pds_nexthop_group_key_t *key, pds_nexthop_group_info_t *info);
+sdk_ret_t nh_group_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
+sdk_ret_t nh_group_get(pds_obj_key_t *key, pds_nexthop_group_info_t *info);
 sdk_ret_t nh_group_get_all(nh_group_get_cb_t nexthop_group_get_cb, void *ctxt);
 
 }    // namespace core

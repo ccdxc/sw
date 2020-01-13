@@ -40,27 +40,27 @@ typedef struct pds_route_s {
     pds_nh_type_t               nh_type;  ///< nexthop type
     union {
         /// PDS_NH_TYPE_OVERLAY specific data
-        pds_tep_key_t           tep;      ///< nexthop TEP
+        pds_obj_key_t           tep;      ///< nexthop TEP
         /// PDS_NH_TYPE_PDS_NH_TYPE_OVERLAY_ECMP specific data
-        pds_nexthop_group_key_t nh_group; ///< ECMP group
+        pds_obj_key_t nh_group; ///< ECMP group
         /// PDS_NH_TYPE_PEER_VPC specific data
-        pds_vpc_key_t           vpc;      ///< peer vpc id
+        pds_obj_key_t           vpc;      ///< peer vpc id
         /// one of the possible nexthop types
-        pds_nexthop_key_t       nh;       ///< nexthop key
+        pds_obj_key_t           nh;       ///< nexthop key
         /// PDS_NH_TYPE_VNIC specific data
-        pds_vnic_key_t          vnic;     ///< vnic nexthop
+        pds_obj_key_t           vnic;     ///< vnic nexthop
     };
     /// NAT action, if any
     /// if NAT action is set, source and/or destination NAT will be performed on
     /// the packet and if destination NAT is performed, another route lookup
     /// will be done in the same route table with the post-NAT destination IP
     /// address being rewritten
-    pds_nat_action_t        nat;          ///< NAT action
+    pds_nat_action_t            nat;      ///< NAT action
     /// enable or disable metering for the route
     /// if metering is true, when traffic from a vnic hits the route and
     /// metering is enabled on that vnic, such traffic is accounted (bytes &
     /// packets) against the vnic
-    bool                    meter;
+    bool                        meter;
 } __PACK__ pds_route_t;
 
 /// \brief route table configuration

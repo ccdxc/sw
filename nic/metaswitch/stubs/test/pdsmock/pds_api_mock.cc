@@ -224,7 +224,7 @@ sdk_ret_t pds_nexthop_create(pds_nexthop_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_read(pds_nexthop_key_t *key, pds_nexthop_info_t *info) {
+sdk_ret_t pds_nexthop_read(pds_obj_key_t *key, pds_nexthop_info_t *info) {
     return SDK_RET_OK;
 }
 
@@ -233,7 +233,7 @@ sdk_ret_t pds_nexthop_update(pds_nexthop_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key,
+sdk_ret_t pds_nexthop_delete(pds_obj_key_t *key,
                              pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }
@@ -266,7 +266,7 @@ sdk_ret_t pds_tep_create(pds_tep_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info) {
+sdk_ret_t pds_tep_read(pds_obj_key_t *key, pds_tep_info_t *info) {
     return SDK_RET_OK;
 }
 
@@ -281,7 +281,7 @@ sdk_ret_t pds_tep_update(pds_tep_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_tep_delete(pds_tep_key_t *key,
+sdk_ret_t pds_tep_delete(pds_obj_key_t *key,
                          pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_TEP, API_OP_DELETE);
@@ -294,7 +294,7 @@ sdk_ret_t pds_vnic_create(pds_vnic_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_vnic_read(pds_vnic_key_t *key, pds_vnic_info_t *info) {
+sdk_ret_t pds_vnic_read(pds_obj_key_t *key, pds_vnic_info_t *info) {
     return SDK_RET_OK;
 }
 
@@ -303,7 +303,7 @@ sdk_ret_t pds_vnic_update(pds_vnic_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_vnic_delete(pds_vnic_key_t *key,
+sdk_ret_t pds_vnic_delete(pds_obj_key_t *key,
                           pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
 }
@@ -319,7 +319,7 @@ sdk_ret_t pds_vpc_create(pds_vpc_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_vpc_read(pds_vpc_key_t *key, pds_vpc_info_t *info) {
+sdk_ret_t pds_vpc_read(pds_obj_key_t *key, pds_vpc_info_t *info) {
     return SDK_RET_OK;
 }
 
@@ -334,7 +334,7 @@ sdk_ret_t pds_vpc_update(pds_vpc_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_vpc_delete(pds_vpc_key_t *key,
+sdk_ret_t pds_vpc_delete(pds_obj_key_t *key,
                          pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_VPC, API_OP_DELETE);
@@ -363,7 +363,7 @@ sdk_ret_t pds_policy_create(pds_policy_spec_s *spec,
 }
 
 sdk_ret_t
-pds_policy_delete (pds_policy_key_t *key,
+pds_policy_delete (pds_obj_key_t *key,
                    pds_batch_ctxt_t bctxt)
 {
     return SDK_RET_OK;
@@ -410,7 +410,7 @@ sdk_ret_t pds_subnet_update(pds_subnet_spec_t *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_subnet_delete(pds_subnet_key_t *key,
+sdk_ret_t pds_subnet_delete(pds_obj_key_t *key,
                             pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_SUBNET, API_OP_DELETE);
@@ -449,7 +449,7 @@ sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_group_read(pds_nexthop_key_t *key, 
+sdk_ret_t pds_nexthop_group_read(pds_obj_key_t *key, 
                                  pds_nexthop_group_info_t *info) {
     return SDK_RET_OK;
 }
@@ -465,7 +465,7 @@ sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
+sdk_ret_t pds_nexthop_group_delete(pds_obj_key_t *key,
                                    pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_NEXTHOP_GROUP, API_OP_DELETE);

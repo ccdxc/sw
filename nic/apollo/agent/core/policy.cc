@@ -16,7 +16,7 @@ policy_create_validate (pds_policy_spec_t *spec)
 }
 
 sdk_ret_t
-policy_create (pds_policy_key_t *key, pds_policy_spec_t *spec,
+policy_create (pds_obj_key_t *key, pds_policy_spec_t *spec,
                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -54,7 +54,7 @@ policy_update_validate (pds_policy_spec_t *spec)
 }
 
 sdk_ret_t
-policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec,
+policy_update (pds_obj_key_t *key, pds_policy_spec_t *spec,
                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -88,7 +88,7 @@ policy_update (pds_policy_key_t *key, pds_policy_spec_t *spec,
 }
 
 sdk_ret_t
-policy_delete (pds_policy_key_t *key, pds_batch_ctxt_t bctxt)
+policy_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_policy_spec_t *spec;
@@ -111,7 +111,7 @@ policy_delete (pds_policy_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-policy_get (pds_policy_key_t *key, pds_policy_info_t *info)
+policy_get (pds_obj_key_t *key, pds_policy_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_policy_spec_t *spec;

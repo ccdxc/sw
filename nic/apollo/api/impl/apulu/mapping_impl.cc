@@ -85,7 +85,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     ip_addr_t public_ip;
     subnet_entry *subnet;
     device_entry *device;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
     p4pd_error_t p4pd_ret;
     nat_actiondata_t nat_data;
     mapping_swkey_t mapping_key;
@@ -739,7 +739,7 @@ error:
 }
 
 sdk_ret_t
-mapping_impl::deactivate_l2_mapping_entry_(pds_subnet_key_t subnet,
+mapping_impl::deactivate_l2_mapping_entry_(pds_obj_key_t subnet,
                                            mac_addr_t mac_addr) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
@@ -758,7 +758,7 @@ mapping_impl::deactivate_l2_mapping_entry_(pds_subnet_key_t subnet,
 }
 
 sdk_ret_t
-mapping_impl::deactivate_ip_mapping_entry_(pds_vpc_key_t vpc, ip_addr_t *ip) {
+mapping_impl::deactivate_ip_mapping_entry_(pds_obj_key_t vpc, ip_addr_t *ip) {
     sdk_ret_t ret;
     mapping_swkey_t mapping_key;
     sdk_table_api_params_t tparams;
@@ -776,7 +776,7 @@ mapping_impl::deactivate_ip_mapping_entry_(pds_vpc_key_t vpc, ip_addr_t *ip) {
 }
 
 sdk_ret_t
-mapping_impl::deactivate_ip_local_mapping_entry_(pds_vpc_key_t vpc,
+mapping_impl::deactivate_ip_local_mapping_entry_(pds_obj_key_t vpc,
                                                  ip_addr_t *ip) {
     sdk_ret_t ret;
     sdk_table_api_params_t tparams;
@@ -971,7 +971,7 @@ mapping_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
     nat_actiondata_t nat_data = { 0 };
     pds_mapping_key_t *mkey = (pds_mapping_key_t *)key;
     pds_mapping_info_t *minfo = (pds_mapping_info_t *)info;

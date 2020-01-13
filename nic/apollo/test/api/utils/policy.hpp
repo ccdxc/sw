@@ -30,7 +30,7 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_policy_key_t key, uint16_t num_rules, rule_dir_t direction,
+    void init(pds_obj_key_t key, uint16_t num_rules, rule_dir_t direction,
               policy_type_t type, uint8_t af, std::string cidr_str,
               uint32_t num_policy = 1);
 
@@ -38,11 +38,11 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_policy_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_policy_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_policy_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_policy_spec_t *spec) const;
 
 };

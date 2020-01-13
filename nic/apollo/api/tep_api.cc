@@ -16,7 +16,7 @@
 #include "nic/apollo/api/tep.hpp"
 
 static inline sdk_ret_t
-pds_tep_api_handle (pds_batch_ctxt_t bctxt, api_op_t api_op, pds_tep_key_t *key,
+pds_tep_api_handle (pds_batch_ctxt_t bctxt, api_op_t api_op, pds_obj_key_t *key,
                     pds_tep_spec_t *spec)
 {
     api_ctxt_t *api_ctxt;
@@ -34,7 +34,7 @@ pds_tep_api_handle (pds_batch_ctxt_t bctxt, api_op_t api_op, pds_tep_key_t *key,
 }
 
 static inline tep_entry *
-pds_tep_entry_find (pds_tep_key_t *key)
+pds_tep_entry_find (pds_obj_key_t *key)
 {
     return (tep_db()->find(key));
 }
@@ -46,7 +46,7 @@ pds_tep_create (_In_ pds_tep_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_tep_read (_In_ pds_tep_key_t *key, _Out_ pds_tep_info_t *info)
+pds_tep_read (_In_ pds_obj_key_t *key, _Out_ pds_tep_info_t *info)
 {
     tep_entry *entry;
 
@@ -68,7 +68,7 @@ pds_tep_update (_In_ pds_tep_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_tep_delete (_In_ pds_tep_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_tep_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_tep_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

@@ -65,7 +65,7 @@ nat_port_block::free(nat_port_block *port_block) {
 }
 
 nat_port_block *
-nat_port_block::build(pds_nat_port_block_key_t *key) {
+nat_port_block::build(pds_obj_key_t *key) {
     nat_port_block *port_block;
 
     port_block = nat_db()->alloc();

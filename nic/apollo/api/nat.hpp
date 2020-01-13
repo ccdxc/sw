@@ -57,7 +57,7 @@ public:
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
     /// \return    NAT port block instance corresponding to the key
-    static nat_port_block *build(pds_nat_port_block_key_t *key);
+    static nat_port_block *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -130,7 +130,7 @@ private:
 
 private:
     /// NAT port block key
-    pds_nat_port_block_key_t key_;
+    pds_obj_key_t key_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

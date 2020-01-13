@@ -18,9 +18,9 @@
 
 namespace pds_ms {
 
-void l2f_local_mac_ip_add(const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
+void l2f_local_mac_ip_add(const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex);
-void l2f_local_mac_ip_del(const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
+void l2f_local_mac_ip_del(const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                           mac_addr_t mac);
 void l2f_del_remote_macs_for_bd(state_t::context_t& state_ctxt, ms_bd_id_t bd_id,
                                 pds_batch_ctxt_t bctxt);

@@ -171,7 +171,7 @@ public:
 
     /// \brief     return key/id of the nexthop
     /// \return    key/id of the nexthop
-    pds_nexthop_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief     return the type of the nexthop
     /// \return    type of the nexthop
@@ -198,7 +198,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_nexthop_key_t key_;    ///< nexthop key
+    pds_obj_key_t key_;    ///< nexthop key
     pds_nh_type_t type_;       ///< nexthop type
     ht_ctxt_t ht_ctxt_;        ///< hash table context
     impl_base *impl_;          ///< impl object instance

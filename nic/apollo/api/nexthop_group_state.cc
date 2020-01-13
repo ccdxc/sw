@@ -22,7 +22,7 @@ nexthop_group_state::nexthop_group_state() {
     nexthop_group_ht_ =
         ht::factory(PDS_MAX_NEXTHOP_GROUP >> 1,
                     nexthop_group::nexthop_group_key_func_get,
-                    sizeof(pds_nexthop_group_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(nexthop_group_ht_ != NULL);
     nexthop_group_slab_ =
         slab::factory("nexthop-group", PDS_SLAB_ID_NEXTHOP_GROUP,
@@ -59,7 +59,7 @@ nexthop_group_state::free(nexthop_group *nh) {
 }
 
 nexthop_group *
-nexthop_group_state::find(pds_nexthop_group_key_t *key) const {
+nexthop_group_state::find(pds_obj_key_t *key) const {
     return (nexthop_group *)(nexthop_group_ht_->lookup(key));
 }
 

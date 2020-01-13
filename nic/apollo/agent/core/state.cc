@@ -323,12 +323,12 @@ agent_state::~agent_state() {
 }
 
 sdk_ret_t
-agent_state::add_to_tep_db(pds_tep_key_t *key, pds_tep_spec_t *spec) {
+agent_state::add_to_tep_db(pds_obj_key_t *key, pds_tep_spec_t *spec) {
     ADD_TO_OBJ_DB(tep, key, spec);
 }
 
 pds_tep_spec_t *
-agent_state::find_in_tep_db(pds_tep_key_t *key) {
+agent_state::find_in_tep_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(tep, key);
 }
 
@@ -344,17 +344,17 @@ agent_state::tep_db_walk(tep_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_tep_db(pds_tep_key_t *key) {
+agent_state::del_from_tep_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(tep, key);
 }
 
 sdk_ret_t
-agent_state::add_to_vpc_db(pds_vpc_key_t *key, pds_vpc_spec_t *spec) {
+agent_state::add_to_vpc_db(pds_obj_key_t *key, pds_vpc_spec_t *spec) {
     ADD_TO_OBJ_DB(vpc, key, spec);
 }
 
 pds_vpc_spec_t *
-agent_state::find_in_vpc_db(pds_vpc_key_t *key) {
+agent_state::find_in_vpc_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(vpc, key);
 }
 
@@ -371,7 +371,7 @@ agent_state::vpc_db_walk(vpc_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_vpc_db(pds_vpc_key_t *key) {
+agent_state::del_from_vpc_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(vpc, key);
 }
 
@@ -403,12 +403,12 @@ agent_state::del_from_vpc_peer_db(pds_vpc_peer_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_subnet_db(pds_subnet_key_t *key, pds_subnet_spec_t *spec) {
+agent_state::add_to_subnet_db(pds_obj_key_t *key, pds_subnet_spec_t *spec) {
     ADD_TO_OBJ_DB(subnet, key, spec);
 }
 
 pds_subnet_spec_t *
-agent_state::find_in_subnet_db(pds_subnet_key_t *key) {
+agent_state::find_in_subnet_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(subnet, key);
 }
 
@@ -424,7 +424,7 @@ agent_state::subnet_db_walk(subnet_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_subnet_db(pds_subnet_key_t *key) {
+agent_state::del_from_subnet_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(subnet, key);
 }
 
@@ -455,12 +455,12 @@ agent_state::del_from_service_db(pds_svc_mapping_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_nh_db(pds_nexthop_key_t *key, pds_nexthop_spec_t *spec) {
+agent_state::add_to_nh_db(pds_obj_key_t *key, pds_nexthop_spec_t *spec) {
     ADD_TO_OBJ_DB(nh, key, spec);
 }
 
 pds_nexthop_spec_t *
-agent_state::find_in_nh_db(pds_nexthop_key_t *key) {
+agent_state::find_in_nh_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(nh, key);
 }
 
@@ -476,18 +476,18 @@ agent_state::nh_db_walk(nh_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_nh_db(pds_nexthop_key_t *key) {
+agent_state::del_from_nh_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(nh, key);
 }
 
 sdk_ret_t
-agent_state::add_to_nh_group_db(pds_nexthop_group_key_t *key,
+agent_state::add_to_nh_group_db(pds_obj_key_t *key,
                                 pds_nexthop_group_spec_t *spec) {
     ADD_TO_OBJ_DB(nh_group, key, spec);
 }
 
 pds_nexthop_group_spec_t *
-agent_state::find_in_nh_group_db(pds_nexthop_group_key_t *key) {
+agent_state::find_in_nh_group_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(nh_group, key);
 }
 
@@ -503,17 +503,17 @@ agent_state::nh_group_db_walk(nh_group_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_nh_group_db(pds_nexthop_group_key_t *key) {
+agent_state::del_from_nh_group_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(nh_group, key);
 }
 
 sdk_ret_t
-agent_state::add_to_vnic_db(pds_vnic_key_t *key, pds_vnic_spec_t *spec) {
+agent_state::add_to_vnic_db(pds_obj_key_t *key, pds_vnic_spec_t *spec) {
     ADD_TO_OBJ_DB(vnic, key, spec);
 }
 
 pds_vnic_spec_t *
-agent_state::find_in_vnic_db(pds_vnic_key_t *key) {
+agent_state::find_in_vnic_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(vnic, key);
 }
 
@@ -529,7 +529,7 @@ agent_state::vnic_db_walk(vnic_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_vnic_db(pds_vnic_key_t *key) {
+agent_state::del_from_vnic_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(vnic, key);
 }
 
@@ -614,12 +614,12 @@ agent_state::route_table_db_walk(route_table_walk_cb_t cb, void *ctxt) {
 }
 
 sdk_ret_t
-agent_state::add_to_policy_db(pds_policy_key_t *key, pds_policy_spec_t *spec) {
+agent_state::add_to_policy_db(pds_obj_key_t *key, pds_policy_spec_t *spec) {
     ADD_TO_OBJ_DB(policy, key, spec);
 }
 
 pds_policy_spec_t *
-agent_state::find_in_policy_db(pds_policy_key_t *key) {
+agent_state::find_in_policy_db(pds_obj_key_t *key) {
     FIND_IN_OBJ_DB(policy, key);
 }
 
@@ -636,7 +636,7 @@ agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_policy_db(pds_policy_key_t *key) {
+agent_state::del_from_policy_db(pds_obj_key_t *key) {
     DEL_FROM_OBJ_DB(policy, key);
 }
 

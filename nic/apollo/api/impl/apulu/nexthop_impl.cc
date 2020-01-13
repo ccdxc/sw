@@ -148,7 +148,7 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
 
 sdk_ret_t
 nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
-    pds_nexthop_key_t key;
+    pds_obj_key_t key;
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data = { 0 };
 

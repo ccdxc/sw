@@ -17,10 +17,10 @@ namespace api {
 class mirror_session_feeder : public feeder {
 public:
     pds_mirror_session_key_t key;
-    pds_vpc_key_t vpc;
+    pds_obj_key_t vpc;
     pds_mirror_session_type_t type;
     uint32_t snap_len;
-    pds_tep_key_t tep;
+    pds_obj_key_t tep;
     ip_addr_t dst_ip;
     ip_addr_t src_ip;
     uint32_t span_id;
@@ -34,7 +34,7 @@ public:
     // initalize feeder with base set of values
     void init(pds_mirror_session_key_t key, uint8_t max_ms,
               pds_ifindex_t interface, uint16_t vlan_tag,
-              std::string src_ip, pds_tep_key_t tep,
+              std::string src_ip, pds_obj_key_t tep,
               uint32_t span_id = 1, uint32_t dscp = 1);
 
     // Iterate helper routines
@@ -66,9 +66,9 @@ operator<<(std::ostream& os, const mirror_session_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(mirror_session);
-API_READ(mirror_session);
+API_READ_TMP(mirror_session);
 API_UPDATE(mirror_session);
-API_DELETE(mirror_session);
+API_DELETE_TMP(mirror_session);
 
 }    // namespace api
 }    // namespace test

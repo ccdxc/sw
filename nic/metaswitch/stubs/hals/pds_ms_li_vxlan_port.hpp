@@ -60,9 +60,9 @@ private:
     pds_tep_spec_t make_pds_tep_spec_(void);
     pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void);
 
-    pds_tep_key_t make_pds_tep_key_
+    pds_obj_key_t make_pds_tep_key_
         (const if_obj_t::vxlan_port_properties_t& vxp_prop) {
-        return pds_tep_key_t(vxp_prop.hal_tep_idx);
+        return pds_obj_key_t(vxp_prop.hal_tep_idx);
     }
 };
 

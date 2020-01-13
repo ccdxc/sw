@@ -52,7 +52,7 @@ public:
     /// \brief      lookup a NAT port block in database given the key
     /// \param[in]  key NAT port block key
     /// \return     pointer to the NAT port block found or NULL
-    nat_port_block *find(pds_nat_port_block_key_t *key) const;
+    nat_port_block *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -74,7 +74,7 @@ private:
 };
 
 static inline nat_port_block *
-nat_port_block_find (pds_nat_port_block_key_t *key)
+nat_port_block_find (pds_obj_key_t *key)
 {
     return (nat_port_block *)api_base::find_obj(OBJ_ID_NAT_PORT_BLOCK, key);
 }

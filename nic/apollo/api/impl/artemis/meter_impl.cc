@@ -125,7 +125,7 @@ sdk_ret_t
 meter_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t           ret;
     pds_meter_spec_t    *spec;
-    pds_vpc_key_t       vpc_key;
+    pds_obj_key_t       vpc_key;
     route_table_t       *rtable;
     vpc_entry           *vpc;
     meter_entry         *meter;

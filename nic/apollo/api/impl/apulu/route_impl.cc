@@ -179,7 +179,7 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vnic_entry             *vnic;
     pds_route_table_spec_t *spec;
     uint32_t               nh_val;
-    pds_vpc_key_t          vpc_key;
+    pds_obj_key_t          vpc_key;
     route_table_t          *rtable;
     p4pd_error_t           p4pd_ret;
     nexthop_group          *nh_group;

@@ -232,7 +232,7 @@ public:
 
     /// \brief    return the vpc of this (L3) interface
     /// \return   vpc of this L3 interface
-    pds_vpc_key_t l3_vpc(void) { return if_info_.l3_.vpc_; }
+    pds_obj_key_t l3_vpc(void) { return if_info_.l3_.vpc_; }
 
     /// \brief    return the MAC address of this interface
     /// \return   MAC address of this interface
@@ -285,7 +285,7 @@ private:
         } uplink_;
         ///< L3 interface specific information
         struct {
-            pds_vpc_key_t vpc_;           ///< vpc of this L3 interface
+            pds_obj_key_t vpc_;           ///< vpc of this L3 interface
             ip_prefix_t ip_pfx_;          ///< IP subnet of this L3 interface
             pds_ifindex_t eth_ifindex_;   ///< eth ifindex
             pds_encap_t encap_;           ///< wire encap, if any

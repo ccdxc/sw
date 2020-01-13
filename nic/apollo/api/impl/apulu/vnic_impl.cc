@@ -213,7 +213,7 @@ sdk_ret_t
 vnic_impl::nuke_resources(api_base *api_obj) {
     sdk_ret_t ret;
     subnet_entry *subnet;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t subnet_key;
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key = { 0 };
     vnic_entry *vnic = (vnic_entry *)api_obj;
@@ -342,7 +342,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     policy *sec_policy;
     route_table *rtable;
     p4pd_error_t p4pd_ret;
-    pds_policy_key_t policy_key;
+    pds_obj_key_t policy_key;
     policy *ing_v4_policy, *ing_v6_policy;
     policy *egr_v4_policy, *egr_v6_policy;
     pds_route_table_key_t route_table_key;
@@ -537,7 +537,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     device_entry *device;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data = { 0 };
@@ -620,7 +620,7 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     p4pd_error_t p4pd_ret;
     device_entry *device;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
     nexthop_actiondata_t nh_data = { 0 };
     vnic_entry *vnic = (vnic_entry *)curr_obj;
@@ -788,7 +788,7 @@ vnic_impl::activate_create_(pds_epoch_t epoch, vnic_entry *vnic,
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
 
     // fetch the subnet of this vnic
     subnet = subnet_find(&spec->subnet);
@@ -830,7 +830,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
     p4pd_error_t p4pd_ret;
     pds_encap_t vnic_encap;
     vlan_actiondata_t vlan_data;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t subnet_key;
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key = { 0 };
     mapping_appdata_t mapping_data = { 0 };
@@ -898,7 +898,7 @@ vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
     subnet_entry *subnet;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
-    pds_vpc_key_t vpc_key;
+    pds_obj_key_t vpc_key;
     vlan_actiondata_t vlan_data;
 
     spec = &obj_ctxt->api_params->vnic_spec;
@@ -976,8 +976,8 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     vnic_entry *vnic;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t vpc_key;
+    pds_obj_key_t subnet_key;
 
     // the only programming that we need to do when vnic is in the dependent
     // list is to update the vnic info table in rxdma

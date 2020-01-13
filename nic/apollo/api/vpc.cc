@@ -102,7 +102,7 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_VERBOSE("Initializing vpc %s, type %u",
                       spec->key.str(), spec->type);
-    memcpy(&key_, &spec->key, sizeof(pds_vpc_key_t));
+    memcpy(&key_, &spec->key, sizeof(key_));
     type_ = spec->type;
     fabric_encap_ = spec->fabric_encap;
     v4_route_table_.id = spec->v4_route_table.id;
@@ -281,7 +281,7 @@ vpc_entry::fill_status_(pds_vpc_status_t *status) {
 
 void
 vpc_entry::fill_spec_(pds_vpc_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_vpc_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->type = type_;
     spec->fabric_encap = fabric_encap_;
     if (nat46_pfx_valid_) {

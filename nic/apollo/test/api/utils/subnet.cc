@@ -15,7 +15,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-subnet_feeder::init(pds_subnet_key_t key, pds_vpc_key_t vpc_key,
+subnet_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc_key,
                     std::string cidr_str, std::string vrmac_str,
                     int num_subnet) {
     ip_prefix_t pfx = {0};
@@ -63,8 +63,8 @@ subnet_feeder::iter_next(int width) {
 }
 
 void
-subnet_feeder::key_build(pds_subnet_key_t *key) const {
-    memset(key, 0, sizeof(pds_subnet_key_t));
+subnet_feeder::key_build(pds_obj_key_t *key) const {
+    memset(key, 0, sizeof(pds_obj_key_t));
     *key = spec.key;
 }
 
@@ -74,8 +74,8 @@ subnet_feeder::spec_build(pds_subnet_spec_t *spec) const {
 }
 
 bool
-subnet_feeder::key_compare(const pds_subnet_key_t *key) const {
-    return (memcmp(key, &this->spec.key, sizeof(pds_subnet_key_t)) == 0);
+subnet_feeder::key_compare(const pds_obj_key_t *key) const {
+    return (memcmp(key, &this->spec.key, sizeof(pds_obj_key_t)) == 0);
 }
 
 // TODO: fix for multiple policies
@@ -125,7 +125,7 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
 //----------------------------------------------------------------------------
 
 // do not modify these sample values as rest of system is sync with these
-pds_subnet_key_t k_subnet_key = int2pdsobjkey(1);
+pds_obj_key_t k_subnet_key = int2pdsobjkey(1);
 static subnet_feeder k_subnet_feeder;
 
 void sample_subnet_setup(pds_batch_ctxt_t bctxt) {

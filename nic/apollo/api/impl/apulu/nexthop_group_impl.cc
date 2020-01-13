@@ -212,7 +212,7 @@ sdk_ret_t
 nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
                                      nexthop_group *nh_group) {
     uint8_t num_nexthops;
-    pds_nexthop_group_key_t key;
+    pds_obj_key_t key;
     pds_nexthop_group_type_t type;
     p4pd_error_t p4pd_ret;
     nexthop_actiondata_t nh_data = { 0 };

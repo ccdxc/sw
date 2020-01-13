@@ -21,9 +21,9 @@ const uint32_t k_max_nh = PDS_MAX_NEXTHOP;
 
 void
 nexthop_feeder::init(std::string ip_str, uint64_t mac, uint32_t num_obj,
-                     pds_nexthop_key_t key, pds_nh_type_t type, uint16_t vlan,
-                     pds_vpc_key_t vpc, pds_if_id_t if_id,
-                     pds_tep_key_t tep) {
+                     pds_obj_key_t key, pds_nh_type_t type, uint16_t vlan,
+                     pds_obj_key_t vpc, pds_if_id_t if_id,
+                     pds_obj_key_t tep) {
     this->spec.key = key;
     this->spec.type = type;
     this->num_obj = num_obj;
@@ -57,8 +57,8 @@ nexthop_feeder::iter_next(int width) {
 }
 
 void
-nexthop_feeder::key_build(pds_nexthop_key_t *key) const {
-    memset(key, 0, sizeof(pds_nexthop_key_t));
+nexthop_feeder::key_build(pds_obj_key_t *key) const {
+    memset(key, 0, sizeof(pds_obj_key_t));
     *key = this->spec.key;
 }
 
@@ -83,7 +83,7 @@ nexthop_feeder::spec_build(pds_nexthop_spec_t *spec) const {
 }
 
 bool
-nexthop_feeder::key_compare(const pds_nexthop_key_t *key) const {
+nexthop_feeder::key_compare(const pds_obj_key_t *key) const {
     return (this->spec.key == *key);
 }
 

@@ -134,7 +134,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     meter_entry *meter;
     route_table *rtable;
     p4pd_error_t p4pd_ret;
-    pds_policy_key_t policy_key;
+    pds_obj_key_t policy_key;
     pds_route_table_key_t route_table_key;
     vnic_info_rxdma_actiondata_t tx_rxdma_vnic_info_data = { 0 };
     vnic_info_rxdma_actiondata_t rx_rxdma_vnic_info_data = { 0 };
@@ -276,8 +276,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     subnet_entry *subnet;
     p4pd_error_t p4pd_ret;
     pds_vnic_spec_t *spec;
-    pds_vpc_key_t vpc_key;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t vpc_key;
+    pds_obj_key_t subnet_key;
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
     egress_vnic_info_actiondata_t egr_vnic_info = { 0 };
@@ -365,7 +365,7 @@ sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     subnet_entry *subnet;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t subnet_key;
     vnic_entry *vnic = (vnic_entry *)api_obj;
     egress_vnic_info_actiondata_t egress_vnic_data;
 
@@ -419,8 +419,8 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     sdk_ret_t ret;
     vpc_entry *vpc;
     subnet_entry *subnet;
-    pds_vpc_key_t vpc_key;
-    pds_subnet_key_t subnet_key;
+    pds_obj_key_t vpc_key;
+    pds_obj_key_t subnet_key;
     sdk_table_api_params_t api_params = { 0 };
     vnic_mapping_swkey vnic_mapping_key = { 0 };
     vnic_mapping_swkey_mask_t vnic_mapping_mask = { 0 };

@@ -21,12 +21,12 @@ class local_mapping_feeder : public feeder {
 public:
     // spec fields
     pds_mapping_type_t map_type;
-    pds_vpc_key_t vpc;
-    pds_subnet_key_t subnet;
+    pds_obj_key_t vpc;
+    pds_obj_key_t subnet;
     pds_encap_t fabric_encap;
     uint64_t vnic_mac_u64;
     ip_prefix_t vnic_ip_pfx;
-    pds_vnic_key_t vnic;
+    pds_obj_key_t vnic;
     bool public_ip_valid;
     ip_prefix_t public_ip_pfx;
 
@@ -56,13 +56,13 @@ public:
     }
 
     // initialize feeder with base set of values
-    void init(pds_vpc_key_t vpc = int2pdsobjkey(1),
-              pds_subnet_key_t subnet = int2pdsobjkey(1),
+    void init(pds_obj_key_t vpc = int2pdsobjkey(1),
+              pds_obj_key_t subnet = int2pdsobjkey(1),
               std::string vnic_ip_str= "0.0.0.0/0",
               uint64_t vnic_mac = 0x00030b020a02,
               pds_encap_type_t encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
               uint32_t encap_val = 1,
-              pds_vnic_key_t vnic = int2pdsobjkey(1),
+              pds_obj_key_t vnic = int2pdsobjkey(1),
               bool is_public_ip_valid = 1,
               std::string pub_ip_str = "0.0.0.0/0",
               uint32_t num_vnics = k_max_vnic,
@@ -105,9 +105,9 @@ operator<<(std::ostream& os, const local_mapping_feeder& obj) {
 using pds_local_mapping_key_t = pds_mapping_key_t;
 
 API_CREATE(local_mapping);
-API_READ(local_mapping);
+API_READ_TMP(local_mapping);
 API_UPDATE(local_mapping);
-API_DELETE(local_mapping);
+API_DELETE_TMP(local_mapping);
 
 }    // namespace api
 }    // namespace test

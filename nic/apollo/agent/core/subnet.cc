@@ -52,7 +52,7 @@ subnet_create_validate (pds_subnet_spec_t *spec)
 }
 
 sdk_ret_t
-subnet_create (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
+subnet_create (pds_obj_key_t *key, pds_subnet_spec_t *spec,
                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -130,7 +130,7 @@ subnet_update_validate (pds_subnet_spec_t *spec)
 }
 
 sdk_ret_t
-subnet_update (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
+subnet_update (pds_obj_key_t *key, pds_subnet_spec_t *spec,
                pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -175,7 +175,7 @@ subnet_update (pds_subnet_key_t *key, pds_subnet_spec_t *spec,
 }
 
 sdk_ret_t
-subnet_delete (pds_subnet_key_t *key, pds_batch_ctxt_t bctxt)
+subnet_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     pds_subnet_spec_t *spec;
     sdk_ret_t ret;
@@ -205,7 +205,7 @@ subnet_delete (pds_subnet_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-subnet_get (pds_subnet_key_t *key, pds_subnet_info_t *info)
+subnet_get (pds_obj_key_t *key, pds_subnet_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_subnet_spec_t *spec;

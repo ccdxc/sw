@@ -1746,7 +1746,7 @@ pds_policy_dir_proto_to_api_spec (rule_dir_t *dir,
 }
 
 static inline sdk_ret_t
-pds_policy_rule_match_proto_to_api_spec (pds_policy_key_t policy,
+pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                                          uint32_t rule_id, uint8_t af,
                                          rule_match_t *match,
                                          const pds::SecurityRule &proto_rule)

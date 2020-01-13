@@ -71,7 +71,7 @@ typedef unordered_map<pds_obj_key_t, pds_vnic_spec_t *, pds_obj_key_hash> vnic_d
 typedef unordered_map<uint32_t, pds_meter_spec_t *> meter_db_t;
 typedef unordered_map<uint32_t, pds_tag_spec_t *> tag_db_t;
 typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
-typedef unordered_map<pds_vpc_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
+typedef unordered_map<pds_obj_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_spec_t *, pds_obj_key_hash> nh_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_group_spec_t *, pds_obj_key_hash> nh_group_db_t;
@@ -180,11 +180,11 @@ public:
     ~agent_state();
     pds_device_spec_t *device(void) { return cfg_db_->device(); }
 
-    pds_tep_spec_t *find_in_tep_db(pds_tep_key_t *key);
-    sdk_ret_t add_to_tep_db(pds_tep_key_t *key,
+    pds_tep_spec_t *find_in_tep_db(pds_obj_key_t *key);
+    sdk_ret_t add_to_tep_db(pds_obj_key_t *key,
                             pds_tep_spec_t *spec);
     sdk_ret_t tep_db_walk(tep_walk_cb_t cb, void *ctxt);
-    bool del_from_tep_db(pds_tep_key_t *key);
+    bool del_from_tep_db(pds_obj_key_t *key);
     slab_ptr_t tep_slab(void) const { return cfg_db_->tep_slab(); }
 
     pds_vpc_spec_t *find_in_vpc_db(pds_obj_key_t *key);
@@ -229,11 +229,11 @@ public:
     bool del_from_service_db(pds_svc_mapping_key_t *key);
     slab_ptr_t service_slab(void) const { return cfg_db_->service_slab(); }
 
-    pds_vnic_spec_t *find_in_vnic_db(pds_vnic_key_t *key);
-    sdk_ret_t add_to_vnic_db(pds_vnic_key_t *key,
+    pds_vnic_spec_t *find_in_vnic_db(pds_obj_key_t *key);
+    sdk_ret_t add_to_vnic_db(pds_obj_key_t *key,
                              pds_vnic_spec_t *spec);
     sdk_ret_t vnic_db_walk(vnic_walk_cb_t cb, void *ctxt);
-    bool del_from_vnic_db(pds_vnic_key_t *key);
+    bool del_from_vnic_db(pds_obj_key_t *key);
     slab_ptr_t vnic_slab(void) const { return cfg_db_->vnic_slab(); }
 
     slab_ptr_t if_slab(void) const { return cfg_db_->if_slab(); }
@@ -261,10 +261,10 @@ public:
         return cfg_db_->route_table_slab();
     }
 
-    sdk_ret_t add_to_policy_db(pds_policy_key_t *key,
+    sdk_ret_t add_to_policy_db(pds_obj_key_t *key,
                                pds_policy_spec_t *spec);
-    pds_policy_spec_t *find_in_policy_db(pds_policy_key_t *key);
-    bool del_from_policy_db(pds_policy_key_t *key);
+    pds_policy_spec_t *find_in_policy_db(pds_obj_key_t *key);
+    bool del_from_policy_db(pds_obj_key_t *key);
     sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
     slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
 

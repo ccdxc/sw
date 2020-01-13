@@ -123,9 +123,9 @@ operator<<(std::ostream& os, const route_table_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(route_table);
-API_READ(route_table);
+API_READ_TMP(route_table);
 API_UPDATE(route_table);
-API_DELETE(route_table);
+API_DELETE_TMP(route_table);
 
 // Misc function prototypes
 void sample_route_table_setup(

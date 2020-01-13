@@ -71,7 +71,7 @@ public:
      * @brief     lookup a vnic in database given the key
      * @param[in] vnic_key vnic key
      */
-    vnic_entry *find(pds_vnic_key_t *vnic_key) const;
+    vnic_entry *find(pds_obj_key_t *vnic_key) const;
 
     /// \brief API to walk all the db elements
     /// \param[in] walk_cb    callback to be invoked for every node
@@ -102,7 +102,7 @@ private:
 };
 
 static inline vnic_entry *
-vnic_find (pds_vnic_key_t *key)
+vnic_find (pds_obj_key_t *key)
 {
     return (vnic_entry *)api_base::find_obj(OBJ_ID_VNIC, key);
 }

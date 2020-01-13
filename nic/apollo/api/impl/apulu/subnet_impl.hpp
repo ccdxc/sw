@@ -185,7 +185,7 @@ public:
     }
 
     /// \brief      accessor API for key
-    pds_subnet_key_t *key(void) { return &key_; }
+    pds_obj_key_t *key(void) { return &key_; }
 
     /// \brief      accessor API for hash table context
     ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
@@ -241,7 +241,7 @@ private:
     handle_t vni_hdl_;
     /// PI specific info
     struct {
-        pds_subnet_key_t key_;
+        pds_obj_key_t key_;
     };
     ht_ctxt_t ht_ctxt_;
 };

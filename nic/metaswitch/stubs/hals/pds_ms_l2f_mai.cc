@@ -32,7 +32,7 @@ extern int l2f_proc_id;
 namespace pds_ms {
 
 void 
-l2f_local_mac_ip_add (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
+l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex)
 {
     NBB_CREATE_THREAD_CONTEXT
@@ -79,7 +79,7 @@ l2f_local_mac_ip_add (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
 }
 
 void 
-l2f_local_mac_ip_del (const pds_subnet_key_t& subnet_key, const ip_addr_t& ip,
+l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac)
 {
     NBB_CREATE_THREAD_CONTEXT

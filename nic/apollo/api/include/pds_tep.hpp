@@ -36,8 +36,8 @@ typedef enum pds_tep_type_e {
 
 /// \brief TEP specification
 typedef struct pds_tep_spec_s {
-    pds_tep_key_t  key;        ///< key
-    pds_vpc_key_t  vpc;        ///< VPC this tunnel belongs to
+    pds_obj_key_t  key;        ///< key
+    pds_obj_key_t  vpc;        ///< VPC this tunnel belongs to
     ip_addr_t      ip_addr;    ///< outer source IP to be used
                                ///< (unused currently)
     ip_addr_t      remote_ip;  ///< TEP IP
@@ -73,9 +73,9 @@ typedef struct pds_tep_spec_s {
     ///    2nd tunnel's encap is MPLSoUDP
     /// 2. 2nd tunnel can't point to another tunnel
     union {
-        pds_nexthop_key_t nh;                ///< underlay nexthop
-        pds_nexthop_group_key_t nh_group;    ///< underlay nexthop group
-        pds_tep_key_t tep;                   ///< another tunnel/TEP
+        pds_obj_key_t nh;                ///< underlay nexthop
+        pds_obj_key_t nh_group;    ///< underlay nexthop group
+        pds_obj_key_t tep;                   ///< another tunnel/TEP
     };
 } __PACK__ pds_tep_spec_t;
 
@@ -113,7 +113,7 @@ sdk_ret_t pds_tep_create(pds_tep_spec_t *spec,
 /// \param[out] info information
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     TEP spec containing a valid tep key should be passed
-sdk_ret_t pds_tep_read(pds_tep_key_t *key, pds_tep_info_t *info);
+sdk_ret_t pds_tep_read(pds_obj_key_t *key, pds_tep_info_t *info);
 
 /// \brief     update TEP
 /// \param[in] spec specification
@@ -128,7 +128,7 @@ sdk_ret_t pds_tep_update(pds_tep_spec_t *spec,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    valid TEP key should be passed
-sdk_ret_t pds_tep_delete(pds_tep_key_t *key,
+sdk_ret_t pds_tep_delete(pds_obj_key_t *key,
                          pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

@@ -16,10 +16,10 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-local_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_key_t subnet,
+local_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                            std::string vnic_ip_cidr_str, uint64_t vnic_mac,
                            pds_encap_type_t encap_type, uint32_t encap_val,
-                           pds_vnic_key_t vnic, bool public_ip_valid,
+                           pds_obj_key_t vnic, bool public_ip_valid,
                            std::string pub_ip_cidr_str, uint32_t num_vnics,
                            uint32_t num_ip_per_vnic,
                            pds_mapping_type_t map_type) {

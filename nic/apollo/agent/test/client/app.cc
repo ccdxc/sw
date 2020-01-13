@@ -308,7 +308,7 @@ update_vpc_grpc (pds_vpc_spec_t *vpc)
 }
 
 sdk_ret_t
-delete_vpc_grpc (pds_vpc_key_t *key)
+delete_vpc_grpc (pds_obj_key_t *key)
 {
     ClientContext   context;
     VPCDeleteResponse     response;
@@ -338,7 +338,7 @@ delete_vpc_grpc (pds_vpc_key_t *key)
 }
 
 sdk_ret_t
-read_vpc_grpc (pds_vpc_key_t *key, pds_vpc_info_t *info)
+read_vpc_grpc (pds_obj_key_t *key, pds_vpc_info_t *info)
 {
     ClientContext   context;
     VPCGetResponse  response;

@@ -17,8 +17,8 @@ namespace api {
 class vpc_peer_feeder : public feeder {
 public:
     pds_vpc_peer_key_t key;
-    pds_vpc_key_t vpc1;
-    pds_vpc_key_t vpc2;
+    pds_obj_key_t vpc1;
+    pds_obj_key_t vpc2;
 
     // Constructor
     vpc_peer_feeder() { };
@@ -27,7 +27,7 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_vpc_peer_key_t key, pds_vpc_key_t vpc1, pds_vpc_key_t vpc2,
+    void init(pds_vpc_peer_key_t key, pds_obj_key_t vpc1, pds_obj_key_t vpc2,
               uint32_t num_vpc_peer = 1);
 
     // Iterate helper routines
@@ -84,9 +84,9 @@ operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(vpc_peer);
-API_READ(vpc_peer);
+API_READ_TMP(vpc_peer);
 API_UPDATE(vpc_peer);
-API_DELETE(vpc_peer);
+API_DELETE_TMP(vpc_peer);
 
 }    // namespace api
 }    // namespace test

@@ -16,7 +16,7 @@
 // mapping internal specification
 typedef struct pds_mapping_spec_s {
     pds_mapping_key_t key;                // mapping key
-    pds_subnet_key_t subnet;              // subnet this IP is part of
+    pds_obj_key_t subnet;              // subnet this IP is part of
     pds_encap_t fabric_encap;             // fabric encap for this mapping
     mac_addr_t overlay_mac;               // MAC for this IP
     pds_nh_type_t nh_type;                // nexthop type information for
@@ -25,18 +25,18 @@ typedef struct pds_mapping_spec_s {
     union {
         // information specific to remote mappings
         union {
-            pds_tep_key_t tep;                // TEP address for this mapping
+            pds_obj_key_t tep;                // TEP address for this mapping
                                               // 1. device IP for local vnic
                                               // 2. remote TEP for remote vnic
                                               //    if provider IP is not valid
-            pds_nexthop_group_key_t nh_group; // nexthop group mapping is behind
-            pds_nexthop_key_t nexthop;        // nexthop (used in case traffic
+            pds_obj_key_t nh_group; // nexthop group mapping is behind
+            pds_obj_key_t nexthop;        // nexthop (used in case traffic
                                               // is going out natively without
                                               // encap)
         };
         // information specific to local IP mappings
         struct {
-            pds_vnic_key_t vnic;              // vnic for local IP
+            pds_obj_key_t vnic;              // vnic for local IP
             bool public_ip_valid;             // true if public IP is valid
             ip_addr_t public_ip;              // public IP address
             bool provider_ip_valid;           // true if provider IP is valid

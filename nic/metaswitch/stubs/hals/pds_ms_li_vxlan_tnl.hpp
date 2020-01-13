@@ -61,11 +61,11 @@ private:
     pds_tep_spec_t make_pds_tep_spec_(void);
     pds_nexthop_group_spec_t make_pds_nhgroup_spec_(void);
 
-    pds_tep_key_t make_pds_tep_key_(void) {
+    pds_obj_key_t make_pds_tep_key_(void) {
         auto& tep_prop = store_info_.tep_obj->properties();
         return msidx2pdsobjkey(tep_prop.hal_tep_idx);
     }
-    pds_nexthop_group_key_t make_pds_nhgroup_key_(void) {
+    pds_obj_key_t make_pds_nhgroup_key_(void) {
         return msidx2pdsobjkey(store_info_.tep_obj->hal_oecmp_idx_guard->idx());
     }
 };

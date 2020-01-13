@@ -142,9 +142,9 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
     nexthop_impl *nh_impl;
     p4pd_error_t p4pd_ret;
     nexthop_group *nhgroup;
-    pds_nexthop_key_t nh_key;
+    pds_obj_key_t nh_key;
     nexthop_group_impl *nhgroup_impl;
-    pds_nexthop_group_key_t nhgroup_key;
+    pds_obj_key_t nhgroup_key;
     tunnel_actiondata_t tep_data = { 0 };
 
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
@@ -332,10 +332,10 @@ tep_impl::activate_delete_tunnel2_(pds_epoch_t epoch, tep_entry *tep) {
     p4pd_error_t p4pd_ret;
     nexthop_impl *nh_impl;
     nexthop_group *nhgroup;
-    pds_nexthop_key_t nh_key;
+    pds_obj_key_t nh_key;
     nexthop_actiondata_t nh_data;
     nexthop_group_impl *nhgroup_impl;
-    pds_nexthop_group_key_t nh_group_key;
+    pds_obj_key_t nh_group_key;
 
     // update/fix the nexthop(s) to not point to this outer tunnel anymore
     if (tep->nh_type() == PDS_NH_TYPE_UNDERLAY_ECMP) {

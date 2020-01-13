@@ -27,8 +27,8 @@
 /// \brief    local mapping specification
 typedef struct pds_local_mapping_spec_s {
     pds_mapping_key_t key;                    ///< mapping key
-    pds_vnic_key_t vnic;                      ///< vnic for given IP
-    pds_subnet_key_t subnet;                  ///< subnet this IP is part of
+    pds_obj_key_t vnic;                       ///< vnic for given IP
+    pds_obj_key_t subnet;                     ///< subnet this IP is part of
     pds_encap_t fabric_encap;                 ///< fabric encap for this mapping
     mac_addr_t vnic_mac;                      ///< vnic MAC
     bool public_ip_valid;                     ///< true if public IP is valid
@@ -44,14 +44,14 @@ typedef struct pds_local_mapping_spec_s {
 /// \brief    remote mapping specification
 typedef struct pds_remote_mapping_spec_s {
     pds_mapping_key_t key;       ///< mapping key
-    pds_subnet_key_t subnet;     ///< subnet this IP is part of
+    pds_obj_key_t subnet;     ///< subnet this IP is part of
     pds_encap_t fabric_encap;    ///< fabric encap for this mapping
     pds_nh_type_t nh_type;       ///< type of the nexthop for this mapping
     union {
         ///< remote TEP where this mapping is located
-        pds_tep_key_t tep;
+        pds_obj_key_t tep;
         ///< overlay nexthop group for this mapping
-        pds_nexthop_group_key_t nh_group;
+        pds_obj_key_t nh_group;
     };
     mac_addr_t vnic_mac;         ///< remote vnic's MAC
     /// number of tag/labels/security groups for the mapping

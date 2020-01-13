@@ -53,7 +53,7 @@ public:
     /// \brief     lookup a vpc in database given the key
     /// \param[in] vpc key for the VPC object
     /// \return    pointer to the VPC instance found or NULL
-    vpc_entry *find(pds_vpc_key_t *key) const;
+    vpc_entry *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -76,7 +76,7 @@ private:
 };
 
 static inline vpc_entry *
-vpc_find (pds_vpc_key_t *key)
+vpc_find (pds_obj_key_t *key)
 {
     return (vpc_entry *)api_base::find_obj(OBJ_ID_VPC, key);
 }

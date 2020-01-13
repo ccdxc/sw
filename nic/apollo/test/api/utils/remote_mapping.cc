@@ -17,7 +17,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-remote_mapping_feeder::init(pds_vpc_key_t vpc, pds_subnet_key_t subnet,
+remote_mapping_feeder::init(pds_obj_key_t vpc, pds_obj_key_t subnet,
                             std::string vnic_ip_cidr_str, uint64_t vnic_mac,
                             pds_encap_type_t encap_type, uint32_t encap_val,
                             pds_nh_type_t nh_type, uint32_t nh_id,

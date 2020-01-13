@@ -36,12 +36,12 @@ typedef enum pds_nh_type_e {
 
 /// \brief nexthop specification
 typedef struct pds_nexthop_spec_s {
-    pds_nexthop_key_t     key;     ///< key
+    pds_obj_key_t     key;         ///< key
     pds_nh_type_t         type;    ///< (immutable) nexthop type
     union {
         // info specific to PDS_NH_TYPE_OVERLAY
         struct {
-            pds_tep_key_t tep;
+            pds_obj_key_t tep;
         };
         // info specific to PDS_NH_TYPE_UNDERLAY
         struct {
@@ -53,7 +53,7 @@ typedef struct pds_nexthop_spec_s {
         // info specific to PDS_NH_TYPE_IP
         // NOTE: PDS_NH_TYPE_IP is deprecated
         struct {
-            pds_vpc_key_t vpc;     ///< nexthop's (egress VPC)
+            pds_obj_key_t vpc;     ///< nexthop's (egress VPC)
             ip_addr_t     ip;      ///< nexthop IP address
             uint16_t      vlan;    ///< egress vlan encap (for tagged packets)
             mac_addr_t    mac;     ///< (optional) MAC address if known at
@@ -89,7 +89,7 @@ sdk_ret_t pds_nexthop_create(pds_nexthop_spec_t *spec,
 /// \param[in]  key  key of the nexthop
 /// \param[out] info nexthop information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nexthop_read(pds_nexthop_key_t *key, pds_nexthop_info_t *info);
+sdk_ret_t pds_nexthop_read(pds_obj_key_t *key, pds_nexthop_info_t *info);
 
 /// \brief     update nexthop
 /// \param[in] spec nexthop specification
@@ -103,7 +103,7 @@ sdk_ret_t pds_nexthop_update(pds_nexthop_spec_t *spec,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid nexthop key should be passed
-sdk_ret_t pds_nexthop_delete(pds_nexthop_key_t *key,
+sdk_ret_t pds_nexthop_delete(pds_obj_key_t *key,
                              pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// \brief nexthop group type
@@ -123,7 +123,7 @@ typedef enum pds_nexthop_group_type_e {
 
 /// \brief nexthop group specification
 typedef struct pds_nexthop_group_spec_s {
-    pds_nexthop_group_key_t key;      ///< key
+    pds_obj_key_t key;                ///< key
     pds_nexthop_group_type_t type;    ///< nexthop group type
     uint8_t num_nexthops;             ///< number of members in this group
     pds_nexthop_spec_t nexthops[PDS_MAX_ECMP_NEXTHOP];
@@ -163,7 +163,7 @@ sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_t *spec,
 /// \param[in]  key  key of the nexthop group
 /// \param[out] info nexthop group information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_nexthop_group_read(pds_nexthop_group_key_t *key,
+sdk_ret_t pds_nexthop_group_read(pds_obj_key_t *key,
                                  pds_nexthop_group_info_t *info);
 
 /// \brief     update nexthop group
@@ -179,7 +179,7 @@ sdk_ret_t pds_nexthop_group_update(pds_nexthop_group_spec_t *spec,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid nexthop group key should be passed
-sdk_ret_t pds_nexthop_group_delete(pds_nexthop_group_key_t *key,
+sdk_ret_t pds_nexthop_group_delete(pds_obj_key_t *key,
                                    pds_batch_ctxt_t bctxt =
                                                      PDS_BATCH_CTXT_INVALID);
 

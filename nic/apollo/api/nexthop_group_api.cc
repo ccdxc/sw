@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_nexthop_group_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                              pds_nexthop_group_key_t *key,
+                              pds_obj_key_t *key,
                               pds_nexthop_group_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -63,7 +63,7 @@ pds_nexthop_group_spec_fill (pds_nexthop_group_spec_t *spec,
 }
 
 static inline nexthop_group *
-pds_nexthop_group_find (pds_nexthop_group_key_t *key)
+pds_nexthop_group_find (pds_obj_key_t *key)
 {
     return (nexthop_group_db()->find(key));
 }
@@ -80,7 +80,7 @@ pds_nexthop_group_create (_In_ pds_nexthop_group_spec_t *spec,
 }
 
 sdk_ret_t
-pds_nexthop_group_read (_In_ pds_nexthop_group_key_t *key,
+pds_nexthop_group_read (_In_ pds_obj_key_t *key,
                         _Out_ pds_nexthop_group_info_t *info)
 {
     nexthop_group *entry;
@@ -104,7 +104,7 @@ pds_nexthop_group_update (_In_ pds_nexthop_group_spec_t *spec,
 }
 
 sdk_ret_t
-pds_nexthop_group_delete (_In_ pds_nexthop_group_key_t *key,
+pds_nexthop_group_delete (_In_ pds_obj_key_t *key,
                           _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_nexthop_group_api_handle(bctxt, API_OP_DELETE, key, NULL);

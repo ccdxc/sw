@@ -73,9 +73,9 @@ NatSvcImpl::NatPortBlockDelete(ServerContext *context,
                                pds::NatPortBlockDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_nat_port_block_key_t key = { 0 };
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -127,7 +127,7 @@ NatSvcImpl::NatPortBlockGet(ServerContext *context,
                             const pds::NatPortBlockGetRequest *proto_req,
                             pds::NatPortBlockGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nat_port_block_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_nat_port_block_info_t info = { 0 };
 
     if (proto_req == NULL) {

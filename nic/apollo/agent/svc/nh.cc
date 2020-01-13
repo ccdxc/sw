@@ -17,8 +17,8 @@ NhSvcImpl::NexthopCreate(ServerContext *context,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_nexthop_spec_t *api_spec;
-    pds_nexthop_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -81,8 +81,8 @@ NhSvcImpl::NexthopUpdate(ServerContext *context,
                          pds::NexthopResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_nexthop_spec_t *api_spec;
-    pds_nexthop_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -145,7 +145,7 @@ NhSvcImpl::NexthopDelete(ServerContext *context,
                          pds::NexthopDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_nexthop_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -197,7 +197,7 @@ NhSvcImpl::NexthopGet(ServerContext *context,
                       const pds::NexthopGetRequest *proto_req,
                       pds::NexthopGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_nexthop_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_nexthop_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("Nexthop Get Received")
@@ -239,7 +239,7 @@ NhSvcImpl::NhGroupCreate(ServerContext *context,
                          pds::NhGroupResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
-    pds_nexthop_group_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_nexthop_group_spec_t *api_spec = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -298,7 +298,7 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
                          pds::NhGroupResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
-    pds_nexthop_group_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_nexthop_group_spec_t *api_spec = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -357,7 +357,7 @@ NhSvcImpl::NhGroupDelete(ServerContext *context,
                          pds::NhGroupDeleteResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_OK;
     pds_batch_ctxt_t bctxt;
-    pds_nexthop_group_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -405,7 +405,7 @@ NhSvcImpl::NhGroupGet(ServerContext *context,
                       const pds::NhGroupGetRequest *proto_req,
                       pds::NhGroupGetResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_OK;
-    pds_nexthop_group_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_nexthop_group_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("NhGroup Get Received")

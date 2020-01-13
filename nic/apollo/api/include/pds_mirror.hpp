@@ -29,9 +29,9 @@ typedef struct pds_rspan_spec_s {
 
 /// \brief    ERSPAN configuration
 typedef struct pds_erspan_spec_s {
-    pds_vpc_key_t vpc;                ///< vpc of the destination IP
+    pds_obj_key_t vpc;                ///< vpc of the destination IP
     union {
-        pds_tep_key_t tep;            ///< tep ID of ERSPAN destination
+        pds_obj_key_t tep;            ///< tep ID of ERSPAN destination
         pds_mapping_key_t mapping;    ///< local/remote mapping destination
     };
     ip_addr_t src_ip;                 ///< IP address of ERSPAN source

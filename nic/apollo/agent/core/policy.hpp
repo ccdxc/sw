@@ -16,12 +16,12 @@ typedef struct policy_db_cb_ctxt_s {
     void         *ctxt;
 } policy_db_cb_ctxt_t;
 
-sdk_ret_t policy_create(pds_policy_key_t *key, pds_policy_spec_t *spec,
+sdk_ret_t policy_create(pds_obj_key_t *key, pds_policy_spec_t *spec,
                         pds_batch_ctxt_t bctxt);
-sdk_ret_t policy_update(pds_policy_key_t *key, pds_policy_spec_t *spec,
+sdk_ret_t policy_update(pds_obj_key_t *key, pds_policy_spec_t *spec,
                         pds_batch_ctxt_t bctxt);
-sdk_ret_t policy_delete(pds_policy_key_t *key, pds_batch_ctxt_t bctxt);
-sdk_ret_t policy_get(pds_policy_key_t *key, pds_policy_info_t *info);
+sdk_ret_t policy_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
+sdk_ret_t policy_get(pds_obj_key_t *key, pds_policy_info_t *info);
 sdk_ret_t policy_get_all(policy_get_cb_t policy_get_cb, void *ctxt);
 
 }    // namespace core

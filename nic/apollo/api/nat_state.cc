@@ -19,7 +19,7 @@ nat_state::nat_state() {
     nat_port_block_ht_ =
         ht::factory(PDS_MAX_NAT_PORT_BLOCK >> 2,
                     nat_port_block::nat_port_block_key_func_get,
-                    sizeof(pds_nat_port_block_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(nat_port_block_ht_ != NULL);
     nat_port_block_slab_ = slab::factory("nat-port-block",
                                          PDS_SLAB_ID_NAT_PORT_BLOCK,
@@ -55,7 +55,7 @@ nat_state::free(nat_port_block *port_block) {
 }
 
 nat_port_block *
-nat_state::find(pds_nat_port_block_key_t *key) const {
+nat_state::find(pds_obj_key_t *key) const {
     return (nat_port_block *)(nat_port_block_ht_->lookup(key));
 }
 

@@ -257,9 +257,9 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
-    pds_subnet_key_t subnet_key;
-    vnic_entry *vnic = (vnic_entry *)api_obj;
     subnet_entry *subnet;
+    pds_obj_key_t subnet_key;
+    vnic_entry *vnic = (vnic_entry *)api_obj;
     egress_local_vnic_info_actiondata_t egress_vnic_data = { 0 };
     sdk_table_api_params_t api_params;
 
@@ -458,13 +458,13 @@ sdk_ret_t
 vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
                                  pds_vnic_spec_t *spec) {
     sdk_ret_t                ret;
-    pds_vpc_key_t            vpc_key;
+    pds_obj_key_t            vpc_key;
     vpc_entry                *vpc;
-    pds_subnet_key_t         subnet_key;
+    pds_obj_key_t            subnet_key;
     subnet_entry             *subnet;
     pds_route_table_key_t    route_table_key;
     route_table              *v4_route_table, *v6_route_table;
-    pds_policy_key_t         policy_key;
+    pds_obj_key_t            policy_key;
     policy                   *ing_v4_policy, *ing_v6_policy;
     policy                   *egr_v4_policy, *egr_v6_policy;
 
@@ -631,8 +631,8 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     sdk_ret_t ret;
     mem_addr_t addr;
     subnet_entry *subnet;
-    pds_subnet_key_t subnet_key;
-    pds_policy_key_t policy_key;
+    pds_obj_key_t subnet_key;
+    pds_obj_key_t policy_key;
     pds_route_table_key_t route_table_key;
     policy *ing_v4_policy, *ing_v6_policy;
     policy *egr_v4_policy, *egr_v6_policy;
@@ -812,7 +812,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     local_vnic_by_vlan_tx_actiondata_t vnic_by_vlan_data = { 0 };
     local_vnic_by_slot_rx_swkey_t vnic_by_slot_key = { 0 };
     local_vnic_by_slot_rx_actiondata_t vnic_by_slot_data = { 0 };
-    pds_vnic_key_t *vkey = &spec->key;
+    pds_obj_key_t *vkey = &spec->key;
     pds_vlan_id_t vnic_vlan;
     bool rx_src_dst_check, tx_src_dst_check;
 

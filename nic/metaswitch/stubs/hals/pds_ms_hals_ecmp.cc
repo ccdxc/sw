@@ -80,7 +80,7 @@ void hals_ecmp_t::fetch_store_info_(state_t* state) {
     store_info_.pathset_obj = state->pathset_store().get(ips_info_.pathset_id);
 }
 
-pds_nexthop_group_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
+pds_obj_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
     ms_hw_tbl_id_t idx;
     if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
         idx = ips_info_.pathset_id;

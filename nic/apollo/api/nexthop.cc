@@ -176,7 +176,7 @@ nexthop::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
 
 void
 nexthop::fill_spec_(pds_nexthop_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_nexthop_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
 }
 
 sdk_ret_t

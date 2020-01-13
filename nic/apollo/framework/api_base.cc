@@ -403,19 +403,19 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_VPC:
-        api_obj = vpc_db()->find((pds_vpc_key_t *)key);
+        api_obj = vpc_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_SUBNET:
-        api_obj = subnet_db()->find((pds_subnet_key_t *)key);
+        api_obj = subnet_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_TEP:
-        api_obj = tep_db()->find((pds_tep_key_t *)key);
+        api_obj = tep_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_VNIC:
-        api_obj = vnic_db()->find((pds_vnic_key_t *)key);
+        api_obj = vnic_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_MAPPING:
@@ -427,7 +427,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_POLICY:
-        api_obj = policy_db()->find((pds_policy_key_t *)key);
+        api_obj = policy_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_MIRROR_SESSION:
@@ -448,11 +448,11 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_NEXTHOP:
-        api_obj = nexthop_db()->find((pds_nexthop_key_t *)key);
+        api_obj = nexthop_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_NEXTHOP_GROUP:
-        api_obj = nexthop_group_db()->find((pds_nexthop_group_key_t *)key);
+        api_obj = nexthop_group_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_POLICER:
@@ -460,15 +460,15 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:
-        api_obj = nat_db()->find((pds_nat_port_block_key_t *)key);
+        api_obj = nat_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_DHCP_RELAY:
-        api_obj = dhcp_db()->find_dhcp_relay((pds_dhcp_relay_key_t *)key);
+        api_obj = dhcp_db()->find_dhcp_relay((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_DHCP_POLICY:
-        api_obj = dhcp_db()->find_dhcp_policy((pds_dhcp_policy_key_t *)key);
+        api_obj = dhcp_db()->find_dhcp_policy((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_SECURITY_PROFILE:

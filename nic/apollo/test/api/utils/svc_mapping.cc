@@ -15,7 +15,7 @@ namespace api {
 
 void
 svc_mapping_feeder::init(std::string vip_str, uint16_t svc_port,
-                         pds_vpc_key_t backend_vpc, std::string backend_ip_str,
+                         pds_obj_key_t backend_vpc, std::string backend_ip_str,
                          uint16_t backend_port, std::string backend_pip_str,
                          uint32_t num_svc_mapping) {
     spec.key.vpc = backend_vpc;

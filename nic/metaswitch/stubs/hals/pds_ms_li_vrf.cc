@@ -74,7 +74,7 @@ void li_vrf_t::fetch_store_info_(pds_ms::state_t* state) {
     }
 }
 
-pds_vpc_key_t li_vrf_t::make_pds_vpc_key_(void) {
+pds_obj_key_t li_vrf_t::make_pds_vpc_key_(void) {
     // This could be delete case - use an object that is guaranteed
     // to be present
     return msidx2pdsobjkey(ips_info_.vrf_id);

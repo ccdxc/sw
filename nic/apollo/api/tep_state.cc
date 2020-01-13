@@ -24,7 +24,7 @@ namespace api {
 tep_state::tep_state() {
     tep_ht_ = ht::factory(PDS_MAX_TEP >> 2,
                           tep_entry::tep_key_func_get,
-                          sizeof(pds_tep_key_t));
+                          sizeof(pds_obj_key_t));
     SDK_ASSERT(tep_ht_ != NULL);
 
     tep_slab_ = slab::factory("tep", PDS_SLAB_ID_TEP, sizeof(tep_entry),
@@ -60,7 +60,7 @@ tep_state::free(tep_entry *tep) {
 }
 
 tep_entry *
-tep_state::find(pds_tep_key_t *tep_key) const {
+tep_state::find(pds_obj_key_t *tep_key) const {
     return (tep_entry *)(tep_ht_->lookup(tep_key));
 }
 

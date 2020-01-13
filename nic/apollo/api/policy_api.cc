@@ -20,7 +20,7 @@
 
 static sdk_ret_t
 pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                       pds_policy_key_t *key, pds_policy_spec_t *spec)
+                       pds_obj_key_t *key, pds_policy_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -42,7 +42,7 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline policy *
-pds_policy_entry_find (pds_policy_key_t *key)
+pds_policy_entry_find (pds_obj_key_t *key)
 {
     return policy_db()->find(key);
 }
@@ -58,7 +58,7 @@ pds_policy_create (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_policy_read (_In_ pds_policy_key_t *key, _Out_ pds_policy_info_t *info)
+pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
 {
     policy *entry;
 
@@ -78,7 +78,7 @@ pds_policy_update (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_policy_delete (_In_ pds_policy_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_policy_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_policy_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

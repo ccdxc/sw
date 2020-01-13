@@ -60,35 +60,35 @@ sdk_ret_t api_info_compare_singleton(
 
 /// \brief Invokes the PDS create apis for test objects
 #define API_CREATE(_api_str)                                                 \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 create(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
-    memset(&spec, 0, sizeof(pds_##_api_str##_spec_t));                       \
+    memset(&spec, 0, sizeof(spec));                                          \
     feeder.spec_build(&spec);                                                \
     return (pds_##_api_str##_create(&spec, bctxt));                          \
 }
 
 /// \brief Dummy function for Read
 #define API_NO_READ(_api_str)                                                \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 read(_api_str##_feeder& feeder) {                                            \
-    return SDK_RET_OK;                                                  \
+    return SDK_RET_OK;                                                       \
 }
 
 /// \brief Invokes the PDS read apis for test objects
 /// Also it compares the config values with values read from hardware
 #define API_READ(_api_str)                                                   \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 read(_api_str##_feeder& feeder) {                                            \
     sdk_ret_t rv;                                                            \
-    pds_##_api_str##_key_t key;                                              \
+    pds_obj_key_t key;                                                       \
     pds_##_api_str##_info_t info;                                            \
                                                                              \
-    memset(&key, 0, sizeof(pds_##_api_str##_key_t));                         \
+    memset(&key, 0, sizeof(key));                                            \
     feeder.key_build(&key);                                                  \
-    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
-    if ((rv = pds_##_api_str##_read(&key, &info)) != SDK_RET_OK)        \
+    memset(&info, 0, sizeof(info));                                          \
+    if ((rv = pds_##_api_str##_read(&key, &info)) != SDK_RET_OK)             \
         return rv;                                                           \
                                                                              \
     return (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(    \
@@ -98,13 +98,13 @@ read(_api_str##_feeder& feeder) {                                            \
 /// \brief Invokes the PDS read apis for test objects
 /// Also it compares the config values with values read from hardware
 #define API_READ_SINGLETON(_api_str)                                         \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 read(_api_str##_feeder& feeder) {                                            \
     sdk_ret_t rv;                                                            \
     pds_##_api_str##_info_t info;                                            \
                                                                              \
-    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
-    if ((rv = pds_##_api_str##_read(&info)) != SDK_RET_OK)              \
+    memset(&info, 0, sizeof(info));                                          \
+    if ((rv = pds_##_api_str##_read(&info)) != SDK_RET_OK)                   \
         return rv;                                                           \
                                                                              \
     return (api_info_compare_singleton<_api_str##_feeder,                    \
@@ -113,36 +113,66 @@ read(_api_str##_feeder& feeder) {                                            \
 
 /// \brief Invokes the PDS update apis for test objects
 #define API_UPDATE(_api_str)                                                 \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 update(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                  \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
-    memset(&spec, 0, sizeof(pds_##_api_str##_spec_t));                       \
+    memset(&spec, 0, sizeof(spec));                                          \
     feeder.spec_build(&spec);                                                \
     return (pds_##_api_str##_update(&spec, bctxt));                          \
 }
 
 /// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE(_api_str)                                                 \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
+del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
+    pds_obj_key_t key;                                                       \
+                                                                             \
+    memset(&key, 0, sizeof(key));                                            \
+    feeder.key_build(&key);                                                  \
+    return (pds_##_api_str##_delete(&key, bctxt));                           \
+}
+
+// TOD: remove this macro later
+#define API_READ_TMP(_api_str)                                               \
+inline sdk_ret_t                                                             \
+read(_api_str##_feeder& feeder) {                                            \
+    sdk_ret_t rv;                                                            \
+    pds_##_api_str##_key_t key;                                              \
+    pds_##_api_str##_info_t info;                                            \
+                                                                             \
+    memset(&key, 0, sizeof(key));                                            \
+    feeder.key_build(&key);                                                  \
+    memset(&info, 0, sizeof(info));                                          \
+    if ((rv = pds_##_api_str##_read(&key, &info)) != SDK_RET_OK)             \
+        return rv;                                                           \
+                                                                             \
+    return (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(    \
+                feeder, &info));                                             \
+}
+
+// TOD: remove this macro later
+/// \brief Invokes the PDS delete apis for test objects
+#define API_DELETE_TMP(_api_str)                                             \
+inline sdk_ret_t                                                             \
 del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
     pds_##_api_str##_key_t key;                                              \
                                                                              \
-    memset(&key, 0, sizeof(pds_##_api_str##_key_t));                         \
+    memset(&key, 0, sizeof(key));                                            \
     feeder.key_build(&key);                                                  \
     return (pds_##_api_str##_delete(&key, bctxt));                           \
 }
 
 /// \brief Invokes the PDS delete apis for test objects
 #define API_DELETE_SINGLETON(_api_str)                                       \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 del(pds_batch_ctxt_t bctxt, _api_str##_feeder& feeder) {                     \
     return (pds_##_api_str##_delete(bctxt));                                 \
 }
 
 // TODO - Defining the following APIs temporarily till all objects are changed
 #define API_CREATE1(_api_str)                                                \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 create(_api_str##_feeder& feeder) {                                          \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
@@ -153,15 +183,15 @@ create(_api_str##_feeder& feeder) {                                          \
 }
 
 #define API_READ1(_api_str)                                                  \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 read(_api_str##_feeder& feeder) {                                            \
     sdk_ret_t rv;                                                            \
-    pds_##_api_str##_key_t key;                                              \
+    pds_obj_key_t key;                                                       \
     pds_##_api_str##_info_t info;                                            \
                                                                              \
     feeder.key_build(&key);                                                  \
-    memset(&info, 0, sizeof(pds_##_api_str##_info_t));                       \
-    if ((rv = read_##_api_str(&key, &info)) != SDK_RET_OK)              \
+    memset(&info, 0, sizeof(info));                                          \
+    if ((rv = read_##_api_str(&key, &info)) != SDK_RET_OK)                   \
         return rv;                                                           \
                                                                              \
     return (api_info_compare<_api_str##_feeder, pds_##_api_str##_info_t>(    \
@@ -169,7 +199,7 @@ read(_api_str##_feeder& feeder) {                                            \
 }
 
 #define API_UPDATE1(_api_str)                                                \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 update(_api_str##_feeder& feeder) {                                          \
     pds_##_api_str##_spec_t spec;                                            \
                                                                              \
@@ -180,9 +210,9 @@ update(_api_str##_feeder& feeder) {                                          \
 }
 
 #define API_DELETE1(_api_str)                                                \
-inline sdk_ret_t                                                        \
+inline sdk_ret_t                                                             \
 del(_api_str##_feeder& feeder) {                                             \
-    pds_##_api_str##_key_t key;                                              \
+    pds_obj_key_t key;                                                       \
                                                                              \
     if (feeder.num_obj == 0)                                                 \
         return (delete_##_api_str(NULL));                                    \

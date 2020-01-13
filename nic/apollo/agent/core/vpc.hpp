@@ -16,12 +16,12 @@ typedef struct vpc_db_cb_ctxt_s {
     void         *ctxt;
 } vpc_db_cb_ctxt_t;
 
-sdk_ret_t vpc_create(pds_vpc_key_t *key, pds_vpc_spec_t *spec,
+sdk_ret_t vpc_create(pds_obj_key_t *key, pds_vpc_spec_t *spec,
                      pds_batch_ctxt_t bctxt);
-sdk_ret_t vpc_update(pds_vpc_key_t *key, pds_vpc_spec_t *spec,
+sdk_ret_t vpc_update(pds_obj_key_t *key, pds_vpc_spec_t *spec,
                      pds_batch_ctxt_t bctxt);
-sdk_ret_t vpc_delete(pds_vpc_key_t *key, pds_batch_ctxt_t bctxt);
-sdk_ret_t vpc_get(pds_vpc_key_t *key, pds_vpc_info_t *info);
+sdk_ret_t vpc_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
+sdk_ret_t vpc_get(pds_obj_key_t *key, pds_vpc_info_t *info);
 sdk_ret_t vpc_get_all(vpc_get_cb_t vpc_get_cb, void *ctxt);
 
 typedef void (*vpc_peer_get_cb_t)(const pds_vpc_peer_info_t *spec, void *ctxt);

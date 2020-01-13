@@ -82,7 +82,7 @@ TEST_F(ipc_dhcp_relay_test, ipc_dhcp_relay_cfg_create) {
     if (!apulu()) return;
     sdk::sdk_ret_t ret_val;
     pds_dhcp_relay_spec_t spec;
-    pds_dhcp_relay_key_t  key;
+    pds_obj_key_t  key;
 
     spec.key = int2pdsobjkey(1234);
     spec.vpc = int2pdsobjkey(200);

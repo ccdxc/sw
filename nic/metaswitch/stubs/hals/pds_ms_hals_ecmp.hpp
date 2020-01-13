@@ -67,7 +67,7 @@ private:
     void make_pds_underlay_nhgroup_spec_ (pds_nexthop_group_spec_t&);
     void make_pds_overlay_nhgroup_spec_ (pds_nexthop_group_spec_t&,
                                          state_t::context_t& state_ctxt);
-    pds_nexthop_group_key_t make_pds_nhgroup_key_(void);
+    pds_obj_key_t make_pds_nhgroup_key_(void);
 };
 
 } // End namespace

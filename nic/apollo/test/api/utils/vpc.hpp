@@ -14,12 +14,12 @@ namespace test {
 namespace api {
 
 // Export variables
-extern pds_vpc_key_t k_vpc_key;
+extern pds_obj_key_t k_vpc_key;
 
 // VPC test feeder class
 class vpc_feeder : public feeder {
 public:
-    pds_vpc_key_t key;
+    pds_obj_key_t key;
     pds_vpc_type_t type;
     pds_encap_t fabric_encap;
     std::string cidr_str;
@@ -34,18 +34,18 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_vpc_key_t key, pds_vpc_type_t type, std::string cidr_str,
+    void init(pds_obj_key_t key, pds_vpc_type_t type, std::string cidr_str,
               std::string vr_mac, uint32_t num_vpc = 1);
 
     // Iterate helper routines
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_vpc_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_vpc_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_vpc_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_vpc_spec_t *spec) const;
 
 };

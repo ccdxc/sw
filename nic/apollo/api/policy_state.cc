@@ -20,7 +20,7 @@ namespace api {
 policy_state::policy_state() {
     policy_ht_ = ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                              policy::policy_key_func_get,
-                             sizeof(pds_policy_key_t));
+                             sizeof(pds_obj_key_t));
     SDK_ASSERT(policy_ht_ != NULL);
 
     policy_slab_ = slab::factory("security-policy", PDS_SLAB_ID_POLICY,
@@ -68,7 +68,7 @@ policy_state::free(policy *policy) {
 }
 
 policy *
-policy_state::find(pds_policy_key_t *policy_key) const {
+policy_state::find(pds_obj_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));
 }
 

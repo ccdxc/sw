@@ -351,8 +351,8 @@ void
 subnet_entry::fill_spec_(pds_subnet_spec_t *spec) {
     uint8_t i;
 
-    memcpy(&spec->key, &key_, sizeof(pds_subnet_key_t));
-    memcpy(&spec->vpc, &vpc_, sizeof(pds_vpc_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
+    memcpy(&spec->vpc, &vpc_, sizeof(pds_obj_key_t));
     spec->v4_route_table = v4_route_table_;
     spec->v6_route_table = v6_route_table_;
     spec->num_ing_v4_policy = num_ing_v4_policy_;

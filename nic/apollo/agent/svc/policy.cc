@@ -16,8 +16,8 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
                                             pds::SecurityPolicyResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_policy_spec_t *api_spec;
-    pds_policy_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -88,8 +88,8 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
                                             pds::SecurityPolicyResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_policy_spec_t *api_spec;
-    pds_policy_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -159,7 +159,7 @@ SecurityPolicySvcImpl::SecurityPolicyDelete(ServerContext *context,
                                             pds::SecurityPolicyDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_policy_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -212,7 +212,7 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
                                          const pds::SecurityPolicyGetRequest *proto_req,
                                          pds::SecurityPolicyGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policy_key_t key;
+    pds_obj_key_t key;
     pds_policy_info_t info;
 
     if (proto_req == NULL) {

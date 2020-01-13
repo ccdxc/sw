@@ -14,8 +14,8 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_vpc_key_t vpc1,
-                      pds_vpc_key_t vpc2, uint32_t num_vpc_peer) {
+vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_obj_key_t vpc1,
+                      pds_obj_key_t vpc2, uint32_t num_vpc_peer) {
     this->key = key;
     this->vpc1 = vpc1;
     this->vpc2 = vpc2;

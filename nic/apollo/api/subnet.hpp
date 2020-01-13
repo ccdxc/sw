@@ -188,7 +188,7 @@ public:
 
     /// \brief          return the subnet key/id
     /// \return         key/id of the subnet
-    pds_subnet_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief          return h/w index for this subnet
     /// \return         h/w table index for this subnet
@@ -196,7 +196,7 @@ public:
 
     /// \brief     return vpc of this subnet
     /// \return    vpc key of this subnet
-    pds_vpc_key_t vpc(void) const { return vpc_; }
+    pds_obj_key_t vpc(void) const { return vpc_; }
 
     /// \brief      return fabric encap of this subnet
     /// \return     fabric encap of this subnet
@@ -219,7 +219,7 @@ public:
     /// \brief          return ingress IPv4 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         ingress IPv4 security policy of the subnet
-    pds_policy_key_t ing_v4_policy(uint32_t n) const {
+    pds_obj_key_t ing_v4_policy(uint32_t n) const {
         return ing_v4_policy_[n];
     }
 
@@ -232,7 +232,7 @@ public:
     /// \brief          return ingress IPv6 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         ingress IPv6 security policy of the subnet
-    pds_policy_key_t ing_v6_policy(uint32_t n) const {
+    pds_obj_key_t ing_v6_policy(uint32_t n) const {
         return ing_v6_policy_[n];
     }
 
@@ -245,7 +245,7 @@ public:
     /// \brief          return egress IPv4 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         egress IPv4 security policy of the subnet
-    pds_policy_key_t egr_v4_policy(uint32_t n) const {
+    pds_obj_key_t egr_v4_policy(uint32_t n) const {
         return egr_v4_policy_[n];
     }
 
@@ -258,7 +258,7 @@ public:
     /// \brief          return egress IPv6 security policy of the subnet
     /// \param[in] n    policy number being queried
     /// \return         egress IPv6 security policy of the subnet
-    pds_policy_key_t egr_v6_policy(uint32_t n) const {
+    pds_obj_key_t egr_v6_policy(uint32_t n) const {
         return egr_v6_policy_[n];
     }
 
@@ -287,27 +287,27 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_subnet_key_t key_;                    ///< subnet key
-    pds_vpc_key_t vpc_;                       ///< vpc of this subnet
+    pds_obj_key_t key_;                    ///< subnet key
+    pds_obj_key_t vpc_;                       ///< vpc of this subnet
     pds_encap_t fabric_encap_;                ///< fabric encap of this subnet
     pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
     pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
     ///< number of ingress IPv4 policies
     uint8_t num_ing_v4_policy_;
     ///< ingress IPv4 policies
-    pds_policy_key_t ing_v4_policy_[PDS_MAX_SUBNET_POLICY];
+    pds_obj_key_t ing_v4_policy_[PDS_MAX_SUBNET_POLICY];
     ///< number of ingress IPv6 policies
     uint8_t num_ing_v6_policy_;
     ///< ingress IPv6 policies
-    pds_policy_key_t ing_v6_policy_[PDS_MAX_SUBNET_POLICY];
+    pds_obj_key_t ing_v6_policy_[PDS_MAX_SUBNET_POLICY];
     ///< number of egress IPv4 policies
     uint8_t num_egr_v4_policy_;
     ///< egress IPv4 policies
-    pds_policy_key_t egr_v4_policy_[PDS_MAX_SUBNET_POLICY];
+    pds_obj_key_t egr_v4_policy_[PDS_MAX_SUBNET_POLICY];
     ///< number of egress IPv6 policies
     uint8_t num_egr_v6_policy_;
     ///< egress IPv6 policies
-    pds_policy_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
+    pds_obj_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
     mac_addr_t vr_mac_;                       ///< virtual router MAC
     pds_ifindex_t host_ifindex_;              ///< PF/VF attached to this subnet
 

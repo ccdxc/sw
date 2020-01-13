@@ -15,8 +15,8 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_vnic_spec_t *api_spec;
-    pds_vnic_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -82,8 +82,8 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
                         pds::VnicResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
     pds_vnic_spec_t *api_spec;
-    pds_vnic_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -149,7 +149,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
                         pds::VnicDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_vnic_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -200,7 +200,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
                      const pds::VnicGetRequest *proto_req,
                      pds::VnicGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vnic_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_vnic_info_t info = { 0 };
 
     if (proto_req == NULL) {

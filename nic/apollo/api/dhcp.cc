@@ -65,7 +65,7 @@ dhcp_relay::free(dhcp_relay *relay) {
 }
 
 dhcp_relay *
-dhcp_relay::build(pds_dhcp_relay_key_t *key) {
+dhcp_relay::build(pds_obj_key_t *key) {
     dhcp_relay *relay;
 
     relay = dhcp_db()->alloc_relay();
@@ -184,7 +184,7 @@ dhcp_policy::free(dhcp_policy *policy) {
 }
 
 dhcp_policy *
-dhcp_policy::build(pds_dhcp_policy_key_t *key) {
+dhcp_policy::build(pds_obj_key_t *key) {
     dhcp_policy *policy;
 
     policy = dhcp_db()->alloc_policy();

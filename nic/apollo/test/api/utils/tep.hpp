@@ -15,8 +15,8 @@ namespace api {
 
 extern const pds_encap_t k_default_tep_encap;
 extern const pds_encap_t k_zero_encap;
-extern const pds_nexthop_key_t k_base_nh_key;
-extern const pds_nexthop_group_key_t k_base_nh_group_key;
+extern const pds_obj_key_t k_base_nh_key;
+extern const pds_obj_key_t k_base_nh_group_key;
 extern const uint64_t k_tep_mac;
 extern const uint16_t k_max_tep;
 
@@ -42,18 +42,18 @@ public:
     void init(uint32_t id, uint64_t dmac, std::string ip_str,
               uint32_t num_tep=k_max_tep,
               pds_nh_type_t nh_type=PDS_NH_TYPE_UNDERLAY,
-              pds_nexthop_key_t nh=k_base_nh_key,
-              pds_nexthop_group_key_t base_nh_group=k_base_nh_group_key);
+              pds_obj_key_t nh=k_base_nh_key,
+              pds_obj_key_t base_nh_group=k_base_nh_group_key);
 
     // Iterate helper routines
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_tep_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_tep_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_tep_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_tep_spec_t *spec) const;
 };
 

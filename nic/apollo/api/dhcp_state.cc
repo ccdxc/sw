@@ -19,7 +19,7 @@ dhcp_state::dhcp_state() {
     dhcp_relay_ht_ =
         ht::factory(PDS_MAX_DHCP_RELAY >> 2,
                     dhcp_relay::dhcp_relay_key_func_get,
-                    sizeof(pds_dhcp_relay_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(dhcp_relay_ht_ != NULL);
     dhcp_relay_slab_ = slab::factory("dhcp-relay", PDS_SLAB_ID_DHCP_RELAY,
                                      sizeof(dhcp_relay), 16, true, true, NULL);
@@ -28,7 +28,7 @@ dhcp_state::dhcp_state() {
     dhcp_policy_ht_ =
         ht::factory(PDS_MAX_DHCP_POLICY >> 2,
                     dhcp_policy::dhcp_policy_key_func_get,
-                    sizeof(pds_dhcp_policy_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(dhcp_policy_ht_ != NULL);
     dhcp_policy_slab_ = slab::factory("dhcp-policy", PDS_SLAB_ID_DHCP_POLICY,
                                      sizeof(dhcp_policy), 16, true, true, NULL);
@@ -64,7 +64,7 @@ dhcp_state::free(dhcp_relay *relay) {
 }
 
 dhcp_relay *
-dhcp_state::find_dhcp_relay(pds_dhcp_relay_key_t *key) const {
+dhcp_state::find_dhcp_relay(pds_obj_key_t *key) const {
     return (dhcp_relay *)(dhcp_relay_ht_->lookup(key));
 }
 
@@ -90,7 +90,7 @@ dhcp_state::free(dhcp_policy *policy) {
 }
 
 dhcp_policy *
-dhcp_state::find_dhcp_policy(pds_dhcp_policy_key_t *key) const {
+dhcp_state::find_dhcp_policy(pds_obj_key_t *key) const {
     return (dhcp_policy *)(dhcp_policy_ht_->lookup(key));
 }
 

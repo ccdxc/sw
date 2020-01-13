@@ -26,7 +26,7 @@ extern "C" {
 /// vnic configuration
 typedef struct pds_vnic_cfg_msg_s {
     union {
-        pds_vnic_key_t key;
+        pds_obj_key_t key;
         pds_vnic_spec_t spec;
     };
     pds_vnic_status_t status;
@@ -35,7 +35,7 @@ typedef struct pds_vnic_cfg_msg_s {
 /// subnet configuration
 typedef struct pds_subnet_cfg_msg_s {
     union {
-        pds_subnet_key_t key;
+        pds_obj_key_t key;
         pds_subnet_spec_t spec;
     };
     pds_subnet_status_t status;
@@ -44,7 +44,7 @@ typedef struct pds_subnet_cfg_msg_s {
 /// NAT port block configuration
 typedef struct pds_nat_port_block_cfg_msg_s {
     union {
-        pds_nat_port_block_key_t key;
+        pds_obj_key_t key;
         pds_nat_port_block_spec_t spec;
     };
 } pds_nat_port_block_cfg_msg_t;
@@ -52,7 +52,7 @@ typedef struct pds_nat_port_block_cfg_msg_s {
 /// DHCP policy configuration
 typedef struct pds_dhcp_policy_cfg_msg_s {
     union {
-        pds_dhcp_policy_key_t key;
+        pds_obj_key_t key;
         pds_dhcp_policy_spec_t spec;
     };
 } pds_dhcp_policy_cfg_msg_t;
@@ -60,7 +60,7 @@ typedef struct pds_dhcp_policy_cfg_msg_s {
 /// DHCP relay configuration
 typedef struct pds_dhcp_relay_cfg_msg_s {
     union {
-        pds_dhcp_relay_key_t key;
+        pds_obj_key_t key;
         pds_dhcp_relay_spec_t spec;
     };
 } pds_dhcp_relay_cfg_msg_t;

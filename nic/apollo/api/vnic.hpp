@@ -198,7 +198,7 @@ public:
 
     /// \brief     return the key/id of this vnic
     /// \return    key/id of the vnic object
-    pds_vnic_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief     return impl instance of this vnic object
     /// \return    impl instance of the vnic object
@@ -206,7 +206,7 @@ public:
 
     /// \brief     return subnet of this vnic
     /// \return    key of the subnet this vnic belongs to
-    pds_subnet_key_t subnet(void) { return subnet_; }
+    pds_obj_key_t subnet(void) { return subnet_; }
 
     /// \brief     return meter policy of this vnic
     /// \param[in] af    IP address family
@@ -247,7 +247,7 @@ public:
     /// \brief          return ingress IPv4 security policy of the vnic
     /// \param[in] n    policy number being queried
     /// \return         ingress IPv4 security policy of the vnic
-    pds_policy_key_t ing_v4_policy(uint32_t n) const {
+    pds_obj_key_t ing_v4_policy(uint32_t n) const {
         return ing_v4_policy_[n];
     }
 
@@ -260,7 +260,7 @@ public:
     /// \brief          return ingress IPv6 security policy of the vnic
     /// \param[in] n    policy number being queried
     /// \return         ingress IPv6 security policy of the vnic
-    pds_policy_key_t ing_v6_policy(uint32_t n) const {
+    pds_obj_key_t ing_v6_policy(uint32_t n) const {
         return ing_v6_policy_[n];
     }
 
@@ -273,7 +273,7 @@ public:
     /// \brief          return egress IPv4 security policy of the vnic
     /// \param[in] n    policy number being queried
     /// \return         egress IPv4 security policy of the vnic
-    pds_policy_key_t egr_v4_policy(uint32_t n) const {
+    pds_obj_key_t egr_v4_policy(uint32_t n) const {
         return egr_v4_policy_[n];
     }
 
@@ -286,7 +286,7 @@ public:
     /// \brief          return egress IPv6 security policy of the vnic
     /// \param[in] n    policy number being queried
     /// \return         egress IPv6 security policy of the vnic
-    pds_policy_key_t egr_v6_policy(uint32_t n) const {
+    pds_obj_key_t egr_v6_policy(uint32_t n) const {
         return egr_v6_policy_[n];
     }
 
@@ -308,8 +308,8 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vnic_key_t    key_;              ///< vnic key
-    pds_subnet_key_t  subnet_;           ///< subnet of this vnic
+    pds_obj_key_t    key_;              ///< vnic key
+    pds_obj_key_t  subnet_;           ///< subnet of this vnic
     pds_meter_key_t   v4_meter_;         ///< IPv4 metering policy
     pds_meter_key_t   v6_meter_;         ///< IPv6 metering policy
     pds_encap_t       vnic_encap_;       ///< vnic's vlan encap
@@ -320,19 +320,19 @@ private:
     ///< number of ingress IPv4 policies
     uint8_t           num_ing_v4_policy_;
     ///< ingress IPv4 policies
-    pds_policy_key_t  ing_v4_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t  ing_v4_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of ingress IPv6 policies
     uint8_t           num_ing_v6_policy_;
     ///< ingress IPv6 policies
-    pds_policy_key_t  ing_v6_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t  ing_v6_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of egress IPv4 policies
     uint8_t           num_egr_v4_policy_;
     ///< egress IPv4 policies
-    pds_policy_key_t  egr_v4_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t  egr_v4_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of egress IPv6 policies
     uint8_t           num_egr_v6_policy_;
     ///< egress IPv6 policies
-    pds_policy_key_t  egr_v6_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t  egr_v6_policy_[PDS_MAX_VNIC_POLICY];
     ht_ctxt_t         ht_ctxt_;          ///< hash table context
     impl_base         *impl_;            ///< impl object instance
 

@@ -17,7 +17,7 @@ namespace api {
 static constexpr uint64_t k_mac_addr = 0x010203040506;
 
 static void
-nh_spec_fill(pds_nexthop_spec_t *spec, pds_nexthop_key_t key,
+nh_spec_fill(pds_nexthop_spec_t *spec, pds_obj_key_t key,
              pds_nh_type_t type, mac_addr_t mac)
 {
     if (spec == NULL) assert(0);
@@ -60,7 +60,7 @@ nh_groups_fill(pds_nexthop_group_spec_t *spec)
 void
 nexthop_group_feeder::init(pds_nexthop_group_type_t type,
                            uint8_t num_nexthops,
-                           pds_nexthop_group_key_t key,
+                           pds_obj_key_t key,
                            uint32_t num_objs) {
     memset(&spec, 0, sizeof(pds_nexthop_group_spec_t));
     spec.type = type;
@@ -82,7 +82,7 @@ nexthop_group_feeder::iter_next(int width) {
 }
 
 void
-nexthop_group_feeder::key_build(pds_nexthop_group_key_t *key) const {
+nexthop_group_feeder::key_build(pds_obj_key_t *key) const {
     *key = spec.key;
 }
 
@@ -92,7 +92,7 @@ nexthop_group_feeder::spec_build(pds_nexthop_group_spec_t *nhg_spec) const {
 }
 
 bool
-nexthop_group_feeder::key_compare(const pds_nexthop_group_key_t *key) const {
+nexthop_group_feeder::key_compare(const pds_obj_key_t *key) const {
     return (spec.key == *key);
 }
 

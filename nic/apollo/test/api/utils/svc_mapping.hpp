@@ -30,7 +30,7 @@ public:
 
     // Initialize feeder with the base set of values
     void init(std::string vip_str, uint16_t svc_port,
-              pds_vpc_key_t backend_vpc, std::string backend_ip,
+              pds_obj_key_t backend_vpc, std::string backend_ip,
               uint16_t backend_port, std::string backend_pip,
               uint32_t num_svc_mapping=100);
 
@@ -80,9 +80,9 @@ operator<<(std::ostream& os, const svc_mapping_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(svc_mapping);
-API_READ(svc_mapping);
+API_READ_TMP(svc_mapping);
 API_UPDATE(svc_mapping);
-API_DELETE(svc_mapping);
+API_DELETE_TMP(svc_mapping);
 
 }    // namespace api
 }    // namespace test

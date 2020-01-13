@@ -21,9 +21,9 @@ extern const uint32_t k_max_vnic;
 class vnic_feeder : public feeder {
 public:
     // TODO: move to vnic_spec_t instead of below variables
-    pds_vnic_key_t key;
-    pds_vpc_key_t vpc;
-    pds_subnet_key_t subnet;
+    pds_obj_key_t key;
+    pds_obj_key_t vpc;
+    pds_obj_key_t subnet;
     pds_encap_t vnic_encap;
     pds_encap_t fabric_encap;
     uint64_t mac_u64;
@@ -43,7 +43,7 @@ public:
     }
 
     // Initialize feeder with the base set of values
-    void init(pds_vnic_key_t key, uint32_t num_vnic = k_max_vnic,
+    void init(pds_obj_key_t key, uint32_t num_vnic = k_max_vnic,
               uint64_t mac = k_feeder_mac,
               pds_encap_type_t vnic_encap_type = PDS_ENCAP_TYPE_DOT1Q,
               pds_encap_type_t fabric_encap_type = PDS_ENCAP_TYPE_MPLSoUDP,
@@ -53,11 +53,11 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_vnic_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_vnic_spec_t *spec) const;
 
     // Compare routines
-    bool key_compare(const pds_vnic_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_vnic_spec_t *spec) const;
 };
 

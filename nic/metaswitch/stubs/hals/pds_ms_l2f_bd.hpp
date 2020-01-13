@@ -52,7 +52,7 @@ private:
     void fetch_store_info_(state_t* state);
     void parse_ips_info_(ATG_BDPI_UPDATE_BD* bd_add_upd);
     pds_subnet_spec_t make_pds_subnet_spec_(void);
-    pds_subnet_key_t  make_pds_subnet_key_(void);
+    pds_obj_key_t  make_pds_subnet_key_(void);
     pds_batch_ctxt_guard_t prepare_pds(state_t::context_t& state_ctxt,
                                        bool async);
 };

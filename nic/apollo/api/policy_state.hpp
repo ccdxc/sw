@@ -58,7 +58,7 @@ public:
 
     /// \brief     lookup a security policy in database given the key
     /// \param[in] policy_key security policy key
-    policy *find(pds_policy_key_t *policy_key) const;
+    policy *find(pds_obj_key_t *policy_key) const;
 
     /// \brief    allocate memory required for a security profile instance
     /// \return    pointer to the allocated security profile instance,
@@ -112,7 +112,7 @@ private:
 };
 
 static inline policy *
-policy_find (pds_policy_key_t *key)
+policy_find (pds_obj_key_t *key)
 {
     return (policy *)api_base::find_obj(OBJ_ID_POLICY, key);
 }

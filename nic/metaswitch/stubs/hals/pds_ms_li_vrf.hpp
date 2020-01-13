@@ -51,7 +51,7 @@ private:
     void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd);
     pds_vpc_spec_t make_pds_vpc_spec_(void);
-    pds_vpc_key_t make_pds_vpc_key_(void);
+    pds_obj_key_t make_pds_vpc_key_(void);
     pds_route_table_key_t make_pds_rttable_key_(void);
     pds_route_table_spec_t make_pds_rttable_spec_(void);
     pds_batch_ctxt_guard_t prepare_pds(state_t::context_t& state_ctxt,

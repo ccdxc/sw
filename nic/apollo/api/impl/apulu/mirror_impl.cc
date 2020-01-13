@@ -122,7 +122,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_entry *vpc;
     tep_entry *tep;
     mac_addr_t mac;
-    pds_tep_key_t tep_key;
+    pds_obj_key_t tep_key;
     p4pd_error_t p4pd_ret;
     mapping_entry *mapping;
     pds_mapping_key_t mapping_key;

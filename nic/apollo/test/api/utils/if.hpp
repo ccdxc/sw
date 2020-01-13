@@ -74,9 +74,9 @@ operator<<(std::ostream& os, const if_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(if);
-API_READ(if);
+API_READ_TMP(if);
 API_UPDATE(if);
-API_DELETE(if);
+API_DELETE_TMP(if);
 
 // Misc function prototypes
 void sample_if_setup(pds_batch_ctxt_t);

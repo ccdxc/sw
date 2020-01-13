@@ -27,7 +27,7 @@ tep_create_validate (pds_tep_spec_t *spec)
 }
 
 sdk_ret_t
-tep_create (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+tep_create (pds_obj_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -53,7 +53,7 @@ tep_create (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_update (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
+tep_update (pds_obj_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -74,7 +74,7 @@ tep_update (pds_tep_key_t *key, pds_tep_spec_t *spec, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_delete (pds_tep_key_t *key, pds_batch_ctxt_t bctxt)
+tep_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_tep_spec_t *spec;
@@ -95,7 +95,7 @@ tep_delete (pds_tep_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tep_get (pds_tep_key_t *key, pds_tep_info_t *info)
+tep_get (pds_obj_key_t *key, pds_tep_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_tep_spec_t *spec;

@@ -16,7 +16,7 @@
 
 static sdk_ret_t
 pds_nat_port_block_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                               pds_nat_port_block_key_t *key,
+                               pds_obj_key_t *key,
                                pds_nat_port_block_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -51,7 +51,7 @@ pds_nat_port_block_create (_In_ pds_nat_port_block_spec_t *spec,
 }
 
 sdk_ret_t
-pds_nat_port_block_read (_In_ pds_nat_port_block_key_t *key,
+pds_nat_port_block_read (_In_ pds_obj_key_t *key,
                          _Out_ pds_nat_port_block_info_t *info)
 {
     if (key == NULL || info == NULL) {
@@ -74,7 +74,7 @@ pds_nat_port_block_update (_In_ pds_nat_port_block_spec_t *spec,
 }
 
 sdk_ret_t
-pds_nat_port_block_delete (_In_ pds_nat_port_block_key_t *key,
+pds_nat_port_block_delete (_In_ pds_obj_key_t *key,
                            _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_nat_port_block_api_handle(bctxt, API_OP_DELETE, key, NULL);
