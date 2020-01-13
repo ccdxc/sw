@@ -12,13 +12,14 @@ TRexDir = "/opt/trex/v2.65/"
 trex_cfg_template = os.path.join(os.path.dirname(__file__), "config/trex_cfg_template.yaml")
 
 class TRexIotaWrapper(ASTFClient):
-    def __init__(self, workload, role='client', gw='128.0.0.1'):
+    def __init__(self, workload, role='client', gw='128.0.0.1', debug=False):
         self.role = role
         self.gw = gw
         self.workload = workload
         self._procHandle = None
         self._createTrexCfg()
-        self._startTrex()
+        self._killTrex()
+        self._startTrex(debug)
         ASTFClient.__init__(self, server=workload.mgmt_ip)
 
     @property
@@ -113,13 +114,36 @@ class TRexIotaWrapper(ASTFClient):
         if cmd.exit_code:
             raise Exception("TRex configuration not found on %s"%
                             self.workload.workload_name)
-
-    def _startTrex(self):
+    def _killTrex(self):
         req = api.Trigger_CreateExecuteCommandsRequest()
+        cmd = "pidof _t-rex-64 && sudo kill -9 `pidof _t-rex-64`"
+
+        api.Trigger_AddCommand(req, self.workload.node_name,
+                               self.workload.workload_name,
+                               cmd, background=True)
+        resp = api.Trigger(req)
+        for cmd in resp.commands:
+            api.PrintCommandResults(cmd)
+
+        if cmd.exit_code:
+            api.Logger.info("Could not find TRex app running on %s"%
+                            (self.workload.workload_name))
+            return
+
+        api.Logger.info("Killed TRex app on %s(%s)(%s)"%
+                        (self.role, self.workload.workload_name, self.workload.mgmt_ip))
+
+    def _startTrex(self, debug=False):
+        req = api.Trigger_CreateExecuteCommandsRequest()
+        debug_cmd = " --rpc-log /home/vm/trex.log -v 10"
+
         if self.role == "server":
             cmd = "cd %s; ./t-rex-64 -i --astf --astf-server-only"%TRexDir
         else:
             cmd = "cd %s; ./t-rex-64 -i --astf --astf-client-mask 0x1"%TRexDir
+
+        if debug:
+            cmd += debug_cmd
 
         api.Trigger_AddCommand(req, self.workload.node_name,
                                self.workload.workload_name,
@@ -129,8 +153,8 @@ class TRexIotaWrapper(ASTFClient):
             api.PrintCommandResults(cmd)
 
         if cmd.exit_code:
-            raise Exception("Failed to start TRex app in role: '%s' on %s"%
-                            (self.role, self.workload.workload_name))
+            raise Exception("Failed to start TRex app in role: '%s' on %s(%s)"%
+                            (self.role, self.workload.workload_name, self.workload.mgmt_ip))
 
         api.Logger.info("Started TRex app in role: '%s' on %s(%s)"%
                         (self.role, self.workload.workload_name, self.workload.mgmt_ip))

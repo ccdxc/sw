@@ -4,7 +4,7 @@ meta:
     nics    : [ pensando, mellanox, intel, broadcom ]
 
 testcases:
-    -   name    : Trex_Local_Workloads
+    -   name    : Cps_Local_Workloads
         testcase: testcases.networking.conn_per_sec
         stress  : True
         ignore  : True
@@ -15,7 +15,7 @@ testcases:
             proto     : [ tcp, udp ]
             cps       : [ 600, 700 ]
             duration  : [ 300, 300 ]
-    -   name    : Trex_Remote_Workloads
+    -   name    : Cps_Remote_Workloads
         testcase: testcases.networking.conn_per_sec
         stress  : True
         ignore  : True
@@ -26,4 +26,16 @@ testcases:
             proto     : [ tcp, udp ]
             cps       : [ 600, 700 ]
             duration  : [ 300, 300 ]
-         
+    -   name    : session_scale
+        testcase: testcases.networking.session_scale
+        stress  : True
+        ignore  : True
+        args    :
+             latency_pps: 10
+             switch_port_flap_interval: 10
+             sec_policy_interval: 30
+        iterators:
+            type             : simple
+            max_active_flow  : [64000]
+            cps              : [600]
+            duration         : [300]

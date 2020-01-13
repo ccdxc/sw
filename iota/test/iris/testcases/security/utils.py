@@ -2,15 +2,15 @@
 import json
 import glob
 import yaml
-import iota.harness.api as api
 import subprocess
 import threading
 import random
 import os
+import time
+import iota.harness.api as api
 import iota.harness.infra.store as store
 import iota.test.iris.utils.ip_rule_db.util.proto as proto
 import iota.test.iris.utils.ip_rule_db.rule_db.rule_db as db
-import time
 
 def SetHalLogsLevel(node_name, level):
     cmd = '/nic/bin/halctl debug trace --level %s'%level
@@ -67,7 +67,9 @@ def clearNaplesSessions(node_name=None):
         req = api.Trigger_CreateExecuteCommandsRequest()
         api.Trigger_AddNaplesCommand(req, node_name, "/nic/bin/halctl clear session")
 
-    resp = api.Trigger(req)
+    api.Trigger(req)
+
+    time.sleep(5)
 
 def GetProtocolDirectory(proto):
     return api.GetTopologyDirectory() + "/gen/{}".format(proto)
@@ -81,6 +83,49 @@ def GetTargetVerifJsons(proto):
 def ReadJson(filename):
     api.Logger.info("Reading JSON file {}".format(filename))
     return api.parser.JsonParse(filename)
+
+def GetDelphiSessionSummaryMetrics(node_name):
+    '''
+    # delphictl metrics get SessionSummaryMetrics
+    {
+    "SessionSummaryMetrics": {
+    "Key": 0,
+    "total_active_sessions": 61641,
+    "num_l2_sessions": 0,
+    "num_tcp_sessions": 23651,
+    "num_udp_sessions": 37990,
+    "num_icmp_sessions": 0,
+    "num_drop_sessions": 0,
+    "num_aged_sessions": 1981415,
+    "num_tcp_resets": 0,
+    "num_icmp_errors": 0,
+    "num_tcp_cxnsetup_timeouts": 0,
+    "num_session_create_errors": 0
+    }
+    }
+    '''
+    cmd = "PATH=$PATH:/platform/bin/;\
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib/:/nic/lib/;\
+    export PATH; export LD_LIBRARY_PATH;\
+    /nic/bin/delphictl metrics get SessionSummaryMetrics"
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    resp = api.Trigger(req)
+    ptrn = "\r\n\r\n"
+    sessionMetrics = {}
+    cmd = resp.commands[0]
+
+    print("delphictl Session Summary Metrics \n : %s \n\n"%
+                    cmd.stdout)
+    if not cmd.stdout:
+        return sessionMetrics
+
+    try:
+        return json.loads(cmd.stdout)['SessionSummaryMetrics']
+    except:
+        api.Logger.error("Failed to parse rule yaml => '%s'"%ruleOut)
+
+    return sessionMetrics
 
 def GetDelphiRuleMetrics(node_name):
     cmd = "PATH=$PATH:/platform/bin/;\
