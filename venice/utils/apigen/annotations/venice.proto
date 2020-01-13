@@ -55,6 +55,16 @@ message ActionEndpoint {
 
 // ProxyEndpoint defines an endpoint which will be reverse proxied to a backend.
 message ProxyEndpoint {
+  message MultipartParam {
+    // Name of the multipart form parameeter
+    string Name = 1;
+    // Type for the parameter
+    string Type = 2;
+    // User friendly short description
+    string Description = 3;
+    // Is the parameter required
+    bool Required = 4;
+  }
   // Backend specifies the external server where the request will be proxied to.
   //  This can either be a fully qualified path <hostname>:<port> or a resolver
   //  destination "pen-xxxserver"
@@ -64,6 +74,12 @@ message ProxyEndpoint {
   string Path = 2;
   // PathPrefix is the prefix to add towards the proxy backend
   string PathPrefix = 3;
+  // DocString is a user friendly short description
+  string DocString = 4;
+  // Response is the response object for the request
+  string Response = 5;
+  // FormParams is the list of the form parts if the proxy endpoint accepts multi-part forms
+  repeated MultipartParam FormParams = 6;
 }
 
 // Venice Option extensions applicable at the file level.

@@ -77,21 +77,6 @@ func (s *scratchVars) getStr(id int) string {
 	return s.Str[id]
 }
 
-// ServiceParams is the parameters related to the Service used by templates
-type ServiceParams struct {
-	// Version is the version of the Service
-	Version string
-	// Prefix is the prefix for all the resources served by the service.
-	Prefix string
-	// URIPath is the URI Path prefix for this service. This is combination of
-	// Version and Prefix and the catogory that is inherited from
-	//  the fileCategory options specified at the file level
-	URIPath string
-	// StagingPath is the URI path prefix for this service if it supports config
-	//  staging. If the service does not support staging then it is empty.
-	StagingPath string
-}
-
 // PdsaGlobalOpts holds raw venice.pdsaSetGlobOpts
 type PdsaGlobalOpts struct {
 	OidLen   string
@@ -430,7 +415,7 @@ func getURIKey(m *descriptor.Method, ver string, req bool) (URIKey, error) {
 			return out, err
 		}
 	}
-	svcParams, err := getSvcParams(m.Service)
+	svcParams, err := common.GetSvcParams(m.Service)
 	if err != nil {
 		return out, err
 	}
@@ -490,43 +475,6 @@ func getMsgURI(m *descriptor.Message, ver, svcPrefix string) ([]KeyComponent, er
 		return output, err
 	}
 	return output, nil
-}
-
-// getSvcParams returns the ServiceParams for the service.
-//   Parameters could be initialized to defaults if options were
-//   not specified by the user in service.proto.
-func getSvcParams(s *descriptor.Service) (ServiceParams, error) {
-	var params ServiceParams
-	var ok bool
-	i, err := reg.GetExtension("venice.apiVersion", s)
-	if params.Version, ok = i.(string); err != nil || !ok {
-		// Can specify a defaults when not specified.
-		params.Version = ""
-	}
-	i, err = reg.GetExtension("venice.apiPrefix", s)
-	if params.Prefix, ok = i.(string); err != nil || !ok {
-		params.Prefix = ""
-	}
-	category := globals.ConfigURIPrefix
-	if i, err = reg.GetExtension("venice.fileCategory", s.File); err == nil {
-		if category, ok = i.(string); !ok {
-			category = globals.ConfigURIPrefix
-		}
-	} else {
-		glog.V(1).Infof("Did not find Category %s", err)
-	}
-	if params.Prefix == "" {
-		params.URIPath = "/" + category + "/" + params.Version
-		if category == globals.ConfigURIPrefix {
-			params.StagingPath = "/staging/{{TOCTX.BufferId}}/" + params.Version
-		}
-	} else {
-		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
-		if category == globals.ConfigURIPrefix {
-			params.StagingPath = "/staging/{TOCTX.BufferId}/" + params.Prefix + "/" + params.Version
-		}
-	}
-	return params, nil
 }
 
 var (
@@ -1615,7 +1563,7 @@ func genServiceManifestInternal(filenm string, file *descriptor.File) (map[strin
 				}
 			}
 		}
-		svcParams, err := getSvcParams(svc)
+		svcParams, err := common.GetSvcParams(svc)
 		if err != nil {
 			glog.V(1).Infof("failed to get svc params for [%v](%s)", *svc.Name, err)
 		}
@@ -3255,7 +3203,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 func getMsgToSvcPrefix(file *descriptor.File) map[string][]string {
 	ret := make(map[string][]string)
 	for _, svc := range file.Services {
-		params, err := getSvcParams(svc)
+		params, err := common.GetSvcParams(svc)
 		if err != nil {
 			glog.Fatalf("failed to get service params for service (%s)", err)
 		}
@@ -3677,67 +3625,6 @@ func isObjNamespaced(file *descriptor.File, obj string) (bool, error) {
 	return isNamespaced(msg)
 }
 
-// ProxyPath is parameters for reverse proxy endpoints
-type ProxyPath struct {
-	Prefix   string
-	TrimPath string
-	Path     string
-	FullPath string
-	Backend  string
-}
-
-func getProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
-	var ret []ProxyPath
-	svcParams, err := getSvcParams(svc)
-	if err != nil {
-		glog.V(1).Infof("unable to get proxy paths for service [%s]", *svc.Name)
-		return ret, err
-	}
-	i, err := reg.GetExtension("venice.proxyPrefix", svc)
-	if err != nil {
-		glog.V(1).Infof("no proxy options found on service [%s](%s)", *svc.Name, err)
-		return ret, nil
-	}
-	opts, ok := i.([]*venice.ProxyEndpoint)
-	if !ok {
-		return ret, fmt.Errorf("could not parse proxy option for service [%s] [%+v]", *svc.Name, opts)
-	}
-	glog.V(1).Infof("found proxy options on service [%s] [%+v]", *svc.Name, opts)
-	pathMap := make(map[string]bool)
-	category := globals.ConfigURIPrefix
-	if i, err = reg.GetExtension("venice.fileCategory", svc.File); err == nil {
-		if category, ok = i.(string); !ok {
-			category = globals.ConfigURIPrefix
-		}
-	} else {
-		glog.V(1).Infof("Did not find Category %s", err)
-	}
-	for _, opt := range opts {
-		if _, ok := pathMap[opt.GetPathPrefix()]; ok {
-			glog.Fatalf("duplicate path detected in proxy paths service [%s] path [%s]", *svc.Name, opt.GetPathPrefix())
-		}
-		fullpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
-		if svcParams.Prefix == "" {
-			fullpath = "/" + category + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
-		}
-
-		trimpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/"
-		if svcParams.Prefix == "" {
-			trimpath = "/" + category + "/" + svcParams.Version + "/"
-		}
-		path := opt.Path
-		path = strings.TrimPrefix(path, "/")
-		path = strings.TrimSuffix(path, "/")
-		prefix := opt.PathPrefix
-		prefix = strings.TrimPrefix(prefix, "/")
-		prefix = strings.TrimSuffix(prefix, "/")
-		prefix = "/" + prefix
-
-		ret = append(ret, ProxyPath{Prefix: prefix, Path: path, TrimPath: trimpath, FullPath: fullpath, Backend: opt.GetBackend()})
-	}
-	return ret, nil
-}
-
 func getJSONTagByName(msg *descriptor.Message, name string) (string, error) {
 	// Special handling for tenant
 	if isSpecStatusMessage(msg) && name == "Tenant" {
@@ -3874,7 +3761,7 @@ func init() {
 	reg.RegisterFunc("getURIKey", getURIKey)
 	reg.RegisterFunc("getMsgURIKey", getMsgURIKey)
 	reg.RegisterFunc("getServiceKey", getServiceKey)
-	reg.RegisterFunc("getSvcParams", getSvcParams)
+	reg.RegisterFunc("getSvcParams", common.GetSvcParams)
 	reg.RegisterFunc("getPenctlCmdOptions", getPenctlCmdOptions)
 	reg.RegisterFunc("getPenctlParentCmdOptions", getPenctlParentCmdOptions)
 	reg.RegisterFunc("getPdsaGetGlobalOpts", getPdsaGetGlobalOpts)
@@ -3951,7 +3838,7 @@ func init() {
 	reg.RegisterFunc("isNamespaced", isNamespaced)
 	reg.RegisterFunc("isObjTenanted", isObjTenanted)
 	reg.RegisterFunc("isObjNamespaced", isObjNamespaced)
-	reg.RegisterFunc("getProxyPaths", getProxyPaths)
+	reg.RegisterFunc("getProxyPaths", common.GetProxyPaths)
 	reg.RegisterFunc("HasSuffix", strings.HasSuffix)
 	reg.RegisterFunc("TrimSuffix", strings.TrimSuffix)
 	reg.RegisterFunc("TrimPrefix", strings.TrimPrefix)

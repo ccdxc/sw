@@ -75,6 +75,7 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 	path := make(genswagger.SwaggerPathsObject)
 	crudObjs := make(map[string]bool)
 
+	glog.V(1).Infof("processing for file [%s]", *file.Name)
 	apiResp := genswagger.SwaggerSchemaObject{
 		SchemaCore: genswagger.SchemaCore{
 			Type: "object",
@@ -153,6 +154,7 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 
 	svcs := file.Services
 	for _, s := range svcs {
+		glog.V(1).Infof("processing for Service [%s]", *s.Name)
 		i, err := gwplugins.GetExtension("venice.apiVersion", s)
 		if err == nil && i != nil {
 			version = i.(string)
@@ -161,6 +163,40 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 		if err == nil && r != nil {
 			for _, v := range r.([]*venice.RestEndpoint) {
 				crudObjs[v.Object] = true
+			}
+		}
+		// Add any proxy paths if defined.
+		pp, err := common.GetProxyPaths(s)
+		if err != nil {
+			glog.Fatalf("failed to get Proxy paths (%s)", err)
+		}
+		if len(pp) > 0 {
+			glog.V(1).Infof("got Proxy paths [%+v]", pp)
+			for _, ppath := range pp {
+				params := []genswagger.SwaggerParameterObject{}
+				for _, fd := range ppath.FormParams {
+					params = append(params, genswagger.SwaggerParameterObject{In: "formData", Name: fd.Name, Description: fd.Description, Type: fd.Type, Required: fd.Required})
+				}
+				respObj := strings.Join(strings.Split(ppath.Response, "."), "")
+				p := genswagger.SwaggerPathItemObject{
+					Post: &genswagger.SwaggerOperationObject{
+						Summary:     ppath.DocString,
+						Parameters:  params,
+						Tags:        []string{fmt.Sprintf("%s/%s", strings.ToLower(pkg), version)},
+						OperationID: strings.Join(strings.Split(strings.TrimPrefix(ppath.Path, "/"), "/"), "_"),
+						Responses: genswagger.SwaggerResponsesObject{
+							"200": genswagger.SwaggerResponseObject{
+								Schema: genswagger.SwaggerSchemaObject{
+									SchemaCore: genswagger.SchemaCore{
+										Ref: "#/definitions/" + respObj,
+									},
+								},
+							},
+						},
+					},
+				}
+				obj.Paths[strings.TrimSuffix(ppath.FullPath, "/")] = p
+				glog.V(1).Infof("adding new proxy path [%v][%+v]", ppath.Path, p)
 			}
 		}
 		ext, err := gwplugins.GetExtension("venice.naplesRestService", s)
@@ -313,7 +349,6 @@ func specFinalizer(obj *genswagger.SwaggerObject, file *descriptor.File, reg *de
 				}
 			}
 		}
-
 	}
 	obj.Info.Title = pkg + " API reference"
 	obj.Info.Version = version

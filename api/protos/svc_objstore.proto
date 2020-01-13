@@ -30,14 +30,21 @@ service ObjstoreV1 {
       Path:         "/uploads/images/"
       PathPrefix:   "/apis/v1"
       Backend:      "pen-vos-http"
+      DocString:    "Upload system image"
+      Response:     "Object"
+      FormParams:   [{Name: "file", Type: "file", Required: true, Description: "file to upload"}];
     };
 
     option (venice.proxyPrefix) = {
       Path:         "/uploads/snapshots/"
       PathPrefix:   "/apis/v1"
       Backend:      "pen-vos-http"
+      DocString:    "Upload Config snapshot file"
+      Response:     "Object"
+      FormParams:   [{Name: "file", Type: "file", Required: true, Description: "file to upload"}];
     };
 
+    // Download file
     rpc DownloadFile(Object) returns (stream StreamChunk) {
         option (google.api.http) = {
             get: "/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}"
@@ -49,6 +56,7 @@ service ObjstoreV1 {
         option (venice.methodSrvBinaryStream) = true;
     }
 
+    // Download file by prefix
     rpc DownloadFileByPrefix(Object) returns (stream StreamChunk) {
         option (google.api.http) = {
             get: "/downloads/all/tenant/{O.Tenant}/{O.Namespace}/{O.Name}"

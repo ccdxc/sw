@@ -17,6 +17,7 @@ import (
 	reg "github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway/plugins"
 	googapi "github.com/pensando/grpc-gateway/third_party/googleapis/google/api"
 
+	"github.com/pensando/sw/venice/globals"
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 	"github.com/pensando/sw/venice/utils/apigen/validators"
 )
@@ -875,6 +876,144 @@ func IsMutable(fld *descriptor.Field) bool {
 		glog.Fatalf("Flag venice.mutable specified for non-scalar field %+v", fld)
 	}
 	return v.(bool)
+}
+
+// ServiceParams is the parameters related to the Service used by templates
+type ServiceParams struct {
+	// Version is the version of the Service
+	Version string
+	// Prefix is the prefix for all the resources served by the service.
+	Prefix string
+	// URIPath is the URI Path prefix for this service. This is combination of
+	// Version and Prefix and the catogory that is inherited from
+	//  the fileCategory options specified at the file level
+	URIPath string
+	// StagingPath is the URI path prefix for this service if it supports config
+	//  staging. If the service does not support staging then it is empty.
+	StagingPath string
+}
+
+// GetSvcParams returns the ServiceParams for the service.
+//   Parameters could be initialized to defaults if options were
+//   not specified by the user in service.proto.
+func GetSvcParams(s *descriptor.Service) (ServiceParams, error) {
+	var params ServiceParams
+	var ok bool
+	i, err := reg.GetExtension("venice.apiVersion", s)
+	if params.Version, ok = i.(string); err != nil || !ok {
+		// Can specify a defaults when not specified.
+		params.Version = ""
+	}
+	i, err = reg.GetExtension("venice.apiPrefix", s)
+	if params.Prefix, ok = i.(string); err != nil || !ok {
+		params.Prefix = ""
+	}
+	category := globals.ConfigURIPrefix
+	if i, err = reg.GetExtension("venice.fileCategory", s.File); err == nil {
+		if category, ok = i.(string); !ok {
+			category = globals.ConfigURIPrefix
+		}
+	} else {
+		glog.V(1).Infof("Did not find Category %s", err)
+	}
+	if params.Prefix == "" {
+		params.URIPath = "/" + category + "/" + params.Version
+		if category == globals.ConfigURIPrefix {
+			params.StagingPath = "/staging/{{TOCTX.BufferId}}/" + params.Version
+		}
+	} else {
+		params.URIPath = "/" + category + "/" + params.Prefix + "/" + params.Version
+		if category == globals.ConfigURIPrefix {
+			params.StagingPath = "/staging/{TOCTX.BufferId}/" + params.Prefix + "/" + params.Version
+		}
+	}
+	return params, nil
+}
+
+// FormParam is parameters for one element of a multipart form
+type FormParam struct {
+	Name        string
+	Type        string
+	Required    bool
+	Description string
+}
+
+// ProxyPath is parameters for reverse proxy endpoints
+type ProxyPath struct {
+	Prefix     string
+	TrimPath   string
+	Path       string
+	FullPath   string
+	Backend    string
+	DocString  string
+	Response   string
+	FormParams []FormParam
+}
+
+// GetProxyPaths retrieves all the proxy paths defined in the service
+func GetProxyPaths(svc *descriptor.Service) ([]ProxyPath, error) {
+	var ret []ProxyPath
+	svcParams, err := GetSvcParams(svc)
+	if err != nil {
+		glog.V(1).Infof("unable to get proxy paths for service [%s]", *svc.Name)
+		return ret, err
+	}
+	i, err := reg.GetExtension("venice.proxyPrefix", svc)
+	if err != nil {
+		glog.V(1).Infof("no proxy options found on service [%s](%s)", *svc.Name, err)
+		return ret, nil
+	}
+	opts, ok := i.([]*venice.ProxyEndpoint)
+	if !ok {
+		return ret, fmt.Errorf("could not parse proxy option for service [%s] [%+v]", *svc.Name, opts)
+	}
+	glog.V(1).Infof("found proxy options on service [%s] [%+v]", *svc.Name, opts)
+	pathMap := make(map[string]bool)
+	category := globals.ConfigURIPrefix
+	if i, err = reg.GetExtension("venice.fileCategory", svc.File); err == nil {
+		if category, ok = i.(string); !ok {
+			category = globals.ConfigURIPrefix
+		}
+	} else {
+		glog.V(1).Infof("Did not find Category %s", err)
+	}
+	for _, opt := range opts {
+		if _, ok := pathMap[opt.GetPathPrefix()]; ok {
+			glog.Fatalf("duplicate path detected in proxy paths service [%s] path [%s]", *svc.Name, opt.GetPathPrefix())
+		}
+		fullpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
+		if svcParams.Prefix == "" {
+			fullpath = "/" + category + "/" + svcParams.Version + "/" + strings.TrimPrefix(opt.GetPath(), "/")
+		}
+
+		trimpath := "/" + category + "/" + svcParams.Prefix + "/" + svcParams.Version + "/"
+		if svcParams.Prefix == "" {
+			trimpath = "/" + category + "/" + svcParams.Version + "/"
+		}
+		path := opt.Path
+		path = strings.TrimPrefix(path, "/")
+		path = strings.TrimSuffix(path, "/")
+		prefix := opt.PathPrefix
+		prefix = strings.TrimPrefix(prefix, "/")
+		prefix = strings.TrimSuffix(prefix, "/")
+		prefix = "/" + prefix
+
+		msgName := opt.Response
+		if !strings.HasPrefix(msgName, ".") {
+			msgName = "." + strings.ToLower(svc.File.GoPkg.Name) + "." + msgName
+		}
+		_, err = svc.File.Reg.LookupMsg("", msgName)
+		if err != nil {
+			return ret, err
+		}
+
+		p := ProxyPath{Prefix: prefix, Path: path, TrimPath: trimpath, FullPath: fullpath, Backend: opt.GetBackend(), Response: msgName, DocString: opt.DocString}
+		for _, fd := range opt.FormParams {
+			p.FormParams = append(p.FormParams, FormParam{Name: fd.Name, Type: fd.Type, Description: fd.Description, Required: fd.Required})
+		}
+		ret = append(ret, p)
+	}
+	return ret, nil
 }
 
 // Hardcoded path Ids for the types

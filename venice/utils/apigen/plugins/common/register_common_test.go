@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	govldtr "github.com/asaskevich/govalidator"
@@ -17,6 +18,12 @@ import (
 
 	venice "github.com/pensando/sw/venice/utils/apigen/annotations"
 )
+
+var once sync.Once
+
+func doOnce() {
+	RegisterOptionParsers()
+}
 
 func TestParsers(t *testing.T) {
 	dummyval1 := "should not pass"
@@ -1270,4 +1277,243 @@ func TestGetFieldExtensions(t *testing.T) {
 
 	}
 
+}
+
+func TestGetParams(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+		name: 'example.proto'
+		package: 'example'
+		syntax: 'proto3'
+		message_type <
+			name: 'Nest1'
+			field <
+				name: 'nest1_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest2'
+				number: 1
+			>
+			field <
+				name: 'str_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 2
+			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 3
+			>
+			options:<[venice.objectPrefix]:{Collection:"prefix-{str_field}", Path:"/qual{nest1_field.embedded_field}"}>
+		>
+		message_type <
+			name: 'testmsg'
+			field <
+				name: 'real_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			field <
+				name: 'leaf_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 3
+			>
+			field <
+				name: 'O'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.ObjectMeta'
+				number: 4
+			>
+			options:<[venice.objectPrefix]:{Collection:"prefix1", Path:"/{leaf_field}"}>
+		>
+		message_type <
+			name: 'Auto_ListNest1'
+			field <
+				name: 'meta'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+			field <
+				name: 'Items'
+				label: LABEL_OPTIONAL
+				type: TYPE_MESSAGE
+				type_name: '.example.Nest1'
+				number: 2
+			>
+		>
+		message_type <
+		name: 'ObjectMeta'
+		field <
+			name: 'Name'
+			label: LABEL_OPTIONAL
+			type: TYPE_STRING
+			number: 2
+		>
+	>
+		service <
+			name: 'full_crudservice'
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1">
+		>
+		service <
+			name: 'hybrid_crudservice'
+			method: <
+				name: 'noncrudsvc_create'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"create" [venice.methodAutoGen]: true [google.api.http]:<selector:"" post:"/prefix">>
+			>
+			method: <
+				name: 'noncrudsvc_update'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"update" [venice.methodAutoGen]: true [google.api.http]:<selector:"" put:"/prefix/{str_field}">>
+			>
+			method: <
+				name: 'noncrudsvc_get'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"get" [venice.methodAutoGen]: true [google.api.http]:<selector:"" get:"/prefix">>
+			>
+			method: <
+				name: 'noncrudsvc_delete'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"delete" [venice.methodAutoGen]: true [google.api.http]:<selector:"" delete:"/prefix">>
+			>
+			method: <
+				name: 'noncrudsvc_list'
+				input_type: '.example.Nest1'
+				output_type: '.example.Auto_ListNest1'
+				options:<[venice.methodOper]:"list" [venice.methodAutoGen]: true [google.api.http]:<selector:"" get:"/prefix">>
+			>
+			method: <
+				name: 'noncrudsvc_action'
+				input_type: '.example.Nest1'
+				output_type: '.example.testmsg'
+				options:<[venice.methodOper]:"create" [venice.methodAutoGen]: true [venice.methodAutoGen]: true [venice.methodActionObject]: "Nest1" [google.api.http]:<selector:"" get:"/prefix">>
+			>
+			method: <
+				name: 'noncrudsvc_watch'
+				input_type: '.example.Nest1'
+				output_type: '.example.Nest1'
+				options:<[venice.methodOper]:"watch" [venice.methodAutoGen]: true>
+			>
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest1" [venice.apiGrpcCrudService]:"testmsg" [venice.apiRestService]: {Object: "Nest1", Method: [ "put", "post" ], Pattern: "/testpattern"}>
+		>
+		`, `
+		name: 'another.proto'
+		package: 'example'
+		message_type <
+			name: 'Nest2'
+			field <
+				name: 'embedded_field'
+				label: LABEL_OPTIONAL
+				type: TYPE_STRING
+				number: 1
+			>
+		>
+		service <
+			name: 'crudservice'
+			options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.apiGrpcCrudService]:"Nest2">
+		>
+		syntax: "proto3"
+		`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	once.Do(doOnce)
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto", "another.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	for _, svc := range file.Services {
+		if *svc.Name != "hybrid_crudservice" {
+			continue
+		}
+		sparams, err := GetSvcParams(svc)
+		if err != nil {
+			t.Errorf("error getting service params")
+		}
+		t.Logf("Service [%s] got [%+v]", *svc.Name, sparams)
+		if sparams.Version != "v1" || sparams.Prefix != "example" {
+			t.Errorf("[%s] Did not get expected service params %+v", *svc.Name, sparams)
+		}
+	}
+}
+
+func TestGetProxyPaths(t *testing.T) {
+	var req gogoplugin.CodeGeneratorRequest
+	for _, src := range []string{
+		`
+			name: 'example.proto'
+			package: 'example'
+			syntax: 'proto3'
+			message_type <
+				name: 'Nest1'
+				field <
+					name: 'nest1_field'
+					label: LABEL_OPTIONAL
+					type: TYPE_MESSAGE
+					type_name: '.example.Nest2'
+					number: 1
+				>
+			>
+			service <
+				name: 'crudservice'
+				method: <
+					name: 'TestMethod'
+					input_type: '.example.Nest1'
+					output_type: '.example.Nest1'
+				>
+				options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.proxyPrefix]:{PathPrefix: "/backapi1", Path: "/test1", Backend: "localhost:9999", Response: ".example.Nest1", FormParams:  [{Name: "file", Type: "file", Required: true, Description: "file to upload"}, {Name: "something", Type: "string", Required: false, Description: "another field"}]} [venice.proxyPrefix]:{PathPrefix: "/backapi2", Path: "/test2", Backend: "resolved-svc", Response: "Nest1"} >
+			>
+			`,
+	} {
+		var fd descriptor.FileDescriptorProto
+		if err := proto.UnmarshalText(src, &fd); err != nil {
+			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
+		}
+		req.ProtoFile = append(req.ProtoFile, &fd)
+	}
+	once.Do(doOnce)
+	r := reg.NewRegistry()
+	req.FileToGenerate = []string{"example.proto"}
+	if err := r.Load(&req); err != nil {
+		t.Fatalf("Load Failed")
+	}
+	file, err := r.LookupFile("example.proto")
+	if err != nil {
+		t.Fatalf("Could not find file")
+	}
+	svc := file.Services[0]
+	pp, err := GetProxyPaths(svc)
+	if err != nil {
+		t.Fatalf("failed to get proxy paths (%s)", err)
+	}
+	exp := []ProxyPath{
+		{Prefix: "/backapi1", TrimPath: "/configs/example/v1/", Path: "test1", FullPath: "/configs/example/v1/test1", Backend: "localhost:9999", Response: ".example.Nest1", FormParams: []FormParam{{Name: "file", Type: "file", Required: true, Description: "file to upload"}, {Name: "something", Type: "string", Required: false, Description: "another field"}}},
+		{Prefix: "/backapi2", TrimPath: "/configs/example/v1/", Path: "test2", FullPath: "/configs/example/v1/test2", Backend: "resolved-svc", Response: ".example.Nest1"},
+	}
+	if !reflect.DeepEqual(pp, exp) {
+		t.Fatalf("Proxy paths does not match exp[%+v] got [%+v]", exp, pp)
+	}
 }

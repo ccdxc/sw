@@ -2079,6 +2079,22 @@
         ]
       }
     },
+    "/configs/bookstore/v1/uploads": {
+      "post": {
+        "operationId": "uploads",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/bookstoreStore"
+            }
+          }
+        },
+        "tags": [
+          "bookstore/v1"
+        ]
+      }
+    },
     "/configs/bookstore/v1/watch/orders": {
       "get": {
         "summary": "Watch Order objects. Supports WebSockets or HTTP long poll",

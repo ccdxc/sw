@@ -1072,7 +1072,7 @@ func TestGetParams(t *testing.T) {
 		if *svc.Name != "hybrid_crudservice" {
 			continue
 		}
-		sparams, err := getSvcParams(svc)
+		sparams, err := common.GetSvcParams(svc)
 		if err != nil {
 			t.Errorf("error getting service params")
 		}
@@ -3762,63 +3762,6 @@ func TestIsTenanted(t *testing.T) {
 		if v, err := isObjNamespaced(file, oname); err != nil || v != c.nval {
 			t.Fatalf("did not get [%v] for message [%v](%v)", c.nval, c.msg, err)
 		}
-	}
-}
-
-func TestGetProxyPaths(t *testing.T) {
-	var req gogoplugin.CodeGeneratorRequest
-	for _, src := range []string{
-		`
-			name: 'example.proto'
-			package: 'example'
-			syntax: 'proto3'
-			message_type <
-				name: 'Nest1'
-				field <
-					name: 'nest1_field'
-					label: LABEL_OPTIONAL
-					type: TYPE_MESSAGE
-					type_name: '.example.Nest2'
-					number: 1
-				>
-			>
-			service <
-				name: 'crudservice'
-				method: <
-					name: 'TestMethod'
-					input_type: '.example.Nest1'
-					output_type: '.example.Nest1'
-				>
-				options:<[venice.apiVersion]:"v1" [venice.apiPrefix]:"example" [venice.proxyPrefix]:{PathPrefix: "/backapi1", Path: "/test1", Backend: "localhost:9999"} [venice.proxyPrefix]:{PathPrefix: "/backapi2", Path: "/test2", Backend: "resolved-svc"} >
-			>
-			`,
-	} {
-		var fd descriptor.FileDescriptorProto
-		if err := proto.UnmarshalText(src, &fd); err != nil {
-			t.Fatalf("proto.UnmarshalText(%s, &fd) failed with %v; want success", src, err)
-		}
-		req.ProtoFile = append(req.ProtoFile, &fd)
-	}
-	r := reg.NewRegistry()
-	req.FileToGenerate = []string{"example.proto"}
-	if err := r.Load(&req); err != nil {
-		t.Fatalf("Load Failed")
-	}
-	file, err := r.LookupFile("example.proto")
-	if err != nil {
-		t.Fatalf("Could not find file")
-	}
-	svc := file.Services[0]
-	pp, err := getProxyPaths(svc)
-	if err != nil {
-		t.Fatalf("failed to get proxy paths")
-	}
-	exp := []ProxyPath{
-		{Prefix: "/backapi1", TrimPath: "/configs/example/v1/", Path: "test1", FullPath: "/configs/example/v1/test1", Backend: "localhost:9999"},
-		{Prefix: "/backapi2", TrimPath: "/configs/example/v1/", Path: "test2", FullPath: "/configs/example/v1/test2", Backend: "resolved-svc"},
-	}
-	if !reflect.DeepEqual(pp, exp) {
-		t.Fatalf("Proxy paths does not match exp[%+v] got [%+v]", exp, pp)
 	}
 }
 

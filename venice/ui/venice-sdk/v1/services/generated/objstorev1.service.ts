@@ -20,6 +20,7 @@ export class Objstorev1Service extends AbstractService {
     return this.constructor.name;
   }
 
+  /** Download file by prefix */
   public GetDownloadFileByPrefix(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/all/tenant/{O.Tenant}/{O.Namespace}/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -33,6 +34,7 @@ export class Objstorev1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}>;
   }
   
+  /** Download file */
   public GetDownloadFile(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}';
     url = url.replace('{O.Tenant}', this['O_Tenant']);
@@ -46,6 +48,7 @@ export class Objstorev1Service extends AbstractService {
     return this.invokeAJAXGetCall(url, queryParam, opts) as Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}>;
   }
   
+  /** Download file */
   public GetDownloadFile_1(O_Namespace,O_Name, queryParam: any = null):Observable<{body: IObjstoreStreamChunk | Error, statusCode: number}> {
     let url = this['baseUrlAndPort'] + '/objstore/v1/downloads/{O.Namespace}/{O.Name}';
     url = url.replace('{O.Namespace}', O_Namespace);
@@ -113,6 +116,40 @@ export class Objstorev1Service extends AbstractService {
       isStaging: false,
     }
     return this.invokeAJAXDeleteCall(url, opts) as Observable<{body: IObjstoreObject | IApiStatus | Error, statusCode: number}>;
+  }
+  
+  /** Upload system image 
+   * FormData keys:
+   * file
+   *   - desc: file to upload
+   *   - type: file
+   *   - required: true
+   */
+  public uploads_images(body: FormData):Observable<{body: IObjstoreObject | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/uploads/images';
+    const opts = {
+      eventID: 'uploads_images',
+      objType: 'ObjstoreObject',
+      isStaging: false,
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | Error, statusCode: number}>;
+  }
+  
+  /** Upload Config snapshot file 
+   * FormData keys:
+   * file
+   *   - desc: file to upload
+   *   - type: file
+   *   - required: true
+   */
+  public uploads_snapshots(body: FormData):Observable<{body: IObjstoreObject | Error, statusCode: number}> {
+    let url = this['baseUrlAndPort'] + '/objstore/v1/uploads/snapshots';
+    const opts = {
+      eventID: 'uploads_snapshots',
+      objType: 'ObjstoreObject',
+      isStaging: false,
+    }
+    return this.invokeAJAXPostCall(url, body, opts) as Observable<{body: IObjstoreObject | Error, statusCode: number}>;
   }
   
   /** Watch Object objects. Supports WebSockets or HTTP long poll */

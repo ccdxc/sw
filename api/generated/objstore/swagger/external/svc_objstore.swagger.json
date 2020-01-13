@@ -18,6 +18,7 @@
   "paths": {
     "/objstore/v1/downloads/all/tenant/{O.Tenant}/{O.Namespace}/{O.Name}": {
       "get": {
+        "summary": "Download file by prefix",
         "operationId": "GetDownloadFileByPrefix",
         "responses": {
           "200": {
@@ -134,6 +135,7 @@
     },
     "/objstore/v1/downloads/tenant/{O.Tenant}/{O.Namespace}/{O.Name}": {
       "get": {
+        "summary": "Download file",
         "operationId": "GetDownloadFile",
         "responses": {
           "200": {
@@ -250,6 +252,7 @@
     },
     "/objstore/v1/downloads/{O.Namespace}/{O.Name}": {
       "get": {
+        "summary": "Download file",
         "operationId": "GetDownloadFile_1",
         "responses": {
           "200": {
@@ -820,6 +823,58 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "objstore/v1"
+        ]
+      }
+    },
+    "/objstore/v1/uploads/images": {
+      "post": {
+        "summary": "Upload system image",
+        "operationId": "uploads_images",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/objstoreObject"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "file",
+            "description": "file to upload",
+            "in": "formData",
+            "required": true,
+            "type": "file"
+          }
+        ],
+        "tags": [
+          "objstore/v1"
+        ]
+      }
+    },
+    "/objstore/v1/uploads/snapshots": {
+      "post": {
+        "summary": "Upload Config snapshot file",
+        "operationId": "uploads_snapshots",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/objstoreObject"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "file",
+            "description": "file to upload",
+            "in": "formData",
+            "required": true,
+            "type": "file"
           }
         ],
         "tags": [
