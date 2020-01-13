@@ -167,9 +167,14 @@ func TestStopStartService(t *testing.T) {
 
 	defer testutils.MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req.ObjectMeta)
 	// check running jobs
-	runningJobs := svcImpl.queue.ListJobs()
-	Assert(t, len(runningJobs) == 1, fmt.Sprintf("no running jobs in queue %#v", runningJobs))
-	Assert(t, runningJobs[0].ID() == fetchedReq.UUID, fmt.Sprintf("expected job ID %v", fetchedReq.UUID))
+	var runningJobs []archive.Job
+	AssertEventually(t, func() (bool, interface{}) {
+		runningJobs = svcImpl.queue.ListJobs()
+		if len(runningJobs) == 1 && runningJobs[0].ID() == fetchedReq.UUID {
+			return true, runningJobs
+		}
+		return false, runningJobs
+	}, fmt.Sprintf("running job for archive request UUID [%s] not found in queue: %v", fetchedReq.UUID, testutils.PrintJobs(runningJobs)))
 	svc.Stop()
 	svc.Start()
 	defer svc.Stop()
@@ -225,9 +230,14 @@ func TestDuplicateRequest(t *testing.T) {
 
 	defer testutils.MustDeleteArchiveRequest(context.TODO(), ti.apicl, &req1.ObjectMeta)
 	// check running jobs
-	runningJobs := svcImpl.queue.ListJobs()
-	Assert(t, len(runningJobs) == 1, fmt.Sprintf("no running jobs in queue %#v", runningJobs))
-	Assert(t, runningJobs[0].ID() == fetchedReq.UUID, fmt.Sprintf("expected job ID %v", fetchedReq.UUID))
+	var runningJobs []archive.Job
+	AssertEventually(t, func() (bool, interface{}) {
+		runningJobs = svcImpl.queue.ListJobs()
+		if len(runningJobs) == 1 && runningJobs[0].ID() == fetchedReq.UUID {
+			return true, runningJobs
+		}
+		return false, runningJobs
+	}, fmt.Sprintf("running job for archive request UUID [%s] not found in queue: %v", fetchedReq.UUID, testutils.PrintJobs(runningJobs)))
 	// create a duplicate request to archive audit events
 	req2 := &monitoring.ArchiveRequest{}
 	req2.Defaults("All")
