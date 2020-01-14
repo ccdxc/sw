@@ -539,6 +539,7 @@ func (ros *RolloutState) setVenicePhase(name, reason, message string, phase ropr
 	ros.Status.ControllerNodesStatus[index].Reason = reason
 	ros.Status.ControllerNodesStatus[index].Message = message
 	ros.Status.ControllerNodesStatus[index].Phase = phase.String()
+	log.Infof("setVenicePhase: Name %v Reason %v message %v Phase %v", name, reason, message, phase)
 	ros.saveStatus()
 }
 
@@ -582,6 +583,7 @@ func (ros *RolloutState) setServicePhase(name, reason, message string, phase rop
 	ros.Status.ControllerServicesStatus[index].Reason = reason
 	ros.Status.ControllerServicesStatus[index].Message = message
 	ros.Status.ControllerServicesStatus[index].Phase = phase.String()
+	log.Infof("setServicephase: Name %v Reason %v message %v Phase %v", name, reason, message, phase)
 	ros.saveStatus()
 }
 func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase roproto.RolloutPhase_Phases) {
@@ -629,6 +631,7 @@ func (ros *RolloutState) setSmartNICPhase(name, reason, message string, phase ro
 	ros.Status.DSCsStatus[index].Reason = reason
 	ros.Status.DSCsStatus[index].Message = message
 	ros.Status.DSCsStatus[index].Phase = phase.String()
+	log.Infof("setSmartNICPhase: Name %v Reason %v message %v Phase %v", name, reason, message, phase)
 	ros.saveStatus()
 	ros.Mutex.Unlock()
 }

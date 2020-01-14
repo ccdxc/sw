@@ -171,11 +171,13 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 			}
 		}
 		if !found { // got status for some operation that we didnt even request for. ignore..
+			log.Infof("Ignoring DSCstatus of %v", snicState.DSCRollout.Name)
 			continue
 		}
 
 		existingStatus := snicState.status[s.Op]
 		if existingStatus.OpStatus == s.OpStatus {
+			log.Infof("Existing Status. so ignoring Status of %v", snicState.DSCRollout.Name)
 			continue
 		}
 		if s.OpStatus == opStatusSkipped {
@@ -258,7 +260,7 @@ func (snicState *DSCRolloutState) anyPendingOp() bool {
 func (snicState *DSCRolloutState) addSpecOp(version string, op protos.DSCOp) {
 
 	snicState.Mutex.Lock()
-	log.Infof("version %s and op %s update %+v", version, op, snicState.Spec.Ops)
+	log.Infof("version %s and op %s update %+v of %+v", version, op, snicState.Spec.Ops, snicState.Name)
 	for _, ops := range snicState.Spec.Ops {
 		if ops.Op == op && ops.Version == version {
 			log.Infof("version %s and op %s already exist for %v", version, op, snicState.ObjectMeta)

@@ -144,7 +144,7 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 
 	// write it
 
-	log.Infof("Updating Rollout %v Status %v", ro.Name, ro.Status)
+	log.Infof("Updating Rollout %v Status %v Percent %v", ro.Name, ro.Status.OperationalState, ro.Status.CompletionPercentage)
 	for ii := 0; ii < 30; ii++ {
 		k, err := apicl.RolloutV1().Rollout().UpdateStatus(context.Background(), ro)
 		if err != nil {
@@ -152,7 +152,7 @@ func (wr *APISrvWriter) WriteRollout(ro *rollout.Rollout) error {
 			time.Sleep(time.Second)
 			continue
 		}
-		log.Infof("Rollout Update successful %+v", k)
+		log.Infof("Rollout Update successful %+v", k.Name)
 		break
 	}
 	return err

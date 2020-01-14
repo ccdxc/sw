@@ -539,7 +539,11 @@ func createNodeHelper(stateMgr *Statemgr, name string) {
 
 func TestVeniceOnlyRollout(t *testing.T) {
 	const version = "v1.1"
-
+	savedRolloutPhasesTimeout := rolloutPhasesTimeout
+	rolloutPhasesTimeout = 0
+	defer func() {
+		rolloutPhasesTimeout = savedRolloutPhasesTimeout
+	}()
 	// create recorder
 	// create recorder
 	evtsRecorder := mockevtsrecorder.NewRecorder("statemgr_test", logger)
