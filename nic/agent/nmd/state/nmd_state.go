@@ -983,6 +983,8 @@ func initAllowedCommands() {
 	allowedCommands["consoleenable"] = 40
 	allowedCommands["rmpentechsupportdir"] = 41
 	allowedCommands["penverifyfirmware"] = 42
+	allowedCommands["halctlshowsystemstatisticspbdetail"] = 43
+	allowedCommands["halctlshowqosclassqueues"] = 44
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1132,6 +1134,12 @@ func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	} else if req.Executable == "halctldebugdeleteqosclassqosgroup" {
 		req.Executable = "halctl"
 		req.Opts = "debug delete qos-class --qosgroup " + req.Opts
+	} else if req.Executable == "halctlshowsystemstatisticspbdetail" {
+		req.Executable = "halctl"
+		req.Opts = "show system statistics pb detail"
+	} else if req.Executable == "halctlshowqosclassqueues" {
+		req.Executable = "halctl"
+		req.Opts = "show qos-class queues"
 	} else if req.Executable == "disablesshd" {
 		req.Executable = "/etc/init.d/S50sshd"
 		req.Opts = "disable"

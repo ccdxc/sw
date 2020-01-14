@@ -34,6 +34,14 @@ var qosClassShowCmd = &cobra.Command{
 	Run:   qosClassShowCmdHandler,
 }
 
+var qosClassShowQueuesCmd = &cobra.Command{
+	Use:   "queues",
+	Short: "show qos-class queues",
+	Long:  "show qos-class queues",
+	Args:  cobra.NoArgs,
+	Run:   qosClassShowQueuesCmdHandler,
+}
+
 var qosClassDeleteCmd = &cobra.Command{
 	Use:   "qos-class",
 	Short: "qos-class object",
@@ -58,9 +66,33 @@ var qosClassUpdateCmd = &cobra.Command{
 	Run:   qosClassUpdateCmdHandler,
 }
 
+var qosShowSystemStatisticsCmd = &cobra.Command{
+	Use:   "statistics",
+	Short: "show system statistics",
+	Long:  "show system statistics",
+	Args:  cobra.NoArgs,
+}
+
+var qosShowSystemStatisticsPbCmd = &cobra.Command{
+	Use:   "pb",
+	Short: "show system statistics pb",
+	Long:  "show system statistics pb",
+	Args:  cobra.NoArgs,
+}
+
+var qosShowSystemStatisticsPbDetailCmd = &cobra.Command{
+	Use:   "detail",
+	Short: "show system statistics pb detail",
+	Long:  "show system statistics pb detail",
+	Args:  cobra.NoArgs,
+	Run:   qosShowSystemStatisticsPbDetailCmdHandler,
+}
+
 func init() {
 	showCmd.AddCommand(qosClassShowCmd)
 	qosClassShowCmd.Flags().StringVar(&qosGroup, "qosgroup", "default", "Specify qos group")
+
+	qosClassShowCmd.AddCommand(qosClassShowQueuesCmd)
 
 	createCmd.AddCommand(qosClassCreateCmd)
 	qosClassCreateCmd.Flags().StringVar(&qosGroup, "qosgroup", "", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
@@ -92,6 +124,10 @@ func init() {
 	deleteCmd.AddCommand(qosClassDeleteCmd)
 	qosClassDeleteCmd.Flags().StringVar(&qosGroup, "qosgroup", "user-defined-1", "Specify qos group. Valid groups: user-defined-1,user-defined-2,user-defined-3,user-defined-4,user-defined-5,user-defined-6")
 	qosClassDeleteCmd.MarkFlagRequired("qosgroup")
+
+	getSystemCmd.AddCommand(qosShowSystemStatisticsCmd)
+	qosShowSystemStatisticsCmd.AddCommand(qosShowSystemStatisticsPbCmd)
+	qosShowSystemStatisticsPbCmd.AddCommand(qosShowSystemStatisticsPbDetailCmd)
 }
 
 func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -108,6 +144,18 @@ func qosClassShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	v := &nmd.DistributedServiceCardCmdExecute{
 		Executable: "halctlshowqosclass",
+		Opts:       "",
+	}
+	naplesExecCmd(v)
+
+	return
+}
+
+func qosClassShowQueuesCmdHandler(cmd *cobra.Command, args []string) {
+	//halctlStr := "halctl show qos-class queues"
+
+	v := &nmd.DistributedServiceCardCmdExecute{
+		Executable: "halctlshowqosclassqueues",
 		Opts:       "",
 	}
 	naplesExecCmd(v)
@@ -255,4 +303,16 @@ func isQosGroupValid(qosGroup string) bool {
 	default:
 		return false
 	}
+}
+
+func qosShowSystemStatisticsPbDetailCmdHandler(cmd *cobra.Command, args []string) {
+	//halctlStr := "halctl show system statistics pb detail"
+
+	v := &nmd.DistributedServiceCardCmdExecute{
+		Executable: "halctlshowsystemstatisticspbdetail",
+		Opts:       "",
+	}
+	naplesExecCmd(v)
+
+	return
 }
