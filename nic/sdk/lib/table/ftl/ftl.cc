@@ -32,31 +32,6 @@ thread_local Apictx ftl_base::apictx_[FTL_MAX_API_CONTEXTS + 1];
         FTL_API_END(props_->name.c_str(), (_status));\
 }
 
-#ifndef SIM
-#define CRC32X(crc, value) __asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(value))
-#define RBITX(value) __asm__("rbit %x0, %x1": "=r"(value) : "r"(value))
-#define RBITW(value) __asm__("rbit %w0, %w1": "=r"(value) : "r"(value))
-#define REVX(value) __asm__("rev %x0, %x1": "=r"(value) : "r"(value))
-uint32_t
-crc32_aarch64(const uint64_t *p) {
-    uint32_t crc = 0;
-    for (auto i = 0; i < 8; i++) {
-        auto v = p[i];
-        RBITX(v);
-        REVX(v);
-        CRC32X(crc, v);
-    }
-    RBITW(crc);
-    return crc;
-}
-#endif
-
-base_table_entry_t *
-ftl_base::get_entry(int index) {
-    SDK_ASSERT(0);
-    return NULL;
-}
-
 void
 ftl_base::add_table_to_cache_(uint32_t table_id,
                               sdk::table::properties_t *props,
@@ -216,55 +191,6 @@ ftl_base::destroy(ftl_base *t) {
         SDK_FREE(SDK_MEM_ALLOC_FTL, t);
         t = NULL;
     }
-}
-
-//---------------------------------------------------------------------------
-// ftl Insert entry with hash value
-//---------------------------------------------------------------------------
-// TODO
-sdk_ret_t
-ftl_base::genhash_(sdk_table_api_params_t *params) {
-    static thread_local base_table_entry_t *hashkey = NULL;
-    static thread_local base_table_entry_t *hashkey32 = NULL;
-    static thread_local base_table_entry_t *hashkey64 = NULL;
-
-    if (params->entry_size == 32) {
-        hashkey = hashkey32;
-    } else {
-        hashkey = hashkey64;
-    }
-
-    if (hashkey == NULL) {
-        hashkey = params->entry->construct(64 + sizeof(base_table_entry_t));
-        if (hashkey == NULL) {
-            return SDK_RET_OOM;
-        }
-    }
-
-    hashkey->build_key(params->entry);
-    sdk::table::internal::base_table_entry_swizzle(
-                        get_sw_entry_pointer(hashkey), params->entry_size);
-
-    if (!params->hash_valid) {
-#ifdef SIM
-        static thread_local char buff[512];
-        params->entry->tostr(buff, sizeof(buff));
-        FTL_TRACE_VERBOSE("Input Entry = [%s]", buff);
-        params->hash_32b = sdk::utils::crc32(
-                                    (uint8_t *)get_sw_entry_pointer(hashkey),
-                                    64,
-                                    props_->hash_poly);
-#else
-        params->hash_32b = crc32_aarch64(
-                                (uint64_t *)get_sw_entry_pointer(hashkey));
-#endif
-        params->hash_valid = true;
-    }
-
-    FTL_TRACE_VERBOSE("[%s] => H:%#x",
-                      ftlu_rawstr((uint8_t *)get_sw_entry_pointer(hashkey), 64),
-                      params->hash_32b);
-    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------

@@ -403,11 +403,13 @@ public:
 
     virtual base_table_entry_t *get_entry(int index) override;
 
+protected:
+    virtual sdk_ret_t genhash_(sdk_table_api_params_t *params) override;
+
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
     static thread_local ${table_entry_name} entry_[FTL_MAX_RECIRCS];
 };
-
 """)
 
 ftl_table_template_cc = Template(
@@ -453,6 +455,45 @@ ${table_name}::get_entry(int index) {
     return &entry_[index];
 }
 
+//---------------------------------------------------------------------------
+// ftl Insert entry with hash value
+//---------------------------------------------------------------------------
+sdk_ret_t
+${table_name}::genhash_(sdk_table_api_params_t *params) {
+    static thread_local base_table_entry_t *hashkey;
+
+    if (hashkey == NULL) {
+        hashkey = ${table_entry_name}::alloc(64 + sizeof(base_table_entry_t));
+        if (hashkey == NULL) {
+            return SDK_RET_OOM;
+        }
+    }
+
+    hashkey->build_key(params->entry);
+    sdk::table::internal::base_table_entry_swizzle(
+                        get_sw_entry_pointer(hashkey), params->entry_size);
+
+    if (!params->hash_valid) {
+#ifdef SIM
+        static thread_local char buff[512];
+        params->entry->tostr(buff, sizeof(buff));
+        FTL_TRACE_VERBOSE("Input Entry = [%s]", buff);
+        params->hash_32b = sdk::utils::crc32(
+                                    (uint8_t *)get_sw_entry_pointer(hashkey),
+                                    64,
+                                    props_->hash_poly);
+#else
+        params->hash_32b = crc32_aarch64(
+                                (uint64_t *)get_sw_entry_pointer(hashkey));
+#endif
+        params->hash_valid = true;
+    }
+
+    FTL_TRACE_VERBOSE("[%s] => H:%#x",
+                      ftlu_rawstr((uint8_t *)get_sw_entry_pointer(hashkey), 64),
+                      params->hash_32b);
+    return SDK_RET_OK;
+}
 """)
 
 #####################################

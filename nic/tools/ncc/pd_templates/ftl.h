@@ -103,6 +103,7 @@
 //:: f.write('#include "gen/p4gen/p4/include/ftl.h"\n')
 //:: f.write('#include "gen/p4gen/p4/include/p4pd.h"\n')
 //:: f.write('#include "nic/sdk/include/sdk/mem.hpp"\n')
+//:: f.write('#include "nic/sdk/lib/table/ftl/ftl_utils.hpp"\n')
 //:: f.write('\n')
 //:: f.close()
 //::
@@ -616,6 +617,28 @@ public:
                  ${args});
     }
 
+    static uint32_t entry_size(void) {
+        return sizeof(${struct_full_name}) - sizeof(base_table_entry_t);
+    }
+
+    static base_table_entry_t *alloc(uint32_t size = 0) {
+        void *mem;
+        uint32_t _size;
+
+        if (size == 0) {
+            _size = sizeof(${struct_full_name});
+        } else {
+            _size = size;
+        }
+
+        mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_FTL, _size);
+        if (mem == NULL) {
+            return NULL;
+        }
+
+        return new (mem) ${struct_full_name}();
+    }
+
 //::                ######################################
 //::                # KEY METHODS
 //::                ######################################
@@ -647,32 +670,6 @@ public:
         clear_data();
         clear_hints();
         set_entry_valid(0);
-    }
-
-    static uint32_t entry_size(void) {
-        return sizeof(${struct_full_name}) - sizeof(base_table_entry_t);
-    }
-
-    static base_table_entry_t *alloc(uint32_t size = 0) {
-        void *mem;
-        uint32_t _size;
-
-        if (size == 0) {
-            _size = sizeof(${struct_full_name});
-        } else {
-            _size = size;
-        }
-
-        mem = SDK_CALLOC(sdk::SDK_MEM_ALLOC_FTL, _size);
-        if (mem == NULL) {
-            return NULL;
-        }
-
-        return new (mem) ${struct_full_name}();
-    }
-
-    base_table_entry_t *construct(uint32_t size = 0) {
-        return alloc(size);
     }
 
     void clear_key(void) {

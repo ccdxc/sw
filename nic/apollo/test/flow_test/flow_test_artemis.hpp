@@ -39,7 +39,7 @@ namespace pt = boost::property_tree;
 
 FILE *g_fp;
 
-static char *
+char *
 flow_key2str(void *key) {
     static char str[256];
     flow_swkey_t *k = (flow_swkey_t *)key;
@@ -63,7 +63,7 @@ flow_key2str(void *key) {
     return str;
 }
 
-static char *
+char *
 flow_appdata2str(void *appdata) {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;
@@ -1138,13 +1138,13 @@ public:
                           sdk_table_stats_t *table_stats) {
         if (g_fp) {
             fprintf(g_fp,
-                    "insert %u, insert_duplicate %u, insert_fail %u, "
-                    "remove %u, remove_not_found %u, remove_fail %u, "
-                    "update %u, update_fail %u, "
-                    "get %u, get_fail %u, "
-                    "reserve %u, reserver_fail %u, "
-                    "release %u, release_fail %u, "
-                    "entries %u, collisions %u\n",
+                    "insert %lu, insert_duplicate %lu, insert_fail %lu, "
+                    "remove %lu, remove_not_found %lu, remove_fail %lu, "
+                    "update %lu, update_fail %lu, "
+                    "get %lu, get_fail %lu, "
+                    "reserve %lu, reserver_fail %lu, "
+                    "release %lu, release_fail %lu, "
+                    "entries %lu, collisions %lu\n",
                     api_stats->insert,
                     api_stats->insert_duplicate,
                     api_stats->insert_fail,

@@ -46,7 +46,7 @@ namespace pt = boost::property_tree;
 #define DOL_MAX_ROUTE_TABLE     64
 #define DOL_MAX_ROUTE_PER_TABLE 128
 
-static char *
+char *
 flow_key2str(void *key) {
     static char str[256];
     flow_swkey_t *k = (flow_swkey_t *)key;
@@ -63,7 +63,7 @@ flow_key2str(void *key) {
     return str;
 }
 
-static char *
+char *
 flow_appdata2str(void *appdata) {
     static char str[512];
     flow_appdata_t *d = (flow_appdata_t *)appdata;

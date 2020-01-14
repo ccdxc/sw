@@ -99,7 +99,7 @@ public:
 
     // Debug string
     char* metastr() {
-        static char str[256];
+        static thread_local char str[256];
         FTL_SNPRINTF(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
                      "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
                      table_index, hint_slot, hint, more_hashs,
@@ -108,7 +108,7 @@ public:
     }
 
     const char* idstr() {
-        static char str[32];
+        static thread_local char str[32];
         FTL_SNPRINTF(str, sizeof(str), "%s%d-L%d", level ? "H" : "M",
                      table_index, level);
         return str;
@@ -125,7 +125,7 @@ public:
     void trace(bool trace_params = false,
                const char *fname = __builtin_FUNCTION()) {
         if (!props->entry_trace_en) return;
-        static char buff[512];
+        static thread_local char buff[512];
         if (trace_params) {
             params->entry->tostr(buff, sizeof(buff));
         } else {
@@ -144,7 +144,7 @@ public:
 #if 0
     static void print_entry(base_table_entry_t *entry,
                             uint32_t hash_32b, bool hash_valid) {
-        static char buff[512];\
+        static thread_local char buff[512];\
         entry->tostr(buff, sizeof(buff));
         FTL_TRACE_VERBOSE("input entry:%s hash_32b:%#x hash_valid:%d",
                           buff, hash_32b, hash_valid);

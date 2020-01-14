@@ -38,7 +38,6 @@ private:
     static thread_local Apictx apictx_[FTL_MAX_API_CONTEXTS + 1];
     static Apictx *get_apictx(int index) { return &apictx_[index]; }
 
-    sdk::table::properties_t *props_;
     void *main_table_;
     apistats api_stats_;
     tablestats tstats_;
@@ -46,7 +45,6 @@ private:
     static std::map<int, ftl_table_info *> table_info_cache;
 
 private:
-    sdk_ret_t genhash_(sdk_table_api_params_t *params);
     sdk_ret_t ctxinit_(sdk_table_api_op_t op,
                        sdk_table_api_params_t *params);
     void add_table_to_cache_(uint32_t table_id,
@@ -54,6 +52,11 @@ private:
                              void *table);
     bool remove_table_from_cache_(uint32_t table_id);
     ftl_table_info *get_cached_table_(uint32_t table_id);
+
+protected:
+    sdk::table::properties_t *props_;
+
+    virtual sdk_ret_t genhash_(sdk_table_api_params_t *params) = 0;
 
 public:
     static void destroy(ftl_base *f);
@@ -74,7 +77,7 @@ public:
     sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state);
     sdk_ret_t clear_stats(void);
 
-    virtual base_table_entry_t *get_entry(int index);
+    virtual base_table_entry_t *get_entry(int index) = 0;
 };
 
 }   // namespace table
