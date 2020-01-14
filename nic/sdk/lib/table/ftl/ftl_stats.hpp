@@ -43,7 +43,7 @@ public:
     ~apistats() {
     }
     
-    void clear() {
+    void clear(void) {
         memset(this, 0, sizeof(apistats));
     }
     
@@ -147,50 +147,42 @@ public:
     ~tablestats() {
     }
 
-    void clear() {
+    void clear(void) {
         memset(this, 0, sizeof(tablestats));
     }
 
-    sdk_ret_t inc_entries() {
-        entries_ ++;
-        return SDK_RET_OK;
+    void inc_entries(void) {
+        entries_++;
     }
 
-    sdk_ret_t inc_collisions() {
-        collisions_ ++;
-        return SDK_RET_OK;
+    void inc_collisions(void) {
+        collisions_++;
     }
 
-    sdk_ret_t dec_entries() {
-        entries_ --;
-        return SDK_RET_OK;
+    void dec_entries(void) {
+        entries_--;
     }
 
-    sdk_ret_t dec_collisions() {
-        collisions_ --;
-        return SDK_RET_OK;
+    void dec_collisions(void) {
+        collisions_--;
     }
 
-    sdk_ret_t insert(uint32_t lvl) {
+    void insert(uint32_t lvl) {
         insert_++;
         insert_lvl_[lvl]++;
-        return SDK_RET_OK;
     }
 
-    sdk_ret_t remove(uint32_t lvl) {
+    void remove(uint32_t lvl) {
         remove_++;
         remove_lvl_[lvl]++;
-        return SDK_RET_OK;
     }
 
-    sdk_ret_t read(uint32_t lvl) {
+    void read(uint32_t lvl) {
         read_++;
-        return SDK_RET_OK;
     }
 
-    sdk_ret_t write(uint32_t lvl) {
+    void write(uint32_t lvl) {
         write_++;
-        return SDK_RET_OK;
     }
 
     sdk_ret_t get(sdk_table_stats_t *stats) {

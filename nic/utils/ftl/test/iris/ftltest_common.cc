@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
+
 #include "nic/utils/ftl/test/ftltest_common.hpp"
 
 static void

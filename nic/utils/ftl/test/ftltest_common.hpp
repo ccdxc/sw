@@ -24,20 +24,6 @@ using sdk::table::sdk_table_api_params_t;
 
 #define POOL_SIZE 16
 
-typedef union crc32_s {
-    struct {
-        uint32_t    index:NUM_INDEX_BITS;
-        uint32_t    hint:NUM_HASH_BITS;
-    };
-    uint32_t val;
-} crc32_t;
-
-uint32_t
-gencrc32(bool nextindex = true, bool nexthint = true);
-char* key2str(void *key);
-char* appdata2str(void *data);
-uint32_t get_cache_count();
-void reset_cache();
 sdk_table_api_params_t *gen_entry (uint32_t index = 0,
                                    bool with_hash = false,
                                    uint32_t hash_32b = 0);

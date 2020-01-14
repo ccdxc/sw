@@ -21,13 +21,7 @@ static const char *time_profile_str_list[] = {
 };
 
 void
-print() {
-    uint64_t seconds;
-    uint64_t mseconds;
-    uint64_t useconds;
-    uint64_t nseconds;
-    uint64_t delta;
-
+print(void) {
     printf("%-40s %-16s\n", "TimeProfileID", "TotalTime");
     printf("------------------------------------------------------------\n");
     for (uint32_t i = 0; i < TIME_PROFILE_ID_MAX; i++) {
@@ -51,14 +45,14 @@ timespec_diff(struct timespec *before, struct timespec *after) {
 }
 
 void
-time_profile_info::start() {
+time_profile_info::start(void) {
     if (time_profile_enable) {
         clock_gettime(CLOCK_REALTIME, &before_);
     }
 }
 
 void
-time_profile_info::stop() {
+time_profile_info::stop(void) {
     if (time_profile_enable) {
         clock_gettime(CLOCK_REALTIME, &after_);
         total_ += timespec_diff(&before_, &after_);
@@ -66,12 +60,12 @@ time_profile_info::stop() {
 }
 
 uint64_t
-time_profile_info::total() {
+time_profile_info::total(void) {
     return total_;
 }
 
 string
-time_profile_info::print_diff() {
+time_profile_info::print_diff(void) {
     uint64_t seconds = 0;
     uint64_t mseconds = 0;
     uint64_t useconds = 0;
@@ -88,7 +82,7 @@ time_profile_info::print_diff() {
         delta = delta / 1000;
         seconds = delta % 1000;
     }
-    snprintf(buff, 500,"%ld.%03ld.%03ld.%03ld",
+    snprintf(buff, 500,"%llu.%03llu.%03llu.%03llu",
              seconds, mseconds, useconds, nseconds);
     return string(buff);
 }

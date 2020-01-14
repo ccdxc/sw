@@ -10,7 +10,7 @@
 #include "lib/utils/time_profile.hpp"
 #include "ftltest_main.hpp"
 
-class scale: public FtlGtestBase {
+class scale: public ftl_test_base {
     sdk_trace_level_e trace_level;
 
 protected:
@@ -28,7 +28,7 @@ protected:
     }
 
     void SetUp() {
-        FtlGtestBase::SetUp();
+        ftl_test_base::SetUp();
         t_info.start();
     }
 
@@ -40,75 +40,75 @@ protected:
                        ::testing::UnitTest::GetInstance()->
                        current_test_info()->name(),
                        t_info.print_diff().c_str());
-        FtlGtestBase::TearDown();
+        ftl_test_base::TearDown();
     }
 };
 
 TEST_F(scale, num1K) {
     sdk_ret_t rs;
-    rs = Insert(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
-    Iterate();
+    iterate();
 
-    rs = Update(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = update(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Remove(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = remove(1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, num4K) {
     sdk_ret_t rs;
-    rs = Insert(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Update(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = update(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Remove(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = remove(4*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, num16K) {
     sdk_ret_t rs;
-    rs = Insert(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Update(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = update(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Remove(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = remove(16*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, num256K) {
     sdk_ret_t rs;
-    rs = Insert(256*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(256*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
-    rs = Remove(256*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = remove(256*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, insert1M_with_hash) {
     sdk_ret_t rs;
-    rs = Insert(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
+    rs = insert(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, remove1M_with_hash) {
     sdk_ret_t rs;
-    rs = Insert(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
+    rs = insert(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 
     t_info.start();
-    rs = Remove(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
+    rs = remove(1024*1024, sdk::SDK_RET_OK, WITH_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, DISABLED_insert8M) {
     sdk_ret_t rs;
-    rs = Insert(8*1024*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(8*1024*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
 TEST_F(scale, DISABLED_insert16M) {
     sdk_ret_t rs;
-    rs = Insert(16*1024*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
+    rs = insert(16*1024*1024, sdk::SDK_RET_OK, WITHOUT_HASH);
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }

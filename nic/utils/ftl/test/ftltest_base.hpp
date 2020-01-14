@@ -30,9 +30,9 @@ using sdk::table::sdk_table_factory_params_t;
 
 #define MHTEST_CHECK_RETURN(_exp, _ret) if (!(_exp)) return (_ret)
 
-class FtlGtestBase: public ::testing::Test {
+class ftl_test_base: public ::testing::Test {
 protected:
-    ftl_base *v6table;
+    ftl_base *table;
     uint32_t num_insert;
     uint32_t num_remove;
     uint32_t num_update;
@@ -45,8 +45,8 @@ protected:
     sdk_table_stats_t table_stats;
 
 protected:
-    FtlGtestBase() {}
-    virtual ~FtlGtestBase() {}
+    ftl_test_base() {}
+    virtual ~ftl_test_base() {}
     
     virtual void SetUp() {
         SDK_TRACE_INFO("============== SETUP : %s.%s ===============",
@@ -59,11 +59,11 @@ protected:
         params.entry_trace_en = true;
 
 #ifdef IRIS
-        v6table = flow_hash_info::factory(&params);
+        table = flow_hash_info::factory(&params);
 #else
-        v6table = flow_hash::factory(&params);
+        table = flow_hash::factory(&params);
 #endif
-        assert(v6table);
+        assert(table);
 
         num_insert = 0;
         num_remove = 0;
@@ -75,16 +75,15 @@ protected:
         table_count = 0;
         memset(&api_stats, 0, sizeof(api_stats));
         memset(&table_stats, 0, sizeof(table_stats));
-        PrintStats();
+        print_stats();
     }
     virtual void TearDown() {
-        ValidateStats();
+        validate_stats();
 #ifdef IRIS
-        flow_hash_info::destroy(v6table);
+        flow_hash_info::destroy(table);
 #else
-        flow_hash::destroy(v6table);
+        flow_hash::destroy(table);
 #endif
-        reset_cache();
         ftl_mock_cleanup();
         SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
@@ -94,26 +93,26 @@ protected:
 private:
     sdk_ret_t insert_(sdk_table_api_params_t *params) {
         num_insert++;
-        return v6table->insert(params);
+        return table->insert(params);
     }
 
     sdk_ret_t remove_(sdk_table_api_params_t *params) {
         num_remove++;
-        return v6table->remove(params);
+        return table->remove(params);
     }
 
     sdk_ret_t update_(sdk_table_api_params_t *params) {
         num_update++;
-        return v6table->update(params);
+        return table->update(params);
     }
 
     sdk_ret_t get_(sdk_table_api_params_t *params) {
         num_get++;
-        return v6table->get(params);
+        return table->get(params);
     }
 
 public:
-    sdk_ret_t Insert(uint32_t count, sdk_ret_t expret,
+    sdk_ret_t insert(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
             auto params = gen_entry(i, with_hash, hash_32b);
@@ -127,7 +126,7 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t RemoveHelper(uint32_t index, sdk_ret_t expret,
+    sdk_ret_t remove_helper(uint32_t index, sdk_ret_t expret,
                            bool with_hash, uint32_t hash_32b) {
         auto params = gen_entry(index, with_hash, hash_32b);
         auto rs = remove_(params);
@@ -138,16 +137,16 @@ public:
         return rs;
     }
 
-    sdk_ret_t Remove(uint32_t count, sdk_ret_t expret,
+    sdk_ret_t remove(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto rs = RemoveHelper(i, expret, with_hash, hash_32b);
+            auto rs = remove_helper(i, expret, with_hash, hash_32b);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         }
         return SDK_RET_OK;
     }
 
-    sdk_ret_t Update(uint32_t count, sdk_ret_t expret,
+    sdk_ret_t update(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
             auto params = gen_entry(i, with_hash, hash_32b);
@@ -157,7 +156,7 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t Get(uint32_t count, sdk_ret_t expret,
+    sdk_ret_t get(uint32_t count, sdk_ret_t expret,
                   bool with_hash = false) {
         for (auto i = 0; i < count; i++) {
             auto params = gen_entry(i, with_hash);
@@ -172,9 +171,9 @@ public:
         return SDK_RET_OK;
     }
 
-    void PrintStats() {
+    void print_stats() {
         //auto hw_count = ftl_mock_get_valid_count(FTL_TBLID_IPV6);
-        v6table->stats_get(&api_stats, &table_stats);
+        table->stats_get(&api_stats, &table_stats);
         SDK_TRACE_INFO("GTest Table Stats: Entries:%d", table_count);
         //SDK_TRACE_INFO("HW Table Stats: Entries=%d", hw_count);
         SDK_TRACE_INFO("SW Table Stats: Entries=%d Collisions:%d",
@@ -187,8 +186,8 @@ public:
         return;    
     }
 
-    sdk_ret_t ValidateStats() {
-        PrintStats();
+    sdk_ret_t validate_stats() {
+        print_stats();
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(table_count, table_stats.entries);
         EXPECT_EQ(num_insert, api_stats.insert + api_stats.insert_duplicate + api_stats.insert_fail);
@@ -201,7 +200,7 @@ public:
     }
 
     static void
-    IterateCallback(sdk_table_api_params_t *params) {
+    iterate_callback(sdk_table_api_params_t *params) {
         static char buff[512];
         (params->entry)->tostr(buff, 512);
         SDK_TRACE_INFO("Handle[%s] Entry[%s]",
@@ -209,10 +208,10 @@ public:
         return;
     }
 
-    sdk_ret_t Iterate() {
+    sdk_ret_t iterate() {
         sdk_table_api_params_t params = { 0 };
-        params.itercb = IterateCallback;
-        return v6table->iterate(&params);
+        params.itercb = iterate_callback;
+        return table->iterate(&params);
     }
 };
 #endif

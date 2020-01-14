@@ -26,10 +26,10 @@ public:
     time_profile_info() {
         total_ = 0;
     }
-    void start();
-    void stop();
-    uint64_t total();
-    string print_diff();
+    void start(void);
+    void stop(void);
+    uint64_t total(void);
+    string print_diff(void);
 };
 
 extern bool time_profile_enable;
@@ -67,7 +67,7 @@ typedef enum time_profile_id_s {
 
 extern time_profile_info time_profile_db[];
 
-void print();
+void print(void);
 
 #define time_profile_enable(v) time_profile_enable = v;
 #define time_profile_begin(_id) \
