@@ -6,7 +6,7 @@ import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SelectItem, MultiSelect } from 'primeng/primeng';
 import { Utility } from '@app/common/Utility';
-import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { FormArray, FormGroup, AbstractControl, ValidatorFn, ValidationErrors, FormControl } from '@angular/forms';
 import { SecurityAppOptions} from '@app/components/security';
 import { SecurityProtoPort } from '@sdk/v1/models/generated/search';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
@@ -459,27 +459,21 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     return true;
   }
 
-  onProtocolChange(event: any, formGroup: any): void {
-    let val = formGroup.get(['protocol']).value;
-    const portsField: AbstractControl = formGroup.get(['ports']);
-    if (val) {
-      val = val.trim();
-    }
-    if (val !== 'tcp' && val !== 'udp' && val !== 'any') {
-      portsField.setValue(null);
-      portsField.disable();
-    } else {
-      portsField.enable();
-    }
-  }
-
   isPortRequired(formGroup: any): boolean {
-    const val = formGroup.get(['ports']).value;
+    const protocol = formGroup.get(['protocol']).value;
+    const portsCtrl: FormControl = formGroup.get(['ports']);
+    const shouldEnable: boolean = protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
+    if (shouldEnable) {
+      portsCtrl.enable();
+    } else {
+      portsCtrl.setValue(null);
+      portsCtrl.disable();
+    }
+    const val = portsCtrl.value;
     if (val && val.trim()) {
       return false;
     }
-    const protocol = formGroup.get(['protocol']).value;
-    return protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
+    return shouldEnable;
   }
 
   addFieldValidator(ctrl: AbstractControl, validator: ValidatorFn) {
