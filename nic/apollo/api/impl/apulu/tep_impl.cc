@@ -74,8 +74,8 @@ tep_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
             tep = tep_db()->find(&spec->tep);
             if (tep == NULL) {
-                PDS_TRACE_ERR("Failed to find nexthop TEP %u used by TEP %u",
-                              spec->tep.id, spec->key.id);
+                PDS_TRACE_ERR("Failed to find nexthop TEP %s used by TEP %s",
+                              spec->tep.str(), spec->key.str());
                 return SDK_RET_INVALID_ARG;
             }
         }
@@ -172,8 +172,8 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
             tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
         }
     } else {
-        PDS_TRACE_ERR("Unsupported nh type %u in TEP %u spec",
-                      spec->nh_type, spec->key.id);
+        PDS_TRACE_ERR("Unsupported nh type %u in TEP %s spec",
+                      spec->nh_type, spec->key.str());
         SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
     }
     if (spec->encap.type != PDS_ENCAP_TYPE_NONE) {
@@ -193,8 +193,8 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL, hw_id_,
                                        NULL, NULL, &tep_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program TEP %u at idx %u",
-                      spec->key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to program TEP %s at idx %u",
+                      spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -231,8 +231,8 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL2, hw_id_,
                                        NULL, NULL, &tep2_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program TEP %u in TUNNEL2 table at idx %u",
-                      spec->key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to program TEP %s in TUNNEL2 table at idx %u",
+                      spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -278,8 +278,8 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
     } else {
-        PDS_TRACE_ERR("Unsupported nh type %u in TEP %u spec",
-                      spec->nh_type, spec->key.id);
+        PDS_TRACE_ERR("Unsupported nh type %u in TEP %s spec",
+                      spec->nh_type, spec->key.str());
         SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
     }
     return SDK_RET_OK;
@@ -290,7 +290,8 @@ tep_impl::activate_create_(pds_epoch_t epoch, tep_entry *tep,
                            pds_tep_spec_t *spec) {
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Activating TEP %u create, hw id %u", spec->key.id, hw_id_);
+    PDS_TRACE_DEBUG("Activating TEP %s create, hw id %u",
+                    spec->key.str(), hw_id_);
     if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // program outer tunnel in double encap case
         ret = activate_create_tunnel2_(epoch, tep, spec);
@@ -309,8 +310,8 @@ tep_impl::activate_delete_tunnel_table_(pds_epoch_t epoch, tep_entry *tep) {
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_TUNNEL, hw_id_,
                                       NULL, NULL, &tep_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read TEP %u at idx %u",
-                      tep->key().id, hw_id_);
+        PDS_TRACE_ERR("Failed to read TEP %s at idx %u",
+                      tep->key().str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     // point the tunnel to the blackhole nexthop

@@ -84,8 +84,8 @@ subnet_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         // reserve a hw id for this subnet
         ret = subnet_impl_db()->subnet_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to allocate hw id for subnet %u, err %u",
-                          spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to allocate hw id for subnet %s, err %u",
+                          spec->key.str(), ret);
             return ret;
         }
         hw_id_ = idx;
@@ -97,8 +97,8 @@ subnet_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                        handle_t::null());
         ret = vpc_impl_db()->vni_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to reserve entry in VNI table for subnet %u, "
-                          "err %u", spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to reserve entry in VNI table for subnet %s, "
+                          "err %u", spec->key.str(), ret);
             return ret;
         }
         vni_hdl_ = tparams.handle;
@@ -210,12 +210,12 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     sdk_table_api_params_t tparams;
     vni_actiondata_t vni_data = { 0 };
 
-    PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, create host if 0x%x",
-                    spec->key.id, hw_id_, spec->host_ifindex);
+    PDS_TRACE_DEBUG("Activating subnet %s, hw id %u, create host if 0x%x",
+                    spec->key.str(), hw_id_, spec->host_ifindex);
     vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
-        PDS_TRACE_ERR("No vpc %u found to program subnet %u",
-                      spec->vpc.id, spec->key.id);
+        PDS_TRACE_ERR("No vpc %s found to program subnet %s",
+                      spec->vpc.str(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // fill the key
@@ -230,8 +230,8 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     // program the VNI table
     ret = vpc_impl_db()->vni_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Programming of VNI table failed for subnet %s, err %u",
+                      spec->key.str(), ret);
         return ret;
     }
 
@@ -244,8 +244,8 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
                                 lif->vnic_hw_id(),
                                 device_find()->learning_enabled());
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u create, "
-                          "err %u", spec->host_ifindex, spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %s create, "
+                          "err %u", spec->host_ifindex, spec->key.str(), ret);
         }
     }
     subnet_impl_db()->insert(hw_id_, this);
@@ -259,8 +259,8 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Activating subnet %u delete, fabric encap (%u, %u)",
-                    subnet->key().id, subnet->fabric_encap().type,
+    PDS_TRACE_DEBUG("Activating subnet %s delete, fabric encap (%u, %u)",
+                    subnet->key().str(), subnet->fabric_encap().type,
                     subnet->fabric_encap().val.vnid);
     // fill the key
     vni_key.vxlan_1_vni = subnet->fabric_encap().val.vnid;
@@ -273,8 +273,8 @@ subnet_impl::activate_delete_(pds_epoch_t epoch, subnet_entry *subnet) {
     // program the VNI table
     ret = vpc_impl_db()->vni_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNI table failed for subnet %u, err %u",
-                      subnet->key().id, ret);
+        PDS_TRACE_ERR("Programming of VNI table failed for subnet %s, err %u",
+                      subnet->key().str(), ret);
     }
     subnet_impl_db()->remove(hw_id_);
     return ret;
@@ -294,12 +294,12 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     vni_actiondata_t vni_data = { 0 };
 
     spec = &obj_ctxt->api_params->subnet_spec;
-    PDS_TRACE_DEBUG("Activating subnet %u, hw id %u, update host if 0x%x",
-                    spec->key.id, hw_id_, spec->host_ifindex);
+    PDS_TRACE_DEBUG("Activating subnet %s, hw id %u, update host if 0x%x",
+                    spec->key.str(), hw_id_, spec->host_ifindex);
     vpc = vpc_find(&spec->vpc);
     if (vpc == NULL) {
-        PDS_TRACE_ERR("No vpc %u found to program subnet %u",
-                      spec->vpc.id, spec->key.id);
+        PDS_TRACE_ERR("No vpc %s found to program subnet %s",
+                      spec->vpc.str(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // fill the key
@@ -314,8 +314,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     // update the VNI table
     ret = vpc_impl_db()->vni_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Updating VNI table failed for subnet %u, err %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Updating VNI table failed for subnet %s, err %u",
+                      spec->key.str(), ret);
         return ret;
     }
 
@@ -328,8 +328,9 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
                                     hw_id_, lif->vnic_hw_id(),
                                     device_find()->learning_enabled());
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %u update, "
-                              "err %u", spec->host_ifindex, spec->key.id, ret);
+                PDS_TRACE_ERR("Failed to update lif 0x%x on subnet %s update, "
+                              "err %u", spec->host_ifindex,
+                              spec->key.str(), ret);
                 return ret;
             }
         }
@@ -342,9 +343,9 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
                                     PDS_IMPL_RSVD_BD_HW_ID, lif->vnic_hw_id(),
                                     false);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to reset lif 0x%x on subnet %u update, "
+                PDS_TRACE_ERR("Failed to reset lif 0x%x on subnet %s update, "
                               "err %u", orig_subnet->host_ifindex(),
-                              spec->key.id, ret);
+                              spec->key.str(), ret);
                 return ret;
             }
         }

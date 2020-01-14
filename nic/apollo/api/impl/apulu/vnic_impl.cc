@@ -91,16 +91,16 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         // reserve an entry in the NEXTHOP table for this local vnic
         ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to allocate nexthop entry for vnic %u, "
-                          "err %u", spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to allocate nexthop entry for vnic %s, "
+                          "err %u", spec->key.str(), ret);
             return ret;
         }
         nh_idx_ = idx;
 
         subnet = subnet_find(&spec->subnet);
         if (subnet == NULL) {
-            PDS_TRACE_ERR("Unable to find subnet %u for vnic %u",
-                          spec->subnet.id, spec->key.id);
+            PDS_TRACE_ERR("Unable to find subnet %s for vnic %s",
+                          spec->subnet.str(), spec->key.str());
             return sdk::SDK_RET_INVALID_ARG;
         }
 
@@ -109,18 +109,18 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             // allocate hw id for this vnic
             if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) !=
                     SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to allocate hw id for vnic %u, err %u",
-                              spec->key.id, ret);
+                PDS_TRACE_ERR("Failed to allocate hw id for vnic %s, err %u",
+                              spec->key.str(), ret);
                 return ret;
             }
             hw_id_ = idx;
         } else {
             // inherit vnic hw id of the corresponding lif
             if (IFINDEX_TO_IFTYPE(spec->host_ifindex) != IF_TYPE_LIF) {
-                PDS_TRACE_ERR("Incorrect interface type %u vnic %u spec, "
-                              "ifindext 0x%x",
+                PDS_TRACE_ERR("Incorrect interface type %u vnic %s spec, "
+                              "ifindex 0x%x",
                               IFINDEX_TO_IFTYPE(spec->host_ifindex),
-                              spec->key.id, spec->host_ifindex);
+                              spec->key.str(), spec->host_ifindex);
                 return SDK_RET_INVALID_ARG;
             }
             lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
@@ -140,7 +140,7 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING"
-                          "table for vnic %u, err %u", spec->key.id, ret);
+                          "table for vnic %s, err %u", spec->key.str(), ret);
             goto error;
         }
         local_mapping_hdl_ = tparams.handle;
@@ -156,7 +156,7 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in MAPPING "
-                          "table for vnic %u, err %u", spec->key.id, ret);
+                          "table for vnic %s, err %u", spec->key.str(), ret);
             goto error;
         }
         mapping_hdl_ = tparams.handle;
@@ -171,8 +171,8 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
 error:
 
-    PDS_TRACE_ERR("Failed to acquire all h/w resources for vnic %u, err %u",
-                  spec->key.id, ret);
+    PDS_TRACE_ERR("Failed to acquire all h/w resources for vnic %s, err %u",
+                  spec->key.str(), ret);
     return ret;
 }
 
@@ -556,7 +556,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_key = subnet->vpc();
     vpc = vpc_find(&vpc_key);
     if (unlikely(vpc == NULL)) {
-        PDS_TRACE_ERR("Failed to find vpc %u", vpc_key.id);
+        PDS_TRACE_ERR("Failed to find vpc %s", vpc_key.str());
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -566,8 +566,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                        hw_id_, NULL, NULL,
                                        &vnic_tx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program vnic %u TX_STATS table entry",
-                      spec->key.id);
+        PDS_TRACE_ERR("Failed to program vnic %s TX_STATS table entry",
+                      spec->key.str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -577,8 +577,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                        hw_id_, NULL, NULL,
                                        &vnic_rx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program vnic %u RX_STATS table entry",
-                      spec->key.id);
+        PDS_TRACE_ERR("Failed to program vnic %s RX_STATS table entry",
+                      spec->key.str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -597,8 +597,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program NEXTHOP table for vnic %u at idx %u",
-                      spec->key.id, nh_idx_);
+        PDS_TRACE_ERR("Failed to program NEXTHOP table for vnic %s at idx %u",
+                      spec->key.str(), nh_idx_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -647,8 +647,8 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                            NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
-            PDS_TRACE_ERR("Failed to update NEXTHOP table for vnic %u at "
-                          "idx %u", spec->key.id, nh_idx_);
+            PDS_TRACE_ERR("Failed to update NEXTHOP table for vnic %s at "
+                          "idx %u", spec->key.str(), nh_idx_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
     }
@@ -698,9 +698,9 @@ vnic_impl::add_local_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                    local_mapping_hdl_);
     ret = mapping_impl_db()->local_mapping_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program LOCAL_MAPPING entry for vnic %u, "
-                      "(subnet %u, mac %s)", spec->key.id, spec->subnet.id,
-                      macaddr2str(spec->mac_addr));
+        PDS_TRACE_ERR("Failed to program LOCAL_MAPPING entry for vnic %s, "
+                      "(subnet %s, mac %s)", spec->key.str(),
+                      spec->subnet.str(), macaddr2str(spec->mac_addr));
         goto error;
     }
     return SDK_RET_OK;
@@ -734,8 +734,8 @@ vnic_impl::add_vlan_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                        spec->vnic_encap.val.vlan_tag,
                                        NULL, NULL, &vlan_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VLAN entry %u for vnic %u",
-                      spec->vnic_encap.val.vlan_tag, spec->key.id);
+        PDS_TRACE_ERR("Failed to program VLAN entry %u for vnic %s",
+                      spec->vnic_encap.val.vlan_tag, spec->key.str());
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -771,9 +771,9 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                                    mapping_hdl_);
     ret = mapping_impl_db()->mapping_tbl()->insert(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program MAPPING entry for vnic %u, "
-                      "(subnet %u, mac %s)", spec->key.id, spec->subnet.id,
-                      macaddr2str(spec->mac_addr));
+        PDS_TRACE_ERR("Failed to program MAPPING entry for vnic %s, "
+                      "(subnet %s, mac %s)", spec->key.str(),
+                      spec->subnet.str(), macaddr2str(spec->mac_addr));
         goto error;
     }
     return SDK_RET_OK;
@@ -866,9 +866,9 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update LOCAL_MAPPING entry for vnic %u, "
-                      "(subnet %u, mac %s), err %u", vnic->key().id,
-                      subnet_key.id, macaddr2str(vnic->mac()), ret);
+        PDS_TRACE_ERR("Failed to update LOCAL_MAPPING entry for vnic %s, "
+                      "(subnet %s, mac %s), err %u", vnic->key().str(),
+                      subnet_key.str(), macaddr2str(vnic->mac()), ret);
         return ret;
     }
 
@@ -883,9 +883,9 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update MAPPING entry for vnic %u, "
-                      "(subnet %u, mac %s), ret %u", vnic->key().id,
-                      subnet_key.id, macaddr2str(vnic->mac()), ret);
+        PDS_TRACE_ERR("Failed to update MAPPING entry for vnic %s, "
+                      "(subnet %s, mac %s), ret %u", vnic->key().str(),
+                      subnet_key.str(), macaddr2str(vnic->mac()), ret);
     }
     return ret;
 }
@@ -1040,8 +1040,8 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read NEXTHOP table for vnic %u at idx %u",
-                      spec->key.id, nh_idx_);
+        PDS_TRACE_ERR("Failed to read NEXTHOP table for vnic %s at idx %u",
+                      spec->key.str(), nh_idx_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
