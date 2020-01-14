@@ -56,7 +56,7 @@ class BatchObject(base.ConfigObjectBase):
 
 class BatchObjectClient:
     def __init__(self):
-        self.__obj = None
+        self.__objs = dict()
         # Temporary fix for artemis to generate flows and sessions for the
         # created mappings
         if utils.IsFlowInstallationNeeded():
@@ -65,36 +65,40 @@ class BatchObjectClient:
             self.__commit_for_flows = False
         return
 
-    def Objects(self):
-        return self.__obj
+    def GetObjectByKey(self, key):
+        return self.__objs.get(key, None)
 
-    def GenerateObjects(self, topospec):
-        self.__obj = BatchObject()
-        self.__obj.Show()
+    def Objects(self):
+        return self.__objs.values()
+
+    def GenerateObjects(self, node, topospec):
+        obj = BatchObject()
+        obj.Show()
+        self.__objs.update({node: obj})
         return
 
-    def __updateObject(self, batchStatus):
+    def __updateObject(self, node, batchStatus):
         if batchStatus is None:
             cookie = INVALID_BATCH_COOKIE
         else:
             cookie = batchStatus[0].BatchContext.BatchCookie
         logger.info("Setting Batch cookie to ", cookie)
-        self.__obj.SetBatchCookie(cookie)
+        self.GetObjectByKey(node).SetBatchCookie(cookie)
 
-    def Start(self):
-        self.__obj.SetNextEpoch()
-        status = api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetBatchSpec())
+    def Start(self, node):
+        self.GetObjectByKey(node).SetNextEpoch()
+        status = api.client[node].Start(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchSpec())
         # update batch context
-        self.__updateObject(status)
+        self.__updateObject(node, status)
         return status
 
-    def Commit(self):
+    def Commit(self, node):
         if self.__commit_for_flows:
-            api.client.Start(api.ObjectTypes.BATCH, self.__obj.GetInvalidBatchSpec())
+            api.client[node].Start(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetInvalidBatchSpec())
             self.__commit_for_flows = False
-        api.client.Commit(api.ObjectTypes.BATCH, self.__obj.GetBatchContext())
+        api.client[node].Commit(api.ObjectTypes.BATCH, self.GetObjectByKey(node).GetBatchContext())
         # invalidate batch context
-        self.__updateObject(None)
+        self.__updateObject(node, None)
         return
 
 client = BatchObjectClient()

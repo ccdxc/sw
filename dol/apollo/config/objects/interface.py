@@ -1,6 +1,8 @@
 #! /usr/bin/python3
 import pdb
 import copy
+from collections import defaultdict
+import ipaddress
 
 from infra.common.logging import logger
 import infra.common.objects as objects
@@ -32,15 +34,21 @@ class InterfaceSpec_:
     pass
 
 class InterfaceInfoObject(base.ConfigObjectBase):
-    def __init__(self, iftype, spec):
+    def __init__(self, iftype, spec, ifspec):
         self.__type = iftype
         if (iftype == topo.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
         elif (iftype == topo.InterfaceTypes.UPLINKPC):
             self.port_bmap = getattr(spec, 'portbmp', None)
         elif (iftype == topo.InterfaceTypes.L3):
-            self.VpcId = getattr(spec, 'vpc', 0)
-            self.ip_prefix = next(resmgr.L3InterfaceIPv4PfxPool)
+            if (hasattr(spec, 'vpcid')):
+                self.VpcId = spec.vpcid
+            else:
+                self.VpcId = getattr(spec, 'vpc', 0)
+            if (hasattr(ifspec, 'ipprefix')):
+                self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
+            else:
+                self.ip_prefix = next(resmgr.L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
@@ -60,10 +68,13 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         logger.info("- %s" % res)
 
 class InterfaceObject(base.ConfigObjectBase):
-    def __init__(self, spec):
-        super().__init__(api.ObjectTypes.INTERFACE)
+    def __init__(self, spec, ifspec, node=None):
+        super().__init__(api.ObjectTypes.INTERFACE, node)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
-        self.InterfaceId = next(resmgr.InterfaceIdAllocator)
+        if (hasattr(ifspec, 'iid')):
+            self.InterfaceId = ifspec.iid
+        else:
+            self.InterfaceId = next(resmgr.InterfaceIdAllocator)
         self.Ifname = spec.id
         self.Type = topo.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
@@ -72,7 +83,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if utils.IsHostLifSupported() and self.lifns:
             self.obj_helper_lif = lif.LifObjectHelper()
             self.__create_lifs(spec)
-        info = InterfaceInfoObject(self.Type, spec)
+        info = InterfaceInfoObject(self.Type, spec, ifspec)
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
@@ -148,10 +159,10 @@ class InterfaceObject(base.ConfigObjectBase):
 class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.INTERFACE)
-        self.__uplinkl3ifs = dict()
-        self.__uplinkl3ifs_iter = None
-        self.__hostifs = dict()
-        self.__hostifs_iter = None
+        self.__uplinkl3ifs = defaultdict(dict)
+        self.__uplinkl3ifs_iter = defaultdict(dict)
+        self.__hostifs = defaultdict(dict)
+        self.__hostifs_iter = defaultdict(dict)
         return
 
     def GetKeyfromSpec(self, spec, yaml=False):
@@ -159,24 +170,20 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return utils.GetYamlSpecAttr(spec, 'id')
         return int(spec.Id)
 
-    def GetInterfaceObject(self, infid):
-        return self.GetObjectByKey(infid)
+    def GetInterfaceObject(self, node, infid):
+        return self.GetObjectByKey(node, infid)
 
-    def GetHostInterface(self):
-        Interface = None
-        if self.__hostifs:
-            try:
-                Interface = next(self.__hostifs_iter)
-            except:
-                Interface = None
-        return Interface
-
-    def GetL3UplinkInterface(self):
-        if self.__uplinkl3ifs:
-            return self.__uplinkl3ifs_iter.rrnext()
+    def GetHostInterface(self, node):
+        if self.__hostifs[node]:
+            return self.__hostifs_iter[node].rrnext()
         return None
 
-    def __generate_host_interfaces(self, ifspec):
+    def GetL3UplinkInterface(self, node):
+        if self.__uplinkl3ifs[node]:
+            return self.__uplinkl3ifs_iter[node].rrnext()
+        return None
+
+    def __generate_host_interfaces(self, node, ifspec):
         if not ifspec:
             return
         spec = InterfaceSpec_()
@@ -191,18 +198,19 @@ class InterfaceObjectClient(base.ConfigClientBase):
             lifstart = obj.LifBase
             lifend = lifstart + obj.LifCount - 1
             spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
-            ifobj = InterfaceObject(spec)
-            self.Objs.update({ifobj.InterfaceId: ifobj})
-            self.__hostifs.update({ifobj.InterfaceId: ifobj})
+            ifobj = InterfaceObject(spec, ifspec, node=node)
+            self.Objs[node].update({ifobj.InterfaceId: ifobj})
+            self.__hostifs[node].update({ifobj.InterfaceId: ifobj})
 
-        if self.__hostifs:
-            self.__hostifs_iter = iter(self.__hostifs.values())
+        if self.__hostifs[node]:
+            self.__hostifs_iter[node] = utils.rrobiniter(self.__hostifs[node].values())
         return
 
-    def __generate_l3_uplink_interfaces(self):
+    def __generate_l3_uplink_interfaces(self, node, parent, iflist):
         uplink_ports = PortClient.Objects()
         if not uplink_ports:
             return
+
         for port in uplink_ports:
             spec = InterfaceSpec_()
             spec.mode = 'l3'
@@ -210,46 +218,59 @@ class InterfaceObjectClient(base.ConfigClientBase):
             spec.ethifidx = topo.PortToEthIfIdx(port.Port)
             spec.id = 'Uplink%d' % spec.port
             spec.status = port.AdminState
-            spec.MACAddr = resmgr.DeviceMacAllocator.get()
-            ifobj = InterfaceObject(spec)
-            self.Objs.update({ifobj.InterfaceId: ifobj})
-            self.__uplinkl3ifs.update({ifobj.InterfaceId: ifobj})
+            for ifspec in iflist:
+                if ifspec.portid == port.Port:
+                    if (hasattr(ifspec, 'macaddress')):
+                        spec.MACAddr = ifspec.macaddress
+                    else:
+                        spec.MACAddr = resmgr.DeviceMacAllocator.get()
+                    spec.vpcid = parent.VPCId
+                    ifobj = InterfaceObject(spec, ifspec, node=node)
+                    self.Objs[node].update({ifobj.InterfaceId: ifobj})
+                    self.__uplinkl3ifs[node].update({ifobj.InterfaceId: ifobj})
 
-        if self.__uplinkl3ifs:
-            self.__uplinkl3ifs_iter = utils.rrobiniter(self.__uplinkl3ifs.values())
+        if self.__uplinkl3ifs[node]:
+            logger.info(" In uplinkl3ifs generate-objects node %s size %d" % (node, len(self.__uplinkl3ifs[node])))
+            self.__uplinkl3ifs_iter[node] = utils.rrobiniter(self.__uplinkl3ifs[node].values())
         return
 
-    def GenerateObjects(self, topospec):
+    def GenerateObjects(self, node, parent, topospec):
         if utils.IsInterfaceSupported() is False:
             return
-        iflist = getattr(topospec, 'interface', None)
-        if iflist:
-            hostifspec = getattr(iflist, 'host', None)
-            self.__generate_host_interfaces(hostifspec)
+        hostifspec = getattr(topospec, 'hostinterface', None)
+        if hostifspec:
+            self.__generate_host_interfaces(node, hostifspec)
+            return
+        iflist = getattr(topospec, 'interface', [])
+        #if iflist:
+        #    hostifspec = getattr(iflist, 'host', None)
+        #    self.__generate_host_interfaces(node, hostifspec)
         if utils.IsL3InterfaceSupported():
             # TODO: move these under underlay VPC
             # generate l3 if for uplink interface
-            self.__generate_l3_uplink_interfaces()
+            self.__generate_l3_uplink_interfaces(node, parent, iflist)
         return
 
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
+    def CreateObjects(self, node):
+        cookie = utils.GetBatchCookie(node)
         if utils.IsL3InterfaceSupported():
             # create l3 if for uplink interface
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs.values()))
-            api.client.Create(api.ObjectTypes.INTERFACE, msgs)
+            logger.info(" Interface createObjects node %s: count %d" % (node, len(self.__uplinkl3ifs[node])))
+            logger.info("Creating L3 interface Objects in agent")
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs[node].values()))
+            api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
         return
 
-    def ReadObjects(self):
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(api.ObjectTypes.INTERFACE, [msg])
-        result = self.ValidateObjects(resp)
+    def ReadObjects(self, node):
+        msg = self.GetGrpcReadAllMessage(node)
+        resp = api.client[node].Get(api.ObjectTypes.INTERFACE, [msg])
+        result = self.ValidateObjects(resp, node)
         if result is False:
             logger.critical("INTERFACE object validation failed!!!")
             assert(0)
         return
 
-    def ValidateObjects(self, getResp):
+    def ValidateObjects(self, getResp, node):
         if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
@@ -257,7 +278,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 return False
             for resp in obj.Response:
                 spec = resp.Spec
-                inf = self.GetInterfaceObject(spec.Id)
+                inf = self.GetInterfaceObject(node, spec.Id)
                 if inf is not None:
                     if not utils.ValidateObject(inf, resp):
                         logger.error("INTERFACE validation failed for ", resp.Spec)

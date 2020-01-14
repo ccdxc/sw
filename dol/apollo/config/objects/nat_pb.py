@@ -15,8 +15,8 @@ import types_pb2 as types_pb2
 import nat_pb2 as nat_pb2
 
 class NatPbObject(base.ConfigObjectBase):
-    def __init__(self, parent, addr, port_lo, port_hi, proto, addr_type):
-        super().__init__(api.ObjectTypes.NAT_PB)
+    def __init__(self, node, parent, addr, port_lo, port_hi, proto, addr_type):
+        super().__init__(api.ObjectTypes.NAT_PB, node)
         self.Id = next(resmgr.NatPoolIdAllocator)
         self.GID('NatPortBlock%d'%self.Id)
         self.VPC = parent
@@ -65,7 +65,7 @@ class NatPbObjectClient(base.ConfigClientBase):
         if yaml: return int(spec['id'])
         return int(spec.Id)
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         nat_spec = vpc_spec_obj.nat
         for i in range(nat_spec.count):
             if nat_spec.addrtype == 'PUBLIC_AND_SERVICE':
@@ -84,23 +84,23 @@ class NatPbObjectClient(base.ConfigClientBase):
             port_lo, port_hi = resmgr.GetNatPoolPortRange()
             for proto in protos:
                 if addr_internet:
-                    obj = NatPbObject(parent, addr_internet, port_lo, \
+                    obj = NatPbObject(node, parent, addr_internet, port_lo, \
                         port_hi, proto, utils.NAT_ADDR_TYPE_PUBLIC)
-                    self.Objs.update({obj.Id : obj})
+                    self.Objs[node].update({obj.Id : obj})
                 if addr_infra:
-                    obj = NatPbObject(parent, addr_internet, port_lo, \
+                    obj = NatPbObject(node, parent, addr_internet, port_lo, \
                         port_hi, proto, utils.NAT_ADDR_TYPE_SERVICE)
-                    self.Objs.update({obj.Id : obj})
+                    self.Objs[node].update({obj.Id : obj})
 
-    def PdsctlRead(self):
+    def PdsctlRead(self, node):
         # pdsctl show not supported for nat port blocks
         return
 
-    def GrpcRead(self):
+    def GrpcRead(self, node):
         # grpc read not supported for nat port blocks
         return
 
-    def ValidateGrpcRead(self, getResp):
+    def ValidateGrpcRead(self, node, getResp):
         # read not supported, return true for now
         return True
 

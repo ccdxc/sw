@@ -15,8 +15,8 @@ import types_pb2 as types_pb2
 
 
 class MirrorSessionObject(base.ConfigObjectBase):
-    def __init__(self, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
-        super().__init__(api.ObjectTypes.MIRROR)
+    def __init__(self, node, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
+        super().__init__(api.ObjectTypes.MIRROR, node)
         self.Id = next(resmgr.MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
 
@@ -114,28 +114,28 @@ class MirrorSessionObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.MIRROR, resmgr.MAX_MIRROR)
         return
 
-    def GetMirrorObject(self, mirrorid):
-        return self.GetObjectByKey(mirrorid)
+    def GetMirrorObject(self, node, mirrorid):
+        return self.GetObjectByKey(node, mirrorid)
 
-    def GenerateObjects(self, mirrorsessionspec):
+    def GenerateObjects(self, node, mirrorsessionspec):
         def __add_mirror_session(msspec):
             spantype = msspec.spantype
             snaplen = msspec.snaplen
             if msspec.spantype == "RSPAN":
                 interface = msspec.interface
                 vlanid = msspec.vlanid
-                obj = MirrorSessionObject(spantype, snaplen, interface, vlanid, 0, 0, 0, 0, 0)
+                obj = MirrorSessionObject(node, spantype, snaplen, interface, vlanid, 0, 0, 0, 0, 0)
             elif msspec.spantype == "ERSPAN":
                 vpcid = msspec.vpcid
                 dscp = msspec.dscp
                 tunnel_id = msspec.tunnelid
-                tunobj = tunnel.client.GetTunnelObject(tunnel_id)
+                tunobj = tunnel.client.GetTunnelObject(node, tunnel_id)
                 srcip = ipaddress.ip_address(msspec.srcip)
                 dstip = tunobj.RemoteIP
-                obj = MirrorSessionObject(spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip, tunnel_id)
+                obj = MirrorSessionObject(node, spantype, snaplen, 0, 0, vpcid, dscp, srcip, dstip, tunnel_id)
             else:
                 assert(0)
-            self.Objs.update({obj.Id: obj})
+            self.Objs[node].update({obj.Id: obj})
 
         if not hasattr(mirrorsessionspec, 'mirror'):
             return

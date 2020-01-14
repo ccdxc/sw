@@ -7,6 +7,7 @@ from scapy.layers.l2 import Dot1Q
 import time
 import yaml
 from collections import OrderedDict
+import os
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
@@ -160,7 +161,7 @@ def ValidateCreate(obj, resps):
             obj.Show()
     return
 
-def ValidateRead(obj, resps):
+def ValidateRead(obj, resps, expApiStatus=types_pb2.API_STATUS_OK):
     if IsDryRun(): return
     # set the appropriate expected status
     if obj.IsHwHabitant():
@@ -209,9 +210,9 @@ def ValidateUpdate(obj, resps):
 def LoadYaml(cmdoutput):
     return yaml.load(cmdoutput, Loader=yaml.FullLoader)
 
-def GetBatchCookie():
+def GetBatchCookie(node):
     batchClient = EzAccessStore.GetBatchClient()
-    obj = batchClient.Objects()
+    obj = batchClient.GetObjectByKey(node)
     return obj.GetBatchCookie()
 
 def InformDependents(dependee, cbFn):
@@ -229,35 +230,36 @@ def CreateObject(obj):
         logger.info("Already restored %s" % (obj))
         return
     batchClient = EzAccessStore.GetBatchClient()
-
-    def RestoreObj(robj):
+    
+    def RestoreObj(robj, node):
         logger.info("Recreating object %s" % (robj))
-        batchClient.Start()
-        cookie = GetBatchCookie()
+        batchClient.Start(node)
+        cookie = GetBatchCookie(node)
         msg = robj.GetGrpcCreateMessage(cookie)
-        resps = api.client.Create(robj.ObjType, [msg])
+        resps = api.client[node].Create(robj.ObjType, [msg])
         ValidateCreate(robj, resps)
-        batchClient.Commit()
+        batchClient.Commit(node)
         InformDependents(robj, 'RestoreNotify')
 
     # create from top to bottom
-    RestoreObj(obj);
+    RestoreObj(obj, obj.Node);
     for childObj in obj.Children:
         CreateObject(childObj)
 
-def ReadObject(obj):
+def ReadObject(obj, expRetCode):
     msg = obj.GetGrpcReadMessage()
-    resps = api.client.Get(obj.ObjType, [msg])
-    return ValidateRead(obj, resps)
+    resps = api.client[obj.Node].Get(obj.ObjType, [msg])
+    return ValidateRead(obj, resps, expRetCode)
 
 def UpdateObject(obj):
     logger.info("Updating object %s" % (obj))
+    node = obj.Node
     batchClient = EzAccessStore.GetBatchClient()
-    batchClient.Start()
-    cookie = GetBatchCookie()
+    batchClient.Start(node)
+    cookie = GetBatchCookie(node)
     msg = obj.GetGrpcUpdateMessage(cookie)
-    resps = api.client.Update(obj.ObjType, [msg])
-    batchClient.Commit()
+    resps = api.client[node].Update(obj.ObjType, [msg])
+    batchClient.Commit(node)
     ValidateUpdate(obj, resps)
     return
 
@@ -266,22 +268,22 @@ def DeleteObject(obj):
         logger.info("Already deleted %s" % (obj))
         return
     batchClient = EzAccessStore.GetBatchClient()
-
-    def DelObj(dobj):
+    
+    def DelObj(dobj, node):
         InformDependents(dobj, 'DeleteNotify')
         logger.info("Deleting object %s" % (dobj))
-        batchClient.Start()
-        cookie = GetBatchCookie()
+        batchClient.Start(node)
+        cookie = GetBatchCookie(node)
         msg = dobj.GetGrpcDeleteMessage(cookie)
-        resps = api.client.Delete(dobj.ObjType, [msg])
-        batchClient.Commit()
+        resps = api.client[node].Delete(dobj.ObjType, [msg])
+        batchClient.Commit(node)
         ValidateDelete(dobj, resps)
 
     # Delete from bottom to top
     for childObj in obj.Children:
         DeleteObject(childObj)
     # Delete the final
-    DelObj(obj)
+    DelObj(obj, obj.Node)
     return
 
 def GetIPProtoByName(protoname):
@@ -639,3 +641,7 @@ class rrobiniter:
                 continue
     def size(self):
         return self.size
+
+def IsDol():
+    return True
+    #return os.environ.get("TEST_TYPE", "") == "DOL"

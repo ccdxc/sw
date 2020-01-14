@@ -6,6 +6,7 @@ import time
 import infra.common.parser as parser
 import infra.common.timeprofiler as timeprofiler
 
+from apollo.config.store import EzAccessStore
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as agentapi
 
@@ -48,100 +49,99 @@ def __initialize_object_info():
     ObjectInfo[agentapi.ObjectTypes.NAT_PB] = nat_pb
     return
 
-def __validate_object_config(objid):
+def __validate_object_config(node, objid):
     if ObjectInfo[objid] is None:
         return
     obj = ObjectInfo[objid]
-    res, err = obj.client.IsValidConfig()
+    res, err = obj.client.IsValidConfig(node)
     if not res:
         logger.error("ERROR: %s" %(err))
         sys.exit(1)
     return
 
-def __validate():
+def __validate(node):
     # Validate objects are generated within their scale limit
     for objid in range(agentapi.ObjectTypes.MAX):
-        __validate_object_config(objid)
+        __validate_object_config(node, objid)
     return
 
-def __generate(topospec):
+def __generate(node, topospec):
     # Generate Batch Object
-    batch.client.GenerateObjects(topospec)
+    batch.client.GenerateObjects(node, topospec)
 
     # Generate Device Configuration
-    device.client.GenerateObjects(topospec)
+    device.client.GenerateObjects(node, topospec)
 
     # Generate Port Configuration
-    port.client.GenerateObjects(topospec)
+    port.client.GenerateObjects(node, topospec)
 
     # Generate Interface Configuration
-    interface.client.GenerateObjects(topospec)
+    interface.client.GenerateObjects(node, None, topospec)
 
     # Generate Mirror session configuration before vnic
-    mirror.client.GenerateObjects(topospec)
+    mirror.client.GenerateObjects(node, topospec)
 
     # Generate VPC configuration
-    vpc.client.GenerateObjects(topospec)
+    vpc.client.GenerateObjects(node, topospec)
 
     # Generate DHCP configuration
-    dhcp_relay.client.GenerateObjects(topospec)
+    dhcp_relay.client.GenerateObjects(node, topospec)
 
     # Validate configuration
-    __validate()
+    __validate(node)
 
     return
 
-def __create():
+def __create(node):
     logger.info("Creating objects in Agent")
     # Start the Batch
-    batch.client.Start()
+    batch.client.Start(node)
 
     # Create Device Object
-    device.client.CreateObjects()
+    device.client.CreateObjects(node)
 
     # Create Interface Objects
-    interface.client.CreateObjects()
+    interface.client.CreateObjects(node)
 
     # Create VPC Objects
-    vpc.client.CreateObjects()
+    vpc.client.CreateObjects(node)
 
     # Commit the Batch
-    batch.client.Commit()
+    batch.client.Commit(node)
 
     # Start separate batch for mirror
     # so that mapping gets programmed before mirror
-    batch.client.Start()
+    batch.client.Start(node)
 
     # Create Mirror session objects
-    mirror.client.CreateObjects()
+    mirror.client.CreateObjects(node)
 
     # Create DHCP Relay Objects
-    dhcp_relay.client.CreateObjects()
+    dhcp_relay.client.CreateObjects(node)
 
     # Commit the Batch
-    batch.client.Commit()
+    batch.client.Commit(node)
     return
 
-def __read():
+def __read(node):
     # Read all objects
     logger.info("Reading objects via Agent")
-    interface.client.ReadObjects()
-    device.client.ReadObjects()
-    vpc.client.ReadObjects()
-    subnet.client.ReadObjects()
-    vnic.client.ReadObjects()
-    tunnel.client.ReadObjects()
-    nexthop.client.ReadObjects()
-    mirror.client.ReadObjects()
-    meter.client.ReadObjects()
-    policy.client.ReadObjects()
-    tag.client.ReadObjects()
-    route.client.ReadObjects()
-    #dhcp_relay.client.ReadObjects()
-    nat_pb.client.ReadObjects()
-    # TODO: get all NOT supported
-    # lmapping.client.ReadObjects()
-    # rmapping.client.ReadObjects()
+    interface.client.ReadObjects(node)
+    device.client.ReadObjects(node)
+    vpc.client.ReadObjects(node)
+    subnet.client.ReadObjects(node)
+    vnic.client.ReadObjects(node)
+    tunnel.client.ReadObjects(node)
+    nexthop.client.ReadObjects(node)
+    mirror.client.ReadObjects(node)
+    meter.client.ReadObjects(node)
+    policy.client.ReadObjects(node)
+    tag.client.ReadObjects(node)
+    route.client.ReadObjects(node)
+    # dhcp_relay.client.ReadObjects(node)
+    nat_pb.client.ReadObjects(node)
+    # lmapping.client.ReadObjects(node)
+    # rmapping.client.ReadObjects(node)
     return
 
 def __get_topo_file():
@@ -173,19 +173,26 @@ def __get_topo_spec():
 
 def Main():
     timeprofiler.ConfigTimeProfiler.Start()
-    agentapi.Init()
-
-    resmgr.Init()
 
     logger.info("Initializing object info")
     __initialize_object_info()
 
     topospec = __get_topo_spec()
-    __generate(topospec)
+    if hasattr(topospec, "dutnode"):
+        EzAccessStore.SetDUTNode(topospec.dutnode)
+    
+    for node in topospec.node:
+        agentapi.Init(node.id)
+    resmgr.Init()
 
-    __create()
+    for node in topospec.node:
+        __generate(node.id, node)
 
-    __read()
+        logger.info("Creating objects in Agent for node ", node.id)
+        __create(node.id)
+
+        logger.info("Reading objects via Agent for node ", node.id)
+        __read(node.id)
 
     timeprofiler.ConfigTimeProfiler.Stop()
 

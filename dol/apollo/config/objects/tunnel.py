@@ -14,10 +14,13 @@ import apollo.config.objects.base as base
 import tunnel_pb2 as tunnel_pb2
 
 class TunnelObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, local):
-        super().__init__(api.ObjectTypes.TUNNEL)
+    def __init__(self, node, parent, spec, local):
+        super().__init__(api.ObjectTypes.TUNNEL, node)
         self.__spec = spec
-        self.Id = next(resmgr.TunnelIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.Id = spec.id
+        else:
+            self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
@@ -57,16 +60,29 @@ class TunnelObject(base.ConfigObjectBase):
                 self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.stack):
-                    self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                    if getattr(spec, 'dstaddr', None) != None:
+                        self.RemoteIPAddr = ipaddress.IPv4Address(spec.dstaddr)
+                    else:
+                        self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 else:
                     self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
                 if spec.type == 'underlay':
                     self.__nhtype = topo.NhType.UNDERLAY
+                    self.NEXTHOP = None
+                    if hasattr(spec, 'nhid'):
+                        self.NexthopId = spec.nhid
+                    else:
+                        self.NexthopId = None
                 elif spec.type == 'underlay-ecmp':
                     self.__nhtype = topo.NhType.UNDERLAY_ECMP
-        self.RemoteIP = str(self.RemoteIPAddr) # for testspec
-        self.MACAddr = resmgr.TepMacAllocator.get()
+                    self.NEXTHOPGROUP = None
+        if utils.IsDol():
+            self.RemoteIP = str(self.RemoteIPAddr) # for testspec
+        if getattr(spec, 'macaddress', None) != None:
+            self.MACAddr = spec.macaddress
+        else:
+            self.MACAddr = resmgr.TepMacAllocator.get()
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
@@ -171,7 +187,7 @@ class TunnelObject(base.ConfigObjectBase):
             return False
         return True
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - tunnel
         dependee - nexthop, & nexthop_group
@@ -257,23 +273,27 @@ class TunnelObjectClient(base.ConfigClientBase):
         if yaml: return utils.GetYamlSpecAttr(spec, 'id')
         return int(spec.Id)
 
-    def GetTunnelObject(self, tunnelid):
-        return self.GetObjectByKey(tunnelid)
+    def GetTunnelObject(self, node, tunnelid):
+        return self.GetObjectByKey(node, tunnelid)
 
-    def AssociateObjects(self):
+    def AssociateObjects(self, node):
         logger.info("Filling nexthops")
-        for tun in self.Objects():
+        for tun in self.Objects(node):
             if tun.IsUnderlay():
-                nhObj = resmgr.UnderlayNHAllocator.rrnext()
-                tun.NEXTHOP = nhObj
-                tun.NexthopId = nhObj.NexthopId
-                logger.info("Linking %s - %s" % (tun, nhObj))
-                nhObj.AddDependent(tun)
+                if tun.NexthopId == None:
+                    nhObj = resmgr.UnderlayNHAllocator.rrnext()
+                    tun.NEXTHOP = nhObj
+                    tun.NexthopId = nhObj.NexthopId
+                    logger.info("Linking %s - %s" % (tun, nhObj))
+                    nhObj.AddDependent(tun)
+                else:
+                    logger.info("Linking Tunnel%d - Nexthop%d" %
+                                (tun.Id, tun.NexthopId))
         return
 
-    def FillUnderlayNhGroups(self):
+    def FillUnderlayNhGroups(self, node):
         logger.info("Filling nexthop groups")
-        for tun in self.Objects():
+        for tun in self.Objects(node):
             if tun.IsUnderlayEcmp():
                 nhGroupObj = resmgr.UnderlayNhGroupAllocator.rrnext()
                 tun.NEXTHOPGROUP = nhGroupObj
@@ -283,7 +303,7 @@ class TunnelObjectClient(base.ConfigClientBase):
         return
 
 
-    def GenerateObjects(self, parent, tunnelspec):
+    def GenerateObjects(self, node, parent, tunnelspec):
         def __isTunFeatureSupported(tunnel_type):
             if tunnel_type == 'service':
                 return utils.IsServiceTunnelSupported()
@@ -300,9 +320,9 @@ class TunnelObjectClient(base.ConfigClientBase):
             if not __isTunFeatureSupported(t.type):
                 continue
             for c in range(t.count):
-                obj = TunnelObject(parent, t, False)
-                self.Objs.update({obj.Id: obj})
-        EzAccessStore.SetTunnels(self.Objects())
+                obj = TunnelObject(node, parent, t, False)
+                self.Objs[node].update({obj.Id: obj})
+        EzAccessStore.SetTunnels(self.Objects(node))
         resmgr.CreateInternetTunnels()
         resmgr.CreateVnicTunnels()
         resmgr.CollectSvcTunnels()

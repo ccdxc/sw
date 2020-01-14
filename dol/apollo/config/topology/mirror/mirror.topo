@@ -2,157 +2,160 @@
 meta:
     id: TOPO_MIRROR
 
-uplink:
-    - entry:
-        id      : uplink0
-        port    : 1
-        mode    : host
-        status  : UP
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : host
+            status  : UP
 
-    - entry:
-        id      : uplink1
-        port    : 2
-        mode    : switch
-        status  : UP
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : switch
+            status  : UP
 
-device:
-    ipaddress   : None # Taken from resmgr
-    gateway     : None # Taken from resmgr
-    macaddress  : macaddr/0002.0100.0001
-    encap       : vxlan # vxlan or mplsodup
-    tunnel      :
-        - count : 16
-          type  : internet-gateway
-          nat   : true
-        - count : 16
-          type  : internet-gateway
-        - count : 32
-          type  : workload
+    device:
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        macaddress  : macaddr/0002.0100.0001
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : internet-gateway
+              nat   : true
+            - count : 16
+              type  : internet-gateway
+            - count : 32
+              type  : workload
 
-mirror:
-    - spantype   : 'RSPAN' # span type RSPAN or ERSPAN
-      snaplen    : 128 # max packet length gets spanned
-      interface  : 285278209 #destination or collector interface eth 1/1
-      vlanid     : 10 # rspan vlanid
+    mirror:
+        - spantype   : 'RSPAN' # span type RSPAN or ERSPAN
+          snaplen    : 128 # max packet length gets spanned
+          interface  : 285278209 #destination or collector interface eth 1/1
+          vlanid     : 10 # rspan vlanid
 
-    # RSPAN session without truncate (snaplen < packet size)
-    - spantype   : 'RSPAN'
-      snaplen    : 1
-      interface  : 285278209
-      vlanid     : 20
+        # RSPAN session without truncate (snaplen < packet size)
+        - spantype   : 'RSPAN'
+          snaplen    : 1
+          interface  : 285278209
+          vlanid     : 20
 
-    # RSPAN session without truncate (snaplen > packet size)
-    - spantype   : 'RSPAN'
-      snaplen    : 4294967295
-      interface  : 285278209
-      vlanid     : 30
+        # RSPAN session without truncate (snaplen > packet size)
+        - spantype   : 'RSPAN'
+          snaplen    : 4294967295
+          interface  : 285278209
+          vlanid     : 30
 
-    # RSPAN session without truncate (snaplen == packet size)
-    - spantype   : 'RSPAN'
-      snaplen    : 130
-      interface  : 285278209
-      vlanid     : 40
+        # RSPAN session without truncate (snaplen == packet size)
+        - spantype   : 'RSPAN'
+          snaplen    : 130
+          interface  : 285278209
+          vlanid     : 40
 
-    - spantype   : 'RSPAN'
-      snaplen    : 128
-      interface  : 285343745 #destination or collector interface eth 1/2
-      vlanid     : 50
+        - spantype   : 'RSPAN'
+          snaplen    : 128
+          interface  : 285343745 #destination or collector interface eth 1/2
+          vlanid     : 50
 
-    - spantype   : 'RSPAN'
-      snaplen    : 128
-      interface  : 285343745
-      vlanid     : 60
+        - spantype   : 'RSPAN'
+          snaplen    : 128
+          interface  : 285343745
+          vlanid     : 60
 
-    # ERSPAN session to underlay vpc with truncate
-    - spantype   : 'ERSPAN'
-      snaplen    : 1
-      dscp       : 0
-      vpcid      : 1
-      tunnelid   : 3
-      # TODO: Check why srcip is configurable. Until then hardcoding device ip
-      srcip      : '172.16.0.1'
+        # ERSPAN session to underlay vpc with truncate
+        - spantype   : 'ERSPAN'
+          snaplen    : 1
+          dscp       : 0
+          vpcid      : 1
+          tunnelid   : 3
+          # TODO: Check why srcip is configurable. Until then hardcoding device ip
+          srcip      : '172.16.0.1'
 
-    # ERSPAN session to underlay vpc without truncate
-    - spantype   : 'ERSPAN'
-      snaplen    : 4294967295
-      dscp       : 0
-      vpcid      : 1
-      tunnelid   : 3
-      srcip      : '172.16.0.1'
+        # ERSPAN session to underlay vpc without truncate
+        - spantype   : 'ERSPAN'
+          snaplen    : 4294967295
+          dscp       : 0
+          vpcid      : 1
+          tunnelid   : 3
+          srcip      : '172.16.0.1'
 
-vpc:
-    - stack  : dual # dual, ipv4 , ipv6
-      count : 1 # only one underlay vpc
-      type  : underlay
+    vpc:
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1 # only one underlay vpc
+          type  : underlay
 
-    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
-    - stack  : dual
-      count : 1
-      type  : tenant
-      subnet:
-        - count     : 20
-          v4prefixlen : 24
-          v6prefixlen : 64
-          vnic:
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
-              public  : true
-              txmirror :
-                - msid    : 1
-                - msid    : 2
-                - msid    : 3
-                - msid    : 4
-                - msid    : 5
-                - msid    : 6
-                - msid    : 7
-                - msid    : 8
-              rxmirror :
-                - msid    : 1
-                - msid    : 2
-                - msid    : 3
-                - msid    : 4
-                - msid    : 5
-                - msid    : 6
-                - msid    : 7
-                - msid    : 8
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual
+          count : 1
+          type  : tenant
+          subnet:
+            - count     : 20
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+                  txmirror :
+                    - msid    : 1
+                    - msid    : 2
+                    - msid    : 3
+                    - msid    : 4
+                    - msid    : 5
+                    - msid    : 6
+                    - msid    : 7
+                    - msid    : 8
+                  rxmirror :
+                    - msid    : 1
+                    - msid    : 2
+                    - msid    : 3
+                    - msid    : 4
+                    - msid    : 5
+                    - msid    : 6
+                    - msid    : 7
+                    - msid    : 8
 
-            - count   : 1             # VNICs per subnet
-              ipcount : 2             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
-              public  : true
-              txmirror :
-                - msid    : 5
-              rxmirror :
-                - msid    : 8
+                - count   : 1             # VNICs per subnet
+                  ipcount : 2             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+                  txmirror :
+                    - msid    : 5
+                  rxmirror :
+                    - msid    : 8
 
-            - count   : 1             # VNICs per subnet
-              ipcount : 2             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
-              public  : true
+                - count   : 1             # VNICs per subnet
+                  ipcount : 2             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
 
-          rmap:                       # Remote IP mappings per subnet
-            - count : 2
-        - count     : 2
-          v4prefixlen : 28
-          v6prefixlen : 96
-          rmap:                       # Remote IP mappings per subnet
-            - count : 2
+              rmap:                       # Remote IP mappings per subnet
+                - count : 2
+            - count     : 2
+              v4prefixlen : 28
+              v6prefixlen : 96
+              rmap:                       # Remote IP mappings per subnet
+                - count : 2
 
-      routetbl:
-             - type: base
-               routetype: adjacent
-               count : 20
-               v4base: '65.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 10
-               v6base: '2001::\65'
-               v6prefixlen : 96
-               nv6routes   : 10
-               v4routes:
-               v6routes:
+          routetbl:
+                 - type: base
+                   routetype: adjacent
+                   count : 20
+                   v4base: '65.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 10
+                   v6base: '2001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
 
-      policy:
-              - type : specific
-                policytype : default
-                direction : bidir
+          policy:
+                  - type : specific
+                    policytype : default
+                    direction : bidir

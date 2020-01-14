@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from collections import defaultdict
 
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
@@ -14,10 +15,13 @@ import apollo.config.objects.nexthop as nexthop
 import nh_pb2 as nh_pb2
 
 class NexthopGroupObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec):
-        super().__init__(api.ObjectTypes.NEXTHOPGROUP)
+    def __init__(self, node, parent, spec):
+        super().__init__(api.ObjectTypes.NEXTHOPGROUP, node)
         ################# PUBLIC ATTRIBUTES OF NEXTHOPGROUP OBJECT ############
-        self.Id = next(resmgr.NexthopGroupIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.Id = spec.id
+        else:
+            self.Id = next(resmgr.NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
         self.Nexthops = {}
         self.DualEcmp = utils.IsDualEcmp(spec)
@@ -124,10 +128,10 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
             return False
 
         super().__init__(api.ObjectTypes.NEXTHOPGROUP, resmgr.MAX_NEXTHOPGROUP)
-        self.__v4objs = {}
-        self.__v6objs = {}
-        self.__v4iter = {}
-        self.__v6iter = {}
+        self.__v4objs = defaultdict(dict)
+        self.__v6objs = defaultdict(dict)
+        self.__v4iter = defaultdict(dict)
+        self.__v6iter = defaultdict(dict)
         self.__num_nhgs_per_vpc = []
         self.__supported = __isObjSupported()
         return
@@ -136,11 +140,14 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         if yaml: return utils.GetYamlSpecAttr(spec, 'id')
         return int(spec.Id)
 
+    def GetNexthopGroupObject(self, node, nexthopid):
+        return self.Objs[node].get(nexthopid, None)
+
     def GetNumNextHopGroupsPerVPC(self):
         return self.__num_nhgs_per_vpc
 
-    def CreateAllocator(self):
-        nh_groups = self.Objects()
+    def CreateAllocator(self, node):
+        nh_groups = self.Objects(node)
         if not nh_groups:
             return
         EzAccessStore.SetNexthopgroups(nh_groups)
@@ -148,9 +155,9 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         resmgr.CreateOverlayNhGroupAllocator()
         resmgr.CreateDualEcmpNhGroupAllocator()
 
-    def AssociateObjects(self):
+    def AssociateObjects(self, node):
         logger.info("Filling nexthops")
-        nh_groups = self.Objects()
+        nh_groups = self.Objects(node)
         for nhg in nh_groups:
             logger.info("NexthopGroup%d - %d nexthops" % (nhg.Id, nhg.NumNexthops))
             for i in range(nhg.NumNexthops):
@@ -163,17 +170,17 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
                         nhg.Nexthops[i] = resmgr.OverlayNHAllocator.rrnext()
                 logger.info("   Nexthop%d" % (nhg.Nexthops[i].NexthopId))
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         if not self.__supported:
             return
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4objs[vpcid] = []
-        self.__v6objs[vpcid] = []
-        self.__v4iter[vpcid] = None
-        self.__v6iter[vpcid] = None
+        self.__v4objs[node][vpcid] = []
+        self.__v6objs[node][vpcid] = []
+        self.__v4iter[node][vpcid] = None
+        self.__v6iter[node][vpcid] = None
 
         nhg_spec = getattr(vpc_spec_obj, 'nexthop-group', None)
         if nhg_spec == None:
@@ -182,17 +189,32 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
 
         for nhg_spec_obj in nhg_spec:
             for c in range(nhg_spec_obj.count):
-                obj = NexthopGroupObject(parent, nhg_spec_obj)
-                self.Objs.update({obj.Id: obj})
+                obj = NexthopGroupObject(node, parent, nhg_spec_obj)
+                self.Objs[node].update({obj.Id: obj})
                 if isV4Stack:
-                    self.__v4objs[vpcid].append(obj)
+                    self.__v4objs[node][vpcid].append(obj)
                 if isV6Stack:
-                    self.__v6objs[vpcid].append(obj)
-        if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
-        if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+                    self.__v6objs[node][vpcid].append(obj)
+        if len(self.__v4objs[node][vpcid]):
+            self.__v4iter[node][vpcid] = utils.rrobiniter(self.__v4objs[node][vpcid])
+        if len(self.__v6objs[node][vpcid]):
+            self.__v6iter[node][vpcid] = utils.rrobiniter(self.__v6objs[node][vpcid])
         self.__num_nhgs_per_vpc.append(nhg_spec_obj.count)
+        return
+
+    def CreateObjects(self, node):
+        cookie = utils.GetBatchCookie(node)
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
+        api.client[node].Create(api.ObjectTypes.NEXTHOPGROUP, msgs)
+        return
+
+    def GetGrpcReadAllMessage(self, node):
+        grpcmsg = nh_pb2.NhgroupGetRequest()
+        return grpcmsg
+
+    def ReadObjects(self, node):
+        msg = self.GetGrpcReadAllMessage(node)
+        api.client[node].Get(api.ObjectTypes.NEXTHOPGROUP, [msg])
         return
 
 client = NexthopGroupObjectClient()

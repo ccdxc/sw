@@ -9,16 +9,23 @@ import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
+import ipaddress
 
 class RemoteMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, tunobj, ipversion, count):
-        super().__init__(api.ObjectTypes.MAPPING)
+    def __init__(self, node, parent, spec, tunobj, ipversion, count):
+        super().__init__(api.ObjectTypes.MAPPING, node)
         parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
-        self.MappingId = next(resmgr.RemoteMappingIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.MappingId = spec.id
+        else:
+            self.MappingId = next(resmgr.RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
-        self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
+        if (hasattr(spec, 'rmacaddr')):
+            self.MACAddr = spec.rmacaddr
+        else:
+            self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
         self.TunID = tunobj.Id
         self.HasDefaultRoute = False
         if tunobj.IsWorkload():
@@ -34,7 +41,10 @@ class RemoteMappingObject(base.ConfigObjectBase):
             if self.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V6RouteTable.HasDefaultRoute
         else:
-            self.IPAddr = parent.AllocIPv4Address();
+            if getattr(spec, 'ripaddr', None) != None:
+                self.IPAddr = ipaddress.IPv4Address(spec.ripaddr)
+            else:
+                self.IPAddr = parent.AllocIPv4Address();
             self.AddrFamily = 'IPV4'
             if self.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
@@ -93,7 +103,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
             return False
         return True
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - remote mapping
         dependee - tunnel
@@ -136,11 +146,11 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.MAPPING)
         return
 
-    def PdsctlRead(self):
+    def PdsctlRead(self, node):
         # pdsctl show not supported for remote mapping
         return
 
-    def GenerateObjects(self, parent, subnet_spec_obj):
+    def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
             return
 
@@ -158,22 +168,22 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
             while c < rmap_spec_obj.count:
                 tunobj = tunnelAllocator.rrnext()
                 if isV6Stack:
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
-                    self.Objs.update({obj.MappingId: obj})
+                    obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_6, v6c)
+                    self.Objs[node].update({obj.MappingId: obj})
                     c = c + 1
                     v6c = v6c + 1
                 if c < rmap_spec_obj.count and isV4Stack:
-                    obj = RemoteMappingObject(parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c)
-                    self.Objs.update({obj.MappingId: obj})
+                    obj = RemoteMappingObject(node, parent, rmap_spec_obj, tunobj, utils.IP_VERSION_4, v4c)
+                    self.Objs[node].update({obj.MappingId: obj})
                     c = c + 1
                     v4c = v4c + 1
         return
 
 client = RemoteMappingObjectClient()
 
-def GetMatchingObjects(selectors):
+def GetMatchingObjects(selectors, node):
     objs = []
-    for obj in client.Objects():
+    for obj in client.Objects(node):
         if obj.IsFilterMatch(selectors) == True:
             objs.append(obj)
     return objs

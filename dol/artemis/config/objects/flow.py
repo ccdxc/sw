@@ -120,9 +120,10 @@ class FlowMapObjectHelper:
         assert (fwdmode == 'VNET' or fwdmode == 'IGW' or fwdmode == 'SVCTUN' or\
                 fwdmode == 'SVCTUN_REMOTE') == True
 
+        dutNode = EzAccessStore.GetDUTNode()
         if fwdmode == 'VNET':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
-                for robj in rmapping.GetMatchingObjects(rmapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
+                for robj in rmapping.GetMatchingObjects(rmapsel, dutNode):
 
                     # Ignore VPC-ID 1 , Reserved for substrate
                     if lobj.VNIC.SUBNET.VPC.VPCId == 1  or robj.SUBNET.VPC.VPCId == 1:
@@ -137,7 +138,7 @@ class FlowMapObjectHelper:
             return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
         elif fwdmode == 'IGW':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
@@ -147,7 +148,7 @@ class FlowMapObjectHelper:
             return utils.GetFilteredObjects(objs, selectors.maxlimits)
 
         elif fwdmode == 'SVCTUN' or fwdmode == 'SVCTUN_REMOTE':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 vpc = lobj.VNIC.SUBNET.VPC
                 if vpc.Nat46_pfx is not None:
                     for routetblobj in routetable.GetAllMatchingObjects(mapsel):

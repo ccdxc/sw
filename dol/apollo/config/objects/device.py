@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+import os
 
 from infra.common.logging import logger
 
@@ -16,8 +17,8 @@ import device_pb2 as device_pb2
 import types_pb2 as types_pb2
 
 class DeviceObject(base.ConfigObjectBase):
-    def __init__(self, spec):
-        super().__init__(api.ObjectTypes.DEVICE)
+    def __init__(self, node, spec):
+        super().__init__(api.ObjectTypes.DEVICE, node)
         self.SetSingleton(True)
         self.GID("Device1")
         self.stack = getattr(spec, 'stack', 'ipv4')
@@ -30,9 +31,18 @@ class DeviceObject(base.ConfigObjectBase):
         self.LearnAgeTimeout = getattr(spec, 'learningagetimeout', 300)
         self.OverlayRoutingEnabled = getattr(spec, 'overlayrouting', False)
         #TODO: based on stack, get ip & gw addr
-        self.IPAddr = next(resmgr.TepIpAddressAllocator)
-        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
-        self.MACAddr = resmgr.DeviceMacAllocator.get()
+        if getattr(spec, 'ipaddress', None) != None:
+            self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
+        else:
+            self.IPAddr = next(resmgr.TepIpAddressAllocator)
+        if getattr(spec, 'gateway', None) != None:
+            self.GatewayAddr = ipaddress.IPv4Address(spec.gateway)
+        else:
+            self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+        if (hasattr(spec, 'macaddress')):
+            self.MACAddr = spec.macaddress
+        else:
+            self.MACAddr = resmgr.DeviceMacAllocator.get()
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
         self.Mutable = utils.IsUpdateSupported()
@@ -41,7 +51,8 @@ class DeviceObject(base.ConfigObjectBase):
         self.__spec = spec
         self.DeriveOperInfo()
         self.Show()
-        tunnel.client.GenerateObjects(self, spec.tunnel)
+        if utils.IsDol():
+            tunnel.client.GenerateObjects(node, self, spec.tunnel)
         return
 
     def UpdateAttributes(self):
@@ -164,7 +175,7 @@ class DeviceObject(base.ConfigObjectBase):
 
     def GetDropStats(self):
         grpcmsg = types_pb2.Empty()
-        resp = api.client.Get(api.ObjectTypes.DEVICE, [ grpcmsg ])
+        resp = api.client[self.Node].Get(api.ObjectTypes.DEVICE, [ grpcmsg ])
         if resp != None:
             return resp[0]
         return None
@@ -174,39 +185,40 @@ class DeviceObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.DEVICE, resmgr.MAX_DEVICE)
         return
 
-    def GenerateObjects(self, topospec):
-        obj = DeviceObject(topospec.device)
-        self.Objs.update({0: obj})
+    def GenerateObjects(self, node, topospec):
+        obj = DeviceObject(node, topospec.device)
+        self.Objs[node].update({0: obj})
         EzAccessStore.SetDevice(obj)
         return
 
-    def CreateObjects(self):
-        super().CreateObjects()
+    def CreateObjects(self, node):
+        super().CreateObjects(node)
 
         # Create Nexthop group object before tunnel as tep impl looks up nhgroup
-        NhGroupClient.CreateObjects()
-        tunnel.client.CreateObjects()
+        if utils.IsDol():
+            NhGroupClient.CreateObjects(node)
+            tunnel.client.CreateObjects(node)
         return
 
-    def GetGrpcReadAllMessage(self):
+    def GetGrpcReadAllMessage(self, node):
         grpcmsg = types_pb2.Empty()
         return grpcmsg
 
-    def ValidateGrpcRead(self, getResp):
+    def ValidateGrpcRead(self, node, getResp):
         if utils.IsDryRun(): return True
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("GRPC get request failed for ", obj)
                 return False
             resp = obj.Response
-            device = self.GetObjectByKey(0)
+            device = self.GetObjectByKey(node, 0)
             if not utils.ValidateObject(device, resp):
                 logger.error("GRPC read validation failed for  ", obj)
                 device.Show()
                 return False
         return True
 
-    def ValidatePdsctlRead(self, ret, stdout):
+    def ValidatePdsctlRead(self, node, ret, stdout):
         if utils.IsDryRun(): return True
         if not ret:
             logger.error("pdsctl show cmd failed for ", self.ObjType)
@@ -217,7 +229,7 @@ class DeviceObjectClient(base.ConfigClientBase):
             yamlOp = utils.LoadYaml(op)
             if not yamlOp:
                 continue
-            device = self.GetObjectByKey(0)
+            device = self.GetObjectByKey(node, 0)
             resp = yamlOp['response']
             if not utils.ValidateObject(device, resp, yaml=True):
                 logger.error("pdsctl read validation failed for ", op)

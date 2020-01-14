@@ -10,8 +10,8 @@ import apollo.config.utils as utils
 import apollo.config.objects.base as base
 
 class DhcpRelayObject(base.ConfigObjectBase):
-    def __init__(self, vpc, serverip, agentip):
-        super().__init__(api.ObjectTypes.DHCPRELAY)
+    def __init__(self, node, vpc, serverip, agentip):
+        super().__init__(api.ObjectTypes.DHCPRELAY, node)
         self.Id = next(resmgr.DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
 
@@ -69,16 +69,16 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
         if yaml: return int(spec['id'])
         return int(spec.Id)
 
-    def GetDhcpRelayObject(self):
-        return self.GetObjectByKey(1)
+    def GetDhcpRelayObject(self, node):
+        return self.GetObjectByKey(node, 1)
 
-    def GenerateObjects(self, dhcpspec):
+    def GenerateObjects(self, node, dhcpspec):
         def __add_dhcp_relay_config(dhcpspec):
             vpcid = dhcpspec.vpcid
             serverip = ipaddress.ip_address(dhcpspec.serverip)
             agentip = ipaddress.ip_address(dhcpspec.agentip)
-            obj = DhcpRelayObject(vpcid, serverip, agentip)
-            self.Objs.update({obj.Id: obj})
+            obj = DhcpRelayObject(node, vpcid, serverip, agentip)
+            self.Objs[node].update({obj.Id: obj})
 
         if not hasattr(dhcpspec, 'dhcprelay'):
             return

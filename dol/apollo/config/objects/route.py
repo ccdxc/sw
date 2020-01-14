@@ -2,7 +2,7 @@
 import pdb
 import ipaddress
 import random
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from infra.common.logging import logger
 
@@ -63,17 +63,17 @@ class RouteObject():
         logger.info("     SNAT action %s" % (self.SNatAction.name))
 
 class RouteTableObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
-        super().__init__(api.ObjectTypes.ROUTE)
+    def __init__(self, node, parent, af, routes, routetype, tunobj, vpcpeerid, spec):
+        super().__init__(api.ObjectTypes.ROUTE, node)
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
             self.AddrFamily = 'IPV6'
-            self.NEXTHOP = NexthopClient.GetV6Nexthop(parent.VPCId)
+            self.NEXTHOP = NexthopClient.GetV6Nexthop(node, parent.VPCId)
         else:
             self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
-            self.NEXTHOP = NexthopClient.GetV4Nexthop(parent.VPCId)
+            self.NEXTHOP = NexthopClient.GetV4Nexthop(node, parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
         self.routes = routes
         self.TUNNEL = tunobj
@@ -139,9 +139,9 @@ class RouteTableObject(base.ConfigObjectBase):
             route.ipaddr = ipaddr
             if route.NextHopType == "nh":
                 if af == utils.IP_VERSION_4:
-                    nh = nexthop.client.GetV4Nexthop(self.VPCId)
+                    nh = nexthop.client.GetV4Nexthop(self.Node, self.VPCId)
                 else:
-                    nh = nexthop.client.GetV6Nexthop(self.VPCId)
+                    nh = nexthop.client.GetV6Nexthop(self.Node, self.VPCId)
                 route.NexthopId = nh.NexthopId
         return
 
@@ -186,7 +186,7 @@ class RouteTableObject(base.ConfigObjectBase):
             return False
         return True
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - route table
         dependee - vpc, tunnel, nexthop, & nexthop_group
@@ -200,13 +200,13 @@ class RouteTableObject(base.ConfigObjectBase):
                 # TODO: get VPC object
                 pass
             elif route.NextHopType == "tep":
-                tunnelObj = TunnelClient.GetObjectByKey(route.TunnelId)
+                tunnelObj = TunnelClient.GetObjectByKey(node, route.TunnelId)
                 dependees.append(tunnelObj)
             elif route.NextHopType == "nh":
-                nhObj = NexthopClient.GetObjectByKey(route.NexthopId)
+                nhObj = NexthopClient.GetObjectByKey(node, route.NexthopId)
                 dependees.append(nhObj)
             elif route.NextHopType == "nhg":
-                nhgObj = NexthopGroupClient.GetObjectByKey(route.NexthopGroupId)
+                nhgObj = NexthopGroupClient.GetObjectByKey(node, route.NexthopGroupId)
                 dependees.append(nhgObj)
         return dependees
 
@@ -301,14 +301,14 @@ class RouteObjectClient(base.ConfigClientBase):
         def __isObjSupported():
             return utils.IsRouteTableSupported()
         super().__init__(api.ObjectTypes.ROUTE, resmgr.MAX_ROUTE_TABLE)
-        self.__v4objs = {}
-        self.__v6objs = {}
-        self.__v4iter = {}
-        self.__v6iter = {}
+        self.__v4objs = defaultdict(dict)
+        self.__v6objs = defaultdict(dict)
+        self.__v4iter = defaultdict(dict)
+        self.__v6iter = defaultdict(dict)
         self.__supported = __isObjSupported()
         return
 
-    def PdsctlRead(self):
+    def PdsctlRead(self, node):
         # pdsctl show not supported for route table
         return
 
@@ -330,21 +330,21 @@ class RouteObjectClient(base.ConfigClientBase):
         else:
             return resmgr.RemoteInternetNatTunAllocator.rrnext()
 
-    def GetRouteTableObject(self, routetableid):
-        return self.GetObjectByKey(routetableid)
+    def GetRouteTableObject(self, node, routetableid):
+        return self.GetObjectByKey(node, routetableid)
 
-    def GetRouteV4Tables(self, vpcid):
-        return self.__v4objs.get(vpcid, None)
+    def GetRouteV4Tables(self, node, vpcid):
+        return self.__v4objs[node].get(vpcid, None)
 
-    def GetRouteV6Tables(self, vpcid):
-        return self.__v6objs.get(vpcid, None)
+    def GetRouteV6Tables(self, node, vpcid):
+        return self.__v6objs[node].get(vpcid, None)
 
-    def IsValidConfig(self):
-        count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
+    def IsValidConfig(self, node):
+        count = sum(list(map(lambda x: len(x.values()), self.__v4objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V4 Route Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
-        count = sum(list(map(lambda x: len(x.values()), self.__v6objs.values())))
+        count = sum(list(map(lambda x: len(x.values()), self.__v6objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V6 Route Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
@@ -352,30 +352,30 @@ class RouteObjectClient(base.ConfigClientBase):
         #TODO: check scale of routes per route table
         return True, ""
 
-    def GetRouteV4Table(self, vpcid, routetblid):
-        v4tables = self.GetRouteV4Tables(vpcid)
+    def GetRouteV4Table(self, node, vpcid, routetblid):
+        v4tables = self.GetRouteV4Tables(node, vpcid)
         if not v4tables:
             return None
         return v4tables.get(routetblid, None)
 
-    def GetRouteV6Table(self, vpcid, routetblid):
-        v6tables = self.GetRouteV6Tables(vpcid)
+    def GetRouteV6Table(self, node, vpcid, routetblid):
+        v6tables = self.GetRouteV6Tables(node, vpcid)
         if not v6tables:
             return None
         return v6tables.get(routetblid, None)
 
-    def GetRouteV4TableId(self, vpcid):
-        if self.GetRouteV4Tables(vpcid):
-            return self.__v4iter[vpcid].rrnext().RouteTblId
+    def GetRouteV4TableId(self, node, vpcid):
+        if self.GetRouteV4Tables(node, vpcid):
+            return self.__v4iter[node][vpcid].rrnext().RouteTblId
         return 0
 
-    def GetRouteV6TableId(self, vpcid):
-        if self.GetRouteV6Tables(vpcid):
-            return self.__v6iter[vpcid].rrnext().RouteTblId
+    def GetRouteV6TableId(self, node, vpcid):
+        if self.GetRouteV6Tables(node, vpcid):
+            return self.__v6iter[node][vpcid].rrnext().RouteTblId
         return 0
 
-    def FillNhGroups(self):
-        for robj in client.Objects():
+    def FillNhGroups(self, node):
+        for robj in client.Objects(node):
             if "overlay-ecmp" in robj.TepType:
                 if robj.DualEcmp is True:
                     robj.NhGroup = resmgr.DualEcmpNhGroupAllocator.rrnext()
@@ -385,7 +385,7 @@ class RouteObjectClient(base.ConfigClientBase):
                 logger.info("Filling NexthopGroup%d in RouteTable%d" % \
                     (robj.NhGroup.Id, robj.RouteTblId))
 
-    def GenerateObjects(self, parent, vpc_spec_obj, vpcpeerid):
+    def GenerateObjects(self, node, parent, vpc_spec_obj, vpcpeerid):
         if not self.__supported:
             return
 
@@ -393,10 +393,10 @@ class RouteObjectClient(base.ConfigClientBase):
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4objs[vpcid] = dict()
-        self.__v6objs[vpcid] = dict()
-        self.__v4iter[vpcid] = None
-        self.__v6iter[vpcid] = None
+        self.__v4objs[node][vpcid] = dict()
+        self.__v6objs[node][vpcid] = dict()
+        self.__v4iter[node][vpcid] = None
+        self.__v6iter[node][vpcid] = None
 
         if utils.IsNatSupported():
             if resmgr.RemoteInternetNonNatTunAllocator == None and \
@@ -439,14 +439,14 @@ class RouteObjectClient(base.ConfigClientBase):
             return
 
         def __add_v4routetable(v4routes, spec):
-            obj = RouteTableObject(parent, utils.IP_VERSION_4, v4routes, spec.routetype, tunobj, vpcpeerid, spec)
-            self.__v4objs[vpcid].update({obj.RouteTblId: obj})
-            self.Objs.update({obj.RouteTblId: obj})
+            obj = RouteTableObject(node, parent, utils.IP_VERSION_4, v4routes, spec.routetype, tunobj, vpcpeerid, spec)
+            self.__v4objs[node][vpcid].update({obj.RouteTblId: obj})
+            self.Objs[node].update({obj.RouteTblId: obj})
 
         def __add_v6routetable(v6routes, spec):
-            obj = RouteTableObject(parent, utils.IP_VERSION_6, v6routes, spec.routetype, tunobj, vpcpeerid, spec)
-            self.__v6objs[vpcid].update({obj.RouteTblId: obj})
-            self.Objs.update({obj.RouteTblId: obj})
+            obj = RouteTableObject(node, parent, utils.IP_VERSION_6, v6routes, spec.routetype, tunobj, vpcpeerid, spec)
+            self.__v6objs[node][vpcid].update({obj.RouteTblId: obj})
+            self.Objs[node].update({obj.RouteTblId: obj})
 
         def __derive_nh_type_info(spec):
             routetype = spec.routetype
@@ -474,9 +474,9 @@ class RouteObjectClient(base.ConfigClientBase):
         def __get_nexthop(af):
             nh = None
             if af == utils.IP_VERSION_4:
-                nh = NexthopClient.GetV4Nexthop(parent.VPCId)
+                nh = NexthopClient.GetV4Nexthop(node, parent.VPCId)
             else:
-                nh = NexthopClient.GetV6Nexthop(parent.VPCId)
+                nh = NexthopClient.GetV6Nexthop(node, parent.VPCId)
             return nh
 
         def __get_route_attribs(spec, af=utils.IP_VERSION_4):
@@ -610,11 +610,11 @@ class RouteObjectClient(base.ConfigClientBase):
                         __add_v6routetable(routes, routetbl_spec_obj)
                         v6base = utils.GetNextSubnet(routes.get(list(routes)[-1]).ipaddr)
 
-        if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
+        if self.__v6objs[node][vpcid]:
+            self.__v6iter[node][vpcid] = utils.rrobiniter(self.__v6objs[node][vpcid].values())
 
-        if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
+        if self.__v4objs[node][vpcid]:
+            self.__v4iter[node][vpcid] = utils.rrobiniter(self.__v4objs[node][vpcid].values())
 
 client = RouteObjectClient()
 
@@ -633,13 +633,14 @@ class RouteTableObjectHelper:
     def GetMatchingConfigObjects(self, selectors, all_objs):
         objs = []
         rtype = selectors.route.GetValueByKey('RouteType')
-        for route_obj in client.Objects():
+        dutNode = EzAccessStore.GetDUTNode()
+        for route_obj in client.Objects(dutNode):
             if not route_obj.IsFilterMatch(selectors):
                 continue
             if rtype != 'empty' and 0 == len(route_obj.routes):
                 # skip route tables with no routes
                 continue
-            for lobj in lmapping.GetMatchingObjects(selectors):
+            for lobj in lmapping.GetMatchingObjects(selectors, dutNode):
                 if self.__is_lmapping_match(route_obj, lobj):
                     route_obj.l_obj = lobj
                     objs.append(route_obj)

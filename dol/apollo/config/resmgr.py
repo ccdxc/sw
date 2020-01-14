@@ -206,6 +206,7 @@ def CreateUnderlayTunnels():
 def CreateUnderlayNHAllocator():
     global UnderlayNHAllocator
     objs = EzAccessStore.GetUnderlayNexthops()
+    print(objs)
     if len(objs) != 0:
         UnderlayNHAllocator = utils.rrobiniter(objs)
 

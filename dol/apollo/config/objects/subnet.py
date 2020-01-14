@@ -34,29 +34,42 @@ class SubnetStatus(base.StatusObjectBase):
         logger.info("  - %s" % repr(self))
 
 class SubnetObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, poolid):
-        super().__init__(api.ObjectTypes.SUBNET)
+    def __init__(self, node, parent, spec, poolid):
+        super().__init__(api.ObjectTypes.SUBNET, node)
         parent.AddChild(self)
         ################# PUBLIC ATTRIBUTES OF SUBNET OBJECT #####################
-        self.SubnetId = next(resmgr.SubnetIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.SubnetId = spec.id
+        else:
+            self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
         self.VPC = parent
         self.PfxSel = parent.PfxSel
         self.IPPrefix = {}
         self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
-        self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
+        if getattr(spec, 'v4prefix', None) != None:
+            self.IPPrefix[1] = ipaddress.ip_network(spec.v4prefix.replace('\\', '/'))
+        else:
+            self.IPPrefix[1] = parent.AllocIPv4SubnetPrefix(poolid)
         self.VirtualRouterIPAddr = {}
         self.VirtualRouterMacAddr = None
-        self.V4RouteTableId = route.client.GetRouteV4TableId(parent.VPCId)
-        self.V6RouteTableId = route.client.GetRouteV6TableId(parent.VPCId)
-        self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(parent.VPCId)]
-        self.IngV6SecurityPolicyIds = [PolicyClient.GetIngV6SecurityPolicyId(parent.VPCId)]
-        self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(parent.VPCId)]
-        self.EgV6SecurityPolicyIds = [PolicyClient.GetEgV6SecurityPolicyId(parent.VPCId)]
-        self.V4RouteTable = route.client.GetRouteV4Table(parent.VPCId, self.V4RouteTableId)
-        self.V6RouteTable = route.client.GetRouteV6Table(parent.VPCId, self.V6RouteTableId)
-        self.Vnid = next(resmgr.VxlanIdAllocator)
-        self.HostIf = InterfaceClient.GetHostInterface()
+        self.V4RouteTableId = route.client.GetRouteV4TableId(node, parent.VPCId)
+        self.V6RouteTableId = route.client.GetRouteV6TableId(node, parent.VPCId)
+        self.IngV4SecurityPolicyIds = [PolicyClient.GetIngV4SecurityPolicyId(node, parent.VPCId)]
+        self.IngV6SecurityPolicyIds = [PolicyClient.GetIngV6SecurityPolicyId(node, parent.VPCId)]
+        self.EgV4SecurityPolicyIds = [PolicyClient.GetEgV4SecurityPolicyId(node, parent.VPCId)]
+        self.EgV6SecurityPolicyIds = [PolicyClient.GetEgV6SecurityPolicyId(node, parent.VPCId)]
+        self.V4RouteTable = route.client.GetRouteV4Table(node, parent.VPCId, self.V4RouteTableId)
+        self.V6RouteTable = route.client.GetRouteV6Table(node, parent.VPCId, self.V6RouteTableId)
+        if getattr(spec, 'fabricencap', None) != None:
+            self.FabricEncap = utils.GetEncapType(spec.fabricencap)
+        if getattr(spec, 'fabricencapvalue', None) != None:
+            self.Vnid = spec.fabricencapvalue
+        else:
+            self.Vnid = next(resmgr.VxlanIdAllocator)
+        if getattr(spec, 'hostifidx', None) != None:
+            self.HostIfIdx = spec.hostifidx
+        self.HostIf = InterfaceClient.GetHostInterface(node)
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
@@ -64,15 +77,15 @@ class SubnetObject(base.ConfigObjectBase):
         self.__ip_address_pool[1] = resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
-        self.__fill_default_rules_in_policy()
+        self.__fill_default_rules_in_policy(node)
         self.DeriveOperInfo()
         self.Mutable = utils.IsUpdateSupported()
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
         # Generate VNIC and Remote Mapping configuration
-        vnic.client.GenerateObjects(self, spec)
-        rmapping.client.GenerateObjects(self, spec)
+        vnic.client.GenerateObjects(node, self, spec)
+        rmapping.client.GenerateObjects(node, self, spec)
         return
 
     def __repr__(self):
@@ -92,17 +105,17 @@ class SubnetObject(base.ConfigObjectBase):
         self.Status.Show()
         return
 
-    def __fill_default_rules_in_policy(self):
+    def __fill_default_rules_in_policy(self, node):
         ids = itertools.chain(self.IngV4SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV6SecurityPolicyIds)
         for policyid in ids:
             if policyid is 0:
                 continue
-            policyobj = PolicyClient.GetPolicyObject(policyid)
+            policyobj = PolicyClient.GetPolicyObject(node, policyid)
             if policyobj.PolicyType == 'default':
                 #TODO: move this to policy.py
                 self.__fill_default_rules(policyobj)
             else:
-                PolicyClient.ModifyPolicyRules(policyid, self)
+                PolicyClient.ModifyPolicyRules(node, policyid, self)
         return
 
     def __fill_default_rules(self, policyobj):
@@ -219,7 +232,7 @@ class SubnetObject(base.ConfigObjectBase):
                 return self.EgV6SecurityPolicyIds[0]
         return None
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - subnet
         dependee - routetable, policy
@@ -227,7 +240,7 @@ class SubnetObject(base.ConfigObjectBase):
         dependees = [ self.V4RouteTable, self.V6RouteTable ]
         policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
         policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
-        policyobjs = PolicyClient.GetObjectsByKeys(policyids)
+        policyobjs = PolicyClient.GetObjectsByKeys(node, policyids)
         dependees.extend(policyobjs)
         return dependees
 
@@ -318,27 +331,27 @@ class SubnetObjectClient(base.ConfigClientBase):
         if yaml: return utils.GetYamlSpecAttr(spec, 'id')
         return int(spec.Id)
 
-    def GetSubnetObject(self, subnetid):
-        return self.GetObjectByKey(subnetid)
+    def GetSubnetObject(self, node, subnetid):
+        return self.GetObjectByKey(node, subnetid)
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         poolid = 0
         for subnet_spec_obj in vpc_spec_obj.subnet:
             parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
-                obj = SubnetObject(parent, subnet_spec_obj, poolid)
-                self.Objs.update({obj.SubnetId: obj})
+                obj = SubnetObject(node, parent, subnet_spec_obj, poolid)
+                self.Objs[node].update({obj.SubnetId: obj})
             poolid = poolid + 1
         return
 
-    def CreateObjects(self):
+    def CreateObjects(self, node):
         logger.info("Creating Subnet Objects in agent")
-        cookie = utils.GetBatchCookie()
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
-        api.client.Create(api.ObjectTypes.SUBNET, msgs)
+        cookie = utils.GetBatchCookie(node)
+        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
+        api.client[node].Create(api.ObjectTypes.SUBNET, msgs)
         # Create VNIC and Remote Mapping Objects
-        vnic.client.CreateObjects()
-        rmapping.client.CreateObjects()
+        vnic.client.CreateObjects(node)
+        rmapping.client.CreateObjects(node)
         return
 
 client = SubnetObjectClient()

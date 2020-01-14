@@ -133,10 +133,14 @@ class ApolloAgentClientRequest:
         return
 
 class ApolloAgentClient:
-    def __init__(self):
+    def __init__(self, ip = None):
         self.__channel = None
         self.__stubs = [None] * ObjectTypes.MAX
         self.__msgreqs = [None] * ObjectTypes.MAX
+        if ip == None:
+            self.agentip = self.__get_agent_ip()
+        else:
+            self.agentip = ip
         self.__create_msgreq_table()
         self.__connect()
         self.__create_stubs()
@@ -257,7 +261,7 @@ class ApolloAgentClient:
         if GlobalOptions.dryrun: return
         return self.__stubs[objtype].Rpc(ApiOps.COMMIT, [ obj ])
 
-client = None
-def Init():
+client = dict()
+def Init(node, ip=None):
     global client
-    client = ApolloAgentClient()
+    client[node] = ApolloAgentClient(ip)

@@ -52,7 +52,7 @@ class PortObjectClient:
     def Objects(self):
         return self.__objs.values()
 
-    def GenerateObjects(self, topospec):
+    def GenerateObjects(self, node, topospec):
         def __get_port_mode(port, mode='auto'):
             if mode == 'switch':
                 return topo.PortTypes.SWITCH

@@ -14,6 +14,8 @@ import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tunnel as tunnel
 from apollo.config.objects.nexthop import client as NhClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
+from apollo.config.objects.interface import client as InterfaceClient
+from apollo.config.objects.port import client as PortClient
 import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.tag as tag
 import apollo.config.objects.meter as meter
@@ -41,11 +43,13 @@ class VpcStatus(base.StatusObjectBase):
         logger.info("  - %s" % repr(self))
 
 class VpcObject(base.ConfigObjectBase):
-    def __init__(self, spec, index, maxcount):
-        super().__init__(api.ObjectTypes.VPC)
-
+    def __init__(self, node, spec, index, maxcount):
+        super().__init__(api.ObjectTypes.VPC, node)
         ################# PUBLIC ATTRIBUTES OF VPC OBJECT #####################
-        self.VPCId = next(resmgr.VpcIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.VPCId = spec.id
+        else:
+            self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
         self.IPPrefix = {}
         self.Nat46_pfx = None
@@ -87,23 +91,33 @@ class VpcObject(base.ConfigObjectBase):
 
         ############### CHILDREN OBJECT GENERATION
 
-        if not utils.IsPipelineArtemis() and self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
+        if utils.IsPipelineApollo() and self.Type == vpc_pb2.VPC_TYPE_UNDERLAY:
             # Nothing to be done for underlay vpc
             return
 
+        # Generate Port Configuration
+        #PortClient.GenerateObjects(node, self, spec)
+
+        # Generate Interface Configuration
+        InterfaceClient.GenerateObjects(node, self, spec)
+        
         # Generate NextHop configuration
-        NhClient.GenerateObjects(self, spec)
+        NhClient.GenerateObjects(node, self, spec)
 
         # Generate NextHop configuration
-        NhGroupClient.GenerateObjects(self, spec)
+        NhGroupClient.GenerateObjects(node, self, spec)
+
+        # Generate NextHop configuration
+        if hasattr(spec, "tunnel"):
+            tunnel.client.GenerateObjects(node, self, spec.tunnel)
 
         # Generate Tag configuration.
         if getattr(spec, 'tagtbl', None) != None:
-            tag.client.GenerateObjects(self, spec)
+            tag.client.GenerateObjects(node, self, spec)
 
         # Generate Policy configuration.
         if getattr(spec, 'policy', None) != None:
-            policy.client.GenerateObjects(self, spec)
+            policy.client.GenerateObjects(node, self, spec)
 
         # Generate Route configuration.
         if getattr(spec, 'routetbl', None) != None:
@@ -112,18 +126,18 @@ class VpcObject(base.ConfigObjectBase):
                 vpc_peerid = self.VPCId - maxcount + 1
             else:
                 vpc_peerid = self.VPCId + 1
-            route.client.GenerateObjects(self, spec, vpc_peerid)
+            route.client.GenerateObjects(node, self, spec, vpc_peerid)
 
         # Generate Meter configuration
-        meter.client.GenerateObjects(self, spec)
+        meter.client.GenerateObjects(node, self, spec)
 
-        self.V4RouteTableId = route.client.GetRouteV4TableId(self.VPCId)
-        self.V6RouteTableId = route.client.GetRouteV6TableId(self.VPCId)
-        self.V4RouteTable = route.client.GetRouteV4Table(self.VPCId, self.V4RouteTableId)
-        self.V6RouteTable = route.client.GetRouteV6Table(self.VPCId, self.V6RouteTableId)
+        self.V4RouteTableId = route.client.GetRouteV4TableId(node, self.VPCId)
+        self.V6RouteTableId = route.client.GetRouteV6TableId(node, self.VPCId)
+        self.V4RouteTable = route.client.GetRouteV4Table(node, self.VPCId, self.V4RouteTableId)
+        self.V6RouteTable = route.client.GetRouteV6Table(node, self.VPCId, self.V6RouteTableId)
         # Generate Subnet configuration post policy & route
         if getattr(spec, 'subnet', None) != None:
-            subnet.client.GenerateObjects(self, spec)
+            subnet.client.GenerateObjects(node, self, spec)
         self.DeriveOperInfo()
 
         # Generate NAT Port Block configuration
@@ -138,7 +152,7 @@ class VpcObject(base.ConfigObjectBase):
                 resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC])
             self.__nat_pool[utils.NAT_ADDR_TYPE_SERVICE] = \
                 resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
-            nat_pb.client.GenerateObjects(self, spec)
+            nat_pb.client.GenerateObjects(node, self, spec)
 
         return
 
@@ -247,7 +261,7 @@ class VpcObject(base.ConfigObjectBase):
     def IsV6Stack(self):
         return utils.IsV6Stack(self.Stack)
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - vpc
         dependee - routetable
@@ -302,8 +316,8 @@ class VpcObjectClient(base.ConfigClientBase):
         return
 
     # TODO: move to GetObjectByKey
-    def GetVpcObject(self, vpcid):
-        return self.GetObjectByKey(vpcid)
+    def GetVpcObject(self, node, vpcid):
+        return self.GetObjectByKey(node, vpcid)
 
     def GetKeyfromSpec(self, spec, yaml=False):
         if yaml:
@@ -318,7 +332,7 @@ class VpcObjectClient(base.ConfigClientBase):
         cfgjson.CfgJsonHelper.SetVPCCount(vpc_count)
         cfgjson.CfgJsonHelper.WriteConfig()
 
-    def GenerateObjects(self, topospec):
+    def GenerateObjects(self, node, topospec):
         vpc_count = 0
         for p in topospec.vpc:
             vpc_count += p.count
@@ -326,8 +340,8 @@ class VpcObjectClient(base.ConfigClientBase):
                 if hasattr(p, "nat46"):
                     if p.nat46 is True and not utils.IsPipelineArtemis():
                         continue
-                obj = VpcObject(p, c, p.count)
-                self.Objs.update({obj.VPCId: obj})
+                obj = VpcObject(node, p, c, p.count)
+                self.Objs[node].update({obj.VPCId: obj})
                 if obj.IsUnderlayVPC():
                     EzAccessStore.SetUnderlayVPC(obj)
         # Write the flow and nexthop config to agent hook file
@@ -335,37 +349,37 @@ class VpcObjectClient(base.ConfigClientBase):
             self.__write_cfg(vpc_count)
         if utils.IsPipelineApulu():
             # Associate Nexthop objects
-            NhGroupClient.CreateAllocator()
-            NhClient.AssociateObjects()
-            NhGroupClient.AssociateObjects()
-            tunnel.client.FillUnderlayNhGroups()
-            route.client.FillNhGroups()
-            VnicClient.AssociateObjects()
+            NhGroupClient.CreateAllocator(node)
+            NhClient.AssociateObjects(node)
+            NhGroupClient.AssociateObjects(node)
+            tunnel.client.FillUnderlayNhGroups(node)
+            route.client.FillNhGroups(node)
+            VnicClient.AssociateObjects(node)
         return
 
-    def CreateObjects(self):
-        super().CreateObjects()
+    def CreateObjects(self, node):
+        super().CreateObjects(node)
 
         # Create Nexthop object
-        NhClient.CreateObjects()
+        NhClient.CreateObjects(node)
 
         # Create Tag object.
-        tag.client.CreateObjects()
+        tag.client.CreateObjects(node)
 
         # Create Policy object.
-        policy.client.CreateObjects()
+        policy.client.CreateObjects(node)
 
         # Create Route object.
-        route.client.CreateObjects()
+        route.client.CreateObjects(node)
 
         # Create Meter Objects
-        meter.client.CreateObjects()
+        meter.client.CreateObjects(node)
 
         # Create Subnet Objects after policy & route
-        subnet.client.CreateObjects()
+        subnet.client.CreateObjects(node)
 
         # Create NAT Port Block Objects
-        nat_pb.client.CreateObjects()
+        nat_pb.client.CreateObjects(node)
         return
 
 client = VpcObjectClient()

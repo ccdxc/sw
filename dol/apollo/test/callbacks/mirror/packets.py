@@ -5,6 +5,7 @@ from scapy.layers.l2 import Dot1Q
 import apollo.config.objects.vpc as vpc
 import apollo.config.utils as utils
 import apollo.config.topo as topo
+from apollo.config.store import EzAccessStore
 
 from infra.common.logging import logger
 import iris.test.callbacks.common.pktslicer as pktslicer
@@ -22,7 +23,7 @@ def GetSPANPortID(testcase, args):
         return utils.GetPortIDfromInterface(mirrorObj.Interface)
     elif mirrorObj.SpanType == 'ERSPAN':
         # underlay vpc, return switchport
-        spanvpc = vpc.client.GetVpcObject(mirrorObj.VPCId)
+        spanvpc = vpc.client.GetVpcObject(EzAccessStore.GetDUTNode(), mirrorObj.VPCId)
         if spanvpc.IsUnderlayVPC():
             return topo.PortTypes.SWITCH
         # TODO: tenant vpc support post impl & p4 support
@@ -60,7 +61,7 @@ def GetERSPANDstMac(testcase, packet, args=None):
     if not mirrorObj or mirrorObj.SpanType != 'ERSPAN':
         return "00:00:00:00:00:00"
     # underlay vpc, return TEP MAC
-    spanvpc = vpc.client.GetVpcObject(mirrorObj.VPCId)
+    spanvpc = vpc.client.GetVpcObject(EzAccessStore.GetDUTNode(), mirrorObj.VPCId)
     if spanvpc.IsUnderlayVPC():
         return "00:02:0b:0a:0d:0e"
     # TODO: tenant vpc support post impl & p4 support

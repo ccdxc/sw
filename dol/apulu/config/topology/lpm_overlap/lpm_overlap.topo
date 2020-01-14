@@ -2,161 +2,193 @@
 meta:
     id: TOPO_LPM_OVERLAP
 
-uplink:
-    - entry:
-        id      : uplink0
-        port    : 1
-        mode    : host
-        status  : UP
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : host
+            status  : UP
 
-    - entry:
-        id      : uplink1
-        port    : 2
-        mode    : switch
-        status  : UP
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : switch
+            status  : UP
 
-interface:
-    host:
+    hostinterface:
         lif         : ref://store/specs/id=LIF_ETH
 
-device:
-    mode        : host # bitw (default), host
-    stack       : ipv4 # ipv4 (default), ipv6
-    bridging    : false # false (default), true
-    learning    : false # false (default), true
-    ipaddress   : None # Taken from resmgr
-    gateway     : None # Taken from resmgr
-    encap       : vxlan # vxlan or mplsodup
-    tunnel      :
-        - count : 16
-          type  : underlay
-        - count : 16
-          type  : underlay-ecmp
-        - count : 16
-          type  : internet-gateway
-          nat   : true
-        - count : 16
-          type  : internet-gateway
-        - count : 32
-          type  : workload
-        # artemis
-        - count : 2
-          type  : service
-        - count : 1
-          type  : service
-          remote : true
-
-vpc:
-    - stack  : dual
-      count : 1
-      type  : tenant
-      subnet:
-        - count     : 8              # should be same as total routetbl
-          v4prefixlen : 24
-          v6prefixlen : 64
-          vnic:
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              public  : true
-          rmap:                       # Remote IP mappings per subnet
+    device:
+        mode        : host # bitw (default), host
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : underlay
+            - count : 16
+              type  : underlay-ecmp
+            - count : 16
+              type  : internet-gateway
+              nat   : true
+            - count : 16
+              type  : internet-gateway
+            - count : 32
+              type  : workload
+            # artemis
             - count : 2
-      policy:
-              - type : specific
-                policytype : default
-                direction : bidir
-      nexthop:
-        - type: underlay
-          count : 25
-      nexthop-group:
-        - type : underlay
-          count : 2
-      routetbl:
-             - type: specific # route table with left overlap routes
-               routetype: left_overlap
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '10.10.0.0\24'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-               teptype : underlay
+              type  : service
+            - count : 1
+              type  : service
+              remote : true
 
-             - type: specific
-               routetype: left_overlap
+    vpc:
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          routetbl:
+             - type: specific # route table with only default routes
+               routetype: only_default
                v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\16'
+                  - '0.0.0.0\0'
                v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:2222::\96'
+                  - '0::\0'
                teptype : underlay
+          nexthop:
+            - type : underlay
+              count : 2
+          interface:
+            - iid           : 1
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.1.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fde
+              portid        : 1
+              encap         : none
+            - iid           : 2
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.2.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fdd
+              portid        : 2
+              encap         : none
+        - stack  : dual
+          count : 1
+          type  : tenant
+          subnet:
+            - count     : 8              # should be same as total routetbl
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  public  : true
+              rmap:                       # Remote IP mappings per subnet
+                - count : 2
+          policy:
+                  - type : specific
+                    policytype : default
+                    direction : bidir
+          nexthop:
+            - type: underlay
+              count : 25
+          nexthop-group:
+            - type : underlay
+              count : 2
+          routetbl:
+                 - type: specific # route table with left overlap routes
+                   routetype: left_overlap
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '10.10.0.0\24'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
+                   teptype : underlay
 
-             - type: specific # route table with left overlap routes and default
-               routetype: left_overlap_with_default
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '10.10.0.0\24'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:2222::\96'
-                   - '0::\0'
-               teptype : underlay
+                 - type: specific
+                   routetype: left_overlap
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:2222::\96'
+                   teptype : underlay
 
-             - type: specific # route table with multiple left overlap routes
-               routetype: multiple_left_overlap
-               v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\24'
-                   - '10.0.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-                   - '1234:5678:4321:8765:1111::\112'
-               teptype : underlay
+                 - type: specific # route table with left overlap routes and default
+                   routetype: left_overlap_with_default
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '10.10.0.0\24'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:2222::\96'
+                       - '0::\0'
+                   teptype : underlay
 
-             - type: specific # route table with multiple left overlap routes and default
-               routetype: multiple_left_overlap_with_default
-               v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\24'
-                   - '10.0.0.0\16'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-                   - '1234:5678:4321:8765:1111::\112'
-                   - '0::\0'
-               teptype : underlay
+                 - type: specific # route table with multiple left overlap routes
+                   routetype: multiple_left_overlap
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\24'
+                       - '10.0.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
+                       - '1234:5678:4321:8765:1111::\112'
+                   teptype : underlay
 
-             - type: specific # route table with right overlap routes
-               routetype: right_overlap
-               v4routes:
-                   - '11.11.0.0\16'
-                   - '11.11.255.0\24'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:ffff::\96'
-               teptype : underlay
+                 - type: specific # route table with multiple left overlap routes and default
+                   routetype: multiple_left_overlap_with_default
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\24'
+                       - '10.0.0.0\16'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
+                       - '1234:5678:4321:8765:1111::\112'
+                       - '0::\0'
+                   teptype : underlay
 
-             - type: specific
-               routetype: right_overlap
-               v4routes:
-                   - '11.0.0.0\8'
-                   - '11.255.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-               teptype : underlay
+                 - type: specific # route table with right overlap routes
+                   routetype: right_overlap
+                   v4routes:
+                       - '11.11.0.0\16'
+                       - '11.11.255.0\24'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:ffff::\96'
+                   teptype : underlay
 
-             - type: specific # route table with right overlap routes and default
-               routetype: right_overlap_with_default
-               v4routes:
-                   - '11.11.0.0\16'
-                   - '11.11.255.0\24'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '0::\0'
-               teptype : underlay
+                 - type: specific
+                   routetype: right_overlap
+                   v4routes:
+                       - '11.0.0.0\8'
+                       - '11.255.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                   teptype : underlay
+
+                 - type: specific # route table with right overlap routes and default
+                   routetype: right_overlap_with_default
+                   v4routes:
+                       - '11.11.0.0\16'
+                       - '11.11.255.0\24'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '0::\0'
+                   teptype : underlay

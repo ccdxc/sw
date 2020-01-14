@@ -35,27 +35,39 @@ class VnicStatus(base.StatusObjectBase):
         logger.info("  - %s" % repr(self))
 
 class VnicObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, rxmirror, txmirror):
-        super().__init__(api.ObjectTypes.VNIC)
+    def __init__(self, node, parent, spec, rxmirror, txmirror):
+        super().__init__(api.ObjectTypes.VNIC, node)
         parent.AddChild(self)
         if (EzAccessStore.IsDeviceLearningEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
-        self.VnicId = next(resmgr.VnicIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.VnicId = spec.id
+        else:
+            self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
         self.SUBNET = parent
-        self.MACAddr =  resmgr.VnicMacAllocator.get()
-        self.VlanId = next(resmgr.VnicVlanIdAllocator)
+        if hasattr(spec, 'vmac'):
+            self.MACAddr =  spec.vmac
+        else:
+            self.MACAddr =  resmgr.VnicMacAllocator.get()
+        if utils.IsDol():
+            self.VlanId = next(resmgr.VnicVlanIdAllocator)
+        else:
+            self.VlanId = 0
         self.MplsSlot = next(resmgr.VnicMplsSlotIdAllocator)
-        self.Vnid = next(resmgr.VxlanIdAllocator)
+        if utils.IsDol():
+            self.Vnid = next(resmgr.VxlanIdAllocator)
+        else:
+            self.Vnid = parent.Vnid
         self.SourceGuard = False
         c = getattr(spec, 'srcguard', None)
         if c != None:
             self.SourceGuard = c
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
-        self.V4MeterId = MeterClient.GetV4MeterId(parent.VPC.VPCId)
-        self.V6MeterId = MeterClient.GetV6MeterId(parent.VPC.VPCId)
+        self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
+        self.V6MeterId = MeterClient.GetV6MeterId(node, parent.VPC.VPCId)
         self.IngV4SecurityPolicyIds = []
         self.IngV6SecurityPolicyIds = []
         self.EgV4SecurityPolicyIds = []
@@ -66,13 +78,13 @@ class VnicObject(base.ConfigObjectBase):
         # get num of policies [0-5] in rrob order if needed
         self.__numpolicy = resmgr.NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
-        self.DeriveOperInfo()
+        self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
         # Generate MAPPING configuration
-        lmapping.client.GenerateObjects(self, spec)
+        lmapping.client.GenerateObjects(node, self, spec)
 
         return
 
@@ -206,32 +218,32 @@ class VnicObject(base.ConfigObjectBase):
     def IsEncapTypeVLAN(self):
         return self.dot1Qenabled
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - vnic
         dependee - subnet, meter, mirror & policy
         """
         dependees = [ self.SUBNET ]
         meterids = [ self.V4MeterId, self.V6MeterId ]
-        meterobjs = MeterClient.GetObjectsByKeys(meterids)
+        meterobjs = MeterClient.GetObjectsByKeys(node, meterids)
         dependees.extend(meterobjs)
         policyids = self.IngV4SecurityPolicyIds + self.IngV6SecurityPolicyIds
         policyids += self.EgV4SecurityPolicyIds + self.EgV6SecurityPolicyIds
-        policyobjs = PolicyClient.GetObjectsByKeys(policyids)
+        policyobjs = PolicyClient.GetObjectsByKeys(node, policyids)
         dependees.extend(policyobjs)
         mirrorobjs = list(self.RxMirrorObjs.values()) + list(self.TxMirrorObjs.values())
         dependees.extend(mirrorobjs)
         return dependees
 
-    def DeriveOperInfo(self):
+    def DeriveOperInfo(self, node):
         self.RxMirrorObjs = dict()
         for rxmirrorid in self.RxMirror:
-            rxmirrorobj = mirror.client.GetMirrorObject(rxmirrorid)
+            rxmirrorobj = mirror.client.GetMirrorObject(node, rxmirrorid)
             self.RxMirrorObjs.update({rxmirrorid: rxmirrorobj})
 
         self.TxMirrorObjs = dict()
         for txmirrorid in self.TxMirror:
-            txmirrorobj = mirror.client.GetMirrorObject(txmirrorid)
+            txmirrorobj = mirror.client.GetMirrorObject(node, txmirrorid)
             self.TxMirrorObjs.update({txmirrorid: txmirrorobj})
         super().DeriveOperInfo()
         return
@@ -349,20 +361,20 @@ class VnicObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.VNIC, resmgr.MAX_VNIC)
         return
 
-    def GetVnicObject(self, vnicid):
-        return self.GetObjectByKey(vnicid)
+    def GetVnicObject(self, node, vnicid):
+        return self.GetObjectByKey(node, vnicid)
 
     def GetKeyfromSpec(self, spec, yaml=False):
         if yaml: return utils.GetYamlSpecAttr(spec, 'vnicid')
         return int(spec.VnicId)
 
-    def AssociateObjects(self):
+    def AssociateObjects(self, node):
         # generate security policies and associate with vnic
-        for vnic in self.Objects():
+        for vnic in self.Objects(node):
             vnic.Generate_vnic_security_policies()
         return
 
-    def GenerateObjects(self, parent, subnet_spec_obj):
+    def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
             return
         def __get_rxmirror(vnicspec):
@@ -388,14 +400,14 @@ class VnicObjectClient(base.ConfigClientBase):
                 # Alternate src dst validations
                 rxmirror = __get_rxmirror(vnic_spec_obj)
                 txmirror = __get_txmirror(vnic_spec_obj)
-                obj = VnicObject(parent, vnic_spec_obj, rxmirror, txmirror)
-                self.Objs.update({obj.VnicId: obj})
+                obj = VnicObject(node, parent, vnic_spec_obj, rxmirror, txmirror)
+                self.Objs[node].update({obj.VnicId: obj})
         return
 
-    def CreateObjects(self):
-        super().CreateObjects()
+    def CreateObjects(self, node):
+        super().CreateObjects(node)
         # Create Local Mapping Objects
-        lmapping.client.CreateObjects()
+        lmapping.client.CreateObjects(node)
         return
 
 client = VnicObjectClient()

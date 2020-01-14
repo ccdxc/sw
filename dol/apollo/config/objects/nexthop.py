@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pdb
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -16,10 +17,13 @@ from apollo.config.objects.tunnel    import client as TunnelClient
 import nh_pb2 as nh_pb2
 
 class NexthopObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec):
-        super().__init__(api.ObjectTypes.NEXTHOP)
+    def __init__(self, node, parent, spec):
+        super().__init__(api.ObjectTypes.NEXTHOP, node)
         ################# PUBLIC ATTRIBUTES OF NEXTHOP OBJECT #####################
-        self.NexthopId = next(resmgr.NexthopIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.NexthopId = spec.id
+        else:
+            self.NexthopId = next(resmgr.NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
         self.VPC = parent
         nh_type = getattr(spec, 'type', 'ip')
@@ -31,16 +35,24 @@ class NexthopObject(base.ConfigObjectBase):
             self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
             self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
             self.VlanId = next(resmgr.NexthopVlanIdAllocator)
-            self.MACAddr = resmgr.NexthopMacAllocator.get()
+            if (hasattr(spec, 'macaddress')):
+                self.MACAddr = spec.macaddress
+            else:
+                self.MACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'underlay':
             self.__type = topo.NhType.UNDERLAY
-            self.L3Interface = InterfaceClient.GetL3UplinkInterface()
+            self.L3Interface = InterfaceClient.GetL3UplinkInterface(node)
             self.L3InterfaceId = self.L3Interface.InterfaceId
-            self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
+            if (hasattr(spec, 'macaddress')):
+                self.underlayMACAddr = spec.macaddress
+            else:
+                self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
         elif nh_type == 'overlay':
             self.__type = topo.NhType.OVERLAY
             if self.DualEcmp:
                 self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
+            if (hasattr(spec, 'tunnelid')):
+                self.TunnelId = spec.tunnelid
             else:
                 self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
         else:
@@ -97,7 +109,7 @@ class NexthopObject(base.ConfigObjectBase):
 
     def GetGrpcReadMessage(self):
         # TODO: NH read req has only filters
-        grpcreq = api.client.GetGRPCMsgReq(self.ObjType, api.ApiOps.GET)
+        grpcreq = api.client[self.Node].GetGRPCMsgReq(self.ObjType, api.ApiOps.GET)
         grpcmsg = grpcreq()
         grpcmsg.Id = str.encode(str(self.NexthopId))
         return grpcmsg
@@ -148,17 +160,17 @@ class NexthopObject(base.ConfigObjectBase):
                 return False
         return True
 
-    def GetDependees(self):
+    def GetDependees(self, node):
         """
         depender/dependent - nexthop
         dependee - l3interface, tunnel
         """
         dependees = [ ]
         if self.IsUnderlay():
-            l3intfObj = InterfaceClient.GetObjectByKey(self.L3InterfaceId)
+            l3intfObj = InterfaceClient.GetObjectByKey(node, self.L3InterfaceId)
             dependees.append(l3intfObj)
         elif self.IsOverlay():
-            tunnelObj = TunnelClient.GetObjectByKey(self.TunnelId)
+            tunnelObj = TunnelClient.GetObjectByKey(node, self.TunnelId)
             dependees.append(tunnelObj)
         return dependees
 
@@ -225,43 +237,43 @@ class NexthopObjectClient(base.ConfigClientBase):
             return False
 
         super().__init__(api.ObjectTypes.NEXTHOP, resmgr.MAX_NEXTHOP)
-        self.__underlay_objs = dict()
-        self.__v4objs = {}
-        self.__v6objs = {}
-        self.__v4iter = {}
-        self.__v6iter = {}
+        self.__underlay_objs = defaultdict(dict)
+        self.__v4objs = defaultdict(dict)
+        self.__v6objs = defaultdict(dict)
+        self.__v4iter = defaultdict(dict)
+        self.__v6iter = defaultdict(dict)
         self.__num_nh_per_vpc = []
         self.__supported = __isObjSupported()
         return
 
-    def GetNexthopObject(self, nexthopid):
-        return self.GetObjectByKey(nexthopid)
+    def GetNexthopObject(self, node, nexthopid):
+        return self.GetObjectByKey(node, nexthopid)
 
-    def GetV4Nexthop(self, vpcid):
-        if self.GetNumObjects():
-            assert(len(self.__v4objs[vpcid]) != 0)
-            return self.__v4iter[vpcid].rrnext()
+    def GetV4Nexthop(self, node, vpcid):
+        if len(self.Objects(node)):
+            assert(len(self.__v4objs[node][vpcid]) != 0)
+            return self.__v4iter[node][vpcid].rrnext()
         else:
             return None
 
-    def GetV6Nexthop(self, vpcid):
-        if self.GetNumObjects():
-            assert(len(self.__v6objs[vpcid]) != 0)
-            return self.__v6iter[vpcid].rrnext()
+    def GetV6Nexthop(self, node, vpcid):
+        if len(self.Objects(node)):
+            assert(len(self.__v6objs[node][vpcid]) != 0)
+            return self.__v6iter[node][vpcid].rrnext()
         else:
             return None
 
     def GetNumNextHopPerVPC(self):
         return self.__num_nh_per_vpc
 
-    def AssociateObjects(self):
-        EzAccessStore.SetNexthops(self.Objects())
+    def AssociateObjects(self, node):
+        EzAccessStore.SetNexthops(self.Objects(node))
         resmgr.CreateUnderlayNHAllocator()
         resmgr.CreateOverlayNHAllocator()
         resmgr.CreateDualEcmpNhAllocator()
-        TunnelClient.AssociateObjects()
+        TunnelClient.AssociateObjects(node)
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         if not self.__supported:
             return
 
@@ -273,10 +285,10 @@ class NexthopObjectClient(base.ConfigClientBase):
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4objs[vpcid] = []
-        self.__v6objs[vpcid] = []
-        self.__v4iter[vpcid] = None
-        self.__v6iter[vpcid] = None
+        self.__v4objs[node][vpcid] = []
+        self.__v6objs[node][vpcid] = []
+        self.__v4iter[node][vpcid] = None
+        self.__v6iter[node][vpcid] = None
 
         if getattr(vpc_spec_obj, 'nexthop', None) == None:
             self.__num_nh_per_vpc.append(0)
@@ -287,38 +299,40 @@ class NexthopObjectClient(base.ConfigClientBase):
             if not __isNhFeatureSupported(nh_type):
                 continue
             for c in range(nh_spec_obj.count):
-                obj = NexthopObject(parent, nh_spec_obj)
-                self.Objs.update({obj.NexthopId: obj})
+                obj = NexthopObject(node, parent, nh_spec_obj)
+                self.Objs[node].update({obj.NexthopId: obj})
                 if nh_type == "underlay":
-                    self.__underlay_objs.update({obj.NexthopId: obj})
+                    self.__underlay_objs[node].update({obj.NexthopId: obj})
                 if isV4Stack:
-                    self.__v4objs[vpcid].append(obj)
+                    self.__v4objs[node][vpcid].append(obj)
                 if isV6Stack:
-                    self.__v6objs[vpcid].append(obj)
-        if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
-        if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+                    self.__v6objs[node][vpcid].append(obj)
+        if len(self.__v4objs[node][vpcid]):
+            self.__v4iter[node][vpcid] = utils.rrobiniter(self.__v4objs[node][vpcid])
+        if len(self.__v6objs[node][vpcid]):
+            self.__v6iter[node][vpcid] = utils.rrobiniter(self.__v6objs[node][vpcid])
         self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
+    def CreateObjects(self, node):
+        cookie = utils.GetBatchCookie(node)
         if utils.IsPipelineApulu():
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs.values()))
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs[node].values()))
         else:
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects()))
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
         logger.info(f"Creating {self.ObjType.name} Objects in agent")
-        api.client.Create(self.ObjType, msgs)
+        api.client[node].Create(self.ObjType, msgs)
         return
 
-    def GetGrpcReadAllMessage(self):
+    def GetGrpcReadAllMessage(self, node):
         grpcmsg = nh_pb2.NexthopGetRequest()
         return grpcmsg
 
-    def ReadObjects(self):
-        msg = self.GetGrpcReadAllMessage()
-        resp = api.client.Get(self.ObjType, [msg])
+    def ReadObjects(self, node):
+        if len(self.Objects(node)) == 0:
+            return
+        msg = self.GetGrpcReadAllMessage(node)
+        resp = api.client[node].Get(self.ObjType, [msg])
         # TODO: Fix get all for nh, currently not supported
         # nh read is based on id and type only
         if False:

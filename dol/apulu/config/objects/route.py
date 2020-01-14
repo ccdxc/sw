@@ -3,6 +3,7 @@
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.route as route
 import apollo.config.utils as utils
+from apollo.config.store import EzAccessStore
 
 class RouteTableObjectHelper:
     def __init__(self):
@@ -19,13 +20,14 @@ class RouteTableObjectHelper:
     def GetMatchingConfigObjects(self, selectors, all_objs):
         objs = []
         rtype = selectors.route.GetValueByKey('RouteType')
-        for route_obj in route.client.Objects():
+        dutNode = EzAccessStore.GetDUTNode()
+        for route_obj in route.client.Objects(dutNode):
             if not route_obj.IsFilterMatch(selectors):
                 continue
             if rtype != 'empty' and 0 == len(route_obj.routes):
                 # skip route tables with no routes
                 continue
-            for lobj in lmapping.GetMatchingObjects(selectors):
+            for lobj in lmapping.GetMatchingObjects(selectors, dutNode):
                 if self.__is_lmapping_match(route_obj, lobj):
                     route_obj.l_obj = lobj
                     objs.append(route_obj)

@@ -10,20 +10,24 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.utils as utils
 import apollo.config.topo as topo
+import ipaddress
 
 import service_pb2 as service_pb2
 import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
-    def __init__(self, parent, spec, ipversion, count):
-        super().__init__(api.ObjectTypes.MAPPING)
+    def __init__(self, node, parent, spec, ipversion, count):
+        super().__init__(api.ObjectTypes.MAPPING, node)
         parent.AddChild(self)
         if (EzAccessStore.IsDeviceLearningEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
 
         self.__is_public = getattr(spec, 'public', False)
         ################# PUBLIC ATTRIBUTES OF LOCAL MAPPING OBJECT ###########
-        self.MappingId = next(resmgr.LocalMappingIdAllocator)
+        if (hasattr(spec, 'id')):
+            self.MappingId = spec.id
+        else:
+            self.MappingId = next(resmgr.LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
         self.VNIC = parent
         self.PublicIPAddr = None
@@ -39,7 +43,12 @@ class LocalMappingObject(base.ConfigObjectBase):
             self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_6)
         else:
             self.AddrFamily = 'IPV4'
-            self.IPAddr = parent.SUBNET.AllocIPv4Address();
+            if getattr(spec, 'lipaddr', None) != None:
+                logger.info("LocalMapping Object assigned IP address:%s" % spec.lipaddr)
+                self.IPAddr = ipaddress.IPv4Address(spec.lipaddr)
+            else:
+                self.IPAddr = parent.SUBNET.AllocIPv4Address()
+                logger.info("LocalMapping Object generated IP address:%s" %(str(self.IPAddr)))
             if self.__is_public:
                 self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
@@ -133,11 +142,11 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.MAPPING)
         return
 
-    def PdsctlRead(self):
+    def PdsctlRead(self, node):
         # pdsctl show not supported for local mapping
         return
 
-    def GenerateObjects(self, parent, vnic_spec_obj):
+    def GenerateObjects(self, node, parent, vnic_spec_obj):
         isV4Stack = utils.IsV4Stack(parent.SUBNET.VPC.Stack)
         isV6Stack = utils.IsV6Stack(parent.SUBNET.VPC.Stack)
         c = 0
@@ -145,39 +154,50 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         v4c = 0
         while c < vnic_spec_obj.ipcount:
             if isV6Stack:
-                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_6, v6c)
-                self.Objs.update({obj.MappingId: obj})
+                obj = LocalMappingObject(node, parent, vnic_spec_obj, utils.IP_VERSION_6, v6c)
+                self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
                 v6c = v6c + 1
             if c < vnic_spec_obj.ipcount and isV4Stack:
-                obj = LocalMappingObject(parent, vnic_spec_obj, utils.IP_VERSION_4, v4c)
-                self.Objs.update({obj.MappingId: obj})
+                obj = LocalMappingObject(node, parent, vnic_spec_obj, utils.IP_VERSION_4, v4c)
+                self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
                 v4c = v4c + 1
         return
 
-    def CreateObjects(self):
-        cookie = utils.GetBatchCookie()
-        super().CreateObjects()
+    def CreateObjects(self, node):
+        cookie = utils.GetBatchCookie(node)
+        super().CreateObjects(node)
 
         if utils.IsServiceMappingSupported():
-            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects()))
-            api.client.Create(api.ObjectTypes.SVCMAPPING, msgs)
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects(node)))
+            api.client[node].Create(api.ObjectTypes.SVCMAPPING, msgs)
         return
 
-    def ReadObjects(self):
-        super().ReadObjects()
+    def ReadObjects(self, node):
+        super().ReadObjects(node)
 
         if utils.IsServiceMappingSupported():
-            msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects()))
-            api.client.Get(api.ObjectTypes.SVCMAPPING, msgs)
+            msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects(node)))
+            api.client[node].Get(api.ObjectTypes.SVCMAPPING, msgs)
         return
+
+    def GetVnicAddresses(self, vnic):
+        ip_addresses = []
+        for mapping in self.Objects(vnic.Node):
+            if hasattr(mapping, "VNIC") and mapping.VNIC.GID() == vnic.GID():
+                if mapping.AddrFamily == 'IPV6':
+                    ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[0].prefixlen))
+                else:
+                    ip_addresses.append(str(mapping.IPAddr) + "/" + str(mapping.VNIC.SUBNET.IPPrefix[1].prefixlen))
+
+        return ip_addresses
 
 client = LocalMappingObjectClient()
 
-def GetMatchingObjects(selectors):
+def GetMatchingObjects(selectors, node):
     objs = []
-    for obj in client.Objects():
+    for obj in client.Objects(node):
         if obj.IsFilterMatch(selectors):
             objs.append(obj)
     return objs

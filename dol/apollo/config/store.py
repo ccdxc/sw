@@ -20,7 +20,14 @@ class ApolloConfigStore:
         self.batchClient = None
         self.hostport = None
         self.switchport = None
+        self.dutNode = 1
         return
+
+    def SetDUTNode(self, node):
+        self.dutNode = 1
+
+    def GetDUTNode(self):
+        return self.dutNode
 
     def SetBatchClient(self, obj):
         self.batchClient = obj

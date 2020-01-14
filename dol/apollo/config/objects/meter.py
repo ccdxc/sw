@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import pdb
 import ipaddress
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -10,6 +11,7 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.objects.base as base
 import apollo.config.objects.route as route
+from apollo.config.store import EzAccessStore
 
 import meter_pb2 as meter_pb2
 
@@ -36,7 +38,7 @@ class MeterStatsHelper:
         grpcmsg = meter_pb2.MeterGetRequest()
         if self.MeterId != None:
             grpcmsg.Id = self.MeterId
-        resp = api.client.Get(api.ObjectTypes.METER, [ grpcmsg ])
+        resp = api.client[EzAccessStore.GetDUTNode()].Get(api.ObjectTypes.METER, [ grpcmsg ])
         if resp != None:
             return resp[0]
         return None
@@ -106,8 +108,8 @@ class MeterRuleObject(base.ConfigObjectBase):
         logger.info("- %s" % res)
 
 class MeterObject(base.ConfigObjectBase):
-    def __init__(self, parent, af, rules):
-        super().__init__(api.ObjectTypes.METER)
+    def __init__(self, node, parent, af, rules):
+        super().__init__(api.ObjectTypes.METER, node)
         ################# PUBLIC ATTRIBUTES OF METER OBJECT #####################
         self.VPCId = parent.VPCId
         if af == utils.IP_VERSION_6:
@@ -161,39 +163,39 @@ class MeterObject(base.ConfigObjectBase):
 class MeterObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.METER, resmgr.MAX_METER)
-        self.__v4objs = {}
-        self.__v6objs = {}
-        self.__v4iter = {}
-        self.__v6iter = {}
+        self.__v4objs = defaultdict(dict)
+        self.__v6objs = defaultdict(dict)
+        self.__v4iter = defaultdict(dict)
+        self.__v6iter = defaultdict(dict)
         self.__num_v4_meter_per_vpc = []
         self.__num_v6_meter_per_vpc = []
         return
 
-    def GetV4MeterId(self, vpcid):
-        if self.GetNumObjects():
-            assert(len(self.__v4objs[vpcid]) != 0)
-            return self.__v4iter[vpcid].rrnext().MeterId
+    def GetV4MeterId(self, node, vpcid):
+        if self.GetNumObjects(node):
+            assert(len(self.__v4objs[node][vpcid]) != 0)
+            return self.__v4iter[node][vpcid].rrnext().MeterId
         else:
             return 0
 
-    def GetV6MeterId(self, vpcid):
-        if self.GetNumObjects():
-            assert(len(self.__v6objs[vpcid]) != 0)
-            return self.__v6iter[vpcid].rrnext().MeterId
+    def GetV6MeterId(self, node, vpcid):
+        if self.GetNumObjects(node):
+            assert(len(self.__v6objs[node][vpcid]) != 0)
+            return self.__v6iter[node][vpcid].rrnext().MeterId
         else:
             return 0
 
     def GetNumMeterPerVPC(self):
         return self.__num_v4_meter_per_vpc,self.__num_v6_meter_per_vpc
 
-    def GenerateObjects(self, parent, vpcspecobj):
+    def GenerateObjects(self, node, parent, vpcspecobj):
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4objs[vpcid] = []
-        self.__v6objs[vpcid] = []
-        self.__v4iter[vpcid] = None
-        self.__v6iter[vpcid] = None
+        self.__v4objs[node][vpcid] = []
+        self.__v6objs[node][vpcid] = []
+        self.__v4iter[node][vpcid] = None
+        self.__v6iter[node][vpcid] = None
 
         if getattr(vpcspecobj, 'meter', None) == None:
             self.__num_v4_meter_per_vpc.append(0)
@@ -246,9 +248,9 @@ class MeterObjectClient(base.ConfigClientBase):
             rules = []
 
             if af == utils.IP_VERSION_4:
-                total_rt = route.client.GetRouteV4Tables(vpcid)
+                total_rt = route.client.GetRouteV4Tables(node, vpcid)
             else:
-                total_rt = route.client.GetRouteV6Tables(vpcid)
+                total_rt = route.client.GetRouteV6Tables(node, vpcid)
             if total_rt != None:
                 for rt_id, rt_obj in total_rt.items():
                     if rt_obj.RouteType != 'overlap':
@@ -269,44 +271,44 @@ class MeterObjectClient(base.ConfigClientBase):
             if meter.auto_fill:
                 if isV4Stack:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_4)
-                    obj = MeterObject(parent, utils.IP_VERSION_4, rules)
-                    self.__v4objs[vpcid].append(obj)
-                    self.Objs.update({obj.MeterId: obj})
+                    obj = MeterObject(node, parent, utils.IP_VERSION_4, rules)
+                    self.__v4objs[node][vpcid].append(obj)
+                    self.Objs[node].update({obj.MeterId: obj})
                     v4_count += len(rules)
                 if isV6Stack:
                     rules = __add_meter_rules_from_routetable(meter, utils.IP_VERSION_6)
-                    obj = MeterObject(parent, utils.IP_VERSION_6, rules)
-                    self.__v6objs[vpcid].append(obj)
-                    self.Objs.update({obj.MeterId: obj})
+                    obj = MeterObject(node, parent, utils.IP_VERSION_6, rules)
+                    self.__v6objs[node][vpcid].append(obj)
+                    self.Objs[node].update({obj.MeterId: obj})
                     v6_count += len(rules)
             else:
                 while c < meter.count:
                     if isV4Stack:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_4, c)
-                        obj = MeterObject(parent, utils.IP_VERSION_4, rules)
-                        self.__v4objs[vpcid].append(obj)
-                        self.Objs.update({obj.MeterId: obj})
+                        obj = MeterObject(node, parent, utils.IP_VERSION_4, rules)
+                        self.__v4objs[node][vpcid].append(obj)
+                        self.Objs[node].update({obj.MeterId: obj})
                         v4_count += len(rules)
                     if isV6Stack:
                         rules = __add_meter_rules(meter.rule, utils.IP_VERSION_6, c)
-                        obj = MeterObject(parent, utils.IP_VERSION_6, rules)
-                        self.__v6objs[vpcid].append(obj)
-                        self.Objs.update({obj.MeterId: obj})
+                        obj = MeterObject(node, parent, utils.IP_VERSION_6, rules)
+                        self.__v6objs[node][vpcid].append(obj)
+                        self.Objs[node].update({obj.MeterId: obj})
                         v6_count += len(rules)
                     c += 1
 
-        if len(self.__v4objs[vpcid]):
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid])
-        if len(self.__v6objs[vpcid]):
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid])
+        if len(self.__v4objs[node][vpcid]):
+            self.__v4iter[node][vpcid] = utils.rrobiniter(self.__v4objs[node][vpcid])
+        if len(self.__v6objs[node][vpcid]):
+            self.__v6iter[node][vpcid] = utils.rrobiniter(self.__v6objs[node][vpcid])
         self.__num_v4_meter_per_vpc.append(v4_count)
         self.__num_v6_meter_per_vpc.append(v6_count)
         return
 
-    def ReadObjects(self):
+    def ReadObjects(self, node):
         # TODO: Add validation
-        msg = self.GetGrpcReadAllMessage()
-        api.client.Get(self.ObjType, [msg])
+        msg = self.GetGrpcReadAllMessage(node)
+        api.client[node].Get(self.ObjType, [msg])
         return
 
 client = MeterObjectClient()

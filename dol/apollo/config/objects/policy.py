@@ -4,6 +4,7 @@ import copy
 import enum
 import ipaddress
 import random
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -111,8 +112,8 @@ class RuleObject:
         self.L4Match.Show()
 
 class PolicyObject(base.ConfigObjectBase):
-    def __init__(self, vpcid, af, direction, rules, policytype, overlaptype, level='subnet'):
-        super().__init__(api.ObjectTypes.POLICY)
+    def __init__(self, node, vpcid, af, direction, rules, policytype, overlaptype, level='subnet'):
+        super().__init__(api.ObjectTypes.POLICY, node)
         ################# PUBLIC ATTRIBUTES OF POLICY OBJECT #####################
         self.VPCId = vpcid
         self.Direction = direction
@@ -288,14 +289,14 @@ class PolicyObjectClient(base.ConfigClientBase):
         def __isObjSupported():
             return True
         super().__init__(api.ObjectTypes.POLICY, resmgr.MAX_POLICY)
-        self.__v4ingressobjs = {}
-        self.__v6ingressobjs = {}
-        self.__v4egressobjs = {}
-        self.__v6egressobjs = {}
-        self.__v4ipolicyiter = {}
-        self.__v6ipolicyiter = {}
-        self.__v4epolicyiter = {}
-        self.__v6epolicyiter = {}
+        self.__v4ingressobjs = defaultdict(dict)
+        self.__v6ingressobjs = defaultdict(dict)
+        self.__v4egressobjs = defaultdict(dict)
+        self.__v6egressobjs = defaultdict(dict)
+        self.__v4ipolicyiter = defaultdict(dict)
+        self.__v6ipolicyiter = defaultdict(dict)
+        self.__v4epolicyiter = defaultdict(dict)
+        self.__v6epolicyiter = defaultdict(dict)
         self.__supported = __isObjSupported()
         return
 
@@ -304,14 +305,14 @@ class PolicyObjectClient(base.ConfigClientBase):
             return utils.GetYamlSpecAttr(spec, 'id')
         return int(spec.Id)
 
-    def PdsctlRead(self):
+    def PdsctlRead(self, node):
         # pdsctl show not supported for policy
         return
 
-    def GetPolicyObject(self, policyid):
-        return self.GetObjectByKey(policyid)
+    def GetPolicyObject(self, node, policyid):
+        return self.GetObjectByKey(node, policyid)
 
-    def ModifyPolicyRules(self, policyid, subnetobj):
+    def ModifyPolicyRules(self, node, policyid, subnetobj):
         if utils.IsPipelineApollo():
             # apollo does not support both sip & dip match in rules
             return
@@ -355,7 +356,7 @@ class PolicyObjectClient(base.ConfigClientBase):
                 l3matchobj.DstPrefix, l3matchobj.DstIPLow, l3matchobj.DstIPHigh, l3matchobj.DstTag = __get_l3_attr(l3matchobj.DstType, subnetpfx, subnettag)
             return
 
-        policy = self.GetPolicyObject(policyid)
+        policy = self.GetPolicyObject(node, policyid)
         direction = policy.Direction
         af = utils.GetIPVersion(policy.AddrFamily)
         subnetpfx = subnetobj.IPPrefix[1] if af == utils.IP_VERSION_4 else subnetobj.IPPrefix[0]
@@ -366,42 +367,42 @@ class PolicyObjectClient(base.ConfigClientBase):
             __modify_l3_match(direction, rule.L3Match, subnetpfx, subnettag)
         return
 
-    def GetIngV4SecurityPolicyId(self, vpcid):
-        if len(self.__v4ingressobjs[vpcid]) == 0:
+    def GetIngV4SecurityPolicyId(self, node, vpcid):
+        if len(self.__v4ingressobjs[node][vpcid]) == 0:
             return 0
-        return self.__v4ipolicyiter[vpcid].rrnext().PolicyId
+        return self.__v4ipolicyiter[node][vpcid].rrnext().PolicyId
 
-    def GetIngV6SecurityPolicyId(self, vpcid):
-        if len(self.__v6ingressobjs[vpcid]) == 0:
+    def GetIngV6SecurityPolicyId(self, node, vpcid):
+        if len(self.__v6ingressobjs[node][vpcid]) == 0:
             return 0
-        return self.__v6ipolicyiter[vpcid].rrnext().PolicyId
+        return self.__v6ipolicyiter[node][vpcid].rrnext().PolicyId
 
-    def GetEgV4SecurityPolicyId(self, vpcid):
-        if len(self.__v4egressobjs[vpcid]) == 0:
+    def GetEgV4SecurityPolicyId(self, node, vpcid):
+        if len(self.__v4egressobjs[node][vpcid]) == 0:
             return 0
-        return self.__v4epolicyiter[vpcid].rrnext().PolicyId
+        return self.__v4epolicyiter[node][vpcid].rrnext().PolicyId
 
-    def GetEgV6SecurityPolicyId(self, vpcid):
-        if len(self.__v6egressobjs[vpcid]) == 0:
+    def GetEgV6SecurityPolicyId(self, node, vpcid):
+        if len(self.__v6egressobjs[node][vpcid]) == 0:
             return 0
-        return self.__v6epolicyiter[vpcid].rrnext().PolicyId
+        return self.__v6epolicyiter[node][vpcid].rrnext().PolicyId
 
     def Add_V4Policy(self, vpcid, direction, v4rules, policytype, overlaptype, level='subnet'):
-        obj = PolicyObject(vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype, level)
+        obj = PolicyObject(node, vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype, level)
         if direction == 'ingress':
-            self.__v4ingressobjs[vpcid].append(obj)
+            self.__v4ingressobjs[node][vpcid].append(obj)
         else:
-            self.__v4egressobjs[vpcid].append(obj)
-        self.Objs.update({obj.PolicyId: obj})
+            self.__v4egressobjs[node][vpcid].append(obj)
+        self.Objs[node].update({obj.PolicyId: obj})
         return obj.PolicyId
 
     def Add_V6Policy(self, vpcid, direction, v6rules, policytype, overlaptype, level='subnet'):
-        obj = PolicyObject(vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype, level)
+        obj = PolicyObject(node, vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype, level)
         if direction == 'ingress':
-            self.__v6ingressobjs[vpcid].append(obj)
+            self.__v6ingressobjs[node][vpcid].append(obj)
         else:
-            self.__v6egressobjs[vpcid].append(obj)
-        self.Objs.update({obj.PolicyId: obj})
+            self.__v6egressobjs[node][vpcid].append(obj)
+        self.Objs[node].update({obj.PolicyId: obj})
         return obj.PolicyId
 
     def Generate_Allow_All_Rules(self, spfx, dpfx):
@@ -445,21 +446,21 @@ class PolicyObjectClient(base.ConfigClientBase):
             vnic_policies.append(policyid)
         return vnic_policies
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         if not self.__supported:
             return
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4ingressobjs[vpcid] = []
-        self.__v6ingressobjs[vpcid] = []
-        self.__v4egressobjs[vpcid] = []
-        self.__v6egressobjs[vpcid] = []
-        self.__v4ipolicyiter[vpcid] = None
-        self.__v6ipolicyiter[vpcid] = None
-        self.__v4epolicyiter[vpcid] = None
-        self.__v6epolicyiter[vpcid] = None
+        self.__v4ingressobjs[node][vpcid] = []
+        self.__v6ingressobjs[node][vpcid] = []
+        self.__v4egressobjs[node][vpcid] = []
+        self.__v6egressobjs[node][vpcid] = []
+        self.__v4ipolicyiter[node][vpcid] = None
+        self.__v6ipolicyiter[node][vpcid] = None
+        self.__v4epolicyiter[node][vpcid] = None
+        self.__v6epolicyiter[node][vpcid] = None
 
         def __get_l4_rule(af, rulespec):
             sportlow = getattr(rulespec, 'sportlow', utils.L4PORT_MIN)
@@ -709,20 +710,20 @@ class PolicyObjectClient(base.ConfigClientBase):
             return rules
 
         def __add_v4policy(direction, v4rules, policytype, overlaptype):
-            obj = PolicyObject(vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype)
+            obj = PolicyObject(node, vpcid, utils.IP_VERSION_4, direction, v4rules, policytype, overlaptype)
             if direction == 'ingress':
-                self.__v4ingressobjs[vpcid].append(obj)
+                self.__v4ingressobjs[node][vpcid].append(obj)
             else:
-                self.__v4egressobjs[vpcid].append(obj)
-            self.Objs.update({obj.PolicyId: obj})
+                self.__v4egressobjs[node][vpcid].append(obj)
+            self.Objs[node].update({obj.PolicyId: obj})
 
         def __add_v6policy(direction, v6rules, policytype, overlaptype):
-            obj = PolicyObject(vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
+            obj = PolicyObject(node, vpcid, utils.IP_VERSION_6, direction, v6rules, policytype, overlaptype)
             if direction == 'ingress':
-                self.__v6ingressobjs[vpcid].append(obj)
+                self.__v6ingressobjs[node][vpcid].append(obj)
             else:
-                self.__v6egressobjs[vpcid].append(obj)
-            self.Objs.update({obj.PolicyId: obj})
+                self.__v6egressobjs[node][vpcid].append(obj)
+            self.Objs[node].update({obj.PolicyId: obj})
 
         def __add_user_specified_policy(policyspec, policytype, overlaptype):
             direction = policyspec.direction
@@ -773,17 +774,17 @@ class PolicyObjectClient(base.ConfigClientBase):
                 overlaptype = getattr(policy_spec_obj, 'overlaptype', 'none')
                 __add_user_specified_policy(policy_spec_obj, policytype, overlaptype)
 
-        if len(self.__v4ingressobjs[vpcid]) != 0:
-            self.__v4ipolicyiter[vpcid] = utils.rrobiniter(self.__v4ingressobjs[vpcid])
+        if len(self.__v4ingressobjs[node][vpcid]) != 0:
+            self.__v4ipolicyiter[node][vpcid] = utils.rrobiniter(self.__v4ingressobjs[node][vpcid])
 
-        if len(self.__v6ingressobjs[vpcid]) != 0:
-            self.__v6ipolicyiter[vpcid] = utils.rrobiniter(self.__v6ingressobjs[vpcid])
+        if len(self.__v6ingressobjs[node][vpcid]) != 0:
+            self.__v6ipolicyiter[node][vpcid] = utils.rrobiniter(self.__v6ingressobjs[node][vpcid])
 
-        if len(self.__v4egressobjs[vpcid]) != 0:
-            self.__v4epolicyiter[vpcid] = utils.rrobiniter(self.__v4egressobjs[vpcid])
+        if len(self.__v4egressobjs[node][vpcid]) != 0:
+            self.__v4epolicyiter[node][vpcid] = utils.rrobiniter(self.__v4egressobjs[node][vpcid])
 
-        if len(self.__v6egressobjs[vpcid]) != 0:
-            self.__v6epolicyiter[vpcid] = utils.rrobiniter(self.__v6egressobjs[vpcid])
+        if len(self.__v6egressobjs[node][vpcid]) != 0:
+            self.__v6epolicyiter[node][vpcid] = utils.rrobiniter(self.__v6egressobjs[node][vpcid])
 
         return
 
@@ -808,9 +809,10 @@ class PolicyObjectHelper:
 
     def GetMatchingConfigObjects(self, selectors):
         objs = []
-        policyobjs = filter(lambda x: x.IsFilterMatch(selectors), client.Objects())
+        dutNode = EzAccessStore.GetDUTNode()
+        policyobjs = filter(lambda x: x.IsFilterMatch(selectors), client.Objects(dutNode))
         for policyObj in policyobjs:
-            for lobj in lmapping.client.Objects():
+            for lobj in lmapping.client.Objects(dutNode):
                 if self.__is_lmapping_match(policyObj, lobj):
                     policyObj.l_obj = lobj
                     objs.append(policyObj)

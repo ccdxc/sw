@@ -46,7 +46,7 @@ class FlowMapObject(base.ConfigObjectBase):
         #TODO: Handle host mode
         obj.hostport = EzAccessStore.GetHostPort()
         obj.switchport = EzAccessStore.GetSwitchPort()
-        obj.dhcprelay = dhcprelay.client.GetDhcpRelayObject()
+        obj.dhcprelay = dhcprelay.client.GetDhcpRelayObject(EzAccessStore.GetDUTNode())
         utils.DumpTestcaseConfig(obj)
         return
 
@@ -153,9 +153,10 @@ class FlowMapObjectHelper:
         else:
             maxlimits = selectors.maxlimits
 
+        dutNode = EzAccessStore.GetDUTNode()
         if fwdmode == 'VPC_PEER':
-            rmappings = rmapping.GetMatchingObjects(mapsel)
-            lmappings = lmapping.GetMatchingObjects(mapsel)
+            rmappings = rmapping.GetMatchingObjects(mapsel, dutNode)
+            lmappings = lmapping.GetMatchingObjects(mapsel, dutNode)
             for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                 if routetblobj.IsNatEnabled():
                     # Skip IGWs with nat flag set to True
@@ -168,7 +169,7 @@ class FlowMapObjectHelper:
                         if IsAlreadySelected(obj, selected_objs): continue
                         objs.append(obj)
         elif fwdmode == 'IGW':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
@@ -179,7 +180,7 @@ class FlowMapObjectHelper:
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == 'IGW_NAT':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 if hasattr(lobj, "PublicIP") == False:
                     continue
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
@@ -192,7 +193,7 @@ class FlowMapObjectHelper:
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == 'IGW_NAPT':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 if hasattr(lobj, "PublicIP") == True:
                     # skip VNICs which have floating IP
                     continue
@@ -206,7 +207,7 @@ class FlowMapObjectHelper:
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == 'POLICY':
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     if not self.__is_lmapping_match(routetblobj, lobj):
                         continue
@@ -214,7 +215,7 @@ class FlowMapObjectHelper:
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         elif fwdmode == "L2L":
-            lobjs = lmapping.GetMatchingObjects(mapsel)
+            lobjs = lmapping.GetMatchingObjects(mapsel, dutNode)
             if l2l == 'VPC_PEER':
                 for routetblobj in routetable.GetAllMatchingObjects(mapsel):
                     smappingobjs = filter(lambda x: self.__is_lmapping_match(routetblobj, x), lobjs)
@@ -257,10 +258,10 @@ class FlowMapObjectHelper:
                     if IsAlreadySelected(obj, selected_objs): continue
                     objs.append(obj)
         else:
-            for lobj in lmapping.GetMatchingObjects(mapsel):
+            for lobj in lmapping.GetMatchingObjects(mapsel, dutNode):
                 if not self.__is_lmapping_valid(lobj):
                     continue
-                for robj in rmapping.GetMatchingObjects(rmapsel):
+                for robj in rmapping.GetMatchingObjects(rmapsel, dutNode):
                     if lobj.VNIC.SUBNET.VPC.VPCId != robj.SUBNET.VPC.VPCId:
                         continue
                     # Select mappings from the same subnet if L2 is set

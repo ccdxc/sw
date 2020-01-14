@@ -2,385 +2,387 @@
 meta:
     id: TOPO_LPM
 
-uplink:
-    - entry:
-        id      : uplink0
-        port    : 1
-        mode    : host
-        status  : UP
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : host
+            status  : UP
 
-    - entry:
-        id      : uplink1
-        port    : 2
-        mode    : switch
-        status  : UP
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : switch
+            status  : UP
 
-interface:
-    host:
+    hostinterface:
         lif         : ref://store/specs/id=LIF_ETH
 
-device:
-    mode        : host # bitw (default), host
-    stack       : ipv4 # ipv4 (default), ipv6
-    bridging    : false # false (default), true
-    learning    : false # false (default), true
-    ipaddress   : None # Taken from resmgr
-    gateway     : None # Taken from resmgr
-    encap       : vxlan # vxlan or mplsodup
-    tunnel      :
-        - count : 16
-          type  : underlay
-        - count : 16
-          type  : underlay-ecmp
-        - count : 16
-          type  : internet-gateway
-          nat   : true
-        - count : 16
-          type  : internet-gateway
-        - count : 32
-          type  : workload
-        # artemis
-        - count : 2
-          type  : service
-        - count : 1
-          type  : service
-          remote : true
-
-vpc:
-    - stack  : dual
-      count : 1
-      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
-      subnet :
-         - count : 1
-           v4prefixlen : 24
-           v6prefixlen : 64
-      routetbl:
-         - type: specific
-           routetype: only_default
-           v4routes:
-              - '0.0.0.0\0'
-           v6routes:
-              - '0::\0'
-      #nexthop:
-      #       - type: base
-      #         count : 1
-      policy:
-        - type : specific
-          policytype : default
-          direction : bidir
-
-    - stack  : dual
-      count : 1
-      type  : tenant
-      subnet:
-        - count     : 25              # should be same as total routetbl
-          v4prefixlen : 24
-          v6prefixlen : 64
-          vnic:
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              public  : true
-          rmap:                       # Remote IP mappings per subnet
+    device:
+        mode        : host # bitw (default), host
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : underlay
+            - count : 16
+              type  : underlay-ecmp
+            - count : 16
+              type  : internet-gateway
+              nat   : true
+            - count : 16
+              type  : internet-gateway
+            - count : 32
+              type  : workload
+            # artemis
             - count : 2
-      policy:
-              - type : specific
-                policytype : default
-                direction : bidir
-      #meter:
-      #  - count: 1
-      #    auto_fill: False
-      #    rule:
-      #      - type: PDS_METER_TYPE_ACCOUNTING
-      #        priority: 1
-      #        num_prefixes: 0
-      #        v4base: '66.0.0.0\24'
-      #        v6base: '2002::\120'
-      #        v4prefixes:
-      #          - '0.0.0.0\0'
-      #        v6prefixes:
-      #          - '0::\0'
-      nexthop:
-             - type: overlay
-               count : 25
-      routetbl:
-             - type: specific # route table with disjoint routes
-               count : 1 # always 1 if routes specified by user
-               routetype: disjoint
-               v4routes:
-                   - '10.10.0.0\16' # TEMP Infra issue and will reverse this in test logic
-                   - '11.11.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:eeee::\80'
+              type  : service
+            - count : 1
+              type  : service
+              remote : true
 
-             #- type: specific
-             #  routetype: disjoint # only > /64 routes are supported
-             #  v4routes:
-             #      - '10.10.0.0\16'
-             #  v6routes:
-             #      - '1234:5678:4321:8765::\64'
-
-             - type: specific # route table with disjoint routes and default
-               routetype: disjoint_with_default
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '11.11.0.0\16'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:eeee::\80'
-                   - '0::\0'
-
-             - type: specific # route table with left overlap routes
-               routetype: left_overlap
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '10.10.0.0\24'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-
+    vpc:
+        - stack  : dual
+          count : 1
+          type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          subnet :
+             - count : 1
+               v4prefixlen : 24
+               v6prefixlen : 64
+          routetbl:
              - type: specific
-               routetype: left_overlap
-               v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:2222::\96'
-
-             - type: specific # route table with left overlap routes and default
-               routetype: left_overlap_with_default
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '10.10.0.0\24'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:2222::\96'
-                   - '0::\0'
-
-             - type: specific # route table with multiple left overlap routes
-               routetype: multiple_left_overlap
-               v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\24'
-                   - '10.0.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-                   - '1234:5678:4321:8765:1111::\112'
-
-             - type: specific # route table with multiple left overlap routes and default
-               routetype: multiple_left_overlap_with_default
-               v4routes:
-                   - '10.0.0.0\8'
-                   - '10.0.0.0\24'
-                   - '10.0.0.0\16'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111::\96'
-                   - '1234:5678:4321:8765:1111::\112'
-                   - '0::\0'
-
-             - type: base
-               routetype: adjacent
-               count : 1
-               v4base: '64.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 10
-               v6base: '2000::\65'
-               v6prefixlen : 96
-               nv6routes   : 10
-               v4routes:
-               v6routes:
-
-             - type: base
-               routetype: adjacent_with_default
-               count : 1
-               v4base: '65.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 10
-               v6base: '2001::\65'
-               v6prefixlen : 96
-               nv6routes   : 10
-               v4routes:
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '0::\0'
-
-             - type: base
-               routetype: adjacent_max
-               count : 1
-               v4base: '75.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 1023
-               v6base: '3001::\65'
-               v6prefixlen : 96
-               nv6routes   : 1023
-               v4routes:
-               v6routes:
-
-             - type: base
-               routetype: adjacent_max_with_default
-               count : 1
-               v4base: '85.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 1022
-               v6base: '4001::\65'
-               v6prefixlen : 96
-               nv6routes   : 1022
-               v4routes:
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '0::\0'
-
-             - type: base
-               routetype: fulloverlap
-               count : 1
-               v4base: '66.0.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 256
-               v6base: '2002::\65'
-               v6prefixlen: 120
-               nv6routes   : 256
-               v4routes:
-               v6routes:
-
-             - type: base
-               routetype: fulloverlap_with_default
-               count : 1
-               v4base: '66.0.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 256
-               v6base: '2002::\65'
-               v6prefixlen: 120
-               nv6routes   : 256
-               v4routes:
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '0::\0'
-
-             - type: base
-               routetype: fulloverlap_max
-               count : 1
-               v4base: '66.0.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 1022
-               v6base: '2002::\65'
-               v6prefixlen: 120
-               nv6routes   : 1022
-               v4routes:
-               v6routes:
-
-             - type: base
-               routetype: fulloverlap_max_with_default
-               count : 1
-               v4base: '66.0.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 1021
-               v6base: '2002::\65'
-               v6prefixlen: 120
-               nv6routes   : 1021
-               v4routes:
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '0::\0'
-
-             - type: specific # route table with empty routes
-               routetype: empty
-               v4routes:
-               v6routes:
-
-             - type: specific # route table with only default routes
                routetype: only_default
                v4routes:
-                   - '0.0.0.0\0'
+                  - '0.0.0.0\0'
                v6routes:
-                   - '0::\0'
+                  - '0::\0'
+          #nexthop:
+          #       - type: base
+          #         count : 1
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
 
-             - type: specific # route table with only host routes
-               routetype: only_host
-               v4routes:
-                   - '10.10.11.1\32'
-                   - '10.10.12.2\32'
-                   - '10.10.13.3\32'
-                   - '10.10.14.4\32'
-                   - '10.10.15.5\32'
-               v6routes:
-                   - 'e1ba:aced:a11:face:b00c:bade:da75:900d\128'
-                   - 'e1ba:be57:10:ca6d:e1ba:0:da7a:1055\128'
+        - stack  : dual
+          count : 1
+          type  : tenant
+          subnet:
+            - count     : 25              # should be same as total routetbl
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  public  : true
+              rmap:                       # Remote IP mappings per subnet
+                - count : 2
+          policy:
+                  - type : specific
+                    policytype : default
+                    direction : bidir
+          #meter:
+          #  - count: 1
+          #    auto_fill: False
+          #    rule:
+          #      - type: PDS_METER_TYPE_ACCOUNTING
+          #        priority: 1
+          #        num_prefixes: 0
+          #        v4base: '66.0.0.0\24'
+          #        v6base: '2002::\120'
+          #        v4prefixes:
+          #          - '0.0.0.0\0'
+          #        v6prefixes:
+          #          - '0::\0'
+          nexthop:
+                 - type: overlay
+                   count : 25
+          routetbl:
+                 - type: specific # route table with disjoint routes
+                   count : 1 # always 1 if routes specified by user
+                   routetype: disjoint
+                   v4routes:
+                       - '10.10.0.0\16' # TEMP Infra issue and will reverse this in test logic
+                       - '11.11.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:eeee::\80'
 
-             - type: specific # route table with right overlap routes
-               routetype: right_overlap
-               v4routes:
-                   - '11.11.0.0\16'
-                   - '11.11.255.0\24'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:ffff::\96'
+                 #- type: specific
+                 #  routetype: disjoint # only > /64 routes are supported
+                 #  v4routes:
+                 #      - '10.10.0.0\16'
+                 #  v6routes:
+                 #      - '1234:5678:4321:8765::\64'
 
-             - type: specific
-               routetype: right_overlap
-               v4routes:
-                   - '11.0.0.0\8'
-                   - '11.255.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
+                 - type: specific # route table with disjoint routes and default
+                   routetype: disjoint_with_default
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '11.11.0.0\16'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:eeee::\80'
+                       - '0::\0'
 
-             - type: specific # route table with right overlap routes and default
-               routetype: right_overlap_with_default
-               v4routes:
-                   - '11.11.0.0\16'
-                   - '11.11.255.0\24'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '0::\0'
+                 - type: specific # route table with left overlap routes
+                   routetype: left_overlap
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '10.10.0.0\24'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
 
-             - type: specific # route table with multiple right overlap routes
-               routetype: multiple_right_overlap
-               v4routes:
-                   - '11.0.0.0\8'
-                   - '11.255.0.0\16'
-                   - '11.255.255.0\24'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '1234:5678:4321:8765:1111:3333:4444::\112'
+                 - type: specific
+                   routetype: left_overlap
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:2222::\96'
 
-             - type: specific # route table with multiple right overlap routes and default
-               routetype: multiple_right_overlap_with_default
-               v4routes:
-                   - '11.0.0.0\8'
-                   - '11.255.0.0\16'
-                   - '11.255.255.0\24'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '1234:5678:4321:8765:1111:3333:4444::\112'
-                   - '0::\0'
+                 - type: specific # route table with left overlap routes and default
+                   routetype: left_overlap_with_default
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '10.10.0.0\24'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:2222::\96'
+                       - '0::\0'
 
-             - type: specific # vpc peering
-               routetype: vpc_peer_with_default
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '11.11.0.0\16'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '0::\0'
+                 - type: specific # route table with multiple left overlap routes
+                   routetype: multiple_left_overlap
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\24'
+                       - '10.0.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
+                       - '1234:5678:4321:8765:1111::\112'
 
-             - type: specific # blackhole
-               routetype: blackhole
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '11.11.0.0\16'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
+                 - type: specific # route table with multiple left overlap routes and default
+                   routetype: multiple_left_overlap_with_default
+                   v4routes:
+                       - '10.0.0.0\8'
+                       - '10.0.0.0\24'
+                       - '10.0.0.0\16'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111::\96'
+                       - '1234:5678:4321:8765:1111::\112'
+                       - '0::\0'
+
+                 - type: base
+                   routetype: adjacent
+                   count : 1
+                   v4base: '64.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 10
+                   v6base: '2000::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
+
+                 - type: base
+                   routetype: adjacent_with_default
+                   count : 1
+                   v4base: '65.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 10
+                   v6base: '2001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+
+                 - type: base
+                   routetype: adjacent_max
+                   count : 1
+                   v4base: '75.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 1023
+                   v6base: '3001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 1023
+                   v4routes:
+                   v6routes:
+
+                 - type: base
+                   routetype: adjacent_max_with_default
+                   count : 1
+                   v4base: '85.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 1022
+                   v6base: '4001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 1022
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+
+                 - type: base
+                   routetype: fulloverlap
+                   count : 1
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 256
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 256
+                   v4routes:
+                   v6routes:
+
+                 - type: base
+                   routetype: fulloverlap_with_default
+                   count : 1
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 256
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 256
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+
+                 - type: base
+                   routetype: fulloverlap_max
+                   count : 1
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1022
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 1022
+                   v4routes:
+                   v6routes:
+
+                 - type: base
+                   routetype: fulloverlap_max_with_default
+                   count : 1
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1021
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 1021
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+
+                 - type: specific # route table with empty routes
+                   routetype: empty
+                   v4routes:
+                   v6routes:
+
+                 - type: specific # route table with only default routes
+                   routetype: only_default
+                   v4routes:
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '0::\0'
+
+                 - type: specific # route table with only host routes
+                   routetype: only_host
+                   v4routes:
+                       - '10.10.11.1\32'
+                       - '10.10.12.2\32'
+                       - '10.10.13.3\32'
+                       - '10.10.14.4\32'
+                       - '10.10.15.5\32'
+                   v6routes:
+                       - 'e1ba:aced:a11:face:b00c:bade:da75:900d\128'
+                       - 'e1ba:be57:10:ca6d:e1ba:0:da7a:1055\128'
+
+                 - type: specific # route table with right overlap routes
+                   routetype: right_overlap
+                   v4routes:
+                       - '11.11.0.0\16'
+                       - '11.11.255.0\24'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:ffff::\96'
+
+                 - type: specific
+                   routetype: right_overlap
+                   v4routes:
+                       - '11.0.0.0\8'
+                       - '11.255.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+
+                 - type: specific # route table with right overlap routes and default
+                   routetype: right_overlap_with_default
+                   v4routes:
+                       - '11.11.0.0\16'
+                       - '11.11.255.0\24'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '0::\0'
+
+                 - type: specific # route table with multiple right overlap routes
+                   routetype: multiple_right_overlap
+                   v4routes:
+                       - '11.0.0.0\8'
+                       - '11.255.0.0\16'
+                       - '11.255.255.0\24'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '1234:5678:4321:8765:1111:3333:4444::\112'
+
+                 - type: specific # route table with multiple right overlap routes and default
+                   routetype: multiple_right_overlap_with_default
+                   v4routes:
+                       - '11.0.0.0\8'
+                       - '11.255.0.0\16'
+                       - '11.255.255.0\24'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '1234:5678:4321:8765:1111:3333:4444::\112'
+                       - '0::\0'
+
+                 - type: specific # vpc peering
+                   routetype: vpc_peer_with_default
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '11.11.0.0\16'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '0::\0'
+
+                 - type: specific # blackhole
+                   routetype: blackhole
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '11.11.0.0\16'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'

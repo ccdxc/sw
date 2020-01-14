@@ -3,6 +3,7 @@
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.policy as policy
 import apollo.config.utils as utils
+from apollo.config.store import EzAccessStore
 
 class PolicyObjectHelper:
     def __init__(self):
@@ -23,9 +24,10 @@ class PolicyObjectHelper:
 
     def GetMatchingConfigObjects(self, selectors):
         objs = []
-        policyobjs = filter(lambda x: x.IsFilterMatch(selectors), policy.client.Objects())
+        dutNode = EzAccessStore.GetDUTNode()
+        policyobjs = filter(lambda x: x.IsFilterMatch(selectors), policy.client.Objects(dutNode))
         for policyObj in policyobjs:
-            for lobj in lmapping.client.Objects():
+            for lobj in lmapping.client.Objects(dutNode):
                 if self.__is_lmapping_match(policyObj, lobj):
                     policyObj.l_obj = lobj
                     objs.append(policyObj)

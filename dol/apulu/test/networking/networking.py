@@ -6,6 +6,7 @@ import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.generator as generator
 import apollo.test.callbacks.common.modcbs as modcbs
+from apollo.config.store import EzAccessStore
 
 def Setup(infra, module):
     if 'WORKFLOW_START' in module.name:
@@ -47,5 +48,5 @@ def TestCaseVerify(tc):
         topo.ChosenFlowObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
         topo.ChosenFlowObjs.reset()
-        generator.__read();
+        generator.__read(EzAccessStore.GetDUTNode())
     return True

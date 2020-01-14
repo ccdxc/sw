@@ -2,207 +2,209 @@
 meta:
     id: TOPO_VxLAN
 
-uplink:
-    - entry:
-        id      : uplink0
-        port    : 1
-        mode    : host
-        status  : UP
+dutnode : 1
+node:
+  - id : 1
+    uplink:
+        - entry:
+            id      : uplink0
+            port    : 1
+            mode    : host
+            status  : UP
 
-    - entry:
-        id      : uplink1
-        port    : 2
-        mode    : switch
-        status  : UP
+        - entry:
+            id      : uplink1
+            port    : 2
+            mode    : switch
+            status  : UP
 
-interface:
-    host:
+    hostinterface:
         lif         : ref://store/specs/id=LIF_ETH
 
-device:
-    mode        : bitw # bitw (default), host
-    stack       : ipv4 # ipv4 (default), ipv6
-    bridging    : false # false (default), true
-    learning    : false # false (default), true
-    ipaddress   : None # Taken from resmgr
-    gateway     : None # Taken from resmgr
-    macaddress  : macaddr/0002.0100.0001
-    encap       : vxlan # vxlan or mplsodup
-    tunnel      :
-        - count : 16
-          type  : internet-gateway
-          nat   : true
-        - count : 16
-          type  : internet-gateway
-        - count : 32
-          type  : workload
-        # artemis
-        - count : 2
-          type  : service
-        - count : 1
-          type  : service
-          remote : true
+    device:
+        mode        : bitw # bitw (default), host
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        macaddress  : macaddr/0002.0100.0001
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 16
+              type  : internet-gateway
+              nat   : true
+            - count : 16
+              type  : internet-gateway
+            - count : 32
+              type  : workload
+            # artemis
+            - count : 2
+              type  : service
+            - count : 1
+              type  : service
+              remote : true
 
-vpc:
-    # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
-    - stack  : dual # dual, ipv4 , ipv6
-      count : 1
-      type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
-      subnet :
-         - count : 1
-           v4prefixlen : 24
-           v6prefixlen : 64
-      nexthop:
-        - count : 1
-      routetbl:
-         - type: specific # route table with only default routes
-           routetype: only_default
-           v4routes:
-              - '0.0.0.0\0'
-           v6routes:
-              - '0::\0'
-      policy:
-        - type : specific
-          policytype : default
-          direction : bidir
-    # artemis - this vpc is only for artemis for nat46 functionality
-    - stack  : dual # dual, ipv4 , ipv6
-      count : 1
-      type  : tenant
-      subnet:
-        - count     : 4
-          v4prefixlen : 24
-          v6prefixlen : 64
-          vnic:
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
-              public  : true
-          rmap:                       # Remote IP mappings per subnet
-            - count : 4
-      nexthop:
-        - count : 10
-      routetbl:
-        - type: specific
-          routetype: only_default
-          teptype : service
-          v4routes:
-             - '0.0.0.0\0'
-          v6routes:
-             - '0::\0'
-
-        - type: specific
-          routetype: only_default
-          teptype : remoteservice
-          v4routes:
-             - '0.0.0.0\0'
-          v6routes:
-             - '0::\0'
-      meter:
-        - count: 1
-          auto_fill: False
-          rule:
-            - type: PDS_METER_TYPE_ACCOUNTING
-              priority: 1
-              num_prefixes: 0
-              v4base: '66.0.0.0\24'
-              v6base: '2002::\120'
-              v4prefixes:
-                - '0.0.0.0\0'
-              v6prefixes:
-                - '0::\0'
-      policy:
-        - type : specific
-          policytype : default
-          direction : bidir
-      nat46 : true
-    - stack  : dual # dual, ipv4 , ipv6
-      count : 2
-      type  : tenant
-      subnet:
-        - count     : 16
-          v4prefixlen : 24
-          v6prefixlen : 64
-          vnic:
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              srcguard : true         # true or false (default false)
-              public  : true
-              tagged  : false         # true or false (default true)
-            - count   : 1             # VNICs per subnet
-              ipcount : 4             # Local IP mapping per vnic
-              srcguard : false        # true or false (default false)
-              public  : true
-          rmap:                       # Remote IP mappings per subnet
-            - count : 4
-        - count     : 2
-          v4prefixlen : 28
-          v6prefixlen : 96
-          rmap:
-            - count : 4
-      nexthop:
-        - count : 10
-      routetbl:
-             - type: base
-               routetype: adjacent
-               count : 8
-               nat:
-                   level : tunnel # tunnel with nat flag set will be used as next-hop
-               v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
-               v4prefixlen : 28
-               nv4routes   : 10
-               v6base: '2000::\65' # TEMP Infra issue and will reverse this in test logic
-               v6prefixlen : 96
-               nv6routes   : 10
+    vpc:
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay  # This VPC is applicable only for ARTEMIS pipeline.
+          subnet :
+             - count : 1
+               v4prefixlen : 24
+               v6prefixlen : 64
+          nexthop:
+            - count : 1
+          routetbl:
+             - type: specific # route table with only default routes
+               routetype: only_default
                v4routes:
+                  - '0.0.0.0\0'
                v6routes:
+                  - '0::\0'
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
+        # artemis - this vpc is only for artemis for nat46 functionality
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : tenant
+          subnet:
+            - count     : 4
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+              rmap:                       # Remote IP mappings per subnet
+                - count : 4
+          nexthop:
+            - count : 10
+          routetbl:
+            - type: specific
+              routetype: only_default
+              teptype : service
+              v4routes:
+                 - '0.0.0.0\0'
+              v6routes:
+                 - '0::\0'
 
-             - type: base
-               routetype: adjacent
-               count : 1
-               v4base: '65.0.0.0\16'
-               v4prefixlen : 28
-               nv4routes   : 10
-               v6base: '2001::\65'
-               v6prefixlen : 96
-               nv6routes   : 10
-               v4routes:
-               v6routes:
+            - type: specific
+              routetype: only_default
+              teptype : remoteservice
+              v4routes:
+                 - '0.0.0.0\0'
+              v6routes:
+                 - '0::\0'
+          meter:
+            - count: 1
+              auto_fill: False
+              rule:
+                - type: PDS_METER_TYPE_ACCOUNTING
+                  priority: 1
+                  num_prefixes: 0
+                  v4base: '66.0.0.0\24'
+                  v6base: '2002::\120'
+                  v4prefixes:
+                    - '0.0.0.0\0'
+                  v6prefixes:
+                    - '0::\0'
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
+          nat46 : true
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 2
+          type  : tenant
+          subnet:
+            - count     : 16
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic:
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : true         # true or false (default false)
+                  public  : true
+                  tagged  : false         # true or false (default true)
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+              rmap:                       # Remote IP mappings per subnet
+                - count : 4
+            - count     : 2
+              v4prefixlen : 28
+              v6prefixlen : 96
+              rmap:
+                - count : 4
+          nexthop:
+            - count : 10
+          routetbl:
+                 - type: base
+                   routetype: adjacent
+                   count : 8
+                   nat:
+                       level : tunnel # tunnel with nat flag set will be used as next-hop
+                   v4base: '64.0.0.0\16' # TEMP Infra issue and will reverse this in test logic
+                   v4prefixlen : 28
+                   nv4routes   : 10
+                   v6base: '2000::\65' # TEMP Infra issue and will reverse this in test logic
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
 
-             - type: base
-               routetype: overlap
-               count : 5
-               v4base: '66.0.0.0\16'
-               v4prefixlen: 24
-               nv4routes   : 10
-               v6base: '2000::\65'
-               v6prefixlen: 120
-               nv6routes   : 10
-               v4routes:
-               v6routes:
+                 - type: base
+                   routetype: adjacent
+                   count : 1
+                   v4base: '65.0.0.0\16'
+                   v4prefixlen : 28
+                   nv4routes   : 10
+                   v6base: '2001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
 
-             - type: specific # route table with empty routes
-               routetype: empty
-               v4routes:
-               v6routes:
+                 - type: base
+                   routetype: overlap
+                   count : 5
+                   v4base: '66.0.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 10
+                   v6base: '2000::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
 
-             - type: specific # vpc peering
-               routetype: vpc_peer_with_default
-               v4routes:
-                   - '10.10.0.0\16'
-                   - '11.11.0.0\16'
-                   - '0.0.0.0\0'
-               v6routes:
-                   - '1234:5678:4321:8765:1111::\80'
-                   - '1234:5678:4321:8765:1111:3333::\96'
-                   - '0::\0'
+                 - type: specific # route table with empty routes
+                   routetype: empty
+                   v4routes:
+                   v6routes:
 
-      meter:
-        - auto_fill: True
-          base_priority: 1
-          rule_type: PDS_METER_TYPE_ACCOUNTING
+                 - type: specific # vpc peering
+                   routetype: vpc_peer_with_default
+                   v4routes:
+                       - '10.10.0.0\16'
+                       - '11.11.0.0\16'
+                       - '0.0.0.0\0'
+                   v6routes:
+                       - '1234:5678:4321:8765:1111::\80'
+                       - '1234:5678:4321:8765:1111:3333::\96'
+                       - '0::\0'
 
-      policy:
-              - type : specific
-                policytype : default
-                direction : bidir
+          meter:
+            - auto_fill: True
+              base_priority: 1
+              rule_type: PDS_METER_TYPE_ACCOUNTING
+
+          policy:
+                  - type : specific
+                    policytype : default
+                    direction : bidir

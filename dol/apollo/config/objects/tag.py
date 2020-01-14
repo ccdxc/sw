@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import ipaddress
 import pdb
+from collections import defaultdict
 
 from infra.common.logging import logger
 
@@ -30,8 +31,8 @@ class TagRuleObject:
         return
 
 class TagObject(base.ConfigObjectBase):
-    def __init__(self, af, rules):
-        super().__init__(api.ObjectTypes.TAG)
+    def __init__(self, node, af, rules):
+        super().__init__(api.ObjectTypes.TAG, node)
         ################# PUBLIC ATTRIBUTES OF TAG TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
             self.TagTblId = next(resmgr.V6TagIdAllocator)
@@ -92,18 +93,18 @@ class TagObject(base.ConfigObjectBase):
 class TagObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.TAG, resmgr.MAX_TAG)
-        self.__v4objs = {}
-        self.__v6objs = {}
-        self.__v4iter = {}
-        self.__v6iter = {}
+        self.__v4objs = defaultdict(dict)
+        self.__v6objs = defaultdict(dict)
+        self.__v4iter = defaultdict(dict)
+        self.__v6iter = defaultdict(dict)
         return
 
     def IsValidConfig(self):
-        count = sum(list(map(lambda x: len(x.values()), self.__v4objs.values())))
+        count = sum(list(map(lambda x: len(x.values()), self.__v4objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V4 Tag Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
-        count = sum(list(map(lambda x: len(x.values()), self.__v6objs.values())))
+        count = sum(list(map(lambda x: len(x.values()), self.__v6objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V6 Tag Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
@@ -111,29 +112,29 @@ class TagObjectClient(base.ConfigClientBase):
         #TODO: check scale of routes per route table
         return True, ""
 
-    def GetTagV4Table(self, vpcid, tagtblid):
-        return self.__v4objs[vpcid].get(tagtblid, None)
+    def GetTagV4Table(self, node, vpcid, tagtblid):
+        return self.__v4objs[node][vpcid].get(tagtblid, None)
 
-    def GetTagV6Table(self, vpcid, tagtblid):
-        return self.__v6objs[vpcid].get(tagtblid, None)
+    def GetTagV6Table(self, node, vpcid, tagtblid):
+        return self.__v6objs[node][vpcid].get(tagtblid, None)
 
-    def GetTagV4TableId(self, vpcid):
-        if self.__v4objs[vpcid]:
-            return self.__v4iter[vpcid].rrnext().TagTblId
+    def GetTagV4TableId(self, node, vpcid):
+        if self.__v4objs[node][vpcid]:
+            return self.__v4iter[node][vpcid].rrnext().TagTblId
         return 0
 
-    def GetTagV6TableId(self, vpcid):
-        if self.__v6objs[vpcid]:
-            return self.__v6iter[vpcid].rrnext().TagTblId
+    def GetTagV6TableId(self, node, vpcid):
+        if self.__v6objs[node][vpcid]:
+            return self.__v6iter[node][vpcid].rrnext().TagTblId
         return 0
 
-    def GetTagTable(self, vpcid, af):
-        tagtblid = self.GetTagV6TableId(vpcid) if af == utils.IP_VERSION_6 else self.GetTagV4TableId(vpcid)
-        tagtbl = self.GetTagV6Table(vpcid, tagtblid) if af == utils.IP_VERSION_6 else self.GetTagV4Table(vpcid, tagtblid)
+    def GetTagTable(self, node, vpcid, af):
+        tagtblid = self.GetTagV6TableId(node, vpcid) if af == utils.IP_VERSION_6 else self.GetTagV4TableId(node, vpcid)
+        tagtbl = self.GetTagV6Table(node, vpcid, tagtblid) if af == utils.IP_VERSION_6 else self.GetTagV4Table(node, vpcid, tagtblid)
         return tagtbl
 
-    def GetCreateTag(self, vpcid, af, pfx, tagid=0):
-        tagtbl = self.GetTagTable(vpcid, af)
+    def GetCreateTag(self, node, vpcid, af, pfx, tagid=0):
+        tagtbl = self.GetTagTable(node, vpcid, af)
         tagtbl.Rules.sort(key=lambda x: x.TagId)
         for rule in tagtbl.Rules:
             for tagpfx in rule.Prefixes:
@@ -146,14 +147,14 @@ class TagObjectClient(base.ConfigClientBase):
         tagtbl.Rules.append(obj)
         return obj
 
-    def GenerateObjects(self, parent, vpc_spec_obj):
+    def GenerateObjects(self, node, parent, vpc_spec_obj):
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
         isV6Stack = utils.IsV6Stack(parent.Stack)
-        self.__v4objs[vpcid] = dict()
-        self.__v6objs[vpcid] = dict()
-        self.__v4iter[vpcid] = None
-        self.__v6iter[vpcid] = None
+        self.__v4objs[node][vpcid] = dict()
+        self.__v6objs[node][vpcid] = dict()
+        self.__v4iter[node][vpcid] = None
+        self.__v6iter[node][vpcid] = None
 
         if not utils.IsTagSupported():
             return
@@ -179,14 +180,14 @@ class TagObjectClient(base.ConfigClientBase):
             return
 
         def __add_v4tagtable(v4rules):
-            obj = TagObject(utils.IP_VERSION_4, v4rules)
-            self.__v4objs[vpcid].update({obj.TagTblId: obj})
-            self.Objs.update({obj.TagTblId: obj})
+            obj = TagObject(node, utils.IP_VERSION_4, v4rules)
+            self.__v4objs[node][vpcid].update({obj.TagTblId: obj})
+            self.Objs[node].update({obj.TagTblId: obj})
 
         def __add_v6tagtable(v6rules):
-            obj = TagObject(utils.IP_VERSION_6, v6rules)
-            self.__v6objs[vpcid].update({obj.TagTblId: obj})
-            self.Objs.update({obj.TagTblId: obj})
+            obj = TagObject(node, utils.IP_VERSION_6, v6rules)
+            self.__v6objs[node][vpcid].update({obj.TagTblId: obj})
+            self.Objs[node].update({obj.TagTblId: obj})
 
         def __get_user_specified_rules(rulesspec):
             rules = []
@@ -216,11 +217,11 @@ class TagObjectClient(base.ConfigClientBase):
                 __add_user_specified_tagtable(tagtbl_spec_obj, tagpfxtype)
                 continue
 
-        if self.__v6objs[vpcid]:
-            self.__v6iter[vpcid] = utils.rrobiniter(self.__v6objs[vpcid].values())
+        if self.__v6objs[node][vpcid]:
+            self.__v6iter[node][vpcid] = utils.rrobiniter(self.__v6objs[node][vpcid].values())
 
-        if self.__v4objs[vpcid]:
-            self.__v4iter[vpcid] = utils.rrobiniter(self.__v4objs[vpcid].values())
+        if self.__v4objs[node][vpcid]:
+            self.__v4iter[node][vpcid] = utils.rrobiniter(self.__v4objs[node][vpcid].values())
         return
 
     """
