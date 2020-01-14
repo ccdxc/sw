@@ -4,12 +4,13 @@ WS_TOP="/sw"
 TOPDIR="/sw/nic"
 BUILD_DIR=${TOPDIR}/build/x86_64/iris/
 
+export OPERD_REGIONS="./operd-regions.json"
 export PENLOG_LOCATION="."
 export NO_WATCHDOG=1
 
 pushd ${TOPDIR}
 
-make delphi_hub.bin sysmgr.bin sysmgr_example.bin
+make delphi_hub.bin sysmgr.bin sysmgr_example.bin operdctl.bin
 RET=$?
 if [ $RET -ne 0 ]
 then
@@ -35,9 +36,10 @@ runtest () {
     json=$1
     shift
     lines=("$@")
-    rm -rf *.log core.* /tmp/delphi* *.out.log* *.err.log*
+    rm -rf *.log core.* /tmp/delphi* *.out.log* *.err.log* /dev/shm/*
     echo Running $json test
     timeout -k $tm $tm ${BUILD_DIR}/bin/sysmgr $json .
+    ${BUILD_DIR}/bin/operdctl dump sysmgr > sysmgr.log
     cat *.log
     for ln in "${lines[@]}"
     do grep -c "$ln" *.log

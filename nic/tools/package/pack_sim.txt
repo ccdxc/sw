@@ -5,6 +5,8 @@ nic/build/x86_64/iris/bin/delphi_hub                                /nic/bin/
 nic/build/x86_64/iris/bin/delphictl                                 /nic/bin/
 nic/build/x86_64/iris/bin/sysmgr                                    /nic/bin/
 nic/build/x86_64/iris/bin/upgrade                                   /nic/bin/
+nic/build/x86_64/iris/bin/operdctl                                  /nic/bin/
+nic/build/x86_64/iris/bin/operd-daemon                              /nic/bin/
 nic/build/x86_64/iris/bin/penctl                                    /nic/bin/
 nic/build/x86_64/iris/bin/fwloggen                                  /nic/bin/
 nic/build/x86_64/iris/bin/gen_events                                /nic/bin/
@@ -93,6 +95,7 @@ nic/build/x86_64/iris/lib/libsysmgr.so                              /nic/lib/
 nic/build/x86_64/iris/lib/libpenlog.so                              /nic/lib/
 nic/build/x86_64/iris/lib/*upgrade*                                 /nic/lib/
 nic/build/x86_64/iris/lib/libpenctlproto.so                         /nic/lib/
+nic/build/x86_64/iris/lib/liboperd.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libproto.so                               /nic/lib/
 nic/build/x86_64/iris/lib/libcommonproto.so                         /nic/lib/
 nic/build/x86_64/iris/lib/libnicmgrproto.so                         /nic/lib/

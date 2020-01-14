@@ -218,5 +218,13 @@
         "flags": [],
         "timeout": 0.0,
         "cpu-affinity": "0xD"
+    },
+    {
+        "name": "operd-daemon",
+        "command": "/nic/bin/operd-daemon /nic/conf/operd-daemon.json",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     }
 ]

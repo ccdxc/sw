@@ -4,7 +4,7 @@ include ${MKDEFS}/pre.mk
 MODULE_TARGET   = sysmgr.bin
 MODULE_PIPELINE = iris apollo apulu artemis
 ifeq (${PIPELINE}, iris)
-MODULE_SOLIBS   = pal logger delphisdk eventproto eventtypes events_recorder
+MODULE_SOLIBS   = pal operd delphisdk eventproto eventtypes events_recorder
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} rt ev pthread z dl
 MODULE_ARLIBS   = sysmgrproto delphiproto
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp \
@@ -12,7 +12,7 @@ ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp \
 ALL_TEST_FILES  = $(wildcard ${MODULE_SRC_DIR}/*_test.cpp)
 else
 MODULE_SOLIBS   = pal logger
-MODULE_LDLIBS   = rt ev pthread z dl
+MODULE_LDLIBS   = rt ev pthread z dl operd
 MODULE_ARLIBS   =
 ALL_CC_FILES    = $(wildcard ${MODULE_SRC_DIR}/*.cpp \
 	                     ${MODULE_SRC_DIR}/apollo/*.cpp)

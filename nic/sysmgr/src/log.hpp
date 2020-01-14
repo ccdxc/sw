@@ -1,13 +1,8 @@
-#ifndef __LOG_H__
-#define __LOG_H__
+#ifndef __SYSMGR_LOG_H__
+#define __SYSMGR_LOG_H__
 
-#include <memory>
+#include "lib/operd/logger.hpp"
 
-#include <spdlog/sinks/file_sinks.h>
-#include <spdlog/spdlog.h>
+extern sdk::operd::logger_ptr g_log;
 
-extern std::shared_ptr<spdlog::logger> glog;
-
-void init_logger(void);
-
-#endif // __LOG_H__
+#endif // __SYSMGR_LOG_H__

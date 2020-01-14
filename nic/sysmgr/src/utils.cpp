@@ -59,14 +59,14 @@ void exists_or_mkdir(const char *dir)
     struct stat sb;
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            glog->critical("%s is not a directory");
+            g_log->err("%s is not a directory", dir);
             exit(-1);
         }
         return;
     }
     
     mkdir(dir, S_IRWXU);
-    glog->debug("Creating directory {}", dir);
+    g_log->debug("Creating directory %s", dir);
 }
 
 void mkdirs(const char *dir)
@@ -79,7 +79,7 @@ void mkdirs(const char *dir)
     // if file exists bail out
     if (stat(dir, &sb) == 0) {
         if (!S_ISDIR(sb.st_mode)) {
-            glog->error("%s is not a directory");
+            g_log->err("%s is not a directory", dir);
             exit(-1);
         }
         return;
@@ -123,7 +123,7 @@ void run_debug(pid_t crashed_pid)
     pid = fork();
     if (pid == -1)
     {
-        glog->error("Fork failed: {}", strerror(errno));
+        g_log->err("Fork failed: %s", strerror(errno));
     }
     else if (pid == 0)
     {
@@ -170,7 +170,7 @@ void close_on_exec(int fd)
     flags = fcntl(fd, F_GETFD, 0);
     if (flags == -1)
     {
-        glog->error("fcntl F_GETFD: %d", errno);
+        g_log->err("fcntl F_GETFD: %d", errno);
         return;
     }
 
@@ -178,7 +178,7 @@ void close_on_exec(int fd)
     rc = fcntl(fd, F_SETFD, flags);
     if (rc == -1)
     {
-        glog->error("fcntl F_SETFD: %d", errno);
+        g_log->err("fcntl F_SETFD: %d", errno);
     }
 }
 
@@ -206,7 +206,7 @@ void launch(const std::string &name, const std::string &command,
 
     if (pid == -1)
     {
-        glog->error("Fork failed: {}", strerror(errno));
+        g_log->err("Fork failed: %s", strerror(errno));
         exit(1);
     }
     else if (pid == 0)
@@ -230,7 +230,7 @@ void launch(const std::string &name, const std::string &command,
     close(outfds[1]);
     close(errfds[1]);
 
-    glog->info("Fork success. Child pid: {}", pid);
+    g_log->info("Fork success. Child pid: %u", pid);
 
     new_process->pid = pid;
     new_process->stdout = outfds[0];
@@ -287,12 +287,13 @@ void copy_std(const std::string &name, pid_t pid, const std::string &suffix)
         std::to_string(pid) + "." + suffix + ".log";
     std::string dest_filename = get_filename(name, suffix, pid);
 
-    glog->debug("Copying {} to {}", src_filename, dest_filename);
+    g_log->debug("Copying %s to %s", src_filename.c_str(),
+                 dest_filename.c_str());
 
     int in = open(src_filename.c_str(), O_RDONLY);
     if (in < 0)
     {
-        glog->warn("Couldn't open {}", src_filename);
+        g_log->warn("Couldn't open %s", src_filename.c_str());
         return;
     }
     gzFile out = gzopen(dest_filename.c_str(), "w");
@@ -301,13 +302,13 @@ void copy_std(const std::string &name, pid_t pid, const std::string &suffix)
         ssize_t n = read(in, buffer, CHUNK_SIZE);
         if (n <= 0) 
         {
-            glog->debug("EOF");
+            g_log->debug("EOF");
             gzclose(out);
             close(in);
             return;
         }
         gzwrite(out, buffer, n);
-        glog->debug("Wrote {} bytes", n);
+        g_log->debug("Wrote %zd bytes", n);
     }
 }
 
@@ -330,7 +331,7 @@ void cpulock(unsigned long cpu_affinity)
         if (cpu_affinity & (1 << i))
         {
             CPU_SET(i, &set);
-            glog->debug("Setting affinity to cpu {}", i);
+            g_log->debug("Setting affinity to cpu %li", i);
         }
     }
     pid = getpid();
@@ -338,7 +339,7 @@ void cpulock(unsigned long cpu_affinity)
     rc = sched_setaffinity(pid, sizeof(set), &set);
     if (rc == -1)
     {
-        glog->error("Failed(%d) to set the affinity for pid {}", errno, pid);
+        g_log->err("Failed(%d) to set the affinity for pid %d", errno, pid);
     }
 }
 

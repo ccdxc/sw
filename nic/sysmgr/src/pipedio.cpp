@@ -19,6 +19,7 @@ PipedIOPtr PipedIO::create(int fd, std::string filename)
     io->filename = filename;
     io->out_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
         S_IRUSR | S_IWUSR);
+    assert(io->out_fd != -1);
     io->watcher = IOWatcher::create(fd, io);
     io->size = 0;
 
@@ -32,7 +33,7 @@ PipedIO::~PipedIO()
 
 void PipedIO::stop()
 {
-    glog->debug("Closing {}", this->filename);
+    g_log->debug("Closing %s", this->filename.c_str());
     if (this->watcher != nullptr)
     {
         this->watcher->stop();
@@ -55,13 +56,14 @@ void PipedIO::rotate()
     if (this->size >= MAX_LOG_SIZE)
     {
         std::string old = this->filename + ".1";
-        glog->debug("Rotating {}", this->filename);
+        g_log->debug("Rotating %s", this->filename.c_str());
         // remove the old "old" if it exist
-        unlink(old.c_str());
         close(this->out_fd);
+        unlink(old.c_str());
         rename(this->filename.c_str(), old.c_str());
         this->out_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
             S_IRUSR | S_IWUSR);
+        assert(this->out_fd != -1);
         this->size = 0;
     }
 }
@@ -70,14 +72,15 @@ void PipedIO::on_io(int fd)
 {
     char buf[1024];
     int  n;
+    int  wn;
 
     while (true)
     {
         n = read(fd, buf, sizeof(buf));
-        glog->debug("Read {} for {}", n, this->filename);
+        g_log->debug("read returned %i for %s", n, this->filename.c_str());
         if (n == 0) /* socket closed */
         {
-            glog->debug("EOF for {}", this->filename);
+            g_log->debug("EOF for %s", this->filename.c_str());
             this->stop();
             return;
         }
@@ -88,12 +91,15 @@ void PipedIO::on_io(int fd)
             {
                 return;
             }
-            glog->error("Errno: {}", errno);
+            g_log->err("Errno: %s", strerror(errno));
             this->stop();
             return;
         }
         this->size += n;
-        write(this->out_fd, buf, n);
+        wn = write(this->out_fd, buf, n);
+        if (wn != n) {
+            g_log->err("Read/Write mismatch %i/%i", n, wn);
+        }
         rotate();
     }
 }

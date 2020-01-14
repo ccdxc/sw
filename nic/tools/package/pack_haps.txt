@@ -9,6 +9,8 @@ nic/conf/iris/classic-plugins.json                                  /nic/conf/ir
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
 nic/conf/iris/hbm_mem_base.json                                     /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
+nic/conf/iris/operd-regions.json                                    /nic/conf/
+nic/conf/iris/operd-daemon.json                                     /nic/conf/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-eth-dev-scale.json
@@ -23,23 +25,26 @@ nic/build/aarch64/iris/gen/p4gen/p4/p4pd/capri_p4_table_map.json    /nic/conf/ir
 nic/build/aarch64/iris/gen/p4gen/common_rxdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_rxdma_table_map.json
 nic/build/aarch64/iris/gen/p4gen/common_txdma_actions/p4pd/capri_p4_table_map.json /nic/conf/iris/capri_p4_txdma_table_map.json
 
-nic/build/aarch64/iris/bin/sysmgr                                   /nic/bin/
 nic/build/aarch64/iris/bin/canary                                   /nic/bin/
-nic/build/aarch64/iris/bin/coremgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/console                                  /nic/bin/
+nic/build/aarch64/iris/bin/coremgr                                  /nic/bin/
 nic/build/aarch64/iris/bin/delphi_hub                               /nic/bin/
 nic/build/aarch64/iris/bin/delphictl                                /nic/bin/
-nic/build/aarch64/iris/bin/upgrade                                  /nic/bin/
 nic/build/aarch64/iris/bin/hal                                      /nic/bin/
+nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
 nic/build/aarch64/iris/bin/netagent                                 /nic/bin/
 nic/build/aarch64/iris/bin/nevtsproxy                               /nic/bin/
-nic/build/aarch64/iris/bin/shmdump                                  /nic/bin/
-nic/build/aarch64/iris/bin/tmagent                                  /nic/bin/
-nic/build/aarch64/iris/bin/heimdall                                 /nic/bin/
 nic/build/aarch64/iris/bin/nmd                                      /nic/bin/
+nic/build/aarch64/iris/bin/ntsa                                     /nic/bin/
+nic/build/aarch64/iris/bin/operdctl                                 /nic/bin/
+nic/build/aarch64/iris/bin/operd-daemon                             /nic/bin/
 nic/build/aarch64/iris/bin/penctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/penlog                                   /nic/bin/
-nic/build/aarch64/iris/bin/ntsa                                     /nic/bin/
+nic/build/aarch64/iris/bin/shmdump                                  /nic/bin/
+nic/build/aarch64/iris/bin/sysmgr                                   /nic/bin/
+nic/build/aarch64/iris/bin/tmagent                                  /nic/bin/
+nic/build/aarch64/iris/bin/upgrade                                  /nic/bin/
+
 # hal objects CLI
 nic/build/aarch64/iris/bin/halctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/net_fwding_test_hw                       /nic/bin/
@@ -47,6 +52,7 @@ nic/build/aarch64/iris/bin/net_fwding_test_hw                       /nic/bin/
 #diag binaries
 nic/build/aarch64/iris/bin/diag_test                                /nic/bin/
 
+nic/build/aarch64/iris/lib/liboperd.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libproto.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libcommonproto.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libnicmgrproto.so                        /nic/lib/

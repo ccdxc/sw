@@ -1,0 +1,9 @@
+[
+    {
+        "output": {
+            "type": "library",
+            "location": "/sw/nic/build/x86_64/iris/out/liboperd-sample_so/liboperd-sample.so"
+        },
+        "input": ["test"]
+    }
+]

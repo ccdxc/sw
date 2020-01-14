@@ -18,7 +18,6 @@
 
 namespace pt = boost::property_tree;
 
-
 static enum service_kind
 service_kind_from_obj(pt::ptree obj)
 {
@@ -125,7 +124,7 @@ ServiceFactoryPtr ServiceFactory::getInstance()
 
 void ServiceFactory::on_config_add(ServiceSpecPtr spec)
 {
-    glog->critical("Config for {} added!", spec->name);
+    g_log->info("Config for %s added", spec->name.c_str());
     this->services[spec->name] = Service::create(spec);
     ServiceLoop::getInstance()->register_event_reactor(SERVICE_EVENT_STOP,
         spec->name, instance);
@@ -135,11 +134,11 @@ void ServiceFactory::load_config(std::string path)
 {
     pt::ptree root;
 
-    glog->info("Loading config from {}", path);
+    g_log->info("Loading config from %s", path.c_str());
 
-    if (access(path.c_str(), F_OK) == -1 )
+    if (access(path.c_str(), F_OK) == -1)
     {
-        glog->error("Config file '{}' not found", path);
+        g_log->err("Config file '%s' not found", path.c_str());
         return;
     }
     
@@ -149,7 +148,7 @@ void ServiceFactory::load_config(std::string path)
     }
     catch (...)
     {
-        glog->error("Failed to parse config file {}", path);
+        g_log->err("Failed to parse config file %s", path.c_str());
     }
 
     for (auto obj: root)
@@ -162,7 +161,7 @@ void ServiceFactory::on_signal(int sig)
 {
     ev::default_loop loop;
 
-    glog->info("Got signal {}. Exiting", sig);
+    g_log->info("Got signal %i. Exiting", sig);
     kill(-mypid, SIGTERM);
     loop.break_loop(ev::ALL);
 }
@@ -176,12 +175,12 @@ void ServiceFactory::respawn_all()
     for (auto s: services)
     {
         if (!s.second->is_running()) {
-            glog->info("Service {} is not running, skiping", s.first);
+            g_log->info("Service %s is not running, skiping", s.first.c_str());
             s.second->reset_dependencies();
             continue;
         }
         s.second->stop();
-        glog->info("Adding {} to shutdown_pending", s.first);
+        g_log->info("Adding %s to shutdown_pending", s.first.c_str());
         this->shutdown_pending.insert(s.first);
     }
     this->respawn_in_progress = true;
@@ -196,10 +195,10 @@ void ServiceFactory::on_service_stop(std::string name)
     if (!this->respawn_in_progress) {
         return;
     }
-    glog->info("Service {} stopped", name);
+    g_log->info("Service %s stopped", name.c_str());
     this->shutdown_pending.erase(name);
 
-    glog->info("Services in shutdown_pending: {}",
+    g_log->info("Services in shutdown_pending: %lu",
         this->shutdown_pending.size());
 
     if (this->shutdown_pending.size() == 0) {

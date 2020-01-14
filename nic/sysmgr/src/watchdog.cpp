@@ -38,7 +38,7 @@ PALWatchdogPtr PALWatchdog::create()
 PALWatchdog::PALWatchdog()
 {
     int rc = pal_watchdog_init(PANIC_WDT);
-    glog->info("pal_watchdog_init() rc = {}", rc);
+    g_log->info("pal_watchdog_init() rc = %i", rc);
 }
 
 void PALWatchdog::kick()
@@ -63,7 +63,7 @@ void SimulationWatchdog::on_timer()
 {
     ev::default_loop loop;
 
-    glog->critical("Simulation Watchdog Expired");
+    g_log->err("Simulation Watchdog Expired");
     // Kill all children
     kill(-getpid(), SIGTERM);
     loop.break_loop(ev::ALL);
@@ -79,17 +79,17 @@ WatchdogPtr Watchdog::create()
     FaultLoop::getInstance()->register_fault_reactor(wchdg);
     SwitchrootLoop::getInstance()->register_switchroot_reactor(wchdg);
 
-    glog->info("Creating watchdog");
+    g_log->debug("Creating watchdog");
 
     // If file "/data/no_watchdog" is present or NO_WATCHDOG is set then use
     // the simulation watchdog
     if ((access("/data/no_watchdog", F_OK) != -1) ||
         (std::getenv("NO_WATCHDOG"))) {
         wchdg->watchdog = SimulationWatchdog::create();
-        glog->info("Using Simulation watchdog");
+        g_log->info("Using Simulation watchdog");
     } else {
         wchdg->watchdog = PALWatchdog::create();
-        glog->info("Using PAL watchdog");
+        g_log->info("Using PAL watchdog");
     }
     
     wchdg->timer_watcher->repeat();
@@ -106,22 +106,22 @@ void Watchdog::on_timer()
 {
     if (this->kick_it == false)
     {
-        glog->debug("Not kicking watchdog");
+        g_log->trace("Not kicking watchdog");
         return;
     }
-    glog->debug("Kicking watchdog");
+    g_log->trace("Kicking watchdog");
     this->watchdog->kick();
 }
 
 void Watchdog::on_switchroot()
 {
-    glog->debug("Watchdog on_switchroot()");
+    g_log->debug("Watchdog on_switchroot()");
     this->stop();
 }
 
 void Watchdog::stop()
 {
-    glog->debug("Watchdgo stop()");
+    g_log->debug("Watchdog stop()");
     this->timer_watcher->stop();
     pal_watchdog_stop();
 }

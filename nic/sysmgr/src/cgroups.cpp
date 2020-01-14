@@ -19,7 +19,7 @@ write_to_file (const char *file_name, int number)
 
     f = fopen(file_name, "w");
     if (f == NULL) {
-        glog->error("fopen error: %s %d", file_name, errno);
+        g_log->err("fopen error: %s %d", file_name, errno);
         return;
     }
 
@@ -35,7 +35,7 @@ cg_init (void)
     // Mount the memory subsytem
     rc = mount(NULL, CGROUP_ROOT, "cgroup", 0, "memory");
     if (rc == -1) {
-        glog->error("cgroup mount failed: %d", errno);
+        g_log->err("cgroup mount failed: %d", errno);
     }
 }
 

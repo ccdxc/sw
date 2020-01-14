@@ -19,7 +19,7 @@ ChildWatcher::ChildWatcher(pid_t pid, ChildReactorPtr reactor)
     this->pid = pid;
     child.set<ChildWatcher, &ChildWatcher::child_callback>(this);
     child.start(pid, ev::READ);
-    glog->info("Child listenting {}", pid);
+    g_log->debug("Child listenting %i", pid);
 }
 
 void ChildWatcher::child_callback()
@@ -29,13 +29,13 @@ void ChildWatcher::child_callback()
 
 void ChildWatcher::stop()
 {
-    glog->info("Child stop listenting {}", this->pid);
+    g_log->debug("Child stop listenting %i", this->pid);
     child.stop();
 }
 
 ChildWatcher::~ChildWatcher()
 {
-    glog->info("Child listener destructor {}", this->pid);
+    g_log->debug("Child listener destructor %i", this->pid);
     this->stop();
 }
 

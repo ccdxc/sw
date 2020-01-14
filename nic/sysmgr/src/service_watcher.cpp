@@ -43,7 +43,7 @@ void ServiceLoop::do_work()
 	auto ev = this->event_queue.front();
 	this->event_queue.pop_front();
 	auto &reactors = this->event_reactors[ev->kind][ev->name];
-	glog->debug("Notyfing service reactors of {}", ev->name);
+	g_log->debug("Notyfing service reactors of %s", ev->name.c_str());
 	for (auto reactor: reactors)
 	{
 	    if (ev->kind == SERVICE_EVENT_START)

@@ -11,7 +11,7 @@
 void
 bus_up (std::string bus_name)
 {
-    glog->debug("Service %s started", bus_name);
+    g_log->debug("Service %s started", bus_name.c_str());
     ServiceLoop::getInstance()->queue_event(
         ServiceEvent::create(bus_name, SERVICE_EVENT_START));
     g_events->SystemBooted();
@@ -20,7 +20,7 @@ bus_up (std::string bus_name)
 void
 service_started (std::string process_name)
 {
-    glog->debug("Service {} started", process_name);
+    g_log->debug("Service %s started", process_name.c_str());
     ServiceLoop::getInstance()->queue_event(
         ServiceEvent::create(process_name, SERVICE_EVENT_START));
 }
@@ -28,7 +28,7 @@ service_started (std::string process_name)
 void
 service_heartbeat (std::string process_name)
 {
-    glog->debug("Service {} heartbeat", process_name);
+    g_log->debug("Service %s heartbeat", process_name.c_str());
     ServiceLoop::getInstance()->queue_event(
         ServiceEvent::create(process_name, SERVICE_EVENT_HEARTBEAT));
 }
@@ -36,7 +36,7 @@ service_heartbeat (std::string process_name)
 void
 switchroot (void)
 {
-    glog->info("Switching root");
+    g_log->info("Switching root");
     switch_root();
     SwitchrootLoop::getInstance()->set_switchroot();
 }
@@ -44,7 +44,7 @@ switchroot (void)
 void
 respawn_processes (void)
 {
-    glog->info("Respawning processes");
+    g_log->info("Respawning processes");
     ServiceFactory::getInstance()->respawn_all();
 }
 

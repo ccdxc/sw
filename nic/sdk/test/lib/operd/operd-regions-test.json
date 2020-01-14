@@ -1,0 +1,6 @@
+{
+    "test": {
+        "chunk-count": 1024,
+        "severity": 1
+    }
+}

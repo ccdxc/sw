@@ -5,6 +5,8 @@
 
 #include <ev++.h>
 #include <stdlib.h>
+#include <spdlog/sinks/null_sink.h>
+
 #include "bus_api.hpp"
 #include "bus_callbacks.hpp"
 #include "cgroups.hpp"
@@ -25,8 +27,6 @@ main (int argc, char *argv[])
     ServiceFactoryPtr service_factory = ServiceFactory::getInstance();
     WatchdogPtr watchdog;
     
-    init_logger();
-
     cg_init();
     vmstats_init(loop);
 
@@ -46,7 +46,7 @@ main (int argc, char *argv[])
     cpulock(0xffffffff);
 
     g_bus = init_bus(&g_bus_callbacks);
-    g_events = init_events(glog);
+    g_events = init_events(spdlog::create<spdlog::sinks::null_sink_st>("null_logger"));
     
     watchdog = Watchdog::create();
     
@@ -60,16 +60,16 @@ main (int argc, char *argv[])
         try {
             config_file = get_main_config_file();
         } catch (const std::exception & e) {
-            glog->error("get_main_config_file() exception: {}",
-                std::string(e.what()));
+            g_log->err("get_main_config_file() exception: %s",
+                       std::string(e.what()).c_str());
             exit(-1);
         }
         service_factory->load_config(config_file);
     }
     
-    glog->debug("Trying /data/sysmgr.json");
+    g_log->debug("Trying /data/sysmgr.json");
     service_factory->load_config("/data/sysmgr.json");
-    glog->debug("Done with /data/sysmgr.json");
+    g_log->debug("Done with /data/sysmgr.json");
 
     // Needed in order to process custom events before blocking for an
     // actual event

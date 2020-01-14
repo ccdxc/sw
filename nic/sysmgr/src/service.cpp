@@ -31,8 +31,9 @@ ServiceDepPtr ServiceDep::create(ServiceSpecDepPtr spec)
     dep->file_name = spec->file_name;
     dep->isMet = false;
 
-    glog->info("Created service dependency {}, {}, {}",
-        dep->kind, dep->service_name, dep->isMet);
+    g_log->info("Created service dependency %i, %s, %s",
+                dep->kind, dep->service_name.c_str(),
+                dep->isMet ? "met" : "not met");
 
     return dep;
 }
@@ -48,9 +49,9 @@ void Service::launch()
         get_logname_for_process(this->spec->name, this->pid, "out"));
     this->stderr_pipe = PipedIO::create(new_process.stderr,
         get_logname_for_process(this->spec->name, this->pid, "err"));
-    glog->info("Launched {}({}) using {} with affinity 0x{:x}",
-               this->spec->name, this->pid, this->spec->command,
-               this->spec->cpu_affinity);
+    g_log->info("Launched %s(%i) using %s with affinity 0x%lx",
+                this->spec->name.c_str(), this->pid, this->spec->command.c_str(),
+                this->spec->cpu_affinity);
     
     if (this->child_watcher != nullptr)
     {
@@ -64,19 +65,20 @@ void Service::launch()
 
 void Service::check_dep_and_launch()
 {
-    glog->info("Checking dependencies for {}",
-        this->spec->name);
+    g_log->info("Checking dependencies for %s",
+                this->spec->name.c_str());
     for (auto dep: this->dependencies)
     {
-        glog->info("Dependency {} is{} met",
-            dep->service_name, dep->isMet?"":" not");
+        g_log->info("Dependency %s is%s met",
+                    dep->service_name.c_str(),
+                    dep->isMet?"":" not");
         if (!dep->isMet)
         {
             return;
         }
     }
-    glog->info("All dependencies are go for {}",
-        this->spec->name);
+    g_log->info("All dependencies are go for %s",
+                this->spec->name.c_str());
     launch();
 }
 
@@ -98,11 +100,11 @@ ServicePtr Service::create(ServiceSpecPtr spec)
 {
     ServicePtr svc = std::make_shared<Service>();
 
-    glog->info("Created service {}", spec->name);
+    g_log->info("Created service %s", spec->name.c_str());
 
     // If it has memory limitation, create a cgroup for it
     if (spec->mem_limit > 0.0) {
-        glog->info("Creating cgroup with size %d", spec->mem_limit);
+        g_log->info("Creating cgroup with size %lf", spec->mem_limit);
         cg_create(spec->name.c_str(), (size_t)spec->mem_limit * (1024 * 1024));
     }
     
@@ -135,7 +137,7 @@ void Service::on_service_start(std::string name)
 {
     if (name == this->spec->name)
     {
-        glog->info("Service {} started", name);
+        g_log->info("Service %s started", name.c_str());
         g_events->ServiceStartedEvent(spec->name);
         return;
     }
@@ -157,7 +159,7 @@ void Service::on_service_stop(std::string name)
 
 void Service::on_service_heartbeat(std::string name)
 {
-    glog->debug("{} got hearbeat!", this->spec->name);
+    g_log->trace("%s got hearbeat", this->spec->name.c_str());
     if (this->timer_watcher)
     {
         this->timer_watcher->repeat();
@@ -169,21 +171,22 @@ void Service::fault(std::string reason)
     reason = reason + " - " + this->spec->name;
 
     if (this->spec->kind == SERVICE_ONESHOT) {
-        glog->info("Service {} is oneshot, not setting fault",
-                   this->spec->name);
+        g_log->info("Service %s is oneshot, not setting fault",
+                    this->spec->name.c_str());
         return;
     }
     if (this->config_state == SERVICE_CONFIG_STATE_OFF) {
-        glog->info("Service {} shutdown on purpose, not setting fault",
-            this->spec->name);
+        g_log->info("Service %s shutdown on purpose, not setting fault",
+                    this->spec->name.c_str());
         return;
     }
     if (this->spec->flags & PANIC_ON_FAILURE) {
-        glog->info("{} is critical. Triggering watchdog", this->spec->name);
+        g_log->info("%s is critical. Triggering watchdog",
+                    this->spec->name.c_str());
         FaultLoop::getInstance()->set_fault(reason);
     }
     
-    glog->info("System in fault mode ({})", reason);
+    g_log->info("System in fault mode (%s)", reason.c_str());
     g_bus->SystemFault(reason);
 }
 
@@ -194,11 +197,10 @@ void Service::on_child(pid_t pid)
     std::string reason = parse_status(this->child_watcher->get_status());
 
     if (this->spec->kind != SERVICE_ONESHOT) {
-        glog->info("Service {} {}", this->spec->name, reason);
+        g_log->info("Service %s %s", this->spec->name.c_str(), reason.c_str());
         g_events->ServiceStoppedEvent(this->spec->name);
         run_debug(this->pid);
     }
-
 
     if (spec->mem_limit > 0.0) {
         cg_reset(this->pid);
@@ -232,7 +234,7 @@ void Service::on_child(pid_t pid)
 
 void Service::on_timer()
 {
-    glog->warn("Service {} timed out. Killing it", this->spec->name);
+    g_log->warn("Service %s timed out. Killing it", this->spec->name.c_str());
     this->timer_watcher->stop();
 
     // Killing the process will end `on_child` getting called where we
@@ -257,7 +259,7 @@ void Service::stop()
     }
     this->restart_count = 0;
     this->reset_dependencies();
-    glog->info("Killing {}({})", this->spec->name, this->pid);
+    g_log->info("Killing %s(%i)", this->spec->name.c_str(), this->pid);
     kill(this->pid, SIGKILL);
 }
 
