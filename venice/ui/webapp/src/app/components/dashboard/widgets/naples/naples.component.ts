@@ -451,7 +451,8 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
       } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
         this.unknownNaplesCount += 1;
       } else {
-        this.unhealthyNaples.push(naple.meta.name);
+        const dsclabel  = (naple.spec.id) ? naple.spec.id : naple.meta.name;
+        this.unhealthyNaples.push(dsclabel);
       }
 
       if (!Utility.isNICConditionNotAdmitted(naple)) {

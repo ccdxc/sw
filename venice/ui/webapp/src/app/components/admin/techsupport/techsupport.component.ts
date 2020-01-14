@@ -72,11 +72,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   postNgInit() {
     this.getTechSupportRequests();
+    if (!this.checkPermissions()) {
+      this.controllerService.invokeInfoToaster('Additional authorizaiton required', 'Cluster node and DSC read permissions are required to create tech-support request.');
+     }
   }
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringtechsupportrequest_create)) {
+    if (this.checkPermissions()) {
       buttons = [{
           cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-button-ADD',
           text: 'ADD TECH-SUPPORT REQUEST',
@@ -88,6 +91,13 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       buttons: buttons,
       breadcrumb: [{ label: 'Tech Supports', url: Utility.getBaseUIUrl() + 'admin/techsupport' }]
     });
+  }
+
+  checkPermissions(): boolean {
+    const boolClusterNodeRead  = this.uiconfigsService.isAuthorized(UIRolePermissions.clusternode_read);
+    const boolClusterDSCRead  = this.uiconfigsService.isAuthorized(UIRolePermissions.clusterdistributedservicecard_read);
+    const boolMonitoryTechSupportCreate  = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringtechsupportrequest_create);
+    return  (boolClusterNodeRead && boolClusterDSCRead && boolMonitoryTechSupportCreate);
   }
 
   getTechSupportRequests() {

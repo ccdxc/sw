@@ -80,7 +80,7 @@ describe('TechsupportComponent', () => {
   });
 
   describe('RBAC', () => {
-    const testHelper = new TestTablevieweditRBAC('monitoringtechsupportrequest');
+    const testHelper = new TestTablevieweditRBAC('monitoringtechsupportrequest', ['clusternode_read', 'clusterdistributedservicecard_read']);
     testHelper.skipEdit = true;
 
     beforeEach(() => {

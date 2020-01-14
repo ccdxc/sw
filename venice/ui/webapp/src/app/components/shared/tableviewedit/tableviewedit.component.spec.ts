@@ -29,105 +29,120 @@ import { BaseModel } from '@sdk/v1/models/generated/basemodel/base-model';
 import { ApiObjectMeta, IApiObjectMeta } from '@sdk/v1/models/generated/auth';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
-import {WidgetsModule} from 'web-app-framework';
+import { WidgetsModule } from 'web-app-framework';
 
 
 
 export class TestTablevieweditRBAC {
   fixture: ComponentFixture<any>;
   skipEdit: boolean = false;
+  createOperationPermissions: UIRolePermissions[];
 
-  constructor(protected permissonBase: string) {
+  constructor(protected permissonBase: string, protected extraPermissions: string[] = []) {
+    this.createOperationPermissions = this.buildCreatePermissionLists();
   }
 
+  /**
+   * This API builds permission list for "object" create operation
+   * For example, create a techsupport request [monitoringtechsupportrequest, clusternode_read, clusterdistributedservicecard_read] permissions
+   * See:
+   * techsupport.component.spec.ts -- > describe('RBAC', () has example
+   */
+  buildCreatePermissionLists(): UIRolePermissions[] {
+    const list: UIRolePermissions[] = [UIRolePermissions[this.permissonBase + '_create']];
+    for (let i = 0; this.extraPermissions && i < this.extraPermissions.length; i++) {
+      list.push(UIRolePermissions[this.extraPermissions[i]]);
+    }
+    return list;
+  }
   /**
    * Runs basic rbac test to check for create, edit, and delete buttons.
    * Meant for use with components that use table view edit.
    */
   runTests() {
-      let toolbarSpy: jasmine.Spy;
+    let toolbarSpy: jasmine.Spy;
 
-      beforeEach(() => {
-        TestingUtility.removeAllPermissions();
-        const controllerService = TestBed.get(ControllerService);
-        toolbarSpy = spyOn(controllerService, 'setToolbarData');
-      });
+    beforeEach(() => {
+      TestingUtility.removeAllPermissions();
+      const controllerService = TestBed.get(ControllerService);
+      toolbarSpy = spyOn(controllerService, 'setToolbarData');
+    });
 
-      it('Admin user', () => {
-        TestingUtility.setAllPermissions();
-        this.fixture.detectChanges();
+    it('Admin user', () => {
+      TestingUtility.setAllPermissions();
+      this.fixture.detectChanges();
 
-        // create button
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
-        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        if (!this.skipEdit) {
-          // settings button
-          expect(actionButtons.length).toBe(3);
-          expect(actionButtons[0].nativeElement.textContent).toBe('settings');
-          // edit button
-          expect(actionButtons[1].nativeElement.textContent).toBe('edit');
-          // delete button
-          expect(actionButtons[2].nativeElement.textContent).toBe('delete');
-        } else {
-          expect(actionButtons.length).toBe(2);
-          // settings button
-          expect(actionButtons[0].nativeElement.textContent).toBe('settings');
-          // delete button
-          expect(actionButtons[1].nativeElement.textContent).toBe('delete');
-        }
-      });
-
-      it('create access only', () => {
-        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_create']]);
-        this.fixture.detectChanges();
-
-        // create button
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
-
-        // edit button not present
-        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(1);
-      });
-
-      it('edit access only', () => {
-        if (this.skipEdit) {
-          return;
-        }
-        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_update']]);
-        this.fixture.detectChanges();
-
-        // create button
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
-        // edit button not present
-        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(2);
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+      const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+      if (!this.skipEdit) {
+        // settings button
+        expect(actionButtons.length).toBe(3);
         expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+        // edit button
         expect(actionButtons[1].nativeElement.textContent).toBe('edit');
-      });
-
-      it('delete access only', () => {
-        TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_delete']]);
-        this.fixture.detectChanges();
-
-        // create button
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
-        // edit button not present
-        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+        // delete button
+        expect(actionButtons[2].nativeElement.textContent).toBe('delete');
+      } else {
         expect(actionButtons.length).toBe(2);
+        // settings button
         expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+        // delete button
         expect(actionButtons[1].nativeElement.textContent).toBe('delete');
-      });
+      }
+    });
 
-      it('no access', () => {
-        this.fixture.detectChanges();
+    it('create access only', () => {
+      TestingUtility.addPermissions(this.createOperationPermissions);
+      this.fixture.detectChanges();
 
-        // create button
-        expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
-        // edit and delete button not present
-        const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
-        expect(actionButtons.length).toBe(1);
-      });
-    }
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(1);
+
+      // edit button not present
+      const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+      expect(actionButtons.length).toBe(1);
+    });
+
+    it('edit access only', () => {
+      if (this.skipEdit) {
+        return;
+      }
+      TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_update']]);
+      this.fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+      // edit button not present
+      const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+      expect(actionButtons.length).toBe(2);
+      expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+      expect(actionButtons[1].nativeElement.textContent).toBe('edit');
+    });
+
+    it('delete access only', () => {
+      TestingUtility.addPermissions([UIRolePermissions[this.permissonBase + '_delete']]);
+      this.fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+      // edit button not present
+      const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+      expect(actionButtons.length).toBe(2);
+      expect(actionButtons[0].nativeElement.textContent).toBe('settings');
+      expect(actionButtons[1].nativeElement.textContent).toBe('delete');
+    });
+
+    it('no access', () => {
+      this.fixture.detectChanges();
+
+      // create button
+      expect(toolbarSpy.calls.mostRecent().args[0].buttons.length).toBe(0);
+      // edit and delete button not present
+      const actionButtons = this.fixture.debugElement.queryAll(By.css('.global-table-action-icon'));
+      expect(actionButtons.length).toBe(1);
+    });
+  }
 }
 
 interface IDummyObj {
@@ -249,14 +264,14 @@ class DummyCreateObj extends BaseModel implements IDummyCreateObj {
 
   protected getFormGroup(): FormGroup {
     if (!this._formGroup) {
-        this._formGroup = new FormGroup({
-            'meta': this['meta'].$formGroup,
-        });
-        // We force recalculation of controls under a form group
-        Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
-            const control = this._formGroup.get('meta').get(field);
-            control.updateValueAndValidity();
-        });
+      this._formGroup = new FormGroup({
+        'meta': this['meta'].$formGroup,
+      });
+      // We force recalculation of controls under a form group
+      Object.keys((this._formGroup.get('meta') as FormGroup).controls).forEach(field => {
+        const control = this._formGroup.get('meta').get(field);
+        control.updateValueAndValidity();
+      });
     }
     return this._formGroup;
   }
@@ -279,7 +294,7 @@ class DummyCreateComponent extends CreationForm<IDummyCreateObj, DummyCreateObj>
   }
 
   // Empty Hook
-  postNgInit() {}
+  postNgInit() { }
 
   // Empty Hook
   isFormValid() {
@@ -293,13 +308,13 @@ class DummyCreateComponent extends CreationForm<IDummyCreateObj, DummyCreateObj>
 
   createObject(object) {
     return new BehaviorSubject<any>(
-     object
+      object
     ).asObservable();
   }
 
   updateObject(object) {
     return new BehaviorSubject<any>(
-     object
+      object
     ).asObservable();
   }
 
@@ -370,7 +385,7 @@ describe('TablevieweditComponent', () => {
 
 
   configureTestSuite(() => {
-     TestBed.configureTestingModule({
+    TestBed.configureTestingModule({
       declarations: [
         DummyComponent,
         DummyCreateComponent,
@@ -537,7 +552,7 @@ describe('TablevieweditComponent', () => {
     const createFixture = TestBed.createComponent(DummyCreateComponent);
     const createComponent = createFixture.componentInstance;
     createComponent.isInline = true;
-    createComponent.objectData = { meta: { name: 'policy1'}};
+    createComponent.objectData = { meta: { name: 'policy1' } };
     const postNgInitSpy = spyOn(createComponent, 'postNgInit');
     const toolbarSpy = spyOn(createComponent, 'setToolbar');
     createFixture.detectChanges();
