@@ -1082,7 +1082,7 @@ create_policers (uint32_t num_policers)
 
     for (uint32_t i = 1; i <= num_policers; i ++) {
         memset(&pds_policer, 0, sizeof(pds_policer_spec_t));
-        pds_policer.key.id = i;
+        pds_policer.key = test::int2pdsobjkey(i);
         pds_policer.dir = (i % 2) ? PDS_POLICER_DIR_INGRESS : PDS_POLICER_DIR_EGRESS;
         pds_policer.type = (i % 3) ? sdk::POLICER_TYPE_PPS : sdk::POLICER_TYPE_BPS;
         if (pds_policer.type == sdk::POLICER_TYPE_PPS) {

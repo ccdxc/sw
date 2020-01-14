@@ -456,7 +456,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_POLICER:
-        api_obj = policer_db()->find((pds_policer_key_t *)key);
+        api_obj = policer_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_NAT_PORT_BLOCK:

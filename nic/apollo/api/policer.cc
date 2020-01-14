@@ -63,7 +63,7 @@ policer_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_policer) policer_entry();
         cloned_policer->impl_ = impl_->clone();
         if (unlikely(cloned_policer->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone policer %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone policer %s impl", key2str().c_str());
             goto error;
         }
         cloned_policer->init_config(api_ctxt);
@@ -117,7 +117,8 @@ policer_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
     if (dir_ != spec->dir) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"direction\" "
-                      "from %u to %u on policer %u", dir_, spec->dir, key_.id);
+                      "from %u to %u on policer %s", dir_, spec->dir,
+                       key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -141,7 +142,7 @@ policer_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
 
 void
 policer_entry::fill_spec_(pds_policer_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_policer_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->dir = dir_;
 }
 

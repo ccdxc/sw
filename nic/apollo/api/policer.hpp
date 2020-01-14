@@ -157,7 +157,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "policer-" + std::to_string(key_.id);
+        return "policer-" + std::string(key_.str());
     }
 
     /// \brief          helper function to get key given policer
@@ -170,7 +170,7 @@ public:
 
     /// \brief          return the policer key/id
     /// \return         key/id of the policer
-    pds_policer_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief    return the traffic direction in which policer is applied
     /// \return   direction in which policer is enforced
@@ -197,7 +197,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_policer_key_t key_;        ///< policer key
+    pds_obj_key_t key_;            ///< policer key
     pds_policer_dir_t dir_;        ///< policer enforcement direction
     ht_ctxt_t ht_ctxt_;            ///< hash table context
 

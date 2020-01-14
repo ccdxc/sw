@@ -69,7 +69,7 @@ union api_params_u {
     pds_nexthop_spec_t           nexthop_spec;
     pds_obj_key_t      nexthop_group_key;
     pds_nexthop_group_spec_t     nexthop_group_spec;
-    pds_policer_key_t            policer_key;
+    pds_obj_key_t                policer_key;
     pds_policer_spec_t           policer_spec;
     pds_obj_key_t     nat_port_block_key;
     pds_nat_port_block_spec_t    nat_port_block_spec;

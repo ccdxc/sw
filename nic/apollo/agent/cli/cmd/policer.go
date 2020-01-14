@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	policerID uint32
+	policerID string 
 )
 
 var policerShowCmd = &cobra.Command{
@@ -28,7 +28,7 @@ var policerShowCmd = &cobra.Command{
 
 func init() {
 	showCmd.AddCommand(policerShowCmd)
-	policerShowCmd.Flags().Uint32VarP(&policerID, "id", "i", 0, "Specify policer ID")
+	policerShowCmd.Flags().StringVarP(&policerID, "id", "i", "", "Specify policer ID")
 }
 
 func policerShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -51,12 +51,12 @@ func policerShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific policer
 		req = &pds.PolicerGetRequest{
-			Id: []uint32{policerID},
+            Id: [][]byte{[]byte(policerID)},
 		}
 	} else {
 		// Get all Mirror sessions
 		req = &pds.PolicerGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -82,7 +82,7 @@ func policerShowCmdHandler(cmd *cobra.Command, args []string) {
 func printPolicerHeader() {
 	hdrLine := strings.Repeat("-", 60)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-5s%-10s%-5s%-10s%-10s%-10s%-10s\n",
+	fmt.Printf("%-36s%-10s%-5s%-10s%-10s%-10s%-10s\n",
 		"ID", "Direction", "Type", "PPS/BPS", "Burst", "AcceptCnt", "DropCnt")
 	fmt.Println(hdrLine)
 }
@@ -103,8 +103,8 @@ func printPolicer(p *pds.Policer) {
 		count = spec.GetBPSPolicer().GetBytesPerSecond()
 		burst = spec.GetBPSPolicer().GetBurst()
 	}
-	fmt.Printf("%-5d%-10s%-5s%-10d%-10d%-10d%-10d\n",
-		spec.GetId(),
+	fmt.Printf("%-36s%-10s%-5s%-10d%-10d%-10d%-10d\n",
+		string(spec.GetId()),
 		strings.Replace(spec.GetDirection().String(), "POLICER_DIR_", "", -1),
 		typeStr, count, burst,
 		stats.GetAccept(), stats.GetDrop())

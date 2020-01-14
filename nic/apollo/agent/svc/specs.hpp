@@ -778,7 +778,7 @@ static inline sdk_ret_t
 pds_policer_proto_to_api_spec (pds_policer_spec_t *api_spec,
                                const pds::PolicerSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->dir = pds_policer_dir_proto_to_api_spec(proto_spec.direction());
     if (proto_spec.has_ppspolicer()) {
         api_spec->type = sdk::POLICER_TYPE_PPS;
@@ -1149,8 +1149,8 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
                                       proto_spec.egv6securitypolicyid(i));
     }
     api_spec->host_ifindex = proto_spec.hostifindex();
-    api_spec->tx_policer.id = proto_spec.txpolicerid();
-    api_spec->rx_policer.id = proto_spec.rxpolicerid();
+    pds_obj_key_proto_to_api_spec(&api_spec->tx_policer, proto_spec.txpolicerid());
+    pds_obj_key_proto_to_api_spec(&api_spec->rx_policer, proto_spec.rxpolicerid());
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
     api_spec->flow_learn_en = proto_spec.flowlearnen();

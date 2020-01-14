@@ -34,7 +34,7 @@ typedef enum pds_policer_dir_e {
 
 /// \brief policer specification
 typedef struct pds_policer_spec_s {
-    pds_policer_key_t key;          ///< policer's unique key
+    pds_obj_key_t key;              ///< policer's unique key
     sdk::policer_type_t type;       ///< type of the policer
     pds_policer_dir_t dir;          ///< traffic direction policer is applied on
     union {
@@ -78,7 +78,7 @@ sdk_ret_t pds_policer_create(pds_policer_spec_t *spec,
 /// \param[in]  key     key of the policer
 /// \param[out] info    policer information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_policer_read(pds_policer_key_t *key, pds_policer_info_t *info);
+sdk_ret_t pds_policer_read(pds_obj_key_t *key, pds_policer_info_t *info);
 
 typedef void (*policer_read_cb_t)(pds_policer_info_t *info, void *ctxt);
 
@@ -101,7 +101,7 @@ sdk_ret_t pds_policer_update(pds_policer_spec_t *spec,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid policer key should be passed
-sdk_ret_t pds_policer_delete(pds_policer_key_t *key,
+sdk_ret_t pds_policer_delete(pds_obj_key_t *key,
                              pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

@@ -20,7 +20,7 @@ namespace api {
 policer_state::policer_state() {
     policer_ht_ = ht::factory(PDS_MAX_POLICER >> 2,
                            policer_entry::policer_key_func_get,
-                           sizeof(pds_policer_key_t));
+                           sizeof(pds_obj_key_t));
     SDK_ASSERT(policer_ht_ != NULL);
 
     policer_slab_ = slab::factory("policer", PDS_SLAB_ID_POLICER,
@@ -56,7 +56,7 @@ policer_state::free(policer_entry *policer) {
 }
 
 policer_entry *
-policer_state::find(pds_policer_key_t *key) const {
+policer_state::find(pds_obj_key_t *key) const {
     return (policer_entry *)(policer_ht_->lookup(key));
 }
 

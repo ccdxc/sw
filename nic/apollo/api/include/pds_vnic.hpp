@@ -58,9 +58,9 @@ typedef struct pds_vnic_spec_s {
     /// host_ifindex (of type IF_TYPE_LIF)
     pds_ifindex_t host_ifindex;
     /// Tx policer, if any
-    pds_policer_key_t tx_policer;
+    pds_obj_key_t tx_policer;
     /// Rx policer, if any
-    pds_policer_key_t rx_policer;
+    pds_obj_key_t rx_policer;
     /// only primary vnic's will get hostname and gateway IP in the
     /// DHCP offer from local DHCP proxy
     bool primary;

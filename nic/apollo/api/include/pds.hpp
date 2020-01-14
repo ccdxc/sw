@@ -94,7 +94,6 @@ typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_tag_id_t;              ///< tag table index
 typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
 typedef uint32_t    pds_ifindex_t;             ///< interface index
-typedef uint32_t    pds_policer_id_t;          ///< policer id
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
@@ -222,11 +221,6 @@ typedef struct pds_mirror_session_key_s {
     ///< unique mirror session id in the range [1-8]
     pds_mirror_session_id_t id;
 } __PACK__ pds_mirror_session_key_t;
-
-/// \brief    policer key
-typedef struct pds_policer_key_s {
-    pds_policer_id_t id;
-} __PACK__ pds_policer_key_t;
 
 /// \brief    service mapping key
 typedef struct pds_svc_mapping_key_s {

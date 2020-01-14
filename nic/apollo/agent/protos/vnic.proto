@@ -59,9 +59,9 @@ message VnicSpec {
   // HostIfIndex is the interface index of such VF/PF
   uint32          HostIfIndex           = 16;
   // policer to be applied on the traffic coming from vnic
-  uint32          TxPolicerId           = 17;
+  bytes           TxPolicerId           = 17;
   // policer to be applied on the traffic going to vnic
-  uint32          RxPolicerId           = 18;
+  bytes           RxPolicerId           = 18;
   // if a vnic is not marked as primary, DHCP offer sent to such vnics
   // will not have gateway IP, hostname options filled in the DHCP offer
   bool            Primary               = 19 [(gogoproto.moretags) = "meta:immutable"];

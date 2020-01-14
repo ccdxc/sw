@@ -52,7 +52,7 @@ public:
     /// \brief      lookup a policer in database given the key
     /// \param[in]  key    policer key
     /// \return     pointer to the policer instance found or NULL
-    policer_entry *find(pds_policer_key_t *key) const;
+    policer_entry *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the db elements
     /// \param[in] walk_cb    callback to be invoked for every node
@@ -79,7 +79,7 @@ private:
 };
 
 static inline policer_entry *
-policer_find (pds_policer_key_t *key)
+policer_find (pds_obj_key_t *key)
 {
     return (policer_entry *)api_base::find_obj(OBJ_ID_POLICER, key);
 }

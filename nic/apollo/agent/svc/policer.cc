@@ -128,7 +128,7 @@ PolicerSvcImpl::PolicerDelete(ServerContext *context,
                               const pds::PolicerDeleteRequest *proto_req,
                               pds::PolicerDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policer_key_t key;
+    pds_obj_key_t key;
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
@@ -152,7 +152,7 @@ PolicerSvcImpl::PolicerDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_policer_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -182,7 +182,7 @@ PolicerSvcImpl::PolicerGet(ServerContext *context,
                            const pds::PolicerGetRequest *proto_req,
                            pds::PolicerGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_policer_key_t key = { 0 };
+    pds_obj_key_t key;
     pds_policer_info_t info = { 0 };
 
     if (proto_req == NULL) {
@@ -195,7 +195,7 @@ PolicerSvcImpl::PolicerGet(ServerContext *context,
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = pds_policer_read(&key, &info);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {

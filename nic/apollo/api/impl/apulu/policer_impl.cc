@@ -100,7 +100,7 @@ policer_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         }
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve entry in policer table for "
-                          "policer %u, err %u", spec->key.id, ret);
+                          "policer %s, err %u", spec->key.str(), ret);
             return ret;
         }
         hw_id_ = idx;
@@ -171,8 +171,8 @@ policer_impl::activate_create_(pds_epoch_t epoch, policer_entry *policer,
         }
     }
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u create",
-                      spec->key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to activate policer %s, hw id %u create",
+                      spec->key.str(), hw_id_);
     }
     return ret;
 }
@@ -201,8 +201,8 @@ policer_impl::activate_update_(pds_epoch_t epoch, policer_entry *policer,
         }
     }
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to activate policer %u, hw id %u update",
-                      spec->key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to activate policer %s, hw id %u update",
+                      spec->key.str(), hw_id_);
     }
     return ret;
 }
