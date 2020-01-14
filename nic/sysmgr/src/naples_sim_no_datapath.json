@@ -28,7 +28,7 @@
     "timeout": 0.0
 }, {
     "name": "tmagent",
-    "command": "/naples/nic/bin/tmagent",
+    "command": "/naples/nic/bin/tmagent -datapath mock",
     "dependencies": [
         {
             "kind": "service",
