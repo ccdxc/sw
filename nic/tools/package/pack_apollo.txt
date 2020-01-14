@@ -146,9 +146,9 @@ nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_with
 
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
-nic/apollo/tools/sysinit.sh                                       /nic/tools/
-nic/apollo/tools/syskill.sh                                       /nic/tools/
-nic/apollo/tools/bringup_mgmt_ifs.sh                              /nic/tools/
+nic/apollo/tools/$PIPELINE/sysinit.sh                             /nic/tools/
+nic/apollo/tools/$PIPELINE/syskill.sh                             /nic/tools/
+nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs.sh                    /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 nic/tools/serial_console.sh                                       /nic/tools/
@@ -222,8 +222,8 @@ nic/conf/captrace/sample-conf.json                                /nic/conf/capt
 nic/build/$ARCH/$PIPELINE/bin/fd_send                             /nic/conf/
 
 # agent specific files
-nic/apollo/tools/start-agent.sh                                   /nic/tools/
-nic/apollo/tools/start-nmd.sh                                     /nic/tools/
+nic/apollo/tools/$PIPELINE/start-agent.sh                         /nic/tools/
+nic/apollo/tools/$PIPELINE/start-nmd.sh                           /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libsvc.so                           /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsagentcore.so                  /nic/lib/
