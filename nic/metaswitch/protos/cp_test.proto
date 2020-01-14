@@ -1,0 +1,31 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// protobuf specification for control plane test configurations
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "pdsa.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// service definition
+service CPTestSvc
+{
+  rpc CPL2fTestCreate (CPL2fTest) returns (CPL2fTestResponse) {}
+}
+
+message CPL2fTest {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "l2f_test_local_mac_ip_add"
+  };
+    uint32          SubnetId = 1;
+    types.IPAddress IPAddr   = 2;
+    bytes           MACAddr  = 3;
+    uint32          IfId     = 4;
+}
+
+message CPL2fTestResponse {
+    types.ApiStatus ApiStatus = 1;
+}

@@ -40,15 +40,15 @@ message CPRouteSpec {
     Mib:    "rtmRibTable"
   };
 
-  uint32            VRFId           = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
-  types.IPAddress   DestAddr        = 2 [(venice.pdsaFields) = {Field:"dest"}];
-  uint32            DestPrefixLen   = 3 [(venice.pdsaFields) = {Field:"dest_len", GetKeyOidIndex: "AMB_QCR_RIB_DEST_LEN_INDEX"}];
-  uint32            ToS             = 4 [(venice.pdsaFields) = {Field:"tos", GetKeyOidIndex: "AMB_QCR_RIB_TOS_INDEX"}];
-  types.IPAddress   NHAddr          = 5 [(venice.pdsaFields) = {Field:"next_hop"}];
-  uint32            IfIndex         = 6 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_QCR_RIB_IF_INDEX_INDEX"}];
-  RouteType         Type            = 7 [(venice.pdsaFields) = {Field:"type"}];
-  RouteProto        proto           = 8 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
-  uint32            RpmIndex        = 9 [(venice.pdsaFields) = {Field:"rpm_index", GetKeyOidIndex: "AMB_QCR_RIB_RPM_INDEX_INDEX"}];
+  uint32          VPCId         = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
+  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest"}];
+  uint32          DestPrefixLen = 3 [(venice.pdsaFields) = {Field:"dest_len", GetKeyOidIndex: "AMB_QCR_RIB_DEST_LEN_INDEX"}];
+  uint32          ToS           = 4 [(venice.pdsaFields) = {Field:"tos", GetKeyOidIndex: "AMB_QCR_RIB_TOS_INDEX"}];
+  types.IPAddress NHAddr        = 5 [(venice.pdsaFields) = {Field:"next_hop"}];
+  uint32          IfIndex       = 6 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_QCR_RIB_IF_INDEX_INDEX"}];
+  RouteType       Type          = 7 [(venice.pdsaFields) = {Field:"type"}];
+  RouteProto      proto         = 8 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
+  uint32          RpmIndex      = 9 [(venice.pdsaFields) = {Field:"rpm_index", GetKeyOidIndex: "AMB_QCR_RIB_RPM_INDEX_INDEX"}];
 }
 
 message CPRouteSpecRequest {
@@ -77,25 +77,29 @@ message CPStaticRouteSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_QCR_STRT_OID_LEN",
     Mib:    "rtmStaticRtTable"
-    FillFn: "rtm_strt_fill_func" // IfIndex
+    FillFn: "rtm_strt_fill_func"
   };
-
-  // VRF ID
-  uint32          VRFId         = 1 [(venice.pdsaFields) = {Field: "fte_index", SetKeyOidIndex: "AMB_QCR_STRT_FTE_INDEX_INDEX"}];
+    
+  bytes           Id          = 1; // spec key
+  // virtual private cloud this route belongs to 
+  bytes           VPCId       = 2;
   // Destination Address 
-  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
+  types.IPAddress DestAddr    = 3 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
   // Destination Address Prefix Length
-  uint32          PrefixLen     = 3 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
+  uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
   // NextHop Address
-  types.IPAddress NextHopAddr   = 4 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
+  types.IPAddress NextHopAddr = 5 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
   // Admin Status
-  AdminSt         AdminStatus   = 5 [(venice.pdsaFields) = {Field: "admin_stat"}];
+  AdminSt         AdminStatus = 6 [(venice.pdsaFields) = {Field: "admin_stat"}];
   // Override Admin Distance
-  AMBBool         Override      = 6 [(venice.pdsaFields) = {Field: "override"}];
+  AMBBool         Override    = 7 [(venice.pdsaFields) = {Field: "override"}];
   // Admin Distance
-  uint32          AdminDist     = 7 [(venice.pdsaFields) = {Field: "admin_dist"}];
+  uint32          AdminDist   = 8 [(venice.pdsaFields) = {Field: "admin_dist"}];
   // Route Action 
-  StRtAction      Action        = 8  [(venice.pdsaFields) = {Field: "action"}];
+  StRtAction      Action      = 9  [(venice.pdsaFields) = {Field: "action"}];
+
+  // Internal Fieds only
+  uint32          VRFId       = 10 [(venice.pdsaFields) = {Field: "fte_index", SetKeyOidIndex: "AMB_QCR_STRT_FTE_INDEX_INDEX"}];
 }
 
 // CRUD request message

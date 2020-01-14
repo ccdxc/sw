@@ -108,7 +108,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_uuid (msidx2pdsobjkey(1).str());
+    proto_spec->set_uuid (msidx2pdsobjkey(1).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -129,7 +129,7 @@ static void create_evpn_evi_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_eviid (1);
+    proto_spec->set_id (msidx2pdsobjkey(1).id);
     if (g_test_conf_.manual_rd) {
         proto_spec->set_autord (pds::EVPN_CFG_MANUAL);
         proto_spec->set_rd((const char *)g_test_conf_.rd, 8);
@@ -161,7 +161,7 @@ static void create_evpn_evi_rt_proto_grpc () {
     Status              ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_eviid (1);
+    proto_spec->set_id (msidx2pdsobjkey(1).id);
     proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
@@ -182,7 +182,8 @@ static void create_route_proto_grpc () {
     Status                ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_vrfid(1);
+    proto_spec->set_id(msidx2pdsobjkey(1).id);
+    proto_spec->set_vpcid(msidx2pdsobjkey(1).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
     dest_addr->set_v4addr (0);
@@ -218,7 +219,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
     proto_spec->set_adminen(pds::ADMIN_UP);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
@@ -261,7 +262,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
     proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -305,8 +306,8 @@ static void create_subnet_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).str());
-    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).str());
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).id);
+    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -336,7 +337,7 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).str());
+    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).id);
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -359,7 +360,7 @@ static void create_evpn_ip_vrf_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_vrfid (k_vpc_id);
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id);
     proto_spec->set_vni(200);
 
     printf ("Pushing EVPN IP VRF proto...\n");
@@ -379,7 +380,7 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_vrfid (k_vpc_id);
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     proto_spec->set_rt(rt,8);
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
@@ -444,7 +445,7 @@ static void get_peer_status_all() {
     Status               ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_uuid(msidx2pdsobjkey(1).str());
+    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
 
     ret_status = g_bgp_stub_->BGPPeerSpecGetAll (&context, request, &response);
     if (ret_status.ok()) {

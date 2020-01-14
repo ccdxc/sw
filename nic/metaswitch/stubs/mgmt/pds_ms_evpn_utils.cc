@@ -2,6 +2,7 @@
 //Purpose: Helper APIs for metaswitch EVPN component
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "evpn_mgmt_if.h"
 
 namespace pds {
@@ -13,7 +14,18 @@ evpn_evi_fill_func (EvpnEviSpec&    req,
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+#if 0
+    uuid_t    uuid = {0};
+    uuid_t    subnet_uuid = {0};
+    
+    // get uuids
+    pds_ms_get_uuid (&uuid, req.id());
+    pds_ms_get_uuid (&subnet_uuid, req.subnetid());
 
+    if (strcmp (uuid.id, subnet_uuid.id) == 0) {
+        // spec uuid is same as subnet uuid, no need to store
+    }
+#endif
     data->entity_index                = PDS_MS_EVPN_ENT_INDEX;
     oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);

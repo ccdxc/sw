@@ -70,12 +70,16 @@ message EvpnEviSpec {
     Mib:    "evpnEviTable"
   };
 
-  uint32      EVIId       = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}];
-  EvpnCfg     AutoRD      = 2 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
-  bytes       RD          = 3 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
-  EvpnCfg     AutoRT      = 4 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}];
-  EvpnRtType  RTType      = 5 [(venice.pdsaFields) = {Field:"auto_rt_type"}];
-  EvpnEncaps  Encap       = 6 [(venice.pdsaFields) = {Field:"encapsulation"}];
+  bytes       Id       = 1; // spec key 
+  bytes       SubnetId = 2; // reference to subnet spec. FillFn to retrieve EVI Id from subnet spec
+  EvpnCfg     AutoRD   = 3 [(venice.pdsaFields) = {Field:"rd_cfg_or_auto"}];
+  bytes       RD       = 4 [(venice.pdsaFields) = {Field:"cfg_rd"}]; // Not mandatory when AutoRD is set to EVPN_CFG_AUTO 
+  EvpnCfg     AutoRT   = 5 [(venice.pdsaFields) = {Field:"rt_cfg_or_auto"}];
+  EvpnRtType  RTType   = 6 [(venice.pdsaFields) = {Field:"auto_rt_type"}];
+  EvpnEncaps  Encap    = 7 [(venice.pdsaFields) = {Field:"encapsulation"}];
+
+  // Internal only
+  uint32      EVIId    = 8 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}];
 }
 
 // EVPN IP VRF configuration
@@ -90,9 +94,13 @@ message EvpnIpVrfSpec {
     Mib:    "evpnIpVrfTable"
   };
 
-  uint32 VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_fill_name_oid", GetFieldFn: "evpn_ip_vrf_get_name_field", GetKeyOidFn: "evpn_ip_vrf_fill_name_oid"}]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
-  uint32 VNI      = 2 [(venice.pdsaFields) = {Field:"vni"}];
-  bytes  RD       = 3 [(venice.pdsaFields) = {Field:"route_distinguisher"}];
+  bytes  Id    = 1; // spec key 
+  bytes  VPCId = 2; // reference to VPC spec. FillFn to convert to VRF Name
+  uint32 VNI   = 3 [(venice.pdsaFields) = {Field:"vni"}];
+  bytes  RD    = 4 [(venice.pdsaFields) = {Field:"route_distinguisher"}];
+
+  // Internal only
+  uint32 VRFId = 5 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_fill_name_oid", GetFieldFn: "evpn_ip_vrf_get_name_field", GetKeyOidFn: "evpn_ip_vrf_fill_name_oid"}]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
 }
 
 // EVPN EVI RT Configuration
@@ -107,9 +115,13 @@ message EvpnEviRtSpec {
     Mib:    "evpnEviRtTable"
   };
 
-  uint32      EVIId   = 1 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}];
-  bytes       RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}];
-  EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}];
+  bytes      Id       = 1; // spec key
+  bytes      SubnetId = 2; // reference to subnet spec. FillFn to retrieve EVI Id from subnet spec
+  bytes      RT       = 3 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET", GetKeyOidIndex: "AMB_EVPN_EVI_RT_RTE_TARGET"}];
+  EvpnRtType RTType   = 4 [(venice.pdsaFields) = {Field:"type"}];
+
+  // Internal only
+  uint32    EVIId     = 5 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}];
 }
 
 // EVPN IP VRF RT Configuration
@@ -124,9 +136,13 @@ message EvpnIpVrfRtSpec {
     Mib:    "evpnIpVrfRtTable"
   };
 
-  uint32      VRFId    = 1 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_rt_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid", GetFieldFn: "evpn_ip_vrf_rt_get_name_field", GetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid"}]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
-  bytes       RT      = 2 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}];
-  EvpnRtType  RTType  = 3 [(venice.pdsaFields) = {Field:"type"}];
+  bytes      Id     = 1; // spec key [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_rt_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid", GetFieldFn: "evpn_ip_vrf_rt_get_name_field", GetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid"}]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
+  bytes      VPCId  = 2; // reference to VPS spec. FillFn to convert to VRF Name
+  bytes      RT     = 3 [(venice.pdsaFields) = {Field:"route_target", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_TARGET_INDEX"}];
+  EvpnRtType RTType = 4 [(venice.pdsaFields) = {Field:"type"}];
+
+  // Internal only
+  uint32     VRFId  = 5 [(venice.pdsaFields) = {Field:"vrf_name", SetFieldFn: "evpn_ip_vrf_rt_fill_name_field", SetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid", GetFieldFn: "evpn_ip_vrf_rt_get_name_field", GetKeyOidFn: "evpn_ip_vrf_rt_fill_name_oid"}]; // cannot be auto-gen, ID to name conversion and viceversa should be populated from the Field/KeyOidFns
 }
 
 // EvpnEvi create and update request

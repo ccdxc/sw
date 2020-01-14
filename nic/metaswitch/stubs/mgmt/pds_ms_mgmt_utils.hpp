@@ -35,6 +35,7 @@ extern "C" {
 #include "gen/proto/cp_interface.pb.h"
 #include "gen/proto/cp_route.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
+#include "gen/proto/cp_test.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 
@@ -78,6 +79,8 @@ NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr,
                                                NBB_BYTE      *amb_ip_addr,
                                                bool          is_zero_ip_valid);
 
+bool ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
+                              ip_addr_t *out_ipaddr);
 NBB_VOID pds_ms_set_address_oid(NBB_ULONG *oid,
                               const NBB_CHAR  *tableName,
                               const NBB_CHAR  *fieldName,
@@ -192,6 +195,8 @@ NBB_VOID lim_sw_intf_fill_func (CPInterfaceSpec&    req,
                                 AMB_GEN_IPS         *mib_msg,
                                 AMB_LIM_SOFTWARE_IF *data,
                                 NBB_LONG            row_status);
+types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTest   *req, 
+                                            CPL2fTestResponse *resp);
 } // namespace pds
 
 namespace pds_ms {

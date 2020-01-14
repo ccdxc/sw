@@ -21,11 +21,11 @@ service CPInterfaceSvc
 }
 
 enum CPIntfType {
-    CP_IF_TYPE_NONE     = 0;
-    CP_IF_TYPE_ETH      = 1;
-    CP_IF_TYPE_LIF      = 2;
-    CP_IF_TYPE_LOOPBACK = 3;
-    CP_IF_TYPE_IRB      = 4;
+  CP_IF_TYPE_NONE     = 0;
+  CP_IF_TYPE_ETH      = 1;
+  CP_IF_TYPE_LIF      = 2;
+  CP_IF_TYPE_LOOPBACK = 3;
+  CP_IF_TYPE_IRB      = 4;
 };
 
 message CPInterfaceAddrSpec {
@@ -35,10 +35,11 @@ message CPInterfaceAddrSpec {
     FillFn: "lim_intf_addr_fill_func"
   };
 
-    CPIntfType      IfType      = 1; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
-    uint32          IfId        = 2; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
-    types.IPAddress IPAddr      = 3 [(venice.pdsaFields) = {Field:"ipaddress"}];
-    uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field:"prefix_len"}];
+  bytes           Id        = 1; // spec key
+  CPIntfType      IfType    = 2; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
+  uint32          IfId      = 3; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
+  types.IPAddress IPAddr    = 4 [(venice.pdsaFields) = {Field:"ipaddress"}];
+  uint32          PrefixLen = 5 [(venice.pdsaFields) = {Field:"prefix_len"}];
 }
 
 // This spec should be used to create only LIF and Loopback interfaces.
@@ -50,8 +51,9 @@ message CPInterfaceSpec {
     FillFn: "lim_sw_intf_fill_func"
   };
 
-    CPIntfType  IfType  = 1; // Interface Type should be converted to MS interface type/subtype, cannot be autogen
-    uint32      IfId    = 2 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
+  bytes      Id     = 1; // spec key  
+  CPIntfType IfType = 2; // interface Type should be converted to MS interface type/subtype, cannot be autogen
+  uint32     IfId   = 3 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
 }
 
 // CRUD request messages
