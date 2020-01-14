@@ -6,51 +6,53 @@ import (
 	"github.com/pensando/sw/venice/globals"
 )
 
-const vnicKind = "VNIC"
+const workloadVnicKind = "workloadVnic"
 
-type vnicStruct struct {
+type vnicEntry struct {
+	PG         string
+	Port       string
+	MacAddress string
+}
+
+type workloadVnics struct {
 	// All objects in pCache must be a apiserver runtime object
 	api.ObjectMeta
 	api.TypeMeta
-	PG       string
-	Port     string
-	Workload string
+	Interfaces map[string]*vnicEntry
 }
 
 func (v *VCHub) setupPCache() {
 	pCache := pcache.NewPCache(v.StateMgr, v.Log)
 	pCache.SetValidator(workloadKind, v.validateWorkload)
-	pCache.SetValidator(vnicKind, validateVNIC)
+	pCache.SetValidator(workloadVnicKind, validateWorkloadVnics)
 	v.pCache = pCache
 	v.Wg.Add(1)
 	go pCache.Run(v.Ctx, v.Wg)
 }
 
-func validateVNIC(in interface{}) (bool, bool) {
+func validateWorkloadVnics(in interface{}) (bool, bool) {
 	// This object should never go to statemgr
 	return false, false
 }
 
-func createVNICMeta(macAddress string) *api.ObjectMeta {
+func createWorkloadVnicsMeta(workloadName string) *api.ObjectMeta {
 	meta := &api.ObjectMeta{
-		Name: macAddress,
-		// TODO: Don't use default tenant
+		Name:      workloadName,
 		Tenant:    globals.DefaultTenant,
 		Namespace: globals.DefaultNamespace,
 	}
 	return meta
 }
 
-// GetVNIC retrieves a vnic
-func (v *VCHub) getVNIC(macAddress string) *vnicStruct {
+func (v *VCHub) getWorkloadVnics(workloadName string) *workloadVnics {
 	p := v.pCache
-	meta := createVNICMeta(macAddress)
-	obj := p.Get(vnicKind, meta)
+	meta := createWorkloadVnicsMeta(workloadName)
+	obj := p.Get(workloadVnicKind, meta)
 	if obj == nil {
 		return nil
 	}
 	switch ret := obj.(type) {
-	case *vnicStruct:
+	case *workloadVnics:
 		return ret
 	default:
 		p.Log.Errorf("VNIC returned wasn't the expected type %v", ret)
@@ -58,13 +60,51 @@ func (v *VCHub) getVNIC(macAddress string) *vnicStruct {
 	return nil
 }
 
-func (v *VCHub) setVNIC(in *vnicStruct) {
+func (v *VCHub) setWorkloadVnicsObject(in *workloadVnics) {
 	// Since we are only setting locally
 	// we don't have to worry about errors
-	v.pCache.Set(vnicKind, in)
+	v.pCache.Set(workloadVnicKind, in)
 }
 
-func (v *VCHub) deleteVNIC(macAddress string) {
-	meta := createVNICMeta(macAddress)
-	v.pCache.Delete(vnicKind, meta)
+func (v *VCHub) deleteWorkloadVnicsObject(workloadName string) {
+	meta := createWorkloadVnicsMeta(workloadName)
+	v.pCache.Delete(workloadVnicKind, meta)
+}
+
+// adds vnic info for the given workload,mac
+// Will create the workloadVnics object if it doesn't exist
+func (v *VCHub) addVnicInfoForWorkload(workloadName string, inf *vnicEntry) {
+	wl := v.getWorkloadVnics(workloadName)
+	if wl == nil {
+		wl = &workloadVnics{
+			ObjectMeta: *createWorkloadVnicsMeta(workloadName),
+			Interfaces: map[string]*vnicEntry{},
+		}
+	}
+	wl.Interfaces[inf.MacAddress] = inf
+	v.setWorkloadVnicsObject(wl)
+}
+
+// Gets vnic info for the given workload,mac
+func (v *VCHub) getVnicInfoForWorkload(workloadName, macAddress string) *vnicEntry {
+	wl := v.getWorkloadVnics(workloadName)
+	if wl == nil {
+		return nil
+	}
+	return wl.Interfaces[macAddress]
+}
+
+// Removes vnic info for the given mac. If there are no vnics left,
+// it will remove the workloadVnic object wrapper as well
+func (v *VCHub) removeVnicInfoForWorkload(workloadName, macAddress string) {
+	wl := v.getWorkloadVnics(workloadName)
+	if wl == nil {
+		return
+	}
+	if _, ok := wl.Interfaces[macAddress]; ok {
+		delete(wl.Interfaces, macAddress)
+	}
+	if len(wl.Interfaces) == 0 {
+		v.deleteWorkloadVnicsObject(workloadName)
+	}
 }

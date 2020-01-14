@@ -21,6 +21,7 @@ type NetworkState struct {
 //GetNetworkWatchOptions gets options
 func (sm *Statemgr) GetNetworkWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
 	return &opts
 }
 

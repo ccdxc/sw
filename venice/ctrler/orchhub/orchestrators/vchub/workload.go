@@ -35,6 +35,10 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
 		return false, false
 	}
+	if len(obj.Spec.Interfaces) == 0 {
+		v.Log.Errorf("workload %s has no interfaces", obj.GetObjectMeta().Name)
+		return false, false
+	}
 	// check that workload is no longer in pvlan mode
 	for _, inf := range obj.Spec.Interfaces {
 		if inf.MicroSegVlan == 0 {
@@ -108,8 +112,7 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 		}
 	}
 
-	v.assignUsegs(m.DcID, m.DcName, m.Key, workloadObj)
-
+	v.syncUsegs(m.DcID, m.DcName, m.Key, existingWorkload, workloadObj)
 	v.pCache.Set(workloadKind, workloadObj)
 }
 
@@ -117,35 +120,84 @@ func (v *VCHub) deleteWorkload(workloadObj *workload.Workload, dcName string) {
 	v.Log.Debugf("Deleting workload %s", workloadObj.Name)
 	// free vlans
 	for _, inf := range workloadObj.Spec.Interfaces {
-		// Check if workload has assignment
-		if inf.MicroSegVlan != 0 {
-			// TODO: send notification to probe to reset override
-			// dc := v.DcMap[m.DcID]
-			dc := v.GetDC(dcName)
-			if dc == nil {
-				v.Log.Errorf("Got Workload delete %s for a DC we don't have state for %s", workloadObj.Name, dcName)
-				continue
-			}
-
-			// TODO: Remove hardcoded dvs name
-			dvs := dc.GetPenDVS(createDVSName(dcName))
-			err := dvs.UsegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
-			if err != nil {
-				v.Log.Errorf("Failed to release vlan %v", err)
-			}
-		} else {
-			// Clean up cache
-			v.deleteVNIC(inf.MACAddress)
-		}
+		v.releaseInterface(dcName, &inf, workloadObj, true)
 	}
 	v.pCache.Delete(workloadKind, workloadObj)
 	return
 }
 
+func (v *VCHub) releaseInterface(dcName string, inf *workload.WorkloadIntfSpec, workloadObj *workload.Workload, deleteVnicMetadata bool) {
+	if inf.MicroSegVlan != 0 {
+		if workloadObj.Spec.HostName == "" {
+			v.Log.Infof("Release interface called for workload %s (DC %s) that has no host", workloadObj.Name, dcName)
+			return
+		}
+		dc := v.GetDC(dcName)
+		if dc == nil {
+			v.Log.Errorf("Got Workload delete %s for a DC we don't have state for %s", workloadObj.Name, dcName)
+			return
+		}
+
+		// TODO: Remove hardcoded dvs name
+		dvs := dc.GetPenDVS(createDVSName(dcName))
+		err := dvs.UsegMgr.ReleaseVlanForVnic(inf.MACAddress, workloadObj.Spec.HostName)
+		if err != nil {
+			v.Log.Errorf("Failed to release vlan %v", err)
+		}
+		inf.MicroSegVlan = 0
+		v.Log.Debugf("Released interface %s for workload %s", inf.MACAddress, workloadObj.Name)
+	}
+	if deleteVnicMetadata {
+		v.removeVnicInfoForWorkload(workloadObj.Name, inf.MACAddress)
+	}
+}
+
+func (v *VCHub) syncUsegs(dcID, dcName, vmName string, existingWorkload, workloadObj *workload.Workload) {
+	// Handle releasing usegs for vnics that are removed
+	if existingWorkload != nil && existingWorkload.Spec.HostName != "" {
+		// If we are going from 1+ vnics to 0 vnics, we delete the workload from apiserver,
+		// and store the new state of the workload (0 infs) in pcache
+		if len(existingWorkload.Spec.Interfaces) > 0 && len(workloadObj.Spec.Interfaces) == 0 {
+			// Delete workload will release the usegs it has assigned
+			v.deleteWorkload(existingWorkload, dcName)
+			return
+		}
+
+		// If host has changed, we need to free all the old usegs
+		if existingWorkload.Spec.HostName != workloadObj.Spec.HostName {
+			v.Log.Infof("Vm changed hosts, releasing current usegs")
+			for _, inf := range existingWorkload.Spec.Interfaces {
+				// don't remove vnic info, as it is needed to assign new useg values
+				v.releaseInterface(dcName, &inf, existingWorkload, false)
+			}
+			// Remove useg value in the workloadObj
+			for i := range workloadObj.Spec.Interfaces {
+				workloadObj.Spec.Interfaces[i].MicroSegVlan = 0
+			}
+
+		} else {
+			// Host is same, check if any interfaces have been removed
+			infs := map[string]bool{}
+			for _, inf := range workloadObj.Spec.Interfaces {
+				infs[inf.MACAddress] = true
+			}
+
+			for _, inf := range existingWorkload.Spec.Interfaces {
+				if _, ok := infs[inf.MACAddress]; !ok {
+					// inf has been removed
+					v.releaseInterface(dcName, &inf, existingWorkload, true)
+				}
+			}
+		}
+	}
+
+	v.assignUsegs(dcID, dcName, vmName, workloadObj)
+}
+
 // assignUsegs will set usegs for the workload, and send a message to
 // the probe to override the ports
 func (v *VCHub) assignUsegs(dcID, dcName, vmName string, workload *workload.Workload) {
-	v.Log.Debugf("Assign usegs called for workload %s", workload.Name)
+	v.Log.Debugf("Assign usegs called for workload %s on host %s", workload.Name, workload.Spec.HostName)
 	if len(workload.Spec.HostName) == 0 {
 		v.Log.Debugf("hostname not set yet for workload %s", workload.Name)
 		return
@@ -160,14 +212,12 @@ func (v *VCHub) assignUsegs(dcID, dcName, vmName string, workload *workload.Work
 			continue
 		}
 
-		entry := v.getVNIC(inf.MACAddress)
+		entry := v.getVnicInfoForWorkload(workload.Name, inf.MACAddress)
 		if entry == nil {
 			v.Log.Errorf("workload inf without useg was not in map, workload %s, mac %s", workload.Name, inf.MACAddress)
 			return
 		}
 
-		// pg := entry.PG
-		// port := entry.Port
 		dc := v.GetDC(dcName)
 		if dc == nil {
 			v.Log.Errorf("Got workload %s create for DC we don't have state for: %s", vmName, dcName)
@@ -180,7 +230,6 @@ func (v *VCHub) assignUsegs(dcID, dcName, vmName string, workload *workload.Work
 		if err == nil {
 			// Already have an assignment
 			workload.Spec.Interfaces[i].MicroSegVlan = uint32(vlan)
-			v.deleteVNIC(inf.MACAddress)
 			continue
 		}
 
@@ -200,8 +249,6 @@ func (v *VCHub) assignUsegs(dcID, dcName, vmName string, workload *workload.Work
 				v.Log.Errorf("Override vlan failed for workload %s, %s", vmName, err)
 			}
 		}
-
-		v.deleteVNIC(inf.MACAddress)
 	}
 
 }
@@ -287,13 +334,12 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 			continue
 		}
 
-		entry := &vnicStruct{
-			ObjectMeta: *createVNICMeta(macStr),
+		entry := &vnicEntry{
 			PG:         pgID,
 			Port:       port,
-			Workload:   workloadName,
+			MacAddress: macStr,
 		}
-		v.setVNIC(entry)
+		v.addVnicInfoForWorkload(workloadName, entry)
 
 		var externalVlan uint32
 		var pgObj *PenPG
@@ -422,7 +468,7 @@ func (v *VCHub) getVmkWorkload(dc *mo.Datacenter, wlName, hostName string) *work
 	return workloadObj
 }
 
-func (v *VCHub) syncHostVmkNics(dc *mo.Datacenter, dvs *mo.VmwareDistributedVirtualSwitch, host *mo.HostSystem, vmknics []vnicStruct) {
+func (v *VCHub) syncHostVmkNics(dc *mo.Datacenter, dvs *mo.VmwareDistributedVirtualSwitch, host *mo.HostSystem, vmkNicInfo *workloadVnics) {
 	// workload name in the vnicStruct is set to WL name created for this host.
 	wlName := createVmkWorkLoadName(v.VcID, dc.Self.Value, host.Self.Value)
 	hostName := createHostName(v.VcID, dc.Self.Value, host.Self.Value)
@@ -431,8 +477,8 @@ func (v *VCHub) syncHostVmkNics(dc *mo.Datacenter, dvs *mo.VmwareDistributedVirt
 	newNicMap := map[string]bool{}
 	oldNicMap := map[string]bool{}
 
-	for _, vmknic := range vmknics {
-		newNicMap[vmknic.Name] = true
+	for _, vmknic := range vmkNicInfo.Interfaces {
+		newNicMap[vmknic.MacAddress] = true
 	}
 	for _, intf := range workloadObj.Spec.Interfaces {
 		oldNicMap[intf.MACAddress] = true
@@ -453,24 +499,24 @@ func (v *VCHub) syncHostVmkNics(dc *mo.Datacenter, dvs *mo.VmwareDistributedVirt
 			penDC.GetPenDVS(createDVSName(dc.Name)).UsegMgr.ReleaseVlanForVnic(existingNic.MACAddress, workloadObj.Spec.HostName)
 		}
 	}
-	for _, vmknic := range vmknics {
+	for _, vmknic := range vmkNicInfo.Interfaces {
 		// Find external vlan from venice network for the PG
 		penPG := penDC.GetPGByID(vmknic.PG)
 		var externalVlan uint32
 		nw, err := v.StateMgr.Controller().Network().Find(&penPG.NetworkMeta)
 		if err == nil {
 			externalVlan = nw.Spec.VlanID
-			v.Log.Infof("Setting vlan %v for vnic %s", externalVlan, vmknic.ObjectMeta.Name)
+			v.Log.Infof("Setting vlan %v for vnic %s", externalVlan, vmknic.MacAddress)
 		} else {
 			v.Log.Infof("No venice network for PG %s", vmknic.PG)
 			continue
 		}
 		interfaces = append(interfaces, workload.WorkloadIntfSpec{
-			MACAddress:   vmknic.ObjectMeta.Name,
+			MACAddress:   vmknic.MacAddress,
 			ExternalVlan: externalVlan,
 		})
 		// needed later by assignUsegs
-		v.setVNIC(&vmknic)
+		v.setWorkloadVnicsObject(vmkNicInfo)
 	}
 	if len(interfaces) == 0 {
 		// vmkNics became zero, delete the workload

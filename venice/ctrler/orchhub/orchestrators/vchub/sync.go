@@ -211,7 +211,9 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 		}
 
 		for _, nw := range networks {
+			v.Log.Debugf("Checking nw %s", nw.Network.Name)
 			for _, orch := range nw.Network.Spec.Orchestrators {
+				v.Log.Debugf("Checking nw %s orch config %v", orch)
 				if orch.Name == v.VcID && orch.Namespace == dcName {
 					pgName := createPGName(nw.Network.Name)
 
@@ -224,6 +226,10 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 						v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
 					}
 					delete(pgMap, pgName)
+				} else {
+					v.Log.Debugf("vcID %s, dcName %s", v.VcID, dcName)
+					v.Log.Debugf("vcID is equal %v", orch.Name == v.VcID)
+					v.Log.Debugf("orch name is equal %v", orch.Name == dcName)
 				}
 			}
 		}
@@ -455,8 +461,11 @@ func (v *VCHub) syncVmkNics(dc *mo.Datacenter, dvsObjs []mo.VmwareDistributedVir
 				// non-pensando host
 				continue
 			}
-			vmkNics := []vnicStruct{}
 			wlName := createVmkWorkLoadName(v.VcID, dc.Self.Value, host.Self.Value)
+			vmkNicInfo := workloadVnics{
+				ObjectMeta: *createWorkloadVnicsMeta(wlName),
+				Interfaces: map[string]*vnicEntry{},
+			}
 			for _, vmkNic := range host.Config.Network.Vnic {
 				v.Log.Infof("Processing VmkNic %s on host %s", vmkNic.Key, host.Name)
 				if vmkNic.Portgroup != "" {
@@ -478,17 +487,16 @@ func (v *VCHub) syncVmkNics(dc *mo.Datacenter, dvsObjs []mo.VmwareDistributedVir
 					continue
 				}
 				macStr := vmkNic.Spec.Mac
-				vmkNics = append(vmkNics, vnicStruct{
-					ObjectMeta: *createVNICMeta(macStr),
+				vmkNicInfo.Interfaces[macStr] = &vnicEntry{
 					PG:         pgKey,
 					Port:       portKey,
-					Workload:   wlName,
-				})
+					MacAddress: macStr,
+				}
 				v.Log.Infof("vmkInterface %s Port %s", vmkNic.Device, portKey)
 			}
 			// reconcile vmknics - Add all new vmknics, remove stale
 			// Create workload if does not exists and add EPs to it
-			v.syncHostVmkNics(dc, &dvs, &host, vmkNics)
+			v.syncHostVmkNics(dc, &dvs, &host, &vmkNicInfo)
 		}
 	}
 }

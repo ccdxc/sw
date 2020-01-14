@@ -206,7 +206,6 @@ func (p *PCache) Delete(kind string, in interface{}) error {
 	// Deletes from cache and statemgr
 	obj, err := runtime.GetObjectMeta(in)
 	if err != nil {
-		p.Log.Errorf("Delete called on a non apiserver object, kind %s", kind)
 		return fmt.Errorf(("Object is not an apiserver object"))
 	}
 	key := obj.GetKey()

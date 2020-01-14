@@ -25,6 +25,7 @@ type OrchestratorState struct {
 //GetOrchestratorWatchOptions gets options
 func (sm *Statemgr) GetOrchestratorWatchOptions() *api.ListWatchOptions {
 	opts := api.ListWatchOptions{}
+	opts.FieldChangeSelector = []string{"Spec"}
 	return &opts
 }
 
@@ -49,7 +50,6 @@ func (sm *Statemgr) OnOrchestratorCreate(w *ctkit.Orchestrator) error {
 
 // OnOrchestratorUpdate handles update event
 func (sm *Statemgr) OnOrchestratorUpdate(w *ctkit.Orchestrator, nw *orchestration.Orchestrator) error {
-	// TODO : act on the state object recovered
 	sm.instanceManagerCh <- &kvstore.WatchEvent{Object: nw, Type: kvstore.Updated}
 	_, err := OrchestratorStateFromObj(w)
 

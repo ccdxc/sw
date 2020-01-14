@@ -68,7 +68,7 @@ func main() {
 		logConfig := &log.Config{
 			Module:      globals.OrchHub,
 			Format:      log.JSONFmt,
-			Filter:      log.AllowInfoFilter,
+			Filter:      log.AllowAllFilter,
 			Debug:       *debugflag,
 			CtxSelector: log.ContextAll,
 			LogToStdout: *logToStdoutFlag,

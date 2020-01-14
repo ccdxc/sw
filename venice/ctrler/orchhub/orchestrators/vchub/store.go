@@ -110,6 +110,7 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 		}
 	case kvstore.Updated:
 		// If wire vlan changes, workloads should be modified
+		// TODO: update workloads
 		v.Log.Info("Update network event")
 	case kvstore.Deleted:
 		if len(nw.Spec.Orchestrators) == 0 {
@@ -121,7 +122,7 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 				dcs = append(dcs, orch.Namespace)
 			}
 		}
-		v.Log.Info("Delete network %s event for dcs %v", nw.Name, dcs)
+		v.Log.Infof("Delete network %s event for dcs %v", nw.Name, dcs)
 		for _, dc := range dcs {
 			v.DcMapLock.Lock()
 			penDC, ok := v.DcMap[dc]
