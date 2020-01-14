@@ -56,6 +56,7 @@ private:
     // There is only a single BGP instance ever
     ms_id_t entity_id_;
 };
+using bgp_uuid_obj_uptr_t = std::unique_ptr<bgp_uuid_obj_t>;
 
 class bgp_peer_uuid_obj_t : public slab_obj_t<bgp_peer_uuid_obj_t>,
                             public uuid_obj_t {

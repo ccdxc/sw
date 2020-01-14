@@ -95,7 +95,7 @@ pds_ms_sim_test_bgp_update ()
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_uuid (msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).str());
+    bgp_global_spec.set_uuid (msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
     pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -104,7 +104,7 @@ pds_ms_sim_test_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).str());
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).id);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -125,7 +125,7 @@ pds_ms_sim_test_bgp_update ()
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).str());
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).id);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -162,7 +162,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).str());
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(2).id);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -183,7 +183,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).str());
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).id);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
