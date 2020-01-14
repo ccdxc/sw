@@ -3027,6 +3027,62 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
   "scope": "PerASIC",
   "objectKind": "DistributedServiceCard"
 },
+  AsicMemoryMetrics: {
+  "name": "AsicMemoryMetrics",
+  "description": "System Memory",
+  "displayName": "System Memory",
+  "fields": [
+    {
+      "name": "Totalmemory",
+      "displayName": "Total memory",
+      "description": "Total memory of the system",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Availablememory",
+      "displayName": "Available memory",
+      "description": "Available memory of the system",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "Freememory",
+      "displayName": "Free memory",
+      "description": "Free memory of the system",
+      "units": "Count",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "reporterID",
+      "description": "Name of reporting object",
+      "baseType": "string",
+      "jsType": "string",
+      "isTag": true,
+      "displayName": "reporterID",
+      "tags": [
+        "Level4"
+      ]
+    }
+  ],
+  "tags": [
+    "Level7"
+  ],
+  "scope": "UnknownScope",
+  "objectKind": "DistributedServiceCard"
+},
   AsicPowerMetrics: {
   "name": "AsicPowerMetrics",
   "description": "Asic Power",
@@ -3114,6 +3170,72 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "HbmTemperature",
       "displayName": "HBM Temperature",
       "description": "Temperature of the HBM in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort1Temperature",
+      "displayName": "QSFP port1 temperature",
+      "description": "QSFP port 1 temperature in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort2Temperature",
+      "displayName": "QSFP port2 temperature",
+      "description": "QSFP port 2 temperature in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort1WarningTemperature",
+      "displayName": "QSFP port1 warning temperature",
+      "description": "QSFP port 1 warning temperature in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort2WarningTemperature",
+      "displayName": "QSFP port2 warning temperature",
+      "description": "QSFP port 2 warning temperature in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort1AlarmTemperature",
+      "displayName": "QSFP port1 alarm temperature",
+      "description": "QSFP port 1 alarm temperature in celsius",
+      "units": "Celsius",
+      "baseType": "Counter",
+      "tags": [
+        "Level4"
+      ],
+      "jsType": "number"
+    },
+    {
+      "name": "QsfpPort2AlarmTemperature",
+      "displayName": "QSFP port2 alarm temperature",
+      "description": "QSFP port 2 alarm temperature in celsius",
       "units": "Celsius",
       "baseType": "Counter",
       "tags": [

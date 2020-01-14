@@ -85,6 +85,9 @@ checktemperature(void)
         pal_write_hbm_temp(temperature.hbmtemp);
 
         // Adding place holders for updating qsfp temperature to cpld
+        pal_write_hbmwarning_temp(temperature.qsfp1temp);
+        pal_write_hbmcritical_temp(temperature.qsfp1temp);
+        pal_write_hbmfatal_temp(g_sysmon_cfg.catalog->hbmtemperature_threshold());
         pal_write_qsfp_temp(temperature.qsfp1temp, QSFP_PORT1);
         pal_write_qsfp_temp(temperature.qsfp2temp, QSFP_PORT2);
         pal_write_qsfp_alarm_temp(temperature.qsfp1warningtemp, QSFP_PORT1);

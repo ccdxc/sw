@@ -39,14 +39,14 @@ func frequencysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - memory
 //rootCmd = system
-//longHelpStr = System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n
+//longHelpStr = System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\nTotalmemory	: Total memory of the system\nAvailablememory	: Available memory of the system\nFreememory	: Free memory of the system\n
 //shortHelpStr = System memory information
 var memorysystemShowCmd = &cobra.Command{
 	Use:   "memory",
 	Short: "System memory information",
-	Long:  "\n---------------------------------\n System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\n\n---------------------------------\n",
-	Args:  cobra.NoArgs,
-	RunE:  memorysystemShowCmdHandler,
+	Long: "\n---------------------------------\n System memory information:\n\n\nValue Description:\n\nTotal Memory: Total Memory of the system.\nAvailable Memory: Available Memory of the system.\nFree Memory: Free Memory of the system.\nThe memory is KB\n\nTotalmemory	: Total memory of the system\nAvailablememory	: Available memory of the system\nFreememory	: Free memory of the system\n\n---------------------------------\n",
+	Args: cobra.NoArgs,
+	RunE: memorysystemShowCmdHandler,
 }
 
 func memorysystemShowCmdHandler(cmd *cobra.Command, args []string) error {
@@ -89,12 +89,12 @@ func powersystemShowCmdHandler(cmd *cobra.Command, args []string) error {
 
 //cmd - temp
 //rootCmd = system
-//longHelpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\n
+//longHelpStr = System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nqsfp_port1_temperature: Temperature of qsfp port 1.\nqsfp_port2_temperature: Temperature of qsfp port 2.\nqsfp_port1_warning_temperature: Warning temperature of qsfp port 1.\nqsfp_port2_warning_temperature: Warning temperature of qsfp port 2.\nqsfp_port1_alarm_temperature: Alarm temperature of qsfp port 1.\nqsfp_port2_alarm_temperature: Alarm temperature of qsfp port 2.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\nQsfpPort1Temperature	: QSFP port 1 temperature in celsius\nQsfpPort2Temperature	: QSFP port 2 temperature in celsius\nQsfpPort1WarningTemperature	: QSFP port 1 warning temperature in celsius\nQsfpPort2WarningTemperature	: QSFP port 2 warning temperature in celsius\nQsfpPort1AlarmTemperature	: QSFP port 1 alarm temperature in celsius\nQsfpPort2AlarmTemperature	: QSFP port 2 alarm temperature in celsius\n
 //shortHelpStr = System temperature information
 var tempsystemShowCmd = &cobra.Command{
 	Use:   "temp",
 	Short: "System temperature information",
-	Long: "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\n\n---------------------------------\n",
+	Long: "\n---------------------------------\n System temperature information:\n\n\nValue Description:\n\nlocal_temperature: Temperature of the board.\ndie_temperature: Temperature of the die.\nhbm_temperature: Temperature of the hbm.\nqsfp_port1_temperature: Temperature of qsfp port 1.\nqsfp_port2_temperature: Temperature of qsfp port 2.\nqsfp_port1_warning_temperature: Warning temperature of qsfp port 1.\nqsfp_port2_warning_temperature: Warning temperature of qsfp port 2.\nqsfp_port1_alarm_temperature: Alarm temperature of qsfp port 1.\nqsfp_port2_alarm_temperature: Alarm temperature of qsfp port 2.\nThe temperature is degree Celcius\n\nLocalTemperature	: Temperature of the board in celsius\nDieTemperature	: Temperature of the die in celsius\nHbmTemperature	: Temperature of the HBM in celsius\nQsfpPort1Temperature	: QSFP port 1 temperature in celsius\nQsfpPort2Temperature	: QSFP port 2 temperature in celsius\nQsfpPort1WarningTemperature	: QSFP port 1 warning temperature in celsius\nQsfpPort2WarningTemperature	: QSFP port 2 warning temperature in celsius\nQsfpPort1AlarmTemperature	: QSFP port 1 alarm temperature in celsius\nQsfpPort2AlarmTemperature	: QSFP port 2 alarm temperature in celsius\n\n---------------------------------\n",
 	Args: cobra.NoArgs,
 	RunE: tempsystemShowCmdHandler,
 }

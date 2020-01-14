@@ -154,6 +154,24 @@ pal_write_qsfp_warning_temp(int data, int port)
 {
     return -1;
 }
+
+void
+pal_write_hbmwarning_temp(int data)
+{
+    return -1;
+}
+
+void
+pal_write_hbmcritical_temp(int data)
+{
+    return -1;
+}
+
+void
+pal_write_hbmfatal_temp(int data)
+{
+    return -1;
+}
 #else
 #include <string.h>
 
@@ -462,6 +480,27 @@ pal_write_board_temp(int data)
 {
     data = (data > 127) ? 127 : data;
     cpld_reg_wr(CPLD_REGISTER_BOARD_TEMP, data);
+}
+
+void
+pal_write_hbmwarning_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_HBM_WARNING_TEMP, data);
+}
+
+void
+pal_write_hbmcritical_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_HBM_CRITICAL_TEMP, data);
+}
+
+void
+pal_write_hbmfatal_temp(int data)
+{
+    data = (data > 127) ? 127 : data;
+    cpld_reg_wr(CPLD_REGISTER_HBM_FATAL_TEMP, data);
 }
 
 int

@@ -8,7 +8,11 @@ func init() {
 		"Frequency",
 	}
 
-	msgFieldMaps["AsicMemoryMetrics"] = []string{}
+	msgFieldMaps["AsicMemoryMetrics"] = []string{
+		"Totalmemory",
+		"Availablememory",
+		"Freememory",
+	}
 
 	msgFieldMaps["AsicPowerMetrics"] = []string{
 		"Pin",
@@ -20,6 +24,12 @@ func init() {
 		"LocalTemperature",
 		"DieTemperature",
 		"HbmTemperature",
+		"QsfpPort1Temperature",
+		"QsfpPort2Temperature",
+		"QsfpPort1WarningTemperature",
+		"QsfpPort2WarningTemperature",
+		"QsfpPort1AlarmTemperature",
+		"QsfpPort2AlarmTemperature",
 	}
 
 }

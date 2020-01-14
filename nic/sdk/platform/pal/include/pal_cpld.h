@@ -14,6 +14,9 @@
 #define CPLD_REGISTER_BOARD_TEMP              0x18
 #define CPLD_REGISTER_QSFP_PORT1_TEMP         0x19
 #define CPLD_REGISTER_QSFP_PORT2_TEMP         0x1a
+#define CPLD_REGISTER_HBM_WARNING_TEMP        0x1b
+#define CPLD_REGISTER_HBM_CRITICAL_TEMP       0x1c
+#define CPLD_REGISTER_HBM_FATAL_TEMP          0x1d
 #define CPLD_PERSISTENT_REG                   0x20
 #define CPLD_REGISTER_QSFP_PORT1_ALARM_TEMP   0x34
 #define CPLD_REGISTER_QSFP_PORT1_WARNING_TEMP 0x35
@@ -122,4 +125,7 @@ bool pal_cpld_hwlock_enabled(void);
 int pal_write_qsfp_temp(int data, int port);
 int pal_write_qsfp_alarm_temp(int data, int port);
 int pal_write_qsfp_warning_temp(int data, int port);
+void pal_write_hbmwarning_temp(int data);
+void pal_write_hbmcritical_temp(int data);
+void pal_write_hbmfatal_temp(int data);
 #endif

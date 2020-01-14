@@ -54,6 +54,7 @@ checkcattrip(void)
             g_sysmon_cfg.cattrip_event_cb();
         }
         logcattrip = true;
+        sync();
         // resetting the system.
         pal_power_cycle();
     }

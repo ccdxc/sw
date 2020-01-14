@@ -23,6 +23,12 @@ message AsicTemperatureMetrics {
                       "local_temperature: Temperature of the board.\\n"
                       "die_temperature: Temperature of the die.\\n"
                       "hbm_temperature: Temperature of the hbm.\\n"
+                      "qsfp_port1_temperature: Temperature of qsfp port 1.\\n"
+                      "qsfp_port2_temperature: Temperature of qsfp port 2.\\n"
+                      "qsfp_port1_warning_temperature: Warning temperature of qsfp port 1.\\n"
+                      "qsfp_port2_warning_temperature: Warning temperature of qsfp port 2.\\n"
+                      "qsfp_port1_alarm_temperature: Alarm temperature of qsfp port 1.\\n"
+                      "qsfp_port2_alarm_temperature: Alarm temperature of qsfp port 2.\\n"
                       "The temperature is degree Celcius\\n",
         RootCmd:      "system"
     };
@@ -39,12 +45,12 @@ message AsicTemperatureMetrics {
     delphi.Counter local_temperature              = 2 [(venice.metricsField) = {DisplayName: "Local Temperature" Description: "Temperature of the board in celsius", Units: Celsius }];
     delphi.Counter die_temperature                = 3 [(venice.metricsField) = {DisplayName: "Die Temperature" Description: "Temperature of the die in celsius", Units: Celsius }];
     delphi.Counter hbm_temperature                = 4 [(venice.metricsField) = {DisplayName: "HBM Temperature" Description: "Temperature of the HBM in celsius", Units: Celsius }];
-    delphi.Counter qsfp_port1_temperature         = 5;
-    delphi.Counter qsfp_port2_temperature         = 6;
-    delphi.Counter qsfp_port1_warning_temperature = 7;
-    delphi.Counter qsfp_port2_warning_temperature = 8;
-    delphi.Counter qsfp_port1_alarm_temperature   = 9;
-    delphi.Counter qsfp_port2_alarm_temperature   = 10;
+    delphi.Counter qsfp_port1_temperature         = 5 [(venice.metricsField) = {DisplayName: "QSFP port1 temperature" Description: "QSFP port 1 temperature in celsius", Units: Celsius }];
+    delphi.Counter qsfp_port2_temperature         = 6 [(venice.metricsField) = {DisplayName: "QSFP port2 temperature" Description: "QSFP port 2 temperature in celsius", Units: Celsius }];
+    delphi.Counter qsfp_port1_warning_temperature = 7 [(venice.metricsField) = {DisplayName: "QSFP port1 warning temperature" Description: "QSFP port 1 warning temperature in celsius", Units: Celsius }];
+    delphi.Counter qsfp_port2_warning_temperature = 8 [(venice.metricsField) = {DisplayName: "QSFP port2 warning temperature" Description: "QSFP port 2 warning temperature in celsius", Units: Celsius }];
+    delphi.Counter qsfp_port1_alarm_temperature   = 9 [(venice.metricsField) = {DisplayName: "QSFP port1 alarm temperature" Description: "QSFP port 1 alarm temperature in celsius", Units: Celsius }];
+    delphi.Counter qsfp_port2_alarm_temperature   = 10 [(venice.metricsField) = {DisplayName: "QSFP port2 alarm temperature" Description: "QSFP port 2 alarm temperature in celsius", Units: Celsius }];
 }
 
 message AsicPowerMetrics {
@@ -129,8 +135,8 @@ message AsicMemoryMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter totalmemory          = 2;
-    delphi.Counter availablememory      = 3;
-    delphi.Counter freememory           = 4;
+    delphi.Counter totalmemory          = 2 [(venice.metricsField) = {DisplayName: "Total memory" Description: "Total memory of the system" }];
+    delphi.Counter availablememory      = 3 [(venice.metricsField) = {DisplayName: "Available memory" Description: "Available memory of the system" }];
+    delphi.Counter freememory           = 4 [(venice.metricsField) = {DisplayName: "Free memory" Description: "Free memory of the system" }];
 
 }

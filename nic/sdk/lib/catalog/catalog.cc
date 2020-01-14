@@ -731,23 +731,20 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
             std::string part_num(32, '\0');
             std::string part_id;
 
-            sdk::platform::readFruKey(PARTNUM_KEY, part_num);
-            // Pensando has part numbers starting with prefix
-            // 68-. The check is to find out which catalog file
-            // to use. Catalog file is named either by using
-            // the first 7 characters for pensando part number
-            // and full part number otherwise.
-            if (part_num.substr(0, 3) == "68-") {
-                // first 7 characters are the part identifiers
-                part_id = part_num.substr(0, 7);
-            } else {
-                part_id = part_num;
-            }
-
-            if (!part_id.empty()) {
+            if (sdk::platform::readFruKey(PARTNUM_KEY, part_num) == 0) {
+                // Pensando has part numbers starting with prefix
+                // 68-. The check is to find out which catalog file
+                // to use. Catalog file is named either by using
+                // the first 7 characters for pensando part number
+                // and full part number otherwise.
+                if (part_num.substr(0, 3) == "68-") {
+                    // first 7 characters are the part identifiers
+                    part_id = part_num.substr(0, 7);
+                } else {
+                    part_id = part_num;
+                }
                 catalog_file_name = "/catalog_hw_" + part_id + ".json";
-            }
-            else {
+            } else {
                 SDK_TRACE_ERR("part-id from FRU is empty. Please program the correct FRU");
                 SDK_TRACE_ERR("Using default catalog.");
                 catalog_file_name = "/catalog_hw_68-0003.json";

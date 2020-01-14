@@ -33,6 +33,8 @@ typedef struct system_temperature {
     int dietemp;
     int localtemp;
     int hbmtemp;
+    int hbmwarningtemp;
+    int hbmcriticaltemp;
     int qsfp1temp;
     int qsfp2temp;
     int qsfp1warningtemp;
