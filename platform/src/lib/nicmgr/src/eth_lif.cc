@@ -180,8 +180,8 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
 
     qinfo[ETH_HW_QTYPE_SVC] = {
         .type_num = ETH_HW_QTYPE_SVC,
-        .size = 1,
-        .entries = 2,
+        .size = 2,
+        .entries = 3,
     };
 
     memcpy(hal_lif_info_.queue_info, qinfo, sizeof(hal_lif_info_.queue_info));
@@ -257,8 +257,13 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
         throw;
     }
 
-    edmaq = new EdmaQ(hal_lif_info_.name, pd, hal_lif_info_.lif_id, ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID,
+    edmaq = new EdmaQ(hal_lif_info_.name, pd, hal_lif_info_.lif_id,
+                      ETH_EDMAQ_QTYPE, ETH_EDMAQ_QID,
                       ETH_EDMAQ_RING_SIZE, EV_A);
+
+    edmaq_async = new EdmaQ(hal_lif_info_.name, pd, hal_lif_info_.lif_id,
+                            ETH_EDMAQ_ASYNC_QTYPE, ETH_EDMAQ_ASYNC_QID,
+                            ETH_EDMAQ_ASYNC_RING_SIZE, EV_A);
 
     // AdminQ
     adminq =
@@ -398,6 +403,11 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     // Initialize EDMA service
     if (!edmaq->Init(0, admin_cosA, admin_cosB)) {
         NIC_LOG_ERR("{}: Failed to initialize EdmaQ service", hal_lif_info_.name);
+        return (IONIC_RC_ERROR);
+    }
+
+    if (!edmaq_async->Init(0, admin_cosA, admin_cosB)) {
+        NIC_LOG_ERR("{}: Failed to initialize EdmaQ Async service", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
 
@@ -568,6 +578,7 @@ EthLif::Reset()
 
     // Reset EDMA service
     edmaq->Reset();
+    edmaq_async->Reset();
 
     // Reset NotifyQ service
     notify_enabled = 0;
@@ -605,6 +616,13 @@ EthLif::EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
                   struct edmaq_ctx *ctx)
 {
     return edmaq->Post(opcode, from, to, size, ctx);
+}
+
+bool
+EthLif::EdmaAsyncProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
+                       struct edmaq_ctx *ctx)
+{
+    return edmaq_async->Post(opcode, from, to, size, ctx);
 }
 
 void
@@ -2859,13 +2877,14 @@ EthLif::StatsUpdate(void *obj)
 {
     EthLif *eth = (EthLif *)obj;
 
-    struct edmaq_ctx ctx = {.cb = &EthLif::StatsUpdateComplete, .obj = obj};
+    struct edmaq_ctx ctx = { .cb = &EthLif::StatsUpdateComplete, .obj = obj };
 
     if (eth->lif_stats_addr != 0 && eth->host_lif_stats_addr != 0) {
-        eth->edmaq->Post(
+        auto posted = eth->edmaq_async->Post(
             eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
             eth->lif_stats_addr, eth->host_lif_stats_addr, sizeof(struct lif_stats), &ctx);
-        evutil_timer_stop(eth->loop, &eth->stats_timer);
+        if (posted)
+            evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
 }
 

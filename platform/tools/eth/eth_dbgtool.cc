@@ -1442,7 +1442,7 @@ eth_qpoll(uint16_t lif, uint8_t qtype)
                         qstate_notifyq.p_index0, qstate_notifyq.c_index0,
                         qstate_notifyq.host_pindex);
             }
-            if (qid == 1) {
+            if (qid == 1 || qid == 4) {
                 sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
                 printf(" dq%3d: head %6u tail %6u comp_index %6u color %d\n", qid,
                         qstate_edmaq.p_index0, qstate_edmaq.c_index0,
@@ -1675,7 +1675,7 @@ eth_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
                    qstate_notifyq.ring_size, qstate_notifyq.host_ring_base,
                    qstate_notifyq.host_ring_size, qstate_notifyq.host_intr_assert_index);
         }
-        if (qid == 1) {
+        if (qid == 1 || qid == 4) {
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate_edmaq, sizeof(qstate_edmaq));
             printf("pc_offset=0x%0x\n"
                    "rsvd0=0x%0x\n"
@@ -1787,7 +1787,7 @@ eth_qdump(uint16_t lif, uint8_t qtype, uint32_t qid, uint8_t ring)
                 }
             }
         }
-        if (qid == 1) {
+        if (qid == 1 || qid == 4) {
             struct edma_qstate qstate = {0};
             sdk::lib::pal_mem_read(addr, (uint8_t *)&qstate, sizeof(qstate));
             if (ring == 0) {

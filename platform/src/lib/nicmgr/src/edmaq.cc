@@ -9,6 +9,8 @@
 #include "cap_pics_c_hdr.h"
 #include "cap_wa_c_hdr.h"
 
+#include "nic/sdk/platform/capri/capri_common.hpp"
+
 
 EdmaQ::EdmaQ(
     const char *name,
@@ -181,42 +183,66 @@ bool
 EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
     struct edmaq_ctx *ctx)
 {
-    // Enqueue edma command
-    struct edma_cmd_desc cmd = {
-        .opcode = opcode,
-        .len = size,
-        .src_lif = lif,
-        .src_addr = from,
-        .dst_lif = lif,
-        .dst_addr = to,
-    };
+    uint64_t addr, req_db_addr;
+    auto offset = 0;
+    auto chunk_sz = (size < EDMAQ_MAX_TRANSFER_SZ) ? size : EDMAQ_MAX_TRANSFER_SZ;
+    auto transfer_sz = 0;
+    auto bytes_left = size;
+    struct edma_cmd_desc cmd = {0};
 
-    /* check for completions before posting more requests, this might make
-       some room in the ring */
-    Poll();
+    if (!init)
+        return false;
 
-    auto ring_full = [](uint16_t h, uint16_t t, uint16_t sz) -> bool {
-        return (((h + 1) % sz) == t);
-    };
-
-    /* if the ring is full, do a blocking wait for completions */
-    if (ring_full(head, tail, ring_size)) {
-        Flush();
-        if (ring_full(head, tail, ring_size)) {
-            NIC_LOG_WARN("{}: EDMA queue full head {} tail {}", name, head, tail);
-            return false;
-        }
+    /* MS only supports reading/writing 64B per DMA transaction */
+    if (from <= CAPRI_HBM_BASE || to <= CAPRI_HBM_BASE) {
+        chunk_sz = (chunk_sz < 64) ? chunk_sz : 64;
     }
 
-    if (ctx != NULL)
-        pending[head] = *ctx;
-    else
-        pending[head] = {0};
+    while (bytes_left > 0) {
 
-    uint64_t addr, req_db_addr;
+        transfer_sz = (bytes_left <= chunk_sz) ? bytes_left : chunk_sz;
 
-    addr = ring_base + head * sizeof(struct edma_cmd_desc);
-    WRITE_MEM(addr, (uint8_t *)&cmd, sizeof(struct edma_cmd_desc), 0);
+        auto ring_full = [](uint16_t h, uint16_t t, uint16_t sz) -> bool {
+            return (((h + 1) % sz) == t);
+        };
+
+        /* If the ring is full, then do a blocking wait for a completion */
+        if (ring_full(head, tail, ring_size)) {
+            while (!Poll()) {
+                ev_sleep(EDMAQ_COMP_POLL_S);
+                ev_now_update(EV_A);
+            }
+            /* Blocking wait for completion above should have made space in the ring.
+               So we should not hit the following condition at all */
+            if (ring_full(head, tail, ring_size)) {
+                NIC_LOG_ERR("{}: EDMA queue full head {} tail {}", name, head, tail);
+                return false;
+            }
+        }
+
+        /* If this is the last chunk then set the completion callback */
+        if (bytes_left <= chunk_sz && ctx)
+            pending[head] = *ctx;
+        else
+            pending[head] = {0};
+        pending[head].deadline = ev_now(EV_A) + EDMAQ_COMP_TIMEOUT_S;
+
+        /* enqueue edma command */
+        addr = ring_base + head * sizeof(struct edma_cmd_desc);
+        cmd = {0};
+        cmd.opcode = opcode;
+        cmd.len = transfer_sz;
+        cmd.src_lif = lif;
+        cmd.src_addr = from + offset;
+        cmd.dst_lif = lif;
+        cmd.dst_addr = to + offset;
+        WRITE_MEM(addr, (uint8_t *)&cmd, sizeof(struct edma_cmd_desc), 0);
+        head = (head + 1) % ring_size;
+
+        offset += transfer_sz;
+        bytes_left -= transfer_sz;
+    }
+
     req_db_addr =
 #ifdef __aarch64__
                 CAP_ADDR_BASE_DB_WA_OFFSET +
@@ -226,11 +252,8 @@ EdmaQ::Post(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
                 (lif << 6) +
                 (qtype << 3);
 
-    head = (head + 1) % ring_size;
     PAL_barrier();
     WRITE_DB64(req_db_addr, (qid << 24) | head);
-
-    pending[head].deadline = ev_now(EV_A) + EDMAQ_COMP_TIMEOUT_S;
 
     if (ctx == NULL) {
         Flush();

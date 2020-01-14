@@ -61,6 +61,11 @@ enum eth_hw_qtype {
 #define LG2_ETH_ADMINQ_RESP_RING_SIZE 4
 #define ETH_ADMINQ_RESP_RING_SIZE (1 << LG2_ETH_ADMINQ_RESP_RING_SIZE)
 
+#define ETH_EDMAQ_ASYNC_QTYPE 7
+#define ETH_EDMAQ_ASYNC_QID 4
+#define LG2_ETH_EDMAQ_ASYNC_RING_SIZE 6
+#define ETH_EDMAQ_ASYNC_RING_SIZE (1 << LG2_ETH_EDMAQ_ASYNC_RING_SIZE)
+
 #define RXDMA_Q_QUIESCE_WAIT_S 0.001  // 1 ms
 #define RXDMA_LIF_QUIESCE_WAIT_S 0.01 // 10 ms
 
@@ -107,6 +112,8 @@ class EthLif
     status_code_t Reset();
     bool EdmaProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
                    struct edmaq_ctx *ctx);
+    bool EdmaAsyncProxy(edma_opcode opcode, uint64_t from, uint64_t to, uint16_t size,
+                        struct edmaq_ctx *ctx);
 
     // Command Handlers
     status_code_t CmdProxyHandler(void *req, void *req_data, void *resp, void *resp_data);
@@ -186,6 +193,7 @@ class EthLif
     // Services
     AdminQ *adminq;
     EdmaQ *edmaq;
+    EdmaQ *edmaq_async;
 
     /* AdminQ Commands */
     static void AdminCmdHandler(void *obj, void *req, void *req_data, void *resp, void *resp_data);

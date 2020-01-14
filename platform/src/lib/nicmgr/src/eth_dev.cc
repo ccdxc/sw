@@ -306,6 +306,8 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
         // bx_dhs_mac_stats_entry
         port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
         port_stats_size = sizeof(struct mgmt_port_stats);
+    } else {
+        port_stats_addr = 0;
     }
 
     NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
@@ -511,6 +513,8 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
         // bx_dhs_mac_stats_entry
         port_stats_addr = (use_hbm == false) ? 0x01000100 : (stats_hbm_base_addr + 2048);
         port_stats_size = sizeof(struct mgmt_port_stats);
+    } else {
+        port_stats_addr = 0;
     }
 
     NIC_LOG_INFO("{}: {:#d} port_stats_addr {:#x} size {:#d}", spec->name, spec->uplink_port_num,
@@ -1917,25 +1921,14 @@ Eth::StatsUpdate(void *obj)
     }
     eth_lif = it->second;
 
-    struct edmaq_ctx ctx = {.cb = NULL, .obj = obj};
-
-    struct edmaq_ctx last_ctx = {.cb = &Eth::StatsUpdateComplete, .obj = obj};
+    struct edmaq_ctx ctx = { .cb = &Eth::StatsUpdateComplete, .obj = obj };
 
     if (eth->port_stats_addr != 0 && eth->host_port_stats_addr != 0) {
-        /* MS cannot handle > 64B transfers. */
-        auto offset = 0;
-        auto bytes_left = sizeof(struct port_stats);
-        while (bytes_left > 0) {
-            auto end = bytes_left <= 64;
-            auto transfer_sz = end ? bytes_left : 64;
-            eth_lif->EdmaProxy(eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST
-                                                   : EDMA_OPCODE_LOCAL_TO_LOCAL,
-                               eth->port_stats_addr + offset, eth->host_port_stats_addr + offset,
-                               transfer_sz, end ? &last_ctx : &ctx);
-            offset += transfer_sz;
-            bytes_left -= transfer_sz;
-        };
-        evutil_timer_stop(eth->loop, &eth->stats_timer);
+        auto posted = eth_lif->EdmaAsyncProxy(
+            eth->spec->host_dev ? EDMA_OPCODE_LOCAL_TO_HOST : EDMA_OPCODE_LOCAL_TO_LOCAL,
+            eth->port_stats_addr, eth->host_port_stats_addr, sizeof(struct port_stats), &ctx);
+        if (posted)
+            evutil_timer_stop(eth->loop, &eth->stats_timer);
     }
 }
 
