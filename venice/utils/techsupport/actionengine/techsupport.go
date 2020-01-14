@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/pensando/sw/nic/agent/protos/tsproto"
@@ -169,6 +170,21 @@ func CollectTechSupport(config *tsconfig.TechSupportConfig, targetID string, tsW
 		log.Errorf("Failed to run ExportActions. %v", err)
 	}
 	os.Chdir("/")
+
+	return nil
+}
+
+// CleanTechsupportDirectory delete all files and directory within the techsupport directory
+func CleanTechsupportDirectory(config *tsconfig.TechSupportConfig) error {
+	log.Infof("Cleaning techsupport directory")
+	dir, err := ioutil.ReadDir(config.FileSystemRoot)
+	if err != nil {
+		return err
+	}
+
+	for _, d := range dir {
+		os.RemoveAll(path.Join([]string{config.FileSystemRoot, d.Name()}...))
+	}
 
 	return nil
 }

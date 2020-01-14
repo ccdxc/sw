@@ -98,6 +98,11 @@ func NewTSMClient(name string, mac string, kind string, configPath string, contr
 		agent.restServer = rest.NewRestServer(res.RESTUri, diagnosticsURL, agent.tsCh, agent.cfg)
 	}
 
+	err = action.CleanTechsupportDirectory(res)
+	if err != nil {
+		log.Errorf("Failed to clean techsupport directory. Err : %v", err)
+	}
+
 	return agent
 }
 
