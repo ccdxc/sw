@@ -117,6 +117,7 @@ p4plus_app_cpu:
   add         r6, r0, r0 // pass packet start offset = 0
 
 p4plus_app_cpu_raw_redir_common:
+  phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   or            r1, r0, r0
   seq           c1, k.ipv4_valid, TRUE
   seq           c2, k.ipv6_valid, TRUE
