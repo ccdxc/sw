@@ -60,10 +60,10 @@ pds_if_mock_validate (const spec_t&  expected_pds,
                       const spec_t&  rcvd_pds)
 {
     if (rcvd_pds.op == API_OP_DELETE) {
-        if (expected_pds.intf.key.id != rcvd_pds.intf.key.id) {
+        if (expected_pds.intf.key != rcvd_pds.intf.key) {
             std::cout << "IF delete key compare failed" << std::endl;
-            std::cout << "Expected: " << expected_pds.intf.key.id <<std::endl;
-            std::cout << "Rcvd: " << rcvd_pds.intf.key.id << std::endl;
+            std::cout << "Expected: " << expected_pds.intf.key.str() <<std::endl;
+            std::cout << "Rcvd: " << rcvd_pds.intf.key.str() << std::endl;
             return false;
         }
         return true;;

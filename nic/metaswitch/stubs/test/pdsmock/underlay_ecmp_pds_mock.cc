@@ -30,13 +30,16 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
                         PDS_MAX_NEXTHOP_GROUP);
     int i = 0;
     for (auto& nh: input.nexthops) {
-        nhgroup_feeder.spec.nexthops[i].l3_if.id  = pds_ms::ms_to_pds_ifindex(nh.l3_ifindex);
-        memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac, nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
+        nhgroup_feeder.spec.nexthops[i].l3_if  =
+            pds_ms::msidx2pdsobjkey(nh.l3_ifindex);
+        memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac,
+                nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
         ++i;
     }
     if (!op_create_) {
         for (auto& nh: input.nexthops) {
-            nhgroup_feeder.spec.nexthops[i].l3_if.id = pds_ms::ms_to_pds_ifindex(nh.l3_ifindex);
+            nhgroup_feeder.spec.nexthops[i].l3_if =
+                pds_ms::msidx2pdsobjkey(nh.l3_ifindex);
             memcpy (nhgroup_feeder.spec.nexthops[i].underlay_mac, nh.l3_dest_mac.m_mac, ETH_ADDR_LEN);
             ++i;
         }

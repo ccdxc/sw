@@ -81,15 +81,13 @@ static void create_l3_intf_proto_grpc () {
 
     request.mutable_batchctxt()->set_batchcookie(1);
 
-    pds_if.key.id = g_test_conf_.eth_if_index;
     pds_if.type = PDS_IF_TYPE_L3;
     pds_if.admin_state = PDS_IF_STATE_UP;
     pds_if.l3_if_info.vpc = msidx2pdsobjkey(1);
     pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
     pds_if.l3_if_info.ip_prefix.len = 16;
-    pds_if.l3_if_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, 1,
-                                                ETH_IF_DEFAULT_CHILD_PORT);
+    pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index;
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
 

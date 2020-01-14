@@ -72,7 +72,7 @@ interface_update (pds_if_spec_t *spec,
 }
 
 sdk_ret_t
-interface_delete (pds_if_key_t *key, pds_batch_ctxt_t bctxt)
+interface_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_if_info_t info;
@@ -102,7 +102,7 @@ interface_delete (pds_if_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-interface_get (pds_if_key_t *key, pds_if_info_t *info)
+interface_get (pds_obj_key_t *key, pds_if_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
 

@@ -150,9 +150,9 @@ func printNexthopOverlayHeader() {
 }
 
 func printNexthopUnderlayHeader() {
-	hdrLine := strings.Repeat("-", 66)
+	hdrLine := strings.Repeat("-", 86)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-10s%-20s\n", "Id", "L3IntfId", "UnderlayMAC")
+	fmt.Printf("%-36s%-36s%-20s\n", "Id", "L3Intf", "UnderlayMAC")
 	fmt.Println(hdrLine)
 }
 
@@ -189,7 +189,7 @@ func printNexthop(nh *pds.Nexthop) {
 		{
 			info := spec.GetUnderlayNhInfo()
 			fmt.Printf("%-36s%-10d%-20s\n",
-				string(spec.GetId()), info.GetL3InterfaceId(),
+				string(spec.GetId()), info.GetL3Interface(),
 				utils.MactoStr(info.GetUnderlayMAC()))
 		}
 	}

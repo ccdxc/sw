@@ -201,13 +201,13 @@ populate_underlay_nh_info_ (pds_nexthop_spec_t *spec,
     nh_data->action_id = NEXTHOP_NEXTHOP_INFO_ID;
     intf = if_db()->find(&spec->l3_if);
     if (!intf) {
-        PDS_TRACE_ERR("L3 intf %u not found for nh group %u",
-                      spec->l3_if.id, spec->key.id);
+        PDS_TRACE_ERR("L3 intf %s not found for nexthop %s",
+                      spec->l3_if.str(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     if (intf->type() != PDS_IF_TYPE_L3) {
-        PDS_TRACE_ERR("Unsupported interface %u type %u in nexthop %u",
-                      intf->key().id, intf->type(), spec->key.id);
+        PDS_TRACE_ERR("Unsupported interface %s type %u in nexthop %s",
+                      intf->key().str(), intf->type(), spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     nh_data->nexthop_info.port = intf->port();

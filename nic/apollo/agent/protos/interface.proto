@@ -76,7 +76,7 @@ message InterfaceSpec {
   // unique interface id
   // NOTE: interface ids start from 1, for IF_TYPE_UPLINK this id is in the
   //       range [1...max-ports#] and same for IF_TYPE_UPLINK_PC
-  uint32           Id          = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes            Id          = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the interface
   IfType           Type        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // port up|down adminstratively
@@ -91,15 +91,19 @@ message InterfaceSpec {
 }
 
 message UplinkStatus {
-  uint32 LifId = 1;
+  // lif id associated with this uplink
+  uint32 LifId   = 1;
 }
 
 // operational status of an interface, if any
 message InterfaceStatus {
-  IfStatus OperStatus         = 1;
+  // encoded interface index of this interface
+  uint32 IfIndex              = 1;
+  // operational status of the interface
+  IfStatus OperStatus         = 2;
   oneof ifstatus {
     // uplink specific status
-    UplinkStatus UplinkStatus = 2;
+    UplinkStatus UplinkStatus = 3;
   }
 }
 
@@ -132,7 +136,7 @@ message InterfaceResponse {
 
 // interface get request
 message InterfaceGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // interface get response
@@ -145,7 +149,7 @@ message InterfaceGetResponse {
 message InterfaceDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // interface delete response

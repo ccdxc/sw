@@ -45,7 +45,7 @@ typedef struct pds_nexthop_spec_s {
         };
         // info specific to PDS_NH_TYPE_UNDERLAY
         struct {
-            pds_if_key_t  l3_if;           ///< L3 interface key (SMACo,
+            pds_obj_key_t  l3_if;          ///< L3 interface key (SMACo,
                                            ///< vlan tag and outgoing port
                                            ///< come from this)
             mac_addr_t    underlay_mac;    ///< underlay/outer DMAC (DMACo)

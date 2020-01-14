@@ -146,7 +146,7 @@ IfSvcImpl::InterfaceDelete(ServerContext *context,
                            pds::InterfaceDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_if_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -170,7 +170,7 @@ IfSvcImpl::InterfaceDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::interface_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -199,8 +199,8 @@ IfSvcImpl::InterfaceGet(ServerContext *context,
                         const pds::InterfaceGetRequest *proto_req,
                         pds::InterfaceGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_if_key_t key = { 0 };
     pds_if_info_t info;
+    pds_obj_key_t key = { 0 };
 
     if (proto_req == NULL) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -208,7 +208,7 @@ IfSvcImpl::InterfaceGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::interface_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -230,11 +230,12 @@ IfSvcImpl::LifGet(ServerContext *context,
                   const pds::LifGetRequest *proto_req,
                   pds::LifGetResponse *proto_rsp) {
     sdk_ret_t ret;
+    pds_lif_key_t key;
 
     if (proto_req) {
         for (int i = 0; i < proto_req->lifid_size(); i ++) {
             pds_lif_info_t info = { 0 };
-            pds_lif_key_t key = proto_req->lifid(i);
+            proto_req->lifid(i);
             ret = pds_lif_read(&key, &info);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             pds_lif_api_info_to_proto(&info, proto_rsp);

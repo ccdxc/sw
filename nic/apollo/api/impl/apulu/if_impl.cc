@@ -164,8 +164,8 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
     p4pd_error_t p4pd_ret;
     lif_actiondata_t lif_data = { 0 };
 
-    PDS_TRACE_DEBUG("Activating if 0x%x, type %u, admin state %u",
-                    spec->key.id, spec->type, spec->admin_state);
+    PDS_TRACE_DEBUG("Activating if %s, type %u, admin state %u",
+                    spec->key.str(), spec->type, spec->admin_state);
     if (spec->type == PDS_IF_TYPE_UPLINK) {
         // program the lif id in the TM
         tm_port =

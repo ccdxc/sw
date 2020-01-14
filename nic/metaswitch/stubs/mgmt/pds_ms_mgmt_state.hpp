@@ -11,6 +11,8 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_object_store.hpp"
+#include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
@@ -89,7 +91,7 @@ public:
     
     void set_pds_mock_mode(bool val) { pds_mock_mode_ = val; }
 
-    void set_pending_uuid_create(const uuid_t& uuid, 
+    void set_pending_uuid_create(const pds_obj_key_t& uuid, 
                                  uuid_obj_uptr_t&& obj) {
         if (lookup_uuid(uuid) != nullptr) {
             SDK_TRACE_VERBOSE("Cannot create existing UUID %s",
@@ -102,16 +104,16 @@ public:
         uuid_pending_create_.clear();
         uuid_pending_delete_.clear();
     }
-    void set_pending_uuid_delete(const uuid_t& uuid) {
+    void set_pending_uuid_delete(const pds_obj_key_t& uuid) {
         uuid_pending_delete_.push_back(uuid);
     }
     // Commit all pending UUID operations to permanent store
     void commit_pending_uuid();
-    void remove_uuid(const uuid_t& uuid) {
+    void remove_uuid(const pds_obj_key_t& uuid) {
         uuid_store_.erase(uuid);
     }
 
-    uuid_obj_t* lookup_uuid(const uuid_t& uuid) {
+    uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid) {
         auto obj = uuid_store_.find(uuid);
         if (obj != uuid_store_.end()) {return obj->second.get();}
         // Some UUID objects are held in pending cache until
@@ -131,9 +133,9 @@ private:
     static std::condition_variable g_cv_resp_;
     static types::ApiStatus g_ms_response_;
     bool pds_mock_mode_ = false;
-    std::unordered_map<uuid_t, uuid_obj_uptr_t, uuid_hash> uuid_store_;
-    std::unordered_map<uuid_t, uuid_obj_uptr_t, uuid_hash> uuid_pending_create_;
-    std::vector<uuid_t> uuid_pending_delete_;
+    std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_store_;
+    std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_pending_create_;
+    std::vector<pds_obj_key_t> uuid_pending_delete_;
     mib_idx_gen_indexer_t mib_indexer_;
     slab_uptr_t slabs_[PDS_MS_MGMT_MAX_SLAB_ID];
 

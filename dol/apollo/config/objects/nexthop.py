@@ -115,7 +115,7 @@ class NexthopObject(base.ConfigObjectBase):
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         elif self.__type == topo.NhType.UNDERLAY:
-            spec.UnderlayNhInfo.L3InterfaceId = self.L3InterfaceId
+            spec.UnderlayNhInfo.L3Interface = str.encode(str(self.L3InterfaceId))
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == topo.NhType.OVERLAY:
             spec.TunnelId = str.encode(str(self.TunnelId))
@@ -139,7 +139,7 @@ class NexthopObject(base.ConfigObjectBase):
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
         elif self.__type == topo.NhType.UNDERLAY:
-            if spec.UnderlayNhInfo.L3InterfaceId != self.L3InterfaceId:
+            if int(spec.UnderlayNhInfo.L3Interface) != self.L3InterfaceId:
                 return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False

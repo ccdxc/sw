@@ -599,7 +599,7 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
     if (IFINDEX_TO_IFTYPE(proto_spec.l3ifspec().ethifindex()) != IF_TYPE_ETH) {
         return SDK_RET_INVALID_ARG;
     }
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->type = PDS_IF_TYPE_L3;
     api_spec->admin_state =
         proto_admin_state_to_pds_admin_state(proto_spec.adminstatus());
@@ -2170,7 +2170,8 @@ pds_nh_proto_to_api_spec (pds_nexthop_spec_t *api_spec,
 
     case pds::NexthopSpec::kUnderlayNhInfo:
         api_spec->type = PDS_NH_TYPE_UNDERLAY;
-        api_spec->l3_if.id = proto_spec.underlaynhinfo().l3interfaceid();
+        pds_obj_key_proto_to_api_spec(&api_spec->l3_if,
+                                      proto_spec.underlaynhinfo().l3interface());
         MAC_UINT64_TO_ADDR(api_spec->underlay_mac,
                            proto_spec.underlaynhinfo().underlaymac());
         break;
@@ -2197,7 +2198,7 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         proto_spec->set_tunnelid(api_spec->tep.id);
     } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
         auto underlayinfo = proto_spec->mutable_underlaynhinfo();
-        underlayinfo->set_l3interfaceid(api_spec->l3_if.id);
+        underlayinfo->set_l3interface(api_spec->l3_if.id);
         underlayinfo->set_underlaymac(MAC_TO_UINT64(api_spec->underlay_mac));
     }
 }

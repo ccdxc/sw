@@ -58,7 +58,7 @@ public:
     /// \brief      lookup a interface in database given the key
     /// \param[in]  key  key for the interface object
     /// \return     pointer to the interface instance found or NULL
-    if_entry *find(pds_if_key_t *key) const;
+    if_entry *find(pds_obj_key_t *key) const;
 
     /// \brief      walk the interface database and invoke the callback per
     ///             interface
@@ -90,13 +90,13 @@ private:
     friend class if_entry;
 
 private:
-    ht *ifindex_ht_;    ///< interface hash table based on ifindex
     ht *if_ht_;         ///< interface hash table based on the key
+    ht *ifindex_ht_;    ///< interface hash table based on ifindex
     slab *if_slab_;     ///< slab for allocating interface entry
 };
 
 static inline if_entry *
-if_find (pds_if_key_t *key)
+if_find (pds_obj_key_t *key)
 {
     return (if_entry *)api_base::find_obj(OBJ_ID_IF, key);
 }

@@ -30,7 +30,7 @@ bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
 NBB_VOID
 bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlator) 
 {
-    uuid_t uuid;
+    pds_obj_key_t uuid;
     pds_ms_get_uuid(&uuid, req.uuid());
 
     // Always set admin status to UP
@@ -91,7 +91,7 @@ bgp_peer_fill_func (pds::BGPPeerSpec&   req,
     oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer->rm_ent_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PER_RM_ENT_INDEX);
 
-    uuid_t uuid;
+    pds_obj_key_t uuid;
     pds_ms_get_uuid(&uuid, req.uuid());
 
     // Always set admin status to UP

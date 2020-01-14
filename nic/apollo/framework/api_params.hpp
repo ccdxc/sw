@@ -39,7 +39,7 @@ namespace api {
 union api_params_u {
     pds_batch_params_t           batch_spec;
     pds_device_spec_t            device_spec;
-    pds_if_key_t                 if_key;
+    pds_obj_key_t                if_key;
     pds_if_spec_t                if_spec;
     pds_obj_key_t                tep_key;
     pds_tep_spec_t               tep_spec;

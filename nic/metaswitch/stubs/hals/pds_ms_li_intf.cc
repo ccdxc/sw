@@ -4,6 +4,7 @@
 //---------------------------------------------------------------
 
 #include <thread>
+#include "nic/apollo/api/internal/pds_if.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_li_intf.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_linux_util.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
@@ -21,14 +22,14 @@ namespace pds_ms {
 
 static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     sdk_ret_t ret;
-    pds_if_key_t key = {0};
     pds_if_info_t info = {0};
-    
+
     auto eth_ifindex = ms_to_pds_eth_ifindex(ifindex);
-    key.id = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
-    ret = pds_if_read(&key, &info);
+    ret = pds_if_read(&eth_ifindex, &info);
     if (unlikely (ret != SDK_RET_OK)) {
-        throw Error(std::string("PDS If Get failed for MS If ")
+        throw Error(std::string("PDS If Get failed for Eth If ")
+                    .append(std::to_string(eth_ifindex))
+                    .append(" MS If ")
                     .append(std::to_string(ifindex))
                     .append(" err=").append(std::to_string(ret)));
     }
@@ -51,9 +52,9 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
 void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     ips_info_.ifindex = port_add_upd_ips->id.if_index;
     ips_info_.if_name = port_add_upd_ips->id.if_name;
-    ips_info_.admin_state = 
+    ips_info_.admin_state =
         (port_add_upd_ips->port_settings.port_enabled == ATG_YES);
-    ips_info_.admin_state_updated = 
+    ips_info_.admin_state_updated =
         (port_add_upd_ips->port_settings.port_enabled_updated == ATG_YES);
     ips_info_.switchport =
         (port_add_upd_ips->port_settings.no_switch_port == ATG_NO);
@@ -70,20 +71,20 @@ void li_intf_t::fetch_store_info_(pds_ms::state_t* state) {
         }
         return;
     }
-    if (store_info_.phy_port_if_obj == nullptr) { 
+    if (store_info_.phy_port_if_obj == nullptr) {
         op_create_ = true;
-        return; 
+        return;
     }
-    if (!store_info_.phy_port_if_obj->phy_port_properties().hal_created) { 
-        // If Obj was saved in store to cache the linux parameters 
+    if (!store_info_.phy_port_if_obj->phy_port_properties().hal_created) {
+        // If Obj was saved in store to cache the linux parameters
         // but not yet created in HAL - issue HAL PDS create now
-        op_create_ = true; 
+        op_create_ = true;
     }
 }
 
 bool li_intf_t::cache_new_obj_in_cookie_(void) {
     void *fw = nullptr;
-    std::unique_ptr<if_obj_t> new_if_obj; 
+    std::unique_ptr<if_obj_t> new_if_obj;
     FRL_FAULT_STATE fault_state;
     if (store_info_.phy_port_if_obj == nullptr) {
         // This is the first time we are seeing this uplink interface
@@ -93,7 +94,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 
         // TODO: Move Linux Intf param fetch to the Mgmt Stub
         auto& phy_port_prop = new_if_obj->phy_port_properties();
-        if (!get_linux_intf_params(ips_info_.if_name, 
+        if (!get_linux_intf_params(ips_info_.if_name,
                                    &phy_port_prop.lnx_ifindex,
                                    phy_port_prop.mac_addr)) {
             throw Error (std::string("Could not fetch Linux params for ")
@@ -127,7 +128,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 
     } else if (ips_info_.admin_state_updated || ips_info_.switchport_updated) {
         if (ips_info_.admin_state_updated) {
-            SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d", 
+            SDK_TRACE_DEBUG ("MS If 0x%lx: Admin State change to %d",
                              ips_info_.ifindex, ips_info_.admin_state);
             // Update the new admin state in the new If object
             phy_port_prop.admin_state = ips_info_.admin_state;
@@ -139,24 +140,22 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
             phy_port_prop.switchport = ips_info_.switchport;
         }
     } else {
-        // Update request but no change in the fields we are 
+        // Update request but no change in the fields we are
         // interested in
         SDK_TRACE_VERBOSE ("MS If 0x%lx: No-op update", ips_info_.ifindex);
         return false;
     }
-    // Update the local store info context so that the make_pds_spec 
+    // Update the local store info context so that the make_pds_spec
     // refers to the latest fields
-    store_info_.phy_port_if_obj = new_if_obj.get(); 
+    store_info_.phy_port_if_obj = new_if_obj.get();
     // Cache the new object in the cookie to revisit asynchronously
     // when the PDS API response is received
     cookie_uptr_->objs.push_back(std::move(new_if_obj));
     return true;
 }
 
-pds_if_key_t li_intf_t::make_pds_if_key_(void) {
-    pds_if_key_t key; 
-    key.id = ms_to_pds_ifindex (ips_info_.ifindex);
-    return key;
+pds_obj_key_t li_intf_t::make_pds_if_key_(void) {
+    return msidx2pdsobjkey(ips_info_.ifindex);
 }
 
 pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
@@ -169,7 +168,7 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
         spec.type = PDS_IF_TYPE_L3;
     }
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
-    spec.admin_state = 
+    spec.admin_state =
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
     // TODO: Change this to eth IfIndex when HAL supports it
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
@@ -223,7 +222,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     port_add_upd_ips->return_code = ATG_OK;
 
     parse_ips_info_(port_add_upd_ips);
-    
+
     if (ms_ifindex_to_pds_type (ips_info_.ifindex) != IF_TYPE_L3) {
         // Nothing to do for non-L3 interfaces
         return;
@@ -249,9 +248,9 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
             // No change
             SDK_TRACE_DEBUG ("MS If 0x%lx: No-op IPS", ips_info_.ifindex);
             return;
-        } 
+        }
 
-        pds_bctxt_guard = make_batch_pds_spec_(); 
+        pds_bctxt_guard = make_batch_pds_spec_();
         // If we have batched multiple IPS earlier flush it now
         // Cannot add a Intf create to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();
@@ -259,7 +258,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [port_add_upd_ips] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -274,7 +273,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
             auto& port_store = li::Fte::get().get_lipi_join()->get_port_store();
             auto it = port_store.find(key);
             if (it == port_store.end()) {
-                auto send_response = 
+                auto send_response =
                     li::Port::set_ips_rc(&port_add_upd_ips->ips_hdr,
                                          (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
@@ -295,9 +294,9 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
             }
             NBS_RELEASE_SHARED_DATA();
             NBS_EXIT_SHARED_CONTEXT();
-            NBB_DESTROY_THREAD_CONTEXT    
+            NBB_DESTROY_THREAD_CONTEXT
         };
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -308,7 +307,7 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                     .append(" err=").append(std::to_string(ret)));
     }
     port_add_upd_ips->return_code = ATG_ASYNC_COMPLETION;
-    SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful", 
+    SDK_TRACE_DEBUG ("MS If 0x%lx: Add/Upd PDS Batch commit successful",
                      ips_info_.ifindex);
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
@@ -323,7 +322,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
 
     // MS stub Integration APIs do not support Async callback for deletes.
     // However since we should not block the MS NBase main thread
-    // the HAL processing is always asynchronous even for deletes. 
+    // the HAL processing is always asynchronous even for deletes.
     // Assuming that Deletes never fail the Store is also updated
     // in a synchronous fashion for deletes so that it is in sync
     // if there is a subsequent create from MS.
@@ -333,7 +332,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
 
     // Empty cookie to force async PDS.
     cookie_uptr_.reset (new cookie_t);
-    pds_bctxt_guard = make_batch_pds_spec_ (); 
+    pds_bctxt_guard = make_batch_pds_spec_ ();
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -343,7 +342,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     } // End of state thread_context
       // Do Not access/modify global state after this
 
-    cookie_uptr_->send_ips_reply = 
+    cookie_uptr_->send_ips_reply =
         [ifindex] (bool pds_status, bool ips_mock) -> void {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
@@ -352,7 +351,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
                             ifindex, (pds_status) ? "Success" : "Failure");
 
         };
-    // All processing complete, only batch commit remains - 
+    // All processing complete, only batch commit remains -
     // safe to release the cookie_uptr_ unique_ptr
     auto cookie = cookie_uptr_.release();
     auto ret = pds_batch_commit(pds_bctxt_guard.release());
@@ -362,12 +361,12 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
                     .append(std::to_string(ips_info_.ifindex))
                     .append(" err=").append(std::to_string(ret)));
     }
-    SDK_TRACE_DEBUG ("MS If 0x%lx: Delete PDS Batch commit successful", 
+    SDK_TRACE_DEBUG ("MS If 0x%lx: Delete PDS Batch commit successful",
                      ips_info_.ifindex);
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
-        // Deletes are synchronous - Delete the store entry immediately 
+        // Deletes are synchronous - Delete the store entry immediately
         state_ctxt.state()->if_store().erase(ifindex);
     }
 }

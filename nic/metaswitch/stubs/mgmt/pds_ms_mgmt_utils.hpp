@@ -36,6 +36,7 @@ extern "C" {
 #include "gen/proto/cp_route.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 
 #define PDS_MS_CTM_GRPC_CORRELATOR 0x101
 #define PDS_MS_CTM_STUB_INIT_CORRELATOR 0x42
@@ -93,7 +94,7 @@ NBB_VOID pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
 NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
 
 NBB_VOID
-pds_ms_get_uuid(pds_ms::uuid_t *out_uuid, const string& in_str);
+pds_ms_get_uuid(pds_obj_key_t *out_uuid, const string& in_str);
 
 NBB_VOID
 pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field,

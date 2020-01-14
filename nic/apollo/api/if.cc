@@ -18,6 +18,8 @@
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
+using sdk::lib::catalog;
+
 namespace api {
 
 if_entry::if_entry() {
@@ -29,7 +31,7 @@ if_entry::if_entry() {
 
 // TODO: this method should go away !!!
 if_entry *
-if_entry::factory(pds_ifindex_t ifindex) {
+if_entry::factory(pds_obj_key_t& key, pds_ifindex_t ifindex) {
     if_entry *intf;
 
     // create interface entry with defaults, if any
@@ -37,6 +39,7 @@ if_entry::factory(pds_ifindex_t ifindex) {
     if (intf) {
         new (intf) if_entry();
     }
+    memcpy(&intf->key_, &key, sizeof(key_));
     intf->ifindex_ = ifindex;
     return intf;
 }
@@ -126,22 +129,28 @@ if_entry::nuke_resources_(void) {
 
 sdk_ret_t
 if_entry::init_config(api_ctxt_t *api_ctxt) {
+    static uint32_t l3_if_idxr_ = 0;
     pds_if_spec_t *spec = &api_ctxt->api_params->if_spec;
 
-    memcpy(&key_, &spec->key, sizeof(pds_if_key_t));
+    memcpy(&key_, &spec->key, sizeof(key_));
     type_ = spec->type;
-    ifindex_ = spec->key.id;
     admin_state_ = spec->admin_state;
     switch (type_) {
      case PDS_IF_TYPE_UPLINK:
-         PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u",
-                         spec->key.id, spec->type);
+         ifindex_ =
+             catalog::logical_port_to_ifindex(spec->uplink_info.port_num);
+         ifindex_ = ETH_IFINDEX_TO_UPLINK_IFINDEX(ifindex_);
+         PDS_TRACE_DEBUG("Initializing uplink interface %s, ifindex 0x%x, "
+                         "port %u", spec->key.str(), ifindex_,
+                         spec->uplink_info.port_num);
          if_info_.uplink_.port_ = spec->uplink_info.port_num;
          break;
 
      case PDS_IF_TYPE_L3:
-         PDS_TRACE_DEBUG("Initializing interface 0x%x, type %u, ifindex %u",
-                         spec->key.id, spec->type, spec->l3_if_info.eth_ifindex);
+         ifindex_ = L3_IFINDEX(l3_if_idxr_++);
+         PDS_TRACE_DEBUG("Initializing L3 interface %s, ifindex 0x%x, "
+                         "eth ifindex 0x%x", spec->key.str(), ifindex_,
+                         spec->l3_if_info.eth_ifindex);
          if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
          if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
          if_info_.l3_.eth_ifindex_ = spec->l3_if_info.eth_ifindex;
@@ -218,7 +227,7 @@ if_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
 
 sdk_ret_t
 if_entry::fill_spec_(pds_if_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_if_key_t));
+    memcpy(&spec->key, &key_, sizeof(key_));
     spec->type = type_;
     spec->admin_state = admin_state_;
     switch (spec->type) {

@@ -59,7 +59,7 @@ typedef struct pds_l3_if_info_s {
 
 /// \brief interface specification
 typedef struct pds_if_spec_s {
-    pds_if_key_t             key;           ///< interface key
+    pds_obj_key_t            key;           ///< interface key
     pds_if_type_t            type;          ///< type of the interface
     pds_if_state_t           admin_state;   ///< admin state of the interface
     union {
@@ -107,7 +107,7 @@ sdk_ret_t pds_if_create(pds_if_spec_t *spec,
 /// \param[out] info information
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     valid interface key should be passed
-sdk_ret_t pds_if_read(pds_if_key_t *key, pds_if_info_t *info);
+sdk_ret_t pds_if_read(pds_obj_key_t *key, pds_if_info_t *info);
 
 /// \brief      read interface
 /// \param[in]  cb   callback
@@ -129,7 +129,7 @@ sdk_ret_t pds_if_update(pds_if_spec_t *spec,
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
 /// \remark    A valid interface key should be passed
-sdk_ret_t pds_if_delete(pds_if_key_t *key,
+sdk_ret_t pds_if_delete(pds_obj_key_t *key,
                         pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

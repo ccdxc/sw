@@ -28,7 +28,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include <thread>
 
-pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params) 
+pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params)
 {
     auto pds_mock = dynamic_cast<pds_ms_test::pds_mock_t*>(pds_ms_test::test_params()->test_output);
     if (pds_mock == nullptr) {
@@ -40,13 +40,13 @@ pds_batch_ctxt_t pds_batch_start(pds_batch_params_t *batch_params)
     pds_mock->cookie = (pds_ms::cookie_t*) batch_params->cookie;
     pds_mock->async = (pds_ms::cookie_t*) batch_params->async;
     if (pds_mock->async) {
-        pds_mock->cookie->ips_mock = 
+        pds_mock->cookie->ips_mock =
             pds_ms_test::test_params()->test_input->ips_mock();
     }
     return ((pds_batch_ctxt_t) pds_mock);
 }
 
-sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt) 
+sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
 {
     // Gtest mode
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
@@ -64,7 +64,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
     }
     if (pds_mock->expected_pds.size() != pds_mock->rcvd_pds.size()) {
         std::cout << "Batch size mismatch - Expected: "
-                  << pds_mock->expected_pds.size() << " Received:" 
+                  << pds_mock->expected_pds.size() << " Received:"
                   << pds_mock->rcvd_pds.size()  << std::endl;
         pds_ret_status = false;
         return SDK_RET_OK;
@@ -72,13 +72,13 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
     for (auto& expected_pds: pds_mock->expected_pds) {
         auto& rcvd_pds = pds_mock->rcvd_pds[count];
         if (expected_pds.op != rcvd_pds.op) {
-            std::cout << "Op Mismatch - Expected: " << expected_pds.op 
+            std::cout << "Op Mismatch - Expected: " << expected_pds.op
                       << "  Received: " << rcvd_pds.op << std::endl;
             pds_ret_status = false;
             return SDK_RET_OK;
         }
         switch (expected_pds.obj_id) {
-        case OBJ_ID_TEP: 
+        case OBJ_ID_TEP:
         {
             if (!pds_ms_test::pds_tep_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
@@ -94,7 +94,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             }
             break;
         }
-        case OBJ_ID_IF: 
+        case OBJ_ID_IF:
         {
             if (!pds_ms_test::pds_if_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
@@ -102,7 +102,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             }
             break;
         }
-        case OBJ_ID_SUBNET: 
+        case OBJ_ID_SUBNET:
         {
             if (!pds_ms_test::pds_subnet_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
@@ -110,7 +110,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             }
             break;
         }
-        case OBJ_ID_VPC: 
+        case OBJ_ID_VPC:
         {
             if (!pds_ms_test::pds_vpc_mock_validate (expected_pds, rcvd_pds)) {
                 pds_ret_status = false;
@@ -146,7 +146,12 @@ sdk_ret_t pds_if_create(pds_if_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_if_read(pds_if_key_t *key, pds_if_info_t *info) {
+sdk_ret_t pds_if_read(pds_obj_key_t *key, pds_if_info_t *info) {
+    info->status.state = PDS_IF_STATE_UP;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t pds_if_read(pds_ifindex_t *key, pds_if_info_t *info) {
     info->status.state = PDS_IF_STATE_UP;
     return SDK_RET_OK;
 }
@@ -166,7 +171,7 @@ sdk_ret_t pds_if_update(pds_if_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_if_delete(pds_if_key_t *key,
+sdk_ret_t pds_if_delete(pds_obj_key_t *key,
                         pds_batch_ctxt_t bctxt) {
     auto pds_mock = (pds_ms_test::pds_mock_t*) bctxt;
     pds_mock->rcvd_pds.emplace_back(OBJ_ID_IF, API_OP_DELETE);
@@ -461,7 +466,7 @@ sdk_ret_t pds_nexthop_group_create(pds_nexthop_group_spec_s *spec,
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_nexthop_group_read(pds_obj_key_t *key, 
+sdk_ret_t pds_nexthop_group_read(pds_obj_key_t *key,
                                  pds_nexthop_group_info_t *info) {
     return SDK_RET_OK;
 }
@@ -524,11 +529,11 @@ int readFruKey(std::string key, std::string &value)
     if (key == NUMMACADDR_KEY) {
         value = "25";
         return 0;
-    } 
+    }
     if (key == MACADDRESS_KEY) {
         value = "00:00:cd:00:00:01";
         return 0;
-    } 
+    }
     return -1;
 }
 }

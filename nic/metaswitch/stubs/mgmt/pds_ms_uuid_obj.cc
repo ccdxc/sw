@@ -28,7 +28,7 @@ uuid_obj_type_str (uuid_obj_type_t t) {
     return "UNKNOWN";
 }
 
-bgp_uuid_obj_t::bgp_uuid_obj_t(const uuid_t& uuid) 
+bgp_uuid_obj_t::bgp_uuid_obj_t(const pds_obj_key_t& uuid) 
     : uuid_obj_t(uuid_obj_type_t::BGP, uuid),
       entity_id_(PDS_MS_BGP_RM_ENT_INDEX) {};
 

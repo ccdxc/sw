@@ -46,7 +46,7 @@ message IPNhSpec {
 message UnderlayNhSpec {
   // L3 interface of this nexthop (outer SMAC, vlan tag and outgoing port
   // are picked from this L3 interface)
-  uint32 L3InterfaceId = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes  L3Interface   = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // UnderlayNexthopMAC is the outer DMAC in case of VxLAN fabric
   uint64 UnderlayMAC   = 2 [(gogoproto.moretags) = "meta:mandatory"];
 }

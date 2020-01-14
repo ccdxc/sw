@@ -1469,7 +1469,7 @@ create_l3_intfs (uint32_t num_if)
     pds_if_spec_t pds_if;
 
     for (uint32_t i = 1; i <= num_if; i++) {
-        pds_if.key.id = i;
+        pds_if.key = test::int2pdsobjkey(i);
         pds_if.type = PDS_IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;
         pds_if.l3_if_info.vpc = test::int2pdsobjkey(i);
@@ -1511,7 +1511,7 @@ create_underlay_nexthops (uint32_t num_nh)
         memset(&pds_nh, 0, sizeof(pds_nh));
         pds_nh.key = test::int2pdsobjkey(i);
         pds_nh.type = PDS_NH_TYPE_UNDERLAY;
-        pds_nh.l3_if.id = i;
+        pds_nh.l3_if = test::int2pdsobjkey(i);
         MAC_UINT64_TO_ADDR(pds_nh.underlay_mac, (peer_mac + i));
         rv = create_nexthop(&pds_nh);
         if (rv != SDK_RET_OK) {

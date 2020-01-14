@@ -53,7 +53,7 @@ private:
     void fetch_store_info_(pds_ms::state_t* state);
     void parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd);
     pds_if_spec_t make_pds_if_spec_(void);
-    pds_if_key_t make_pds_if_key_(void);
+    pds_obj_key_t make_pds_if_key_(void);
 };
 
 } // End namespace

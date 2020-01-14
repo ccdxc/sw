@@ -242,8 +242,9 @@ pds_ms_sim_test_config ()
 
     // Create L3 interface
     pds_if_spec_t l3_if_spec = {0};
+    l3_if_spec.type = PDS_IF_TYPE_L3;
     l3_if_spec.l3_if_info.ip_prefix.len = 24;
-    l3_if_spec.key.id = g_test_conf.eth_if_index;
+    l3_if_spec.l3_if_info.eth_ifindex = g_test_conf.eth_if_index;
     l3_if_spec.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf.local_ip_addr;
     l3_if_spec.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_ms::interface_create (&l3_if_spec, 0);

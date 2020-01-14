@@ -6,6 +6,8 @@
  * @brief   This file handles port operations
  */
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include "nic/sdk/linkmgr/port.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
@@ -17,6 +19,8 @@
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/port.hpp"
+
+namespace uuids = boost::uuids;
 
 namespace api {
 
@@ -93,7 +97,6 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
         xcvr_event_info->state != xcvr_state_t::XCVR_SPROM_READ) {
         return;
     }
-
     if_db()->walk(IF_TYPE_ETH, xvcr_event_walk_cb, xcvr_event_info);
 }
 
@@ -150,8 +153,10 @@ update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
 static sdk_ret_t
 create_port (pds_ifindex_t ifindex, port_args_t *port_args)
 {
-    void *port_info;
     if_entry *intf;
+    void *port_info;
+    uuids::uuid uuid;
+    pds_obj_key_t key;
 
     PDS_TRACE_DEBUG("Creating port %u", port_args->port_num);
     /**
@@ -178,7 +183,10 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
         PDS_TRACE_ERR("port %u create failed", port_args->port_num);
         return SDK_RET_ERR;
     }
-    intf = if_entry::factory(ifindex);
+    uuid = uuids::random_generator()();
+    memcpy(&key, &uuid, PDS_MAX_KEY_LEN);
+    key.id[PDS_MAX_KEY_LEN] = '\0';
+    intf = if_entry::factory(key, ifindex);
     if (intf == NULL) {
         sdk::linkmgr::port_delete(port_info);
         return SDK_RET_ERR;

@@ -24,7 +24,7 @@ if_state::if_state() {
                               sizeof(pds_ifindex_t));
     SDK_ASSERT(ifindex_ht_ != NULL);
     if_ht_ = ht::factory(PDS_MAX_IF >> 1, if_entry::if_key_func_get,
-                         sizeof(pds_if_key_t));
+                         sizeof(pds_obj_key_t));
     SDK_ASSERT(if_ht_ != NULL);
     if_slab_ = slab::factory("interface", PDS_SLAB_ID_IF, sizeof(if_entry), 16,
                              true, true, true, NULL);
@@ -75,7 +75,7 @@ if_state::find(pds_ifindex_t *ifindex) const {
 }
 
 if_entry *
-if_state::find(pds_if_key_t *key) const {
+if_state::find(pds_obj_key_t *key) const {
     return (if_entry *)(if_ht_->lookup(key));
 }
 

@@ -6,6 +6,8 @@
  * @brief   This file deals with PDS init/teardown API handling
  */
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -26,6 +28,7 @@
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "platform/sysmon/sysmon.hpp"
 
+namespace uuids = boost::uuids;
 const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
 
 namespace api {
@@ -93,6 +96,7 @@ linkmgr_init (catalog *catalog, const char *cfg_path)
 static inline sdk_ret_t
 create_uplinks (void)
 {
+    uuids::uuid      uuid;
     sdk_ret_t        ret;
     pds_if_spec_t    spec = { 0 };
     pds_ifindex_t    ifindex, eth_ifindex;
@@ -100,10 +104,12 @@ create_uplinks (void)
     PDS_TRACE_DEBUG("Creating uplinks ...");
     for (uint32_t port = 1;
          port <= g_pds_state.catalogue()->num_fp_ports(); port++) {
-        eth_ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
-                                  port, ETH_IF_DEFAULT_CHILD_PORT);
+         eth_ifindex = ETH_IFINDEX(g_pds_state.catalogue()->slot(),
+                                   port, ETH_IF_DEFAULT_CHILD_PORT);
         ifindex = ETH_IFINDEX_TO_UPLINK_IFINDEX(eth_ifindex);
-        spec.key.id = ifindex;
+        uuid = uuids::random_generator()();
+        memcpy(&spec.key, &uuid, PDS_MAX_KEY_LEN);
+        spec.key.id[PDS_MAX_KEY_LEN] = '\0';
         spec.type = PDS_IF_TYPE_UPLINK;
         spec.admin_state = PDS_IF_STATE_UP;
         spec.uplink_info.port_num =

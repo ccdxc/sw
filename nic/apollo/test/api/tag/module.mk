@@ -14,7 +14,7 @@ MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   bm_allocator sdklinkmgr sdklinkmgrcsr memhash \
                   sltcam slhash ${NIC_${PIPELINE}_NICMGR_LIBS}
 MODULE_LDLIBS   = ${NIC_COMMON_LDLIBS} ${NIC_CAPSIM_LDLIBS} \
-                  ${SDK_THIRDPARTY_CAPRI_LDLIBS} \
+                  ${${PIPELINE}_GTEST_COMMON_LDLIBS} \
                   AAPL edit ncurses
 MODULE_INCS     = ${NIC_CSR_INCS}
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}

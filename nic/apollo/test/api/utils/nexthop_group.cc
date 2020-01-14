@@ -28,7 +28,7 @@ nh_spec_fill(pds_nexthop_spec_t *spec, pds_obj_key_t key,
         // TODO
         break;
     case PDS_NH_TYPE_UNDERLAY:
-        spec->l3_if.id = k_l3_if_id;
+        spec->l3_if = k_l3_if_key;
         memcpy(spec->underlay_mac, mac, ETH_ADDR_LEN);
         break;
     case PDS_NH_TYPE_OVERLAY:

@@ -110,13 +110,14 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
         for (auto& nh: ips_info_.nexthops) {
             // Nexthop key is unused
             nhgroup_spec.nexthops[i].type = PDS_NH_TYPE_UNDERLAY;
-            nhgroup_spec.nexthops[i].l3_if.id = 
-                ms_to_pds_ifindex(nh.ms_ifindex);
+            nhgroup_spec.nexthops[i].l3_if = 
+                msidx2pdsobjkey(nh.ms_ifindex);
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
                    ETH_ADDR_LEN);
-            SDK_TRACE_DEBUG("MS ECMP %ld Add NH MSIfIndex 0x%lx PDSIfIndex 0x%lx MAC %s",
+            SDK_TRACE_DEBUG("MS ECMP %ld Add NH MSIfIndex 0x%lx PDSIf"
+                            " UUID %s MAC %s",
                             ips_info_.pathset_id, nh.ms_ifindex, 
-                            nhgroup_spec.nexthops[i].l3_if.id,
+                            nhgroup_spec.nexthops[i].l3_if.str(),
                             macaddr2str(nh.mac_addr.m_mac));
             ++i;
         }

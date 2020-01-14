@@ -12,6 +12,5 @@ MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam \
                   pdsfte ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS}
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
-                  ${NIC_COMMON_LDLIBS} edit ncurses \
-                  $(MS_LD_LIBS)
+                  ${NIC_COMMON_LDLIBS} edit ncurses $(MS_LD_LIBS)
 include ${MKDEFS}/post.mk

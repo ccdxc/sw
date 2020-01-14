@@ -308,7 +308,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // if there is a subsequent create from MS.
 
     ips_info_.bd_id = bd_id;
-    uuid_t  subnet_uuid;
+    pds_obj_key_t  subnet_uuid;
     SDK_TRACE_INFO ("MS BD %d: Delete IPS", ips_info_.bd_id);
 
     { // Enter thread-safe context to access/modify global state

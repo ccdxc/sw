@@ -51,6 +51,7 @@ private:
     void generate_del_specs(const phy_port_input_params_t& input,
                             batch_spec_t& pds_batch);
     void validate_();
+    pds_obj_key_t make_l3if_key_(const phy_port_input_params_t& input);
 };
 
 } // End namespace pds_ms_test

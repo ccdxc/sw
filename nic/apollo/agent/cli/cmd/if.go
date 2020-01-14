@@ -17,7 +17,7 @@ import (
 
 var (
 	lifID uint32
-	ifID  uint32
+	ifID  string
 )
 
 var lifShowCmd = &cobra.Command{
@@ -38,7 +38,7 @@ func init() {
 	showCmd.AddCommand(lifShowCmd)
 	showCmd.AddCommand(ifShowCmd)
 	lifShowCmd.Flags().Uint32Var(&lifID, "id", 0, "Specify Lif ID")
-	ifShowCmd.Flags().Uint32Var(&ifID, "id", 0, "Specify interface ID")
+	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify interface ID")
 }
 
 func ifShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -59,11 +59,11 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("id") == false {
 		req = &pds.InterfaceGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	} else {
 		req = &pds.InterfaceGetRequest{
-			Id: []uint32{ifID},
+			Id: [][]byte{[]byte(ifID)},
 		}
 	}
 
@@ -98,7 +98,7 @@ func printIfHeader() {
 func printIf(intf *pds.Interface) {
 	spec := intf.GetSpec()
 	status := intf.GetStatus()
-	ifIndex := spec.GetId()
+    ifIndex := status.GetIfIndex()
 	ifStr := ifIndexToPortIdStr(ifIndex)
 	adminState := strings.Replace(spec.GetAdminStatus().String(),
 		"IF_STATUS_", "", -1)

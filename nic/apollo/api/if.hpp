@@ -37,9 +37,10 @@ class if_state;
 class if_entry : public api_base {
 public:
     /// \brief    factory method to allocate & initialize a interface entry
-    /// \param[in] key    interface key
+    /// \param[in] key        key of the interface
+    /// \param[in] ifindex    encoded interface index
     /// \return    new instance of interface or NULL, in case of error
-    static if_entry *factory(pds_ifindex_t key);
+    static if_entry *factory(pds_obj_key_t& key, pds_ifindex_t ifindex);
 
     /// \brief    factory method to allocate & initialize a interface entry
     /// \param[in] spec    interface specification
@@ -167,7 +168,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "if-" + std::to_string(key_.id);
+        return "if-" + std::string(key_.str());
     }
 
     /// \brief          helper function to get key given interface entry
@@ -196,7 +197,7 @@ public:
 
     /// \brief    return the interface key
     /// \return interface index
-    pds_if_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief    return admin state
     /// \return interface admin state
@@ -270,7 +271,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_if_key_t key_;             ///< interface key
+    pds_obj_key_t key_;            ///< interface key
     pds_ifindex_t ifindex_;        ///< interface index
     pds_if_type_t type_;           ///< interface type
     pds_if_state_t admin_state_;   ///< admin state

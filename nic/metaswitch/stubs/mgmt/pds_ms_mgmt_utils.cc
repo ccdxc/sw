@@ -327,7 +327,7 @@ pds_ms_get_string_in_byte_array_with_len_oid(NBB_ULONG *oid, string in_str, NBB_
 }
 
 NBB_VOID
-pds_ms_get_uuid(pds_ms::uuid_t *uuid, const string& in_str)
+pds_ms_get_uuid(pds_obj_key_t *uuid, const string& in_str)
 {
     NBB_MEMCPY(uuid->id, in_str.c_str(), in_str.length());
 }

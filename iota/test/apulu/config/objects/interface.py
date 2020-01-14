@@ -101,12 +101,12 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.InterfaceId)
+        grpcmsg.Id.append(str.encode(str(self.InterfaceId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.InterfaceId
+        spec.Id = str.encode(str(self.InterfaceId))
         spec.AdminStatus = interface_pb2.IF_STATUS_UP
         if self.Type == utils.InterfaceTypes.L3:
             spec.Type = interface_pb2.IF_TYPE_L3
@@ -115,7 +115,7 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.InterfaceId:
+        if int(spec.Id) != self.InterfaceId:
             return False
         if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
             return False
@@ -144,6 +144,11 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__hostifs = defaultdict(dict)
         self.__hostifs_iter = defaultdict(dict)
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml:
+            return utils.GetYamlSpecAttr(spec, 'id')
+        return int(spec.Id)
 
     def GetInterfaceObject(self, node, infid):
         return self.GetObjectByKey(node, infid)

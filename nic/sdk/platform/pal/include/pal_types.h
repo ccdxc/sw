@@ -42,11 +42,11 @@ typedef enum {
 } pal_led_frequency_t;
 
 /* Keep the order as is. */
-typedef enum uuid_e {
+typedef enum pal_uuid_e {
     NICMGR      =       0,
     HAL         =       1,
     PCIEMGR     =       2
-} uuid_t;
+} pal_uuid_t;
 
 typedef enum {
     PAL_UPGRADE_COMPLETED = 0,

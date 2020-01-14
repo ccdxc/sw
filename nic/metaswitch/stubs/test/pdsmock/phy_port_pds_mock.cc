@@ -7,6 +7,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_li.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/test/base/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include <cstdlib>
@@ -20,14 +21,23 @@ void load_phy_port_test_output ()
     test_params()->test_output = &g_phy_port_pds_mock;
 }
 
+pds_obj_key_t phy_port_pds_mock_t::make_l3if_key_
+                            (const phy_port_input_params_t& input)
+{
+    pds_ifindex_t eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT,
+                                            input.phy_port,
+                                            ETH_IF_DEFAULT_CHILD_PORT);
+    auto ms_ifindex = pds_ms::pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
+    return pds_ms::msidx2pdsobjkey(ms_ifindex);
+}
+
 void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& input,
                                                 batch_spec_t& pds_batch)
 {
     auto op = (op_create_)?API_OP_CREATE : API_OP_UPDATE;
     test::api::if_feeder if_feeder;
     pds_if_spec_t spec = {0};
-    spec.key.id = IFINDEX(IF_TYPE_L3, ETH_IF_DEFAULT_SLOT, input.phy_port,
-                          ETH_IF_DEFAULT_CHILD_PORT);
+    spec.key = make_l3if_key_(input);
     spec.type = PDS_IF_TYPE_L3;
     spec.admin_state = input.admin_state ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
 
@@ -56,9 +66,7 @@ void phy_port_pds_mock_t::generate_del_specs(const phy_port_input_params_t& inpu
                                           batch_spec_t& pds_batch)
 {
     pds_batch.emplace_back (OBJ_ID_IF, API_OP_DELETE);
-    pds_batch.back().intf.key.id = IFINDEX(IF_TYPE_L3, ETH_IF_DEFAULT_SLOT,
-                                           input.phy_port,
-                                           ETH_IF_DEFAULT_CHILD_PORT);
+    pds_batch.back().intf.key = make_l3if_key_(input);
 }
 
 void phy_port_pds_mock_t::validate_()

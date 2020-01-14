@@ -26,19 +26,19 @@ enum class uuid_obj_type_t {
 const char* uuid_obj_type_str(uuid_obj_type_t t);
 
 class uuid_obj_t {
-public:    
-    uuid_obj_t(uuid_obj_type_t type, const uuid_t& uuid)
+public:
+    uuid_obj_t(uuid_obj_type_t type, const pds_obj_key_t& uuid)
         : obj_type_(type), uuid_(uuid) {};
     uuid_obj_type_t obj_type() {return obj_type_;}
-    uuid_t  uuid() {return uuid_;}
-    virtual std::string str()=0; 
+    pds_obj_key_t  uuid() {return uuid_;}
+    virtual std::string str()=0;
     virtual ~uuid_obj_t() {};
     // Should the UUID obj release be delayed until
     // MS HAL stub delete is invoked
     virtual bool delay_release() {return false;}
-private:    
+private:
     uuid_obj_type_t obj_type_;
-    uuid_t          uuid_;
+    pds_obj_key_t          uuid_;
 };
 
 using uuid_obj_uptr_t = std::unique_ptr<uuid_obj_t>;
@@ -47,14 +47,14 @@ using uuid_obj_uptr_t = std::unique_ptr<uuid_obj_t>;
 class bgp_uuid_obj_t : public uuid_obj_t {
 public:
     using ms_id_t = uint32_t;
-    bgp_uuid_obj_t(const uuid_t& uuid); 
+    bgp_uuid_obj_t(const pds_obj_key_t& uuid);
     ms_id_t ms_id() {return entity_id_;}
     std::string str() override {
         return std::string("BGP Entity ID ").append(std::to_string(entity_id_));
     }
 private:
     // There is only a single BGP instance ever
-    ms_id_t entity_id_;    
+    ms_id_t entity_id_;
 };
 
 class bgp_peer_uuid_obj_t : public slab_obj_t<bgp_peer_uuid_obj_t>,
@@ -65,12 +65,12 @@ public:
         ip_addr_t peer_ip;
         //types::IPAddress local_ip;
         //types::IPAddress peer_ip;
-        ms_id_t(const ip_addr_t& l, const ip_addr_t& p) 
-            : local_ip(l), peer_ip(p) {}; 
+        ms_id_t(const ip_addr_t& l, const ip_addr_t& p)
+            : local_ip(l), peer_ip(p) {};
     };
-    bgp_peer_uuid_obj_t(const uuid_t& uuid,
+    bgp_peer_uuid_obj_t(const pds_obj_key_t& uuid,
                         const ip_addr_t& l,
-                        const ip_addr_t& p) 
+                        const ip_addr_t& p)
         : uuid_obj_t(uuid_obj_type_t::BGP_PEER, uuid),
           mib_keys_(l,p) {};
 
@@ -80,7 +80,7 @@ public:
                .append(" Peer IP ").append(ipaddr2str(&mib_keys_.peer_ip));
     }
 private:
-    ms_id_t  mib_keys_;    
+    ms_id_t  mib_keys_;
 };
 using bgp_peer_uuid_obj_uptr_t = std::unique_ptr<bgp_peer_uuid_obj_t>;
 void bgp_peer_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
@@ -89,7 +89,7 @@ class subnet_uuid_obj_t : public slab_obj_t<subnet_uuid_obj_t>,
                           public uuid_obj_t {
 public:
     using ms_id_t = uint32_t;
-    subnet_uuid_obj_t(const uuid_t& uuid) 
+    subnet_uuid_obj_t(const pds_obj_key_t& uuid)
         : uuid_obj_t(uuid_obj_type_t::SUBNET, uuid) {};
 
     ms_id_t ms_id() { return idx_guard.idx(); }
@@ -97,7 +97,7 @@ public:
         return std::string("Subnet BD ").append(std::to_string(ms_id()));
     }
     // Delay release until MS HAL stub delete is invoked
-    // so that internal MS BD ID is not released and reallocated until 
+    // so that internal MS BD ID is not released and reallocated until
     // all BD state is cleaned up all the way down until MS HAL stubs
     bool delay_release() override {return true;}
 private:
