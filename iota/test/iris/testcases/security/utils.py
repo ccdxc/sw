@@ -57,6 +57,37 @@ def GetSecurityPolicy(workload=None, node_name=None):
             return None
     return cmd.stdout
 
+def isHalAlive(node_name=None):
+    node_list = []
+    if not node_name:
+        node_list = api.GetNaplesHostnames()
+    else:
+        node_list.append(node_name)
+
+    for n in node_list:
+        try:
+            GetHalPid(n)
+        except:
+            return api.types.status.FAILURE
+
+    return api.types.status.SUCCESS
+
+def GetHalPid(node_name):
+    if not node_name:
+        raise Exception("Invalid node name Argument")
+
+    cmd = "pidof hal"
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name,cmd)
+    resp = api.Trigger(req)
+
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+        if cmd.exit_code != 0:
+            raise Exception("Could not find the HAL process on %s"%(node_name))
+        else:
+            return int(cmd.stdout.strip())
+
 def clearNaplesSessions(node_name=None):
     if not node_name:
         for node_name in  api.GetNaplesHostnames():
@@ -115,8 +146,6 @@ def GetDelphiSessionSummaryMetrics(node_name):
     sessionMetrics = {}
     cmd = resp.commands[0]
 
-    print("delphictl Session Summary Metrics \n : %s \n\n"%
-                    cmd.stdout)
     if not cmd.stdout:
         return sessionMetrics
 

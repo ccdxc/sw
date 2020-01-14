@@ -88,7 +88,7 @@ def showStats(tc):
             print("%s %s %s"%(dec, printWorkloadInfo(w), dec))
             w.trexHandle._show_traffic_stats(False, is_sum = True)
         except Exception as e:
-            traceback.print_exc()
+            #traceback.print_exc()
             api.Logger.error("Failed to show traffic stats for %s : %s"%(w.workload_name, e))
 
 def switchPortFlap(tc):
@@ -181,7 +181,7 @@ def startTrex(tc):
 def barrier(tc):
     for w in tc.workloadPeers.keys():
         w.trexHandle.wait_on_traffic()
-        api.Logger.info("Stopped traffic ")
+        api.Logger.info("Stopped traffic on %s"%(w.workload_name))
 
 def Setup(tc):
     tc.workloadPeers = {}
@@ -213,7 +213,13 @@ def Trigger(tc):
         getPeriodicEvents(tc)
         startPeriodicEvents(tc)
 
-        barrier(tc)
+        try:
+            barrier(tc)
+        except:
+            api.Logger.error("Barrier failed..")
+            cancelPeriodicEvents(tc)
+            raise
+
         cancelPeriodicEvents(tc)
         return api.types.status.SUCCESS
     except Exception as e:
@@ -227,7 +233,7 @@ def verifySessions(tc):
         utils.clearNaplesSessions()
         for n in api.GetNaplesHostnames():
             metrics = utils.GetDelphiSessionSummaryMetrics(n)
-            api.Logger.info("Session sumaary metrics for %s => %s"%(n, metrics))
+            api.Logger.info("Session summary metrics for %s => %s"%(n, metrics))
             if metrics['num_tcp_sessions'] != 0 or \
                metrics['num_tcp_sessions'] != 0:
                 api.Logger.error("Found active udp or tcp session!")
@@ -244,6 +250,14 @@ def Verify(tc):
         ret = verifySessions(tc)
         if ret != api.types.status.SUCCESS:
             return ret
+        api.Logger.info("Verified session stats successfully.")
+        
+        ret = utils.isHalAlive()
+        if ret != api.types.status.SUCCESS:
+            api.Logger.error("HAL is DEAD ..")
+            return ret
+        api.Logger.info("Verified the HAL process.")
+
     except Exception as e:
         traceback.print_exc()
         api.Logger.error("Failed to verify : %s"%(e))
