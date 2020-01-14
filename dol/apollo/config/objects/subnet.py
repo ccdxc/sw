@@ -171,8 +171,8 @@ class SubnetObject(base.ConfigObjectBase):
         spec.IPv4VirtualRouterIP = int(self.VirtualRouterIPAddr[1])
         spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
-        spec.V4RouteTableId = self.V4RouteTableId
-        spec.V6RouteTableId = self.V6RouteTableId
+        spec.V4RouteTableId = str.encode(str(self.V4RouteTableId))
+        spec.V6RouteTableId = str.encode(str(self.V6RouteTableId))
         for policyid in self.IngV4SecurityPolicyIds:
             spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
         for policyid in self.IngV6SecurityPolicyIds:
@@ -194,9 +194,9 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
             return False
-        if spec.V4RouteTableId != self.V4RouteTableId:
+        if int(spec.V4RouteTableId) != self.V4RouteTableId:
             return False
-        if spec.V6RouteTableId != self.V6RouteTableId:
+        if int(spec.V6RouteTableId) != self.V6RouteTableId:
             return False
         if int(spec.IngV4SecurityPolicyId[0]) != self.IngV4SecurityPolicyIds[0]:
             return False

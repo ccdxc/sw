@@ -21,6 +21,8 @@
 /// \defgroup PDS_ROUTE Route API
 /// @{
 
+#define PDS_ROUTE_TABLE_ID_INVALID     k_pds_obj_key_invalid
+
 // TODO: should be same as PDS_MAX_SUBNET
 #define PDS_MAX_ROUTE_TABLE            1024   ///< maximum route tables
 #define PDS_MAX_ROUTE_PER_TABLE        1023   ///< maximum routes per table
@@ -67,11 +69,11 @@ typedef struct pds_route_s {
 typedef struct pds_route_table_spec_s    pds_route_table_spec_t;
 /// \brief route table configuration
 struct pds_route_table_spec_s {
-    pds_route_table_key_t key;        ///< key
-    uint8_t               af;         ///< address family - v4 or v6
-    bool                  enable_pbr; ///< enable/disable priority based routing
-    uint32_t              num_routes; ///< number of routes in the list
-    pds_route_t           *routes;    ///< list or route rules
+    pds_obj_key_t key;        ///< key
+    uint8_t       af;         ///< address family - v4 or v6
+    bool          enable_pbr; ///< enable/disable priority based routing
+    uint32_t      num_routes; ///< number of routes in the list
+    pds_route_t   *routes;    ///< list or route rules
 
     // constructor
     pds_route_table_spec_s() { routes = NULL; }
@@ -130,7 +132,7 @@ sdk_ret_t pds_route_table_create(pds_route_table_spec_t *spec,
 /// \param[in] key route table key
 /// \param[out] info route table information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_table_read(pds_route_table_key_t *key,
+sdk_ret_t pds_route_table_read(pds_obj_key_t *key,
                                pds_route_table_info_t *info);
 
 /// \brief update route table
@@ -144,7 +146,7 @@ sdk_ret_t pds_route_table_update(pds_route_table_spec_t *spec,
 /// \param[in] key key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_route_table_delete(pds_route_table_key_t *key,
+sdk_ret_t pds_route_table_delete(pds_obj_key_t *key,
                                  pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

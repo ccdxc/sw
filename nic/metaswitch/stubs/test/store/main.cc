@@ -122,17 +122,16 @@ protected:
 public:
     state_t::context_t state_thr_ctxt;
 };
+static const pds_obj_key_t k_route_key = pds_ms::msidx2pdsobjkey(1);
 
 TEST_F(route_store_test, create) {
-    pds_route_table_key_t key;
     auto state = state_thr_ctxt.state();
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
-    key.id = 1;
-    state->route_table_store().add_upd(1,
-                            rttbl_obj_uptr_t (new route_table_obj_t(key)));
+    state->route_table_store().add_upd(k_route_key,
+                        rttbl_obj_uptr_t (new route_table_obj_t(k_route_key)));
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 1);
 
-    auto rttbl = state->route_table_store().get(1);
+    auto rttbl = state->route_table_store().get(k_route_key);
     ASSERT_TRUE (rttbl != nullptr);
     ASSERT_TRUE (rttbl->num_routes() == 0);
 
@@ -174,7 +173,7 @@ TEST_F(route_store_test, get) {
     // Test the route store
     auto state = state_thr_ctxt.state();
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 1);
-    auto rttbl = state->route_table_store().get(1);
+    auto rttbl = state->route_table_store().get(k_route_key);
     ASSERT_TRUE (rttbl != nullptr);
 
     // Get route 2
@@ -190,7 +189,7 @@ TEST_F(route_store_test, get) {
 TEST_F(route_store_test, update) {
     // Update existing entry
     auto state = state_thr_ctxt.state();
-    auto rttbl = state->route_table_store().get(1);
+    auto rttbl = state->route_table_store().get(k_route_key);
     // Update route 1
     pds_route_t route = {0};
     route.prefix.addr.af = IP_AF_IPV4;
@@ -212,7 +211,7 @@ TEST_F(route_store_test, update) {
 TEST_F(route_store_test, del) {
     // Delete entry
     auto state = state_thr_ctxt.state();
-    auto rttbl = state->route_table_store().get(1);
+    auto rttbl = state->route_table_store().get(k_route_key);
 
     // Delete route 2
     ip_prefix_t prefix = {0};
@@ -269,7 +268,7 @@ TEST_F(route_store_test, del) {
     ASSERT_TRUE (rttbl->num_routes() == 0);
 
     // Delete complete rttbl
-    state->route_table_store().erase(1);
+    state->route_table_store().erase(k_route_key);
     ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) == 0);
 }
 

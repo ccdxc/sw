@@ -231,7 +231,7 @@ void dump_packet(std::vector<uint8_t> data);
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_obj_key_t *key) {
-    os << " id: " << std::string(key->str());
+    os << "id: " << std::string(key->str());
     return os;
 }
 

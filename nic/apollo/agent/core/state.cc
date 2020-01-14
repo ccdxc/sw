@@ -586,19 +586,19 @@ agent_state::del_from_tag_db(pds_tag_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_route_table_db(pds_route_table_key_t *key,
-                             pds_route_table_spec_t *spec) {
-    ADD_TO_DB(route_table, key, spec);
+agent_state::add_to_route_table_db(pds_obj_key_t *key,
+                                   pds_route_table_spec_t *spec) {
+    ADD_TO_OBJ_DB(route_table, key, spec);
 }
 
 pds_route_table_spec_t *
-agent_state::find_in_route_table_db(pds_route_table_key_t *key) {
-    FIND_IN_DB(route_table, key);
+agent_state::find_in_route_table_db(pds_obj_key_t *key) {
+    FIND_IN_OBJ_DB(route_table, key);
 }
 
 bool
-agent_state::del_from_route_table_db(pds_route_table_key_t *key) {
-    DEL_FROM_DB(route_table, key);
+agent_state::del_from_route_table_db(pds_obj_key_t *key) {
+    DEL_FROM_OBJ_DB(route_table, key);
 }
 
 sdk_ret_t

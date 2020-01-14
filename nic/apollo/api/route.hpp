@@ -170,7 +170,7 @@ public:
 
     /**< @brief    return stringified key of the object (for debugging) */
     virtual string key2str(void) const override {
-        return "route-table-"  + std::to_string(key_.id);
+            return "route-table-"  + std::string(key_.str());
     }
 
     /**
@@ -185,7 +185,7 @@ public:
 
     /// \brief          return the route table key/id
     /// \return         key/id of the route table
-    pds_route_table_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /**
      * @brief return address family of this routing table
@@ -218,10 +218,10 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_route_table_key_t    key_;        /**< route table key */
-    uint8_t                  af_;         /**< IP_AF_IPV4 or IP_AF_IPV6 */
-    ht_ctxt_t                ht_ctxt_;    /**< hash table context */
-    impl_base                *impl_;      /**< impl object instance */
+    pds_obj_key_t    key_;        ///< route table key
+    uint8_t          af_;         ///< IP_AF_IPV4 or IP_AF_IPV6
+    ht_ctxt_t        ht_ctxt_;    ///< hash table context
+    impl_base        *impl_;      ///< impl object instance
 
     friend class route_table_state;    // route_table_state is friend
                                        // of route_table

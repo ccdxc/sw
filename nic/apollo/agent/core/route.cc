@@ -9,7 +9,7 @@
 namespace core {
 
 static inline sdk_ret_t
-route_table_create_validate (pds_route_table_key_t *key,
+route_table_create_validate (pds_obj_key_t *key,
                              pds_route_table_spec_t *spec)
 {
     for (uint32_t i = 0; i < spec->num_routes; i ++) {
@@ -17,15 +17,16 @@ route_table_create_validate (pds_route_table_key_t *key,
             if (agent_state::state()->find_in_nh_db(&spec->routes[i].nh) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to create route table {}, nexthop {} "
-                              "not found", spec->key.id, spec->routes[i].nh.id);
+                              "not found", spec->key.str(),
+                              spec->routes[i].nh.id);
                 return SDK_RET_INVALID_ARG;
             }
         } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to create route table {}, vpc {} "
-                              "not found", spec->key.id,
-                              spec->routes[i].vpc.id);
+                              "not found", spec->key.str(),
+                              spec->routes[i].vpc.str());
                 return SDK_RET_INVALID_ARG;
             }
         }
@@ -34,7 +35,7 @@ route_table_create_validate (pds_route_table_key_t *key,
 }
 
 sdk_ret_t
-route_table_create (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
+route_table_create (pds_obj_key_t *key, pds_route_table_spec_t *spec,
                     pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t               ret;
@@ -44,7 +45,7 @@ route_table_create (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
     }
     if ((ret = route_table_create_validate(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to create route table {}, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
@@ -59,23 +60,23 @@ route_table_create (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
 }
 
 static inline sdk_ret_t
-route_table_update_validate (pds_route_table_key_t *key,
-                             pds_route_table_spec_t *spec)
+route_table_update_validate (pds_obj_key_t *key, pds_route_table_spec_t *spec)
 {
     for (uint32_t i = 0; i < spec->num_routes; i ++) {
         if (spec->routes[i].nh_type == PDS_NH_TYPE_IP) {
             if (agent_state::state()->find_in_nh_db(&spec->routes[i].nh) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to update route table {}, nexthop {} "
-                              "not found", spec->key.id, spec->routes[i].nh.id);
+                              "not found", spec->key.str(),
+                              spec->routes[i].nh.id);
                 return SDK_RET_INVALID_ARG;
             }
         } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
             if (agent_state::state()->find_in_vpc_db(&spec->routes[i].vpc) ==
                     NULL) {
                 PDS_TRACE_ERR("Failed to update route table {}, vpc {} "
-                              "not found", spec->key.id,
-                              spec->routes[i].vpc.id);
+                              "not found", spec->key.str(),
+                              spec->routes[i].vpc.str());
                 return SDK_RET_INVALID_ARG;
             }
         }
@@ -84,7 +85,7 @@ route_table_update_validate (pds_route_table_key_t *key,
 }
 
 sdk_ret_t
-route_table_update (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
+route_table_update (pds_obj_key_t *key, pds_route_table_spec_t *spec,
                     pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t               ret;
@@ -94,7 +95,7 @@ route_table_update (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
     }
     if ((ret = route_table_update_validate(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update route table {}, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
@@ -111,7 +112,7 @@ route_table_update (pds_route_table_key_t *key, pds_route_table_spec_t *spec,
 }
 
 sdk_ret_t
-route_table_delete (pds_route_table_key_t *key, pds_batch_ctxt_t bctxt)
+route_table_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t               ret;
     pds_route_table_spec_t *spec;
@@ -136,7 +137,7 @@ route_table_delete (pds_route_table_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-route_table_get (pds_route_table_key_t *key, pds_route_table_info_t *info)
+route_table_get (pds_obj_key_t *key, pds_route_table_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_route_table_spec_t *spec;
@@ -144,7 +145,7 @@ route_table_get (pds_route_table_key_t *key, pds_route_table_info_t *info)
     memset(info, 0, sizeof(pds_route_table_info_t));
     spec = agent_state::state()->find_in_route_table_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find route table {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find route table {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

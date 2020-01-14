@@ -61,7 +61,7 @@ void route_pds_mock_t::validate_()
     { // Enter state thread context
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        auto rttbl = state->route_table_store().get(1);
+        auto rttbl = state->route_table_store().get(pds_ms::msidx2pdsobjkey(1));
         if (op_delete_update_) {
             // Object is removed from store synchronously for deletes
             ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)2);
@@ -92,7 +92,7 @@ void route_pds_mock_t::validate_()
 
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
-    auto rttbl = state->route_table_store().get(1);
+    auto rttbl = state->route_table_store().get(pds_ms::msidx2pdsobjkey(1));
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_RTTABLE_SLAB_ID) , (uint32_t)2);
     ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) , (uint32_t)0);
     if (op_delete_update_) {

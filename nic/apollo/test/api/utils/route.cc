@@ -38,7 +38,8 @@ route_table_feeder::init(std::string base_route_pfx_str,
                          uint8_t af, uint32_t num_routes,
                          uint32_t num_route_tables,
                          uint32_t id) {
-    spec.key.id = id;
+    memset(&spec, 0, sizeof(pds_route_table_spec_t));
+    spec.key = int2pdsobjkey(id);
     spec.af = af;
     spec.num_routes = num_routes;
     this->base_route_pfx_str = base_route_pfx_str;
@@ -47,14 +48,13 @@ route_table_feeder::init(std::string base_route_pfx_str,
 
 void
 route_table_feeder::iter_next(int width) {
-    spec.key.id += width;
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
     cur_iter_pos++;
 }
 
 void
-route_table_feeder::key_build(pds_route_table_key_t *key) const {
-    memset(key, 0, sizeof(pds_route_table_key_t));
-    key->id = this->spec.key.id;
+route_table_feeder::key_build(pds_obj_key_t *key) const {
+    memcpy(key, &this->spec.key, sizeof(pds_obj_key_t));
 }
 
 void
@@ -132,10 +132,8 @@ route_table_feeder::fill_spec(pds_nh_type_t type,
 }
 
 bool
-route_table_feeder::key_compare(const pds_route_table_key_t *key) const {
-    if (key->id != spec.key.id)
-        return false;
-    return true;
+route_table_feeder::key_compare(const pds_obj_key_t *key) const {
+    return *key == this->spec.key;
 }
 
 bool

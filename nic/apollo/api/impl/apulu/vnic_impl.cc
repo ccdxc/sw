@@ -345,7 +345,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     pds_obj_key_t policy_key;
     policy *ing_v4_policy, *ing_v6_policy;
     policy *egr_v4_policy, *egr_v6_policy;
-    pds_route_table_key_t route_table_key;
+    pds_obj_key_t route_table_key;
     vnic_info_rxdma_actiondata_t vnic_info_data;
 
     // program IPv4 ingress entry
@@ -430,11 +430,11 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     // populate IPv4 route table root address in Tx direction entry
     i = 0; // route root is always at index 0
     route_table_key = subnet->v4_route_table();
-    if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
         route_table_key = vpc->v4_route_table();
     }
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_find(&route_table_key);
         if (rtable) {
             addr =
@@ -483,11 +483,11 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     // populate IPv6 route table root address in Tx direction entry
     i = 0; // route root is at index 0
     route_table_key = subnet->v6_route_table();
-    if (route_table_key.id == PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
         route_table_key = vpc->v6_route_table();
     }
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_find(&route_table_key);
         if (rtable) {
             addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();

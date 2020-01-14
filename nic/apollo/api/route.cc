@@ -68,7 +68,8 @@ route_table::clone(api_ctxt_t *api_ctxt) {
         new (rtable) route_table();
         rtable->impl_ = impl_->clone();
         if (unlikely(rtable->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone route table %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone route table %s impl",
+                          key2str().c_str());
             goto error;
         }
         rtable->init_config(api_ctxt);
@@ -112,14 +113,14 @@ route_table::init_config(api_ctxt_t *api_ctxt) {
     pds_route_table_spec_t    *spec;
 
     spec = &api_ctxt->api_params->route_table_spec;
-    memcpy(&this->key_, &spec->key, sizeof(pds_route_table_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->af_ = spec->af;
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 route_table::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming route table %u", key_.id);
+    PDS_TRACE_DEBUG("Programming route table %s", key2str().c_str());
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -131,7 +132,7 @@ route_table::compute_update(api_obj_ctxt_t *obj_ctxt) {
     // routes in the route table but not the address family
     if (af_ != spec->af) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"address family\" "
-                      "on route table %u", key_.id);
+                      "on route table %s", key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
     // in all other cases we have to recompute the route table and program in
@@ -145,8 +146,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
     route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
 
     subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
-    if ((subnet->v4_route_table().id == upd_ctxt->rtable->key().id) ||
-        (subnet->v6_route_table().id == upd_ctxt->rtable->key().id)) {
+    if ((subnet->v4_route_table() == upd_ctxt->rtable->key()) ||
+        (subnet->v6_route_table() == upd_ctxt->rtable->key())) {
         api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
                             (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
@@ -159,8 +160,8 @@ vpc_upd_walk_cb_ (void *api_obj, void *ctxt) {
     route_table_upd_ctxt_t *upd_ctxt = (route_table_upd_ctxt_t *)ctxt;
 
     vpc = (vpc_entry *)api_framework_obj((api_base *)api_obj);
-    if ((vpc->v4_route_table().id == upd_ctxt->rtable->key().id) ||
-        (vpc->v6_route_table().id == upd_ctxt->rtable->key().id)) {
+    if ((vpc->v4_route_table() == upd_ctxt->rtable->key()) ||
+        (vpc->v6_route_table() == upd_ctxt->rtable->key())) {
         api_obj_add_to_deps(OBJ_ID_VPC, upd_ctxt->obj_ctxt->api_op,
                             (api_base *)api_obj, upd_ctxt->upd_bmap);
     }
@@ -193,13 +194,13 @@ route_table::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 route_table::activate_config(pds_epoch_t epoch, api_op_t api_op,
                              api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating route table %u config", key_.id);
+    PDS_TRACE_DEBUG("Activating route table %s config", key2str().c_str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 void
 route_table::fill_spec_(pds_route_table_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_route_table_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->af = af_;
     spec->num_routes = 0;
     // routes are not stored anywhere
@@ -215,7 +216,7 @@ route_table::read(pds_route_table_info_t *info) {
 
 sdk_ret_t
 route_table::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding route table %u to db", key_.id);
+    PDS_TRACE_VERBOSE("Adding route table %s to db", key2str().c_str());
     return route_table_db()->insert(this);
 }
 

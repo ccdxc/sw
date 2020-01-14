@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_route_table_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                            pds_route_table_key_t *key,
+                            pds_obj_key_t *key,
                             pds_route_table_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -42,7 +42,7 @@ pds_route_table_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline route_table *
-pds_route_table_find (pds_route_table_key_t *key)
+pds_route_table_find (pds_obj_key_t *key)
 {
     return (route_table_db()->find(key));
 }
@@ -55,7 +55,7 @@ pds_route_table_create (_In_ pds_route_table_spec_t *spec,
 }
 
 sdk_ret_t
-pds_route_table_read (_In_ pds_route_table_key_t *key,
+pds_route_table_read (_In_ pds_obj_key_t *key,
                       _Out_ pds_route_table_info_t *info)
 {
     route_table *entry;
@@ -79,7 +79,7 @@ pds_route_table_update (_In_ pds_route_table_spec_t *spec,
 }
 
 sdk_ret_t
-pds_route_table_delete (_In_ pds_route_table_key_t *key,
+pds_route_table_delete (_In_ pds_obj_key_t *key,
                         _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_route_table_api_handle(bctxt, API_OP_DELETE, key, NULL);

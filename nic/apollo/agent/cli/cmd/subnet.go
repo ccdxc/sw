@@ -92,13 +92,13 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 215)
+	hdrLine := strings.Repeat("-", 276)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
 	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3s\n",
+	fmt.Printf("%-36s%-36s%-10s%-20s%-20s%-16s%-16s%-20s%-73s%-12s%-12s%-3s\n",
 		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VR IPv4", "VR IPv6", "VR MAC",
 		"RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
@@ -110,10 +110,12 @@ func printSubnet(subnet *pds.Subnet) {
 	if spec.GetHostIfIndex() != 0 {
 		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
 	}
-	rtTblID := fmt.Sprintf("%d/%d", spec.GetV4RouteTableId(), spec.GetV6RouteTableId())
+	v4rtTblID := string(spec.GetV4RouteTableId())
+	v6rtTblID := string(spec.GetV6RouteTableId())
+	rtTblID := fmt.Sprintf("%-36s/%-36s", v4rtTblID, v6rtTblID)
 	ingSGID := fmt.Sprintf("%d/%d", spec.GetIngV4SecurityPolicyId(), spec.GetIngV6SecurityPolicyId())
 	egSGID := fmt.Sprintf("%d/%d", spec.GetEgV4SecurityPolicyId(), spec.GetEgV6SecurityPolicyId())
-	fmt.Printf("%-36s%-36d%-10s%-20s%-20s%-16s%-16s%-20s%-12s%-12s%-12s%-3d\n",
+	fmt.Printf("%-36s%-36d%-10s%-20s%-20s%-16s%-16s%-20s%-73s%-12s%-12s%-3d\n",
 		string(spec.GetId()), string(spec.GetVPCId()), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.IPv6PrefixToStr(spec.GetV6Prefix()),

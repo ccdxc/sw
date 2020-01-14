@@ -63,7 +63,7 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
     v6route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         v6rtnum = 0;
-        v6route_table.key.id = ntables + i;
+        v6route_table.key = test::int2pdsobjkey(ntables + i);
         for (uint32_t j = 0; j < num_routes; j++) {
             if (apollo() || apulu()) {
                 // In apollo, use TEPs as nexthop
@@ -119,7 +119,7 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
     route_table.num_routes = num_routes;
     for (uint32_t i = 1; i <= ntables; i++) {
         rtnum = 0;
-        route_table.key.id = i;
+        route_table.key = test::int2pdsobjkey(i);
         for (uint32_t j = 0; j < num_routes; j++) {
             route_table.routes[j].prefix.addr.af = IP_AF_IPV4;
             if (apollo() || apulu()) {
@@ -625,9 +625,9 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
         pds_subnet.v6_vr_ip = pds_subnet.v6_prefix.addr;
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac,
                            (uint64_t)pds_subnet.v4_vr_ip);
-        pds_subnet.v6_route_table.id =
-            route_table_id + (num_subnets * num_vpcs);
-        pds_subnet.v4_route_table.id = route_table_id++;
+        pds_subnet.v6_route_table =
+            test::int2pdsobjkey(route_table_id + (num_subnets * num_vpcs));
+        pds_subnet.v4_route_table = test::int2pdsobjkey(route_table_id++);
         pds_subnet.num_egr_v4_policy = 1;
         pds_subnet.egr_v4_policy[0] = test::int2pdsobjkey(policy_id);
         pds_subnet.num_ing_v4_policy = 1;

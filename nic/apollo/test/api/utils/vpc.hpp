@@ -59,8 +59,8 @@ operator<<(std::ostream& os, const pds_vpc_spec_t *spec) {
        << " v6 cidr: " << ippfx2str(&spec->v6_prefix)
        << " vr mac: " << macaddr2str(spec->vr_mac)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
-       << " v4 rt table: " << spec->v4_route_table.id
-       << " v6 rt table: " << spec->v6_route_table.id
+       << " v4 rt table: " << spec->v4_route_table.str()
+       << " v6 rt table: " << spec->v6_route_table.str()
        << " nat46 pfx: " << ippfx2str(&spec->nat46_prefix);
     return os;
 }
@@ -83,7 +83,7 @@ operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"
-       << " id: " << obj.key.id
+       << &obj.key
        << " cidr_str: " << obj.cidr_str
        << " vnid: " << obj.fabric_encap.val.vnid
        << " rmac: " << obj.vr_mac << " ";

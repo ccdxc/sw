@@ -2541,7 +2541,7 @@ pds_route_table_proto_to_api_spec (pds_route_table_spec_t *api_spec,
 {
     uint32_t num_routes = 0;
 
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     switch (proto_spec.af()) {
     case types::IP_AF_INET:
         api_spec->af = IP_AF_IPV4;
@@ -3312,8 +3312,10 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
     memcpy(api_spec->v6_vr_ip.addr.v6_addr.addr8,
            proto_spec.ipv6virtualrouterip().c_str(), IP6_ADDR8_LEN);
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
-    api_spec->v4_route_table.id = proto_spec.v4routetableid();
-    api_spec->v6_route_table.id = proto_spec.v6routetableid();
+    pds_obj_key_proto_to_api_spec(&api_spec->v4_route_table,
+                                  proto_spec.v4routetableid());
+    pds_obj_key_proto_to_api_spec(&api_spec->v6_route_table,
+                                  proto_spec.v6routetableid());
 
     if (proto_spec.ingv4securitypolicyid_size() > PDS_MAX_SUBNET_POLICY) {
         PDS_TRACE_ERR("No. of IPv4 ingress security policies on subnet can't "
@@ -3381,8 +3383,10 @@ pds_vpc_proto_to_api_spec (pds_vpc_spec_t *api_spec,
                                          proto_spec.nat46prefix());
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
     MAC_UINT64_TO_ADDR(api_spec->vr_mac, proto_spec.virtualroutermac());
-    api_spec->v4_route_table.id = proto_spec.v4routetableid();
-    api_spec->v6_route_table.id = proto_spec.v6routetableid();
+    pds_obj_key_proto_to_api_spec(&api_spec->v4_route_table,
+                                  proto_spec.v4routetableid());
+    pds_obj_key_proto_to_api_spec(&api_spec->v6_route_table,
+                                  proto_spec.v6routetableid());
     api_spec->tos = proto_spec.tos();
 }
 

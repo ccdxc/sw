@@ -204,11 +204,11 @@ public:
 
     /// \brief      return IPv4 route table configured on the subnet
     /// \return     IPv4 route table this subnet
-    pds_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
+    pds_obj_key_t v4_route_table(void) const { return v4_route_table_; }
 
     /// \brief      return IPv6 route table configured on the subnet
     /// \return     IPv6 route table this subnet
-    pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
+    pds_obj_key_t v6_route_table(void) const { return v6_route_table_; }
 
     /// \brief     return number of IPv4 ingress policies on the subnet
     /// \return    number of IPv4 ingress policies on the subnet
@@ -290,8 +290,8 @@ private:
     pds_obj_key_t key_;                    ///< subnet key
     pds_obj_key_t vpc_;                       ///< vpc of this subnet
     pds_encap_t fabric_encap_;                ///< fabric encap of this subnet
-    pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
-    pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
+    pds_obj_key_t v4_route_table_;    ///< IPv4 route table id
+    pds_obj_key_t v6_route_table_;    ///< IPv6 route table id
     ///< number of ingress IPv4 policies
     uint8_t num_ing_v4_policy_;
     ///< ingress IPv4 policies

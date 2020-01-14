@@ -24,9 +24,10 @@ public:
 
     route_table_feeder() {};
     route_table_feeder(const route_table_feeder& feeder) {
+        pds_obj_key_t key = feeder.spec.key;
         init(feeder.base_route_pfx_str, feeder.spec.af,
              feeder.spec.num_routes, feeder.num_obj,
-             feeder.spec.key.id);
+             pdsobjkey2int(key));
     }
     ~route_table_feeder() {};
 
@@ -41,12 +42,12 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_route_table_key_t *key) const;
+    void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_route_table_spec_t *spec) const;
     void fill_spec(pds_nh_type_t type,
                    pds_route_table_spec_t *spec, uint32_t index) const;
     // Compare routines
-    bool key_compare(const pds_route_table_key_t *key) const;
+    bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_route_table_spec_t *spec) const;
 };
 
@@ -69,12 +70,6 @@ operator<<(std::ostream& os, const pds_route_t *route) {
         break;
     }
     os << std::endl;
-    return os;
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const pds_route_table_key_t *key) {
-    os << " id: " << key->id;
     return os;
 }
 
@@ -115,7 +110,7 @@ operator<<(std::ostream& os, const pds_route_table_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const route_table_feeder& obj) {
     os << "Route table feeder => "
-       << " id: " << obj.spec.key.id
+       << " key: " << obj.spec.key.str()
        << " af: " << +obj.spec.af
        << " num routes: " << obj.spec.num_routes;
     return os;
@@ -123,9 +118,9 @@ operator<<(std::ostream& os, const route_table_feeder& obj) {
 
 // CRUD prototypes
 API_CREATE(route_table);
-API_READ_TMP(route_table);
+API_READ(route_table);
 API_UPDATE(route_table);
-API_DELETE_TMP(route_table);
+API_DELETE(route_table);
 
 // Misc function prototypes
 void sample_route_table_setup(

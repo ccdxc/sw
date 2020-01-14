@@ -70,7 +70,7 @@ typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_
 typedef unordered_map<pds_obj_key_t, pds_vnic_spec_t *, pds_obj_key_hash> vnic_db_t;
 typedef unordered_map<pds_obj_key_t, pds_meter_spec_t *, pds_obj_key_hash> meter_db_t;
 typedef unordered_map<uint32_t, pds_tag_spec_t *> tag_db_t;
-typedef unordered_map<uint32_t, pds_route_table_spec_t *> route_table_db_t;
+typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
 typedef unordered_map<pds_obj_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_spec_t *, pds_obj_key_hash> nh_db_t;
@@ -252,10 +252,10 @@ public:
     bool del_from_tag_db(pds_tag_key_t *key);
     slab_ptr_t tag_slab(void) const { return cfg_db_->tag_slab(); }
 
-    pds_route_table_spec_t *find_in_route_table_db(pds_route_table_key_t *key);
-    sdk_ret_t add_to_route_table_db(pds_route_table_key_t *key,
+    pds_route_table_spec_t *find_in_route_table_db(pds_obj_key_t *key);
+    sdk_ret_t add_to_route_table_db(pds_obj_key_t *key,
                                     pds_route_table_spec_t *spec);
-    bool del_from_route_table_db(pds_route_table_key_t *key);
+    bool del_from_route_table_db(pds_obj_key_t *key);
     sdk_ret_t route_table_db_walk(route_table_walk_cb_t cb, void *ctxt);
     slab_ptr_t route_table_slab(void) const {
         return cfg_db_->route_table_slab();

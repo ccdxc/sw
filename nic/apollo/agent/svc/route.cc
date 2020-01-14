@@ -19,7 +19,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
     bool batched_internally = false;
     pds_batch_params_t batch_params;
     pds_route_table_spec_t *api_spec;
-    pds_route_table_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -49,7 +49,7 @@ RouteSvcImpl::RouteTableCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.id();
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_route_table_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
@@ -91,7 +91,7 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_route_table_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
     pds_route_table_spec_t *api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
@@ -122,7 +122,7 @@ RouteSvcImpl::RouteTableUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        key.id = request.id();
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_route_table_proto_to_api_spec(api_spec, request);
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
@@ -163,7 +163,7 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
     pds_batch_ctxt_t bctxt;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_route_table_key_t key = { 0 };
+    pds_obj_key_t key = { 0 };
 
     if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -185,7 +185,7 @@ RouteSvcImpl::RouteTableDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::route_table_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -214,7 +214,7 @@ RouteSvcImpl::RouteTableGet(ServerContext *context,
                             const pds::RouteTableGetRequest *proto_req,
                             pds::RouteTableGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_route_table_key_t key;
+    pds_obj_key_t key;
     pds_route_table_info_t info;
 
     if (proto_req == NULL) {
@@ -222,7 +222,7 @@ RouteSvcImpl::RouteTableGet(ServerContext *context,
         return Status::OK;
     }
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::route_table_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));

@@ -27,19 +27,20 @@ public:
 
        // Create VPC store entry
         int vrf_id = 1;
+        pds_obj_key_t route_table_key = pds_ms::msidx2pdsobjkey(vrf_id);
         vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
         vpc_spec.type = PDS_VPC_TYPE_TENANT;
         vpc_spec.v4_prefix.len = 24; 
         str2ipv4addr("23.1.10.1", &vpc_spec.v4_prefix.v4_addr);
         mac_str_to_addr((char*) "04:06:03:09:00:03", vpc_spec.vr_mac);
-        vpc_spec.v4_route_table.id = vrf_id;
+        vpc_spec.v4_route_table = route_table_key;
         vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         vpc_spec.fabric_encap.val.vnid  = 100;
         vpc_spec.tos = 5;
         auto state_ctxt = pds_ms::state_t::thread_context(); 
         state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
-        state_ctxt.state()->route_table_store().add_upd(vrf_id, new pds_ms::route_table_obj_t
-                                                       (vpc_spec.v4_route_table));
+        state_ctxt.state()->route_table_store().add_upd(route_table_key,
+                            new pds_ms::route_table_obj_t(route_table_key));
    }
    virtual ~route_input_params_t(void) {};
 };

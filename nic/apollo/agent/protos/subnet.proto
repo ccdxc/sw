@@ -38,9 +38,9 @@ message SubnetSpec {
   // the device carry this MAC as source MAC
   uint64           VirtualRouterMac      = 7 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv4 route table to be used
-  uint32           V4RouteTableId        = 8 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes            V4RouteTableId        = 8 [(gogoproto.moretags) = "meta:mandatory"];
   // identifier of the IPv6 route table to be used, if any
-  uint32           V6RouteTableId        = 9;
+  bytes            V6RouteTableId        = 9;
   // identifier of ingress IPv4 security policy to be enforced
   // NOTE: max. of 2 policies supported currently
   repeated bytes   IngV4SecurityPolicyId = 10;

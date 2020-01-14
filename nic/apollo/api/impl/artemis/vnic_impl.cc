@@ -135,7 +135,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     route_table *rtable;
     p4pd_error_t p4pd_ret;
     pds_obj_key_t policy_key;
-    pds_route_table_key_t route_table_key;
+    pds_obj_key_t route_table_key;
     vnic_info_rxdma_actiondata_t tx_rxdma_vnic_info_data = { 0 };
     vnic_info_rxdma_actiondata_t rx_rxdma_vnic_info_data = { 0 };
     vnic_info_txdma_actiondata_t txdma_vnic_info_data = { 0 };
@@ -217,7 +217,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
     }
 
     route_table_key = subnet->v6_route_table();
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
         rtable = route_table_db()->find(&route_table_key);
     } else {
         rtable = NULL;

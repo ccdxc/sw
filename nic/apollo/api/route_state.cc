@@ -20,7 +20,7 @@ namespace api {
 route_table_state::route_table_state() {
     route_table_ht_ = ht::factory(PDS_MAX_ROUTE_TABLE >> 2,
                                   route_table::route_table_key_func_get,
-                                  sizeof(pds_route_table_key_t));
+                                  sizeof(pds_obj_key_t));
     SDK_ASSERT(route_table_ht_ != NULL);
 
     route_table_slab_ = slab::factory("route-table", PDS_SLAB_ID_ROUTE_TABLE,
@@ -42,7 +42,7 @@ route_table_state::alloc(void) {
 sdk_ret_t
 route_table_state::insert(route_table *table) {
     return route_table_ht_->insert_with_key(&table->key_, table,
-                                             &table->ht_ctxt_);
+                                            &table->ht_ctxt_);
 }
 
 route_table *
@@ -65,7 +65,7 @@ route_table_state::free(route_table *rtable) {
 }
 
 route_table *
-route_table_state::find(pds_route_table_key_t *route_table_key) const {
+route_table_state::find(pds_obj_key_t *route_table_key) const {
     return (route_table *)(route_table_ht_->lookup(route_table_key));
 }
 

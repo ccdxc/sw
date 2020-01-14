@@ -37,11 +37,11 @@ message VPCSpec {
   // identifier of the IPv4 route table to be used and this route table is
   // inherited by the subnets under this VPC, if they are created with no route
   // table explicitly
-  uint32         V4RouteTableId   = 3;
+  bytes          V4RouteTableId   = 3;
   // identifier of the IPv6 route table to be used, if any and this route table
   // is inherited by the subnets under this VPC, if they are created with no
   // route table explicitly
-  uint32         V6RouteTableId   = 4;
+  bytes          V6RouteTableId   = 4;
   // Virtual Router (VR) MAC address, any packets originated or routed in this
   // VPC carry this MAC as source MAC
   uint64         VirtualRouterMac = 5;

@@ -129,7 +129,7 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         rtable->max_routes = route_table_impl_db()->v6_max_routes();
     }
     rtable->num_routes = spec->num_routes;
-    PDS_TRACE_DEBUG("Processing route table %u", spec->key.id);
+    PDS_TRACE_DEBUG("Processing route table %s", spec->key.str());
     for (uint32_t i = 0; i < rtable->num_routes; i++) {
         rtable->routes[i].prefix = spec->routes[i].prefix;
         rtable->routes[i].prio = 128 - spec->routes[i].prefix.len;
@@ -144,9 +144,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             vpc = vpc_db()->find(&spec->routes[i].vpc);
             if (vpc == NULL) {
                 PDS_TRACE_ERR("vpc %u not found while processing route %s in "
-                              "route table %u", spec->routes[i].vpc.id,
+                              "route table %s", spec->routes[i].vpc.id,
                               ippfx2str(&spec->routes[i].prefix),
-                              spec->key.id);
+                              spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
@@ -164,8 +164,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             tep = tep_db()->find(tep_key);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %u not found while processing route %s in "
-                              "route table %u", tep_key->id,
-                              ippfx2str(&spec->routes[i].prefix), spec->key.id);
+                              "route table %s", tep_key->id,
+                              ippfx2str(&spec->routes[i].prefix),
+                              spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
@@ -192,8 +193,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             break;
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "
-                          "route table %u", spec->routes[i].nh_type,
-                          ippfx2str(&spec->routes[i].prefix), spec->key.id);
+                          "route table %s", spec->routes[i].nh_type,
+                          ippfx2str(&spec->routes[i].prefix), spec->key.str());
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
             break;

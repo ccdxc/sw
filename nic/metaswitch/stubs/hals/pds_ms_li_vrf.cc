@@ -84,7 +84,7 @@ pds_vpc_spec_t li_vrf_t::make_pds_vpc_spec_(void) {
     return store_info_.vpc_obj->properties().vpc_spec;
 }
 
-pds_route_table_key_t li_vrf_t::make_pds_rttable_key_(void) {
+pds_obj_key_t li_vrf_t::make_pds_rttable_key_(void) {
     // Get the route-table id from the VPC store
     pds_vpc_spec_t vpc_spec = make_pds_vpc_spec_();
     return (vpc_spec.v4_route_table);
@@ -221,8 +221,8 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
             if (pds_status && l_op_create) {
                 // Create the route table store for this VRF
                 auto state_ctxt = pds_ms::state_t::thread_context();
-                state_ctxt.state()->route_table_store().add_upd(l_vrf_id,
-                   new route_table_obj_t((pds_route_table_key_t &)l_rttbl_key));
+                state_ctxt.state()->route_table_store().add_upd(l_rttbl_key,
+                   new route_table_obj_t(l_rttbl_key));
             }
             if (unlikely(ips_mock)) return; // UT
 
@@ -354,7 +354,7 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
         state_ctxt.state()->flush_outstanding_pds_batch();
 
         // Delete the VRF route table
-        state_ctxt.state()->route_table_store().erase(ips_info_.vrf_id);
+        state_ctxt.state()->route_table_store().erase(make_pds_rttable_key_());
         state_ctxt.state()->vpc_store().erase(ips_info_.vrf_id);
     } // End of state thread_context
       // Do Not access/modify global state after this

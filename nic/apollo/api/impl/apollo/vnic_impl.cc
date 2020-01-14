@@ -462,7 +462,7 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     vpc_entry                *vpc;
     pds_obj_key_t            subnet_key;
     subnet_entry             *subnet;
-    pds_route_table_key_t    route_table_key;
+    pds_obj_key_t            route_table_key;
     route_table              *v4_route_table, *v6_route_table;
     pds_obj_key_t            policy_key;
     policy                   *ing_v4_policy, *ing_v6_policy;
@@ -481,7 +481,7 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
     route_table_key = subnet->v4_route_table();
     v4_route_table = route_table_db()->find(&route_table_key);
     route_table_key = subnet->v6_route_table();
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
         v6_route_table =
             route_table_db()->find(&route_table_key);
     } else {
@@ -633,7 +633,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     subnet_entry *subnet;
     pds_obj_key_t subnet_key;
     pds_obj_key_t policy_key;
-    pds_route_table_key_t route_table_key;
+    pds_obj_key_t route_table_key;
     policy *ing_v4_policy, *ing_v6_policy;
     policy *egr_v4_policy, *egr_v6_policy;
     vnic_entry *vnic = (vnic_entry *)api_obj;
@@ -675,7 +675,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     v4_route_table = (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE,
                                                        &route_table_key);
     route_table_key = subnet->v6_route_table();
-    if (route_table_key.id != PDS_ROUTE_TABLE_ID_INVALID) {
+    if (route_table_key!= PDS_ROUTE_TABLE_ID_INVALID) {
         v6_route_table = (route_table *)api_base::find_obj(OBJ_ID_ROUTE_TABLE,
                                                            &route_table_key);
     } else {

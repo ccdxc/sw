@@ -109,12 +109,12 @@ class RouteObject(base.ConfigObjectBase):
         return super().IsFilterMatch(selectors.route.filters)
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.RouteTblId)
+        grpcmsg.Id.append(str.encode(str(self.RouteTblId)))
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.RouteTblId
+        spec.Id = str.encode(str(self.RouteTblId))
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for route in self.routes:
             rtspec = spec.Routes.add()
@@ -130,7 +130,7 @@ class RouteObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.RouteTblId:
+        if int(spec.Id) != self.RouteTblId:
             return False
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
@@ -157,6 +157,11 @@ class RouteObjectClient(base.ConfigClientBase):
         self.__v6iter = defaultdict(dict)
         self.__supported = __isObjSupported()
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        if yaml:
+            return utils.GetYamlSpecAttr(spec, 'id')
+        return int(spec.Id)
 
     def PdsctlRead(self):
         # pdsctl show not supported for route table

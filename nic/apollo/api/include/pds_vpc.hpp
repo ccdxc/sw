@@ -33,30 +33,30 @@ typedef enum pds_vpc_type_e {
 
 /// \brief VPC specification
 typedef struct pds_vpc_spec_s {
-    pds_obj_key_t         key;               ///< key
-    pds_vpc_type_t        type;              ///< type
-    ipv4_prefix_t         v4_prefix;         ///< IPv4 CIDR block
-    ip_prefix_t           v6_prefix;         ///< IPv6 CIDR block
+    pds_obj_key_t  key;               ///< key
+    pds_vpc_type_t type;              ///< type
+    ipv4_prefix_t  v4_prefix;         ///< IPv4 CIDR block
+    ip_prefix_t    v6_prefix;         ///< IPv6 CIDR block
     ///< traffic routed in this VPC will carry SMAC as vr_mac, if
     ///< there are no subnets configured (or else the vr_mac configured
     ///< in the subnet will stamped as SMAC in the routed packet),
     ///< additionally, only packets coming with DMAC as this vr_mac are routed
-    mac_addr_t            vr_mac;            ///< vnic's overlay MAC address
-    pds_encap_t           fabric_encap;      ///< fabric encap for this VPC
+    mac_addr_t     vr_mac;            ///< vnic's overlay MAC address
+    pds_encap_t    fabric_encap;      ///< fabric encap for this VPC
     ///< subnets of this VPC configured without route table
     ///< will inherit corresponding VPC's route table(s), if any
-    pds_route_table_key_t v4_route_table;    ///< IPv4 route table id
-    pds_route_table_key_t v6_route_table;    ///< IPv6 route table id
-    ip_prefix_t           nat46_prefix;      ///< IPv6 prefix/IP to be used to
-                                             ///< (S)NAT outbound traffic from
-                                             ///< this VPC that is destined to
-                                             ///< a IPv6-only service/network
+    pds_obj_key_t  v4_route_table;    ///< IPv4 route table id
+    pds_obj_key_t  v6_route_table;    ///< IPv6 route table id
+    ip_prefix_t    nat46_prefix;      ///< IPv6 prefix/IP to be used to
+                                      ///< (S)NAT outbound traffic from
+                                      ///< this VPC that is destined to
+                                      ///< a IPv6-only service/network
     /// type of service to be used in the outer header in encapped pkts when
     /// vpc's vnid is used in the packet
     /// NOTE: this tos value is not inherited by subnets inside this vpc (they
     ///       need to be configured explicitly with either same tos value as
     ///       their vpc or a different value
-    uint8_t tos;
+    uint8_t        tos;
 } __PACK__ pds_vpc_spec_t;
 
 /// \brief VPC status

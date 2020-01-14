@@ -114,7 +114,7 @@ route_table_impl::reserve_resources(api_base *api_obj,
                                                         false);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to reserve %u entries in DNAT table for "
-                          "route table %u, err %u", spec->key.id, ret);
+                          "route table %s, err %u", spec->key.str(), ret);
             return ret;
         }
     }
@@ -247,8 +247,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                                NULL, NULL, &dnat_data);
             if (p4pd_ret != P4PD_SUCCESS) {
                 PDS_TRACE_ERR("Failed to program DNAT table at %u for route "
-                              "%s in route table %u", dnat_base_idx_ + dnat_idx,
-                              ippfx2str(&route_spec->prefix), spec->key.id);
+                              "%s in route table %s", dnat_base_idx_ + dnat_idx,
+                              ippfx2str(&route_spec->prefix), spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
@@ -260,8 +260,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         switch (route_spec->nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
             rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> blackhole "
-                            "nh id %u, ", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
+                            "nh id %u, ", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);
             break;
@@ -271,16 +271,17 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             tep = tep_db()->find(&spec->routes[i].tep);
             if (tep == NULL) {
                 PDS_TRACE_ERR("TEP %u not found while processing route %s in "
-                              "route table %u", spec->routes[i].tep.id,
-                              ippfx2str(&spec->routes[i].prefix), spec->key.id);
+                              "route table %s", spec->routes[i].tep.id,
+                              ippfx2str(&spec->routes[i].prefix),
+                              spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_TUNNEL,
                                         ((tep_impl *)(tep->impl()))->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> TEP %s, "
-                            "nh id 0x%x", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route table %s, route %s -> TEP %s, "
+                            "nh id 0x%x", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             tep->key2str().c_str(), nh_val);
             break;
@@ -289,18 +290,18 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             nh_group = nexthop_group_db()->find(&spec->routes[i].nh_group);
             if (nh_group == NULL) {
                 PDS_TRACE_ERR("nexthop group %u not found while processing "
-                              "route %s in route table %u",
+                              "route %s in route table %s",
                               spec->routes[i].nh_group.id,
                               ippfx2str(&rtable->routes[i].prefix),
-                              spec->key.id);
+                              spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_ECMP,
                 ((nexthop_group_impl *)nh_group->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> "
-                            "nh group %s, nh id 0x%x", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route table %s, route %s -> "
+                            "nh group %s, nh id 0x%x", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             nh_group->key2str().c_str(), nh_val);
             break;
@@ -309,16 +310,16 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             vpc = vpc_db()->find(&spec->routes[i].vpc);
             if (vpc == NULL) {
                 PDS_TRACE_ERR("vpc %u not found while processing route %s in "
-                              "route table %u", spec->routes[i].vpc.id,
+                              "route table %s", spec->routes[i].vpc.id,
                               ippfx2str(&spec->routes[i].prefix),
-                              spec->key.id);
+                              spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_VPC, vpc->hw_id());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vpc %s, "
-                            "nh id 0x%x, ", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route table %s, route %s -> vpc %s, "
+                            "nh id 0x%x, ", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             vpc->key2str().c_str(), nh_val);
             break;
@@ -327,24 +328,24 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             vnic = vnic_db()->find(&spec->routes[i].vnic);
             if (vnic == NULL) {
                  PDS_TRACE_ERR("vnic %u not found while processing route %s in "
-                               "route table %u", spec->routes[i].vnic.id,
+                               "route table %s", spec->routes[i].vnic.id,
                                ippfx2str(&spec->routes[i].prefix),
-                               spec->key.id);
+                               spec->key.str());
                  break;
             }
             PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
                                         ((vnic_impl *)vnic->impl())->nh_idx());
             rtable->routes[i].nhid = nh_val;
-            PDS_TRACE_DEBUG("Processing route table %u, route %s -> vnic %s, "
-                            "nh id 0x%x, ", spec->key.id,
+            PDS_TRACE_DEBUG("Processing route table %s, route %s -> vnic %s, "
+                            "nh id 0x%x, ", spec->key.str(),
                             ippfx2str(&rtable->routes[i].prefix),
                             vnic->key2str().c_str(), nh_val);
             break;
 
         default:
             PDS_TRACE_ERR("Unsupported nh type %u while processing route %s in "
-                          "route table %u", spec->routes[i].nh_type,
-                          ippfx2str(&spec->routes[i].prefix), spec->key.id);
+                          "route table %s", spec->routes[i].nh_type,
+                          ippfx2str(&spec->routes[i].prefix), spec->key.str());
             ret = SDK_RET_INVALID_ARG;
             goto cleanup;
             break;

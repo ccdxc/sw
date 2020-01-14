@@ -56,12 +56,6 @@ public:
 
 // Dump prototypes
 inline std::ostream&
-operator<<(std::ostream& os, const pds_obj_key_t *key) {
-    os << " id: " << std::string(key->str());
-    return os;
-}
-
-inline std::ostream&
 operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
     os << &spec->key
        << " type: " << spec->type;

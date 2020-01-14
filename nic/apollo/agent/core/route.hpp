@@ -17,16 +17,14 @@ typedef struct route_table_db_cb_ctxt_s {
     void         *ctxt;
 } route_table_db_cb_ctxt_t;
 
-sdk_ret_t route_table_create(pds_route_table_key_t *key,
+sdk_ret_t route_table_create(pds_obj_key_t *key,
                              pds_route_table_spec_t *spec,
                              pds_batch_ctxt_t bctxt);
-sdk_ret_t route_table_update(pds_route_table_key_t *key,
+sdk_ret_t route_table_update(pds_obj_key_t *key,
                              pds_route_table_spec_t *spec,
                              pds_batch_ctxt_t bctxt);
-sdk_ret_t route_table_delete(pds_route_table_key_t *key,
-                             pds_batch_ctxt_t bctxt);
-sdk_ret_t route_table_get(pds_route_table_key_t *key,
-                          pds_route_table_info_t *info);
+sdk_ret_t route_table_delete(pds_obj_key_t *key, pds_batch_ctxt_t bctxt);
+sdk_ret_t route_table_get(pds_obj_key_t *key, pds_route_table_info_t *info);
 sdk_ret_t route_table_get_all(route_table_get_cb_t route_table_get_cb,
                               void *ctxt);
 

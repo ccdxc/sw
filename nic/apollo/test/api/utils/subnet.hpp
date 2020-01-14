@@ -44,17 +44,17 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_subnet_spec_t *spec) {
-    os  << " id: " << spec->key.id
-        << " vpc: " << spec->vpc.id
+    os << &spec->key
+        << " vpc: " << spec->vpc.str()
         << " cidr_str: " << ipv4pfx2str(&spec->v4_prefix)
         << " vr_ip: " << ipv4addr2str(spec->v4_vr_ip)
         << " vr_mac: " << macaddr2str(spec->vr_mac)
-        << " v4_rt: " << spec->v4_route_table.id
-        << " v6_rt: " << spec->v6_route_table.id
-        << " v4_in_pol: " << spec->ing_v4_policy[0].id
-        << " v6_in_pol: " << spec->ing_v6_policy[0].id
-        << " v4_eg_pol: " << spec->egr_v4_policy[0].id
-        << " v6_eg_pol: " << spec->egr_v6_policy[0].id
+        << " v4_rt: " << spec->v4_route_table.str()
+        << " v6_rt: " << spec->v6_route_table.str()
+        << " v4_in_pol: " << spec->ing_v4_policy[0].str()
+        << " v6_in_pol: " << spec->ing_v6_policy[0].str()
+        << " v4_eg_pol: " << spec->egr_v4_policy[0].str()
+        << " v6_eg_pol: " << spec->egr_v6_policy[0].str()
         << " fabric encap: " << pds_encap2str(&spec->fabric_encap);
     return os;
 }
@@ -67,7 +67,7 @@ operator<<(std::ostream& os, const pds_subnet_info_t *obj) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const subnet_feeder& obj) {
-    os << "Subnet feeder =>" << &obj.spec;
+    os << "Subnet feeder =>" << &obj.spec << " ";
     return os;
 }
 

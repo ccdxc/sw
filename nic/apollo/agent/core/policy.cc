@@ -23,24 +23,25 @@ policy_create (pds_obj_key_t *key, pds_policy_spec_t *spec,
 
     if (agent_state::state()->find_in_policy_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create policy {}, policy exists already",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = policy_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create policy {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to create policy {}, err {}",
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_policy_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create policy {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_policy_db(key, spec)) !=
             SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add policy {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -61,27 +62,28 @@ policy_update (pds_obj_key_t *key, pds_policy_spec_t *spec,
 
     if (agent_state::state()->find_in_policy_db(key) == NULL) {
         PDS_TRACE_ERR("Failed to update policy {}, policy doesn't exist",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if ((ret = policy_update_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update policy {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to update policy {}, err {}",
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_policy_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update policy {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_policy_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete policy {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete policy {} from db", key->str());
     }
     if ((ret = agent_state::state()->add_to_policy_db(key, spec)) !=
             SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add policy {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -94,17 +96,19 @@ policy_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
     pds_policy_spec_t *spec;
 
     if ((spec = agent_state::state()->find_in_policy_db(key)) == NULL) {
-        PDS_TRACE_ERR("Failed to delete policy {}, policy not found", key->id);
+        PDS_TRACE_ERR("Failed to delete policy {}, policy not found",
+                      key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_policy_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete policy {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete policy {}, err {}",
+                          key->str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_policy_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete policy {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete policy {} from db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -119,7 +123,7 @@ policy_get (pds_obj_key_t *key, pds_policy_info_t *info)
     memset(info, 0, sizeof(pds_policy_info_t));
     spec = agent_state::state()->find_in_policy_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find policy {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find policy {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

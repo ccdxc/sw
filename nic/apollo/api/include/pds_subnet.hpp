@@ -33,8 +33,8 @@ typedef struct pds_subnet_spec_s {
     ipv4_addr_t v4_vr_ip;                    ///< IPv4 virtual router IP
     ip_addr_t v6_vr_ip;                      ///< IPv6 virtual router IP
     mac_addr_t vr_mac;                       ///< virtual router mac
-    pds_route_table_key_t v4_route_table;    ///< IPv4 Route table id
-    pds_route_table_key_t v6_route_table;    ///< IPv6 Route table id
+    pds_obj_key_t v4_route_table;    ///< IPv4 Route table id
+    pds_obj_key_t v6_route_table;    ///< IPv6 Route table id
     ///< ingress IPv4 policy table(s)
     uint8_t num_ing_v4_policy;
     pds_obj_key_t ing_v4_policy[PDS_MAX_SUBNET_POLICY];

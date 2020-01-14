@@ -51,7 +51,7 @@ union api_params_u {
     pds_vnic_spec_t              vnic_spec;
     pds_mapping_key_t            mapping_key;
     pds_mapping_spec_t           mapping_spec;
-    pds_route_table_key_t        route_table_key;
+    pds_obj_key_t                route_table_key;
     pds_route_table_spec_t       route_table_spec;
     pds_obj_key_t                policy_key;
     pds_policy_spec_t            policy_spec;

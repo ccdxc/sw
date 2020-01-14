@@ -77,7 +77,7 @@ message Route {
 //       supported)
 message RouteTableSpec {
   // unique route table id (this id is not scoped under VPC or subnet)
-  uint32         Id        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes          Id        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
   types.IPAF     Af        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // enable or disable Priority-Based-Routing (PBR) for the route table
@@ -118,7 +118,7 @@ message RouteTableResponse {
 
 // route table get request
 message RouteTableGetRequest {
-  repeated uint32 Id = 1; // batched request
+  repeated bytes Id = 1; // batched request
 }
 
 // route table get response
@@ -132,7 +132,7 @@ message RouteTableDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // route table delete response

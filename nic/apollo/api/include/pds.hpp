@@ -22,8 +22,6 @@
 
 #define PDS_EPOCH_INVALID             0x0    ///< invalid epoch
 #define PDS_BATCH_CTXT_INVALID        0x0    ///< invalid batch context
-#define PDS_ROUTE_TABLE_ID_INVALID    0x0    ///< invalid route table id
-#define PDS_POLICY_ID_INVALID         0x0    ///< invalid policy id
 #define PDS_PORT_INVALID              0xFF   ///< invalid port#
 
 #define PDS_MAX_HOST_NAME_LEN         128
@@ -87,7 +85,6 @@ typedef uint16_t    pds_vlan_id_t;             ///< VLAN tag value
 typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
 typedef uint32_t    pds_mapping_id_t;          ///< mapping table index
-typedef uint32_t    pds_route_table_id_t;      ///< route table index
 typedef uint16_t    pds_lif_key_t;             ///< lif key id
 typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_tag_id_t;              ///< tag table index
@@ -200,14 +197,6 @@ typedef struct pds_mapping_key_s {
         };
     };
 } __PACK__ pds_mapping_key_t;
-
-/// \brief    route table key
-/// \remark
-///  - Route table id is not scoped under vpc, it is unique on
-//     the device (across VPCs and IPv4/IPv6 route tables)
-typedef struct pds_route_table_key_s {
-    pds_route_table_id_t    id;    ///< route table id
-} __PACK__ pds_route_table_key_t;
 
 /// \brief    mirror session key
 typedef struct pds_mirror_session_key_s {

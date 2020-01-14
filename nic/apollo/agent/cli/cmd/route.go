@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	routeID uint32
+	routeID string
 )
 
 var routeShowCmd = &cobra.Command{
@@ -31,7 +31,7 @@ var routeShowCmd = &cobra.Command{
 func init() {
 	//	showCmd.AddCommand(routeShowCmd)
 	routeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	routeShowCmd.Flags().Uint32VarP(&routeID, "route-id", "i", 0, "Specify Route ID")
+	routeShowCmd.Flags().StringVarP(&routeID, "route-id", "i", "", "Specify Route ID")
 }
 
 func routeShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -54,12 +54,12 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Route
 		req = &pds.RouteTableGetRequest{
-			Id: []uint32{routeID},
+			Id: [][]byte{[]byte(routeID)},
 		}
 	} else {
 		// Get all Routes
 		req = &pds.RouteTableGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -92,9 +92,9 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 90)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-6s%-20s%-12s%-16s\n",
+	fmt.Printf("%-36s%-6s%-20s%-12s%-16s\n",
 		"ID", "IPAF", "Prefix", "NextHopType", "NextHopValue")
 	fmt.Println(hdrLine)
 }
@@ -104,7 +104,7 @@ func printRoute(rt *pds.RouteTable) {
 	routes := spec.GetRoutes()
 	first := true
 
-	fmt.Printf("%-6d%-6s", spec.GetId(),
+	fmt.Printf("%-36s%-6s", string(spec.GetId()),
 		strings.Replace(spec.GetAf().String(), "IP_AF_", "", -1))
 
 	for _, route := range routes {

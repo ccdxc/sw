@@ -50,7 +50,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_policy_spec_t *spec) {
-    os << " id: " << spec->key.id
+    os << &spec->key
        << " dir: " << spec->direction
        << " af: " << (uint32_t)spec->af
        << " num rules: " << spec->num_rules;

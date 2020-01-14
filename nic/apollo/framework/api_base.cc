@@ -423,7 +423,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_ROUTE_TABLE:
-        api_obj = route_table_db()->find((pds_route_table_key_t *)key);
+        api_obj = route_table_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_POLICY:

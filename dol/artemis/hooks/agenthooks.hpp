@@ -580,20 +580,21 @@ public:
 
     void add_route_table(pds_route_table_spec_t *route_spec) {
         uint32_t rt_dbid = route_spec->af == IP_AF_IPV4;
+        uint32_t route_table_id = test::pdsobjkey2int(route_spec->key);
         uint32_t tblid = 0;
 
         if (rt_dbid == 1) {
             if (!v4_route_table_sid)
-                v4_route_table_sid = route_spec->key.id;
+                v4_route_table_sid = route_table_id;
             else
-                tblid = route_spec->key.id - v4_route_table_sid;
+                tblid = route_table_id - v4_route_table_sid;
         } else if(rt_dbid == 0) {
             if (!v6_route_table_sid)
-                v6_route_table_sid = route_spec->key.id;
+                v6_route_table_sid = route_table_id;
             else
-                 tblid = route_spec->key.id - v6_route_table_sid;
+                tblid = route_table_id - v6_route_table_sid;
         }
-        DBG_PRINT("Route tblid %u:%u type %u\n", route_spec->key.id, tblid, rt_dbid);
+        DBG_PRINT("Route tblid %u:%u type %u\n", route_table_id, tblid, rt_dbid);
         assert(tblid < DOL_MAX_ROUTE_TABLE);
         assert(route_spec->num_routes < DOL_MAX_ROUTE_PER_TABLE);
         for (uint32_t i = 0; i < route_spec->num_routes; i++) {
@@ -606,14 +607,15 @@ public:
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
         uint32_t subnet_id = test::pdsobjkey2int(subnet_spec->key);
         uint32_t vpc_id = test::pdsobjkey2int(subnet_spec->vpc);
+        uint32_t v4route_table_id = test::pdsobjkey2int(subnet_spec->v4_route_table);
+        uint32_t v6route_table_id = test::pdsobjkey2int(subnet_spec->v6_route_table);
 
         assert(subnet_id < DOL_MAX_SUBNET);
         assert(vpc_id < DOL_MAX_VPC);
         DBG_PRINT("Subnet tblid %u, rtid %u:%u\n", subnet_id,
-                  subnet_spec->v4_route_table.id,
-                  subnet_spec->v6_route_table.id);
-        subnetdb[vpc_id][subnet_id].v4_routetbl_id = subnet_spec->v4_route_table.id + 1;
-        subnetdb[vpc_id][subnet_id].v6_routetbl_id = subnet_spec->v6_route_table.id + 1;
+                  v4route_table_id, v6route_table_id);
+        subnetdb[vpc_id][subnet_id].v4_routetbl_id = v4route_table_id + 1;
+        subnetdb[vpc_id][subnet_id].v6_routetbl_id = v6route_table_id + 1;
     }
 
     void add_tep(pds_tep_spec_t *tep_spec) {

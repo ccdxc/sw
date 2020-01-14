@@ -226,8 +226,8 @@ class VpcObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = str.encode(str(self.VPCId))
         spec.Type = self.Type
-        spec.V4RouteTableId = self.V4RouteTableId
-        spec.V6RouteTableId = self.V6RouteTableId
+        spec.V4RouteTableId = str.encode(str(self.V4RouteTableId))
+        spec.V6RouteTableId = str.encode(str(self.V6RouteTableId))
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:

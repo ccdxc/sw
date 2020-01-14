@@ -40,7 +40,7 @@ bool hals_route_t::parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) {
     return true;
 }
 
-pds_route_table_key_t hals_route_t::make_pds_rttable_key_(void) {
+pds_obj_key_t hals_route_t::make_pds_rttable_key_(void) {
     auto state = pds_ms::state_t::thread_context().state();
     auto vpc_obj = state->vpc_store().get(ips_info_.vrf_id);
     if (unlikely(vpc_obj == nullptr)) {
@@ -61,7 +61,7 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable) {
     route_.nh_group = msidx2pdsobjkey(ips_info_.overlay_ecmp_id);
     { // Enter thread-safe context to access/modify global state
         auto state = pds_ms::state_t::thread_context().state();
-        auto rttbl_store = state->route_table_store().get(ips_info_.vrf_id);
+        auto rttbl_store = state->route_table_store().get(rttable.key);
         if (unlikely(rttbl_store == nullptr)) {
             throw Error("Did not find route table store for VRF "
                                                     + ips_info_.vrf_id);
@@ -175,7 +175,7 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
                 auto state = pds_ms::state_t::thread_context().state();
                 auto rttbl_store =
                     state->route_table_store().
-                                get(((pds_route_table_key_t &)l_rttbl_key_).id);
+                                get(l_rttbl_key_);
                 if (l_op_create_) {
                     // Add failed. Delete the new route from the store
                     rttbl_store->del_route((ip_prefix_t &)l_ips_info_.pfx);

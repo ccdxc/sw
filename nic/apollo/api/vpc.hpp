@@ -189,11 +189,11 @@ public:
 
     /// \brief return the IPv4 route table of this VPC
     /// \return  IPv4 route table key of this VPC
-    pds_route_table_key_t v4_route_table(void) const { return v4_route_table_; }
+    pds_obj_key_t v4_route_table(void) const { return v4_route_table_; }
 
     /// \brief return the IPv6 route table of this VPC
     /// \return  IPv6 route table key of this VPC
-    pds_route_table_key_t v6_route_table(void) const { return v6_route_table_; }
+    pds_obj_key_t v6_route_table(void) const { return v6_route_table_; }
 
     /// \brief    return true if NAT46 prefix configured is valid
     /// \return    true or false based on whether NAT46 prefix is valid or not
@@ -231,8 +231,8 @@ private:
     pds_obj_key_t key_;                       ///< VPC key
     pds_vpc_type_t type_;                     ///< VPC type
     pds_encap_t fabric_encap_;                ///< fabric encap information
-    pds_route_table_key_t v4_route_table_;    ///< IPv4 route table id
-    pds_route_table_key_t v6_route_table_;    ///< IPv6 route table id
+    pds_obj_key_t v4_route_table_;    ///< IPv4 route table id
+    pds_obj_key_t v6_route_table_;    ///< IPv6 route table id
     bool nat46_pfx_valid_;                    ///< TRUE if NAT46 prefix is valid
     ip_prefix_t nat46_pfx_;                   ///< IPv6 prefix to be used to
                                               ///< (S)NAT outbound traffic

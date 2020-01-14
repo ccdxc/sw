@@ -30,8 +30,8 @@ typedef struct subnet_upd_ctxt_s {
 } __PACK__ subnet_upd_ctxt_t;
 
 subnet_entry::subnet_entry() {
-    v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
-    v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
+    v4_route_table_.reset();
+    v6_route_table_.reset();
     num_ing_v4_policy_ = 0;
     num_ing_v6_policy_ = 0;
     num_egr_v4_policy_ = 0;
@@ -160,21 +160,21 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
 
     PDS_TRACE_VERBOSE(
         "Initializing subnet (vpc %s, subnet %s), v4/v6 pfx %s/%s,\n"
-        "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
+        "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %s/%s\n"
         "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
         "vnid %u", spec->vpc.str(), spec->key.str(),
         ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
         ipv4addr2str(spec->v4_vr_ip), ipaddr2str(&spec->v6_vr_ip),
-        macaddr2str(spec->vr_mac), spec->v4_route_table.id,
-        spec->v6_route_table.id, spec->num_ing_v4_policy,
+        macaddr2str(spec->vr_mac), spec->v4_route_table.str(),
+        spec->v6_route_table.str(), spec->num_ing_v4_policy,
         spec->num_ing_v6_policy, spec->num_egr_v4_policy,
         spec->num_egr_v6_policy, spec->fabric_encap.val.vnid);
 
     key_ = spec->key;
     vpc_ = spec->vpc;
     fabric_encap_ = spec->fabric_encap;
-    v4_route_table_.id = spec->v4_route_table.id;
-    v6_route_table_.id = spec->v6_route_table.id;
+    v4_route_table_ = spec->v4_route_table;
+    v6_route_table_ = spec->v6_route_table;
     num_ing_v4_policy_ = spec->num_ing_v4_policy;
     for (uint8_t i = 0; i < num_ing_v4_policy_; i++) {
         ing_v4_policy_[i] = spec->ing_v4_policy[i];
@@ -252,11 +252,11 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"fabric encap\" "
                       "from %u to %u on subnet %s",
                       pds_encap2str(&fabric_encap_),
-                      pds_encap2str(&spec->fabric_encap));
+                      pds_encap2str(&spec->fabric_encap), key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
-    if ((v4_route_table_.id != spec->v4_route_table.id) ||
-        (v6_route_table_.id !=  spec->v6_route_table.id)) {
+    if ((v4_route_table_ != spec->v4_route_table) ||
+        (v6_route_table_ !=  spec->v6_route_table)) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_ROUTE_TABLE;
     }
     if ((num_ing_v4_policy_ != spec->num_ing_v4_policy)          ||
@@ -276,7 +276,8 @@ subnet_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (host_ifindex_ != spec->host_ifindex) {
         obj_ctxt->upd_bmap |= PDS_SUBNET_UPD_HOST_IFINDEX;
     }
-    PDS_TRACE_DEBUG("subnet %u upd bmap 0x%lx", obj_ctxt->upd_bmap);
+    PDS_TRACE_DEBUG("subnet %s upd bmap 0x%lx",
+                    key2str().c_str(), obj_ctxt->upd_bmap);
     return SDK_RET_OK;
 }
 
@@ -286,7 +287,7 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     subnet_upd_ctxt_t *upd_ctxt = (subnet_upd_ctxt_t *)ctxt;
 
     vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
-    if (vnic->subnet().id == upd_ctxt->subnet->key().id) {
+    if (vnic->subnet() == upd_ctxt->subnet->key()) {
         api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                             (api_base *)api_obj, upd_ctxt->upd_bmap);
     }

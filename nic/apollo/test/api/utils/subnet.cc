@@ -27,9 +27,9 @@ subnet_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc_key,
     spec.v4_prefix.len = pfx.len;
     spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
     mac_str_to_addr((char *)vrmac_str.c_str(), spec.vr_mac);
-    spec.v4_route_table.id = pdsobjkey2int(key);
+    spec.v4_route_table = int2pdsobjkey(pdsobjkey2int(key));
     // Unique id, 1-1024 reserved
-    spec.v6_route_table.id = pdsobjkey2int(key) + 1024;
+    spec.v6_route_table = int2pdsobjkey(pdsobjkey2int(key) + 1024);
                                             // for IPv4 rt table
     // TODO: fix for multiple policies
     spec.num_ing_v4_policy = 1;
@@ -55,8 +55,8 @@ void
 subnet_feeder::iter_next(int width) {
     spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
     spec.v4_prefix.v4_addr += (1 << spec.v4_prefix.len);
-    spec.v4_route_table.id += width;
-    spec.v6_route_table.id += width;
+    spec.v4_route_table = int2pdsobjkey(pdsobjkey2int(spec.v4_route_table) + width);
+    spec.v6_route_table = int2pdsobjkey(pdsobjkey2int(spec.v6_route_table) + width);
     spec.fabric_encap.val.vnid += width;
 
     cur_iter_pos++;
@@ -85,11 +85,11 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
         return false;
     }
 
-    if (spec->v4_route_table.id != this->spec.v4_route_table.id) {
+    if (spec->v4_route_table != this->spec.v4_route_table) {
         return false;
     }
 
-    if (spec->v6_route_table.id != this->spec.v6_route_table.id) {
+    if (spec->v6_route_table != this->spec.v6_route_table) {
         return false;
     }
 

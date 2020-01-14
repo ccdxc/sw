@@ -27,8 +27,8 @@ typedef struct vpc_upd_ctxt_s {
 
 vpc_entry::vpc_entry() {
     type_ = PDS_VPC_TYPE_NONE;
-    v4_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
-    v6_route_table_.id = PDS_ROUTE_TABLE_ID_INVALID;
+    v4_route_table_.reset();
+    v6_route_table_.reset();
     ht_ctxt_.reset();
     hw_id_ = 0xFFFF;
     impl_ = NULL;
@@ -105,8 +105,8 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
     memcpy(&key_, &spec->key, sizeof(key_));
     type_ = spec->type;
     fabric_encap_ = spec->fabric_encap;
-    v4_route_table_.id = spec->v4_route_table.id;
-    v6_route_table_.id = spec->v6_route_table.id;
+    v4_route_table_ = spec->v4_route_table;
+    v6_route_table_ = spec->v6_route_table;
     if (ip_addr_is_zero(&spec->nat46_prefix.addr)) {
         nat46_pfx_valid_ = false;
     } else {
@@ -202,8 +202,8 @@ vpc_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       pds_encap2str(&spec->fabric_encap), key2str().c_str());
         return SDK_RET_INVALID_ARG;
     }
-    if ((v4_route_table_.id != spec->v4_route_table.id) ||
-        (v6_route_table_.id != spec->v6_route_table.id)) {
+    if ((v4_route_table_ != spec->v4_route_table) ||
+        (v6_route_table_ != spec->v6_route_table)) {
         obj_ctxt->upd_bmap |= PDS_VPC_UPD_ROUTE_TABLE;
     }
     // may be either tos or vrmac has changed
@@ -225,8 +225,8 @@ subnet_upd_walk_cb_ (void *api_obj, void *ctxt) {
 
     subnet = (subnet_entry *)api_framework_obj((api_base *)api_obj);
     if (subnet->vpc() == upd_ctxt->vpc->key()) {
-        if ((subnet->v4_route_table().id == PDS_ROUTE_TABLE_ID_INVALID) ||
-            (subnet->v6_route_table().id == PDS_ROUTE_TABLE_ID_INVALID)) {
+        if ((subnet->v4_route_table() == PDS_ROUTE_TABLE_ID_INVALID) ||
+            (subnet->v6_route_table() == PDS_ROUTE_TABLE_ID_INVALID)) {
             // this subnet inherited the vpc's routing table(s)
             api_obj_add_to_deps(OBJ_ID_SUBNET, upd_ctxt->obj_ctxt->api_op,
                                 (api_base *)api_obj, upd_ctxt->upd_bmap);

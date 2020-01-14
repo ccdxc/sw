@@ -30,9 +30,10 @@ namespace pds_ms {
 class route_table_obj_t : public slab_obj_t<route_table_obj_t>,
                           public base_obj_t {
 public:
-    route_table_obj_t(pds_route_table_key_t &key) : key_(key)
-                              {routes_.reserve(PDS_MS_MIN_NUM_ROUTES);}
-    pds_route_table_id_t key(void) const {return key_.id;}
+    route_table_obj_t(pds_obj_key_t key) : key_(key) {
+        routes_.reserve(PDS_MS_MIN_NUM_ROUTES);
+    }
+    pds_obj_key_t key(void) const {return key_;}
     void update_store(state_t* state, bool op_delete) override;
     void print_debug_str(void) override {};
     void add_upd_route(pds_route_t &route);
@@ -47,12 +48,12 @@ private:
     // has to be contiguous in the route_table_spec when calling the PDS
     // HAL APIs
     std::vector<pds_route_t> routes_;
-    pds_route_table_key_t key_;
+    pds_obj_key_t key_;
     // Store the index of the route in the vector
     std::unordered_map<ip_prefix_t, int, ip_prefix_hash> route_index_;
 };
 
-class route_table_store_t : public obj_store_t <pds_route_table_id_t, route_table_obj_t> {
+class route_table_store_t : public obj_store_t <pds_obj_key_t, route_table_obj_t, pds_obj_key_hash> {
 };
 
 void route_table_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
