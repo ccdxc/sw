@@ -67,6 +67,7 @@ sdk_ret_t
 if_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     uint32_t idx;
     sdk_ret_t ret;
+    if_entry *intf = (if_entry *)api_obj;
     pds_if_spec_t *spec = &obj_ctxt->api_params->if_spec;
 
     if (spec->type != PDS_IF_TYPE_UPLINK) {
@@ -82,8 +83,9 @@ if_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         api_obj->set_rsvd_rsc();
         ret = if_impl_db()->lif_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to alloc lif hw id for uplink 0x%x, err %u",
-                          spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to alloc lif hw id for uplink if %s, "
+                          "ifindex 0x%x, err %u", spec->key.str(),
+                          intf->ifindex(), ret);
             return ret;
         }
         hw_id_ = idx;
@@ -170,13 +172,13 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
         // program the lif id in the TM
         tm_port =
             g_pds_state.catalogue()->logical_port_to_tm_port(spec->uplink_info.port_num);
-        PDS_TRACE_DEBUG("Creating uplink if 0x%x, port %u, hw_id_ %u, "
-                        "tm_port %u", spec->key.id, spec->uplink_info.port_num,
-                        hw_id_, tm_port);
+        PDS_TRACE_DEBUG("Creating uplink if %s, port %u, hw_id_ %u, "
+                        "tm_port %u", spec->key.str(),
+                        spec->uplink_info.port_num, hw_id_, tm_port);
         ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, hw_id_);
         if (ret != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to program uplink 0x%s's lif %u in TM "
-                          "register", spec->key.id, hw_id_);
+            PDS_TRACE_ERR("Failed to program uplink %s's lif %u in TM "
+                          "register", spec->key.str(), hw_id_);
         }
         // program LIF table
         lif_data.action_id = LIF_LIF_INFO_ID;

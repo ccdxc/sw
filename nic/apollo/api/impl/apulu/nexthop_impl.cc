@@ -131,15 +131,15 @@ nexthop_impl::activate_create_update_(pds_epoch_t epoch, nexthop *nh,
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
                                            NULL, NULL, &nh_data);
         if (p4pd_ret != P4PD_SUCCESS) {
-            PDS_TRACE_ERR("Failed to program nexthop %u at idx %u",
-                          spec->key.id, hw_id_);
+            PDS_TRACE_ERR("Failed to program nexthop %s at idx %u",
+                          spec->key.str(), hw_id_);
             return sdk::SDK_RET_HW_PROGRAM_ERR;
         }
         break;
 
     default:
-        PDS_TRACE_ERR("Failed to activate nexthop %u, unknown nexthop type %u",
-                      spec->key.id, spec->type);
+        PDS_TRACE_ERR("Failed to activate nexthop %s, unknown nexthop type %u",
+                      spec->key.str(), spec->type);
         return SDK_RET_INVALID_ARG;
         break;
     }
@@ -159,8 +159,8 @@ nexthop_impl::activate_delete_(pds_epoch_t epoch, nexthop *nh) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, hw_id_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program nexthop %u at idx %u",
-                      key.id, hw_id_);
+        PDS_TRACE_ERR("Failed to program nexthop %s at idx %u",
+                      key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
