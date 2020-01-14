@@ -63,7 +63,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // allocate hw id for this vnic
     if (vnic_impl_db()->vnic_idxr()->alloc(&idx) !=
             sdk::lib::indexer::SUCCESS) {
-        PDS_TRACE_ERR("Failed to allocate hw id for vnic %u", spec->key.id);
+        PDS_TRACE_ERR("Failed to allocate hw id for vnic %s", spec->key.str());
         return sdk::SDK_RET_NO_RESOURCE;
     }
     hw_id_ = idx;
@@ -91,7 +91,7 @@ vnic_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     ret = vnic_impl_db()->vnic_mapping_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in VNIC_MAPPING "
-                      "table for vnic %u, err %u", spec->key.id, ret);
+                      "table for vnic %s, err %u", spec->key.str(), ret);
         return ret;
     }
     vnic_mapping_handle_ = api_params.handle;
@@ -289,8 +289,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     // get the subnet of the vnic
     subnet = subnet_db()->find(&spec->subnet);
     if (unlikely(subnet == NULL)) {
-        PDS_TRACE_ERR("Unable to find subnet %u for vnic %u",
-                      spec->subnet.id, spec->key.id);
+        PDS_TRACE_ERR("Unable to find subnet %s for vnic %s",
+                      spec->subnet.str(), spec->key.str());
         return sdk::SDK_RET_INVALID_ARG;
     }
 

@@ -66,7 +66,7 @@ vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     ret = tep_impl_db()->tep1_rx_tbl()->reserve(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in TEP1_RX "
-                      "table for vpc %u, err %u", spec->key.id, ret);
+                      "table for vpc %s, err %u", spec->key.str(), ret);
         return ret;
     }
     tep1_rx_handle_ = api_params.handle;
@@ -121,8 +121,8 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
     tep1_rx_actiondata_t tep1_rx_data = { 0 };
     sdk_table_api_params_t api_params = { 0 };
 
-    PDS_TRACE_DEBUG("Activating vpc %u, type %u, fabric encap (%u, %u)",
-                    spec->key.id, spec->type, spec->fabric_encap.type,
+    PDS_TRACE_DEBUG("Activating vpc %s, type %u, fabric encap (%u, %u)",
+                    spec->key.str(), spec->type, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
 
     tep1_rx_key.vxlan_1_vni = spec->fabric_encap.val.value;
@@ -137,8 +137,8 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
     api_params.handle = tep1_rx_handle_;
     ret = tep_impl_db()->tep1_rx_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of TEP1_RX table failed for vpc %u, err %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Programming of TEP1_RX table failed for vpc %s, err %u",
+                      spec->key.str(), ret);
     }
     return ret;
 }

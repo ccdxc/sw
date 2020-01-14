@@ -71,8 +71,8 @@ tep_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         // reserve an entry in REMOTE_46_TEP table for service type TEPs
         if (tep_impl_db()->remote_46_tep_idxr()->alloc(&idx) !=
                 sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate hw id for TEP id %u, ip %s",
-                          spec->key.id, ipaddr2str(&spec->remote_ip));
+            PDS_TRACE_ERR("Failed to allocate hw id for TEP %s, ip %s",
+                          spec->key.str(), ipaddr2str(&spec->remote_ip));
             return sdk::SDK_RET_NO_RESOURCE;
         }
         remote46_hw_id_ = idx & 0xFFFF;
@@ -332,8 +332,8 @@ tep_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         ret = SDK_RET_INVALID_ARG;
         break;
     }
-    PDS_TRACE_DEBUG("Programmed TEP id %u, ip %s, hw id %u",
-                    spec->key.id, ipaddr2str(&spec->remote_ip),
+    PDS_TRACE_DEBUG("Programmed TEP %s, ip %s, hw id %u",
+                    spec->key.str(), ipaddr2str(&spec->remote_ip),
                     remote46_hw_id_);
     return ret;
 }

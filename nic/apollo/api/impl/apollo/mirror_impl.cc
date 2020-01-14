@@ -130,7 +130,7 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         if (vpc->type() == PDS_VPC_TYPE_UNDERLAY) {
             tep_key = spec->erspan_spec.tep;
             if ((tep = tep_db()->find(&tep_key)) == NULL) {
-                PDS_TRACE_ERR("Unknown TEP IP %u", tep_key.id);
+                PDS_TRACE_ERR("Unknown TEP IP %s", tep_key.str());
                 return SDK_RET_INVALID_ARG;
             }
             // TODO: what if this TEP is local TEP itself ?
