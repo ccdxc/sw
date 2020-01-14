@@ -180,6 +180,9 @@ switch0:
     nop
     
   .brcase BARCO_SGL_NUM_TUPLES_MAX
+
+    b           endif10
+    nop
   .brend
 endsw0:
 
@@ -231,6 +234,9 @@ switch2:
     phvwr       p.barco_sgl_tuple2_len_update_last_blk_len, r_update_len.wx  // delay slot
     
   .brcase BARCO_SGL_NUM_TUPLES_MAX
+  
+    b           endsw2
+    nop
   .brend
 endsw2:
     

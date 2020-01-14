@@ -60,22 +60,30 @@ _switch0:
   
     tblwr       d.session_id_next, d.session_id_base
     tblwr       d.total_sessions_scanned, r0
-    
     add         r_session_id_next, d.session_id_base, r0
-    add         r_total_sessions_scanned, r0, r0
 
-    // Fall through!!!
+    // There's no "fall through" with MPU assembly
+    
+    b           _expiry_map_restart
+    add         r_total_sessions_scanned, r0, r0            // delay slot
     
   .brcase SESSION_AGE_STATE_RESTART_EXPIRY_MAP
   
+_expiry_map_restart:
+
     tblwr       d.expiry_map_sessions_scanned, r0
     add         r_expiry_map_sessions_scanned, r0, r0
-    add         r_expiry_session_id_base, d.session_id_next, r0
+    b           _reevaluate
+    add         r_expiry_session_id_base, d.session_id_next, r0 // delay slot
     
-    // Fall through!!!
-        
   .brcase SESSION_AGE_STATE_SCAN
+  
+    b           _reevaluate
+    nop
+    
   .brcase SESSION_AGE_STATE_REEVALUATE
+
+_reevaluate:
 
     phvwr       p.age_kivec0_session_id_curr, r_session_id_next
     tblwr       d.expiry_session_id_base, r_expiry_session_id_base
