@@ -33,6 +33,6 @@ typedef struct nat_trace_s {
     // TODO
 } nat_trace_t;
 
-void pds_nat_ipc_init(void);
+void pds_nat_cfg_init(void);
 
 #endif    // __VPP_NAT_NODE_H__

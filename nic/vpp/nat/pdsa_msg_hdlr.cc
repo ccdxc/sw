@@ -2,8 +2,7 @@
 //  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 //
 
-#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
-#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
+#include "nic/vpp/infra/cfg/pdsa_db.hpp"
 #include "nat_api.h"
 
 extern "C" {
@@ -126,13 +125,13 @@ pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
     }
 }
 
-// initialize callbacks for flow configuration
+// initialize callbacks for NAT configuration
 //
 // Note: This is called from C code, and must have C linkage
 //
 void
-pds_nat_ipc_init(void) {
-    pds_ipc_register_callbacks(OBJ_ID_NAT_PORT_BLOCK,
+pds_nat_cfg_init(void) {
+    pds_cfg_register_callbacks(OBJ_ID_NAT_PORT_BLOCK,
                                pds_nat_cfg_set,
                                pds_nat_cfg_del,
                                pds_nat_cfg_act);

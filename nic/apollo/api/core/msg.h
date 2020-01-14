@@ -13,6 +13,7 @@
 
 #include "nic/apollo/framework/api.h"
 #include "nic/apollo/core/msg.h"
+#include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -22,6 +23,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/// vpc configuration
+typedef struct pds_vpc_cfg_msg_s {
+    union {
+        pds_obj_key_t key;
+        pds_vpc_spec_t spec;
+    };
+    pds_vpc_status_t status;
+} pds_vpc_cfg_msg_t;
 
 /// vnic configuration
 typedef struct pds_vnic_cfg_msg_s {
@@ -81,6 +91,7 @@ typedef struct pds_cfg_msg_s {
     obj_id_t obj_id;
     /// msg contents
     union {
+        pds_vpc_cfg_msg_t vpc;
         pds_vnic_cfg_msg_t vnic;
         pds_subnet_cfg_msg_t subnet;
         pds_dhcp_relay_cfg_msg_t dhcp_relay;

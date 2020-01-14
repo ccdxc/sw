@@ -1,28 +1,32 @@
 //
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#include "pdsa_vpp_cfg.hpp"
 #include <vector>
 #include <iterator>
+#include "pdsa_db.hpp"
 
-/////// static data
+// static data
 vpp_config_data vpp_config_data::singleton;
 vpp_config_batch vpp_config_batch::singleton;
 std::list<commit_cbs_t> vpp_config_batch::commit_cbs;
 
-/////// vpp_config_data member functions
+// vpp_config_data member functions
 
 // returns the currently configured number of instances of a specific obj id
 int
 vpp_config_data::size (obj_id_t obj_id) const {
     switch(obj_id) {
-    case OBJ_ID_VNIC: return vnic.size();
-    case OBJ_ID_SUBNET: return subnet.size();
-    case OBJ_ID_DHCP_RELAY: return dhcp_relay.size();
-    case OBJ_ID_DHCP_POLICY: return dhcp_policy.size();
-    case OBJ_ID_NAT_PORT_BLOCK: return nat_port_block.size();
-    case OBJ_ID_SECURITY_PROFILE: return security_profile.size();
+#define _(c,s) case OBJ_ID_##c:  return s.size();
+
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
+#undef _
     default:
         assert(false);
     }
@@ -37,37 +41,19 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
     // since key and spec are a union, and the first element in the spec is
     // the key, we don't verify whether a key or spec is passed here
     switch(cfg_msg.obj_id) {
-    case OBJ_ID_VNIC:
-        if (vnic.find(cfg_msg.vnic.key) != vnic.end()) {
-            return true;
-        }
+#define _(c,s)                                     \
+    case OBJ_ID_##c:                               \
+        if (s.find(cfg_msg.s.key) != s.end()) { \
+            return true;                           \
+        }                                          \
         break;
-
-    case OBJ_ID_SUBNET:
-        if (subnet.find(cfg_msg.subnet.key) != subnet.end()) {
-            return true;
-        }
-        break;
-
-    case OBJ_ID_DHCP_RELAY:
-        if (dhcp_relay.find(cfg_msg.dhcp_relay.key) != dhcp_relay.end()) {
-            return true;
-        }
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        if (dhcp_policy.find(cfg_msg.dhcp_policy.key) != dhcp_policy.end()) {
-            return true;
-        }
-        break;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        if (nat_port_block.find(cfg_msg.nat_port_block.key) !=
-            nat_port_block.end()) {
-            return true;
-        }
-        break;
-
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+#undef _
     case OBJ_ID_SECURITY_PROFILE:
         if (security_profile.find(cfg_msg.security_profile.key.id) !=
             security_profile.end()) {
@@ -76,7 +62,8 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
         break;
 
     default:
-        assert(false);
+        // don't assert here, it could be a malformed IPC request
+        break;
     }
     return false;
 }
@@ -86,66 +73,39 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
 bool
 vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
     // initialize iterators to all obj types
+    auto vpc_it = vpc.end();
     auto vnic_it = vnic.end();
     auto subnet_it = subnet.end();
     auto dhcp_relay_it = dhcp_relay.end();
     auto dhcp_policy_it = dhcp_policy.end();
-    auto nat_it = nat_port_block.end();
-    auto sec_it = security_profile.end();
+    auto nat_port_block_it = nat_port_block.end();
+    auto security_profile_it = security_profile.end();
 
     switch(cfg_msg.obj_id) {
-    case OBJ_ID_VNIC:
-        vnic_it = vnic.find(cfg_msg.vnic.key);
-        if (vnic_it == vnic.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.vnic.spec = vnic_it->second;
+#define _(c,s)                             \
+    case OBJ_ID_##c:                       \
+        s##_it = s.find(cfg_msg.s.key); \
+        if (s##_it == s.end()) {           \
+            cfg_msg.obj_id = OBJ_ID_NONE;  \
+            return false;                  \
+        }                                  \
+        cfg_msg.s.spec = s##_it->second;   \
         break;
 
-    case OBJ_ID_SUBNET:
-        subnet_it = subnet.find(cfg_msg.subnet.key);
-        if (subnet_it == subnet.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.subnet.spec = subnet_it->second;
-        break;
-
-    case OBJ_ID_DHCP_RELAY:
-        dhcp_relay_it = dhcp_relay.find(cfg_msg.dhcp_relay.key);
-        if (dhcp_relay_it == dhcp_relay.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.dhcp_relay.spec = dhcp_relay_it->second;
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        dhcp_policy_it = dhcp_policy.find(cfg_msg.dhcp_policy.key);
-        if (dhcp_policy_it == dhcp_policy.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.dhcp_policy.spec = dhcp_policy_it->second;
-        break;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        nat_it = nat_port_block.find(cfg_msg.nat_port_block.key);
-        if (nat_it == nat_port_block.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.nat_port_block.spec = nat_it->second;
-        break;
-
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+#undef _
     case OBJ_ID_SECURITY_PROFILE:
-        sec_it = security_profile.find(cfg_msg.security_profile.key.id);
-        if (sec_it == security_profile.end()) {
+        security_profile_it = security_profile.find(cfg_msg.security_profile.key.id);
+        if (security_profile_it == security_profile.end()) {
             cfg_msg.obj_id = OBJ_ID_NONE;
             return false;
         }
-        cfg_msg.security_profile.spec = sec_it->second;
+        cfg_msg.security_profile.spec = security_profile_it->second;
         break;
 
     default:
@@ -160,26 +120,18 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
 void
 vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
     switch(cfg_msg.obj_id) {
-    case OBJ_ID_VNIC:
-        vnic[cfg_msg.vnic.spec.key] = cfg_msg.vnic.spec;
+#define _(c,s)                                     \
+    case OBJ_ID_##c:                               \
+        s[cfg_msg.s.spec.key] = cfg_msg.s.spec; \
         break;
 
-    case OBJ_ID_SUBNET:
-        subnet[cfg_msg.subnet.spec.key] = cfg_msg.subnet.spec;
-        break;
-
-    case OBJ_ID_DHCP_RELAY:
-        dhcp_relay[cfg_msg.dhcp_relay.spec.key] = cfg_msg.dhcp_relay.spec;
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        dhcp_policy[cfg_msg.dhcp_policy.spec.key] = cfg_msg.dhcp_policy.spec;
-        break;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        nat_port_block[cfg_msg.nat_port_block.spec.key] =
-            cfg_msg.nat_port_block.spec;
-        break;
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+#undef _
 
     case OBJ_ID_SECURITY_PROFILE:
         security_profile[cfg_msg.security_profile.spec.key.id] =
@@ -195,26 +147,18 @@ vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
 void
 vpp_config_data::unset (obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg) {
     switch(obj_id) {
-    case OBJ_ID_VNIC:
-        vnic.erase(cfg_msg.vnic.key);
+#define _(c,s)                     \
+    case OBJ_ID_##c:               \
+        s.erase(cfg_msg.s.key); \
         break;
 
-    case OBJ_ID_SUBNET:
-        subnet.erase(cfg_msg.subnet.key);
-        break;
-
-    case OBJ_ID_DHCP_RELAY:
-        dhcp_relay.erase(cfg_msg.dhcp_relay.key);
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        dhcp_policy.erase(cfg_msg.dhcp_policy.key);
-        break;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        nat_port_block.erase(cfg_msg.nat_port_block.key);
-        break;
-
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+#undef _
     case OBJ_ID_SECURITY_PROFILE:
         security_profile.erase(cfg_msg.security_profile.key.id);
         break;
@@ -230,49 +174,22 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
     assert(left.obj_id == right.obj_id);
 
     switch(left.obj_id) {
-    case OBJ_ID_VNIC:
-        if (right.op != API_OP_DELETE) {
-            return (left.vnic.spec.key == right.vnic.spec.key);
-        } else {
-            return (left.vnic.spec.key == right.vnic.key);
-        }
+#define _(c,s)                                                  \
+    case OBJ_ID_##c:                                            \
+        if (right.op != API_OP_DELETE) {                        \
+            return (left.s.spec.key.id == right.s.spec.key.id); \
+        } else {                                                \
+            return (left.s.spec.key.id == right.s.key.id);      \
+        }                                                       \
         break;
 
-    case OBJ_ID_SUBNET:
-        if (right.op != API_OP_DELETE) {
-            return (left.subnet.spec.key == right.subnet.spec.key);
-        } else {
-            return (left.subnet.spec.key == right.subnet.key);
-        }
-        break;
-
-    case OBJ_ID_DHCP_RELAY:
-        if (right.op != API_OP_DELETE) {
-            return (left.dhcp_relay.spec.key ==
-                    right.dhcp_relay.spec.key);
-        } else {
-            return (left.dhcp_relay.spec.key == right.dhcp_relay.key);
-        }
-        break;
-
-    case OBJ_ID_DHCP_POLICY:
-        if (right.op != API_OP_DELETE) {
-            return (left.dhcp_policy.spec.key ==
-                    right.dhcp_policy.spec.key);
-        } else {
-            return (left.dhcp_policy.spec.key == right.dhcp_policy.key);
-        }
-        break;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        if (right.op != API_OP_DELETE) {
-            return (left.nat_port_block.spec.key ==
-                    right.nat_port_block.spec.key);
-        } else {
-            return (left.nat_port_block.spec.key ==
-                    right.nat_port_block.spec.key);
-        }
-        break;
+        _(VPC, vpc)
+        _(VNIC, vnic)
+        _(SUBNET, subnet)
+        _(DHCP_RELAY, dhcp_relay)
+        _(DHCP_POLICY, dhcp_policy)
+        _(NAT_PORT_BLOCK, nat_port_block)
+#undef _
 
     case OBJ_ID_SECURITY_PROFILE:
         if (right.op != API_OP_DELETE) {
@@ -283,7 +200,6 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
                     right.security_profile.key.id);
         }
         break;
-
     default:
         assert(false);
     }
@@ -291,29 +207,24 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
     return false;
 }
 
-//////// config pool functions to operate on a batch
+// config pool functions to operate on a batch
 
 // returns the number of instances for a specific object type
 size_t
 vpp_config_batch::maxsize (obj_id_t obj_id) {
     switch(obj_id) {
-    case OBJ_ID_VNIC:
-        return PDS_MAX_VNIC;
+#define _(c)                \
+    case OBJ_ID_##c:        \
+        return PDS_MAX_##c;
 
-    case OBJ_ID_SUBNET:
-        return PDS_MAX_SUBNET;
-
-    case OBJ_ID_DHCP_RELAY:
-        return PDS_MAX_DHCP_RELAY;
-
-    case OBJ_ID_DHCP_POLICY:
-        return PDS_MAX_DHCP_POLICY;
-
-    case OBJ_ID_NAT_PORT_BLOCK:
-        return PDS_MAX_NAT_PORT_BLOCK;
-
-    case OBJ_ID_SECURITY_PROFILE:
-        return 1;
+        _(VPC)
+        _(VNIC)
+        _(SUBNET)
+        _(DHCP_RELAY)
+        _(DHCP_POLICY)
+        _(NAT_PORT_BLOCK)
+        _(SECURITY_PROFILE)
+#undef _
 
     default:
         assert(false);
@@ -326,12 +237,17 @@ void
 vpp_config_batch::init (void) {
     vpp_config_data &vpp_config = vpp_config_data::get();
 
-    pool_sz[OBJ_ID_VNIC] = vpp_config.size(OBJ_ID_VNIC);
-    pool_sz[OBJ_ID_SUBNET] = vpp_config.size(OBJ_ID_SUBNET);
-    pool_sz[OBJ_ID_DHCP_RELAY] = vpp_config.size(OBJ_ID_DHCP_RELAY);
-    pool_sz[OBJ_ID_DHCP_POLICY] = vpp_config.size(OBJ_ID_DHCP_POLICY);
-    pool_sz[OBJ_ID_NAT_PORT_BLOCK] = vpp_config.size(OBJ_ID_NAT_PORT_BLOCK);
-    pool_sz[OBJ_ID_SECURITY_PROFILE] = vpp_config.size(OBJ_ID_SECURITY_PROFILE);
+#define _(c) \
+    pool_sz[OBJ_ID_##c] = vpp_config.size(OBJ_ID_##c);
+
+        _(VPC)
+        _(VNIC)
+        _(SUBNET)
+        _(DHCP_RELAY)
+        _(DHCP_POLICY)
+        _(NAT_PORT_BLOCK)
+        _(SECURITY_PROFILE)
+#undef _
 }
 
 // checks for the existence of the specified key either in batch or config db
@@ -634,3 +550,32 @@ vpp_config_batch::commit (void) {
 
     return ret;
 }
+
+// register callbacks from plugins for messages
+// return 0 indicates  registered successfully
+// return non-zero indicates registration fail (invalid param)
+int
+pds_cfg_register_callbacks (obj_id_t id,
+                            pds_cfg_set_cb set_cb_fn,
+                            pds_cfg_del_cb del_cb_fn,
+                            pds_cfg_act_cb act_cb_fn ) {
+    if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
+        return -1;
+    }
+
+    if ((id != OBJ_ID_VPC) &&
+        (id != OBJ_ID_VNIC) &&
+        (id != OBJ_ID_SUBNET) &&
+        (id != OBJ_ID_DHCP_RELAY) &&
+        (id != OBJ_ID_DHCP_POLICY) &&
+        (id != OBJ_ID_NAT_PORT_BLOCK) &&
+        (id != OBJ_ID_SECURITY_PROFILE)) {
+        return -1;
+    }
+
+    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn);
+
+    return 0;
+}
+
+

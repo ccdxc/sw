@@ -1,9 +1,9 @@
 //
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_INFRA_IPC_VPPCFG_HPP__
-#define __VPP_INFRA_IPC_VPPCFG_HPP__
+#ifndef __VPP_INFRA_CFG_PDSA_DB_HPP__
+#define __VPP_INFRA_CFG_PDSA_DB_HPP__
 
 #include <map>
 #include <unordered_map>
@@ -12,7 +12,17 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/core/msg.h"
 #include "nic/apollo/api/core/msg.h"
-#include "pdsa_hdlr.hpp"
+
+// callback function prototype
+typedef sdk::sdk_ret_t (*pds_cfg_set_cb)(const pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_del_cb)(const pds_cfg_msg_t *msg);
+typedef sdk::sdk_ret_t (*pds_cfg_act_cb)(const pds_cfg_msg_t *msg);
+
+// function prototypes
+int pds_cfg_register_callbacks(obj_id_t id,
+                               pds_cfg_set_cb set_cb_fn,
+                               pds_cfg_del_cb del_cb_fn,
+                               pds_cfg_act_cb act_cb_fn);
 
 typedef struct {
     obj_id_t      obj_id;
@@ -33,6 +43,7 @@ typedef struct {
 // registered callbacks) when this config changes
 class vpp_config_data {
     // containers are ordered map, instance to spec
+    std::unordered_map<pds_obj_key_t, pds_vpc_spec_t, pds_obj_key_hash> vpc;
     std::unordered_map<pds_obj_key_t, pds_vnic_spec_t, pds_obj_key_hash> vnic;
     std::unordered_map<pds_obj_key_t, pds_subnet_spec_t, pds_obj_key_hash> subnet;
     std::unordered_map<pds_obj_key_t, pds_dhcp_relay_spec_t, pds_obj_key_hash> dhcp_relay;
@@ -96,4 +107,4 @@ public:
 };
 
 
-#endif    // __VPP_INFRA_IPC_VPPCFG_HPP__
+#endif // __VPP_INFRA_CFG_PDSA_DB_HPP__

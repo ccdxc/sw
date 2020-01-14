@@ -50,6 +50,8 @@ typedef enum pds_msg_id_s {
     PDS_CFG_MSG_ID_NONE,
     /// any device/global configuration
     PDS_CFG_MSG_ID_DEVICE,
+    /// vpc related configuration
+    PDS_CFG_MSG_ID_VPC,
     /// vnic related configuration
     PDS_CFG_MSG_ID_VNIC,
     /// subnet related configuration

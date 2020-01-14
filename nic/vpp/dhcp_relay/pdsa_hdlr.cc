@@ -1,8 +1,8 @@
 //
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 //
 
-#include <nic/vpp/infra/ipc/pdsa_hdlr.hpp>
+#include <nic/vpp/infra/cfg/pdsa_db.hpp>
 #include "pdsa_vpp_cfg.h"
 
 static sdk::sdk_ret_t
@@ -52,7 +52,7 @@ void
 pds_dhcp_relay_cfg_init (void) {
     // initialize callbacks for cfg/oper messages received from pds-agent
 
-    pds_ipc_register_callbacks(OBJ_ID_DHCP_RELAY,
+    pds_cfg_register_callbacks(OBJ_ID_DHCP_RELAY,
                                pdsa_dhcp_relay_cfg_set, 
                                pdsa_dhcp_relay_cfg_del,
                                NULL);

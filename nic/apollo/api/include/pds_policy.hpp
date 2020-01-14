@@ -188,6 +188,8 @@ sdk_ret_t pds_policy_update(pds_policy_spec_t *policy,
 sdk_ret_t pds_policy_delete(pds_obj_key_t *key,
                             pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
+#define PDS_MAX_SECURITY_PROFILE  1 ///< only one instance of security profile
+
 /// \brief security profile spec
 typedef struct pds_security_profile_spec_s {
     pds_security_profile_key_t key;                    ///< id

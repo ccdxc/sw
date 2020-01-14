@@ -4,8 +4,7 @@
 // Handlers for all messages from PDS Agent
 
 #include <arpa/inet.h>
-#include "nic/vpp/infra/ipc/pdsa_hdlr.hpp"
-#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
+#include "nic/vpp/infra/cfg/pdsa_db.hpp"
 #include "pdsa_hdlr.h"
 
 static sdk::sdk_ret_t
@@ -46,7 +45,7 @@ pdsa_flow_hdlr_init (void)
 {
     // initialize callbacks for cfg/oper messages received from pds-agent
 
-    pds_ipc_register_callbacks(OBJ_ID_SECURITY_PROFILE,
+    pds_cfg_register_callbacks(OBJ_ID_SECURITY_PROFILE,
                                pdsa_flow_cfg_set, 
                                pdsa_flow_cfg_clear,
                                NULL);

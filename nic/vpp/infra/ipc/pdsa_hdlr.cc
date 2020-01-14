@@ -2,12 +2,11 @@
 //  {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 //
 
+#include <map>
 #include <assert.h>
 #include <nic/sdk/lib/ipc/ipc.hpp>
-#include "pdsa_hdlr.hpp"
-#include "pdsa_vpp_cfg.hpp"
+#include <nic/vpp/infra/cfg/pdsa_db.hpp>
 #include "pdsa_vpp_hdlr.h"
-#include <map>
 
 // maps storing the callback functions and context associated with a file
 // descriptor. multiple file descriptors are provided to be monitored by the
@@ -28,11 +27,9 @@ pds_ipc_read_fd (int fd) {
     auto cb_ctx_it = g_cb_ctx.find(fd);
 
     if (cb_func_it == g_cb_func.end()) {
-        ipc_log_error("Attempting read on unknown fd %d", fd);
+        ipc_log_error("Attempting read on unknown fd %u", fd);
         return;
     }
-
-    ipc_log_notice("Data available on fd %d", fd);
 
     sdk::ipc::handler_cb cb_func = cb_func_it->second;
     const void *cb_ctx = cb_ctx_it->second;
@@ -64,7 +61,7 @@ pds_ipc_ok_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     g_type_count[type]++;
 
-    ipc_log_notice("Received msg with type:%d [count:%d] Returning OK", type,
+    ipc_log_notice("Received msg with type:%u [count:%u] Returning OK", type,
                    g_type_count[type]);
 
     // always return ok
@@ -80,45 +77,13 @@ pds_ipc_invalid_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
 
     g_type_count[type]++;
 
-    ipc_log_notice("Received msg with type:%d [count:%d] Returning Invalid OP",
+    ipc_log_notice("Received msg with type:%u [count:%u] Returning Invalid OP",
                    type, g_type_count[type]);
 
     // always return ok
     ret = sdk::SDK_RET_INVALID_OP;
     sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk::sdk_ret_t));
 }
-
-// register callbacks from plugins for messages
-// return 0 indicates  registered successfully
-// return non-zero indicates registration fail (invalid param)
-int
-pds_ipc_register_callbacks (obj_id_t id,
-                            pds_cfg_set_cb set_cb_fn,
-                            pds_cfg_del_cb del_cb_fn,
-                            pds_cfg_act_cb act_cb_fn ) {
-    if ((set_cb_fn == NULL) || (del_cb_fn == NULL)) {
-        ipc_log_error("Registration request for obj id %d"
-                      " has invalid function pointers", id);
-        return -1;
-    }
-
-    if ((id != OBJ_ID_VNIC) &&
-        (id != OBJ_ID_SUBNET) &&
-        (id != OBJ_ID_DHCP_RELAY) &&
-        (id != OBJ_ID_DHCP_POLICY) &&
-        (id != OBJ_ID_NAT_PORT_BLOCK) &&
-        (id != OBJ_ID_SECURITY_PROFILE)) {
-        ipc_log_error("Registration request for invalid obj id %d", id);
-        return -1;
-    }
-
-    vpp_config_batch::register_cbs(id, set_cb_fn, del_cb_fn, act_cb_fn);
-
-    ipc_log_notice("Callbacks registered for obj id %d", id);
-
-    return 0;
-}
-
 
 // handler for batch messages from HAL
 static void
@@ -135,7 +100,7 @@ pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     msglist = (pds_msg_list_t *)ipc_msg->data();
 
     g_type_count[PDS_MSG_TYPE_CFG]++;
-    ipc_log_notice("Received msglist with %d message(s) [epoch:%u]",
+    ipc_log_notice("Received msglist with %u message(s) [epoch:%u]",
                    msglist->num_msgs, msglist->epoch);
 
     // Stage 1: setup batch
@@ -155,7 +120,7 @@ error:
     // clear batch on both success and failure
     config_batch.clear();
     if (ret != sdk::SDK_RET_OK) {
-        ipc_log_error("Execution fail of msglist [epoch:%u] ret:%d",
+        ipc_log_error("Execution fail of msglist [epoch:%u] ret:%u",
                       (msglist ? msglist->epoch : 0), ret);
     } else {
         ipc_log_notice("Successful Execution of msglist [epoch:%u]",
@@ -194,13 +159,13 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     memcpy(&response.cfg_msg, &msg->cfg_msg, sizeof(pds_cfg_msg_t));
     config_data.get(response.cfg_msg);
 
-    ipc_log_notice("Execution success of command msg [count:%d]",
+    ipc_log_notice("Execution success of command msg [count:%u]",
                    g_type_count[PDS_MSG_TYPE_CMD]);
     sdk::ipc::respond(ipc_msg, (const void *)&response, sizeof(pds_msg_t));
     return;
 
 error:
-    ipc_log_error("Execution fail of command msg [count:%d] ret:%d",
+    ipc_log_error("Execution fail of command msg [count:%u] ret:%u",
                   g_type_count[PDS_MSG_TYPE_CMD], retcode);
     sdk::ipc::respond(ipc_msg, (const void *)&retcode, sizeof(sdk::sdk_ret_t));
 }

@@ -2,8 +2,8 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //
 
-#ifndef __VPP_INFRA_IPC_PDS_IPC_H__
-#define __VPP_INFRA_IPC_PDS_IPC_H__
+#ifndef __VPP_INFRA_IPC_VPP_HDLR_H__
+#define __VPP_INFRA_IPC_VPP_HDLR_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,4 +44,4 @@ pds_id_set(u8 id1[PDS_MAX_KEY_LEN], const u8 id2[PDS_MAX_KEY_LEN])
 }
 #endif
 
-#endif    // __VPP_INFRA_IPC_PDS_IPC_H__
+#endif    // __VPP_INFRA_IPC_VPP_HDLR_H__
