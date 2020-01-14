@@ -14,6 +14,7 @@
 // const URL =  "10.30.2.173"  // QA Ambish's large scale setup  admin/Pensando0$
 // const URL =  "10.30.2.174"  
 // const URL = "10.30.1.175"  // Srividhya Swaminathan
+// const URL = "10.8.102.52"; // scale setup admin/Pensando0$
 
 const PROXY_CONFIG =
   {

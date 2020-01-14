@@ -1,5 +1,10 @@
 <div fxLayout="column" fxLayoutGap="10px">
   <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
+    <app-dsbdworkloads *roleGuard="{ req: ['workloadworkload_read', 'clusterhost_read']}"
+                       fxFlex="none"></app-dsbdworkloads>
+    <app-dsbdpolicyhealth *roleGuard="'adminrole'" fxFlex="none"></app-dsbdpolicyhealth>
+  </div>
+  <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
     <app-dsbdsystemcapacitywidget *roleGuard="{ req: ['clustercluster_read', 'clusternode_read']}"
                                   fxFlex="none"
                                   [cardState]="systemCapacity.cardState" [currentData]="currentData"
@@ -8,15 +13,6 @@
     </app-dsbdsystemcapacitywidget>
     <app-dsbdnapleswidget *roleGuard="'clusterdistributedservicecard_read'" fxFlex="none">
     </app-dsbdnapleswidget>
-  </div>
-  <!-- hide workload and sg-policies widget for now 20190611 -->
-  <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-dsbdworkloads *roleGuard="{ req: ['workloadworkload_read', 'clusterhost_read']}"
-                       fxFlex="none"></app-dsbdworkloads>
-    <app-dsbdpolicyhealth *roleGuard="'adminrole'" fxFlex="none"></app-dsbdpolicyhealth>
-  </div>
-  <div fxFlex="none" fxLayout="row" fxLayoutGap="10px">
-    <app-forwarddrop *roleGuard="'adminrole'" fxFlex="none"></app-forwarddrop>
   </div>
 </div>
 

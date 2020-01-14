@@ -22,7 +22,6 @@ import { SystemcapacitywidgetComponent } from './widgets/systemcapacity/systemca
 import { NaplesComponent } from './widgets/naples/naples.component';
 import { PolicyhealthComponent } from './widgets/policyhealth/policyhealth.component';
 import { DsbdworkloadComponent } from './widgets/dsbdworkload/dsbdworkload.component';
-import { ForwardDropComponent } from './widgets/forwarddrop/forwarddrop.component';
 
 import { MatIconRegistry } from '@angular/material';
 import { ConfirmationService } from 'primeng/primeng';
@@ -57,7 +56,6 @@ describe('DashboardComponent', () => {
         NaplesComponent,
         PolicyhealthComponent,
         DsbdworkloadComponent,
-        ForwardDropComponent,
         DummyComponent,
         WorkloadsComponent,
       ],
@@ -146,14 +144,6 @@ describe('DashboardComponent', () => {
       fixture.detectChanges();
       // metrics should be hidden
       const cards = fixture.debugElement.queryAll(By.css('app-flip'));
-      expect(cards.length).toBe(1);
-    });
-
-    it('forwarded vs dropped card', () => {
-      TestingUtility.addPermissions([UIRolePermissions.adminrole]);
-      fixture.detectChanges();
-      // metrics should be hidden
-      const cards = fixture.debugElement.queryAll(By.css('app-forwarddrop'));
       expect(cards.length).toBe(1);
     });
 

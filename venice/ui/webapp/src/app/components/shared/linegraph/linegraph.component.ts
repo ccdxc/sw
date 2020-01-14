@@ -42,6 +42,7 @@ interface LinegraphPoint extends ChartPoint {
 export class LinegraphComponent implements OnInit, AfterViewInit {
   @Input() stats: LineGraphStat[] = [];
   @Input() statSpace: string = '100px';
+  @Input() statLayout: string = 'row';
   @Input() hideStats: boolean = false;
   // Setting to null or empty string will disable it from highlighting the last point
   @Input() highlightLastPointColor: string;

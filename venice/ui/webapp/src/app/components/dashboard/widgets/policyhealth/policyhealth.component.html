@@ -82,7 +82,9 @@
       </div>
       <app-linegraph [@fade] #lineGraph *ngIf="cardState === cardStates.READY" fxFlex="70%"
                      fxLayout="row"
-                     class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"></app-linegraph>
+                     class="dsbdpolicyhealth-card-back" [stats]="linegraphStats"
+                     [statLayout]="'column'">
+      </app-linegraph>
     </div>
   </app-basecard>
 

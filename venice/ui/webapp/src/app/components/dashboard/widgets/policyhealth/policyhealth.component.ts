@@ -11,7 +11,7 @@ import { FlipState, FlipComponent } from '@app/components/shared/flip/flip.compo
 import { TelemetryPollingMetricQueries, MetricsPollingQuery, MetricsqueryService, MetricsPollingOptions } from '@app/services/metricsquery.service';
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
-import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
+import { Telemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function, Telemetry_queryMetricsQuerySpec_sort_order } from '@sdk/v1/models/generated/telemetry_query';
 /**
 SessionSummaryMetrics table looks like this
 
@@ -238,20 +238,21 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
       tenant: Utility.getInstance().getTenant()
     };
     queryList.queries.push(this.sessionTimeSeriesQuery()); // time series. Every 5 minutes last Sum(all DSC TotalActiveSessions)
-    queryList.queries.push(this.cpsTimeSeriesQuery());
-    queryList.queries.push(this.sessionAvgQuery());
-    queryList.queries.push(this.cpsAvgQuery());
-    queryList.queries.push(this.sessionCurrentQuery());  // current TotalActiveSessions of all DSCs
+    // Remove other metric queries until we can get correct sum functions from backend
+    // queryList.queries.push(this.cpsTimeSeriesQuery());
+    // queryList.queries.push(this.sessionAvgQuery());
+    // queryList.queries.push(this.cpsAvgQuery());
+    // queryList.queries.push(this.sessionCurrentQuery());  // current TotalActiveSessions of all DSCs
 
     const sub = this.metricsqueryService.pollMetrics('policyHealthCards', queryList).subscribe(
       (data: ITelemetry_queryMetricsQueryResponse) => {
         if (data && data.results && data.results.length === queryList.queries.length) {
           if (MetricsUtility.resultHasData(data.results[0])) {
             this.sessionData = data.results[0];
-            this.cpsData = data.results[1];
-            this.sessionAvg = data.results[2];
-            this.cpsAvg = data.results[3];
-            this.sessionDataCurrent = data.results[4];
+            // this.cpsData = data.results[1];
+            // this.sessionAvg = data.results[2];
+            // this.cpsAvg = data.results[3];
+            // this.sessionDataCurrent = data.results[4];
             this.lastUpdateTime = new Date().toISOString();
             this.cardState = CardStates.READY;
             this.tryGenMetrics();
@@ -270,11 +271,29 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
 
   setupCard() {
     if (MetricsUtility.resultHasData(this.sessionData)) {
-      let data = MetricsUtility.transformToChartjsTimeSeries(this.sessionData.series[0], 'totalActiveSessions', true);
-      if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
-        const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
-        data = data.concat(currData);
+      const data = MetricsUtility.transformToChartjsTimeSeries(this.sessionData.series[0], 'totalActiveSessions', true);
+      if (this.sessionData.series.length > 1) {
+        for (let i = 1; i < this.sessionData.series.length; i++) {
+          const yFieldIndex = MetricsUtility.findFieldIndex(this.sessionData.series[i].columns, 'totalActiveSessions');
+          if (yFieldIndex < 0) {
+            console.error('policyhealth setupCard: given column name "totalActiveSessions" was not found');
+          }
+          this.sessionData.series[i].values.forEach((item, idx) => {
+            let val = item[yFieldIndex];
+            if (val != null) {
+              val = Math.round(val);
+            }
+            data[idx].y = data[idx].y + val;
+          });
+        }
       }
+
+      let sum = 0;
+      data.forEach(d => {
+        sum += d.y;
+      });
+      this.activeFlows.defaultValue = data.length > 1 ? sum / data.length : sum;
+      this.currActiveFlows = data[data.length - 1].y;
       this.activeFlows.data = data;
       if (data.length > 1) {
         const start = data[0].t;
@@ -288,33 +307,33 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
         const startStr = startUtc.format(formatOpts);
         const endStr = endUtc.format(formatOpts);
 
-        this.activeFlows.title = `ACTIVE SESSIONS (${startStr} - ${endStr})`;
+        this.activeFlows.title = `ACTIVE SESSIONS (${startStr} - ${endStr}, avg every 5 min)`;
       } else {
         this.activeFlows.title = 'ACTIVE SESSIONS';
       }
     }
 
-    if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
-      const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
-      this.currActiveFlows = currData[currData.length - 1].y;
-    } else {
-      this.currActiveFlows = 0;
-    }
+    // if (MetricsUtility.resultHasData(this.sessionDataCurrent)) {
+    //   const currData = MetricsUtility.transformToChartjsTimeSeries(this.sessionDataCurrent.series[0], 'totalActiveSessions', true);
+    //   this.currActiveFlows = currData[currData.length - 1].y;
+    // } else {
+    //   this.currActiveFlows = 0;
+    // }
 
-    if (MetricsUtility.resultHasData(this.cpsData)) {
-      const data = MetricsUtility.transformToChartjsTimeSeries(this.cpsData.series[0], 'connectionsPerSecond');
-      this.totalConnections.data = data;
-    }
+    // if (MetricsUtility.resultHasData(this.cpsData)) {
+    //   const data = MetricsUtility.transformToChartjsTimeSeries(this.cpsData.series[0], 'connectionsPerSecond');
+    //   this.totalConnections.data = data;
+    // }
 
-    if (MetricsUtility.resultHasData(this.sessionAvg)) {
-      const index = MetricsUtility.findFieldIndex(this.sessionAvg.series[0].columns, 'totalActiveSessions');
-      this.activeFlows.defaultValue = Math.round(this.sessionAvg.series[0].values[0][index]);
-    }
+    // if (MetricsUtility.resultHasData(this.sessionAvg)) {
+    //   const index = MetricsUtility.findFieldIndex(this.sessionAvg.series[0].columns, 'totalActiveSessions');
+    //   this.activeFlows.defaultValue = Math.round(this.sessionAvg.series[0].values[0][index]);
+    // }
 
-    if (MetricsUtility.resultHasData(this.cpsAvg)) {
-      const index = MetricsUtility.findFieldIndex(this.cpsAvg.series[0].columns, 'connectionsPerSecond');
-      this.totalConnections.defaultValue = Math.round(this.cpsAvg.series[0].values[0][index]);
-    }
+    // if (MetricsUtility.resultHasData(this.cpsAvg)) {
+    //   const index = MetricsUtility.findFieldIndex(this.cpsAvg.series[0].columns, 'connectionsPerSecond');
+    //   this.totalConnections.defaultValue = Math.round(this.cpsAvg.series[0].values[0][index]);
+    // }
 
     this.cardState = CardStates.READY;
     if (this.graphDrawn) {
@@ -352,7 +371,43 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
     }
    */
   sessionTimeSeriesQuery(): MetricsPollingQuery {
-    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics', [], null, Telemetry_queryMetricsQuerySpec_function.mean);
+    const merge = (currData: ITelemetry_queryMetricsQueryResult, newData: ITelemetry_queryMetricsQueryResult) => {
+      // Checking if there is new data
+      if (MetricsUtility.resultHasData(newData)) {
+        if (MetricsUtility.resultHasData(currData)) {
+          // Drops any values that are older than window minutes from the current time.
+          // Window is 24h.
+          const window = 24 * 60;
+          const _ = Utility.getLodash();
+          const moment = Utility.getMomentJS();
+          const windowStart = moment().subtract(window, 'minutes');
+          currData.series.forEach((series, idx) => {
+            const filteredValues = _.dropWhile(series.values, item => {
+              // Assuming time is the first index.
+              return windowStart.diff(moment(item[0]), 'minutes') > 0;
+            });
+            currData.series[idx].values = _.cloneDeep(filteredValues);
+          });
+
+          // We then add on the newer values.
+          newData.series.forEach((series, idx) => {
+            const data = series.values;
+            currData.series[idx].values.push(...data);
+          });
+        } else {
+          return newData;
+        }
+      }
+      return currData;
+    };
+
+    return MetricsUtility.timeSeriesQueryPolling('SessionSummaryMetrics',
+                                                 ['TotalActiveSessions'],
+                                                 null,
+                                                 Telemetry_queryMetricsQuerySpec_function.mean,
+                                                 Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+                                                 'reporterID',
+                                                 merge);
   }
 
   /**

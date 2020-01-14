@@ -114,7 +114,8 @@ export class MetricsUtility {
 
   public static timeSeriesQuery(kind: string, fields: string[], selector: IFieldsSelector = null,
     functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
-    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending
+    sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+    groupByField: string = null,
   ): Telemetry_queryMetricsQuerySpec {
     const configService = Utility.getInstance().getUIConfigsService();
     const metricsQuery = configService && configService.configFile.metricsQuery;
@@ -125,6 +126,7 @@ export class MetricsUtility {
       'name': null,
       'selector': selector,
       function: functionToUse,
+      'group-by-field': groupByField,
       'group-by-time': '5m',
       // We don't specify the fields we need, as specifying more than one field
       // while using the average function isn't supported by the backend.
@@ -142,13 +144,16 @@ export class MetricsUtility {
   }
 
   public static timeSeriesQueryPolling(kind: string, fields: string[], selector: IFieldsSelector = null,
-                                      functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean
+                                      functionToUse: Telemetry_queryMetricsQuerySpec_function = Telemetry_queryMetricsQuerySpec_function.mean,
+                                      sortOrder: Telemetry_queryMetricsQuerySpec_sort_order = Telemetry_queryMetricsQuerySpec_sort_order.ascending,
+                                      groupByField: string = null,
+                                      mergeFunction = MetricsUtility.createTimeSeriesQueryMerge()
     ): MetricsPollingQuery {
     const pollOptions: MetricsPollingOptions = {
       timeUpdater: MetricsUtility.timeSeriesQueryUpdate,
-      mergeFunction: MetricsUtility.createTimeSeriesQueryMerge()
+      mergeFunction
     };
-    return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector, functionToUse), pollingOptions: pollOptions };
+    return { query: MetricsUtility.timeSeriesQuery(kind, fields, selector, functionToUse, sortOrder, groupByField), pollingOptions: pollOptions };
   }
 
   // Since we are averaging over 5 min buckets, we always query from the last 5 min window increment
