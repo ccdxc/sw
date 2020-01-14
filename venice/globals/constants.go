@@ -241,6 +241,9 @@ const (
 	// MaxAllowedSGPolicies tracks the maximum number of security policies allowed per VRF. TODO relax this for future releases
 	MaxAllowedSGPolicies = 1
 
+	// MaxAllowedIPPerInterface maximum allowed IP per interface
+	MaxAllowedIPPerInterface = 1
+
 	// MaxAllowedSGRules tracks the maximum number of rules in a given network security policy. 32K
 	MaxAllowedSGRules = 32 * 1024
 )
