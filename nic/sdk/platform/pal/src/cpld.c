@@ -158,20 +158,18 @@ pal_write_qsfp_warning_temp(int data, int port)
 void
 pal_write_hbmwarning_temp(int data)
 {
-    return -1;
 }
 
 void
 pal_write_hbmcritical_temp(int data)
 {
-    return -1;
 }
 
 void
 pal_write_hbmfatal_temp(int data)
 {
-    return -1;
 }
+
 #else
 #include <string.h>
 

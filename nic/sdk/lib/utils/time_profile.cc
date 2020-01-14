@@ -82,7 +82,7 @@ time_profile_info::print_diff(void) {
         delta = delta / 1000;
         seconds = delta % 1000;
     }
-    snprintf(buff, 500,"%llu.%03llu.%03llu.%03llu",
+    snprintf(buff, 500,"%lu.%03lu.%03lu.%03lu",
              seconds, mseconds, useconds, nseconds);
     return string(buff);
 }
