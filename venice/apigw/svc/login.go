@@ -263,10 +263,18 @@ func (s *loginV1GwService) updateUserStatus(user *auth.User, password string) (*
 		Timestamp: *m,
 	}
 	b := balancer.New(s.rslvr)
-	apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, s.apiserver, s.logger, rpckit.WithBalancer(b))
+	defer b.Close()
+	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
+		apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, s.apiserver, s.logger, rpckit.WithBalancer(b))
+		if err != nil {
+			return nil, err
+		}
+		return apicl, nil
+	}, 200*time.Millisecond, 10)
 	if err != nil {
 		return nil, err
 	}
+	apicl := result.(apiclient.Services)
 	defer apicl.Close()
 	var storedUser *auth.User
 	if storedUser, err = apicl.AuthV1().User().Get(context.Background(), user.GetObjectMeta()); err != nil {

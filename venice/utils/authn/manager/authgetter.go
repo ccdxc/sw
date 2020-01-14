@@ -136,7 +136,7 @@ func (ug *defaultAuthGetter) GetAuthenticators() ([]authn.Authenticator, error) 
 				ug.name,
 				ug.apiServer,
 				ug.resolver,
-				policy.Spec.Authenticators.GetLocal()))
+				policy.Spec.Authenticators.GetLocal(), ug.logger))
 		case auth.Authenticators_LDAP.String():
 			authenticators = append(authenticators, ldap.NewLdapAuthenticator(policy.Spec.Authenticators.Ldap))
 		case auth.Authenticators_RADIUS.String():

@@ -23,7 +23,6 @@ type getter struct {
 	sync.RWMutex
 	apiServer string
 	rslvr     resolver.Interface
-	b         balancer.Balancer
 	logger    log.Logger
 	apicl     apiclient.Services
 }
@@ -52,8 +51,10 @@ func (g *getter) refreshAPIClient() error {
 	if g.apicl != nil {
 		g.apicl.Close()
 	}
-	apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, g.apiServer, g.logger, rpckit.WithBalancer(g.b))
+	b := balancer.New(g.rslvr)
+	apicl, err := apiclient.NewGrpcAPIClient(globals.APIGw, g.apiServer, g.logger, rpckit.WithBalancer(b))
 	if err != nil {
+		b.Close()
 		return err
 	}
 	g.apicl = apicl
@@ -61,11 +62,10 @@ func (g *getter) refreshAPIClient() error {
 }
 
 // NewGetter returns the module.Getter implementation TODO: Can have a cache based implementation in future
-func NewGetter(apiServer string, rslvr resolver.Interface, b balancer.Balancer, logger log.Logger) diagapi.Getter {
+func NewGetter(apiServer string, rslvr resolver.Interface, logger log.Logger) diagapi.Getter {
 	if gGetter != nil {
 		gGetter.apiServer = apiServer
 		gGetter.rslvr = rslvr
-		gGetter.b = b
 		gGetter.logger = logger
 		gGetter.refreshAPIClient()
 	}
@@ -73,7 +73,6 @@ func NewGetter(apiServer string, rslvr resolver.Interface, b balancer.Balancer, 
 		gGetter = &getter{
 			apiServer: apiServer,
 			rslvr:     rslvr,
-			b:         b,
 			logger:    logger,
 		}
 		gGetter.refreshAPIClient()

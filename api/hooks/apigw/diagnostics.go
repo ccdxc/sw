@@ -10,7 +10,6 @@ import (
 	"github.com/pensando/sw/venice/apigw"
 	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/diagnostics/module"
 	"github.com/pensando/sw/venice/utils/log"
@@ -20,7 +19,6 @@ import (
 type diagnosticsHooks struct {
 	apiServer    string
 	rslvr        resolver.Interface
-	b            balancer.Balancer
 	logger       log.Logger
 	moduleGetter diagnostics.Getter
 	clientGetter diagnostics.ClientGetter // to support unit testing
@@ -73,10 +71,9 @@ func registerDiagnosticsHooks(svc apigw.APIGatewayService, l log.Logger) error {
 		apiServer: gw.GetAPIServerAddr(globals.APIServer),
 		logger:    l,
 		rslvr:     gw.GetResolver(),
-		b:         balancer.New(gw.GetResolver()),
 		diagSvc:   gw.GetDiagnosticsService(),
 	}
-	d.moduleGetter = module.NewGetter(d.apiServer, d.rslvr, d.b, d.logger)
+	d.moduleGetter = module.NewGetter(d.apiServer, d.rslvr, d.logger)
 	return d.registerDebugPreCallHook(svc)
 }
 

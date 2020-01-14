@@ -96,7 +96,7 @@ func TestAuthenticate(t *testing.T) {
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
+	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: testPassword})
@@ -116,7 +116,7 @@ func TestIncorrectPasswordAuthentication(t *testing.T) {
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
+	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: testUser, Tenant: "default", Password: "wrongpassword"})
@@ -136,7 +136,7 @@ func TestIncorrectUserAuthentication(t *testing.T) {
 	defer DeleteAuthenticationPolicy(apicl)
 
 	// create password authenticator
-	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal())
+	authenticator := NewPasswordAuthenticator("password_test", apiSrvAddr, nil, policy.Spec.Authenticators.GetLocal(), logger)
 
 	// authenticate
 	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: "test1", Tenant: "default", Password: "password"})
