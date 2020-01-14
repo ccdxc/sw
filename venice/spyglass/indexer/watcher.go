@@ -272,8 +272,7 @@ func (idr *Indexer) startWriter(id int) {
 		if failedBulkCount == bulkTimeout {
 			idr.logger.Errorf("elastic write failed for %d seconds. so, dropping the request", bulkTimeout)
 			failedBulkCount = 0
-			idr.resVersionUpdater[id] = nil
-			idr.requests[id] = nil
+			idr.updateIndexer(id)
 		}
 
 		if len(idr.requests[id]) == idr.batchSize {
@@ -448,6 +447,11 @@ func (idr *Indexer) attemptSendBulkRequest(id int) error {
 		return err
 	}
 
+	idr.updateIndexer(id)
+	return nil
+}
+
+func (idr *Indexer) updateIndexer(id int) {
 	idr.updateWriteCount(uint64(len(idr.requests[id])))
 
 	updateFunc := idr.resVersionUpdater[id]
@@ -455,7 +459,6 @@ func (idr *Indexer) attemptSendBulkRequest(id int) error {
 
 	idr.resVersionUpdater[id] = nil
 	idr.requests[id] = nil
-	return nil
 }
 
 // Stop all the watchers
