@@ -70,7 +70,7 @@ tep_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_tep) tep_entry();
         cloned_tep->impl_ = impl_->clone();
         if (unlikely(cloned_tep->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone tep %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone tep %s impl", key_.str());
             goto error;
         }
         cloned_tep->init_config(api_ctxt);
@@ -122,8 +122,8 @@ sdk_ret_t
 tep_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tep_spec_t *spec = &api_ctxt->api_params->tep_spec;
 
-    PDS_TRACE_DEBUG("Initializing TEP id %u, ip %s encap %s",
-                    spec->key.id, ipaddr2str(&spec->remote_ip),
+    PDS_TRACE_DEBUG("Initializing TEP %s, ip %s encap %s",
+                    spec->key.str(), ipaddr2str(&spec->remote_ip),
                     pds_encap2str(&spec->encap));
     memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->type_ = spec->type;
@@ -167,19 +167,19 @@ tep_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     obj_ctxt->upd_bmap = 0;
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
-                      "on tunnel %u", type_, spec->type, key_.id);
+                      "on tunnel %s", type_, spec->type, key_.str());
         return SDK_RET_INVALID_ARG;
     }
 
     if ((fabric_encap_.type != spec->encap.type) ||
         (fabric_encap_.val.value != spec->encap.val.value)) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"encap\" from "
-                      "%s to %s on tunnel %u", pds_encap2str(&fabric_encap_),
-                      pds_encap2str(&spec->encap), key_.id);
+                      "%s to %s on tunnel %s", pds_encap2str(&fabric_encap_),
+                      pds_encap2str(&spec->encap), key_.str());
         return SDK_RET_INVALID_ARG;
     }
 
-    if ((nh_type_ == PDS_NH_TYPE_OVERLAY) && (tep_.id != spec->tep.id)) {
+    if ((nh_type_ == PDS_NH_TYPE_OVERLAY) && (tep_ != spec->tep)) {
         obj_ctxt->upd_bmap = PDS_TEP_UPD_OVERLAY_NH;
     }
     return SDK_RET_OK;
@@ -193,8 +193,7 @@ tep_upd_walk_cb_ (void *api_obj, void *ctxt) {
 
     tep = (tep_entry *)api_framework_obj((api_base *)api_obj);
     tep_key = upd_ctxt->tep->key();
-    if ((tep->nh_type() == PDS_NH_TYPE_OVERLAY) &&
-        (tep->tep().id == tep_key.id)) {
+    if ((tep->nh_type() == PDS_NH_TYPE_OVERLAY) && (tep->tep() == tep_key)) {
         api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                              (api_base *)api_obj, upd_ctxt->upd_bmap);
     }

@@ -75,7 +75,7 @@ meter_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_meter) meter_entry();
         cloned_meter->impl_ = impl_->clone();
         if (unlikely(cloned_meter->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone meter %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone meter %s impl", key_.str());
             goto error;
         }
         cloned_meter->init_config(api_ctxt);
@@ -116,7 +116,7 @@ meter_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 meter_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming meter %u", key_.id);
+    PDS_TRACE_DEBUG("Programming meter %s", key_.str());
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -148,7 +148,7 @@ meter_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 meter_entry::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding meter %u to db", key_.id);
+    PDS_TRACE_VERBOSE("Adding meter %s to db", key_.str());
     return meter_db()->insert(this);
 }
 

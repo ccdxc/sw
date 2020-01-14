@@ -70,7 +70,7 @@ vpc_entry::clone(api_ctxt_t *api_ctxt) {
         if (impl_) {
             cloned_vpc->impl_ = impl_->clone();
             if (unlikely(cloned_vpc->impl_ == NULL)) {
-                PDS_TRACE_ERR("Failed to clone vpc %s impl", key2str().c_str());
+                PDS_TRACE_ERR("Failed to clone vpc %s impl", key_.str());
                 goto error;
             }
         }
@@ -124,7 +124,7 @@ vpc_entry::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     case API_OP_CREATE:
         if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&idx) !=
                 sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate index for vpc idx %u", idx);
+            PDS_TRACE_ERR("Failed to allocate index for vpc %s", key_.str());
             return sdk::SDK_RET_NO_RESOURCE;
         }
         hw_id_ = idx & 0xFFFF;

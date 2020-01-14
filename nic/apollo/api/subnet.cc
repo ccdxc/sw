@@ -79,7 +79,7 @@ subnet_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_subnet) subnet_entry();
         cloned_subnet->impl_ = impl_->clone();
         if (unlikely(cloned_subnet->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone subnet %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone subnet %s impl", key_.str());
             goto error;
         }
         cloned_subnet->init_config(api_ctxt);
@@ -159,10 +159,10 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_subnet_spec_t *spec = &api_ctxt->api_params->subnet_spec;
 
     PDS_TRACE_VERBOSE(
-        "Initializing subnet (vpc %s, subnet %u), v4/v6 pfx %s/%s,\n"
+        "Initializing subnet (vpc %s, subnet %s), v4/v6 pfx %s/%s,\n"
         "v4/v6 VR IP %s/%s, VR MAC %s, v4/v6 route table %u/%u\n"
         "num ingress v4/v6 policy %u/%u, num egress v4/v6 policy %u/%u, "
-        "vnid %u", spec->vpc.str(), spec->key.id,
+        "vnid %u", spec->vpc.str(), spec->key.str(),
         ipv4pfx2str(&spec->v4_prefix), ippfx2str(&spec->v6_prefix),
         ipv4addr2str(spec->v4_vr_ip), ipaddr2str(&spec->v6_vr_ip),
         macaddr2str(spec->vr_mac), spec->v4_route_table.id,
@@ -196,8 +196,8 @@ subnet_entry::init_config(api_ctxt_t *api_ctxt) {
     if (host_ifindex_ != IFINDEX_INVALID) {
         lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         if (unlikely(lif_db()->find(&lif_key) == NULL)) {
-            PDS_TRACE_ERR("lif 0x%x not found, subnet %u init failed",
-                          spec->host_ifindex, spec->key.id);
+            PDS_TRACE_ERR("lif 0x%x not found, subnet %s init failed",
+                          spec->host_ifindex, spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
     }
@@ -325,7 +325,7 @@ sdk_ret_t
 subnet_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                               api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
-        PDS_TRACE_DEBUG("Activating subnet %u config", key_.id);
+        PDS_TRACE_DEBUG("Activating subnet %s config", key_.str());
         return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
     }
     return SDK_RET_OK;

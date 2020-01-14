@@ -71,7 +71,7 @@ vnic_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_vnic) vnic_entry();
         cloned_vnic->impl_ = impl_->clone();
         if (unlikely(cloned_vnic->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone vnic %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone vnic %s impl", key_.str());
             goto error;
         }
         cloned_vnic->init_config(api_ctxt);
@@ -122,8 +122,8 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     vnic_encap_ = spec->vnic_encap;
     if (unlikely((vnic_encap_.type != PDS_ENCAP_TYPE_NONE) &&
                  (vnic_encap_.type != PDS_ENCAP_TYPE_DOT1Q))) {
-        PDS_TRACE_ERR("Invalid encap type %u on vnic %u",
-                      vnic_encap_.type, key_.id);
+        PDS_TRACE_ERR("Invalid encap type %u on vnic %s",
+                      vnic_encap_.type, key_.str());
         return SDK_RET_INVALID_ARG;
 
     }
@@ -133,14 +133,14 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
         // switch vnics can send/receive traffic multiple SIPs/SMACs
         if (unlikely(spec->src_dst_check)) {
             PDS_TRACE_ERR("switch vnics can't have src/dst check knob enabled, "
-                          "vnic %u api op %u failed", key_.id,
+                          "vnic %s api op %u failed", key_.str(),
                           api_ctxt->api_op);
             return SDK_RET_INVALID_ARG;
         }
         // switch vnics can send/receive traffic on multiple vlans
         if (unlikely(vnic_encap_.type != PDS_ENCAP_TYPE_NONE)) {
-            PDS_TRACE_ERR("switch vnic can'thave VLAN encap, vnic %u api op %u "
-                          "failed", key_.id, api_ctxt->api_op);
+            PDS_TRACE_ERR("switch vnic can'thave VLAN encap, vnic %s api op %u "
+                          "failed", key_.str(), api_ctxt->api_op);
             return SDK_RET_INVALID_ARG;
         }
     }
@@ -167,8 +167,8 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     if (host_ifindex_ != IFINDEX_INVALID) {
         lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
         if (unlikely(lif_db()->find(&lif_key) == NULL)) {
-            PDS_TRACE_ERR("lif 0x%x not found, vnic %u init failed",
-                          spec->host_ifindex, spec->key.id);
+            PDS_TRACE_ERR("lif 0x%x not found, vnic %s init failed",
+                          spec->host_ifindex, spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
     }
@@ -193,11 +193,11 @@ sdk_ret_t
 vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
-    PDS_TRACE_DEBUG("Programming vnic %u, subnet %u, v4 meter id %u, "
+    PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, v4 meter id %u, "
                     "v6 meter id %u, mac %s\nvnic encap %s, fabric encap %s, "
                     "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
                     "host if 0x%x",
-                    key_.id, spec->subnet.id,
+                    key_.str(), spec->subnet.str(),
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),
                     pds_encap2str(&spec->vnic_encap),
@@ -217,16 +217,16 @@ sdk_ret_t
 vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
-    if (subnet_.id != spec->subnet.id) {
+    if (subnet_ != spec->subnet) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"subnet\" "
-                      "from %u to %u on vnic %s", subnet_.id,
-                      spec->subnet.id, key2str().c_str());
+                      "from %s to %s on vnic %s", subnet_.str(),
+                      spec->subnet.str(), key_.str());
         return SDK_RET_INVALID_ARG;
     }
     if (memcmp(mac_, spec->mac_addr, ETH_ADDR_LEN)) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"mac address\" "
                       "from %s to %s on vnic %s", macaddr2str(mac_),
-                      macaddr2str(spec->mac_addr), key2str().c_str());
+                      macaddr2str(spec->mac_addr), key_.str());
         return SDK_RET_INVALID_ARG;
     }
     if ((vnic_encap_.type != spec->vnic_encap.type) ||
@@ -253,34 +253,34 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     if (host_ifindex_ != spec->host_ifindex) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;
     }
-    PDS_TRACE_DEBUG("subnet %u upd bmap 0x%lx", obj_ctxt->upd_bmap);
+    PDS_TRACE_DEBUG("vnic %s upd bmap 0x%lx", key_.str(), obj_ctxt->upd_bmap);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 vnic_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Updating vnic %u", key_.id);
+    PDS_TRACE_DEBUG("Updating vnic %s", key_.str());
     return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
 vnic_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                             api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating vnic %u config", key_.id);
+    PDS_TRACE_DEBUG("Activating vnic %s config", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 sdk_ret_t
 vnic_entry::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Reprogramming vnic %u, subnet %u, fabric encap %s, ",
-                    key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
+    PDS_TRACE_DEBUG("Reprogramming vnic %s, subnet %s, fabric encap %s, ",
+                    key_.str(), subnet_.str() , pds_encap2str(&fabric_encap_));
     return impl_->reprogram_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
 vnic_entry::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Reactivating vnic %u, subnet %u, fabric encap %s, ",
-                    key_.id, subnet_.id, pds_encap2str(&fabric_encap_));
+    PDS_TRACE_DEBUG("Reactivating vnic %s, subnet %s, fabric encap %s, ",
+                    key_.str(), subnet_.str(), pds_encap2str(&fabric_encap_));
     return impl_->reactivate_hw(this, epoch, obj_ctxt);
 }
 
@@ -324,7 +324,7 @@ vnic_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 vnic_entry::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding vnic %u to db", key_.id);
+    PDS_TRACE_VERBOSE("Adding vnic %s to db", key_.str());
     return vnic_db()->insert(this);
 }
 

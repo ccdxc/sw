@@ -67,7 +67,7 @@ nexthop::clone(api_ctxt_t *api_ctxt) {
         new (cloned_nh) nexthop();
         cloned_nh->impl_ = impl_->clone();
         if (unlikely(cloned_nh->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone nexthop %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone nexthop %s impl", key_.str());
             goto error;
         }
         cloned_nh->init_config(api_ctxt);
@@ -150,8 +150,8 @@ nexthop::compute_update(api_obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
     if (type_ != spec->type) {
-        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u",
-                      " on nexthop %u", type_, spec->type, spec->key.id);
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %s",
+                      " on nexthop %u", type_, spec->type, spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -165,7 +165,7 @@ nexthop::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 nexthop::activate_config(pds_epoch_t epoch, api_op_t api_op,
                          api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_VERBOSE("Activating nexthop %u config", key_);
+    PDS_TRACE_VERBOSE("Activating nexthop %s config", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -188,7 +188,7 @@ nexthop::read(pds_nexthop_info_t *info) {
 
 sdk_ret_t
 nexthop::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding nexthop %u to db", key_);
+    PDS_TRACE_VERBOSE("Adding nexthop %s to db", key_.str());
     return nexthop_db()->insert(this);
 }
 

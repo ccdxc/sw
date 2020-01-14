@@ -70,7 +70,7 @@ nexthop_group::clone(api_ctxt_t *api_ctxt) {
         new (cloned_nh_group) nexthop_group();
         cloned_nh_group->impl_ = impl_->clone();
         if (unlikely(cloned_nh_group->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone nexthop group %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone nexthop group %s impl", key_.str());
             goto error;
         }
         cloned_nh_group->init_config(api_ctxt);
@@ -143,7 +143,7 @@ nexthop_group::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 nexthop_group::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating nexthop group %u", key_);
+    PDS_TRACE_DEBUG("Activating nexthop group %s", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 

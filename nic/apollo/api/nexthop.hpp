@@ -198,10 +198,10 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_obj_key_t key_;    ///< nexthop key
-    pds_nh_type_t type_;       ///< nexthop type
-    ht_ctxt_t ht_ctxt_;        ///< hash table context
-    impl_base *impl_;          ///< impl object instance
+    pds_obj_key_t key_;            ///< nexthop key
+    pds_nh_type_t type_;           ///< nexthop type
+    ht_ctxt_t ht_ctxt_;            ///< hash table context
+    impl_base *impl_;              ///< impl object instance
 
     friend class nexthop_state;    ///< a friend of nexthop
 } __PACK__;
