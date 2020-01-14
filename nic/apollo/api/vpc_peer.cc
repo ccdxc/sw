@@ -61,7 +61,8 @@ vpc_peer_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_vpc_peer) vpc_peer_entry();
         cloned_vpc_peer->impl_ = impl_->clone();
         if (unlikely(cloned_vpc_peer->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone vpc peer obj %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone vpc peer obj %s impl",
+                           key2str().c_str());
             goto error;
         }
         cloned_vpc_peer->init_config(api_ctxt);
@@ -86,7 +87,7 @@ vpc_peer_entry::free(vpc_peer_entry *vpc_peer) {
 }
 
 vpc_peer_entry *
-vpc_peer_entry::build(pds_vpc_peer_key_t *key) {
+vpc_peer_entry::build(pds_obj_key_t *key) {
     return NULL;
 }
 
@@ -103,9 +104,9 @@ sdk_ret_t
 vpc_peer_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_vpc_peer_spec_t *spec = &api_ctxt->api_params->vpc_peer_spec;
 
-    PDS_TRACE_DEBUG("Intializing vpc peering vpc1 %u, vpc2 %u",
-                    spec->vpc1.id, spec->vpc2.id);
-    memcpy(&key_, &spec->key, sizeof(pds_vpc_peer_key_t));
+    PDS_TRACE_DEBUG("Intializing vpc peering vpc1 %s, vpc2 %s",
+                    spec->vpc1.str(), spec->vpc2.str());
+    memcpy(&key_, &spec->key, sizeof(pds_obj_key_t));
     return SDK_RET_OK;
 }
 
@@ -143,8 +144,8 @@ sdk_ret_t
 vpc_peer_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                 api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_vpc_peer_spec_t *spec = &obj_ctxt->api_params->vpc_peer_spec;
-    PDS_TRACE_DEBUG("Activating vpc peering (%u, %u) config",
-                    spec->vpc1.id, spec->vpc2.id);
+    PDS_TRACE_DEBUG("Activating vpc peering (%s, %s) config",
+                    spec->vpc1.str(), spec->vpc2.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
@@ -160,7 +161,7 @@ vpc_peer_entry::delay_delete(void) {
 
 void
 vpc_peer_entry::fill_spec_(pds_vpc_peer_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_vpc_peer_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
 }
 
 sdk_ret_t

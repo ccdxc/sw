@@ -376,13 +376,13 @@ agent_state::del_from_vpc_db(pds_obj_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_vpc_peer_db(pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec) {
-    ADD_TO_DB(vpc_peer, key, spec);
+agent_state::add_to_vpc_peer_db(pds_obj_key_t *key, pds_vpc_peer_spec_t *spec) {
+    ADD_TO_OBJ_DB(vpc_peer, key, spec);
 }
 
 pds_vpc_peer_spec_t *
-agent_state::find_in_vpc_peer_db(pds_vpc_peer_key_t *key) {
-    FIND_IN_DB(vpc_peer, key);
+agent_state::find_in_vpc_peer_db(pds_obj_key_t *key) {
+    FIND_IN_OBJ_DB(vpc_peer, key);
 }
 
 sdk_ret_t
@@ -398,8 +398,8 @@ agent_state::vpc_peer_db_walk(vpc_peer_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_vpc_peer_db(pds_vpc_peer_key_t *key) {
-    DEL_FROM_DB(vpc_peer, key);
+agent_state::del_from_vpc_peer_db(pds_obj_key_t *key) {
+    DEL_FROM_OBJ_DB(vpc_peer, key);
 }
 
 sdk_ret_t

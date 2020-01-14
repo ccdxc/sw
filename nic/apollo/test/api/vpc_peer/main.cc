@@ -60,7 +60,7 @@ protected:
 /// \ref WF_1
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_1) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1); 
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
 
@@ -72,7 +72,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_1) {
 /// \ref WF_2
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_2) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
 
@@ -84,7 +84,9 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_2) {
 /// \ref WF_3
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_3) {
     vpc_peer_feeder feeder1, feeder2, feeder3;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30}, key3 = {.id = 50};
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key2 = int2pdsobjkey(30);
+    pds_obj_key_t key3 = int2pdsobjkey(50);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(3);
@@ -102,7 +104,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_3) {
 /// \ref WF_4
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_4) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
 
@@ -114,7 +116,9 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_4) {
 /// \ref WF_5
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_5) {
     vpc_peer_feeder feeder1, feeder2, feeder3;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30}, key3 = {.id = 50};
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key2 = int2pdsobjkey(30);
+    pds_obj_key_t key3 = int2pdsobjkey(50);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -132,7 +136,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_5) {
 /// \ref WF_6
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_6) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -150,7 +154,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_6) {
 /// \ref WF_7
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_7) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  =  int2pdsobjkey(1);
     pds_obj_key_t vpc1 =  int2pdsobjkey(1);
     pds_obj_key_t vpc2 =  int2pdsobjkey(2);
     pds_obj_key_t vpc3 =  int2pdsobjkey(1);
@@ -168,7 +172,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_7) {
 /// \ref WF_8
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_8) {
     vpc_peer_feeder feeder1, feeder1A, feeder1B;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  =  int2pdsobjkey(1);
     pds_obj_key_t vpc1 =  int2pdsobjkey(1);
     pds_obj_key_t vpc2 =  int2pdsobjkey(2);
     pds_obj_key_t vpc3 =  int2pdsobjkey(1);
@@ -186,7 +190,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_8) {
 /// \ref WF_9
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_9) {
     vpc_peer_feeder feeder1, feeder1A;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  =  int2pdsobjkey(1);
     pds_obj_key_t vpc1 =  int2pdsobjkey(1);
     pds_obj_key_t vpc2 =  int2pdsobjkey(2);
     pds_obj_key_t vpc3 =  int2pdsobjkey(1);
@@ -201,8 +205,10 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_9) {
 /// \ref WF_10
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_10) {
     vpc_peer_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 40}, key3 = {.id = 70},
-                       key4 = {.id = 100};
+    pds_obj_key_t key1 =  int2pdsobjkey(10);
+    pds_obj_key_t key2 =  int2pdsobjkey(40);
+    pds_obj_key_t key3 =  int2pdsobjkey(70);
+    pds_obj_key_t key4 =  int2pdsobjkey(100);
     pds_obj_key_t vpc1 =  int2pdsobjkey(1);
     pds_obj_key_t vpc2 =  int2pdsobjkey(2);
     pds_obj_key_t vpc3 =  int2pdsobjkey(1);
@@ -230,9 +236,9 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_10) {
 /// \ref WF_N_1
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_1) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key =  {.id = 1};
+    pds_obj_key_t key  =  int2pdsobjkey(1);
     pds_obj_key_t vpc1 =  int2pdsobjkey(1);
-    pds_obj_key_t vpc2 = int2pdsobjkey(2);
+    pds_obj_key_t vpc2 =  int2pdsobjkey(2);
 
     feeder.init(key, vpc1, vpc2, k_max_vpc_peer);
     workflow_neg_1<vpc_peer_feeder>(feeder);
@@ -242,7 +248,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_1) {
 /// \ref WF_N_2
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_2) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
 
@@ -254,7 +260,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_2) {
 /// \ref WF_N_3
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_3) {
     vpc_peer_feeder feeder;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
 
@@ -266,7 +272,8 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_3) {
 /// \ref WF_N_4
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_4) {
     vpc_peer_feeder feeder1, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key2 = int2pdsobjkey(30);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -281,7 +288,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_4) {
 /// \ref WF_N_5
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_5) {
     vpc_peer_feeder feeder1, feeder1A;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -296,7 +303,7 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_5) {
 /// \ref WF_N_6
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_6) {
     vpc_peer_feeder feeder1, feeder1A;
-    pds_vpc_peer_key_t key = {.id = 1};
+    pds_obj_key_t key  = int2pdsobjkey(1);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -311,7 +318,8 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_6) {
 /// \ref WF_N_7
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_7) {
     vpc_peer_feeder feeder1, feeder1A, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key2 = int2pdsobjkey(30);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);
@@ -329,7 +337,8 @@ TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_7) {
 /// \ref WF_N_8
 TEST_F(vpc_peer, DISABLED_vpc_peer_workflow_neg_8) {
     vpc_peer_feeder feeder1, feeder2;
-    pds_vpc_peer_key_t key1 = {.id = 10}, key2 = {.id = 30};
+    pds_obj_key_t key1 = int2pdsobjkey(10);
+    pds_obj_key_t key2 = int2pdsobjkey(30);
     pds_obj_key_t vpc1 = int2pdsobjkey(1);
     pds_obj_key_t vpc2 = int2pdsobjkey(2);
     pds_obj_key_t vpc3 = int2pdsobjkey(1);

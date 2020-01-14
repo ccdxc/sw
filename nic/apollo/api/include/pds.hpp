@@ -91,7 +91,6 @@ typedef uint32_t    pds_route_table_id_t;      ///< route table index
 typedef uint16_t    pds_lif_key_t;             ///< lif key id
 typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_tag_id_t;              ///< tag table index
-typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
@@ -238,11 +237,6 @@ public:
         return hash_algo::fnv_hash((void *)&key, sizeof(key));
     }
 };
-
-/// \brief    vpc peering key
-typedef struct pds_vpc_peer_key_s {
-    pds_vpc_peer_id_t id;    ///< VPC peer id
-} __PACK__ pds_vpc_peer_key_t;
 
 /// \brief    security profile key
 typedef struct pds_security_profile_key_s {

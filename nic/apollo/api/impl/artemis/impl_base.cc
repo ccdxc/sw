@@ -178,7 +178,7 @@ impl_base::build(impl_obj_id_t obj_id, void *key, api_base *api_obj) {
                                        (svc_mapping *)api_obj);
 
     case IMPL_OBJ_ID_VPC_PEER:
-        return vpc_peer_impl::build((pds_vpc_peer_key_t *)key,
+        return vpc_peer_impl::build((pds_obj_key_t *)key,
                                     (vpc_peer_entry *)api_obj);
 
     default:

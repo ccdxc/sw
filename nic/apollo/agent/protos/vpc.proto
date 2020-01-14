@@ -122,7 +122,7 @@ message VPCDeleteResponse {
 // VPCPeerSpec captures configuration for a VPC peering relation
 message VPCPeerSpec {
   // unique id/key idenitifying this VPC peering relation
-  uint32 Id   = 1;
+  bytes  Id   = 1;
   // unique key/identifier of VPC1
   bytes  Vpc1 = 2 [(gogoproto.moretags) = "meta:mandatory"];
   // unique key/identifier of VPC2
@@ -163,7 +163,7 @@ message VPCPeerResponse {
 
 // VPC peer get request
 message VPCPeerGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // VPC peer get response
@@ -177,7 +177,7 @@ message VPCPeerGetResponse {
 message VPCPeerDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // VPC peer delete response

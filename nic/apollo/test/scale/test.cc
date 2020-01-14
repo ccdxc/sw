@@ -775,7 +775,7 @@ create_vpc_peers (uint32_t num_vpcs)
     SDK_ASSERT(num_vpcs <= PDS_MAX_VPC);
     for (uint32_t i = 1; i <= num_vpcs; i+=2) {
         memset(&pds_vpc_peer, 0, sizeof(pds_vpc_peer));
-        pds_vpc_peer.key.id = vpc_peer_id++;
+        pds_vpc_peer.key  = test::int2pdsobjkey(vpc_peer_id++);
         pds_vpc_peer.vpc1 = test::int2pdsobjkey(i);
         pds_vpc_peer.vpc2 = test::int2pdsobjkey(i + 1);
         rv = create_vpc_peer(&pds_vpc_peer);

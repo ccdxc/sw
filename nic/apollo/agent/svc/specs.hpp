@@ -1295,7 +1295,7 @@ pds_vpc_peer_proto_to_api_spec (pds_vpc_peer_spec_t *api_spec,
     if (!api_spec) {
         return;
     }
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     pds_obj_key_proto_to_api_spec(&api_spec->vpc1, proto_spec.vpc1());
     pds_obj_key_proto_to_api_spec(&api_spec->vpc2, proto_spec.vpc2());
 }

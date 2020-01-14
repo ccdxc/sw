@@ -113,7 +113,7 @@ sdk_ret_t pds_vpc_delete(pds_obj_key_t *key,
 
 /// \brief VPC peering specification
 typedef struct pds_vpc_peer_spec_s {
-    pds_vpc_peer_key_t    key;    ///< key
+    pds_obj_key_t         key;    ///< key
     pds_obj_key_t         vpc1;   ///< vpc1 key
     pds_obj_key_t         vpc2;   ///< vpc2 VPC
 } __PACK__ pds_vpc_peer_spec_t;
@@ -146,7 +146,7 @@ sdk_ret_t pds_vpc_peer_create(pds_vpc_peer_spec_t *spec,
 /// \param[in]  key  key
 /// \param[out] info information
 /// \return     #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vpc_peer_read(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
+sdk_ret_t pds_vpc_peer_read(pds_obj_key_t *key, pds_vpc_peer_info_t *info);
 
 /// \brief     update VPC peering
 /// \param[in] spec specification
@@ -160,7 +160,7 @@ sdk_ret_t pds_vpc_peer_update(pds_vpc_peer_spec_t *spec,
 /// \param[in] key key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return    #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_vpc_peer_delete(pds_vpc_peer_key_t *key,
+sdk_ret_t pds_vpc_peer_delete(pds_obj_key_t *key,
                               pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

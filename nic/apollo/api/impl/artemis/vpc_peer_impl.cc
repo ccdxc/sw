@@ -66,7 +66,7 @@ vpc_peer_impl::destroy(vpc_peer_impl *impl) {
 
 // TODO: read from p4 tables
 vpc_peer_impl *
-vpc_peer_impl::build(pds_vpc_peer_key_t *key, vpc_peer_entry *vpc_peer) {
+vpc_peer_impl::build(pds_obj_key_t *key, vpc_peer_entry *vpc_peer) {
     vpc_peer_impl *impl;
 
     impl = vpc_peer_impl_db()->alloc();
@@ -228,7 +228,7 @@ error:
 }
 
 sdk_ret_t
-vpc_peer_impl::read_hw(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info) {
+vpc_peer_impl::read_hw(pds_obj_key_t *key, pds_vpc_peer_info_t *info) {
     return SDK_RET_INVALID_OP;
 }
 

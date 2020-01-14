@@ -63,7 +63,7 @@ typedef enum slab_id_e {
 } slab_id_t;
 
 typedef unordered_map<pds_obj_key_t, pds_vpc_spec_t *, pds_obj_key_hash> vpc_db_t;
-typedef unordered_map<uint32_t, pds_vpc_peer_spec_t *> vpc_peer_db_t;
+typedef unordered_map<pds_obj_key_t, pds_vpc_peer_spec_t *, pds_obj_key_hash> vpc_peer_db_t;
 typedef unordered_map<pds_obj_key_t , pds_subnet_spec_t *, pds_obj_key_hash> subnet_db_t;
 typedef unordered_map<pds_svc_mapping_key_t, pds_svc_mapping_spec_t *, pds_svc_mapping_hash_fn> service_db_t;
 typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_t;
@@ -208,11 +208,11 @@ public:
     bool del_from_nh_group_db(pds_obj_key_t *key);
     slab_ptr_t nh_group_slab(void) const { return cfg_db_->nh_group_slab(); }
 
-    pds_vpc_peer_spec_t *find_in_vpc_peer_db(pds_vpc_peer_key_t *key);
-    sdk_ret_t add_to_vpc_peer_db(pds_vpc_peer_key_t *key,
+    pds_vpc_peer_spec_t *find_in_vpc_peer_db(pds_obj_key_t *key);
+    sdk_ret_t add_to_vpc_peer_db(pds_obj_key_t *key,
                                  pds_vpc_peer_spec_t *spec);
     sdk_ret_t vpc_peer_db_walk(vpc_peer_walk_cb_t cb, void *ctxt);
-    bool del_from_vpc_peer_db(pds_vpc_peer_key_t *key);
+    bool del_from_vpc_peer_db(pds_obj_key_t *key);
     slab_ptr_t vpc_peer_slab(void) const { return cfg_db_->vpc_peer_slab(); }
 
     pds_subnet_spec_t *find_in_subnet_db(pds_obj_key_t *key);

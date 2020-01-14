@@ -46,7 +46,7 @@ public:
     /// \param[in] key    vpc peering entry's key
     /// \param[in] vpc_peer    vpc peer API object
     /// \return    new instance of vpc peering implementation object or NULL
-    static vpc_peer_impl *build(pds_vpc_peer_key_t *key,
+    static vpc_peer_impl *build(pds_obj_key_t *key,
                                 vpc_peer_entry *vpc_peer);
 
     /// \brief     free a stateless entry's temporary s/w only resources like
@@ -117,7 +117,7 @@ public:
     /// \param[out] info pointer to vpc peering info
     /// \param[in]  arg  pointer to boolean having local true/false
     /// \return     SDK_RET_OK on success, failure status code on error
-    sdk_ret_t read_hw(pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info);
+    sdk_ret_t read_hw(pds_obj_key_t *key, pds_vpc_peer_info_t *info);
 
 private:
     /// \brief constructor

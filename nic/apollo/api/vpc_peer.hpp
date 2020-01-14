@@ -54,7 +54,7 @@ public:
     ///           stateless objects to be operated on by framework during DELETE
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
-    static vpc_peer_entry *build(pds_vpc_peer_key_t *key);
+    static vpc_peer_entry *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -139,7 +139,7 @@ public:
 
     /// \brief return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "vpc-peer-" + std::to_string(key_.id);
+        return "vpc-peer-" + std::string(key_.str());
     }
 
     /// \brief          read config
@@ -149,7 +149,7 @@ public:
 
     /// \brief    return the key of this object
     /// \return    key contains ID of vpc peer
-    pds_vpc_peer_key_t key(void) { return key_; }
+    pds_obj_key_t key(void) { return key_; }
 
 private:
     /// \brief constructor
@@ -168,7 +168,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_vpc_peer_key_t key_;         ///< VPC peering key
+    pds_obj_key_t       key_;        ///< VPC peering key
     impl_base          *impl_;       ///< impl object instance
 
     friend class vpc_peer_state;     ///< a friend of vpc_peer_entry

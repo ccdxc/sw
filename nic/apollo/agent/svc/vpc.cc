@@ -230,7 +230,7 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_vpc_peer_spec_t *api_spec;
-    pds_vpc_peer_key_t key = { 0 };
+    pds_obj_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -262,7 +262,7 @@ VPCSvcImpl::VPCPeerCreate(ServerContext *context,
             goto end;
         }
         auto proto_spec = proto_req->request(i);
-        key.id = proto_spec.id();
+        pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
         pds_vpc_peer_proto_to_api_spec(api_spec, proto_spec);
         ret = core::vpc_peer_create(&key, api_spec, bctxt);
         if (ret != SDK_RET_OK) {
@@ -293,7 +293,7 @@ VPCSvcImpl::VPCPeerDelete(ServerContext *context,
                           pds::VPCPeerDeleteResponse *proto_rsp) {
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
-    pds_vpc_peer_key_t key = { 0 };
+    pds_obj_key_t key;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -317,7 +317,7 @@ VPCSvcImpl::VPCPeerDelete(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i++) {
-        key.id = proto_req->id(i);
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vpc_peer_delete(&key, bctxt);
         proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {
@@ -345,7 +345,7 @@ VPCSvcImpl::VPCPeerGet(ServerContext *context,
                        const pds::VPCPeerGetRequest *proto_req,
                        pds::VPCPeerGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_vpc_peer_key_t key = { 0 };
+    pds_obj_key_t key;
     pds_vpc_peer_info_t info = { 0 };
 
     PDS_TRACE_VERBOSE("VPCPeer Get Received")
@@ -356,8 +356,7 @@ VPCSvcImpl::VPCPeerGet(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->id_size(); i ++) {
-        key.id = proto_req->id(i);
-        //pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vpc_peer_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);

@@ -14,7 +14,7 @@ namespace api {
 //----------------------------------------------------------------------------
 
 void
-vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_obj_key_t vpc1,
+vpc_peer_feeder::init(pds_obj_key_t key, pds_obj_key_t vpc1,
                       pds_obj_key_t vpc2, uint32_t num_vpc_peer) {
     this->key = key;
     this->vpc1 = vpc1;
@@ -24,13 +24,13 @@ vpc_peer_feeder::init(pds_vpc_peer_key_t key, pds_obj_key_t vpc1,
 
 void
 vpc_peer_feeder::iter_next(int width) {
-    key.id += width;
+    this->key = int2pdsobjkey(pdsobjkey2int(this->key) + width);
     vpc2 = int2pdsobjkey(pdsobjkey2int(vpc2) + width);
     cur_iter_pos++;
 }
 
 void
-vpc_peer_feeder::key_build(pds_vpc_peer_key_t *key) const {
+vpc_peer_feeder::key_build(pds_obj_key_t *key) const {
     *key = this->key;
 }
 
@@ -45,8 +45,8 @@ vpc_peer_feeder::spec_build(pds_vpc_peer_spec_t *spec) const {
 }
 
 bool
-vpc_peer_feeder::key_compare(const pds_vpc_peer_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_vpc_peer_key_t)) == 0);
+vpc_peer_feeder::key_compare(const pds_obj_key_t *key) const {
+    return (this->key == *key);
 }
 
 bool

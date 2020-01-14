@@ -63,7 +63,7 @@ union api_params_u {
     pds_tag_spec_t               tag_spec;
     pds_svc_mapping_key_t        svc_mapping_key;
     pds_svc_mapping_spec_t       svc_mapping_spec;
-    pds_vpc_peer_key_t           vpc_peer_key;
+    pds_obj_key_t                vpc_peer_key;
     pds_vpc_peer_spec_t          vpc_peer_spec;
     pds_obj_key_t            nexthop_key;
     pds_nexthop_spec_t           nexthop_spec;

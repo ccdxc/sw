@@ -59,7 +59,7 @@ vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
 
 bool
 vpc_feeder::key_compare(const pds_obj_key_t *key) const {
-    return (memcmp(key, &this->key, sizeof(pds_obj_key_t)) == 0);
+    return (this->key == *key);
 }
 
 bool

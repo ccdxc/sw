@@ -232,7 +232,7 @@ vpc_peer_create_validate (pds_vpc_peer_spec_t *spec)
 }
 
 sdk_ret_t
-vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec,
+vpc_peer_create (pds_obj_key_t *key, pds_vpc_peer_spec_t *spec,
                  pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -264,7 +264,7 @@ vpc_peer_create (pds_vpc_peer_key_t *key, pds_vpc_peer_spec_t *spec,
 }
 
 sdk_ret_t
-vpc_peer_delete (pds_vpc_peer_key_t *key, pds_batch_ctxt_t bctxt)
+vpc_peer_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
     pds_vpc_peer_spec_t *spec;
@@ -288,7 +288,7 @@ vpc_peer_delete (pds_vpc_peer_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-vpc_peer_get (pds_vpc_peer_key_t *key, pds_vpc_peer_info_t *info)
+vpc_peer_get (pds_obj_key_t *key, pds_vpc_peer_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_vpc_peer_spec_t *spec;
