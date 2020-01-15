@@ -105,7 +105,7 @@ pds_ms_sim_test_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(1).id);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -126,7 +126,7 @@ pds_ms_sim_test_bgp_update ()
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).id);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -144,7 +144,8 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_af.set_nhself(pds::BOOL_FALSE);
     bgp_peer_af.set_defaultorig(pds::BOOL_FALSE);
 
-    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -163,7 +164,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(2).id);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -181,10 +182,10 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
     pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-    pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(1).id);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -202,7 +203,8 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_af.set_nhself(pds::BOOL_FALSE);
     bgp_peer_af.set_defaultorig(pds::BOOL_FALSE);
 
-    pds_ms_set_amb_bgp_peer_afi_safi (bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_pre_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
+    pds_ms_set_amb_bgp_peer_afi_safi(bgp_peer_af, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);

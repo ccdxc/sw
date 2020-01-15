@@ -43,6 +43,7 @@ private:
 
 using uuid_obj_uptr_t = std::unique_ptr<uuid_obj_t>;
 
+// BGP Global
 // No slab for this one as it is a singleton
 class bgp_uuid_obj_t : public uuid_obj_t {
 public:
@@ -58,6 +59,7 @@ private:
 };
 using bgp_uuid_obj_uptr_t = std::unique_ptr<bgp_uuid_obj_t>;
 
+// BGP Peer Object
 class bgp_peer_uuid_obj_t : public slab_obj_t<bgp_peer_uuid_obj_t>,
                             public uuid_obj_t {
 public:
@@ -86,6 +88,40 @@ private:
 using bgp_peer_uuid_obj_uptr_t = std::unique_ptr<bgp_peer_uuid_obj_t>;
 void bgp_peer_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
 
+// BGP PeerAF Object
+class bgp_peer_af_uuid_obj_t : public slab_obj_t<bgp_peer_af_uuid_obj_t>,
+                            public uuid_obj_t {
+public:
+    struct ms_id_t {
+        ip_addr_t local_ip;
+        ip_addr_t peer_ip;
+        uint32_t  afi;
+        uint32_t  safi;
+        ms_id_t(const ip_addr_t& l, const ip_addr_t& p, const uint32_t &af,
+                const uint32_t &saf)
+            : local_ip(l), peer_ip(p), afi(af), safi(saf) {};
+    };
+    bgp_peer_af_uuid_obj_t(const pds_obj_key_t& uuid, const ip_addr_t& l,
+                           const ip_addr_t& p, const uint32_t &afi,
+                           const uint32_t &safi)
+        : uuid_obj_t(uuid_obj_type_t::BGP_PEER_AF, uuid),
+          mib_keys_(l, p, afi, safi) {};
+
+    ms_id_t& ms_id() { return mib_keys_; }
+    std::string str() override {
+        return std::string("BGP PeerAF Local IP ")
+               .append(ipaddr2str(&mib_keys_.local_ip))
+               .append(" PeerAF IP ").append(ipaddr2str(&mib_keys_.peer_ip))
+               .append(std::to_string(mib_keys_.afi))
+               .append(std::to_string(mib_keys_.safi));
+    }
+private:
+    ms_id_t  mib_keys_;
+};
+using bgp_peer_af_uuid_obj_uptr_t = std::unique_ptr<bgp_peer_af_uuid_obj_t>;
+void bgp_peer_af_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
+
+// Subnet object
 class subnet_uuid_obj_t : public slab_obj_t<subnet_uuid_obj_t>,
                           public uuid_obj_t {
 public:

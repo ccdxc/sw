@@ -28,19 +28,20 @@ uuid_obj_type_str (uuid_obj_type_t t) {
     return "UNKNOWN";
 }
 
+// BGP Global object - Singleton, no slab required
 bgp_uuid_obj_t::bgp_uuid_obj_t(const pds_obj_key_t& uuid) 
     : uuid_obj_t(uuid_obj_type_t::BGP, uuid),
       entity_id_(PDS_MS_BGP_RM_ENT_INDEX) {};
 
+// BGP Peer object
 template<> sdk::lib::slab* slab_obj_t<bgp_peer_uuid_obj_t>::slab_ = nullptr;
-
 void
 bgp_peer_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {
     slabs_[slab_id].
         reset(sdk::lib::slab::factory("PDS-MS-BGP-PEER-UUID-OBJ",
                                       slab_id, sizeof(bgp_peer_uuid_obj_t),
-                                      3,
+                                      4,
                                       true, true, true));
     if (unlikely (!slabs_[slab_id])) {
         throw Error("SLAB creation failed for BGP Peer UUID Map obj");
@@ -48,8 +49,24 @@ bgp_peer_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
     bgp_peer_uuid_obj_t::set_slab(slabs_[slab_id].get());
 }
 
-template<> sdk::lib::slab* slab_obj_t<subnet_uuid_obj_t>::slab_ = nullptr;
+// BGP PeerAF object
+template<> sdk::lib::slab* slab_obj_t<bgp_peer_af_uuid_obj_t>::slab_ = nullptr;
+void
+bgp_peer_af_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
+{
+    slabs_[slab_id].
+        reset(sdk::lib::slab::factory("PDS-MS-BGP-PEERAF-UUID-OBJ",
+                                      slab_id, sizeof(bgp_peer_af_uuid_obj_t),
+                                      4,
+                                      true, true, true));
+    if (unlikely (!slabs_[slab_id])) {
+        throw Error("SLAB creation failed for BGP PeerAF UUID Map obj");
+    }
+    bgp_peer_af_uuid_obj_t::set_slab(slabs_[slab_id].get());
+}
 
+// Subnet object
+template<> sdk::lib::slab* slab_obj_t<subnet_uuid_obj_t>::slab_ = nullptr;
 void
 subnet_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
 {

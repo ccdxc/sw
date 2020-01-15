@@ -17,8 +17,9 @@ std::condition_variable mgmt_state_t::g_cv_resp_;
 types::ApiStatus mgmt_state_t::g_ms_response_;
 
 mgmt_state_t::mgmt_state_t(void) {
-    bgp_peer_uuid_obj_slab_init (slabs_, PDS_MS_MGMT_BGP_PEER_SLAB_ID);
-    subnet_uuid_obj_slab_init (slabs_, PDS_MS_MGMT_SUBNET_SLAB_ID);
+    bgp_peer_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_BGP_PEER_SLAB_ID);
+    bgp_peer_af_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_BGP_PEER_AF_SLAB_ID);
+    subnet_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_SUBNET_SLAB_ID);
 }
 
 void mgmt_state_t::commit_pending_uuid() {
