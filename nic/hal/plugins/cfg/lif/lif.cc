@@ -50,6 +50,7 @@ lif_process_get (lif_t *lif, LifGetResponse *rsp)
     spec->set_enable_nvme(lif->enable_nvme);
     spec->set_nvme_max_ns(lif->nvme_max_ns);
     spec->set_nvme_max_sess(lif->nvme_max_sess);
+    spec->set_rdma_sniff_en(lif->rdma_sniff_en);
 
     spec->set_vlan_strip_en(lif->vlan_strip_en);
     spec->set_vlan_insert_en(lif->vlan_insert_en);
