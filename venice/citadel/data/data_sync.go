@@ -465,7 +465,12 @@ func (dn *DNode) addSyncBuffer(sm *sync.Map, nodeUUID string, req interface{}) e
 		go dn.processPendingQueue(sb)
 	}
 
-	sb.queue.Insert(req)
+	if sb.queue.Len() < dn.clusterCfg.MaxSyncBuffSize {
+		sb.queue.Insert(req)
+	} else {
+		log.Errorf("sync buffer limit reached for node %v replica %v(%v)", sb.nodeUUID, sb.replicaID, sb.shardID)
+	}
+
 	return nil
 }
 

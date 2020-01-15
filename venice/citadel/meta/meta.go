@@ -131,11 +131,13 @@ type ClusterConfig struct {
 	MetastoreType       string             // metadata store type
 	MetaStoreTLSConfig  *tls.Config        // tls config for kv store
 	MetaStoreRetry      int                // number of retries before generating event
+	MetaStoreURLs       []string           // metastore URLs to connect to
 	NumShards           uint32             // number of shards in shardmap
 	DesiredReplicas     uint32             // desired number of replicas
 	NodeTTL             uint64             // TTL for the node keepalives
 	MaxSyncMsgSize      int                // Max sync message size
 	MaxSyncRetry        int                // Max sync retry attempts
+	MaxSyncBuffSize     int                // Max sync buffer size
 	DeadInterval        time.Duration      // duration after which we declare a node as dead
 	RebalanceInterval   time.Duration      // rebalance interval
 	RebalanceDelay      time.Duration      // delay before starting rebalance loop
@@ -168,6 +170,7 @@ const (
 	DefaultMetaStoreRetry      = 180
 	DefaultMaxSyncMsgSize      = 20 * 1024 * 1024 // 20MB
 	DefaultMaxSyncRetry        = 5
+	DefaultMaxSyncBuffSize     = 1000
 )
 
 // DefaultClusterConfig returns default cluster config params
@@ -191,6 +194,7 @@ func DefaultClusterConfig() *ClusterConfig {
 		NodeTTL:             DefaultNodeTTL,
 		MaxSyncMsgSize:      DefaultMaxSyncMsgSize,
 		MaxSyncRetry:        DefaultMaxSyncRetry,
+		MaxSyncBuffSize:     DefaultMaxSyncBuffSize,
 		DeadInterval:        DefaultNodeDeadInterval,
 		RebalanceInterval:   time.Second,
 		RebalanceDelay:      time.Second * 5,
@@ -553,6 +557,8 @@ func GetClusterState(cfg *ClusterConfig, clusterType string) (*TscaleCluster, er
 		}
 	}
 
+	// reset URLs to fetch from api server
+	cfg.MetaStoreURLs = nil
 	return nil, err
 }
 
@@ -580,15 +586,24 @@ func GetMetastoreURLs(ctx context.Context, cfg *ClusterConfig) []string {
 		return nil
 	}
 
+	if len(cfg.MetaStoreURLs) > 0 {
+		return cfg.MetaStoreURLs
+	}
+
 	for ctx.Err() == nil {
 		for i := 0; i < cfg.MetaStoreRetry && ctx.Err() == nil; i++ {
 			// create a grpc client
-			apicl, err := apiclient.NewGrpcAPIClient(globals.Citadel, globals.APIServer, log.WithContext("pkg", globals.Citadel+"-grpc"), rpckit.WithBalancer(balancer.New(cfg.ResolverClient)))
+			bl := balancer.New(cfg.ResolverClient)
+			apicl, err := apiclient.NewGrpcAPIClient(globals.Citadel, globals.APIServer, log.WithContext("pkg", globals.Citadel+"-grpc"), rpckit.WithBalancer(bl))
 			if err != nil {
+				bl.Close()
 				log.Errorf("failed to connect to %s, %s", globals.APIServer, err)
 				time.Sleep(time.Second)
 				continue
 			}
+
+			defer apicl.Close()
+
 			log.Infof("connected to %s", globals.APIServer)
 
 			cluster, err := apicl.ClusterV1().Cluster().List(context.Background(), &api.ListWatchOptions{})
@@ -604,7 +619,8 @@ func GetMetastoreURLs(ctx context.Context, cfg *ClusterConfig) []string {
 				for _, q := range c.Spec.QuorumNodes {
 					kvstore = append(kvstore, q+":"+globals.KVStoreClientPort)
 				}
-				log.Infof("kvstore : %+v", kvstore)
+				log.Infof("metastore urls : %+v", kvstore)
+				cfg.MetaStoreURLs = kvstore
 				return kvstore
 			}
 			time.Sleep(time.Second)
