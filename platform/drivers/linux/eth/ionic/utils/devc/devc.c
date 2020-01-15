@@ -41,6 +41,7 @@ static void usage(char **argv)
 	printf("%s <pci> nop\n", progname);
 	printf("%s <pci> reset\n", progname);
 	printf("%s <pci> identify\n", progname);
+	printf("%s <pci> link <down|up>\n", progname);
 	printf("%s <pci> lif_init <index>\n", progname);
 	printf("%s <pci> vf <id> set|get spoof|trust|state|mac|vlan|rate [val]\n", progname);
 	exit(1);
@@ -146,6 +147,30 @@ static void identify(int argc, char **argv)
 	printf("ndbpgs_per_lif:   %d\n", dev_ident->ndbpgs_per_lif);
 	printf("intr_coal_mult:   %d\n", dev_ident->intr_coal_mult);
 	printf("intr_coal_div:    %d\n", dev_ident->intr_coal_div);
+}
+
+static void port_state(int argc, char **argv)
+{
+	union dev_cmd cmd = {
+		.port_setattr.opcode = CMD_OPCODE_PORT_SETATTR,
+		.port_setattr.attr = IONIC_PORT_ATTR_STATE,
+	};
+	union dev_cmd_comp comp;
+	u8 state;
+
+	if (argc != 3)
+		usage(argv);
+
+	if (!strcmp(argv[2], "up")) {
+		cmd.port_setattr.state = 1;
+	} else if (!strcmp(argv[2], "down")) {
+		cmd.port_setattr.state = 0;
+	} else {
+		usage(argv);
+	}
+
+	if (go(&cmd, &comp))
+		printf("status: %d\n", comp.identify.status);
 }
 
 static void lif_init(int argc, char **argv)
@@ -341,6 +366,8 @@ int main(int argc, char **argv)
 		reset(argc, argv);
 	else if (strcmp(cmd, "identify") == 0)
 		identify(argc, argv);
+	else if (strcmp(cmd, "link") == 0)
+		port_state(argc, argv);
 	else if (strcmp(cmd, "lif_init") == 0)
 		lif_init(argc, argv);
 	else if (strcmp(cmd, "vf") == 0)

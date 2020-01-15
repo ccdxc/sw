@@ -60,6 +60,185 @@ char *heads_or_tails(int i, int head, int tail)
 	return "    ";
 }
 
+void dump_adminq(char *path)
+{
+	char *fpath;
+	FILE *file, *file_sg;
+	struct admin_cmd cmd;
+	int i, j;
+
+	int head = get_val(path, "head");
+	int tail = get_val(path, "tail");
+	int num_descs = get_val(path, "num_descs");
+
+	char *ionic_opcode_to_str(enum cmd_opcode opcode)
+	{
+		switch (opcode) {
+		case CMD_OPCODE_NOP:
+			return "CMD_OPCODE_NOP";
+		case CMD_OPCODE_INIT:
+			return "CMD_OPCODE_INIT";
+		case CMD_OPCODE_RESET:
+			return "CMD_OPCODE_RESET";
+		case CMD_OPCODE_IDENTIFY:
+			return "CMD_OPCODE_IDENTIFY";
+		case CMD_OPCODE_GETATTR:
+			return "CMD_OPCODE_GETATTR";
+		case CMD_OPCODE_SETATTR:
+			return "CMD_OPCODE_SETATTR";
+		case CMD_OPCODE_PORT_IDENTIFY:
+			return "CMD_OPCODE_PORT_IDENTIFY";
+		case CMD_OPCODE_PORT_INIT:
+			return "CMD_OPCODE_PORT_INIT";
+		case CMD_OPCODE_PORT_RESET:
+			return "CMD_OPCODE_PORT_RESET";
+		case CMD_OPCODE_PORT_GETATTR:
+			return "CMD_OPCODE_PORT_GETATTR";
+		case CMD_OPCODE_PORT_SETATTR:
+			return "CMD_OPCODE_PORT_SETATTR";
+		case CMD_OPCODE_LIF_INIT:
+			return "CMD_OPCODE_LIF_INIT";
+		case CMD_OPCODE_LIF_RESET:
+			return "CMD_OPCODE_LIF_RESET";
+		case CMD_OPCODE_LIF_IDENTIFY:
+			return "CMD_OPCODE_LIF_IDENTIFY";
+		case CMD_OPCODE_LIF_SETATTR:
+			return "CMD_OPCODE_LIF_SETATTR";
+		case CMD_OPCODE_LIF_GETATTR:
+			return "CMD_OPCODE_LIF_GETATTR";
+		case CMD_OPCODE_RX_MODE_SET:
+			return "CMD_OPCODE_RX_MODE_SET";
+		case CMD_OPCODE_RX_FILTER_ADD:
+			return "CMD_OPCODE_RX_FILTER_ADD";
+		case CMD_OPCODE_RX_FILTER_DEL:
+			return "CMD_OPCODE_RX_FILTER_DEL";
+		case CMD_OPCODE_Q_IDENTIFY:
+			return "CMD_OPCODE_Q_IDENTIFY";
+		case CMD_OPCODE_Q_INIT:
+			return "CMD_OPCODE_Q_INIT";
+		case CMD_OPCODE_Q_CONTROL:
+			return "CMD_OPCODE_Q_CONTROL";
+		case CMD_OPCODE_RDMA_RESET_LIF:
+			return "CMD_OPCODE_RDMA_RESET_LIF";
+		case CMD_OPCODE_RDMA_CREATE_EQ:
+			return "CMD_OPCODE_RDMA_CREATE_EQ";
+		case CMD_OPCODE_RDMA_CREATE_CQ:
+			return "CMD_OPCODE_RDMA_CREATE_CQ";
+		case CMD_OPCODE_RDMA_CREATE_ADMINQ:
+			return "CMD_OPCODE_RDMA_CREATE_ADMINQ";
+		case CMD_OPCODE_FW_DOWNLOAD:
+			return "CMD_OPCODE_FW_DOWNLOAD";
+		case CMD_OPCODE_FW_CONTROL:
+			return "CMD_OPCODE_FW_CONTROL";
+		case CMD_OPCODE_VF_GETATTR:
+			return "CMD_OPCODE_VF_GETATTR";
+		case CMD_OPCODE_VF_SETATTR:
+			return "CMD_OPCODE_VF_SETATTR";
+		default:
+			return "DEVCMD_UNKNOWN";
+		}
+	}
+
+	fpath = make_path(path, "desc_blob");
+	file = fopen(fpath, "rb");
+	if (!file) {
+		perror(fpath);
+		exit(1);
+	}
+
+	for (i = 0; i < num_descs; i++) {
+		fread(&cmd, sizeof(cmd), 1, file);
+
+		printf("%s", heads_or_tails(i, head, tail));
+		printf("[%04x]", i);
+		printf(" op %02d %-15s", cmd.opcode, ionic_opcode_to_str(cmd.opcode));
+
+		printf("\n");
+	}
+
+	fclose(file);
+}
+
+void dump_admincq(char *path)
+{
+	FILE *file;
+	struct admin_comp comp;
+	int tail = get_val(path, "tail");
+	int num_descs = get_val(path, "num_descs");
+	int i;
+
+	path = make_path(path, "desc_blob");
+	file = fopen(path, "rb");
+	if (!file) {
+		perror(path);
+		exit(1);
+	}
+
+	for (i = 0; i < num_descs; i++) {
+		fread(&comp, sizeof(comp), 1, file);
+
+		printf("%s", heads_or_tails(i, -1, tail));
+		printf("[%04x]", i);
+
+		printf(" status %d comp_index 0x%x color %d",
+		       comp.status, comp.comp_index,
+		       comp.color & IONIC_COMP_COLOR_MASK ? 1 : 0);
+
+		printf("\n");
+	}
+
+	fclose(file);
+}
+
+void dump_notifycq(char *path)
+{
+	FILE *file;
+	struct notifyq_event ev;
+	int tail = get_val(path, "tail");
+	int num_descs = get_val(path, "num_descs");
+	int i;
+
+	char *ev_opcode(u8 opcode)
+	{
+		switch (opcode) {
+		case 0:
+			return "none";
+		case EVENT_OPCODE_LINK_CHANGE:
+			return "EVENT_OPCODE_LINK_CHANGE";
+		case EVENT_OPCODE_RESET:
+			return "EVENT_OPCODE_RESET";
+		case EVENT_OPCODE_HEARTBEAT:
+			return "EVENT_OPCODE_HEARTBEAT";
+		case EVENT_OPCODE_LOG:
+			return "EVENT_OPCODE_LOG";
+		case EVENT_OPCODE_XCVR:
+			return "EVENT_OPCODE_XCVR";
+		default:
+			return "unknown";
+		}
+	}
+
+	path = make_path(path, "desc_blob");
+	file = fopen(path, "rb");
+	if (!file) {
+		perror(path);
+		exit(1);
+	}
+
+	for (i = 0; i < num_descs; i++) {
+		fread(&ev, sizeof(ev), 1, file);
+
+		printf("%s", heads_or_tails(i, -1, tail));
+		printf("[%04x]", i);
+
+		printf(" eid %lu ecode %d %s", ev.eid, ev.ecode, ev_opcode(ev.ecode));
+
+		printf("\n");
+	}
+
+	fclose(file);
+}
+
 void dump_rxq(char *path)
 {
 	char *fpath;
@@ -298,11 +477,11 @@ void dump_txq(char *path)
 int main (int argc, char **argv)
 {
 	char *path, *bdf, *lif, *q, *qcq;
-	bool cq, tx;
+	bool cq;
 
 	void usage(void)
 	{
-		printf("e.g. %s 0000:03:00.0/lif0/tx0/q\n", argv[0]);
+		printf("e.g. %s 0000:03:00.0/lif0/L0-tx0/q\n", argv[0]);
 		exit(1);
 	}
 
@@ -316,17 +495,35 @@ int main (int argc, char **argv)
 	q = strtok(NULL, "/");
 	qcq = strtok(NULL, "/");
 
-	tx = (q[3] == 't');
 	cq = (qcq[0] == 'c');
 
-	if (tx && cq)
-		dump_txcq(path);
-	if (tx && !cq)
-		dump_txq(path);
-	if (!tx && cq)
-		dump_rxcq(path);
-	if (!tx && !cq)
-		dump_rxq(path);
+	switch (q[3]) {
+	case 't':
+		if (cq)
+			dump_txcq(path);
+		else
+			dump_txq(path);
+		break;
+	case 'r':
+		if (cq)
+			dump_rxcq(path);
+		if (!cq)
+			dump_rxq(path);
+		break;
+	case 'a':
+		if (cq)
+			dump_admincq(path);
+		else
+			dump_adminq(path);
+		break;
+	case 'n':
+		if (cq)
+			dump_notifycq(path);
+		break;
+	default:
+		usage();
+		break;
+	}
 
 	return 0;
 }
