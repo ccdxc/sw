@@ -4,6 +4,11 @@
   margin-right: 10px;
 }
 
+.naplesdetail-detailsTable-container {
+  margin-right: 10px;
+  min-width: 300px;
+}
+
 .naplesdetail-alertsevents-container {
   min-height: 600px;
 }
@@ -97,5 +102,6 @@
 
 .naplesdetail-chart-item {
   max-width: calc(33% - 20px);
+  min-width: 450px;
   margin-right: 20px;
 }

@@ -65,8 +65,8 @@
   <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-node-table-container">
     <div fxFlex="nogrow" fxLayout="column" class="naplesdetail-details">
       <!-- <div fxFlex="none" class="cluster-details-title"> Distributed Services Card Detail </div> -->
-      <div fxFlex="none" fxLayout="row" fxLayoutAlign="space-around start">
-        <div fxFlex="none" fxLayout="column">
+      <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start start">
+        <div fxFlex="none" fxLayout="column" class="naplesdetail-detailsTable-container">
           <div fxFlex="none" fxLayout="row">
             <!-- Field titles -->
             <div fxFlex="none" fxLayout="column">
@@ -167,7 +167,7 @@
           </div>
         </div>
 
-        <div fxFlex="none" fxLayout="column" *ngIf="showExpandedDetailsCard"
+        <div fxFlex="none" fxLayout="column" class="naplesdetail-detailsTable-container"
              [@slideInOutHorizontal]>
           <div fxFlex="none" fxLayout="row">
             <!-- Field titles -->
@@ -230,7 +230,7 @@
           </div>
         </div>
 
-        <div fxFlex fxFlex="none" fxLayout="column">
+        <div fxFlex fxFlex="none" fxLayout="column" class="naplesdetail-detailsTable-container">
           <!-- hide the expand and collapse icon now
           <div fxFlex="none" fxLayout="row">
             <div class="naplesdetail-details-toggle-expand" [@slideInOutHorizontal] fxFlex="10"
@@ -270,7 +270,7 @@
           </div>
         </div>
 
-        <div fxFlex fxFlex="none" fxLayout="column">
+        <div fxFlex fxFlex="none" fxLayout="column" class="naplesdetail-detailsTable-container">
           <div fxFlex="none" fxLayout="row">
             <!-- Field titles -->
             <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
