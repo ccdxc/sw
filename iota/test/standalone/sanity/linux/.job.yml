@@ -6,11 +6,11 @@ image:
 rebase: true
 queue_name: baremetal
 
-# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine.
 e2e-targets:
   # baremetal + baremetal Esx test cases
  e2e-linux-bm:
-   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite classic --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,tso,ionicdrv,penctl,mode_change,post_diag_check,asic_tools,obfl_check,cpldupgrade,hpe_ilo"]
+   commands: ["sh", "-c", "make linux && ./run_iota.sh --testsuite classic"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]
    owners: ["email:ci-status@pensando.io"]
    area:
@@ -26,9 +26,9 @@ e2e-targets:
          server-type: server-a
          # nic-type can be naples, mellanox, or raw
          nic-type: naples
-         # Required when RDMA is reenabled
-         #constraints:
-         #  same-switch: true
+         # Required when RDMA is enabled
+         constraints:
+           same-switch: true
    provision:
        username: vm
        password: vm

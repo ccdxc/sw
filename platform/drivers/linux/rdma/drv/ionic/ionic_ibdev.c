@@ -2754,7 +2754,7 @@ static int __ionic_create_cq(struct ionic_cq *cq,
 			     struct ib_udata *udata)
 {
 	struct ionic_ibdev *dev = to_ionic_ibdev(cq->ibcq.device);
-	struct ionic_ctx *ctx = to_ionic_ctx_fb(ibctx);
+	struct ionic_ctx *ctx = to_ionic_ctx(ibctx);
 	struct ionic_cq_req req;
 	struct ionic_cq_resp resp;
 	int rc, eq_idx;
@@ -3498,17 +3498,6 @@ static int ionic_poll_cq(struct ib_cq *ibcq, int nwc, struct ib_wc *wc)
 	bool peek;
 	int rc = 0, npolled = 0;
 	unsigned long irqflags;
-
-	/* Note about rc: (noted here because poll is different)
-	 *
-	 * Functions without "poll" in the name, if they return an integer,
-	 * return zero on success, or a positive error number.  Functions
-	 * returning a pointer return NULL on error and set errno to a positve
-	 * error number.
-	 *
-	 * Functions with "poll" in the name return negative error numbers, or
-	 * greater or equal to zero number of completions on success.
-	 */
 
 	if (nwc < 1)
 		return 0;

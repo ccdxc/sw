@@ -395,15 +395,10 @@ static inline struct ionic_ibdev *to_ionic_ibdev(struct ib_device *ibdev)
 
 static inline struct ionic_ctx *to_ionic_ctx(struct ib_ucontext *ibctx)
 {
-	return container_of(ibctx, struct ionic_ctx, ibctx);
-}
-
-static inline struct ionic_ctx *to_ionic_ctx_fb(struct ib_ucontext *ibctx)
-{
 	if (!ibctx)
 		return NULL;
 
-	return to_ionic_ctx(ibctx);
+	return container_of(ibctx, struct ionic_ctx, ibctx);
 }
 
 static inline struct ionic_ctx *to_ionic_ctx_uobj(struct ib_uobject *uobj)

@@ -38,11 +38,12 @@ make -j -C krping || exit
 #
 
 cd rdma-core
+rm -rf build
 mkdir -p build
 cd build
 cmake -GNinja -DCMAKE_INSTALL_PREFIX:PATH=/usr ..
-ninja
-ninja install
+ninja || exit
+ninja install || exit
 cd ../..
 
 # Clean out refs to drivers which have been removed
