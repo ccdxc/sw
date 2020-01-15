@@ -59,6 +59,7 @@ else
     autoconf \
     cmake \
     gcc \
+    libelf-dev \
     libudev-dev \
     libnl-3-dev \
     libnl-route-3-dev \

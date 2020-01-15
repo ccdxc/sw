@@ -38,8 +38,21 @@
 #define MLNX_OFED_4_2__4_17		1
 #define MLNX_OFED_4_2__4_19a		1
 #define MLNX_OFED_4_2__4_19b		1
+#define MLNX_OFED_4_2__4_19c		1
 #define MLNX_OFED_4_2__4_20		1
 #define MLNX_OFED_4_2__5_0		1
+
+/* MLNX_OFED_LINUX-4.4-1.0.0.0-ubuntu18.04-x86_64 */
+#define OFA_COMPAT_d647238		MLNX_OFED_4_4
+
+#define MLNX_OFED_4_4__support		1
+#define MLNX_OFED_4_4__umem_get		1
+#define MLNX_OFED_4_4__reg_user_mr	1
+#define MLNX_OFED_4_4__4_17		1
+#define MLNX_OFED_4_4__4_19b		1
+#define MLNX_OFED_4_4__4_19c		1
+#define MLNX_OFED_4_4__4_20		1
+#define MLNX_OFED_4_4__5_0		1
 
 /* MLNX_OFED_LINUX-4.5-1.0.1.0-debian9.0-x86_64 */
 /* MLNX_OFED_LINUX-4.5-1.0.1.0-ubuntu18.04-x86_64 */

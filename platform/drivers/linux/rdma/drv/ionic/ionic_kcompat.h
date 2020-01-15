@@ -281,7 +281,6 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #define ib_gid_to_network_type(gid_type, gid) \
 	ib_gid_to_network_type(gid_type, (union ib_gid *)(gid))
 #else
-#define HAVE_PORT_ATTR_IP_GIDS
 #define HAVE_AH_ATTR_CACHED_GID
 #endif
 
@@ -293,6 +292,11 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #else
 #define HAVE_CONST_IB_WR
 #define HAVE_IBDEV_MAX_SEND_RECV_SGE
+#endif
+
+#if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 4_19c)
+#else
+#define HAVE_PORT_ATTR_IP_GIDS
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,20, /* RHEL */ 99,99, /* OFA */ 4_20)
