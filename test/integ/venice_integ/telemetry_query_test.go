@@ -103,7 +103,7 @@ func (it *veniceIntegSuite) TestFwlogsQueryAuth(c *C) {
 	AssertOk(c, err, "Failed to get logged in context")
 
 	_, err = tc.Fwlogs(newUserCtx, query)
-	AssertOk(c, err, "Fwlogs query should have succeeded")
+	Assert(c, err != nil, "Fwlogs query should have failed")
 
 	// Querying for a different tenant should fail
 	query.Tenant = "randomTenant"

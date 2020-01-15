@@ -25,7 +25,7 @@ import (
 )
 
 // createNode creates a node
-func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string, logger log.Logger) (*data.DNode, error) {
+func createDnode(nodeUUID, nodeURL, dbPath string, logger log.Logger) (*data.DNode, error) {
 	cfg := meta.DefaultClusterConfig()
 	cfg.DeadInterval = time.Millisecond * 500
 	cfg.NodeTTL = 5
@@ -33,7 +33,7 @@ func createDnode(nodeUUID, nodeURL, dbPath, qdbpath string, logger log.Logger) (
 	cfg.RebalanceInterval = time.Millisecond * 10
 
 	// create the data node
-	dn, err := data.NewDataNode(cfg, nodeUUID, nodeURL, dbPath, qdbpath, logger)
+	dn, err := data.NewDataNode(cfg, nodeUUID, nodeURL, dbPath, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 
 		defer os.RemoveAll(qpath)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -151,7 +151,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		log.Infof("Got result: %v", string(restr))
 
 		// query deprecated apis
-		_, err = brokers[0].ExecuteQuerySingle(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx), 1)
+		_, err = brokers[0].ExecuteQuerySingle(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx))
 		AssertOk(t, err, "Error executing query-single")
 
 		// test show commands
@@ -273,8 +273,6 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	Assert(t, err != nil, "query database didn't fail")
 	_, err = brokers[0].ExecuteQuery(context.Background(), "db0", "SELECT * frpm cpu")
 	Assert(t, err != nil, "query database didn't fail")
-	_, err = brokers[0].ExecuteAggQuery(context.Background(), "db0", "SELECT * frpm cpu")
-	Assert(t, err != nil, "aggquery database didn't fail")
 	_, err = brokers[0].ExecuteShowCmd(context.Background(), "db0", "SHOW mesurements")
 	Assert(t, err != nil, "show commands didn't fail")
 
@@ -313,7 +311,7 @@ func TestBrokerKstoreBasic(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(qpath)
 
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 
@@ -470,104 +468,6 @@ func TestBrokerKstoreBasic(t *testing.T) {
 	AssertOk(t, err, "Error deleting cluster state")
 }
 
-func TestBrokerAggQuery(t *testing.T) {
-	const numNodes = 4
-	dnodes := make([]*data.DNode, numNodes)
-	brokers := make([]*broker.Broker, numNodes)
-	var err error
-	logger := log.GetNewLogger(log.GetDefaultConfig(t.Name()))
-
-	// create nodes
-	for idx := 0; idx < numNodes; idx++ {
-		// create a temp dir
-		path, err := ioutil.TempDir("", fmt.Sprintf("agg-tstore-%d-", idx))
-		AssertOk(t, err, "Error creating tmp dir")
-		defer os.RemoveAll(path)
-
-		qpath, err := ioutil.TempDir("", fmt.Sprintf("agg-qstore-%d-", idx))
-		AssertOk(t, err, "Error creating tmp dir")
-		defer os.RemoveAll(qpath)
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
-		AssertOk(t, err, "Error creating nodes")
-	}
-	// create the brokers
-	for idx := 0; idx < numNodes; idx++ {
-		brokers[idx], err = createBroker(fmt.Sprintf("node-%d", idx), logger)
-		AssertOk(t, err, "Error creating broker")
-	}
-
-	// wait till all the shards are created
-	AssertEventually(t, func() (bool, interface{}) {
-		if len(brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap) != numNodes {
-			return false, nil
-		}
-		for _, nd := range brokers[0].GetCluster(meta.ClusterTypeTstore).NodeMap {
-			if nd.NumShards != (meta.DefaultShardCount*meta.DefaultReplicaCount)/numNodes {
-				return false, []interface{}{brokers[0].GetCluster(meta.ClusterTypeTstore), nd}
-			}
-		}
-		return true, nil
-	}, "nodes have invalid number of shards", "1s", "20s")
-
-	// create the database
-	err = brokers[0].CreateDatabase(context.Background(), "db0")
-	AssertOk(t, err, "Error creating database")
-
-	// write some points
-	for idx := 0; idx < numNodes; idx++ {
-		// create some points
-		data := fmt.Sprintf("cpu%d,host=serverB,svc=nginx value1=11,value2=12 %v\n", idx, time.Now().UnixNano()) +
-			fmt.Sprintf("cpu%d,host=serverC,svc=nginx value1=21,value2=22  %v\n", idx, time.Now().UnixNano())
-		points, err := models.ParsePointsWithPrecision([]byte(data), time.Now().UTC(), "ns")
-		AssertOk(t, err, "Error parsing points")
-
-		// write the points
-		err = brokers[idx].WritePoints(context.Background(), "db0", points)
-		AssertOk(t, err, "Error writing points")
-	}
-
-	// read the points back
-	for idx := 0; idx < numNodes; idx++ {
-		results, err := brokers[idx].ExecuteAggQuery(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx))
-		AssertOk(t, err, "Error executing query")
-		Assert(t, len(results) == 1, "invalid number of results", results)
-		for _, r := range results {
-			Assert(t, len(r.Series) == 1, "invalid number of series", results)
-			for _, s := range r.Series {
-				Assert(t, len(s.Values) == 2, "invalid number of values", results)
-			}
-		}
-	}
-
-	// error checks
-	_, err = brokers[0].ExecuteAggQuery(context.Background(), "unknown", "SELECT * FROM cpu0")
-	Assert(t, err != nil, "query didnt fail for invalid db")
-	_, err = brokers[0].ExecuteAggQuery(context.Background(), "", "SELECT * FROM cpu0")
-	Assert(t, err != nil, "query didnt fail for invalid db")
-	_, err = brokers[0].ExecuteAggQuery(context.Background(), "", "DESELECT * FROM cpu0")
-	Assert(t, err != nil, "invalid query didnt fail")
-
-	// delete the database
-	err = brokers[0].DeleteDatabase(context.Background(), "db0")
-	AssertOk(t, err, "Error deleting database")
-
-	// stop all brokers and data nodes
-	for idx := 0; idx < numNodes; idx++ {
-		err = dnodes[idx].Stop()
-		AssertOk(t, err, "Error stopping data node")
-		Assert(t, brokers[idx].IsStopped() == false, "Incorrect broker state")
-		err = brokers[idx].Stop()
-		AssertOk(t, err, "Error stopping broker")
-		Assert(t, brokers[idx].IsStopped() == true, "Incorrect broker state")
-	}
-
-	// delete the old cluster state
-	err = meta.DestroyClusterState(meta.DefaultClusterConfig(), meta.ClusterTypeTstore)
-	AssertOk(t, err, "Error deleting cluster state")
-	err = meta.DestroyClusterState(meta.DefaultClusterConfig(), meta.ClusterTypeKstore)
-	AssertOk(t, err, "Error deleting cluster state")
-}
-
 func TestBrokerTstoreWriteRetry(t *testing.T) {
 	const numNodes = 4
 	dnodes := make([]*data.DNode, numNodes)
@@ -586,7 +486,7 @@ func TestBrokerTstoreWriteRetry(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(qpath)
 
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, logger)
 		AssertOk(t, err, "Error creating nodes")
 		defer dnodes[idx].Stop()
 	}
@@ -653,11 +553,7 @@ func TestBrokerBenchmark(t *testing.T) {
 		AssertOk(t, err, "Error creating tmp dir")
 		defer os.RemoveAll(path)
 
-		qpath, err := ioutil.TempDir("", fmt.Sprintf("%s-querydb-%d-", t.Name(), idx))
-		AssertOk(t, err, "Error creating tmp dir")
-		defer os.RemoveAll(qpath)
-
-		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, qpath, logger)
+		dnodes[idx], err = createDnode(fmt.Sprintf("node-%d", idx), "localhost:0", path, logger)
 		AssertOk(t, err, "Error creating nodes")
 	}
 

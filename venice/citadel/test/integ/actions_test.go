@@ -230,7 +230,7 @@ func (it *integTestSuite) stopNode(c *C, idx int) {
 func (it *integTestSuite) startNode(c *C, idx int) {
 	var err error
 	// create data node
-	it.dnodes[idx], err = data.NewDataNode(it.cfg, fmt.Sprintf("dnode-%d", idx), fmt.Sprintf(nodeURLFormat, idx), fmt.Sprintf(dbpathFormat, idx), fmt.Sprintf(querydbpathFormat, idx), it.logger)
+	it.dnodes[idx], err = data.NewDataNode(it.cfg, fmt.Sprintf("dnode-%d", idx), fmt.Sprintf(nodeURLFormat, idx), fmt.Sprintf(dbpathFormat, idx), it.logger)
 	AssertOk(c, err, "Error creating datanode")
 
 	// create broker

@@ -136,19 +136,6 @@ func (mr *MockInfMockRecorder) ExecuteQuery(ctx, database, qry interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteQuery", reflect.TypeOf((*MockInf)(nil).ExecuteQuery), ctx, database, qry)
 }
 
-// ExecuteAggQuery mocks base method
-func (m *MockInf) ExecuteAggQuery(ctx context.Context, database, qry string) ([]*query.Result, error) {
-	ret := m.ctrl.Call(m, "ExecuteAggQuery", ctx, database, qry)
-	ret0, _ := ret[0].([]*query.Result)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExecuteAggQuery indicates an expected call of ExecuteAggQuery
-func (mr *MockInfMockRecorder) ExecuteAggQuery(ctx, database, qry interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteAggQuery", reflect.TypeOf((*MockInf)(nil).ExecuteAggQuery), ctx, database, qry)
-}
-
 // WriteLines mocks base method
 func (m *MockInf) WriteLines(ctx context.Context, database string, lines []string) error {
 	ret := m.ctrl.Call(m, "WriteLines", ctx, database, lines)

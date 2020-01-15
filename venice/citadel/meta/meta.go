@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -453,6 +454,30 @@ func (cl *TscaleCluster) GetNode(nodeUUID string) (*NodeState, error) {
 	}
 
 	return node, nil
+}
+
+// GetReplicaFromNode returns a replica from Node
+func (cl *TscaleCluster) GetReplicaFromNode(nodeUUID string) (*Replica, error) {
+	ns, err := cl.GetNode(nodeUUID)
+	if err != nil {
+		return nil, err
+	}
+
+	for r := range ns.Replicas {
+		repl, err := cl.ShardMap.GetReplica(r)
+		if err != nil {
+			continue
+		}
+
+		if repl.State != ReplicaStateReady {
+			continue
+		}
+
+		return repl, nil
+	}
+
+	log.Errorf("failed to find any replica in node %v in ready state ", nodeUUID)
+	return nil, fmt.Errorf("failed to find any replica")
 }
 
 // IsNodeAlive checks if a node is alive

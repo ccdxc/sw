@@ -182,6 +182,12 @@ func TestMetaBasic(t *testing.T) {
 			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)), w1.GetCluster(meta.ClusterTypeTstore)
 	}, "nodes did not get cluster update", "100ms", "30s")
 
+	repl, err := w1.GetCluster(meta.ClusterTypeTstore).GetReplicaFromNode("1111")
+	AssertOk(t, err, "Error getting a replica from node 1111")
+	// check replica in node
+	_, ok := w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].Replicas[repl.ReplicaID]
+	Assert(t, ok == true, fmt.Sprintf("failed to find replica %v in node %v", repl, w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].Replicas))
+
 	// verify that shardmap is setup correctly
 	tcl := w1.GetCluster(meta.ClusterTypeTstore)
 	_, err = tcl.ShardMap.GetShardForPoint("db0", "measurement0", "")

@@ -44,8 +44,14 @@ func (sm *ShardMap) computeHashForPoint(keys string) uint32 {
 
 // GetShardForPoint returns a shard for the measurement
 func (sm *ShardMap) GetShardForPoint(kind, measurement, tags string) (*Shard, error) {
+	var hash uint32
+
 	// calculate the hash
-	hash := sm.computeHashForPoint(kind + "|" + measurement + "|" + tags)
+	if measurement == "Fwlogs" {
+		hash = sm.computeHashForPoint(kind + "|" + measurement + "|" + tags)
+	} else {
+		hash = sm.computeHashForPoint(kind + "|" + measurement)
+	}
 
 	// calculate modulo
 	mod := hash % sm.NumShards

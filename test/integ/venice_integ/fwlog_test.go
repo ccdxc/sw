@@ -102,6 +102,7 @@ func (it *veniceIntegSuite) TestValidateFwlogPolicy(c *C) {
 }
 
 func (it *veniceIntegSuite) TestFwlog(c *C) {
+	c.Skip("fwlogs disabled")
 	// query
 	apiGwAddr := "localhost:" + it.config.APIGatewayPort
 	tc, err := telemetryclient.NewTelemetryClient(apiGwAddr)

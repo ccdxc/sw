@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
-	"strconv"
 	"strings"
 	"time"
 
@@ -258,20 +257,8 @@ func (hsrv *HTTPServer) queryShardReqHandler(w http.ResponseWriter, r *http.Requ
 	}
 	database := r.FormValue("db")
 
-	shid := strings.TrimSpace(r.FormValue("shard"))
-	if shid == "" {
-		http.Error(w, `missing required shard id parameter "shard"`, http.StatusBadRequest)
-		return
-	}
-
-	shardNum, err := strconv.Atoi(shid)
-	if err != nil {
-		http.Error(w, `invalid shard`, http.StatusBadRequest)
-		return
-	}
-
 	// execute the query
-	result, err := hsrv.broker.ExecuteQuerySingle(context.Background(), database, qp, shardNum)
+	result, err := hsrv.broker.ExecuteQuerySingle(context.Background(), database, qp)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error executing the query: %v", err), http.StatusInternalServerError)
 		return

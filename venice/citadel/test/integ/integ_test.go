@@ -34,11 +34,10 @@ type integTestSuite struct {
 }
 
 const (
-	DefaultNumNodes   = 5
-	nodeURLFormat     = "localhost:74%02d"
-	restURLFormat     = "localhost:75%02d"
-	dbpathFormat      = "/tmp/citadel/%d"
-	querydbpathFormat = "/tmp/citadel/qstore/%d"
+	DefaultNumNodes = 5
+	nodeURLFormat   = "localhost:74%02d"
+	restURLFormat   = "localhost:75%02d"
+	dbpathFormat    = "/tmp/citadel/%d"
 )
 
 var logger = log.GetNewLogger(log.GetDefaultConfig("citadel-integ-test"))
@@ -76,7 +75,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	// create all the nodes and brokers
 	for i := 0; i < it.numNodes; i++ {
 		// create data node
-		dn, err := data.NewDataNode(cfg, fmt.Sprintf("dnode-%d", i), fmt.Sprintf(nodeURLFormat, i), fmt.Sprintf(dbpathFormat, i), fmt.Sprintf(querydbpathFormat, i), it.logger)
+		dn, err := data.NewDataNode(cfg, fmt.Sprintf("dnode-%d", i), fmt.Sprintf(nodeURLFormat, i), fmt.Sprintf(dbpathFormat, i), it.logger)
 		AssertOk(c, err, "Error creating datanode")
 		it.dnodes = append(it.dnodes, dn)
 

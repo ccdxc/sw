@@ -166,7 +166,6 @@ service DataNode {
     rpc PointsReplicate (PointsWriteReq) returns (StatusResp) {};
     rpc PointsWrite (PointsWriteReq) returns (StatusResp) {};
     rpc ExecuteQuery(QueryReq) returns (QueryResp) {};
-    rpc ExecuteAggQuery(QueryReq) returns (QueryResp) {};
 
     // key-value messages
     rpc ReadReq(KeyMsg) returns (KeyValueMsg) {};
