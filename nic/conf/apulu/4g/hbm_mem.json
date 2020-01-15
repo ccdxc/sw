@@ -1,20 +1,29 @@
 {
+    "guideline": {
+        "_comment"  : "Regions are categorized to 'static','upgrade','opertbl' and 'cfgtbl'",
+        "_comment1" : "For non-disruptive sw upgrades, the static* should not be modified across releases",
+        "_comment2" : "Memory fragmentation and upgrade issues, all static regions should be placed adjascent",
+        "_comment2" : "Memory fragmentation and upgrade issues, all opertbl regions should be placed adjascent"
+    },
     "regions": [
          {
             "_comment" : "cache coherent",
             "name": "cpu-dr",
+            "kind": "static",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-pr",
+            "kind": "static",
             "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-descriptor",
+            "kind": "static",
             "size": "2048K",
             "cc": "true"
 
@@ -22,30 +31,35 @@
         {
             "_comment" : "cache coherent",
             "name": "cpu-page",
+            "kind": "static",
             "size": "32768K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "arq-rx",
+            "kind": "static",
             "size": "256K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "ascq",
+            "kind": "static",
             "size": "256K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "asq",
+            "kind": "static",
             "size": "256K",
             "cc"     : "true"
         },
         {
             "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
             "name" : "unused cache coherent",
+            "kind": "static",
             "size" : "29696K",
             "cc"      : "true"
         },
@@ -54,67 +68,81 @@
             "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
             "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
              "name": "reserved_common",
+            "kind": "static",
              "size": "64M"
         },
         {
             "name": "devcmd",
+            "kind": "static",
             "size": "32768K"
         },
         {
             "name": "nicmgrqstate_map",
+            "kind": "static",
             "size": "32768K",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgr",
+            "kind": "static",
             "size" : "32768K"
         },
         {
             "name": "fwupdate",
+            "kind": "static",
             "size": "128K"
         },
         {
             "name": "lif_stats",
+            "kind": "static",
             "size": "1024K",
             "reset": true,
             "cache": "p4plus-all"
         },
         {
             "name": "rss_indir_table",
+            "kind": "static",
             "size": "1024K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "lif2qstate_map",
+            "kind": "static",
             "size": "4K",
             "cache": "p4plus-all"
         },
         {
-            "name": "p4_program",
-            "size": "1024K"
-        },
-        {
-            "name": "rxdma_program",
-            "size": "1024K",
-            "cache": "p4plus-rxdma"
-        },
-        {
-            "name": "txdma_program",
-            "size": "1024K",
-            "cache": "p4plus-txdma"
-        },
-        {
             "name": "rxdma_to_txdma_buf",
+            "kind": "static",
             "size": "10M",
             "_comment": "1K buffers of size 10K"
         },
         {
             "name": "rxdma_to_txdma_desc",
+            "kind": "static",
             "size": "128K",
             "_comment": "1K descriptors of size 128B"
         },
         {
+            "name": "p4_program",
+            "kind": "cfgtbl",
+            "size": "1024K"
+        },
+        {
+            "name": "rxdma_program",
+            "kind": "cfgtbl",
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "txdma_program",
+            "kind": "cfgtbl",
+            "size": "1024K",
+            "cache": "p4plus-txdma"
+        },
+        {
             "name": "lpm_v4",
+            "kind": "cfgtbl",
             "_comment": "(32+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "564K",
             "block_size": "17472B",
@@ -123,6 +151,7 @@
         },
         {
             "name": "lpm_v6",
+            "kind": "cfgtbl",
             "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
             "size": "1K",
             "block_size": "1B",
@@ -131,40 +160,46 @@
         },
         {
             "name": "dnat",
+            "kind": "cfgtbl",
             "_comment": "8 * 1024 * (128 + 10)",
             "size": "1104K",
             "cache": "p4plus-txdma"
         },
         {
+            "_comment": "dummy region - for meters use profile p2",
             "name": "meter_v4",
-            "_comment": "dummy region - for meters use profile p2",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1B",
             "max_elements": "1K"
         },
         {
+            "_comment": "dummy region - for meters use profile p2",
             "name": "meter_v6",
-            "_comment": "dummy region - for meters use profile p2",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1B",
             "max_elements": "1K"
         },
         {
+            "_comment": "dummy region - for tags use profile p2",
             "name": "tag_v4",
-            "_comment": "dummy region - for tags use profile p2",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1B",
             "max_elements": "1K"
         },
         {
-            "name": "tag_v6",
             "_comment": "dummy region - for tags use profile p2",
+            "name": "tag_v6",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1B",
             "max_elements": "1K"
         },
         {
             "name": "sacl_ingress_v4",
+            "kind": "cfgtbl",
             "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
             "_comment": "RFC-C1:round64(2^17 * 64/51) + round64(2^18 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(328965) + round64(1458888) = 164544 + 329024 + 1458944 = 1952512",
             "_comment": "RFC-C2:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944  = 1664640",
@@ -178,6 +213,7 @@
         },
         {
             "name": "sacl_egress_v4",
+            "kind": "cfgtbl",
             "_comment": "LPM tables:17472 + 17472 + 17472 + 2112 = 54528",
             "_comment": "RFC-C1:round64(2^17 * 64/51) + round64(2^18 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(328965) + round64(1458888) = 164544 + 329024 + 1458944 = 1952512",
             "_comment": "RFC-C2:round64(2^17 * 64/51) + round64(2^15 * 64/51) + round64(2^20 * 64/46) = round64(164482) + round64(41120) + round64(1458888) = 164544 + 41152 + 1458944  = 1664640",
@@ -191,6 +227,7 @@
         },
         {
             "name": "sacl_ingress_v6",
+            "kind": "cfgtbl",
             "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
             "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
             "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
@@ -204,6 +241,7 @@
         },
         {
             "name": "sacl_egress_v6",
+            "kind": "cfgtbl",
             "_comment": "LPM tables:87360 (SIP)+ 87360 (DIP) + 17472 (port+dport) + 2112 (sport) = 194304",
             "_comment": "RFC-C1:(((2^17 + 2^18) * 64)/51) + (2^20 * 64)/46 = round64(493450) + round64(1458890) = 493504 + 1458944 = 1952448",
             "_comment": "RFC-C2:(((2^17 + 2^15) * 64)/51) + (2^20 * 64)/46 = round64(205604) + round64(1458890) = 205632 + 1458944 = 1664576",
@@ -217,93 +255,109 @@
         },
         {
             "name": "vnic_info_rxdma",
+            "kind": "cfgtbl",
             "size": "256K",
             "cache": "p4plus-rxdma",
             "_comment": "4K * 64B"
         },
         {
             "name": "local_mapping",
+            "kind": "cfgtbl",
             "size": "8M",
             "cache": "p4ig",
             "_comment": "128K * 64B"
         },
         {
             "name": "local_mapping_ohash",
+            "kind": "cfgtbl",
             "size": "1M",
             "cache": "p4ig",
             "reset": true
         },
         {
             "name": "flow",
+            "kind": "opertbl",
             "size": "128M",
             "cache": "p4ig",
             "_comment": "2M * 64B"
         },
         {
             "name": "flow_ohash",
+            "kind": "opertbl",
             "size": "16M",
             "cache": "p4ig",
             "_comment": "256K * 64B"
         },
         {
             "name": "ipv4_flow",
+            "kind": "opertbl",
             "size": "256M",
             "cache": "p4ig",
             "_comment": "8M * 32B"
         },
         {
             "name": "ipv4_flow_ohash",
+            "kind": "opertbl",
             "size": "32M",
             "cache": "p4ig",
             "_comment": "1M * 32B"
         },
         {
             "name": "ip_mac_binding",
+            "kind": "opertbl",
             "size": "512K",
             "cache": "p4ig",
             "_comment": "32K * 16B"
         },
         {
             "name": "session",
+            "kind": "opertbl",
             "size": "64M",
             "cache": "p4eg",
             "_comment": "2M * 32B"
         },
         {
+            "name": "session_stats",
+            "kind": "opertbl",
+            "size": "64M",
+            "_comment": "2M * 16B * 2"
+        },
+        {
             "name": "mapping",
+            "kind": "cfgtbl",
             "size": "256M",
             "cache": "p4eg",
             "_comment": "4M * 64B"
         },
         {
             "name": "mapping_ohash",
+            "kind": "cfgtbl",
             "size": "32M",
             "cache": "p4eg",
             "_comment": "512K * 64B"
         },
         {
             "name": "nexthop",
+            "kind": "cfgtbl",
             "size": "4M",
             "cache": "p4eg",
             "_comment": "64K * 64B"
         },
         {
             "name": "nat",
+            "kind": "cfgtbl",
             "size": "131072K",
             "cache": "p4eg",
             "_comment": "TBD"
         },
         {
-            "name": "session_stats",
-            "size": "64M",
-            "_comment": "2M * 16B * 2"
-        },
-        {
             "name": "qos-hbm-fifo",
+            "kind": "cfgtbl",
             "size": "0K"
         },
         {
             "name": "tx-scheduler",
+            "kind": "cfgtbl",
             "size": "2048K"
         },
         {
@@ -312,12 +366,21 @@
             "_comment1": "key space = 1024 * 64 = 64K",
             "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
             "name": "timers",
+            "kind": "cfgtbl",
             "size": "1088K"
         },
         {
             "name": "port_stats",
+            "kind": "opertbl",
             "size": "17K",
             "reset": true
+        },
+        {
+            "_comment" : "Reserved for upgrade for duplicating the tables",
+            "_comment1" : "Consider memory for new table addition also in future",
+            "name": "for_upgrade",
+            "kind": "upgrade",
+            "size": "0M"
         }
     ]
 }

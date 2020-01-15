@@ -9,58 +9,58 @@
          {
             "_comment" : "cache coherent",
             "name": "cpu-dr",
-            "size": "128K",
             "kind": "static",
+            "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-pr",
-            "size": "128K",
             "kind": "static",
+            "size": "128K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-descriptor",
-            "size": "2048K",
             "kind": "static",
+            "size": "2048K",
             "cc": "true"
 
         },
         {
             "_comment" : "cache coherent",
             "name": "cpu-page",
-            "size": "32768K",
             "kind": "static",
+            "size": "32768K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "arq-rx",
-            "size": "256K",
             "kind": "static",
+            "size": "256K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "ascq",
-            "size": "256K",
             "kind": "static",
+            "size": "256K",
             "cc": "true"
         },
         {
             "_comment" : "cache coherent",
             "name": "asq",
-            "size": "256K",
             "kind": "static",
+            "size": "256K",
             "cc"     : "true"
         },
         {
             "_comment" : "keep this to make cache coherent region order of 2 - currently 64MB from beg(hbm base) including this region",
             "name" : "unused cache coherent",
-            "size" : "29696K",
             "kind": "static",
+            "size" : "29696K",
             "cc"      : "true"
         },
         {
@@ -78,8 +78,8 @@
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "32768K",
             "kind": "static",
+            "size": "32768K",
             "cache": "p4plus-all"
         },
         {
@@ -94,33 +94,33 @@
         },
         {
             "name": "lif_stats",
+            "kind": "static",
             "size": "1024K",
             "reset": true,
-            "kind": "static",
             "cache": "p4plus-all"
         },
         {
             "name": "rss_indir_table",
-            "size": "1024K",
             "kind": "static",
+            "size": "1024K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "lif2qstate_map",
-            "size": "4K",
             "kind": "static",
+            "size": "4K",
             "cache": "p4plus-all"
         },
         {
             "name": "rxdma_to_txdma_buf",
-            "size": "10M",
             "kind": "static",
+            "size": "10M",
             "_comment": "1K buffers of size 10K"
         },
         {
             "name": "rxdma_to_txdma_desc",
-            "size": "128K",
             "kind": "static",
+            "size": "128K",
             "_comment": "1K descriptors of size 128B"
         },
         {
@@ -130,32 +130,32 @@
         },
         {
             "name": "rxdma_program",
-            "size": "1024K",
             "kind": "cfgtbl",
+            "size": "1024K",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "txdma_program",
-            "size": "1024K",
             "kind": "cfgtbl",
+            "size": "1024K",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v4",
+            "kind": "cfgtbl",
             "_comment": "(1024+1) * (64 + 16 * 64 + 16 * 16 * 64)",
             "size": "18M",
             "block_size": "17472B",
             "max_elements": "1K",
-            "kind": "cfgtbl",
             "cache": "p4plus-txdma"
         },
         {
             "name": "lpm_v6",
+            "kind": "cfgtbl",
             "_comment": "(1024+1) * (64 + 8 * 64 + 8 * 8 * 64 + 8 * 8 * 8 * 64)",
             "size": "37M",
             "block_size": "37440B",
             "max_elements": "1K",
-            "kind": "cfgtbl",
             "cache": "p4plus-txdma"
         },
         {
@@ -167,159 +167,159 @@
         },
         {
             "name": "meter_v4",
+            "kind": "cfgtbl",
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",
             "block_size": "1B",
-            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
             "name": "meter_v6",
+            "kind": "cfgtbl",
             "_comment": "dummy region - for meters use profile p2",
             "size": "1K",
             "block_size": "1B",
-            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
             "name": "tag_v4",
+            "kind": "cfgtbl",
             "_comment": "dummy region - for tags use profile p2",
             "size": "1K",
             "block_size": "1B",
-            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
             "name": "tag_v6",
+            "kind": "cfgtbl",
             "_comment": "dummy region - for tags use profile p2",
             "size": "1K",
             "block_size": "1B",
-            "kind": "cfgtbl",
             "max_elements": "1K"
         },
         {
             "name": "sacl_egress_v4",
+            "kind": "cfgtbl",
             "size": "264M",
             "block_size": "264K",
-            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_ingress_v4",
+            "kind": "cfgtbl",
             "size": "264M",
             "block_size": "264K",
-            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_egress_v6",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1K",
-            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "sacl_ingress_v6",
+            "kind": "cfgtbl",
             "size": "1K",
             "block_size": "1K",
-            "kind": "cfgtbl",
             "cache": "p4plus-rxdma"
         },
         {
             "name": "vnic_info_rxdma",
+            "kind": "cfgtbl",
             "size": "256K",
             "cache": "p4plus-rxdma",
-            "kind": "cfgtbl",
             "_comment": "4K * 64B"
         },
         {
             "name": "local_mapping",
+            "kind": "cfgtbl",
             "size": "8M",
             "cache": "p4ig",
-            "kind": "cfgtbl",
             "_comment": "128K * 64B"
         },
         {
             "name": "local_mapping_ohash",
+            "kind": "cfgtbl",
             "size": "1M",
             "cache": "p4ig",
-            "kind": "cfgtbl",
             "reset": true
         },
         {
             "name": "flow",
+            "kind": "opertbl",
             "size": "128M",
             "cache": "p4ig",
-            "kind": "opertbl",
             "_comment": "2M * 64B"
         },
         {
             "name": "flow_ohash",
+            "kind": "opertbl",
             "size": "16M",
             "cache": "p4ig",
-            "kind": "opertbl",
             "_comment": "256K * 64B"
         },
         {
             "name": "ipv4_flow",
+            "kind": "opertbl",
             "size": "256M",
             "cache": "p4ig",
-            "kind": "opertbl",
             "_comment": "8M * 32B"
         },
         {
             "name": "ipv4_flow_ohash",
+            "kind": "opertbl",
             "size": "32M",
             "cache": "p4ig",
-            "kind": "opertbl",
             "_comment": "1M * 32B"
         },
         {
             "name": "ip_mac_binding",
+            "kind": "opertbl",
             "size": "512K",
             "cache": "p4ig",
-            "kind": "opertbl",
             "_comment": "32K * 16B"
         },
         {
             "name": "session",
+            "kind": "opertbl",
             "size": "64M",
             "cache": "p4eg",
-            "kind": "opertbl",
             "_comment": "2M * 32B"
         },
         {
             "name": "session_stats",
-            "size": "64M",
             "kind": "opertbl",
+            "size": "64M",
             "_comment": "2M * 16B * 2"
         },
         {
             "name": "mapping",
+            "kind": "cfgtbl",
             "size": "256M",
             "cache": "p4eg",
-            "kind": "cfgtbl",
             "_comment": "4M * 64B"
         },
         {
             "name": "mapping_ohash",
+            "kind": "cfgtbl",
             "size": "32M",
             "cache": "p4eg",
-            "kind": "cfgtbl",
             "_comment": "512K * 64B"
         },
         {
             "name": "nexthop",
+            "kind": "cfgtbl",
             "size": "4M",
             "cache": "p4eg",
-            "kind": "cfgtbl",
             "_comment": "64K * 64B"
         },
         {
             "name": "nat",
+            "kind": "cfgtbl",
             "size": "131072K",
             "cache": "p4eg",
-            "kind": "cfgtbl",
             "_comment": "TBD"
         },
         {
@@ -343,14 +343,14 @@
         },
         {
             "name": "port_stats",
+            "kind": "opertbl",
             "size": "17K",
-            "kind": "cfgtbl",
             "reset": true
         },
         {
-            "name": "for_upgrade",
             "_comment" : "Reserved for upgrade for duplicating the tables",
             "_comment1" : "Consider memory for new table addition also in future",
+            "name": "for_upgrade",
             "kind": "upgrade",
             "size": "0M"
         }
