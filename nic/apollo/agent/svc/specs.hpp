@@ -489,6 +489,8 @@ pds_if_type_to_proto_if_type (pds_if_type_t type)
         return pds::IF_TYPE_UPLINK_PC;
     case PDS_IF_TYPE_L3:
         return pds::IF_TYPE_L3;
+    case PDS_IF_TYPE_LOOPBACK:
+        return pds::IF_TYPE_LOOPBACK;
     default:
         return pds::IF_TYPE_NONE;
     }
@@ -549,6 +551,13 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
                                          &api_spec->l3_if_info.ip_prefix);
         }
         break;
+    case PDS_IF_TYPE_LOOPBACK:
+        {
+            auto proto_loopback = proto_spec->mutable_loopbackifspec();
+            ippfx_api_spec_to_proto_spec(proto_loopback->mutable_prefix(),
+                &api_spec->loopback_if_info.ip_prefix);
+        }
+        break;
     default:
         break;
     }
@@ -562,7 +571,7 @@ pds_if_api_status_to_proto (pds::InterfaceStatus *proto_status,
     switch (type) {
     case PDS_IF_TYPE_UPLINK:
         {
-            auto uplink_status = proto_status->mutable_uplinkstatus();
+            auto uplink_status = proto_status->mutable_uplinkifstatus();
             uplink_status->set_lifid(api_status->uplink_status.lif_id);
         }
         break;
@@ -593,26 +602,36 @@ static inline sdk_ret_t
 pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
                           const pds::InterfaceSpec &proto_spec)
 {
-    if (proto_spec.type() != pds::IF_TYPE_L3) {
-        return SDK_RET_INVALID_ARG;
-    }
-    if (IFINDEX_TO_IFTYPE(proto_spec.l3ifspec().ethifindex()) != IF_TYPE_ETH) {
-        return SDK_RET_INVALID_ARG;
-    }
     pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
-    api_spec->type = PDS_IF_TYPE_L3;
     api_spec->admin_state =
         proto_admin_state_to_pds_admin_state(proto_spec.adminstatus());
+    switch (proto_spec.type()) {
+    case pds::IF_TYPE_L3:
+        if (IFINDEX_TO_IFTYPE(proto_spec.l3ifspec().ethifindex()) !=
+                IF_TYPE_ETH) {
+            return SDK_RET_INVALID_ARG;
+        }
+        api_spec->type = PDS_IF_TYPE_L3;
+        pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
+                                      proto_spec.l3ifspec().vpcid());
+        api_spec->l3_if_info.eth_ifindex = proto_spec.l3ifspec().ethifindex();
+        api_spec->l3_if_info.encap =
+            proto_encap_to_pds_encap(proto_spec.l3ifspec().encap());
+        MAC_UINT64_TO_ADDR(api_spec->l3_if_info.mac_addr,
+                           proto_spec.l3ifspec().macaddress());
+        ippfx_proto_spec_to_api_spec(&api_spec->l3_if_info.ip_prefix,
+                                     proto_spec.l3ifspec().prefix());
+        break;
 
-    pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
-                                  proto_spec.l3ifspec().vpcid());
-    api_spec->l3_if_info.eth_ifindex = proto_spec.l3ifspec().ethifindex();
-    api_spec->l3_if_info.encap =
-        proto_encap_to_pds_encap(proto_spec.l3ifspec().encap());
-    MAC_UINT64_TO_ADDR(api_spec->l3_if_info.mac_addr,
-                       proto_spec.l3ifspec().macaddress());
-    ippfx_proto_spec_to_api_spec(&api_spec->l3_if_info.ip_prefix,
-                                 proto_spec.l3ifspec().prefix());
+    case pds::IF_TYPE_LOOPBACK:
+        api_spec->type = PDS_IF_TYPE_LOOPBACK;
+        ippfx_proto_spec_to_api_spec(&api_spec->loopback_if_info.ip_prefix,
+                                     proto_spec.loopbackifspec().prefix());
+        break;
+
+    default:
+        return SDK_RET_INVALID_ARG;
+    }
     return SDK_RET_OK;
 }
 

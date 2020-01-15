@@ -111,7 +111,7 @@ func printIf(intf *pds.Interface) {
 	lifId := "-"
 	switch spec.GetType() {
 	case pds.IfType_IF_TYPE_UPLINK:
-		lifId = fmt.Sprint(status.GetUplinkStatus().GetLifId())
+		lifId = fmt.Sprint(status.GetUplinkIfStatus().GetLifId())
 		portNum = fmt.Sprintf("%d", spec.GetUplinkSpec().GetPortId())
 	case pds.IfType_IF_TYPE_L3:
 		portNum = ifIndexToPortIdStr(spec.GetL3IfSpec().GetEthIfIndex())

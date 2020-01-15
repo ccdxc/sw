@@ -27,6 +27,8 @@ enum IfType {
   IF_TYPE_UPLINK_PC = 2;
   // L3 interface
   IF_TYPE_L3        = 3;
+  // loopback interface
+  IF_TYPE_LOOPBACK  = 4;
 }
 
 // IfStatus status reflects the operational status of Interface
@@ -71,39 +73,56 @@ message L3IfSpec {
   uint64         MACAddress = 5;
 }
 
+// Loopback interface configuration
+message LoopbackIfSpec {
+  // IP address hosted on the loopback interface
+  // NOTE: This IP address is in underlay VPC
+  types.IPPrefix Prefix = 1 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
 // InterfaceSpec is used to add or update of an interface
 message InterfaceSpec {
   // unique interface id
   // NOTE: interface ids start from 1, for IF_TYPE_UPLINK this id is in the
   //       range [1...max-ports#] and same for IF_TYPE_UPLINK_PC
-  bytes            Id          = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes              Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the interface
-  IfType           Type        = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  IfType             Type         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // port up|down adminstratively
-  IfStatus         AdminStatus = 3;
+  IfStatus           AdminStatus  = 3;
   // interface type specific configuration
   oneof ifinfo {
     // uplink specific configuration
-    UplinkSpec   UplinkSpec    = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
-    UplinkPCSpec UplinkPCSpec  = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
-    L3IfSpec     L3IfSpec      = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
+    UplinkSpec     UplinkSpec     = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
+    UplinkPCSpec   UplinkPCSpec   = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
+    L3IfSpec       L3IfSpec       = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
+    LoopbackIfSpec LoopbackIfSpec = 7 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_LOOPBACK"];
   }
 }
 
-message UplinkStatus {
+// operational status of uplink interface
+message UplinkIfStatus {
   // lif id associated with this uplink
-  uint32 LifId   = 1;
+  uint32 LifId = 1;
+}
+
+// operational status of loopback interface
+message LoopbackIfStatus {
+  // loopback interface name in linux
+  string name = 1;
 }
 
 // operational status of an interface, if any
 message InterfaceStatus {
   // encoded interface index of this interface
-  uint32 IfIndex              = 1;
+  uint32             IfIndex          = 1;
   // operational status of the interface
-  IfStatus OperStatus         = 2;
+  IfStatus           OperStatus       = 2;
   oneof ifstatus {
     // uplink specific status
-    UplinkStatus UplinkStatus = 3;
+    UplinkIfStatus   UplinkIfStatus   = 3;
+    // loopback interface specific status
+    LoopbackIfStatus LoopbackIfStatus = 4;
   }
 }
 

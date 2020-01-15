@@ -25,7 +25,7 @@ class InterfaceStatus(base.StatusObjectBase):
 
     def Update(self, iftype, status):
         if iftype == utils.InterfaceTypes.UPLINK:
-            self.LifId = status.UplinkStatus.LifId
+            self.LifId = status.UplinkIfStatus.LifId
         return
 
 class InterfaceSpec_:

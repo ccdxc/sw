@@ -29,6 +29,8 @@ typedef enum pds_if_type_e {
     PDS_IF_TYPE_UPLINK_PC = 2,
     // L3 interface
     PDS_IF_TYPE_L3        = 3,
+    // Loopback interface
+    PDS_IF_TYPE_LOOPBACK  = 4,
 } pds_if_type_t;
 
 /// \brief interface admin/operational state
@@ -51,11 +53,16 @@ typedef struct pds_uplink_pc_info_s {
 /// \brief L3 interface specific configuration
 typedef struct pds_l3_if_info_s {
     pds_obj_key_t   vpc;          ///< vpc this L3 if belongs to
-    ip_prefix_t     ip_prefix;    ///< IP address and subnet of this L3 if
+    ip_prefix_t     ip_prefix;    ///< IP address and subnet of this L3 intf
     pds_ifindex_t   eth_ifindex;  ///< Eth ifindex of this L3 if
     pds_encap_t     encap;        ///< (optional) encap used for egress rewrite
     mac_addr_t      mac_addr;     ///< MAC address of this L3 interface
 } __PACK__ pds_l3_if_info_t;
+
+/// \brief loopback interface specific configuration
+typedef struct pds_loopback_info_s {
+    ip_prefix_t    ip_prefix;     ///< IP address and subnet host on this intf
+} __PACK__ pds_loopback_info_t;
 
 /// \brief interface specification
 typedef struct pds_if_spec_s {
@@ -66,6 +73,7 @@ typedef struct pds_if_spec_s {
         pds_uplink_info_t    uplink_info;
         pds_uplink_pc_info_t uplink_pc_info;
         pds_l3_if_info_t     l3_if_info;
+        pds_loopback_info_t  loopback_if_info;
     };
 } __PACK__ pds_if_spec_t;
 
@@ -74,11 +82,19 @@ typedef struct pds_if_uplink_status_s {
     uint16_t lif_id;
 } __PACK__ pds_if_uplink_status_t;
 
+typedef struct pds_if_loopback_status_s {
+    ///< name of the loopback interface as seen on linux
+    char name[SDK_MAX_NAME_LEN];
+} __PACK__ pds_if_loopback_status_t;
+
 /// \brief interface status
 typedef struct pds_if_status_s {
     pds_if_state_t    state;    ///< operational status of the interface
     union {
+        /// uplink interface operational status
         pds_if_uplink_status_t uplink_status;
+        /// loopback interface operational status
+        pds_if_loopback_status_t loopback_status;
     };
 } __PACK__ pds_if_status_t;
 
