@@ -2,10 +2,191 @@
 //Purpose: Helper APIs for metaswitch EVPN component
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
-#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
+#include "nic/apollo/api/include/pds.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "evpn_mgmt_if.h"
+using namespace pds_ms;
 
 namespace pds {
+NBB_VOID
+evpn_evi_pre_set (EvpnEviSpec  &req,
+                  NBB_LONG     row_status,
+                  NBB_ULONG    test_correlator)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    pds_obj_key_t subnet_uuid = {0};
+    pds_obj_key_t zero_uuid = {0};
+
+    // get uuids
+    pds_ms_get_uuid (&uuid, req.id());
+    pds_ms_get_uuid (&subnet_uuid, req.subnetid());
+
+    if (uuid == zero_uuid) {
+        // zero is an invalid uuid 
+        SDK_TRACE_ERR ("EVPN EVI request with Invalid UUID key");
+        return;
+    }
+
+    if (uuid ==  subnet_uuid) {
+        // spec uuid is same as subnet uuid
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_uuid);
+
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR ("EVPN EVI request with unknown key %s", subnet_uuid.str());
+            return;
+        } 
+        if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
+           auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
+           req.set_eviid(subnet_uuid_obj->ms_id()); 
+           SDK_TRACE_DEBUG("EVPN EVI request: %s evi-index: %d",
+                            uuid.str(), subnet_uuid_obj->ms_id());
+        } else {
+            SDK_TRACE_ERR ("EVPN EVI request with non-matching UUID type %s",
+                            uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    } else {
+        // TODO: spec uuid doesnt match with subnet uuid. need to key-map
+    }
+}
+
+NBB_VOID
+evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
+                     NBB_LONG       row_status,
+                     NBB_ULONG      test_correlator)
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    pds_obj_key_t subnet_uuid = {0};
+    pds_obj_key_t zero_uuid = {0};
+    
+    // get uuids
+    pds_ms_get_uuid (&uuid, req.id());
+    pds_ms_get_uuid (&subnet_uuid, req.subnetid());
+
+    if (uuid == zero_uuid) {
+        SDK_TRACE_ERR ("EVPN EVI RT request with Invalid UUID key");
+        return;
+    }
+
+    if (strncmp (uuid.id, subnet_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // spec uuid is same as subnet uuid
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_uuid);
+
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR ("EVPN EVI RT request with unknown key %s", subnet_uuid.str());
+            return;
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::SUBNET) {
+           auto subnet_uuid_obj = (subnet_uuid_obj_t *)uuid_obj;
+           req.set_eviid(subnet_uuid_obj->ms_id()); 
+           SDK_TRACE_DEBUG("EVPN EVI RT request: %s evi-index: %d",
+                            uuid.str(), subnet_uuid_obj->ms_id());
+        } else {
+            SDK_TRACE_ERR ("EVPN EVI RT request with non-matching UUID type %s",
+                            uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    } else {
+        // TODO: spec uuid doesnt match with subnet uuid. need to key-map
+    }
+}
+
+NBB_VOID 
+evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
+                     NBB_LONG      row_status,
+                     NBB_ULONG     test_correlator) 
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    pds_obj_key_t vpc_uuid = {0};
+    pds_obj_key_t zero_uuid = {0};
+
+    
+    // get uuids
+    pds_ms_get_uuid (&uuid, req.id());
+    pds_ms_get_uuid (&vpc_uuid, req.vpcid());
+
+    if (uuid == zero_uuid) {
+        SDK_TRACE_ERR ("EVPN IP VRF request with Invalid UUID key");
+        return;
+    }
+
+    if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // spec uuid is same as vpcuuid
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(vpc_uuid);
+
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR ("EVPN IP VRF request with unknown VPC reference %s",
+                            vpc_uuid.str());
+            return;
+        } 
+        if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
+#if 0 // TODO: uncomment this block after VPC uuid obj is available
+            auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
+            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
+            req.set_vrfname(vrf_name);
+           SDK_TRACE_DEBUG("EVPN IP VRF request: %s evi-index: %d, vrf-name:%s",
+                            uuid.str(), subnet_uuid_obj->ms_id(), vrf_name.c_str());
+#endif    
+        } else {
+            SDK_TRACE_ERR ("EVPN IP VRF request with non-matching reference type %s",
+                            uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    } else {
+        // TODO: spec uuid doesnt match with VPC uuid. need to key-map
+    }
+}
+
+NBB_VOID 
+evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
+                        NBB_LONG        row_status,
+                        NBB_ULONG       test_correlator) 
+{
+    // Local variables
+    pds_obj_key_t uuid = {0};
+    pds_obj_key_t vpc_uuid = {0};
+    pds_obj_key_t zero_uuid = {0};
+
+    // get uuids
+    pds_ms_get_uuid (&uuid, req.id());
+    pds_ms_get_uuid (&vpc_uuid, req.vpcid());
+
+    if (uuid == zero_uuid) {
+        SDK_TRACE_ERR ("EVPN IP VRF RT request with Invalid UUID key");
+        return;
+    }
+
+    if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // spec uuid is same as vpcuuid
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(vpc_uuid);
+
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR ("EVPN IP VRF RT request with unknown VPC reference %s",
+                            vpc_uuid.str());
+            return;
+        } 
+        if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
+#if 0 // TODO: uncomment this block after VPC uuid obj is available
+            auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
+            std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
+            req.set_vrfname(vrf_name);
+            SDK_TRACE_DEBUG
+                ("EVPN IP RT VRF request: %s evi-index: %d, vrf-name:%s",
+                 uuid.str(), subnet_uuid_obj->ms_id(), vrf_name.c_str());
+#endif            
+        } else {
+            SDK_TRACE_ERR ("EVPN IP VRF RT request with non-matching reference type %s",
+                            uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    } else {
+        // TODO: spec uuid doesnt match with VPC uuid. need to key-map
+    }
+}
+
 NBB_VOID
 evpn_evi_fill_func (EvpnEviSpec&    req,
                     AMB_GEN_IPS     *mib_msg,
@@ -14,18 +195,7 @@ evpn_evi_fill_func (EvpnEviSpec&    req,
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
-#if 0
-    uuid_t    uuid = {0};
-    uuid_t    subnet_uuid = {0};
-    
-    // get uuids
-    pds_ms_get_uuid (&uuid, req.id());
-    pds_ms_get_uuid (&subnet_uuid, req.subnetid());
 
-    if (strcmp (uuid.id, subnet_uuid.id) == 0) {
-        // spec uuid is same as subnet uuid, no need to store
-    }
-#endif
     data->entity_index                = PDS_MS_EVPN_ENT_INDEX;
     oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_EVI_ENTITY_IX);
@@ -78,82 +248,6 @@ NBB_VOID
 evpn_mac_ip_get_fill_func (EvpnMacIpSpec& req, NBB_ULONG *oid)
 {
     oid[AMB_EVPN_MAC_IP_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
-}
-
-NBB_VOID
-evpn_ip_vrf_fill_name_oid (EvpnIpVrfSpec& req, NBB_ULONG *oid)
-{
-    NBB_ULONG   ii = 0;
-    std::string vrf_name = std::to_string (req.vrfid());
-    const char  *name = vrf_name.c_str();
-
-    for (ii = 0; ii < vrf_name.length(); ii++)
-    {
-        oid[AMB_EVPN_IP_VRF_NAME_INDEX + ii] = (NBB_ULONG)name[ii];
-    }
-    oid[AMB_EVPN_IP_VRF_NAME_LEN_INDEX] = vrf_name.length();
-}
-
-NBB_VOID
-evpn_ip_vrf_fill_name_field (EvpnIpVrfSpec& req, AMB_GEN_IPS *mib_msg)
-{
-    std::string     vrf_name = std::to_string (req.vrfid());
-    AMB_EVPN_IP_VRF *data = NULL;
-
-    data = (AMB_EVPN_IP_VRF *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
-
-    data->vrf_name_len = vrf_name.length();
-    NBB_MEMCPY (data->vrf_name, vrf_name.c_str(), vrf_name.length());
-
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IP_VRF_NAME);
-}
-
-NBB_VOID
-evpn_ip_vrf_rt_fill_name_field (EvpnIpVrfRtSpec& req, AMB_GEN_IPS *mib_msg)
-{
-    std::string         vrf_name = std::to_string (req.vrfid());
-    AMB_EVPN_IP_VRF_RT  *data = NULL;
-
-    data = (AMB_EVPN_IP_VRF_RT *)((NBB_BYTE *)mib_msg + mib_msg->data_offset);
-
-    data->vrf_name_len = vrf_name.length();
-    NBB_MEMCPY (data->vrf_name, vrf_name.c_str(), vrf_name.length());
-
-    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_EVPN_IV_RT_VRF_NAME);
-}
-
-NBB_VOID
-evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid)
-{
-    NBB_ULONG   ii = 0;
-    std::string vrf_name = std::to_string (req.vrfid());
-    const char  *name = vrf_name.c_str();
-
-    for (ii = 0; ii < vrf_name.length(); ii++)
-    {
-        oid[AMB_EVPN_IP_VRF_RT_NAME_INDEX + ii] = (NBB_ULONG)name[ii];
-    }
-    oid[AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX] = vrf_name.length();
-}
-
-NBB_VOID
-evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data)
-{
-    NBB_ULONG       vrf_id = 0;
-    if (data->vrf_name_len) {
-        vrf_id = strtol((const char*)data->vrf_name, NULL, 0);
-    }
-    req->set_vrfid(vrf_id);
-}
-
-NBB_VOID
-evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req, AMB_EVPN_IP_VRF_RT *data)
-{
-    NBB_ULONG       vrf_id = 0;
-    if (data->vrf_name_len) {
-        vrf_id = strtol((const char *)data->vrf_name, NULL, 0);
-    }
-    req->set_vrfid(vrf_id);
 }
 } // End namespace pds
 

@@ -35,6 +35,7 @@ extern "C" {
 #include "gen/proto/cp_interface.pb.h"
 #include "gen/proto/cp_route.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_evpn_utils_gen.hpp"
 #include "gen/proto/cp_test.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
 #include "nic/apollo/api/include/pds.hpp"
@@ -158,6 +159,18 @@ NBB_VOID bgp_peer_af_fill_func (pds::BGPPeerAf&        req,
                                 AMB_GEN_IPS           *mib_msg,
                                 AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
                                 NBB_LONG               row_status);
+NBB_VOID evpn_evi_pre_set (EvpnEviSpec  &req,
+                           NBB_LONG     row_status,
+                           NBB_ULONG    test_correlator);
+NBB_VOID evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
+                              NBB_LONG       row_status,
+                              NBB_ULONG      test_correlator);
+NBB_VOID evpn_ip_vrf_pre_set (EvpnIpVrfSpec  &req,
+                              NBB_LONG       row_status,
+                              NBB_ULONG      test_correlator);
+NBB_VOID evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec  &req,
+                                 NBB_LONG       row_status,
+                                 NBB_ULONG      test_correlator);
 NBB_VOID evpn_evi_fill_func (EvpnEviSpec&    req,
                              AMB_GEN_IPS     *mib_msg,
                              AMB_EVPN_EVI    *data,

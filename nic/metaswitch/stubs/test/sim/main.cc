@@ -52,6 +52,7 @@ std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
 static constexpr int k_vpc_id = 2;
+static constexpr int k_subnet_id = 20;
 
 namespace pds_ms_test {
 
@@ -218,11 +219,13 @@ pds_ms_sim_test_evpn_evi_update ()
 
     // EvpnEviTable
     pds::EvpnEviSpec evpn_evi_spec;
-    evpn_evi_spec.set_eviid (1);
+    evpn_evi_spec.set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    evpn_evi_spec.set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     evpn_evi_spec.set_autord(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_autort(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
     evpn_evi_spec.set_encap(pds::EVPN_ENCAP_VXLAN);
+    pds_ms_pre_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_evpn_evi (evpn_evi_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     // End CTM transaction
     PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
@@ -277,14 +280,16 @@ pds_ms_sim_test_config ()
     PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::EvpnIpVrfSpec evpn_ip_vrf_spec;
-    evpn_ip_vrf_spec.set_vrfid (k_vpc_id);
+    evpn_ip_vrf_spec.set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_spec.set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     evpn_ip_vrf_spec.set_vni(200);
     NBB_BYTE rd[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     evpn_ip_vrf_spec.set_rd((char*)rd,8);
     pds_ms_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::EvpnIpVrfRtSpec evpn_ip_vrf_rt_spec;
-    evpn_ip_vrf_rt_spec.set_vrfid (k_vpc_id);
+    evpn_ip_vrf_rt_spec.set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_rt_spec.set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     evpn_ip_vrf_rt_spec.set_rt(rt,8);
     evpn_ip_vrf_rt_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
@@ -299,7 +304,7 @@ pds_ms_sim_test_config ()
 
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
-    subnet_spec.key = pds_ms::msidx2pdsobjkey(1);
+    subnet_spec.key = pds_ms::msidx2pdsobjkey(k_subnet_id);
     subnet_spec.vpc = pds_ms::msidx2pdsobjkey(k_vpc_id);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;

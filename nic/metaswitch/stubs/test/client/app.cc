@@ -45,7 +45,8 @@ static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
 
-static constexpr int k_vpc_id = 2;
+static constexpr int k_vpc_id    = 2;
+static constexpr int k_subnet_id = 20;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -129,7 +130,8 @@ static void create_evpn_evi_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id (msidx2pdsobjkey(1).id);
+    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi UUID is same as subnet UUID
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     if (g_test_conf_.manual_rd) {
         proto_spec->set_autord (pds::EVPN_CFG_MANUAL);
         proto_spec->set_rd((const char *)g_test_conf_.rd, 8);
@@ -161,7 +163,8 @@ static void create_evpn_evi_rt_proto_grpc () {
     Status              ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id (msidx2pdsobjkey(1).id);
+    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
     proto_spec->set_rttype (pds::EVPN_RT_IMPORT_EXPORT);
 
@@ -183,7 +186,7 @@ static void create_route_proto_grpc () {
 
     auto proto_spec = request.add_request ();
     proto_spec->set_id(msidx2pdsobjkey(1).id);
-    proto_spec->set_vpcid(msidx2pdsobjkey(1).id);
+    proto_spec->set_routetableid(msidx2pdsobjkey(1).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
     dest_addr->set_v4addr (0);
@@ -306,8 +309,8 @@ static void create_subnet_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(pds_ms::msidx2pdsobjkey(1).id);
-    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id);
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
@@ -337,7 +340,7 @@ static void create_vpc_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).id);
+    proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -360,7 +363,8 @@ static void create_evpn_ip_vrf_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id);
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_vni(200);
 
     printf ("Pushing EVPN IP VRF proto...\n");
@@ -380,7 +384,8 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id);
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     proto_spec->set_rt(rt,8);
     proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);

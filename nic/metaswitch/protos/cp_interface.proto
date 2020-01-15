@@ -35,7 +35,7 @@ message CPInterfaceAddrSpec {
     FillFn: "lim_intf_addr_fill_func"
   };
 
-  bytes           Id        = 1; // spec key
+  bytes           Id        = 1; // spec UUID key
   CPIntfType      IfType    = 2; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
   uint32          IfId      = 3; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
   types.IPAddress IPAddr    = 4 [(venice.pdsaFields) = {Field:"ipaddress"}];
@@ -51,7 +51,7 @@ message CPInterfaceSpec {
     FillFn: "lim_sw_intf_fill_func"
   };
 
-  bytes      Id     = 1; // spec key  
+  bytes      Id     = 1; // spec UUID key
   CPIntfType IfType = 2; // interface Type should be converted to MS interface type/subtype, cannot be autogen
   uint32     IfId   = 3 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_LIM_SOFTWIF_INDEX"}];
 }

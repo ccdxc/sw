@@ -1,6 +1,7 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// protobuf specification for control plane test configurations
+// protobuf specification for control plane test configurations, 
+// Used only for testing, not exposed to outside
 //------------------------------------------------------------------------------
 
 syntax = "proto3";

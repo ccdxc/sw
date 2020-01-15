@@ -40,7 +40,7 @@ message CPRouteSpec {
     Mib:    "rtmRibTable"
   };
 
-  uint32          VPCId         = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
+  uint32          RouteTableId  = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
   types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest"}];
   uint32          DestPrefixLen = 3 [(venice.pdsaFields) = {Field:"dest_len", GetKeyOidIndex: "AMB_QCR_RIB_DEST_LEN_INDEX"}];
   uint32          ToS           = 4 [(venice.pdsaFields) = {Field:"tos", GetKeyOidIndex: "AMB_QCR_RIB_TOS_INDEX"}];
@@ -80,26 +80,26 @@ message CPStaticRouteSpec {
     FillFn: "rtm_strt_fill_func"
   };
     
-  bytes           Id          = 1; // spec key
+  bytes           Id           = 1; // spec UUID key
   // virtual private cloud this route belongs to 
-  bytes           VPCId       = 2;
+  bytes           RouteTableId = 2;
   // Destination Address 
-  types.IPAddress DestAddr    = 3 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
+  types.IPAddress DestAddr     = 3 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
   // Destination Address Prefix Length
-  uint32          PrefixLen   = 4 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
+  uint32          PrefixLen    = 4 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
   // NextHop Address
-  types.IPAddress NextHopAddr = 5 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
+  types.IPAddress NextHopAddr  = 5 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
   // Admin Status
-  AdminSt         AdminStatus = 6 [(venice.pdsaFields) = {Field: "admin_stat"}];
+  AdminSt         AdminStatus  = 6 [(venice.pdsaFields) = {Field: "admin_stat"}];
   // Override Admin Distance
-  AMBBool         Override    = 7 [(venice.pdsaFields) = {Field: "override"}];
+  AMBBool         Override     = 7 [(venice.pdsaFields) = {Field: "override"}];
   // Admin Distance
-  uint32          AdminDist   = 8 [(venice.pdsaFields) = {Field: "admin_dist"}];
+  uint32          AdminDist    = 8 [(venice.pdsaFields) = {Field: "admin_dist"}];
   // Route Action 
-  StRtAction      Action      = 9  [(venice.pdsaFields) = {Field: "action"}];
+  StRtAction      Action       = 9  [(venice.pdsaFields) = {Field: "action"}];
 
   // Internal Fieds only
-  uint32          VRFId       = 10 [(venice.pdsaFields) = {Field: "fte_index", SetKeyOidIndex: "AMB_QCR_STRT_FTE_INDEX_INDEX"}];
+  uint32          Index        = 1000 [(venice.pdsaFields) = {Field: "fte_index", SetKeyOidIndex: "AMB_QCR_STRT_FTE_INDEX_INDEX"}, (gogoproto.moretags) = "venice:msinternal=true"];
 }
 
 // CRUD request message
