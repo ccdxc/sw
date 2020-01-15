@@ -659,6 +659,8 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
         return -1;
     }
 
+    pme->params.subdeviceid = catalog->pcie_subdeviceid();
+
     int nportspecs = catalog->pcie_nportspecs();
     for (int i = 0; i < nportspecs; i++) {
         pcieport_spec_t ps = { 0 };
@@ -679,6 +681,8 @@ portmap_init_from_catalog(pciemgrenv_t *pme)
     }
     sdk::lib::catalog::destroy(catalog);
 #else
+    pme->params.subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
+
     pcieport_spec_t ps = { 0 };
     ps.host  = 0;
     ps.port  = 0;
@@ -722,7 +726,6 @@ pciemgrd_catalog_defaults(pciemgrenv_t *pme)
     pciemgr_params_t *params = &pme->params;
     params->vendorid = PCI_VENDOR_ID_PENSANDO;
     params->subvendorid = params->vendorid;
-    params->subdeviceid = PCI_SUBDEVICE_ID_PENSANDO_NAPLES100_4GB;
 
     portmap_init_from_catalog(pme);
 }
