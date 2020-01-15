@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET = liboperd.so
-MODULE_PIPELINE = iris apollo apulu artemis gft
+MODULE_PIPELINE = iris apollo apulu artemis gft athena
 MODULE_SOLIBS =
 MODULE_LDLIBS =
 MODULE_FLAGS  = -Werror

@@ -138,6 +138,18 @@
             "_comment": "4M * 64B"
         },
         {
+            "name": "config1",
+            "size": "2M",
+            "cache": "p4ig",
+            "_comment": "1M * 2B"
+        },
+        {
+            "name": "config2",
+            "base_region": "config1",
+            "size": "2M",
+            "_comment": "Alias of the config1 table"
+        },
+        {
             "name": "qos-hbm-fifo",
             "size": "0K"
         },

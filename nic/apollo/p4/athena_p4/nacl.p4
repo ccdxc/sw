@@ -24,7 +24,7 @@ action nacl_redirect(redir_type, app_id, oport, lif, qtype, qid) {
     }
 }
 
-@pragma stage 4
+@pragma stage 5
 table nacl {
     reads {
         control_metadata.direction          : ternary;
