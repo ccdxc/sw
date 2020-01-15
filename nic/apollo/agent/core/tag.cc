@@ -16,7 +16,7 @@ tag_create_validate (pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-tag_create (pds_tag_key_t *key, pds_tag_spec_t *spec,
+tag_create (pds_obj_key_t *key, pds_tag_spec_t *spec,
             pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -56,7 +56,7 @@ tag_update_validate (pds_tag_spec_t *spec)
 }
 
 sdk_ret_t
-tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec,
+tag_update (pds_obj_key_t *key, pds_tag_spec_t *spec,
             pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
@@ -95,7 +95,7 @@ tag_update (pds_tag_key_t *key, pds_tag_spec_t *spec,
 }
 
 sdk_ret_t
-tag_delete (pds_tag_key_t *key, pds_batch_ctxt_t bctxt)
+tag_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 {
     sdk_ret_t ret;
 
@@ -119,7 +119,7 @@ tag_delete (pds_tag_key_t *key, pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-tag_get (pds_tag_key_t *key, pds_tag_info_t *info)
+tag_get (pds_obj_key_t *key, pds_tag_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     pds_tag_spec_t *spec;

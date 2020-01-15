@@ -436,7 +436,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_TAG:
-        api_obj = tag_db()->find((pds_tag_key_t *)key);
+        api_obj = tag_db()->find((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_SVC_MAPPING:

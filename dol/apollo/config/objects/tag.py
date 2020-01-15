@@ -65,7 +65,7 @@ class TagObject(base.ConfigObjectBase):
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = self.TagTblId
+        spec.Id = str.encode(str(self.TagTblId))
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.Rules:
             tagrulespec = spec.Rules.add()
@@ -77,14 +77,14 @@ class TagObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id != self.TagTblId:
+        if int(spec.Id) != self.TagTblId:
             return False
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if spec['id'] != self.TagTblId:
+        if utils.GetYamlSpecAttr(spec, 'id') != self.TagTblId:
             return False
         if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False

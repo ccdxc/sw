@@ -26,14 +26,14 @@ tag_feeder::~tag_feeder() {
 }
 
 tag_feeder::tag_feeder(const tag_feeder& feeder) {
-    init(feeder.key.id, feeder.base_route_pfx_v4_str,
+    init(feeder.key, feeder.base_route_pfx_v4_str,
          feeder.base_route_pfx_v6_str, feeder.tag_base,
          feeder.priority_base, feeder.af,
          feeder.num_obj, feeder.num_prefixes_all);
 }
 
 void
-tag_feeder::init(uint32_t base_tag_table_id,
+tag_feeder::init(pds_obj_key_t base_tag_table_id,
                  std::string base_tag_pfx_str_v4,
                  std::string base_tag_pfx_str_v6,
                  uint32_t tag, uint32_t priority,
@@ -42,7 +42,7 @@ tag_feeder::init(uint32_t base_tag_table_id,
 
     ip_addr_t route_addr;
     memset(rules, 0, sizeof(tag_rule) * (MAX_NUM_RULES + 1));
-    this->key.id = base_tag_table_id;
+    this->key = base_tag_table_id;
     this->num_rules = MAX_NUM_RULES;
     this->af = af;
     this->tag_base = tag;
@@ -89,11 +89,11 @@ void
 tag_feeder::iter_next(int width) {
     ip_addr_t route_addr = {0};
 
-    this->key.id += width;
+    this->key = int2pdsobjkey(pdsobjkey2int(key) + width);
     cur_iter_pos++;
 
     //create ipv4 and ipv6 tag tables alternately
-    if (this->key.id % 2 == 1) {
+    if (pdsobjkey2int(this->key) % 2 == 1) {
         this->af = IP_AF_IPV4;
     } else {
         this->af = IP_AF_IPV6;
@@ -117,9 +117,9 @@ tag_feeder::iter_next(int width) {
 }
 
 void
-tag_feeder::key_build(pds_tag_key_t *key) {
-    memset(key, 0, sizeof(pds_tag_key_t));
-    key->id = this->key.id;
+tag_feeder::key_build(pds_obj_key_t *key) {
+    memset(key, 0, sizeof(pds_obj_key_t));
+    *key = this->key;
 }
 
 void

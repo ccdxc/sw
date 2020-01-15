@@ -58,7 +58,7 @@ public:
 
     /// \brief     lookup a tag entry in database given the key
     /// \param[in] key tag entry key
-    tag_entry *find(pds_tag_key_t *key) const;
+    tag_entry *find(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -79,7 +79,7 @@ private:
 };
 
 static inline tag_entry *
-tag_find (pds_tag_key_t *key)
+tag_find (pds_obj_key_t *key)
 {
     return (tag_entry *)api_base::find_obj(OBJ_ID_TAG, key);
 }

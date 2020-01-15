@@ -59,7 +59,7 @@ union api_params_u {
     pds_mirror_session_spec_t    mirror_session_spec;
     pds_obj_key_t                meter_key;
     pds_meter_spec_t             meter_spec;
-    pds_tag_key_t                tag_key;
+    pds_obj_key_t                tag_key;
     pds_tag_spec_t               tag_spec;
     pds_svc_mapping_key_t        svc_mapping_key;
     pds_svc_mapping_spec_t       svc_mapping_spec;

@@ -87,7 +87,7 @@ typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
 typedef uint32_t    pds_mapping_id_t;          ///< mapping table index
 typedef uint16_t    pds_lif_key_t;             ///< lif key id
 typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
-typedef uint32_t    pds_tag_id_t;              ///< tag table index
+typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
@@ -168,11 +168,6 @@ typedef struct pds_nat_action_s {
     pds_nat_type_t src_nat_type;
     ip_addr_t      dst_nat_ip;
 } pds_nat_action_t;
-
-/// \brief Tag key
-typedef struct pds_tag_key_s {
-    pds_tag_id_t id;    ///< unique tag id
-} __PACK__ pds_tag_key_t;
 
 /// \brief    mapping type
 typedef enum pds_mapping_type_e {

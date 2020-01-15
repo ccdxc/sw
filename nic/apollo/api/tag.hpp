@@ -133,7 +133,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "tag-" + std::to_string(key_.id);
+        return "tag-" + std::string(key_.str());
     }
 
     /// \brief          helper function to get key given tag entry
@@ -151,7 +151,7 @@ public:
 
     /// \brief          return the tag entry's key/id
     /// \return         key/id of the tag entry
-    pds_tag_key_t key(void) const { return key_; }
+    pds_obj_key_t key(void) const { return key_; }
 
     /// \brief return address family of this tag entry
     /// \return IP_AF_IPV4, if tag entry is IPv4 or else IP_AF_IPV6
@@ -178,7 +178,7 @@ private:
     sdk_ret_t nuke_resources_(void);
 
 private:
-    pds_tag_key_t key_;        ///< tag key
+    pds_obj_key_t key_;        ///< tag key
     uint8_t af_;               ///< IP_AF_IPV4 or IP_AF_IPV6
     ht_ctxt_t ht_ctxt_;        ///< hash table context
     impl_base *impl_;          ///< impl object instance

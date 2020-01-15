@@ -844,7 +844,7 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
     uint32_t priority = 0;
     uint32_t step = TESTAPP_TAGS_PRIORITY_STEP;
     // unique IDs across tags
-    static pds_tag_id_t id = 1;
+    static uint16_t id = 1;
     static uint32_t tag_pfx_count = 0;
     static uint32_t tag_value = 0;
 
@@ -873,7 +873,7 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
             (pds_tag_rule_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_TAG,
                         (pds_tag.num_rules * sizeof(pds_tag_rule_t)));
     for (uint32_t i = 0; i < num_tag_trees; i++) {
-        pds_tag.key.id = id++;
+        pds_tag.key = test::int2pdsobjkey(id++);
         priority = 0;
         step = TESTAPP_TAGS_PRIORITY_STEP;
         for (uint32_t rule = 0; rule < num_rules; rule++) {

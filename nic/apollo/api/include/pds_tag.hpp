@@ -34,7 +34,7 @@ typedef struct pds_tag_rule_s {
 typedef struct pds_tag_spec_s    pds_tag_spec_t;
 /// \brief tag configuration
 struct pds_tag_spec_s {
-    pds_tag_key_t     key;             ///< key
+    pds_obj_key_t     key;             ///< key
     uint8_t           af;              ///< address family - v4 or v6
     uint32_t          num_rules;       ///< number of tag policy rules
     pds_tag_rule_t    *rules;          ///< metering rules
@@ -111,7 +111,7 @@ sdk_ret_t pds_tag_create(pds_tag_spec_t *spec,
 /// \param[in] key key
 /// \param[out] info tag information
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_tag_read(pds_tag_key_t *key, pds_tag_info_t *info);
+sdk_ret_t pds_tag_read(pds_obj_key_t *key, pds_tag_info_t *info);
 
 /// \brief update tag
 /// \param[in] spec tag configuration
@@ -124,7 +124,7 @@ sdk_ret_t pds_tag_update(pds_tag_spec_t *spec,
 /// \param[in] key key
 /// \param[in] bctxt batch context if API is invoked in a batch
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_tag_delete(pds_tag_key_t *key,
+sdk_ret_t pds_tag_delete(pds_obj_key_t *key,
                          pds_batch_ctxt_t bctxt = PDS_BATCH_CTXT_INVALID);
 
 /// @}

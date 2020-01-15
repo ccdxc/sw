@@ -52,12 +52,12 @@ protected:
 TEST_F(tag_test, v4v6_tag_table_workflow_1) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_1<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_1<tag_feeder>(feeder);
@@ -68,12 +68,12 @@ TEST_F(tag_test, v4v6_tag_table_workflow_1) {
 TEST_F(tag_test, v4v6_tag_table_workflow_2) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_2<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_2<tag_feeder>(feeder);
@@ -84,20 +84,20 @@ TEST_F(tag_test, v4v6_tag_table_workflow_2) {
 TEST_F(tag_test, v4v6_tag_table_workflow_3) {
     tag_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, 0);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, 0);
-    feeder3.init(3, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder3.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, 0);
     // trigger - test tag tables with zero prefixes
     workflow_3<tag_feeder>(feeder1,feeder2, feeder3);
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
-    feeder3.init(3, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder3.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_3<tag_feeder>(feeder1, feeder2, feeder3);
@@ -108,12 +108,12 @@ TEST_F(tag_test, v4v6_tag_table_workflow_3) {
 TEST_F(tag_test, v4v6_tag_table_workflow_4) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_4<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_4<tag_feeder>(feeder);
@@ -124,20 +124,20 @@ TEST_F(tag_test, v4v6_tag_table_workflow_4) {
 TEST_F(tag_test, v4v6_tag_table_workflow_5) {
     tag_feeder feeder1, feeder2, feeder3;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, 0);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, 0);
-    feeder3.init(3, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder3.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, 0);
     // trigger - test tag tables with zero prefixes
     workflow_5<tag_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
-    feeder3.init(3, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder3.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_5<tag_feeder>(feeder1, feeder2, feeder3);
@@ -148,13 +148,13 @@ TEST_F(tag_test, v4v6_tag_table_workflow_5) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_6) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = with change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1B = with change in priority and tag
-    feeder1B.init(1, k_base_v4_pfx, k_base_v6_pfx, 2, 2,
+    feeder1B.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 2, 2,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_6<tag_feeder>(feeder1, feeder1A, feeder1B);
@@ -165,13 +165,13 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_6) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_7) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = with change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                         IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1B = with change in priority and tag
-    feeder1B.init(1, k_base_v4_pfx, k_base_v6_pfx, 2, 2,
+    feeder1B.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 2, 2,
                   IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_7<tag_feeder>(feeder1, feeder1A, feeder1B);
@@ -182,13 +182,13 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_7) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_8) {
     tag_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = with change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                   IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1B = with change in priority and tag
-    feeder1B.init(1, k_base_v4_pfx, k_base_v6_pfx, 2, 2,
+    feeder1B.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 2, 2,
                   IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_8<tag_feeder>(feeder1, feeder1A, feeder1B);
@@ -198,10 +198,10 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_8) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_9) {
     tag_feeder feeder1, feeder1A;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = with change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                   IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_9<tag_feeder>(feeder1, feeder1A);
@@ -212,17 +212,17 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_9) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_10) {
     tag_feeder feeder1, feeder2, feeder3, feeder4, feeder2A, feeder3A;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
-    feeder3.init(3, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder3.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder4.init(4, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder4.init(test::int2pdsobjkey(4), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
-    feeder2A.init(2, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder2A.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                   IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
-    feeder3A.init(3, k_base_v4_pfx, k_base_v6_pfx, 2, 2,
+    feeder3A.init(test::int2pdsobjkey(3), k_base_v4_pfx, k_base_v6_pfx, 2, 2,
                   IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables
     workflow_10<tag_feeder>(feeder1, feeder2, feeder2A,
@@ -234,12 +234,12 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_10) {
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_1) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_neg_1<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_neg_1<tag_feeder>(feeder);
@@ -250,12 +250,12 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_1) {
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_2) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table+1, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_neg_2<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table+1, k_max_prefixes_per_tbl+1);
     // trigger - test max tag tables with max prefixes
     workflow_neg_2<tag_feeder>(feeder);
@@ -266,12 +266,12 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_2) {
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_3) {
     tag_feeder feeder;
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, 0);
     // trigger - test max tag tables with zero prefixes
     workflow_neg_3<tag_feeder>(feeder);
 
-    feeder.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                 IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_neg_3<tag_feeder>(feeder);
@@ -282,16 +282,16 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_3) {
 TEST_F(tag_test, v4v6_tag_table_workflow_neg_4) {
     tag_feeder feeder1, feeder2;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                         IP_AF_IPV4, 1, 0);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                         IP_AF_IPV6, 1, 0);
     // trigger - test tag tables with zero prefixes
     workflow_neg_4<tag_feeder>(feeder1, feeder2);
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_neg_4<tag_feeder>(feeder1, feeder2);
@@ -302,10 +302,10 @@ TEST_F(tag_test, v4v6_tag_table_workflow_neg_4) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_5) {
     tag_feeder feeder1, feeder1A;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                   IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_neg_5<tag_feeder>(feeder1, feeder1A);
@@ -316,10 +316,10 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_5) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_6) {
     tag_feeder feeder1, feeder1A;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, k_max_tag_table, k_max_prefixes_per_tbl);
     //seed1A = change in priority and tag
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                   IP_AF_IPV4, k_max_tag_table+1, k_max_prefixes_per_tbl);
     // trigger - test max tag tables with max prefixes
     workflow_neg_6<tag_feeder>(feeder1, feeder1A);
@@ -330,11 +330,11 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_6) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_7) {
     tag_feeder feeder1, feeder2, feeder1A;
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder1A.init(1, k_base_v4_pfx, k_base_v6_pfx, 1, 1,
+    feeder1A.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 1, 1,
                   IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_neg_7<tag_feeder>(feeder1, feeder1A, feeder2);
@@ -345,9 +345,9 @@ TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_7) {
 TEST_F(tag_test, DISABLED_v4v6_tag_table_workflow_neg_8) {
     tag_feeder feeder1 = {}, feeder2 = {};
 
-    feeder1.init(1, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder1.init(test::int2pdsobjkey(1), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV4, 1, k_max_prefixes_per_tbl);
-    feeder2.init(2, k_base_v4_pfx, k_base_v6_pfx, 0, 0,
+    feeder2.init(test::int2pdsobjkey(2), k_base_v4_pfx, k_base_v6_pfx, 0, 0,
                  IP_AF_IPV6, 1, k_max_prefixes_per_tbl);
     // trigger - test tag tables with max prefixes
     workflow_neg_8<tag_feeder>(feeder1, feeder2);

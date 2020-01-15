@@ -52,8 +52,8 @@ tag_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     // allocate free lpm slab for this tag table
     if (tag_impl_db()->alloc(spec->af, &lpm_block_id) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to allocate LPM block for tag %u",
-                      spec->key.id);
+        PDS_TRACE_ERR("Failed to allocate LPM block for tag %s",
+                      spec->key.str());
         return sdk::SDK_RET_NO_RESOURCE;
     }
     lpm_root_addr_ =
@@ -119,8 +119,8 @@ tag_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     rtable->num_routes = num_prefixes;
     for (uint32_t i = 0; i < spec->num_rules; i++) {
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
-            PDS_TRACE_DEBUG("Processing tag table %u, pfx %s -> tag %u, "
-                            "prio %u", spec->key.id,
+            PDS_TRACE_DEBUG("Processing tag table %s, pfx %s -> tag %u, "
+                            "prio %u", spec->key.str(),
                             ippfx2str(&spec->rules[i].prefixes[j]),
                             spec->rules[i].tag, spec->rules[i].priority);
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
@@ -135,8 +135,8 @@ tag_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                           lpm_root_addr_,
                           tag_impl_db()->table_size(spec->af));
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build LPM tag table %u, err : %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to build LPM tag table %s, err : %u",
+                      spec->key.str(), ret);
     }
     SDK_FREE(PDS_MEM_ALLOC_ID_TAG, rtable);
     return ret;

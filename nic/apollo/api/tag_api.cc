@@ -19,7 +19,7 @@
 
 static sdk_ret_t
 pds_tag_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                    pds_tag_key_t *key, pds_tag_spec_t *spec)
+                    pds_obj_key_t *key, pds_tag_spec_t *spec)
 {
     sdk_ret_t rv;
     api_ctxt_t *api_ctxt;
@@ -41,7 +41,7 @@ pds_tag_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 }
 
 static inline tag_entry *
-pds_tag_entry_find (pds_tag_key_t *key)
+pds_tag_entry_find (pds_obj_key_t *key)
 {
     return (tag_db()->find(key));
 }
@@ -57,7 +57,7 @@ pds_tag_create (_In_ pds_tag_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_tag_read (_In_ pds_tag_key_t *key, _Out_ pds_tag_info_t *info)
+pds_tag_read (_In_ pds_obj_key_t *key, _Out_ pds_tag_info_t *info)
 {
     tag_entry *entry;
 
@@ -79,7 +79,7 @@ pds_tag_update (_In_ pds_tag_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 }
 
 sdk_ret_t
-pds_tag_delete (_In_ pds_tag_key_t *key, _In_ pds_batch_ctxt_t bctxt)
+pds_tag_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_tag_api_handle(bctxt, API_OP_DELETE, key, NULL);
 }

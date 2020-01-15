@@ -33,7 +33,7 @@ public:
 class tag_feeder : public feeder {
 public:
     // Test parameters
-    pds_tag_key_t key;
+    pds_obj_key_t key;
     uint8_t af;
     uint32_t num_rules;
     uint32_t tag_base;
@@ -52,7 +52,7 @@ public:
     tag_feeder(const tag_feeder& feeder);
 
     // Initialize feeder with the base set of values
-    void init(uint32_t base_tag_table_id,
+    void init(pds_obj_key_t base_tag_table_id,
               std::string base_tag_pfx_str_v4,
               std::string base_tag_pfx_str_v6,
               uint32_t tag, uint32_t priority,
@@ -64,13 +64,13 @@ public:
     void iter_next(int width = 1);
 
     // Build routines
-    void key_build(pds_tag_key_t *key);
+    void key_build(pds_obj_key_t *key);
     void spec_build(pds_tag_spec_t *spec);
 
     // Compare routines
     // There is no state maintained in hardware in the same form as input,
     // so comparision won't be possible
-    bool key_compare(pds_tag_key_t *key) { return true; }
+    bool key_compare(pds_obj_key_t *key) { return true; }
     bool spec_compare(pds_tag_spec_t *spec) { return true; }
 };
 
@@ -78,16 +78,16 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const tag_feeder& obj) {
     os << "Tag feeder =>"
-       << "id: " << obj.key.id
+       << "id: " << obj.key.str()
        << "num prefixes: " << obj.num_prefixes_all;
     return os;
 }
 
 // CRUD prototypes
 API_CREATE(tag);
-API_READ_TMP(tag);
+API_READ(tag);
 API_UPDATE(tag);
-API_DELETE_TMP(tag);
+API_DELETE(tag);
 
 }    // namespace api
 }    // namespace test

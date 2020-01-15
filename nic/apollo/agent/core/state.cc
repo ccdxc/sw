@@ -560,13 +560,13 @@ agent_state::del_from_meter_db(pds_obj_key_t *key) {
 }
 
 sdk_ret_t
-agent_state::add_to_tag_db(pds_tag_key_t *key, pds_tag_spec_t *spec) {
-    ADD_TO_DB(tag, key, spec);
+agent_state::add_to_tag_db(pds_obj_key_t *key, pds_tag_spec_t *spec) {
+    ADD_TO_OBJ_DB(tag, key, spec);
 }
 
 pds_tag_spec_t *
-agent_state::find_in_tag_db(pds_tag_key_t *key) {
-    FIND_IN_DB(tag, key);
+agent_state::find_in_tag_db(pds_obj_key_t *key) {
+    FIND_IN_OBJ_DB(tag, key);
 }
 
 sdk_ret_t
@@ -581,8 +581,8 @@ agent_state::tag_db_walk(tag_walk_cb_t cb, void *ctxt) {
 }
 
 bool
-agent_state::del_from_tag_db(pds_tag_key_t *key) {
-    DEL_FROM_DB(tag, key);
+agent_state::del_from_tag_db(pds_obj_key_t *key) {
+    DEL_FROM_OBJ_DB(tag, key);
 }
 
 sdk_ret_t

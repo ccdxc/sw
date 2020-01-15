@@ -1055,7 +1055,7 @@ pds_tag_proto_to_api_spec (pds_tag_spec_t *api_spec,
 {
     sdk_ret_t ret;
 
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     ret = pds_af_proto_spec_to_api_spec(&api_spec->af, proto_spec.af());
     if (ret != SDK_RET_OK) {
         return SDK_RET_INVALID_ARG;

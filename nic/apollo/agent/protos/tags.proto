@@ -33,7 +33,7 @@ message TagRuleSpec {
 //       prefixes in the tag policy is supported)
 message TagSpec {
   // unique tag policy id
-  uint32               Id = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes                Id = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // IP address family
   types.IPAF           Af = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // tag policy rules
@@ -74,7 +74,7 @@ message TagResponse {
 // tag table get request
 message TagGetRequest {
   // batched request
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // tag table get response
@@ -88,7 +88,7 @@ message TagDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // tag table delete response

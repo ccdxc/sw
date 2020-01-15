@@ -74,7 +74,7 @@ tag_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_tag) tag_entry();
         cloned_tag->impl_ = impl_->clone();
         if (unlikely(cloned_tag->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone tag %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone tag %s impl", key_.str());
             goto error;
         }
         cloned_tag->init_config(api_ctxt);
@@ -103,7 +103,7 @@ tag_entry::init_config(api_ctxt_t *api_ctxt) {
     pds_tag_spec_t    *spec;
 
     spec = &api_ctxt->api_params->tag_spec;
-    memcpy(&this->key_, &spec->key, sizeof(pds_tag_key_t));
+    memcpy(&this->key_, &spec->key, sizeof(pds_obj_key_t));
     this->af_ = spec->af;
     return SDK_RET_OK;
 }
@@ -115,7 +115,7 @@ tag_entry::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tag_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Programming tag tree %u", key_);
+    PDS_TRACE_DEBUG("Programming tag tree %s", key_.str());
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -137,13 +137,13 @@ tag_entry::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 sdk_ret_t
 tag_entry::activate_config(pds_epoch_t epoch, api_op_t api_op,
                            api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    PDS_TRACE_DEBUG("Activating tag %u config", key_);
+    PDS_TRACE_DEBUG("Activating tag %s config", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
 }
 
 void
 tag_entry::fill_spec_(pds_tag_spec_t *spec) {
-    memcpy(&spec->key, &key_, sizeof(pds_tag_key_t));
+    memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->af = af_;
     spec->num_rules = 0;
     // rules are not stored anywhere
@@ -166,7 +166,7 @@ tag_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
 
 sdk_ret_t
 tag_entry::add_to_db(void) {
-    PDS_TRACE_VERBOSE("Adding tag %u to db", key_);
+    PDS_TRACE_VERBOSE("Adding tag %s to db", key_.str());
     return tag_db()->insert(this);
 }
 

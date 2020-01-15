@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	tagID uint32
+	tagID string
 )
 
 var tagShowCmd = &cobra.Command{
@@ -30,7 +30,7 @@ var tagShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(tagShowCmd)
 	tagShowCmd.Flags().Bool("yaml", false, "Output in yaml")
-	tagShowCmd.Flags().Uint32VarP(&tagID, "id", "i", 0, "Specify tag policy ID")
+	tagShowCmd.Flags().StringVarP(&tagID, "id", "i", "", "Specify tag policy ID")
 }
 
 func tagShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -58,12 +58,12 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Tag
 		req = &pds.TagGetRequest{
-			Id: []uint32{tagID},
+			Id: [][]byte{[]byte(tagID)},
 		}
 	} else {
 		// Get all Tags
 		req = &pds.TagGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
