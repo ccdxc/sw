@@ -188,6 +188,11 @@ export class NewhostComponent extends CreationForm<IClusterHost, ClusterHost> im
   onRadioButtonChange($event) {
     // changes value of radio to the one the user has selected
     this.radioValue = $event.value;
+    if (this.radioValue === 'id') {
+      this.newHostForm.get(['spec', 'dscs', 0, 'mac-address']).setValue(null);
+    } else {
+      this.newHostForm.get(['spec', 'dscs', 0, 'id']).setValue(null);
+    }
   }
 
 

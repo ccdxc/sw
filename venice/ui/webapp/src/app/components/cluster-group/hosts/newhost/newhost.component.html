@@ -108,6 +108,7 @@
       </legend>
       <div fxflex="nogrow" fxLayout="column" class="newhost-sNI-choose"
            [formGroup]="newHostForm.get(['spec','dscs', index])">
+        <div fxFlex="5px"></div>
         <div class="newhost-radio-container">
 
           <mat-radio-group fxFlex="nogrow" class="newhost-attach-radio" fxLayout="start center"
@@ -124,6 +125,7 @@
           </mat-radio-group>
 
         </div>
+        <div fxFlex="5px"></div>
         <div [ngSwitch]="radioValue">
           <ng-container *ngSwitchCase="'id'">
             <div class="newhost-input-row">
