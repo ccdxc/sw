@@ -15,6 +15,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 
 {{range .Services}}
+{{$svc := .}}
 {{$svcname := .Name}}
 {{range .Methods}}
 {{$rpc := .Name}}
@@ -43,40 +44,26 @@ Status
         {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
           {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
           {{$struct := $param.Struct}}
+          {{$fields := .RequestType.Fields}}
+          {{range $fields}}
+            {{$field := .}}
+            {{if (eq "Request" .GetName)}}
+              {{if isRepeatedField .}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
+              {{else}}
+        auto proto_spec = req->request();
+              {{end}}
         pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
         pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
         pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+              {{if isRepeatedField .}}
     }
+              {{end}}
+            {{end}}
+          {{end}}
         {{end}}
     PDS_MS_END_TXN(correlator);
-      {{end}}
-      {{if (HasSuffix $rpc "Get")}}
-    PDS_MS_GET_SHARED_START();
-    //Get request
-        {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
-          {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
-          {{$struct := $param.Struct}}
-    for (int i = 0; i < req->request_size(); i ++) {
-        auto proto_spec = req->request(i);
-        pds_ms_get_{{$struct | ToLower}}(proto_spec, resp);
-    }
-        {{end}}
-    PDS_MS_GET_SHARED_END();
-      {{end}}
-      {{if (HasSuffix $rpc "GetAll")}}
-    PDS_MS_GET_SHARED_START();
-    //Getall request
-        {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
-          {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
-          {{$struct := $param.Struct}}
-    for (int i = 0; i < req->request_size(); i ++) {
-        auto proto_spec = req->request(i);
-        pds_ms_getall_{{$struct | ToLower}}(proto_spec, resp);
-    }
-        {{end}}
-    PDS_MS_GET_SHARED_END();
       {{end}}
       {{if or (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
     uint correlator = PDS_MS_CTM_GRPC_CORRELATOR;
@@ -85,19 +72,84 @@ Status
         {{if hasExtension "venice.pdsaSetGlobOpts" .RequestType }}
           {{$param := (getPdsaSetGlobalOpts .RequestType $cam)}}
           {{$struct := $param.Struct}}
+          {{$fields := .RequestType.Fields}}
+          {{range $fields}}
+            {{$field := .}}
+            {{if (eq "Request" .GetName)}}
+              {{if isRepeatedField .}}
     for (int i = 0; i < req->request_size(); i ++) {
         auto proto_spec = req->request(i);
+              {{else}}
+        auto proto_spec = req->request();
+              {{end}}
         pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
         pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
         pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+              {{if isRepeatedField .}}
     }
+              {{end}}
+            {{end}}
+          {{end}}
         {{end}}
     PDS_MS_END_TXN(correlator);
       {{end}}
-    resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
-    return Status::OK;
     {{end}}
   {{end}}
+ 
+  {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
+    {{if (HasSuffix $rpc "Get")}}
+    PDS_MS_GET_SHARED_START();
+    //Get request
+      {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
+        {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
+        {{$struct := $param.Struct}}
+        {{$fields := .RequestType.Fields}}
+        {{range $fields}}
+          {{$field := .}}
+          {{if (eq "Request" .GetName)}}
+            {{if isRepeatedField .}}
+    for (int i = 0; i < req->request_size(); i ++) {
+        auto proto_spec = req->request(i);
+            {{else}}
+        auto proto_spec = req->request();
+            {{end}}
+        pds_ms_get_{{$struct | ToLower}}(proto_spec, resp);
+            {{if isRepeatedField .}}
+    }
+            {{end}}
+          {{end}}
+        {{end}}
+      {{end}}
+    PDS_MS_GET_SHARED_END();
+    {{end}}
+    {{if (HasSuffix $rpc "GetAll")}}
+    PDS_MS_GET_SHARED_START();
+    //Getall request
+      {{if hasExtension "venice.pdsaGetGlobOpts" .RequestType }}
+        {{$param := (getPdsaGetGlobalOpts .RequestType $cam)}}
+        {{$struct := $param.Struct}}
+        {{$fields := .RequestType.Fields}}
+        {{range $fields}}
+          {{$field := .}}
+          {{if (eq "Request" .GetName)}}
+            {{if isRepeatedField .}}
+    for (int i = 0; i < req->request_size(); i ++) {
+        auto proto_spec = req->request(i);
+            {{else}}
+        auto proto_spec = req->request();
+            {{end}}
+        pds_ms_getall_{{$struct | ToLower}}(proto_spec, resp);
+            {{if isRepeatedField .}}
+    }
+            {{end}}
+          {{end}}
+        {{end}}
+      {{end}}
+    PDS_MS_GET_SHARED_END();
+    {{end}}
+  {{end}}
+    resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
+    return Status::OK;
 } 
 
 {{end}}

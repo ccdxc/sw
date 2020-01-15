@@ -31,8 +31,8 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_localport(3);
         ent->set_ifid(0);
-        ent->set_remoteasn(33);
-        ent->set_localasn(1);
+        ent->set_remoteasn(1);
+        ent->set_localasn(0);
         ent->set_connectretry(1);
         ent->set_sendcomm(pds::BOOL_TRUE);
         ent->set_sendextcomm(pds::BOOL_TRUE);
@@ -64,8 +64,8 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_localport(3);
         ent->set_ifid(0);
-        ent->set_remoteasn(33);
-        ent->set_localasn(1);
+        ent->set_remoteasn(1);
+        ent->set_localasn(0);
 
         grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
 
@@ -113,8 +113,8 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_localport(3);
         ent->set_ifid(0);
-        ent->set_remoteasn(33);
-        ent->set_localasn(1);
+        ent->set_remoteasn(1);
+        ent->set_localasn(0);
         grpc::Status status = stub_->BGPPeerSpecDelete(&context, req, &res);
 
         if (status.ok()) {
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
     client.peerGet();
 //    sleep(25);
     client.peerGetAll();
-    client.peerDelete();
+//    client.peerDelete();
     client.peerGetAll();
 
     return 0;

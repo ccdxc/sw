@@ -107,7 +107,7 @@ static void create_bgp_global_proto_grpc () {
     ClientContext   context;
     Status          ret_status;
 
-    auto proto_spec = request.add_request();
+    auto proto_spec = request.mutable_request();
     proto_spec->set_uuid (msidx2pdsobjkey(1).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));

@@ -104,7 +104,7 @@ message BGPRequest {
       Mib: "bgpRmEntTable"
   };
   // requests
-  repeated BGPGlobalSpec Request = 1;
+  BGPGlobalSpec Request = 1;
 }
 
 // operational status of BGP, if any
@@ -143,8 +143,8 @@ message BGPResponse {
 
 // BGPGlobalSpec get response
 message BGPGlobalSpecResponse {
-  types.ApiStatus        ApiStatus = 1;
-  repeated BGPGlobalSpec Response  = 2;
+  types.ApiStatus ApiStatus = 1;
+  BGPGlobalSpec   Response  = 2;
 }
 
 // BGPPeerSpec get response

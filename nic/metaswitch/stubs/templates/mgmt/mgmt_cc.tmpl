@@ -304,7 +304,20 @@
 
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
+                {{$resPkgName:= (addStr $pkgName ".") }}
+                {{$myMsg := (addStr $msgName "Response")}}
+                {{$resMsgPkgName := (addStr $resPkgName $myMsg)}}
+                {{$reqMsg := (.File.Reg.LookupMsg "" $resMsgPkgName) }}
+                {{$reqfields := $reqMsg.Fields}}
+                {{range $reqfields}}
+                  {{if (eq .GetName "Response")}}
+                    {{if (isRepeatedField .)}}
                 auto ent = resp->add_response();
+                    {{else}}
+                auto ent = resp->mutable_response();
+                    {{end}}
+                  {{end}}
+                {{end}}
                 /*************************************************************************/
                 /* TODO: Extract the fields.                                             */
                 /*************************************************************************/

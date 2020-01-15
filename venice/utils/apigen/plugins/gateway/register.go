@@ -638,6 +638,17 @@ func mapScalarTypes(in gogoproto.FieldDescriptorProto_Type) string {
 	}
 }
 
+func isRepeatedField(fld *descriptor.Field) bool {
+	if *fld.Label == gogoproto.FieldDescriptorProto_LABEL_REPEATED {
+		return true
+	}
+	return false
+}
+
+func addStr(str1 string, str2 string) string {
+	return str1 + str2
+}
+
 func getFieldIsReadOnlyFromCam(cam *CamInfo, table string, field string) bool {
 	for _, mibInfo := range cam.Mibs.MibInfo {
 		if mibInfo.CodeName == table {
@@ -3877,6 +3888,8 @@ func init() {
 	reg.RegisterFunc("getPdsaCastGetFunc", getPdsaCastGetFunc)
 	reg.RegisterFunc("getCppTypeFieldFromProto", getCppTypeFieldFromProto)
 	reg.RegisterFunc("getRowStatusOid", getRowStatusOid)
+	reg.RegisterFunc("isRepeatedField", isRepeatedField)
+	reg.RegisterFunc("addStr", addStr)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)
