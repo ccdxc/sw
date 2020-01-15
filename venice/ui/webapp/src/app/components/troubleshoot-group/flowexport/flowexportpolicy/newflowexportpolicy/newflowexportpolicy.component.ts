@@ -85,7 +85,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
 
   postNgInit() {
 
-    this.getSecurityApps();
     // Field is labeled as exports for this object instead of target
     this.syslogConfig = {
       format: this.newObject.spec.format as any,
@@ -259,11 +258,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       }
     }
 
-    if (this.areAllRulesEmpty()) {
-      this.validationMessage = 'Error:At least one match export must be specified.';
-      return false;
-    }
-
     if (!this.newObject.$formGroup.get(['spec', 'interval']).valid) {
       this.validationMessage = this.newObject.$formGroup.get(['spec', 'interval']).errors.interval.message;
       return false;
@@ -273,8 +267,6 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       this.validationMessage = this.newObject.$formGroup.get(['spec', 'template-interval']).errors['template-interval'].message;
       return false;
     }
-
-
 
     if (!this.newObject.$formGroup.valid) {
       this.validationMessage = 'Error:Please correct validation error.';

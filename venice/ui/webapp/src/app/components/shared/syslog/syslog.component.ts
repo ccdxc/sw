@@ -161,7 +161,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
       if (!val) {
         return null;
       }
-      if ((protocolVal.toLowerCase() === 'tcp' || protocolVal.toLowerCase() === 'udp') && (val.includes('/')) && (Utility.isPortValid(port))) {
+      if ((protocolVal.toLowerCase() === 'udp') && (val.includes('/')) && (Utility.isPortValid(port))) {
         return null;
       }
       return {
