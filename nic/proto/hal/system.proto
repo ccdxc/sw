@@ -35,6 +35,9 @@ service System {
   rpc MicroSegUpdate(MicroSegUpdateRequestMsg) returns (MicroSegUpdateResponseMsg) {}
   // Nicmgr -> HAL micro seg status
   rpc MicroSegStatusUpdate(MicroSegRequestMsg) returns (MicroSegResponseMsg) {}
+
+  rpc SysSpecCreate(SysSpec) returns (SysSpecResponse) {}
+  rpc SysSpecUpdate(SysSpec) returns (SysSpecResponse) {}
 }
 
 enum ApiCounter {
@@ -485,4 +488,33 @@ message MicroSegUpdateResponse {
 
 message MicroSegUpdateResponseMsg {
   repeated MicroSegUpdateResponse response = 1;
+}
+
+// Forwarding Mode
+enum ForwardMode {
+    FWD_MODE_TRANSPARENT    = 0;
+    FWD_MODE_MICROSEG       = 1;
+}
+
+// Policy Mode
+enum PolicyMode {
+    POLICY_MODE_BASE_NET    = 0;
+    POLICY_MODE_FLOW_AWARE  = 1;
+    POLICY_MODE_ENFORCE     = 2;
+}
+
+// System Spec
+message SysSpec {
+    ForwardMode fwd_mode    = 1;
+    PolicyMode  policy_mode = 2;
+}
+
+// System Spec Response Status
+message SysSpecStatus {
+} 
+
+// System Spec Response
+message SysSpecResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  SysSpecStatus    status     = 2;
 }
