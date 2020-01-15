@@ -64,7 +64,7 @@ def __update_job_cfg(job_file):
         if target in args.skip_targets:
             continue
         job_info = job["targets"][target]["commands"]
-        cov_cmd = "JOB_ID=1 IGNORE_BUILD_PIPELINE=1 " + " ".join(job_info) + " COVERAGE=1"
+        cov_cmd = "JOB_ID=1 IGNORE_BUILD_PIPELINE=1 make clean && " + " ".join(job_info) + " COVERAGE=1"
         job_cfg["_".join(target.split("/")[-2:])] = cov_cmd
 
 for job_file in args.job_files:
