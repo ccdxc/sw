@@ -258,7 +258,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
       this.alertsSelectedTimeRange = timeRange;
       const start = this.alertsSelectedTimeRange.getTime().startTime.toISOString() as any;
       const end = this.alertsSelectedTimeRange.getTime().endTime.toISOString() as any;
-      this.alertsTimeConstraints = 'meta.creation-time<' + end + ',' + 'meta.creation-time>' + start;
+      this.alertsTimeConstraints = 'meta.mod-time<' + end + ',' + 'meta.mod-time>' + start;
       this.genQueryBodies();
       this.getAlerts();
     }, 0);

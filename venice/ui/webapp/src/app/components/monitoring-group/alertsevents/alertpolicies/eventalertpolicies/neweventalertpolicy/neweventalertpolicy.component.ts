@@ -48,6 +48,9 @@ export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertP
         value: destination.meta.name,
       });
     });
+    if (this.newObject.$formGroup.get(['spec', 'destinations']).value.length === 0) {
+     this.newObject.$formGroup.get(['spec', 'destinations']).disable();
+    }
   }
 
   getClassName(): string {
