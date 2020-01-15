@@ -77,7 +77,7 @@ export class AxisTransform extends GraphTransform<{}> {
 
   convertBytes(opts: TransformGraphOptions) {
     const byteData = opts.data.filter( (d) => {
-      return d.units === 'Bytes';
+      return d.units === 'Bytes' || d.units === 'KB';
     });
     if (byteData.length === 0) {
       return 0;
@@ -86,7 +86,7 @@ export class AxisTransform extends GraphTransform<{}> {
     let max = 0;
     byteData.forEach( (d) => {
       d.series.values.forEach( (v) => {
-        const val = v[d.fieldIndex];
+        const val = d.units === 'Bytes' ? v[d.fieldIndex] : v[d.fieldIndex] * 1024;
         max = Math.max(val, max);
       });
     });
@@ -94,7 +94,8 @@ export class AxisTransform extends GraphTransform<{}> {
     byteData.forEach( (d) => {
       d.units = byteUnits;
       d.dataset.data = (<any>d.dataset.data).map( (point) => {
-        point.y = Utility.scaleBytes(point.y, 2, byteUnits);
+        const yValue = d.units === 'Bytes' ? point.y : point.y * 1024;
+        point.y = Utility.scaleBytes(yValue, 2, byteUnits);
         return point;
       });
     });
@@ -139,31 +140,19 @@ export class AxisTransform extends GraphTransform<{}> {
     let isSameUnit = true;
     let isSameField = true;
     // Whether they are all derivatives, or all not
-    let isSameRate = true;
-    let isAllDerivative = true;
     let previousUnit;
     let previousField;
-    let previousIsDerivative;
     opts.data.forEach( (d) => {
       const fieldMetadata = getFieldData(d.measurement, d.field);
-      const isDerivative = DerivativeTransform.doesFieldUseDerivative(fieldMetadata);
       if (previousUnit == null) {
         previousUnit = d.units;
         previousField = d.field;
-        previousIsDerivative = isDerivative;
-        if (!isDerivative) {
-          isAllDerivative = false;
-        }
       }
       if (previousField !== d.field) {
         isSameField = false;
       }
       if (previousUnit !== d.units) {
         isSameUnit = false;
-      }
-      if (previousIsDerivative !== isDerivative) {
-        isSameRate = false;
-        isAllDerivative = false;
       }
     });
 
@@ -176,15 +165,9 @@ export class AxisTransform extends GraphTransform<{}> {
       } else if (previousUnit != null) {
         unitString = previousUnit;
       }
-      if (isAllDerivative) {
-        unitString += ' / s';
-      }
       yAxisOptions.scaleLabel.labelString += ' (' + unitString + ')';
     } else if (isSameUnit && previousUnit != null) {
       yAxisOptions.scaleLabel.labelString = previousUnit;
-      if (isAllDerivative) {
-        yAxisOptions.scaleLabel.labelString += ' / s';
-      }
     } else {
       yAxisOptions.scaleLabel.labelString = '';
     }
@@ -209,15 +192,11 @@ export class AxisTransform extends GraphTransform<{}> {
 
       const dataItem = opts.data[tooltipItem.datasetIndex];
       const fieldMetadata = getFieldData(dataItem.measurement, dataItem.field);
-      const isDerivative = DerivativeTransform.doesFieldUseDerivative(fieldMetadata);
 
       let units = dataItem.units;
       if (units != null) {
         if (units === 'Percent') {
           units = '%';
-        }
-        if (isDerivative) {
-          units += ' / s';
         }
         return  label  + ' ' + units;
       }

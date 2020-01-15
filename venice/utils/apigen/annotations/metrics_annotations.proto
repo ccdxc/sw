@@ -12,6 +12,9 @@ enum MetricUnitType {
     Gauge       = 4;
     Bitmap      = 5;
     Celsius     = 6;
+    KB          = 7;
+    MWatts      = 8;
+    MHz         = 9;
 }
 
 // defines as a hint of type of metric

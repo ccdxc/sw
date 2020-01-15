@@ -3002,7 +3002,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Frequency",
       "displayName": "Frequency of the system",
       "description": "Frequency of the system in MHz",
-      "units": "Count",
+      "units": "MHz",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3036,7 +3036,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Totalmemory",
       "displayName": "Total memory",
       "description": "Total memory of the system",
-      "units": "Count",
+      "units": "KB",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3047,7 +3047,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Availablememory",
       "displayName": "Available memory",
       "description": "Available memory of the system",
-      "units": "Count",
+      "units": "KB",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3058,7 +3058,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Freememory",
       "displayName": "Free memory",
       "description": "Free memory of the system",
-      "units": "Count",
+      "units": "KB",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3092,7 +3092,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pin",
       "displayName": "Input Power",
       "description": "Input power to the system",
-      "units": "Count",
+      "units": "MWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3103,7 +3103,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pout1",
       "displayName": "Core Output Power",
       "description": "Core output power",
-      "units": "Count",
+      "units": "MWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3114,7 +3114,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pout2",
       "displayName": "ARM Output Power",
       "description": "ARM output power",
-      "units": "Count",
+      "units": "MWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"

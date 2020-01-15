@@ -74,9 +74,9 @@ message AsicPowerMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system" }];
-    delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power" }];
-    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "ARM Output Power" Description: "ARM output power" }];
+    delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system", Units: MWatts }];
+    delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power", Units: MWatts }];
+    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "ARM Output Power" Description: "ARM output power", Units: MWatts }];
 }
 
 message AsicFrequencyMetrics {
@@ -99,7 +99,7 @@ message AsicFrequencyMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter frequency           = 2 [(venice.metricsField) = {DisplayName: "Frequency of the system" Description: "Frequency of the system in MHz" }];
+    delphi.Counter frequency           = 2 [(venice.metricsField) = {DisplayName: "Frequency of the system" Description: "Frequency of the system in MHz", Units: MHz }];
 }
 
 enum SpeedState {
@@ -135,8 +135,8 @@ message AsicMemoryMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter totalmemory          = 2 [(venice.metricsField) = {DisplayName: "Total memory" Description: "Total memory of the system" }];
-    delphi.Counter availablememory      = 3 [(venice.metricsField) = {DisplayName: "Available memory" Description: "Available memory of the system" }];
-    delphi.Counter freememory           = 4 [(venice.metricsField) = {DisplayName: "Free memory" Description: "Free memory of the system" }];
+    delphi.Counter totalmemory          = 2 [(venice.metricsField) = {DisplayName: "Total memory" Description: "Total memory of the system", Units: KB }];
+    delphi.Counter availablememory      = 3 [(venice.metricsField) = {DisplayName: "Available memory" Description: "Available memory of the system", Units: KB }];
+    delphi.Counter freememory           = 4 [(venice.metricsField) = {DisplayName: "Free memory" Description: "Free memory of the system", Units: KB }];
 
 }

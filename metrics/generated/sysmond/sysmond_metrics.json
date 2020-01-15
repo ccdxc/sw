@@ -12,7 +12,7 @@
           "Name": "Frequency",
           "DisplayName": "Frequency of the system",
           "Description": "Frequency of the system in MHz",
-          "Units": "Count",
+          "Units": "MHz",
           "BaseType": "Counter"
         }
       ],
@@ -30,21 +30,21 @@
           "Name": "Totalmemory",
           "DisplayName": "Total memory",
           "Description": "Total memory of the system",
-          "Units": "Count",
+          "Units": "KB",
           "BaseType": "Counter"
         },
         {
           "Name": "Availablememory",
           "DisplayName": "Available memory",
           "Description": "Available memory of the system",
-          "Units": "Count",
+          "Units": "KB",
           "BaseType": "Counter"
         },
         {
           "Name": "Freememory",
           "DisplayName": "Free memory",
           "Description": "Free memory of the system",
-          "Units": "Count",
+          "Units": "KB",
           "BaseType": "Counter"
         }
       ],
@@ -62,21 +62,21 @@
           "Name": "Pin",
           "DisplayName": "Input Power",
           "Description": "Input power to the system",
-          "Units": "Count",
+          "Units": "MWatts",
           "BaseType": "Counter"
         },
         {
           "Name": "Pout1",
           "DisplayName": "Core Output Power",
           "Description": "Core output power",
-          "Units": "Count",
+          "Units": "MWatts",
           "BaseType": "Counter"
         },
         {
           "Name": "Pout2",
           "DisplayName": "ARM Output Power",
           "Description": "ARM output power",
-          "Units": "Count",
+          "Units": "MWatts",
           "BaseType": "Counter"
         }
       ],
