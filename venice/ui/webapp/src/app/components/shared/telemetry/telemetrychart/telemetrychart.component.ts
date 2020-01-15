@@ -366,6 +366,7 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       tooltips: {
         enabled: true,
         intersect: false,
+        mode: 'index',
         titleFontFamily: 'Fira Sans Condensed',
         bodyFontFamily: 'Fira Sans Condensed'
       },
@@ -382,32 +383,51 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
       },
       scales: {
         xAxes: [{
+          id: 'telemetrychart-x-axis-time',
           type: 'time',
           time: {
             parser: data => moment.utc(data),
             tooltipFormat: 'YYYY-MM-DD HH:mm',
             displayFormats: {
-                millisecond: 'HH:mm:ss.SSS',
-                second: 'HH:mm:ss',
-                minute: 'HH:mm',
-                hour: 'HH'
+              millisecond: 'HH:mm:ss.SSS',
+              second: 'HH:mm:ss',
+              minute: 'HH:mm',
+              hour: 'HH'
             },
           },
           display: true,
           gridLines: {
             display: true
           },
-          scaleLabel: {
-            display: true
-          },
           ticks: {
-            callback: function(value, index, values) {
+            callback: function (value, index, values) {
               if (!values[index]) {
                 return;
               }
-              return new PrettyDatePipe('en-US').transform(values[index]['value'], 'graph');
+
+              const currMoment = moment.utc(values[index].value);
+              return currMoment.format('HH:mm');
             },
+          },
+        }, {
+          id: 'telemetrychart-x-axis-date',
+          type: 'time',
+          gridLines: {
             display: false,
+            drawBorder: false,
+            drawTicks: false,
+          },
+          ticks: {
+            callback: function (value, index, values) {
+              if (!values[index]) {
+                return;
+              }
+
+              const currMoment = moment.utc(values[index].value);
+              const prevMoment = index > 0 && values[index - 1] ? moment.utc(values[index - 1].value) : null;
+              const sameDay = prevMoment && currMoment.isSame(prevMoment, 'day');
+              return sameDay ? '' : currMoment.format('MM/DD');
+            },
           },
         }],
         yAxes: [{
