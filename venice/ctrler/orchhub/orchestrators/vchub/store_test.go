@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -38,6 +40,17 @@ func TestStore(t *testing.T) {
 		logConfig.Filter = log.AllowAllFilter
 		logger = log.SetConfig(logConfig)
 	}
+	dcName := "DC1"
+	dvsName := createDVSName(dcName)
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xbb)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	macStr := conv.MacString(pNicMac)
+
 	testCases := []struct {
 		name   string
 		events []defs.Probe2StoreMsg
@@ -54,6 +67,7 @@ func TestStore(t *testing.T) {
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						DcID:       "DC1",
+						DcName:     dcName,
 					},
 				},
 			},
@@ -91,6 +105,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -101,7 +116,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -115,6 +135,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -178,7 +199,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -307,6 +333,11 @@ func TestStore(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: "aa:bb:cc:dd:ee:ff",
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -462,6 +493,11 @@ func TestStore(t *testing.T) {
 												Mac: "aa:bb:cc:dd:ee:ff",
 											},
 										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
+											},
+										},
 									},
 								},
 							},
@@ -485,6 +521,11 @@ func TestStore(t *testing.T) {
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
 												Mac: "aa:bb:cc:dd:ee:ff",
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -629,6 +670,11 @@ func TestStore(t *testing.T) {
 												Mac: "aa:bb:cc:dd:ee:ff",
 											},
 										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
+											},
+										},
 									},
 								},
 							},
@@ -741,13 +787,14 @@ func TestStore(t *testing.T) {
 			},
 		},
 		{
-			name: "workload inf assign for delete workload",
+			name: "workload inf assign for deleted workload",
 			events: []defs.Probe2StoreMsg{
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -758,7 +805,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -772,6 +824,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -805,12 +858,18 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes:    []types.PropertyChange{},
 						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
+			},
+			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+				mockProbe := mock.NewMockProbeInf(mockCtrl)
+				v.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -834,6 +893,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -844,7 +904,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -858,6 +923,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-40",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -924,6 +990,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -934,7 +1001,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -948,6 +1020,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -957,6 +1030,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1021,6 +1095,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1031,7 +1106,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1045,6 +1125,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1097,6 +1178,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 					},
@@ -1106,6 +1188,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes:    []types.PropertyChange{},
@@ -1135,6 +1218,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1207,6 +1291,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-44",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1217,7 +1302,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1240,7 +1330,7 @@ func TestStore(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aa:bb:cc:dd:ee:ff",
+								MACAddress: macStr,
 							},
 						},
 					},
@@ -1266,6 +1356,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1276,7 +1367,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1290,6 +1386,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1300,7 +1397,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:dd:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1323,7 +1425,7 @@ func TestStore(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aa:bb:cc:dd:ee:ff",
+								MACAddress: macStr,
 							},
 						},
 					},
@@ -1337,7 +1439,7 @@ func TestStore(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aa:bb:cc:dd:dd:ff",
+								MACAddress: macStr,
 							},
 						},
 					},
@@ -1366,6 +1468,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1376,7 +1479,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1399,7 +1507,7 @@ func TestStore(t *testing.T) {
 					Spec: cluster.HostSpec{
 						DSCs: []cluster.DistributedServiceCardID{
 							cluster.DistributedServiceCardID{
-								MACAddress: "aa:bb:cc:dd:ee:ff",
+								MACAddress: macStr,
 							},
 						},
 					},
@@ -1425,6 +1533,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1435,7 +1544,12 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
 											},
 										},
 									},
@@ -1449,6 +1563,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes:    []types.PropertyChange{},
@@ -1478,6 +1593,7 @@ func TestStore(t *testing.T) {
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
 						DcID:       "DC1",
+						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -1551,9 +1667,6 @@ func TestStore(t *testing.T) {
 			defer mockCtrl.Finish()
 		}
 
-		// Setup state for DC1
-		dcName := "DC1"
-		dvsName := createDVSName(dcName)
 		useg, err := useg.NewUsegAllocator()
 		AssertOk(t, err, "Failed to create useg")
 		penDVS := &PenDVS{
@@ -1568,6 +1681,7 @@ func TestStore(t *testing.T) {
 			State: vchub.State,
 			// probe:  v.probe,
 			Name: dcName,
+			VcID: "DC1",
 			DvsMap: map[string]*PenDVS{
 				createDVSName(dcName): penDVS,
 			},

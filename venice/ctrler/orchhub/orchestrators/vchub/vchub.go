@@ -166,7 +166,7 @@ func (v *VCHub) ListPensandoHosts(dcRef *types.ManagedObjectReference) []mo.Host
 	hosts := v.probe.ListHosts(dcRef)
 	var penHosts []mo.HostSystem
 	for _, host := range hosts {
-		if !isPensandoHost(&host) {
+		if !isPensandoHost(host.Config) {
 			v.Log.Debugf("Skipping non-Pensando Host %s", host.Name)
 			continue
 		}

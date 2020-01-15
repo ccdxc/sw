@@ -79,7 +79,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			continue
 		}
 		v.Log.Infof("new DC %s", name)
-		v.NewPenDC(name)
+		v.NewPenDC(name, m.Key)
 	}
 }
 

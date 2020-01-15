@@ -27,6 +27,9 @@ const (
 	VCEvent = Probe2StoreMsgType("VCEvent")
 )
 
+// VmkWorkloadPrefix - used when creating name for dummy workload for vmkernel networking
+const VmkWorkloadPrefix = "VmkWorkload"
+
 // Probe2StoreMsgType defines the probe to store message types
 type Probe2StoreMsgType string
 
@@ -91,7 +94,7 @@ const (
 // VCEventMsg specifies a vc event
 type VCEventMsg struct {
 	VcObject   VCObject
-	Key        string // vSphere key for the object
+	Key        string // vCenter object key
 	Changes    []types.PropertyChange
 	UpdateType types.ObjectUpdateKind
 	DcID       string

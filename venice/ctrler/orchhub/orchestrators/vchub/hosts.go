@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/ref"
 	conv "github.com/pensando/sw/venice/utils/strconv"
 )
@@ -17,7 +18,7 @@ import (
 func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	v.Log.Debugf("Got handle host event")
 	meta := &api.ObjectMeta{
-		Name: utils.CreateGlobalKey(m.Originator, m.DcID, m.Key),
+		Name: createHostName(m.Originator, m.DcID, m.Key),
 	}
 	var existingHost, hostObj *cluster.Host
 	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
@@ -50,42 +51,87 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
+	penDC := v.GetDC(m.DcName)
+	var hConfig *types.HostConfigInfo
+
 	for _, prop := range m.Changes {
-		hConfig, ok := prop.Val.(types.HostConfigInfo)
+		configProp, ok := prop.Val.(types.HostConfigInfo)
 		if !ok {
 			v.Log.Errorf("Failed to cast to HostConfigInfo. Prop Name: %s", prop.Name)
 			return
 		}
+		hConfig = &configProp
+	}
+	if hConfig == nil {
+		return
+	}
 
-		nwInfo := hConfig.Network
-		if nwInfo == nil {
-			v.Log.Errorf("Missing hConfig.Network")
-			return
-		}
+	nwInfo := hConfig.Network
+	if nwInfo == nil {
+		v.Log.Errorf("Missing hConfig.Network")
+		return
+	}
 
-		var DSCs []cluster.DistributedServiceCardID
-		for _, pnic := range nwInfo.Pnic {
-			// TODO check for vendor field to identify Pensando NICs
-			macStr, err := conv.ParseMacAddr(pnic.Mac)
-			if err != nil {
-				v.Log.Errorf("Failed to parse Mac, %s", err)
-				continue
-			}
-			DSCs = append(DSCs, cluster.DistributedServiceCardID{
-				MACAddress: macStr,
-			})
-			// TODO : Currently we do not allow more than one Pnics per host to be added to Venice.
+	var penDVS *PenDVS
+	for _, dvsProxy := range nwInfo.ProxySwitch {
+		penDVS = penDC.GetDVS(dvsProxy.DvsName)
+		if penDVS != nil {
 			break
 		}
-
-		// Sort before storing, so that if we receive the Pnics
-		// in a different order later we don't generate
-		// an unnecessary update
-		sort.Slice(DSCs, func(i, j int) bool {
-			return DSCs[i].MACAddress < DSCs[j].MACAddress
-		})
-		hostObj.Spec.DSCs = DSCs
 	}
+	if penDVS == nil {
+		// This host in not on pen-dvs, ignore it
+		v.Log.Infof("Host %s is not added to pensando DVS - ignored", m.Key)
+		return
+	}
+
+	var DSCs []cluster.DistributedServiceCardID
+	// sort pnics based on MAC address to find/use correct
+	// MAC for DSC idenitification. the management MAC is numerically highest MAC addr
+	sort.Slice(nwInfo.Pnic, func(i, j int) bool {
+		// reverse sort
+		return nwInfo.Pnic[i].Mac > nwInfo.Pnic[j].Mac
+	})
+
+	for _, pnic := range nwInfo.Pnic {
+		macStr, err := conv.ParseMacAddr(pnic.Mac)
+		if err != nil {
+			v.Log.Errorf("Failed to parse Mac, %s", err)
+			continue
+		}
+		if !netutils.IsPensandoMACAddress(macStr) {
+			continue
+		}
+		DSCs = append(DSCs, cluster.DistributedServiceCardID{
+			MACAddress: macStr,
+		})
+		// TODO : Currently we do not allow more than one DSC per host to be added to Venice.
+		break
+	}
+
+	// Sort before storing, so that if we receive the Pnics
+	// in a different order later we don't generate
+	// an unnecessary update
+	sort.Slice(DSCs, func(i, j int) bool {
+		return DSCs[i].MACAddress < DSCs[j].MACAddress
+	})
+	hostObj.Spec.DSCs = DSCs
+
+	if hostObj.Labels == nil {
+		hostObj.Labels = make(map[string]string)
+	}
+
+	if existingHost == nil && v.OrchConfig != nil {
+		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
+	}
+
+	if existingHost == nil {
+		v.Log.Infof("Creating host %s", hostObj.Name)
+		v.StateMgr.Controller().Host().Create(hostObj)
+	}
+
+	// TODO the host name is not correct here.. fix it
+	v.syncHostVmkNics(penDC, penDVS, m.Key, hostObj.Name, hConfig)
 
 	// If different, write to apiserver
 	if reflect.DeepEqual(hostObj, existingHost) {
@@ -93,18 +139,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
-	if hostObj.Labels == nil {
-		hostObj.Labels = make(map[string]string)
-	}
-
-	if v.OrchConfig != nil {
-		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
-	}
-
-	if existingHost == nil {
-		v.Log.Infof("Creating host %s", hostObj.Name)
-		v.StateMgr.Controller().Host().Create(hostObj)
-	} else {
+	if existingHost != nil {
 		v.Log.Infof("Updating host %s", hostObj.Name)
 		v.StateMgr.Controller().Host().Update(hostObj)
 	}

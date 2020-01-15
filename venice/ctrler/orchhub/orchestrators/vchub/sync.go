@@ -71,7 +71,7 @@ func (v *VCHub) sync() {
 			continue
 		}
 
-		_, err := v.NewPenDC(dc.Name)
+		_, err := v.NewPenDC(dc.Name, dc.Self.Value)
 		if err != nil {
 			v.Log.Errorf("Creating DC %s failed: %s", dc.Name, err)
 			continue
@@ -86,7 +86,6 @@ func (v *VCHub) sync() {
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
 		v.syncHosts(dc, vcHosts, hosts)
 		v.syncVMs(workloads, dc, dvsObjs, vms, pgs)
-		v.syncVmkNics(&dc, dvsObjs, vcHosts, pgs)
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
@@ -110,7 +109,7 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 		if _, ok := vcHostMap[host.Name]; !ok {
 			// host no longer exists
 			// Delete vmkWorkload if created for this host
-			wlName := createVmkWorkLoadNameFromHostName(host.Name)
+			wlName := createVmkWorkloadNameFromHostName(host.Name)
 			v.deleteWorkloadByName(dc.Self.Value, wlName)
 
 			v.Log.Debugf("Deleting host %s", host.Name)
@@ -134,7 +133,7 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 				},
 			},
 		}
-		v.Log.Debugf("Creating host %s", host.Name)
+		v.Log.Debugf("Process config change for host %s", host.Name)
 		v.handleHost(m)
 	}
 }
@@ -440,63 +439,4 @@ func (v *VCHub) extractOverrides(ports []types.DistributedVirtualPort) map[strin
 		overrides[portKey] = int(vlanSpec.VlanId)
 	}
 	return overrides
-}
-
-func (v *VCHub) syncVmkNics(dc *mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vcHosts []mo.HostSystem, pgs []mo.DistributedVirtualPortgroup) {
-	vcHostRefMap := make(map[types.ManagedObjectReference]mo.HostSystem)
-	for _, host := range vcHosts {
-		vcHostRefMap[host.Reference()] = host
-	}
-	v.Log.Infof("SyncVmkNics found %d hosts", len(vcHostRefMap))
-
-	penDC := v.GetDC(dc.Name)
-	for _, dvs := range dvsObjs {
-		if !isPensandoDVS(dvs.Name) {
-			v.Log.Debugf("Skipping dvs %s", dvs.Name)
-			continue
-		}
-		for _, hostMember := range dvs.Config.GetDVSConfigInfo().Host {
-			host, ok := vcHostRefMap[*(hostMember.Config.Host)]
-			if !ok {
-				// non-pensando host
-				continue
-			}
-			wlName := createVmkWorkLoadName(v.VcID, dc.Self.Value, host.Self.Value)
-			vmkNicInfo := workloadVnics{
-				ObjectMeta: *createWorkloadVnicsMeta(wlName),
-				Interfaces: map[string]*vnicEntry{},
-			}
-			for _, vmkNic := range host.Config.Network.Vnic {
-				v.Log.Infof("Processing VmkNic %s on host %s", vmkNic.Key, host.Name)
-				if vmkNic.Portgroup != "" {
-					// standard (non-DV) port gorup is not supported
-					v.Log.Infof("Skip vnic - not in DV Port group")
-					continue
-				}
-				pgKey := vmkNic.Spec.DistributedVirtualPort.PortgroupKey
-				portKey := vmkNic.Spec.DistributedVirtualPort.PortKey
-				if !ok {
-					// Error
-					v.Log.Errorf("PG not found for %s", pgKey)
-					continue
-				}
-				penPG := penDC.GetPGByID(pgKey)
-				if penPG == nil {
-					// not a venice network
-					v.Log.Errorf("PenPG not found for PG Id %s", pgKey)
-					continue
-				}
-				macStr := vmkNic.Spec.Mac
-				vmkNicInfo.Interfaces[macStr] = &vnicEntry{
-					PG:         pgKey,
-					Port:       portKey,
-					MacAddress: macStr,
-				}
-				v.Log.Infof("vmkInterface %s Port %s", vmkNic.Device, portKey)
-			}
-			// reconcile vmknics - Add all new vmknics, remove stale
-			// Create workload if does not exists and add EPs to it
-			v.syncHostVmkNics(dc, &dvs, &host, &vmkNicInfo)
-		}
-	}
 }

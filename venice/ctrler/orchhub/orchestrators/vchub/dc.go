@@ -16,17 +16,19 @@ type PenDC struct {
 	sync.Mutex
 	*defs.State
 	Name string
+	VcID string
 	// Map from dvs display name to PenDVS inside this DC
 	DvsMap map[string]*PenDVS
 	probe  vcprobe.ProbeInf
 }
 
 // NewPenDC creates a new penDC object
-func (v *VCHub) NewPenDC(dcName string) (*PenDC, error) {
+func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 	v.DcMapLock.Lock()
 	defer v.DcMapLock.Unlock()
 
 	var dc *PenDC
+	// TODO: DC name might change, in that case lookp using ID
 	if dcExisting, ok := v.DcMap[dcName]; ok {
 		dc = dcExisting
 	} else {
@@ -34,6 +36,7 @@ func (v *VCHub) NewPenDC(dcName string) (*PenDC, error) {
 			State:  v.State,
 			probe:  v.probe,
 			Name:   dcName,
+			VcID:   dcID,
 			DvsMap: map[string]*PenDVS{},
 		}
 		v.DcMap[dcName] = dc
@@ -111,6 +114,17 @@ func (d *PenDC) AddPG(pgName string, networkMeta api.ObjectMeta, dvsName string)
 		}
 	}
 	return errs
+}
+
+// GetDVS returns the DVS with matching name
+func (d *PenDC) GetDVS(dvsName string) *PenDVS {
+	d.Lock()
+	defer d.Unlock()
+	dvs, ok := d.DvsMap[dvsName]
+	if !ok {
+		return nil
+	}
+	return dvs
 }
 
 // GetPG returns the pg with the matching name. Looks thorugh all

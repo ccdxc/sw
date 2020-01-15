@@ -183,3 +183,8 @@ func (v *ProbeMock) GetPenDVSPorts(dcName, dvsName string, criteria *types.Distr
 	}
 	return portsRet, nil
 }
+
+// StartWatchers start the watchers
+func (v *ProbeMock) StartWatchers() {
+	v.VCProbe.StartWatchers()
+}

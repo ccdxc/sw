@@ -465,6 +465,11 @@ func (v *DVS) AddHost(host *Host) error {
 			Host: &ref,
 		},
 	}
+	dvsProxy := types.HostProxySwitch{
+		ConfigNumPorts: 512,
+		DvsName:        v.Obj.Name,
+	}
+	host.Obj.Config.Network.ProxySwitch = append(host.Obj.Config.Network.ProxySwitch, dvsProxy)
 	v.Obj.Config.GetDVSConfigInfo().Host = append(v.Obj.Config.GetDVSConfigInfo().Host, newMember)
 	d := simulator.Map.Get(v.Obj.Reference())
 	simulator.Map.Update(d, []types.PropertyChange{

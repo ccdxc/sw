@@ -99,6 +99,12 @@ func TestVCSyncPG(t *testing.T) {
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.SessionReady {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
 
 	defer vchub.Destroy()
 
@@ -183,11 +189,40 @@ func TestVCSyncHost(t *testing.T) {
 	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
+
+	// SETTING UP MOCK
+	// Real probe that will be used by mock probe when possible
+	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start()
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.SessionReady {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	defer vchub.Destroy()
+
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
+	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
+	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc1.Obj.Self.Value)
+	// Add DVS
+	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	if !ok {
+		logger.Info("GetDVS Failed")
+		os.Exit(1)
+	}
+	Assert(t, ok, "failed dvs create")
 
 	hostSystem1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
 	pNicMac := net.HardwareAddr{}
 	pNicMac = append(pNicMac, globals.PensandoOUI[0])
 	pNicMac = append(pNicMac, globals.PensandoOUI[1])
@@ -200,6 +235,8 @@ func TestVCSyncHost(t *testing.T) {
 
 	hostSystem2, err := dc1.AddHost("host2")
 	AssertOk(t, err, "failed host2 create")
+	err = dvs.AddHost(hostSystem2)
+	AssertOk(t, err, "failed to add Host to DVS")
 	pNicMac = net.HardwareAddr{}
 	pNicMac = append(pNicMac, globals.PensandoOUI[0])
 	pNicMac = append(pNicMac, globals.PensandoOUI[1])
@@ -249,16 +286,6 @@ func TestVCSyncHost(t *testing.T) {
 	sm.Controller().Host().Create(&host1)
 
 	time.Sleep(1 * time.Second)
-
-	// SETTING UP MOCK
-	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
-	mockProbe := mock.NewProbeMock(vcp)
-	vchub.probe = mockProbe
-	mockProbe.Start()
-
-	defer vchub.Destroy()
 
 	vchub.Sync()
 
@@ -339,11 +366,38 @@ func TestVCSyncVM(t *testing.T) {
 	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
 	AssertOk(t, err, "Failed to create vcsim")
 	defer s.Destroy()
+
+	// SETTING UP MOCK
+	// Real probe that will be used by mock probe when possible
+	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
+	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
+	mockProbe := mock.NewProbeMock(vcp)
+	vchub.probe = mockProbe
+	mockProbe.Start()
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.SessionReady {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
+
+	defer vchub.Destroy()
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
+	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
+	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc1.Obj.Self.Value)
+	// Add DVS
+	dvsName := createDVSName(defaultTestParams.TestDCName)
+	dvs, ok := dc1.GetDVS(dvsName)
+	if !ok {
+		logger.Info("GetDVS Failed")
+		os.Exit(1)
+	}
 
 	hostSystem1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed host1 create")
+	err = dvs.AddHost(hostSystem1)
+	AssertOk(t, err, "failed to add Host to DVS")
 	pNicMac := net.HardwareAddr{}
 	pNicMac = append(pNicMac, globals.PensandoOUI[0])
 	pNicMac = append(pNicMac, globals.PensandoOUI[1])
@@ -353,19 +407,6 @@ func TestVCSyncVM(t *testing.T) {
 	pNicMac = append(pNicMac, 0x00)
 	// Make it Pensando host
 	err = hostSystem1.AddNic("vmnic0", conv.MacString(pNicMac))
-
-	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
-	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
-	dvs, err := dc1.AddDVS(dvsCreateSpec)
-	AssertOk(t, err, "failed dvs create")
-
-	// SETTING UP MOCK
-	// Real probe that will be used by mock probe when possible
-	vchub := setupVCHub(vcURL, sm, orchConfig, logger)
-	vcp := vcprobe.NewVCProbe(vchub.vcReadCh, vchub.State)
-	mockProbe := mock.NewProbeMock(vcp)
-	vchub.probe = mockProbe
-	mockProbe.Start()
 
 	time.Sleep(3 * time.Second)
 
@@ -607,6 +648,12 @@ func TestSyncVmkNics(t *testing.T) {
 	mockProbe := mock.NewProbeMock(vcp)
 	vchub.probe = mockProbe
 	mockProbe.Start()
+	AssertEventually(t, func() (bool, interface{}) {
+		if !mockProbe.SessionReady {
+			return false, fmt.Errorf("Session not ready")
+		}
+		return true, nil
+	}, "Session is not Ready", "1s", "10s")
 	defer vchub.Destroy()
 
 	for !mockProbe.IsSessionReady() {
@@ -619,7 +666,7 @@ func TestSyncVmkNics(t *testing.T) {
 	// Add it using vcHub so mockProbe gets the needed info ???
 	// This will also create PenDVS
 	logger.Infof("Creating PenDC for %s\n", dc.Obj.Reference().Value)
-	_, err = vchub.NewPenDC(defaultTestParams.TestDCName)
+	_, err = vchub.NewPenDC(defaultTestParams.TestDCName, dc.Obj.Self.Value)
 	// Add DVS
 	dvsName := createDVSName(defaultTestParams.TestDCName)
 	dvs, ok := dc.GetDVS(dvsName)
@@ -710,7 +757,7 @@ func TestSyncVmkNics(t *testing.T) {
 	logger.Infof("===== Sync1 =====")
 	vchub.Sync()
 
-	wlName := createVmkWorkLoadName(orchInfo1[0].Name, dc.Obj.Self.Value, host.Obj.Self.Value)
+	wlName := createVmkWorkloadName(orchInfo1[0].Name, dc.Obj.Self.Value, host.Obj.Self.Value)
 	testWorkloadMap[wlName] = testNICs
 
 	// Add Validations
@@ -720,9 +767,11 @@ func TestSyncVmkNics(t *testing.T) {
 			opts := api.ListWatchOptions{}
 			wls, err := sm.Controller().Workload().List(context.Background(), &opts)
 			if err != nil {
+				logger.Infof("Cannot get workloads - err %s", err)
 				return false, nil
 			}
 			if len(wls) != len(testWlEPMap) {
+				logger.Infof("Got %d workloads, Expected %d", len(wls), len(testWlEPMap))
 				return false, nil
 			}
 			for wlname, testEPs := range testWlEPMap {
@@ -744,11 +793,12 @@ func TestSyncVmkNics(t *testing.T) {
 					}
 				}
 				if len(wl.Workload.Spec.Interfaces) != len(testEPs) {
+					logger.Infof("Got %d interface, Expected %d", len(wl.Workload.Spec.Interfaces), len(testEPs))
 					return false, nil
 				}
 			}
 			return true, nil
-		}, msg, "5s", "1s")
+		}, msg, "1s", "10s")
 	}
 	verifyVmkworkloads(testWorkloadMap, "WL with 2EPs create failed")
 	host.RemoveVmkNic("vmk2")
@@ -768,16 +818,32 @@ func TestSyncVmkNics(t *testing.T) {
 	vchub.Sync()
 	verifyVmkworkloads(testWorkloadMap, "WL delete 1 EP failed")
 
-	// Delete all vmkNics from a host, WL should be deleted
-	time.Sleep(5 * time.Second)
-
 	host.RemoveVmkNic("vmk1")
 	host.RemoveVmkNic("vmk3")
+	delete(testNICs, "0011.2233.0001")
+	delete(testNICs, spec.Mac)
 	delete(testWorkloadMap, wlName)
 
 	logger.Infof("===== Sync3 =====")
 	vchub.Sync()
 	verifyVmkworkloads(testWorkloadMap, "WL delete all EPs failed")
+
+	// Start the watcher, add vmkNic to the host
+	// vc sim does not deliver events if objects are created after starting the watch.. so create
+	// them before watch is called
+	logger.Infof("===== Watch =====")
+	err = host.AddVmkNic(&spec, "vmk1")
+	testNICs[spec.Mac] = testEP{
+		mac:  spec.Mac,
+		vlan: 500,
+	}
+	AssertOk(t, err, "failed to add vmkNic")
+	testWorkloadMap[wlName] = testNICs
+	vchub.Wg.Add(1)
+	go vchub.startEventsListener()
+	vchub.Wg.Add(1)
+	go vchub.probe.StartWatchers()
+	verifyVmkworkloads(testWorkloadMap, "VmkWorkload create with EP failed via watch")
 }
 
 func setupVCHub(vcURL *url.URL, stateMgr *statemgr.Statemgr, config *orchestration.Orchestrator, logger log.Logger, opts ...Option) *VCHub {
