@@ -277,7 +277,7 @@ func (n *NMD) issueNextPendingOp() {
 			return
 		}
 		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), 4*time.Minute)
+		ctx, cancel = context.WithTimeout(context.Background(), 10*time.Minute)
 		err = imagestore.DownloadNaplesImage(ctx, n.resolverClient, naplesVersion, "/update/naples_fw.tar")
 		if err != nil {
 			log.Errorf("Failed to download naples image from objectstore %+v", err)

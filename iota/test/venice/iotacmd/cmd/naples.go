@@ -109,14 +109,21 @@ func doNaplesMgmtLinkFlap(percent int) error {
 
 func doNaplesUpgrade(percent int) error {
 
+	numNaples := 0
 	setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-		_, err := setupModel.Action().RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
+		_, err := setupModel.Action().RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
+		numNaples++
 		return err
 	})
 
 	defer setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-		_, err := setupModel.Action().RunNaplesCommand(nc, "rm /update/upgrade_to_same_firmware_allowed")
+		_, err := setupModel.Action().RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 		return err
+	})
+
+	setupModel.ForEachFakeNaples(func(nc *iotakit.NaplesCollection) error {
+		numNaples++
+		return nil
 	})
 
 	rollout, err := setupModel.GetRolloutObject(true)
@@ -129,7 +136,7 @@ func doNaplesUpgrade(percent int) error {
 		return err
 	}
 
-	TimedOutEvent := time.After(time.Duration(300) * time.Second)
+	TimedOutEvent := time.After(time.Duration(60*numNaples) * time.Second)
 	for true {
 		select {
 		case <-TimedOutEvent:

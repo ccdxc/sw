@@ -233,7 +233,7 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKi
 			}
 			for _, obj := range objlist {
 				if obj.Spec.NodeUUID != nodeID {
-					log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+					//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
 					continue
 				}
 				mobj, err := types.MarshalAny(obj)
@@ -544,7 +544,9 @@ func (eh *AggregateTopic) registerAggWatcher(aggkey, nodeID string, kinds []stri
 	eh.Lock()
 	defer eh.Unlock()
 
-	eh.aggStatus[aggkey] = &NodesStatus{nodesStatus: make(map[string]*NodeKindStatus)}
+	if _, ok := eh.aggStatus[aggkey]; !ok {
+		eh.aggStatus[aggkey] = &NodesStatus{nodesStatus: make(map[string]*NodeKindStatus)}
+	}
 
 	eh.aggStatus[aggkey].nodesStatus[nodeID] = &NodeKindStatus{watcher: watcher,
 		kindStatus: make(map[string]*KindStatus)}
@@ -665,12 +667,14 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 	defer eh.Unlock()
 
 	var nodeStatus *NodeKindStatus
-	for _, nodesStatus := range eh.aggStatus {
-		nodeStatus, ok = nodesStatus.nodesStatus[nodeID]
-		if !ok {
-			return true
+	for aggKey, nodesStatus := range eh.aggStatus {
+		if strings.Contains(aggKey, kind) {
+			nodeStatus, ok = nodesStatus.nodesStatus[nodeID]
+			if !ok {
+				return true
+			}
+			break
 		}
-		break
 	}
 
 	//This node already unregistered
@@ -765,7 +769,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 			}
 			for _, obj := range objlist {
 				if obj.Spec.NodeUUID != nodeID {
-					log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
+					//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
 					continue
 				}
 				mobj, err := types.MarshalAny(obj)
@@ -944,7 +948,7 @@ Watching:
 					return err
 				}
 				if obj.Spec.NodeUUID != nodeID {
-					log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
+					//log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
 					continue Watching
 				}
 				mobj, err = types.MarshalAny(obj)

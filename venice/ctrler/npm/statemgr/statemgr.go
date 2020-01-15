@@ -704,28 +704,25 @@ func (sm *Statemgr) GetConfigPushStatus() interface{} {
 
 		nodeState.KindStatus["App"] = &evStatus{}
 		nodeState.KindStatus["Endpoint"] = &evStatus{}
+		nodeState.KindStatus["Network"] = &evStatus{}
 		nodeState.KindStatus["NetworkSecurityPolicy"] = &evStatus{}
 		nodeState.KindStatus["App"].Status = make(map[string]bool)
 		nodeState.KindStatus["Endpoint"].Status = make(map[string]bool)
+		nodeState.KindStatus["Network"].Status = make(map[string]bool)
 		nodeState.KindStatus["NetworkSecurityPolicy"].Status = make(map[string]bool)
 		for _, ev := range events {
-			if !sm.topics.AppTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
-				log.Infof("SmartNic %v, App not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
-				nodeState.KindStatus["App"].Status[ev.String()] = false
+			if !sm.topics.AggregateTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, "Network", ev) {
+				nodeState.KindStatus["Network"].Status[ev.String()] = false
+				log.Infof("SmartNic %v, Network not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
 			} else {
-				nodeState.KindStatus["App"].Status[ev.String()] = true
+				nodeState.KindStatus["Network"].Status[ev.String()] = true
 			}
-			if !sm.topics.EndpointTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
+
+			if !sm.topics.AggregateTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, "Endpoint", ev) {
 				nodeState.KindStatus["Endpoint"].Status[ev.String()] = false
 				log.Infof("SmartNic %v, Endpoint not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
 			} else {
 				nodeState.KindStatus["Endpoint"].Status[ev.String()] = true
-			}
-			if !sm.topics.NetworkSecurityPolicyTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, ev) {
-				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = false
-				log.Infof("SmartNic %v, NetworkSecurityPolicy not in sync for ev : %v", snic.DistributedServiceCard.Name, ev)
-			} else {
-				nodeState.KindStatus["NetworkSecurityPolicy"].Status[ev.String()] = true
 			}
 
 			if !sm.topics.AggregateTopic.WatcherInConfigSync(snic.DistributedServiceCard.Name, "App", ev) {

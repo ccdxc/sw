@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	restartTimeout = 600 //300 seconds for node restart
+	restartTimeout =  1200 //300 seconds for node restart
 )
 
 // AddNode adds a node to the topology

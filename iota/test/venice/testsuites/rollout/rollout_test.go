@@ -19,7 +19,7 @@ var _ = Describe("rollout tests", func() {
 		}).Should(Succeed())
 
 		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			_, err := ts.model.Action().RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
+			_, err := ts.model.Action().RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
@@ -27,7 +27,7 @@ var _ = Describe("rollout tests", func() {
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
 		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			ts.model.Action().RunNaplesCommand(nc, "rm /update/upgrade_to_same_firmware_allowed")
+			ts.model.Action().RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 			return nil
 		})
 

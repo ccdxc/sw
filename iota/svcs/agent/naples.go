@@ -1637,9 +1637,9 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 	}
 
-	modeSwitch := func(mgmtIP, gw string) error {
+	modeSwitch := func(mac, mgmtIP, gw string) error {
 		cmd = []string{"NAPLES_URL=http://localhost LD_LIBRARY_PATH=/naples/nic/lib64", "/naples/nic/bin/penctl", "update", "naples",
-			"--managed-by", "network", "--management-network", "oob"}
+			"--managed-by", "network", "--management-network", "oob", "--primary-mac", mac}
 
 		if len(veniceIPs) != 0 {
 			cmd = append(cmd, "--controllers")
@@ -1688,7 +1688,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 			return "", err
 		}
 
-		err = modeSwitch(ipAddress, defaultGW)
+		err = modeSwitch(macAddress, ipAddress, defaultGW)
 		if err == nil {
 			return ipAddress, nil
 		}

@@ -11,6 +11,10 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+const (
+	sameImageUpgradeCheckFile = "/data/upgrade_to_same_firmware_allowed"
+)
+
 type preUpgImgMeta struct {
 	Uboot struct {
 		Image struct {
@@ -240,7 +244,7 @@ func isUpgradeAllowed(pkgName string) error {
 		return err
 	}
 	if isPrePostImageMetaSame(&upgCtx) {
-		if _, err := os.Stat("/data/upgrade_to_same_firmware_allowed"); os.IsNotExist(err) {
+		if _, err := os.Stat(sameImageUpgradeCheckFile); os.IsNotExist(err) {
 			return errors.New("Upgrade image is same as running image")
 		}
 	}

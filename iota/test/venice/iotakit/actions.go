@@ -179,6 +179,19 @@ func (act *ActionCtx) VerifyClusterStatus() error {
 		log.Errorf("Config push incomplete")
 		return errors.New("Config not in sync")
 	}
+
+	// verify ping is successful across all workloads
+	if act.model.tb.HasNaplesHW() {
+		for i := 0; i < 10; i++ {
+			err = act.PingPairs(act.model.WorkloadPairs().WithinNetwork())
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
