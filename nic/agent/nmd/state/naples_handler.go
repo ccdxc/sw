@@ -664,6 +664,13 @@ func (n *NMD) AdmitNaples() {
 					} else {
 
 						if len(cntrls) > 0 {
+							// Venice may have different list of controllers.
+							// Re-populate remote certs URLs
+							n.remoteCertsURLs = []string{}
+							for _, c := range cntrls {
+								n.remoteCertsURLs = append(n.remoteCertsURLs, fmt.Sprintf("%s:%s", c, globals.CMDAuthCertAPIPort))
+							}
+
 							nicObj.Spec.Controllers = cntrls
 							n.config.Status.Controllers = cntrls
 							n.SetSmartNIC(nicObj)
