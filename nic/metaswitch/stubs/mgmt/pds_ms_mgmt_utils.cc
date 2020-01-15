@@ -292,10 +292,10 @@ pds_ms_nbb_get_long(NBB_BYTE *byteVal)
 }
 
 NBB_VOID
-pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_ULONG &len, string in_str)
+pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field, NBB_ULONG *len, string in_str)
 {
-    len = in_str.length();
-    NBB_MEMCPY(field, in_str.c_str(), len);
+    *len = in_str.length();
+    NBB_MEMCPY(field, in_str.c_str(), *len);
 }
 
 NBB_VOID

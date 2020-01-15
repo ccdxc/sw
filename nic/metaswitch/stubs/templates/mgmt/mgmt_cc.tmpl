@@ -133,7 +133,7 @@
                     {{if (eq $fieldOpt.FieldHasLen false)}}
                 {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
-                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len, req.{{$fieldOpt.Name | ToLower}}());
+                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, (NBB_ULONG*)&(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len), req.{{$fieldOpt.Name | ToLower}}());
                     {{end}}
                   {{end}}
                 AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});

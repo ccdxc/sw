@@ -101,7 +101,7 @@ pds_ms_get_uuid(pds_obj_key_t *out_uuid, const string& in_str);
 
 NBB_VOID
 pds_ms_set_string_in_byte_array_with_len(NBB_BYTE *field,
-                                       NBB_ULONG &len,
+                                       NBB_ULONG *len,
                                        string in_str);
 
 NBB_VOID
