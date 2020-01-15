@@ -1,7 +1,9 @@
 #! /usr/bin/python3
+import copy
 import json
 import logging
 import os
+import pdb
 import re
 import subprocess
 import sys
@@ -16,24 +18,26 @@ from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 from multiprocessing.dummy import Pool as ThreadPool
 
+
 logdirs = [
     "/pensando/iota/*.log",
     "/home/vm/nohup.out", #agent log if crashed
     "/naples/memtun.log",
+    "/var/log/vmkernel.log",
 ]
 
 class CollectLogNode:
-    def __init__(self,name,ip):
+    def __init__(self,name,ip,username,password):
         self.name=name
-        self.mgmtIpAddress=ip
+        self.ip=ip
+        self.username=username
+        self.password=password
     def Name(self):
         return self.name
-    def MgmtIpAddress(self):
-        return self.mgmtIpAddress
 
 def __collect_onenode(node):
-    SSHCMD = "sshpass -p vm scp -r -o StrictHostKeyChecking=no vm@"
-    msg="Collecting Logs for Node: %s (%s)" % (node.Name(), node.MgmtIpAddress())
+    SSHCMD = "sshpass -p {0} scp -r -o StrictHostKeyChecking=no {1}@".format(node.password,node.username)
+    msg="Collecting Logs for Node: %s (%s)" % (node.Name(), node.ip)
     print(msg)
     Logger.debug(msg)
     tsName=''
@@ -42,7 +46,7 @@ def __collect_onenode(node):
     localdir = "%s/logs/%s/nodes/%s/" % (GlobalOptions.logdir, tsName, node.Name())
     subprocess.call("mkdir -p %s" % localdir,shell=True,stdout=None,stderr=subprocess.STDOUT)
     for logdir in logdirs:
-        permCmd = "sshpass -p vm ssh vm@" + node.MgmtIpAddress() + " sudo chown -R vm:vm " + logdir
+        permCmd = "sshpass -p vm ssh vm@" + node.ip + " sudo chown -R vm:vm " + logdir
         Logger.debug(permCmd)
         try:
             proc=subprocess.Popen(permCmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -50,7 +54,7 @@ def __collect_onenode(node):
         except: 
             output=traceback.format_exc()
         Logger.debug(output)
-        fullcmd = "%s%s:%s %s" % (SSHCMD, node.MgmtIpAddress(), logdir, localdir)
+        fullcmd = "%s%s:%s %s" % (SSHCMD, node.ip, logdir, localdir)
         Logger.debug(fullcmd)
         try: 
             proc=subprocess.Popen(fullcmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -65,9 +69,15 @@ def buildNodesFromTestbedFile(testbed):
     try:
         with open(testbed,"r") as topoFile:
             data=json.load(topoFile)
+            if 'Vars' in data['Provision'] and getattr(data['Provision']['Vars'],"EsxUsername",None):
+                username = data['Provision']['Vars']['EsxUsername']
+                password = data['Provision']['Vars']['EsxPassword']
+            else:
+                username = data['Provision']['Username']
+                password = data['Provision']['Password']
             for inst in data["Instances"]:
-                if inst.get("Type","") == "bm" and "NodeMgmtIP" in inst and "Name" in inst:
-                    nodes.append(CollectLogNode(inst["Name"],inst["NodeMgmtIP"]))
+                if inst.get("Type","") == "bm" and "NodeMgmtIP" in inst and "Name" in inst: 
+                    nodes.append(CollectLogNode(inst["Name"],inst["NodeMgmtIP"],username,password))
     except:
         msg="failed to build nodes from testbed file. error was:"
         msg+=traceback.format_exc()
@@ -77,12 +87,20 @@ def buildNodesFromTestbedFile(testbed):
 def CollectLogs():
     if GlobalOptions.dryrun or GlobalOptions.skip_logs: return
     nodes=[]
-    try: nodes=store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes()
+    try: 
+        nodes=copy.deepcopy(store.GetTestbed().GetCurrentTestsuite().GetTopology().GetNodes())
+        for node in nodes:
+            if getattr(node,"_Node__esx_username",None):
+                node.username = node._Node__esx_username
+                node.password = node._Node__esx_password
+            else:
+                node.username = getattr(node,"_Node__vmUser","vm")
+                node.password = getattr(node,"_Node__vmPassword","vm")
+            node.ip = node._Node__ip_address
     except:
-        msg="failed to get nodes in call to CollectLogs. error was:"
-        msg+=traceback.format_exc()
+        msg = traceback.format_exc()
         Logger.debug(msg)
-        msg='gathering node info from testbed json file'
+        msg = 'topo not setup yet, gathering node info from testbed json file'
         Logger.debug(msg)
         nodes=buildNodesFromTestbedFile(GlobalOptions.testbed_json)
     pool = ThreadPool(len(nodes))
@@ -125,6 +143,8 @@ def CollectTechSupport(tsName):
         #if __CURREN_TECHSUPPORT_CNT > __MAX_TECHSUPPORT_PER_RUN:
         #    return types.status.CRITICAL
         return result
+    except AttributeError:
+        Logger.debug('failed to collect tech support. node list not setup yet')
     except:
         Logger.debug('failed to collect tech support. error was: {0}'.format(traceback.format_exc()))
         return types.status.CRITICAL
