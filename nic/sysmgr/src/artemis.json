@@ -12,5 +12,12 @@
         "dependencies": [],
         "flags": [],
         "timeout": 0.0
+    },
+    {
+        "name": "operd-daemon",
+        "command": "/nic/bin/operd-daemon /nic/conf/operd-daemon.json",
+        "dependencies": [ ],
+        "flags": [],
+        "timeout": 0.0
     }
 ]
