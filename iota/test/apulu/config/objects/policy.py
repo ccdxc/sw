@@ -88,7 +88,7 @@ class L3MatchObject:
             logger.info("    No L3Match")
 
 class RuleObject:
-    def __init__(self, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
+    def __init__(self, l3match, l4match, priority=0, action=types_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
         self.Stateful = stateful
         self.L3Match = copy.deepcopy(l3match)
         self.L4Match = copy.deepcopy(l4match)
@@ -97,7 +97,7 @@ class RuleObject:
 
     def Show(self):
         def __get_action_str(action):
-            if action == policy_pb2.SECURITY_RULE_ACTION_ALLOW:
+            if action == types_pb2.SECURITY_RULE_ACTION_ALLOW:
                 return "allow"
             return "deny"
 
@@ -551,11 +551,11 @@ class PolicyObjectClient(base.ConfigClientBase):
         def __get_rule_action(rulespec):
             actionVal = getattr(rulespec, 'action', None)
             if actionVal == "deny":
-                action = policy_pb2.SECURITY_RULE_ACTION_DENY
+                action = types_pb2.SECURITY_RULE_ACTION_DENY
             elif actionVal == "random":
-                action = random.choice([policy_pb2.SECURITY_RULE_ACTION_DENY, policy_pb2.SECURITY_RULE_ACTION_ALLOW])
+                action = random.choice([types_pb2.SECURITY_RULE_ACTION_DENY, types_pb2.SECURITY_RULE_ACTION_ALLOW])
             else:
-                action = policy_pb2.SECURITY_RULE_ACTION_ALLOW
+                action = types_pb2.SECURITY_RULE_ACTION_ALLOW
             return action
 
         def __get_valid_priority(prio):

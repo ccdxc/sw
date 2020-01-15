@@ -1703,26 +1703,26 @@ pds_port_proto_to_port_args (port_args_t *port_args,
     port_args->num_lanes_cfg = port_args->num_lanes = spec.numlanes();
 }
 
-static inline pds::SecurityRuleAction
+static inline types::SecurityRuleAction
 pds_rule_action_to_proto_action (rule_action_data_t *action_data)
 {
     switch (action_data->fw_action.action) {
     case SECURITY_RULE_ACTION_ALLOW:
-        return pds::SECURITY_RULE_ACTION_ALLOW;
+        return types::SECURITY_RULE_ACTION_ALLOW;
     case SECURITY_RULE_ACTION_DENY:
-        return pds::SECURITY_RULE_ACTION_DENY;
+        return types::SECURITY_RULE_ACTION_DENY;
     default:
-        return pds::SECURITY_RULE_ACTION_NONE;
+        return types::SECURITY_RULE_ACTION_NONE;
     }
 }
 
 static inline fw_action_t
-pds_proto_action_to_rule_action (pds::SecurityRuleAction action)
+pds_proto_action_to_rule_action (types::SecurityRuleAction action)
 {
     switch (action) {
-    case pds::SECURITY_RULE_ACTION_ALLOW:
+    case types::SECURITY_RULE_ACTION_ALLOW:
         return SECURITY_RULE_ACTION_ALLOW;
-    case pds::SECURITY_RULE_ACTION_DENY:
+    case types::SECURITY_RULE_ACTION_DENY:
         return SECURITY_RULE_ACTION_DENY;
     default:
         return SECURITY_RULE_ACTION_DENY;
@@ -2868,17 +2868,18 @@ pds_ipv4_flow_to_proto (ftlite::internal::ipv4_entry_t *ipv4_entry,
 {
     flow_get_t *fget = (flow_get_t *)ctxt;
     auto flow = fget->msg.add_flow();
-    auto key = flow->mutable_key();
-    auto srcaddr = key->mutable_srcaddr();
-    auto dstaddr = key->mutable_dstaddr();
+    auto ipflowkey = flow->mutable_key()->mutable_ipflowkey();
+    auto srcaddr = ipflowkey->mutable_srcip();
+    auto dstaddr = ipflowkey->mutable_dstip();
+    auto tcpudpinfo = ipflowkey->mutable_l4info()->mutable_tcpudpinfo();
 
     srcaddr->set_af(types::IP_AF_INET);
     srcaddr->set_v4addr(ipv4_entry->src);
     dstaddr->set_af(types::IP_AF_INET);
     dstaddr->set_v4addr(ipv4_entry->dst);
-    key->set_srcport(ipv4_entry->sport);
-    key->set_dstport(ipv4_entry->dport);
-    key->set_ipproto(ipv4_entry->proto);
+    ipflowkey->set_ipprotocol(ipv4_entry->proto);
+    tcpudpinfo->set_srcport(ipv4_entry->sport);
+    tcpudpinfo->set_dstport(ipv4_entry->dport);
 
     flow->set_vpc(ipv4_entry->vpc_id);
     flow->set_flowrole(ipv4_entry->flow_role);
@@ -2900,9 +2901,10 @@ pds_ipv6_flow_to_proto (ftlite::internal::ipv6_entry_t *ipv6_entry,
 {
     flow_get_t *fget = (flow_get_t *)ctxt;
     auto flow = fget->msg.add_flow();
-    auto key = flow->mutable_key();
-    auto srcaddr = key->mutable_srcaddr();
-    auto dstaddr = key->mutable_dstaddr();
+    auto ipflowkey = flow->mutable_key()->mutable_ipflowkey();
+    auto srcaddr = ipflowkey->mutable_srcip();
+    auto dstaddr = ipflowkey->mutable_dstip();
+    auto tcpudpinfo = ipflowkey->mutable_l4info()->mutable_tcpudpinfo();
 
     srcaddr->set_af(types::IP_AF_INET6);
     srcaddr->set_v6addr(std::string((const char *)(ipv6_entry->src),
@@ -2910,9 +2912,9 @@ pds_ipv6_flow_to_proto (ftlite::internal::ipv6_entry_t *ipv6_entry,
     dstaddr->set_af(types::IP_AF_INET6);
     srcaddr->set_v6addr(std::string((const char *)(ipv6_entry->dst),
                         IP6_ADDR8_LEN));
-    key->set_srcport(ipv6_entry->sport);
-    key->set_dstport(ipv6_entry->dport);
-    key->set_ipproto(ipv6_entry->proto);
+    ipflowkey->set_ipprotocol(ipv6_entry->proto);
+    tcpudpinfo->set_srcport(ipv6_entry->sport);
+    tcpudpinfo->set_dstport(ipv6_entry->dport);
 
     flow->set_vpc(ipv6_entry->vpc_id);
     flow->set_flowrole(ipv6_entry->flow_role);

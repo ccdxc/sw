@@ -88,7 +88,7 @@ class L3MatchObject:
 
 
 class RuleObject:
-    def __init__(self, l3match, l4match, priority=0, action=policy_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
+    def __init__(self, l3match, l4match, priority=0, action=types_pb2.SECURITY_RULE_ACTION_ALLOW, stateful=False):
         self.Stateful = stateful
         self.L3Match = l3match
         self.L4Match = l4match
@@ -97,7 +97,7 @@ class RuleObject:
 
     def Show(self):
         def __get_action_str(action):
-            if action == policy_pb2.SECURITY_RULE_ACTION_ALLOW:
+            if action == types_pb2.SECURITY_RULE_ACTION_ALLOW:
                 return "allow"
             return "deny"
 

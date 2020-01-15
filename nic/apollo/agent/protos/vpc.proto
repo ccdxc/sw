@@ -31,27 +31,27 @@ enum VPCType {
 // VPCSpec captures VPC configuration
 message VPCSpec {
   // unique key/identifier of VPC
-  bytes          Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes            Id               = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // type of the VPC
-  VPCType        Type             = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  VPCType          Type             = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // identifier of the IPv4 route table to be used and this route table is
   // inherited by the subnets under this VPC, if they are created with no route
   // table explicitly
-  bytes          V4RouteTableId   = 3;
+  bytes            V4RouteTableId   = 3;
   // identifier of the IPv6 route table to be used, if any and this route table
   // is inherited by the subnets under this VPC, if they are created with no
   // route table explicitly
-  bytes          V6RouteTableId   = 4;
+  bytes            V6RouteTableId   = 4;
   // Virtual Router (VR) MAC address, any packets originated or routed in this
   // VPC carry this MAC as source MAC
-  uint64         VirtualRouterMac = 5;
+  uint64           VirtualRouterMac = 5;
   // encapped traffic coming with the specified encap from fabric side will be
   // mapped to this VPC
-  types.Encap    FabricEncap      = 6 [(gogoproto.moretags) = "meta:immutable"];
+  types.Encap      FabricEncap      = 6 [(gogoproto.moretags) = "meta:immutable"];
   // IPv6 prefix/IP to be used to NAT the IPv4 traffic destined to reach a
   // service in IPv6 only network/service (all VNICs in this VPC will use this
   // prefix to get their IPv4 traffic (S)NAT-ed in the outbound direction)
-  types.IPv6Prefix Nat46Prefix    = 7;
+  types.IPv6Prefix Nat46Prefix      = 7;
   // ToS field is 1 byte value that is populated in the DSCP field of IPv4 outer
   // header or in the Traffic Class field of IPv6 outer header, this value will
   // be written as-is (i.e., not interpreted) during encap time by the dataplane
@@ -59,13 +59,13 @@ message VPCSpec {
   // NOTE: subnets under this VPC don't inherit this ToS value, subnets need to
   //       be explicitly configured with same ToS value as that of VPC or
   //       potentially different ToS value of their own
-  uint32          ToS             = 8;
+  uint32           ToS              = 8;
 }
 
 // operational status of a VPC, if any
 message VPCStatus {
-    // vpc hw id
-    uint32 HwId = 1;
+  // vpc hw id
+  uint32 HwId = 1;
 }
 
 // stats for a VPC, if any

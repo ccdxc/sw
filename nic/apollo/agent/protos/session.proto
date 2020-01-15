@@ -17,20 +17,12 @@ service SessionSvc {
   rpc SessionClear (SessionClearRequest) returns (SessionClearResponse) {}
 }
 
-message FlowKey {
-  types.IPAddress SrcAddr = 1;
-  types.IPAddress DstAddr = 2;
-  uint32          SrcPort = 3 [(gogoproto.moretags) = "meta:range:0-65535"];
-  uint32          DstPort = 4 [(gogoproto.moretags) = "meta:range:0-65535"];
-  uint32          IPProto = 5 [(gogoproto.moretags) = "meta:range:0-255"]; // IP Protocol
-}
-
 message Flow {
-  FlowKey Key        = 1;
-  uint32  Vpc        = 2;
-  uint32  FlowRole   = 3;
-  uint32  SessionIdx = 4;
-  uint32  Epoch      = 5;
+  types.FlowKey Key        = 1;
+  uint32        Vpc        = 2;
+  uint32        FlowRole   = 3;
+  uint32        SessionIdx = 4;
+  uint32        Epoch      = 5;
 }
 
 message FlowMsg {

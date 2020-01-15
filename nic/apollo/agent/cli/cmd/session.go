@@ -307,7 +307,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func flowMatchFilter(cmd *cobra.Command, flow *pds.Flow) bool {
-	key := flow.GetKey()
+	key := flow.GetKey().GetIPFlowKey()
 
 	if cmd.Flags().Changed("vpcid") == false {
 		if flow.GetVpc() != flowVpcID {
@@ -316,31 +316,31 @@ func flowMatchFilter(cmd *cobra.Command, flow *pds.Flow) bool {
 	}
 
 	if cmd.Flags().Changed("srcip") == false {
-		if strings.Compare(utils.IPAddrToStr(key.GetSrcAddr()), flowSrcIP) != 0 {
+		if strings.Compare(utils.IPAddrToStr(key.GetSrcIP()), flowSrcIP) != 0 {
 			return false
 		}
 	}
 
 	if cmd.Flags().Changed("dstip") == false {
-		if strings.Compare(utils.IPAddrToStr(key.GetDstAddr()), flowDstIP) != 0 {
+		if strings.Compare(utils.IPAddrToStr(key.GetDstIP()), flowDstIP) != 0 {
 			return false
 		}
 	}
 
 	if cmd.Flags().Changed("srcport") == false {
-		if key.GetSrcPort() != flowSrcPort {
+		if key.GetL4Info().GetTcpUdpInfo().GetSrcPort() != flowSrcPort {
 			return false
 		}
 	}
 
 	if cmd.Flags().Changed("dstport") == false {
-		if key.GetDstPort() != flowDstPort {
+		if key.GetL4Info().GetTcpUdpInfo().GetDstPort() != flowDstPort {
 			return false
 		}
 	}
 
 	if cmd.Flags().Changed("ipproto") == false {
-		if key.GetIPProto() != flowIPProto {
+		if key.GetIPProtocol() != flowIPProto {
 			return false
 		}
 	}
@@ -358,13 +358,14 @@ func flowPrintHeader() {
 }
 
 func flowPrintEntry(flow *pds.Flow) {
-	key := flow.GetKey()
+	key := flow.GetKey().GetIPFlowKey()
 	fmt.Printf("%-6d%-40s%-40s%-8d%-8d%-8d%-5d%-11d%-5d\n",
 		flow.GetVpc(),
-		utils.IPAddrToStr(key.GetSrcAddr()),
-		utils.IPAddrToStr(key.GetDstAddr()),
-		key.GetSrcPort(), key.GetDstPort(),
-		key.GetIPProto(), flow.GetFlowRole(),
+		utils.IPAddrToStr(key.GetSrcIP()),
+		utils.IPAddrToStr(key.GetDstIP()),
+		key.GetL4Info().GetTcpUdpInfo().GetSrcPort(),
+        key.GetL4Info().GetTcpUdpInfo().GetDstPort(),
+		key.GetIPProtocol(), flow.GetFlowRole(),
 		flow.GetSessionIdx(), flow.GetEpoch())
 }
 

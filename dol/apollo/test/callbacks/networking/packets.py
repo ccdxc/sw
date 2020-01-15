@@ -407,7 +407,7 @@ def __get_packet_tuples(pkt):
     return packet_tuples
 
 def __get_final_result(tc_rule, match_rule):
-    final_result = match_rule.Action if match_rule else policy_pb2.SECURITY_RULE_ACTION_DENY
+    final_result = match_rule.Action if match_rule else types_pb2.SECURITY_RULE_ACTION_DENY
     logger.info("TestCase rule for packet ")
     tc_rule.Show()
     if match_rule:
@@ -442,7 +442,7 @@ def GetExpectedCPSPacket(testcase, args):
     pkt = testcase.packets.Get(args.ipkt).GetScapyPacket()
     match_rule = __get_matching_rule(policy, pkt, tc_rule)
     final_result = __get_final_result(tc_rule, match_rule)
-    if final_result == policy_pb2.SECURITY_RULE_ACTION_DENY:
+    if final_result == types_pb2.SECURITY_RULE_ACTION_DENY:
         logger.info("GetExpectedCPSPacket: packet denied")
         return None
     logger.info("GetExpectedCPSPacket: packet allowed")

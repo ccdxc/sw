@@ -20,17 +20,17 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
     if (hwentry->get_entry_valid()) {
         pds::FlowMsg flow_msg = pds::FlowMsg();
         pds::Flow *flow = flow_msg.mutable_flowentry();
-        
-        flow->mutable_key()->set_srcport(hwentry->get_key_metadata_sport());
-        flow->mutable_key()->set_dstport(hwentry->get_key_metadata_dport());
-        flow->mutable_key()->set_ipproto(hwentry->get_key_metadata_proto());
-        flow->mutable_key()->mutable_srcaddr()->set_af(types::IPAF::IP_AF_INET);
-        flow->mutable_key()->mutable_srcaddr()->set_v4addr(
+        types::IPFlowKey *ipflowkey = flow->mutable_key()->mutable_ipflowkey();
+
+        ipflowkey->mutable_l4info()->mutable_tcpudpinfo()->set_srcport(hwentry->get_key_metadata_sport());
+        ipflowkey->mutable_l4info()->mutable_tcpudpinfo()->set_dstport(hwentry->get_key_metadata_dport());
+        ipflowkey->set_ipprotocol(hwentry->get_key_metadata_proto());
+        ipflowkey->mutable_srcip()->set_af(types::IPAF::IP_AF_INET);
+        ipflowkey->mutable_srcip()->set_v4addr(
                 hwentry->get_key_metadata_ipv4_src());
-        flow->mutable_key()->mutable_dstaddr()->set_af(types::IPAF::IP_AF_INET);
-        flow->mutable_key()->mutable_dstaddr()->set_v4addr(
+        ipflowkey->mutable_dstip()->set_af(types::IPAF::IP_AF_INET);
+        ipflowkey->mutable_dstip()->set_v4addr(
                 hwentry->get_key_metadata_ipv4_dst());
-        flow->mutable_key()->set_ipproto(hwentry->get_key_metadata_proto());
 
         flow->set_sessionidx(hwentry->get_session_index());
         flow->set_flowrole(hwentry->get_flow_role());
@@ -51,19 +51,15 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
     if (hwentry->get_entry_valid()) {
         pds::FlowMsg flow_msg = pds::FlowMsg();
         pds::Flow *flow = flow_msg.mutable_flowentry();
+        types::IPFlowKey *ipflowkey = flow->mutable_key()->mutable_ipflowkey();
 
-        flow->mutable_key()->set_srcport(hwentry->get_key_metadata_sport());
-        flow->mutable_key()->set_dstport(hwentry->get_key_metadata_dport());
-        flow->mutable_key()->set_ipproto(hwentry->get_key_metadata_proto());
-        flow->mutable_key()->mutable_srcaddr()->set_af(
-                types::IPAF::IP_AF_INET6);
-        hwentry->get_key_metadata_src(
-                (uint8_t *)flow->mutable_key()->mutable_srcaddr());
-        flow->mutable_key()->mutable_dstaddr()->set_af(
-                types::IPAF::IP_AF_INET6);
-        hwentry->get_key_metadata_dst(
-                (uint8_t *)flow->mutable_key()->mutable_dstaddr());
-        flow->mutable_key()->set_ipproto(hwentry->get_key_metadata_proto());
+        ipflowkey->mutable_l4info()->mutable_tcpudpinfo()->set_srcport(hwentry->get_key_metadata_sport());
+        ipflowkey->mutable_l4info()->mutable_tcpudpinfo()->set_dstport(hwentry->get_key_metadata_dport());
+        ipflowkey->set_ipprotocol(hwentry->get_key_metadata_proto());
+        ipflowkey->mutable_srcip()->set_af(types::IPAF::IP_AF_INET6);
+        hwentry->get_key_metadata_src((uint8_t *)ipflowkey->mutable_srcip());
+        ipflowkey->mutable_dstip()->set_af(types::IPAF::IP_AF_INET6);
+        hwentry->get_key_metadata_dst((uint8_t *)ipflowkey->mutable_dstip());
 
         flow->set_sessionidx(hwentry->get_session_index());
         flow->set_flowrole(hwentry->get_flow_role());
@@ -77,10 +73,10 @@ ftlv6_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
 
 // Callback to dump flow entries via UDS
 static void
-vpp_uds_flow_dump(int fd) 
+vpp_uds_flow_dump(int fd)
 {
     sdk::table::sdk_table_api_params_t params = {0};
-    sdk::table::ftl_base *table4 = 
+    sdk::table::ftl_base *table4 =
         (sdk::table::ftl_base *)pds_flow_get_table4();
     sdk::table::ftl_base *table6 =
         (sdk::table::ftl_base *)pds_flow_get_table6();
@@ -106,7 +102,7 @@ vpp_uds_flow_dump(int fd)
 
 // initializes callbacks for flow dump
 void
-pds_flow_dump_init(void) 
+pds_flow_dump_init(void)
 {
     vpp_uds_register_cb(VPP_UDS_FLOW_DUMP, vpp_uds_flow_dump);
 }

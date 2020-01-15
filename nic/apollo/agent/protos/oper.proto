@@ -1,0 +1,55 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for operational objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+import "meta/meta.proto";
+import "types.proto";
+
+// flow log type indicates whether log is generated when flow is
+// created or closed
+enum FlowLogType {
+  FLOW_LOG_TYPE_NONE  = 0;
+  FLOW_LOG_TYPE_OPEN  = 1;
+  FLOW_LOG_TYPE_CLOSE = 2;
+}
+
+// security policy type due to which the flow action was chosen
+enum SecurityPolicyType {
+  SECURITY_POLICY_TYPE_NONE = 0;
+  // flow action is the result of a security group rule
+  SECURITY_POLICY_TYPE_SG   = 1;
+  // flow action is the result of a stateless NACL rule (subnet/vpc level)
+  SECURITY_POLICY_TYPE_NACL = 2;
+}
+
+// protobuf format for flow logs (this is the format consumers will see flow
+// logs in). VPP itself will just a binary dump and a decoder (invoked by VPP)
+// will xform the contents into this format.
+message FlowLog {
+  // timestamp indicating when the flow is created/closed
+  uint64                   Timestamp    = 1;
+  // flow open log or flow close log
+  FlowLogType              LogType      = 2;
+  // source interface of first packet (uplink of VF/PF id)
+  uint32                   SrcInterface = 3;
+  // flow key
+  types.FlowKey            Key          = 4;
+  // flow action taken
+  types.SecurityRuleAction FlowAction   = 5;
+  // source NAT action, if any
+  types.NatAction          SrcNATAction = 6;
+  // destination NAT action, if any
+  types.NatAction          DstNATAction = 7;
+  // source NAT port, if any
+  uint32                   SrcNATPort   = 8;
+  // destination NAT port, if any
+  uint32                   DstNATPort   = 9;
+  // policy type that resulted in the flow action
+  SecurityPolicyType       PolicyType   = 10;
+}

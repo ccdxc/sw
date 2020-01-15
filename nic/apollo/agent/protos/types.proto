@@ -225,12 +225,19 @@ enum LifType {
   LIF_TYPE_LEARN                    = 8;
 }
 
+// Security rule action is one of the below
+enum SecurityRuleAction {
+  SECURITY_RULE_ACTION_NONE  = 0;
+  SECURITY_RULE_ACTION_ALLOW = 1;
+  SECURITY_RULE_ACTION_DENY  = 2;
+}
+
 // types of NAT actions supported
 enum NatAction {
   NAT_ACTION_NONE        = 0;
   // Address only static NAT
   NAT_ACTION_STATIC      = 1;
-  // address and port translation to public (aka. Internet) address space
+  // address and port translation to the public (aka. Internet) address space
   NAT_ACTION_NAPT_PUBLIC = 2;
   // address and port translation to internal service address space
   NAT_ACTION_NAPT_SVC    = 3;
@@ -251,3 +258,55 @@ enum AddressType {
   ADDR_TYPE_SERVICE     = 2;
 }
 
+// flow key for non-IP flows
+message MACFlowKey {
+  // subnet identifier
+  bytes  Subnet = 1;
+  // source MAC address
+  uint64 SrcMAC = 2;
+  // destination MAC address
+  uint64 DstMAC = 3;
+}
+
+// L4 portion of flow key tuple
+message FlowL4Info {
+  // key fields for TCP/UDP flows
+  message TCPUDPInfo {
+    uint32 SrcPort  = 1;
+    uint32 DstPort  = 2;
+  }
+  // key fields for ICMP flows
+  message ICMPInfo {
+    uint32 Type = 1;
+    uint32 Code = 2;
+    uint32 Id   = 3;
+  }
+  oneof l4_info {
+    TCPUDPInfo TcpUdpInfo = 1;
+    ICMPInfo   IcmpInfo   = 2;
+  }
+}
+
+// flow key for IP flows
+message IPFlowKey {
+  // VPC identifier
+  bytes           VPCId      = 1;
+  // source IP seen in the packet
+  types.IPAddress SrcIP      = 2;
+  // destination IP seen in the packet
+  types.IPAddress DstIP      = 3;
+  // IP protocol
+  uint32          IPProtocol = 4;
+  // L4 information of the flow key
+  FlowL4Info      L4Info     = 5;
+}
+
+// flow key is either IP flow key or non-IP flow key
+message FlowKey {
+  oneof key {
+    // flow key for the IPv4 and IPv6 flows
+    IPFlowKey  IPFlowKey  = 1;
+    // flow key for the non-IP flows
+    MACFlowKey MACFlowKey = 2;
+  }
+}
