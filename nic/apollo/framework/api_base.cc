@@ -315,9 +315,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_POLICY:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_db()->find(&api_ctxt->api_params->policy_key);
+            return policy_db()->find_policy(&api_ctxt->api_params->policy_key);
         }
-        return policy_db()->find(&api_ctxt->api_params->policy_spec.key);
+        return policy_db()->find_policy(&api_ctxt->api_params->policy_spec.key);
 
     case OBJ_ID_NEXTHOP:
         if (api_ctxt->api_op == API_OP_DELETE) {
@@ -375,9 +375,9 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
 
     case OBJ_ID_SECURITY_PROFILE:
         if (api_ctxt->api_op == API_OP_DELETE) {
-            return policy_db()->find(&api_ctxt->api_params->security_profile_key);
+            return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_key);
         }
-        return policy_db()->find(&api_ctxt->api_params->security_profile_spec.key);
+        return policy_db()->find_security_profile(&api_ctxt->api_params->security_profile_spec.key);
 
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_VPC_PEER:
@@ -427,7 +427,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_POLICY:
-        api_obj = policy_db()->find((pds_obj_key_t *)key);
+        api_obj = policy_db()->find_policy((pds_obj_key_t *)key);
         break;
 
     case OBJ_ID_MIRROR_SESSION:
@@ -472,7 +472,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_SECURITY_PROFILE:
-        api_obj = policy_db()->find((pds_security_profile_key_t *)key);
+        api_obj = policy_db()->find_security_profile((pds_obj_key_t *)key);
         break;
 
     default:

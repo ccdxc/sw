@@ -65,7 +65,7 @@ security_profile::free(security_profile *profile) {
 }
 
 security_profile *
-security_profile::build(pds_security_profile_key_t *key) {
+security_profile::build(pds_obj_key_t *key) {
     security_profile *profile;
 
     profile = policy_db()->alloc_security_profile();
@@ -85,7 +85,7 @@ security_profile::soft_delete(security_profile *profile) {
 
 sdk_ret_t
 security_profile::init_config(api_ctxt_t *api_ctxt) {
-    key_.id = api_ctxt->api_params->security_profile_spec.key.id;
+    key_ = api_ctxt->api_params->security_profile_spec.key;
     return SDK_RET_OK;
 }
 

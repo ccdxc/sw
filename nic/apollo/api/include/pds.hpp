@@ -84,12 +84,10 @@ typedef uint32_t    pds_slot_id_t;             ///< MPLS tag value
 typedef uint16_t    pds_vlan_id_t;             ///< VLAN tag value
 typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
-typedef uint32_t    pds_mapping_id_t;          ///< mapping table index
 typedef uint16_t    pds_lif_key_t;             ///< lif key id
 typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
 typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
 typedef uint32_t    pds_ifindex_t;             ///< interface index
-typedef uint32_t    pds_security_profile_id_t; ///< security profile id
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other
 ///< module to refer to an interface
@@ -222,17 +220,13 @@ public:
     }
 };
 
-/// \brief    security profile key
-typedef struct pds_security_profile_key_s {
-    pds_security_profile_id_t id;    ///< security profile id
-} __PACK__ pds_security_profile_key_t;
-
-/// \brief address type (Public/Internet or Service)
+/// \brief address type (public/Internet or service)
 typedef enum address_type_s {
-    ADDR_TYPE_NONE          = 0,
-    ADDR_TYPE_PUBLIC        = 1,            ///< Public/Internet address space
-    ADDR_TYPE_SERVICE       = 2             ///< Service/Infra address space
+    ADDR_TYPE_NONE    = 0,
+    ADDR_TYPE_PUBLIC  = 1,    ///< public/Internet address space
+    ADDR_TYPE_SERVICE = 2,    ///< service/infra address space
 } address_type_t;
 
 /// @}
+
 #endif    // __INCLUDE_API_PDS_HPP__

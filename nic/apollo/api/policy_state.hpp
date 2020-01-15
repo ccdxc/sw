@@ -58,7 +58,7 @@ public:
 
     /// \brief     lookup a security policy in database given the key
     /// \param[in] policy_key security policy key
-    policy *find(pds_obj_key_t *policy_key) const;
+    policy *find_policy(pds_obj_key_t *policy_key) const;
 
     /// \brief    allocate memory required for a security profile instance
     /// \return    pointer to the allocated security profile instance,
@@ -83,7 +83,7 @@ public:
 
     /// \brief     lookup a security security profile in database given the key
     /// \param[in] key    security profile key
-    security_profile *find(pds_security_profile_key_t *key) const;
+    security_profile *find_security_profile(pds_obj_key_t *key) const;
 
     /// \brief API to walk all the slabs
     /// \param[in] walk_cb    callback to be invoked for every slab
@@ -118,7 +118,7 @@ policy_find (pds_obj_key_t *key)
 }
 
 static inline security_profile *
-security_profile_find (pds_security_profile_key_t *key)
+security_profile_find (pds_obj_key_t *key)
 {
     return (security_profile *)api_base::find_obj(OBJ_ID_SECURITY_PROFILE, key);
 }

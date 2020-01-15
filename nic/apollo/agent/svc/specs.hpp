@@ -2075,7 +2075,7 @@ static inline sdk_ret_t
 pds_security_profile_proto_to_api_spec (pds_security_profile_spec_t *api_spec,
                                         const pds::SecurityProfileSpec &proto_spec)
 {
-    api_spec->key.id = proto_spec.id();
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     api_spec->conn_track_en = proto_spec.conntracken();
     api_spec->default_action.fw_action.action =
             pds_proto_action_to_rule_action(proto_spec.defaultfwaction());

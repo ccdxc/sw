@@ -57,7 +57,7 @@ public:
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
     /// \return    NAT port block instance corresponding to the key
-    static security_profile *build(pds_security_profile_key_t *key);
+    static security_profile *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like
     ///           memory etc., for a stateless entry calling destroy() will
@@ -106,7 +106,7 @@ public:
 
     /// \brief          return stringified key of the object (for debugging)
     virtual string key2str(void) const override {
-        return "security-profile-" + std::to_string(key_.id);
+        return "security-profile-" + std::string(key_.str());
     }
 
     /// \brief          helper function to get key given security profile
@@ -130,7 +130,7 @@ private:
 
 private:
     /// security profile key
-    pds_security_profile_key_t key_;
+    pds_obj_key_t key_;
 
     /// hash table context
     ht_ctxt_t ht_ctxt_;

@@ -49,9 +49,7 @@ class vpp_config_data {
     std::unordered_map<pds_obj_key_t, pds_dhcp_relay_spec_t, pds_obj_key_hash> dhcp_relay;
     std::unordered_map<pds_obj_key_t, pds_dhcp_policy_spec_t, pds_obj_key_hash> dhcp_policy;
     std::unordered_map<pds_obj_key_t, pds_nat_port_block_spec_t, pds_obj_key_hash> nat_port_block;
-    std::map<pds_security_profile_id_t, pds_security_profile_spec_t>
-        security_profile;
-
+    std::unordered_map<pds_obj_key_t, pds_security_profile_spec_t, pds_obj_key_hash> security_profile;
     static vpp_config_data singleton;
 
 public:

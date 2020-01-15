@@ -30,7 +30,7 @@ policy_state::policy_state() {
     security_profile_ht_ =
         ht::factory(PDS_MAX_SECURITY_POLICY >> 2,
                     security_profile::security_profile_key_func_get,
-                    sizeof(pds_security_profile_key_t));
+                    sizeof(pds_obj_key_t));
     SDK_ASSERT(security_profile_ht_ != NULL);
 
     security_profile_slab_ = slab::factory("security-profile",
@@ -68,7 +68,7 @@ policy_state::free(policy *policy) {
 }
 
 policy *
-policy_state::find(pds_obj_key_t *policy_key) const {
+policy_state::find_policy(pds_obj_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));
 }
 
@@ -94,7 +94,7 @@ policy_state::free(security_profile *profile) {
 }
 
 security_profile *
-policy_state::find(pds_security_profile_key_t *key) const {
+policy_state::find_security_profile(pds_obj_key_t *key) const {
     return (security_profile *)(security_profile_ht_->lookup(key));
 }
 

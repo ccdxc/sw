@@ -44,7 +44,7 @@ pds_policy_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
 static inline policy *
 pds_policy_entry_find (pds_obj_key_t *key)
 {
-    return policy_db()->find(key);
+    return policy_db()->find_policy(key);
 }
 
 //----------------------------------------------------------------------------
@@ -89,7 +89,7 @@ pds_policy_delete (_In_ pds_obj_key_t *key, _In_ pds_batch_ctxt_t bctxt)
 
 static sdk_ret_t
 pds_security_profile_api_handle (pds_batch_ctxt_t bctxt, api_op_t op,
-                                 pds_security_profile_key_t *key,
+                                 pds_obj_key_t *key,
                                  pds_security_profile_spec_t *spec)
 {
     sdk_ret_t rv;
@@ -119,7 +119,7 @@ pds_security_profile_create (_In_ pds_security_profile_spec_t *spec,
 }
 
 sdk_ret_t
-pds_security_profile_read (_In_ pds_security_profile_key_t *key,
+pds_security_profile_read (_In_ pds_obj_key_t *key,
                            _Out_ pds_security_profile_info_t *info)
 {
     if (key == NULL || info == NULL) {
@@ -136,7 +136,7 @@ pds_security_profile_update (_In_ pds_security_profile_spec_t *spec,
 }
 
 sdk_ret_t
-pds_security_profile_delete (_In_ pds_security_profile_key_t *key,
+pds_security_profile_delete (_In_ pds_obj_key_t *key,
                              _In_ pds_batch_ctxt_t bctxt)
 {
     return pds_security_profile_api_handle(bctxt, API_OP_DELETE, key, NULL);

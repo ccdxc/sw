@@ -65,19 +65,19 @@ union api_params_u {
     pds_svc_mapping_spec_t       svc_mapping_spec;
     pds_obj_key_t                vpc_peer_key;
     pds_vpc_peer_spec_t          vpc_peer_spec;
-    pds_obj_key_t            nexthop_key;
+    pds_obj_key_t                nexthop_key;
     pds_nexthop_spec_t           nexthop_spec;
-    pds_obj_key_t      nexthop_group_key;
+    pds_obj_key_t                nexthop_group_key;
     pds_nexthop_group_spec_t     nexthop_group_spec;
     pds_obj_key_t                policer_key;
     pds_policer_spec_t           policer_spec;
-    pds_obj_key_t     nat_port_block_key;
+    pds_obj_key_t                nat_port_block_key;
     pds_nat_port_block_spec_t    nat_port_block_spec;
-    pds_obj_key_t         dhcp_relay_key;
+    pds_obj_key_t                dhcp_relay_key;
     pds_dhcp_relay_spec_t        dhcp_relay_spec;
-    pds_obj_key_t        dhcp_policy_key;
+    pds_obj_key_t                dhcp_policy_key;
     pds_dhcp_policy_spec_t       dhcp_policy_spec;
-    pds_security_profile_key_t   security_profile_key;
+    pds_obj_key_t                security_profile_key;
     pds_security_profile_spec_t  security_profile_spec;
 };
 

@@ -149,7 +149,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // egress v4 & v6 policy roots are programmed in TX direction entry
     policy_key = subnet->egr_v4_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_db()->find_policy(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 egr policy root addr 0x%llx", addr);
@@ -157,7 +157,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                 addr, 5);
     }
     policy_key = subnet->egr_v6_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_db()->find_policy(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 egr policy root addr 0x%llx", addr);
@@ -167,7 +167,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
 
     // ingress v4 & v6 policy roots are programmed in RX direction entry
     policy_key = subnet->ing_v4_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_db()->find_policy(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv4 ing policy root addr 0x%llx", addr);
@@ -175,7 +175,7 @@ vnic_impl::program_vnic_info_(vpc_entry *vpc, subnet_entry *subnet,
                                 addr, 5);
     }
     policy_key = subnet->ing_v6_policy(0);
-    sec_policy = policy_db()->find(&policy_key);
+    sec_policy = policy_db()->find_policy(&policy_key);
     if (sec_policy) {
         addr = ((impl::security_policy_impl *)(sec_policy->impl()))->security_policy_root_addr();
         PDS_TRACE_DEBUG("IPv6 ing policy root addr 0x%llx", addr);

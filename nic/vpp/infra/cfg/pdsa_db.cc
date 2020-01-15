@@ -53,13 +53,8 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
         _(DHCP_RELAY, dhcp_relay)
         _(DHCP_POLICY, dhcp_policy)
         _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
 #undef _
-    case OBJ_ID_SECURITY_PROFILE:
-        if (security_profile.find(cfg_msg.security_profile.key.id) !=
-            security_profile.end()) {
-            return true;
-        }
-        break;
 
     default:
         // don't assert here, it could be a malformed IPC request
@@ -98,15 +93,8 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
         _(DHCP_RELAY, dhcp_relay)
         _(DHCP_POLICY, dhcp_policy)
         _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
 #undef _
-    case OBJ_ID_SECURITY_PROFILE:
-        security_profile_it = security_profile.find(cfg_msg.security_profile.key.id);
-        if (security_profile_it == security_profile.end()) {
-            cfg_msg.obj_id = OBJ_ID_NONE;
-            return false;
-        }
-        cfg_msg.security_profile.spec = security_profile_it->second;
-        break;
 
     default:
         assert(false);
@@ -131,12 +119,8 @@ vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
         _(DHCP_RELAY, dhcp_relay)
         _(DHCP_POLICY, dhcp_policy)
         _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
 #undef _
-
-    case OBJ_ID_SECURITY_PROFILE:
-        security_profile[cfg_msg.security_profile.spec.key.id] =
-            cfg_msg.security_profile.spec;
-        break;
 
     default:
         assert(false);
@@ -158,10 +142,8 @@ vpp_config_data::unset (obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg) {
         _(DHCP_RELAY, dhcp_relay)
         _(DHCP_POLICY, dhcp_policy)
         _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
 #undef _
-    case OBJ_ID_SECURITY_PROFILE:
-        security_profile.erase(cfg_msg.security_profile.key.id);
-        break;
 
     default:
         assert(false);
@@ -189,17 +171,9 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
         _(DHCP_RELAY, dhcp_relay)
         _(DHCP_POLICY, dhcp_policy)
         _(NAT_PORT_BLOCK, nat_port_block)
+        _(SECURITY_PROFILE, security_profile)
 #undef _
 
-    case OBJ_ID_SECURITY_PROFILE:
-        if (right.op != API_OP_DELETE) {
-            return (left.security_profile.spec.key.id ==
-                    right.security_profile.spec.key.id);
-        } else {
-            return (left.security_profile.spec.key.id ==
-                    right.security_profile.key.id);
-        }
-        break;
     default:
         assert(false);
     }

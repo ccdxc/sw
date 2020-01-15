@@ -78,7 +78,7 @@ typedef struct pds_dhcp_relay_cfg_msg_s {
 /// security profile configuration
 typedef struct pds_security_profile_cfg_msg_s {
     union {
-        pds_security_profile_key_t key;
+        pds_obj_key_t key;
         pds_security_profile_spec_t spec;
     };
 } pds_security_profile_cfg_msg_t;

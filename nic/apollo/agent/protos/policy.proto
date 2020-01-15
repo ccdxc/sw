@@ -115,7 +115,7 @@ message SecurityPolicyDeleteResponse {
 // 2. if no object is created, indicated default values will be used
 message SecurityProfileSpec {
   // unique identifier of security profile
-  uint32             Id                    = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes              Id                    = 1 [(gogoproto.moretags) = "meta:mandatory"];
 
   // ConnTrackEn, if set to true, will enable full connection tracking
   bool               ConnTrackEn           = 2 [(gogoproto.moretags) = "meta:default=false"];
@@ -182,7 +182,7 @@ message SecurityProfileResponse {
 
 // security profile get request
 message SecurityProfileGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 // security profile get response
@@ -195,7 +195,7 @@ message SecurityProfileGetResponse {
 message SecurityProfileDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
-  repeated uint32 Id        = 2;
+  repeated bytes  Id        = 2;
 }
 
 // security profile delete response
