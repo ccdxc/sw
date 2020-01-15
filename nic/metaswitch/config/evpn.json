@@ -12,7 +12,7 @@
         "lo-ip" : "192.168.20.2",
         "as"    : "1"
     },
-    "eth-if-index" : "0x71010001",
+    "eth-if-index" : "0x11010001",
     "lif-if-index" : "0x7",
     "vni"          : "100",
     "route"        : {
