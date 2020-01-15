@@ -113,8 +113,8 @@
           <mat-icon *ngIf="isNICUnhealthy(rowData)" fxFlex="nogrow" [inline]="true"
                     class="naples-status-icon global-alert-critical-icon"
                     [matTooltip]="'Health: Unhealthy. ' + displayReasons(rowData)">error</mat-icon>
-          <mat-icon *ngIf="isNICHealthUnknown(rowData)" fxFlex="nogrow" class="naples-status-icon"
-                    [inline]="true"
+          <mat-icon *ngIf="isNICHealthUnknown(rowData)" fxFlex="nogrow"
+                    class="naples-status-icon global-alert-warning-icon" [inline]="true"
                     [matTooltip]="'Health: Unknown. ' + displayReasons(rowData)">battery_unknown
           </mat-icon>
           <mat-icon *ngIf="isNicNeedReboot(rowData)" fxFlex="nogrow" class="naples-status-icon"
