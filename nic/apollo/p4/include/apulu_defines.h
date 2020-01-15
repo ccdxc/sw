@@ -180,6 +180,10 @@
 /*****************************************************************************/
 #define ROUTE_RESULT_METER_EN_SIZE           1
 #define ROUTE_RESULT_SNAT_TYPE_SIZE          2
+#define ROUTE_RESULT_SNAT_TYPE_NONE          0
+#define ROUTE_RESULT_SNAT_TYPE_STATIC        1
+#define ROUTE_RESULT_SNAT_TYPE_NAPT_PUBLIC   2
+#define ROUTE_RESULT_SNAT_TYPE_NAPT_SVC      3
 #define ROUTE_RESULT_DNAT_EN_SIZE            1
 #define ROUTE_RESULT_DNAT_IDX_SIZE           28         // DNAT_EN == 1
 #define ROUTE_RESULT_NHTYPE_SIZE             2          // DNAT_EN == 0

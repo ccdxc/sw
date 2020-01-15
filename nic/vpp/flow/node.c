@@ -517,8 +517,13 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         pds_flow_extract_nexthop_info(p0, 1);
         ftlv4_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
         ftlv4_cache_advance_count(1);
-        if (vnet_buffer(p0)->pds_data.xlate_idx) {
-            // TODO : Handle napt, rx from uplink, service mapping
+        // TODO : Handle rx from uplink, service mapping
+        if (vnet_buffer(p0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+            // NAPT - both port and ip are changed
+            dst_ip = vnet_buffer(p0)->pds_data.xlate_addr;
+            r_dport = vnet_buffer(p0)->pds_data.xlate_port;
+        } else if (vnet_buffer2(p0)->pds_data.xlate_idx) {
+            // static NAT
             dst_ip = vnet_buffer(p0)->pds_data.xlate_addr;
         }
         ftlv4_cache_set_key(dst_ip, src_ip,

@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = nat.so
-MODULE_PIPELINE = apulu
+MODULE_PIPELINE = apulu apollo artemis
 MODULE_ARCH     = aarch64 x86_64
 MODULE_PREREQS  = vpp_pkg.export
 MODULE_SOLIBS   = pdsvpp_impl pdsvpp_api pdsvpp_cfg

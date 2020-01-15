@@ -235,6 +235,7 @@ platform/drivers/linux/mnet_uio_pdrv_genirq/mnet_uio_pdrv_genirq.ko /nic/bin/
 nic/build/$ARCH/$PIPELINE/lib/flow_plugin.so                      /nic/lib/vpp_plugins/
 nic/build/$ARCH/$PIPELINE/lib/infra_plugin.so                     /nic/lib/vpp_plugins/
 nic/build/$ARCH/$PIPELINE/lib/arp_proxy.so                        /nic/lib/vpp_plugins/
+nic/build/$ARCH/$PIPELINE/lib/nat.so                              /nic/lib/vpp_plugins/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_api.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_impl.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_ipc.so                    /nic/lib/

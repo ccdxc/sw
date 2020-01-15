@@ -30,6 +30,14 @@ typedef enum
 } nat_next_t;
 
 typedef struct nat_trace_s {
+    u16 vpc_id;
+    ip4_address_t pvt_ip;
+    u16 pvt_port;
+    ip4_address_t dip;
+    u16 dport;
+    u8 protocol;
+    ip4_address_t public_ip;
+    u16 public_port;
     // TODO
 } nat_trace_t;
 

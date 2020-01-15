@@ -10,12 +10,23 @@
 #include <nic/apollo/p4/include/apulu_defines.h>
 #include <vppinfra/format.h>
 
+// Flags passed from p4 pipeline (1st byte filled from p4)
 #define VPP_CPU_FLAGS_VLAN_VALID           APULU_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         APULU_CPU_FLAGS_IPV4_1_VALID
 #define VPP_CPU_FLAGS_IPV6_1_VALID         APULU_CPU_FLAGS_IPV6_1_VALID
 #define VPP_CPU_FLAGS_ETH_2_VALID          APULU_CPU_FLAGS_ETH_2_VALID
 #define VPP_CPU_FLAGS_IPV4_2_VALID         APULU_CPU_FLAGS_IPV4_2_VALID
 #define VPP_CPU_FLAGS_IPV6_2_VALID         APULU_CPU_FLAGS_IPV6_2_VALID
+
+// Flags defined and used within vpp (2nd byte filled in VPP)
+#define VPP_CPU_FLAGS_RX_PKT_POS           8
+#define VPP_CPU_FLAGS_NAPT_POS             9
+#define VPP_CPU_FLAGS_NAPT_SVC_POS         10
+
+#define VPP_CPU_FLAGS_RX_PKT_VALID         (1 << VPP_CPU_FLAGS_RX_PKT_POS)
+#define VPP_CPU_FLAGS_NAPT_VALID           (1 << VPP_CPU_FLAGS_NAPT_POS)
+#define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << VPP_CPU_FLAGS_NAPT_POS)
+
 #define VPP_ARM_TO_P4_HDR_SZ               APULU_ARM_TO_P4_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APULU_P4_TO_ARM_HDR_SZ
 always_inline void

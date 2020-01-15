@@ -10,10 +10,10 @@
 #include <nic/sdk/lib/p4/p4_api.hpp>
 #include <nic/sdk/platform/capri/capri_p4.hpp>
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
-#include <nic/apollo/p4/include/defines.h>
 #include <nic/p4/common/defines.h>
+#include <nic/apollo/p4/include/defines.h>
+#include <nic/vpp/impl/nat.h>
 #include <gen/p4gen/apulu/include/p4pd.h>
-#include <nat_pd.h>
 
 using namespace sdk;
 using namespace sdk::table;
@@ -37,7 +37,7 @@ pds_snat_tbl_write_ip4(int nat_index, uint32_t ip, uint16_t port)
     nat_actiondata_t nat_data = { 0 };
 
     *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0] = ip;
-    nat_data.action_u.nat_nat_rewrite.port = htons(port);
+    nat_data.action_u.nat_nat_rewrite.port = port;
 
     p4pd_entry_write(P4TBL_ID_NAT, nat_index, NULL, NULL, &nat_data);
 
@@ -51,7 +51,7 @@ pds_dnat_tbl_write_ip4(int nat_index, uint32_t ip, uint16_t port)
     nat_actiondata_t nat_data = { 0 };
 
     *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0] = ip;
-    nat_data.action_u.nat_nat_rewrite.port = htons(port);
+    nat_data.action_u.nat_nat_rewrite.port = port;
 
     p4pd_entry_write(P4TBL_ID_NAT2, nat_index, NULL, NULL, &nat_data);
 
@@ -66,7 +66,7 @@ pds_snat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port)
 
     p4pd_entry_read(P4TBL_ID_NAT, nat_index, NULL, NULL, &nat_data);
     *ip = *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0];
-    *port = ntohs(nat_data.action_u.nat_nat_rewrite.port);
+    *port = nat_data.action_u.nat_nat_rewrite.port;
 
     return 0;
 }
@@ -79,7 +79,7 @@ pds_dnat_tbl_read_ip4(int nat_index, uint32_t *ip, uint16_t *port)
 
     p4pd_entry_read(P4TBL_ID_NAT2, nat_index, NULL, NULL, &nat_data);
     *ip = *(uint32_t *)&nat_data.action_u.nat_nat_rewrite.ip[0];
-    *port = ntohs(nat_data.action_u.nat_nat_rewrite.port);
+    *port = nat_data.action_u.nat_nat_rewrite.port;
 
     return 0;
 }

@@ -10,6 +10,7 @@
 #include <nic/apollo/packet/artemis/p4_cpu_hdr.h>
 #include <vppinfra/format.h>
 
+// Flags passed from p4 pipeline (1st byte filled from p4)
 #define VPP_CPU_FLAGS_VLAN_VALID           ARTEMIS_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         ARTEMIS_CPU_FLAGS_IPV4_1_VALID
 #define VPP_CPU_FLAGS_IPV6_1_VALID         ARTEMIS_CPU_FLAGS_IPV6_1_VALID
@@ -17,8 +18,14 @@
 #define VPP_CPU_FLAGS_IPV4_2_VALID         ARTEMIS_CPU_FLAGS_IPV4_2_VALID
 #define VPP_CPU_FLAGS_IPV6_2_VALID         ARTEMIS_CPU_FLAGS_IPV6_2_VALID
 #define VPP_CPU_FLAGS_DIRECTION            ARTEMIS_CPU_FLAGS_DIRECTION
+
+// Flags defined and used within vpp (2nd byte filled in VPP)
+#define VPP_CPU_FLAGS_NAPT_VALID           (1 << 8)
+#define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << 9)
+
 #define VPP_ARM_TO_P4_HDR_SZ               ARTEMIS_PREDICATE_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               ARTEMIS_P4_TO_ARM_HDR_SZ
+
 
 u8 *
 format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)

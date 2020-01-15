@@ -14,6 +14,7 @@ extern "C" {
 #endif
 
 // Datastructures
+
 typedef enum {
     NAT_ERR_OK = 0,
     NAT_ERR_EXISTS = 1,
@@ -64,6 +65,9 @@ nat_err_t nat_port_block_del(const uint8_t key[PDS_MAX_KEY_LEN],
                              uint16_t start_port, uint16_t end_port,
                              nat_type_t nat_type);
 #else
+
+typedef u32 nat_hw_index_t;
+
 void nat_init(void);
 nat_err_t nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
                              ip4_address_t addr, u8 protocol, u16 start_port,
@@ -80,8 +84,9 @@ nat_err_t nat_port_block_del(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_hw_id,
 
 nat_err_t nat_flow_alloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport,
                          u8 protocol, ip4_address_t pvt_ip, u16 pvt_port,
-                         nat_type_t nat_type,
-                         ip4_address_t *sip, u16 *sport);
+                         nat_type_t nat_type, ip4_address_t *sip, u16 *sport,
+                         nat_hw_index_t *xlate_idx,
+                         nat_hw_index_t *xlate_idx_rflow);
 nat_err_t nat_flow_dealloc(u32 vpc_hw_id, ip4_address_t dip, u16 dport, u8 protocol,
                            ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
                            u16 pvt_port, nat_type_t nat_type);

@@ -24,7 +24,6 @@ modules:
     - module:
         name    : IPV4_UDP_NAPT
         spec    : local2igw.testspec
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
 

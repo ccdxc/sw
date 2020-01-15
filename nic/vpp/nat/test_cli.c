@@ -81,7 +81,7 @@ test_nat_add_flow (vlib_main_t *vm,
     u32 vpc_id;
     ip4_address_t sip, dip, public_ip;
     u8 proto;
-    u32 sport, dport;
+    u32 sport, dport, xlate_idx, xlate_idx_rflow;
     u16 public_port;
     u8 vpc_id_set = 0, sip_set = 0, dip_set = 0, proto_set = 0, sport_set = 0, dport_set = 0;
     nat_err_t ret;
@@ -115,12 +115,14 @@ test_nat_add_flow (vlib_main_t *vm,
     }
 
     ret = nat_flow_alloc(vpc_id, dip, dport, proto, sip, sport,
-                         NAT_TYPE_INTERNET,
-                         &public_ip, &public_port);
+                         NAT_TYPE_INTERNET, &public_ip, &public_port,
+                         &xlate_idx, &xlate_idx_rflow);
     if (ret != NAT_ERR_OK) {
         vlib_cli_output(vm, "Error: nat flow add failed! ret = %d\n", ret);
     } else {
-        vlib_cli_output(vm, "Allocated sip %U sport %U\nnat flow add success.\n",
+        vlib_cli_output(vm, "xlate_idx %u Allocated sip %U sport %U\n"
+                        "nat flow add success.\n",
+                        xlate_idx,
                         format_ip4_address, &public_ip,
                         format_tcp_udp_port,
                         clib_host_to_net_u16(public_port));

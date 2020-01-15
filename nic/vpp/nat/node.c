@@ -26,9 +26,18 @@ nat_next_node_fill (u8 idx, u16 *next, u32 *counters, u16 node,
 }
 
 always_inline void
-nat_trace_add (nat_trace_t *trace)
+nat_trace_add (nat_trace_t *trace, u16 vpc_id, ip4_address_t pvt_ip,
+               u16 pvt_port, ip4_address_t dip, u16 dport, u8 protocol,
+               ip4_address_t public_ip, u16 public_port)
 {
-    // TODO
+    trace->vpc_id = vpc_id;
+    trace->pvt_ip = pvt_ip;
+    trace->pvt_port = pvt_port;
+    trace->dip = dip;
+    trace->dport = dport;
+    trace->protocol = protocol;
+    trace->public_ip = public_ip;
+    trace->public_port = public_port;
 }
 
 always_inline void
@@ -42,13 +51,16 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     u16 sport, pvt_port, dport;
     u16 vpc_id;
     u8 protocol;
+    nat_hw_index_t xlate_idx, xlate_idx_rflow;
+    nat_type_t nat_address_type = NAT_TYPE_INTERNET;
 
-    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
-                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
-        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
-        nat_trace_add(trace);
-    }
-    vpc_id = vnet_buffer (p0)->sw_if_index[VLIB_TX];
+    // TODO : Until we nat_port_block cfg in VPP can do
+    // vpc_id --> hw_vpc_id translation, use vpc_id = 0
+#if 0
+    vpc_id = vnet_buffer (p0)->pds_data.vpc_id;
+#else
+    vpc_id = 0;
+#endif
     ip40 = vlib_buffer_get_current(p0);
     pvt_ip.as_u32 = ip40->src_address.as_u32;
     dip.as_u32 = ip40->dst_address.as_u32;
@@ -57,21 +69,30 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     if (protocol != IP_PROTOCOL_UDP && protocol != IP_PROTOCOL_TCP) {
         goto error;
     }
-#if 1
-    udp0 = (udp_header_t *)(ip40 + 1);
-#else
     udp0 = (udp_header_t *) (((u8 *) ip40) +
             (vnet_buffer (p0)->l4_hdr_offset -
              vnet_buffer (p0)->l3_hdr_offset));
-#endif
     pvt_port = clib_net_to_host_u16(udp0->src_port);
     dport = clib_net_to_host_u16(udp0->dst_port);
 
-    // TODO : get nat_type
-    if (nat_flow_alloc(vpc_id, dip, dport, protocol, pvt_ip,
-                       pvt_port, NAT_TYPE_INTERNET, &sip, &sport) !=
+    if (vnet_buffer(p0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
+        nat_address_type = NAT_TYPE_INFRA;
+    }
+    if (nat_flow_alloc(vpc_id, dip, dport, protocol, pvt_ip, pvt_port,
+                       nat_address_type, &sip, &sport, &xlate_idx,
+                       &xlate_idx_rflow) !=
                        NAT_ERR_OK) {
         goto error;
+    }
+    vnet_buffer2(p0)->pds_data.xlate_idx = xlate_idx;
+    vnet_buffer2(p0)->pds_data.xlate_idx_rflow = xlate_idx_rflow;
+    vnet_buffer(p0)->pds_data.xlate_addr = sip.as_u32;
+    vnet_buffer(p0)->pds_data.xlate_port = sport;
+    if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
+                      p0->flags & VLIB_BUFFER_IS_TRACED)) {
+        trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
+        nat_trace_add(trace, vpc_id, pvt_ip, pvt_port, dip, dport, protocol,
+                      sip, sport);
     }
 
     nat_next_node_fill(*next_idx, nexts, counter,
@@ -82,8 +103,8 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
 
 error:
     nat_next_node_fill(*next_idx, nexts, counter,
-                             NAT_NEXT_DROP,
-                             NAT_COUNTER_FAILED);
+                       NAT_NEXT_DROP,
+                       NAT_COUNTER_FAILED);
     (*next_idx)++;
     return;
 }
@@ -99,9 +120,6 @@ nat (vlib_main_t * vm,
     PDS_PACKET_LOOP_START {
 
         PDS_PACKET_DUAL_LOOP_START (WRITE, READ) {
-            vnet_buffer (_b[0])->sw_if_index[VLIB_TX] = vnet_buffer (_b[0])->sw_if_index[VLIB_RX];
-            vnet_buffer (_b[1])->sw_if_index[VLIB_TX] = vnet_buffer (_b[1])->sw_if_index[VLIB_RX];
-
             nat_internal(_b[0], &next_idx, _nexts, counter, node, vm);
 
             nat_internal(_b[1], &next_idx, _nexts, counter, node, vm);
@@ -109,9 +127,6 @@ nat (vlib_main_t * vm,
         } PDS_PACKET_DUAL_LOOP_END;
 
         PDS_PACKET_SINGLE_LOOP_START {
-
-            vnet_buffer (_b[0])->sw_if_index[VLIB_TX] = vnet_buffer (_b[0])->sw_if_index[VLIB_RX];
-
             nat_internal(_b[0], &next_idx, _nexts, counter, node, vm);
 
         } PDS_PACKET_SINGLE_LOOP_END;

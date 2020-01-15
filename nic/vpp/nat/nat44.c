@@ -5,12 +5,13 @@
 #include <vlib/vlib.h>
 #include <vnet/ip/ip.h>
 #include <vnet/plugin/plugin.h>
+#include <nic/vpp/impl/nat.h>
 #include "nat_api.h"
-#include "nat_pd.h"
 
 // TODO move to right place
 #define PDS_MAX_VPC 64
 #define PDS_MAX_DYNAMIC_NAT 32768
+#define PDS_DYNAMIC_NAT_START_INDEX 1000
 
 #define IPV4_MASK 0xffffffff
 #define PORT_MASK 0xffff
@@ -35,7 +36,7 @@ typedef struct nat_port_block_s {
     nat_port_block_state_t state;
     int num_flow_alloc;
     u32 *ref_count;
-    u32 *nat_tx_hw_index;
+    nat_hw_index_t *nat_tx_hw_index;
     uword *port_bitmap;
 } nat_port_block_t;
 
@@ -356,6 +357,12 @@ nat_port_block_commit(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id,
     return NAT_ERR_OK;
 }
 
+always_inline nat_hw_index_t
+nat_get_hw_index(u8 *ptr)
+{
+    return ptr - nat_main.hw_index_pool + PDS_DYNAMIC_NAT_START_INDEX;
+}
+
 always_inline void
 nat_flow_get_and_add_src_endpoint_mapping(nat_vpc_config_t *vpc,
                                           ip4_address_t pvt_ip, u16 pvt_port,
@@ -448,12 +455,13 @@ nat_flow_del_ip_mapping(nat_vpc_config_t *vpc,
 
 always_inline nat_err_t
 nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
-                      ip4_address_t sip, u16 sport,
-                      ip4_address_t pvt_ip, u16 pvt_port,
-                      nat_flow_key_t *flow_key)
+                      ip4_address_t sip, u16 sport, ip4_address_t pvt_ip,
+                      u16 pvt_port, nat_flow_key_t *flow_key,
+                      nat_hw_index_t *xlate_idx,
+                      nat_hw_index_t *xlate_idx_rflow)
 {
     u8 *tx_hw_index_ptr = NULL, *rx_hw_index_ptr;
-    u32 rx_hw_index;
+    nat_hw_index_t rx_hw_index;
     u16 index = sport - pb->start_port;
 
     //
@@ -474,16 +482,17 @@ nat_flow_alloc_for_pb(nat_vpc_config_t *vpc, nat_port_block_t *pb,
     pool_get(nat_main.hw_index_pool, rx_hw_index_ptr);
     clib_spinlock_unlock(&nat_main.lock);
 
-    rx_hw_index = rx_hw_index_ptr - nat_main.hw_index_pool;
+    rx_hw_index = nat_get_hw_index(rx_hw_index_ptr);
 
     if (pb->ref_count[index] == 0) {
         clib_bitmap_set_no_check(pb->port_bitmap, index, 1);
-        pb->nat_tx_hw_index[index] =
-            tx_hw_index_ptr - nat_main.hw_index_pool;
+        pb->nat_tx_hw_index[index] = nat_get_hw_index(tx_hw_index_ptr);
         pds_snat_tbl_write_ip4(pb->nat_tx_hw_index[index], sip.as_u32, sport);
     }
 
     pds_snat_tbl_write_ip4(rx_hw_index, pvt_ip.as_u32, pvt_port);
+    *xlate_idx = pb->nat_tx_hw_index[index];
+    *xlate_idx_rflow = rx_hw_index;
 
     pb->ref_count[index]++;
     pb->num_flow_alloc++;
@@ -505,7 +514,8 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
                       ip4_address_t pvt_ip, u16 pvt_port,
                       ip4_address_t *sip, u16 *sport,
                       nat_port_block_t *pb, nat_vpc_config_t *vpc,
-                      u8 protocol)
+                      u8 protocol, nat_hw_index_t *xlate_idx,
+                      nat_hw_index_t *xlate_idx_rflow)
 {
     u16 num_ports;
     nat_flow_key_t key = { 0 };
@@ -535,7 +545,7 @@ nat_flow_alloc_inline(u32 vpc_id, ip4_address_t dip, u16 dport,
             *sport = try_sport;
 
             nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                  &key);
+                                  &key, xlate_idx, xlate_idx_rflow);
 
             return NAT_ERR_OK;
         }
@@ -592,7 +602,8 @@ nat_get_random_pool(nat_vpc_config_t *vpc, nat_port_block_t *nat_pb)
 nat_err_t
 nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
                u8 protocol, ip4_address_t pvt_ip, u16 pvt_port,
-               nat_type_t nat_type, ip4_address_t *sip, u16 *sport)
+               nat_type_t nat_type, ip4_address_t *sip, u16 *sport,
+               nat_hw_index_t *xlate_idx, nat_hw_index_t *xlate_idx_rflow)
 {
     nat_port_block_t *pb = NULL;
     nat_vpc_config_t *vpc;
@@ -632,7 +643,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
         }
         if (pb) {
             ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip, pvt_port,
-                    sip, sport, pb, vpc, protocol);
+                    sip, sport, pb, vpc, protocol, xlate_idx, xlate_idx_rflow);
         }
         if (!pb || ret != NAT_ERR_OK) {
             // random pool did not work, try all pools
@@ -640,8 +651,10 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
             pool_foreach (pb, nat_pb,
             ({
                 if (allocated || pb->state != NAT_PB_STATE_OK) continue;
-                ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip, pvt_port,
-                                            sip, sport, pb, vpc, protocol);
+                ret = nat_flow_alloc_inline(vpc_id, dip, dport, pvt_ip,
+                                            pvt_port, sip, sport, pb, vpc,
+                                            protocol, xlate_idx,
+                                            xlate_idx_rflow);
                 if (ret == NAT_ERR_OK) allocated = 1;
             }));
         }
@@ -658,7 +671,7 @@ nat_flow_alloc(u32 vpc_id, ip4_address_t dip, u16 dport,
                 key.dport = dport;
                 key.protocol = protocol;
                 nat_flow_alloc_for_pb(vpc, pb, *sip, *sport, pvt_ip, pvt_port,
-                                      &key);
+                                      &key, xlate_idx, xlate_idx_rflow);
             }
         }));
     }

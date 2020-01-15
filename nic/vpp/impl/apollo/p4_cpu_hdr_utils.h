@@ -9,6 +9,7 @@
 #include <nic/apollo/p4/include/defines.h>
 #include <nic/apollo/packet/apollo/p4_cpu_hdr.h>
 
+// Flags passed from p4 pipeline (1st byte filled from p4)
 #define VPP_CPU_FLAGS_VLAN_VALID           APOLLO_CPU_FLAGS_VLAN_VALID
 #define VPP_CPU_FLAGS_IPV4_1_VALID         APOLLO_CPU_FLAGS_IPV4_1_VALID
 #define VPP_CPU_FLAGS_IPV6_1_VALID         APOLLO_CPU_FLAGS_IPV6_1_VALID
@@ -16,6 +17,11 @@
 #define VPP_CPU_FLAGS_IPV4_2_VALID         APOLLO_CPU_FLAGS_IPV4_2_VALID
 #define VPP_CPU_FLAGS_IPV6_2_VALID         APOLLO_CPU_FLAGS_IPV6_2_VALID
 #define VPP_CPU_FLAGS_DIRECTION            APOLLO_CPU_FLAGS_DIRECTION
+
+// Flags defined and used within vpp (2nd byte filled in VPP)
+#define VPP_CPU_FLAGS_NAPT_VALID           (1 << 8)
+#define VPP_CPU_FLAGS_NAPT_SVC_VALID       (1 << 9)
+
 #define VPP_ARM_TO_P4_HDR_SZ               APOLLO_PREDICATE_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               APOLLO_P4_TO_ARM_HDR_SZ
 

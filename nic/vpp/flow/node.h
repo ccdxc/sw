@@ -18,6 +18,7 @@
         _(IP6_FLOW_PROG, "pds-ip6-flow-program" )                   \
         _(IP4_TUN_FLOW_PROG, "pds-tunnel-ip4-flow-program" )        \
         _(IP6_TUN_FLOW_PROG, "pds-tunnel-ip6-flow-program" )        \
+        _(IP4_NAT, "pds-nat44" )                                    \
         _(DROP, "error-drop")                                       \
 
 #define foreach_flow_classify_counter                               \
@@ -25,6 +26,7 @@
         _(IP6_FLOW, "IPv6 flow packets" )                           \
         _(IP4_TUN_FLOW, "IPv4 tunnel flow packets" )                \
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
+        _(IP4_NAT, "NAPT flow packets" )                            \
         _(UNKOWN, "Unknown flow packets")                           \
 
 #define foreach_flow_prog_next                                      \
