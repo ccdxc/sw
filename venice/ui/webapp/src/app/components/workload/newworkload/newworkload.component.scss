@@ -1,57 +1,126 @@
-@import 'src/global-mixins';
+@import "src/global-mixins";
 
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
+$dary-grey: #a9a9a9;
 
-.newworkload-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  margin-left: 53px;
-  height: 30px !important;
-}
+.new-workload-container {
+  padding: 20px;
 
-.newworkload-attach-radio {
-  margin-left: 5px;
-  margin-top: 6px;
-  @include global-mat-radio(12px);
-}
+  .new-workload-groups {
+    width: 590px;
+    justify-content: space-between;
+    padding-bottom: 10px;
 
-.newworkload-container {
-  padding: 20px 15px;
-  @include primary-font();
-}
+    .new-workload-group-name {
+      margin-left: 25px;
+    }
+  }
 
-.newworkload-multiselect {
-  height: 30px !important;
-}
+  .new-workload-subtext {
+    margin-top: 2px;
+    @include primary-font(12px, #b2b3b4, 300);
+  }
 
-.newworkload-subtext {
-  margin-top: 2px;
-  @include primary-font(12px, #b2b3b4, 300);
-}
+  .new-workload-rule-source {
+    border: 1px solid $dary-grey;
+    padding: 5px;
+    width: 520px;
 
-.newworkload-interfaces {
-  margin-left: $horizontal-gutter;
-}
+    legend {
+      width: auto;
+      padding: 0 2px;
+      font-size: 14px;
+      color: #676763;
+    }
+  }
 
-.newworkload-input {
-  height: 30px;
-}
+  .new-workload-input {
+    .new-workload-mac-address {
+      width: 215px;
+      height: 30px;
+    }
 
-.newworkload-chip {
-  width: 400px;
-  height: 30px;
-}
+    width: 215px;
+    height: 30px;
+  }
 
-.newworkload-save,
-.newworkload-cancel {
-  font-size: 16px;
-  display: inline-block;
-  padding: 4px 10px;
-  line-height: 25px;
-  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
-}
+  .new-workload-fieldset-row {
+    margin-bottom: 10px;
+    justify-content: space-around;
 
-.newworkload-add-interface {
-  @include primary-font(16px, #6ba0e5, 500);
-  cursor: pointer;
+    .new-workload-rule-boxes {
+      .ui-chips-input-token input {
+        width: 192px;
+        white-space: nowrap;
+        overflow: hidden !important;
+      }
+    }
+  }
+
+  .new-workload-rule-template {
+    cursor: pointer;
+
+    .new-workload-edit-buttons,
+    .new-workload-delete-buttons {
+      display: none;
+    }
+
+    &:hover {
+
+      .new-workload-edit-buttons,
+      .new-workload-delete-buttons {
+        display: inherit;
+      }
+    }
+
+    .new-workload-bold {
+      @include primary-font(16px, #383838, 500);
+    }
+
+    .new-workload-bold-subtext-ipmac {
+      @include primary-font(16px, #383838, 200);
+      // width: 40px;
+    }
+  }
+
+  .new-workload-subtext {
+    margin-top: 2px;
+    @include primary-font(12px, #b2b3b4, 300);
+  }
+
+  .export-policy-rule-boxes {
+    ul {
+      width: 215px;
+      white-space: nowrap;
+      overflow: hidden !important;
+      font-size: 14px !important;
+      height: 30px !important;
+    }
+  }
+
+  .new-workload-button-container {
+    margin-top: 1.5 * $vertical-gutter;
+    place-content: flex-end;
+    align-items: flex-start;
+
+    .new-workload-save,
+    .new-workload-cancel {
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      padding: 4px 10px;
+      line-height: 25px;
+      margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+    }
+  }
+
+  .new-workload-add-rule {
+    cursor: pointer;
+    width: 100px;
+  }
+
+  app-orderedlist {
+    width: 590px;
+  }
 }

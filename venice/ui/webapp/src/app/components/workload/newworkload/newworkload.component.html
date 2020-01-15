@@ -1,127 +1,217 @@
-<div fxFlex="auto" fxLayout="column" class="newworkload-container">
-
-  <div fxFlex="auto" fxLayout="row">
-    <ng-container *ngTemplateOutlet="meta"></ng-container>
-    <div fxFlex></div>
-    <div *ngIf="isInline" class="newworkload-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
-         fxLayoutAlign="start start">
-      <div fxFlex="nogrow">
-        <span (click)="saveObject()"
-              class="global-button-primary global-button-padding newworkload-save"
-              [ngClass]="computeInlineButtonClass()">SAVE</span>
-      </div>
-      <div fxFlex="nogrow">
-        <span (click)="cancelObject()"
-              class="global-button-neutral global-button-padding newworkload-save">CANCEL</span>
-      </div>
-    </div>
+<div fxFlex="auto" fxLayout="column" class="new-workload-container">
+  <ng-container *ngTemplateOutlet="inlineButtons"></ng-container>
+  <div fxFlex="noshrink" fxLayout="column" fxLayoutAlign="start center">
+    <ng-container *ngTemplateOutlet="metaHostname"></ng-container>
+    <ng-container *ngTemplateOutlet="match_rules"></ng-container>
   </div>
-  <div fxFlex="30px"></div>
-  <ng-container *ngTemplateOutlet="hostname"></ng-container>
-  <div fxFlex="30px"></div>
-  <ng-container *ngTemplateOutlet="interfaces"></ng-container>
-
 </div>
 
-<ng-template #meta>
-  <div fxFlex="none" [formGroup]="newObject.$formGroup">
-    <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center" formGroupName="meta"
-         class="newworkload-row">
-      <div>NAME:</div>
-      <input fxFlex="300px" formControlName="name" class="newworkload-name" appErrorTooltip
-             spellcheck="false"
-             type="text" pInputText placeholder="Unique Workload Name...">
-    </div>
-  </div>
-</ng-template>
-
-<ng-template #hostname>
-  <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center"
-       [formGroup]="newObject.$formGroup.get('spec')"
-       fxLayoutGap="20px">
-    <div fxFlex="nogrow">HOST NAME:</div>
-    <p-dropdown class="newworkload-host" fxFlex="200px" formControlName="host-name"
-                styleClass="neweventalertpolicy-font" placeholder="select host name..."
-                [options]="hostOptions"></p-dropdown>
-  </div>
-</ng-template>
-
-<ng-template #interfaces>
-  <div fxFlex="none" fxLayout="column">
-    <div fxFlex="none" fxLayout="row">
-      <div fxFlex="none">INTERFACES:</div>
-      <div fxFlex="5px"></div>
-      <div fxFlex="none" class="newworkload-subtext">(specify one or more)</div>
-    </div>
-    <div fxFlex="15px"></div>
-
-    <div fxFlex="none" fxLayout="column"
-         [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
-      <div fxFlex="nogrow" class="newworkload-interfaces" fxLayout="column" fxLayoutGap="15px"
-           [@slideInOut]
-           *ngFor="let interface of controlAsFormArray(newObject.$formGroup.get(['spec','interfaces'])).controls; let index = index; let first = first"
-           [formGroupName]="index">
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
-          <div fxFlex="none">INTERFACE {{index + 1}}:</div>
-          <div fxFlex="15px"></div>
-          <mat-icon fxFlex="nogrow" class="global-trash-button"
-                    *ngIf="controlAsFormArray(newObject.$formGroup.get(['spec','interfaces'])).length > 1"
-                    (click)="removeInterface(index)">delete</mat-icon>
-        </div>
-
-        <div fxFlex="nogrow" class="newworkload-interfaces" fxLayout="column" fxLayoutGap="10px">
-          <div fxFlex fxLayout="row wrap" fxlayoutAlign="start start" fxLayoutGap="100px">
-            <div fxFlex="none" fxLayout="row" fxLayoutAnewlign="start center" fxLayoutGap="50px"
-                 class="newworkload-input">
-              <div fxFlex="none">Mac-Address:</div>
-              <input fxFlex="nogrow" appErrorTooltip formControlName="mac-address"
-                     spellcheck="false" type="text"
-                     class="newworkload-input newworkload-mac-address" pInputText placeholder="">
-            </div>
-            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
-                 class="newworkload-input">
-              <div fxFlex="none">Micro-seg vlan:</div>
-              <input fxFlex="nogrow" appErrorTooltip formControlName="micro-seg-vlan"
-                     spellcheck="false" type="number"
-                     class="newworkload-input newworkload-micro-seg-vlan" pInputText placeholder="">
-            </div>
-            <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="50px"
-                 class="newworkload-input">
-              <div fxFlex="none">External vlan:</div>
-              <input fxFlex="nogrow" appErrorTooltip formControlName="external-vlan"
-                     spellcheck="false" type="number"
-                     class="newworkload-input newworkload-external-vlan" pInputText placeholder="">
-            </div>
-          </div>
-
-          <div fxFlex fxLayout="column" fxLayoutGap="10px">
-            <div fxFlex="none" fxLayout="row">
-              <div fxFlex="none">IP Addresses:</div>
-              <div fxFlex="5px"></div>
-              <div fxFlex="none" class="newworkload-subtext">(specify one or more)</div>
-            </div>
-            <app-chips class="newworkload-chip" [maxChipLength]="15" [addOnBlur]="true"
-                       [addOnTab]="true"
-                       formControlName="ip-addresses">
-              <ng-template let-item let-cancelFunc="cancelFunc" pTemplate="item">
-                <div fxLayout="row" fxLayoutAlign="start center" class="ui-chips-token-item"
-                     [ngClass]="{'error': !isValidIP(item)}">
-                  <div fxFlex="none" class="ui-chips-token-item-text">{{item}}</div>
-                  <mat-icon fxFlex="none" class="ui-chips-token-icon-cancel"
-                            (click)="cancelFunc($event)">close
-                  </mat-icon>
-                </div>
-              </ng-template>
-            </app-chips>
-          </div>
-
-        </div>
-
-        <div fxFlex="15px"></div>
-
-
+<ng-template #metaHostname>
+  <div fxFlex="row" class="new-workload-groups">
+    <div fxFlex="none" [formGroup]="newObject.$formGroup">
+      <div fxFlex="none" formGroupName="meta" class="new-workload-group-name">
+        <span [ngClass]="{
+          'requiredField': isFieldEmpty(newObject.$formGroup.get(['meta', 'name']))
+        }">
+          <input formControlName="name" appErrorTooltip spellcheck="false" type="text"
+                 class="new-workload-input new-workload-name" pInputText
+                 appFloatLabel="Unique Workload Name" fxFlex="235px">
+        </span>
       </div>
     </div>
-    <div fxFlex="none" (click)="addInterface()" class="newworkload-add-interface">+ INTERFACE</div>
+    <div fxFlex="none" fxLayoutAlign="start center" [formGroup]="newObject.$formGroup.get('spec')">
+      <span [ngClass]="{
+        'requiredField': isFieldEmpty(newObject.$formGroup.get(['spec', 'host-name']))
+      }">
+        <p-dropdown class="new-workload-input new-workload-host" formControlName="host-name"
+                    appFloatLabel="Host name"
+                    [options]="hostOptions" fxFlex="235px"></p-dropdown>
+      </span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #inlineButtons>
+  <div *ngIf="isInline" class="new-workload-button-container">
+    <div fxFlex="nogrow">
+      <span (click)="saveObject()"
+            class="global-button-primary global-button-padding new-workload-save"
+            [ngClass]="computeInlineButtonClass()">SAVE</span>
+    </div>
+    <div fxFlex="nogrow">
+      <span (click)="cancelObject()"
+            class="global-button-neutral global-button-padding new-workload-cancel">CANCEL</span>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #match_rules>
+  <div fxFlex="none" fxLayout="column">
+    <div fxFlex="none" fxLayout="row">
+      <div fxFlex="none" [ngClass]="{'requiredLabel': !areInterfaceValid()}">INTERFACES:</div>
+      <div fxFlex="5px"></div>
+      <div fxFlex="none" class="new-workload-subtext">(specify one or more)</div>
+    </div>
+    <div fxFlex="10px"></div>
+    <app-orderedlist [dataArray]="formControls()" [template]="ruleTemplate"
+                     (itemClick)="orderedListClick($event)">
+    </app-orderedlist>
+    <div fxFlex="none" (click)="addInterface()" class="new-workload-add-rule">+ INTERFACE</div>
+  </div>
+</ng-template>
+
+<ng-template #ruleTemplate let-data="data" let-index="index" let-inEdit="inEdit">
+  <div [formGroup]="newObject.$formGroup.get(['spec', 'interfaces'])">
+    <div fxFlex="auto" fxLayout="column" [formGroupName]="index">
+      <div *ngIf="!inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
+        <ng-container
+                      *ngTemplateOutlet="ruleTemplateEdit; context:{data: data, index: index, inEdit: inEdit}">
+        </ng-container>
+      </div>
+
+      <div *ngIf="inEdit" [@slideInOut] fxFlex="auto" fxLayout="column">
+        <ng-container
+                      *ngTemplateOutlet="ruleTemplateView; context:{data: data, index: index, inEdit: inEdit}">
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+
+<ng-template #ruleTemplateEdit let-data="data" let-index="index" let-inEdit="inEdit">
+  <div fxFlex="auto" fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="center none"
+       [ngClass]="{'newmirrorsession-hide-primeng-panel': '!inEdit'}">
+    <div fxFlex="none" fxLayout="column" fxLayoutGap="10px">
+      <fieldset class="new-workload-rule-source">
+        <legend>source </legend>
+        <div fxLayout="row" class="new-workload-fieldset-row">
+
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" class="new-workload-input">
+            <span [ngClass]="{
+            'requiredField': isFieldEmpty(formControlName(index,'mac-address'))
+          }"></span>
+            <span>
+              <input fxFlex="nogrow" appErrorTooltip
+                     [formControl]="formControlName(index,'mac-address')"
+                     spellcheck="false" type="text"
+                     class="new-workload-input new-workload-mac-address" pInputText
+                     appFloatLabel="mac-address">
+            </span>
+          </div>
+
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" class="new-workload-input">
+            <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL" [maxChipLength]="1"
+                           [formControl]="formControlName(index,'ip-addresses')"
+                           boxStyleClass="export-policy-rule-boxes"
+                           [itemValidator]="isValidIP" [itemErrorMsg]="IPS_ERRORMSG"
+                           appErrorTooltip>
+            </app-formchips>
+          </div>
+        </div>
+
+      </fieldset>
+      <fieldset class="new-workload-rule-source">
+        <legend>Vlan </legend>
+        <div fxLayout="row" class="new-workload-fieldset-row">
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" class="new-workload-input">
+            <span [ngClass]="{
+              'requiredField': isFieldEmpty(formControlName(index,'external-vlan'))
+            }"></span>
+            <span>
+              <input fxFlex="nogrow" appErrorTooltip
+                     [formControl]="formControlName(index,'external-vlan')"
+                     spellcheck="false" type="number"
+                     class="new-workload-input new-workload-external-vlan" pInputText
+                     appFloatLabel="External-vlan" min="1">
+            </span>
+          </div>
+
+          <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" class="new-workload-input">
+            <span [ngClass]="{
+              'requiredField': isFieldEmpty(formControlName(index,'micro-seg-vlan'))
+            }"></span>
+            <span>
+              <input fxFlex="nogrow" appErrorTooltip
+                     [formControl]="formControlName(index,'micro-seg-vlan')"
+                     spellcheck="false" type="number"
+                     class="new-workload-input new-workload-micro-seg-vlan" pInputText
+                     appFloatLabel="Micro-seg vlan" min="1">
+            </span>
+          </div>
+        </div>
+      </fieldset>
+
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #ruleTemplateView let-data="data" let-index="index" let-inEdit="inEdit">
+  <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start none" class="new-workload-rule-template"
+       [ngClass]="{'newsgpolicy-hide-primeng-panel': !inEdit}">
+    <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start start">
+      <div fxFlex="10px"></div>
+      <div fxFlex="auto" fxLayout="row" fxLayout="row wrap" fxLayoutAlign="space-between start">
+        <div fxFlex="230px" fxLayout="column" fxLayouAlign="start start">
+
+          <div fxFlex="none" class="new-workload-bold">Source</div>
+          <div *ngIf="getInputFieldValue(index,'mac-address')" fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-workload-bold-subtext-ipmac">MAC:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span class="new-export-policy-rule-content">
+                {{getInputFieldValue(index,'mac-address')}}
+              </span>
+            </div>
+          </div>
+
+          <div *ngIf="getInputFieldValue(index,'ip-addresses').length" fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-workload-bold-subtext-ipmac">IP:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span class="new-export-policy-rule-content"
+                    *ngFor="let ip of getInputFieldValue(index,'ip-addresses')">
+                {{ip}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div fxFlex="230px" fxLayout="column" fxLayouAlign="start start">
+          <div fxFlex="none" class="new-workload-bold">Vlan</div>
+          <div *ngIf="getInputFieldValue(index,'external-vlan')" fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-workload-bold-subtext-ipmac">External-vlan:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span class="new-export-policy-rule-content">
+                {{ getInputFieldValue(index,'external-vlan') }}
+              </span>
+            </div>
+          </div>
+          <div *ngIf="getInputFieldValue(index,'micro-seg-vlan')" fxFlex="none" fxLayout="row">
+            <div fxFlex="none" class="new-workload-bold-subtext-ipmac">Micro-seg-vlan:</div>
+            <div fxFlex="none" fxLayout="column">
+              <span class="new-export-policy-rule-content">
+                {{ getInputFieldValue(index,'micro-seg-vlan') }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <ng-container *ngTemplateOutlet="ruleEditDeleteOption;context:{ index: index}"></ng-container>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #ruleEditDeleteOption let-index="index">
+  <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center">
+    <div fxFlex="auto" fxLayoutAlign="end center">
+      <div>
+        <mat-icon class="new-workload-edit-buttons" [matTooltip]="'Edit'" fxFlex="nogrow"
+                  (click)="editInterface(index)">edit
+        </mat-icon>
+        <mat-icon class="new-workload-delete-buttons" [matTooltip]="'Delete'" fxFlex="nogrow"
+                  (click)="removeInterface(index)">delete
+        </mat-icon>
+      </div>
+    </div>
   </div>
 </ng-template>

@@ -111,11 +111,11 @@ describe('NewworkloadComponent', () => {
       }
     };
 
-    tu.setInput('.newworkload-name', workload.meta.name);
-    tu.setDropdown('.newworkload-host', 'naples1-host');
-    tu.setInput('.newworkload-mac-address', workload.spec.interfaces[0]['mac-address']);
-    tu.setInput('.newworkload-micro-seg-vlan', workload.spec.interfaces[0]['micro-seg-vlan']);
-    tu.setInput('.newworkload-external-vlan', workload.spec.interfaces[0]['external-vlan']);
+    tu.setInput('.new-workload-name', workload.meta.name);
+    tu.setDropdown('.new-workload-host', 'naples1-host');
+    tu.setInput('.new-workload-mac-address', workload.spec.interfaces[0]['mac-address']);
+    tu.setInput('.new-workload-micro-seg-vlan', workload.spec.interfaces[0]['micro-seg-vlan']);
+    tu.setInput('.new-workload-external-vlan', workload.spec.interfaces[0]['external-vlan']);
 
     component.saveObject();
     fixture.detectChanges();
@@ -150,14 +150,11 @@ describe('NewworkloadComponent', () => {
       ])
     );
     fixture.detectChanges();
-
     workload.spec.interfaces[0]['mac-address'] = '2222.2222.2222';
-
-    tu.setInput('.newworkload-mac-address', workload.spec.interfaces[0]['mac-address']);
-    tu.sendClick(tu.getElemByCss('.global-button-primary.newworkload-save'));
+    tu.sendClick(tu.getElemByCss('.new-workload-save'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
     const expVal = new WorkloadWorkload(workload).getModelValues();
-    expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
+    expect(_.isEqual(recVal.meta, expVal.meta)).toBeTruthy('Received: ' + JSON.stringify(recVal.meta) + ' , expected: ' + JSON.stringify(expVal.meta));
   });
 });
