@@ -193,13 +193,18 @@ func AddAggregateTopic(server *MbusServer, reactor AggStatusReactor) (*Aggregate
 	return &handler, nil
 }
 
-func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
+func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOptions) (*netproto.AggObjectList, error) {
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 
-	aggKey := strings.Join(kinds.Kinds, "-")
+	kindStrings := []string{}
+	for _, aggKind := range kinds.WatchOptions {
+		kindStrings = append(kindStrings, aggKind.Kind)
+	}
+	aggKey := strings.Join(kindStrings, "-")
+
 	objList := &netproto.AggObjectList{}
 	// walk all associated kinds objects
-	for _, kind := range kinds.Kinds {
+	for _, kind := range kindStrings {
 
 		addAggObjectEvent := func(mobj *types.Any, meta *api.ObjectMeta) {
 			aggObj := &netproto.AggObject{Kind: kind, Object: &api.Any{}}
@@ -716,7 +721,7 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 }
 
 // WatchObjects watches aggregate  and sends streaming resp
-func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
+func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
@@ -725,11 +730,15 @@ func (eh *AggregateTopic) WatchObjects(kinds *netproto.AggKinds, stream netproto
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
 	defer close(watcher.Channel)
 
-	aggKey := strings.Join(kinds.Kinds, "-")
-	eh.registerAggWatcher(aggKey, nodeID, kinds.Kinds, &watcher)
-	defer eh.unRegisterAggWatcher(aggKey, nodeID)
-	for _, kind := range kinds.Kinds {
+	kindStrings := []string{}
+	for _, kind := range kinds.WatchOptions {
+		kindStrings = append(kindStrings, kind.Kind)
+	}
 
+	aggKey := strings.Join(kindStrings, "-")
+	eh.registerAggWatcher(aggKey, nodeID, kindStrings, &watcher)
+	defer eh.unRegisterAggWatcher(aggKey, nodeID)
+	for _, kind := range kindStrings {
 		eh.server.memDB.WatchObjects(kind, &watcher)
 		defer eh.server.memDB.StopWatchObjects(kind, &watcher)
 

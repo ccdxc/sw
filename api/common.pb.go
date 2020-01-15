@@ -13,9 +13,11 @@
 		Filter
 		Spec
 		WatchSpec
+		AggWatchOptions
 		Any
 		Interface
 		InterfaceSlice
+		KindWatchOptions
 		ListMeta
 		ListWatchOptions
 		ObjectMeta

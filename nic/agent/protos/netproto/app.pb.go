@@ -37,7 +37,6 @@
 		AppList
 		AppEvent
 		AppEventList
-		AggKinds
 		AggObject
 		AggObjectList
 		AggObjectEvent

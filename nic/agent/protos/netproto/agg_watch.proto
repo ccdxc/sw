@@ -13,13 +13,9 @@ import "github.com/pensando/sw/api/meta.proto";
 // ---------------------------- Aggregagte API ----------------------------
 // app controller api
 service AggWatchApiV1 {
-    rpc WatchObjects (AggKinds) returns (stream AggObjectEventList) {};
+    rpc WatchObjects (api.AggWatchOptions) returns (stream AggObjectEventList) {};
     rpc ObjectOperUpdate (stream AggObjectEvent) returns (api.TypeMeta) {};
-    rpc ListObjects (AggKinds) returns (AggObjectList) {};
-}
-
-message AggKinds {
-    repeated string kinds = 1 [(gogoproto.jsontag) = "kind,omitempty"];
+    rpc ListObjects (api.AggWatchOptions) returns (AggObjectList) {};
 }
 
 // agg object
@@ -33,13 +29,11 @@ message AggObjectList {
     repeated AggObject  objects = 1;
 }
 
-
 // app watch event
 message AggObjectEvent {
     api.EventType   EventType   = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
     AggObject       AggObj      = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "agg,omitempty"];
 }
-
 
 // agg watch events batched
 message AggObjectEventList {

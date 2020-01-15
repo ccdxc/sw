@@ -548,7 +548,7 @@ func createRPCServer(t *testing.T) *fakeRPCServer {
 	return &srv
 }
 
-func (srv *fakeRPCServer) ListObjects(ctx context.Context, kinds *netproto.AggKinds) (*netproto.AggObjectList, error) {
+func (srv *fakeRPCServer) ListObjects(ctx context.Context, kinds *api.AggWatchOptions) (*netproto.AggObjectList, error) {
 	//No need for implemebtation
 	return &netproto.AggObjectList{}, nil
 }
@@ -557,7 +557,7 @@ func (srv *fakeRPCServer) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 	return nil
 }
 
-func (srv *fakeRPCServer) WatchObjects(kinds *netproto.AggKinds, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
+func (srv *fakeRPCServer) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
 	// walk local db and send stream resp
 	for _, app := range srv.appdb {
 		// watch event

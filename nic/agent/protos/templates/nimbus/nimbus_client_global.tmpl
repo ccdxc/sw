@@ -297,24 +297,25 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 
 	}
 
-	//Make sure all kinds are implemented by the reactor to avoid later failures
+	aggKinds := api.AggWatchOptions{}
 	for _, kind := range kinds {
 		switch kind {
 		{{range $key, $value := $manifest}}
 		case "{{$value.Object}}":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.({{$value.Object}}Reactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "{{$value.Object}}Reactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
         {{end}}
 		}
 	}
 
 	// start the watch
 	aggRPCClient := netproto.NewAggWatchApiV1Client(client.rpcClient.ClientConn)
-	aggKinds := netproto.AggKinds{}
-	for _, kind := range kinds {
-		aggKinds.Kinds = append(aggKinds.Kinds, kind)
-	}
+
 	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
 	if err != nil {
 		log.Errorf("Error watching Aggregate watch for . Err: %v", err)

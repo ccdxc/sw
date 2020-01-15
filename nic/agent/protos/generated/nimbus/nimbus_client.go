@@ -830,59 +830,88 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 
 	}
 
-	//Make sure all kinds are implemented by the reactor to avoid later failures
+	aggKinds := api.AggWatchOptions{}
 	for _, kind := range kinds {
 		switch kind {
 
 		case "App":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(AppReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "AppReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Endpoint":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(EndpointReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "EndpointReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "IPAMPolicy":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(IPAMPolicyReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "IPAMPolicyReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Interface":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(InterfaceReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "InterfaceReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Network":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(NetworkReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "NetworkReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "NetworkSecurityPolicy":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(NetworkSecurityPolicyReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "NetworkSecurityPolicyReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "RoutingConfig":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(RoutingConfigReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "RoutingConfigReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "SecurityProfile":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(SecurityProfileReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "SecurityProfileReactor")
 			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		}
 	}
 
 	// start the watch
 	aggRPCClient := netproto.NewAggWatchApiV1Client(client.rpcClient.ClientConn)
-	aggKinds := netproto.AggKinds{}
-	for _, kind := range kinds {
-		aggKinds.Kinds = append(aggKinds.Kinds, kind)
-	}
+
 	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
 	if err != nil {
 		log.Errorf("Error watching Aggregate watch for . Err: %v", err)

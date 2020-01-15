@@ -124,6 +124,17 @@ message WatchEventList {
   repeated WatchEvent Events = 1 [(gogoproto.jsontag) = "events,omitempty"];
 }
 
+message KindWatchOptions {
+  string Group                = 2 [(gogoproto.jsontag) = "group,omitempty"];
+  string Kind                 = 3 [(gogoproto.jsontag) = "kind,omitempty"];
+  ListWatchOptions  Options   = 4 [(gogoproto.jsontag) = "options,omitempty", (gogoproto.nullable) = false];
+}
+
+message AggWatchOptions {
+  api.ObjectMeta O                        = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+  repeated KindWatchOptions WatchOptions  = 2 [(gogoproto.jsontag) = "watch-options,omitempty", (gogoproto.nullable) = false];
+}
+
 // StatusResult contains possible statuses for a NIC.
 message StatusResult {
   string Str = 1;
