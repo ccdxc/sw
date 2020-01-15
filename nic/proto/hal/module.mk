@@ -34,7 +34,8 @@ MODULE_SRCS         := ${MODULE_DIR}/acl.proto          \
                        ${MODULE_DIR}/proxy.proto        \
                        ${MODULE_DIR}/types.proto        \
                        ${MODULE_DIR}/tcp_proxy.proto    \
-                       ${MODULE_DIR}/telemetry.proto
+                       ${MODULE_DIR}/telemetry.proto    \
+                       ${MODULE_DIR}/ncsi.proto
 ifeq ($(ARCH),x86_64)
 MODULE_SRCS         := ${MODULE_SRCS}                   \
                        ${MODULE_DIR}/cpucb.proto        \

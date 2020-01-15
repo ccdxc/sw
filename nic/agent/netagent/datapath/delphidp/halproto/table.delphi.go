@@ -44,7 +44,7 @@ var TableKind_value = map[string]int32{
 func (x TableKind) String() string {
 	return proto.EnumName(TableKind_name, int32(x))
 }
-func (TableKind) EnumDescriptor() ([]byte, []int) { return fileDescriptor29, []int{0} }
+func (TableKind) EnumDescriptor() ([]byte, []int) { return fileDescriptor30, []int{0} }
 
 // Index Metadata
 type TableIndexMetadata struct {
@@ -61,7 +61,7 @@ type TableIndexMetadata struct {
 func (m *TableIndexMetadata) Reset()                    { *m = TableIndexMetadata{} }
 func (m *TableIndexMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableIndexMetadata) ProtoMessage()               {}
-func (*TableIndexMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{0} }
+func (*TableIndexMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{0} }
 
 func (m *TableIndexMetadata) GetCapacity() uint32 {
 	if m != nil {
@@ -134,7 +134,7 @@ type TableTcamMetadata struct {
 func (m *TableTcamMetadata) Reset()                    { *m = TableTcamMetadata{} }
 func (m *TableTcamMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableTcamMetadata) ProtoMessage()               {}
-func (*TableTcamMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{1} }
+func (*TableTcamMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{1} }
 
 func (m *TableTcamMetadata) GetCapacity() uint32 {
 	if m != nil {
@@ -210,7 +210,7 @@ type TableHashMetadata struct {
 func (m *TableHashMetadata) Reset()                    { *m = TableHashMetadata{} }
 func (m *TableHashMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableHashMetadata) ProtoMessage()               {}
-func (*TableHashMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{2} }
+func (*TableHashMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{2} }
 
 func (m *TableHashMetadata) GetHasOtcam() bool {
 	if m != nil {
@@ -306,7 +306,7 @@ type TableFlowMetadata struct {
 func (m *TableFlowMetadata) Reset()                    { *m = TableFlowMetadata{} }
 func (m *TableFlowMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableFlowMetadata) ProtoMessage()               {}
-func (*TableFlowMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{3} }
+func (*TableFlowMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{3} }
 
 func (m *TableFlowMetadata) GetCapacity() uint32 {
 	if m != nil {
@@ -393,7 +393,7 @@ type TableMetMetadata struct {
 func (m *TableMetMetadata) Reset()                    { *m = TableMetMetadata{} }
 func (m *TableMetMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableMetMetadata) ProtoMessage()               {}
-func (*TableMetMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{4} }
+func (*TableMetMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{4} }
 
 func (m *TableMetMetadata) GetCapacity() uint32 {
 	if m != nil {
@@ -468,7 +468,7 @@ type TableMetadata struct {
 func (m *TableMetadata) Reset()                    { *m = TableMetadata{} }
 func (m *TableMetadata) String() string            { return proto.CompactTextString(m) }
 func (*TableMetadata) ProtoMessage()               {}
-func (*TableMetadata) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{5} }
+func (*TableMetadata) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{5} }
 
 type isTableMetadata_Metadata interface{ isTableMetadata_Metadata() }
 
@@ -697,7 +697,7 @@ type TableMetadataResponseMsg struct {
 func (m *TableMetadataResponseMsg) Reset()                    { *m = TableMetadataResponseMsg{} }
 func (m *TableMetadataResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableMetadataResponseMsg) ProtoMessage()               {}
-func (*TableMetadataResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{6} }
+func (*TableMetadataResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{6} }
 
 func (m *TableMetadataResponseMsg) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -723,7 +723,7 @@ type TableIdName struct {
 func (m *TableIdName) Reset()                    { *m = TableIdName{} }
 func (m *TableIdName) String() string            { return proto.CompactTextString(m) }
 func (*TableIdName) ProtoMessage()               {}
-func (*TableIdName) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{7} }
+func (*TableIdName) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{7} }
 
 type isTableIdName_IdOrName interface{ isTableIdName_IdOrName() }
 
@@ -830,7 +830,7 @@ type TableSpec struct {
 func (m *TableSpec) Reset()                    { *m = TableSpec{} }
 func (m *TableSpec) String() string            { return proto.CompactTextString(m) }
 func (*TableSpec) ProtoMessage()               {}
-func (*TableSpec) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{8} }
+func (*TableSpec) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{8} }
 
 func (m *TableSpec) GetKey() *TableIdName {
 	if m != nil {
@@ -846,7 +846,7 @@ type TableRequestMsg struct {
 func (m *TableRequestMsg) Reset()                    { *m = TableRequestMsg{} }
 func (m *TableRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableRequestMsg) ProtoMessage()               {}
-func (*TableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{9} }
+func (*TableRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{9} }
 
 func (m *TableRequestMsg) GetSpec() []*TableSpec {
 	if m != nil {
@@ -863,7 +863,7 @@ type TableIndexEntry struct {
 func (m *TableIndexEntry) Reset()                    { *m = TableIndexEntry{} }
 func (m *TableIndexEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableIndexEntry) ProtoMessage()               {}
-func (*TableIndexEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{10} }
+func (*TableIndexEntry) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{10} }
 
 func (m *TableIndexEntry) GetIndex() uint32 {
 	if m != nil {
@@ -886,7 +886,7 @@ type TableIndexMsg struct {
 func (m *TableIndexMsg) Reset()                    { *m = TableIndexMsg{} }
 func (m *TableIndexMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableIndexMsg) ProtoMessage()               {}
-func (*TableIndexMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{11} }
+func (*TableIndexMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{11} }
 
 func (m *TableIndexMsg) GetIndexEntry() []*TableIndexEntry {
 	if m != nil {
@@ -903,7 +903,7 @@ type TableTcamEntry struct {
 func (m *TableTcamEntry) Reset()                    { *m = TableTcamEntry{} }
 func (m *TableTcamEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableTcamEntry) ProtoMessage()               {}
-func (*TableTcamEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{12} }
+func (*TableTcamEntry) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{12} }
 
 func (m *TableTcamEntry) GetIndex() uint32 {
 	if m != nil {
@@ -926,7 +926,7 @@ type TableTcamMsg struct {
 func (m *TableTcamMsg) Reset()                    { *m = TableTcamMsg{} }
 func (m *TableTcamMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableTcamMsg) ProtoMessage()               {}
-func (*TableTcamMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{13} }
+func (*TableTcamMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{13} }
 
 func (m *TableTcamMsg) GetTcamEntry() []*TableTcamEntry {
 	if m != nil {
@@ -944,7 +944,7 @@ type TableHashEntry struct {
 func (m *TableHashEntry) Reset()                    { *m = TableHashEntry{} }
 func (m *TableHashEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableHashEntry) ProtoMessage()               {}
-func (*TableHashEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{14} }
+func (*TableHashEntry) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{14} }
 
 func (m *TableHashEntry) GetInOtcam() bool {
 	if m != nil {
@@ -974,7 +974,7 @@ type TableHashMsg struct {
 func (m *TableHashMsg) Reset()                    { *m = TableHashMsg{} }
 func (m *TableHashMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableHashMsg) ProtoMessage()               {}
-func (*TableHashMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{15} }
+func (*TableHashMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{15} }
 
 func (m *TableHashMsg) GetHashEntry() []*TableHashEntry {
 	if m != nil {
@@ -995,7 +995,7 @@ type TableFlowEntry struct {
 func (m *TableFlowEntry) Reset()                    { *m = TableFlowEntry{} }
 func (m *TableFlowEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableFlowEntry) ProtoMessage()               {}
-func (*TableFlowEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{16} }
+func (*TableFlowEntry) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{16} }
 
 func (m *TableFlowEntry) GetPrimaryIndexValid() bool {
 	if m != nil {
@@ -1046,7 +1046,7 @@ type TableFlowMsg struct {
 func (m *TableFlowMsg) Reset()                    { *m = TableFlowMsg{} }
 func (m *TableFlowMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableFlowMsg) ProtoMessage()               {}
-func (*TableFlowMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{17} }
+func (*TableFlowMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{17} }
 
 func (m *TableFlowMsg) GetFlowEntry() []*TableFlowEntry {
 	if m != nil {
@@ -1063,7 +1063,7 @@ type TableMetEntry struct {
 func (m *TableMetEntry) Reset()                    { *m = TableMetEntry{} }
 func (m *TableMetEntry) String() string            { return proto.CompactTextString(m) }
 func (*TableMetEntry) ProtoMessage()               {}
-func (*TableMetEntry) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{18} }
+func (*TableMetEntry) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{18} }
 
 func (m *TableMetEntry) GetIndex() uint32 {
 	if m != nil {
@@ -1086,7 +1086,7 @@ type TableMetMsg struct {
 func (m *TableMetMsg) Reset()                    { *m = TableMetMsg{} }
 func (m *TableMetMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableMetMsg) ProtoMessage()               {}
-func (*TableMetMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{19} }
+func (*TableMetMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{19} }
 
 func (m *TableMetMsg) GetMetEntry() []*TableMetEntry {
 	if m != nil {
@@ -1109,7 +1109,7 @@ type TableResponse struct {
 func (m *TableResponse) Reset()                    { *m = TableResponse{} }
 func (m *TableResponse) String() string            { return proto.CompactTextString(m) }
 func (*TableResponse) ProtoMessage()               {}
-func (*TableResponse) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{20} }
+func (*TableResponse) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{20} }
 
 type isTableResponse_TableEntry interface{ isTableResponse_TableEntry() }
 
@@ -1322,7 +1322,7 @@ type TableResponseMsg struct {
 func (m *TableResponseMsg) Reset()                    { *m = TableResponseMsg{} }
 func (m *TableResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*TableResponseMsg) ProtoMessage()               {}
-func (*TableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor29, []int{21} }
+func (*TableResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor30, []int{21} }
 
 func (m *TableResponseMsg) GetResponse() []*TableResponse {
 	if m != nil {
@@ -1357,9 +1357,9 @@ func init() {
 	proto.RegisterEnum("halproto.TableKind", TableKind_name, TableKind_value)
 }
 
-func init() { proto.RegisterFile("table.proto", fileDescriptor29) }
+func init() { proto.RegisterFile("table.proto", fileDescriptor30) }
 
-var fileDescriptor29 = []byte{
+var fileDescriptor30 = []byte{
 	// 1231 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x57, 0xdd, 0x6e, 0x1b, 0x55,
 	0x10, 0xf6, 0xbf, 0x77, 0xc7, 0x71, 0xe2, 0x9c, 0x34, 0xad, 0x93, 0x2a, 0x4a, 0x65, 0x82, 0xa8,

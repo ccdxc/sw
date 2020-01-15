@@ -52,7 +52,7 @@ var VmotionMessageType_value = map[string]int32{
 func (x VmotionMessageType) String() string {
 	return proto.EnumName(VmotionMessageType_name, int32(x))
 }
-func (VmotionMessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{0} }
+func (VmotionMessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor34, []int{0} }
 
 type VmotionMessageStatus int32
 
@@ -73,7 +73,7 @@ var VmotionMessageStatus_value = map[string]int32{
 func (x VmotionMessageStatus) String() string {
 	return proto.EnumName(VmotionMessageStatus_name, int32(x))
 }
-func (VmotionMessageStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
+func (VmotionMessageStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptor34, []int{1} }
 
 type VmotionInitiate struct {
 	MacAddress uint64 `protobuf:"varint,1,opt,name=mac_address,json=macAddress" json:"mac_address,omitempty"`
@@ -82,7 +82,7 @@ type VmotionInitiate struct {
 func (m *VmotionInitiate) Reset()                    { *m = VmotionInitiate{} }
 func (m *VmotionInitiate) String() string            { return proto.CompactTextString(m) }
 func (*VmotionInitiate) ProtoMessage()               {}
-func (*VmotionInitiate) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{0} }
+func (*VmotionInitiate) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{0} }
 
 func (m *VmotionInitiate) GetMacAddress() uint64 {
 	if m != nil {
@@ -98,7 +98,7 @@ type VmotionSync struct {
 func (m *VmotionSync) Reset()                    { *m = VmotionSync{} }
 func (m *VmotionSync) String() string            { return proto.CompactTextString(m) }
 func (*VmotionSync) ProtoMessage()               {}
-func (*VmotionSync) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{1} }
+func (*VmotionSync) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{1} }
 
 func (m *VmotionSync) GetResponse() []*SessionGetResponse {
 	if m != nil {
@@ -114,7 +114,7 @@ type VmotionSyncEnd struct {
 func (m *VmotionSyncEnd) Reset()                    { *m = VmotionSyncEnd{} }
 func (m *VmotionSyncEnd) String() string            { return proto.CompactTextString(m) }
 func (*VmotionSyncEnd) ProtoMessage()               {}
-func (*VmotionSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{2} }
+func (*VmotionSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{2} }
 
 func (m *VmotionSyncEnd) GetStatus() VmotionMessageStatus {
 	if m != nil {
@@ -129,7 +129,7 @@ type VmotionTermSyncReq struct {
 func (m *VmotionTermSyncReq) Reset()                    { *m = VmotionTermSyncReq{} }
 func (m *VmotionTermSyncReq) String() string            { return proto.CompactTextString(m) }
 func (*VmotionTermSyncReq) ProtoMessage()               {}
-func (*VmotionTermSyncReq) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{3} }
+func (*VmotionTermSyncReq) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{3} }
 
 type VmotionTermSync struct {
 	Response []*SessionGetResponse `protobuf:"bytes,1,rep,name=response" json:"response,omitempty"`
@@ -138,7 +138,7 @@ type VmotionTermSync struct {
 func (m *VmotionTermSync) Reset()                    { *m = VmotionTermSync{} }
 func (m *VmotionTermSync) String() string            { return proto.CompactTextString(m) }
 func (*VmotionTermSync) ProtoMessage()               {}
-func (*VmotionTermSync) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{4} }
+func (*VmotionTermSync) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{4} }
 
 func (m *VmotionTermSync) GetResponse() []*SessionGetResponse {
 	if m != nil {
@@ -154,7 +154,7 @@ type VmotionTermSyncEnd struct {
 func (m *VmotionTermSyncEnd) Reset()                    { *m = VmotionTermSyncEnd{} }
 func (m *VmotionTermSyncEnd) String() string            { return proto.CompactTextString(m) }
 func (*VmotionTermSyncEnd) ProtoMessage()               {}
-func (*VmotionTermSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{5} }
+func (*VmotionTermSyncEnd) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{5} }
 
 func (m *VmotionTermSyncEnd) GetStatus() VmotionMessageStatus {
 	if m != nil {
@@ -170,7 +170,7 @@ type VmotionTermSyncAck struct {
 func (m *VmotionTermSyncAck) Reset()                    { *m = VmotionTermSyncAck{} }
 func (m *VmotionTermSyncAck) String() string            { return proto.CompactTextString(m) }
 func (*VmotionTermSyncAck) ProtoMessage()               {}
-func (*VmotionTermSyncAck) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{6} }
+func (*VmotionTermSyncAck) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{6} }
 
 func (m *VmotionTermSyncAck) GetStatus() VmotionMessageStatus {
 	if m != nil {
@@ -185,7 +185,7 @@ type VmotionEpMoved struct {
 func (m *VmotionEpMoved) Reset()                    { *m = VmotionEpMoved{} }
 func (m *VmotionEpMoved) String() string            { return proto.CompactTextString(m) }
 func (*VmotionEpMoved) ProtoMessage()               {}
-func (*VmotionEpMoved) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{7} }
+func (*VmotionEpMoved) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{7} }
 
 type VmotionMessage struct {
 	Type VmotionMessageType `protobuf:"varint,1,opt,name=type,enum=vmotion_msg.VmotionMessageType" json:"type,omitempty"`
@@ -204,7 +204,7 @@ type VmotionMessage struct {
 func (m *VmotionMessage) Reset()                    { *m = VmotionMessage{} }
 func (m *VmotionMessage) String() string            { return proto.CompactTextString(m) }
 func (*VmotionMessage) ProtoMessage()               {}
-func (*VmotionMessage) Descriptor() ([]byte, []int) { return fileDescriptor33, []int{8} }
+func (*VmotionMessage) Descriptor() ([]byte, []int) { return fileDescriptor34, []int{8} }
 
 type isVmotionMessage_Msg interface{ isVmotionMessage_Msg() }
 
@@ -514,9 +514,9 @@ func init() {
 	proto.RegisterEnum("halproto.VmotionMessageStatus", VmotionMessageStatus_name, VmotionMessageStatus_value)
 }
 
-func init() { proto.RegisterFile("vmotion.proto", fileDescriptor33) }
+func init() { proto.RegisterFile("vmotion.proto", fileDescriptor34) }
 
-var fileDescriptor33 = []byte{
+var fileDescriptor34 = []byte{
 	// 569 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x6f, 0xda, 0x4e,
 	0x14, 0xb4, 0xc1, 0x80, 0x79, 0x16, 0xfc, 0xac, 0x55, 0x7e, 0x92, 0x43, 0x9a, 0x84, 0xf8, 0x84,

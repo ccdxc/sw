@@ -51,6 +51,7 @@ export NIC_HAL_PROTO_SOLIBS := halproto hal_svc_gen hal_svc
 
 export NIC_HAL_CFG_PLUGIN_SOLIBS := cfg_plugin_tcp_proxy \
                                     cfg_plugin_nw \
+                                    cfg_plugin_ncsi \
                                     cfg_plugin_rdma \
                                     cfg_plugin_nvme \
                                     cfg_plugin_aclqos \

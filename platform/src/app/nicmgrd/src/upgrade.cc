@@ -796,5 +796,4 @@ nicmgr_upg_init (void)
     }
 }
 
-
 } // namespace nicmgr

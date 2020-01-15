@@ -24,6 +24,7 @@ typedef enum event_id_e {
     EVENT_ID_UPG                = 7,
     EVENT_ID_UPG_STAGE_STATUS   = 8,
     EVENT_ID_MICRO_SEG          = 9,
+    EVENT_ID_NCSI               = 10,
 } event_id_t;
 
 // port event specific information

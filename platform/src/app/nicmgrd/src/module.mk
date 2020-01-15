@@ -12,5 +12,6 @@ MODULE_INCS     := ${BLD_PROTOGEN_DIR}/ \
                    ${BLD_P4GEN_DIR}/common_txdma_actions/include
 MODULE_LDLIBS   := crypto ${NIC_COMMON_LDLIBS} \
 		   ${NIC_THIRDPARTY_GOOGLE_LDLIBS}
-MODULE_SRCS     = ${MODULE_SRC_DIR}/nicmgr_init.cc ${MODULE_SRC_DIR}/upgrade.cc
+MODULE_SRCS     = ${MODULE_SRC_DIR}/nicmgr_init.cc ${MODULE_SRC_DIR}/upgrade.cc \
+				  ${MODULE_SRC_DIR}/nicmgr_ncsi.cc
 include ${MKDEFS}/post.mk

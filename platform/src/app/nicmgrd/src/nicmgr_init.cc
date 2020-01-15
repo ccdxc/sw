@@ -20,6 +20,7 @@
 #include "platform/src/lib/nicmgr/include/logger.hpp"
 #include "nic/hal/core/event_ipc.hpp"
 #include "upgrade.hpp"
+#include "nicmgr_ncsi.hpp"
 
 // for device::MICRO_SEG_ENABLE  : TODO - fix
 #include <grpc++/grpc++.h>
@@ -204,6 +205,9 @@ dev_init:
 
     // upgrade init
     nicmgr::nicmgr_upg_init();
+
+    // ncsi init
+    nicmgr::nicmgr_ncsi_ipc_init();
 
     NIC_LOG_INFO("Listening to events");
 }

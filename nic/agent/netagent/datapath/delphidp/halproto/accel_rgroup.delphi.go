@@ -24,6 +24,7 @@ It is generated from these files:
 	l4lb.proto
 	multicast.proto
 	nat.proto
+	ncsi.proto
 	nic.proto
 	nvme.proto
 	nw.proto
@@ -891,6 +892,68 @@ It has these top-level messages:
 	NatMappingStats
 	NatMappingGetResponse
 	NatMappingGetResponseMsg
+	VlanFilterRequest
+	VlanFilterRequestMsg
+	VlanFilterStatus
+	VlanFilterResponse
+	VlanFilterResponseMsg
+	VlanFilterGetRequest
+	VlanFilterGetRequestMsg
+	VlanFilterGetResponse
+	VlanFilterGetResponseMsg
+	MacFilterRequest
+	MacFilterRequestMsg
+	MacFilterStatus
+	MacFilterResponse
+	MacFilterResponseMsg
+	MacFilterGetRequest
+	MacFilterGetRequestMsg
+	MacFilterGetResponse
+	MacFilterGetResponseMsg
+	BcastFilterRequest
+	BcastFilterRequestMsg
+	BcastFilterDeleteRequest
+	BcastFilterDeleteRequestMsg
+	BcastFilterStatus
+	BcastFilterResponse
+	BcastFilterResponseMsg
+	BcastFilterDeleteResponse
+	BcastFilterDeleteResponseMsg
+	BcastFilterGetRequest
+	BcastFilterGetRequestMsg
+	BcastFilterGetResponse
+	BcastFilterGetResponseMsg
+	McastFilterRequest
+	McastFilterRequestMsg
+	McastFilterStatus
+	McastFilterResponse
+	McastFilterResponseMsg
+	McastFilterDeleteRequest
+	McastFilterDeleteRequestMsg
+	McastFilterDeleteResponse
+	McastFilterDeleteResponseMsg
+	McastFilterGetRequest
+	McastFilterGetRequestMsg
+	McastFilterGetResponse
+	McastFilterGetResponseMsg
+	VlanModeRequest
+	VlanModeRequestMsg
+	VlanModeStatus
+	VlanModeResponse
+	VlanModeResponseMsg
+	VlanModeGetRequest
+	VlanModeGetRequestMsg
+	VlanModeGetResponse
+	VlanModeGetResponseMsg
+	ChannelRequest
+	ChannelRequestMsg
+	ChannelStatus
+	ChannelResponse
+	ChannelResponseMsg
+	ChannelGetRequest
+	ChannelGetRequestMsg
+	ChannelGetResponse
+	ChannelGetResponseMsg
 	DeviceSpec
 	DeviceRequest
 	DeviceRequestMsg

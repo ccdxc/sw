@@ -33,6 +33,7 @@ MODULE_DEPS         := ${MODULE_SRC_DIR}/acl.proto          \
                        ${MODULE_SRC_DIR}/tcp_proxy.proto    \
                        ${MODULE_SRC_DIR}/types.proto        \
                        ${MODULE_SRC_DIR}/telemetry.proto    \
+                       ${MODULE_SRC_DIR}/ncsi.proto         \
                        $(wildcard ${TOPDIR}/nic/tools/hal/*)
 ifeq ($(PIPELINE),gft)
 MODULE_DEPS         := ${MODULE_DEPS}                       \

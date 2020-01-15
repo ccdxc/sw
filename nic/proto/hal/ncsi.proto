@@ -1,0 +1,319 @@
+//------------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for ncsi objects
+//------------------------------------------------------------------------------
+
+syntax = "proto3";
+
+import "types.proto";
+import "delphi.proto";
+
+package ncsi;
+option go_package="halproto";
+
+service Ncsi {
+  // Vlan Filters
+  rpc VlanFilterCreate (VlanFilterRequestMsg) returns (VlanFilterResponseMsg) {} 
+  rpc VlanFilterDelete (VlanFilterRequestMsg) returns (VlanFilterResponseMsg) {} 
+  rpc VlanFilterGet (VlanFilterGetRequestMsg) returns (VlanFilterGetResponseMsg) {}
+  // Mac Filters
+  rpc MacFilterCreate (MacFilterRequestMsg) returns (MacFilterResponseMsg) {} 
+  rpc MacFilterDelete (MacFilterRequestMsg) returns (MacFilterResponseMsg) {} 
+  rpc MacFilterGet (MacFilterGetRequestMsg) returns (MacFilterGetResponseMsg) {}
+  // Bcast Filters
+  rpc BcastFilterCreate (BcastFilterRequestMsg) returns (BcastFilterResponseMsg) {} 
+  rpc BcastFilterUpdate (BcastFilterRequestMsg) returns (BcastFilterResponseMsg) {} 
+  rpc BcastFilterDelete (BcastFilterDeleteRequestMsg) returns (BcastFilterDeleteResponseMsg) {} 
+  rpc BcastFilterGet (BcastFilterGetRequestMsg) returns (BcastFilterGetResponseMsg) {}
+  // Mcast Filters
+  rpc McastFilterCreate (McastFilterRequestMsg) returns (McastFilterResponseMsg) {} 
+  rpc McastFilterUpdate (McastFilterRequestMsg) returns (McastFilterResponseMsg) {} 
+  rpc McastFilterDelete (McastFilterDeleteRequestMsg) returns (McastFilterDeleteResponseMsg) {} 
+  rpc McastFilterGet (McastFilterGetRequestMsg) returns (McastFilterGetResponseMsg) {}
+  // Vlan Mode
+  rpc VlanModeCreate (VlanModeRequestMsg) returns (VlanModeResponseMsg) {}
+  rpc VlanModeUpdate (VlanModeRequestMsg) returns (VlanModeResponseMsg) {}
+  rpc VlanModeDelete (VlanModeRequestMsg) returns (VlanModeResponseMsg) {}
+  rpc VlanModeGet (VlanModeGetRequestMsg) returns (VlanModeGetResponseMsg) {}
+  // Channel Rx/Tx/Reset
+  rpc ChannelCreate (ChannelRequestMsg) returns (ChannelResponseMsg) {}
+  rpc ChannelUpdate (ChannelRequestMsg) returns (ChannelResponseMsg) {}
+  rpc ChannelDelete (ChannelRequestMsg) returns (ChannelResponseMsg) {}
+  rpc ChannelGet (ChannelGetRequestMsg) returns (ChannelGetResponseMsg) {}
+}
+
+// Vlan Filters
+message VlanFilterRequest {
+  uint32                id      = 1; // Vlan filter id
+  uint32                vlan_id = 2; 
+  uint32                channel = 3; // TODO: Have to see how this can be used
+}
+
+message VlanFilterRequestMsg {
+  repeated VlanFilterRequest request = 1;
+}
+
+message VlanFilterStatus {
+    // Add here if we have to send any status
+}
+
+message VlanFilterResponse {
+  types.ApiStatus   api_status = 1[(gogoproto.moretags) = "venice:api_status"];
+  VlanFilterStatus  status     = 2;
+}
+
+message VlanFilterResponseMsg {
+  repeated VlanFilterResponse response = 1;
+}
+
+message VlanFilterGetRequest {
+  uint32 vlan_id = 1;
+  uint32 channel = 2;
+}
+
+message VlanFilterGetRequestMsg {
+  repeated VlanFilterGetRequest request = 1;
+}
+
+message VlanFilterGetResponse {
+  types.ApiStatus       api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  VlanFilterRequest     request    = 2;    
+}
+
+message VlanFilterGetResponseMsg {
+  repeated VlanFilterGetResponse response = 1;
+}
+
+
+// Mac Filters
+message MacFilterRequest {
+  uint32                id       = 1; // Mac filter id
+  uint64                mac_addr = 2; // Mac id
+  uint32                channel  = 3; // TODO: Have to see how this can be used
+}
+
+message MacFilterRequestMsg {
+  repeated MacFilterRequest request = 1;
+}
+
+message MacFilterStatus {
+    // Add here if we have to send any status
+}
+
+message MacFilterResponse {
+  types.ApiStatus  api_status = 1[(gogoproto.moretags) = "venice:api_status"];
+  MacFilterStatus  status     = 2;
+}
+
+message MacFilterResponseMsg {
+  repeated MacFilterResponse response = 1;
+}
+
+message MacFilterGetRequest {
+  uint64 mac_addr = 1;
+  uint32 channel  = 2;
+}
+
+message MacFilterGetRequestMsg {
+  repeated MacFilterGetRequest request = 1;
+}
+
+message MacFilterGetResponse {
+  types.ApiStatus      api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  MacFilterRequest     request    = 2;    
+}
+
+message MacFilterGetResponseMsg {
+  repeated MacFilterGetResponse response = 1;
+}
+
+// Bcast Filters
+message BcastFilterRequest {
+  uint32                id                  = 1;
+  bool                  enable_arp          = 2;
+  bool                  enable_dhcp_client  = 3;
+  bool                  enable_dhcp_server  = 4;
+  bool                  enable_netbios      = 5;
+  uint32                channel             = 6;
+}
+message BcastFilterRequestMsg {
+  repeated BcastFilterRequest request = 1;
+}
+
+message BcastFilterDeleteRequest {
+}
+
+message BcastFilterDeleteRequestMsg {
+  repeated BcastFilterDeleteRequest request = 1;
+}
+
+message BcastFilterStatus {
+}
+
+message BcastFilterResponse {
+  types.ApiStatus      api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  BcastFilterStatus    status     = 2;
+}
+
+message BcastFilterResponseMsg {
+  repeated BcastFilterResponse response = 1;
+}
+
+message BcastFilterDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+}
+message BcastFilterDeleteResponseMsg {
+  repeated BcastFilterDeleteResponse response = 1;
+}
+
+message BcastFilterGetRequest {
+}
+
+message BcastFilterGetRequestMsg {
+  repeated BcastFilterGetRequest request = 1;
+}
+
+message BcastFilterGetResponse {
+  types.ApiStatus      api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  BcastFilterRequest   request    = 2;  
+}
+message BcastFilterGetResponseMsg {
+  repeated BcastFilterGetResponse response = 1;
+}
+
+
+// Mcast Filters
+message McastFilterRequest {
+  uint32                id                          = 1;
+  bool                  enable_ipv6_neigh_adv       = 2;
+  bool                  enable_ipv6_router_adv      = 3;
+  bool                  enable_dhcpv6_relay         = 4;
+  bool                  enable_dhcpv6_mcast         = 5;
+  bool                  enable_ipv6_mld             = 6;
+  bool                  enable_ipv6_neigh_sol       = 7;
+  uint32                channel                     = 8;
+}
+message McastFilterRequestMsg {
+  repeated McastFilterRequest request = 1;
+}
+
+message McastFilterStatus {
+}
+
+message McastFilterResponse {
+  types.ApiStatus      api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
+  McastFilterStatus    status     = 2;
+}
+
+message McastFilterResponseMsg {
+  repeated McastFilterResponse response = 1;
+}
+
+message McastFilterDeleteRequest {
+}
+
+message McastFilterDeleteRequestMsg {
+  repeated McastFilterDeleteRequest request = 1;
+}
+
+message McastFilterDeleteResponse {
+  types.ApiStatus    api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+}
+message McastFilterDeleteResponseMsg {
+  repeated McastFilterDeleteResponse response = 1;
+}
+
+message McastFilterGetRequest {
+}
+
+message McastFilterGetRequestMsg {
+  repeated McastFilterGetRequest request = 1;
+}
+
+message McastFilterGetResponse {
+  types.ApiStatus      api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  McastFilterRequest   request    = 2;  
+}
+message McastFilterGetResponseMsg {
+  repeated McastFilterGetResponse response = 1;
+}
+
+// Vlan Mode
+message VlanModeRequest {
+    bool    enable = 1;
+    uint32  mode   = 2;
+}
+
+message VlanModeRequestMsg {
+  repeated VlanModeRequest request = 1;
+}
+
+message VlanModeStatus {
+}
+
+message VlanModeResponse {
+  types.ApiStatus   api_status = 1[(gogoproto.moretags) = "venice:api_status"];
+  VlanModeStatus  status       = 2;
+}
+
+message VlanModeResponseMsg {
+  repeated VlanModeResponse response = 1;
+}
+
+message VlanModeGetRequest {
+}
+
+message VlanModeGetRequestMsg {
+  repeated VlanModeGetRequest request = 1;
+}
+
+message VlanModeGetResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  VlanModeRequest request    = 2;
+}
+
+message VlanModeGetResponseMsg {
+  repeated VlanModeGetResponse response = 1;
+}
+
+// Channel Tx/Rx/Reset
+message ChannelRequest {
+  bool                  tx_enable = 1;
+  bool                  rx_enable = 2;
+  bool                  reset     = 3;
+  uint32                channel   = 4;
+}
+
+message ChannelRequestMsg {
+  repeated ChannelRequest request = 1;
+}
+
+message ChannelStatus {
+}
+
+message ChannelResponse {
+  types.ApiStatus   api_status = 1[(gogoproto.moretags) = "venice:api_status"];
+  ChannelStatus  status     = 2;
+}
+
+message ChannelResponseMsg {
+  repeated ChannelResponse response = 1;
+}
+
+message ChannelGetRequest {
+    uint32 channel = 1;
+}
+
+message ChannelGetRequestMsg {
+  repeated ChannelGetRequest request = 1;
+}
+
+message ChannelGetResponse {
+  types.ApiStatus api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  ChannelRequest request    = 2;
+}
+
+message ChannelGetResponseMsg {
+  repeated ChannelGetResponse response = 1;
+}

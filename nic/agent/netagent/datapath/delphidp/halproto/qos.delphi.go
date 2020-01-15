@@ -34,7 +34,7 @@ var QosPauseType_value = map[string]int32{
 func (x QosPauseType) String() string {
 	return proto.EnumName(QosPauseType_name, int32(x))
 }
-func (QosPauseType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
+func (QosPauseType) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
 
 type QosClassMapType int32
 
@@ -61,7 +61,7 @@ var QosClassMapType_value = map[string]int32{
 func (x QosClassMapType) String() string {
 	return proto.EnumName(QosClassMapType_name, int32(x))
 }
-func (QosClassMapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
+func (QosClassMapType) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
 
 type PacketBufferPortType int32
 
@@ -88,7 +88,7 @@ var PacketBufferPortType_value = map[string]int32{
 func (x PacketBufferPortType) String() string {
 	return proto.EnumName(PacketBufferPortType_name, int32(x))
 }
-func (PacketBufferPortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
+func (PacketBufferPortType) EnumDescriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
 
 type PolicerPPSSpec struct {
 	PacketsPerSec uint32 `protobuf:"varint,1,opt,name=packets_per_sec,json=packetsPerSec" json:"packets_per_sec,omitempty"`
@@ -98,7 +98,7 @@ type PolicerPPSSpec struct {
 func (m *PolicerPPSSpec) Reset()                    { *m = PolicerPPSSpec{} }
 func (m *PolicerPPSSpec) String() string            { return proto.CompactTextString(m) }
 func (*PolicerPPSSpec) ProtoMessage()               {}
-func (*PolicerPPSSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{0} }
+func (*PolicerPPSSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{0} }
 
 func (m *PolicerPPSSpec) GetPacketsPerSec() uint32 {
 	if m != nil {
@@ -122,7 +122,7 @@ type PolicerBPSSpec struct {
 func (m *PolicerBPSSpec) Reset()                    { *m = PolicerBPSSpec{} }
 func (m *PolicerBPSSpec) String() string            { return proto.CompactTextString(m) }
 func (*PolicerBPSSpec) ProtoMessage()               {}
-func (*PolicerBPSSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{1} }
+func (*PolicerBPSSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{1} }
 
 func (m *PolicerBPSSpec) GetBytesPerSec() uint64 {
 	if m != nil {
@@ -149,7 +149,7 @@ type PolicerSpec struct {
 func (m *PolicerSpec) Reset()                    { *m = PolicerSpec{} }
 func (m *PolicerSpec) String() string            { return proto.CompactTextString(m) }
 func (*PolicerSpec) ProtoMessage()               {}
-func (*PolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{2} }
+func (*PolicerSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{2} }
 
 type isPolicerSpec_PolicerType interface{ isPolicerSpec_PolicerType() }
 
@@ -269,7 +269,7 @@ type PolicerStats struct {
 func (m *PolicerStats) Reset()                    { *m = PolicerStats{} }
 func (m *PolicerStats) String() string            { return proto.CompactTextString(m) }
 func (*PolicerStats) ProtoMessage()               {}
-func (*PolicerStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{3} }
+func (*PolicerStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{3} }
 
 func (m *PolicerStats) GetPermittedPackets() uint64 {
 	if m != nil {
@@ -310,7 +310,7 @@ type QosPause struct {
 func (m *QosPause) Reset()                    { *m = QosPause{} }
 func (m *QosPause) String() string            { return proto.CompactTextString(m) }
 func (*QosPause) ProtoMessage()               {}
-func (*QosPause) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{4} }
+func (*QosPause) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{4} }
 
 func (m *QosPause) GetXonThreshold() uint32 {
 	if m != nil {
@@ -351,7 +351,7 @@ type QosSched struct {
 func (m *QosSched) Reset()                    { *m = QosSched{} }
 func (m *QosSched) String() string            { return proto.CompactTextString(m) }
 func (*QosSched) ProtoMessage()               {}
-func (*QosSched) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5} }
+func (*QosSched) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5} }
 
 type isQosSched_SchedType interface{ isQosSched_SchedType() }
 
@@ -468,7 +468,7 @@ type QosSched_DWRRInfo struct {
 func (m *QosSched_DWRRInfo) Reset()                    { *m = QosSched_DWRRInfo{} }
 func (m *QosSched_DWRRInfo) String() string            { return proto.CompactTextString(m) }
 func (*QosSched_DWRRInfo) ProtoMessage()               {}
-func (*QosSched_DWRRInfo) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5, 0} }
+func (*QosSched_DWRRInfo) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5, 0} }
 
 func (m *QosSched_DWRRInfo) GetBwPercentage() uint32 {
 	if m != nil {
@@ -485,7 +485,7 @@ type QosSched_StrictPriorityInfo struct {
 func (m *QosSched_StrictPriorityInfo) Reset()                    { *m = QosSched_StrictPriorityInfo{} }
 func (m *QosSched_StrictPriorityInfo) String() string            { return proto.CompactTextString(m) }
 func (*QosSched_StrictPriorityInfo) ProtoMessage()               {}
-func (*QosSched_StrictPriorityInfo) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{5, 1} }
+func (*QosSched_StrictPriorityInfo) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{5, 1} }
 
 func (m *QosSched_StrictPriorityInfo) GetBps() uint64 {
 	if m != nil {
@@ -505,7 +505,7 @@ type QosClassMap struct {
 func (m *QosClassMap) Reset()                    { *m = QosClassMap{} }
 func (m *QosClassMap) String() string            { return proto.CompactTextString(m) }
 func (*QosClassMap) ProtoMessage()               {}
-func (*QosClassMap) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{6} }
+func (*QosClassMap) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{6} }
 
 func (m *QosClassMap) GetType() QosClassMapType {
 	if m != nil {
@@ -539,7 +539,7 @@ type QosMarking struct {
 func (m *QosMarking) Reset()                    { *m = QosMarking{} }
 func (m *QosMarking) String() string            { return proto.CompactTextString(m) }
 func (*QosMarking) ProtoMessage()               {}
-func (*QosMarking) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{7} }
+func (*QosMarking) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{7} }
 
 func (m *QosMarking) GetDot1QPcpRewriteEn() bool {
 	if m != nil {
@@ -584,7 +584,7 @@ type QosClassSpec struct {
 func (m *QosClassSpec) Reset()                    { *m = QosClassSpec{} }
 func (m *QosClassSpec) String() string            { return proto.CompactTextString(m) }
 func (*QosClassSpec) ProtoMessage()               {}
-func (*QosClassSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{8} }
+func (*QosClassSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{8} }
 
 func (m *QosClassSpec) GetKeyOrHandle() *QosClassKeyHandle {
 	if m != nil {
@@ -643,7 +643,7 @@ type QosClassRequestMsg struct {
 func (m *QosClassRequestMsg) Reset()                    { *m = QosClassRequestMsg{} }
 func (m *QosClassRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassRequestMsg) ProtoMessage()               {}
-func (*QosClassRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{9} }
+func (*QosClassRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{9} }
 
 func (m *QosClassRequestMsg) GetRequest() []*QosClassSpec {
 	if m != nil {
@@ -660,7 +660,7 @@ type PacketBufferPort struct {
 func (m *PacketBufferPort) Reset()                    { *m = PacketBufferPort{} }
 func (m *PacketBufferPort) String() string            { return proto.CompactTextString(m) }
 func (*PacketBufferPort) ProtoMessage()               {}
-func (*PacketBufferPort) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{10} }
+func (*PacketBufferPort) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{10} }
 
 func (m *PacketBufferPort) GetPortType() PacketBufferPortType {
 	if m != nil {
@@ -685,7 +685,7 @@ type QosClassPortStatus struct {
 func (m *QosClassPortStatus) Reset()                    { *m = QosClassPortStatus{} }
 func (m *QosClassPortStatus) String() string            { return proto.CompactTextString(m) }
 func (*QosClassPortStatus) ProtoMessage()               {}
-func (*QosClassPortStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{11} }
+func (*QosClassPortStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{11} }
 
 func (m *QosClassPortStatus) GetPacketBufferPort() *PacketBufferPort {
 	if m != nil {
@@ -717,7 +717,7 @@ type QosClassStatusEpd struct {
 func (m *QosClassStatusEpd) Reset()                    { *m = QosClassStatusEpd{} }
 func (m *QosClassStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStatusEpd) ProtoMessage()               {}
-func (*QosClassStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{12} }
+func (*QosClassStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{12} }
 
 func (m *QosClassStatusEpd) GetPortStatus() []*QosClassPortStatus {
 	if m != nil {
@@ -740,7 +740,7 @@ type QosClassStatusCpd struct {
 func (m *QosClassStatusCpd) Reset()                    { *m = QosClassStatusCpd{} }
 func (m *QosClassStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStatusCpd) ProtoMessage()               {}
-func (*QosClassStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{13} }
+func (*QosClassStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{13} }
 
 // QosClassStatus represents the operational status of QosClass
 type QosClassStatus struct {
@@ -754,7 +754,7 @@ type QosClassStatus struct {
 func (m *QosClassStatus) Reset()                    { *m = QosClassStatus{} }
 func (m *QosClassStatus) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStatus) ProtoMessage()               {}
-func (*QosClassStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{14} }
+func (*QosClassStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{14} }
 
 type isQosClassStatus_QosClassPdStatus interface{ isQosClassStatus_QosClassPdStatus() }
 
@@ -879,7 +879,7 @@ type QosClassResponse struct {
 func (m *QosClassResponse) Reset()                    { *m = QosClassResponse{} }
 func (m *QosClassResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassResponse) ProtoMessage()               {}
-func (*QosClassResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{15} }
+func (*QosClassResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{15} }
 
 func (m *QosClassResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -903,7 +903,7 @@ type QosClassResponseMsg struct {
 func (m *QosClassResponseMsg) Reset()                    { *m = QosClassResponseMsg{} }
 func (m *QosClassResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassResponseMsg) ProtoMessage()               {}
-func (*QosClassResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{16} }
+func (*QosClassResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{16} }
 
 func (m *QosClassResponseMsg) GetResponse() []*QosClassResponse {
 	if m != nil {
@@ -921,7 +921,7 @@ type QosClassDeleteRequest struct {
 func (m *QosClassDeleteRequest) Reset()                    { *m = QosClassDeleteRequest{} }
 func (m *QosClassDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteRequest) ProtoMessage()               {}
-func (*QosClassDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{17} }
+func (*QosClassDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{17} }
 
 func (m *QosClassDeleteRequest) GetKeyOrHandle() *QosClassKeyHandle {
 	if m != nil {
@@ -938,7 +938,7 @@ type QosClassDeleteRequestMsg struct {
 func (m *QosClassDeleteRequestMsg) Reset()                    { *m = QosClassDeleteRequestMsg{} }
 func (m *QosClassDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteRequestMsg) ProtoMessage()               {}
-func (*QosClassDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{18} }
+func (*QosClassDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{18} }
 
 func (m *QosClassDeleteRequestMsg) GetRequest() []*QosClassDeleteRequest {
 	if m != nil {
@@ -955,7 +955,7 @@ type QosClassDeleteResponse struct {
 func (m *QosClassDeleteResponse) Reset()                    { *m = QosClassDeleteResponse{} }
 func (m *QosClassDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteResponse) ProtoMessage()               {}
-func (*QosClassDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{19} }
+func (*QosClassDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{19} }
 
 func (m *QosClassDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -972,7 +972,7 @@ type QosClassDeleteResponseMsg struct {
 func (m *QosClassDeleteResponseMsg) Reset()                    { *m = QosClassDeleteResponseMsg{} }
 func (m *QosClassDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassDeleteResponseMsg) ProtoMessage()               {}
-func (*QosClassDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{20} }
+func (*QosClassDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{20} }
 
 func (m *QosClassDeleteResponseMsg) GetResponse() []*QosClassDeleteResponse {
 	if m != nil {
@@ -992,7 +992,7 @@ type QosClassInputOflowQueueStats struct {
 func (m *QosClassInputOflowQueueStats) Reset()                    { *m = QosClassInputOflowQueueStats{} }
 func (m *QosClassInputOflowQueueStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassInputOflowQueueStats) ProtoMessage()               {}
-func (*QosClassInputOflowQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{21} }
+func (*QosClassInputOflowQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{21} }
 
 func (m *QosClassInputOflowQueueStats) GetGoodPktsIn() uint64 {
 	if m != nil {
@@ -1040,7 +1040,7 @@ type QosClassInputQueueStats struct {
 func (m *QosClassInputQueueStats) Reset()                    { *m = QosClassInputQueueStats{} }
 func (m *QosClassInputQueueStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassInputQueueStats) ProtoMessage()               {}
-func (*QosClassInputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{22} }
+func (*QosClassInputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{22} }
 
 func (m *QosClassInputQueueStats) GetInputQueueIdx() uint32 {
 	if m != nil {
@@ -1086,7 +1086,7 @@ type QosClassOutputQueueStats struct {
 func (m *QosClassOutputQueueStats) Reset()                    { *m = QosClassOutputQueueStats{} }
 func (m *QosClassOutputQueueStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassOutputQueueStats) ProtoMessage()               {}
-func (*QosClassOutputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{23} }
+func (*QosClassOutputQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{23} }
 
 func (m *QosClassOutputQueueStats) GetOutputQueueIdx() uint32 {
 	if m != nil {
@@ -1117,7 +1117,7 @@ type QosClassQueueStats struct {
 func (m *QosClassQueueStats) Reset()                    { *m = QosClassQueueStats{} }
 func (m *QosClassQueueStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassQueueStats) ProtoMessage()               {}
-func (*QosClassQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{24} }
+func (*QosClassQueueStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{24} }
 
 func (m *QosClassQueueStats) GetInputQueueStats() []*QosClassInputQueueStats {
 	if m != nil {
@@ -1141,7 +1141,7 @@ type QosClassPortStats struct {
 func (m *QosClassPortStats) Reset()                    { *m = QosClassPortStats{} }
 func (m *QosClassPortStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassPortStats) ProtoMessage()               {}
-func (*QosClassPortStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{25} }
+func (*QosClassPortStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{25} }
 
 func (m *QosClassPortStats) GetPacketBufferPort() *PacketBufferPort {
 	if m != nil {
@@ -1167,7 +1167,7 @@ type QosClassStats struct {
 func (m *QosClassStats) Reset()                    { *m = QosClassStats{} }
 func (m *QosClassStats) String() string            { return proto.CompactTextString(m) }
 func (*QosClassStats) ProtoMessage()               {}
-func (*QosClassStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{26} }
+func (*QosClassStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{26} }
 
 func (m *QosClassStats) GetNumLifsTx() uint32 {
 	if m != nil {
@@ -1199,7 +1199,7 @@ type QosClassGetRequest struct {
 func (m *QosClassGetRequest) Reset()                    { *m = QosClassGetRequest{} }
 func (m *QosClassGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetRequest) ProtoMessage()               {}
-func (*QosClassGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{27} }
+func (*QosClassGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{27} }
 
 func (m *QosClassGetRequest) GetKeyOrHandle() *QosClassKeyHandle {
 	if m != nil {
@@ -1216,7 +1216,7 @@ type QosClassGetRequestMsg struct {
 func (m *QosClassGetRequestMsg) Reset()                    { *m = QosClassGetRequestMsg{} }
 func (m *QosClassGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetRequestMsg) ProtoMessage()               {}
-func (*QosClassGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{28} }
+func (*QosClassGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{28} }
 
 func (m *QosClassGetRequestMsg) GetRequest() []*QosClassGetRequest {
 	if m != nil {
@@ -1236,7 +1236,7 @@ type QosClassGetResponse struct {
 func (m *QosClassGetResponse) Reset()                    { *m = QosClassGetResponse{} }
 func (m *QosClassGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetResponse) ProtoMessage()               {}
-func (*QosClassGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{29} }
+func (*QosClassGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{29} }
 
 func (m *QosClassGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1274,7 +1274,7 @@ type OccupancyPerQueue struct {
 func (m *OccupancyPerQueue) Reset()                    { *m = OccupancyPerQueue{} }
 func (m *OccupancyPerQueue) String() string            { return proto.CompactTextString(m) }
 func (*OccupancyPerQueue) ProtoMessage()               {}
-func (*OccupancyPerQueue) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{30} }
+func (*OccupancyPerQueue) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{30} }
 
 func (m *OccupancyPerQueue) GetQueueIdx() uint32 {
 	if m != nil {
@@ -1298,7 +1298,7 @@ type PortOccupancy struct {
 func (m *PortOccupancy) Reset()                    { *m = PortOccupancy{} }
 func (m *PortOccupancy) String() string            { return proto.CompactTextString(m) }
 func (*PortOccupancy) ProtoMessage()               {}
-func (*PortOccupancy) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{31} }
+func (*PortOccupancy) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{31} }
 
 func (m *PortOccupancy) GetPortNum() uint32 {
 	if m != nil {
@@ -1323,7 +1323,7 @@ type Thresholds struct {
 func (m *Thresholds) Reset()                    { *m = Thresholds{} }
 func (m *Thresholds) String() string            { return proto.CompactTextString(m) }
 func (*Thresholds) ProtoMessage()               {}
-func (*Thresholds) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{32} }
+func (*Thresholds) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{32} }
 
 func (m *Thresholds) GetHbmContext() uint32 {
 	if m != nil {
@@ -1355,7 +1355,7 @@ type QosClassThresholdsGetResponse struct {
 func (m *QosClassThresholdsGetResponse) Reset()                    { *m = QosClassThresholdsGetResponse{} }
 func (m *QosClassThresholdsGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*QosClassThresholdsGetResponse) ProtoMessage()               {}
-func (*QosClassThresholdsGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{33} }
+func (*QosClassThresholdsGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{33} }
 
 func (m *QosClassThresholdsGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1386,7 +1386,7 @@ func (m *QosClassThresholdsGetResponseMsg) Reset()         { *m = QosClassThresh
 func (m *QosClassThresholdsGetResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*QosClassThresholdsGetResponseMsg) ProtoMessage()    {}
 func (*QosClassThresholdsGetResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor25, []int{34}
+	return fileDescriptor26, []int{34}
 }
 
 func (m *QosClassThresholdsGetResponseMsg) GetResponse() []*QosClassThresholdsGetResponse {
@@ -1402,7 +1402,7 @@ type QosClassThresholdsGetRequest struct {
 func (m *QosClassThresholdsGetRequest) Reset()                    { *m = QosClassThresholdsGetRequest{} }
 func (m *QosClassThresholdsGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*QosClassThresholdsGetRequest) ProtoMessage()               {}
-func (*QosClassThresholdsGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{35} }
+func (*QosClassThresholdsGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{35} }
 
 type QosClassThresholdsGetRequestMsg struct {
 	Request []*QosClassThresholdsGetRequest `protobuf:"bytes,1,rep,name=request" json:"request,omitempty"`
@@ -1412,7 +1412,7 @@ func (m *QosClassThresholdsGetRequestMsg) Reset()         { *m = QosClassThresho
 func (m *QosClassThresholdsGetRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*QosClassThresholdsGetRequestMsg) ProtoMessage()    {}
 func (*QosClassThresholdsGetRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor25, []int{36}
+	return fileDescriptor26, []int{36}
 }
 
 func (m *QosClassThresholdsGetRequestMsg) GetRequest() []*QosClassThresholdsGetRequest {
@@ -1430,7 +1430,7 @@ type QosClassGetResponseMsg struct {
 func (m *QosClassGetResponseMsg) Reset()                    { *m = QosClassGetResponseMsg{} }
 func (m *QosClassGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*QosClassGetResponseMsg) ProtoMessage()               {}
-func (*QosClassGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{37} }
+func (*QosClassGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{37} }
 
 func (m *QosClassGetResponseMsg) GetResponse() []*QosClassGetResponse {
 	if m != nil {
@@ -1447,7 +1447,7 @@ func (m *QosClassSetGlobalPauseTypeRequest) Reset()         { *m = QosClassSetGl
 func (m *QosClassSetGlobalPauseTypeRequest) String() string { return proto.CompactTextString(m) }
 func (*QosClassSetGlobalPauseTypeRequest) ProtoMessage()    {}
 func (*QosClassSetGlobalPauseTypeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor25, []int{38}
+	return fileDescriptor26, []int{38}
 }
 
 func (m *QosClassSetGlobalPauseTypeRequest) GetPauseType() QosPauseType {
@@ -1465,7 +1465,7 @@ func (m *QosClassSetGlobalPauseTypeRequestMsg) Reset()         { *m = QosClassSe
 func (m *QosClassSetGlobalPauseTypeRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*QosClassSetGlobalPauseTypeRequestMsg) ProtoMessage()    {}
 func (*QosClassSetGlobalPauseTypeRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor25, []int{39}
+	return fileDescriptor26, []int{39}
 }
 
 func (m *QosClassSetGlobalPauseTypeRequestMsg) GetRequest() []*QosClassSetGlobalPauseTypeRequest {
@@ -1482,7 +1482,7 @@ func (m *QosClassSetGlobalPauseTypeResponseMsg) Reset()         { *m = QosClassS
 func (m *QosClassSetGlobalPauseTypeResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*QosClassSetGlobalPauseTypeResponseMsg) ProtoMessage()    {}
 func (*QosClassSetGlobalPauseTypeResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor25, []int{40}
+	return fileDescriptor26, []int{40}
 }
 
 // Specifications of a Copp
@@ -1495,7 +1495,7 @@ type CoppSpec struct {
 func (m *CoppSpec) Reset()                    { *m = CoppSpec{} }
 func (m *CoppSpec) String() string            { return proto.CompactTextString(m) }
 func (*CoppSpec) ProtoMessage()               {}
-func (*CoppSpec) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{41} }
+func (*CoppSpec) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{41} }
 
 func (m *CoppSpec) GetKeyOrHandle() *CoppKeyHandle {
 	if m != nil {
@@ -1519,7 +1519,7 @@ type CoppRequestMsg struct {
 func (m *CoppRequestMsg) Reset()                    { *m = CoppRequestMsg{} }
 func (m *CoppRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppRequestMsg) ProtoMessage()               {}
-func (*CoppRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{42} }
+func (*CoppRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{42} }
 
 func (m *CoppRequestMsg) GetRequest() []*CoppSpec {
 	if m != nil {
@@ -1536,7 +1536,7 @@ type CoppStatusEpd struct {
 func (m *CoppStatusEpd) Reset()                    { *m = CoppStatusEpd{} }
 func (m *CoppStatusEpd) String() string            { return proto.CompactTextString(m) }
 func (*CoppStatusEpd) ProtoMessage()               {}
-func (*CoppStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{43} }
+func (*CoppStatusEpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{43} }
 
 func (m *CoppStatusEpd) GetHwPolicerIdx() uint32 {
 	if m != nil {
@@ -1552,7 +1552,7 @@ type CoppStatusCpd struct {
 func (m *CoppStatusCpd) Reset()                    { *m = CoppStatusCpd{} }
 func (m *CoppStatusCpd) String() string            { return proto.CompactTextString(m) }
 func (*CoppStatusCpd) ProtoMessage()               {}
-func (*CoppStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{44} }
+func (*CoppStatusCpd) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{44} }
 
 type CoppStatus struct {
 	CoppHandle uint64 `protobuf:"fixed64,1,opt,name=copp_handle,json=coppHandle" json:"copp_handle,omitempty"`
@@ -1565,7 +1565,7 @@ type CoppStatus struct {
 func (m *CoppStatus) Reset()                    { *m = CoppStatus{} }
 func (m *CoppStatus) String() string            { return proto.CompactTextString(m) }
 func (*CoppStatus) ProtoMessage()               {}
-func (*CoppStatus) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{45} }
+func (*CoppStatus) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{45} }
 
 type isCoppStatus_QosClassPdStatus interface{ isCoppStatus_QosClassPdStatus() }
 
@@ -1690,7 +1690,7 @@ type CoppResponse struct {
 func (m *CoppResponse) Reset()                    { *m = CoppResponse{} }
 func (m *CoppResponse) String() string            { return proto.CompactTextString(m) }
 func (*CoppResponse) ProtoMessage()               {}
-func (*CoppResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{46} }
+func (*CoppResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{46} }
 
 func (m *CoppResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1714,7 +1714,7 @@ type CoppResponseMsg struct {
 func (m *CoppResponseMsg) Reset()                    { *m = CoppResponseMsg{} }
 func (m *CoppResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppResponseMsg) ProtoMessage()               {}
-func (*CoppResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{47} }
+func (*CoppResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{47} }
 
 func (m *CoppResponseMsg) GetResponse() []*CoppResponse {
 	if m != nil {
@@ -1732,7 +1732,7 @@ type CoppDeleteRequest struct {
 func (m *CoppDeleteRequest) Reset()                    { *m = CoppDeleteRequest{} }
 func (m *CoppDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*CoppDeleteRequest) ProtoMessage()               {}
-func (*CoppDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{48} }
+func (*CoppDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{48} }
 
 func (m *CoppDeleteRequest) GetKeyOrHandle() *CoppKeyHandle {
 	if m != nil {
@@ -1749,7 +1749,7 @@ type CoppDeleteRequestMsg struct {
 func (m *CoppDeleteRequestMsg) Reset()                    { *m = CoppDeleteRequestMsg{} }
 func (m *CoppDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppDeleteRequestMsg) ProtoMessage()               {}
-func (*CoppDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{49} }
+func (*CoppDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{49} }
 
 func (m *CoppDeleteRequestMsg) GetRequest() []*CoppDeleteRequest {
 	if m != nil {
@@ -1766,7 +1766,7 @@ type CoppDeleteResponse struct {
 func (m *CoppDeleteResponse) Reset()                    { *m = CoppDeleteResponse{} }
 func (m *CoppDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*CoppDeleteResponse) ProtoMessage()               {}
-func (*CoppDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{50} }
+func (*CoppDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{50} }
 
 func (m *CoppDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1783,7 +1783,7 @@ type CoppDeleteResponseMsg struct {
 func (m *CoppDeleteResponseMsg) Reset()                    { *m = CoppDeleteResponseMsg{} }
 func (m *CoppDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppDeleteResponseMsg) ProtoMessage()               {}
-func (*CoppDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{51} }
+func (*CoppDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{51} }
 
 func (m *CoppDeleteResponseMsg) GetResponse() []*CoppDeleteResponse {
 	if m != nil {
@@ -1801,7 +1801,7 @@ type CoppStats struct {
 func (m *CoppStats) Reset()                    { *m = CoppStats{} }
 func (m *CoppStats) String() string            { return proto.CompactTextString(m) }
 func (*CoppStats) ProtoMessage()               {}
-func (*CoppStats) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{52} }
+func (*CoppStats) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{52} }
 
 func (m *CoppStats) GetPolicerStats() *PolicerStats {
 	if m != nil {
@@ -1826,7 +1826,7 @@ type CoppGetRequest struct {
 func (m *CoppGetRequest) Reset()                    { *m = CoppGetRequest{} }
 func (m *CoppGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetRequest) ProtoMessage()               {}
-func (*CoppGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{53} }
+func (*CoppGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{53} }
 
 func (m *CoppGetRequest) GetKeyOrHandle() *CoppKeyHandle {
 	if m != nil {
@@ -1842,7 +1842,7 @@ type CoppGetRequestMsg struct {
 func (m *CoppGetRequestMsg) Reset()                    { *m = CoppGetRequestMsg{} }
 func (m *CoppGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetRequestMsg) ProtoMessage()               {}
-func (*CoppGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{54} }
+func (*CoppGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{54} }
 
 func (m *CoppGetRequestMsg) GetRequest() []*CoppGetRequest {
 	if m != nil {
@@ -1862,7 +1862,7 @@ type CoppGetResponse struct {
 func (m *CoppGetResponse) Reset()                    { *m = CoppGetResponse{} }
 func (m *CoppGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetResponse) ProtoMessage()               {}
-func (*CoppGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{55} }
+func (*CoppGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{55} }
 
 func (m *CoppGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1900,7 +1900,7 @@ type CoppGetResponseMsg struct {
 func (m *CoppGetResponseMsg) Reset()                    { *m = CoppGetResponseMsg{} }
 func (m *CoppGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CoppGetResponseMsg) ProtoMessage()               {}
-func (*CoppGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor25, []int{56} }
+func (*CoppGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor26, []int{56} }
 
 func (m *CoppGetResponseMsg) GetResponse() []*CoppGetResponse {
 	if m != nil {
@@ -1974,9 +1974,9 @@ func init() {
 	proto.RegisterEnum("halproto.PacketBufferPortType", PacketBufferPortType_name, PacketBufferPortType_value)
 }
 
-func init() { proto.RegisterFile("qos.proto", fileDescriptor25) }
+func init() { proto.RegisterFile("qos.proto", fileDescriptor26) }
 
-var fileDescriptor25 = []byte{
+var fileDescriptor26 = []byte{
 	// 2678 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x1a, 0x49, 0x50, 0x1b, 0xd9,
 	0xd5, 0x8d, 0x30, 0xa0, 0x27, 0xb4, 0xf0, 0xc1, 0x80, 0xf1, 0x22, 0xdc, 0xe3, 0x85, 0xb1, 0xc7,

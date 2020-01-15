@@ -80,7 +80,7 @@ namespace hal {
     ENTRY(NUM_QOS_GROUPS,               14, "num-qos-groups")
 
 DEFINE_ENUM(qos_group_t, QOS_GROUPS)
-#undef QOS_GROUOPS
+#undef QOS_GROUPS
 
 #define HAL_MAX_QOS_CLASSES NUM_QOS_GROUPS
 

@@ -9,7 +9,7 @@
 //::
 //::  file_name_prefix = fileName.replace('_pb2.py', '')
 //::  hdr_file = file_name_prefix + '_svc_gen.hpp'
-//::  plugin_files = ["session", "ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2", "rdma", "nvme"]
+//::  plugin_files = ["session", "ipsec", "gft", "l2segment", "vrf", "qos", "endpoint", "nat", "telemetry", "multicast","nw", "acl", "dos", "l4lb", "tcp_proxy", "tls_proxy_cb2", "rdma", "nvme", "ncsi"]
 //::  new_plugin_files = {"nwsec":"sfw"}
 //::  session_file = {"session"}
 //::  nwsec_file = {"nwsec"}

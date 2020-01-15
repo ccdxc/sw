@@ -32,7 +32,7 @@ var ExportFormat_value = map[string]int32{
 func (x ExportFormat) String() string {
 	return proto.EnumName(ExportFormat_name, int32(x))
 }
-func (ExportFormat) EnumDescriptor() ([]byte, []int) { return fileDescriptor31, []int{0} }
+func (ExportFormat) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 // RuleAction is an enumeration of support telemetry actions
 type RuleAction int32
@@ -57,7 +57,7 @@ var RuleAction_value = map[string]int32{
 func (x RuleAction) String() string {
 	return proto.EnumName(RuleAction_name, int32(x))
 }
-func (RuleAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor31, []int{1} }
+func (RuleAction) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 // AggregationScheme is an enumeration of aggregation schemes supported
 type AggregationScheme int32
@@ -106,7 +106,7 @@ var AggregationScheme_value = map[string]int32{
 func (x AggregationScheme) String() string {
 	return proto.EnumName(AggregationScheme_name, int32(x))
 }
-func (AggregationScheme) EnumDescriptor() ([]byte, []int) { return fileDescriptor31, []int{2} }
+func (AggregationScheme) EnumDescriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 // CollectorSpec is the configuration specification for a telemetry collector
 type CollectorSpec struct {
@@ -126,7 +126,7 @@ type CollectorSpec struct {
 func (m *CollectorSpec) Reset()                    { *m = CollectorSpec{} }
 func (m *CollectorSpec) String() string            { return proto.CompactTextString(m) }
 func (*CollectorSpec) ProtoMessage()               {}
-func (*CollectorSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{0} }
+func (*CollectorSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{0} }
 
 func (m *CollectorSpec) GetKeyOrHandle() *CollectorKeyHandle {
 	if m != nil {
@@ -213,7 +213,7 @@ type CollectorStatus struct {
 func (m *CollectorStatus) Reset()                    { *m = CollectorStatus{} }
 func (m *CollectorStatus) String() string            { return proto.CompactTextString(m) }
 func (*CollectorStatus) ProtoMessage()               {}
-func (*CollectorStatus) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{1} }
+func (*CollectorStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{1} }
 
 func (m *CollectorStatus) GetHandle() uint64 {
 	if m != nil {
@@ -232,7 +232,7 @@ type CollectorResponse struct {
 func (m *CollectorResponse) Reset()                    { *m = CollectorResponse{} }
 func (m *CollectorResponse) String() string            { return proto.CompactTextString(m) }
 func (*CollectorResponse) ProtoMessage()               {}
-func (*CollectorResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{2} }
+func (*CollectorResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{2} }
 
 func (m *CollectorResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -256,7 +256,7 @@ type CollectorRequestMsg struct {
 func (m *CollectorRequestMsg) Reset()                    { *m = CollectorRequestMsg{} }
 func (m *CollectorRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorRequestMsg) ProtoMessage()               {}
-func (*CollectorRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{3} }
+func (*CollectorRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{3} }
 
 func (m *CollectorRequestMsg) GetRequest() []*CollectorSpec {
 	if m != nil {
@@ -273,7 +273,7 @@ type CollectorResponseMsg struct {
 func (m *CollectorResponseMsg) Reset()                    { *m = CollectorResponseMsg{} }
 func (m *CollectorResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorResponseMsg) ProtoMessage()               {}
-func (*CollectorResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{4} }
+func (*CollectorResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{4} }
 
 func (m *CollectorResponseMsg) GetResponse() []*CollectorResponse {
 	if m != nil {
@@ -290,7 +290,7 @@ type CollectorDeleteRequest struct {
 func (m *CollectorDeleteRequest) Reset()                    { *m = CollectorDeleteRequest{} }
 func (m *CollectorDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*CollectorDeleteRequest) ProtoMessage()               {}
-func (*CollectorDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{5} }
+func (*CollectorDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{5} }
 
 func (m *CollectorDeleteRequest) GetKeyOrHandle() *CollectorKeyHandle {
 	if m != nil {
@@ -308,7 +308,7 @@ type CollectorDeleteResponse struct {
 func (m *CollectorDeleteResponse) Reset()                    { *m = CollectorDeleteResponse{} }
 func (m *CollectorDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*CollectorDeleteResponse) ProtoMessage()               {}
-func (*CollectorDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{6} }
+func (*CollectorDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{6} }
 
 func (m *CollectorDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -332,7 +332,7 @@ type CollectorDeleteRequestMsg struct {
 func (m *CollectorDeleteRequestMsg) Reset()                    { *m = CollectorDeleteRequestMsg{} }
 func (m *CollectorDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorDeleteRequestMsg) ProtoMessage()               {}
-func (*CollectorDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{7} }
+func (*CollectorDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{7} }
 
 func (m *CollectorDeleteRequestMsg) GetRequest() []*CollectorDeleteRequest {
 	if m != nil {
@@ -349,7 +349,7 @@ type CollectorDeleteResponseMsg struct {
 func (m *CollectorDeleteResponseMsg) Reset()                    { *m = CollectorDeleteResponseMsg{} }
 func (m *CollectorDeleteResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorDeleteResponseMsg) ProtoMessage()               {}
-func (*CollectorDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{8} }
+func (*CollectorDeleteResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{8} }
 
 func (m *CollectorDeleteResponseMsg) GetResponse() []*CollectorDeleteResponse {
 	if m != nil {
@@ -366,7 +366,7 @@ type CollectorGetRequest struct {
 func (m *CollectorGetRequest) Reset()                    { *m = CollectorGetRequest{} }
 func (m *CollectorGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*CollectorGetRequest) ProtoMessage()               {}
-func (*CollectorGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{9} }
+func (*CollectorGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{9} }
 
 func (m *CollectorGetRequest) GetKeyOrHandle() *CollectorKeyHandle {
 	if m != nil {
@@ -383,7 +383,7 @@ type CollectorGetRequestMsg struct {
 func (m *CollectorGetRequestMsg) Reset()                    { *m = CollectorGetRequestMsg{} }
 func (m *CollectorGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorGetRequestMsg) ProtoMessage()               {}
-func (*CollectorGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{10} }
+func (*CollectorGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{10} }
 
 func (m *CollectorGetRequestMsg) GetRequest() []*CollectorGetRequest {
 	if m != nil {
@@ -401,7 +401,7 @@ type CollectorGetResponse struct {
 func (m *CollectorGetResponse) Reset()                    { *m = CollectorGetResponse{} }
 func (m *CollectorGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*CollectorGetResponse) ProtoMessage()               {}
-func (*CollectorGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{11} }
+func (*CollectorGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{11} }
 
 func (m *CollectorGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -432,7 +432,7 @@ type CollectorGetResponseMsg struct {
 func (m *CollectorGetResponseMsg) Reset()                    { *m = CollectorGetResponseMsg{} }
 func (m *CollectorGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*CollectorGetResponseMsg) ProtoMessage()               {}
-func (*CollectorGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{12} }
+func (*CollectorGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{12} }
 
 func (m *CollectorGetResponseMsg) GetResponse() []*CollectorGetResponse {
 	if m != nil {
@@ -456,7 +456,7 @@ type CollectorStats struct {
 func (m *CollectorStats) Reset()                    { *m = CollectorStats{} }
 func (m *CollectorStats) String() string            { return proto.CompactTextString(m) }
 func (*CollectorStats) ProtoMessage()               {}
-func (*CollectorStats) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{13} }
+func (*CollectorStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{13} }
 
 func (m *CollectorStats) GetNumExportedBytes() uint64 {
 	if m != nil {
@@ -503,7 +503,7 @@ type MonitorAction struct {
 func (m *MonitorAction) Reset()                    { *m = MonitorAction{} }
 func (m *MonitorAction) String() string            { return proto.CompactTextString(m) }
 func (*MonitorAction) ProtoMessage()               {}
-func (*MonitorAction) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{14} }
+func (*MonitorAction) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{14} }
 
 func (m *MonitorAction) GetAction() []RuleAction {
 	if m != nil {
@@ -538,7 +538,7 @@ type FlowMonitorRuleSpec struct {
 func (m *FlowMonitorRuleSpec) Reset()                    { *m = FlowMonitorRuleSpec{} }
 func (m *FlowMonitorRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleSpec) ProtoMessage()               {}
-func (*FlowMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{15} }
+func (*FlowMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{15} }
 
 func (m *FlowMonitorRuleSpec) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
 	if m != nil {
@@ -584,7 +584,7 @@ type FlowMonitorRuleStatus struct {
 func (m *FlowMonitorRuleStatus) Reset()                    { *m = FlowMonitorRuleStatus{} }
 func (m *FlowMonitorRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleStatus) ProtoMessage()               {}
-func (*FlowMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{16} }
+func (*FlowMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{16} }
 
 func (m *FlowMonitorRuleStatus) GetHandle() uint64 {
 	if m != nil {
@@ -610,7 +610,7 @@ type FlowMonitorRuleResponse struct {
 func (m *FlowMonitorRuleResponse) Reset()                    { *m = FlowMonitorRuleResponse{} }
 func (m *FlowMonitorRuleResponse) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleResponse) ProtoMessage()               {}
-func (*FlowMonitorRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{17} }
+func (*FlowMonitorRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{17} }
 
 func (m *FlowMonitorRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -634,7 +634,7 @@ type FlowMonitorRuleRequestMsg struct {
 func (m *FlowMonitorRuleRequestMsg) Reset()                    { *m = FlowMonitorRuleRequestMsg{} }
 func (m *FlowMonitorRuleRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleRequestMsg) ProtoMessage()               {}
-func (*FlowMonitorRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{18} }
+func (*FlowMonitorRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{18} }
 
 func (m *FlowMonitorRuleRequestMsg) GetRequest() []*FlowMonitorRuleSpec {
 	if m != nil {
@@ -651,7 +651,7 @@ type FlowMonitorRuleResponseMsg struct {
 func (m *FlowMonitorRuleResponseMsg) Reset()                    { *m = FlowMonitorRuleResponseMsg{} }
 func (m *FlowMonitorRuleResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleResponseMsg) ProtoMessage()               {}
-func (*FlowMonitorRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{19} }
+func (*FlowMonitorRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{19} }
 
 func (m *FlowMonitorRuleResponseMsg) GetResponse() []*FlowMonitorRuleResponse {
 	if m != nil {
@@ -669,7 +669,7 @@ type FlowMonitorRuleDeleteRequest struct {
 func (m *FlowMonitorRuleDeleteRequest) Reset()                    { *m = FlowMonitorRuleDeleteRequest{} }
 func (m *FlowMonitorRuleDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleDeleteRequest) ProtoMessage()               {}
-func (*FlowMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{20} }
+func (*FlowMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{20} }
 
 func (m *FlowMonitorRuleDeleteRequest) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
 	if m != nil {
@@ -694,7 +694,7 @@ type FlowMonitorRuleDeleteResponse struct {
 func (m *FlowMonitorRuleDeleteResponse) Reset()                    { *m = FlowMonitorRuleDeleteResponse{} }
 func (m *FlowMonitorRuleDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleDeleteResponse) ProtoMessage()               {}
-func (*FlowMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{21} }
+func (*FlowMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{21} }
 
 func (m *FlowMonitorRuleDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -719,7 +719,7 @@ func (m *FlowMonitorRuleDeleteRequestMsg) Reset()         { *m = FlowMonitorRule
 func (m *FlowMonitorRuleDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleDeleteRequestMsg) ProtoMessage()    {}
 func (*FlowMonitorRuleDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor31, []int{22}
+	return fileDescriptor32, []int{22}
 }
 
 func (m *FlowMonitorRuleDeleteRequestMsg) GetRequest() []*FlowMonitorRuleDeleteRequest {
@@ -738,7 +738,7 @@ func (m *FlowMonitorRuleDeleteResponseMsg) Reset()         { *m = FlowMonitorRul
 func (m *FlowMonitorRuleDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleDeleteResponseMsg) ProtoMessage()    {}
 func (*FlowMonitorRuleDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor31, []int{23}
+	return fileDescriptor32, []int{23}
 }
 
 func (m *FlowMonitorRuleDeleteResponseMsg) GetResponse() []*FlowMonitorRuleDeleteResponse {
@@ -756,7 +756,7 @@ type FlowMonitorRuleGetRequest struct {
 func (m *FlowMonitorRuleGetRequest) Reset()                    { *m = FlowMonitorRuleGetRequest{} }
 func (m *FlowMonitorRuleGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleGetRequest) ProtoMessage()               {}
-func (*FlowMonitorRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{24} }
+func (*FlowMonitorRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{24} }
 
 func (m *FlowMonitorRuleGetRequest) GetKeyOrHandle() *FlowMonitorRuleKeyHandle {
 	if m != nil {
@@ -773,7 +773,7 @@ type FlowMonitorRuleGetRequestMsg struct {
 func (m *FlowMonitorRuleGetRequestMsg) Reset()                    { *m = FlowMonitorRuleGetRequestMsg{} }
 func (m *FlowMonitorRuleGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleGetRequestMsg) ProtoMessage()               {}
-func (*FlowMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{25} }
+func (*FlowMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{25} }
 
 func (m *FlowMonitorRuleGetRequestMsg) GetRequest() []*FlowMonitorRuleGetRequest {
 	if m != nil {
@@ -788,7 +788,7 @@ type FlowMonitorRuleStats struct {
 func (m *FlowMonitorRuleStats) Reset()                    { *m = FlowMonitorRuleStats{} }
 func (m *FlowMonitorRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleStats) ProtoMessage()               {}
-func (*FlowMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{26} }
+func (*FlowMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{26} }
 
 type FlowMonitorRuleGetResponse struct {
 	ApiStatus ApiStatus             `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -799,7 +799,7 @@ type FlowMonitorRuleGetResponse struct {
 func (m *FlowMonitorRuleGetResponse) Reset()                    { *m = FlowMonitorRuleGetResponse{} }
 func (m *FlowMonitorRuleGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleGetResponse) ProtoMessage()               {}
-func (*FlowMonitorRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{27} }
+func (*FlowMonitorRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{27} }
 
 func (m *FlowMonitorRuleGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -830,7 +830,7 @@ type FlowMonitorRuleGetResponseMsg struct {
 func (m *FlowMonitorRuleGetResponseMsg) Reset()                    { *m = FlowMonitorRuleGetResponseMsg{} }
 func (m *FlowMonitorRuleGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*FlowMonitorRuleGetResponseMsg) ProtoMessage()               {}
-func (*FlowMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{28} }
+func (*FlowMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{28} }
 
 func (m *FlowMonitorRuleGetResponseMsg) GetResponse() []*FlowMonitorRuleGetResponse {
 	if m != nil {
@@ -849,7 +849,7 @@ type DropMonitorRuleSpec struct {
 func (m *DropMonitorRuleSpec) Reset()                    { *m = DropMonitorRuleSpec{} }
 func (m *DropMonitorRuleSpec) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleSpec) ProtoMessage()               {}
-func (*DropMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{29} }
+func (*DropMonitorRuleSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{29} }
 
 func (m *DropMonitorRuleSpec) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
 	if m != nil {
@@ -881,7 +881,7 @@ type DropMonitorRuleStatus struct {
 func (m *DropMonitorRuleStatus) Reset()                    { *m = DropMonitorRuleStatus{} }
 func (m *DropMonitorRuleStatus) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleStatus) ProtoMessage()               {}
-func (*DropMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{30} }
+func (*DropMonitorRuleStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{30} }
 
 func (m *DropMonitorRuleStatus) GetHandle() uint64 {
 	if m != nil {
@@ -907,7 +907,7 @@ type DropMonitorRuleResponse struct {
 func (m *DropMonitorRuleResponse) Reset()                    { *m = DropMonitorRuleResponse{} }
 func (m *DropMonitorRuleResponse) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleResponse) ProtoMessage()               {}
-func (*DropMonitorRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{31} }
+func (*DropMonitorRuleResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{31} }
 
 func (m *DropMonitorRuleResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -931,7 +931,7 @@ type DropMonitorRuleRequestMsg struct {
 func (m *DropMonitorRuleRequestMsg) Reset()                    { *m = DropMonitorRuleRequestMsg{} }
 func (m *DropMonitorRuleRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleRequestMsg) ProtoMessage()               {}
-func (*DropMonitorRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{32} }
+func (*DropMonitorRuleRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{32} }
 
 func (m *DropMonitorRuleRequestMsg) GetRequest() []*DropMonitorRuleSpec {
 	if m != nil {
@@ -948,7 +948,7 @@ type DropMonitorRuleResponseMsg struct {
 func (m *DropMonitorRuleResponseMsg) Reset()                    { *m = DropMonitorRuleResponseMsg{} }
 func (m *DropMonitorRuleResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleResponseMsg) ProtoMessage()               {}
-func (*DropMonitorRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{33} }
+func (*DropMonitorRuleResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{33} }
 
 func (m *DropMonitorRuleResponseMsg) GetResponse() []*DropMonitorRuleResponse {
 	if m != nil {
@@ -965,7 +965,7 @@ type DropMonitorRuleDeleteRequest struct {
 func (m *DropMonitorRuleDeleteRequest) Reset()                    { *m = DropMonitorRuleDeleteRequest{} }
 func (m *DropMonitorRuleDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleDeleteRequest) ProtoMessage()               {}
-func (*DropMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{34} }
+func (*DropMonitorRuleDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{34} }
 
 func (m *DropMonitorRuleDeleteRequest) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
 	if m != nil {
@@ -983,7 +983,7 @@ type DropMonitorRuleDeleteResponse struct {
 func (m *DropMonitorRuleDeleteResponse) Reset()                    { *m = DropMonitorRuleDeleteResponse{} }
 func (m *DropMonitorRuleDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleDeleteResponse) ProtoMessage()               {}
-func (*DropMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{35} }
+func (*DropMonitorRuleDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{35} }
 
 func (m *DropMonitorRuleDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1008,7 +1008,7 @@ func (m *DropMonitorRuleDeleteRequestMsg) Reset()         { *m = DropMonitorRule
 func (m *DropMonitorRuleDeleteRequestMsg) String() string { return proto.CompactTextString(m) }
 func (*DropMonitorRuleDeleteRequestMsg) ProtoMessage()    {}
 func (*DropMonitorRuleDeleteRequestMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor31, []int{36}
+	return fileDescriptor32, []int{36}
 }
 
 func (m *DropMonitorRuleDeleteRequestMsg) GetRequest() []*DropMonitorRuleDeleteRequest {
@@ -1027,7 +1027,7 @@ func (m *DropMonitorRuleDeleteResponseMsg) Reset()         { *m = DropMonitorRul
 func (m *DropMonitorRuleDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*DropMonitorRuleDeleteResponseMsg) ProtoMessage()    {}
 func (*DropMonitorRuleDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor31, []int{37}
+	return fileDescriptor32, []int{37}
 }
 
 func (m *DropMonitorRuleDeleteResponseMsg) GetResponse() []*DropMonitorRuleDeleteResponse {
@@ -1045,7 +1045,7 @@ type DropMonitorRuleGetRequest struct {
 func (m *DropMonitorRuleGetRequest) Reset()                    { *m = DropMonitorRuleGetRequest{} }
 func (m *DropMonitorRuleGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleGetRequest) ProtoMessage()               {}
-func (*DropMonitorRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{38} }
+func (*DropMonitorRuleGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{38} }
 
 func (m *DropMonitorRuleGetRequest) GetKeyOrHandle() *DropMonitorRuleKeyHandle {
 	if m != nil {
@@ -1062,7 +1062,7 @@ type DropMonitorRuleGetRequestMsg struct {
 func (m *DropMonitorRuleGetRequestMsg) Reset()                    { *m = DropMonitorRuleGetRequestMsg{} }
 func (m *DropMonitorRuleGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleGetRequestMsg) ProtoMessage()               {}
-func (*DropMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{39} }
+func (*DropMonitorRuleGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{39} }
 
 func (m *DropMonitorRuleGetRequestMsg) GetRequest() []*DropMonitorRuleGetRequest {
 	if m != nil {
@@ -1077,7 +1077,7 @@ type DropMonitorRuleStats struct {
 func (m *DropMonitorRuleStats) Reset()                    { *m = DropMonitorRuleStats{} }
 func (m *DropMonitorRuleStats) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleStats) ProtoMessage()               {}
-func (*DropMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{40} }
+func (*DropMonitorRuleStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{40} }
 
 type DropMonitorRuleGetResponse struct {
 	ApiStatus ApiStatus             `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -1088,7 +1088,7 @@ type DropMonitorRuleGetResponse struct {
 func (m *DropMonitorRuleGetResponse) Reset()                    { *m = DropMonitorRuleGetResponse{} }
 func (m *DropMonitorRuleGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleGetResponse) ProtoMessage()               {}
-func (*DropMonitorRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{41} }
+func (*DropMonitorRuleGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{41} }
 
 func (m *DropMonitorRuleGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1119,7 +1119,7 @@ type DropMonitorRuleGetResponseMsg struct {
 func (m *DropMonitorRuleGetResponseMsg) Reset()                    { *m = DropMonitorRuleGetResponseMsg{} }
 func (m *DropMonitorRuleGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*DropMonitorRuleGetResponseMsg) ProtoMessage()               {}
-func (*DropMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{42} }
+func (*DropMonitorRuleGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{42} }
 
 func (m *DropMonitorRuleGetResponseMsg) GetResponse() []*DropMonitorRuleGetResponse {
 	if m != nil {
@@ -1137,7 +1137,7 @@ type RSpanSpec struct {
 func (m *RSpanSpec) Reset()                    { *m = RSpanSpec{} }
 func (m *RSpanSpec) String() string            { return proto.CompactTextString(m) }
 func (*RSpanSpec) ProtoMessage()               {}
-func (*RSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{43} }
+func (*RSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{43} }
 
 func (m *RSpanSpec) GetIntf() *InterfaceKeyHandle {
 	if m != nil {
@@ -1164,7 +1164,7 @@ type ERSpanSpec struct {
 func (m *ERSpanSpec) Reset()                    { *m = ERSpanSpec{} }
 func (m *ERSpanSpec) String() string            { return proto.CompactTextString(m) }
 func (*ERSpanSpec) ProtoMessage()               {}
-func (*ERSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{44} }
+func (*ERSpanSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{44} }
 
 func (m *ERSpanSpec) GetDestIp() *IPAddress {
 	if m != nil {
@@ -1209,7 +1209,7 @@ type MirrorSessionSpec struct {
 func (m *MirrorSessionSpec) Reset()                    { *m = MirrorSessionSpec{} }
 func (m *MirrorSessionSpec) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionSpec) ProtoMessage()               {}
-func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{45} }
+func (*MirrorSessionSpec) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{45} }
 
 type isMirrorSessionSpec_Destination interface{ isMirrorSessionSpec_Destination() }
 
@@ -1378,7 +1378,7 @@ type MirrorSessionStatus struct {
 func (m *MirrorSessionStatus) Reset()                    { *m = MirrorSessionStatus{} }
 func (m *MirrorSessionStatus) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionStatus) ProtoMessage()               {}
-func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{46} }
+func (*MirrorSessionStatus) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{46} }
 
 func (m *MirrorSessionStatus) GetHandle() uint64 {
 	if m != nil {
@@ -1404,7 +1404,7 @@ type MirrorSessionResponse struct {
 func (m *MirrorSessionResponse) Reset()                    { *m = MirrorSessionResponse{} }
 func (m *MirrorSessionResponse) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionResponse) ProtoMessage()               {}
-func (*MirrorSessionResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{47} }
+func (*MirrorSessionResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{47} }
 
 func (m *MirrorSessionResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1428,7 +1428,7 @@ type MirrorSessionRequestMsg struct {
 func (m *MirrorSessionRequestMsg) Reset()                    { *m = MirrorSessionRequestMsg{} }
 func (m *MirrorSessionRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionRequestMsg) ProtoMessage()               {}
-func (*MirrorSessionRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{48} }
+func (*MirrorSessionRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{48} }
 
 func (m *MirrorSessionRequestMsg) GetRequest() []*MirrorSessionSpec {
 	if m != nil {
@@ -1445,7 +1445,7 @@ type MirrorSessionResponseMsg struct {
 func (m *MirrorSessionResponseMsg) Reset()                    { *m = MirrorSessionResponseMsg{} }
 func (m *MirrorSessionResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionResponseMsg) ProtoMessage()               {}
-func (*MirrorSessionResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{49} }
+func (*MirrorSessionResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{49} }
 
 func (m *MirrorSessionResponseMsg) GetResponse() []*MirrorSessionResponse {
 	if m != nil {
@@ -1462,7 +1462,7 @@ type MirrorSessionDeleteRequest struct {
 func (m *MirrorSessionDeleteRequest) Reset()                    { *m = MirrorSessionDeleteRequest{} }
 func (m *MirrorSessionDeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionDeleteRequest) ProtoMessage()               {}
-func (*MirrorSessionDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{50} }
+func (*MirrorSessionDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{50} }
 
 func (m *MirrorSessionDeleteRequest) GetKeyOrHandle() *MirrorSessionKeyHandle {
 	if m != nil {
@@ -1480,7 +1480,7 @@ type MirrorSessionDeleteResponse struct {
 func (m *MirrorSessionDeleteResponse) Reset()                    { *m = MirrorSessionDeleteResponse{} }
 func (m *MirrorSessionDeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionDeleteResponse) ProtoMessage()               {}
-func (*MirrorSessionDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{51} }
+func (*MirrorSessionDeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{51} }
 
 func (m *MirrorSessionDeleteResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1504,7 +1504,7 @@ type MirrorSessionDeleteRequestMsg struct {
 func (m *MirrorSessionDeleteRequestMsg) Reset()                    { *m = MirrorSessionDeleteRequestMsg{} }
 func (m *MirrorSessionDeleteRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionDeleteRequestMsg) ProtoMessage()               {}
-func (*MirrorSessionDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{52} }
+func (*MirrorSessionDeleteRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{52} }
 
 func (m *MirrorSessionDeleteRequestMsg) GetRequest() []*MirrorSessionDeleteRequest {
 	if m != nil {
@@ -1522,7 +1522,7 @@ func (m *MirrorSessionDeleteResponseMsg) Reset()         { *m = MirrorSessionDel
 func (m *MirrorSessionDeleteResponseMsg) String() string { return proto.CompactTextString(m) }
 func (*MirrorSessionDeleteResponseMsg) ProtoMessage()    {}
 func (*MirrorSessionDeleteResponseMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor31, []int{53}
+	return fileDescriptor32, []int{53}
 }
 
 func (m *MirrorSessionDeleteResponseMsg) GetResponse() []*MirrorSessionDeleteResponse {
@@ -1540,7 +1540,7 @@ type MirrorSessionGetRequest struct {
 func (m *MirrorSessionGetRequest) Reset()                    { *m = MirrorSessionGetRequest{} }
 func (m *MirrorSessionGetRequest) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionGetRequest) ProtoMessage()               {}
-func (*MirrorSessionGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{54} }
+func (*MirrorSessionGetRequest) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{54} }
 
 func (m *MirrorSessionGetRequest) GetKeyOrHandle() *MirrorSessionKeyHandle {
 	if m != nil {
@@ -1557,7 +1557,7 @@ type MirrorSessionGetRequestMsg struct {
 func (m *MirrorSessionGetRequestMsg) Reset()                    { *m = MirrorSessionGetRequestMsg{} }
 func (m *MirrorSessionGetRequestMsg) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionGetRequestMsg) ProtoMessage()               {}
-func (*MirrorSessionGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{55} }
+func (*MirrorSessionGetRequestMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{55} }
 
 func (m *MirrorSessionGetRequestMsg) GetRequest() []*MirrorSessionGetRequest {
 	if m != nil {
@@ -1572,7 +1572,7 @@ type MirrorSessionStats struct {
 func (m *MirrorSessionStats) Reset()                    { *m = MirrorSessionStats{} }
 func (m *MirrorSessionStats) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionStats) ProtoMessage()               {}
-func (*MirrorSessionStats) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{56} }
+func (*MirrorSessionStats) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{56} }
 
 type MirrorSessionGetResponse struct {
 	ApiStatus ApiStatus           `protobuf:"varint,1,opt,name=api_status,json=apiStatus,enum=types.ApiStatus" json:"api_status,omitempty"`
@@ -1583,7 +1583,7 @@ type MirrorSessionGetResponse struct {
 func (m *MirrorSessionGetResponse) Reset()                    { *m = MirrorSessionGetResponse{} }
 func (m *MirrorSessionGetResponse) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionGetResponse) ProtoMessage()               {}
-func (*MirrorSessionGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{57} }
+func (*MirrorSessionGetResponse) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{57} }
 
 func (m *MirrorSessionGetResponse) GetApiStatus() ApiStatus {
 	if m != nil {
@@ -1614,7 +1614,7 @@ type MirrorSessionGetResponseMsg struct {
 func (m *MirrorSessionGetResponseMsg) Reset()                    { *m = MirrorSessionGetResponseMsg{} }
 func (m *MirrorSessionGetResponseMsg) String() string            { return proto.CompactTextString(m) }
 func (*MirrorSessionGetResponseMsg) ProtoMessage()               {}
-func (*MirrorSessionGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor31, []int{58} }
+func (*MirrorSessionGetResponseMsg) Descriptor() ([]byte, []int) { return fileDescriptor32, []int{58} }
 
 func (m *MirrorSessionGetResponseMsg) GetResponse() []*MirrorSessionGetResponse {
 	if m != nil {
@@ -1688,9 +1688,9 @@ func init() {
 	proto.RegisterEnum("halproto.AggregationScheme", AggregationScheme_name, AggregationScheme_value)
 }
 
-func init() { proto.RegisterFile("telemetry.proto", fileDescriptor31) }
+func init() { proto.RegisterFile("telemetry.proto", fileDescriptor32) }
 
-var fileDescriptor31 = []byte{
+var fileDescriptor32 = []byte{
 	// 2256 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x5a, 0x4f, 0x73, 0x1b, 0x49,
 	0x15, 0xf7, 0xd8, 0xb2, 0x6c, 0x3d, 0x59, 0x8e, 0xdc, 0x71, 0x6c, 0xc5, 0x78, 0x63, 0x67, 0x36,
