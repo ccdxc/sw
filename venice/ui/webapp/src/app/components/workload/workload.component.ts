@@ -180,6 +180,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    */
   postNgInit() {
     this.buildAdvSearchCols();
+    this.tableLoading = true;
     this.getHosts(); // prepare hostOptions needed by newworkload component.
     this.getNaples(); // get DSC cards
     this.getSecuritygroups(); // get security groups
@@ -389,7 +390,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * We start a GET, then watch workloads.
    */
   getWorkloads() {
-    this.tableLoading = true;
     const getSubscription = this.workloadService.ListWorkload().subscribe(
       response => {
         const workloadList: WorkloadWorkloadList = response.body as WorkloadWorkloadList;

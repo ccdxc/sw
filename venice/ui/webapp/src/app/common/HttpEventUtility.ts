@@ -1,6 +1,6 @@
 import { Utility } from '@app/common/Utility';
 
-enum EventTypes {
+export enum EventTypes {
   create = 'Created',
   update = 'Updated',
   delete = 'Deleted',

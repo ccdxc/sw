@@ -268,7 +268,7 @@ describe('HostsComponent', () => {
     const serviceCluster = TestBed.get(ClusterService);
     const serviceWorkload = TestBed.get(WorkloadService);
     const subject = TestingUtility.createWatchEventsSubject([
-      naple1
+      naple1, workload1, workload2
     ]);
     spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
       subject
@@ -329,7 +329,7 @@ describe('HostsComponent', () => {
     const serviceCluster = TestBed.get(ClusterService);
 
     const subject = TestingUtility.createWatchEventsSubject([
-      naple1
+      naple1, workload1, workload2
     ]);
     spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
       subject

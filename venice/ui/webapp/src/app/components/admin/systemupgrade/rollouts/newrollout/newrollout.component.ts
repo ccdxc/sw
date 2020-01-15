@@ -39,7 +39,7 @@ export class RolloutOrder {
 
   When Naples are assigned labels we can specify a sequence for the rollout to progress in.
   This means that the 1st order group will be updated before the 2nd and so on.
-  The UI allows the user to select NICs for group with the help of label selectors.
+  The UI allows the user to select DSCs for group with the help of label selectors.
 
   When one or more labels are selected for group the updated label count is shown on the order HTML element.
   User can choose to add multiple such group though only one can be edited at one time.
@@ -56,7 +56,7 @@ export class RolloutOrder {
   setSpecOrderConstrains() - generates the order constraints
   buildRollout() - built the rollout object based on the form
   saveRollout() - call the rollout create api with the built rollout object
-  getRuleResults() - checks the naplesRuleMap to find NICs matching the given labels
+  getRuleResults() - checks the naplesRuleMap to find DSCs matching the given labels
   repeaterValueChange(index) - updates the order summary and match count, when the repeater value changes
   isAllInputsValidated()
 

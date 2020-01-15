@@ -42,7 +42,7 @@ import * as _ from 'lodash';
  *
  * When WatchDistributedServiceCard sends a response, we create a map mapping naples name (spec.id) to the naples object.
  * Whenever advanced search is used, a new searchrequest is created using this.advancedSearchComponent.getSearchRequest
- * Then we make an api call to get all the matching NICs using _callSearchRESTAPI.
+ * Then we make an api call to get all the matching DSCs using _callSearchRESTAPI.
  * These results do not contain spec information, so we lookup the original naples object from the naplesMap.
  * The matching naples objects are added to this.filteredNaples which is used to render the table.
  */
@@ -556,7 +556,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       // This case executed when only local search is required
       this.dataObjects = this.generateFilteredNaples(localSearchResult.searchRes);
       if (this.dataObjects.length === 0) {
-        this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
+        this.controllerService.invokeInfoToaster('Information', 'No record found. Please change search criteria.');
       }
     }
   }
@@ -632,7 +632,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         const data: SearchSearchResponse = response.body as SearchSearchResponse;
         let objects = data.entries;
         if (!objects || objects.length === 0) {
-          this.controllerService.invokeInfoToaster('Information', 'No NICs found. Please change search criteria.');
+          this.controllerService.invokeInfoToaster('Information', 'No record found. Please change search criteria.');
           objects = [];
         }
         const entries = [];

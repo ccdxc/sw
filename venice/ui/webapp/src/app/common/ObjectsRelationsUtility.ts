@@ -92,7 +92,7 @@ export interface DSCsNameMacMap {
       "rule-id": "4918",                // policy's rule
       "session-id": "92",
       "session-state": "flow_delete",0
-      "reporter-id": "00ae.cd00.1146",  // link back to NIC  ID:naples-2, mac:00ae.cd00.1146
+      "reporter-id": "00ae.cd00.1146",  // link back to DSC  ID:naples-2, mac:00ae.cd00.1146
       "time": "2019-10-03T17:49:06.353077274Z"
     },
 

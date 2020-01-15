@@ -82,7 +82,7 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
 
   naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   // During progressing rollout, WatchDistributedServiceCard may fail resulting in this.naples to be set to empty.
-  // This affects the "name" column of the NICs table (see getNICID func).
+  // This affects the "name" column of the DSCs table (see getNICID func).
   // Hence we keep the last valid copy of naples as naplesCopy, which is used to render NIC names.
   naplesCopy: ReadonlyArray<ClusterDistributedServiceCard> = [];
 

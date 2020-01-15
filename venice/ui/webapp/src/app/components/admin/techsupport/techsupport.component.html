@@ -83,14 +83,14 @@
     <div fxLayout="row">
       <div *ngFor="let v of rowData['techsupportdownload']['nicNodes']">
         <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-           [matTooltip]="'Download NIC files ' + v.name ">{{v.name}}</a>
+           [matTooltip]="'Download DSC tech-support files ' + v.name ">{{v.name}}</a>
       </div>
     </div>
 
     <div fxLayout="row">
       <div *ngFor="let v of rowData['techsupportdownload']['controlnodes']">
         <a class="techsupportrequests-download-file-link" href="{{v.url}}"
-           [matTooltip]="'Download Controller file ' + v.name ">{{v.name}}</a>
+           [matTooltip]="'Download Controller tech-support file ' + v.name ">{{v.name}}</a>
       </div>
     </div>
   </ng-container>
