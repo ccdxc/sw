@@ -20,10 +20,13 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 
 logdirs = [
-    "/pensando/iota/*.log",
+    "/pensando/iota/\*.log",
     "/home/vm/nohup.out", #agent log if crashed
-    "/naples/memtun.log",
-    "/var/log/vmkernel.log",
+    "/var/log/messages\*", # freebsd kernel logs
+    "/var/log/kern.log\*", # ubuntu kernel logs
+    "/var/log/syslog\*",   # ubuntu syslog
+    "/var/log/vmkernel.log", # esx kernel log
+    "/vmfs/volumes/\*/log/vmkernel\*",  # more kernel logs
 ]
 
 class CollectLogNode:
@@ -44,7 +47,7 @@ def __collect_onenode(node):
     try: tsName=api.GetTestsuiteName()
     except: tsName='NA'
     localdir = "%s/logs/%s/nodes/%s/" % (GlobalOptions.logdir, tsName, node.Name())
-    subprocess.call("mkdir -p %s" % localdir,shell=True,stdout=None,stderr=subprocess.STDOUT)
+    subprocess.call("mkdir -p %s" % localdir,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
     for logdir in logdirs:
         permCmd = "sshpass -p vm ssh vm@" + node.ip + " sudo chown -R vm:vm " + logdir
         Logger.debug(permCmd)
@@ -53,7 +56,8 @@ def __collect_onenode(node):
             output=proc.communicate()[0]
         except: 
             output=traceback.format_exc()
-        Logger.debug(output)
+        if output:
+            Logger.debug(output)
         fullcmd = "%s%s:%s %s" % (SSHCMD, node.ip, logdir, localdir)
         Logger.debug(fullcmd)
         try: 
@@ -61,7 +65,8 @@ def __collect_onenode(node):
             output=proc.communicate()[0]
         except: 
             output=traceback.format_exc()
-        Logger.debug(output)
+        if output:
+            Logger.debug(output)
 
 def buildNodesFromTestbedFile(testbed):
     Logger.debug("building nodes from testbed file {0}".format(testbed))
