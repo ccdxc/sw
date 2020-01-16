@@ -25,11 +25,9 @@ class Client {
         peeraddr->set_v4addr(1);
         ent->set_uuid(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
-        ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_localport(3);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
         ent->set_localasn(0);
@@ -58,11 +56,9 @@ class Client {
         peeraddr->set_v4addr(1);
         ent->set_uuid(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
-        ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_localport(3);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
         ent->set_localasn(0);
@@ -75,12 +71,10 @@ class Client {
                 auto resp = res.response(i);
                 std::cout << "===== Entry #" << i << " =====" << std::endl;
                 std::cout << "vrfid: " << resp.uuid() << std::endl;
-                std::cout << "peerport: " << resp.peerport() << std::endl;
                 auto paddr = resp.peeraddr().v4addr();
                 struct in_addr ip_addr;
                 ip_addr.s_addr = paddr;
                 std::cout << "peeraf: " << resp.peeraddr().af() << " peeraddr: " << inet_ntoa(ip_addr) << std::endl;
-                std::cout << "localport: " << resp.localport() << std::endl;
                 paddr = resp.localaddr().v4addr();
                 ip_addr.s_addr = paddr;
                 std::cout << "localaf: " << resp.localaddr().af() << " localaddr: " << inet_ntoa(ip_addr) << std::endl;
@@ -107,11 +101,9 @@ class Client {
         peeraddr->set_v4addr(1);
         ent->set_uuid(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
-        ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_localport(3);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
         ent->set_localasn(0);
@@ -135,11 +127,9 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(0);
         ent->set_uuid(std::to_string(1));
-        ent->set_peerport(3);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(0);
-        ent->set_localport(3);
         ent->set_ifid(0);
         grpc::Status status = stub_->BGPPeerSpecGetAll(&context, req, &res);
 
@@ -149,12 +139,10 @@ class Client {
                 auto resp = res.response(i);
 		std::cout << "===== Entry #" << i << " =====" << std::endl;
                 std::cout << "vrfid: " << resp.uuid() << std::endl;
-                std::cout << "peerport: " << resp.peerport() << std::endl;
 		auto paddr = resp.peeraddr().v4addr();
 		struct in_addr ip_addr;
 		ip_addr.s_addr = paddr;
                 std::cout << "peeraf: " << resp.peeraddr().af() << " peeraddr: " << inet_ntoa(ip_addr) << std::endl;
-                std::cout << "localport: " << resp.localport() << std::endl;
 		paddr = resp.localaddr().v4addr();
 		ip_addr.s_addr = paddr;
                 std::cout << "localaf: " << resp.localaddr().af() << " localaddr: " << inet_ntoa(ip_addr) << std::endl;

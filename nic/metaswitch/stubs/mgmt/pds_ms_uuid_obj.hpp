@@ -20,7 +20,8 @@ enum class uuid_obj_type_t {
     BGP_PEER,
     BGP_PEER_AF,
     VPC,
-    SUBNET
+    SUBNET,
+    INTERFACE
 };
 
 const char* uuid_obj_type_str(uuid_obj_type_t t);
@@ -172,6 +173,29 @@ private:
 using subnet_uuid_obj_uptr_t = std::unique_ptr<subnet_uuid_obj_t>;
 void subnet_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
 
+// Interface Object
+class interface_uuid_obj_t : public slab_obj_t<interface_uuid_obj_t>,
+                            public uuid_obj_t {
+public:
+    struct ms_id_t {
+        uint32_t  ms_ifindex;
+        ms_id_t(const uint32_t &i)
+            : ms_ifindex(i) {};
+    };
+    interface_uuid_obj_t(const pds_obj_key_t& uuid, const uint32_t &i)
+        : uuid_obj_t(uuid_obj_type_t::INTERFACE, uuid),
+          mib_keys_(i) {};
+
+    ms_id_t& ms_id() { return mib_keys_; }
+    std::string str() override {
+        return std::string("Interface IfIdx ")
+               .append(std::to_string(mib_keys_.ms_ifindex));
+    }
+private:
+    ms_id_t  mib_keys_;
+};
+using interface_uuid_obj_uptr_t = std::unique_ptr<interface_uuid_obj_t>;
+void interface_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
 
 } // End namespace
 

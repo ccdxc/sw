@@ -225,7 +225,6 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     }
     proto_spec->set_uuid(msidx2pdsobjkey(1).id);
     proto_spec->set_adminen(pds::ADMIN_UP);
-    proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -233,7 +232,6 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         localaddr->set_v4addr(0);
     }
-    proto_spec->set_localport(0);
     proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
     proto_spec->set_localasn(g_test_conf_.local_asn);
@@ -267,7 +265,6 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
     proto_spec->set_uuid(msidx2pdsobjkey(1).id);
-    proto_spec->set_peerport(0);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -276,7 +273,6 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
         localaddr->set_v4addr(0);
     }
 
-    proto_spec->set_localport(0);
     proto_spec->set_ifid(0);
     if (lo) {
         // Disable IP
@@ -485,12 +481,10 @@ static void get_peer_status_all() {
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  VRF Id               : %d\n", 1); // TODO: how to convert UUID to VrfID.. auto-gen wont support fillFn in get
-            printf ("  Local Port           : %d\n",resp.localport());
             auto paddr = resp.localaddr().v4addr();
             struct in_addr ip_addr;
             ip_addr.s_addr = paddr;
             printf ("  Local Address        : %s\n", inet_ntoa(ip_addr));
-            printf ("  Peer Port            : %d\n",resp.peerport());
             paddr = resp.peeraddr().v4addr();
             ip_addr.s_addr = paddr;
             printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));

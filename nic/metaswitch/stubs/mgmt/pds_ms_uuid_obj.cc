@@ -24,6 +24,8 @@ uuid_obj_type_str (uuid_obj_type_t t) {
             return "VPC"; break;
         case uuid_obj_type_t::SUBNET:
             return "SUBNET"; break;
+        case uuid_obj_type_t::INTERFACE:
+            return "INTERFACE"; break;
     }
     return "UNKNOWN";
 }
@@ -104,6 +106,22 @@ subnet_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
         throw Error("SLAB creation failed for Subnet UUID mapping obj");
     }
     subnet_uuid_obj_t::set_slab(slabs_[slab_id].get());
+}
+
+// Interface object
+template<> sdk::lib::slab* slab_obj_t<interface_uuid_obj_t>::slab_ = nullptr;
+void
+interface_uuid_obj_slab_init (slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id)
+{
+    slabs_[slab_id].
+        reset(sdk::lib::slab::factory("PDS-MS-INTERFACE-UUID-OBJ",
+                                      slab_id, sizeof(interface_uuid_obj_t),
+                                      2,
+                                      true, true, true));
+    if (unlikely (!slabs_[slab_id])) {
+        throw Error("SLAB creation failed for Interface UUID mapping obj");
+    }
+    interface_uuid_obj_t::set_slab(slabs_[slab_id].get());
 }
 
 } // End namespace

@@ -16,11 +16,9 @@ bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
 {
     auto bgp_peer_uuid_obj = (bgp_peer_uuid_obj_t*) uuid_obj;
     auto localaddr = req.mutable_localaddr();
-    localaddr->set_af(types::IP_AF_INET);
     ip_addr_to_spec(&bgp_peer_uuid_obj->ms_id().local_ip, localaddr);
 
     auto peeraddr = req.mutable_peeraddr();
-    peeraddr->set_af(types::IP_AF_INET);
     ip_addr_to_spec(&bgp_peer_uuid_obj->ms_id().peer_ip, peeraddr);
 
     SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
@@ -35,11 +33,9 @@ bgp_peer_af_fill_keys_(pds::BGPPeerAf& req,
 {
     auto bgp_peer_af_uuid_obj = (bgp_peer_af_uuid_obj_t*) uuid_obj;
     auto localaddr = req.mutable_localaddr();
-    localaddr->set_af(types::IP_AF_INET);
     ip_addr_to_spec(&bgp_peer_af_uuid_obj->ms_id().local_ip, localaddr);
 
     auto peeraddr = req.mutable_peeraddr();
-    peeraddr->set_af(types::IP_AF_INET);
     ip_addr_to_spec(&bgp_peer_af_uuid_obj->ms_id().peer_ip, peeraddr);
 
     SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
@@ -71,7 +67,6 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlato
                                       local_ipaddr,
                                       peer_ipaddr));
         {
-            auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_peer_uuid_obj));
         }
@@ -118,7 +113,6 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAf &req, NBB_LONG row_status,
             (new bgp_peer_af_uuid_obj_t (uuid, local_ipaddr, peer_ipaddr,
                                          req.afi(), req.safi()));
         {
-            auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_peer_af_uuid_obj));
         }

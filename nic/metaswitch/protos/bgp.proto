@@ -163,40 +163,34 @@ message BGPPeerSpec {
   AdminSt         AdminEn      = 3 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
   types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr"}];
-  // BGP Peer Port Address
-  uint32          PeerPort     = 5 [(venice.pdsaFields) = {Field: "remote_port", SetKeyOidIndex: "AMB_BGP_PER_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_REMOTE_PORT_INDEX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr    = 6 [(venice.pdsaFields) = {Field: "local_addr"}];
-  // BGP Local Port Address
-  uint32          LocalPort    = 7 [(venice.pdsaFields) = {Field: "local_port", SetKeyOidIndex: "AMB_BGP_PER_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_LOCAL_PORT_INDEX"}];
+  types.IPAddress LocalAddr    = 5 [(venice.pdsaFields) = {Field: "local_addr"}];
   // IfId
-  uint32          IfId         = 8 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
+  uint32          IfId         = 6 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
   // Remote 4-byte (32-bit) AS number
-  uint32          RemoteASN    = 9 [(venice.pdsaFields) = {Field: "remote_as"}];
+  uint32          RemoteASN    = 7 [(venice.pdsaFields) = {Field: "remote_as"}];
   // Send regular community attributes to neighbor
-  AMBBool         SendComm     = 10 [(venice.pdsaFields) = {Field: "send_comm"}];
+  AMBBool         SendComm     = 8 [(venice.pdsaFields) = {Field: "send_comm"}];
   // Send extended community attributes to neighbor
-  AMBBool         SendExtComm  = 11 [(venice.pdsaFields) = {Field: "send_ext_comm"}];
+  AMBBool         SendExtComm  = 9 [(venice.pdsaFields) = {Field: "send_ext_comm"}];
   // Peer is a route reflector client
-  BGPPeerRRClient RRClient     = 12 [(venice.pdsaFields) = {Field: "reflector_client"}];
-  // Update source address for peering
-  types.IPAddress UpdateSrc    = 13;
+  BGPPeerRRClient RRClient     = 10 [(venice.pdsaFields) = {Field: "reflector_client"}];
   // BGP session connect-retry timer in seconds
-  uint32          ConnectRetry = 14 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
+  uint32          ConnectRetry = 11 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
   // BGP session holdtime timer in seconds
-  uint32          HoldTime     = 15 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
+  uint32          HoldTime     = 12 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
   // BGP session keepalive timer in seconds
-  uint32          KeepAlive    = 16 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
+  uint32          KeepAlive    = 13 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
   
   // Get-Only fields follows
   // BGP session Status
-  uint32          Status       = 17 [(venice.pdsaFields) = {Field: "state"}];
+  uint32          Status       = 14 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session Prev Status
-  uint32          PrevStatus   = 18 [(venice.pdsaFields) = {Field: "last_state"}];
+  uint32          PrevStatus   = 15 [(venice.pdsaFields) = {Field: "last_state"}];
   // Last Error Received
-  bytes           LastErrorRcvd = 19 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes           LastErrorRcvd = 16 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last Error Sent
-  bytes           LastErrorSent = 20 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  bytes           LastErrorSent = 17 [(venice.pdsaFields) = {Field: "last_error_sent"}];
 }
 
 // BGP PeerAF configurations
@@ -215,24 +209,20 @@ message BGPPeerAf {
   bytes           UUID        = 1; // FillFn to convert UUID to uint32 MS Ent index
   // BGP Peer IP Address
   types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
-  // BGP Peer Port Address
-  uint32          PeerPort    = 3 [(venice.pdsaFields) = {Field: "remote_port",  SetKeyOidIndex: "AMB_BGP_PAS_REMOTE_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_REMOTE_PORT_INDEX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr   = 4 [(venice.pdsaFields) = {Field: "local_addr"}];
-  // BGP Local Port Address
-  uint32          LocalPort   = 5 [(venice.pdsaFields) = {Field: "local_port",  SetKeyOidIndex: "AMB_BGP_PAS_LOCAL_PORT_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_LOCAL_PORT_INDEX"}];
+  types.IPAddress LocalAddr   = 3 [(venice.pdsaFields) = {Field: "local_addr"}];
   // IfId
-  uint32          IfId        = 6 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}];
+  uint32          IfId        = 4 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}];
   // BGP Address family
-  BGPAfi          Afi         = 7 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
+  BGPAfi          Afi         = 5 [(venice.pdsaFields) = {Field: "afi",  SetKeyOidIndex: "AMB_BGP_PAS_AFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_AFI_INDEX"}];
   // BGP Sub-Address family
-  BGPSafi         Safi        = 8 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
+  BGPSafi         Safi        = 6 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
   // Disable AFI SAFI
-  AMBBool         Disable     = 9 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
+  AMBBool         Disable     = 7 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
   // Enforce this router to set self as next-hop for advertised routes
-  AMBBool         NHself      = 10 [(venice.pdsaFields) = {Field: "next_hop_self"}];
+  AMBBool         NHself      = 8 [(venice.pdsaFields) = {Field: "next_hop_self"}];
   // Originate a default route to this peer
-  AMBBool         DefaultOrig = 11 [(venice.pdsaFields) = {Field: "originate_default"}];
+  AMBBool         DefaultOrig = 9 [(venice.pdsaFields) = {Field: "originate_default"}];
 }
 
 enum NLRISrc {

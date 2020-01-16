@@ -71,63 +71,138 @@ process_interface_update (pds_if_spec_t *if_spec,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
+void
+interface_uuid_alloc(const pds_obj_key_t& key, uint32_t &ms_ifindex)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj != nullptr) {
+        throw Error(std::string("Interface Create for existing UUID")
+                    .append(key.str()).append(" containing ")
+                    .append(uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
+    }
+    interface_uuid_obj_uptr_t interface_uuid_obj
+                              (new interface_uuid_obj_t(key, ms_ifindex));
+    mgmt_ctxt.state()->set_pending_uuid_create(key,
+                                               std::move(interface_uuid_obj));
+    return;
+}
+
+uint32_t
+interface_uuid_fetch(const pds_obj_key_t& key)
+{
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
+    if (uuid_obj == nullptr) {
+        throw Error(std::string("Unknown UUID in Interface Request ")
+                    .append(key.str()), SDK_RET_ENTRY_NOT_FOUND);
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::INTERFACE) {
+        throw Error(std::string("Wrong UUID ").append(key.str())
+                    .append(" containing ").append(uuid_obj->str())
+                    .append(" in Interface request"), SDK_RET_INVALID_ARG);
+    }
+    auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
+    SDK_TRACE_VERBOSE("Fetched Interface UUID %s MSIfindex 0x%X",
+                      key.str(), interface_uuid_obj->ms_id().ms_ifindex);
+    return interface_uuid_obj->ms_id().ms_ifindex;
+}
+
 sdk_ret_t
 interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
+    sdk_ret_t ret = SDK_RET_OK;
     types::ApiStatus ret_status;
     SDK_ASSERT(spec->type == PDS_IF_TYPE_L3);
 
-    // Get PDS to MS IfIndex
-    auto eth_ifindex = spec->l3_if_info.eth_ifindex;
-
-    auto ms_ifindex = pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
-    SDK_TRACE_INFO ("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",
-                    spec->key.str(), eth_ifindex, ms_ifindex);
-
-    // TODO Cache L3 Intf UUID to MS IfIndex
-
-    ret_status = process_interface_update (spec, ms_ifindex, AMB_ROW_ACTIVE);
-
-    if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process L3 interface %s create for "
-                       "MSIfIndex 0x%X err %d",
-                        spec->key.str(), ms_ifindex, ret_status);
-        return pds_ms_api_to_sdk_ret (ret_status);
+    try {
+        // Get PDS to MS IfIndex
+        auto eth_ifindex = spec->l3_if_info.eth_ifindex;
+    
+        auto ms_ifindex = pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
+        SDK_TRACE_INFO ("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",
+                        spec->key.str(), eth_ifindex, ms_ifindex);
+        // Cache L3 Intf UUID to MS IfIndex
+        interface_uuid_alloc(spec->key, ms_ifindex);
+    
+        ret_status = process_interface_update (spec, ms_ifindex, AMB_ROW_ACTIVE);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process L3 interface %s create for "
+                           "MSIfIndex 0x%X err %d",
+                            spec->key.str(), ms_ifindex, ret_status);
+            return pds_ms_api_to_sdk_ret (ret_status);
+        }
+    
+        SDK_TRACE_DEBUG ("L3 intf create for Eth 0x%X MSIfIndex 0x%X"
+                         " successfully processed",
+                          eth_ifindex, ms_ifindex);
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Interface %s creation failed %s", 
+                        spec->key.str(), e.what());
+        return e.rc();
     }
-
-    SDK_TRACE_DEBUG ("L3 intf create for Eth 0x%X MSIfIndex 0x%X"
-                     " successfully processed",
-                      eth_ifindex, ms_ifindex);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 interface_delete (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
+    uint32_t ms_ifindex;
     types::ApiStatus ret_status;
-    // TODO - Fill MS IfIndex from UUID cache
-    ms_ifindex_t ms_ifindex = pdsobjkey2msidx(spec->key);
-
-    ret_status = process_interface_update (spec, ms_ifindex, AMB_ROW_DESTROY);
-
-    if (ret_status != types::ApiStatus::API_STATUS_OK) {
-        SDK_TRACE_ERR ("Failed to process interface UUID %s MS-Interface 0x%X "
-                       "delete err %d", 
-                        spec->key.str(), ms_ifindex, ret_status);
-        return pds_ms_api_to_sdk_ret (ret_status);
+    
+    try {
+        // Fill MS IfIndex from UUID cache
+        ms_ifindex = interface_uuid_fetch(spec->key);
+        
+        ret_status = process_interface_update(spec, ms_ifindex,
+                                              AMB_ROW_DESTROY);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process interface UUID %s "
+                           "MS-Interface 0x%X "
+                           "delete err %d", 
+                            spec->key.str(), ms_ifindex, ret_status);
+            return pds_ms_api_to_sdk_ret (ret_status);
+        }
+    
+        SDK_TRACE_DEBUG ("L3 Interface delete for MSIfIndex 0x%X successfully"
+                         " processed", ms_ifindex);
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Interface %s deletion failed %s", 
+                        spec->key.str(), e.what());
+        return e.rc();
     }
-
-    SDK_TRACE_DEBUG ("L3 Interface delete for MSIfIndex 0x%X successfully processed",
-                      ms_ifindex);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    // TODO
-    SDK_TRACE_INFO ("L3 Intf Update:: UUID %s", spec->key.str());
-
+    uint32_t ms_ifindex;
+    types::ApiStatus ret_status;
+    
+    try {
+        // Fill MS IfIndex from UUID cache
+        ms_ifindex = interface_uuid_fetch(spec->key);
+        // Only L3 interface address can be updated. Send the current
+        // interface address to Metaswitch. If address is same then metaswitch
+        // will treat it as a no-ip
+        ret_status = process_interface_update(spec, ms_ifindex,
+                                              AMB_ROW_ACTIVE);
+        if (ret_status != types::ApiStatus::API_STATUS_OK) {
+            SDK_TRACE_ERR ("Failed to process interface UUID %s "
+                           "MS-Interface 0x%X "
+                           "update err %d", 
+                            spec->key.str(), ms_ifindex, ret_status);
+            return pds_ms_api_to_sdk_ret (ret_status);
+        }
+    
+        SDK_TRACE_DEBUG ("L3 Interface update for MSIfIndex 0x%X successfully"
+                         " processed", ms_ifindex);
+    } catch (const Error& e) {
+        SDK_TRACE_ERR ("Interface %s update failed %s", 
+                        spec->key.str(), e.what());
+        return e.rc();
+    }
     return SDK_RET_OK;
 }
 

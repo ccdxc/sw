@@ -112,12 +112,10 @@ pds_ms_sim_test_bgp_update ()
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(g_test_conf.remote_ip_addr);
-    bgp_peer_spec.set_peerport(0);
 
     auto localaddr = bgp_peer_spec.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(0);
-    bgp_peer_spec.set_localport(0);
     bgp_peer_spec.set_ifid(0);
 
     bgp_peer_spec.set_connectretry(10);
@@ -132,12 +130,10 @@ pds_ms_sim_test_bgp_update ()
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(g_test_conf.remote_ip_addr);
-    bgp_peer_af.set_peerport(0);
 
     localaddr = bgp_peer_af.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(0);
-    bgp_peer_af.set_localport(0);
     bgp_peer_af.set_ifid(0);
     bgp_peer_af.set_afi(pds::BGP_AFI_L2VPN);
     bgp_peer_af.set_safi(pds::BGP_SAFI_EVPN);
@@ -171,12 +167,10 @@ pds_ms_sim_test_overlay_bgp_update ()
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(g_test_conf.remote_lo_ip_addr);
-    bgp_peer_spec.set_peerport(0);
 
     auto localaddr = bgp_peer_spec.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(g_test_conf.local_lo_ip_addr);
-    bgp_peer_spec.set_localport(0);
     bgp_peer_spec.set_ifid(0);
 
     bgp_peer_spec.set_connectretry(10);
@@ -191,12 +185,10 @@ pds_ms_sim_test_overlay_bgp_update ()
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     peeraddr->set_v4addr(g_test_conf.remote_lo_ip_addr);
-    bgp_peer_af.set_peerport(0);
 
     localaddr = bgp_peer_af.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(g_test_conf.local_lo_ip_addr);
-    bgp_peer_af.set_localport(0);
     bgp_peer_af.set_ifid(0);
     bgp_peer_af.set_afi(pds::BGP_AFI_IPV4);
     bgp_peer_af.set_safi(pds::BGP_SAFI_UNICAST);
