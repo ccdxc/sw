@@ -506,7 +506,7 @@ Loop:
 							log.Debugf("Got status for smartnic %s in context of %s", snRolloutState.Name, snicState.Name)
 						}
 					case <-timer.C:
-						log.Debugf("Timeout waiting for status update of smartNIC %s", snicState.Name)
+						log.Debugf("Timeout waiting for status update of DSC %s", snicState.Name)
 						snicROState, err := sm.GetDSCRolloutState(snicState.Tenant, snicState.Name)
 						if err == nil {
 							snicROState.UpdateDSCRolloutStatus(&protos.DSCRolloutStatus{
@@ -515,7 +515,7 @@ Loop:
 										Op:       op,
 										Version:  version,
 										OpStatus: "timeout",
-										Message:  "Timeout waiting for status from smartNIC",
+										Message:  "Timeout waiting for status from DSC",
 									},
 								},
 							})
