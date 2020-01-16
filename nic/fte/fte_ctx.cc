@@ -12,6 +12,7 @@
 #include "nic/hal/pd/cpupkt_api.hpp"
 #include "nic/asm/cpu-p4plus/include/cpu-defines.h"
 #include "nic/hal/plugins/app_redir/app_redir_ctx.hpp"
+#include "nic/include/pkt_hdrs.hpp"
 
 using namespace hal::app_redir;
 
@@ -97,12 +98,20 @@ void ctx_t::swap_flow_key(const hal::flow_key_t &key, hal::flow_key_t *rkey)
             rkey->dport = key.sport;
             break;
         case IP_PROTO_ICMP:
-            rkey->icmp_type = key.icmp_type ==8 ? 0 : key.icmp_type; // flip echo to reply
+            if (key.icmp_type == ICMP_TYPE_ECHO_RESPONSE) {
+                rkey->icmp_type = ICMP_TYPE_ECHO_REQUEST;
+            } else if (key.icmp_type == ICMP_TYPE_ECHO_REQUEST) {
+                rkey->icmp_type = ICMP_TYPE_ECHO_RESPONSE;
+            }
             rkey->icmp_code = key.icmp_code;
             rkey->icmp_id = key.icmp_id;
             break;
         case IP_PROTO_ICMPV6:
-            rkey->icmp_type = key.icmp_type == 128 ? 129 : key.icmp_type; // flip echo to reply
+            if (key.icmp_type == ICMPV6_TYPE_ECHO_RESPONSE) {
+                rkey->icmp_type = ICMPV6_TYPE_ECHO_REQUEST;
+            } else if (key.icmp_type == ICMPV6_TYPE_ECHO_REQUEST) {
+                rkey->icmp_type = ICMPV6_TYPE_ECHO_RESPONSE;
+            }
             rkey->icmp_code = key.icmp_code;
             rkey->icmp_id = key.icmp_id;
             break;

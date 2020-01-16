@@ -237,6 +237,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/linux
   nic/fte:
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/esx
   nic/hal:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx
