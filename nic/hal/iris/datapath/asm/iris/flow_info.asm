@@ -241,7 +241,6 @@ flow_miss_common:
   smneb         c2, k.tcp_flags, TCP_FLAG_SYN, TCP_FLAG_SYN
   seq           c3, k.l4_metadata_tcp_non_syn_first_pkt_drop, ACT_DROP
   bcf           [c1&c2&c3], flow_miss_tcp_non_syn_first_pkt_drop
-  phvwr         p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
   seq           c2, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
   bcf           [c2], flow_miss_unicast
   seq           c2, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
@@ -292,6 +291,7 @@ flow_miss_unicast_reg_mac_hit:
   phvwr.c1      p.control_metadata_dst_lport, CPU_LPORT
   phvwr.c1      p.rewrite_metadata_tunnel_rewrite_index, 0
   phvwr.c1      p.rewrite_metadata_rewrite_index, 0
+  phvwr.c1      p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
   seq           c2, k.l4_metadata_flow_learn_cfg_en, TRUE
   setcf         c3, [!c1 & c2]
   phvwr.c3      p.capri_intrinsic_tm_cpu, 1

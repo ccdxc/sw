@@ -63,8 +63,6 @@ action flow_miss() {
         drop_packet();
     }
 
-    modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
-
     modify_field(control_metadata.flow_miss_ingress, TRUE);
     modify_field(control_metadata.i2e_flags, (1 << P4_I2E_FLAGS_FLOW_MISS),
                  (1 << P4_I2E_FLAGS_FLOW_MISS));
@@ -111,6 +109,7 @@ action flow_miss() {
                     modify_field(control_metadata.cpu_copy, TRUE);
                     modify_field(rewrite_metadata.tunnel_rewrite_index, 0);
                     modify_field(rewrite_metadata.rewrite_index, 0);
+                    modify_field(qos_metadata.qos_class_id, control_metadata.flow_miss_qos_class_id);
                 } else {
                     if (l4_metadata.flow_learn_cfg_en == TRUE) {
                         // Sup Copy
