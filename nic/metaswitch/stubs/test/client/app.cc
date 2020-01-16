@@ -45,9 +45,13 @@ static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
 
+// Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
+static constexpr int k_underlay_rttbl_id = 30;
 static constexpr int k_vpc_id = 200;
+static constexpr int k_overlay_rttbl_id = 230;
 static constexpr int k_subnet_id = 300;
+static constexpr int k_bgp_id = 50;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -85,7 +89,7 @@ static void create_l3_intf_proto_grpc () {
 
     pds_if.type = PDS_IF_TYPE_L3;
     pds_if.admin_state = PDS_IF_STATE_UP;
-    pds_if.l3_if_info.vpc = msidx2pdsobjkey(1);
+    pds_if.l3_if_info.vpc = msidx2pdsobjkey(k_underlay_vpc_id);
     pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
     pds_if.l3_if_info.ip_prefix.len = 16;
@@ -110,7 +114,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.mutable_request();
-    proto_spec->set_uuid (msidx2pdsobjkey(1).id);
+    proto_spec->set_uuid (msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -186,8 +190,8 @@ static void create_route_proto_grpc () {
     Status                ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id(msidx2pdsobjkey(1).id);
-    proto_spec->set_routetableid(msidx2pdsobjkey(1).id);
+    proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id);
+    proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
     dest_addr->set_v4addr (0);
@@ -223,7 +227,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
+    proto_spec->set_uuid(msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_adminen(pds::ADMIN_UP);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -264,7 +268,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
+    proto_spec->set_uuid(msidx2pdsobjkey(k_bgp_id).id);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -338,6 +342,7 @@ static void create_underlay_vpc_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_NONE);
@@ -362,6 +367,7 @@ static void create_vpc_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_overlay_rttbl_id).id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_TENANT);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);

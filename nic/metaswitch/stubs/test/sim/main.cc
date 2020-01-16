@@ -52,7 +52,7 @@ std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
 static int g_vpc_uuid = 100;
-static int g_bgp_uuid = 1;
+static int g_bgp_uuid = 200;
 static int g_subnet_uuid = 300;
 
 namespace pds_ms_test {

@@ -33,6 +33,7 @@ Status
     }
 
   {{if or (HasSuffix $rpc "Delete") (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
+    try {
     uint correlator = PDS_MS_CTM_GRPC_CORRELATOR;
     PDS_MS_START_TXN(correlator);
     {{$fields := .RequestType.Fields}}
@@ -68,9 +69,15 @@ Status
       {{end}}
     {{end}}
     PDS_MS_END_TXN(correlator);
+    } catch (const pds_ms::Error& e) {
+        SDK_TRACE_ERR("CTM Transaction aborted %s", e.what());
+        resp->set_apistatus(pds_ms_sdk_ret_to_api_status(e.rc()));
+        return Status::OK;
+    }
   {{end}}
  
   {{if or (HasSuffix $rpc "Get") (HasSuffix $rpc "GetAll")}}
+    try {
     PDS_MS_GET_SHARED_START();
     {{$fields := .RequestType.Fields}}
     {{range $fields}}
@@ -101,6 +108,11 @@ Status
       {{end}}
     {{end}}
     PDS_MS_GET_SHARED_END();
+    } catch (const pds_ms::Error& e) {
+        SDK_TRACE_ERR("MIB Get aborted %s", e.what());
+        resp->set_apistatus(pds_ms_sdk_ret_to_api_status(e.rc()));
+        return Status::OK;
+    }
   {{end}}
     resp->set_apistatus(pds_ms::mgmt_state_t::ms_response_wait());
     return Status::OK;

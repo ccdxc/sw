@@ -21,6 +21,7 @@ mgmt_state_t::mgmt_state_t(void) {
     bgp_peer_af_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_BGP_PEER_AF_SLAB_ID);
     vpc_uuid_obj_slab_init (slabs_, PDS_MS_MGMT_VPC_SLAB_ID);
     subnet_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_SUBNET_SLAB_ID);
+    interface_uuid_obj_slab_init(slabs_, PDS_MS_MGMT_INTERFACE_SLAB_ID);
 }
 
 void mgmt_state_t::commit_pending_uuid() {

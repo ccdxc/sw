@@ -458,3 +458,18 @@ pds_ms_api_to_sdk_ret (ApiStatus api_err)
     }
     return SDK_RET_ERR;
 }
+ApiStatus
+pds_ms_sdk_ret_to_api_status (sdk_ret_t sdk_ret)
+{
+    switch (sdk_ret) {
+    case SDK_RET_OK: {return API_STATUS_OK;}
+    case SDK_RET_ERR: {return API_STATUS_ERR;}
+    case SDK_RET_INVALID_ARG: {return API_STATUS_INVALID_ARG;}
+    case SDK_RET_ENTRY_EXISTS: {return API_STATUS_EXISTS_ALREADY;}
+    case SDK_RET_OOM: {return API_STATUS_OUT_OF_MEM;}
+    case SDK_RET_ENTRY_NOT_FOUND: {return API_STATUS_NOT_FOUND;}
+    case SDK_RET_NO_RESOURCE: {return API_STATUS_OUT_OF_RESOURCE;}
+    case SDK_RET_INVALID_OP: {return API_STATUS_OPERATION_NOT_ALLOWED;}
+    default: {return API_STATUS_ERR;} // catch undefined errors
+    }
+}

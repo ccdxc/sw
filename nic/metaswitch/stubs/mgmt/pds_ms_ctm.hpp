@@ -24,27 +24,70 @@ pds_ms_ctm_bld_row_update_common (AMB_GEN_IPS    **mib,
 NBB_VOID pds_ms_ctm_send_row_update_common (pds_ms::pds_ms_config_t  *conf, 
                                           pds_ms_amb_fill_fnptr_t     fill_api);
 
+class ms_txn_guard_t {
+public:
+    ms_txn_guard_t(uint32_t pid, NBB_ULONG correlator) {
+        if (nbb_thread_global_data == nullptr) {
+            nbb_thread_global_data = nbb_alloc_tgd();
+        }
+        nbs_enter_shared_context(pid, &saved_context NBB_CCXT);
+        NBS_GET_SHARED_DATA();
+        NBB_TRC_FLOW ((NBB_FORMAT "Start CTM Transaction"));
+        pds_ms_ctm_send_transaction_start (correlator);
+    }
+    void end_txn(void) {end_txn_ = true;}
+    ~ms_txn_guard_t() {
+        if (end_txn_) {
+            pds_ms_ctm_send_transaction_end (correlator);
+        } else {
+            pds_ms_ctm_send_transaction_abort (correlator);
+        }
+        NBS_RELEASE_SHARED_DATA();
+        nbs_exit_shared_context(&saved_context  NBB_CCXT);
+        if (nbb_thread_global_data != nullptr) {
+            nbb_free_tgd(NBB_CXT);
+        }
+    }
+private:
+    NBB_SAVED_CONTEXT saved_context;
+    NBB_ULONG   correlator;
+    bool end_txn_ = false;
+};
+
+class ms_thr_ctxt_guard_t {
+public:
+    ms_thr_ctxt_guard_t(uint32_t pid) {
+        if (nbb_thread_global_data == nullptr) {
+            nbb_thread_global_data = nbb_alloc_tgd();
+        }
+        nbs_enter_shared_context(pid, &saved_context NBB_CCXT);
+        NBB_TRC_FLOW ((NBB_FORMAT "Start PDS_MS_GET_SHARED_START"));
+        NBS_GET_SHARED_DATA();
+    }
+    ~ms_thr_ctxt_guard_t() {
+        NBS_RELEASE_SHARED_DATA();
+        nbs_exit_shared_context(&saved_context  NBB_CCXT);
+        if (nbb_thread_global_data != nullptr) {
+            nbb_free_tgd(NBB_CXT);
+        }
+    }
+private:
+    NBB_SAVED_CONTEXT saved_context;
+};
+
 #define PDS_MS_START_TXN(correlator) \
-    NBB_CREATE_THREAD_CONTEXT \
-    NBS_ENTER_SHARED_CONTEXT(sms_our_pid); \
-    NBS_GET_SHARED_DATA(); \
-    NBB_TRC_FLOW ((NBB_FORMAT "Start CTM Transaction")); \
-    pds_ms_ctm_send_transaction_start (correlator);
+    { \
+       ms_txn_guard_t ms_txn_guard(sms_our_pid, correlator); \
 
 #define PDS_MS_END_TXN(correlator) \
-    pds_ms_ctm_send_transaction_end (correlator); \
-    NBS_RELEASE_SHARED_DATA(); \
-    NBS_EXIT_SHARED_CONTEXT(); \
-    NBB_DESTROY_THREAD_CONTEXT
+       ms_txn_guard.end_txn();  \
+    }    
 
 #define PDS_MS_GET_SHARED_START() \
-    NBB_CREATE_THREAD_CONTEXT \
-    NBS_ENTER_SHARED_CONTEXT(sms_our_pid); \
-    NBS_GET_SHARED_DATA(); \
-    NBB_TRC_FLOW ((NBB_FORMAT "Start PDS_MS_GET_SHARED_START"));
+    { \
+       ms_thr_ctxt_guard_t ms_thr_ctxt_guard(sms_our_pid); \
 
 #define PDS_MS_GET_SHARED_END() \
-    NBS_RELEASE_SHARED_DATA(); \
-    NBS_EXIT_SHARED_CONTEXT(); \
-    NBB_DESTROY_THREAD_CONTEXT
+    }    
+
 #endif /*__PDS_MS_CTM_HPP__*/

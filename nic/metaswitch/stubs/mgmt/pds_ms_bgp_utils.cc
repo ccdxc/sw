@@ -235,7 +235,10 @@ bgp_peer_af_fill_func (pds::BGPPeerAf        &req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
-    v_amb_bgp_peer_af->rm_ent_index     = strtol (req.uuid().c_str(), NULL, 0); 
+    // ASSUMPTION - There is only a single BGP instance ever.
+    // So the BGP instance UUID is not included in the BGP Peer Proto. 
+    // Harcoding the BGP entity index.
+    v_amb_bgp_peer_af->rm_ent_index        = PDS_MS_BGP_RM_ENT_INDEX;
     oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = v_amb_bgp_peer_af->rm_ent_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_PAS_RM_ENT_INDEX);
 }

@@ -64,7 +64,8 @@ extern "C" {
 
 using namespace std;
 
-sdk_ret_t pds_ms_api_to_sdk_ret (types::ApiStatus api_err);
+sdk_ret_t pds_ms_api_to_sdk_ret(types::ApiStatus api_err);
+types::ApiStatus pds_ms_sdk_ret_to_api_status(sdk_ret_t sdk_ret);
 
 void ip_addr_to_spec(const ip_addr_t *ip_addr,
                      types::IPAddress *ip_addr_spec);
