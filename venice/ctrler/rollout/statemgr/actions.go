@@ -412,7 +412,6 @@ Loop:
 					endTime, _ := ros.Spec.ScheduledEndTime.Time()
 					newduration := endTime.Sub(time.Now())
 					log.Debugf("New duration %+v", newduration.Seconds())
-					ros.rolloutTimedout = true
 					if newduration < 0 {
 						log.Infof("Specified endtime is in the past. Skip upgrade for %s", snicState)
 						continue
