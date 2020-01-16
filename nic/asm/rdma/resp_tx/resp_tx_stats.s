@@ -48,14 +48,16 @@ resp_tx_stats_process:
 
     // if flush rq, skip updating num_pkts and num_bytes
     bbeq             CAPRI_KEY_FIELD(IN_P, flush_rq), 1, err_dis_qp_stats
+    seq              c7, CAPRI_KEY_FIELD(IN_P, dcqcn_rate), 1 // BD Slot
 
     // if dcqcn rate, skip updating num_pkts and num_bytes etc.
-    bbeq             CAPRI_KEY_FIELD(IN_P, dcqcn_rate), 1, dcqcn_rate_stats
+    bcf              [c7], dcqcn_rate_stats
+    seq              c7, CAPRI_KEY_FIELD(IN_P, dcqcn_timer), 1 // BD Slot
 
     // if dcqcn timer, skip updating num_pkts and num_bytes etc.
-    bbeq             CAPRI_KEY_FIELD(IN_P, dcqcn_timer), 1, dcqcn_timer_stats
+    bcf              [c7], dcqcn_timer_stats
 
-    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_byte_threshold_db), 1
+    seq              c7, CAPRI_KEY_FIELD(to_s7_stats_info, rp_num_byte_threshold_db), 1 // BD Slot
     tblmincri.c7     d.rp_num_byte_threshold_db, MASK_16, 1
 
     crestore         [c7, c6, c5, c4, c3, c2, c1], GLOBAL_FLAGS, (RESP_TX_FLAG_ATOMIC_RESP | RESP_TX_FLAG_READ_RESP | RESP_TX_FLAG_ACK | RESP_TX_FLAG_ONLY | RESP_TX_FLAG_LAST | RESP_TX_FLAG_FIRST | RESP_TX_FLAG_ERR_DIS_QP) // BD Slot
