@@ -30,10 +30,13 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   @Input() valueFormName: string = 'valueFormControl';
   @Input() keytextFormName: string = 'keytextFormName';
 
-  @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   fieldData: RepeaterData[] = [];
   buildFieldValuePlaceholder = SearchUtil.buildFieldValuePlaceholder;
 
+  // TODO: Default repopulated unacceptable events keys
+  @Input() unacceptableKeys: string[] = ['meta.tenant', 'object-ref.tenant', 'meta.labels', 'meta.self-link'];
+
+  @Output() repeaterValues: EventEmitter<any> = new EventEmitter();
   constructor() { }
 
   ngOnInit() {
@@ -52,12 +55,13 @@ export class FieldselectorComponent implements OnInit, OnChanges {
           if (values[this.operatorFormName] === 'equals') {
             values[this.operatorFormName] = 'in';
             control.patchValue(values);
-          } else if (control.value[this.operatorFormName] === 'notEquals')  {
+          } else if (control.value[this.operatorFormName] === 'notEquals') {
             values[this.operatorFormName] = 'notIn';
             control.patchValue(values);
           }
         });
       }
+
       if (!this.kind) {
         this.setDefaultData();
       } else {
@@ -153,11 +157,7 @@ export class FieldselectorComponent implements OnInit, OnChanges {
   }
 
   acceptField(key): boolean {
-    if (key === SearchUtil.SEARCHFIELD_META + '.labels' ||
-      key === SearchUtil.SEARCHFIELD_META + '.self-link') {
-      return false;
-    }
-    return true;
+    return (this.unacceptableKeys.includes(key)) ? false : true;
   }
 
   getFieldOperators(kind: string, keys: string[]): any[] {
