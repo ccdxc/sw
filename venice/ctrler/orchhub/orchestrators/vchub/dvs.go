@@ -87,6 +87,7 @@ func (d *PenDVS) GetPortSettings() ([]types.DistributedVirtualPort, error) {
 
 // SetVlanOverride overrides the port settings with the given vlan
 func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
+	d.Log.Debugf("SetVlanOverride called with port: %v vlan:%v", port, vlan)
 	ports := vcprobe.PenDVSPortSettings{
 		port: &types.VmwareDistributedVirtualSwitchVlanIdSpec{
 			VlanId: int32(vlan),
@@ -103,6 +104,7 @@ func (d *PenDVS) SetVlanOverride(port string, vlan int) error {
 // SetPvlanForPorts undoes the vlan override and restores the given ports with the pvlan of the given pg
 // Input is a map from pg name to ports to set
 func (d *PenDVS) SetPvlanForPorts(pgMap map[string][]string) error {
+	d.Log.Debugf("SetPvlanForPorts called with %v", pgMap)
 	portSetting := vcprobe.PenDVSPortSettings{}
 	for pg, ports := range pgMap {
 		_, vlan2, err := d.UsegMgr.GetVlansForPG(pg)

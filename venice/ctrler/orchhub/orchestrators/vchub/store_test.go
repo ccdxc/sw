@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
@@ -66,10 +67,14 @@ func TestStore(t *testing.T) {
 						VcObject:   defs.VirtualMachine,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -104,7 +109,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
@@ -134,7 +139,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -152,6 +157,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -187,8 +196,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -217,8 +226,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -264,10 +273,32 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
-				v.probe = mockProbe
-				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+
+				orchInfo := []*network.OrchestratorInfo{
+					{
+						Name:      vchub.VcID,
+						Namespace: dcName,
+					},
+				}
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG3", "10.1.1.0/24", "10.1.1.1", 300, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG3"), "PG3", "PG3")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG4", "10.1.1.0/24", "10.1.1.1", 400, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG4"), "PG4", "PG4")
+
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -284,16 +315,20 @@ func TestStore(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
+								MACAddress:   "aabb.ccdd.eeff",
+								ExternalVlan: 100,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddff",
+								MACAddress:   "aabb.ccdd.ddff",
+								ExternalVlan: 200,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddee",
+								MACAddress:   "aabb.ccdd.ddee",
+								ExternalVlan: 300,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ccee",
+								MACAddress:   "aabb.ccdd.ccee",
+								ExternalVlan: 400,
 							},
 						},
 					},
@@ -320,8 +355,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -350,8 +385,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -384,8 +419,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -416,10 +451,23 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
-				v.probe = mockProbe
-				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+				orchInfo := []*network.OrchestratorInfo{
+					{
+						Name:      vchub.VcID,
+						Namespace: dcName,
+					},
+				}
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -436,13 +484,16 @@ func TestStore(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
+								MACAddress:   "aabb.ccdd.eeff",
+								ExternalVlan: 100,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aaaa.ccdd.ddff",
+								MACAddress:   "aaaa.ccdd.ddff",
+								ExternalVlan: 200,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aaaa.aadd.ddff",
+								MACAddress:   "aaaa.aadd.ddff",
+								ExternalVlan: 200,
 							},
 						},
 					},
@@ -466,7 +517,7 @@ func TestStore(t *testing.T) {
 					expWorkload.Spec.Interfaces[i].MicroSegVlan = inf.MicroSegVlan
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
-				usegMgr := v.GetDC("DC1").GetPenDVS(createDVSName("DC1")).UsegMgr
+				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
 				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
 				Assert(t, err != nil, "Vlan should not have still be assigned for the deleted inf")
 			},
@@ -478,8 +529,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -508,8 +559,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "hostsystem-25",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -538,8 +589,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -572,8 +623,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -591,10 +642,25 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
-				v.probe = mockProbe
-				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+
+				orchInfo := []*network.OrchestratorInfo{
+					{
+						Name:      vchub.VcID,
+						Namespace: dcName,
+					},
+				}
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
+
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -611,10 +677,12 @@ func TestStore(t *testing.T) {
 					Spec: workload.WorkloadSpec{
 						Interfaces: []workload.WorkloadIntfSpec{
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.eeff",
+								MACAddress:   "aabb.ccdd.eeff",
+								ExternalVlan: 100,
 							},
 							workload.WorkloadIntfSpec{
-								MACAddress: "aabb.ccdd.ddff",
+								MACAddress:   "aabb.ccdd.ddff",
+								ExternalVlan: 200,
 							},
 						},
 					},
@@ -641,7 +709,7 @@ func TestStore(t *testing.T) {
 					expWorkload.Spec.Interfaces[i].MicroSegVlan = inf.MicroSegVlan
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
-				usegMgr := v.GetDC("DC1").GetPenDVS(createDVSName("DC1")).UsegMgr
+				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
 				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
 				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-25")
@@ -655,8 +723,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -685,8 +753,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -719,8 +787,8 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
-						DcName:     "DC1",
+						DcID:       dcName,
+						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
 						Changes: []types.PropertyChange{
@@ -737,10 +805,23 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
-				v.probe = mockProbe
-				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+				orchInfo := []*network.OrchestratorInfo{
+					{
+						Name:      vchub.VcID,
+						Namespace: dcName,
+					},
+				}
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -781,7 +862,7 @@ func TestStore(t *testing.T) {
 				Assert(t, item.ObjectMeta.Name == expWorkload.ObjectMeta.Name, "workloads are not same")
 				AssertEquals(t, len(expWorkload.Spec.Interfaces), len(item.Spec.Interfaces), "Interfaces were not equal")
 
-				usegMgr := v.GetDC("DC1").GetPenDVS(createDVSName("DC1")).UsegMgr
+				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
 				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
 			},
@@ -793,7 +874,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
@@ -823,7 +904,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -857,7 +938,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -866,10 +947,23 @@ func TestStore(t *testing.T) {
 					},
 				},
 			},
-			setup: func(v *VCHub, mockCtrl *gomock.Controller) {
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
-				v.probe = mockProbe
-				mockProbe.EXPECT().UpdateDVSPortsVlan("DC1", createDVSName("DC1"), gomock.Any()).Return(nil).AnyTimes()
+				vchub.probe = mockProbe
+				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
+				orchInfo := []*network.OrchestratorInfo{
+					{
+						Name:      vchub.VcID,
+						Namespace: dcName,
+					},
+				}
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG1"), "PG1", "PG1")
+
+				statemgr.CreateNetwork(vchub.StateMgr, "default", "PG2", "10.1.1.0/24", "10.1.1.1", 200, nil, orchInfo)
+				addPGState(t, vchub, dcName, createPGName("PG2"), "PG2", "PG2")
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -892,7 +986,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
@@ -922,7 +1016,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-40",
 						Originator: "127.0.0.1:8990",
@@ -947,6 +1041,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -989,7 +1087,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
@@ -1019,7 +1117,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1029,7 +1127,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1047,6 +1145,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1094,7 +1196,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-21",
 						Originator: "127.0.0.1:8990",
@@ -1124,7 +1226,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1142,6 +1244,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1177,7 +1283,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1187,7 +1293,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1195,6 +1301,10 @@ func TestStore(t *testing.T) {
 						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1217,7 +1327,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "virtualmachine-41",
 						Originator: "127.0.0.1:8990",
@@ -1252,6 +1362,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1290,7 +1404,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-44",
 						Originator: "127.0.0.1:8990",
@@ -1316,6 +1430,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1355,7 +1473,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1385,7 +1503,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1411,6 +1529,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1467,7 +1589,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1493,6 +1615,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1532,7 +1658,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1562,7 +1688,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1570,6 +1696,10 @@ func TestStore(t *testing.T) {
 						UpdateType: types.ObjectUpdateKindLeave,
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1592,7 +1722,7 @@ func TestStore(t *testing.T) {
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
 						VcObject:   defs.HostSystem,
-						DcID:       "DC1",
+						DcID:       dcName,
 						DcName:     dcName,
 						Key:        "hostsystem-41",
 						Originator: "127.0.0.1:8990",
@@ -1604,6 +1734,10 @@ func TestStore(t *testing.T) {
 						},
 					},
 				},
+			},
+			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
+				// Setup state for DC1
+				addDCState(t, vchub, dcName)
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
@@ -1630,6 +1764,7 @@ func TestStore(t *testing.T) {
 			continue
 		}
 		t.Logf("running %s", tc.name)
+		logger.Infof("<==== RUNNING %s ====>", tc.name)
 		sm, _, err := statemgr.NewMockStateManager()
 		if err != nil {
 			t.Fatalf("Failed to create state manager. Err : %v", err)
@@ -1667,30 +1802,13 @@ func TestStore(t *testing.T) {
 			defer mockCtrl.Finish()
 		}
 
-		useg, err := useg.NewUsegAllocator()
-		AssertOk(t, err, "Failed to create useg")
-		penDVS := &PenDVS{
-			State:   vchub.State,
-			DcName:  dcName,
-			DvsName: dvsName,
-			UsegMgr: useg,
-			Pgs:     map[string]*PenPG{},
-			probe:   vchub.probe,
-		}
-		vchub.DcMap[dcName] = &PenDC{
-			State: vchub.State,
-			// probe:  v.probe,
-			Name: dcName,
-			VcID: "DC1",
-			DvsMap: map[string]*PenDVS{
-				createDVSName(dcName): penDVS,
-			},
-		}
-
 		vchub.Wg.Add(1)
 		go vchub.startEventsListener()
 
 		// Push events
+
+		// Process any statemgr events first
+		time.Sleep(100 * time.Millisecond)
 		for _, e := range tc.events {
 			inbox <- e
 		}
@@ -1756,4 +1874,44 @@ func generateVNIC(macAddress, portKey, portgroupKey, vnicType string) types.Base
 			VirtualEthernetCard: ethCard,
 		}
 	}
+}
+
+func addDCState(t *testing.T, vchub *VCHub, dcName string) {
+	dvsName := createDVSName(dcName)
+	useg, err := useg.NewUsegAllocator()
+	AssertOk(t, err, "Failed to create useg")
+	penDVS := &PenDVS{
+		State:   vchub.State,
+		DcName:  dcName,
+		DvsName: dvsName,
+		UsegMgr: useg,
+		Pgs:     map[string]*PenPG{},
+		pgIDMap: map[string]*PenPG{},
+		probe:   vchub.probe,
+	}
+	vchub.DcMap[dcName] = &PenDC{
+		State: vchub.State,
+		Name:  dcName,
+		DvsMap: map[string]*PenDVS{
+			dvsName: penDVS,
+		},
+	}
+}
+
+func addPGState(t *testing.T, vchub *VCHub, dcName, pgName, pgID, networkName string) {
+	penDC := vchub.GetDC(dcName)
+	penDVS := penDC.GetPenDVS(createDVSName(dcName))
+	penPG := &PenPG{
+		State:  vchub.State,
+		probe:  vchub.probe,
+		PgName: pgName,
+		PgID:   pgID,
+		NetworkMeta: api.ObjectMeta{
+			Name:      networkName,
+			Tenant:    "default",
+			Namespace: "default",
+		},
+	}
+	penDVS.Pgs[pgName] = penPG
+	penDVS.pgIDMap[pgID] = penPG
 }

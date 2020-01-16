@@ -333,13 +333,6 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 			continue
 		}
 
-		entry := &vnicEntry{
-			PG:         pgID,
-			Port:       port,
-			MacAddress: macStr,
-		}
-		v.addVnicInfoForWorkload(workloadName, entry)
-
 		var externalVlan uint32
 		var pgObj *PenPG
 		var nw *ctkit.Network
@@ -354,16 +347,23 @@ func (v *VCHub) extractInterfaces(workloadName string, dcID string, dcName strin
 					v.Log.Debugf("Setting vlan %v for vnic %s", externalVlan, macStr)
 				} else {
 					v.Log.Errorf("Received EP with no corresponding venice network: PG: %s DC: %s Network meta %+v, err %s", pgID, dcName, pgObj.NetworkMeta, err)
-					// continue
+					continue
 				}
 			} else {
 				v.Log.Errorf("Received EP with PG we don't have state for: PG: %s DC: %s", pgID, dcName)
-				// continue
+				continue
 			}
 		} else {
 			v.Log.Errorf("Received EP for DC we don't have state for: %s", dcName)
-			// continue
+			continue
 		}
+
+		entry := &vnicEntry{
+			PG:         pgID,
+			Port:       port,
+			MacAddress: macStr,
+		}
+		v.addVnicInfoForWorkload(workloadName, entry)
 
 		vnic := workload.WorkloadIntfSpec{
 			MACAddress:   macStr,

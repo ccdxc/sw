@@ -141,13 +141,15 @@ func (w *InstanceManager) periodicSync() {
 	ticker := time.NewTicker(5 * time.Minute)
 	inProgress := false
 
+	w.logger.Info("Starting periodic sync")
 	for {
 		select {
 		case <-w.watchCtx.Done():
-			log.Info("Exiting periodic sync")
+			w.logger.Info("Exiting periodic sync")
 			return
 		case <-ticker.C:
 			if !inProgress {
+				w.logger.Info("periodic sync running")
 				inProgress = true
 				for _, v := range w.orchestratorMap {
 					v.Sync()

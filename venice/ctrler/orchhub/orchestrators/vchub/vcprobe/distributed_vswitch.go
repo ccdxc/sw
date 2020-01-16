@@ -132,6 +132,7 @@ func (v *VCProbe) getPenDVSPorts(dcName, dvsName string, criteria *types.Distrib
 
 // UpdateDVSPortsVlan updates the port settings
 func (v *VCProbe) UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error {
+	v.Log.Debugf("UpdateDVSPortsVlan called with %s %s %v", dcName, dvsName, portsSetting)
 	numPorts := len(portsSetting)
 	if numPorts == 0 {
 		// Nothing to do
