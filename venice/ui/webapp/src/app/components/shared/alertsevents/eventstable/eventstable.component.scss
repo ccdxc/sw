@@ -3,3 +3,24 @@
 .eventstable-filterby {
   @include primary-font();
 }
+
+.eventdetail-key {
+  @include primary-font(14px, #676763, bold);
+}
+
+.eventdetail-value {
+  @include primary-font();
+}
+
+.eventdetail-close {
+  cursor: pointer;
+}
+
+.eventdetail-header {
+  @include primary-font(18px, #676763, bold);
+}
+
+.eventdetail-container {
+  border-bottom: 1px solid;
+  @include primary-font(14px, #676763);
+}

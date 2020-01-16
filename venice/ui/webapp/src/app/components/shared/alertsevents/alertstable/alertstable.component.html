@@ -1,13 +1,26 @@
 <div fxFlex class="alertsevents-events-table">
-  <app-tableviewedit fxFlex="auto" fxLayout="column" class="naples-table-container"
+  <!-- <app-tableviewedit fxFlex="auto" fxLayout="column"
                      [data]="dataObjects"
                      [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
                      [runDoCheck]="true"
                      [dataKey]="'meta.name'" [sortOrder]="-1" [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
                      [enableCheckbox]="true"
+                     [actionTemplate]="actionTemplate"
+                     (rowClick)="selectAlert($event)"
+                     [showRowExpand]="false">
+  </app-tableviewedit> -->
+
+  <app-tableviewedit style="height: 100%" fxLayout="column" [data]="dataObjects"
+                     [showRowExpand]="showRowExpand"
+                     [cols]="cols" [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
+                     [dataKey]="'meta.name'" [sortOrder]="-1"
+                     [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
+                     (rowClick)="selectAlert($event)"
+                     [enableCheckbox]="true"
                      [actionTemplate]="actionTemplate">
   </app-tableviewedit>
+
 </div>
 
 
@@ -15,89 +28,178 @@
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
     <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'resolved'"
               matTooltip="Resolve Alert"
-              class="global-table-action-icon" (click)="resolveAlert(rowData)">
+              class="global-table-action-icon" (click)="resolveAlert(rowData, $event)">
       done_all
     </mat-icon>
     <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'acknowledged'"
               matTooltip="Acknowledge Alert"
               class="global-table-action-icon alertsevents-acknowledge-icon"
-              (click)="acknowledgeAlert(rowData)">
+              (click)="acknowledgeAlert(rowData, $event)">
       done
     </mat-icon>
     <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'open'"
               matTooltip="Mark Alert as Open"
               class="global-table-action-icon alertsevents-open-icon"
-              (click)="openAlert(rowData)">
+              (click)="openAlert(rowData, $event)">
       priority_high
     </mat-icon>
   </div>
 </ng-template>
 
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader fxFlex title="Alerts" [count]="count" [total]="alerts.length"
-                   [icon]="alertsIcon"
-                   [enableColumnSelect]="false" width="250px">
-    <div fxFlex="50" fxLayoutAlign="start center">
-      <div fxFlex="none">
-        <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"
-                  class="global-table-action-icon"
-                  (click)="resolveSelectedAlerts()">
-          done_all
-        </mat-icon>
-        <mat-icon *ngIf="showBatchAcknowLedgeIcon()" matTooltip="Acknowledge Selected Alerts"
-                  class="global-table-action-icon alertsevents-acknowledge-icon"
-                  (click)="acknowledgeSelectedAlerts()">
-          done
-        </mat-icon>
-        <mat-icon *ngIf="showBatchOpenIcon()" matTooltip="Mark Selected Alerts as Open"
-                  class="global-table-action-icon alertsevents-open-icon"
-                  (click)="openSelectedAlerts()">
-          priority_high
-        </mat-icon>
-      </div>
-      <div fxFlex></div>
-      <div *ngIf="selector && selector.alertSelector && selector.alertSelector.name"
-           class="alertsevents-filter-sourcenode">
-        Filtering by {{selector.alertSelector.name}}
-      </div>
+  <div fxFlex fxLayout="column">
+    <div fxFlex *ngIf="this.selectedAlert" [@slideInOut] fxFlex="auto" fxLayout="row"
+         class="alertdetail-container">
+      <ng-container *ngTemplateOutlet="selectedAlertDetail;"></ng-container>
     </div>
-    <div fxFlex="none" fxLayoutAlign="end center">
-      <!-- Checkboxes for Open, Ack, Resolved states -->
-      <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
-        <ng-container *ngFor="let state of possibleFilterStates">
-          <p-checkbox name="stateFilter" styleClass="alertsevents-checkbox"
-                      labelStyleClass="alertsevents-checkbox-label" [value]="state"
-                      [label]="state"
-                      [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
-                      [(ngModel)]="selectedStateFilters" (onChange)="filterAlerts()">
-          </p-checkbox>
-        </ng-container>
+    <app-tableheader fxFlex title="Alerts" [count]="count" [total]="alerts.length"
+                     [icon]="alertsIcon"
+                     [enableColumnSelect]="false" width="250px">
+      <div fxFlex="50" fxLayoutAlign="start center">
+        <div fxFlex="none">
+          <mat-icon *ngIf="showBatchResolveIcon()" matTooltip="Resolve Selected Alerts"
+                    class="global-table-action-icon"
+                    (click)="resolveSelectedAlerts()">
+            done_all
+          </mat-icon>
+          <mat-icon *ngIf="showBatchAcknowLedgeIcon()" matTooltip="Acknowledge Selected Alerts"
+                    class="global-table-action-icon alertsevents-acknowledge-icon"
+                    (click)="acknowledgeSelectedAlerts()">
+            done
+          </mat-icon>
+          <mat-icon *ngIf="showBatchOpenIcon()" matTooltip="Mark Selected Alerts as Open"
+                    class="global-table-action-icon alertsevents-open-icon"
+                    (click)="openSelectedAlerts()">
+            priority_high
+          </mat-icon>
+        </div>
+        <div fxFlex></div>
+        <div *ngIf="selector && selector.alertSelector && selector.alertSelector.name"
+             class="alertsevents-filter-sourcenode">
+          Filtering by {{selector.alertSelector.name}}
+        </div>
       </div>
-      <!-- Removing the all button -->
-      <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number "
-        (click)="onAlertNumberClick(null)"  [matTooltip]="'All Alerts'"
-        *ngIf="currentAlertSeverityFilter != null">All</div> -->
+      <div fxFlex="none" fxLayoutAlign="end center">
+        <!-- Checkboxes for Open, Ack, Resolved states -->
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+          <ng-container *ngFor="let state of possibleFilterStates">
+            <p-checkbox name="stateFilter" styleClass="alertsevents-checkbox"
+                        labelStyleClass="alertsevents-checkbox-label" [value]="state"
+                        [label]="state"
+                        [disabled]="selectedStateFilters.length === 1 && selectedStateFilters[0] === state"
+                        [(ngModel)]="selectedStateFilters" (onChange)="filterAlerts()">
+            </p-checkbox>
+          </ng-container>
+        </div>
+        <!-- Removing the all button -->
+        <!-- <div class="global-button global-alert-neutral alertsevents-main-menu-number "
+          (click)="onAlertNumberClick(null)"  [matTooltip]="'All Alerts'"
+          *ngIf="currentAlertSeverityFilter != null">All</div> -->
 
-      <div class="global-button global-alert-critical alertsevents-main-menu-number "
-           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
-           (click)="onAlertNumberClick('critical')" [matTooltip]="'Critical Alerts'"
-           *ngIf="alertNumbers.critical>0 && alertNumbers.critical !== alerts.length">
-        {{ alertNumbers.critical }}</div>
-      <div class="global-button global-alert-warning alertsevents-main-menu-number "
-           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
-           (click)="onAlertNumberClick('warn')" [matTooltip]="'Warning Alerts'"
-           *ngIf="alertNumbers.warn>0 && alertNumbers.warn !== alerts.length">
-        {{ alertNumbers.warn }}</div>
-      <div class="global-button global-alert-info alertsevents-main-menu-number "
-           [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
-           (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
-           *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
-        {{ alertNumbers.info }}</div>
-      &nbsp;|
-      <app-timerange fxFlex="nogrow" [selectedTimeRange]="alertsSelectedTimeRange"
-                     (timeRange)="setAlertsTimeRange($event)"></app-timerange>
+        <div class="global-button global-alert-critical alertsevents-main-menu-number "
+             [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'critical' ? 'alertsevents-disabled' : ''"
+             (click)="onAlertNumberClick('critical')" [matTooltip]="'Critical Alerts'"
+             *ngIf="alertNumbers.critical>0 && alertNumbers.critical !== alerts.length">
+          {{ alertNumbers.critical }}</div>
+        <div class="global-button global-alert-warning alertsevents-main-menu-number "
+             [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'warn' ? 'alertsevents-disabled' : ''"
+             (click)="onAlertNumberClick('warn')" [matTooltip]="'Warning Alerts'"
+             *ngIf="alertNumbers.warn>0 && alertNumbers.warn !== alerts.length">
+          {{ alertNumbers.warn }}</div>
+        <div class="global-button global-alert-info alertsevents-main-menu-number "
+             [ngClass]="currentAlertSeverityFilter != null && currentAlertSeverityFilter !== 'info' ? 'alertsevents-disabled' : ''"
+             (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
+             *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
+          {{ alertNumbers.info }}</div>
+        &nbsp;|
+        <app-timerange fxFlex="nogrow" [selectedTimeRange]="alertsSelectedTimeRange"
+                       (timeRange)="setAlertsTimeRange($event)"></app-timerange>
+      </div>
+    </app-tableheader>
+  </div>
+</ng-template>
+
+<ng-template #selectedAlertDetail>
+  <div fxFlex class="alertdetail-container">
+    <div fxFlex fxLayout="column">
+      <div class="alertdetail-header" fxFlex fxLayout="row">
+        <a fxFlex fxLayoutAlign="start center">Alert Details:</a>
+        <mat-icon class="alertdetail-close" (click)="closeDetails()">close</mat-icon>
+      </div>
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Severity:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="alertdetail-value">{{this.selectedAlert.status.severity}}</a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">State:</a>
+            <a fxFlex fxLayoutAlign="start center"
+               class="alertdetail-value">{{this.selectedAlert.spec.state}}</a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Modification Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-value">
+              {{ dateToString(this.selectedAlert.meta['mod-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Creation Time:</a>
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-value">
+              {{ dateToString(this.selectedAlert.meta['creation-time']) | PrettyDate }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Source Node &
+              Component:</a>
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-value">
+              <a class="alertdetail-link" href="{{getAlertSourceNameLink(this.selectedAlert)}}"
+                 [matTooltip]="getAlertSourceNameTooltip(this.selectedAlert)">
+                {{ this.selectedAlert.status.source['node-name'] }} </a> :
+              {{ this.selectedAlert.status.source.component }}
+            </a>
+          </div>
+        </div>
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Event URI:</a>
+            <a class="alertdetail-link alertdetail-value" fxFlex fxLayoutAlign="start center"
+               [routerLink]="['/monitoring/alertsevents/']"
+               [queryParams]="{'event': getEventNameFromURI(this.selectedAlert.status['event-uri'])}">
+              <!-- routerLink="/monitoring/alertsevents/{{'event=' + getEventNameFromURI(this.selectedAlert.status['event-uri'])}}" -->
+              {{ this.selectedAlert.status['event-uri'] }}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
+        <div fxFlex fxLayout="column">
+          <div fxLayout="row">
+            <a fxFlex="25" fxLayoutAlign="start center" class="alertdetail-key">Message:</a>
+            <a fxFlex="75" fxLayoutAlign="start center" class="alertdetail-value">
+              {{ this.selectedAlert.status.message}}
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
-  </app-tableheader>
+  </div>
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">

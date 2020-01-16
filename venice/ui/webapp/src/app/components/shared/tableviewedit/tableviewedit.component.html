@@ -76,7 +76,7 @@
             [style.min-height]="virtualRowHeight + 'px'"
             fxLayout="row"
             (click)="rowClick.emit({event: $event, rowData: rowData})">
-          <td [style.min-width]="checkboxWidth + 'px'"
+          <td (click)="$event.stopPropagation()" [style.min-width]="checkboxWidth + 'px'"
               *ngIf="enableCheckbox  && selectedcolumns.length > 0">
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
