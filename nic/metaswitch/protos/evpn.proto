@@ -148,47 +148,23 @@ message EvpnIpVrfRtSpec {
 
 // EvpnEvi create and update request
 message EvpnEviRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "evpnEviTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "evpnEviTable"
-  };
   // requests
   repeated EvpnEviSpec  Request = 1;
 }
 
 // EvpnIPVrf create and update request
 message EvpnIpVrfRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "evpnIpVrfTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "evpnIpVrfTable"
-  };
   // requests
   repeated EvpnIpVrfSpec Request = 1;
 }
 
 //EvpnEviRtSpec create and update request
 message EvpnEviRtRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "evpnEviRtTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "evpnEviRtTable"
-  };
   // requests
   repeated EvpnEviRtSpec  Request = 1;
 }
 
 message EvpnIpVrfRtRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "evpnIpVrfRtTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "evpnIpVrfRtTable"
-  };
   // requests
   repeated EvpnIpVrfRtSpec Request = 1;
 }
@@ -251,9 +227,6 @@ message EvpnMacIpSpec {
 }
 
 message EvpnMacIpSpecRequest {
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "evpnMacIpTable"
-  };
   // requests
   repeated EvpnMacIpSpec Request = 1;
 }

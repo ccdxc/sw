@@ -97,12 +97,6 @@ message BGPGlobalSpec {
 
 // BGPGlobalSpec create and update request
 message BGPRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "bgpRmEntTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "bgpRmEntTable"
-  };
   // requests
   BGPGlobalSpec Request = 1;
 }
@@ -113,24 +107,12 @@ message BGPStatus {
 
 // BGPPeerSpec create and update request
 message BGPPeerRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "bgpPeerTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "bgpPeerStatusTable"
-  };
   // requests
   repeated BGPPeerSpec Request = 1;
 }
 
 // BGPPeerAf create and update request
 message BGPPeerAfRequest {
-  option (venice.pdsaSetGlobOpts) = {
-      Mib: "bgpPeerAfiSafiTable"
-  };
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "bgpPeerAfiSafiStatusTable"
-  };
   // requests
   repeated BGPPeerAf Request = 1;
 }
@@ -292,9 +274,6 @@ message BGPNLRIPrefixSpec {
 
 // BGP NLRI Prefix create and update request
 message BGPNLRIPrefixRequest {
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "bgpNlriPrefixTable"
-  };
   // requests
   repeated BGPNLRIPrefixSpec Request = 1;
 }

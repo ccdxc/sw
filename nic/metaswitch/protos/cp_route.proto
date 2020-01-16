@@ -52,9 +52,6 @@ message CPRouteSpec {
 }
 
 message CPRouteSpecRequest {
-  option (venice.pdsaGetGlobOpts) = {
-      Mib: "rtmRibTable"
-  };
   // requests
   repeated CPRouteSpec Request = 1;
 }
@@ -104,10 +101,6 @@ message CPStaticRouteSpec {
 
 // CRUD request message
 message CPStaticRouteRequest {
-  option (venice.pdsaSetGlobOpts) = {
-    Mib:    "rtmStaticRtTable"
-  };
-
   repeated CPStaticRouteSpec request = 1;
 }
 

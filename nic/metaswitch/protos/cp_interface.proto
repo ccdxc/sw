@@ -58,18 +58,10 @@ message CPInterfaceSpec {
 
 // CRUD request messages
 message CPInterfaceRequest {
-  option (venice.pdsaSetGlobOpts) = {
-    Mib:    "limSoftwareInterfaceTable"
-  };
-
   repeated CPInterfaceSpec request = 1;
 }
 
 message CPInterfaceAddrRequest {
-  option (venice.pdsaSetGlobOpts) = {
-    Mib:    "limL3InterfaceAddressTable"
-  };
-
   repeated CPInterfaceAddrSpec request = 1;
 }
 
