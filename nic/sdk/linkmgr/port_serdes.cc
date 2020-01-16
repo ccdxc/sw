@@ -246,6 +246,12 @@ serdes_an_hcd_cfg_default (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
 }
 
 int
+serdes_invert_cfg_default (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    return 0;
+}
+
+int
 serdes_an_fec_enable_read_default (uint32_t sbus_addr)
 {
     return 0x0;
@@ -956,16 +962,6 @@ serdes_an_start_hw(uint32_t sbus_addr, serdes_info_t *serdes_info,
 
     avago_serdes_an_start(aapl, sbus_addr, config);
 
-    // assert link status
-    int_code = 0x107;
-    int_data = 0x8009;
-    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
-    if (int_ret == false) {
-        SDK_LINKMGR_TRACE_ERR("Failed to assert link status. sbus_addr: %d",
-                              sbus_addr);
-        ret = -1;
-    }
-
 cleanup:
     avago_serdes_an_config_destruct(aapl, config);
 
@@ -1011,6 +1007,9 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
     int      rx_width  = 0;
     uint32_t an_hcd    = 0;
     uint8_t  num_lanes = 0;
+    int      int_code  = 0x0;
+    int      int_data  = 0x0;
+    bool     int_ret   = false;
     Avago_serdes_an_config_t  *config      = NULL;
     Avago_serdes_pmd_config_t *pmd_config  = NULL;
     Avago_addr_t              *addr_struct = NULL;
@@ -1066,6 +1065,21 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
                                   aapl_an_hcd_to_str(an_hcd));
             return -1;
     }
+
+    // assert link status
+    int_code = 0x107;
+    int_data = an_hcd | (1 << BIN_ENCODE_ASSERT_LINK_STATUS_SHIFT);
+    SDK_LINKMGR_TRACE_DEBUG("an_hcd_cfg sbus_addr %d an_hcd 0x%x (%s) int_code 0x%x "
+                            "int_data 0x%x num_lanes %d tx_width %d rx_width %d",
+                             sbus_addr, an_hcd, aapl_an_hcd_to_str(an_hcd),
+                             int_code, int_data, num_lanes, tx_width, rx_width);
+    int_ret = serdes_spico_int_check_hw(sbus_addr, int_code, int_data);
+    if (int_ret == false) {
+        SDK_LINKMGR_TRACE_ERR("Failed to assert link status. sbus_addr: %d",
+                              sbus_addr);
+        return -1;
+    }
+
     config     = avago_serdes_an_config_construct(aapl);
     pmd_config = avago_serdes_pmd_config_construct(aapl);
 
@@ -1081,6 +1095,8 @@ serdes_an_hcd_cfg_hw (uint32_t sbus_addr, uint32_t *sbus_addr_arr)
             head->next = node;
             head = head->next;
         }
+        avago_spico_int(aapl, node->sbus, 0x26, 0x000f); // seed HF
+        avago_spico_int(aapl, node->sbus, 0x26, 0x0103); // seed LF
     }
     avago_serdes_an_configure_to_hcd(
                     aapl, addr_struct, config, pmd_config, tx_width, rx_width);
@@ -1211,10 +1227,22 @@ serdes_basic_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
 
     avago_serdes_init_config_destruct(aapl, cfg);
 
+    return ret;
+}
+
+int
+serdes_invert_cfg_hw (uint32_t sbus_addr, serdes_info_t *serdes_info)
+{
+    uint8_t  tx_invert = serdes_info->tx_pol;
+    uint8_t  rx_invert = serdes_info->rx_pol;
+
+    SDK_LINKMGR_TRACE_DEBUG("sbus_addr %u tx_invert 0x%u rx_invert 0x%u",
+                            sbus_addr, tx_invert, rx_invert);
+
+    // set the inversions
     avago_serdes_set_tx_invert(aapl, sbus_addr, tx_invert);
     avago_serdes_set_rx_invert(aapl, sbus_addr, rx_invert);
-
-    return ret;
+    return 0;
 }
 
 int
@@ -1305,6 +1333,7 @@ port_serdes_fn_init(platform_type_t platform_type,
     serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_default;
     serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_default;
     serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_default;
+    serdes_fn->serdes_invert_cfg    = &serdes_invert_cfg_default;
     serdes_fn->serdes_eye_check     = &serdes_eye_check_default;
 
     serdes_fn->serdes_an_core_status = &serdes_an_core_status_default;
@@ -1353,6 +1382,7 @@ port_serdes_fn_init(platform_type_t platform_type,
         serdes_fn->serdes_an_wait_hcd   = &serdes_an_wait_hcd_hw;
         serdes_fn->serdes_an_hcd_read   = &serdes_an_hcd_read_hw;
         serdes_fn->serdes_an_hcd_cfg    = &serdes_an_hcd_cfg_hw;
+        serdes_fn->serdes_invert_cfg    = &serdes_invert_cfg_hw;
         serdes_fn->serdes_an_core_status = &serdes_an_core_status_hw;
 
         serdes_fn->serdes_an_fec_enable_read   =

@@ -13,13 +13,15 @@
 #include "port_mac.hpp"
 #include "port_serdes.hpp"
 
-#define MAX_PORT_AN_HCD_RETRIES     10
-#define MAX_PORT_MAC_SYNC_RETRIES   4
-#define MAX_PORT_SERDES_DFE_RETRIES 5
-#define MAX_PORT_MAC_FAULTS_CHECK   3
-#define MAX_PORT_MAC_NOFAULTS_CHECK 3
-#define PORT_MAC_STAT_REPORT_SIZE   1024
-#define MIN_PORT_TIMER_INTERVAL     100     // msecs
+#define MAX_PORT_SERDES_READY_RETRIES    10
+#define MAX_PORT_QSFP_AN_HCD_RETRIES     10
+#define MAX_PORT_SFP_AN_HCD_RETRIES       4
+#define MAX_PORT_MAC_SYNC_RETRIES         4
+#define MAX_PORT_SERDES_DFE_RETRIES       5
+#define MAX_PORT_MAC_FAULTS_CHECK         3
+#define MAX_PORT_MAC_NOFAULTS_CHECK       3
+#define PORT_MAC_STAT_REPORT_SIZE      1024
+#define MIN_PORT_TIMER_INTERVAL         100     // msecs
 
 namespace sdk {
 namespace linkmgr {
@@ -36,6 +38,11 @@ typedef enum dfe_ret_e {
     DFE_WAIT,
     DFE_DONE,
 } dfe_ret_t;
+
+typedef enum neg_mode_e {
+    FIXED_NEG = 0,
+    AUTO_NEG = 1,
+} neg_mode_t;
 
 class port {
 public:
@@ -119,6 +126,11 @@ public:
     bool auto_neg_cfg(void) const { return this->auto_neg_cfg_; }
     void set_auto_neg_cfg(bool auto_neg_cfg) {
         this->auto_neg_cfg_ = auto_neg_cfg;
+    }
+
+    bool toggle_neg_mode(void) const { return this->toggle_neg_mode_; }
+    void set_toggle_neg_mode(bool toggle_neg_mode) {
+        this->toggle_neg_mode_ = toggle_neg_mode;
     }
 
     port_pause_type_t pause(void) const { return this->pause_; }
@@ -218,6 +230,11 @@ public:
     uint32_t num_link_train_retries(void) { return this->num_link_train_retries_; }
     void set_num_link_train_retries(uint32_t num_link_train) {
         this->num_link_train_retries_ = num_link_train;
+    }
+
+    uint32_t num_serdes_ready_retries(void) { return this->num_serdes_ready_retries_; }
+    void set_num_serdes_ready_retries(uint32_t num_serdes_ready) {
+        this->num_serdes_ready_retries_ = num_serdes_ready;
     }
 
     sdk_ret_t port_enable(bool start_en_timer = false);
@@ -392,6 +409,8 @@ private:
     bool                      auto_neg_cfg_;              // user configured AutoNeg
     sdk::event_thread::timer_t link_bringup_timer_;        // port link bring up timer
     sdk::event_thread::timer_t link_debounce_timer_;       // port link debounce timer
+    bool                      toggle_neg_mode_;           // for SFP+ toggle between auto_neg/force modes until link-up
+    neg_mode_t                last_neg_mode_;             // last toggle was auto_neg or force mode
     uint32_t                  mac_id_;                    // mac instance for this port
     uint32_t                  mac_ch_;                    // mac channel within mac instance
     uint32_t                  num_lanes_;                 // number of lanes for this port
@@ -419,10 +438,15 @@ private:
     uint32_t                  num_an_hcd_retries_;        // number of times AN HCD was retried in one pass of SM
     uint32_t                  num_mac_sync_retries_;      // number of times MAC sync is retried in one pass of SM
     uint32_t                  num_link_train_retries_;    // number of times link training failed in one pass of SM
+    uint32_t                  num_serdes_ready_retries_;  // number of times serdes ready was retried in one pass of SM
     bool                      persist_stats_collect_;     // set after initial link-up state; never reset (? TBD)
     uint64_t                  persist_stats_data_[MAX_MAC_STATS]; // saved stats before link flap or mac resets;
     sdk::types::mem_addr_t    port_stats_base_addr_;      // Base address for this port's stats
 
+    uint32_t port_max_an_retries(void);
+    uint32_t port_max_serdes_ready_retries(void);
+    neg_mode_t is_auto_neg (void);
+    void toggle_negotiation_mode (void);
     // MAC port num calculation based on mac instance and mac channel
     uint32_t  port_mac_port_num_calc(void);
 

@@ -4,6 +4,7 @@
 #define __SDK_PORT_SERDES_HPP__
 
 #define MAX_SERDES_EYE_HEIGHTS 4
+#define BIN_ENCODE_ASSERT_LINK_STATUS_SHIFT 15
 
 namespace sdk {
 namespace linkmgr {
@@ -28,6 +29,8 @@ typedef struct serdes_fn_s_ {
     int (*serdes_an_core_status)   (uint32_t sbus_addr);
     int (*serdes_an_hcd_cfg)       (uint32_t sbus_addr,
                                     uint32_t *sbus_addr_arr);
+    int (*serdes_invert_cfg)       (uint32_t sbus_addr,
+                                    serdes_info_t *serdes_info);
     int (*serdes_ical_start)       (uint32_t sbus_addr);
     int (*serdes_pcal_start)       (uint32_t sbus_addr);
     int (*serdes_an_pcal_start)    (uint32_t sbus_addr);
@@ -50,7 +53,7 @@ typedef struct serdes_fn_s_ {
     bool (*serdes_spico_int)       (uint32_t sbus_addr,
                                     int int_code, int int_data);
     uint32_t (*serdes_get_errors)  (uint32_t sbus_addr, bool clear);
-    int (*serdes_prbs_start)   (uint32_t sbus_addr, serdes_info_t *serdes_info);
+    int (*serdes_prbs_start)       (uint32_t sbus_addr, serdes_info_t *serdes_info);
 
     int (*serdes_an_fec_enable_read)   (uint32_t sbus_addr);
     int (*serdes_an_rsfec_enable_read) (uint32_t sbus_addr);

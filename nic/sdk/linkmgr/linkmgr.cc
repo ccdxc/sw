@@ -712,10 +712,12 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
             // (1) fiber cable is inserted OR
             // (2) QSA is inserted,
             // set the speed, fec, num_lanes based on cable
+            // TODO: to extend to QSFP also after initial validations on SFPs
+            port_args->toggle_neg_mode = false;
             if (port_args->auto_neg_enable == true) {
                 if ((port_args->cable_type == cable_type_t::CABLE_TYPE_FIBER) ||
-                    (sdk::platform::xcvr_type(phy_port-1) ==
-                                            xcvr_type_t::XCVR_TYPE_SFP)) {
+                    (sdk::platform::xcvr_type(phy_port-1) == xcvr_type_t::XCVR_TYPE_SFP)) {
+
                     port_args->auto_neg_enable = false;
                     port_args->port_speed =
                         sdk::platform::cable_speed(phy_port-1);
@@ -747,7 +749,19 @@ port_args_set_by_xcvr_state (port_args_t *port_args)
                             break;
                     }
                 }
+                if ((port_args->cable_type == cable_type_t::CABLE_TYPE_CU) &&
+                    (sdk::platform::xcvr_type(phy_port-1) == xcvr_type_t::XCVR_TYPE_SFP)) {
+                    // for these types, toggle between force/an till link-up - TOR/peer could have any
+                    port_args->toggle_neg_mode = true;
+                    SDK_TRACE_DEBUG("port %u CU-SFP toggle_neg_mode enabled",
+                                     port_args->port_num);
+                }
             }
+            SDK_TRACE_DEBUG("port %u auto_neg_enable %u toggle an %u ",
+                             port_args->port_num, port_args->auto_neg_enable,
+                             port_args->toggle_neg_mode);
+
+
         } else {
             port_args->admin_state = port_admin_state_t::PORT_ADMIN_STATE_DOWN;
         }
@@ -817,6 +831,7 @@ port_create (port_args_t *args)
     port_p->set_debounce_time(args->debounce_time);
     port_p->set_fec_type(args->fec_type);
     port_p->set_auto_neg_enable(args->auto_neg_enable);
+    port_p->set_toggle_neg_mode(args->toggle_neg_mode);
     port_p->set_mtu(args->mtu);
     port_p->set_pause(args->pause);
     port_p->set_tx_pause_enable(args->tx_pause_enable);
@@ -988,6 +1003,13 @@ port_update (void *pd_p, port_args_t *args)
         SDK_TRACE_DEBUG("AN updated. new: %d, old: %d",
                         args->auto_neg_enable, port_p->auto_neg_enable());
         port_p->set_auto_neg_enable(args->auto_neg_enable);
+        configured = true;
+    }
+
+    if (args->toggle_neg_mode != port_p->toggle_neg_mode()) {
+        SDK_TRACE_DEBUG("port %u toggle neg mode updated. new: %d, old: %d",
+                        args->port_num, args->toggle_neg_mode, port_p->toggle_neg_mode());
+        port_p->set_toggle_neg_mode(args->toggle_neg_mode);
         configured = true;
     }
 

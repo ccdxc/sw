@@ -71,6 +71,7 @@ typedef struct port_args_s {
     cable_type_t          cable_type;                 // CU/Fiber cable type
     bool                  auto_neg_cfg;               // user AutoNeg config
     bool                  auto_neg_enable;            // Enable AutoNeg
+    bool                  toggle_neg_mode;            // toggle between auto_neg and force modes
     bool                  mac_stats_reset;            // mac stats reset
     uint32_t              mac_id;                     // mac id associated with the port
     uint32_t              mac_ch;                     // mac channel associated with port

@@ -36,6 +36,27 @@ port::port_debounce_timer_cb(void)
     return SDK_RET_OK;
 }
 
+// fn returns max serdes ready retries value
+// TODO: enhance to add 
+uint32_t
+port::port_max_serdes_ready_retries (void)
+{
+    return MAX_PORT_SERDES_READY_RETRIES;
+}
+
+// fn returns AN retries value based on cable_type and XCVR type
+// we want SFP/CU AN to have shorter retries cycle
+uint32_t
+port::port_max_an_retries (void)
+{
+    int phy_port = sdk::lib::catalog::logical_port_to_phy_port(this->port_num_);
+
+    if (sdk::platform::xcvr_type(phy_port -1) == xcvr_type_t::XCVR_TYPE_SFP) {
+        return MAX_PORT_SFP_AN_HCD_RETRIES;
+    }
+    return MAX_PORT_QSFP_AN_HCD_RETRIES;
+}
+
 bool
 port::port_link_status(void)
 {
@@ -277,6 +298,8 @@ port::port_serdes_cfg(void)
                                     cable_type());
 
         serdes_fns()->serdes_basic_cfg(sbus_addr, serdes_info);
+        // configure the tx/rx inversions
+        serdes_fns()->serdes_invert_cfg(sbus_addr, serdes_info);
         serdes_fns()->serdes_cfg(sbus_addr, serdes_info);
         serdes_fns()->serdes_rx_lpbk(sbus_addr,
                 loopback_mode() == port_loopback_mode_t::PORT_LOOPBACK_MODE_PHY?
@@ -413,7 +436,7 @@ port::port_serdes_pcal_start(void)
     uint32_t lane = 0;
 
     for (lane = 0; lane < num_lanes_; ++lane) {
-        if (auto_neg_enable() == true) {
+        if (is_auto_neg()) {
             serdes_fns()->serdes_an_pcal_start(port_sbus_addr(lane));
         } else {
             serdes_fns()->serdes_pcal_start(port_sbus_addr(lane));
@@ -475,6 +498,9 @@ port::port_serdes_an_start (void)
 
     // Init serdes in 1G
     serdes_fns()->serdes_an_init(port_sbus_addr(0), &serdes_info_an);
+
+    // configure the tx/rx inversions
+    serdes_fns()->serdes_invert_cfg(sbus_addr, serdes_info);
 
     // Configure Tx/Rx slip, Rx termination, Tx EQ for 25G serdes.
     // This is to avoid setting these values if negotiated speed
@@ -745,12 +771,12 @@ port::port_link_sm_an_process(void)
         }
 
         // If AN HCD doesn't resolve:
-        //   If retry count < MAX_PORT_AN_HCD_RETRIES:
+        //   If retry count < port_max_an_retries():
         //     start bringup timer and return with AN_WAIT
         //  Else return with AN_RESET
         if(an_good == false) {
             set_num_an_hcd_retries(num_an_hcd_retries() + 1);
-            if (num_an_hcd_retries() >= MAX_PORT_AN_HCD_RETRIES) {
+            if (num_an_hcd_retries() >= port_max_an_retries()) {
                 an_ret = AN_RESET;
                 break;
             }
@@ -933,6 +959,8 @@ port::port_link_sm_process(bool start_en_timer)
                 timer_stop(link_bringup_timer());
                 timer_stop(link_debounce_timer());
 
+                //make the an/fixed mode toggle here - 25G-CU only
+                toggle_negotiation_mode();
                 // pull the stats and save in persist storage before bringing down
                 port_mac_stats_persist_update();
 
@@ -977,7 +1005,7 @@ port::port_link_sm_process(bool start_en_timer)
 
              case port_link_sm_t::PORT_LINK_SM_AN_CFG:
 
-                if (auto_neg_enable() == true) {
+                if (is_auto_neg()) {
                     an_ret = port_link_sm_an_process();
 
                     if (an_ret == AN_RESET) {
@@ -1025,10 +1053,17 @@ port::port_link_sm_process(bool start_en_timer)
                 serdes_rdy = port_serdes_rdy();
 
                 if(serdes_rdy == false) {
+                    set_num_serdes_ready_retries(num_serdes_ready_retries() + 1);
+                    if (num_serdes_ready_retries() >= port_max_serdes_ready_retries()) {
+                        // reset serdes and try SM again
+                        port_link_sm_retry_enabled(true);
+                        break;
+                    }
                     this->bringup_timer_val_ += timeout;
                     port_timer_start(link_bringup_timer(), timeout);
                     break;
                 }
+                set_num_serdes_ready_retries(0);
 
                 // transition to mac cfg state
                 this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_MAC_CFG);
@@ -1047,7 +1082,7 @@ port::port_link_sm_process(bool start_en_timer)
                 port_mac_enable(true);
                 port_mac_soft_reset(false);
 
-                if (auto_neg_enable() == true) {
+                if (is_auto_neg()) {
                     // Restart AN if link training failed.
                     if (port_serdes_an_link_train_check() == false ||
                             port_serdes_eye_check() == false ) {
@@ -1155,7 +1190,7 @@ port::port_link_sm_process(bool start_en_timer)
                     if (num_mac_sync_retries() >= MAX_PORT_MAC_SYNC_RETRIES) {
                         retry_sm = true;
                         set_num_mac_sync_retries(0);
-                        port_link_sm_retry_enabled();
+                        port_link_sm_retry_enabled(false);
                         break;
                     }
 
@@ -1194,7 +1229,7 @@ port::port_link_sm_process(bool start_en_timer)
                                             "MAC faults persistent, retry SM");
                         retry_sm = true;
                         set_mac_faults(0);
-                        port_link_sm_retry_enabled();
+                        port_link_sm_retry_enabled(false);
                         break;
                     }
                 } else if (fec_type() == port_fec_type_t::PORT_FEC_TYPE_NONE) {
@@ -1267,6 +1302,25 @@ port::port_link_sm_process(bool start_en_timer)
     }
 
     return SDK_RET_OK;
+}
+
+neg_mode_t
+port::is_auto_neg (void)
+{
+    // check if we need to switch if autoneg is disabled
+    if (this->toggle_neg_mode_ == true) {
+        return this->last_neg_mode_;
+    }
+    // default option return
+    return (auto_neg_enable() ? AUTO_NEG : FIXED_NEG);
+}
+
+void
+port::toggle_negotiation_mode (void)
+{
+    if (this->toggle_neg_mode_ == true) {
+        this->last_neg_mode_ = (this->last_neg_mode_ == AUTO_NEG)?FIXED_NEG:AUTO_NEG;
+    }
 }
 
 sdk_ret_t
@@ -1448,10 +1502,9 @@ port::port_mac_state_reset(void)
     port_mac_enable(false);
 
     // reset MAC global programming since serdes config
-    // is changed to run AN
-    if (auto_neg_enable() == true) {
-        port_deinit();
-    }
+    // is changed to run AN/force
+    // TODO: Need enhancement for breakout/switch of 100G/25G/10G in same MAC
+    port_deinit();
     return SDK_RET_OK;
 }
 
@@ -1484,6 +1537,9 @@ port::port_link_sm_counters_reset(void)
     // reset AN HCD retry counter
     set_num_an_hcd_retries(0);
 
+    // reset serdes ready retry counter
+    set_num_serdes_ready_retries(0);
+
     // reset AN link training retry counter
     set_num_link_train_retries(0);
 
@@ -1503,6 +1559,10 @@ port::port_link_sm_retry_enabled(bool serdes_reset)
         port_serdes_state_reset();
     }
     this->set_port_link_sm(port_link_sm_t::PORT_LINK_SM_ENABLED);
+
+    //make the an/fixed mode toggle here - 25G-CU only
+    toggle_negotiation_mode();
+
     return SDK_RET_OK;
 }
 

@@ -44,8 +44,8 @@
     },
 
     "serdes" : {
-        "fw"             : "serdes.0x1087_244D.rom",
-        "build_id"       : "0x1087",
+        "fw"             : "serdes.0x1094_244D.rom",
+        "build_id"       : "0x1094",
         "rev_id"         : "0x244D",
         "serdes_file"    : "serdes_68-0005.json",
         "jtag_id"        : "0xA2BF8001",
