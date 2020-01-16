@@ -277,6 +277,7 @@ func (idr *Indexer) Start() error {
 
 	// Block on the done channel
 	err = <-idr.doneCh
+	idr.logger.Errorf("received err from done ch, err: %v", err)
 	idr.Stop()
 	return err
 }
@@ -285,6 +286,7 @@ func (idr *Indexer) initializeAndStartWatchers() {
 	defer idr.Done()
 
 	if err := idr.initialize(); err != nil {
+		idr.logger.Errorf("failed to create watchers, err: %v", err)
 		idr.doneCh <- err // context cancelled
 		return
 	}
@@ -295,10 +297,6 @@ func (idr *Indexer) initializeAndStartWatchers() {
 }
 
 func (idr *Indexer) initialize() error {
-	idr.Lock()
-	idr.watcherDone = make(chan bool)
-	idr.Unlock()
-
 	for {
 		select {
 		case <-idr.ctx.Done():
@@ -306,6 +304,10 @@ func (idr *Indexer) initialize() error {
 			idr.logger.Error(err)
 			return err
 		default:
+			idr.Lock()
+			idr.watcherDone = make(chan bool)
+			idr.Unlock()
+
 			_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 				return func() (interface{}, error) {
 					return nil, idr.createWatchers()

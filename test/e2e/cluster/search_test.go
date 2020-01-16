@@ -58,7 +58,6 @@ var _ = Describe("search test", func() {
 	})
 
 	It("spyglass restart", func() {
-		Skip("Skip until it can be properly debugged")
 		createDummyObj()
 		testCases := []*queryTestCase{
 			{
