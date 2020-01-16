@@ -118,7 +118,7 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-details-panel-ntp-servers">
-                  {{ selectedObj?.spec['id'] }}
+                  {{ selectedObj?.spec.id }}
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
@@ -154,13 +154,13 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-version">
-                  {{ selectedObj?.status['DSCVersion'] }}
+                  {{ selectedObj?.status.DSCVersion }}
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-panel-version">
-                  <a routerLink="/cluster/hosts"> {{ selectedObj?.status['host'] }}</a>
+                  <a routerLink="/cluster/hosts"> {{ selectedObj?.status.host }}</a>
                 </div>
               </div>
             </div>
@@ -205,7 +205,7 @@
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
                    class="naplesdetail-node-value">
                 <div class="naplesdetail-details-panel-virtual-ip">
-                  {{ selectedObj?.status['smartNicSku']}}
+                  {{ selectedObj?.status.DSCSku}}
                 </div>
               </div>
               <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center"
