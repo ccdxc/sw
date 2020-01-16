@@ -503,45 +503,9 @@ export class TelemetrychartComponent extends BaseComponent implements OnInit, On
     // We may use an incorrect time instance if we do
     const timeRange = this.selectedTimeRange;
     this.dataSources.forEach( (source) => {
-      if (source.fields != null && source.fields.length !== 0) {
-        // Fields with counter types go into a second query
-        const query =  this.buildMetricsPollingQuery(source);
-         // Remvoing default group by time
-        query.query['group-by-time'] = null;
-        // Set timerange
-        const setQueryTime = (currQuery: ITelemetry_queryMetricsQuerySpec) => {
-          if (timeRange != null) {
-            currQuery['start-time'] = timeRange.getTime().startTime.toISOString() as any;
-            currQuery['end-time'] = timeRange.getTime().endTime.toISOString() as any;
-          } else {
-            // Default time range
-            currQuery['start-time'] = moment().subtract('1', 'd').toISOString() as any;
-            currQuery['end-time'] = moment().toISOString() as any;
-          }
-        };
-        setQueryTime(query.query);
-        // Update query timing
-        // If query end timing is now, then we need to have a sliding window
-        if (this.selectedTimeRange == null) {
-          // if selectedTimeRange is blank, then the default is till now
-          query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
-            queryBody['start-time'] = queryBody['end-time'];
-            query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
-          };
-        } else if (this.selectedTimeRange.isEndTimeNow()) {
-          query.pollingOptions.mergeFunction = MetricsUtility.createTimeSeriesQueryMerge(this.selectedTimeRange.getDuration().asMinutes());
-          // Update polling options
-          query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
-            queryBody['start-time'] = queryBody['end-time'];
-            query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
-          };
-        } else {
-          query.pollingOptions.mergeFunction = null;
-          // Always fetch the same data since the window isn't sliding
-          query.pollingOptions.timeUpdater = setQueryTime;
-        }
-        source.transformQuery({query: query.query});
-        queryList.queries.push(query);
+      const query = source.generateQuery(timeRange);
+      if (query != null) {
+         queryList.queries.push(query);
       }
     });
     this.graphTransforms.forEach( (t) => {

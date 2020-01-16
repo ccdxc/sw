@@ -101,7 +101,7 @@ export class LabelSelectorTransform extends MetricTransform<LabelSelectorTransfo
     this.labelData = res;
   }
 
-  transformQuery(opts: TransformQuery) {
+  transformQuery(opts: TransformQuery): boolean {
     if (opts.query.selector == null || opts.query.selector.requirements == null) {
      opts.query.selector =  {
       requirements: [],
@@ -127,6 +127,7 @@ export class LabelSelectorTransform extends MetricTransform<LabelSelectorTransfo
       };
     });
     opts.query.selector.requirements.push(...reqs);
+    return true;
   }
 
   load(config: LabelSelectorTransformConfig) {

@@ -220,6 +220,7 @@ export const patternValidator = (pattern: string | RegExp, message: string): Val
 export const CustomFormControl = (formControl, propInfo) => {
     formControl._venice_sdk = {
         description: propInfo.description,
+        hint: propInfo.hint,
         default: propInfo.default,
     }
     return formControl

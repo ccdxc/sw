@@ -1,11 +1,14 @@
-import { ITelemetry_queryMetricsQuerySpec } from '@sdk/v1/models/generated/telemetry_query';
+import { ITelemetry_queryMetricsQuerySpec, Telemetry_queryMetricsQuerySpec_function } from '@sdk/v1/models/generated/telemetry_query';
 import { ITelemetry_queryMetricsResultSeries, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
 import { ChartData as ChartJSData, ChartDataSets as ChartJSDataSets, ChartOptions } from 'chart.js';
 import { Observer } from 'rxjs';
 import { Utility } from '@app/common/Utility';
 import { MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { DataTransformConfig  } from '@app/models/frontend/shared/userpreference.interface';
-import { TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
+import { TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
+import { MetricsUtility } from '@app/common/MetricsUtility';
+import { TimeRange } from '@app/components/shared/timerange/utility';
+import * as moment from 'moment';
 
 // List of transforms
 export enum TransformNames {
@@ -90,7 +93,9 @@ export abstract class MetricTransform<T> {
   onFieldChange() {}
   onDebugModeChange() {}
   // Hook called before query goes to Venice
-  transformQuery(opts: TransformQuery) {}
+  transformQuery(opts: TransformQuery): boolean {
+    return true;
+  }
   // Hook called before data is converted to chart js datasets
   transformMetricData(opts: TransformMetricData) {}
   // Hook called after each dataset is created
@@ -242,6 +247,62 @@ export class DataSource {
     });
   }
 
+  // Returns a metricsPollingQuery, or null if a query should not be executed
+  generateQuery(timeRange: TimeRange): MetricsPollingQuery {
+      if (this.fields == null || this.fields.length === 0) {
+        return null;
+      }
+      // Fields with counter types go into a second query
+      const query =  this.buildMetricsPollingQuery();
+      // Remvoing default group by time
+      query.query['group-by-time'] = null;
+      // Set timerange
+      const setQueryTime = (currQuery: ITelemetry_queryMetricsQuerySpec) => {
+        if (timeRange != null) {
+          currQuery['start-time'] = timeRange.getTime().startTime.toISOString() as any;
+          currQuery['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+        } else {
+          // Default time range
+          currQuery['start-time'] = moment().subtract('1', 'd').toISOString() as any;
+          currQuery['end-time'] = moment().toISOString() as any;
+        }
+      };
+      setQueryTime(query.query);
+      // Update query timing
+      // If query end timing is now, then we need to have a sliding window
+      if (timeRange == null) {
+        // if selectedTimeRange is blank, then the default is till now
+        query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
+          queryBody['start-time'] = queryBody['end-time'];
+          query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+        };
+      } else if (timeRange.isEndTimeNow()) {
+        query.pollingOptions.mergeFunction = MetricsUtility.createTimeSeriesQueryMerge(timeRange.getDuration().asMinutes());
+        // Update polling options
+        query.pollingOptions.timeUpdater = (queryBody: ITelemetry_queryMetricsQuerySpec) => {
+          queryBody['start-time'] = queryBody['end-time'];
+          query['end-time'] = timeRange.getTime().endTime.toISOString() as any;
+        };
+      } else {
+        query.pollingOptions.mergeFunction = null;
+        // Always fetch the same data since the window isn't sliding
+        query.pollingOptions.timeUpdater = setQueryTime;
+      }
+      const isReady = this.transformQuery({query: query.query});
+      if (isReady) {
+        return query;
+      }
+      return null;
+  }
+
+  buildMetricsPollingQuery(): MetricsPollingQuery {
+    const query = MetricsUtility.timeSeriesQueryPolling(this.measurement, this.fields);
+    if (this.measurement === 'Cluster' || this.measurement === 'SessionSummaryMetrics') {  // measurement can be SessionSummaryMetrics, FteCPSMetrics, Cluster
+      query.query.function = Telemetry_queryMetricsQuerySpec_function.last; // VS-741 use median function to show DSC count
+    }
+    return query;
+  }
+
   load(config: DataTransformConfig) {
     this.measurement = config.measurement;
     this.fields = config.fields;
@@ -262,9 +323,9 @@ export class DataSource {
      };
   }
 
-  transformQuery(opts: TransformQuery) {
-    this.transforms.forEach( (t) => {
-      t.transformQuery(opts);
+  transformQuery(opts: TransformQuery): boolean {
+    return this.transforms.every( (t) => {
+      return t.transformQuery(opts);
     });
   }
 

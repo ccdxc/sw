@@ -8,6 +8,9 @@ export class RoundCountersTransform extends MetricTransform<{}> {
   transformName = TransformNames.RoundCounters;
 
   transformMetricData(opts: TransformMetricData) {
+    if (opts.result == null || opts.result.series == null) {
+      return;
+    }
     opts.result.series.forEach( (s) => {
       // For each series, each field that we have needs to be rounded
       this.fields.forEach( (f) => {

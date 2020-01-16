@@ -88,10 +88,16 @@ export class ErrorTooltipDirective extends MatTooltip implements OnInit {
       return this.appErrorTooltip;
     }
     // Description from swagger
+    const desc = [];
     const customControl: any = this.control.control;
     if (customControl != null && customControl._venice_sdk != null && customControl._venice_sdk.description != null) {
       this.tooltipClass = this.tooltipDefaultClass;
-      return customControl._venice_sdk.description;
+      desc.push(customControl._venice_sdk.description);
     }
+    if (customControl != null && customControl._venice_sdk != null && customControl._venice_sdk.hint != null) {
+      this.tooltipClass = this.tooltipDefaultClass;
+      desc.push( 'Ex. ' + customControl._venice_sdk.hint);
+    }
+    return desc.join('\n');
   }
 }

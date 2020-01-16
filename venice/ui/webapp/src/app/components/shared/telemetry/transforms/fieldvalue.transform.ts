@@ -24,12 +24,13 @@ export class FieldValueTransform extends MetricTransform<{}> {
     super();
   }
 
-  transformQuery(opts: TransformQuery) {
+  transformQuery(opts: TransformQuery): boolean {
     const measurement = opts.query.kind;
     const funcTransform = this.queryTransformMap[measurement];
     if (funcTransform != null) {
       funcTransform(opts.query);
     }
+    return true;
   }
 
   transformMetricData(opts: TransformMetricData) {

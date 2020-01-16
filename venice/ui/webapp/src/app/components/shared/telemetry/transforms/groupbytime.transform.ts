@@ -12,7 +12,7 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
   minimumGroupByTime: string = '60s';
 
 
-  transformQuery(opts: TransformQuery) {
+  transformQuery(opts: TransformQuery): boolean {
     const start = moment(opts.query['start-time']);
     const end = moment(opts.query['end-time']);
     const duration = moment.duration(end.diff(start));
@@ -35,6 +35,7 @@ export class GroupByTimeTransform extends MetricTransform<{}> {
     }
 
     opts.query['group-by-time'] = groupByMin + 'm';
+    return true;
   }
 
   load(config: {}) {

@@ -122,7 +122,7 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
     return 'Value 1, Value 2';
   }
 
-  transformQuery(opts: TransformQuery) {
+  transformQuery(opts: TransformQuery): boolean {
     if (opts.query.selector == null || opts.query.selector.requirements == null) {
      opts.query.selector =  {
       requirements: [],
@@ -136,6 +136,7 @@ export class FieldSelectorTransform extends MetricTransform<FieldSelectorTransfo
       };
     });
     opts.query.selector.requirements.push(...values);
+    return true;
   }
 
   load(config: FieldSelectorTransformConfig) {

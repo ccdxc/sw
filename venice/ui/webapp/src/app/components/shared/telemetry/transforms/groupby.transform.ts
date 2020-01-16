@@ -40,8 +40,9 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
     this.groupByOptions = options;
   }
 
-  transformQuery(opts: TransformQuery) {
+  transformQuery(opts: TransformQuery): boolean {
     opts.query['group-by-field'] = this.groupBy;
+    return true;
   }
 
   transformDataset(opts: TransformDataset) {
