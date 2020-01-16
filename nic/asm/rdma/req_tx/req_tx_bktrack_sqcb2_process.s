@@ -66,10 +66,7 @@ check_err_retry:
     // Check err_retry_ctr for retransmit timeout
     seq            c1, d.err_retry_ctr, 0 // Branch Delay Slot
     bcf            [c1], local_ack_retry_err
-
-    // Infinite retries if retry_ctr is set to 7
-    seq            c1, d.err_retry_ctr, 7 // Branch Delay Slot
-    tblsub.!c1     d.err_retry_ctr, 1
+    tblsub.!c1     d.err_retry_ctr, 1 // Branch Delay Slot
 
 trigger_bktrack:
     tblwr          d.busy, 1
