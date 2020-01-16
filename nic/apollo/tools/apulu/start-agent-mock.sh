@@ -3,7 +3,7 @@
 TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../../`
-GDB='gdb --args'
+#GDB='gdb --args'
 # Enable the below to test with flow insertion
 export AGENT_TEST_HOOKS_LIB=libflowtestagenthooks.so
 export CONFIG_PATH=$NIC_DIR/conf/
