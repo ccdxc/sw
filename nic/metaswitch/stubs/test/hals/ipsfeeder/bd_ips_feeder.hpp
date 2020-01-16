@@ -22,6 +22,9 @@ public:
    void init() override {
        bd_input_params_t::init();
     }
+   void trigger_init() override {
+        pds_ms::vpc_create(&vpc_spec, 0);
+   }
 
     ATG_BDPI_UPDATE_BD generate_add_upd_ips(void) {
         ATG_BDPI_UPDATE_BD add_upd {0};
@@ -74,6 +77,21 @@ public:
     void trigger_if_unbind(void) {
     }
     bool ips_mock() override {return true;}
+
+    void cleanup() override {
+        // Delete the VPC created as a pre-req
+        std::cout << " ====== Cleanup ========" << std::endl;
+        pds_ms::vpc_delete(&vpc_spec, 0);
+        // TODO Fix - currently VPC delete is not calling HAL stub VRF delete
+       auto state_ctxt = pds_ms::state_t::thread_context(); 
+       auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
+       if (vpc_obj->properties().spec_invalid) {
+           std::cout << "Erasing VPC from store" << std::endl;
+           state_ctxt.state()->vpc_store().erase(vrf_id);
+           state_ctxt.state()->route_table_store()
+               .erase(pds_ms::msidx2pdsobjkey(vrf_id));
+       }
+    }
 };
 
 } // End Namespace

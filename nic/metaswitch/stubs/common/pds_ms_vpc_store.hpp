@@ -26,11 +26,11 @@ public:
         bool            spec_invalid = false; // Has the VPC Spec been deleted
                                               // mgmt
 
-        properties_t(const pds_vpc_spec_t& vpc_spec_)
-            : vrf_id(pdsobjkey2msidx(vpc_spec_.key)), vpc_spec(vpc_spec_) {};
+        properties_t(ms_vrf_id_t vrf_id_, const pds_vpc_spec_t& vpc_spec_)
+            : vrf_id(vrf_id_), vpc_spec(vpc_spec_) {};
     };
-    vpc_obj_t(const properties_t& prop) : prop_(prop) {};
-    vpc_obj_t(const pds_vpc_spec_t& vpc_spec_) : prop_(vpc_spec_) {};
+    vpc_obj_t(ms_vrf_id_t vrf_id_, const pds_vpc_spec_t& vpc_spec_)
+        : prop_(vrf_id_, vpc_spec_) {};
     void set_properties (const properties_t& prop) {prop_ = prop;}
     properties_t& properties(void) {return prop_;}
     const properties_t& properties(void) const {return prop_;}

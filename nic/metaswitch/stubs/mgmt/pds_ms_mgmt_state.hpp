@@ -88,23 +88,16 @@ public:
     }
     
     bool pds_mock_mode(void) const { return pds_mock_mode_;  }
-    
     void set_pds_mock_mode(bool val) { pds_mock_mode_ = val; }
 
     void set_pending_uuid_create(const pds_obj_key_t& uuid, 
-                                 uuid_obj_uptr_t&& obj) {
-        if (lookup_uuid(uuid) != nullptr) {
-            SDK_TRACE_VERBOSE("Cannot create existing UUID %s",
-                              uuid.str());
-            return;
-        }
-        uuid_pending_create_[uuid] = std::move(obj);
-    }
+                                 uuid_obj_uptr_t&& obj);
     void release_pending_uuid() {
         uuid_pending_create_.clear();
         uuid_pending_delete_.clear();
     }
     void set_pending_uuid_delete(const pds_obj_key_t& uuid) {
+        SDK_TRACE_VERBOSE("UUID %s in pending Delete list", uuid.str());
         uuid_pending_delete_.push_back(uuid);
     }
     // Commit all pending UUID operations to permanent store
@@ -112,16 +105,8 @@ public:
     void remove_uuid(const pds_obj_key_t& uuid) {
         uuid_store_.erase(uuid);
     }
+    uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid);
 
-    uuid_obj_t* lookup_uuid(const pds_obj_key_t& uuid) {
-        auto obj = uuid_store_.find(uuid);
-        if (obj != uuid_store_.end()) {return obj->second.get();}
-        // Some UUID objects are held in pending cache until
-        // MS HAL stub completes asynchronously
-        auto obj_pend = uuid_pending_create_.find(uuid);
-        if (obj_pend != uuid_store_.end()) {return obj_pend->second.get();}
-        return nullptr;
-    }
     mib_idx_gen_indexer_t&  mib_indexer() {return mib_indexer_;}
 
 private:
@@ -137,7 +122,7 @@ private:
     std::unordered_map<pds_obj_key_t, uuid_obj_uptr_t, pds_obj_key_hash> uuid_pending_create_;
     std::vector<pds_obj_key_t> uuid_pending_delete_;
     mib_idx_gen_indexer_t mib_indexer_;
-    slab_uptr_t slabs_[PDS_MS_MGMT_MAX_SLAB_ID];
+    slab_uptr_t slabs_ [PDS_MS_MGMT_MAX_SLAB_ID];
 
 private:
     mgmt_state_t(void);

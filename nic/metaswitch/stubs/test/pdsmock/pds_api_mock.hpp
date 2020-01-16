@@ -37,6 +37,7 @@ struct spec_t {
         pds_vpc_spec_t          vpc;
         pds_if_spec_t           intf;
     };
+    bool          prereq = false; // Pre-requisite object for actual test 
     spec_t (obj_id_t oid, api_op_t o) : obj_id(oid), op(o) {};
 };
 

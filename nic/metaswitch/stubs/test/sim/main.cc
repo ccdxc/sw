@@ -51,8 +51,9 @@ static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
-static constexpr int k_vpc_id = 2;
-static constexpr int k_subnet_id = 20;
+static int g_vpc_uuid = 100;
+static int g_bgp_uuid = 1;
+static int g_subnet_uuid = 300;
 
 namespace pds_ms_test {
 
@@ -96,7 +97,7 @@ pds_ms_sim_test_bgp_update ()
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_uuid (msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
+    bgp_global_spec.set_uuid (msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
     pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -105,7 +106,7 @@ pds_ms_sim_test_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -126,7 +127,7 @@ pds_ms_sim_test_bgp_update ()
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -164,7 +165,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
+    bgp_peer_spec.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -185,7 +186,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(PDS_MS_BGP_RM_ENT_INDEX).id);
+    bgp_peer_af.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -221,8 +222,8 @@ pds_ms_sim_test_evpn_evi_update ()
 
     // EvpnEviTable
     pds::EvpnEviSpec evpn_evi_spec;
-    evpn_evi_spec.set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
-    evpn_evi_spec.set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    evpn_evi_spec.set_id (msidx2pdsobjkey(g_subnet_uuid).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    evpn_evi_spec.set_subnetid (msidx2pdsobjkey(g_subnet_uuid).id, PDS_MAX_KEY_LEN);
     evpn_evi_spec.set_autord(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_autort(pds::EVPN_CFG_AUTO);
     evpn_evi_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
@@ -244,6 +245,13 @@ pds_ms_sim_test_config ()
          pthread_yield();
     }
     cout << "Nbase is ready!\n";
+
+    // Underlay VPC update
+    pds_vpc_spec_t u_vpc_spec = {0};
+    u_vpc_spec.key = msidx2pdsobjkey(g_vpc_uuid++);
+    u_vpc_spec.type = PDS_VPC_TYPE_UNDERLAY;
+    pds_ms::vpc_create (&u_vpc_spec, 0);
+    cout << "Config thread: VPC Proto is done!\n";
 
     // Create L3 interface
     pds_if_spec_t l3_if_spec = {0};
@@ -272,7 +280,8 @@ pds_ms_sim_test_config ()
 
     // VPC update
     pds_vpc_spec_t vpc_spec = {0};
-    vpc_spec.key = msidx2pdsobjkey(k_vpc_id);
+    vpc_spec.key = msidx2pdsobjkey(g_vpc_uuid);
+    u_vpc_spec.type = PDS_VPC_TYPE_TENANT;
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
     pds_ms::vpc_create (&vpc_spec, 0);
@@ -282,16 +291,16 @@ pds_ms_sim_test_config ()
     PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::EvpnIpVrfSpec evpn_ip_vrf_spec;
-    evpn_ip_vrf_spec.set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    evpn_ip_vrf_spec.set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_spec.set_id (msidx2pdsobjkey(g_vpc_uuid).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_spec.set_vpcid (msidx2pdsobjkey(g_vpc_uuid).id, PDS_MAX_KEY_LEN);
     evpn_ip_vrf_spec.set_vni(200);
     NBB_BYTE rd[] = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
     evpn_ip_vrf_spec.set_rd((char*)rd,8);
     pds_ms_set_amb_evpn_ip_vrf (evpn_ip_vrf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::EvpnIpVrfRtSpec evpn_ip_vrf_rt_spec;
-    evpn_ip_vrf_rt_spec.set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
-    evpn_ip_vrf_rt_spec.set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_rt_spec.set_id (msidx2pdsobjkey(g_vpc_uuid).id, PDS_MAX_KEY_LEN);
+    evpn_ip_vrf_rt_spec.set_vpcid (msidx2pdsobjkey(g_vpc_uuid).id, PDS_MAX_KEY_LEN);
     NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
     evpn_ip_vrf_rt_spec.set_rt(rt,8);
     evpn_ip_vrf_rt_spec.set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
@@ -306,8 +315,8 @@ pds_ms_sim_test_config ()
 
     // Subnet update
     pds_subnet_spec_t subnet_spec = {0};
-    subnet_spec.key = pds_ms::msidx2pdsobjkey(k_subnet_id);
-    subnet_spec.vpc = pds_ms::msidx2pdsobjkey(k_vpc_id);
+    subnet_spec.key = pds_ms::msidx2pdsobjkey(g_subnet_uuid);
+    subnet_spec.vpc = pds_ms::msidx2pdsobjkey(g_vpc_uuid);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
     subnet_spec.host_ifindex = g_test_conf.lif_if_index;
@@ -328,13 +337,13 @@ pds_ms_sim_test_config ()
         mac_addr_t  mac;
         str2ipaddr((char*) "10.17.0.1", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.2", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.5", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -343,7 +352,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(1), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -352,7 +361,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(1), ip, mac);
+        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac);
     }
 }
 } // End of pds_ms_test  namespace

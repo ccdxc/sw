@@ -27,19 +27,23 @@ public:
     }
 
     void trigger_create(void) override {
-        auto add_upd = generate_add_upd_ips();
-        pds_ms::li_is()->vrf_add_update(&add_upd);
+        pds_ms::vpc_create(&vpc_spec, 0);
+    //    auto add_upd = generate_add_upd_ips();
+    //    pds_ms::li_is()->vrf_add_update(&add_upd);
     }
 
     void trigger_delete(void) override {
-        vrf_input_params_t::trigger_delete();
-        auto vrf_str = std::to_string(vrf_id);
-        pds_ms::li_is()->vrf_delete((const NBB_BYTE*) vrf_str.c_str(), vrf_str.length());
+        pds_ms::vpc_delete(&vpc_spec, 0);
+        // TODO Fix - VPC delete is currently not calling MS HAL stub VRF delete
+       vrf_input_params_t::trigger_delete();
+       auto vrf_str = std::to_string(vrf_id);
+       pds_ms::li_is()->vrf_delete((const NBB_BYTE*) vrf_str.c_str(), vrf_str.length());
     }
 
     void trigger_update(void) override {
-        auto add_upd = generate_add_upd_ips();
-        pds_ms::li_is()->vrf_add_update(&add_upd);
+      //  auto add_upd = generate_add_upd_ips();
+      //  pds_ms::li_is()->vrf_add_update(&add_upd);
+        pds_ms::vpc_update(&vpc_spec, 0);
     }
     bool ips_mock() override {return true;}
 };

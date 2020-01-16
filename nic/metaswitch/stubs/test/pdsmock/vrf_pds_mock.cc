@@ -102,6 +102,7 @@ void vrf_pds_mock_t::validate_()
     if (op_delete_) { 
         --num_vrf_objs_;
     } else {
+        std::cout << "Fetching VRF for " <<  ((vrf_input_params_t*)test_params()->test_input)->vrf_id << std::endl;
         auto vrf_obj = state->vpc_store().get(((vrf_input_params_t*)test_params()->test_input)->vrf_id);
         ASSERT_FALSE (vrf_obj == nullptr);
         ASSERT_TRUE (vrf_obj->properties().hal_created);

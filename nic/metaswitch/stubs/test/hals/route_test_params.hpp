@@ -38,7 +38,8 @@ public:
         vpc_spec.fabric_encap.val.vnid  = 100;
         vpc_spec.tos = 5;
         auto state_ctxt = pds_ms::state_t::thread_context(); 
-        state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
+        state_ctxt.state()->vpc_store().add_upd (vrf_id,
+                                                 new pds_ms::vpc_obj_t(vrf_id, vpc_spec));
         state_ctxt.state()->route_table_store().add_upd(route_table_key,
                             new pds_ms::route_table_obj_t(route_table_key));
    }

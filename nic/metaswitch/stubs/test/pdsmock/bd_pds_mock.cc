@@ -18,6 +18,23 @@ void load_bd_test_output ()
     test_params()->test_output = &g_bd_pds_mock;
 }
 
+void bd_pds_mock_t::init(void) 
+{
+    // Expect VPC at init
+    auto input = dynamic_cast<bd_input_params_t*> (test_params()->test_input);
+    auto op = API_OP_CREATE;
+    expected_pds.emplace_back (OBJ_ID_VPC, op);
+    expected_pds.back().prereq = true;
+    auto& vpc_spec = expected_pds.back().vpc;
+    vpc_spec = input->vpc_spec; 
+    if (op != API_OP_UPDATE) {
+        // Add route table also to expect
+        expected_pds.emplace_back (OBJ_ID_ROUTE_TABLE, op);
+        auto& route_table = expected_pds.back().route_table;
+        route_table = input->route_table;
+    }
+}
+
 void bd_pds_mock_t::generate_addupd_specs(const bd_input_params_t& input,
                                            batch_spec_t& pds_batch) 
 {

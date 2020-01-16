@@ -58,7 +58,6 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         cb.detach();
         return SDK_RET_OK;
     }
-
     if (pds_mock->mock_pds_batch_commit_fail_) {
         return SDK_RET_ERR;
     }
@@ -69,6 +68,7 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
         pds_ret_status = false;
         return SDK_RET_OK;
     }
+    bool prereq = false;
     for (auto& expected_pds: pds_mock->expected_pds) {
         auto& rcvd_pds = pds_mock->rcvd_pds[count];
         if (expected_pds.op != rcvd_pds.op) {
@@ -122,6 +122,13 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             break;
         }
         ++count;
+        if (expected_pds.prereq) prereq = true; 
+    }
+    if (prereq) {
+        // Call hal callback if this is a prerequisite Object for the actual test 
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, pds_mock->cookie);
+        cb.detach();
+        return SDK_RET_OK;
     }
     if (pds_mock->mock_pds_batch_async_fail_) {
         pds_ret_status = false;

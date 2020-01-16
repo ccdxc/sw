@@ -89,10 +89,10 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
     ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
     if (ip_addr_is_zero(&ip)) {
         SDK_TRACE_DEBUG("Received MAC remove for Subnet %s BD %d MAC %s",
-                        subnet_key, bd_id, macaddr2str(mac));
+                        subnet_key.str(), bd_id, macaddr2str(mac));
     } else {
         SDK_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
-                        subnet_key, bd_id, ipaddr2str(&ip), macaddr2str(mac));
+                        subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac));
     }
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};

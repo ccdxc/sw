@@ -12,8 +12,13 @@ namespace pds_ms {
 
 class Error : public std::runtime_error {
 public:
-    Error(const char* err_str) : std::runtime_error(err_str) {};
-    Error(const std::string& err_str) : std::runtime_error(err_str.c_str()) {};
+    Error(const char* err_str, sdk_ret_t rc=SDK_RET_ERR)
+        : std::runtime_error(err_str), rc_(rc) {};
+    Error(const std::string& err_str, sdk_ret_t rc=SDK_RET_ERR)
+        : std::runtime_error(err_str.c_str()), rc_(rc) {};
+    sdk_ret_t rc() const {return rc_;}
+private:
+    sdk_ret_t rc_;
 };
 
 }

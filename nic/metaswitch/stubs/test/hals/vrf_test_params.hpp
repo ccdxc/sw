@@ -14,15 +14,15 @@ namespace pds_ms_test{
 
 class vrf_input_params_t : public test_input_base_t {
 public:
-    uint32_t        vrf_id;
+    uint32_t        vrf_id, vrf_uuid;
     pds_vpc_spec_t  vpc_spec = {0};
     pds_route_table_spec_t  route_table;
 
    // These inputs are used to generate feeder inputs 
    // as well as output verifications 
    virtual void init() {
-    vrf_id = 1;
-    vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
+    vrf_uuid = 1000; vrf_id = 3;
+    vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_uuid);
     vpc_spec.type = PDS_VPC_TYPE_TENANT;
     vpc_spec.v4_prefix.len = 24; 
     str2ipv4addr("23.1.10.1", &vpc_spec.v4_prefix.v4_addr);
@@ -36,7 +36,6 @@ public:
     route_table.num_routes = 0;
 
     auto state_ctxt = pds_ms::state_t::thread_context(); 
-    state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
    }
    void modify(void) override {
        vpc_spec.fabric_encap.val.vnid  += 100;
@@ -44,14 +43,14 @@ public:
    void next(void) override {
        // Set an initial subnet spec in the BD store 
        vrf_id = vrf_id+1;
-       vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
+       vpc_spec.key = pds_ms::msidx2pdsobjkey(++vrf_uuid);
        str2ipv4addr("25.2.10.1", &vpc_spec.v4_prefix.v4_addr);
        mac_str_to_addr((char*) "04:26:23:29:20:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table = pds_ms::msidx2pdsobjkey(vrf_id);
        vpc_spec.fabric_encap.val.vnid  += 100;
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
    }; 
+
    void trigger_delete(void) override { 
        auto state_ctxt = pds_ms::state_t::thread_context(); 
        auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
@@ -61,17 +60,19 @@ public:
            state_ctxt.state()->vpc_store().erase(vrf_id);
        }
    }
+
    virtual ~vrf_input_params_t(void) {};
    virtual void init_direct_update() {
        // Set an initial subnet spec in the BD store 
-       vrf_id = vrf_id+1;
-       vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_id);
+       ++vrf_id; ++vrf_uuid;
+       vpc_spec.key = pds_ms::msidx2pdsobjkey(vrf_uuid);
        str2ipv4addr("33.3.10.1", &vpc_spec.v4_prefix.v4_addr);
        mac_str_to_addr((char*) "04:66:63:69:60:03", vpc_spec.vr_mac);
        vpc_spec.v4_route_table = pds_ms::msidx2pdsobjkey(vrf_id);
        vpc_spec.fabric_encap.val.vnid  += 100;
        auto state_ctxt = pds_ms::state_t::thread_context(); 
-       state_ctxt.state()->vpc_store().add_upd (vrf_id, new pds_ms::vpc_obj_t(vpc_spec));
+       state_ctxt.state()->vpc_store().
+           add_upd (vrf_id, new pds_ms::vpc_obj_t(vrf_id, vpc_spec));
 
        // And then change it to simulate Direct Update
        vpc_spec.fabric_encap.val.vnid  += 100;

@@ -90,7 +90,7 @@ void l2f_bd_t::fetch_store_info_(pds_ms::state_t* state) {
 }
 
 pds_obj_key_t l2f_bd_t::make_pds_subnet_key_(void) {
-    return pds_obj_key_t {msidx2pdsobjkey(ips_info_.bd_id)};
+    return store_info_.bd_obj->properties().subnet;
 }
 
 pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
@@ -192,7 +192,8 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
         }
         store_info_.bd_obj->properties().fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
         store_info_.bd_obj->properties().fabric_encap.val.vnid = ips_info_.vnid;
-        SDK_TRACE_INFO("MS BD %d: %s IPS VNI %ld", ips_info_.bd_id,
+        SDK_TRACE_INFO("MS BD %d UUID %s %s IPS VNI %ld", ips_info_.bd_id,
+                       store_info_.bd_obj->properties().subnet.str(),
                        (op_create_) ? "Create" : "Update",
                        store_info_.bd_obj->properties().fabric_encap.val.vnid);
 
@@ -308,8 +309,7 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
     // if there is a subsequent create from MS.
 
     ips_info_.bd_id = bd_id;
-    pds_obj_key_t  subnet_uuid;
-    SDK_TRACE_INFO ("MS BD %d: Delete IPS", ips_info_.bd_id);
+    pds_obj_key_t  subnet_uuid = {0};
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -321,6 +321,8 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
             return;
         }
         subnet_uuid = store_info_.bd_obj->properties().subnet;
+        SDK_TRACE_INFO ("MS BD %d UUID %s Delete IPS", ips_info_.bd_id,
+                        subnet_uuid.str());
 
         // Empty cookie to force async PDS.
         cookie_uptr_.reset (new cookie_t);

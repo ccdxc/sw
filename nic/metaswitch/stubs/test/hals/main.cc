@@ -248,7 +248,9 @@ TEST_F(pds_ms_hals_test, bd_test) {
     // Initialize
     auto bd_input = dynamic_cast<pds_ms_test::bd_input_params_t*>
                               (test_input);
-    bd_input->init ();
+    bd_input->init();
+    test_output->init();
+    bd_input->trigger_init();
 
     // Create
     std::cout << "=== BD Create test ===" << std::endl;
@@ -453,6 +455,7 @@ main (int argc, char **argv)
         sleep(1);
     }
     std::cout << "Nbase is really ready!\n";
+    sleep(5);
 #ifdef PDS_MOCKAPI
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

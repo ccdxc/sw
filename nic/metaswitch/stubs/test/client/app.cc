@@ -45,8 +45,9 @@ static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
 
-static constexpr int k_vpc_id    = 2;
-static constexpr int k_subnet_id = 20;
+static constexpr int k_underlay_vpc_id = 10;
+static constexpr int k_vpc_id = 200;
+static constexpr int k_subnet_id = 300;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -331,6 +332,30 @@ static void create_subnet_proto_grpc () {
     }
 }
 
+static void create_underlay_vpc_proto_grpc () {
+    VPCRequest      request;
+    VPCResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
+    auto proto_encap = proto_spec->mutable_fabricencap();
+    proto_encap->set_type(types::ENCAP_TYPE_NONE);
+
+    printf ("Pushing Underlay VPC proto...\n");
+    ret_status = g_vpc_stub_->VPCCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
 static void create_vpc_proto_grpc () {
     VPCRequest      request;
     VPCResponse     response;
@@ -546,6 +571,7 @@ int main(int argc, char** argv)
     {
         // Send protos to grpc server
         create_device_proto_grpc();
+        create_underlay_vpc_proto_grpc();
         create_l3_intf_proto_grpc();
         create_loopback_proto_grpc();
         create_loopback_addr_proto_grpc();

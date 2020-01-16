@@ -11,6 +11,8 @@ namespace pds_ms_test {
 
 class bd_pds_mock_t final : public pds_mock_t {
 public:
+    void init(void) override;
+
     void validate() override {
         validate_();
         reset_mock_fail();

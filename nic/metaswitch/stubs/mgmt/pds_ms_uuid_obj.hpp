@@ -121,17 +121,46 @@ private:
 using bgp_peer_af_uuid_obj_uptr_t = std::unique_ptr<bgp_peer_af_uuid_obj_t>;
 void bgp_peer_af_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
 
+// VPC object
+class vpc_uuid_obj_t : public slab_obj_t<vpc_uuid_obj_t>,
+                          public uuid_obj_t {
+public:
+    using ms_id_t = uint32_t;
+    vpc_uuid_obj_t(const pds_obj_key_t& uuid, bool is_default=false)
+        : uuid_obj_t(uuid_obj_type_t::VPC, uuid), is_default_(is_default) {
+        if (!is_default) {
+            idx_guard.alloc();
+        }
+    }
+    ms_id_t ms_id(void);
+    ms_id_t ms_v4_rttbl_id(void);
+    std::string str() override {
+        return std::string("VPC VRF-ID ").append(std::to_string(ms_id()));
+    }
+    // Delay release until MS HAL stub delete is invoked
+    // so that internal MS VRF ID is not released and reallocated until
+    // all VRF state is cleaned up all the way down until MS HAL stubs
+    bool delay_release() override {return true;}
+private:
+    bool is_default_;
+    mib_idx_gen_guard_t  idx_guard = MIB_IDX_GEN_TBL_VRF;
+};
+using vpc_uuid_obj_uptr_t = std::unique_ptr<vpc_uuid_obj_t>;
+void vpc_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);
+
 // Subnet object
 class subnet_uuid_obj_t : public slab_obj_t<subnet_uuid_obj_t>,
                           public uuid_obj_t {
 public:
     using ms_id_t = uint32_t;
     subnet_uuid_obj_t(const pds_obj_key_t& uuid)
-        : uuid_obj_t(uuid_obj_type_t::SUBNET, uuid) {};
+        : uuid_obj_t(uuid_obj_type_t::SUBNET, uuid) {
+            idx_guard.alloc();
+        };
 
     ms_id_t ms_id() { return idx_guard.idx(); }
     std::string str() override {
-        return std::string("Subnet BD ").append(std::to_string(ms_id()));
+        return std::string("Subnet BD-ID ").append(std::to_string(ms_id()));
     }
     // Delay release until MS HAL stub delete is invoked
     // so that internal MS BD ID is not released and reallocated until

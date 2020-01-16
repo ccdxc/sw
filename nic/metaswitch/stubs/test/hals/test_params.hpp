@@ -47,6 +47,7 @@ class test_params_t;
 
 class test_output_base_t {
 public:
+    virtual void init() {};
     virtual void expect_create() = 0;
     virtual void expect_update() = 0;
     virtual void expect_delete() = 0;

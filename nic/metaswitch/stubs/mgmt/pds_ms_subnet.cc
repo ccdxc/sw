@@ -107,10 +107,23 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     std::string vrf_name;
 
     // Convert VRF ID to name
-    auto vrf_id = pdsobjkey2msidx(subnet_spec->vpc);
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_spec->vpc);
+
+    // TODO When there is a failure here in IRB then the BD has to be reverted
+    if (uuid_obj == nullptr) {
+        throw Error(std::string("Subnet has unknown VPC reference ")
+                    .append(subnet_spec->vpc.str()), SDK_RET_INVALID_ARG);
+    }
+    if (uuid_obj->obj_type() != uuid_obj_type_t::VPC) {
+        throw Error(std::string("Subnet has invalid VPC reference ")
+                    .append(subnet_spec->vpc.str()).append(" containing ")
+                    .append(uuid_obj->str()), SDK_RET_INVALID_ARG);
+    }
+    auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
     vrf_name = std::to_string (vrf_id);
 
-    SDK_TRACE_DEBUG("IRB Interface:: BD ID: 0x%X MSIfIndex: 0x%X VRF name %s len %d", 
+    SDK_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d", 
                     vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
@@ -306,43 +319,43 @@ cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete)
     state_ctxt.state()->subnet_store().add_upd(bd_id, std::move(subnet_obj_uptr));
 }
 
-sdk_ret_t
-subnet_uuid_2_idx_alloc (const pds_obj_key_t& key, ms_bd_id_t* bd_id)
+static ms_bd_id_t
+subnet_uuid_2_idx_alloc (const pds_obj_key_t& key)
 {
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     // Subnet Create - Allocate a new index
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
     if (uuid_obj != nullptr) {
-        SDK_TRACE_ERR("Subnet Create for existing UUID %s containing %s",
-                      key.str(), uuid_obj->str());
-        return SDK_RET_ENTRY_EXISTS;
+        throw Error(std::string("Subnet Create for existing UUID ")
+                    .append(key.str()).append(" containing ")
+                    .append(uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
     }
     subnet_uuid_obj_uptr_t subnet_uuid_obj (new subnet_uuid_obj_t(key));
-    *bd_id = subnet_uuid_obj->ms_id();
+    auto bd_id = subnet_uuid_obj->ms_id();
     mgmt_ctxt.state()->set_pending_uuid_create(key,
                                                std::move(subnet_uuid_obj));
-    return SDK_RET_OK;
+    return bd_id;
 }
 
-sdk_ret_t
-subnet_uuid_2_idx_fetch (const pds_obj_key_t& key, ms_bd_id_t* bd_id)
+static ms_bd_id_t
+subnet_uuid_2_idx_fetch (const pds_obj_key_t& key)
 {
     // Update or Delete - fetch the BD ID
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
     if (uuid_obj == nullptr) {
-        SDK_TRACE_ERR("Unknown UUID %s in Subnet Request", key.str());
-        return SDK_RET_ENTRY_NOT_FOUND;
+        throw Error(std::string("Unknown UUID in Subnet Request ")
+                    .append(key.str()), SDK_RET_ENTRY_NOT_FOUND);
     }
     if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
-        SDK_TRACE_ERR("Wrong UUID %s containing %s in Subnet request",
-                      key.str(), uuid_obj->str());
-        return SDK_RET_INVALID_ARG;
+        throw Error(std::string("Wrong UUID ").append(key.str())
+                    .append(" containing ").append(uuid_obj->str())
+                    .append(" in Subnet request"), SDK_RET_INVALID_ARG);
     }
     auto subnet_uuid_obj = (subnet_uuid_obj_t*) uuid_obj;
-    *bd_id = subnet_uuid_obj->ms_id();
-    SDK_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d", bd_id);
-    return SDK_RET_OK;
+    SDK_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d",
+                      key.str(), subnet_uuid_obj->ms_id());
+    return subnet_uuid_obj->ms_id();
 }
 
 sdk_ret_t
@@ -351,10 +364,7 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
 
     try {
-        ms_bd_id_t bd_id;
-        auto ret = subnet_uuid_2_idx_alloc(spec->key, &bd_id);
-        if (ret != SDK_RET_OK) {return ret;}
-
+        auto bd_id = subnet_uuid_2_idx_alloc(spec->key);
         cache_subnet_spec (spec, bd_id, false /* Create new*/);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_ACTIVE);
@@ -371,7 +381,7 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         SDK_TRACE_ERR ("Subnet %s creation failed %s", 
                         spec->key.str(), e.what());
-        return SDK_RET_ERR;
+        return e.rc();
     }
     return SDK_RET_OK;
 }
@@ -382,13 +392,11 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
 
     try {
-        ms_bd_id_t bd_id;
-        auto ret = subnet_uuid_2_idx_fetch(spec->key, &bd_id);
-        if (ret != SDK_RET_OK) {return ret;}
+        auto bd_id = subnet_uuid_2_idx_fetch(spec->key);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
-            SDK_TRACE_ERR ("Failed to process subnet %s bd %d create (error=%d)",
+            SDK_TRACE_ERR ("Failed to process subnet %s bd %d delete (error=%d)",
                            spec->key.str(), bd_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
@@ -400,23 +408,23 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         SDK_TRACE_ERR ("Subnet %s deletion failed %s",
                         spec->key.str(), e.what());
+        return e.rc();
     }
     return SDK_RET_OK;
 }
 
-static sdk_ret_t
+static void
 parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
                      subnet_upd_flags_t& ms_upd_flags)
 {
     bool fastpath = false;
     // Enter thread-safe context to access/modify global state
     auto state_ctxt = state_t::thread_context();
-    bd_id = pdsobjkey2msidx(spec->key);
     auto subnet_obj = state_ctxt.state()->subnet_store().get(bd_id);
     if (subnet_obj == nullptr) {
-        SDK_TRACE_ERR("Update for unknown subnet %s bd %d",
-                      spec->key.str(), bd_id);
-        return SDK_RET_ENTRY_NOT_FOUND;
+        throw Error(std::string("Store lookup failed for subnet ")
+                    .append(spec->key.str()).append(" bd ")
+                    .append(std::to_string(bd_id)), SDK_RET_ENTRY_NOT_FOUND);
     }
 
     auto& state_pds_spec = subnet_obj->spec();
@@ -457,12 +465,11 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
         // Do not state_ctxt has been released above 
         // Do not access global state beyond this
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Subnet %s BD %d update fastpath fields failed %d",
-                          spec->key.str(), bd_id, ret);
-            return ret;
+            throw Error(std::string("Failed to update fastpath fields for Subnet ")
+                        .append(spec->key.str()).append(" BD ")
+                        .append(std::to_string(bd_id)), ret);
         }
     }
-    return SDK_RET_OK;
 }
 
 sdk_ret_t
@@ -473,11 +480,8 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ms_bd_id_t bd_id;
 
     try {
-        auto ret = subnet_uuid_2_idx_fetch(spec->key, &bd_id);
-        if (ret != SDK_RET_OK) {return ret;}
-
-        ret = parse_subnet_update(spec, bd_id, ms_upd_flags);
-        if (ret != SDK_RET_OK) {return ret;}
+        bd_id = subnet_uuid_2_idx_fetch(spec->key);
+        parse_subnet_update(spec, bd_id, ms_upd_flags);
 
         if (ms_upd_flags) {
             ret_status = process_subnet_field_update(spec, ms_upd_flags, bd_id,
@@ -493,7 +497,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     } catch (const Error& e) {
         SDK_TRACE_ERR ("Subnet %s update failed %s", 
                         spec->key.str(), e.what());
-        return SDK_RET_ERR;
+        return e.rc();
     }
 
     return SDK_RET_OK;

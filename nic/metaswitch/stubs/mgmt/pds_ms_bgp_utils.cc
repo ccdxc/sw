@@ -203,7 +203,8 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
             entity_index = bgp_uuid_obj->ms_id();
             mgmt_ctxt.state()->set_pending_uuid_create(uuid,
                                                        std::move(bgp_uuid_obj));
-            SDK_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s", uuid.str());
+            SDK_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
+                              uuid.str(), entity_index);
         } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
             auto bgp_uuid_obj = (bgp_uuid_obj_t*)uuid_obj;
             entity_index = bgp_uuid_obj->ms_id();
