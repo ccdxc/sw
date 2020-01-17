@@ -232,12 +232,12 @@
   },
   {
    "Name": "NAPLES_OVER_TEMP",
-   "Severity": "warn",
+   "Severity": "critical",
    "Desc": "System temperature is above threshold."
   },
   {
    "Name": "NAPLES_OVER_TEMP_EXIT",
-   "Severity": "critical",
+   "Severity": "warn",
    "Desc": "System temperature is below threshold."
   },
   {

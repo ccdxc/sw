@@ -258,11 +258,11 @@ enum EventTypes {
                                            (desc)        = "System encountered cattrip resetting system"];
 
     NAPLES_OVER_TEMP                = 510 [(category)    = System,
-                                           (severity)    = WARN,
+                                           (severity)    = CRITICAL,
                                            (desc)        = "System temperature is above threshold."];
 
     NAPLES_OVER_TEMP_EXIT           = 511 [(category)    = System,
-                                           (severity)    = CRITICAL,
+                                           (severity)    = WARN,
                                            (desc)        = "System temperature is below threshold."];
 
     NAPLES_PANIC_EVENT              = 512 [(category)    = System,
