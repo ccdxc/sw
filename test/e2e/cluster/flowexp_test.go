@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/calmh/ipfix"
 
 	vflow "github.com/pensando/sw/venice/utils/ipfix"
-	"github.com/pensando/sw/venice/utils/log"
-
 	"github.com/pensando/sw/venice/utils/ipfix/server"
 
 	. "github.com/onsi/ginkgo"
@@ -76,9 +75,10 @@ var _ = Describe("flow export policy tests", func() {
 
 			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
-					VrfName:  globals.DefaultVrf,
-					Interval: "10s",
-					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
+					VrfName:          globals.DefaultVrf,
+					Interval:         "10s",
+					TemplateInterval: "5m",
+					Format:           monitoring.FlowExportPolicySpec_Ipfix.String(),
 					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
@@ -105,6 +105,7 @@ var _ = Describe("flow export policy tests", func() {
 				}
 			}
 
+			venicePolicy := []*monitoring.FlowExportPolicy{}
 			for i := 0; i < tpm.MaxNumExportPolicy; i++ {
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -119,7 +120,8 @@ var _ = Describe("flow export policy tests", func() {
 				}
 				_, err := flowExpClient.Create(ctx, flowPolicy)
 				Expect(err).ShouldNot(HaveOccurred())
-				By(fmt.Sprintf("create flow export Policy %v", flowPolicy.Name))
+				fmt.Printf("create flow export Policy %v \n", flowPolicy.Name)
+				venicePolicy = append(venicePolicy, flowPolicy)
 			}
 
 			// use token api to get NAPLES access credentials
@@ -135,31 +137,35 @@ var _ = Describe("flow export policy tests", func() {
 				}
 
 				if len(pl) != len(testFwSpecList) {
-					By(fmt.Sprintf("received flow export policy from venice %+v", pl))
+					fmt.Printf("received flow export policy from venice %+v \n", pl)
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
 				}
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
-					var naplesPol []tpmprotos.FlowExportPolicy
+					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
-						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+						fmt.Printf("received flow export policy from naples: %v, %+v \n", naples, st)
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy  %+v\n", naples, naplesPol)
 
 					if len(naplesPol) != len(testFwSpecList) {
-						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+						fmt.Printf("received flow export policy from naples: %v, %v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 					}
 
+					if err := cmpExportPolicy(naples, venicePolicy, naplesPol); err != nil {
+						return err
+					}
 				}
 				return nil
 			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			By("Update flow export Policy")
+			venicePolicy = []*monitoring.FlowExportPolicy{}
 			for i := range testFwSpecList {
 				fwPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -174,6 +180,7 @@ var _ = Describe("flow export policy tests", func() {
 				}
 				_, err := flowExpClient.Update(ctx, fwPolicy)
 				Expect(err).Should(BeNil())
+				venicePolicy = append(venicePolicy, fwPolicy)
 			}
 
 			Eventually(func() error {
@@ -184,24 +191,28 @@ var _ = Describe("flow export policy tests", func() {
 				}
 
 				if len(pl) != len(testFwSpecList) {
-					By(fmt.Sprintf("received flow export policy from venice %+v", pl))
+					fmt.Printf("received flow export policy from venice %+v \n", pl)
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
 				}
 
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
-					var naplesPol []tpmprotos.FlowExportPolicy
+					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
-						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+						fmt.Printf("received flow export policy from naples: %v, %+v", naples, st)
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
 
 					if len(naplesPol) != len(testFwSpecList) {
-						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+						fmt.Printf("received flow export policy from naples: %v, %v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
+					}
+
+					if err := cmpExportPolicy(naples, venicePolicy, naplesPol); err != nil {
+						return err
 					}
 				}
 				return nil
@@ -228,7 +239,7 @@ var _ = Describe("flow export policy tests", func() {
 				}
 
 				if len(pl) != 0 {
-					By(fmt.Sprintf("policy exists after delete, %+v", pl))
+					fmt.Printf("policy exists after delete, %+v \n", pl)
 					return fmt.Errorf("policy exists after delete, %+v", pl)
 				}
 
@@ -238,14 +249,14 @@ var _ = Describe("flow export policy tests", func() {
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
-						By(fmt.Sprintf("received flow export policy from naples:%v,  %+v", naples, st))
+						fmt.Printf("received flow export policy from naples:%v, %+v \n", naples, st)
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
 
 					if len(naplesPol) != 0 {
-						By(fmt.Sprintf("received flow export policy from naples:%v,  %+v", naples, naplesPol))
+						fmt.Printf("received flow export policy from naples:%v, %+v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected 0", naples, len(naplesPol))
 					}
 				}
@@ -328,13 +339,13 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
-					var naplesPol []tpmprotos.FlowExportPolicy
+					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
 
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -418,7 +429,7 @@ var _ = Describe("flow export policy tests", func() {
 							return err
 						}
 
-						log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+						fmt.Printf("naples-%v: policy %+v \n", naples, naplesPol)
 
 						if len(naplesPol) != expRules {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -549,7 +560,7 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy %+v\n", naples, naplesPol)
 
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -635,7 +646,7 @@ var _ = Describe("flow export policy tests", func() {
 							return err
 						}
 
-						log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+						fmt.Printf("naples-%v: policy %+v \n", naples, naplesPol)
 
 						if len(naplesPol) != len(testFwSpecList) {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
@@ -770,7 +781,7 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					log.Infof("naples-%v: policy  %+v", naples, naplesPol)
+					fmt.Printf("naples-%v: policy %+v\n", naples, naplesPol)
 
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList)))
@@ -1253,3 +1264,134 @@ var _ = Describe("flow export policy tests", func() {
 		})
 	})
 })
+
+// cmpExportPolicy compare policy in Naples to that in Venice
+func cmpExportPolicy(naples string, vp []*monitoring.FlowExportPolicy, np []*tpmprotos.FlowExportPolicy) error {
+	naplesPolicyMap := map[string]*tpmprotos.FlowExportPolicy{}
+	for _, p := range np {
+		naplesPolicyMap[p.GetKey()] = p
+	}
+	venicePolicyMap := map[string]*monitoring.FlowExportPolicy{}
+	for _, p := range vp {
+		venicePolicyMap[p.GetKey()] = p
+	}
+
+	if len(naplesPolicyMap) != len(venicePolicyMap) {
+		err := fmt.Errorf("policy didn't match in %v, got %v expected %v", naples, len(naplesPolicyMap),
+			len(venicePolicyMap))
+		fmt.Print(err)
+		return err
+	}
+
+	for k, v := range venicePolicyMap {
+		n, ok := naplesPolicyMap[k]
+		if !ok {
+			err := fmt.Errorf("failed to find %v in naples-%v", k, naples)
+			fmt.Print(err)
+			return err
+		}
+		vspec := v.Spec
+		nspec := n.Spec
+
+		// empty match-rule
+		if vspec.MatchRules == nil && nspec.MatchRules == nil {
+			return nil
+		}
+
+		// compare fields
+		if len(vspec.MatchRules) != len(nspec.MatchRules) {
+			err := fmt.Errorf("match-rules didnt match in %v, got %v expected %v",
+				naples, len(nspec.MatchRules), len(vspec.MatchRules))
+			fmt.Print(err)
+			return err
+		}
+
+		for i, v := range vspec.MatchRules {
+			n := nspec.MatchRules[i]
+
+			if len(v.Dst.IPAddresses) != len(n.Dst.Addresses) {
+				err := fmt.Errorf("matchrule-dst[%d] length didn't match in %v, got %v expected %v", i, naples,
+					n.Dst.String(), v.Dst.String())
+				fmt.Print(err)
+				return err
+			}
+
+			if !reflect.DeepEqual(v.Dst.IPAddresses, n.Dst.Addresses) {
+				err := fmt.Errorf("matchrule-dst[%d] didn't match in %v, got %v expected %v", i, naples,
+					n.Dst.String(), v.Dst.String())
+				fmt.Print(err)
+				return err
+			}
+
+			if len(v.AppProtoSel.ProtoPorts) != len(n.Dst.ProtoPorts) {
+				err := fmt.Errorf("matchrule-proto-port[%d] length didn't match in %v, got %v expected %v", i, naples,
+					n.Dst.String(), v.AppProtoSel.String())
+				fmt.Print(err)
+				return err
+			}
+
+			for i, vp := range v.AppProtoSel.ProtoPorts {
+				if vp != fmt.Sprintf("%v/%v", n.Dst.ProtoPorts[i].Protocol, n.Dst.ProtoPorts[i].Port) {
+					err := fmt.Errorf("matchrule-proto-port[%d]  didn't match in %v, got %v expected %v", i, naples,
+						vp, n.Dst.ProtoPorts[i].String())
+					fmt.Print(err)
+					return err
+				}
+			}
+
+			if len(v.Src.IPAddresses) != len(n.Src.Addresses) {
+				err := fmt.Errorf("matchrule-src[%d] count didn't match in %v, got %v expected %v", i, naples,
+					n.Src.String(), v.Src.String())
+				fmt.Print(err)
+				return err
+			}
+
+			if !reflect.DeepEqual(v.Src.IPAddresses, n.Src.Addresses) {
+				err := fmt.Errorf("matchrule-src[%d] didn't match in %v, got %v expected %v", i, naples,
+					n.Src.String(), v.Src.String())
+				fmt.Print(err)
+				return err
+			}
+		}
+
+		if vspec.Interval != nspec.Interval {
+			err := fmt.Errorf("interval didn't match in %v, got %v expected %v", naples,
+				nspec.Interval, vspec.Interval)
+			fmt.Print(err)
+			return err
+		}
+
+		if vspec.Format != nspec.Format {
+			err := fmt.Errorf("format didn't match in %v, got %v expected %v", naples,
+				nspec.Format, vspec.Format)
+			fmt.Print(err)
+			return err
+		}
+
+		if vspec.TemplateInterval != nspec.TemplateInterval {
+			err := fmt.Errorf("template interval didn't match in %v, got %v expected %v", naples,
+				nspec.TemplateInterval, vspec.TemplateInterval)
+			fmt.Print(err)
+			return err
+		}
+
+		if len(vspec.Exports) != len(nspec.Exports) {
+			err := fmt.Errorf("exports didn't match in %v, got %v expected %v", naples,
+				len(nspec.Exports), len(vspec.Exports))
+			fmt.Print(err)
+			return err
+		}
+
+		for i, v := range vspec.Exports {
+			n := nspec.Exports[i]
+			if v.String() != n.String() {
+				err := fmt.Errorf("exports[%d] didn't match in %v, got %v expected %v", i, naples,
+					n.String(), v.String())
+				fmt.Print(err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}

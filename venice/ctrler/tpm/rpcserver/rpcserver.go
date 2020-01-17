@@ -296,22 +296,11 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 			return fmt.Errorf("invalid flow export policy from list")
 		}
 
-		//p, err := json.Marshal(obj)
-		//if err != nil {
-		//	rpcLog.Errorf("invalid flow export policy from list %+v", obj)
-		//	return fmt.Errorf("invalid flow export policy from list")
-		//}
-
 		flowExportPolicy := &tpmProtos.FlowExportPolicy{
 			TypeMeta:   fePolicy.TypeMeta,
 			ObjectMeta: fePolicy.ObjectMeta,
 			Spec:       convertFlowExportPolicySpec(&fePolicy.Spec),
 		}
-		//
-		//if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
-		//	rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
-		//	return fmt.Errorf("failed to convert flow export policy from list")
-		//}
 
 		if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: api.EventType_CreateEvent,
 			Policy: flowExportPolicy}); err != nil {
@@ -334,16 +323,16 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 				p.clients.Store(peer, time.Now().Format(time.RFC3339))
 			}
 
-			p, err := json.Marshal(event.Obj)
-			if err != nil {
-				rpcLog.Errorf("invalid flow export policy from list %+v", event.Obj)
+			fePolicy, ok := event.Obj.(*apiProtos.FlowExportPolicy)
+			if !ok {
+				rpcLog.Errorf("invalid flow export policy from list, %T", event.Obj)
 				return fmt.Errorf("invalid flow export policy from list")
 			}
-			flowExportPolicy := &tpmProtos.FlowExportPolicy{}
 
-			if err := json.Unmarshal(p, &flowExportPolicy); err != nil {
-				rpcLog.Errorf("failed to convert flow export policy from list %+v", event.Obj)
-				return fmt.Errorf("failed to convert flow export policy from list")
+			flowExportPolicy := &tpmProtos.FlowExportPolicy{
+				TypeMeta:   fePolicy.TypeMeta,
+				ObjectMeta: fePolicy.ObjectMeta,
+				Spec:       convertFlowExportPolicySpec(&fePolicy.Spec),
 			}
 
 			if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: apiEventTypeMap[event.EventType],
