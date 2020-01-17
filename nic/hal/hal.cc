@@ -86,6 +86,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGHUP:
     case SIGCHLD:
     case SIGURG:
+    case SIGPIPE:
     default:
         break;
     }

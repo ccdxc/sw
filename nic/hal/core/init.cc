@@ -47,6 +47,7 @@ hal_sig_init (hal_sig_handler_t sig_handler)
     sigaction(SIGURG, &act, NULL);
     sigaction(SIGUSR2, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
+    sigaction(SIGPIPE, &act, NULL);
 
     return HAL_RET_OK;
 }

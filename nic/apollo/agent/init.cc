@@ -63,6 +63,7 @@ pds_sig_handler (int sig, siginfo_t *info, void *ptr)
     case SIGHUP:
     case SIGCHLD:
     case SIGURG:
+    case SIGPIPE:
     default:
         break;
     }
@@ -91,6 +92,7 @@ pds_sig_init (sig_handler_t sig_handler)
     sigaction(SIGURG, &act, NULL);
     sigaction(SIGUSR2, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
+    sigaction(SIGPIPE, &act, NULL);
 
     return SDK_RET_OK;
 }
