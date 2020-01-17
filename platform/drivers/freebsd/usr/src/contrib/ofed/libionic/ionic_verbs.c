@@ -134,35 +134,37 @@ static int ionic_dealloc_pd(struct ibv_pd *ibpd)
 }
 
 static struct ibv_mr *ionic_reg_mr(struct ibv_pd *ibpd,
-				   void *addr, size_t len, int access)
+				   void *addr,
+				   size_t len,
+				   int access)
 {
-	struct ibv_mr *ibmr;
+	struct ibv_mr *vmr;
 	struct ibv_reg_mr req = {};
 	struct ibv_reg_mr_resp resp = {};
 	int rc;
 
-	ibmr = calloc(1, sizeof(*ibmr));
-	if (!ibmr) {
+	vmr = calloc(1, sizeof(*vmr));
+	if (!vmr) {
 		rc = errno;
 		goto err_mr;
 	}
 
-	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, ibmr,
+	rc = ibv_cmd_reg_mr(ibpd, addr, len, (uintptr_t)addr, access, vmr,
 			    &req, sizeof(req),
 			    &resp, sizeof(resp));
 	if (rc)
 		goto err_cmd;
 
-	return ibmr;
+	return vmr;
 
 err_cmd:
-	free(ibmr);
+	free(vmr);
 err_mr:
 	errno = rc;
 	return NULL;
 }
 
-static int ionic_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
+static int ionic_rereg_mr(struct ibv_mr *vmr, int flags, struct ibv_pd *pd,
 			  void *addr, size_t length, int access)
 {
 	struct ibv_rereg_mr cmd;
@@ -171,21 +173,21 @@ static int ionic_rereg_mr(struct ibv_mr *ibmr, int flags, struct ibv_pd *pd,
 	if (flags & IBV_REREG_MR_KEEP_VALID)
 		return ENOTSUP;
 
-	return ibv_cmd_rereg_mr(ibmr, flags, addr, length,
+	return ibv_cmd_rereg_mr(vmr, flags, addr, length,
 				(uintptr_t)addr, access, pd,
 				&cmd, sizeof(cmd),
 				&resp, sizeof(resp));
 }
 
-static int ionic_dereg_mr(struct ibv_mr *ibmr)
+static int ionic_dereg_mr(struct ibv_mr *vmr)
 {
 	int rc;
 
-	rc = ibv_cmd_dereg_mr(ibmr);
+	rc = ibv_cmd_dereg_mr(vmr);
 	if (rc)
 		return rc;
 
-	free(ibmr);
+	free(vmr);
 
 	return 0;
 }
@@ -318,14 +320,16 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 
 	/* wqe_id must be a valid queue index */
 	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
-		ionic_err("invalid id %#lx", wqe->base.wqe_id);
+		ionic_err("invalid id %#lx",
+			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[wqe->base.wqe_id];
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
-		ionic_err("wqe not posted %#lx", wqe->base.wqe_id);
+		ionic_err("wqe not posted %#lx",
+			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
@@ -453,14 +457,16 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 
 	/* wqe_id must be a valid queue index */
 	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
-		ionic_err("invalid id %#lx", cqe->recv.wqe_id);
+		ionic_err("invalid id %#lx",
+			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[cqe->recv.wqe_id];
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
-		ionic_err("wqe is not posted %#lx", cqe->recv.wqe_id);
+		ionic_err("wqe is not posted %#lx",
+			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
@@ -726,7 +732,7 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 				 cqe_seq, qp->sq.mask);
 	if (rc) {
 		ionic_err("wqe is not posted %#lx (id)",
-			  cqe->send.npg_wqe_id);
+			  (unsigned long)cqe->send.npg_wqe_id);
 		return rc;
 	}
 
@@ -1403,8 +1409,7 @@ static int ionic_modify_qp(struct ibv_qp *ibqp,
 	if (!attr_mask)
 		return 0;
 
-	rc = ibv_cmd_modify_qp(ibqp, attr, attr_mask,
-			       &cmd, sizeof(cmd));
+	rc = ibv_cmd_modify_qp(ibqp, attr, attr_mask, &cmd, sizeof(cmd));
 	if (rc)
 		goto err_cmd;
 

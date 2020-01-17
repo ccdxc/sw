@@ -3680,7 +3680,7 @@ static int ionic_req_notify_cq(struct ib_cq *ibcq,
 	 *
 	 * Here, we check if the color bit in the next cqe is flipped.  If it
 	 * is flipped, then progress can be made by immediately polling the cq.
-	 * Sill, the cq will be armed, and an event will be generated.  The cq
+	 * Still, the cq will be armed, and an event will be generated.  The cq
 	 * may be empty when polled after the event, because the next poll
 	 * after arming the cq can empty it.
 	 */

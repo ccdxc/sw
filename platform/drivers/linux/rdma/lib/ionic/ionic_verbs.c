@@ -281,16 +281,16 @@ static int ionic_destroy_cq(struct ibv_cq *ibcq)
 static struct ibv_srq *ionic_create_srq(struct ibv_pd *ibpd,
 					struct ibv_srq_init_attr *attr)
 {
-	struct verbs_context *vctx =
-		container_of(ibpd->context, struct verbs_context, context);
 	struct ibv_srq_init_attr_ex ex = {
 		.srq_context = attr->srq_context,
 		.attr = attr->attr,
 		.srq_type = IBV_SRQT_BASIC,
 		.pd = ibpd,
 	};
+	struct verbs_context *vctx;
 	struct ibv_srq *ibsrq;
 
+	vctx = container_of(ibpd->context, struct verbs_context, context);
 	ibsrq = vctx->create_srq_ex(&vctx->context, &ex);
 
 	attr->attr = ex.attr;
@@ -316,14 +316,16 @@ static int ionic_flush_recv(struct ionic_qp *qp, struct ibv_wc *wc)
 
 	/* wqe_id must be a valid queue index */
 	if (unlikely(wqe->base.wqe_id >> qp->rq.depth_log2)) {
-		ionic_err("invalid id %#llx", wqe->base.wqe_id);
+		ionic_err("invalid id %#lx",
+			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[wqe->base.wqe_id];
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
-		ionic_err("wqe not posted %#llx", wqe->base.wqe_id);
+		ionic_err("wqe not posted %#lx",
+			  (unsigned long)wqe->base.wqe_id);
 		return -EIO;
 	}
 
@@ -451,14 +453,16 @@ static int ionic_poll_recv(struct ionic_ctx *ctx, struct ionic_cq *cq,
 
 	/* wqe_id must be a valid queue index */
 	if (unlikely(cqe->recv.wqe_id >> qp->rq.depth_log2)) {
-		ionic_err("invalid id %#llx", cqe->recv.wqe_id);
+		ionic_err("invalid id %#lx",
+			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
 	/* wqe_id must indicate a request that is outstanding */
 	meta = &qp->rq_meta[cqe->recv.wqe_id];
 	if (unlikely(meta->next != IONIC_META_POSTED)) {
-		ionic_err("wqe is not posted %#llx", cqe->recv.wqe_id);
+		ionic_err("wqe is not posted %#lx",
+			  (unsigned long)cqe->recv.wqe_id);
 		return -EIO;
 	}
 
@@ -723,8 +727,8 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 				 qp->sq_npg_cons,
 				 cqe_seq, qp->sq.mask);
 	if (rc) {
-		ionic_err("wqe is not posted %#llx (id)",
-			  cqe->send.npg_wqe_id);
+		ionic_err("wqe is not posted %#lx (id)",
+			  (unsigned long)cqe->send.npg_wqe_id);
 		return rc;
 	}
 
@@ -2460,8 +2464,6 @@ static int ionic_post_srq_recv(struct ibv_srq *ibsrq, struct ibv_recv_wr *wr,
 static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 				      struct ibv_qp_init_attr *attr)
 {
-	struct verbs_context *vctx =
-		container_of(ibpd->context, struct verbs_context, context);
 	struct ibv_qp_init_attr_ex ex = {
 		.qp_context = attr->qp_context,
 		.send_cq = attr->send_cq,
@@ -2473,8 +2475,10 @@ static struct ibv_qp *ionic_create_qp(struct ibv_pd *ibpd,
 		.comp_mask = IBV_QP_INIT_ATTR_PD,
 		.pd = ibpd,
 	};
+	struct verbs_context *vctx;
 	struct ibv_qp *ibqp;
 
+	vctx = container_of(ibpd->context, struct verbs_context, context);
 	ibqp = vctx->create_qp_ex(&vctx->context, &ex);
 
 	attr->cap = ex.cap;
