@@ -338,7 +338,7 @@ subnet_uuid_2_idx_alloc (const pds_obj_key_t& key)
 }
 
 static ms_bd_id_t
-subnet_uuid_2_idx_fetch (const pds_obj_key_t& key)
+subnet_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
 {
     // Update or Delete - fetch the BD ID
     auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -355,6 +355,9 @@ subnet_uuid_2_idx_fetch (const pds_obj_key_t& key)
     auto subnet_uuid_obj = (subnet_uuid_obj_t*) uuid_obj;
     SDK_TRACE_VERBOSE("Fetched Subnet UUID %s = BD %d",
                       key.str(), subnet_uuid_obj->ms_id());
+    if (del_op) {
+        mgmt_ctxt.state()->set_pending_uuid_delete(key);
+    }
     return subnet_uuid_obj->ms_id();
 }
 
@@ -392,7 +395,7 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     types::ApiStatus ret_status;
 
     try {
-        auto bd_id = subnet_uuid_2_idx_fetch(spec->key);
+        auto bd_id = subnet_uuid_2_idx_fetch(spec->key, true);
 
         ret_status = process_subnet_update (spec, bd_id, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
@@ -480,7 +483,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
     ms_bd_id_t bd_id;
 
     try {
-        bd_id = subnet_uuid_2_idx_fetch(spec->key);
+        bd_id = subnet_uuid_2_idx_fetch(spec->key, false);
         parse_subnet_update(spec, bd_id, ms_upd_flags);
 
         if (ms_upd_flags) {

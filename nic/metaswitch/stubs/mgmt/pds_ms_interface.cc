@@ -89,7 +89,7 @@ interface_uuid_alloc(const pds_obj_key_t& key, uint32_t &ms_ifindex)
 }
 
 uint32_t
-interface_uuid_fetch(const pds_obj_key_t& key)
+interface_uuid_fetch(const pds_obj_key_t& key, bool del_op)
 {
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(key);
@@ -105,13 +105,15 @@ interface_uuid_fetch(const pds_obj_key_t& key)
     auto interface_uuid_obj = (interface_uuid_obj_t*) uuid_obj;
     SDK_TRACE_VERBOSE("Fetched Interface UUID %s MSIfindex 0x%X",
                       key.str(), interface_uuid_obj->ms_id().ms_ifindex);
+    if (del_op) {
+        mgmt_ctxt.state()->set_pending_uuid_delete(key);
+    }
     return interface_uuid_obj->ms_id().ms_ifindex;
 }
 
 sdk_ret_t
 interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
 {
-    sdk_ret_t ret = SDK_RET_OK;
     types::ApiStatus ret_status;
     SDK_ASSERT(spec->type == PDS_IF_TYPE_L3);
 
@@ -152,7 +154,7 @@ interface_delete (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     
     try {
         // Fill MS IfIndex from UUID cache
-        ms_ifindex = interface_uuid_fetch(spec->key);
+        ms_ifindex = interface_uuid_fetch(spec->key, true);
         
         ret_status = process_interface_update(spec, ms_ifindex,
                                               AMB_ROW_DESTROY);
@@ -182,7 +184,7 @@ interface_update (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     
     try {
         // Fill MS IfIndex from UUID cache
-        ms_ifindex = interface_uuid_fetch(spec->key);
+        ms_ifindex = interface_uuid_fetch(spec->key, false);
         // Only L3 interface address can be updated. Send the current
         // interface address to Metaswitch. If address is same then metaswitch
         // will treat it as a no-ip

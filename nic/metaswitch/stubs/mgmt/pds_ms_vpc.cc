@@ -174,7 +174,7 @@ vpc_uuid_2_idx_alloc (const pds_vpc_spec_t* spec)
 }
 
 static std::pair<ms_vrf_id_t,mib_idx_t>
-vpc_uuid_2_idx_fetch (const pds_obj_key_t& key)
+vpc_uuid_2_idx_fetch (const pds_obj_key_t& key, bool del_op)
 {
     // Update or Delete - fetch the BD ID
     auto mgmt_ctxt = mgmt_state_t::thread_context();
@@ -191,6 +191,9 @@ vpc_uuid_2_idx_fetch (const pds_obj_key_t& key)
     auto vpc_uuid_obj = (vpc_uuid_obj_t*) uuid_obj;
     SDK_TRACE_VERBOSE("Fetched VPC UUID %s = VRF %d",
                       key.str(), vpc_uuid_obj->ms_id());
+    if (del_op) {
+        mgmt_ctxt.state()->set_pending_uuid_delete(key);
+    }
     return std::make_pair(vpc_uuid_obj->ms_id(),
                           vpc_uuid_obj->ms_v4_rttbl_id());
 }
@@ -242,7 +245,7 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     try {
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
-        std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key);
+        std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
 
         ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
@@ -250,10 +253,8 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                            spec->key.str(), vrf_id, ret_status);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-
         SDK_TRACE_DEBUG ("VPC %s VRF %d delete is successfully processed",
                          spec->key.str(), vrf_id);
-
         // Remove cached VPC spec, after successful reply from MS
         pds_cache_vpc_spec(spec, vrf_id, true);
 
@@ -271,7 +272,7 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     try {
         ms_vrf_id_t vrf_id;
         mib_idx_t   rtm_index;
-        std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key);
+        std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, false);
 
         auto state_ctxt = state_t::thread_context();
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);

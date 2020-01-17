@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/event.hpp"
+#include "nic/apollo/agent/core/core.hpp"
 #include <li_fte.hpp>
 
 extern NBB_ULONG li_proc_id;
@@ -157,7 +158,8 @@ ipc_init_cb (int fd, sdk::ipc::handler_ms_cb cb, void *ctx)
 bool
 hal_init (void)
 {
-    sdk::ipc::ipc_init_metaswitch(32, &ipc_init_cb);
+    sdk::ipc::ipc_init_metaswitch(core::PDS_AGENT_THREAD_ID_ROUTING,
+                                  &ipc_init_cb);
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, &hal_event_callback, NULL);
     return true;
 }
