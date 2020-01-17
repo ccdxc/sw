@@ -150,6 +150,10 @@ func TestMetaBasic(t *testing.T) {
 	cfg.RebalanceDelay = time.Millisecond * 100
 	cfg.RebalanceInterval = time.Millisecond * 10
 
+	// Mock error for empty listenURL
+	_, _, _, err := createNode(cfg, "1111", "")
+	Assert(t, err != nil, "Error failed to raise error for empty listenURL")
+
 	// create nodes and watchers
 	w1, n1, s1, err := createNode(cfg, "1111", "localhost:7071")
 	AssertOk(t, err, "Error creating node1")
@@ -189,9 +193,19 @@ func TestMetaBasic(t *testing.T) {
 	Assert(t, ok == true, fmt.Sprintf("failed to find replica %v in node %v", repl, w1.GetCluster(meta.ClusterTypeTstore).NodeMap["1111"].Replicas))
 
 	// verify that shardmap is setup correctly
-	tcl := w1.GetCluster(meta.ClusterTypeTstore)
-	_, err = tcl.ShardMap.GetShardForPoint("db0", "measurement0", "")
+	tcl1 := w1.GetCluster(meta.ClusterTypeTstore)
+	sd1, err := tcl1.ShardMap.GetShardForPoint("db0", "measurement0", "")
 	AssertOk(t, err, "Could not get a shard for point")
+	_, err = tcl1.ShardMap.GetShardFromID(int(sd1.ShardID))
+	AssertOk(t, err, "Could not find the existed shard")
+	_, err = tcl1.ShardMap.FindShardByID(sd1.ShardID)
+	AssertOk(t, err, "Could not find the existed shard")
+
+	// verify that shardmap is setup correctly for Fwlogs
+	tcl2 := w1.GetCluster(meta.ClusterTypeTstore)
+	_, err = tcl2.ShardMap.GetShardForPoint("db0", "Fwlogs", "testTag")
+	AssertOk(t, err, "Could not get a shard for point")
+
 	kcl := w1.GetCluster(meta.ClusterTypeKstore)
 	_, err = kcl.ShardMap.GetShardForKey("table0", tproto.Key{Key: []byte("key1")})
 	AssertOk(t, err, "Error getting a shard for the key")
