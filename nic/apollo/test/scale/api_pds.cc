@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <math.h>
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/test/flow_test/flow_test.hpp"
 
 #ifndef SKIP_FLOW
@@ -273,6 +274,36 @@ create_objects_end (void)
     sdk_ret_t ret;
 
     ret = g_flow_test_obj->create_flows();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#endif
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+delete_objects_end (void)
+{
+#ifndef SKIP_FLOW
+    sdk_ret_t ret;
+
+    ret = g_flow_test_obj->delete_flows();
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+#endif
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+iterate_objects_end (sdk::table::iterate_t table_entry_iterate)
+{
+#ifndef SKIP_FLOW
+    sdk_ret_t ret;
+
+    ret = g_flow_test_obj->iterate_flows(table_entry_iterate);
     if (ret != SDK_RET_OK) {
         return ret;
     }

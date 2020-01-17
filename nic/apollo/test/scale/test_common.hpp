@@ -118,6 +118,8 @@ typedef struct test_params_s {
         uint16_t sport_hi;
         uint16_t dport_lo;
         uint16_t dport_hi;
+        bool     flow_create;
+        bool     flow_delete;
     };
     // mirror config
     struct {
@@ -372,6 +374,20 @@ parse_test_cfg (const char *cfg_file, test_params_t *test_params)
                 test_params->sport_hi = std::stol(obj.second.get<std::string>("sport_hi"));
                 test_params->dport_lo = std::stol(obj.second.get<std::string>("dport_lo"));
                 test_params->dport_hi = std::stol(obj.second.get<std::string>("dport_hi"));
+                boost::optional<pt::ptree&> ops_pt = obj.second.get_child_optional( "ops" );
+                if (ops_pt) {
+                    test_params->flow_create = false;
+                    if (!obj.second.get<std::string>("ops.create").compare("true")) {
+                        test_params->flow_create = true;
+                    }
+                    test_params->flow_delete = false;
+                    if (!obj.second.get<std::string>("ops.delete").compare("true")) {
+                        test_params->flow_delete = true;
+                    }
+               } else {
+                    test_params->flow_create = true;
+                    test_params->flow_delete = false;
+               }
             } else if (kind == "mirror") {
                 if (!obj.second.get<std::string>("enable").compare("true")) {
                     test_params->mirror_en = true;

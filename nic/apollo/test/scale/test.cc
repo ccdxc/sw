@@ -6,6 +6,7 @@
 #include <math.h>
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/include/sdk/qos.hpp"
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/test/base/utils.hpp"
 #include "nic/apollo/test/scale/test.hpp"
 #include "nic/apollo/test/scale/api.hpp"
@@ -1544,6 +1545,12 @@ create_underlay_nexthops (uint32_t num_nh)
     return SDK_RET_OK;
 }
 
+static uint32_t flow_counter = 0;
+static void
+table_entry_iterate (sdk::table::sdk_table_api_params_t *params) {
+    flow_counter++;
+}
+
 sdk_ret_t
 create_objects (void)
 {
@@ -1772,10 +1779,35 @@ create_objects (void)
         }
     }
 
-    ret = create_objects_end();
-    if (ret != SDK_RET_OK) {
-        return SDK_RET_ERR;
+    if (g_test_params.flow_create == true) {
+        ret = create_objects_end();
+        if (ret != SDK_RET_OK) {
+            return SDK_RET_ERR;
+        }
+
+        ret = iterate_objects_end(table_entry_iterate);
+        if (ret != SDK_RET_OK) {
+            return SDK_RET_ERR;
+        }
+
+        SDK_TRACE_DEBUG("Installed Flows %u\n", flow_counter);
     }
 
+    if (g_test_params.flow_delete == true) {
+        // delete all flows
+        flow_counter = 0;
+        ret = delete_objects_end();
+        if (ret != SDK_RET_OK) {
+            return SDK_RET_ERR;
+        }
+
+        ret = iterate_objects_end(table_entry_iterate);
+        if (ret != SDK_RET_OK) {
+            return SDK_RET_ERR;
+        }
+
+        // make sure all flows are deleted
+        SDK_ASSERT(flow_counter == 0);
+    }
     return ret;
 }

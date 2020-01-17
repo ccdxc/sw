@@ -5,6 +5,7 @@
 #ifndef __SCALE_API_HPP_
 #define __SCALE_API_HPP_
 
+#include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
@@ -44,5 +45,7 @@ sdk_ret_t create_mirror_session(pds_mirror_session_spec_t *ms);
 sdk_ret_t create_l3_intf(pds_if_spec_t *intf);
 sdk_ret_t create_objects_init(test_params_t *test_params);
 sdk_ret_t create_objects_end(void);
+sdk_ret_t delete_objects_end(void);
+sdk_ret_t iterate_objects_end(sdk::table::iterate_t table_entry_iterate);
 
 #endif

@@ -1255,6 +1255,25 @@ public:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t delete_flows(void) {
+        // Not implemented
+        SDK_ASSERT(0);
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t iterate_flows(sdk::table::iterate_t table_entry_iterate) {
+        sdk_table_api_params_t params = { 0 };
+
+        params.itercb = table_entry_iterate;
+
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+        v4table->iterate(&params);
+
+        params.entry_size = flow_hash_entry_t::entry_size();
+        v6table->iterate(&params);
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t clear_flows() {
        v4table->clear(true, true);
        v6table->clear(true, true);

@@ -75,13 +75,17 @@
         },
         {
             "kind" : "flows",
-            "num_tcp": "0",
-            "num_udp": "65536",
+            "num_tcp": "1048576",
+            "num_udp": "1048576",
             "num_icmp": "0",
             "sport_lo": "100",
             "sport_hi": "101",
             "dport_lo": "100",
-            "dport_hi": "107"
+            "dport_hi": "107",
+            "ops" : {
+                "create" : "true",
+                "delete" : "true"
+            }
         }
     ]
 }

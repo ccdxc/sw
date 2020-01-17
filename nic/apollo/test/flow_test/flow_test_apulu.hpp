@@ -43,7 +43,25 @@ namespace pt = boost::property_tree;
 
 #define MAX_NEXTHOP_GROUP_INDEX 1024
 
-FILE *g_fp;
+static FILE *g_fp;
+
+typedef enum flow_op_e {
+    FLOW_CREATE,
+    FLOW_DELETE,
+} flow_op_t;
+
+static string
+op_str (flow_op_t op)
+{
+    switch (op) {
+    case FLOW_DELETE:
+        return "delete";
+
+    case FLOW_CREATE:
+    default:
+        return "create";
+    }
+}
 
 char *
 flow_key2str(void *key) {
@@ -282,9 +300,9 @@ private:
     }
 
 
-    sdk_ret_t insert_(flow_hash_entry_t *v6entry) {
+    sdk_ret_t insert_(flow_hash_entry_t *entry) {
         memset(&params, 0, sizeof(params));
-        params.entry = v6entry;
+        params.entry = entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
@@ -293,9 +311,20 @@ private:
         return v6table->insert(&params);
     }
 
-    sdk_ret_t insert_(ipv4_flow_hash_entry_t *v4entry) {
+    sdk_ret_t remove_(flow_hash_entry_t *entry) {
         memset(&params, 0, sizeof(params));
-        params.entry = v4entry;
+        params.entry = entry;
+        if (with_hash) {
+            params.hash_valid = true;
+            params.hash_32b = hash++;
+        }
+        params.entry_size = flow_hash_entry_t::entry_size();
+        return v6table->remove(&params);
+    }
+
+    sdk_ret_t insert_(ipv4_flow_hash_entry_t *entry) {
+        memset(&params, 0, sizeof(params));
+        params.entry = entry;
         if (with_hash) {
             params.hash_valid = true;
             params.hash_32b = hash++;
@@ -304,10 +333,15 @@ private:
         return v4table->insert(&params);
     }
 
-    sdk_ret_t remove_(flow_hash_entry_t *key) {
-        sdk_table_api_params_t params = { 0 };
-        params.key = key;
-        return v6table->remove(&params);
+    sdk_ret_t remove_(ipv4_flow_hash_entry_t *entry) {
+        memset(&params, 0, sizeof(params));
+        params.entry = entry;
+        if (with_hash) {
+            params.hash_valid = true;
+            params.hash_32b = hash++;
+        }
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+        return v4table->remove(&params);
     }
 
 public:
@@ -328,6 +362,13 @@ public:
         hash = 0;
         with_hash = w;
         session_index = 1;
+
+#ifdef SIM
+        g_fp = fopen("./flow_log.log", "w+");
+#else
+        // tmp doesn't have sufficient memory
+        g_fp = fopen("/data/flow_log.log", "w+");
+#endif
     }
 
     void set_port_bases(uint16_t spbase, uint16_t dpbase) {
@@ -555,7 +596,6 @@ public:
                           uint32_t dst_bd_id, ipv6_addr_t v6_addr_dip,
                           mac_addr_t dmac, uint8_t proto, uint16_t sport,
                           uint16_t dport, uint32_t nh_idx) {
-        // memset(&v6entry, 0, sizeof(flow_hash_entry_t));
         v6entry.clear();
         v6entry.key_metadata_ktype = KEY_TYPE_IPV6;
         v6entry.vnic_metadata_bd_id = src_bd_id - 1;
@@ -569,6 +609,28 @@ public:
         // v6entry.nexthop_valid = 1;
         // v6entry.nexthop_type = NEXTHOP_TYPE_TUNNEL;
         auto ret = insert_(&v6entry);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // print entry info
+        dump_flow_entry(&v6entry, v6_addr_sip, smac, v6_addr_dip, dmac);
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t delete_flow(uint32_t vpc, uint32_t src_bd_id,
+                          ipv6_addr_t v6_addr_sip, mac_addr_t smac,
+                          uint32_t dst_bd_id, ipv6_addr_t v6_addr_dip,
+                          mac_addr_t dmac, uint8_t proto, uint16_t sport,
+                          uint16_t dport, uint32_t nh_idx) {
+        v6entry.clear();
+        v6entry.key_metadata_ktype = KEY_TYPE_IPV6;
+        v6entry.vnic_metadata_bd_id = src_bd_id - 1;
+        sdk::lib::memrev(v6entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
+        sdk::lib::memrev(v6entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
+        v6entry.key_metadata_proto = proto;
+        v6entry.key_metadata_sport = sport;
+        v6entry.key_metadata_dport = dport;
+        auto ret = remove_(&v6entry);
         if (ret != SDK_RET_OK) {
             return ret;
         }
@@ -625,14 +687,56 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_one_proto_(uint32_t count, uint8_t proto,
-                                      bool ipv6) {
+    sdk_ret_t delete_session(uint32_t iflow_vpc, uint32_t iflow_bd_id,
+                             mac_addr_t iflow_smac, mac_addr_t iflow_dmac,
+                             ipv4_addr_t iflow_sip, ipv4_addr_t iflow_dip,
+                             uint16_t iflow_sport, uint16_t iflow_dport,
+                             uint32_t rflow_vpc, uint32_t rflow_bd_id,
+                             mac_addr_t rflow_smac, mac_addr_t rflow_dmac,
+                             ipv4_addr_t rflow_sip, ipv4_addr_t rflow_dip,
+                             uint16_t rflow_sport, uint16_t rflow_dport,
+                             uint8_t proto) {
+        // install iflow
+        v4entry.clear();
+        v4entry.vnic_metadata_bd_id = iflow_bd_id;
+        v4entry.key_metadata_sport = iflow_sport;
+        v4entry.key_metadata_dport = iflow_dport;
+        v4entry.key_metadata_proto = proto;
+        v4entry.key_metadata_ipv4_src = iflow_sip;
+        v4entry.key_metadata_ipv4_dst = iflow_dip;
+        auto ret = remove_(&v4entry);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // print entry info
+        dump_flow_entry(&v4entry, iflow_sip, iflow_smac, iflow_dip, iflow_dmac);
+
+        // install rflow
+        v4entry.clear();
+        v4entry.vnic_metadata_bd_id = rflow_bd_id;
+        v4entry.key_metadata_sport = rflow_sport;
+        v4entry.key_metadata_dport = rflow_dport;
+        v4entry.key_metadata_proto = proto;
+        v4entry.key_metadata_ipv4_src = rflow_sip;
+        v4entry.key_metadata_ipv4_dst = rflow_dip;
+        ret = remove_(&v4entry);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+        // print entry info
+        dump_flow_entry(&v4entry, rflow_sip, rflow_smac, rflow_dip, rflow_dmac);
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t flows_one_proto_(uint32_t count, uint8_t proto,
+                               bool ipv6, flow_op_t op) {
         uint16_t local_port = 0, remote_port = 0;
         uint32_t i = 0, v4_nh_idx = IPV4_MAPPING_NH_HW_IDX_START;
         uint32_t v6_nh_idx = IPV6_MAPPING_NH_HW_IDX_START;
         uint16_t fwd_sport = 0, fwd_dport = 0;
         uint16_t rev_sport = 0, rev_dport = 0;
         uint32_t nflows = 0;
+        sdk_ret_t ret = SDK_RET_OK;
 
         for (uint32_t vpc = 1; vpc < MAX_VPCS; vpc++) {
             generate_ep_pairs(vpc, ipv6);
@@ -656,39 +760,87 @@ public:
                         }
 
                         if (ipv6) {
-                            auto ret = create_flow(vpc,
-                                                   ep_pairs[i].lbd_id,
-                                                   ep_pairs[i].lip6,
-                                                   ep_pairs[i].lmac6,
-                                                   ep_pairs[i].rbd_id,
-                                                   ep_pairs[i].rip6,
-                                                   ep_pairs[i].rmac6,
-                                                   proto,
-                                                   fwd_sport, fwd_dport,
-                                                   v6_nh_idx);
-                            if (ret != SDK_RET_OK) {
-                                return ret;
+                            switch (op) {
+                            case FLOW_DELETE:
+                                ret = delete_flow(vpc,
+                                                       ep_pairs[i].lbd_id,
+                                                       ep_pairs[i].lip6,
+                                                       ep_pairs[i].lmac6,
+                                                       ep_pairs[i].rbd_id,
+                                                       ep_pairs[i].rip6,
+                                                       ep_pairs[i].rmac6,
+                                                       proto,
+                                                       fwd_sport, fwd_dport,
+                                                       v6_nh_idx);
+                                if (ret != SDK_RET_OK) {
+                                    return ret;
+                                }
+                                break;
+
+                            case FLOW_CREATE:
+                            default:
+                                ret = create_flow(vpc,
+                                                       ep_pairs[i].lbd_id,
+                                                       ep_pairs[i].lip6,
+                                                       ep_pairs[i].lmac6,
+                                                       ep_pairs[i].rbd_id,
+                                                       ep_pairs[i].rip6,
+                                                       ep_pairs[i].rmac6,
+                                                       proto,
+                                                       fwd_sport, fwd_dport,
+                                                       v6_nh_idx);
+                                if (ret != SDK_RET_OK) {
+                                    return ret;
+                                }
+                                break;
                             }
+                            nflows++;
                         } else {
-                            auto ret = create_session(vpc, ep_pairs[i].lbd_id,
-                                                      ep_pairs[i].lmac,
-                                                      ep_pairs[i].rmac,
-                                                      ep_pairs[i].lip,
-                                                      ep_pairs[i].rip,
-                                                      fwd_sport, fwd_dport,
-                                                      vpc, ep_pairs[i].rbd_id,
-                                                      ep_pairs[i].rmac,
-                                                      ep_pairs[i].lmac,
-                                                      ep_pairs[i].rip,
-                                                      ep_pairs[i].lip,
-                                                      fwd_dport, fwd_sport,
-                                                      proto);
-                            if (ret != SDK_RET_OK) {
-                                return ret;
+                            switch (op) {
+                            case FLOW_DELETE:
+                                ret = delete_session(vpc, ep_pairs[i].lbd_id,
+                                                          ep_pairs[i].lmac,
+                                                          ep_pairs[i].rmac,
+                                                          ep_pairs[i].lip,
+                                                          ep_pairs[i].rip,
+                                                          fwd_sport, fwd_dport,
+                                                          vpc, ep_pairs[i].rbd_id,
+                                                          ep_pairs[i].rmac,
+                                                          ep_pairs[i].lmac,
+                                                          ep_pairs[i].rip,
+                                                          ep_pairs[i].lip,
+                                                          fwd_dport, fwd_sport,
+                                                          proto);
+                                if (ret != SDK_RET_OK) {
+                                    return ret;
+                                }
+                                break;
+
+                            case FLOW_CREATE:
+                            default:
+                                ret = create_session(vpc, ep_pairs[i].lbd_id,
+                                                          ep_pairs[i].lmac,
+                                                          ep_pairs[i].rmac,
+                                                          ep_pairs[i].lip,
+                                                          ep_pairs[i].rip,
+                                                          fwd_sport, fwd_dport,
+                                                          vpc, ep_pairs[i].rbd_id,
+                                                          ep_pairs[i].rmac,
+                                                          ep_pairs[i].lmac,
+                                                          ep_pairs[i].rip,
+                                                          ep_pairs[i].lip,
+                                                          fwd_dport, fwd_sport,
+                                                          proto);
+                                if (ret != SDK_RET_OK) {
+                                    return ret;
+                                }
+                                break;
                             }
+                            nflows += 2;
                         }
-                        create_session_info(vpc, session_index++);
-                        nflows++;
+                        if (op == FLOW_CREATE) {
+                            create_session_info(vpc, session_index++);
+                        }
                         if (nflows >= count) {
                             return SDK_RET_OK;
                         }
@@ -765,28 +917,36 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t create_flows_all_protos_(bool ipv6) {
+    sdk_ret_t flows_all_protos_(bool ipv6, flow_op_t op) {
         if (cfg_params.num_tcp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_tcp,
-                                               IP_PROTO_TCP, ipv6);
+            auto ret = flows_one_proto_(cfg_params.num_tcp,
+                                        IP_PROTO_TCP, ipv6,
+                                        op);
             if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("TCP flow %s failure, err %u",
+                              op_str(op).c_str(), ret);
                 return ret;
             }
         }
 
         if (cfg_params.num_udp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_udp,
-                                               IP_PROTO_UDP, ipv6);
+            auto ret = flows_one_proto_(cfg_params.num_udp,
+                                        IP_PROTO_UDP, ipv6,
+                                        op);
             if (ret != SDK_RET_OK) {
-                SDK_TRACE_ERR("UDP flow creation failure, err %u", ret);
+                SDK_TRACE_ERR("UDP flow %s failure, err %u",
+                              op_str(op).c_str(), ret);
                 return ret;
             }
         }
 
         if (cfg_params.num_icmp) {
-            auto ret = create_flows_one_proto_(cfg_params.num_icmp,
-                                               IP_PROTO_ICMP, ipv6);
+            auto ret = flows_one_proto_(cfg_params.num_icmp,
+                                        IP_PROTO_ICMP, ipv6,
+                                        op);
             if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("ICMP flow %s failure, err %u",
+                              op_str(op).c_str(), ret);
                 return ret;
             }
         }
@@ -809,31 +969,28 @@ public:
         show_cfg_params_();
     }
 
-    sdk_ret_t create_flows(void) {
-#ifdef SIM
-        g_fp = fopen("./flow_log.log", "w+");
-#else
-        // tmp doesn't have sufficient memory
-        g_fp = fopen("/data/flow_log.log", "w+");
-#endif
-
+    sdk_ret_t flow_ops(flow_op_t op) {
         if (cfg_params.valid == false) {
             parse_cfg_json_();
         }
 
+        SDK_TRACE_DEBUG("v4 flows %s", op_str(op).c_str());
+
         // Create V4 Flows
-        SDK_TRACE_DEBUG("Creating v4 flows");
-        auto ret = create_flows_all_protos_(false);
+        auto ret = flows_all_protos_(false, op);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_DEBUG("v4 flow creation failure, err %u", ret);
+            SDK_TRACE_DEBUG("v4 flow %s failure, err %u",
+                            op_str(op).c_str(), ret);
             return ret;
         }
 
 #if 0
         if (cfg_params.dual_stack) {
-            SDK_TRACE_DEBUG("Creating v6 flows");
-            ret = create_flows_all_protos_(true);
+            SDK_TRACE_DEBUG("v6 flows %s", op_str(op).c_str());
+            ret = flows_all_protos_(true, op);
             if (ret != SDK_RET_OK) {
+            SDK_TRACE_DEBUG("v6 flow %s failure, err %u",
+                            op_str(op).c_str(), ret);
                 return ret;
             }
         }
@@ -842,7 +999,28 @@ public:
         return SDK_RET_OK;
     }
 
-    sdk_ret_t clear_flows() {
+    sdk_ret_t create_flows(void) {
+        return flow_ops(FLOW_CREATE);
+    }
+
+    sdk_ret_t delete_flows(void) {
+        return flow_ops(FLOW_DELETE);
+    }
+
+    sdk_ret_t iterate_flows(sdk::table::iterate_t table_entry_iterate) {
+        sdk_table_api_params_t params = { 0 };
+
+        params.itercb = table_entry_iterate;
+
+        params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+        v4table->iterate(&params);
+
+        params.entry_size = flow_hash_entry_t::entry_size();
+        v6table->iterate(&params);
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t clear_flows(void) {
        v4table->clear(true, true);
        v6table->clear(true, true);
        return SDK_RET_OK;

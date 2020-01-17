@@ -210,3 +210,17 @@ create_objects_end (void)
     }
     return SDK_RET_OK;
 }
+
+sdk_ret_t
+delete_objects_end (void)
+{
+    SDK_TRACE_DEBUG("flow delete not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+iterate_objects_end (sdk::table::iterate_t table_entry_iterate)
+{
+    SDK_TRACE_DEBUG("flow iteration not implemented");
+    return SDK_RET_OK;
+}
