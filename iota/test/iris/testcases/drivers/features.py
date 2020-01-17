@@ -6,7 +6,8 @@ import iota.test.iris.testcases.drivers.interface as interface
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.utils.naples_workloads as workloads
-
+import iota.test.utils.ionic_utils as ionic_utils
+ 
 INTF_TEST_TYPE_OOB_1G       = "oob-1g"
 INTF_TEST_TYPE_IB_100G      = "inb-100g"
 INTF_TEST_TYPE_INT_MGMT     = "int-mgmt"
@@ -121,6 +122,14 @@ def Trigger(tc):
 
     response = api.Trigger_AggregateCommandsResponse(trig_resp1, term_resp1)
     tc.resp = api.Trigger_AggregateCommandsResponse(response, trig_resp2)
+
+    status = ionic_utils.checkForIonicError(w1.node_name)
+    if status != api.types.status.SUCCESS:
+        api.Logger.error("Error on iperf server")
+
+    status = ionic_utils.checkForIonicError(w2.node_name)
+    if status != api.types.status.SUCCESS:
+        api.Logger.error("Error on iperf client")
 
     return api.types.status.SUCCESS
 

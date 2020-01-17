@@ -18,7 +18,7 @@ import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 UP = 1
 waitTime = 20
-naplesPorts = [1, 5]
+naplesPorts = [1, 5, 9]
 maxLinkBringupDuration = 15
 
 def Setup(tc):
@@ -106,6 +106,7 @@ def validateResults (node, beforeList, afterList):
     while (intfOffset < len(naplesPorts)):
         bData = beforeList[intfOffset]
         aData = afterList[intfOffset]
+        portNum = naplesPorts[intfOffset]
         intfOffset += 1
 
         port = aData[0]
@@ -123,8 +124,13 @@ def validateResults (node, beforeList, afterList):
             testStatus = api.types.status.FAILURE
             continue
 
-        if ((bData[2] + 1) != aData[2]): # link down count 1 increment for contiguous admin  down/up
-            #  linkdown count error
+        # link down count 1 increment for contiguous admin  down/up
+        #  linkdown count error
+        if ( portNum != 9) and ((bData[2] + 1) != aData[2]):
+            api.Logger.error("%s mismatch linkdown count, before %d after %d " % (np, bData[2], aData[2]))
+            testStatus = api.types.status.FAILURE
+        # link down count 2 increment for two contiguous admin  down/up for OOB
+        elif (portNum == 9) and ((bData[2] + 2) != aData[2]):
             api.Logger.error("%s mismatch linkdown count, before %d after %d " % (np, bData[2], aData[2]))
             testStatus = api.types.status.FAILURE
 
