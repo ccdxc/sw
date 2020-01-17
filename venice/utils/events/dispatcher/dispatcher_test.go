@@ -1069,7 +1069,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 				return
 			default:
 				AssertOk(t, dispatcher.Action(evt), "failed to send event")
-				time.Sleep(5 * time.Millisecond)
+				time.Sleep(4 * time.Millisecond)
 				creationTime, _ := types.TimestampProto(time.Now())
 				timeNow := api.Timestamp{Timestamp: *creationTime}
 				evt.ObjectMeta.CreationTime = timeNow
@@ -1111,7 +1111,7 @@ func TestEventsDispatcherCacheExpiry(t *testing.T) {
 			}, "expected cache expiry did not happen", string("20ms"), string("5s"))
 			return
 
-		case <-time.After(15 * time.Millisecond): // after every batch interval
+		case <-time.After(100 * time.Millisecond): // after every few batch intervals
 			evt := mockExporter.GetEventByUUID(evtUUID)
 			Assert(t, evt != nil, "unexpected, event is nil")
 
