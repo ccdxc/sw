@@ -2,7 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
     tc.iota_path = api.GetTestsuiteAttr("driver_path")
@@ -16,6 +16,24 @@ def Trigger(tc):
 
     w1 = pairs[0][0]
     w2 = pairs[0][1]
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    for n in tc.nodes:
+        for intf in api.GetNaplesHostInterfaces(n):
+            if tc.os == host.OS_TYPE_LINUX:
+                pci = host.GetNaplesPci(n, intf)
+                if pci is None:
+                    continue
+                cmd = 'grep -e qpid -e state /sys/kernel/debug/ionic/' + pci + '/lif0/rdma/qp/*/info'
+            else:
+                cmd = 'sysctl dev.' + host.GetNaplesSysctl(intf) + '.rdma.qp | grep -e qpid -e state'
+            api.Trigger_AddHostCommand(req, n, cmd)
+
+            resp = api.Trigger(req)
+            cmd = resp.commands[0]
+            api.Logger.info("Initial QP state for %s %s (%d):" % \
+                            (n, intf, cmd.exit_code))
+            api.PrintCommandResults(cmd)
 
     #===============================================================
     # Uninstall RDMA module, so next tests would not have dependency
@@ -42,7 +60,8 @@ def Trigger(tc):
             # allow device to register before proceeding
             api.Trigger_AddHostCommand(req, n, "sleep 2")
 
-    api.Logger.info("Final unload")
+    if repeat:
+        api.Logger.info("Final unload")
     for n in tc.nodes:
         if tc.os == host.OS_TYPE_LINUX:
             api.Trigger_AddHostCommand(req, n, "rmmod ionic_rdma")

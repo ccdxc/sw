@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.utils.naples_host as host
 
 # Check that eventqueues are used when expected
 # The test runs only in Linux; it reads the value seen in
@@ -16,27 +17,15 @@ def Setup(tc):
 def Trigger(tc):
     names = api.GetNaplesHostnames()
     hostname = names[0]
-    if api.GetNodeOs(hostname) != "linux":
+    if api.GetNodeOs(hostname) != host.OS_TYPE_LINUX:
         return api.types.status.SUCCESS
 
     for intf in api.GetNaplesHostInterfaces(hostname):
         api.Logger.info("Checking event queue use on host %s interface %s" % (hostname, intf))
 
-        # get the interface pci info
-        req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-        cmd = "ethtool -i " + intf + " | awk -F ' ' '/bus-info/ { print $2}'"
-        api.Trigger_AddHostCommand(req, hostname, cmd)
-        resp = api.Trigger(req)
-
-        if resp is None:
-            api.Logger.error("Failed to get pci info from host %s interface %s" % (hostname, intf))
+        pci = host.GetNaplesPci(hostname, intf)
+        if pci is None:
             return api.types.status.FAILURE
-        for cmd in resp.commands:
-            if cmd.exit_code != 0:
-                api.Logger.error("Error getting pci info from host %s interface %s" % (hostname, intf))
-                api.PrintCommandResults(cmd)
-                return api.types.status.FAILURE
-            pci = cmd.stdout.strip()
 
         # get eth_eq_count and number of eq interrupts
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)

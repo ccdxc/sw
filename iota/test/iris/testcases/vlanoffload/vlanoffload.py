@@ -2,7 +2,7 @@
 import random
 import yaml
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as naples_host
+import iota.test.utils.naples_host as naples_host
 import iota.test.iris.utils.hal_show as hal_show
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 

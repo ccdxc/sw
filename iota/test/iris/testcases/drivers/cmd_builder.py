@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import iota.test.iris.utils.naples  as naples
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.harness.api as api
 
 symmetric_key = "6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A:6D:5A"

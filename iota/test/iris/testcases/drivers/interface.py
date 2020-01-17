@@ -4,7 +4,7 @@ import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
 import iota.test.iris.testcases.drivers.verify as verify
-import iota.test.iris.utils.naples_host as utils
+import iota.test.utils.naples_host as utils
 import ipaddress
 import iota.harness.infra.store as store
 import re

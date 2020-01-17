@@ -5,7 +5,7 @@ from scapy.all import rdpcap
 import iota.harness.api as api
 import iota.test.iris.testcases.drivers.common as common
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 VXLAN_SERVER_IP = "100.1.1.1"

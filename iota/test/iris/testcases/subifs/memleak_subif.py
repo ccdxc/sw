@@ -3,7 +3,7 @@ import pdb
 import time
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as utils
+import iota.test.utils.naples_host as utils
 import iota.test.iris.utils.subif_utils as subif_utils
 
 def Setup(tc):

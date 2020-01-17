@@ -27,11 +27,11 @@ def Setup(tc):
     naples_console.Connect()
 
     # TODO what if agent is started by default
-    # output = naples_console.RunCommoandOnConsoleWithOutput('start-agent.sh &')
-    output = naples_console.RunCommoandOnConsoleWithOutput('grep "Finished activate config stage" /var/log/pensando/pds-agent.log')
+    # output = naples_console.RunCommandOnConsoleWithOutput('start-agent.sh &')
+    output = naples_console.RunCommandOnConsoleWithOutput('grep "Finished activate config stage" /var/log/pensando/pds-agent.log')
     api.Logger.info(output)
     if not re.search('[0-9]+\-[0-9]+\-[0-9]+',str(output)):
-        output = naples_console.RunCommoandOnConsoleWithOutput('time testapp -i %s'%tc.args.cfg_json)
+        output = naples_console.RunCommandOnConsoleWithOutput('time testapp -i %s'%tc.args.cfg_json)
         api.Logger.info(output)
 
         if re.search('fail', str(output)):

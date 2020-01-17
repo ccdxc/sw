@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 # Check that the driver can reconnect to the device

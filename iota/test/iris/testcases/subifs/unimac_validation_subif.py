@@ -3,10 +3,9 @@ import pdb
 import time
 import iota.protos.pygen.topo_svc_pb2 as topo_svc
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as utils
+import iota.test.utils.naples_host as utils
 import iota.test.iris.utils.subif_utils as subif_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.host as util_host
 
 def Setup(tc):
@@ -72,7 +71,7 @@ def ValidateMacRegistration():
             if wl.interface not in wload_intf_mac_dict:
                 host_intf_mac_dict[wl.interface] = util_host.GetMACAddress(naples_node, wl.interface)
 
-    for inf in naples_host_utils.GetHostInternalMgmtInterfaces(naples_node):
+    for inf in utils.GetHostInternalMgmtInterfaces(naples_node):
         if inf not in wload_intf_mac_dict:
             mac = util_host.GetMACAddress(naples_node, inf)
             host_intf_mac_dict[inf] = mac

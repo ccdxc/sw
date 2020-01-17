@@ -2,7 +2,7 @@
 import iota.harness.api as api
 import iota.protos.pygen.topo_svc_pb2 as topo_svc_pb2
 import iota.test.iris.verif.utils.rdma_utils as rdma
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
     tc.iota_path = api.GetTestsuiteAttr("driver_path")

@@ -73,7 +73,7 @@ class NaplesConsoleManagement():
         self.hdl.sendline(cmd)
         self.hdl.expect("#",timeout=timeout)
 
-    def RunCommoandOnConsoleWithOutput(self, cmd, timeout = 180):
+    def RunCommandOnConsoleWithOutput(self, cmd, timeout = 180):
         self.__run_cmd(cmd, timeout)
         return self.hdl.before
 

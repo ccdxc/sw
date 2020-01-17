@@ -2,7 +2,7 @@
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
+import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.traffic as traffic_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 import random

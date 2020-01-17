@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
+import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
 from collections import defaultdict

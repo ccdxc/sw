@@ -5,7 +5,7 @@
 import pdb
 import time
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 WDOG_ERR_ADQ_HB  = 1

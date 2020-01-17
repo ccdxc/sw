@@ -1,7 +1,7 @@
 import iota.harness.api as api
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
+import iota.test.utils.naples_host as naples_host_utils
 import ipaddress
 
 def Setup(tc):

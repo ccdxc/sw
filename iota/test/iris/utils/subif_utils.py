@@ -9,7 +9,7 @@ import iota.harness.infra.utils.parser as parser
 import iota.harness.infra.resmgr as resmgr
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 import iota.harness.infra.store as store
-import iota.test.iris.utils.naples_host as naples_utils
+import iota.test.utils.naples_host as naples_utils
 
 __local_workloads = {}
 __deleted_store_subifs = {}  # node_name + host if --> list of subifs

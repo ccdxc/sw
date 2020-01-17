@@ -14,7 +14,7 @@
 #
 import time
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 
 mc_cmd_base = "for i in \`/nic/bin/halctl show multicast | grep 3333 | cut -c34-40 \` ; do /nic/bin/halctl show multicast --oif-list --handle \$i | tail -1 ; done | grep -c "

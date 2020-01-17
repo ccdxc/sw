@@ -5,7 +5,7 @@ import os
 import iota.harness.api as api
 import iota.harness.infra.store as store
 import iota.test.iris.testcases.drivers.cmd_builder as cmd_builder
-import iota.test.iris.utils.naples_host as naples_host_util
+import iota.test.utils.naples_host as naples_host_util
 import iota.protos.pygen.iota_types_pb2 as types_pb2
 
 UPGRADE_ROOT_DIR = 'upgrade_bin'

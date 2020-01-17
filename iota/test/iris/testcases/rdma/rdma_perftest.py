@@ -1,10 +1,9 @@
 #! /usr/bin/python3
 import iota.harness.api as api
 import re
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
- 
     tc.desc = '''
     Test        :   rdma_perftest_bw
     Opcode      :   Send, Read, Write
@@ -194,7 +193,7 @@ def Trigger(tc):
     if getattr(tc.iterators, 'port_flap', 'false') == 'true' and hasattr(tc.iterators, 'duration'):
         port_flap = True
         tc.client_bkg = True
-    
+
     #==============================================================
     # run the cmds
     #==============================================================
@@ -210,7 +209,6 @@ def Trigger(tc):
     # cmd for server
     #==============================================================
     for p in range(s_port, e_port):
-
         port_opt  = ' -p {port} '.format(port = p)
         dev_opt   = ' -d {dev} '.format(dev = tc.devices[server_idx])
         gid_opt   = ' -x {gid} '.format(gid = tc.gid[server_idx])
@@ -241,7 +239,6 @@ def Trigger(tc):
     # cmd for client
     #==============================================================
     for p in range(s_port, e_port):
-
         port_opt  = ' -p {port} '.format(port = p)
         dev_opt   = ' -d {dev} '.format(dev = tc.devices[client_idx])
         gid_opt   = ' -x {gid} '.format(gid = tc.gid[client_idx])
@@ -267,7 +264,7 @@ def Trigger(tc):
     if hasattr(tc.iterators, 'duration') and port_flap == True:
         num_flaps = int(getattr(tc.iterators, 'duration')) // 20
         num_flaps = num_flaps - 2 #Reduce the number of flaps so that we don't flap during connection close
-        
+
         export_path_cmd = "export PATH=$PATH:/platform/bin:/nic/bin:/platform/tools:/nic/tools"
         export_ld_path_cmd = "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/platform/lib:/nic/lib"
         port_down_cmd = "/nic/bin/halctl debug port --port 1  --admin-state down"
@@ -311,13 +308,21 @@ def Trigger(tc):
                                cmd, timeout = (bkg_timeout+5))
 
     # print the next_qpid
-    if api.GetNodeOs(w1.node_name) == host.OS_TYPE_BSD:
-        cmd = 'sysctl dev.' + host.GetNaplesSysctl(w1.interface) + '.rdma.info.next_qpid'
+    for w in [w1, w2]:
+        os = api.GetNodeOs(w.node_name)
+        if os == host.OS_TYPE_BSD:
+            cmd = 'sysctl dev.' + host.GetNaplesSysctl(w.interface) + '.rdma.info.next_qpid'
+        elif os == host.OS_TYPE_LINUX:
+            pci = host.GetNaplesPci(w.node_name, w.interface)
+            if pci is None:
+                continue
+            cmd = 'grep next_qpid /sys/kernel/debug/ionic/' + pci + '/lif0/rdma/info'
+        else:
+            continue
         api.Trigger_AddCommand(req,
-                               w1.node_name,
-                               w1.workload_name,
+                               w.node_name,
+                               w.workload_name,
                                cmd, timeout = (bkg_timeout+5))
-    # TODO add code for linux
 
     #==============================================================
     # trigger the request

@@ -4,7 +4,7 @@ import iota.harness.api as api
 import iota.harness.infra.resmgr as resmgr
 import iota.harness.infra.store as store
 import iota.test.iris.utils.host as host_utils
-import iota.test.iris.utils.naples_host as naples_host
+import iota.test.utils.naples_host as naples_host
 import iota.test.iris.testcases.drivers.verify as verify
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 import ipaddress

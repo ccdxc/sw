@@ -3,7 +3,7 @@ import time
 import iota.harness.api as api
 import iota.test.iris.utils.subif_utils as subif_utils
 import iota.test.iris.testcases.filters.filters_utils as filters_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
+import iota.test.utils.naples_host as naples_host_utils
 import iota.test.iris.utils.host as util_host
 
 

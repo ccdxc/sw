@@ -4,7 +4,7 @@ import yaml
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
 # tc.desc = 'Toggle link simultaneous and check link-down count'
 # Note: Current scope is to look at port up/down count only and track link bringup time,

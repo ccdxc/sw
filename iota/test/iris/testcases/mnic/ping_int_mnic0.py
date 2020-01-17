@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 import time
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as utils
+import iota.test.utils.naples_host as utils
 import iota.harness.infra.store as store
 import re
 

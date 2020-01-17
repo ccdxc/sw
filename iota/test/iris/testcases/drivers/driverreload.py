@@ -2,13 +2,13 @@
 import pdb
 import time
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 import iota.test.iris.config.netagent.hw_push_config as hw_config
-  
+
 def Setup(tc):
- 
+
     api.Logger.info ("Driver Load/Unload x %s" % tc.args.loops)
- 
+
     tc.nodes = api.GetNaplesHostnames()
     tc.os = api.GetNodeOs(tc.nodes[0])
     

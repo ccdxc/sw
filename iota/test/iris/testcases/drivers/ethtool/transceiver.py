@@ -3,7 +3,7 @@ import re
 import iota.harness.api as api
 import iota.test.iris.utils.debug as debug_utils
 import iota.test.iris.utils.host as host_utils
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 # tc.desc = 'Extract Driver info, Firmware Info, and Card info'
 
 def Setup(tc):

@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
-import iota.test.iris.utils.naples_host as host
+import iota.test.utils.naples_host as host
 
 def Setup(tc):
     tc.nodes = api.GetNaplesHostnames()

@@ -9,26 +9,26 @@ FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ioni
 
 # Get memory slab information in a given node
 def GetMemorySlabInNaples(node_name):
-   mem_slab = {}
-   cmd = 'sleep 3 && /nic/bin/halctl show system memory slab --yaml'
-   req = api.Trigger_CreateExecuteCommandsRequest()
-   api.Trigger_AddNaplesCommand(req, node_name, cmd)
-   resp = api.Trigger(req)
+    mem_slab = {}
+    cmd = 'sleep 3 && /nic/bin/halctl show system memory slab --yaml'
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    api.Trigger_AddNaplesCommand(req, node_name, cmd)
+    resp = api.Trigger(req)
 
-   cmd = resp.commands[0]
-   if cmd.stdout is None:
-       return None
+    cmd = resp.commands[0]
+    if cmd.stdout is None:
+        return None
 
-   #api.Logger.info("cmd.stdout: %s" % cmd.stdout)
-   yml_loaded = yaml.load_all(cmd.stdout)
-   for yml in yml_loaded:
-       if yml is not None:
-           name = yml["spec"]["name"]
-           inuse = yml["stats"]["numelementsinuse"]
-           num_allocs = yml["stats"]["numallocs"]
-           num_frees = yml["stats"]["numfrees"]
-           mem_slab[name] = (inuse, num_allocs, num_frees)
-   return mem_slab
+    #api.Logger.info("cmd.stdout: %s" % cmd.stdout)
+    yml_loaded = yaml.load_all(cmd.stdout)
+    for yml in yml_loaded:
+        if yml is not None:
+            name = yml["spec"]["name"]
+            inuse = yml["stats"]["numelementsinuse"]
+            num_allocs = yml["stats"]["numallocs"]
+            num_frees = yml["stats"]["numfrees"]
+            mem_slab[name] = (inuse, num_allocs, num_frees)
+    return mem_slab
 
 # Check if memory slab leaks and print on a given node
 def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
@@ -57,9 +57,9 @@ def ShowLeakInMemorySlabInNaples(memslab_before, memslab_after, node_name):
 def Toggle_TxVlanOffload(node, interface, enable):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    if api.GetNodeOs(node) == "linux":
+    if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -K " + interface + " txvlan " + enable
-    elif api.GetNodeOs(node) == "freebsd":
+    elif api.GetNodeOs(node) == OS_TYPE_BSD:
         if enable == 'on':
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
@@ -74,9 +74,9 @@ def Toggle_TxVlanOffload(node, interface, enable):
 def Toggle_RxVlanOffload(node, interface, enable):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    if api.GetNodeOs(node) == "linux":
+    if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -K " + interface + " rxvlan " + enable
-    elif api.GetNodeOs(node) == "freebsd":
+    elif api.GetNodeOs(node) == OS_TYPE_BSD:
         if enable == 'on':
             cmd = "ifconfig " + interface + " vlanhwtag "
         else:
@@ -91,9 +91,9 @@ def Get_RxVlanOffload_Status(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     resp = None
-    if api.GetNodeOs(node) == "linux":
+    if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -k " + interface + " | grep rx-vlan-offload"
-    elif api.GetNodeOs(node) == "freebsd":
+    elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
 
     api.Trigger_AddHostCommand(req, node, cmd)
@@ -104,9 +104,9 @@ def Get_TxVlanOffload_Status(node, interface):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
     resp = None
-    if api.GetNodeOs(node) == "linux":
+    if api.GetNodeOs(node) == OS_TYPE_LINUX:
         cmd = "ethtool -k " + interface + " | grep tx-vlan-offload"
-    elif api.GetNodeOs(node) == "freebsd":
+    elif api.GetNodeOs(node) == OS_TYPE_BSD:
         cmd = "ifconfig " + interface + " | grep options"
 
     api.Trigger_AddHostCommand(req, node, cmd)
@@ -125,7 +125,7 @@ def GetHostInternalMgmtInterfaces(node):
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
 
-    if api.GetNodeOs(node) == "linux":
+    if api.GetNodeOs(node) == OS_TYPE_LINUX:
         pci_bdf_list = []
         #find pci bdf first for mgmt device which has deviceId as 1004
         cmd = "lspci -d :1004 | cut -d' ' -f1"
@@ -274,7 +274,29 @@ def GetNaplesSysctl(intf):
     # iota passes interface name "ionic0". BSD sysctl wants "ionic.0".
     return intf[:-1] + '.' + intf[-1]
 
+def GetNaplesPci(node, intf):
+    if api.GetNodeOs(node) != OS_TYPE_LINUX:
+        return None
+
+    req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
+    cmd = "ethtool -i " + intf + " | awk -F ' ' '/bus-info/ { print $2}'"
+    api.Trigger_AddHostCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    if resp is None:
+        api.Logger.error("Failed to get pci info from node %s interface %s" % (node, intf))
+        return None
+
+    cmd = resp.commands[0]
+    if cmd.exit_code != 0:
+        api.Logger.error("Error getting pci info from node %s interface %s" % (node, intf))
+        api.PrintCommandResults(cmd)
+        return None
+
+    return cmd.stdout.strip()
+
 def BsdLifReset(node, intf):
+    if api.GetNodeOs(node) != OS_TYPE_BSD:
+        return -1
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     api.Trigger_AddHostCommand(req, node, "sysctl dev.%s.lif_resets | cut -d : -f 2" %

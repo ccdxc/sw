@@ -4,7 +4,7 @@ import iota.test.iris.utils.address as address_utils
 import iota.test.iris.utils.hal_show as hal_show_utils
 import iota.test.iris.utils.host as host_utils
 import iota.test.iris.utils.naples as naples_utils
-import iota.test.iris.utils.naples_host as naples_host_utils
+import iota.test.utils.naples_host as naples_host_utils
 from collections import defaultdict
 import yaml
 
