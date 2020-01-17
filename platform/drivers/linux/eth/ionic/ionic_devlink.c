@@ -35,6 +35,12 @@ static int ionic_dl_info_get(struct devlink *dl, struct devlink_info_req *req,
 	if (err)
 		return err;
 
+	val = ioread8(&idev->dev_info_regs->fw_status);
+	snprintf(buf, sizeof(buf), "0x%x", val);
+	err = devlink_info_version_running_put(req, "fw.status", buf);
+	if (err)
+		return err;
+
 	snprintf(buf, sizeof(buf), "0x%x", idev->dev_info.asic_type);
 	err = devlink_info_version_fixed_put(req,
 					     DEVLINK_INFO_VERSION_GENERIC_ASIC_ID,

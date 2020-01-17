@@ -29,10 +29,11 @@ static void ionic_get_stats_strings(struct ionic_lif *lif, u8 *buf)
 static void ionic_get_stats(struct net_device *netdev,
 			    struct ethtool_stats *stats, u64 *buf)
 {
-	struct ionic_lif *lif;
+	struct ionic_lif *lif = netdev_priv(netdev);
 	u32 i;
 
-	lif = netdev_priv(netdev);
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return;
 
 	memset(buf, 0, stats->n_stats * sizeof(*buf));
 	for (i = 0; i < ionic_num_stats_grps; i++)
@@ -300,6 +301,9 @@ static int ionic_set_link_ksettings(struct net_device *netdev,
 	struct ionic_dev *idev = &lif->ionic->idev;
 	int err = 0;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	idev = &lif->ionic->idev;
 
 	/* set autoneg */
@@ -347,6 +351,9 @@ static int ionic_set_pauseparam(struct net_device *netdev,
 	struct ionic *ionic = lif->ionic;
 	u32 requested_pause;
 	int err;
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	if (pause->autoneg)
 		return -EOPNOTSUPP;
@@ -400,6 +407,9 @@ static int ionic_set_fecparam(struct net_device *netdev,
 	struct ionic_lif *lif = netdev_priv(netdev);
 	u8 fec_type;
 	int ret = 0;
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	if (lif->ionic->idev.port_info->config.an_enable) {
 		netdev_err(netdev, "FEC request not allowed while autoneg is enabled\n");
@@ -846,6 +856,9 @@ static int ionic_nway_reset(struct net_device *netdev)
 	struct ionic_lif *lif = netdev_priv(netdev);
 	struct ionic *ionic = lif->ionic;
 	int err = 0;
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	/* flap the link to force auto-negotiation */
 

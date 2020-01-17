@@ -16,11 +16,19 @@
 static void ionic_watchdog_cb(struct timer_list *t)
 {
 	struct ionic *ionic = from_timer(ionic, t, watchdog_timer);
+	struct ionic_lif *lif = ionic->master_lif;
+	int hb;
 
 	mod_timer(&ionic->watchdog_timer,
 		  round_jiffies(jiffies + ionic->watchdog_period));
 
-	ionic_heartbeat_check(ionic);
+	hb = ionic_heartbeat_check(ionic);
+
+	/* check link if we're waiting for link to come back up */
+	if (hb >= 0 && lif && netif_running(lif->netdev) &&
+	    !test_bit(IONIC_LIF_F_UP, lif->state)) {
+		ionic_link_status_check_request(lif);
+	}
 }
 
 void ionic_init_devinfo(struct ionic *ionic)
@@ -88,6 +96,7 @@ int ionic_dev_setup(struct ionic *ionic)
 	idev->db_pages = bar->vaddr;
 	idev->phy_db_pages = bar->bus_addr;
 
+	idev->last_fw_status = 0xff;
 	timer_setup(&ionic->watchdog_timer, ionic_watchdog_cb, 0);
 	ionic->watchdog_period = IONIC_WATCHDOG_SECS * HZ;
 	mod_timer(&ionic->watchdog_timer,
@@ -134,7 +143,7 @@ int ionic_heartbeat_check(struct ionic *ionic)
 {
 	struct ionic_dev *idev = &ionic->idev;
 	unsigned long hb_time;
-	u32 fw_status;
+	u8 fw_status;
 	u32 hb;
 
 	/* don't check heartbeat on the internal platform device */
@@ -146,9 +155,46 @@ int ionic_heartbeat_check(struct ionic *ionic)
 	if (time_before(hb_time, (idev->last_hb_time + ionic->watchdog_period)))
 		return 0;
 
-	/* firmware is useful only if fw_status is non-zero */
-	fw_status = ioread32(&idev->dev_info_regs->fw_status);
-	if (!fw_status)
+	/* firmware is useful only if fw_status is not zero and not 0xff */
+	fw_status = ioread8(&idev->dev_info_regs->fw_status);
+
+	/* is this a transition? */
+	if (fw_status != idev->last_fw_status &&
+	    idev->last_fw_status != 0xff) {
+		struct ionic_lif *lif = ionic->master_lif;
+		bool trigger = false;
+
+		if (!fw_status || fw_status == 0xff) {
+			dev_info(ionic->dev, "FW status STOPPED\n");
+			if (lif && !test_bit(IONIC_LIF_F_FW_RESET, lif->state)) {
+				dev_info(ionic->dev, " ... triggering stop\n");
+				trigger = true;
+			}
+		} else {
+			dev_info(ionic->dev, "FW status RUNNING %u\n", fw_status);
+			if (lif && test_bit(IONIC_LIF_F_FW_RESET, lif->state)) {
+				dev_info(ionic->dev, " ... triggering restart\n");
+				trigger = true;
+			}
+		}
+
+		if (trigger) {
+			struct ionic_deferred_work *work;
+
+			work = kzalloc(sizeof(*work), GFP_ATOMIC);
+			if (!work) {
+				dev_err(ionic->dev, "%s OOM\n", __func__);
+			} else {
+				work->type = IONIC_DW_TYPE_LIF_RESET;
+				work->fw_status = fw_status == 1 ? 1 : 0;
+				ionic_lif_deferred_enqueue(&lif->deferred, work);
+			}
+		}
+
+	}
+	idev->last_fw_status = fw_status;
+
+	if (!fw_status || fw_status == 0xff)
 		return -ENXIO;
 
 	/* early FW has no heartbeat, else FW will return non-zero */
@@ -160,7 +206,7 @@ int ionic_heartbeat_check(struct ionic *ionic)
 	if (hb == idev->last_hb) {
 		/* only complain once for each stall seen */
 		if (idev->last_hb_time != 1) {
-			dev_info(ionic->dev, "FW heartbeat stalled at %d\n",
+			dev_info(ionic->dev, "FW heartbeat stalled at %u\n",
 				 idev->last_hb);
 			idev->last_hb_time = 1;
 		}
@@ -986,8 +1032,8 @@ void ionic_q_post(struct ionic_queue *q, bool ring_doorbell, ionic_desc_cb cb,
 	q->head->cb_arg = cb_arg;
 	q->head = q->head->next;
 
-	dev_dbg(dev, "lif=%d qname=%s hw_type=%d hw_index=%d p_index=%d ringdb=%d\n",
-		q->lif->index, q->name, q->hw_type, q->hw_index,
+	dev_dbg(dev, "%s: lif=%d qname=%s hw_type=%d hw_index=%d p_index=%d ringdb=%d\n",
+		__func__, q->lif->index, q->name, q->hw_type, q->hw_index,
 		q->head->index, ring_doorbell);
 
 	if (ring_doorbell)

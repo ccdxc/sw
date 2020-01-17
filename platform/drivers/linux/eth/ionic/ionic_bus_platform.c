@@ -301,12 +301,6 @@ static int ionic_probe(struct platform_device *pfdev)
 		goto err_out_deinit_lifs;
 	}
 
-	err = ionic_lifs_init_queues(ionic);
-	if (err) {
-		dev_err(dev, "Cannot init LIF queues: %d, aborting\n", err);
-		goto err_out_deinit_lifs;
-	}
-
 	err = ionic_lifs_register(ionic);
 	if (err) {
 		dev_err(dev, "Cannot register LIFs, aborting\n");

@@ -99,6 +99,7 @@ struct ionic_deferred_work {
 	union {
 		unsigned int rx_mode;
 		u8 addr[ETH_ALEN];
+		u8 fw_status;
 	};
 };
 
@@ -125,9 +126,10 @@ enum ionic_lif_state_flags {
 	IONIC_LIF_F_INITED,
 	IONIC_LIF_F_SW_DEBUG_STATS,
 	IONIC_LIF_F_UP,
+	IONIC_LIF_F_TRANS,
 	IONIC_LIF_F_LINK_CHECK_REQUESTED,
 	IONIC_LIF_F_QUEUE_RESET,
-	IONIC_LIF_F_FW_READY,
+	IONIC_LIF_F_FW_RESET,
 	IONIC_LIF_F_RDMA_SNIFFER,
 
 	/* leave this as last */
@@ -250,11 +252,13 @@ static inline bool ionic_is_vf(struct ionic *ionic)
 	       ionic->pdev->device == PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF;
 }
 
+void ionic_lif_deferred_enqueue(struct ionic_deferred *def,
+				struct ionic_deferred_work *work);
+void ionic_link_status_check_request(struct ionic_lif *lif);
 int ionic_lifs_alloc(struct ionic *ionic);
 void ionic_lifs_free(struct ionic *ionic);
 void ionic_lifs_deinit(struct ionic *ionic);
 int ionic_lifs_init(struct ionic *ionic);
-int ionic_lifs_init_queues(struct ionic *ionic);
 int ionic_lifs_register(struct ionic *ionic);
 void ionic_lifs_unregister(struct ionic *ionic);
 int ionic_lif_identify(struct ionic *ionic, u8 lif_type,
