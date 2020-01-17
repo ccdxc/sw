@@ -652,7 +652,7 @@ qos_class_pd_program_uplink_xoff (pd_qos_class_t *pd_qos_class)
                                                set_all_xoff,
                                                reset_pfc_xoff,
                                                set_pfc_xoff,
-                                               qos_class->pause.pfc_cos);
+                                               (1 << qos_class->pause.pfc_cos));
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error programming mac xoff for "
@@ -1207,6 +1207,35 @@ qos_class_pd_reset_stats (pd_qos_class_t *qos_class_pd)
     }
 }
 
+// walk through all the user-defined no-drop classes and form 
+// the bitmap of all the pfc-cos values
+uint32_t
+pd_qos_class_get_all_tc_pfc_cos_bitmap()
+{
+    qos_class_t *qos_class = NULL;
+    qos_group_t qos_group;
+    uint32_t    pfc_cos_bitmap = 0;
+
+    for (qos_group = QOS_GROUP_USER_DEFINED_1; 
+         qos_group <= QOS_GROUP_USER_DEFINED_6; 
+         qos_group = qos_group_get_next_user_defined(qos_group)) {
+
+        qos_class = find_qos_class_by_group(qos_group);
+
+        if(!qos_class)
+            continue;
+
+        if(qos_class->no_drop) {
+            pfc_cos_bitmap |= (1 << qos_class->pause.pfc_cos);
+        }
+    }
+
+    HAL_TRACE_DEBUG("pfc_cos_bitmap for all TCs {}", pfc_cos_bitmap);
+
+    return pfc_cos_bitmap;
+
+}
+
 // ----------------------------------------------------------------------------
 // Qos-class set global pause type
 // ----------------------------------------------------------------------------
@@ -1219,8 +1248,8 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
     bool reset_all_xoff = false;
     bool set_all_xoff = false;
     bool reset_pfc_xoff = false;    // unused in this method
-    bool set_pfc_xoff = false;      // unused in this method
-    uint32_t pfc_cos = 0x0;         // unused in this method
+    bool set_pfc_xoff = false;      // used if pause-type = PFC & no-drop TCs present
+    uint32_t pfc_cos_bitmap = 0x0;  // bitmap of PFC COS values for all TCs
     pd_qos_class_set_global_pause_type_args_t *args =
                             pd_func_args->pd_qos_class_set_global_pause_type;
 
@@ -1234,6 +1263,16 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
         reset_all_xoff = true;
         break;
     }
+
+    if(reset_all_xoff == true) {
+        // not link-level pause
+        pfc_cos_bitmap = pd_qos_class_get_all_tc_pfc_cos_bitmap();
+        if((pfc_cos_bitmap != 0) && (args->pause_type != hal::QOS_PAUSE_TYPE_NONE)) {
+            // pause-type = PFC; other no-drop TCs present with pfc-cos
+            set_pfc_xoff = true;
+        }
+    }
+
     for (tm_port = TM_UPLINK_PORT_BEGIN;
                         tm_port <= TM_UPLINK_PORT_END; tm_port++) {
         sdk_ret = capri_tm_set_uplink_mac_xoff(tm_port,
@@ -1241,7 +1280,7 @@ pd_qos_class_set_global_pause_type (pd_func_args_t *pd_func_args)
                                                set_all_xoff,
                                                reset_pfc_xoff,
                                                set_pfc_xoff,
-                                               pfc_cos);
+                                               pfc_cos_bitmap);
         ret = hal_sdk_ret_to_hal_ret(sdk_ret);
         if (ret != HAL_RET_OK) {
             HAL_TRACE_ERR("Error setting global pause type {} "

@@ -227,6 +227,29 @@ qos_is_user_defined_class (qos_group_t qos_group) {
     return false;
 }
 
+static inline qos_group_t 
+qos_group_get_next_user_defined(qos_group_t qos_group)
+{
+    switch(qos_group) {
+        case QOS_GROUP_DEFAULT:
+            return QOS_GROUP_USER_DEFINED_1;
+        case QOS_GROUP_USER_DEFINED_1:
+            return QOS_GROUP_USER_DEFINED_2;
+        case QOS_GROUP_USER_DEFINED_2:
+            return QOS_GROUP_USER_DEFINED_3;
+        case QOS_GROUP_USER_DEFINED_3:
+            return QOS_GROUP_USER_DEFINED_4;
+        case QOS_GROUP_USER_DEFINED_4:
+            return QOS_GROUP_USER_DEFINED_5;
+        case QOS_GROUP_USER_DEFINED_5:
+            return QOS_GROUP_USER_DEFINED_6;
+        case QOS_GROUP_USER_DEFINED_6:
+        default:
+            break;
+    }
+    return NUM_QOS_GROUPS;
+}
+
 void
 qos_class_queue_stats_to_proto_stats(qos::QosClassQueueStats *q_stats,
                                      sdk::platform::capri::capri_queue_stats_t *qos_queue_stats);

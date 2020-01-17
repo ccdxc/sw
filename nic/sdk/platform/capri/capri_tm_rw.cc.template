@@ -904,7 +904,7 @@ capri_tm_set_uplink_mac_xoff (tm_port_t port,
                               bool set_all_xoff,
                               bool reset_pfc_xoff,
                               bool set_pfc_xoff,
-                              uint32_t xoff_cos)
+                              uint32_t xoff_cos_bitmap)
 {
     cap_top_csr_t &cap0 = g_capri_state_pd->cap_top();
     cap_pbc_csr_t &pbc_csr = cap0.pb.pbc;
@@ -931,9 +931,11 @@ capri_tm_set_uplink_mac_xoff (tm_port_t port,
                     xoff_enable_val = 0xff;
                 }
                 if (reset_pfc_xoff == true) {
-                    xoff_enable_val &= ~(1 << xoff_cos);
+                    //xoff_enable_val &= ~(1 << xoff_cos);
+                    xoff_enable_val &= ~xoff_cos_bitmap;
                 } else if (set_pfc_xoff == true) {
-                    xoff_enable_val |= (1 << xoff_cos);
+                    //xoff_enable_val |= (1 << xoff_cos);
+                    xoff_enable_val |= xoff_cos_bitmap;
                 }
                 pbc_csr.port_${p}.cfg_mac_xoff.enable(xoff_enable_val);
                 if (tm_sw_cfg_write_enabled()) {

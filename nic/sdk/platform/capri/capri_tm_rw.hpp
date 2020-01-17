@@ -164,7 +164,7 @@ sdk_ret_t capri_tm_set_uplink_mac_xoff(tm_port_t port,
                                        bool set_all_xoff,
                                        bool reset_pfc_xoff,
                                        bool set_pfc_xoff,
-                                       uint32_t xoff_cos);
+                                       uint32_t xoff_cos_bitmap);
 
 #define TM_SCHED_TYPES(ENTRY)                    \
     ENTRY(TM_SCHED_TYPE_DWRR,       0, "dwrr")   \
