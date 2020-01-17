@@ -26,7 +26,7 @@ message ExportConfig {
     string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check)="StrLen(1,2048)"];
 
     // protocol and Port number where an external collector is gathering the data
-    // example "TCP/2055"
+    // example "UDP/2055"
     string Transport = 2 [(gogoproto.jsontag) = "transport,omitempty", (venice.check)="EmptyOr(ProtoPort())"];
 
     // Credentials provide secure access to the collector

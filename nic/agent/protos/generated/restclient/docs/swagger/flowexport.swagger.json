@@ -457,7 +457,7 @@
         "proto-port": {
           "$ref": "#/definitions/netprotoProtoPort",
           "example": "tcp/1234, arp",
-          "description": "should be a valid layer3 or layer 4 protocol and port/type",
+          "description": "should be a valid layer 3 or layer 4 protocol and port/type",
           "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
         }
       }

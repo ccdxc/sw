@@ -937,7 +937,7 @@
           },
           {
             "name": "app-protocol-selectors.proto-ports",
-            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer3 or layer 4 protocol and port/type",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer 3 or layer 4 protocol and port/type",
             "in": "query",
             "required": false,
             "type": "array",
@@ -6551,7 +6551,7 @@
           },
           {
             "name": "app-protocol-selectors.proto-ports",
-            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer3 or layer 4 protocol and port/type",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. should be a valid layer 3 or layer 4 protocol and port/type",
             "in": "query",
             "required": false,
             "type": "array",
@@ -14829,7 +14829,7 @@
             "type": "string"
           },
           "example": "tcp/1234, arp",
-          "description": "should be a valid layer3 or layer 4 protocol and port/type",
+          "description": "should be a valid layer 3 or layer 4 protocol and port/type",
           "title": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]"
         },
         "applications": {
@@ -15380,8 +15380,8 @@
         "transport": {
           "type": "string",
           "example": "tcp/1234, arp",
-          "description": "should be a valid layer3 or layer 4 protocol and port/type",
-          "title": "protocol and Port number where an external collector is gathering the data\nexample \"TCP/2055\""
+          "description": "should be a valid layer 3 or layer 4 protocol and port/type",
+          "title": "protocol and Port number where an external collector is gathering the data\nexample \"UDP/2055\""
         },
         "credentials": {
           "$ref": "#/definitions/monitoringExternalCred",

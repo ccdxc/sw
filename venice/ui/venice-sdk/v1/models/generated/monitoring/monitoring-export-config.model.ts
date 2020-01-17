@@ -20,7 +20,7 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
     /** IP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048 */
     'destination': string = null;
     /** protocol and Port number where an external collector is gathering the data
-example "TCP/2055"should be a valid layer3 or layer 4 protocol and port/type */
+example "UDP/2055"should be a valid layer 3 or layer 4 protocol and port/type */
     'transport': string = null;
     /** Credentials provide secure access to the collector */
     'credentials': MonitoringExternalCred = null;
@@ -31,7 +31,7 @@ example "TCP/2055"should be a valid layer3 or layer 4 protocol and port/type */
             type: 'string'
         },
         'transport': {
-            description:  `Protocol and Port number where an external collector is gathering the data example "TCP/2055"should be a valid layer3 or layer 4 protocol and port/type`,
+            description:  `Protocol and Port number where an external collector is gathering the data example "UDP/2055"should be a valid layer 3 or layer 4 protocol and port/type`,
             hint:  'tcp/1234, arp',
             required: false,
             type: 'string'
