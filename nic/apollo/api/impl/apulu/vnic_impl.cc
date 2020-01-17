@@ -32,7 +32,6 @@
 #define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
-#define txdma_vnic_info               action_u.vnic_info_txdma_vnic_info_txdma
 #define nexthop_info                  action_u.nexthop_nexthop_info
 
 namespace api {
@@ -515,13 +514,13 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
     }
 
-    // program v6 TXDMA_VNIC_INFO entry for Tx direction in 2nd half of the
+    // program v6 VNIC_INFO_RXDMA entry for Tx direction in 2nd half of the
     // table at (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1 index
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                    (VNIC_INFO_TABLE_SIZE * 2) + (hw_id_ * 2) + 1,
                    NULL, NULL, &vnic_info_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VNIC_INFO_TXDMA table at %u",
+        PDS_TRACE_ERR("Failed to program VNIC_INFO_RXDMA table at %u",
                       (VNIC_INFO_TABLE_SIZE*2) + (hw_id_*2) + 1);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     } else {

@@ -3,7 +3,7 @@
 /******************************************************************************/
 action lif_info(direction, lif_type, vnic_id, bd_id, vpc_id, learn_enabled,
                 pinned_nexthop_type, pinned_nexthop_id) {
-    modify_field(control_metadata.rx_packet, lif_type);
+    modify_field(control_metadata.rx_packet, direction);
     modify_field(p4i_i2e.rx_packet, direction);
     modify_field(control_metadata.lif_type, lif_type);
     modify_field(vnic_metadata.vnic_id, vnic_id);

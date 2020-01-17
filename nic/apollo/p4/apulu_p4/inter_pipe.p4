@@ -95,7 +95,7 @@ action ingress_to_rxdma() {
         modify_field(p4i_to_rxdma.vnic_info_en, FALSE);
     }
     modify_field(p4i_to_rxdma.vnic_info_key,
-                 ((control_metadata.rx_packet << 10) |
+                 ((control_metadata.rx_packet << 11) |
                   (vnic_metadata.vnic_id << 1) | scratch_metadata.flag));
 
     add_to_field(capri_p4_intrinsic.packet_len,

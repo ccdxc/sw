@@ -80,12 +80,12 @@ ingress_to_rxdma:
     phvwr           p.p4i_to_arm_mapping_xlate_id, k.{p4i_i2e_xlate_id}.hx
 
     phvwr           p.p4i_to_rxdma_apulu_p4plus, TRUE
-    seq             c1, k.control_metadata_rx_packet, r0
-    or.c1           r1, k.vnic_metadata_vnic_id, 1, 10
-    or.!c1          r1, k.vnic_metadata_vnic_id, 0, 10
     seq             c1, k.key_metadata_ktype, KEY_TYPE_IPV6
-    or.c1           r1, 1, r1, 1
-    or.!c1          r1, 0, r1, 1
+    or.c1           r1, 1, k.vnic_metadata_vnic_id, 1
+    or.!c1          r1, 0, k.vnic_metadata_vnic_id, 1
+    seq             c1, k.control_metadata_rx_packet, r0
+    or.c1           r1, r1, 1, 11
+    or.!c1          r1, r1, 0, 11
     phvwr           p.p4i_to_rxdma_vnic_info_key, r1
     seq.!c1         c1, k.key_metadata_ktype, KEY_TYPE_IPV4
     seq             c2, k.control_metadata_force_flow_miss, FALSE
