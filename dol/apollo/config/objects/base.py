@@ -37,6 +37,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Precedent = None
         self.Mutable = False
         self.deleted = False
+        self.Dirty = False
         self.Node = node
         return
 
@@ -100,6 +101,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def IsSingleton(self):
         return self.Singleton
 
+    def SetDirty(self, value):
+        self.Dirty = value
+
     def SetOrigin(self, origintype):
         self.Origin = origintype
 
@@ -117,7 +121,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return
 
     def Read(self, spec=None, expRetCode=types_pb2.API_STATUS_OK):
-        return utils.ReadObject(self, expRetCode)
+        if self.Dirty == False:
+            return utils.ReadObject(self, expRetCode)
+        else:
+            logger.info("Not reading object from Hw since it is marked Dirty")
+            return True
 
     def ReadAfterDelete(self, spec=None):
         return self.Read(types_pb2.API_STATUS_NOT_FOUND)
@@ -160,9 +168,12 @@ class ConfigObjectBase(base.ConfigObjectBase):
         if self.HasPrecedent():
             self.RollbackAttributes()
             self.Precedent = None
+            self.HwHabitant = False
+            self.SetDirty(True)
         return
 
     def CommitUpdate(self, spec=None):
+        self.SetDirty(False)
         return utils.UpdateObject(self)
 
     def ValidateSpec(self, spec):

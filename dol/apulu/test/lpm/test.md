@@ -116,8 +116,11 @@ The following testcases are run for all the route table types defined in
 
 ## Random destination address
     Trigger:
-        Host to internet gateway packet with random destination address is
-        sent to host interface.
+        A Host to internet gateway packet is sent to host interface by choosing
+        a random destination address,
+            1) From the routetable as configured initially
+            2) After updating route IP addresses and nexthops
+            3) After rolling back the attributes of routetable to old values
 
     Expectation:
         Nexthop picked up from the route with highest priority is used for
@@ -125,8 +128,11 @@ The following testcases are run for all the route table types defined in
 
 ## First value as destination address:
     Trigger:
-        Host to internet gateway packet with first value from the interval
-        tree used as the destination address is sent to host interface.
+        A Host to internet gateway packet is sent to host interface by choosing
+        first value from the interval tree as the destination address,
+            1) From the routetable as configured initially
+            2) After updating route IP addresses and nexthops
+            3) After rolling back the attributes of routetable to old values
 
     Expectation:
         Nexthop picked up from the route with highest priority is used for
@@ -134,8 +140,11 @@ The following testcases are run for all the route table types defined in
 
 ## Last value as destination address:
     Trigger:
-        Host to internet gateway packet with last value from the interval
-        tree used as the destination address is sent to host interface.
+        A Host to internet gateway packet is sent to host interface by choosing
+        last value from the interval tree as the destination address,
+            1) From the routetable as configured initially
+            2) After updating route IP addresses and nexthops
+            3) After rolling back the attributes of routetable to old values
 
     Expectation:
         Nexthop picked up from the route with highest priority is used for

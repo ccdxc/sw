@@ -204,6 +204,7 @@ def ValidateUpdate(obj, resps):
             else:
                 logger.error("Update failed for %s" %(obj.__repr__()))
                 obj.PrepareRollbackUpdate()
+                obj.SetDirty(False)
                 obj.SetHwHabitant(True)
     return
 

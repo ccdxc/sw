@@ -107,73 +107,45 @@ session:
     #     trigger:
     #         configs:
     #             - object    : ref://testcase/config/route
-    #               method    : Delete
-
-    #         descriptors:
-    #             - descriptor:
-    #                 object  : ref://testcase/descriptors/id=DESC1
-    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-
-    #     expect:
-    #         configs:
-    #             - object    : ref://testcase/config/route
-    #               method    : ReadAfterDelete
-
-    #         packets:
-    #             - packet:
-    #                 #object  : None
-    #                 # Currently, deleting a route table does NOT cleanup HW
-    #                 # and corresponding vnic also does not get updated.
-    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
-    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
-
-    #         descriptors:
-    #             - descriptor:
-    #                 object  : ref://testcase/descriptors/id=DESC2
-    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-
-    # - step:
-    #     trigger:
-    #         configs:
-    #             - object    : ref://testcase/config/route
-    #               method    : Create
-
-    #         descriptors:
-    #             - descriptor:
-    #                 object  : ref://testcase/descriptors/id=DESC1
-    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-
-    #     expect:
-    #         configs:
-    #             - object    : ref://testcase/config/route
-    #               method    : Read
-
-    #         packets:
-    #             - packet:
-    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
-    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
-
-    #         descriptors:
-    #             - descriptor:
-    #                 object  : ref://testcase/descriptors/id=DESC2
-    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
-    # - step:
-    #     trigger:
-    #         configs:
-    #             - object    : ref://testcase/config/route
     #               method    : Update
-
-    #         packets:
-    #             - packet:
-    #                 object  : ref://testcase/packets/id=IN_PKT
-    #                 port    : ref://testcase/config/hostport
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC1
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
 
     #     expect:
     #         configs:
     #             - object    : ref://testcase/config/route
     #               method    : Read
+    #         packets:
+    #             - packet:
+    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
+    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
 
-    #        packets:
-    #            - packet:
-    #                 object  : ref://testcase/packets/id=EXP_SWITCH_PKT
-    #                 port    : ref://testcase/config/switchport
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC2
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+    # - step:
+    #     trigger:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : RollbackUpdate
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC1
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
+
+    #     expect:
+    #         configs:
+    #             - object    : ref://testcase/config/route
+    #               method    : Read
+    #         packets:
+    #             - packet:
+    #                 object  : ref://testcase/packets/id=TO_SWITCH_PKT
+    #                 port    : callback://networking/packets/GetExpectedEgressUplinkPort
+
+    #         descriptors:
+    #             - descriptor:
+    #                 object  : ref://testcase/descriptors/id=DESC2
+    #                 ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
