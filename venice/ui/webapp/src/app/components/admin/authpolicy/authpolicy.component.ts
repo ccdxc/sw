@@ -290,7 +290,8 @@ export class AuthpolicyComponent extends BaseComponent implements OnInit {
   saveAuthenticationPolicy(authAuthenticationPolicy: IAuthAuthenticationPolicy, onSaveSuccess: Function | null = null, authTypePolicy: string = null) {
     let handler: Observable<{ body: IAuthAuthenticationPolicy | IApiStatus | Error, statusCode: number }>;
     // If the user is in the UI, they must have setup at least a local auth policy. We should only be updating the current one.
-    handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy);
+
+    handler = this._authService.UpdateAuthenticationPolicy(authAuthenticationPolicy, null, null, false, true); // VS-1152 don't trim local:{}
     handler.subscribe(
       (response) => {
         this.authPolicy = new AuthAuthenticationPolicy(authAuthenticationPolicy);

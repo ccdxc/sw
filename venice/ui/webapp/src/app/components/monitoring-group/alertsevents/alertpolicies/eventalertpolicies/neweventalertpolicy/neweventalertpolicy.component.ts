@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, Component, Input, OnInit, ViewChild, ViewEncapsulation, OnChanges, SimpleChanges } from '@angular/core';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
@@ -17,7 +17,8 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
   animations: [Animations],
   encapsulation: ViewEncapsulation.None,
 })
-export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertPolicy, MonitoringAlertPolicy> implements OnInit, AfterViewInit {
+export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertPolicy, MonitoringAlertPolicy> implements OnInit, AfterViewInit , OnChanges {
+
   @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
 
   @Input() destinations: IMonitoringAlertDestination[] = [];
@@ -35,6 +36,10 @@ export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertP
     super(controllerService, uiconfigsService, MonitoringAlertPolicy);
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    this.setDestinationDropDownState();
+  }
+
   postNgInit() {
     if (this.objectData == null) {
       this.newObject.spec.enable = true;
@@ -48,8 +53,15 @@ export class NeweventalertpolicyComponent extends CreationForm<IMonitoringAlertP
         value: destination.meta.name,
       });
     });
-    if (this.newObject.$formGroup.get(['spec', 'destinations']).value.length === 0) {
-     this.newObject.$formGroup.get(['spec', 'destinations']).disable();
+
+    this.setDestinationDropDownState();
+  }
+
+  setDestinationDropDownState() {
+    if (this.newObject && this.destinations && this.destinations.length > 0) {
+      this.newObject.$formGroup.get(['spec', 'destinations']).enable();
+    } else  if (this.newObject && this.destinations && this.destinations.length === 0) {
+      this.newObject.$formGroup.get(['spec', 'destinations']).disable();
     }
   }
 
