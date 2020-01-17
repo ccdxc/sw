@@ -64,7 +64,6 @@
 #define IONIC_MAX_RD_ATOM	16
 #define IONIC_GID_TBL_LEN	256
 #define IONIC_PKEY_TBL_LEN	1
-#define IONIC_MAX_SGE_ADVERT	16
 
 #define IONIC_META_LAST ((void *)1ul)
 #define IONIC_META_POSTED ((void *)2ul)

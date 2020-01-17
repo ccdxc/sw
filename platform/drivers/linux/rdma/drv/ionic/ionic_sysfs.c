@@ -76,7 +76,7 @@ static const struct kernel_param_ops ionic_spec_ops = {
 	.set = ionic_set_spec,
 	.get = param_get_int,
 };
-int ionic_spec = 8;
+int ionic_spec = 16;
 module_param_cb(spec, &ionic_spec_ops, &ionic_spec, 0644);
 MODULE_PARM_DESC(spec, "Max SGEs for speculation.");
 

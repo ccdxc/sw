@@ -17,6 +17,7 @@ testcases:
         testcase: testcases.rdma.insmod_rdma
         args    :
             type: remote_only
+            spec: '8'
 
     -   name    : Show_Gid
         testcase: testcases.rdma.show_gid

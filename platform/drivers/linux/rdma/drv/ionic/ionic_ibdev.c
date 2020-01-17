@@ -1256,16 +1256,16 @@ static int ionic_query_device(struct ib_device *ibdev,
 #ifdef HAVE_IBDEV_MAX_SEND_RECV_SGE
 	attr->max_send_sge =
 		min(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
-		    IONIC_MAX_SGE_ADVERT);
+		    ionic_spec);
 	attr->max_recv_sge =
 		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    IONIC_MAX_SGE_ADVERT);
+		    ionic_spec);
 	attr->max_sge_rd = attr->max_send_sge;
 #else
 	attr->max_sge =
 		min3(ionic_v1_send_wqe_max_sge(dev->max_stride, 0),
 		     ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		     IONIC_MAX_SGE_ADVERT);
+		     ionic_spec);
 	attr->max_sge_rd = attr->max_sge;
 #endif
 	attr->max_cq = dev->inuse_cqid.inuse_size;
@@ -1288,7 +1288,7 @@ static int ionic_query_device(struct ib_device *ibdev,
 	attr->max_srq_wr = IONIC_MAX_DEPTH;
 	attr->max_srq_sge =
 		min(ionic_v1_recv_wqe_max_sge(dev->max_stride, 0),
-		    IONIC_MAX_SGE_ADVERT);
+		    ionic_spec);
 #endif /* IONIC_SRQ_XRC */
 	attr->max_fast_reg_page_list_len =
 		(dev->inuse_restbl.inuse_size / 2) <<

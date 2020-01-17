@@ -108,7 +108,7 @@ static int ionic_spec_sysctl(SYSCTL_HANDLER_ARGS)
 
 	return (0);
 }
-int ionic_spec = 8;
+int ionic_spec = 16;
 SYSCTL_PROC(_hw_ionic_rdma, OID_AUTO, spec, CTLFLAG_RWTUN | CTLTYPE_INT,
     &ionic_spec, 0, ionic_spec_sysctl, "I", "Max SGEs for speculation");
 

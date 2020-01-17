@@ -84,7 +84,7 @@ def Verify(tc):
 
     result = api.types.status.SUCCESS
 
-    api.Logger.info("insmod_rdma results for the following nodes: {0}".format(tc.nodes))
+    api.Logger.info("build_rdma results for the following nodes: {0}".format(tc.nodes))
 
     unames = []
     for cmd in tc.resp_uname.commands:
