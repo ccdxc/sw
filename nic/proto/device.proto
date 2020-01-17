@@ -26,8 +26,14 @@ enum ForwardingMode {
 //------------------------------------------------------------------------------
 enum FeatureProfile {
   FEATURE_PROFILE_NONE                  = 0;
-  FEATURE_PROFILE_CLASSIC_DEFAULT       = 1;  // default classic mode profile with 2 host devices
-  FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE = 2;  // scaled up classic mode w.r.t devices
+
+  // only following will be supported
+  FEATURE_PROFILE_BASE = 1;
+  FEATURE_PROFILE_STORAGE = 2;
+  FEATURE_PROFILE_SRIOV = 3;
+  FEATURE_PROFILE_VIRTUALIZED = 4;
+  FEATURE_PROFILE_PROXY = 5;
+  FEATURE_PROFILE_DEVELOPER = 6;  
 }
 
 enum PortAdminState {

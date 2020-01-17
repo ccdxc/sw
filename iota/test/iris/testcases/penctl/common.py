@@ -295,9 +295,6 @@ def IsNaplesHostManagedDefault(n):
     if naples_spec["mode"] != naples_status["mode"] and naples_spec["mode"] != "HOST":
         return api.types.status.FAILURE
 
-    if naples_spec["dsc-profile"] != "default":
-        return api.types.status.FAILURE
-
     if naples_spec["network-mode"] != "":
         return api.types.status.FAILURE
 

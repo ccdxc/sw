@@ -66,11 +66,6 @@ const (
 // CreateNaplesProfile creates a Naples Profile
 func (n *NMD) CreateNaplesProfile(profile nmd.DSCProfile) error {
 	log.Infof("Creating Naples Profile : %v", profile)
-	// Validate the number of LIFs
-	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {
-		return fmt.Errorf("requested lif number is not supported. Expecting either 1 or 16")
-	}
-
 	if profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String() && profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
 		log.Infof("Invalid port admin state set. Setting to default of Enabled.")
 		profile.Spec.DefaultPortAdmin = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
@@ -906,11 +901,6 @@ func (n *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge []
 // UpdateNaplesProfile creates a Naples Profile
 func (n *NMD) UpdateNaplesProfile(profile nmd.DSCProfile) error {
 	log.Infof("Creating Naples Profile : %v", profile)
-	// Validate the number of LIFs
-	if !(profile.Spec.NumLifs == 1 || profile.Spec.NumLifs == 16) {
-		return fmt.Errorf("requested lif number is not supported. Expecting either 1 or 16")
-	}
-
 	if profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String() && profile.Spec.DefaultPortAdmin != nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
 		log.Infof("Invalid port admin state set. Setting to default of Enabled.")
 		profile.Spec.DefaultPortAdmin = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
@@ -924,7 +914,6 @@ func (n *NMD) UpdateNaplesProfile(profile nmd.DSCProfile) error {
 		if profile.Name == p.Name {
 			found = true
 			p.Spec.DefaultPortAdmin = profile.Spec.DefaultPortAdmin
-			p.Spec.NumLifs = profile.Spec.NumLifs
 
 			c, _ := types.TimestampProto(time.Now())
 			p.ModTime = api.Timestamp{

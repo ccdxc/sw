@@ -14,6 +14,16 @@ enum PortAdminState {
   PORT_ADMIN_STATE_DISABLE  = 1;
 }
 
+enum SupportedProfiles {
+  // Only following are supported after v2
+  FEATURE_PROFILE_BASE = 0;
+  FEATURE_PROFILE_STORAGE = 1;
+  FEATURE_PROFILE_SRIOV = 2;
+  FEATURE_PROFILE_VIRTUALIZED = 3;
+  FEATURE_PROFILE_PROXY = 4;
+  FEATURE_PROFILE_DEVELOPER = 5;
+}
+
 // DSC config object
 message DSCProfile {
 

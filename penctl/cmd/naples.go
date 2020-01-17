@@ -17,7 +17,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/pensando/sw/api"
 	vldtor "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/strconv"
 )
@@ -40,15 +39,6 @@ var naplesShowCmd = &cobra.Command{
 	RunE:    naplesShowCmdHandler,
 }
 
-var naplesProfileCreateCmd = &cobra.Command{
-	Use:     "dsc-profile",
-	Aliases: []string{"naples-profile"},
-	Short:   "Distributed Service Card profile object",
-	Long:    "\n----------------------------\n Create Distributed Service Card Profiles \n----------------------------\n",
-	RunE:    naplesProfileCreateCmdHandler,
-	Args:    naplesProfileCreateCmdValidator,
-}
-
 var naplesProfileShowCmd = &cobra.Command{
 	Use:     "dsc-profiles",
 	Aliases: []string{"naples-profiles"},
@@ -58,24 +48,14 @@ var naplesProfileShowCmd = &cobra.Command{
 	RunE:    naplesProfileShowCmdHandler,
 }
 
-var naplesProfileDeleteCmd = &cobra.Command{
-	Use:     "dsc-profile",
-	Aliases: []string{"naples-profile"},
-	Short:   "Distributed Service Card profile object",
-	Long:    "\n----------------------------\n Delete Distributed Service Card Profiles \n----------------------------\n",
-	RunE:    naplesProfileDeleteCmdHandler,
-	Args:    naplesProfileDeleteCmdValidator,
-}
-
 var naplesProfileUpdateCmd = &cobra.Command{
 	Use:   "dsc-profile",
 	Short: "Distributed Service Card profile object",
 	Long:  "\n----------------------------\n Update Distributed Service Card Profiles \n----------------------------\n",
 	RunE:  naplesProfileUpdateCmdHandler,
-	Args:  naplesProfileCreateCmdValidator,
+	Args:  naplesProfileUpdateCmdValidator,
 }
 
-var numLifs int32
 var controllers []string
 var managedBy, managementNetwork, priMac, id, mgmtIP, defaultGW, naplesProfile, profileName, portDefault string
 var dnsServers []string
@@ -83,8 +63,6 @@ var dnsServers []string
 func init() {
 	updateCmd.AddCommand(naplesCmd)
 	showCmd.AddCommand(naplesShowCmd, naplesProfileShowCmd)
-	createCmd.AddCommand(naplesProfileCreateCmd)
-	deleteCmd.AddCommand(naplesProfileDeleteCmd)
 	updateCmd.AddCommand(naplesProfileUpdateCmd)
 
 	naplesCmd.Flags().StringSliceVarP(&controllers, "controllers", "c", make([]string, 0), "List of controller IP addresses or ids")
@@ -97,14 +75,8 @@ func init() {
 	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "default", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
-	naplesProfileCreateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
-	naplesProfileCreateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
-	naplesProfileCreateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
-
-	naplesProfileDeleteCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be deleted")
 
 	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
-	naplesProfileUpdateCmd.Flags().Int32VarP(&numLifs, "num-lifs", "i", 1, "Maximum number of LIFs on the eth device. 1 or 16")
 	naplesProfileUpdateCmd.Flags().StringVarP(&portDefault, "port-default", "p", "enable", "Set default port admin state for next reboot. (enable | disable)")
 }
 
@@ -210,73 +182,23 @@ func naplesProfileShowCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func naplesProfileCreateCmdHandler(cmd *cobra.Command, args []string) error {
-	var portState string
-
-	if portDefault == "enable" {
-		portState = nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
-	} else if portDefault == "disable" {
-		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
-	}
-
-	profile := nmd.DSCProfile{
-		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
-		ObjectMeta: api.ObjectMeta{
-			Name: profileName,
-		},
-		Spec: nmd.DSCProfileSpec{
-			NumLifs:          numLifs,
-			DefaultPortAdmin: portState,
-		},
-	}
-
-	_, err := restPost(profile, "api/v1/naples/profiles/")
-	if err != nil {
-		if strings.Contains(err.Error(), "EOF") {
-			if verbose {
-				fmt.Println("success")
-			}
-		} else {
-			fmt.Println("Unable to create profile.")
-			fmt.Println("Error:", err.Error())
-		}
-		return err
-	}
-	return err
-}
-
-func naplesProfileDeleteCmdHandler(cmd *cobra.Command, args []string) error {
-	// check if profile exists.
-	if err := checkProfileExists(profileName); err != nil {
-		return err
-	}
-
-	// check if currently attached profile is being deleted
-	if err := checkAttachedProfile(profileName); err != nil {
-		return err
-	}
-
-	url := fmt.Sprintf("api/v1/naples/profiles/%s", profileName)
-	_, err := restDelete(url)
-	return err
-}
-
-func naplesProfileCreateCmdValidator(cmd *cobra.Command, args []string) (err error) {
+func naplesProfileUpdateCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	if len(profileName) == 0 {
 		err = errors.New("must specify a dsc profile name")
 		return
 	}
 
-	if !(numLifs == 1 || numLifs == 16) {
-		err = errors.New("number of LIFs not supported. --num-lifs should either be 1 or 16")
+	if portDefault != "enable" && portDefault != "disable" {
+		err = errors.New("invalid port default admin state passed")
 	}
+
 	return
 }
 
 func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	var portState string
 
-	// check if currently attached profile is being deleted
+	// check if currently attached profile is being updated
 	if err := checkAttachedProfile(profileName); err != nil {
 		fmt.Printf("%v is currently applied, all changes will be applicable after reboot only\n", profileName)
 	}
@@ -287,16 +209,12 @@ func naplesProfileUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		portState = nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
 	}
 
-	profile := nmd.DSCProfile{
-		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
-		ObjectMeta: api.ObjectMeta{
-			Name: profileName,
-		},
-		Spec: nmd.DSCProfileSpec{
-			NumLifs:          numLifs,
-			DefaultPortAdmin: portState,
-		},
+	profile := getNaplesProfile(profileName)
+	if profile == nil {
+		return fmt.Errorf("the selected profile is not supported by the DSC")
 	}
+
+	profile.Spec.DefaultPortAdmin = portState
 
 	err := restPut(profile, "api/v1/naples/profiles/")
 	if err != nil {
@@ -420,21 +338,28 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 	}
 }
 
-func naplesProfileDeleteCmdValidator(cmd *cobra.Command, args []string) error {
-	if len(profileName) == 0 {
-		return errors.New("must specify a dsc profile name")
-	}
+func getNaplesProfile(profileName string) *nmd.DSCProfile {
+	baseURL, _ := getNaplesURL()
+	url := fmt.Sprintf("%s/api/v1/naples/profiles/", baseURL)
 
-	if profileName == "default" {
-		return errors.New("deleting default profile is disallowed")
+	resp, err := penHTTPClient.Get(url)
+	if err != nil {
+		if strings.Contains(err.Error(), httpsSignature) {
+			err = fmt.Errorf("DSC is part of a cluster, authentication token required")
+		}
+		fmt.Println("Failed to get existing profiles. Err: ", err)
+		return nil
 	}
+	defer resp.Body.Close()
 
-	if len(portDefault) == 0 {
-		return errors.New("port default must be passed")
-	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	var profiles []*nmd.DSCProfile
+	json.Unmarshal(body, &profiles)
 
-	if portDefault != "enable" && portDefault != "disable" {
-		return errors.New("invalid port default value set")
+	for _, p := range profiles {
+		if profileName == p.Name {
+			return p
+		}
 	}
 
 	return nil

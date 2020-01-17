@@ -174,20 +174,6 @@ func NewNMD(pipeline Pipeline,
 		}
 	}
 
-	// construct default config and a default profile
-	defaultProfile := &nmd.DSCProfile{
-		ObjectMeta: api.ObjectMeta{
-			Name: "default",
-		},
-		TypeMeta: api.TypeMeta{
-			Kind: "DSCProfile",
-		},
-		Spec: nmd.DSCProfileSpec{
-			NumLifs:          1,
-			DefaultPortAdmin: nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(),
-		},
-	}
-
 	config := nmd.DistributedServiceCard{
 		ObjectMeta: api.ObjectMeta{
 			Name: "DistributedServiceCardConfig",
@@ -199,7 +185,7 @@ func NewNMD(pipeline Pipeline,
 			Mode:       nmd.MgmtMode_HOST.String(),
 			PrimaryMAC: fru.MacStr,
 			ID:         fru.MacStr,
-			DSCProfile: "default",
+			DSCProfile: nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
 			IPConfig: &cluster.IPConfig{
 				IPAddress:  "",
 				DefaultGW:  "",
@@ -221,6 +207,17 @@ func NewNMD(pipeline Pipeline,
 		log.Info("Config object found in NMD DB. Using persisted values.")
 		// Use the persisted config moving forward
 		config = *cfgObj.(*nmd.DistributedServiceCard)
+
+		// For DSC being upgraded from an older version, the DSCProfile name will be "default"
+		// we must update it to use "BASE"instead of "default"
+		if config.Spec.DSCProfile == "default" {
+			config.Spec.DSCProfile = nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String()
+			log.Infof("Updating Naples config object in the DB. %v", config)
+			err := emdb.Write(&config)
+			if err != nil {
+				log.Errorf("Failed to write Naples config into Naples DB. Err : %v", err)
+			}
+		}
 
 		// Always re-read the contents of fru.json upon startup
 		config.Status.Fru = ReadFruFromJSON()
@@ -279,20 +276,20 @@ func NewNMD(pipeline Pipeline,
 		log.Errorf("Could not set timezone to %v. Err : %v", config.Status.TimeZone, err)
 	}
 
-	// check if naples NaplesProfiles exist in emdb
 	p := nmd.DSCProfile{
 		TypeMeta: api.TypeMeta{Kind: "DSCProfile"},
 	}
 	profileObjs, err := emdb.List(&p)
+	// Create Default profiles
+	nm.createDefaultProfiles()
+	log.Infof("Got profile objs : %v", profileObjs)
 
+	// Overwrite the default profiles with profiles reconciled from the database
 	if profileObjs != nil && err == nil {
-		// Use Persisted profiles moving forward
 		for _, p := range profileObjs {
 			profile := p.(*nmd.DSCProfile)
-			nm.CreateNaplesProfile(*profile)
+			nm.UpdateNaplesProfile(*reconcileDSCProfile(profile))
 		}
-	} else {
-		nm.CreateNaplesProfile(*defaultProfile)
 	}
 
 	for _, o := range opts {
@@ -443,36 +440,6 @@ func (n *NMD) NaplesConfigHandler(r *http.Request) (interface{}, error) {
 	return resp, nil
 }
 
-// NaplesProfileHandler is the REST handler for Naples Profile POST
-func (n *NMD) NaplesProfileHandler(r *http.Request) (interface{}, error) {
-	req := nmd.DSCProfile{}
-	resp := NaplesConfigResp{}
-
-	content, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Errorf("Failed to read request: %v", err)
-		resp.ErrorMsg = err.Error()
-		return resp, err
-	}
-
-	if err = json.Unmarshal(content, &req); err != nil {
-		log.Errorf("Unmarshal err %s", content)
-		resp.ErrorMsg = err.Error()
-		return resp, err
-	}
-	log.Infof("Naples Profile Request: %+v", req)
-
-	err = n.CreateNaplesProfile(req)
-
-	if err != nil {
-		resp.ErrorMsg = err.Error()
-		return resp, err
-	}
-	log.Infof("Naples Profile Response: %+v", resp)
-
-	return resp, nil
-}
-
 // NaplesProfileGetHandler is the REST handler for Naples Profiles GET
 func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
 	if n.metrics != nil && n.metrics.GetCalls != nil {
@@ -482,21 +449,6 @@ func (n *NMD) NaplesProfileGetHandler(r *http.Request) (interface{}, error) {
 	profiles := n.profiles
 	log.Infof("Naples Profile Get Response: %+v", profiles)
 	return profiles, nil
-}
-
-// NaplesProfileDeleteHandler deletes a napels pr
-func (n *NMD) NaplesProfileDeleteHandler(r *http.Request) (interface{}, error) {
-	profileName := mux.Vars(r)["ProfileName"]
-
-	for i, p := range n.profiles {
-		if profileName == p.Name {
-			copy(n.profiles[i:], n.profiles[i+1:])
-			n.profiles[len(n.profiles)-1] = nil
-			n.profiles = n.profiles[:len(n.profiles)-1]
-			break
-		}
-	}
-	return nil, nil
 }
 
 // NaplesRolloutHandler is the REST handler for Naples Config POST operation
@@ -648,7 +600,6 @@ func (n *NMD) StartRestServer() error {
 	t1.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesConfigHandler))
 	t1.HandleFunc(RolloutURL, httputils.MakeHTTPHandler(n.NaplesRolloutHandler))
 	t1.HandleFunc(UpdateURL, NaplesFileUploadHandler)
-	t1.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileHandler))
 
 	t2 := router.Methods("GET").Subrouter()
 	t2.HandleFunc(ConfigURL, httputils.MakeHTTPHandler(n.NaplesGetHandler))
@@ -681,8 +632,6 @@ func (n *NMD) StartRestServer() error {
 	router.PathPrefix(CoresURL).Handler(http.StripPrefix(CoresURL, http.FileServer(http.Dir(globals.CoresDir))))
 	router.PathPrefix(UpdateURL).Handler(http.StripPrefix(UpdateURL, http.FileServer(http.Dir(globals.UpdateDir))))
 	router.PathPrefix(DataURL).Handler(http.StripPrefix(DataURL, http.FileServer(http.Dir(globals.DataDir))))
-
-	router.HandleFunc("/api/v1/naples/profiles/{ProfileName}", httputils.MakeHTTPHandler(n.NaplesProfileDeleteHandler))
 
 	t4 := router.Methods("PUT").Subrouter()
 	t4.HandleFunc(ProfileURL, httputils.MakeHTTPHandler(n.NaplesProfileUpdateHandler))
@@ -1431,7 +1380,6 @@ func (n *NMD) writeDeviceFiles() (err error) {
 	mgmtIfMAC := parseMgmtIfMAC(n.config.Spec.NetworkMode)
 	if n.config.Spec.Mode == nmd.MgmtMode_HOST.String() {
 		fwdMode := device.ForwardingMode_FORWARDING_MODE_CLASSIC.String()
-		var featureProfile device.FeatureProfile
 		var profile *nmd.DSCProfile
 		var defaultPortAdmin string
 		var ok bool
@@ -1451,20 +1399,13 @@ func (n *NMD) writeDeviceFiles() (err error) {
 			return
 		}
 
-		// Interpret 16 numLifs as scale profile. TODO Remove this when nicmgr can directly read numLifs from device.conf
-		if profile.Spec.NumLifs == 16 {
-			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE
-		} else {
-			featureProfile = device.FeatureProfile_FEATURE_PROFILE_CLASSIC_DEFAULT
-		}
-
 		if profile.Spec.DefaultPortAdmin == nmd.PortAdminState_PORT_ADMIN_STATE_DISABLE.String() {
 			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_DISABLE.String()
 		} else {
 			defaultPortAdmin = device.PortAdminState_PORT_ADMIN_STATE_ENABLE.String()
 		}
 
-		err = n.PersistDeviceSpec(fwdMode, featureProfile, defaultPortAdmin, mgmtIfMAC)
+		err = n.PersistDeviceSpec(fwdMode, convertProfileNameToFeatureSpec(profile.Name), defaultPortAdmin, mgmtIfMAC)
 		return
 	}
 
@@ -1668,4 +1609,76 @@ func (n *NMD) NaplesProfileUpdateHandler(r *http.Request) (interface{}, error) {
 	log.Infof("Naples Profile Response: %+v", resp)
 
 	return resp, nil
+}
+
+func (n *NMD) createDefaultProfiles() error {
+
+	for _, profileName := range nmd.SupportedProfiles_name {
+		if profileName == "default" || profileName == nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String() {
+			profileName = nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String()
+		}
+
+		profile := &nmd.DSCProfile{
+			ObjectMeta: api.ObjectMeta{
+				Name: profileName,
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "DSCProfile",
+			},
+			Spec: nmd.DSCProfileSpec{
+				DefaultPortAdmin: nmd.PortAdminState_PORT_ADMIN_STATE_ENABLE.String(),
+			},
+		}
+
+		err := n.CreateNaplesProfile(*profile)
+		if err != nil {
+			log.Errorf("Failed to create profile %v", profileName)
+		}
+	}
+
+	return nil
+}
+
+func convertProfileNameToFeatureSpec(profileName string) device.FeatureProfile {
+	switch profileName {
+	case nmd.SupportedProfiles_FEATURE_PROFILE_STORAGE.String():
+		return device.FeatureProfile_FEATURE_PROFILE_STORAGE
+	case nmd.SupportedProfiles_FEATURE_PROFILE_SRIOV.String():
+		return device.FeatureProfile_FEATURE_PROFILE_SRIOV
+	case nmd.SupportedProfiles_FEATURE_PROFILE_VIRTUALIZED.String():
+		return device.FeatureProfile_FEATURE_PROFILE_VIRTUALIZED
+	case nmd.SupportedProfiles_FEATURE_PROFILE_PROXY.String():
+		return device.FeatureProfile_FEATURE_PROFILE_PROXY
+	case nmd.SupportedProfiles_FEATURE_PROFILE_DEVELOPER.String():
+		return device.FeatureProfile_FEATURE_PROFILE_DEVELOPER
+	case "default": // required for older software
+		fallthrough
+	case nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String():
+		fallthrough
+	default:
+		return device.FeatureProfile_FEATURE_PROFILE_BASE
+	}
+}
+
+func reconcileDSCProfile(p *nmd.DSCProfile) *nmd.DSCProfile {
+	log.Infof("Reconciling DSC profile : %v", p)
+	if p.Name == "default" || p.Name == "DEFAULT" || p.Spec.NumLifs == 16 {
+		log.Infof("Updating the feature profile to use base config with the Base config")
+
+		// The default profile is the base config
+		return &nmd.DSCProfile{
+			ObjectMeta: api.ObjectMeta{
+				Name: nmd.SupportedProfiles_FEATURE_PROFILE_BASE.String(),
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "DSCProfile",
+			},
+			Spec: nmd.DSCProfileSpec{
+				NumLifs:          1,
+				DefaultPortAdmin: p.Spec.DefaultPortAdmin,
+			},
+		}
+	}
+
+	return p
 }

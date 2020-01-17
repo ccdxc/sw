@@ -48,14 +48,10 @@ get_main_config_file (void)
 
     int feature_profile = ptree.get<int>(
         "feature-profile", 
-        device::FEATURE_PROFILE_CLASSIC_DEFAULT);
+         device::FEATURE_PROFILE_BASE);
     if (feature_profile == device::FEATURE_PROFILE_NONE ||
-        feature_profile == device::FEATURE_PROFILE_CLASSIC_DEFAULT) {
-        feature = "default";
-    } else if (feature_profile ==
-        device::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
-
-        feature = "eth-dev-scale";
+        feature_profile == device::FEATURE_PROFILE_BASE) {
+        feature = "FEATURE_PROFILE_BASE";
     } else {
         throw std::runtime_error("Unknown feature-mode");
     }

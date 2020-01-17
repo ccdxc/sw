@@ -33,9 +33,9 @@ func isNetworkModeValid(spec nmdProto.DistributedServiceCardSpec) (err error) {
 		return errors.New("id cannot be empty for network managed mode")
 	case !(spec.NetworkMode == nmdProto.NetworkMode_INBAND.String() || spec.NetworkMode == nmdProto.NetworkMode_OOB.String()):
 		return fmt.Errorf("network mode must specify management network. either inband or oob. Found: %v", spec.NetworkMode)
-
-	case len(spec.DSCProfile) != 0 && spec.DSCProfile != "default":
-		return fmt.Errorf("naples profile is not applicable when naples is in network managed mode. Found: %v", spec.DSCProfile)
+		// TODO : Bring this back once decision on various profiles when in network managed mode is made
+		//case len(spec.DSCProfile) != 0 && spec.DSCProfile != "default":
+		//	return fmt.Errorf("naples profile is not applicable when naples is in network managed mode. Found: %v", spec.DSCProfile)
 	}
 
 	checkSubnet := false
