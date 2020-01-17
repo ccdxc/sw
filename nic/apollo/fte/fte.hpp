@@ -21,6 +21,9 @@ struct stats_t {
 
 void *fte_thread_start(void *ctxt);
 
+void fte_flow_prog(struct rte_mbuf *m);
+void fte_ftl_init(unsigned int);
+
 }    // namespace fte
 
 #endif    // __FTE_FTE_HPP__
