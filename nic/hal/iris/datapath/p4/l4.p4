@@ -1281,6 +1281,7 @@ action ip_normalization_checks() {
         }
         // Vlan tagged packet
         if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (control_metadata.parse_tcp_option_error == FALSE) and
             (tunnel_metadata.tunnel_terminate == FALSE) and
             ((vlan_tag.valid == TRUE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 18)) and
              (((ipv4.totalLen + 18) >= MIN_ETHER_FRAME_LEN) or
@@ -1294,6 +1295,7 @@ action ip_normalization_checks() {
         }
         // Vlan untagged packet
         if ((l4_metadata.ip_invalid_len_action == NORMALIZATION_ACTION_EDIT) and
+            (control_metadata.parse_tcp_option_error == FALSE) and
             (tunnel_metadata.tunnel_terminate == FALSE) and
             ((vlan_tag.valid == FALSE) and (capri_p4_intrinsic.packet_len > (ipv4.totalLen + 14)) and
              (((ipv4.totalLen + 14) >= MIN_ETHER_FRAME_LEN) or

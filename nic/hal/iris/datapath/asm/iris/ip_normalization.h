@@ -156,7 +156,8 @@ lb_ipv4_norm_invalid_length:
   // is parsing and then do the calculation so that we update the
   // capri_deparser_len_trunc_pkt_len.
   // When editing we need to make sure we don't truncate lower than 64 byte packet
-  sle         c2, k.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
+  seq         c2, k.control_metadata_parse_tcp_option_error, TRUE
+  sle.!c2     c2, k.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
   b.c2        lb_ipv4_norm_ttl
   // Calculate the total parsed packet length from ethernet header onwards.
   // If we parsed more than the packet length we will not truncate the packet.
