@@ -96,6 +96,23 @@ if [ $image_sz -gt $max_gold_img_sz ]; then
 else
     echo "GoldFW is ready under sw/nic/buildroot/output_gold/images/naples_goldfw.tar. Goldfw Size: $image_sz bytes"
     echo 'Please check goldfw sanity before publishing it'
+
+    #Publish the artifacts if RELEASE is non-zero
+    if [ -z $RELEASE ]
+    then
+        echo "RELEASE is not set, return"
+        exit 0
+    fi
+
+    docker_exec "cd /usr/src/github.com/pensando/sw/nic && make package-drivers"
+    gold_ver=`jq -r .software_version $TOPDIR/nic/buildroot/output_gold/images/MANIFEST`
+    cd $TOPDIR/platform/tools && ./update_gold_drv.sh $gold_ver
+    cd $TOPDIR/platform && tar -czf gold_drv.tar.gz hosttools
+    docker_exec "cd /usr/src/github.com/pensando/sw/asset-build/asset-push && go build"
+    cd $TOPDIR
+    asset-build/asset-push/asset-push builds hourly $RELEASE $TOPDIR/nic/buildroot/output_gold/images/naples_goldfw.tar
+    asset-build/asset-push/asset-push builds hourly $RELEASE $TOPDIR/platform/gold_drv.tar.gz
+
     exit 0
 fi
 
