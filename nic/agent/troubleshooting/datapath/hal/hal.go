@@ -4,6 +4,7 @@ package troubleshootingHal
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -46,7 +47,7 @@ type Hal struct {
 
 // MockClients stores references for mockclients to be used for setting expectations
 type mockClients struct {
-	MockTeleClient *halproto.MockTelemetryClient
+	//MockTeleClient *halproto.MockTelemetryClient
 }
 
 // Datapath contains mock and hal clients.
@@ -72,46 +73,19 @@ func (hd *Hal) Fatalf(format string, args ...interface{}) {
 }
 
 // NewHalDatapath returns a mock hal datapath
-func NewHalDatapath(kind Kind) (*Datapath, error) {
+func NewHalDatapath() (*Datapath, error) {
 	var err error
 	var hal Hal
 	haldp := Datapath{}
-	haldp.Kind = kind
 
-	if haldp.Kind.String() == "hal" {
-		hal.client, err = hal.createNewGRPCClient()
-		if err != nil {
-			return nil, err
-		}
-		hal.TeleClient = halproto.NewTelemetryClient(hal.client.ClientConn)
-		haldp.Hal = hal
-		return &haldp, nil
+	hal.client, err = hal.createNewGRPCClient()
+	if err != nil {
+		return nil, err
 	}
-
-	hal.mockCtrl = gomock.NewController(&hal)
-	hal.MockClients = mockClients{
-		MockTeleClient: halproto.NewMockTelemetryClient(hal.mockCtrl),
-	}
-	hal.TeleClient = hal.MockClients.MockTeleClient
-
+	hal.TeleClient = halproto.NewTelemetryClient(hal.client.ClientConn)
 	haldp.Hal = hal
-	haldp.Hal.setExpectations()
 	return &haldp, nil
-}
 
-func (hd *Hal) setExpectations() {
-	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().MirrorSessionGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().DropMonitorRuleGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-	hd.MockClients.MockTeleClient.EXPECT().FlowMonitorRuleGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 }
 
 func (hd *Hal) createNewGRPCClient() (*rpckit.RPCClient, error) {
@@ -246,6 +220,10 @@ func (hd *Datapath) createUpdateMirrorSession(mirrorSessionKey string, vrfID uin
 		}
 
 		var resp *halproto.MirrorSessionResponseMsg
+		b, _ := json.MarshalIndent(mirrorReqMsg, "", "   ")
+		fmt.Println("############### MIRROR SESSION REQUEST MESSAGE ############")
+		fmt.Println(string(b))
+		fmt.Println("############### MIRROR SESSION REQUEST MESSAGE ############")
 		resp, err = hd.Hal.TeleClient.MirrorSessionCreate(context.Background(), mirrorReqMsg)
 		if err != nil {
 			log.Errorf("Error creating mirror session. Err: %v, req:%+v", err, mirrorReqMsg)

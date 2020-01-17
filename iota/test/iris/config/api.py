@@ -85,7 +85,7 @@ def NewCfgNode(host_name, host_ip, nic_ip):
 if __name__ == '__main__':
     ReadConfigs("test/iris/topologies/container")
     #ObjectConfigStore.PrintConfigs()
-    objects = QueryConfigs("Endpoint", filter="spec.useg_vlan=1001;spec.ipv4_address=192.168.100.103/32")
+    objects = QueryConfigs("Endpoint", filter="spec.useg_vlan=1001;spec.ipv4_address=192.168.100.103")
     PrintConfigsObjects(objects)
     mgmtIp = store.GetPrimaryIntNicMgmtIp()
     for obj in objects:

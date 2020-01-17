@@ -47,10 +47,11 @@ type Emstore interface {
 	Write(obj Object) error
 	Delete(obj Object) error
 	Close() error
-	GetNextID(r ResourceType) (uint64, error)
+	GetNextID(r ResourceType, offset int) (uint64, error)
 	RawWrite(kind, key string, data []byte) error
 	RawList(kind string) ([][]byte, error)
 	RawDelete(kind, key string) error
+	RawRead(kind, key string) ([]byte, error)
 }
 
 // BoltdbStore hold bolt db instance members
@@ -294,7 +295,7 @@ func (bdb *BoltdbStore) Delete(obj Object) error {
 }
 
 // GetNextID gets the next id for the resource boltdb resource type
-func (bdb *BoltdbStore) GetNextID(r ResourceType) (nextID uint64, err error) {
+func (bdb *BoltdbStore) GetNextID(r ResourceType, offset int) (nextID uint64, err error) {
 	err = bdb.boltDb.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(r))
 		if err != nil {
@@ -306,7 +307,7 @@ func (bdb *BoltdbStore) GetNextID(r ResourceType) (nextID uint64, err error) {
 		// concurrency. IDs are unique (auto-incremented) per resource type.
 		id, _ := b.NextSequence()
 
-		nextID = uint64(id)
+		nextID = id + uint64(offset)
 		return nil
 	})
 	return nextID, err
@@ -409,11 +410,43 @@ func (mdb *MemStore) Delete(obj Object) error {
 }
 
 // GetNextID gets the next id for the resource memDB resource type
-func (mdb *MemStore) GetNextID(r ResourceType) (uint64, error) {
-	return mdb.resID.getNextID(r)
+func (mdb *MemStore) GetNextID(r ResourceType, offset int) (uint64, error) {
+	return mdb.resID.getNextID(r, offset)
 }
 
 // Close closes memstore
 func (mdb *MemStore) Close() error {
 	return nil
+}
+
+// RawRead lists objects by kind without any marshalling/unmarshaling.
+func (bdb *BoltdbStore) RawRead(kind, key string) ([]byte, error) {
+
+	// read the data
+	var data []byte
+
+	err := bdb.boltDb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(kind))
+		if b == nil {
+			return ErrTableNotFound
+		}
+		data = b.Get([]byte(key))
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// check if we got anything
+	if data == nil {
+		return nil, errors.New("Object not found")
+	}
+
+	return data, nil
+}
+
+// RawRead is not needed for mem store
+func (mdb *MemStore) RawRead(kind, key string) ([]byte, error) {
+	return nil, nil
 }

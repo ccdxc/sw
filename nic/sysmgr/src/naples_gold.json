@@ -29,8 +29,8 @@
         "timeout": 30.0
     },
     {
-        "name": "netagent",
-        "command": "/nic/bin/netagent -datapath hal",
+        "name": "pen-netagent",
+        "command": "/nic/bin/netagent",
         "dependencies": [
             {
                 "kind": "service",

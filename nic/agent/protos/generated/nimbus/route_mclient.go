@@ -12,22 +12,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
 )
 
 type RoutingConfigReactor interface {
-	CreateRoutingConfig(routingconfigObj *netproto.RoutingConfig) error     // creates an RoutingConfig
-	FindRoutingConfig(meta api.ObjectMeta) (*netproto.RoutingConfig, error) // finds an RoutingConfig
-	ListRoutingConfig() []*netproto.RoutingConfig                           // lists all RoutingConfigs
-	UpdateRoutingConfig(routingconfigObj *netproto.RoutingConfig) error     // updates an RoutingConfig
-	DeleteRoutingConfig(routingconfigObj, ns, name string) error            // deletes an RoutingConfig
+	HandleRoutingConfig(oper types.Operation, routingconfigObj netproto.RoutingConfig) ([]netproto.RoutingConfig, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type RoutingConfigOStream struct {
@@ -164,7 +161,14 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListRoutingConfig()
+	o := netproto.RoutingConfig{
+		TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+	}
+
+	localObjs, err := reactor.HandleRoutingConfig(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Err: %v", types.Operation(types.List), err))
+	}
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -172,7 +176,7 @@ func (client *NimbusClient) diffRoutingConfigs(objList *netproto.RoutingConfigLi
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.RoutingConfigEvent{
 					EventType:     api.EventType_DeleteEvent,
-					RoutingConfig: *lobj,
+					RoutingConfig: lobj,
 				}
 				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
@@ -213,21 +217,21 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.FindRoutingConfig(evt.RoutingConfig.ObjectMeta)
+			_, err = reactor.HandleRoutingConfig(types.Get, evt.RoutingConfig)
 			if err != nil {
 				// create the RoutingConfig
-				err = reactor.CreateRoutingConfig(&evt.RoutingConfig)
+				_, err = reactor.HandleRoutingConfig(types.Create, evt.RoutingConfig)
 				if err != nil {
-					log.Errorf("Error creating the RoutingConfig {%+v}. Err: %v", evt.RoutingConfig.ObjectMeta, err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Create), evt.RoutingConfig.GetKey(), err))
 					client.debugStats.AddInt("CreateRoutingConfigError", 1)
 				} else {
 					client.debugStats.AddInt("CreateRoutingConfig", 1)
 				}
 			} else {
 				// update the RoutingConfig
-				err = reactor.UpdateRoutingConfig(&evt.RoutingConfig)
+				_, err = reactor.HandleRoutingConfig(types.Update, evt.RoutingConfig)
 				if err != nil {
-					log.Errorf("Error updating the RoutingConfig {%+v}. Err: %v", evt.RoutingConfig.GetKey(), err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Update), evt.RoutingConfig.GetKey(), err))
 					client.debugStats.AddInt("UpdateRoutingConfigError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateRoutingConfig", 1)
@@ -235,14 +239,10 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 			}
 
 		case api.EventType_DeleteEvent:
-			// delete the object
-			err = reactor.DeleteRoutingConfig(evt.RoutingConfig.Tenant, evt.RoutingConfig.Namespace, evt.RoutingConfig.Name)
-			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("RoutingConfig {%+v} not found", evt.RoutingConfig.ObjectMeta)
-				err = nil
-			}
+			// update the RoutingConfig
+			_, err = reactor.HandleRoutingConfig(types.Delete, evt.RoutingConfig)
 			if err != nil {
-				log.Errorf("Error deleting the RoutingConfig {%+v}. Err: %v", evt.RoutingConfig.ObjectMeta, err)
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Key: %s | Err: %v", types.Operation(types.Delete), evt.RoutingConfig.GetKey(), err))
 				client.debugStats.AddInt("DeleteRoutingConfigError", 1)
 			} else {
 				client.debugStats.AddInt("DeleteRoutingConfig", 1)
@@ -265,7 +265,7 @@ func (client *NimbusClient) processRoutingConfigEvent(evt netproto.RoutingConfig
 
 			// send oper status
 			ostream.Lock()
-			modificationTime, _ := types.TimestampProto(time.Now())
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.RoutingConfig.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 			err := ostream.stream.Send(&robj)
 			if err != nil {
@@ -301,7 +301,7 @@ func (client *NimbusClient) processRoutingConfigDynamic(evt api.EventType,
 	client.lockObject(routingconfigEvt.RoutingConfig.GetObjectKind(), routingconfigEvt.RoutingConfig.ObjectMeta)
 
 	err := client.processRoutingConfigEvent(routingconfigEvt, reactor, nil)
-	modificationTime, _ := types.TimestampProto(time.Now())
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
 	return err

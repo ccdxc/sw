@@ -47,7 +47,7 @@ func (na *Nagent) CreateTunnel(tun *netproto.Tunnel) error {
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if tun.Status.TunnelID == 0 {
 		// Tunnel IDs and Interface IDs must be unique in the datapath as tunnel is modeled as an interface in HAL.
-		tunnelID, err := na.Store.GetNextID(types.InterfaceID)
+		tunnelID, err := na.Store.GetNextID(types.InterfaceID, 0)
 		if err != nil {
 			log.Errorf("Could not allocate tunnel id. {%+v}", err)
 			return err

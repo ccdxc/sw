@@ -7,12 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
+	"github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
@@ -111,9 +113,9 @@ func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApiV1_
 }
 
 // GetObject retrieves the runtime.Object from a svc watch event
-func GetObject(obj *netproto.AggObject) (*types.DynamicAny, error) {
-	robj := &types.DynamicAny{}
-	err := types.UnmarshalAny(&obj.Object.Any, robj)
+func GetObject(obj *netproto.AggObject) (*protoTypes.DynamicAny, error) {
+	robj := &protoTypes.DynamicAny{}
+	err := protoTypes.UnmarshalAny(&obj.Object.Any, robj)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +190,15 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListApp()
+	o := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+	}
+
+	localObjs, err := reactor.HandleApp(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListApp()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -196,7 +206,7 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.AppEvent{
 					EventType: api.EventType_DeleteEvent,
-					App:       *lobj,
+					App:       lobj,
 				}
 				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
@@ -217,7 +227,7 @@ func (client *NimbusClient) diffAppsDynamic(objList *netproto.AppList, reactor A
 		err := client.processAppEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "App", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -249,7 +259,15 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListEndpoint()
+	o := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+	}
+
+	localObjs, err := reactor.HandleEndpoint(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListEndpoint()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -257,7 +275,7 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.EndpointEvent{
 					EventType: api.EventType_DeleteEvent,
-					Endpoint:  *lobj,
+					Endpoint:  lobj,
 				}
 				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
@@ -278,7 +296,7 @@ func (client *NimbusClient) diffEndpointsDynamic(objList *netproto.EndpointList,
 		err := client.processEndpointEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Endpoint", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -310,7 +328,15 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListIPAMPolicy()
+	o := netproto.IPAMPolicy{
+		TypeMeta: api.TypeMeta{Kind: "IPAMPolicy"},
+	}
+
+	localObjs, err := reactor.HandleIPAMPolicy(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: IPAMPolicy | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListIPAMPolicy()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -318,7 +344,7 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.IPAMPolicyEvent{
 					EventType:  api.EventType_DeleteEvent,
-					IPAMPolicy: *lobj,
+					IPAMPolicy: lobj,
 				}
 				log.Infof("diffIPAMPolicys(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.IPAMPolicy.GetObjectKind(), evt.IPAMPolicy.ObjectMeta)
@@ -339,7 +365,7 @@ func (client *NimbusClient) diffIPAMPolicysDynamic(objList *netproto.IPAMPolicyL
 		err := client.processIPAMPolicyEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "IPAMPolicy", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -371,7 +397,15 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListInterface()
+	o := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+	}
+
+	localObjs, err := reactor.HandleInterface(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Interface | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListInterface()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -379,7 +413,7 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.InterfaceEvent{
 					EventType: api.EventType_DeleteEvent,
-					Interface: *lobj,
+					Interface: lobj,
 				}
 				log.Infof("diffInterfaces(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Interface.GetObjectKind(), evt.Interface.ObjectMeta)
@@ -400,7 +434,7 @@ func (client *NimbusClient) diffInterfacesDynamic(objList *netproto.InterfaceLis
 		err := client.processInterfaceEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Interface", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -432,7 +466,15 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListNetwork()
+	o := netproto.Network{
+		TypeMeta: api.TypeMeta{Kind: "Network"},
+	}
+
+	localObjs, err := reactor.HandleNetwork(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Network | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListNetwork()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -440,7 +482,7 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.NetworkEvent{
 					EventType: api.EventType_DeleteEvent,
-					Network:   *lobj,
+					Network:   lobj,
 				}
 				log.Infof("diffNetworks(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Network.GetObjectKind(), evt.Network.ObjectMeta)
@@ -461,7 +503,7 @@ func (client *NimbusClient) diffNetworksDynamic(objList *netproto.NetworkList, r
 		err := client.processNetworkEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "Network", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -493,7 +535,15 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListNetworkSecurityPolicy()
+	o := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+	}
+
+	localObjs, err := reactor.HandleNetworkSecurityPolicy(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListNetworkSecurityPolicy()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -501,7 +551,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.NetworkSecurityPolicyEvent{
 					EventType:             api.EventType_DeleteEvent,
-					NetworkSecurityPolicy: *lobj,
+					NetworkSecurityPolicy: lobj,
 				}
 				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
@@ -522,7 +572,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 		err := client.processNetworkSecurityPolicyEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "NetworkSecurityPolicy", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -554,7 +604,15 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListRoutingConfig()
+	o := netproto.RoutingConfig{
+		TypeMeta: api.TypeMeta{Kind: "RoutingConfig"},
+	}
+
+	localObjs, err := reactor.HandleRoutingConfig(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: RoutingConfig | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListRoutingConfig()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -562,7 +620,7 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.RoutingConfigEvent{
 					EventType:     api.EventType_DeleteEvent,
-					RoutingConfig: *lobj,
+					RoutingConfig: lobj,
 				}
 				log.Infof("diffRoutingConfigs(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.RoutingConfig.GetObjectKind(), evt.RoutingConfig.ObjectMeta)
@@ -583,7 +641,7 @@ func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingC
 		err := client.processRoutingConfigEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "RoutingConfig", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -615,7 +673,15 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListSecurityProfile()
+	o := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+	}
+
+	localObjs, err := reactor.HandleSecurityProfile(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: SecurityProfile | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListSecurityProfile()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -623,7 +689,7 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.SecurityProfileEvent{
 					EventType:       api.EventType_DeleteEvent,
-					SecurityProfile: *lobj,
+					SecurityProfile: lobj,
 				}
 				log.Infof("diffSecurityProfiles(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.SecurityProfile.GetObjectKind(), evt.SecurityProfile.ObjectMeta)
@@ -644,7 +710,7 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 		err := client.processSecurityProfileEvent(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "SecurityProfile", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -677,7 +743,7 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 	//This will order be diffed
 	listOrderObjects := []*listObject{}
 
-	addToListOrder := func(kind string, obj *types.DynamicAny) {
+	addToListOrder := func(kind string, obj *protoTypes.DynamicAny) {
 		for _, lobj := range listOrderObjects {
 			if lobj.kind == kind {
 				switch kind {

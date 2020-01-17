@@ -21,6 +21,8 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
+// SecurityGroup is not supported by Agent. The tests taht assert for agent conversion and policy attachment to SGs is commented out.
+// However the SGPolicy Create/Delete and conversions are kept intact
 func newStatemgr() (*Statemgr, error) {
 	// create nimbus server
 	msrv := nimbus.NewMbusServer("npm-test", nil)

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 
 	ptypes "github.com/gogo/protobuf/types"
 
@@ -829,7 +829,7 @@ func (srv *fakeRPCServer) WatchNetworkSecurityPolicys(sel *api.ListWatchOptions,
 		// watch event
 		watchEvt := netproto.NetworkSecurityPolicyEvent{
 			EventType:             api.EventType_CreateEvent,
-			NetworkSecurityPolicy: *sgp,
+			NetworkSecurityPolicy: sgp,
 		}
 
 		watchEvts := netproto.NetworkSecurityPolicyEventList{}
@@ -873,7 +873,7 @@ func (srv *fakeRPCServer) NetworkSecurityPolicyOperUpdate(stream netproto.Networ
 		}
 
 		srv.Lock()
-		srv.sgpUpdatedb[objectKey(oper.NetworkSecurityPolicy.ObjectMeta)] = &oper.NetworkSecurityPolicy
+		srv.sgpUpdatedb[objectKey(oper.NetworkSecurityPolicy.ObjectMeta)] = oper.NetworkSecurityPolicy
 		srv.Unlock()
 	}
 }
@@ -914,7 +914,7 @@ func (srv *fakeRPCServer) WatchApps(sel *api.ListWatchOptions, stream netproto.A
 		// watch event
 		watchEvt := netproto.AppEvent{
 			EventType: api.EventType_CreateEvent,
-			App:       *app,
+			App:       app,
 		}
 
 		watchEvts := netproto.AppEventList{}

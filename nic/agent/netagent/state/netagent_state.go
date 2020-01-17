@@ -246,11 +246,11 @@ func (na *Nagent) PurgeConfigs() error {
 		}
 	}
 
-	for _, cfg := range na.ListRoutingConfig() {
-		if err := na.DeleteRoutingConfig(cfg.Tenant, cfg.Namespace, cfg.Name); err != nil {
-			log.Errorf("Failed to delete Routing config, err: %v", err)
-		}
-	}
+	//for _, cfg := range na.ListRoutingConfig() {
+	//	if err := na.DeleteRoutingConfig(cfg.Tenant, cfg.Namespace, cfg.Name); err != nil {
+	//		log.Errorf("Failed to delete Routing config, err: %v", err)
+	//	}
+	//}
 	return nil
 }
 
@@ -376,24 +376,24 @@ func (na *Nagent) ReplayConfigs() error {
 		}
 	}
 
-	// Replay RoutingConfig Objects
-	rtcfgs, err := na.Store.RawList("RoutingCofnig")
-	if err == nil {
-		for _, o := range rtcfgs {
-			var cfg netproto.RoutingConfig
-			err := cfg.Unmarshal(o)
-			if err != nil {
-				log.Errorf("Failed to unmarshal object to RoutingConfig. Err: %v", err)
-				continue
-			}
-			creator, ok := cfg.ObjectMeta.Labels["CreatedBy"]
-			if ok && creator == "Venice" {
-				log.Infof("Replaying persisted RoutingConfig object: %+v", cfg)
-				if err := na.CreateRoutingConfig(&cfg); err != nil {
-					log.Errorf("Failed to recreate RoutingConfig: %v. Err: %v", cfg.GetKey(), err)
-				}
-			}
-		}
-	}
+	//// Replay RoutingConfig Objects
+	//rtcfgs, err := na.Store.RawList("RoutingCofnig")
+	//if err == nil {
+	//	for _, o := range rtcfgs {
+	//		var cfg netproto.RoutingConfig
+	//		err := cfg.Unmarshal(o)
+	//		if err != nil {
+	//			log.Errorf("Failed to unmarshal object to RoutingConfig. Err: %v", err)
+	//			continue
+	//		}
+	//		creator, ok := cfg.ObjectMeta.Labels["CreatedBy"]
+	//		if ok && creator == "Venice" {
+	//			log.Infof("Replaying persisted RoutingConfig object: %+v", cfg)
+	//			if err := na.CreateRoutingConfig(&cfg); err != nil {
+	//				log.Errorf("Failed to recreate RoutingConfig: %v. Err: %v", cfg.GetKey(), err)
+	//			}
+	//		}
+	//	}
+	//}
 	return nil
 }

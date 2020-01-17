@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	tpmproto "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"net"
 	"net/http"
 	"os"
@@ -18,12 +19,10 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/constants"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
@@ -86,12 +85,11 @@ type policyDb struct {
 }
 
 // NewTpAgent creates new telemetry policy agent state
-func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm halproto.TelemetryClient) (*PolicyState, error) {
+func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string) (*PolicyState, error) {
 	state := &PolicyState{
 		store:         netAgent.Store,
 		netAgent:      netAgent,
 		getMgmtIPAddr: getMgmtIPAddr,
-		hal:           halTm,
 		ipfixCtx:      &sync.Map{},
 	}
 
@@ -130,7 +128,7 @@ func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm hal
 		}
 
 		if objList, err := state.store.List(&types.FlowExportPolicyTable{
-			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			FlowExportPolicy: &netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "FlowExportPolicy",
 				},
@@ -158,7 +156,7 @@ func NewTpAgent(netAgent *agstate.Nagent, getMgmtIPAddr func() string, halTm hal
 func (s *PolicyState) Close() {
 }
 
-func (s *PolicyState) validateMeta(p *tpmprotos.FlowExportPolicy) error {
+func (s *PolicyState) validateMeta(p *netproto.FlowExportPolicy) error {
 	if strings.TrimSpace(p.Name) == "" || strings.TrimSpace(p.Kind) == "" {
 		return fmt.Errorf("name/kind can't be empty")
 	}
@@ -262,7 +260,7 @@ func validateFlowExportFormat(s string) error {
 }
 
 // ValidateFlowExportPolicy validates policy, called from api-server
-func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
+func ValidateFlowExportPolicy(p *netproto.FlowExportPolicy) error {
 	spec := p.Spec
 	if _, err := validateFlowExportInterval(spec.Interval); err != nil {
 		return err
@@ -331,7 +329,8 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 			}
 		}
 
-		if _, _, err := parsePortProto(export.Transport); err != nil {
+		exp := fmt.Sprintf("%s/%s", export.Transport.Protocol, export.Transport.Port)
+		if _, _, err := parsePortProto(exp); err != nil {
 			return err
 		}
 	}
@@ -339,7 +338,7 @@ func ValidateFlowExportPolicy(p *monitoring.FlowExportPolicy) error {
 	return nil
 }
 
-func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.CollectorKey]bool, error) {
+func (s *PolicyState) validatePolicy(p *netproto.FlowExportPolicy) (map[types.CollectorKey]bool, error) {
 	if err := s.validateMeta(p); err != nil {
 		return nil, err
 	}
@@ -403,7 +402,9 @@ func (s *PolicyState) validatePolicy(p *tpmprotos.FlowExportPolicy) (map[types.C
 			dest = s[0] // pick the first address from dns
 		}
 
-		proto, port, err := parsePortProto(export.Transport)
+		exp := fmt.Sprintf("%s/%s", export.Transport.Protocol, export.Transport.Port)
+
+		proto, port, err := parsePortProto(exp)
 		if err != nil {
 			return nil, err
 		}
@@ -434,7 +435,7 @@ func (s *PolicyState) getVrfID(tenant, namespace, vrfName string) (uint64, error
 }
 
 // get vrf from tenant/namespace
-func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.NetworkStatus, error) {
+func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.Network, error) {
 	epList := s.netAgent.ListEndpoint()
 	for _, ep := range epList {
 		for _, addr := range ep.Spec.IPv4Addresses {
@@ -450,7 +451,7 @@ func (s *PolicyState) getL2SegID(tenant, namespace, address string) (*netproto.N
 				if err != nil {
 					return nil, fmt.Errorf("failed to find network %s of this {%s}", netName, address)
 				}
-				return &netObj.Status, nil
+				return netObj, nil
 			}
 		}
 	}
@@ -556,7 +557,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 			return fmt.Errorf("invalid l2 segment, %s", err)
 		}
 
-		collectorID, err := p.state.store.GetNextID(flowExportPolicyID)
+		collectorID, err := p.state.store.GetNextID(flowExportPolicyID, 0)
 		if err != nil {
 			return fmt.Errorf("failed to allocate object id for collector policy")
 		}
@@ -587,7 +588,7 @@ func (p *policyDb) createCollectorPolicy(ctx context.Context) (err error) {
 
 			L2SegKeyHandle: &halproto.L2SegmentKeyHandle{
 				KeyOrHandle: &halproto.L2SegmentKeyHandle_SegmentId{
-					SegmentId: netObj.NetworkID,
+					SegmentId: netObj.Status.NetworkID,
 				},
 			},
 
@@ -707,7 +708,7 @@ func (p *policyDb) createHalFlowMonitorRule(ctx context.Context, ruleKey types.F
 	var err error
 
 	log.Infof("create rule %+v ", ruleKey)
-	ruleID, err = p.state.store.GetNextID(tstype.FlowMonitorRuleIDType)
+	ruleID, err = p.state.store.GetNextID(tstype.FlowMonitorRuleIDType, 0)
 	if err != nil {
 		log.Errorf("failed to allocate object id for flow monitor %s", err)
 		return fmt.Errorf("failed to allocate object id for flow monitor %s", err)
@@ -1018,9 +1019,9 @@ func (p *policyDb) writeCollectorTable() (err error) {
 	return nil
 }
 
-func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *tpmprotos.FlowExportPolicy) (*types.FlowExportPolicyTable, error) {
+func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *netproto.FlowExportPolicy) (*types.FlowExportPolicyTable, error) {
 	obj, err := p.state.store.Read(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   tpmPolicy.TypeMeta,
 			ObjectMeta: tpmPolicy.ObjectMeta,
 		}})
@@ -1036,7 +1037,7 @@ func (p *policyDb) readFlowExportPolicyTable(tpmPolicy *tpmprotos.FlowExportPoli
 	return flowObj, nil
 }
 
-func (p *policyDb) writeFlowExportPolicyTable(fp *tpmprotos.FlowExportPolicy) (err error) {
+func (p *policyDb) writeFlowExportPolicyTable(fp *netproto.FlowExportPolicy) (err error) {
 
 	ckey := map[string]bool{}
 	for k, v := range p.collectorKeys {
@@ -1062,7 +1063,7 @@ func (p *policyDb) writeFlowExportPolicyTable(fp *tpmprotos.FlowExportPolicy) (e
 	return nil
 }
 
-func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*policyDb, error) {
+func (s *PolicyState) createPolicyContext(p *netproto.FlowExportPolicy) (*policyDb, error) {
 	policyCtx := &policyDb{
 		objMeta:       p.ObjectMeta,
 		state:         s,
@@ -1134,7 +1135,7 @@ func (s *PolicyState) createPolicyContext(p *tpmprotos.FlowExportPolicy) (*polic
 }
 
 // CreateFlowExportPolicy is the POST() entry point
-func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
+func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *netproto.FlowExportPolicy) error {
 	log.Infof("POST: %+v", p)
 
 	collKeys, err := s.validatePolicy(p)
@@ -1157,7 +1158,7 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	}
 
 	if objList, err := s.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "FlowExportPolicy",
 			},
@@ -1188,7 +1189,7 @@ func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 }
 
 // UpdateFlowExportPolicy is the PUT entry point
-func (s *PolicyState) UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
+func (s *PolicyState) UpdateFlowExportPolicy(ctx context.Context, p *netproto.FlowExportPolicy) error {
 	log.Infof("PUT: %+v", p)
 	pctx, err := s.createPolicyContext(p)
 	if err != nil {
@@ -1273,7 +1274,7 @@ func (p *policyDb) cleanupTables(ctx context.Context, del bool) {
 }
 
 // DeleteFlowExportPolicy is the DELETE entry point
-func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
+func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *netproto.FlowExportPolicy) error {
 	log.Infof("DELETE :%+v", p)
 
 	if err := s.validateMeta(p); err != nil {
@@ -1304,7 +1305,7 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 	polCtx.writeFlowMonitorTable()
 
 	err = s.store.Delete(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   p.TypeMeta,
 			ObjectMeta: p.ObjectMeta,
 		}})
@@ -1312,7 +1313,7 @@ func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.F
 }
 
 type debugPolicy struct {
-	FlowExportPolicy *tpmprotos.FlowExportPolicy
+	FlowExportPolicy *netproto.FlowExportPolicy
 	Collectors       []string
 	FlowRules        []string
 }
@@ -1354,7 +1355,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 
 	// flow export policy
 	if objList, err := s.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "FlowExportPolicy",
 			},
@@ -1362,7 +1363,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 	}); err == nil {
 		for _, obj := range objList {
 			readObj, err := s.store.Read(&types.FlowExportPolicyTable{
-				FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+				FlowExportPolicy: &netproto.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
 						Kind: "FlowExportPolicy",
 					},
@@ -1472,7 +1473,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 }
 
 // GetFlowExportPolicy is the GET entry point
-func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowExportPolicy) (*tpmprotos.FlowExportPolicy, error) {
+func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *netproto.FlowExportPolicy) (*netproto.FlowExportPolicy, error) {
 	log.Infof("GET: %+v", p)
 
 	if err := s.validateMeta(p); err != nil {
@@ -1483,7 +1484,7 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 	defer s.Unlock()
 
 	polObj, err := s.store.Read(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   p.TypeMeta,
 			ObjectMeta: p.ObjectMeta,
 		}})
@@ -1502,19 +1503,19 @@ func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowE
 }
 
 // ListFlowExportPolicy is the LIST all entry point
-func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
+func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*netproto.FlowExportPolicy, error) {
 	s.Lock()
 	defer s.Unlock()
 
 	objList, err := s.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "FlowExportPolicy",
 			},
 		},
 	})
 
-	flowExpList := []*tpmprotos.FlowExportPolicy{}
+	flowExpList := []*netproto.FlowExportPolicy{}
 
 	if err != nil {
 		if !strings.Contains(err.Error(), emstore.ErrTableNotFound.Error()) {
@@ -1548,27 +1549,27 @@ func getObjMetaKey(m *api.ObjectMeta) string {
 // dummy functions, these polcies are handled in tmagent
 
 // CreateFwlogPolicy is the POST entry point
-func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+func (s *PolicyState) CreateFwlogPolicy(ctx context.Context, p *tpmproto.FwlogPolicy) error {
 	return nil
 }
 
 // GetFwlogPolicy is the GET entry point
-func (s *PolicyState) GetFwlogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error) {
-	return &tpmprotos.FwlogPolicy{}, nil
+func (s *PolicyState) GetFwlogPolicy(tx context.Context, p *tpmproto.FwlogPolicy) (*tpmproto.FwlogPolicy, error) {
+	return &tpmproto.FwlogPolicy{}, nil
 }
 
 // ListFwlogPolicy is the LIST entry point
-func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error) {
-	return []*tpmprotos.FwlogPolicy{}, nil
+func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmproto.FwlogPolicy, error) {
+	return []*tpmproto.FwlogPolicy{}, nil
 }
 
 // UpdateFwlogPolicy is the PUT entry point
-func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+func (s *PolicyState) UpdateFwlogPolicy(ctx context.Context, p *tpmproto.FwlogPolicy) error {
 	return nil
 }
 
 // DeleteFwlogPolicy is the DEL entry points
-func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error {
+func (s *PolicyState) DeleteFwlogPolicy(ctx context.Context, p *tpmproto.FwlogPolicy) error {
 	return nil
 }
 

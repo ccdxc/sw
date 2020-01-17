@@ -5,13 +5,11 @@ package state
 import (
 	"errors"
 	"fmt"
+	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"strings"
 	"time"
-
 	"github.com/gogo/protobuf/proto"
-
 	"github.com/pensando/sw/api"
-	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )

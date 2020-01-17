@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/dscagent/types"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	apiintf "github.com/pensando/sw/api/interfaces"
@@ -308,21 +310,27 @@ func newNimbusClient(uuid, url string) (*nimbus.NimbusClient, error) {
 	return client, nil
 }
 
+type SecurityGroupReactor interface {
+	//CreateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // creates an SecurityGroup
+	//FindSecurityGroup(meta api.ObjectMeta) (*netproto.SecurityGroup, error) // finds an SecurityGroup
+	//ListSecurityGroup() []*netproto.SecurityGroup                           // lists all SecurityGroups
+	//UpdateSecurityGroup(securitygroupObj *netproto.SecurityGroup) error     // updates an SecurityGroup
+	//DeleteSecurityGroup(securitygroupObj, ns, name string) error            // deletes an SecurityGroup
+	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
+}
+
 type NetworkSecurityPolicyReactor interface {
-	CreateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // creates an NetworkSecurityPolicy
-	FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error)     // finds an NetworkSecurityPolicy
-	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
-	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
-	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
+	HandleNetworkSecurityPolicy(oper types.Operation, networksecuritypolicyObj netproto.NetworkSecurityPolicy) ([]netproto.NetworkSecurityPolicy, error)
+	//CreateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // creates an NetworkSecurityPolicy
+	//FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error)     // finds an NetworkSecurityPolicy
+	//ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
+	//UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
+	//DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 
 type AppReactor interface {
-	CreateApp(appObj *netproto.App) error               // creates an App
-	FindApp(meta api.ObjectMeta) (*netproto.App, error) // finds an App
-	ListApp() []*netproto.App                           // lists all Apps
-	UpdateApp(appObj *netproto.App) error               // updates an App
-	DeleteApp(appObj, ns, name string) error            // deletes an App
+	HandleApp(oper types.Operation, app netproto.App) ([]netproto.App, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 
@@ -362,106 +370,86 @@ func (t *testAgent) updateEvent(kind string, eventType int) {
 	}
 }
 
-func (t *testAgent) CreateNetworkSecurityPolicy(obj *netproto.NetworkSecurityPolicy) error {
-	t.Lock()
-	defer t.Unlock()
-	t.securityPolicies[obj.GetKey()] = obj
-	t.updateEvent(obj.GetKind(), CREATE)
-	return nil
-}
+func (t *testAgent) HandleNetworkSecurityPolicy(oper types.Operation, obj netproto.NetworkSecurityPolicy) (policies []netproto.NetworkSecurityPolicy, err error) {
+	switch oper {
+	case types.Create:
+		t.Lock()
+		defer t.Unlock()
+		t.securityPolicies[obj.GetKey()] = &obj
+		t.updateEvent(obj.GetKind(), CREATE)
+		return nil, nil
+	case types.Get:
+		t.Lock()
+		defer t.Unlock()
+		if sg, ok := t.securityPolicies[obj.GetKey()]; ok {
+			policies = append(policies, *sg)
+			return policies, nil
+		}
+		return nil, fmt.Errorf("Not found")
 
-func (t *testAgent) FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error) {
-	t.Lock()
-	defer t.Unlock()
-	if sg, ok := t.securityPolicies[meta.GetKey()]; ok {
-		return sg, nil
+	case types.List:
+		return nil, nil
+	case types.Update:
+		t.Lock()
+		defer t.Unlock()
+		t.securityPolicies[obj.GetKey()] = &obj
+		t.updateEvent(obj.Kind, UPDATE)
+		return nil, nil
+	case types.Delete:
+		t.Lock()
+		defer t.Unlock()
+		if sg, ok := t.securityPolicies[obj.GetKey()]; ok {
+			t.updateEvent(sg.Kind, DELETE)
+			delete(t.securityPolicies, sg.GetKey())
+			return nil, nil
+		}
+	default:
+		return
 	}
-	return nil, fmt.Errorf("Not found")
-}
-
-func (*testAgent) ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy {
-	return nil
-}
-
-func (t *testAgent) UpdateNetworkSecurityPolicy(obj *netproto.NetworkSecurityPolicy) error {
-	t.Lock()
-	defer t.Unlock()
-	t.securityPolicies[obj.GetKey()] = obj
-	t.updateEvent(obj.GetKind(), UPDATE)
-	return nil
-}
-
-func (t *testAgent) DeleteNetworkSecurityPolicy(tenant, ns, name string) error {
-	t.Lock()
-	defer t.Unlock()
-	sg := &netproto.NetworkSecurityPolicy{
-		TypeMeta: api.TypeMeta{Kind: "SecurityGroup"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    tenant,
-			Namespace: ns,
-			Name:      name,
-		},
-	}
-	if sg, ok := t.securityPolicies[sg.GetKey()]; ok {
-		t.updateEvent(sg.GetKind(), DELETE)
-		delete(t.securityPolicies, sg.GetKey())
-		return nil
-	}
-
-	return fmt.Errorf("Not found")
+	return
 }
 
 func (*testAgent) GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions {
 	return api.ListWatchOptions{}
 }
 
-func (t *testAgent) CreateApp(obj *netproto.App) error {
-	t.Lock()
-	defer t.Unlock()
-	t.apps[obj.GetKey()] = obj
-	t.updateEvent(obj.GetKind(), CREATE)
-	return nil
-}
+func (t *testAgent) HandleApp(oper types.Operation, obj netproto.App) (apps []netproto.App, err error) {
+	switch oper {
+	case types.Create:
+		t.Lock()
+		defer t.Unlock()
+		t.apps[obj.GetKey()] = &obj
+		t.updateEvent(obj.GetKind(), CREATE)
+		return nil, nil
+	case types.Get:
+		t.Lock()
+		defer t.Unlock()
+		if app, ok := t.apps[obj.GetKey()]; ok {
+			apps = append(apps, *app)
+			return apps, nil
+		}
+		return nil, fmt.Errorf("Not found")
 
-func (t *testAgent) FindApp(meta api.ObjectMeta) (*netproto.App, error) {
-	t.Lock()
-	defer t.Unlock()
-	if sg, ok := t.apps[meta.GetKey()]; ok {
-		return sg, nil
+	case types.List:
+		return nil, nil
+	case types.Update:
+		t.Lock()
+		defer t.Unlock()
+		t.apps[obj.GetKey()] = &obj
+		t.updateEvent(obj.Kind, UPDATE)
+		return nil, nil
+	case types.Delete:
+		t.Lock()
+		defer t.Unlock()
+		if app, ok := t.apps[obj.GetKey()]; ok {
+			t.updateEvent(app.Kind, DELETE)
+			delete(t.apps, app.GetKey())
+			return nil, nil
+		}
+	default:
+		return
 	}
-	return nil, fmt.Errorf("Not found")
-}
-
-func (*testAgent) ListApp() []*netproto.App {
-	return nil
-}
-
-func (t *testAgent) UpdateApp(obj *netproto.App) error {
-	t.Lock()
-	defer t.Unlock()
-	t.apps[obj.GetKey()] = obj
-	t.updateEvent(obj.GetKind(), UPDATE)
-	return nil
-}
-
-func (t *testAgent) DeleteApp(tenant, ns, name string) error {
-	t.Lock()
-	defer t.Unlock()
-	sg := &netproto.App{
-		TypeMeta: api.TypeMeta{Kind: "App"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    tenant,
-			Namespace: ns,
-			Name:      name,
-		},
-	}
-	if sg, ok := t.apps[sg.GetKey()]; ok {
-		t.updateEvent(sg.GetKind(), DELETE)
-		delete(t.apps, sg.GetKey())
-		return nil
-	}
-
-	return fmt.Errorf("Not found")
+	return
 }
 
 func newTestAgent(uuid, url string) *testAgent {
@@ -688,6 +676,8 @@ func TestAggWatchWithSgAndPoliciesListOneAfterOther(t *testing.T) {
 
 	go ag.client.WatchAggregate(context.Background(), []string{"NetworkSecurityPolicy"}, ag)
 
+	time.Sleep(time.Second * 2)
+
 	AssertEventually(t, func() (bool, interface{}) {
 		if len(ag.securityPolicies) == 3 {
 			return true, nil
@@ -805,7 +795,7 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 		}
 
 		return false, fmt.Errorf("did not receive the expected security policies")
-	}, fmt.Sprintf("Security groups not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
+	}, fmt.Sprintf("Security policies not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
 
 	time.Sleep(2 * time.Second)
 	err = propogationCompleteForPolicies(stateMgr, 0, 3)
@@ -824,11 +814,12 @@ func TestAggWatchWithSgAndUpdatePoliciesListWithDisconnect(t *testing.T) {
 
 	go ag.client.WatchAggregate(context.Background(), []string{"NetworkSecurityPolicy"}, ag)
 	AssertEventually(t, func() (bool, interface{}) {
-		if len(ag.securityPolicies) != 3 {
-			return false, fmt.Sprintf("expected : %d, got : %v. Agent Object : %v", 3, len(ag.securityPolicies), ag)
+		if len(ag.securityPolicies) == 3 {
+			return true, nil
 		}
-		return true, nil
-	}, fmt.Sprintf("Expected number of security groups or policies not found. %v", ag), "100ms", "1s")
+
+		return false, fmt.Errorf("did not receive the expected security policies")
+	}, fmt.Sprintf("Security policies not received by the agent. Expected : %v, Got : %v. Agent - %v", 3, len(ag.securityPolicies), ag), "100ms", "5s")
 
 	synced := stateMgr.topics.AggregateTopic.WatcherInConfigSync(snic.Status.PrimaryMAC, "NetworkSecurityPolicy",
 		api.EventType_CreateEvent)

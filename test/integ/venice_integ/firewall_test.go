@@ -7,6 +7,9 @@ import (
 	"strings"
 	"time"
 
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
@@ -51,8 +54,13 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	// verify policy gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
-			if (cerr != nil) || (secp.Name != fwp.Name) {
+			profileMeta := netproto.SecurityProfile{
+				TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
+				ObjectMeta: fwp.ObjectMeta,
+			}
+			secp, cerr := sn.agent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
+
+			if (cerr != nil) || (secp[0].Name != fwp.Name) {
 				return false, secp
 			}
 		}
@@ -61,19 +69,24 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 
 	// verify all the parameters
 	for _, sn := range it.snics {
-		secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
+		profileMeta := netproto.SecurityProfile{
+			TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
+			ObjectMeta: fwp.ObjectMeta,
+		}
+		secp, cerr := sn.agent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
+
 		AssertOk(c, cerr, "Security profile not found in agent")
-		AssertEquals(c, secp.Spec.Timeouts.SessionIdle, fwpDefault.Spec.SessionIdleTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCP, fwpDefault.Spec.TcpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPDrop, fwpDefault.Spec.TCPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPConnectionSetup, fwpDefault.Spec.TCPConnectionSetupTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPClose, fwpDefault.Spec.TCPCloseTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPHalfClose, fwpDefault.Spec.TCPHalfClosedTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.Drop, fwpDefault.Spec.DropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDP, fwpDefault.Spec.UdpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwpDefault.Spec.UDPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwpDefault.Spec.IcmpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwpDefault.Spec.ICMPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.SessionIdle, fwpDefault.Spec.SessionIdleTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCP, fwpDefault.Spec.TcpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPDrop, fwpDefault.Spec.TCPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPConnectionSetup, fwpDefault.Spec.TCPConnectionSetupTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPClose, fwpDefault.Spec.TCPCloseTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPHalfClose, fwpDefault.Spec.TCPHalfClosedTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.Drop, fwpDefault.Spec.DropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.UDP, fwpDefault.Spec.UdpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.UDPDrop, fwpDefault.Spec.UDPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.ICMP, fwpDefault.Spec.IcmpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.ICMPDrop, fwpDefault.Spec.ICMPDropTimeout, "incorrect params")
 	}
 
 	// change conn track and session timeout
@@ -84,8 +97,12 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	// verify params got updated in agent
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
-			if (cerr != nil) || (secp.Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
+			profileMeta := netproto.SecurityProfile{
+				TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
+				ObjectMeta: fwp.ObjectMeta,
+			}
+			secp, cerr := sn.agent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
+			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
 				return false, secp
 			}
 		}
@@ -93,19 +110,23 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 	}, "Firewall profile params incorrect in agent", "100ms", it.pollTimeout())
 	// verify all the parameters
 	for _, sn := range it.snics {
-		secp, cerr := sn.agent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
+		profileMeta := netproto.SecurityProfile{
+			TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
+			ObjectMeta: fwp.ObjectMeta,
+		}
+		secp, cerr := sn.agent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
 		AssertOk(c, cerr, "Security profile not found in agent")
-		AssertEquals(c, secp.Spec.Timeouts.SessionIdle, fwp.Spec.SessionIdleTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCP, fwp.Spec.TcpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPDrop, fwp.Spec.TCPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPConnectionSetup, fwp.Spec.TCPConnectionSetupTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPClose, fwp.Spec.TCPCloseTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.TCPHalfClose, fwp.Spec.TCPHalfClosedTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.Drop, fwp.Spec.DropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDP, fwp.Spec.UdpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
-		AssertEquals(c, secp.Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.SessionIdle, fwp.Spec.SessionIdleTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCP, fwp.Spec.TcpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPDrop, fwp.Spec.TCPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPConnectionSetup, fwp.Spec.TCPConnectionSetupTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPClose, fwp.Spec.TCPCloseTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.TCPHalfClose, fwp.Spec.TCPHalfClosedTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.Drop, fwp.Spec.DropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.UDP, fwp.Spec.UdpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
 	}
 
 	// verify FirewallProfile status reflects propagation status
@@ -159,8 +180,12 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(icmpApp.ObjectMeta)
-			if (cerr != nil) || (napp.Name != icmpApp.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: icmpApp.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != icmpApp.Name) {
 				return false, napp
 			}
 		}
@@ -169,11 +194,15 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(icmpApp.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: icmpApp.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, icmpApp.Spec.Timeout, "invalid alg params")
-		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.Icmp.Type, "invalid alg params")
-		AssertEquals(c, fmt.Sprintf("%d", napp.Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.Icmp.Code, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, icmpApp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp[0].Spec.ALG.ICMP.Type), icmpApp.Spec.ALG.Icmp.Type, "invalid alg params")
+		AssertEquals(c, fmt.Sprintf("%d", napp[0].Spec.ALG.ICMP.Code), icmpApp.Spec.ALG.Icmp.Code, "invalid alg params")
 
 	}
 
@@ -203,11 +232,15 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	// verify agents have this policy and params are correct
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
 			if cerr != nil {
 				return false, cerr
 			}
-			if len(nsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(nsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				return false, nsgp
 			}
 		}
@@ -264,7 +297,11 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	time.Sleep(time.Millisecond * 100)
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgpInv.ObjectMeta)
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgpInv.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
 			if cerr == nil {
 				return false, nsgp
 			}
@@ -295,7 +332,11 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
 			if cerr == nil {
 				return false, nsgp
 			}
@@ -310,7 +351,11 @@ func (it *veniceIntegSuite) TestIcmpApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(icmpApp.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: icmpApp.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -359,8 +404,12 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
-			if (cerr != nil) || (napp.Name != app.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != app.Name) {
 				return false, napp
 			}
 		}
@@ -369,14 +418,18 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: app.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropMultiQuestionPackets, app.Spec.ALG.Dns.DropMultiQuestionPackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropLargeDomainPackets, app.Spec.ALG.Dns.DropLargeDomainNamePackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.DropLongLabelPackets, app.Spec.ALG.Dns.DropLongLabelPackets, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.MaxMessageLength, app.Spec.ALG.Dns.MaxMessageLength, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.DNS.QueryResponseTimeout, app.Spec.ALG.Dns.QueryResponseTimeout, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.DNS.DropMultiQuestionPackets, app.Spec.ALG.Dns.DropMultiQuestionPackets, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.DNS.DropLargeDomainPackets, app.Spec.ALG.Dns.DropLargeDomainNamePackets, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.DNS.DropLongLabelPackets, app.Spec.ALG.Dns.DropLongLabelPackets, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.DNS.MaxMessageLength, app.Spec.ALG.Dns.MaxMessageLength, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.DNS.QueryResponseTimeout, app.Spec.ALG.Dns.QueryResponseTimeout, "invalid alg params")
 	}
 
 	// delete app
@@ -386,7 +439,11 @@ func (it *veniceIntegSuite) TestDnsApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -431,8 +488,12 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
-			if (cerr != nil) || (napp.Name != app.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != app.Name) {
 				return false, napp
 			}
 		}
@@ -441,10 +502,14 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: app.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.FTP.AllowMismatchIPAddresses, app.Spec.ALG.Ftp.AllowMismatchIPAddress, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.FTP.AllowMismatchIPAddresses, app.Spec.ALG.Ftp.AllowMismatchIPAddress, "invalid alg params")
 	}
 
 	// delete app
@@ -454,7 +519,11 @@ func (it *veniceIntegSuite) TestFtpApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -496,8 +565,12 @@ func (it *veniceIntegSuite) TestTftpApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
-			if (cerr != nil) || (napp.Name != app.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != app.Name) {
 				return false, napp
 			}
 		}
@@ -506,10 +579,14 @@ func (it *veniceIntegSuite) TestTftpApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: app.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
-		Assert(c, napp.Spec.ALG.TFTP != nil, "invalid tftp alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
+		Assert(c, napp[0].Spec.ALG.TFTP != nil, "invalid tftp alg params")
 	}
 
 	// delete app
@@ -519,7 +596,11 @@ func (it *veniceIntegSuite) TestTftpApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -561,8 +642,12 @@ func (it *veniceIntegSuite) TestRtspApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
-			if (cerr != nil) || (napp.Name != app.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != app.Name) {
 				return false, napp
 			}
 		}
@@ -571,10 +656,14 @@ func (it *veniceIntegSuite) TestRtspApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: app.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
-		Assert(c, napp.Spec.ALG.RTSP != nil, "invalid rtsp alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, app.Spec.Timeout, "invalid alg params")
+		Assert(c, napp[0].Spec.ALG.RTSP != nil, "invalid rtsp alg params")
 	}
 
 	// delete app
@@ -584,7 +673,11 @@ func (it *veniceIntegSuite) TestRtspApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -661,12 +754,21 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(sunapp.ObjectMeta)
-			if (cerr != nil) || (napp.Name != sunapp.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: sunapp.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != sunapp.Name) {
 				return false, napp
 			}
-			napp, cerr = sn.agent.NetworkAgent.FindApp(msapp.ObjectMeta)
-			if (cerr != nil) || (napp.Name != msapp.Name) {
+
+			sapp = netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: msapp.ObjectMeta,
+			}
+			napp, cerr = sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != msapp.Name) {
 				return false, napp
 			}
 		}
@@ -675,15 +777,24 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 
 	// verify ALG params
 	for _, sn := range it.snics {
-		napp, cerr := sn.agent.NetworkAgent.FindApp(sunapp.ObjectMeta)
+		sapp := netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: sunapp.ObjectMeta,
+		}
+		napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, sunapp.Spec.Timeout, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.SUNRPC[0].ProgramID, pgmID, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, sunapp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.SUNRPC[0].ProgramID, pgmID, "invalid alg params")
 
-		napp, cerr = sn.agent.NetworkAgent.FindApp(msapp.ObjectMeta)
+		sapp = netproto.App{
+			TypeMeta:   api.TypeMeta{Kind: "App"},
+			ObjectMeta: msapp.ObjectMeta,
+		}
+		napp, cerr = sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+
 		AssertOk(c, cerr, "App not found in agent")
-		AssertEquals(c, napp.Spec.AppIdleTimeout, msapp.Spec.Timeout, "invalid alg params")
-		AssertEquals(c, napp.Spec.ALG.MSRPC[0].ProgramID, pgmID, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.AppIdleTimeout, msapp.Spec.Timeout, "invalid alg params")
+		AssertEquals(c, napp[0].Spec.ALG.MSRPC[0].ProgramID, pgmID, "invalid alg params")
 	}
 
 	// delete app
@@ -695,11 +806,20 @@ func (it *veniceIntegSuite) TestRPCApp(c *C) {
 	// verify app is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(sunapp.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: sunapp.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
-			napp, cerr = sn.agent.NetworkAgent.FindApp(msapp.ObjectMeta)
+
+			sapp = netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: msapp.ObjectMeta,
+			}
+			napp, cerr = sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}
@@ -746,8 +866,12 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify all agents have the app
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
-			if (cerr != nil) || (napp.Name != app.Name) {
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
+			if (cerr != nil) || (napp[0].Name != app.Name) {
 				return false, napp
 			}
 		}
@@ -791,8 +915,12 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify all agents have the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
-			if (cerr != nil) || (nsgp.Name != sgp.Name) {
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
+			if (cerr != nil) || (nsgp[0].Name != sgp.Name) {
 				return false, nsgp
 			}
 		}
@@ -802,16 +930,20 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify datapath has the sg policy
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
 			if cerr != nil {
 				return false, nil
 			}
-			if len(sgp.Spec.Rules) != len(nsgp.Spec.Rules) {
-				return false, nsgp.Spec.Rules
+			if len(sgp.Spec.Rules) != len(nsgp[0].Spec.Rules) {
+				return false, nsgp[0].Spec.Rules
 			}
 
 			for _, veniceRule := range sgp.Spec.Rules {
-				for _, naplesRule := range nsgp.Spec.Rules {
+				for _, naplesRule := range nsgp[0].Spec.Rules {
 					if veniceRule.Action != strings.ToLower(naplesRule.Action) {
 						// FIXME: we need to validate rules more add unit tests around conversion routines
 						return false, naplesRule
@@ -829,7 +961,11 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify sg policy is gone from agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			nsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			sgpMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			nsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, sgpMeta)
 			if cerr == nil {
 				return false, nsgp
 			}
@@ -844,7 +980,11 @@ func (it *veniceIntegSuite) TestFirewallFtp(c *C) {
 	// verify app is removed from all agents
 	AssertEventually(c, func() (bool, interface{}) {
 		for _, sn := range it.snics {
-			napp, cerr := sn.agent.NetworkAgent.FindApp(app.ObjectMeta)
+			sapp := netproto.App{
+				TypeMeta:   api.TypeMeta{Kind: "App"},
+				ObjectMeta: app.ObjectMeta,
+			}
+			napp, cerr := sn.agent.PipelineAPI.HandleApp(agentTypes.Get, sapp)
 			if cerr == nil {
 				return false, napp
 			}

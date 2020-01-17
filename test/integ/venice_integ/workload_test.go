@@ -5,11 +5,14 @@ package veniceinteg
 import (
 	"fmt"
 
+	"github.com/pensando/sw/nic/agent/dscagent"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -31,7 +34,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 		// workload params
 		var name string
 		if name, err = strconv.ParseMacAddr(sn.macAddr); err != nil {
-			name = sn.agent.NetworkAgent.NodeUUID
+			name = sn.agent.InfraAPI.GetDscName()
 		}
 		wrloads[i] = workload.Workload{
 			TypeMeta: api.TypeMeta{Kind: "Workload"},
@@ -74,9 +77,13 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 
 	// wait for all endpoints to be propagated to other agents
 	for i, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.config.NumHosts, nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
@@ -87,26 +94,29 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 			for _, snl := range it.snics {
 				name, err := strconv.ParseMacAddr(snl.macAddr)
 				if err != nil {
-					name = snl.agent.NetworkAgent.NodeUUID
+					name = snl.agent.InfraAPI.GetDscName()
 				}
 				epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
-				epmeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      epname,
+				epmeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					},
 				}
-				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+				sep, perr := ag.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
+					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v", epname, ag.InfraAPI.GetDscName(), perr)
 					return
 				}
 
-				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
+				if sep[0].Spec.NodeUUID == ag.InfraAPI.GetDscName() {
 					foundLocal = true
 				}
 			}
 			if !foundLocal {
-				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.NetworkAgent.NodeUUID)
+				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.InfraAPI.GetDscName())
 				return
 			}
 
@@ -115,7 +125,7 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 
 		name, err := strconv.ParseMacAddr(sn.macAddr)
 		if err != nil {
-			name = sn.agent.NetworkAgent.NodeUUID
+			name = sn.agent.InfraAPI.GetDscName()
 		}
 		epname := fmt.Sprintf("testWorkload-%s-%s", name, name)
 		epmeta := api.ObjectMeta{
@@ -160,9 +170,13 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 
 	// verify all endpoints are gone
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return

@@ -10,41 +10,34 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 	"time"
+
+	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
 
 	"github.com/vishvananda/netlink"
 	"golang.org/x/net/context"
 	"gopkg.in/check.v1"
-
-	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
-	"github.com/pensando/sw/venice/utils/netutils"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/cluster"
 	pencluster "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/dscagent"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
-	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
-	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
-	"github.com/pensando/sw/venice/utils/featureflags"
-
 	"github.com/pensando/sw/nic/agent/nmd"
+	nmdstate "github.com/pensando/sw/nic/agent/nmd/state"
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	nmdutils "github.com/pensando/sw/nic/agent/nmd/utils"
 	nmdproto "github.com/pensando/sw/nic/agent/protos/nmd"
 	tmrestapi "github.com/pensando/sw/nic/agent/tmagent/ctrlerif/restapi"
-
-	"github.com/pensando/sw/nic/agent/tpa"
-	"github.com/pensando/sw/nic/agent/troubleshooting"
-	tshal "github.com/pensando/sw/nic/agent/troubleshooting/datapath/hal"
+	tmstate "github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/nic/delphi/gosdk"
-
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
-	tpactrlerif "github.com/pensando/sw/nic/agent/tpa/ctrlerif"
+	"github.com/pensando/sw/venice/utils/featureflags"
+	"github.com/pensando/sw/venice/utils/netutils"
 
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apigw"
@@ -164,8 +157,7 @@ type SuiteConfig struct {
 type naples struct {
 	macAddr  string
 	snicName string
-	agent    *netagent.Agent
-	tsAgent  *troubleshooting.Agent
+	agent    *dscagent.DSCAgent
 	tmAgent  *tmrestapi.RestServer
 	nmd      *nmd.Agent
 }
@@ -213,6 +205,8 @@ type veniceIntegSuite struct {
 	hub                 gosdk.Hub
 	ctx                 context.Context
 	cancel              context.CancelFunc
+	resolverServer      *rpckit.RPCServer
+	fakehal             *fakehal.Hal
 }
 
 // VeniceSuite is an interface implemented by venice integ test suite
@@ -335,6 +329,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	go cmdauth.RunAuthServer(cmdAuthServer, nil)
 	go cmdauth.RunLeaderInstanceServer(cmdLeaderInstanceServer, nil)
 	go it.smartNICServer.MonitorHealth()
+	it.resolverServer = rpcServer
 }
 
 func (it *veniceIntegSuite) startNmd(c *check.C) {
@@ -565,6 +560,7 @@ func (it *veniceIntegSuite) updateResolver(serviceName, url string) {
 		Service: serviceName,
 		URL:     url,
 	})
+
 }
 
 // startCitadel starts a single node citadel cluster
@@ -688,100 +684,32 @@ func (it *veniceIntegSuite) startEventsAndSearch() {
 	it.idr = idr.(indexer.Interface)
 }
 
-func (it *veniceIntegSuite) startAgent() {
-	// create agents
-	// Start DelphiHub
-	it.hub = gosdk.NewFakeHub()
-	it.hub.Start()
+func (it *veniceIntegSuite) startAgent(c *check.C, veniceURL string) {
+	it.logger.Info("Starting Agent")
 	for i := 0; i < it.config.NumHosts; i++ {
-		// mock datapath
-		datapathKind := datapath.Kind(it.config.DatapathKind)
 
-		tmpfile, aerr := ioutil.TempFile("", "nicagent_db")
-		if aerr != nil {
-			log.Fatalf("Error creating tmp file. Err: %v", aerr)
-		}
-		n := tmpfile.Name()
-		tmpfile.Close()
-		it.tmpFiles = append(it.tmpFiles, n)
-
-		// Create netagent
-		rc := it.resolverClient
-		agent, aerr := netagent.NewAgent(datapathKind.String(), n, globals.Npm, rc)
-		if aerr != nil {
-			log.Fatalf("Error creating netagent. Err: %v", aerr)
-		}
-		// FIXME -- we should not override NodeUUID
-		// currently needed to get TestVeniceIntegSecuritygroup to pass with specific MAC address
 		snicMac := it.getNaplesMac(i)
 		dotMac, _ := strconv.ParseMacAddr(snicMac)
 		snicName := fmt.Sprintf("naples%d", i+1)
-		agent.NetworkAgent.NodeUUID = dotMac
 
-		// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
-		npmClient, err := ctrlerif.NewNpmClient(agent.NetworkAgent, globals.Npm, rc)
+		dscAgent, err := dscagent.NewDSCAgent(logger, globals.Npm, globals.Tpm, globals.Tsm, agentTypes.DefaultAgentRestURL)
 		if err != nil {
-			log.Errorf("Error creating NPM client. Err: %v", err)
-		}
-		agent.NpmClient = npmClient
-
-		tsdp, aerr := tshal.NewHalDatapath("mock")
-		if aerr != nil {
-			log.Fatalf("Error creating TS datapath. Err: %v", aerr)
+			log.Errorf("Error creating network agent. Err: %v", err)
 		}
 
-		tmpfile, aerr = ioutil.TempFile("", "tsagent_db")
-		if aerr != nil {
-			log.Fatalf("Error creating TS agent file. Err: %v", aerr)
-		}
-		n = tmpfile.Name()
-		tmpfile.Close()
-		it.tmpFiles = append(it.tmpFiles, n)
+		// Handle mode change
 
-		log.Infof("creating troubleshooting subagent")
-		tsa, aerr := troubleshooting.NewTsAgent(tsdp, fmt.Sprintf("dummy-uuid-%d", i), agent.NetworkAgent, agent.GetMgmtIPAddr)
-		if aerr != nil {
-			log.Fatalf("Error creating TS agent. Err: %v", aerr)
+		o := agentTypes.DistributedServiceCardStatus{
+			DSCName:     dotMac,
+			DSCMode:     "network_managed_inband",
+			MgmtIP:      "42.42.42.42/24",
+			Controllers: []string{veniceURL},
 		}
-		if tsa == nil {
-			log.Fatalf("cannot create troubleshooting agent. Err: %v", aerr)
-		}
-		if err := tsa.NewTsPolicyClient(rc); err != nil {
-			log.Fatalf("cannot create troubleshooting agent. Err: %v", aerr)
-		}
+		err = dscAgent.ControllerAPI.HandleVeniceCoordinates(o)
+		logger.Infof("RestURL: %v", agentTypes.DefaultAgentRestURL)
+		time.Sleep(time.Second * 5)
 
-		log.Infof("created troubleshooting subagent")
-		tmpfile, aerr = ioutil.TempFile("", "tpagent_db")
-		if aerr != nil {
-			log.Fatalf("Error creating tpagent file. Err: %v", aerr)
-		}
-		n = tmpfile.Name()
-		tmpfile.Close()
-		it.tmpFiles = append(it.tmpFiles, n)
-
-		log.Infof("creating telemetry policy agent")
-		tpAgent, aerr := tpa.NewPolicyAgent("mock", agent.NetworkAgent, agent.GetMgmtIPAddr)
-		if aerr != nil {
-			log.Fatalf("Error creating TPAgent. Err: %v", aerr)
-		}
-		if tpAgent == nil {
-			log.Fatalf("cannot create telemetry policy agent. Err: %v", aerr)
-		}
-		if err := tpAgent.NewTpClient(fmt.Sprintf("dummy-uuid-%d", i), rc); err != nil {
-			log.Fatalf("cannot create telemetry client. Err: %v", aerr)
-		}
-		log.Infof("created telemetry policy agent")
-
-		// create new RestServer instance. Not started yet.
-		restURL := fmt.Sprintf("localhost:%d", it.config.NetAgentRestPort+i)
-		restServer, err := restapi.NewRestServer(agent.NetworkAgent, tsa.TroubleShootingAgent, tpAgent.TpState, restURL)
-		if aerr != nil {
-			log.Fatalf("Error creating agent REST server. Err: %v", aerr)
-		}
-		if restServer == nil {
-			log.Fatalf("cannot create REST server . Err: %v", err)
-		}
-		agent.RestServer = restServer
+		rc := it.resolverClient
 
 		// report node metrics
 		node := &cluster.DistributedServiceCard{
@@ -789,15 +717,14 @@ func (it *veniceIntegSuite) startAgent() {
 				Kind: "DistributedServiceCard",
 			},
 			ObjectMeta: api.ObjectMeta{
-				Name: agent.NetworkAgent.NodeUUID,
+				Name: dscAgent.InfraAPI.GetDscName(),
 			},
 		}
 
 		snic := naples{
 			macAddr:  snicMac,
 			snicName: snicName,
-			agent:    agent,
-			tsAgent:  tsa,
+			agent:    dscAgent,
 		}
 		it.snics = append(it.snics, &snic)
 
@@ -815,11 +742,6 @@ func (it *veniceIntegSuite) startAgent() {
 			// Init the TSDB
 			if err := tpState.TsdbInit(fmt.Sprintf("tmagent-%d", i), rc); err != nil {
 				log.Fatalf("failed to init tsdb, err: %v", err)
-			}
-
-			_, err = tpactrlerif.NewTpClient(fmt.Sprintf("dummy-uuid-%d", i), tpState, globals.Tpm, rc)
-			if err != nil {
-				log.Fatalf("failed to init tmagent controller client, err: %v", err)
 			}
 
 			tmpFd, err := ioutil.TempFile("/tmp", "palazzo-fwlogshm")
@@ -844,6 +766,7 @@ func (it *veniceIntegSuite) startAgent() {
 
 			res.ReportMetrics(10*time.Second, nil)
 		}
+		it.logger.Info("Agent successfully started")
 	}
 }
 
@@ -960,7 +883,8 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 	for _, sn := range it.snics {
 		ag := sn.agent
 		tutils.AssertEventually(c, func() (bool, interface{}) {
-			return ag.IsNpmClientConnected(), nil
+			cfg := ag.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not connected to NPM", "1s", it.pollTimeout())
 	}
 
@@ -968,6 +892,19 @@ func (it *veniceIntegSuite) verifyNaplesConnected(c *check.C) {
 }
 
 func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
+	// start hub
+	it.hub = gosdk.NewFakeHub()
+	it.hub.Start()
+
+	// start fake hal
+	var halLis netutils.TestListenAddr
+	halLis.GetAvailablePort()
+	it.fakehal = fakehal.NewFakeHalServer(halLis.ListenURL.String())
+	if err := os.Setenv("HAL_GRPC_PORT", strings.Split(halLis.ListenURL.String(), ":")[1]); err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+
 	os.MkdirAll(path.Dir(globals.NmdBackupDBPath), 0664)
 
 	// We need a fairly high limit because all clients are collapsed into a single process
@@ -1065,8 +1002,8 @@ func (it *veniceIntegSuite) SetUpSuite(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	// start agents
-	log.Infof("Creating %d agents", it.config.NumHosts)
-	it.startAgent()
+	it.logger.Infof("Creating %d agents", it.config.NumHosts)
+	it.startAgent(c, "localhost:"+globals.CMDResolverPort)
 
 	// REST Client
 	restcl, err := apiclient.NewRestAPIClient(fmt.Sprintf("localhost:%s", it.config.APIGatewayPort))
@@ -1162,7 +1099,6 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	// stop the agents
 	for _, sn := range it.snics {
 		sn.agent.Stop()
-		sn.tsAgent.Stop()
 		if sn.tmAgent != nil {
 			sn.tmAgent.Stop()
 		}
@@ -1227,7 +1163,7 @@ func (it *veniceIntegSuite) TearDownSuite(c *check.C) {
 	}
 
 	nmdutils.ClearNaplesTrustRoots()
-
+	it.fakehal.Stop()
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 	log.Infof("============================= TearDownSuite completed ==========================")
 }

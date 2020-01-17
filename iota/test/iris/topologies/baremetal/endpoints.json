@@ -13,7 +13,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.255.0.101/32"
+            "10.255.0.101"
           ],
           "ipv6-addresses": [
             "2000::101/128"
@@ -33,7 +33,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.254.0.102/32"
+            "10.254.0.102"
           ],
           "ipv6-addresses": [
             "2001::102/128"
@@ -53,7 +53,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.253.0.103/32"
+            "10.253.0.103"
           ],
           "ipv6-addresses": [
             "2002::103/128"
@@ -73,7 +73,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.252.0.104/32"
+            "10.252.0.104"
           ],
           "ipv6-addresses": [
             "2003::104/128"
@@ -93,7 +93,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.251.0.105/32"
+            "10.251.0.105"
           ],
           "ipv6-addresses": [
             "2004::105/128"
@@ -113,7 +113,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "10.255.0.106/32"
+            "10.255.0.106"
           ],
           "ipv6-addresses": [
             "2000::106/128"
@@ -133,7 +133,7 @@
       "spec": {
         "network-name": "nw0",
         "ipv4-addresses": [
-          "10.254.0.107/32"
+          "10.254.0.107"
         ],
         "ipv6-addresses": [
           "2001::107/128"
@@ -153,7 +153,7 @@
       "spec": {
         "network-name": "nw0",
         "ipv4-addresses": [
-          "10.253.0.108/32"
+          "10.253.0.108"
         ],
         "ipv6-addresses": [
           "2002::108/128"
@@ -173,7 +173,7 @@
       "spec": {
         "network-name": "nw0",
         "ipv4-addresses": [
-          "10.252.0.109/32"
+          "10.252.0.109"
         ],
         "ipv6-addresses": [
           "2003::109/128"
@@ -193,7 +193,7 @@
       "spec": {
         "network-name": "nw0",
         "ipv4-addresses": [
-          "10.251.0.110/32"
+          "10.251.0.110"
         ],
         "ipv6-addresses": [
           "2004::110/128"

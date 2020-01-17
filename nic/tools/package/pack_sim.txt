@@ -176,6 +176,7 @@ nic/build/x86_64/iris/bin/shmdump                                /nic/bin/
 nic/build/x86_64/iris/bin/halctl                                 /nic/bin/
 nic/build/x86_64/iris/bin/fake_nic_mgr                           /nic/bin/
 nic/build/x86_64/iris/bin/heimdall                               /nic/bin/
+nic/build/x86_64/iris/bin/fakehal                                /nic/bin/
 
 nic/sim/naples/hntap-cfg.json                                    /nic/conf
 nic/sim/naples/hntap-with-qemu-cfg.json                          /nic/conf

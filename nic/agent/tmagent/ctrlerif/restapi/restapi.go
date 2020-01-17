@@ -110,8 +110,7 @@ func NewRestServer(pctx context.Context, listenURL string, tpAgent types.CtrlerI
 	}
 
 	prefixRoutes := map[string]routeAddFunc{
-		"/api/telemetry/flowexports/": srv.gensrv.AddFlowExportPolicyAPIRoutes,
-		"/api/telemetry/fwlog/":       srv.gensrv.AddFwlogPolicyAPIRoutes,
+		"/api/telemetry/fwlog/": srv.gensrv.AddFwlogPolicyAPIRoutes,
 	}
 
 	for prefix, subRouter := range prefixRoutes {

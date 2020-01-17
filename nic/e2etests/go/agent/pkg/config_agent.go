@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/netutils"
 )
@@ -85,7 +84,7 @@ func (o *Object) populateAgentConfig(manifestFile string, agentCfg *AgentConfig)
 
 func (agentCfg *AgentConfig) push() error {
 	doConfig := func(config interface{}, restURL string) error {
-		var resp restapi.Response
+		var resp Response
 		err := netutils.HTTPPost(restURL, config, &resp)
 		if err != nil {
 			agentCfg.printErr(err, resp)
@@ -146,7 +145,7 @@ func (agentCfg *AgentConfig) push() error {
 	return nil
 }
 
-func (o *AgentConfig) printErr(err error, resp restapi.Response) {
+func (o *AgentConfig) printErr(err error, resp Response) {
 	fmt.Printf("Agent configuration failed with. Err: %v\n", err)
 	fmt.Println("######### RESPONSE #########")
 	b, _ := json.MarshalIndent(resp, "", "   ")

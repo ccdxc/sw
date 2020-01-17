@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -13,18 +14,16 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/nic/agent/netagent"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/nic/agent/dscagent"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
 // Dpagent is an agent instance
 type Dpagent struct {
-	nagent *netagent.Agent
+	dscAgent *dscagent.DSCAgent
 }
 
 // objKey returns endpoint key
@@ -43,74 +42,41 @@ func (it *integTestSuite) endpointPollTimeout() string {
 }
 
 // CreateAgent creates an instance of agent
-func CreateAgent(kind datapath.Kind, srvURL, nodeUUID string, resolver resolver.Interface) (*Dpagent, error) {
+func CreateAgent(logger log.Logger, veniceURL, nodeUUID string) (*Dpagent, error) {
 	// create new network agent
-	nagent, err := netagent.NewAgent(kind.String(), "", srvURL, resolver)
+	var lis netutils.TestListenAddr
+	if err := lis.GetAvailablePort(); err != nil {
+		log.Errorf("Failed to find an available port. Err: %v", err)
+		return nil, fmt.Errorf("failed to find an available port. Err: %v", err)
+	}
+	nagent, err := dscagent.NewDSCAgent(logger, globals.Npm, globals.Tpm, globals.Tsm, lis.ListenURL.String())
 	if err != nil {
 		log.Errorf("Error creating network agent. Err: %v", err)
 		return nil, err
 	}
 
-	restServer, err := restapi.NewRestServer(nagent.NetworkAgent, nil, nil, "")
-	if err != nil {
-		log.Errorf("Error creating Rest server. Err: %v", err)
-		return nil, err
-	}
-	nagent.RestServer = restServer
-	nagent.NetworkAgent.NodeUUID = nodeUUID
+	// Handle mode change
 
-	// Create NPM Client.
-	// TODO Remove this when nmd and delphi hub are integrated with venice_integ and npm_integ
-	npmClient, err := ctrlerif.NewNpmClient(nagent.NetworkAgent, srvURL, resolver)
-	if err != nil {
-		log.Errorf("Error creating NPM client. Err: %v", err)
+	o := types.DistributedServiceCardStatus{
+		DSCName:     nodeUUID,
+		DSCMode:     "network_managed_inband",
+		MgmtIP:      "42.42.42.42/24",
+		Controllers: []string{veniceURL},
 	}
-	nagent.NpmClient = npmClient
+	err = nagent.ControllerAPI.HandleVeniceCoordinates(o)
+	logger.Infof("RestURL: %v", lis.ListenURL.String())
+	time.Sleep(time.Second * 5)
 
+	if err != nil {
+		log.Errorf("Failed to perform mode switch. Err: %v", err)
+		return nil, fmt.Errorf("failed to perform mode switch. Err: %v", err)
+	}
 	// create an agent instance
 	ag := Dpagent{
-		nagent: nagent,
+		dscAgent: nagent,
 	}
 
 	return &ag, nil
-}
-
-func (ag *Dpagent) createEndpointReq(tenant, namespace, net, epname, host string) (*netproto.Endpoint, error) {
-	epinfo := netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    tenant,
-			Name:      epname,
-			Namespace: namespace,
-		},
-		Spec: netproto.EndpointSpec{
-			NetworkName:    net,
-			HomingHostAddr: host,
-		},
-	}
-
-	// make a create request
-	ep, _, err := ag.nagent.NetworkAgent.EndpointCreateReq(&epinfo)
-
-	return ep, err
-}
-
-func (ag *Dpagent) deleteEndpointReq(tenant, net, epname, host string) (*netproto.Endpoint, error) {
-	epinfo := netproto.Endpoint{
-		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant: tenant,
-			Name:   epname,
-		},
-		Spec: netproto.EndpointSpec{
-			NetworkName:    net,
-			HomingHostAddr: host,
-		},
-	}
-
-	// make a create request
-	err := ag.nagent.NetworkAgent.EndpointDeleteReq(&epinfo)
-	return &epinfo, err
 }
 
 // CreateNetwork injects a create network event on the watcher

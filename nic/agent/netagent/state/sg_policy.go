@@ -98,7 +98,7 @@ func (na *Nagent) CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolic
 
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if sgp.Status.NetworkSecurityPolicyID == 0 {
-		sgp.Status.NetworkSecurityPolicyID, err = na.Store.GetNextID(types.NetworkSecurityPolicyID)
+		sgp.Status.NetworkSecurityPolicyID, err = na.Store.GetNextID(types.NetworkSecurityPolicyID, 0)
 	}
 
 	if err != nil {

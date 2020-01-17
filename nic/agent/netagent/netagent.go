@@ -10,8 +10,6 @@ import (
 
 	"github.com/vishvananda/netlink"
 
-	"github.com/pensando/sw/nic/agent/tpa"
-	"github.com/pensando/sw/nic/agent/troubleshooting"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
 	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
@@ -69,9 +67,7 @@ type Agent struct {
 	SysmgrClient   *sysmgr.Client
 	DelphiClient   clientApi.Client
 	NaplesStatus   delphiProto.DistributedServiceCardStatus
-	Tmagent        *tpa.PolicyAgent
 	mountComplete  bool
-	TroubleShoot   *troubleshooting.Agent
 	StopTSDB       context.CancelFunc
 }
 
@@ -271,21 +267,21 @@ func (ag *Agent) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCard
 			log.Infof("NPM client {%+v} is running", npmClient)
 			ag.NpmClient = npmClient
 
-			if ag.TroubleShoot != nil {
-				if err := ag.TroubleShoot.NewTsPolicyClient(ag.ResolverClient); err != nil {
-					log.Errorf("Error creating TroubleShooting client. Err: %v", err)
-				} else {
-					log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
-				}
-			}
-
-			if ag.Tmagent != nil { // tmagent was enabled
-				if err := ag.Tmagent.NewTpClient(ag.NetworkAgent.NodeUUID, ag.ResolverClient); err != nil {
-					log.Errorf("Error creating telemetry policy client, Err: %v", err)
-				} else {
-					log.Infof("telemetry policy client {%+v} is running", ag.Tmagent.TpState)
-				}
-			}
+			//if ag.TroubleShoot != nil {
+			//	if err := ag.TroubleShoot.NewTsPolicyClient(ag.ResolverClient); err != nil {
+			//		log.Errorf("Error creating TroubleShooting client. Err: %v", err)
+			//	} else {
+			//		log.Infof("TroubleShooting client {%+v} is running", ag.TroubleShoot.TroubleShootingAgent)
+			//	}
+			//}
+			//
+			//if ag.Tmagent != nil { // tmagent was enabled
+			//	if err := ag.Tmagent.NewTpClient(ag.NetworkAgent.NodeUUID, ag.ResolverClient); err != nil {
+			//		log.Errorf("Error creating telemetry policy client, Err: %v", err)
+			//	} else {
+			//		log.Infof("telemetry policy client {%+v} is running", ag.Tmagent.TpState)
+			//	}
+			//}
 		}
 	} else if obj.DistributedServiceCardMode == delphiProto.DistributedServiceCardStatus_HOST_MANAGED {
 		log.Info("Switching to host mode. Purging all configs")

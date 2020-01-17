@@ -97,8 +97,8 @@ func (dp *DelphiDatapath) DeleteInterface(intf *netproto.Interface) error {
 }
 
 // ListInterfaces Lists all the lifs and uplinks from the datapath state
-func (dp *DelphiDatapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error) {
-	return nil, nil, nil
+func (dp *DelphiDatapath) ListInterfaces() ([]*netproto.Interface, error) {
+	return nil, nil
 }
 
 //--------------------------- Delphi reactors ---------------------------

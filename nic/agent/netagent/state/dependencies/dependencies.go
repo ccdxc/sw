@@ -8,7 +8,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -182,8 +181,8 @@ func (s *StateDependencies) resolveObjectType(o interface{}) (api.TypeMeta, api.
 	case *netproto.MirrorSession:
 		ms := o.(*netproto.MirrorSession)
 		return ms.TypeMeta, ms.ObjectMeta, nil
-	case *tpmprotos.FlowExportPolicy:
-		fe := o.(*tpmprotos.FlowExportPolicy)
+	case *netproto.FlowExportPolicy:
+		fe := o.(*netproto.FlowExportPolicy)
 		return fe.TypeMeta, fe.ObjectMeta, nil
 
 	default:

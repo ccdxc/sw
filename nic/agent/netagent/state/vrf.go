@@ -9,7 +9,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
@@ -43,7 +43,7 @@ func (na *Nagent) CreateVrf(vrf *netproto.Vrf) error {
 
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if vrf.Status.VrfID == 0 {
-		vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID)
+		vrf.Status.VrfID, err = na.Store.GetNextID(types.VrfID, 0)
 		vrf.Status.VrfID += types.VrfOffset
 	}
 

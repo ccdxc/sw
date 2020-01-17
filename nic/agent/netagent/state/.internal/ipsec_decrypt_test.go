@@ -1,8 +1,11 @@
-package _internal
+// +build ignore
+
+package state
 
 import (
-	"github.com/pensando/sw/nic/agent/netagent/state"
 	"testing"
+
+	"github.com/pensando/sw/nic/agent/netagent/state"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/protos/netproto"

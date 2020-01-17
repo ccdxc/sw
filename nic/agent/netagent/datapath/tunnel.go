@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )

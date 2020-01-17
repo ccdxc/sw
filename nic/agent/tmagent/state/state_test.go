@@ -14,20 +14,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/jeromer/syslogparser"
 	"github.com/jeromer/syslogparser/rfc3164"
 	"github.com/jeromer/syslogparser/rfc5424"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/monitoring"
+	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
+	"github.com/pensando/sw/nic/agent/dscagent"
+	"github.com/pensando/sw/nic/agent/dscagent/infra"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif/restapi"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-	"github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	tpmprotos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
+	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/nic/utils/ntranslate/metrics"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -37,6 +37,79 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
+
+var mockAgent *dscagent.DSCAgent
+
+func TestMain(m *testing.M) {
+	// Start delphihub
+
+	// Start Fake HAL
+	var lis netutils.TestListenAddr
+	if err := lis.GetAvailablePort(); err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+	//if err := restLis.GetAvailablePort(); err != nil {
+	//	log.Errorf("Test Setup Failed. Err: %v", err)
+	//	os.Exit(1)
+	//}
+	primaryDB, err := ioutil.TempFile("", "")
+	if err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+
+	secondaryDB, err := ioutil.TempFile("", "")
+	if err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+	log.Infof("Primary DB: %s | Backup DB: %s", primaryDB.Name(), secondaryDB.Name())
+
+	if err := os.Setenv("HAL_GRPC_PORT", strings.Split(lis.ListenURL.String(), ":")[1]); err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+
+	mockHal := fakehal.NewFakeHalServer(lis.ListenURL.String())
+
+	mockAgent, err = dscagent.NewDSCAgent(nil, "", "", "", types.DefaultAgentRestURL)
+	if err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+	time.Sleep(time.Second * 2)
+	mockAgent.InfraAPI, err = infra.NewInfraAPI(primaryDB.Name(), secondaryDB.Name())
+	if err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+
+	// Create initial Vrfs for testing
+	for i := 1; i <= 7; i++ {
+		vrf := netproto.Vrf{
+			TypeMeta: api.TypeMeta{Kind: "Vrf"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    fmt.Sprintf("vpc-%d", i),
+				Namespace: "default",
+				Name:      fmt.Sprintf("vpc-%d", i),
+			},
+		}
+		_, err := mockAgent.PipelineAPI.HandleVrf(types.Create, vrf)
+		if err != nil {
+			log.Errorf("Test Setup Failed. Err: %v", err)
+			os.Exit(1)
+		}
+
+	}
+	code := m.Run()
+	mockAgent.Stop()
+	mockHal.Stop()
+	os.Remove(primaryDB.Name())
+	os.Remove(secondaryDB.Name())
+	os.Exit(code)
+
+}
 
 func parseRfc3164(ch chan []byte) (syslogparser.LogParts, error) {
 	select {
@@ -140,106 +213,17 @@ func startSyslogServer(proto string, ch chan []byte) (string, func(), error) {
 	return "", nop, fmt.Errorf("invalid protocol %s", proto)
 }
 
-func startNetagent() (*state.Nagent, *restapi.RestServer, error) {
-	dp, err := datapath.NewHalDatapath(datapath.Kind("mock"))
-	if err != nil {
-		log.Errorf("Could not create HAL mock datapath. Error %v", err)
-		return nil, nil, err
-	}
-
-	// Set tenant creation expectation
-	if dp.Kind.String() == "mock" {
-		dp.Hal.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).Return(nil, nil)
-	}
-
-	nagent, err := state.NewNetAgent(dp, "", nil)
-	if err != nil {
-		log.Errorf("Could not create net agent")
-		return nil, nil, err
-	}
-
-	nRest, err := restapi.NewRestServer(nagent, nil, nil, "127.0.0.1:")
-	if err != nil {
-		log.Errorf("failed to create rest server, %s", err)
-		return nil, nil, err
-	}
-
-	log.Printf("net-agent {%+v} instantiated", nRest.GetListenURL())
-
-	nt := netproto.Network{
-		TypeMeta: api.TypeMeta{Kind: "Network"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "preCreatedNetwork",
-		},
-		Spec: netproto.NetworkSpec{
-			VlanID: 42,
-		},
-	}
-	err = nagent.CreateNetwork(&nt)
-	if err != nil {
-		log.Errorf("Failed to create network. {%v}", nt)
-		return nil, nil, err
-	}
-
-	for i := 1; i <= 7; i++ {
-		tn := &netproto.Tenant{
-			TypeMeta: api.TypeMeta{Kind: "Tenant"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    fmt.Sprintf("vpc-%d", i),
-				Namespace: "default",
-				Name:      fmt.Sprintf("vpc-%d", i),
-			},
-		}
-		err = nagent.CreateTenant(tn)
-		if err != nil {
-			log.Errorf("Failed to create tenant. {%v}", tn)
-			return nil, nil, err
-		}
-
-		vrf := &netproto.Vrf{
-			TypeMeta: api.TypeMeta{Kind: "Vrf"},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    fmt.Sprintf("vpc-%d", i),
-				Namespace: "default",
-				Name:      fmt.Sprintf("vpc-%d", i),
-			},
-		}
-		err = nagent.CreateVrf(vrf)
-		if err != nil {
-			log.Errorf("Failed to create vrf. {%v}", i)
-			return nil, nil, err
-		}
-	}
-
-	return nagent, nRest, nil
-}
-
 func TestValidateLifIdToLifName(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
-	metrics.Agenturl = rest.GetListenURL()
 	intfname := metrics.GetLifName(1)
-	Assert(t, intfname == "lif1", "invalid intfname received")
+	Assert(t, intfname == "lif-1", "invalid intfname received")
 }
 
 func TestValidateFwlogPolicy(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	defer ps.Reset()
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
@@ -695,17 +679,10 @@ func TestFwPolicyOps(t *testing.T) {
 		}
 	}
 
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -729,9 +706,11 @@ func TestFwPolicyOps(t *testing.T) {
 		//match collectors
 		m, ok := ps.getCollector(vrf)
 		Assert(t, ok == true, "didn't get collector for vrf %+v", vrf)
+		v := netproto.Vrf{TypeMeta: api.TypeMeta{Kind: "Vrf"}}
+		vrfs, _ := mockAgent.PipelineAPI.HandleVrf(types.List, v)
 
-		vrfs, _ := json.MarshalIndent(ag.ListVrf(), "", "   ")
-		fmt.Println(string(vrfs))
+		vrfJSON, _ := json.MarshalIndent(vrfs, "", "   ")
+		fmt.Println(string(vrfJSON))
 
 		for k := range m {
 			_, ok := cmap[k]
@@ -764,20 +743,24 @@ func TestFwPolicyOps(t *testing.T) {
 }
 
 func TestProcessFWEvent(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
+	v := netproto.Vrf{
+		TypeMeta: api.TypeMeta{
+			Kind: "Vrf",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name:      "default",
+			Tenant:    "default",
+			Namespace: "default",
+		},
+	}
 
-	nm, err := ag.ValidateVrf("default", "default", "default")
-	AssertOk(t, err, "failed to find name space")
+	nm, err := mockAgent.PipelineAPI.HandleVrf(types.List, v)
+	AssertOk(t, err, "failed to find vrf")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -942,8 +925,8 @@ func TestProcessFWEvent(t *testing.T) {
 	}{
 		{
 			fwEvent: &halproto.FWEvent{
-				SourceVrf: nm.Status.VrfID,
-				DestVrf:   nm.Status.VrfID,
+				SourceVrf: nm[0].Status.VrfID,
+				DestVrf:   nm[0].Status.VrfID,
 				Fwaction:  halproto.SecurityAction_SECURITY_RULE_ACTION_IMPLICIT_DENY,
 				Sipv4:     srcIP,
 				Dipv4:     destIP,
@@ -993,17 +976,11 @@ func TestProcessFWEvent(t *testing.T) {
 }
 
 func TestPolicyUpdate(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1226,17 +1203,10 @@ func TestPolicyUpdate(t *testing.T) {
 }
 
 func TestSyslogConnect(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1283,47 +1253,20 @@ func TestSyslogConnect(t *testing.T) {
 }
 
 func TestUnusedCb(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-
-	err = ps.CreateFlowExportPolicy(context.Background(), nil)
-	AssertOk(t, err, "CreateFlowExportPolicy failed")
-	err = ps.UpdateFlowExportPolicy(context.Background(), nil)
-	AssertOk(t, err, "UpdateFlowExportPolicy failed")
-	err = ps.DeleteFlowExportPolicy(context.Background(), nil)
-	AssertOk(t, err, "failed to create tp agent")
-	_, err = ps.GetFlowExportPolicy(context.Background(), nil)
-	AssertOk(t, err, "DeleteFlowExportPolicy failed")
-	_, err = ps.GetFlowExportPolicy(context.Background(), nil)
-	AssertOk(t, err, "DeleteFlowExportPolicy failed")
-	_, err = ps.ListFlowExportPolicy(context.Background())
-	AssertOk(t, err, "ListFlowExportPolicy failed")
 }
 
 func TestTsdbInit(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
@@ -1333,17 +1276,11 @@ func TestTsdbInit(t *testing.T) {
 }
 
 func TestFwlogInit(t *testing.T) {
-	ag, rest, err := startNetagent()
-	AssertOk(t, err, "failed to create mock netagent")
-	defer func() {
-		ag.Stop()
-		rest.Stop()
-	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ps, err := NewTpAgent(ctx, strings.Split(rest.GetListenURL(), ":")[1])
+	ps, err := NewTpAgent(ctx, strings.Split(types.DefaultAgentRestURL, ":")[1])
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()

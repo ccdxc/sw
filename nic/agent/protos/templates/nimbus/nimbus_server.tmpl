@@ -513,7 +513,7 @@ func (eh *{{$crudObject}}Topic) update{{$crudObject}}Oper(oper *netproto.{{$crud
     eh.updateAckedObjStatus(nodeID, oper.EventType, &oper.{{$crudObject}}.ObjectMeta)
 	switch oper.EventType {
 	case api.EventType_CreateEvent:
-		fallthrough 
+		fallthrough
 	case api.EventType_UpdateEvent:
 		// incr stats
 		eh.server.Stats("{{$crudObject}}", "AgentUpdate").Inc()

@@ -55,10 +55,10 @@ message PauseSpec {
     //Pause type
     string Type               = 1 [(venice.check) = "StrEnum(PauseType)",(gogoproto.jsontag) = "type,omitempty"];
 
-    // TX Pause enabled    
+    // TX Pause enabled
     bool  TxPauseEnabled     = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tx-pause-enabled,omitempty"];
 
-    // RX Pause enabled    
+    // RX Pause enabled
     bool  RxPauseEnabled     = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rx-pause-enabled,omitempty"];
 
 }
@@ -144,7 +144,7 @@ message TransceiverStatus {
        SFP_25GBASE_CR_S  = 3;
        SFP_25GBASE_CR_L  = 4;
        SFP_25GBASE_CR_N  = 5;
-      
+
         // Fiber, grouping all together
        QSFP_100G_AOC    = 50;
        QSFP_100G_ACC    = 51;

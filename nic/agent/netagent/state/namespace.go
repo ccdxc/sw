@@ -34,7 +34,7 @@ func (na *Nagent) CreateNamespace(ns *netproto.Namespace) error {
 
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if ns.Status.NamespaceID == 0 {
-		namespaceID, err := na.Store.GetNextID(types.NamespaceID)
+		namespaceID, err := na.Store.GetNextID(types.NamespaceID, 0)
 		if err != nil {
 			log.Errorf("Could not allocate namespace id. {%+v}", err)
 			return err

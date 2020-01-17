@@ -25,7 +25,8 @@ required = ["github.com/GeertJohan/go.rice",
             "github.com/russross/blackfriday",
             "layeh.com/radius/cmd/radius-dict-gen",
             "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc",
-            "github.com/cheggaaa/pb"]
+            "github.com/cheggaaa/pb",
+	    "github.com/mgechev/revive"]
 
 # Hash contents of docker repo is different on CI machines. Since this is used only by some test targets, it is
 # safe to add it to noverify list, which will ensure that dep check will not compare vendor tree has for this constraint.

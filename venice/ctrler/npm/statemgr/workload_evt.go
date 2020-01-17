@@ -299,13 +299,14 @@ func (ws *WorkloadState) createEndpoints() error {
 		// check if we have a network for this workload
 		netName := ws.stateMgr.networkName(ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		ns, err = ws.stateMgr.FindNetwork(ws.Workload.Tenant, netName)
+		//if err != nil {
+		// Create networks since all creates are idempotent
+		err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
 		if err != nil {
-			err = ws.createNetwork(netName, ws.Workload.Spec.Interfaces[ii].ExternalVlan)
-			if err != nil {
-				log.Errorf("Error creating network. Err: %v", err)
-				return err
-			}
+			log.Errorf("Error creating network. Err: %v", err)
+			return err
 		}
+		//}
 
 		// check if we already have the endpoint for this workload
 		name, _ := strconv.ParseMacAddr(ws.Workload.Spec.Interfaces[ii].MACAddress)

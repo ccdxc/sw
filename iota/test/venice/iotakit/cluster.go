@@ -403,24 +403,27 @@ func (sm *SysModel) CheckNaplesHealth(node *Naples) error {
 	// get naples info from Netagent
 	// Note: struct redefined here to avoid dependency on netagent package
 	var naplesInfo struct {
-		UUID                 string   `json:"naples-uuid,omitempty"`
-		ControllerIPs        []string `json:"controller-ips,omitempty"`
-		Mode                 string   `json:"naples-mode,omitempty"`
-		IsNpmClientConnected bool     `json:"is-npm-client-connected,omitempty"`
+		DSCMode     string   `json:"dsc-mode,omitempty"`
+		DSCName     string   `json:"dsc-name,omitempty"`
+		MgmtIP      string   `json:"mgmt-ip,omitempty"`
+		Controllers []string `json:"controllers,omitempty"`
+		IsConnectedToVenice bool `json:"is-connected-to-venice"`
 	}
-	status, err = agentClient.Req("GET", "https://"+nodeIP+":8888/api/system/info/", nil, &naplesInfo)
+
+	status, err = agentClient.Req("GET", "https://"+nodeIP+":8888/api/mode/", nil, &naplesInfo)
 	if err != nil || status != http.StatusOK {
 		nerr := fmt.Errorf("Error checking netagent health. Status: %v, err: %v", status, err)
 		log.Errorf("%v", nerr)
 		return nerr
 	}
 
-	if !strings.Contains(naplesInfo.Mode, "network-managed") {
-		nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.Mode)
+	// Use type safe strings here. TODO
+	if !strings.Contains(strings.ToLower(naplesInfo.DSCMode), "network") {
+		nerr := fmt.Errorf("Naples/Netagent is in incorrect mode: %s", naplesInfo.DSCMode)
 		log.Errorf("%v", nerr)
 		return nerr
-	} else if !naplesInfo.IsNpmClientConnected {
-		nerr := fmt.Errorf("Netagent NPM client is not connected to Venice")
+	} else if !naplesInfo.IsConnectedToVenice {
+		nerr := fmt.Errorf("Netagent is not connected to Venice")
 		log.Errorf("%v", nerr)
 		return nerr
 	}

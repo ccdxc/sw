@@ -11,15 +11,8 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
-
 	"github.com/gorilla/mux"
-
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
-	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
-	"github.com/pensando/sw/api"
-	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
-	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
-	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 )
 
 // this package contains the REST API provided by the agent
@@ -27,7 +20,7 @@ import (
 // RestServer is the REST api server
 type RestServer struct {
 	listenURL  string                     // URL where http server is listening
-	agent      types.CtrlerIntf           // net Agent API
+	pipelineAPI      types.PipelineAPI           // net Agent API
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -51,13 +44,12 @@ func MakeErrorResponse(code int, err error) (*Response, error) {
 }
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(pipelineAPI types.PipelineAPI, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
 		listenURL: listenURL,
-		agent:     agent,
+		pipelineAPI:     pipelineAPI,
 	}
 
 	return &srv, nil
 }
-

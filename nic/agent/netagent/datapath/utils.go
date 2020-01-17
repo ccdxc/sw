@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -48,8 +48,8 @@ func ipv4Touint32(ip net.IP) uint32 {
 // RuleMatches for L4 Ports are built either using App/ALG Data or match selectors
 func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleIDAppLUT *sync.Map, ruleID *int) ([]*halproto.RuleMatch, error) {
 	var srcIPRanges, dstIPRanges []*halproto.IPAddressObj
-	var srcProtoPorts, dstProtoPorts []string
-	var appProtoPorts []string
+	var srcProtoPorts, dstProtoPorts []*netproto.ProtoPort
+	var appProtoPorts []*netproto.ProtoPort
 	var app *netproto.App
 
 	var ruleMatches []*halproto.RuleMatch
@@ -66,8 +66,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				return nil, fmt.Errorf("failed to cast App object. %v", obj)
 			}
 			for _, a := range app.Spec.ProtoPorts {
-				protoPort := fmt.Sprintf("%s/%s", a.Protocol, a.Port)
-				appProtoPorts = append(appProtoPorts, protoPort)
+				appProtoPorts = append(appProtoPorts, a)
 			}
 		}
 	}
@@ -82,7 +81,10 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 		// Build proto/port from src app configs.
 		for _, s := range src.ProtoPorts {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
-			protoPort := fmt.Sprintf("%s/%s", s.Protocol, s.Port)
+			protoPort := &netproto.ProtoPort{
+				Protocol: s.Protocol,
+				Port:     s.Port,
+			}
 			srcProtoPorts = append(srcProtoPorts, protoPort)
 		}
 	}
@@ -96,7 +98,10 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 
 		for _, d := range dst.ProtoPorts {
 			// TODO Unify the proto/port definitions between App Object and Match Selectors to avoid manually building this.
-			protoPort := fmt.Sprintf("%s/%s", d.Protocol, d.Port)
+			protoPort := &netproto.ProtoPort{
+				Protocol: d.Protocol,
+				Port:     d.Port,
+			}
 			dstProtoPorts = append(dstProtoPorts, protoPort)
 		}
 	}
@@ -131,7 +136,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 			log.Errorf("Failed to convert rule. Err: %v", err)
 			return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 		}
-		ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
+		ruleMatch.Protocol = halproto.IPProtocol(halproto.IPProtocol_value[halProtocol.String()])
 		ruleMatches = append(ruleMatches, &ruleMatch)
 		return ruleMatches, nil
 
@@ -177,7 +182,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
+			ruleMatch.Protocol = halproto.IPProtocol(halproto.IPProtocol_value[halProtocol.String()])
 
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
@@ -226,7 +231,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 				log.Errorf("Failed to convert rule. Err: %v", err)
 				return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 			}
-			ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
+			ruleMatch.Protocol = halproto.IPProtocol(halproto.IPProtocol_value[halProtocol.String()])
 			ruleMatches = append(ruleMatches, &ruleMatch)
 
 		}
@@ -289,7 +294,7 @@ func (hd *Datapath) buildHALRuleMatches(src, dst *netproto.MatchSelector, ruleID
 					log.Errorf("Failed to convert rule. Err: %v", err)
 					return nil, fmt.Errorf("failed to convert rule. Err: %v", err)
 				}
-				ruleMatch.Protocol = halproto.IPProtocol_value[halProtocol.String()]
+				ruleMatch.Protocol = halproto.IPProtocol(halproto.IPProtocol_value[halProtocol.String()])
 				ruleMatches = append(ruleMatches, &ruleMatch)
 			}
 		}
@@ -642,14 +647,7 @@ func (hd *Datapath) convertPortTypeFec(portType string) (halPortType halproto.Po
 	return
 }
 
-func (hd *Datapath) parseProtocolPort(protoPort string) (protocol, port string, err error) {
-	if components := strings.Split(strings.TrimSpace(protoPort), "/"); len(components) == 2 {
-		protocol = components[0]
-		port = components[1]
-	} else {
-		err = fmt.Errorf("failed to parse protocol/port information from the App. %v. Err: %v", protocol, err)
-		return
-	}
+func (hd *Datapath) parseProtocolPort(protoPort *netproto.ProtoPort) (protocol, port string, err error) {
 	return
 }
 

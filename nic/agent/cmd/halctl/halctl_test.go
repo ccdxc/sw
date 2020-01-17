@@ -2,23 +2,99 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc"
 	. "gopkg.in/check.v1"
 
-	"os"
-
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+type Kind string
+
+// DB holds all the state information.
+type DB struct {
+	EndpointDB       map[string]*halproto.EndpointRequestMsg
+	EndpointUpdateDB map[string]*halproto.EndpointUpdateRequestMsg
+	EndpointDelDB    map[string]*halproto.EndpointDeleteRequestMsg
+	SgDB             map[string]*halproto.SecurityGroupRequestMsg
+	TenantDB         map[string]*halproto.VrfRequestMsg
+	TenantDelDB      map[string]*halproto.VrfDeleteRequestMsg
+	SgPolicyDB       map[string]*halproto.SecurityPolicyRequestMsg
+	InterfaceDB      map[string]*halproto.InterfaceRequestMsg
+	LifDB            map[string]*halproto.LifRequestMsg
+	InterfaceDelDB   map[string]*halproto.InterfaceDeleteRequestMsg
+	LifDelDB         map[string]*halproto.LifDeleteRequestMsg
+}
+
+type Datapath struct {
+	sync.Mutex
+	Kind Kind
+	Hal  Hal
+	DB   DB
+}
+
+// MockClients stores references for mockclients to be used for setting expectations
+type mockClients struct {
+	//MockEpclient       *halproto.MockEndpointClient
+	//MockIfclient       *halproto.MockInterfaceClient
+	//MockL2Segclient    *halproto.MockL2SegmentClient
+	//MockNetClient      *halproto.MockNetworkClient
+	//MockLbclient       *halproto.MockL4LbClient
+	//MockSgclient       *halproto.MockNwSecurityClient
+	//MockSessclient     *halproto.MockSessionClient
+	//MockTnclient       *halproto.MockVrfClient
+	//MockNatClient      *halproto.MockNatClient
+	//MockIPSecClient    *halproto.MockIpsecClient
+	//MockTCPProxyClient *halproto.MockTcpProxyClient
+	//MockPortClient     *halproto.MockPortClient
+	//MockSystemClient   *halproto.MockSystemClient
+	//MockEventClient    *halproto.MockEventClient
+}
+
+type Hal struct {
+	client   *grpc.ClientConn
+	mockCtrl *gomock.Controller
+	//StateAPI             types.CtrlerIntf
+	MockClients mockClients
+	Epclient    halproto.EndpointClient
+	Ifclient    halproto.InterfaceClient
+	L2SegClient halproto.L2SegmentClient
+	Netclient   halproto.NetworkClient
+	//Lbclient             halproto.L4LbClient
+	Sgclient halproto.NwSecurityClient
+	//Sessclient           halproto.SessionClient
+	Tnclient  halproto.VrfClient
+	Natclient halproto.NatClient
+	//IPSecclient          halproto.IpsecClient
+	PortClient halproto.PortClient
+	//TCPProxyPolicyClient halproto.TcpProxyClient
+	//SystemClient         halproto.SystemClient
+	EventClient halproto.EventClient
+}
+
+// Errorf for satisfying gomock
+func (hd *Hal) Errorf(format string, args ...interface{}) {
+	log.Errorf(format, args...)
+}
+
+// Fatalf for satisfying gomock
+func (hd *Hal) Fatalf(format string, args ...interface{}) {
+	log.Fatalf(format, args...)
+}
 
 const (
 	halCtlBinaryName = "halctl"
@@ -48,7 +124,7 @@ var getIfCPUCmdValidShort = []string{"show", "interface", "cpu"}
 // veniceIntegSuite is the state of integ test
 type halCtlSuite struct {
 	halListener netutils.TestListenAddr
-	dp          *datapath.Datapath
+	dp          *Datapath
 	mockSrv     *grpc.Server
 }
 
@@ -291,7 +367,7 @@ func (h *halCtlSuite) SetUpSuite(c *C) {
 		halproto.RegisterInterfaceServer(h.mockSrv, &mockServer{})
 		h.mockSrv.Serve(lis)
 	}(lis)
-	dp, err := datapath.NewHalDatapath("hal")
+	dp, err := NewHalDatapath("hal")
 	c.Assert(err, IsNil)
 	h.dp = dp
 	_, err = exec.Command("go", "install", selfPkgName).CombinedOutput()
@@ -583,3 +659,224 @@ func (h *halCtlSuite) getTunnels(v *halproto.InterfaceGetRequestMsg) (string, er
 	return string(b), err
 }
 */
+
+//######## Test Helper Functions ###############
+
+func NewHalDatapath(kind Kind) (*Datapath, error) {
+	var err error
+	var hal Hal
+	haldp := Datapath{}
+	haldp.Kind = kind
+
+	db := DB{EndpointDB: make(map[string]*halproto.EndpointRequestMsg),
+		EndpointUpdateDB: make(map[string]*halproto.EndpointUpdateRequestMsg),
+		EndpointDelDB:    make(map[string]*halproto.EndpointDeleteRequestMsg),
+		SgDB:             make(map[string]*halproto.SecurityGroupRequestMsg),
+		TenantDB:         make(map[string]*halproto.VrfRequestMsg),
+		TenantDelDB:      make(map[string]*halproto.VrfDeleteRequestMsg),
+		SgPolicyDB:       make(map[string]*halproto.SecurityPolicyRequestMsg),
+		InterfaceDB:      make(map[string]*halproto.InterfaceRequestMsg),
+		LifDB:            make(map[string]*halproto.LifRequestMsg),
+		InterfaceDelDB:   make(map[string]*halproto.InterfaceDeleteRequestMsg),
+		LifDelDB:         make(map[string]*halproto.LifDeleteRequestMsg),
+	}
+	haldp.DB = db
+	if haldp.Kind.String() == "hal" {
+		hal.client, err = createNewGRPCClient()
+		if err != nil {
+			return nil, err
+		}
+		hal.Epclient = halproto.NewEndpointClient(hal.client)
+		hal.Ifclient = halproto.NewInterfaceClient(hal.client)
+		hal.L2SegClient = halproto.NewL2SegmentClient(hal.client)
+		hal.Netclient = halproto.NewNetworkClient(hal.client)
+		//hal.Lbclient = halproto.NewL4LbClient(hal.client)
+		hal.Sgclient = halproto.NewNwSecurityClient(hal.client)
+		//hal.Sessclient = halproto.NewSessionClient(hal.client)
+		hal.Tnclient = halproto.NewVrfClient(hal.client)
+		hal.Natclient = halproto.NewNatClient(hal.client)
+		//hal.IPSecclient = halproto.NewIpsecClient(hal.client)
+		//hal.TCPProxyPolicyClient = halproto.NewTcpProxyClient(hal.client)
+		hal.PortClient = halproto.NewPortClient(hal.client)
+		//hal.SystemClient = halproto.NewSystemClient(hal.client)
+		hal.EventClient = halproto.NewEventClient(hal.client)
+		haldp.Hal = hal
+		return &haldp, nil
+	}
+	hal.mockCtrl = gomock.NewController(&hal)
+	hal.MockClients = mockClients{
+		//MockEpclient:       halproto.NewMockEndpointClient(hal.mockCtrl),
+		//MockIfclient:       halproto.NewMockInterfaceClient(hal.mockCtrl),
+		//MockL2Segclient:    halproto.NewMockL2SegmentClient(hal.mockCtrl),
+		//MockNetClient:      halproto.NewMockNetworkClient(hal.mockCtrl),
+		//MockLbclient:       halproto.NewMockL4LbClient(hal.mockCtrl),
+		//MockSgclient:       halproto.NewMockNwSecurityClient(hal.mockCtrl),
+		//MockSessclient:     halproto.NewMockSessionClient(hal.mockCtrl),
+		//MockTnclient:       halproto.NewMockVrfClient(hal.mockCtrl),
+		//MockNatClient:      halproto.NewMockNatClient(hal.mockCtrl),
+		//MockIPSecClient:    halproto.NewMockIpsecClient(hal.mockCtrl),
+		//MockTCPProxyClient: halproto.NewMockTcpProxyClient(hal.mockCtrl),
+		//MockPortClient:     halproto.NewMockPortClient(hal.mockCtrl),
+		//MockSystemClient:   halproto.NewMockSystemClient(hal.mockCtrl),
+		//MockEventClient:    halproto.NewMockEventClient(hal.mockCtrl),
+	}
+
+	//hal.Epclient = hal.MockClients.MockEpclient
+	//hal.Ifclient = hal.MockClients.MockIfclient
+	//hal.L2SegClient = hal.MockClients.MockL2Segclient
+	//hal.Netclient = hal.MockClients.MockNetClient
+	//hal.Lbclient = hal.MockClients.MockLbclient
+	//hal.Sgclient = hal.MockClients.MockSgclient
+	//hal.Sessclient = hal.MockClients.MockSessclient
+	//hal.Tnclient = hal.MockClients.MockTnclient
+	//hal.Natclient = hal.MockClients.MockNatClient
+	//hal.IPSecclient = hal.MockClients.MockIPSecClient
+	//hal.TCPProxyPolicyClient = hal.MockClients.MockTCPProxyClient
+	//hal.PortClient = hal.MockClients.MockPortClient
+	//hal.SystemClient = hal.MockClients.MockSystemClient
+	haldp.Hal = hal
+	haldp.Hal.setExpectations()
+	return &haldp, nil
+}
+
+func (hd *Hal) setExpectations() {
+	//hd.MockClients.MockEpclient.EXPECT().EndpointCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockEpclient.EXPECT().EndpointUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockEpclient.EXPECT().EndpointDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockIfclient.EXPECT().InterfaceGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().AddL2SegmentOnUplink(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().InterfaceCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().InterfaceUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().InterfaceDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockIfclient.EXPECT().LifGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().LifCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().LifUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIfclient.EXPECT().LifDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockL2Segclient.EXPECT().L2SegmentCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockL2Segclient.EXPECT().L2SegmentUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockL2Segclient.EXPECT().L2SegmentDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNetClient.EXPECT().NetworkCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().NetworkUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().NetworkDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNetClient.EXPECT().RouteCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().RouteUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().RouteDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNetClient.EXPECT().NexthopCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().NexthopUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNetClient.EXPECT().NexthopDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityGroupPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockSgclient.EXPECT().SecurityProfileCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityProfileUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityProfileDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockSgclient.EXPECT().SecurityPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSgclient.EXPECT().SecurityPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockTnclient.EXPECT().VrfCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockTnclient.EXPECT().VrfUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockTnclient.EXPECT().VrfDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNatClient.EXPECT().NatPoolCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatPoolUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatPoolDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNatClient.EXPECT().NatPolicyCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatPolicyUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatPolicyDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockNatClient.EXPECT().NatMappingCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockNatClient.EXPECT().NatMappingDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSAEncryptDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockIPSecClient.EXPECT().IpsecSADecryptDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockTCPProxyClient.EXPECT().TcpProxyRuleDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockPortClient.EXPECT().PortCreate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockPortClient.EXPECT().PortUpdate(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockPortClient.EXPECT().PortDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockPortClient.EXPECT().PortInfoGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockSystemClient.EXPECT().SystemUuidGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//
+	//hd.MockClients.MockEventClient.EXPECT().EventListen(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+
+}
+
+func createNewGRPCClient() (*grpc.ClientConn, error) {
+	// create a grpc client
+	// ToDo Use AgentID for mysvcName
+	return waitForHAL()
+}
+
+func waitForHAL() (rpcClient *grpc.ClientConn, err error) {
+
+	halUP := make(chan bool, 1)
+	ticker := time.NewTicker(time.Millisecond * 500)
+	timeout := time.After(time.Minute * 10)
+	rpcClient, err = isHalConnected()
+	if err == nil {
+		log.Info("HAL Connected on 1st tick")
+		return
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			rpcClient, err = isHalConnected()
+			if err != nil {
+				halUP <- true
+			}
+		case <-halUP:
+			log.Info("Agent is connected to HAL")
+			return
+		case <-timeout:
+			log.Errorf("Agent could not connect to HAL. Err: %v", err)
+			return nil, errors.New("hal not available")
+		}
+	}
+}
+
+func isHalConnected() (*grpc.ClientConn, error) {
+	halPort := os.Getenv("HAL_GRPC_PORT")
+	if halPort == "" {
+		halPort = "50054"
+	}
+	halURL := fmt.Sprintf("127.0.0.1:%s", halPort)
+	log.Debugf("Trying to connect to HAL at %s", halURL)
+	var grpcOpts []grpc.DialOption
+	grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
+	grpcOpts = append(grpcOpts, grpc.WithInsecure())
+	return grpc.Dial(halURL, grpcOpts...)
+}
+
+// String returns string value of the datapath kind
+func (k *Kind) String() string {
+	return string(*k)
+}

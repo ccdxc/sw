@@ -69,9 +69,9 @@ class TestMgmtNode:
         if self.nettype == 'bridge':
             ports_exposed = """ -p {}:443 -p {}:9200 """.format(exposedPortBase + self.containerIndex, exposedPortBase + 200 + self.containerIndex)
         if self.dev_mode:
-            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.5 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {}  -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh -v {}:/import/src/github.com/pensando/sw --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.6 /bin/sh """.format(ports_exposed, self.ipaddress, src_dir, self.name, self.name))
         else:
-            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.5 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
+            runCommand("""docker run --dns-search my.dummy -td {} -l pens --network pen-dind-net --ip {} -v /var/run/docker.sock:/var/run/docker.sock -v sshSecrets:/root/.ssh --privileged --rm --name {} -h {} registry.test.pensando.io:5000/pens-e2e:v0.7 /bin/sh """.format(ports_exposed, self.ipaddress, self.name, self.name))
         self.runCmd("""sh -c 'if ! test -f /root/.ssh/id_rsa ; then ssh-keygen -f /root/.ssh/id_rsa -t rsa -N "";fi ' """)
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys""")
         self.runCmd("""cp /root/.ssh/id_rsa.pub /root/.ssh/authorized_keys2""")
@@ -203,25 +203,28 @@ class NaplesNode(Node):
         # start nmd as a native process on NaplesNode
         if self.testMode == "TELEMETRY":
             runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
+            runCommand("""docker exec -d {} /fakehal  & """.format(self.name))
             time.sleep(3)
             runCommand("""docker exec -d {} nmd & """.format(self.name, self.name))
             runCommand("""docker exec -d {} bash -c "tools/start_fte_sim.sh {}:9009 " """.format(self.name, self.clustervip))
         elif self.testMode == "HAL":
             runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
+            runCommand("""docker exec -d {} /fakehal  & """.format(self.name))
             time.sleep(3)
             runCommand("""docker exec -d {} nmd & """)
             runCommand("""docker exec -d {} make e2e-sanity-hal-bringup""".format(self.name))
-            runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent -npm pen-npm -resolver-urls {}:9009 -hostif eth1 -datapath hal -mode managed &" """.format(self.name, self.clustervip))
+            runCommand("""docker exec -d {} bash -c "agent/netagent/scripts/wait-for-hal.sh && netagent" """.format(self.name))
             runCommand("""docker exec -d {} tmagent &""".format(self.name))
         else:
-            runCommand("""docker exec -d {} /fakedelphihub  & """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/fakedelphihub > /var/log/pensando/delphihub.out.err.log 2>&1 &' """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/fakehal > /var/log/pensando/fakehal.out.err.log 2>&1 &' """.format(self.name))
             time.sleep(3)
-            runCommand("""docker exec -d {} /ntsa -config /naples-tsa.json &""".format(self.name))
-            runCommand("""docker exec -d {} /nmd -updinterval 2 & """.format(self.name, self.name))
-            runCommand("""docker exec -d {} /netagent -datapath mock &""".format(self.name))
-            runCommand("""docker exec -d {} /tmagent  -datapath mock""".format(self.name))
-            runCommand("""docker exec -d {} /nevtsproxy &""".format(self.name))
-            runCommand("""docker exec -d {} /fwgen  & """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/ntsa -config /naples-tsa.json > /var/log/pensando/ntsa.out.err.log 2>&1 &' """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/nmd -updinterval 2 > /var/log/pensando/nmd.out.err.log 2>&1 &' """.format(self.name, self.name))
+            runCommand("""docker exec -d {} sh -c '/netagent > /var/log/pensando/netagent.out.err.log 2>&1 &' """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/tmagent -datapath mock > /var/log/pensando/tmagent.out.err.log 2>&1 &' """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/nevtsproxy > /var/log/pensando/nevtsproxy.out.err.log 2>&1 &' """.format(self.name))
+            runCommand("""docker exec -d {} sh -c '/fwgen  > /var/log/pensando/fwgen.out.err.log 2>&1 &' """.format(self.name))
 
 def initCluster(nodeAddr, quorumNodes, clustervip):
     postUrl = 'http://' + nodeAddr + ':9001/api/v1/cluster'

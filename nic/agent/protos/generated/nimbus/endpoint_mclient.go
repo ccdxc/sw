@@ -12,22 +12,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
 )
 
 type EndpointReactor interface {
-	CreateEndpoint(endpointObj *netproto.Endpoint) error          // creates an Endpoint
-	FindEndpoint(meta api.ObjectMeta) (*netproto.Endpoint, error) // finds an Endpoint
-	ListEndpoint() []*netproto.Endpoint                           // lists all Endpoints
-	UpdateEndpoint(endpointObj *netproto.Endpoint) error          // updates an Endpoint
-	DeleteEndpoint(endpointObj, ns, name string) error            // deletes an Endpoint
+	HandleEndpoint(oper types.Operation, endpointObj netproto.Endpoint) ([]netproto.Endpoint, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type EndpointOStream struct {
@@ -164,7 +161,14 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListEndpoint()
+	o := netproto.Endpoint{
+		TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+	}
+
+	localObjs, err := reactor.HandleEndpoint(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Err: %v", types.Operation(types.List), err))
+	}
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -172,7 +176,7 @@ func (client *NimbusClient) diffEndpoints(objList *netproto.EndpointList, reacto
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.EndpointEvent{
 					EventType: api.EventType_DeleteEvent,
-					Endpoint:  *lobj,
+					Endpoint:  lobj,
 				}
 				log.Infof("diffEndpoints(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.Endpoint.GetObjectKind(), evt.Endpoint.ObjectMeta)
@@ -213,21 +217,21 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.FindEndpoint(evt.Endpoint.ObjectMeta)
+			_, err = reactor.HandleEndpoint(types.Get, evt.Endpoint)
 			if err != nil {
 				// create the Endpoint
-				err = reactor.CreateEndpoint(&evt.Endpoint)
+				_, err = reactor.HandleEndpoint(types.Create, evt.Endpoint)
 				if err != nil {
-					log.Errorf("Error creating the Endpoint {%+v}. Err: %v", evt.Endpoint.ObjectMeta, err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Key: %s | Err: %v", types.Operation(types.Create), evt.Endpoint.GetKey(), err))
 					client.debugStats.AddInt("CreateEndpointError", 1)
 				} else {
 					client.debugStats.AddInt("CreateEndpoint", 1)
 				}
 			} else {
 				// update the Endpoint
-				err = reactor.UpdateEndpoint(&evt.Endpoint)
+				_, err = reactor.HandleEndpoint(types.Update, evt.Endpoint)
 				if err != nil {
-					log.Errorf("Error updating the Endpoint {%+v}. Err: %v", evt.Endpoint.GetKey(), err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Key: %s | Err: %v", types.Operation(types.Update), evt.Endpoint.GetKey(), err))
 					client.debugStats.AddInt("UpdateEndpointError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateEndpoint", 1)
@@ -235,14 +239,10 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 			}
 
 		case api.EventType_DeleteEvent:
-			// delete the object
-			err = reactor.DeleteEndpoint(evt.Endpoint.Tenant, evt.Endpoint.Namespace, evt.Endpoint.Name)
-			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("Endpoint {%+v} not found", evt.Endpoint.ObjectMeta)
-				err = nil
-			}
+			// update the Endpoint
+			_, err = reactor.HandleEndpoint(types.Delete, evt.Endpoint)
 			if err != nil {
-				log.Errorf("Error deleting the Endpoint {%+v}. Err: %v", evt.Endpoint.ObjectMeta, err)
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Endpoint | Key: %s | Err: %v", types.Operation(types.Delete), evt.Endpoint.GetKey(), err))
 				client.debugStats.AddInt("DeleteEndpointError", 1)
 			} else {
 				client.debugStats.AddInt("DeleteEndpoint", 1)
@@ -265,7 +265,7 @@ func (client *NimbusClient) processEndpointEvent(evt netproto.EndpointEvent, rea
 
 			// send oper status
 			ostream.Lock()
-			modificationTime, _ := types.TimestampProto(time.Now())
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.Endpoint.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 			err := ostream.stream.Send(&robj)
 			if err != nil {
@@ -301,7 +301,7 @@ func (client *NimbusClient) processEndpointDynamic(evt api.EventType,
 	client.lockObject(endpointEvt.Endpoint.GetObjectKind(), endpointEvt.Endpoint.ObjectMeta)
 
 	err := client.processEndpointEvent(endpointEvt, reactor, nil)
-	modificationTime, _ := types.TimestampProto(time.Now())
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
 	return err

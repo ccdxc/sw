@@ -704,6 +704,9 @@ delphi::error {{$msgName}}::Publish({{$msgName | ToLower}}_t *mptr) {
     // find the key
 	uint32_t key = 0;
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    if (tbl == NULL) {
+        return NULL;
+    }
       {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     if (tbl == NULL) {
         return NULL;
@@ -766,6 +769,9 @@ delphi::error {{$msgName}}::Publish({{$pkgName}}::{{.GetCppTypeName}} key, {{$ms
 
     // find the key
     delphi::shm::TableMgrUptr tbl = shm->Kvstore()->Table("{{$msgName}}");
+    if (tbl == NULL) {
+        return NULL;
+    }
           {{if $msg.HasExtOption "delphi.datapath_metrics" }}
     if (tbl == NULL) {
         return NULL;

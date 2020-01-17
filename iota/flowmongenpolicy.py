@@ -26,7 +26,10 @@ flowmonpolicy_template = {
         "exports": [
           {
             "destination": "192.168.100.103",
-            "transport": "UDP/2055"
+            "proto-port": {
+              "protocol": "udp",
+              "port": "2055"
+            }
           }
         ],
         "match-rules": [

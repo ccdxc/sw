@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto6 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto7 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type NetworkSecurityPolicy struct {
 	Meta                  *delphi.ObjectMeta               `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key                   string                           `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	NetworkSecurityPolicy *netproto6.NetworkSecurityPolicy `protobuf:"bytes,3,opt,name=NetworkSecurityPolicy" json:"NetworkSecurityPolicy,omitempty"`
+	NetworkSecurityPolicy *netproto7.NetworkSecurityPolicy `protobuf:"bytes,3,opt,name=NetworkSecurityPolicy" json:"NetworkSecurityPolicy,omitempty"`
 }
 
 func (m *NetworkSecurityPolicy) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type NetworkSecurityPolicyReactor interface {
 func (m *NetworkSecurityPolicy) Reset()                    { *m = NetworkSecurityPolicy{} }
 func (m *NetworkSecurityPolicy) String() string            { return proto.CompactTextString(m) }
 func (*NetworkSecurityPolicy) ProtoMessage()               {}
-func (*NetworkSecurityPolicy) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
+func (*NetworkSecurityPolicy) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *NetworkSecurityPolicy) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *NetworkSecurityPolicy) GetKey() string {
 	return ""
 }
 
-func (m *NetworkSecurityPolicy) GetNetworkSecurityPolicy() *netproto6.NetworkSecurityPolicy {
+func (m *NetworkSecurityPolicy) GetNetworkSecurityPolicy() *netproto7.NetworkSecurityPolicy {
 	if m != nil {
 		return m.NetworkSecurityPolicy
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*NetworkSecurityPolicy)(nil), "dnetproto.NetworkSecurityPolicy")
 }
 
-func init() { proto.RegisterFile("delphi/sgpolicy.proto", fileDescriptor5) }
+func init() { proto.RegisterFile("delphi/sgpolicy.proto", fileDescriptor6) }
 
-var fileDescriptor5 = []byte{
+var fileDescriptor6 = []byte{
 	// 203 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4d, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0x4e, 0x2f, 0xc8, 0xcf, 0xc9, 0x4c, 0xae, 0xd4, 0x2b, 0x28, 0xca, 0x2f,

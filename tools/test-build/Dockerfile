@@ -1,4 +1,4 @@
-FROM "golang:1.12.9"
+FROM "golang:1.13.4"
 
 # enable jessie-backports
 #RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/jessie-backports.list

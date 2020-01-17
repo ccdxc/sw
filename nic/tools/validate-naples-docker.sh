@@ -22,11 +22,8 @@ function create_networks {
   echo "Creating Networks"
   NETWORK_URL="$NAPLES_AGENT_IP:8888/api/networks/"
 
-  curl -d'{"Kind":"Network","meta":{"Name":"kg1","Tenant":"default","Namespace":"kg1"}, "spec":{"IPv4Subnet": "10.1.1.0/24", "IPv4Gateway":"10.1.1.1", "VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
+  curl -d'{"Kind":"Network","meta":{"Name":"kg1","Tenant":"default","Namespace":"default"}, "spec":{"VlanID":100}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
   validate_get "kg1" $NETWORK_URL
-
-  curl -d'{"Kind":"Network","meta":{"Name":"public","Tenant":"default","Namespace":"public"}, "spec":{"IPv4Subnet": "20.1.1.0/24", "IPv4Gateway":"20.1.1.1", "VlanID":200}}' -X POST -H "Content-Type: application/json" $NETWORK_URL
-  validate_get "public" $NETWORK_URL
 
   echo "All networks created"
 }
@@ -34,11 +31,8 @@ function create_networks {
 function create_endpoints {
   EP_URL="$NAPLES_AGENT_IP:8888/api/endpoints/"
 
-  curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"kg1"},"spec":{"NetworkName":"kg1","Interface":"uplink-0"},"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
+  curl -d'{"Kind":"Endpoint","Meta":{"Name":"kg1-router","Tenant":"default","Namespace":"default"},"spec":{"network-name":"kg1", "ipv4-addresses":["42.42.42.42"], "mac-address": "ba:ba:ba:ba:ba:ba", "useg-vlan": 42, "node-uuid": "naples-1" },"status":{"IPv4Address":"10.1.1.1/24","MacAddress":"00:22:22:22:22:22","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
   validate_get "kg1" $EP_URL
-
-  curl -d'{"kind":"Endpoint","Meta":{"Name":"public-router","Tenant":"default","Namespace":"public"},"spec":{"NetworkName":"public","Interface":"uplink-2"},"status":{"IPv4Address":"20.1.1.1/24","MacAddress":"00:33:33:33:33:33","NodeUUID":"GWUUID"}}' -X POST -H "Content-Type: application/json" $EP_URL
-  validate_get "public" $EP_URL
 
   echo "All endpoints created"
 }
@@ -145,9 +139,9 @@ echo "NAPLES container $NAPLES_CID found"
 check_for_naples_health "$NAPLES_CID"
 
 # create objects
-create_namespaces
-# create_networks
-# create_endpoints
+# create_namespaces
+ create_networks
+ create_endpoints
 # create_routes
 # create_nat_pools
 # create_nat_bindings

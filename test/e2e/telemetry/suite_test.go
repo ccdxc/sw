@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"os"
 	"strings"
 	"testing"
@@ -24,9 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/grpc"
 
-	"github.com/pkg/errors"
-
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	cinteg "github.com/pensando/sw/test/integ/tsdb/collector"
 	stypes "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
@@ -37,10 +34,10 @@ import (
 var configFile string
 
 type teleSuite struct {
-	simClients []halproto.InternalClient
-	conns      []*grpc.ClientConn
-	broker     *broker.Broker
-	tt         *cinteg.TimeTable
+	//simClients []halproto.InternalClient
+	conns  []*grpc.ClientConn
+	broker *broker.Broker
+	tt     *cinteg.TimeTable
 }
 
 type tbConfig struct {
@@ -91,16 +88,16 @@ func newTS() (*teleSuite, error) {
 		return nil, err
 	}
 
-	sims, conns, err := getSimClients(&cfg)
-	if err != nil {
-		return nil, err
-	}
+	//sims, conns, err := getSimClients(&cfg)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &teleSuite{
-		simClients: sims,
-		conns:      conns,
-		broker:     br,
-		tt:         cinteg.NewTimeTable("firewall"),
+		//simClients: sims,
+		conns:  nil,
+		broker: br,
+		tt:     cinteg.NewTimeTable("firewall"),
 	}, nil
 }
 
@@ -130,47 +127,47 @@ func getCitadelURLs(scheme string) (string, error) {
 	return "", fmt.Errorf("no citadel service found")
 }
 
-func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn, error) {
-	var sims []halproto.InternalClient
-	var conns []*grpc.ClientConn
-	var err error
-
-	naplesIP := net.ParseIP(cfg.FirstNaplesIP).To4()
-	if naplesIP == nil {
-		return nil, nil, fmt.Errorf("Bad IP %v", cfg.FirstNaplesIP)
-	}
-
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	appendor := func(a string) error {
-		conn, err := grpc.Dial(a, opts...)
-		if err != nil {
-			return err
-		}
-
-		conns = append(conns, conn)
-		sims = append(sims, halproto.NewInternalClient(conn))
-		return nil
-	}
-
-	numNaplesNodes := cfg.NumNaplesHosts
-	if numNaplesNodes > 200 {
-		// limit to allow the following logic
-		numNaplesNodes = 200
-	}
-
-	for ix := 0; ix < numNaplesNodes; ix++ {
-		naplesIP[3] += byte(ix)
-		port := cfg.FirstSimPort
-		addr := fmt.Sprintf("%s:%d", naplesIP.String(), port)
-		err = appendor(addr)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	return sims, conns, nil
-}
+//func getSimClients(cfg *tbConfig) ([]halproto.InternalClient, []*grpc.ClientConn, error) {
+//	var sims []halproto.InternalClient
+//	var conns []*grpc.ClientConn
+//	var err error
+//
+//	naplesIP := net.ParseIP(cfg.FirstNaplesIP).To4()
+//	if naplesIP == nil {
+//		return nil, nil, fmt.Errorf("Bad IP %v", cfg.FirstNaplesIP)
+//	}
+//
+//	var opts []grpc.DialOption
+//	opts = append(opts, grpc.WithInsecure())
+//	appendor := func(a string) error {
+//		conn, err := grpc.Dial(a, opts...)
+//		if err != nil {
+//			return err
+//		}
+//
+//		conns = append(conns, conn)
+//		sims = append(sims, halproto.NewInternalClient(conn))
+//		return nil
+//	}
+//
+//	numNaplesNodes := cfg.NumNaplesHosts
+//	if numNaplesNodes > 200 {
+//		// limit to allow the following logic
+//		numNaplesNodes = 200
+//	}
+//
+//	for ix := 0; ix < numNaplesNodes; ix++ {
+//		naplesIP[3] += byte(ix)
+//		port := cfg.FirstSimPort
+//		addr := fmt.Sprintf("%s:%d", naplesIP.String(), port)
+//		err = appendor(addr)
+//		if err != nil {
+//			return nil, nil, err
+//		}
+//	}
+//
+//	return sims, conns, nil
+//}
 
 func (ts *teleSuite) DbQuery(ctx context.Context, db, cmd string) (models.Rows, error) {
 	response, err := ts.broker.ExecuteQuery(ctx, db, cmd)
@@ -194,16 +191,16 @@ func (ts *teleSuite) DeleteDB(ctx context.Context, db string) error {
 }
 
 func (ts *teleSuite) InjectLogs(count int) error {
-	ctx := context.Background()
+	//ctx := context.Background()
 	stamp := time.Now()
 	twoms, err := time.ParseDuration("5ms")
 	if err != nil {
 		return err
 	}
-	simCount := len(ts.simClients)
-	if simCount == 0 {
-		return fmt.Errorf("No sim clients")
-	}
+	//simCount := len(ts.simClients)
+	//if simCount == 0 {
+	//	return fmt.Errorf("No sim clients")
+	//}
 	for ix := 0; ix < count; ix++ {
 		fwe := &halproto.FWEvent{
 			Flowaction: halproto.FlowLogEventType(ix % 2),
@@ -215,15 +212,15 @@ func (ts *teleSuite) InjectLogs(count int) error {
 			Timestamp:  stamp.UnixNano(),
 		}
 
-		m := &halproto.LogFlowRequestMsg{
-			Request: []*halproto.FWEvent{fwe},
-		}
+		//m := &halproto.LogFlowRequestMsg{
+		//	Request: []*halproto.FWEvent{fwe},
+		//}
 
-		clientID := ix % simCount
-		_, err := ts.simClients[clientID].LogFlow(ctx, m)
-		if err != nil {
-			return errors.Wrapf(err, "simCount: %d, clientID: %d", simCount, clientID)
-		}
+		//clientID := ix % simCount
+		//_, err := ts.simClients[clientID].LogFlow(ctx, m)
+		//if err != nil {
+		//	return errors.Wrapf(err, "simCount: %d, clientID: %d", simCount, clientID)
+		//}
 
 		ts.addTimeTable(fwe)
 		stamp = stamp.Add(twoms)

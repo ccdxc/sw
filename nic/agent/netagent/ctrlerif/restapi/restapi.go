@@ -12,8 +12,6 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	genapi "github.com/pensando/sw/nic/agent/protos/generated/restapi/netagent"
 	tpagent "github.com/pensando/sw/nic/agent/protos/generated/restapi/tpagent"
-	tsagent "github.com/pensando/sw/nic/agent/protos/generated/restapi/tsagent"
-
 	tpa "github.com/pensando/sw/nic/agent/tpa/state/types"
 	troubleshooting "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 	"github.com/pensando/sw/venice/utils/log"
@@ -69,8 +67,7 @@ func NewRestServer(agent types.CtrlerIntf, tsAgent troubleshooting.CtrlerIntf, t
 		return &srv, nil
 	}
 
-	nsrv, _ := genapi.NewRestServer(agent, listenURL)
-	tsasrv, _ := tsagent.NewRestServer(tsAgent, listenURL)
+	nsrv, _ := genapi.NewRestServer(nil, listenURL)
 	tpasrv, _ := tpagent.NewRestServer(tpAgent, listenURL)
 
 	// setup the top level routes
@@ -80,12 +77,9 @@ func NewRestServer(agent types.CtrlerIntf, tsAgent troubleshooting.CtrlerIntf, t
 		"/api/endpoints/":             nsrv.AddEndpointAPIRoutes,
 		"/api/interfaces/":            nsrv.AddInterfaceAPIRoutes,
 		"/api/security/policies/":     nsrv.AddNetworkSecurityPolicyAPIRoutes,
-		"/api/security/profiles/":     nsrv.AddSecurityProfileAPIRoutes,
 		"/api/tunnels/":               nsrv.AddTunnelAPIRoutes,
-		"/api/system/ports":           nsrv.AddPortAPIRoutes,
 		"/api/apps":                   nsrv.AddAppAPIRoutes,
 		"/api/vrfs":                   nsrv.AddVrfAPIRoutes,
-		"/api/mirror/sessions/":       tsasrv.AddMirrorSessionAPIRoutes,
 		"/api/telemetry/flowexports/": tpasrv.AddFlowExportPolicyAPIRoutes,
 		"/api/telemetry/fwlog/":       tpasrv.AddFwlogPolicyAPIRoutes,
 	}

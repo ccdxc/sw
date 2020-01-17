@@ -11,7 +11,10 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
 // AddInterfaceAPIRoutes adds Interface routes
@@ -22,5 +25,9 @@ func (s *RestServer) AddInterfaceAPIRoutes(r *mux.Router) {
 }
 
 func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) {
-	return s.agent.ListInterface(), nil
+	o := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+	}
+
+	return s.pipelineAPI.HandleInterface(types.List, o)
 }

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -181,9 +181,8 @@ func (hd *Datapath) UpdateInterface(intf *netproto.Interface) error {
 }
 
 // ListInterfaces returns the lisg of lifs and uplinks from the datapath
-func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error) {
+func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, error) {
 	var lifResp []*netproto.Interface
-	var portResp []*netproto.Port
 	var lifs *halproto.LifGetResponseMsg
 	var ports *halproto.PortInfoGetResponseMsg
 	var err error
@@ -205,13 +204,13 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 		lifs, err = hd.Hal.Ifclient.LifGet(context.Background(), lifReqMsg)
 		if err != nil {
 			log.Errorf("Error getting lifs from the datapath. Err: %v", err)
-			return nil, nil, nil
+			return nil, nil
 		}
 
 		lifStream, err := hd.Hal.EventClient.EventListen(context.Background(), evtReqMsg)
 		if err != nil {
 			log.Errorf("Failed to establish LIF Update event listener")
-			return nil, nil, err
+			return nil, err
 		}
 
 		go func(stream halproto.Event_EventListenClient) {
@@ -240,14 +239,14 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 		}
 		ports, err = hd.Hal.PortClient.PortInfoGet(context.Background(), portReqMsg)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 
 		// return all the ports
 		for _, p := range ports.Response {
 			if p.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
 				log.Errorf("HAL returned non OK status. %v", p.ApiStatus.String())
-				return nil, nil, fmt.Errorf("HAL returned non OK status. %v", p.ApiStatus.String())
+				return nil, fmt.Errorf("HAL returned non OK status. %v", p.ApiStatus.String())
 			}
 		}
 
@@ -279,43 +278,6 @@ func (hd *Datapath) ListInterfaces() ([]*netproto.Interface, []*netproto.Port, e
 		lifResp = append(lifResp, l)
 	}
 
-	var numLanes uint32
-	// Populate Agent state
-	for _, port := range ports.Response {
-		var portType, speed string
-		id := 1 + numLanes
-		numLanes += port.Spec.NumLanes
-		if port.Spec.PortType == halproto.PortType_PORT_TYPE_MGMT {
-			portType = "TYPE_MANAGEMENT"
-			speed = "SPEED_1G"
-		} else {
-			portType = "TYPE_ETHERNET"
-			speed = "SPEED_AUTONEG"
-		}
-		p := &netproto.Port{
-			TypeMeta: api.TypeMeta{
-				Kind: "Port",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("port%d", id),
-			},
-			Spec: netproto.PortSpec{
-				Speed:        speed,
-				BreakoutMode: "BREAKOUT_NONE",
-				AdminStatus:  port.Spec.AdminState.String(),
-				Type:         portType,
-				Lanes:        port.Spec.NumLanes,
-			},
-			Status: netproto.PortStatus{
-				PortID: uint64(id),
-			},
-		}
-
-		portResp = append(portResp, p)
-	}
-
 	// return resp
-	return lifResp, portResp, err
+	return lifResp, err
 }

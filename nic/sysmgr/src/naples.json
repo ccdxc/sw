@@ -66,8 +66,8 @@
         "timeout": 30.0
     },
     {
-        "name": "netagent",
-        "command": "/nic/bin/netagent -datapath hal",
+        "name": "pen-netagent",
+        "command": "/nic/bin/netagent",
         "dependencies": [
             {
                 "kind": "service",
@@ -99,6 +99,10 @@
             {
                 "kind": "service",
                 "service-name": "hal"
+            },
+            {
+                "kind": "service",
+                "service-name": "pen-netagent"
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],

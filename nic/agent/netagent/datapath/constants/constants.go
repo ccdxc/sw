@@ -3,7 +3,7 @@ package constants
 import (
 	"math"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 )
 
 const (

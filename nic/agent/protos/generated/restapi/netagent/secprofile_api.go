@@ -8,17 +8,16 @@ package restapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
-	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
@@ -36,19 +35,21 @@ func (s *RestServer) AddSecurityProfileAPIRoutes(r *mux.Router) {
 }
 
 func (s *RestServer) listSecurityProfileHandler(r *http.Request) (interface{}, error) {
-	return s.agent.ListSecurityProfile(), nil
+	o := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+	}
+
+	return s.pipelineAPI.HandleSecurityProfile(types.List, o)
 }
 
 func (s *RestServer) postSecurityProfileHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	var o netproto.SecurityProfile
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-	c, _ := types.TimestampProto(time.Now())
+	c, _ := protoTypes.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
 	}
@@ -56,72 +57,64 @@ func (s *RestServer) postSecurityProfileHandler(r *http.Request) (interface{}, e
 		Timestamp: *c,
 	}
 
-	err = s.agent.CreateSecurityProfile(&o)
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+	_, err = s.pipelineAPI.HandleSecurityProfile(types.Create, o)
 
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		return res, err
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
-
-	res.StatusCode = http.StatusOK
-	return res, err
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }
 
 func (s *RestServer) deleteSecurityProfileHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
 	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
 	name, _ := mux.Vars(r)["ObjectMeta.Name"]
-	err := s.agent.DeleteSecurityProfile(tenant, namespace, name)
-
-	res.References = []string{r.RequestURI}
-
-	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		// check if its a cannot delete type err
-		delErr, ok := err.(*agentTypes.ErrCannotDelete)
-		if ok {
-			res.References = delErr.References
-		}
-
-		return res, err
+	o := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{Kind: "SecurityProfile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 
-	res.StatusCode = http.StatusOK
-	return res, err
+	_, err := s.pipelineAPI.HandleSecurityProfile(types.Delete, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }
 
 func (s *RestServer) putSecurityProfileHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	var o netproto.SecurityProfile
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-	m, _ := types.TimestampProto(time.Now())
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
 	o.ModTime = api.Timestamp{
-		Timestamp: *m,
+		Timestamp: *c,
 	}
-	err = s.agent.UpdateSecurityProfile(&o)
 
-	res.References = []string{r.RequestURI}
-
+	_, err = s.pipelineAPI.HandleSecurityProfile(types.Update, o)
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		return res, err
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
-
-	res.StatusCode = http.StatusOK
-	return res, err
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }

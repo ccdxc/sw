@@ -16,7 +16,7 @@ service NetworkApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Network",
-        Method: ["list", "post", "put", "delete"],
+        Method: ["list", "get", "post", "put", "delete"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
         Prefix: "api/networks"
     };

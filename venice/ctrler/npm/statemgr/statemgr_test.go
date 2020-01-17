@@ -848,52 +848,53 @@ func TestEndpointNodeState(t *testing.T) {
 }
 
 func TestSgCreateDelete(t *testing.T) {
-	// create network state manager
-	stateMgr, err := newStatemgr()
-	if err != nil {
-		t.Fatalf("Could not create network manager. Err: %v", err)
-		return
-	}
-
-	// create tenant
-	err = createTenant(t, stateMgr, "default")
-	AssertOk(t, err, "Error creating the tenant")
-
-	// create sg
-	sg, err := createSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
-	AssertOk(t, err, "Error creating security group")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		_, err := stateMgr.FindSecurityGroup("default", "testSg")
-		if err == nil {
-			return true, nil
-		}
-		return false, nil
-	}, "Sg not found", "1ms", "1s")
-
-	sg, err = updateSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
-	AssertOk(t, err, "Error creating security group")
-
-	// verify we can find the sg
-	sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
-	AssertOk(t, err, "Could not find the security group")
-	AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
-
-	// delete the security group
-	err = stateMgr.ctrler.SecurityGroup().Delete(&sgs.SecurityGroup.SecurityGroup)
-	AssertOk(t, err, "Error deleting security group")
-
-	AssertEventually(t, func() (bool, interface{}) {
-		_, err := stateMgr.FindSecurityGroup("default", "testSg")
-		if err != nil {
-			return true, nil
-		}
-		return false, nil
-	}, "Sg found", "1ms", "1s")
-
-	// verify the sg is gone
-	_, err = stateMgr.FindSecurityGroup("default", "testSg")
-	Assert(t, (err != nil), "Security group still found after deleting")
+	t.Skip("SG is not implemented")
+	//// create network state manager
+	//stateMgr, err := newStatemgr()
+	//if err != nil {
+	//	t.Fatalf("Could not create network manager. Err: %v", err)
+	//	return
+	//}
+	//
+	//// create tenant
+	//err = createTenant(t, stateMgr, "default")
+	//AssertOk(t, err, "Error creating the tenant")
+	//
+	//// create sg
+	//sg, err := createSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	//AssertOk(t, err, "Error creating security group")
+	//
+	//AssertEventually(t, func() (bool, interface{}) {
+	//	_, err := stateMgr.FindSecurityGroup("default", "testSg")
+	//	if err == nil {
+	//		return true, nil
+	//	}
+	//	return false, nil
+	//}, "Sg not found", "1ms", "1s")
+	//
+	//sg, err = updateSg(stateMgr, "default", "testSg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	//AssertOk(t, err, "Error creating security group")
+	//
+	//// verify we can find the sg
+	//sgs, err := stateMgr.FindSecurityGroup("default", "testSg")
+	//AssertOk(t, err, "Could not find the security group")
+	//AssertEquals(t, sgs.SecurityGroup.Spec.WorkloadSelector.String(), sg.Spec.WorkloadSelector.String(), "Security group params did not match")
+	//
+	//// delete the security group
+	//err = stateMgr.ctrler.SecurityGroup().Delete(&sgs.SecurityGroup.SecurityGroup)
+	//AssertOk(t, err, "Error deleting security group")
+	//
+	//AssertEventually(t, func() (bool, interface{}) {
+	//	_, err := stateMgr.FindSecurityGroup("default", "testSg")
+	//	if err != nil {
+	//		return true, nil
+	//	}
+	//	return false, nil
+	//}, "Sg found", "1ms", "1s")
+	//
+	//// verify the sg is gone
+	//_, err = stateMgr.FindSecurityGroup("default", "testSg")
+	//Assert(t, (err != nil), "Security group still found after deleting")
 }
 
 func TestSgAttachEndpoint(t *testing.T) {

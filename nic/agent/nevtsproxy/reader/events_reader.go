@@ -11,14 +11,13 @@ import (
 	"github.com/pensando/sw/api"
 	evtsapi "github.com/pensando/sw/api/generated/events"
 	"github.com/pensando/sw/events/generated/eventtypes"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ntranslate"
 	// to register key/handles with protobuf; this is needed to convert any to protobuf message
-	_ "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
 
 // Events reader implementation internally uses shared memory reader (shm/reader.go)

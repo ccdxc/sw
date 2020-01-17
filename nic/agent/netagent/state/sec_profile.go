@@ -60,7 +60,7 @@ func (na *Nagent) CreateSecurityProfile(profile *netproto.SecurityProfile) error
 
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if profile.Status.SecurityProfileID == 0 {
-		profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID)
+		profile.Status.SecurityProfileID, err = na.Store.GetNextID(types.SecurityProfileID, 0)
 		profile.Status.SecurityProfileID += types.SecurityProfileOffset
 	}
 

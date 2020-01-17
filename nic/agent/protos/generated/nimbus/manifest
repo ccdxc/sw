@@ -3,8 +3,8 @@ App AppApiV1
 Endpoint EndpointApiV1
 IPAMPolicy IPAMPolicyApiV1
 Interface InterfaceApiV1
-Interface InterfaceApiV1
 Network NetworkApiV1
 NetworkSecurityPolicy NetworkSecurityPolicyApiV1
 RoutingConfig RoutingConfigApiV1
+SecurityProfile SecurityProfileApiV1
 SecurityProfile SecurityProfileApiV1

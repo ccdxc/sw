@@ -3,6 +3,7 @@ package ctrlerif
 import (
 	"context"
 	"fmt"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"strings"
 	"sync"
 	"time"
@@ -117,7 +118,7 @@ func (w *watchChan) watchFwlogPolicy(ctx context.Context, cl tpmproto.FwlogPolic
 	}
 }
 
-func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl tpmproto.FlowExportPolicyApi_WatchFlowExportPolicyClient) {
+func (w *watchChan) watchFlowExpPolicy(ctx context.Context, cl netproto.FlowExportPolicyApiV1_WatchFlowExportPolicyClient) {
 	defer func() {
 		close(w.flowExpChan)
 		w.wg.Done()
@@ -143,14 +144,14 @@ type watchChan struct {
 	wg          sync.WaitGroup
 	statsChan   chan *tpmproto.StatsPolicyEvent
 	fwlogChan   chan *tpmproto.FwlogPolicyEvent
-	flowExpChan chan *tpmproto.FlowExportPolicyEvent
+	flowExpChan chan *netproto.FlowExportPolicyEventList
 }
 
 func (client *TpClient) processEvents(pctx context.Context) error {
 	wc := &watchChan{
 		statsChan:   make(chan *tpmproto.StatsPolicyEvent, watchlen),
 		fwlogChan:   make(chan *tpmproto.FwlogPolicyEvent, watchlen),
-		flowExpChan: make(chan *tpmproto.FlowExportPolicyEvent, watchlen),
+		flowExpChan: make(chan *netproto.FlowExportPolicyEventList, watchlen),
 	}
 
 	ctx, cancel := context.WithCancel(pctx)
@@ -168,7 +169,7 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 	wc.wg.Add(1)
 	go wc.watchFwlogPolicy(ctx, fwlogPolicyStream)
 
-	flowExpClient := tpmproto.NewFlowExportPolicyApiClient(client.rpcClient.ClientConn)
+	flowExpClient := netproto.NewFlowExportPolicyApiV1Client(client.rpcClient.ClientConn)
 	flowPolicyStream, err := flowExpClient.WatchFlowExportPolicy(ctx, &api.ObjectMeta{})
 	if err != nil {
 		log.Errorf("Error watching flow export policy: Err: %v", err)
@@ -245,44 +246,44 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 				log.Errorf("flow policy channel closed")
 				return nil
 			}
-			log.Infof("received policy(%s) %+v", event.EventType, event.Policy)
+			log.Infof("received policy(%s) %+v", event.FlowExportPolicyEvents[0].EventType, event.FlowExportPolicyEvents[0].Policy)
 
 			func() {
 				var err error
 				for iter := 0; iter < maxRetry; iter++ {
-					switch event.EventType {
+					switch event.FlowExportPolicyEvents[0].EventType {
 
 					case api.EventType_CreateEvent:
-						if err = client.state.CreateFlowExportPolicy(ctx, event.Policy); err != nil {
-							if strings.Contains(err.Error(), "already exists") {
-								err = client.state.UpdateFlowExportPolicy(ctx, event.Policy)
-							}
-						}
+						//if err = client.state.CreateFlowExportPolicy(ctx, event.Policy); err != nil {
+						//	if strings.Contains(err.Error(), "already exists") {
+						//		err = client.state.UpdateFlowExportPolicy(ctx, event.Policy)
+						//	}
+						//}
 					case api.EventType_UpdateEvent:
-						if err = client.state.UpdateFlowExportPolicy(ctx, event.Policy); err != nil {
-							if strings.Contains(err.Error(), "doesn't exist") {
-								err = client.state.CreateFlowExportPolicy(ctx, event.Policy)
-							}
-
-						}
+						//if err = client.state.UpdateFlowExportPolicy(ctx, event.Policy); err != nil {
+						//	if strings.Contains(err.Error(), "doesn't exist") {
+						//		err = client.state.CreateFlowExportPolicy(ctx, event.Policy)
+						//	}
+						//
+						//}
 					case api.EventType_DeleteEvent:
-						if err = client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
-							if strings.Contains(err.Error(), "doesn't exist") {
-								err = nil // ignore
-							}
-						}
+						//if err = client.state.DeleteFlowExportPolicy(ctx, event.Policy); err != nil {
+						//	if strings.Contains(err.Error(), "doesn't exist") {
+						//		err = nil // ignore
+						//	}
+						//}
 					}
 
 					if err == nil {
 						return
 					}
 
-					log.Errorf("[%v] flow export policy failed, err: %v", event.EventType, err)
+					log.Errorf("[%v] flow export policy failed, err: %v", event.FlowExportPolicyEvents[0].EventType, err)
 					time.Sleep(time.Second * 5)
 				}
 				recorder.Event(eventtypes.CONFIG_FAIL, fmt.Sprintf("Failed to %v %v %v, error: %v",
-					strings.Split(strings.ToLower(event.EventType.String()), "-event")[0], event.Policy.Kind,
-					event.Policy.Name, err), event.Policy)
+					strings.Split(strings.ToLower(event.FlowExportPolicyEvents[0].EventType.String()), "-event")[0], event.FlowExportPolicyEvents[0].Policy.Kind,
+					event.FlowExportPolicyEvents[0].Policy.Name, err), event.FlowExportPolicyEvents[0].Policy)
 			}()
 
 			// periodic sync
@@ -290,22 +291,22 @@ func (client *TpClient) processEvents(pctx context.Context) error {
 			// flow export
 			flowEvent, err := flowExpClient.ListFlowExportPolicy(ctx, &api.ObjectMeta{})
 			if err == nil {
-				ctrlFlowExp := map[string]*tpmproto.FlowExportPolicy{}
-				for _, exp := range flowEvent.EventList {
+				ctrlFlowExp := map[string]*netproto.FlowExportPolicy{}
+				for _, exp := range flowEvent.FlowExportPolicyEvents {
 					ctrlFlowExp[exp.Policy.GetKey()] = exp.Policy
 				}
 
 				// read policy from agent
-				agFlowExp, err := client.state.ListFlowExportPolicy(ctx)
+				//agFlowExp, err := client.state.ListFlowExportPolicy(ctx)
 				if err == nil {
-					for _, pol := range agFlowExp {
-						if _, ok := ctrlFlowExp[pol.GetKey()]; !ok {
-							log.Infof("sync deleting flowExport policy %v", pol.GetKey())
-							if err := client.state.DeleteFlowExportPolicy(ctx, pol); err != nil {
-								log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
-							}
-						}
-					}
+					//for _, pol := range agFlowExp {
+					//	if _, ok := ctrlFlowExp[pol.GetKey()]; !ok {
+					//		log.Infof("sync deleting flowExport policy %v", pol.GetKey())
+					//		if err := client.state.DeleteFlowExportPolicy(ctx, pol); err != nil {
+					//			log.Errorf("failed to delete %v, err: %v", pol.GetKey(), err)
+					//		}
+					//	}
+					//}
 				}
 			}
 

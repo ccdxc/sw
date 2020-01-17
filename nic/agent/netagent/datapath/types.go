@@ -6,7 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 )
 
@@ -22,35 +22,35 @@ type Hal struct {
 	Epclient             halproto.EndpointClient
 	Ifclient             halproto.InterfaceClient
 	L2SegClient          halproto.L2SegmentClient
-	Netclient            halproto.NetworkClient
-	Lbclient             halproto.L4LbClient
+	//Netclient            halproto.NetworkClient
+	//Lbclient             halproto.L4LbClient
 	Sgclient             halproto.NwSecurityClient
-	Sessclient           halproto.SessionClient
+	//Sessclient           halproto.SessionClient
 	Tnclient             halproto.VrfClient
-	Natclient            halproto.NatClient
-	IPSecclient          halproto.IpsecClient
+	//Natclient            halproto.NatClient
+	//IPSecclient          halproto.IpsecClient
 	PortClient           halproto.PortClient
-	TCPProxyPolicyClient halproto.TcpProxyClient
-	SystemClient         halproto.SystemClient
+	//TCPProxyPolicyClient halproto.TcpProxyClient
+	//SystemClient         halproto.SystemClient
 	EventClient          halproto.EventClient
 }
 
 // MockClients stores references for mockclients to be used for setting expectations
 type mockClients struct {
-	MockEpclient       *halproto.MockEndpointClient
-	MockIfclient       *halproto.MockInterfaceClient
-	MockL2Segclient    *halproto.MockL2SegmentClient
-	MockNetClient      *halproto.MockNetworkClient
-	MockLbclient       *halproto.MockL4LbClient
-	MockSgclient       *halproto.MockNwSecurityClient
-	MockSessclient     *halproto.MockSessionClient
-	MockTnclient       *halproto.MockVrfClient
-	MockNatClient      *halproto.MockNatClient
-	MockIPSecClient    *halproto.MockIpsecClient
-	MockTCPProxyClient *halproto.MockTcpProxyClient
-	MockPortClient     *halproto.MockPortClient
-	MockSystemClient   *halproto.MockSystemClient
-	MockEventClient    *halproto.MockEventClient
+	//MockEpclient       *halproto.MockEndpointClient
+	//MockIfclient       *halproto.MockInterfaceClient
+	//MockL2Segclient    *halproto.MockL2SegmentClient
+	//MockNetClient      *halproto.MockNetworkClient
+	//MockLbclient       *halproto.MockL4LbClient
+	//MockSgclient       *halproto.MockNwSecurityClient
+	//MockSessclient     *halproto.MockSessionClient
+	//MockTnclient       *halproto.MockVrfClient
+	//MockNatClient      *halproto.MockNatClient
+	//MockIPSecClient    *halproto.MockIpsecClient
+	//MockTCPProxyClient *halproto.MockTcpProxyClient
+	//MockPortClient     *halproto.MockPortClient
+	//MockSystemClient   *halproto.MockSystemClient
+	//MockEventClient    *halproto.MockEventClient
 }
 
 // DB holds all the state information.

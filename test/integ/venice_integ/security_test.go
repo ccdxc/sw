@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/dscagent"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
@@ -14,7 +18,6 @@ import (
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/nic/agent/netagent"
 	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
@@ -57,8 +60,12 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
-			if (cerr != nil) || (rsgp.Name != sgp.Name) {
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			rsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
+			if (cerr != nil) || (rsgp[0].Name != sgp.Name) {
 				notFound = true
 			}
 		}
@@ -101,11 +108,15 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
-			if (cerr != nil) || (rsgp.Name != sgp.Name) {
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			rsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
+			if (cerr != nil) || (rsgp[0].Name != sgp.Name) {
 				notFound = true
 			}
-			if len(rsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(rsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				notFound = true
 			}
 		}
@@ -155,7 +166,11 @@ func (it *veniceIntegSuite) TestVeniceIntegSecurityPolicy(c *C) {
 	AssertEventually(c, func() (bool, interface{}) {
 		found := false
 		for _, sn := range it.snics {
-			_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if cerr == nil {
 				found = true
 			}
@@ -222,9 +237,13 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 
 	// wait for all endpoints to be propagated to other agents
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListEndpoint()) == it.config.NumHosts, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.config.NumHosts, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -233,22 +252,26 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			foundLocal := false
 			for i := range it.snics {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-				epmeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      epname,
+				epmeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					},
 				}
-				sep, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+				sep, perr := ag.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
+
 				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, ag.NetworkAgent.NodeUUID, perr, ag.NetworkAgent.EndpointDB)
+					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v", epname, ag.InfraAPI.GetDscName(), perr)
 					return
 				}
-				if sep.Spec.NodeUUID == ag.NetworkAgent.NodeUUID {
+				if sep[0].Spec.NodeUUID == ag.InfraAPI.GetDscName() {
 					foundLocal = true
 				}
 			}
 			if !foundLocal {
-				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.NetworkAgent.NodeUUID)
+				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.InfraAPI.GetDscName())
 				return
 			}
 			waitCh <- nil
@@ -267,16 +290,19 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 
 	// verify SG to endpoint association is removed
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
 				for i := range it.snics {
 					epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-					epmeta := api.ObjectMeta{
-						Tenant:    "default",
-						Namespace: "default",
-						Name:      epname,
+					epmeta := netproto.Endpoint{
+						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+						ObjectMeta: api.ObjectMeta{
+							Tenant:    "default",
+							Namespace: "default",
+							Name:      epname,
+						},
 					}
-					_, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+					_, perr := ag.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 					if perr != nil {
 						return false, perr
 					}
@@ -289,14 +315,17 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 			}
 			for i := range it.snics {
 				epname := fmt.Sprintf("testWorkload%d-0001.0203.04%02d", i, i)
-				epmeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      epname,
+				epmeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					},
 				}
-				_, perr := ag.NetworkAgent.FindEndpoint(epmeta)
+				_, perr := ag.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 				if perr != nil {
-					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v, db: %+v", epname, epname, perr, ag.NetworkAgent.EndpointDB)
+					waitCh <- fmt.Errorf("Endpoint %s not found in netagent(%v), err=%v", epname, epname, perr)
 					return
 				}
 			}
@@ -318,9 +347,13 @@ func (it *veniceIntegSuite) TestVeniceIntegSecuritygroup(c *C) {
 
 	// verify all endpoints are gone
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -413,8 +446,12 @@ func (it *veniceIntegSuite) TestNetworkSecurityPolicyRuleWithMultipleApps(c *C) 
 	AssertEventually(c, func() (bool, interface{}) {
 		notFound := false
 		for _, sn := range it.snics {
-			rsgp, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
-			if (cerr != nil) || (rsgp.Name != sgp.Name) || len(rsgp.Spec.Rules) != 2 {
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			rsgp, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
+			if (cerr != nil) || (rsgp[0].Name != sgp.Name) || len(rsgp[0].Spec.Rules) != 2 {
 				notFound = true
 			}
 		}
@@ -460,7 +497,11 @@ func (it *veniceIntegSuite) TestNetworkSecurityPolicyRuleWithMultipleApps(c *C) 
 	AssertEventually(c, func() (bool, interface{}) {
 		found := false
 		for _, sn := range it.snics {
-			_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if cerr == nil {
 				found = true
 			}
@@ -558,15 +599,19 @@ func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 		// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
 		for _, sn := range it.snics {
 			AssertEventually(c, func() (bool, interface{}) {
-				gsgp, gerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+				nsgp := netproto.NetworkSecurityPolicy{
+					TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+					ObjectMeta: sgp.ObjectMeta,
+				}
+				gsgp, gerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 				if gerr != nil {
 					return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 				}
-				if len(gsgp.Spec.Rules) != len(rules) {
-					return false, gsgp.Spec.Rules
+				if len(gsgp[0].Spec.Rules) != len(rules) {
+					return false, gsgp[0].Spec.Rules
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", sn.agent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 		}
 
 		// verify sgpolicy status reflects propagation status
@@ -638,15 +683,19 @@ func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 		// verify agent state has the updated policy
 		for _, sn := range it.snics {
 			AssertEventually(c, func() (bool, interface{}) {
-				gsgp, gerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+				nsgp := netproto.NetworkSecurityPolicy{
+					TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+					ObjectMeta: sgp.ObjectMeta,
+				}
+				gsgp, gerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 				if gerr != nil {
 					return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 				}
-				if len(gsgp.Spec.Rules) != len(rules) {
-					return false, gsgp.Spec.Rules
+				if len(gsgp[0].Spec.Rules) != len(rules) {
+					return false, gsgp[0].Spec.Rules
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", len(sn.agent.NetworkAgent.ListNetworkSecurityPolicy()[0].Spec.Rules)), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("SGPolicy not found in agent SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 		}
 
 		// verify sgpolicy status reflects propagation status
@@ -703,7 +752,11 @@ func (it *veniceIntegSuite) TestSgPolicyCommitBuffer(c *C) {
 		AssertEventually(c, func() (bool, interface{}) {
 			found := false
 			for _, sn := range it.snics {
-				_, cerr := sn.agent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+				nsgp := netproto.NetworkSecurityPolicy{
+					TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+					ObjectMeta: sgp.ObjectMeta,
+				}
+				_, cerr := sn.agent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 				if cerr == nil {
 					found = true
 				}

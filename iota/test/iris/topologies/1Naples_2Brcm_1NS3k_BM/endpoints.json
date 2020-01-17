@@ -16,7 +16,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "192.168.100.101/32"
+            "192.168.100.101"
           ],
           "mac-address": "00:46:46:00:01:01",
           "useg-vlan": 1001,

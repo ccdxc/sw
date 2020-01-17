@@ -9,19 +9,14 @@ package nimbus
 
 import (
 	"context"
-	"errors"
 	"sync"
-        "time"
-
+	"time"
+	protoTypes "github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/pensando/sw/api"
-	"github.com/gogo/protobuf/types"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
-	"github.com/pensando/sw/venice/utils/memdb"
-	"github.com/pensando/sw/venice/utils/rpckit"
-    "github.com/pensando/sw/venice/utils/balancer"
-    "github.com/pensando/sw/nic/agent/netagent/state"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
@@ -36,11 +31,7 @@ import (
 
 
 type {{$crudObject}}Reactor interface {
-	Create{{$crudObject}}({{lower $crudObject}}Obj *netproto.{{$crudObject}}) error                  // creates an {{$crudObject}}
-	Find{{$crudObject}}(meta api.ObjectMeta) (*netproto.{{$crudObject}}, error) // finds an {{$crudObject}}
-	List{{$crudObject}}() []*netproto.{{$crudObject}}                           // lists all {{$crudObject}}s
-	Update{{$crudObject}}({{lower $crudObject}}Obj *netproto.{{$crudObject}}) error                  // updates an {{$crudObject}}
-	Delete{{$crudObject}}({{lower $crudObject}}Obj, ns, name string) error               // deletes an {{$crudObject}}
+	Handle{{$crudObject}}(oper types.Operation, {{lower $crudObject}}Obj netproto.{{$crudObject}}) ([]netproto.{{$crudObject}}, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type {{$crudObject}}OStream struct {
@@ -181,7 +172,14 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.List{{$crudObject}}()
+	o := netproto.{{$crudObject}} {
+		TypeMeta: api.TypeMeta{Kind: "{{$crudObject}}"},
+	}
+
+	localObjs, err := reactor.Handle{{$crudObject}}(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Err: %v", types.Operation(types.List), err))
+	}
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -189,7 +187,7 @@ func (client *NimbusClient) diff{{$crudObject}}s(objList *netproto.{{$crudObject
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.{{$crudObject}}Event{
 					EventType: api.EventType_DeleteEvent,
-					{{$crudObject}}:  *lobj,
+					{{$crudObject}}:  lobj,
 				}
 				log.Infof("diff{{$crudObject}}s(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.{{$crudObject}}.GetObjectKind(), evt.{{$crudObject}}.ObjectMeta)
@@ -228,23 +226,23 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 	for iter := 0; iter < maxOpretry; iter++ {
 		switch evt.EventType {
 		case api.EventType_CreateEvent:
-			fallthrough
+		fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.Find{{$crudObject}}(evt.{{$crudObject}}.ObjectMeta)
+		  _, err = reactor.Handle{{$crudObject}}(types.Get, evt.{{$crudObject}})
 			if err != nil {
 				// create the {{$crudObject}}
-				err = reactor.Create{{$crudObject}}(&evt.{{$crudObject}})
+				_, err = reactor.Handle{{$crudObject}}(types.Create, evt.{{$crudObject}})
 				if err != nil {
-					log.Errorf("Error creating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}.ObjectMeta, err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Create), evt.{{$crudObject}}.GetKey(), err))
 					client.debugStats.AddInt("Create{{$crudObject}}Error", 1)
 				} else {
 					client.debugStats.AddInt("Create{{$crudObject}}", 1)
 				}
 			} else {
 				// update the {{$crudObject}}
-				err = reactor.Update{{$crudObject}}(&evt.{{$crudObject}})
+				_, err = reactor.Handle{{$crudObject}}(types.Update, evt.{{$crudObject}})
 				if err != nil {
-					log.Errorf("Error updating the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}.GetKey(), err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Update), evt.{{$crudObject}}.GetKey(), err))
 					client.debugStats.AddInt("Update{{$crudObject}}Error", 1)
 				} else {
 					client.debugStats.AddInt("Update{{$crudObject}}", 1)
@@ -252,14 +250,10 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 			}
 
 		case api.EventType_DeleteEvent:
-			// delete the object
-			err = reactor.Delete{{$crudObject}}(evt.{{$crudObject}}.Tenant, evt.{{$crudObject}}.Namespace, evt.{{$crudObject}}.Name)
-			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("{{$crudObject}} {%+v} not found", evt.{{$crudObject}}.ObjectMeta)
-				err = nil
-			}
+			// update the {{$crudObject}}
+			_, err = reactor.Handle{{$crudObject}}(types.Delete, evt.{{$crudObject}})
 			if err != nil {
-				log.Errorf("Error deleting the {{$crudObject}} {%+v}. Err: %v", evt.{{$crudObject}}.ObjectMeta, err)
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$crudObject}} | Key: %s | Err: %v", types.Operation(types.Delete), evt.{{$crudObject}}.GetKey(), err))
 				client.debugStats.AddInt("Delete{{$crudObject}}Error", 1)
 			} else {
 				client.debugStats.AddInt("Delete{{$crudObject}}", 1)
@@ -282,7 +276,7 @@ func (client *NimbusClient) process{{$crudObject}}Event(evt netproto.{{$crudObje
 
 			// send oper status
 			ostream.Lock()
-			modificationTime, _ := types.TimestampProto(time.Now())
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.{{$crudObject}}.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 			err := ostream.stream.Send(&robj)
 			if err != nil {
@@ -318,7 +312,7 @@ func (client *NimbusClient) process{{$crudObject}}Dynamic(evt api.EventType,
 	client.lockObject({{lower $crudObject}}Evt.{{$crudObject}}.GetObjectKind(), {{lower $crudObject}}Evt.{{$crudObject}}.ObjectMeta)
 
 	err := client.process{{$crudObject}}Event({{lower $crudObject}}Evt, reactor, nil)
-	modificationTime, _ := types.TimestampProto(time.Now())
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
 	return err

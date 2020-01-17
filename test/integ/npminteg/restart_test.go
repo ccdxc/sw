@@ -3,8 +3,16 @@
 package npminteg
 
 import (
-	"context"
 	"fmt"
+
+	"github.com/pensando/sw/api/generated/security"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/utils/featureflags"
+
+	"context"
+	//"fmt"
 	"time"
 
 	"gopkg.in/check.v1"
@@ -12,12 +20,12 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
-	"github.com/pensando/sw/venice/ctrler/npm"
+	//"github.com/pensando/sw/api/generated/security"
+	//"github.com/pensando/sw/nic/agent/netagent/ctrlerif"
+	//"github.com/pensando/sw/venice/ctrler/npm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
-	"github.com/pensando/sw/venice/utils/featureflags"
+	//"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -37,12 +45,13 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
-		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
-		AssertOk(c, nerr, "error finding network")
-		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// stop API server
@@ -60,14 +69,18 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 
 	// verify NPM still has the network
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agents have the network too
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 	}
@@ -79,7 +92,11 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -90,7 +107,7 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 
 	// verify NPM recreates the network
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found on agent", "10ms", it.pollTimeout())
 
@@ -105,14 +122,18 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 
 	// wait for network to go away from NPM
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
 	}, "Network still found in NPM", "100ms", it.pollTimeout())
 
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -123,14 +144,18 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 
 	// verify NPM recreates the network
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 	}
@@ -146,14 +171,18 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 
 	// verify NPM still has the network
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agents have the network too
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 	}
@@ -165,7 +194,11 @@ func (it *integTestSuite) TestNpmApiServerRestart(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -184,49 +217,56 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
-		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
-		AssertOk(c, nerr, "error finding network")
-		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// stop NPM
-	err = it.ctrler.Stop()
+	err = it.npmCtrler.Stop()
 	AssertOk(c, err, "Error stopping NPM")
 
 	// verify agents are all disconnected
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return !ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return !cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 	// Set feature flags to initialized
 	featureflags.SetInitialized()
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 
 	// verify NPM still has the network
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agents are all connected back
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not connected to NPM", "10ms", it.pollTimeout())
 	}
 
 	// verify agents have the network too
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
 	}
@@ -238,7 +278,11 @@ func (it *integTestSuite) TestNpmRestart(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -312,12 +356,16 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	// verify agent state has the policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not found in agent. SGPolicy: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -338,13 +386,14 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	log.Infof("==================== Restarting NPM =========================")
 
 	// stop NPM
-	err = it.ctrler.Stop()
+	err = it.npmCtrler.Stop()
 	AssertOk(c, err, "Error stopping NPM")
 
 	// verify agents are all disconnected
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return !ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return !cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 
@@ -352,32 +401,37 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	featureflags.SetInitialized()
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 
 	// verify NPM got the sgpolicy
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindSgpolicy("default", "test-sgpolicy")
+		_, nerr := it.npmCtrler.StateMgr.FindSgpolicy("default", "test-sgpolicy")
 		return (nerr == nil), nil
 	}, "NetworkSecurityPolicy not found on NPM", "10ms", it.pollTimeout())
 
 	// verify agents are all connected back
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not connected to NPM", "10ms", it.pollTimeout())
 	}
 
 	// verify agents have the sgpolicy too
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy not found in agent. %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// delete the policy
@@ -388,7 +442,15 @@ func (it *integTestSuite) TestNpmRestartWithNetworkSecurityPolicy(c *C) {
 	// verify policy is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "test-sgpolicy"})
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      "default",
+					Tenant:    "default",
+					Namespace: "test-sgpolicy",
+				},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			return (nerr != nil), nil
 		}, "NetworkSecurityPolicy still found on agent", "100ms", "60s")
 	}
@@ -418,20 +480,25 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	// wait for endpoints to be sent to agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * numWorkloadPerHost), nil
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
 
 	log.Infof("==================== Restarting NPM =========================")
 
 	// stop NPM
-	err := it.ctrler.Stop()
+	err := it.npmCtrler.Stop()
 	AssertOk(c, err, "Error stopping NPM")
 
 	// verify agents are all disconnected
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return !ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return !cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 
@@ -439,14 +506,15 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	featureflags.SetInitialized()
 
 	// restart the NPM
-	it.ctrler, err = npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
+	it.npmCtrler, err = npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, it.resolverClient, it.logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
 	time.Sleep(time.Millisecond * 100)
 
 	// verify agents are all connected back
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 	time.Sleep(time.Millisecond * 100)
@@ -454,7 +522,11 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	// verify agents have all endpoints
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), len(ag.nagent.NetworkAgent.ListEndpoint())
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * numWorkloadPerHost), len(endpoints)
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
 
@@ -468,7 +540,11 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	// verify agent has old and new endpoints
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * (numWorkloadPerHost + 1)), ag.nagent.NetworkAgent.ListEndpoint()
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * (numWorkloadPerHost + 1)), endpoints
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
 
@@ -483,7 +559,11 @@ func (it *integTestSuite) TestNpmRestartWithWorkload(c *C) {
 	// verify endpoints are gone
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, ag.nagent.NetworkAgent.ListEndpoint()
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 0, endpoints
 		}, "Not all endpoints deleted from agent", "100ms", it.pollTimeout())
 	}
 
@@ -515,7 +595,11 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// wait for endpoints to be sent to agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * numWorkloadPerHost), nil
 		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
 	}
 
@@ -582,23 +666,27 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agent state has the policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// stop all agents
 	for _, ag := range it.agents {
-		ag.nagent.Stop()
+		ag.dscAgent.Stop()
 	}
 	it.agents = []*Dpagent{}
 
 	// restart all agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", i), it.resolverClient)
+		agent, err := CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", i))
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -606,7 +694,8 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agents are all connected back
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 	time.Sleep(time.Millisecond * 100)
@@ -614,19 +703,27 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agents have all endpoints
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), len(ag.nagent.NetworkAgent.ListEndpoint())
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * numWorkloadPerHost), len(endpoints)
 		}, "Endpoint count incorrect in agent after restart", "100ms", it.endpointPollTimeout())
 	}
 
 	// verify agent state has the policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// create one more workload on each host
@@ -639,13 +736,17 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agent has old and new endpoints
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * (numWorkloadPerHost + 1)), ag.nagent.NetworkAgent.ListEndpoint()
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * (numWorkloadPerHost + 1)), endpoints
 		}, "Endpoint count incorrect in agent after new workload", "100ms", it.pollTimeout())
 	}
 
 	// stop all agents
 	for _, ag := range it.agents {
-		ag.nagent.Stop()
+		ag.dscAgent.Stop()
 	}
 	it.agents = []*Dpagent{}
 
@@ -667,7 +768,7 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 
 	// restart all agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", i), it.resolverClient)
+		agent, err := CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", i))
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -675,7 +776,8 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agents are all connected back
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			cfg := ag.dscAgent.InfraAPI.GetConfig()
+			return cfg.IsConnectedToVenice, nil
 		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
 	}
 	time.Sleep(time.Millisecond * 100)
@@ -683,7 +785,11 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify agent new endpoint is removed from the agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), ag.nagent.NetworkAgent.ListEndpoint()
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == (it.numAgents * numWorkloadPerHost), endpoints
 		}, "Deleted endpoint still found in agent", "100ms", it.endpointPollTimeout())
 	}
 
@@ -700,145 +806,19 @@ func (it *integTestSuite) TestAgentRestart(c *C) {
 	// verify endpoints are gone
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, ag.nagent.NetworkAgent.ListEndpoint()
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 0, endpoints
 		}, "Not all endpoints deleted from agent", "100ms", it.pollTimeout())
 	}
+
+	// delete sg policy
+	err = it.DeleteSgpolicy(sgp.Tenant, sgp.Namespace, sgp.Name)
+	AssertOk(c, err, "error creating sg policy")
 
 	// delete the network
 	err = it.DeleteNetwork("default", "Network-Vlan-1")
-	c.Assert(err, IsNil)
-}
-
-func (it *integTestSuite) TestAgentDisconnectConnect(c *C) {
-	const numWorkloadPerHost = 10
-	// if not present create the default tenant
-	it.CreateTenant("default")
-
-	// create a host for each agent if it doesnt exist
-	for idx := range it.agents {
-		macAddr := fmt.Sprintf("0002.0000.%02x00", idx)
-		it.CreateHost(fmt.Sprintf("testHost-%d", idx), macAddr)
-	}
-
-	// create 100 workloads on each host
-	for i := range it.agents {
-		for j := 0; j < numWorkloadPerHost; j++ {
-			macAddr := fmt.Sprintf("0001.0203.%02x%02x", i, j)
-			err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, j), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+j), 1)
-			AssertOk(c, err, "Error creating workload")
-		}
-	}
-
-	// wait for endpoints to be sent to agents
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), nil
-		}, "Endpoint count incorrect in agent", "100ms", it.pollTimeout())
-	}
-
-	// stop npm client on all agents
-	for _, ag := range it.agents {
-		ag.nagent.NpmClient.Stop()
-		ag.nagent.NetworkAgent.Ctrlerif = nil
-	}
-
-	// restart npm client on all agents
-	for _, ag := range it.agents {
-		npmClient, err := ctrlerif.NewNpmClient(ag.nagent.NetworkAgent, globals.Npm, it.resolverClient)
-		AssertOk(c, err, "Error creating NPM client")
-		ag.nagent.NpmClient = npmClient
-	}
-
-	// verify agents are all connected back
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
-		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
-	}
-	time.Sleep(time.Millisecond * 100)
-
-	// verify agents have all endpoints
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), len(ag.nagent.NetworkAgent.ListEndpoint())
-		}, "Endpoint count incorrect in agent after restart", "100ms", it.pollTimeout())
-	}
-
-	// create one more workload on each host
-	for i := range it.agents {
-		macAddr := fmt.Sprintf("0001.0203.%02x%02x", i, numWorkloadPerHost)
-		err := it.CreateWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, numWorkloadPerHost), fmt.Sprintf("testHost-%d", i), macAddr, uint32(100+numWorkloadPerHost), 1)
-		AssertOk(c, err, "Error creating n+1 workload")
-	}
-
-	// verify agent has old and new endpoints
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * (numWorkloadPerHost + 1)), ag.nagent.NetworkAgent.ListEndpoint()
-		}, "Endpoint count incorrect in agent after new workload", "100ms", it.pollTimeout())
-	}
-
-	// stop npm client on all agents
-	for _, ag := range it.agents {
-		ag.nagent.NpmClient.Stop()
-		ag.nagent.NetworkAgent.Ctrlerif = nil
-	}
-
-	// delete new workload from each host
-	for i := 0; i < it.numAgents; i++ {
-		err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, numWorkloadPerHost))
-		AssertOk(c, err, "Error deleting workload")
-	}
-
-	// verify endpoints are gone from apiserver
-	AssertEventually(c, func() (bool, interface{}) {
-		listopt := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: "default"}}
-		eplist, lerr := it.apisrvClient.WorkloadV1().Endpoint().List(context.Background(), &listopt)
-		if lerr == nil && len(eplist) == (it.numAgents*numWorkloadPerHost) {
-			return true, nil
-		}
-		return false, eplist
-	}, "Endpoints still found in apiserver")
-
-	// restart npm client on all agents
-	for _, ag := range it.agents {
-		npmClient, err := ctrlerif.NewNpmClient(ag.nagent.NetworkAgent, globals.Npm, it.resolverClient)
-		AssertOk(c, err, "Error creating NPM client")
-		ag.nagent.NpmClient = npmClient
-	}
-
-	// verify agents are all connected back
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
-		}, "agents are not disconnected from NPM", "10ms", it.pollTimeout())
-	}
-	time.Sleep(time.Millisecond * 100)
-
-	// verify agent new endpoint is removed from the agent
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == (it.numAgents * numWorkloadPerHost), ag.nagent.NetworkAgent.ListEndpoint()
-		}, "Deleted endpoint still found in agent", "100ms", it.pollTimeout())
-	}
-	time.Sleep(time.Second * 2)
-
-	// delete workloads
-	for i := range it.agents {
-		for j := 0; j < numWorkloadPerHost; j++ {
-			err := it.DeleteWorkload("default", "default", fmt.Sprintf("testWorkload-%d-%d", i, j))
-			AssertOk(c, err, "Error deleting workload")
-		}
-	}
-
-	// verify endpoints are gone
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, ag.nagent.NetworkAgent.ListEndpoint()
-		}, "Not all endpoints deleted from agent", "100ms", it.pollTimeout())
-	}
-
-	// delete the network
-	err := it.DeleteNetwork("default", "Network-Vlan-1")
 	c.Assert(err, IsNil)
 }

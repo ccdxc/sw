@@ -8,8 +8,8 @@ package restapi
 import (
     "github.com/gorilla/mux"
     "github.com/pensando/sw/api"
-    "github.com/gogo/protobuf/types"
-    agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
+    protoTypes "github.com/gogo/protobuf/types"
+    "github.com/pensando/sw/nic/agent/dscagent/types"
 )
 {{range .Services}}
     {{$svcname := .Name}}
@@ -37,85 +37,121 @@ import (
            {{$pattern := .Pattern}}
            {{$methods := .Methods}}
            {{range $methods}}
-                {{if strEq . "list"}}
-                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
-                        return s.agent.List{{title $crudObject}}(), nil
-                    }
-                {{else}}
-                    func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
-                        var res Response
-                        {{if strEq . "post"}}
-                            var o netproto.{{title $crudObject}}
-                            b, _ := ioutil.ReadAll(r.Body)
-                            err := json.Unmarshal(b, &o)
-                            if err != nil {
-                                return nil, err
-                            }
-                            c, _ := types.TimestampProto(time.Now())
-                            o.CreationTime = api.Timestamp{
-                                Timestamp: *c,
-                            }
-                            o.ModTime = api.Timestamp{
-                                Timestamp: *c,
-                            }
-                        
-                             err = s.agent.Create{{title $crudObject}}(&o)
-                        {{else if strEq . "put"}}
-                             var o netproto.{{title $crudObject}}
-                             b, _ := ioutil.ReadAll(r.Body)
-                             err := json.Unmarshal(b, &o)
-                             if err != nil {
-                                 return nil, err
-                             }
-                             m, _ := types.TimestampProto(time.Now())
-                             o.ModTime = api.Timestamp{
-                                Timestamp: *m,
-                             }
-                             err = s.agent.Update{{title $crudObject}}(&o)
-                        {{else if strEq . "delete"}}
-                             {{if strEq $crudObject "Tenant"}}
-                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
-                                err := s.agent.Delete{{title $crudObject}}(name, name, name)
-                             {{else if strEq $crudObject "Namespace"}}
-                                tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
-                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
-                                err := s.agent.Delete{{title $crudObject}}(tenant, name, name)
-                             {{else}}
-                                tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
-                                namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
-                                name, _ := mux.Vars(r)["ObjectMeta.Name"]
-                                err := s.agent.Delete{{title $crudObject}}(tenant, namespace, name)
-                             {{end}}
-                        {{end}}
-                        {{if strEq . "post"}}
-                          {{if strEq $crudObject "Tenant"}}
-                            res.References = []string{fmt.Sprintf("%s%s",r.RequestURI, o.Name)}
-                          {{else if strEq $crudObject "Namespace"}}
-                            res.References = []string{fmt.Sprintf("%s%s/%s",r.RequestURI, o.Tenant, o.Name)}
-                          {{else}}
-                            res.References = []string{fmt.Sprintf("%s%s/%s/%s",r.RequestURI, o.Tenant, o.Namespace, o.Name)}
-                          {{end}}
-                        {{else}}
-                          res.References = []string{r.RequestURI}
-                        {{end}}
-                        if err != nil {
-                          res.StatusCode = http.StatusInternalServerError
-                          res.Error = err.Error()
-                          {{if strEq . "delete"}}
-                          // check if its a cannot delete type err
-                          delErr , ok := err.(*agentTypes.ErrCannotDelete)
-                          if ok {
-                            res.References = delErr.References
-                          }
-                          {{end}}
-                            return res, err
-                        }
+            {{if strEq . "post"}}
+              func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+               var o netproto.{{title $crudObject}}
+               b, _ := ioutil.ReadAll(r.Body)
+               err := json.Unmarshal(b, &o)
+               if err != nil {
+                   return nil, err
+               }
+               c, _ := protoTypes.TimestampProto(time.Now())
+               o.CreationTime = api.Timestamp{
+                   Timestamp: *c,
+               }
+               o.ModTime = api.Timestamp{
+                   Timestamp: *c,
+               }
 
-                        res.StatusCode = http.StatusOK
-                        return res, err
-                    }
-                {{end}}
+               _, err = s.pipelineAPI.Handle{{title $crudObject}}(types.Create, o)
+
+               if err != nil {
+                 return Response {
+                   StatusCode: http.StatusInternalServerError,
+                 }, err
+               }
+               return Response {
+                 StatusCode:http.StatusOK,
+               }, nil
+             }
+
+             {{else if strEq . "list"}}
+             func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+              o := netproto.{{$crudObject}}{
+ 		                     TypeMeta:   api.TypeMeta{Kind: "{{$crudObject}}"},
+ 	                     }
+
+              return s.pipelineAPI.Handle{{title $crudObject}}(types.List, o)
+             }
+
+            {{else if strEq . "get"}}
+            func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+              tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+              namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+              name, _ := mux.Vars(r)["ObjectMeta.Name"]
+              o := netproto.{{$crudObject}}{
+            		TypeMeta:   api.TypeMeta{Kind:"{{$crudObject}}"},
+            		ObjectMeta: api.ObjectMeta{
+            			Tenant: tenant,
+            			Namespace: namespace,
+            			Name: name,
+            		},
+            	}
+
+             data, err := s.pipelineAPI.Handle{{title $crudObject}}(types.Get, o)
+             if err != nil {
+               return Response {
+                 StatusCode: http.StatusInternalServerError,
+               }, err
+             }
+             return data, nil
+
+            }
+
+            {{else if strEq . "put"}}
+            func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+              var o netproto.{{title $crudObject}}
+              b, _ := ioutil.ReadAll(r.Body)
+              err := json.Unmarshal(b, &o)
+              if err != nil {
+                  return nil, err
+              }
+              c, _ := protoTypes.TimestampProto(time.Now())
+              o.CreationTime = api.Timestamp{
+                  Timestamp: *c,
+              }
+              o.ModTime = api.Timestamp{
+                  Timestamp: *c,
+              }
+
+             _, err = s.pipelineAPI.Handle{{title $crudObject}}(types.Update, o)
+             if err != nil {
+               return Response {
+                 StatusCode: http.StatusInternalServerError,
+               }, err
+             }
+             return Response {
+               StatusCode: http.StatusOK,
+             }, nil
+            }
+
+            {{else if strEq . "delete"}}
+            func (s *RestServer) {{lower .}}{{title $crudObject}}Handler(r *http.Request) (interface{}, error){
+              tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+              namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+              name, _ := mux.Vars(r)["ObjectMeta.Name"]
+              o := netproto.{{$crudObject}}{
+            		TypeMeta:   api.TypeMeta{Kind:"{{$crudObject}}"},
+            		ObjectMeta: api.ObjectMeta{
+            			Tenant: tenant,
+            			Namespace: namespace,
+            			Name: name,
+            		},
+            	}
+
+             _, err := s.pipelineAPI.Handle{{title $crudObject}}(types.Delete, o)
+             if err != nil {
+               return Response {
+                 StatusCode: http.StatusInternalServerError,
+               }, err
+             }
+             return Response {
+               StatusCode:http.StatusOK,
+             }, nil
+            }
+
+            {{end}}
            {{end}}
        {{end}}
-    {{end}}
-{{end}}
+     {{end}}
+   {{end}}

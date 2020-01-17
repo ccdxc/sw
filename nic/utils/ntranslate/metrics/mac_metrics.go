@@ -1,40 +1,65 @@
 package metrics
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/pensando/sw/api"
 	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
-	dnetproto "github.com/pensando/sw/nic/agent/protos/generated/delphi/netproto/delphi"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 )
 
-type macMetricsXlate struct{}
+type macMetricsXlate struct {
+	portToInterfaceMap map[uint32]*netproto.Interface // maintains portID to netproto.Interface map. Caching this value is ok as the mappings don't change after init
+}
+
+func newMacMetricsTranslator() *macMetricsXlate {
+	m := &macMetricsXlate{
+		portToInterfaceMap: make(map[uint32]*netproto.Interface),
+	}
+	return m
+}
 
 // KeyToMeta converts network key to meta
 func (n *macMetricsXlate) KeyToMeta(key interface{}) *api.ObjectMeta {
-	if portID, ok := key.(uint32); ok {
-		intfName := strconv.FormatUint(uint64(portID), 10)
-		if delphiClient != nil {
-			nodeUUID := ""
-			nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
-			for _, ns := range nslist {
-				nodeUUID = ns.GetDSCName()
+	portID, ok := key.(uint32)
+	if ok {
+		nodeUUID := ""
+		nslist := delphiProto.DistributedServiceCardStatusList(delphiClient)
+		for _, ns := range nslist {
+			nodeUUID = ns.GetDSCName()
+		}
+
+		// Check cache.
+		_, found := n.portToInterfaceMap[portID]
+		if !found {
+			// build cache
+			reqURL := fmt.Sprintf("http://127.0.0.1:%s/api/interfaces/", globals.AgentRESTPort)
+			var interfaces []netproto.Interface
+			if err := netutils.HTTPGet(reqURL, &interfaces); err != nil {
+				log.Errorf("Failed to Get Interfaces from Agent. Err: %v", err)
 			}
-			intfList := dnetproto.InterfaceList(delphiClient)
-			for _, intf := range intfList {
-				if intf.Interface.Spec.Type == "UPLINK_ETH" || intf.Interface.Spec.Type == "UPLINK_MGMT" {
-					if intf.Interface.Status.IFUplinkStatus.PortID == portID {
-						if nodeUUID != "" {
-							intfName = nodeUUID + "-" + intf.Interface.ObjectMeta.Name
-						} else {
-							intfName = intf.Interface.ObjectMeta.Name
-						}
-					}
+
+			for _, intf := range interfaces {
+				if intf.Spec.Type == "UPLINK_ETH" || intf.Spec.Type == "UPLINK_MGMT" {
+					n.portToInterfaceMap[portID] = &intf
 				}
 			}
 		}
 
-		return &api.ObjectMeta{Tenant: "default", Namespace: "default", Name: intfName}
+		intf, ok := n.portToInterfaceMap[portID]
+		if !ok {
+			log.Errorf("Failed to find the interface with port ID %d in DB: %v", portID, n.portToInterfaceMap)
+			return nil
+		}
+
+		return &api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      fmt.Sprintf("%s-%s", nodeUUID, intf.Name)}
+
 	}
 	return nil
 }

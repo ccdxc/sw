@@ -10,15 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/events/generated/eventtypes"
-	"github.com/pensando/sw/venice/utils/events/recorder"
-
 	"github.com/gogo/protobuf/types"
-
 	"github.com/vishvananda/netlink"
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/nmd/utils"
@@ -27,10 +25,19 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certs"
 	"github.com/pensando/sw/venice/utils/certsproxy"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
+
+// Response captures the HTTP Response sent by Agent REST Server
+type Response struct {
+	StatusCode int      `json:"status-code,omitempty"`
+	Error      string   `json:"error,omitempty"`
+	References []string `json:"references,omitempty"`
+}
 
 const (
 	// ConfigURL is URL to configure a nic
@@ -61,6 +68,8 @@ const (
 	// Retry interval is initially exponential and is capped
 	// at 3 mins.
 	nicRegMaxInterval = 3 * time.Minute
+	// agentModeChangeURL is netagent's mode change URL
+	agentModeChangeURL = "http://127.0.0.1:9007/api/mode/"
 )
 
 // CreateNaplesProfile creates a Naples Profile
@@ -271,8 +280,47 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 		err = fmt.Errorf("failed to persist device config. Err: %v ", err)
 		return
 	}
-
 	n.config.Status.Mode = n.config.Spec.Mode
+
+	var controllers []string
+	var mgmtIntf string
+
+	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
+		mgmtIntf = ipif.NaplesInbandInterface
+	} else if n.config.Spec.NetworkMode == nmd.NetworkMode_OOB.String() {
+		mgmtIntf = ipif.NaplesOOBInterface
+	}
+
+	for _, c := range n.config.Status.Controllers {
+		controllers = append(controllers, fmt.Sprintf("%s:%s", c, globals.CMDGRPCAuthPort))
+	}
+
+	statusObj := agentTypes.DistributedServiceCardStatus{
+		DSCMode:     n.config.Status.Mode,
+		DSCName:     n.config.Status.DSCName,
+		MgmtIP:      n.config.Status.IPConfig.IPAddress,
+		MgmtIntf:    mgmtIntf,
+		Controllers: controllers,
+	}
+
+	var resp Response
+	ticker := time.NewTicker(time.Minute)
+	if err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp); err != nil {
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					err := netutils.HTTPPost(agentModeChangeURL, &statusObj, &resp)
+					if err != nil {
+						log.Errorf("NetAgent failed to respond to mode change. Resp: %v | Err: %v", resp, err)
+					} else {
+						return
+					}
+				}
+			}
+		}()
+	}
+
 	if updateDelphi && n.Pipeline != nil {
 		if err = n.Pipeline.WriteDelphiObjects(); err != nil {
 			return err

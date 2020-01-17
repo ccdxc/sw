@@ -3,40 +3,52 @@
 package npminteg
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
 
-	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/labels"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/globals"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 // TestNpmSgCreateDelete
 func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
-	it.DeleteSgpolicy("default", "default", "test-sgpolicy")
-	it.DeleteSgpolicy("default", "default", "testpolicy")
-	it.DeleteSgpolicy("default", "default", "sgpolicy-0")
+
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
 
 	// Check agent doesn't have any SG Policies
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			policies := ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			}
+			policies, _ := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.List, nsgp)
 			if len(policies) != 0 {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SG Policies not deleted from agent"), "10ms", it.pollTimeout())
 	}
 
 	// if not present create the default tenant
 	it.CreateTenant("default")
 	// create sg in watcher
-	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 
 	// incoming rule
@@ -68,12 +80,16 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify agent state has the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			_, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err != nil {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SG Policy not found on agent. SGPolicy: %v", policyMeta), "10ms", it.pollTimeout())
 	}
 
 	// delete the sg policy
@@ -83,7 +99,11 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// verify rules are gone from agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			_, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err == nil {
 				return false, nil
 			}
@@ -93,21 +113,23 @@ func (it *integTestSuite) TestNpmSgCreateDelete(c *C) {
 	// delete the security group
 	err = it.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
-
-	// verify sg is removed from datapath
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
-		}, "Sg still found on agent", "10ms", it.pollTimeout())
-	}
 }
 
 // TestNpmSgCreateUpdateDelete
 func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
+
 	// if not present create the default tenant
 	it.CreateTenant("default")
 	// create sg in watcher
-	err := it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
+	err = it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	//c.Assert(err, IsNil)
 	numApps := 2
 	addApps := 1
@@ -122,7 +144,7 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 
 	//Stop App Watch so that we  miss apps update.
 
-	it.ctrler.StateMgr.StopAppWatch()
+	it.npmCtrler.StateMgr.StopAppWatch()
 	for index, app := range apps {
 		err := it.CreateApp("default", "default", app, ports[index])
 		c.Assert(err, IsNil)
@@ -140,12 +162,16 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 			}
 
 			AssertEventually(c, func() (bool, interface{}) {
-				_, err := ag.nagent.NetworkAgent.FindApp(policyMeta)
+				napp := netproto.App{
+					TypeMeta:   api.TypeMeta{Kind: "App"},
+					ObjectMeta: policyMeta,
+				}
+				_, err := ag.dscAgent.PipelineAPI.HandleApp(agentTypes.Get, napp)
 				if err == nil {
 					return false, nil
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("App not found in agent. App: %v", policyMeta), "10ms", it.pollTimeout())
 			if index+1 == addApps {
 				break
 			}
@@ -177,16 +203,20 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 	// verify agent state does not have the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			_, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err == nil {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy still found in agent. SGP: %v", policyMeta), "10ms", it.pollTimeout())
 	}
 
 	//Now we will allow apps to resolve
-	it.ctrler.StateMgr.StartAppWatch()
+	it.npmCtrler.StateMgr.StartAppWatch()
 	// construct object meta
 	for _, ag := range it.agents {
 		for index, app := range apps {
@@ -197,12 +227,16 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 			}
 
 			AssertEventually(c, func() (bool, interface{}) {
-				_, err := ag.nagent.NetworkAgent.FindApp(policyMeta)
+				napp := netproto.App{
+					TypeMeta:   api.TypeMeta{Kind: "App"},
+					ObjectMeta: policyMeta,
+				}
+				_, err := ag.dscAgent.PipelineAPI.HandleApp(agentTypes.Get, napp)
 				if err != nil {
 					return false, nil
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("App found on agent. App: %v", policyMeta), "10ms", it.pollTimeout())
 			if index+1 == addApps {
 				break
 			}
@@ -212,12 +246,16 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 	// verify agent state has the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			_, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err != nil {
 				return false, nil
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGpolicy not found in agent. SGP: %v", policyMeta), "10ms", it.pollTimeout())
 	}
 
 	//Do Update
@@ -241,12 +279,16 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 			}
 
 			AssertEventually(c, func() (bool, interface{}) {
-				_, err := ag.nagent.NetworkAgent.FindApp(policyMeta)
+				napp := netproto.App{
+					TypeMeta:   api.TypeMeta{Kind: "App"},
+					ObjectMeta: policyMeta,
+				}
+				_, err := ag.dscAgent.PipelineAPI.HandleApp(agentTypes.Get, napp)
 				if err != nil {
 					return false, nil
 				}
 				return true, nil
-			}, fmt.Sprintf("App not found on agent. DB: %v", len(ag.nagent.NetworkAgent.ListApp())), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("App not found on agent. App: %v", policyMeta), "10ms", it.pollTimeout())
 		}
 	}
 
@@ -265,19 +307,23 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 	// verify agent state has the policy has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			gsgp, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err != nil {
 				return false, nil
 			}
-			if len(gsgp.Spec.Rules) != numApps {
-				return false, gsgp.Spec.Rules
+			if len(gsgp[0].Spec.Rules) != numApps {
+				return false, gsgp[0].Spec.Rules
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg rules not found on agent. SGP: %v", policyMeta), "10ms", it.pollTimeout())
 	}
 
 	//Stop Policy watch so that npm does not receive delete
-	it.ctrler.StopNetworkSecurityPolicyWatch()
+	it.npmCtrler.StopNetworkSecurityPolicyWatch()
 	// delete the sg policy
 	err = it.DeleteSgpolicy("default", "default", "testpolicy")
 	c.Assert(err, IsNil)
@@ -300,22 +346,30 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 			}
 
 			AssertEventually(c, func() (bool, interface{}) {
-				_, err := ag.nagent.NetworkAgent.FindApp(policyMeta)
+				napp := netproto.App{
+					TypeMeta:   api.TypeMeta{Kind: "App"},
+					ObjectMeta: policyMeta,
+				}
+				_, err := ag.dscAgent.PipelineAPI.HandleApp(agentTypes.Get, napp)
 				if err != nil {
 					return false, nil
 				}
 				return true, nil
-			}, fmt.Sprintf("App found on agent. DB: %v", len(ag.nagent.NetworkAgent.ListApp())), "100ms", it.pollTimeout())
+			}, fmt.Sprintf("App found on agent. DB: %v", policyMeta), "100ms", it.pollTimeout())
 		}
 	}
 
-	it.ctrler.StartNetworkSecurityPolicyWatch()
-	time.Sleep(100 * time.Millisecond)
+	it.npmCtrler.StartNetworkSecurityPolicyWatch()
+	time.Sleep(2 * time.Second)
 
 	// verify rules are not gone from agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, err := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(policyMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: policyMeta,
+			}
+			_, err := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if err != nil {
 				return true, nil
 			}
@@ -333,35 +387,33 @@ func (it *integTestSuite) TestNpmSgCreateDeleteWitApps(c *C) {
 			}
 
 			AssertEventually(c, func() (bool, interface{}) {
-				_, err := ag.nagent.NetworkAgent.FindApp(policyMeta)
+				napp := netproto.App{
+					TypeMeta:   api.TypeMeta{Kind: "App"},
+					ObjectMeta: policyMeta,
+				}
+				_, err := ag.dscAgent.PipelineAPI.HandleApp(agentTypes.Get, napp)
 				if err != nil {
 					return true, nil
 				}
 				return false, nil
-			}, fmt.Sprintf("Sg rules not found on agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("App not found on agent. App: %v", policyMeta), "10ms", it.pollTimeout())
 		}
 	}
 
 	// delete the security group
 	err = it.DeleteSecurityGroup("default", "testsg")
 	c.Assert(err, IsNil)
-
-	// verify sg is removed from datapath
-	for _, ag := range it.agents {
-		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
-		}, "Sg still found on agent", "10ms", it.pollTimeout())
-	}
 }
 
 func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
+
 	// if not present create the default tenant
 	it.CreateTenant("default")
 	// create a network in controller
 	err := it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	//c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
@@ -369,7 +421,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	err = it.CreateSecurityGroup("default", "default", "testsg", labels.SelectorFromSet(labels.Set{"env": "production", "app": "procurement"}))
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, serr := it.ctrler.StateMgr.FindSecurityGroup("default", "testsg")
+		_, serr := it.npmCtrler.StateMgr.FindSecurityGroup("default", "testsg")
 		return (serr == nil), nil
 	}, "Sg not found in statemgr")
 
@@ -380,14 +432,21 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 1, nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 1, nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
-		epmeta := api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "testEndpoint1",
+		epmeta := netproto.Endpoint{
+			TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "testEndpoint1",
+			},
 		}
-		_, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+		_, err := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 		c.Assert(err, Equals, nil)
 	}
 
@@ -398,7 +457,11 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify new endpoint is present in all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 2, nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 2, nil
 		}, "endpoint not found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -407,7 +470,11 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 1, nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 1, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -418,12 +485,15 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	// verify sg is removed from the endpoint
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			epmeta := api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      "testEndpoint1",
+			epmeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant:    "default",
+					Namespace: "default",
+					Name:      "testEndpoint1",
+				},
 			}
-			_, err := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+			_, err := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 			if err != nil {
 				return false, nil
 			}
@@ -436,7 +506,11 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	c.Assert(err, IsNil)
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			return len(endpoints) == 0, nil
 		}, "endpoint still found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -444,7 +518,7 @@ func (it *integTestSuite) TestNpmSgEndpointAttach(c *C) {
 	err = it.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
 	}, "endpoint still found on agent", "10ms", it.pollTimeout())
 }
@@ -483,7 +557,10 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 	// verify all agents have the security group
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListSecurityProfile()) == 0, nil
+			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
+			profiles, _ := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
+
+			return len(profiles) == 0, nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -494,7 +571,9 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 	// verify all agents have the security group
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return len(ag.nagent.NetworkAgent.ListSecurityProfile()) == 1, nil
+			p := netproto.SecurityProfile{TypeMeta: api.TypeMeta{Kind: "SecurityProfile"}}
+			profiles, _ := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.List, p)
+			return len(profiles) == 1, nil
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
 	}
 
@@ -506,9 +585,13 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 	// verify params got updated in agent
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
+			profileMeta := netproto.SecurityProfile{
+				TypeMeta:   api.TypeMeta{Kind: "SecurityProfile"},
+				ObjectMeta: fwp.ObjectMeta,
+			}
+			secp, cerr := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
 
-			secp, cerr := ag.nagent.NetworkAgent.FindSecurityProfile(fwp.ObjectMeta)
-			if (cerr != nil) || (secp.Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
+			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
 				return false, secp
 			}
 			return true, nil

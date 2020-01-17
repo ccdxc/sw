@@ -36,7 +36,7 @@ func (na *Nagent) CreateTenant(tn *netproto.Tenant) error {
 
 	// Allocate ID only on first object creates and use existing ones during config replay
 	if tn.Status.TenantID == 0 {
-		tenantID, err := na.Store.GetNextID(types.TenantID)
+		tenantID, err := na.Store.GetNextID(types.TenantID, 0)
 		if err != nil {
 			log.Errorf("Could not allocate tenant id. {%+v}", err)
 			return err

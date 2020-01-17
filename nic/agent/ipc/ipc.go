@@ -14,7 +14,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	ipcproto "github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	ipcproto "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

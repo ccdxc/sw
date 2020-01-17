@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto3 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto4 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type IPAMPolicy struct {
 	Meta       *delphi.ObjectMeta    `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key        string                `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	IPAMPolicy *netproto3.IPAMPolicy `protobuf:"bytes,3,opt,name=IPAMPolicy" json:"IPAMPolicy,omitempty"`
+	IPAMPolicy *netproto4.IPAMPolicy `protobuf:"bytes,3,opt,name=IPAMPolicy" json:"IPAMPolicy,omitempty"`
 }
 
 func (m *IPAMPolicy) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type IPAMPolicyReactor interface {
 func (m *IPAMPolicy) Reset()                    { *m = IPAMPolicy{} }
 func (m *IPAMPolicy) String() string            { return proto.CompactTextString(m) }
 func (*IPAMPolicy) ProtoMessage()               {}
-func (*IPAMPolicy) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (*IPAMPolicy) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
 
 func (m *IPAMPolicy) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *IPAMPolicy) GetKey() string {
 	return ""
 }
 
-func (m *IPAMPolicy) GetIPAMPolicy() *netproto3.IPAMPolicy {
+func (m *IPAMPolicy) GetIPAMPolicy() *netproto4.IPAMPolicy {
 	if m != nil {
 		return m.IPAMPolicy
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*IPAMPolicy)(nil), "dnetproto.IPAMPolicy")
 }
 
-func init() { proto.RegisterFile("delphi/ipam.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("delphi/ipam.proto", fileDescriptor3) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor3 = []byte{
 	// 190 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4c, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0xcf, 0x2c, 0x48, 0xcc, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c,

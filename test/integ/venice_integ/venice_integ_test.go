@@ -8,6 +8,9 @@ import (
 	"testing"
 	"time"
 
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
@@ -49,7 +52,11 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network gets created in agent
 	AssertEventually(c, func() (bool, interface{}) {
-		_, cerr := it.snics[0].agent.NetworkAgent.FindNetwork(nw.ObjectMeta)
+		ntMeta := netproto.Network{
+			TypeMeta:   api.TypeMeta{Kind: "Network"},
+			ObjectMeta: nw.ObjectMeta,
+		}
+		_, cerr := it.snics[0].agent.PipelineAPI.HandleNetwork(agentTypes.Get, ntMeta)
 		return (cerr == nil), nil
 	}, "Network not found in agent", "100ms", it.pollTimeout())
 
@@ -59,7 +66,11 @@ func (it *veniceIntegSuite) TestVeniceIntegBasic(c *C) {
 
 	// verify network is removed from agent
 	AssertEventually(c, func() (bool, interface{}) {
-		_, cerr := it.snics[0].agent.NetworkAgent.FindNetwork(nw.ObjectMeta)
+		ntMeta := netproto.Network{
+			TypeMeta:   api.TypeMeta{Kind: "Network"},
+			ObjectMeta: nw.ObjectMeta,
+		}
+		_, cerr := it.snics[0].agent.PipelineAPI.HandleNetwork(agentTypes.Get, ntMeta)
 		return (cerr != nil), nil
 	}, "Network still found in agent", "100ms", it.pollTimeout())
 }

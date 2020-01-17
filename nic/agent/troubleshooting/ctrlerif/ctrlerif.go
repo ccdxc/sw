@@ -155,6 +155,10 @@ func (client *TsClient) runTroubleShootingWatcher(ctx context.Context) {
 								return
 							}
 
+							if err != nil {
+								// Raise a config event
+							}
+
 							if err == nil { // return on success
 								return
 							}

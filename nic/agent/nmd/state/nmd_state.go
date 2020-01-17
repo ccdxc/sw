@@ -176,7 +176,8 @@ func NewNMD(pipeline Pipeline,
 
 	config := nmd.DistributedServiceCard{
 		ObjectMeta: api.ObjectMeta{
-			Name: "DistributedServiceCardConfig",
+			Name:   "DistributedServiceCardConfig",
+			Tenant: "default",
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "DistributedServiceCard",

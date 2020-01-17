@@ -16,7 +16,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "192.168.100.101/32"
+            "192.168.100.101"
           ],
           "ipv6-addresses": [
             "2000::101/128"
@@ -40,7 +40,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "192.168.100.102/32"
+            "192.168.100.102"
           ],
           "ipv6-addresses": [
             "2000::102/128"
@@ -64,7 +64,7 @@
         "spec": {
           "network-name": "nw1",
           "ipv4-addresses": [
-            "192.168.101.101/32"
+            "192.168.101.101"
           ],
           "ipv6-addresses": [
             "2001::101/128"
@@ -88,7 +88,7 @@
         "spec": {
           "network-name": "nw1",
           "ipv4-addresses": [
-            "192.168.101.102/32"
+            "192.168.101.102"
           ],
           "ipv6-addresses": [
             "2001::102/128"
@@ -112,7 +112,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "192.168.100.103/32"
+            "192.168.100.103"
           ],
           "ipv6-addresses": [
             "2000::103/128"
@@ -136,7 +136,7 @@
         "spec": {
           "network-name": "nw0",
           "ipv4-addresses": [
-            "192.168.100.104/32"
+            "192.168.100.104"
           ],
           "ipv6-addresses": [
             "2000::104/128"
@@ -160,7 +160,7 @@
         "spec": {
           "network-name": "nw1",
           "ipv4-addresses": [
-            "192.168.101.103/32"
+            "192.168.101.103"
           ],
           "ipv6-addresses": [
             "2001::103/128"
@@ -184,7 +184,7 @@
         "spec": {
           "network-name": "nw1",
           "ipv4-addresses": [
-            "192.168.101.104/32"
+            "192.168.101.104"
           ],
           "ipv6-addresses": [
             "2001::104/128"

@@ -116,8 +116,8 @@ run "yum install -y #{PACKAGES.join(" ")}"
 # otherwise protobuf.pc will end up in the wrong spot, required for building protobuf-c
 run "ln -s /usr/share/pkgconfig /usr/lib/pkgconfig"
 
-# Install go 1.12.9
-run "curl -sSL https://dl.google.com/go/go1.12.9.linux-amd64.tar.gz | tar xz -C /usr/local"
+# Install go 1.13.4
+run "curl -sSL https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz | tar xz -C /usr/local"
 run "go get github.com/golang/protobuf/..."
 
 run "yum install epel-release"

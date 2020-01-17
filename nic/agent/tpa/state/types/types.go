@@ -4,24 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	tstype "github.com/pensando/sw/nic/agent/troubleshooting/state/types"
 )
 
 // CtrlerIntf provides all CRUD operations on telemetry policy objects
 type CtrlerIntf interface {
-	CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
-	GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowExportPolicy) (*tpmprotos.FlowExportPolicy, error)
-	ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error)
-	UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
-	DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error
-
 	CreateFwlogPolicy(ctx context.Context, p *tpmprotos.FwlogPolicy) error
 	GetFwlogPolicy(tx context.Context, p *tpmprotos.FwlogPolicy) (*tpmprotos.FwlogPolicy, error)
 	ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPolicy, error)
@@ -173,7 +168,7 @@ func (m *FlowMonitorTable) Unmarshal(data []byte) error {
 
 // FlowExportPolicyTable is saved in agent to track hal object
 type FlowExportPolicyTable struct {
-	*tpmprotos.FlowExportPolicy
+	*netproto.FlowExportPolicy
 	// Vrf is the vrf id
 	Vrf uint64
 	// CollectorKeys stores collectors with CollectorKey.string() as key

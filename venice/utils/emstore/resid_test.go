@@ -92,26 +92,26 @@ func validateConcurrency(genids *[]uint64) error {
 func resourceIDAllocationTest(db Emstore, t *testing.T, n, s, tn ResourceType) {
 	// test net id allocation
 
-	nextID, err := db.GetNextID(n)
+	nextID, err := db.GetNextID(n, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(1), nextID, "Getting next id for network failed.")
-	nextID, err = db.GetNextID(n)
+	nextID, err = db.GetNextID(n, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(2), nextID, "Getting next id for network failed.")
 
 	// test sg id allocation
-	nextID, err = db.GetNextID(s)
+	nextID, err = db.GetNextID(s, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(1), nextID, "Getting next id for network failed.")
-	nextID, err = db.GetNextID(s)
+	nextID, err = db.GetNextID(s, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(2), nextID, "Getting next id for network failed.")
 
 	// test tenant id allocation
-	nextID, err = db.GetNextID(tn)
+	nextID, err = db.GetNextID(tn, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(1), nextID, "Getting next id for network failed.")
-	nextID, err = db.GetNextID(tn)
+	nextID, err = db.GetNextID(tn, 0)
 	AssertOk(t, err, "Could not get the next ID")
 	AssertEquals(t, uint64(2), nextID, "Getting next id for network failed.")
 }
@@ -127,21 +127,21 @@ func concurrentResourceIDAllocationTest(db Emstore, t *testing.T, genIDs []uint6
 	for i := 0; i < concurrencyCount; i++ {
 		randomUsec := randGen.Intn(100)
 		go func(iter int) {
-			id, err := db.GetNextID(n)
+			id, err := db.GetNextID(n, 0)
 			AssertOk(t, err, fmt.Sprintf("could not generate network ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))
 		}(i)
 
 		go func(iter int) {
-			id, err := db.GetNextID(s)
+			id, err := db.GetNextID(s, 0)
 			AssertOk(t, err, fmt.Sprintf("Could not generate security group ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))
 		}(i)
 
 		go func(iter int) {
-			id, err := db.GetNextID(tn)
+			id, err := db.GetNextID(tn, 0)
 			AssertOk(t, err, fmt.Sprintf("Could not generate tenant ID. Iteration: %v, Err: %v", iter, err))
 			idChannel <- id
 			time.Sleep(time.Microsecond * time.Duration(randomUsec))

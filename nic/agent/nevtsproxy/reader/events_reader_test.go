@@ -14,7 +14,7 @@ import (
 	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/events/generated/eventtypes"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/nevtsproxy/shm"
 	"github.com/pensando/sw/venice/utils/events"
 	"github.com/pensando/sw/venice/utils/events/dispatcher"

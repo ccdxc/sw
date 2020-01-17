@@ -1,4 +1,4 @@
-FROM golang:1.12.9-alpine3.10
+FROM golang:1.13.4-alpine3.10
 MAINTAINER "Barun Halder" <barun@pensando.io>
 RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/main > /etc/apk/repositories
 RUN echo http://package-mirror.test.pensando.io/alpine/v3.10/community >> /etc/apk/repositories

@@ -8,17 +8,16 @@ package restapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
-	agentTypes "github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 )
 
@@ -26,6 +25,8 @@ import (
 func (s *RestServer) AddAppAPIRoutes(r *mux.Router) {
 
 	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listAppHandler))
+
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.getAppHandler))
 
 	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postAppHandler))
 
@@ -36,19 +37,44 @@ func (s *RestServer) AddAppAPIRoutes(r *mux.Router) {
 }
 
 func (s *RestServer) listAppHandler(r *http.Request) (interface{}, error) {
-	return s.agent.ListApp(), nil
+	o := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+	}
+
+	return s.pipelineAPI.HandleApp(types.List, o)
+}
+
+func (s *RestServer) getAppHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	data, err := s.pipelineAPI.HandleApp(types.Get, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return data, nil
+
 }
 
 func (s *RestServer) postAppHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	var o netproto.App
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-	c, _ := types.TimestampProto(time.Now())
+	c, _ := protoTypes.TimestampProto(time.Now())
 	o.CreationTime = api.Timestamp{
 		Timestamp: *c,
 	}
@@ -56,72 +82,64 @@ func (s *RestServer) postAppHandler(r *http.Request) (interface{}, error) {
 		Timestamp: *c,
 	}
 
-	err = s.agent.CreateApp(&o)
-
-	res.References = []string{fmt.Sprintf("%s%s/%s/%s", r.RequestURI, o.Tenant, o.Namespace, o.Name)}
+	_, err = s.pipelineAPI.HandleApp(types.Create, o)
 
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		return res, err
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
-
-	res.StatusCode = http.StatusOK
-	return res, err
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }
 
 func (s *RestServer) putAppHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	var o netproto.App
 	b, _ := ioutil.ReadAll(r.Body)
 	err := json.Unmarshal(b, &o)
 	if err != nil {
 		return nil, err
 	}
-	m, _ := types.TimestampProto(time.Now())
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
 	o.ModTime = api.Timestamp{
-		Timestamp: *m,
+		Timestamp: *c,
 	}
-	err = s.agent.UpdateApp(&o)
 
-	res.References = []string{r.RequestURI}
-
+	_, err = s.pipelineAPI.HandleApp(types.Update, o)
 	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		return res, err
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
 	}
-
-	res.StatusCode = http.StatusOK
-	return res, err
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }
 
 func (s *RestServer) deleteAppHandler(r *http.Request) (interface{}, error) {
-	var res Response
-
 	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
 	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
 	name, _ := mux.Vars(r)["ObjectMeta.Name"]
-	err := s.agent.DeleteApp(tenant, namespace, name)
-
-	res.References = []string{r.RequestURI}
-
-	if err != nil {
-		res.StatusCode = http.StatusInternalServerError
-		res.Error = err.Error()
-
-		// check if its a cannot delete type err
-		delErr, ok := err.(*agentTypes.ErrCannotDelete)
-		if ok {
-			res.References = delErr.References
-		}
-
-		return res, err
+	o := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
 	}
 
-	res.StatusCode = http.StatusOK
-	return res, err
+	_, err := s.pipelineAPI.HandleApp(types.Delete, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }

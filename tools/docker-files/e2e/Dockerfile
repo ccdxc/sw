@@ -7,7 +7,7 @@ RUN curl -fL --retry 3 --keepalive-time 2  -o /tmp/kubernetes-server-linux-amd64
 RUN tar xvf /tmp/kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin/kubectl
 RUN chmod 755 kubernetes/server/bin/kubectl
 
-FROM golang:1.12.9-alpine3.10
+FROM golang:1.13.4-alpine3.10
 MAINTAINER "Suresh Nalluru" <suresh@pensando.io>
 RUN apk update
 RUN apk add curl bash git make build-base linux-headers gcc libpcap-dev libtool openssh docker

@@ -155,12 +155,7 @@ func (c *Config) generateObjs(manifestFile string, sdevices []StationDevice, vla
 				return err
 			}
 			c.Objects[i] = *genObj
-		case "NatPool":
-			genObj, err := c.generateNatPool(&o, manifestFile)
-			if err != nil {
-				return err
-			}
-			c.Objects[i] = *genObj
+
 		case "NatBinding":
 			genObj, err := c.generateNatBinding(&o, manifestFile)
 			if err != nil {
@@ -264,6 +259,7 @@ func (c *Config) generateNetworks(o *Object, manifestFile string, vlanOffset int
 
 		subnet := subnets[i]
 		_, _, _ = libs.GenIPAddress(subnet, 4, false)
+
 		nt := netproto.Network{
 			TypeMeta: api.TypeMeta{Kind: "Network"},
 			ObjectMeta: api.ObjectMeta{
@@ -633,6 +629,7 @@ func (c *Config) generateFlowExportPolicy(o *Object, manifestFile string) (*Obje
 func (c *Config) generateNatPool(o *Object, manifestFile string) (*Object, error) {
 	return o, nil
 }
+
 
 func (c *Config) generateTunnels(o *Object, manifestFile string) (*Object, error) {
 	var tunnels []netproto.Tunnel

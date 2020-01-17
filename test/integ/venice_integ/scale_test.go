@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/dscagent"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	"golang.org/x/net/context"
 	. "gopkg.in/check.v1"
 
@@ -13,7 +17,6 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/iota/test/venice/iotakit/cfgen"
-	"github.com/pensando/sw/nic/agent/netagent"
 )
 
 // TestNpmFirewallProfile tests firewall profile create/update/delete operations
@@ -86,16 +89,24 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	waitCh := make(chan error, len(it.snics)*2)
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListNetwork()) == len(cfg.ConfigItems.Networks), nil
+				ntMeta := netproto.Network{
+					TypeMeta: api.TypeMeta{Kind: "Network"},
+				}
+				networks, _ := ag.PipelineAPI.HandleNetwork(agentTypes.List, ntMeta)
+				return len(networks) == len(cfg.ConfigItems.Networks), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
 				waitCh <- fmt.Errorf("Scale: Network count incorrect in datapath")
 				return
 			}
-			agObjs := ag.NetworkAgent.ListNetwork()
+			ntMeta := netproto.Network{
+				TypeMeta: api.TypeMeta{Kind: "Network"},
+			}
+			networks, _ := ag.PipelineAPI.HandleNetwork(agentTypes.List, ntMeta)
+			agObjs := networks
 			for _, obj := range cfg.ConfigItems.Networks {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
@@ -104,7 +115,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 					}
 				}
 				if !foundObj {
-					waitCh <- fmt.Errorf("Scale: couldn't find network %s on node %s", obj.ObjectMeta.Name, ag.NetworkAgent.NodeUUID)
+					waitCh <- fmt.Errorf("Scale: couldn't find network %s on node %s", obj.ObjectMeta.Name, ag.InfraAPI.GetDscName())
 					return
 				}
 			}
@@ -117,16 +128,25 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	}
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListApp()) == len(cfg.ConfigItems.Apps), nil
+				appMeta := netproto.App{
+					TypeMeta: api.TypeMeta{Kind: "App"},
+				}
+				apps, _ := ag.PipelineAPI.HandleApp(agentTypes.List, appMeta)
+				return len(apps) == len(cfg.ConfigItems.Apps), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
 				waitCh <- fmt.Errorf("Scale: App count incorrect in datapath")
 				return
 			}
-			agObjs := ag.NetworkAgent.ListApp()
+			appMeta := netproto.App{
+				TypeMeta: api.TypeMeta{Kind: "App"},
+			}
+			apps, _ := ag.PipelineAPI.HandleApp(agentTypes.List, appMeta)
+
+			agObjs := apps
 			for _, obj := range cfg.ConfigItems.Apps {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
@@ -135,7 +155,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 					}
 				}
 				if !foundObj {
-					waitCh <- fmt.Errorf("Scale: couldn't find app %s on node %s", obj.ObjectMeta.Name, ag.NetworkAgent.NodeUUID)
+					waitCh <- fmt.Errorf("Scale: couldn't find app %s on node %s", obj.ObjectMeta.Name, ag.InfraAPI.GetDscName())
 					return
 				}
 			}
@@ -148,17 +168,31 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 	}
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListNetworkSecurityPolicy()) == len(cfg.ConfigItems.SGPolicies), nil
+				nspMeta := netproto.NetworkSecurityPolicy{
+					TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				}
+				policies, _ := ag.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.List, nspMeta)
+				return len(policies) == len(cfg.ConfigItems.SGPolicies), nil
 			}, "10ms", it.pollTimeout())
 			fmt.Println(found)
 			if !found {
+				nspMeta := netproto.NetworkSecurityPolicy{
+					TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				}
+				policies, _ := ag.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.List, nspMeta)
 				waitCh <- fmt.Errorf("Scale: NetworkSecurityPolicy count incorrect found %d expected %d",
-					len(ag.NetworkAgent.ListNetworkSecurityPolicy()), len(cfg.ConfigItems.SGPolicies))
+					len(policies), len(cfg.ConfigItems.SGPolicies))
 				return
 			}
-			agObjs := ag.NetworkAgent.ListNetworkSecurityPolicy()
+
+			nspMeta := netproto.NetworkSecurityPolicy{
+				TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			}
+			policies, _ := ag.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.List, nspMeta)
+
+			agObjs := policies
 			for _, obj := range cfg.ConfigItems.SGPolicies {
 				foundObj := false
 				for ii := 0; ii < len(agObjs); ii++ {
@@ -167,7 +201,7 @@ func (it *veniceIntegSuite) verifyCreateConfig(loginCtx context.Context, c *C, c
 					}
 				}
 				if !foundObj {
-					waitCh <- fmt.Errorf("Scale: couldn't find sgpolicy %s on node %s", obj.ObjectMeta.Name, ag.NetworkAgent.NodeUUID)
+					waitCh <- fmt.Errorf("Scale: couldn't find sgpolicy %s on node %s", obj.ObjectMeta.Name, ag.InfraAPI.GetDscName())
 					return
 				}
 			}
@@ -228,9 +262,14 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 	waitCh := make(chan error, len(it.snics)*2)
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListApp()) == 0, nil
+				appMeta := netproto.App{
+					TypeMeta: api.TypeMeta{Kind: "App"},
+				}
+				apps, _ := ag.PipelineAPI.HandleApp(agentTypes.List, appMeta)
+
+				return len(apps) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Scale: All Apps are not deleted in datapath")
 				return
@@ -244,9 +283,13 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 	}
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListNetworkSecurityPolicy()) == 0, nil
+				nspMeta := netproto.NetworkSecurityPolicy{
+					TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				}
+				policies, _ := ag.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.List, nspMeta)
+				return len(policies) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Scale: All SGPolicies are not deleted in datapath")
 				return
@@ -260,11 +303,19 @@ func (it *veniceIntegSuite) verifyDeleteConfig(loginCtx context.Context, c *C, c
 	}
 
 	for _, sn := range it.snics {
-		go func(ag *netagent.Agent) {
+		go func(ag *dscagent.DSCAgent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.NetworkAgent.ListNetwork()) == 0, nil
+				ntMeta := netproto.Network{
+					TypeMeta: api.TypeMeta{Kind: "Network"},
+				}
+				networks, _ := ag.PipelineAPI.HandleNetwork(agentTypes.List, ntMeta)
+				return len(networks) == 0, nil
 			}, "10ms", it.pollTimeout()) {
-				waitCh <- fmt.Errorf("Scale: All networks not deleted in datapath: %+v", ag.NetworkAgent.ListNetwork())
+				ntMeta := netproto.Network{
+					TypeMeta: api.TypeMeta{Kind: "Network"},
+				}
+				networks, _ := ag.PipelineAPI.HandleNetwork(agentTypes.List, ntMeta)
+				waitCh <- fmt.Errorf("Scale: All networks not deleted in datapath: %+v", networks)
 				return
 			}
 

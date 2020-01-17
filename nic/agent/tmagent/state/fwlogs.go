@@ -11,8 +11,8 @@ import (
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/tsdb"
 
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

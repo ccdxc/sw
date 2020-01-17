@@ -8,17 +8,28 @@ import (
 	"math/rand"
 	"time"
 
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"github.com/pensando/sw/venice/globals"
+
 	. "gopkg.in/check.v1"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/log"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 func (it *integTestSuite) TestNpmSgPolicy(c *C) {
-	// sg policy
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
+
+	// policy
 	sgp := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
 		ObjectMeta: api.ObjectMeta{
@@ -46,21 +57,25 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	}
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, nil
 			}
-			if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SG Policy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -105,15 +120,20 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 	// verify agent state updated policy
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
+
 			if gerr != nil {
 				return false, nil
 			}
-			if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -135,6 +155,15 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 }
 
 func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
+
 	protoPorts := []security.ProtoPort{{
 		Protocol: "TCP",
 		Ports:    "80",
@@ -162,7 +191,7 @@ func (it *integTestSuite) TestNpmSgPolicyValidators(c *C) {
 	}
 
 	// create sg policy and verify it fails
-	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	Assert(c, err != nil, "sgpolicy create with invalid app reference didnt fail")
 
 	// create sg policy without app it should fail as it doesn't have valid ports
@@ -277,15 +306,19 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, nil
 			}
-			if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -306,22 +339,26 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 
 	// create a new agent instance
 	agNum := len(it.agents)
-	agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", agNum), it.resolverClient)
+	agent, err := CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", agNum))
 	c.Assert(err, IsNil)
 	err = it.CreateHost(fmt.Sprintf("testHost-%d", agNum), fmt.Sprintf("0001.%02x00.0000", agNum))
 	AssertOk(c, err, "Error creating new host")
 
 	// verify new agent got the sgpolicy
 	AssertEventually(c, func() (bool, interface{}) {
-		gsgp, gerr := agent.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+		nsgp := netproto.NetworkSecurityPolicy{
+			TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+			ObjectMeta: sgp.ObjectMeta,
+		}
+		gsgp, gerr := agent.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 		if gerr != nil {
 			return false, nil
 		}
-		if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+		if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 			return false, gsgp
 		}
 		return true, nil
-	}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", agent.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+	}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 
 	// verify policy status reflects new agent
 	AssertEventually(c, func() (bool, interface{}) {
@@ -342,7 +379,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	snic.Status.Conditions[0].Status = "UNKNOWN"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
-	agent.nagent.Stop()
+	agent.dscAgent.Stop()
 
 	// verify policy status is not changed by unhealthy snic
 	AssertEventually(c, func() (bool, interface{}) {
@@ -363,7 +400,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	snic.Status.Conditions[0].Status = "TRUE"
 	_, err = it.apisrvClient.ClusterV1().DistributedServiceCard().Update(context.Background(), snic)
 	AssertOk(c, err, "Error updating new snic")
-	agent, err = CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", agNum), it.resolverClient)
+	agent, err = CreateAgent(it.logger, it.resolverSrv.GetListenURL(), fmt.Sprintf("testHost-%d", agNum))
 	c.Assert(err, IsNil)
 
 	// verify policy status reflects snic being healthy
@@ -380,7 +417,7 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 	}, "SgPolicy status was not updated after smartnic became healthy", "100ms", it.pollTimeout())
 
 	// stop the new agent
-	agent.nagent.Stop()
+	agent.dscAgent.Stop()
 	err = it.DeleteHost(fmt.Sprintf("testHost-%d", agNum))
 	AssertOk(c, err, "Error deleting new host")
 
@@ -437,6 +474,15 @@ func (it *integTestSuite) TestNpmSgPolicyNicAdmission(c *C) {
 }
 
 func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
+
 	// sg policy
 	sgp := security.NetworkSecurityPolicy{
 		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
@@ -465,21 +511,25 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	}
 
 	// create sg policy
-	_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
+	_, err = it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Create(context.Background(), &sgp)
 	AssertOk(c, err, "error creating sg policy")
 
 	// verify agent state has the policy and has the rules
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, nil
 			}
-			if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
+			if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// verify sgpolicy status reflects propagation status
@@ -519,23 +569,27 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 			AssertOk(c, err, "error updating sg policy")
 		}
 
-		log.Infof("Checking for %d rules", numChange)
+		it.logger.Infof("Checking for %d rules", numChange)
 
 		// verify agent state has the policy and has the rules
 		for _, ag := range it.agents {
 			AssertEventually(c, func() (bool, interface{}) {
-				gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+				nsgp := netproto.NetworkSecurityPolicy{
+					TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+					ObjectMeta: sgp.ObjectMeta,
+				}
+				gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 				if gerr != nil {
 					return false, nil
 				}
-				if len(gsgp.Spec.Rules) != len(sgp.Spec.Rules) {
-					return false, []int{len(gsgp.Spec.Rules), len(sgp.Spec.Rules)}
+				if len(gsgp[0].Spec.Rules) != len(sgp.Spec.Rules) {
+					return false, []int{len(gsgp[0].Spec.Rules), len(sgp.Spec.Rules)}
 				}
-				if gsgp.Spec.Rules[0].Dst.ProtoPorts[0].Port != sgp.Spec.Rules[0].ProtoPorts[0].Ports {
-					return false, []string{gsgp.Spec.Rules[0].Dst.ProtoPorts[0].Port, sgp.Spec.Rules[0].ProtoPorts[0].Ports}
+				if gsgp[0].Spec.Rules[0].Dst.ProtoPorts[0].Port != sgp.Spec.Rules[0].ProtoPorts[0].Ports {
+					return false, []string{gsgp[0].Spec.Rules[0].Dst.ProtoPorts[0].Port, sgp.Spec.Rules[0].ProtoPorts[0].Ports}
 				}
 				return true, nil
-			}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+			}, fmt.Sprintf("SGPolicy not found in agent SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 		}
 
 		// verify sgpolicy status reflects propagation status
@@ -562,16 +616,29 @@ func (it *integTestSuite) TestNpmSgPolicyBurstChange(c *C) {
 	// verify policy is gone from agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr == nil {
 				return false, gsgp
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 }
 
 func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
+	// clean up stale SG Policies
+	policies, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+	AssertOk(c, err, "failed to list policies")
+
+	for _, p := range policies {
+		_, err := it.apisrvClient.SecurityV1().NetworkSecurityPolicy().Delete(context.Background(), &p.ObjectMeta)
+		AssertOk(c, err, "failed to clean up policy. NSP: %v | Err: %v", p.GetKey(), err)
+	}
+
 	// app
 	ftpApp := security.App{
 		TypeMeta: api.TypeMeta{Kind: "App"},
@@ -596,7 +663,7 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 			},
 		},
 	}
-	_, err := it.apisrvClient.SecurityV1().App().Create(context.Background(), &ftpApp)
+	_, err = it.apisrvClient.SecurityV1().App().Create(context.Background(), &ftpApp)
 	AssertOk(c, err, "error creating app")
 
 	// ICMP app
@@ -650,18 +717,22 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 	// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			gsgp, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			gsgp, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return false, fmt.Errorf("Error finding sgpolicy for %+v", sgp.ObjectMeta)
 			}
-			if len(gsgp.Spec.Rules) != 2 {
-				return false, gsgp.Spec.Rules
+			if len(gsgp[0].Spec.Rules) != 2 {
+				return false, gsgp[0].Spec.Rules
 			}
-			if gsgp.Spec.Rules[0].ID != gsgp.Spec.Rules[1].ID {
-				return false, gsgp.Spec.Rules
+			if gsgp[0].Spec.Rules[0].ID != gsgp[0].Spec.Rules[1].ID {
+				return false, gsgp[0].Spec.Rules
 			}
 			return true, nil
-		}, fmt.Sprintf("Sg policy not correct in agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("SGPolicy not found in agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 
 	// finally, delete sg policy
@@ -677,11 +748,15 @@ func (it *integTestSuite) TestNpmSgPolicyMultiApp(c *C) {
 	// verify agent state has the policy and has seperate rules for each app and their rule-ids dont match
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, gerr := ag.nagent.NetworkAgent.FindNetworkSecurityPolicy(sgp.ObjectMeta)
+			nsgp := netproto.NetworkSecurityPolicy{
+				TypeMeta:   api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+				ObjectMeta: sgp.ObjectMeta,
+			}
+			_, gerr := ag.dscAgent.PipelineAPI.HandleNetworkSecurityPolicy(agentTypes.Get, nsgp)
 			if gerr != nil {
 				return true, nil
 			}
 			return false, nil
-		}, fmt.Sprintf("Sg policy still present agent. DB: %v", ag.nagent.NetworkAgent.ListNetworkSecurityPolicy()), "10ms", it.pollTimeout())
+		}, fmt.Sprintf("Sg policy still present agent. SGP: %v", sgp.GetKey()), "10ms", it.pollTimeout())
 	}
 }

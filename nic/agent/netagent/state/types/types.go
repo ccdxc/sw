@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 
 	"github.com/mdlayher/arp"
 
@@ -134,9 +134,9 @@ type NetAgent struct {
 	NetworkSecurityPolicyDB map[string]*netproto.NetworkSecurityPolicy // Security group policy DB
 	TunnelDB                map[string]*netproto.Tunnel                // Tunnel object DB
 	HwIfDB                  map[string]*netproto.Interface             // Has all the Uplinks and Lifs
-	PortDB                  map[string]*netproto.Port                  // HW Port DB
 	AppDB                   map[string]*netproto.App                   // App DB
 	VrfDB                   map[string]*netproto.Vrf
+	PortDB map[string]*netproto.Port
 	SecurityProfileDB       map[string]*netproto.SecurityProfile //Security Profile DB
 	IPAMPolicyDB            map[string]*netproto.IPAMPolicy      // IPAM Policy DB
 	RoutingConfigDB         map[string]*netproto.RoutingConfig   // RoutingConfig DB
@@ -285,7 +285,7 @@ type NetDatapathAPI interface {
 	CreateInterface(intfs ...*netproto.Interface) error
 	UpdateInterface(intf *netproto.Interface) error
 	DeleteInterface(intf *netproto.Interface) error
-	ListInterfaces() ([]*netproto.Interface, []*netproto.Port, error)
+	ListInterfaces() ([]*netproto.Interface, error)
 
 	CreateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error
 	UpdateNetworkSecurityPolicy(sgp *netproto.NetworkSecurityPolicy, vrfID uint64, ruleIDAppLUT *sync.Map) error

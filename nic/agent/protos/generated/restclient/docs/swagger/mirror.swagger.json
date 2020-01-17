@@ -441,6 +441,20 @@
         }
       }
     },
+    "netprotoMatchRule": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "title": "Either Src or Dst or both must be specified, both cannot be *\nSrc = * when not specified\nWhen Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored"
+        },
+        "destination": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "title": "Dst = * when not specified\nWhen Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored"
+        }
+      },
+      "title": "MatchRule : This is used to select packets that need to be monitored (mirrored)"
+    },
     "netprotoMatchSelector": {
       "type": "object",
       "properties": {
@@ -473,6 +487,15 @@
         }
       },
       "title": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)"
+    },
+    "netprotoMirrorDir": {
+      "type": "string",
+      "enum": [
+        "BOTH",
+        "INGRESS",
+        "EGRESS"
+      ],
+      "default": "BOTH"
     },
     "netprotoMirrorExportConfig": {
       "type": "object",
@@ -535,6 +558,9 @@
     },
     "netprotoMirrorSessionSpec": {
       "type": "object",
+      "required": [
+        "mirror-direction"
+      ],
       "properties": {
         "vrf-name": {
           "type": "string"
@@ -549,9 +575,22 @@
         "match-rules": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/netprotoMatchSelector"
+            "$ref": "#/definitions/netprotoMatchRule"
           },
           "title": "Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions"
+        },
+        "packet-size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mirror-direction": {
+          "$ref": "#/definitions/netprotoMirrorDir",
+          "enum": [
+            "both",
+            "ingress",
+            "egress"
+          ],
+          "default": "both"
         }
       }
     },

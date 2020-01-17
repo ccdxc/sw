@@ -9,7 +9,7 @@ CACHEMOUNT :=
 endif
 
 # Lists excluded patterns to "go list"
-EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|buildroot|gometrics"
+EXCLUDE_PATTERNS := "apollo|generated|halproto|proto|model_sim|labels|vendor|bazel|e2etests|iota|buildroot|gometrics|netagent|dscagent|tsagent|tpagent|agent/tpa"
 
 # these are run as part of integ test
 INTEG_TEST_PATTERNS := "sw.test.integ|api.integration|citadel.test.integ"
@@ -58,7 +58,8 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./nic/delphi/compiler/... \
 							./vendor/layeh.com/radius/cmd/radius-dict-gen \
 							./vendor/github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc \
-							./venice/utils/doctool
+							./venice/utils/doctool \
+							./vendor/github.com/mgechev/revive
 
 # Lists the binaries to be containerized
 TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa orchhub vcsim
@@ -170,7 +171,7 @@ ginkgo-src:
 	$(info +++ ginkgo dryrun)
 	@go test github.com/pensando/sw/test/e2e/cluster/... -ginkgo.v -ginkgo.dryRun
 
-.PHONY: build gopkglist gopkgsinstall ginkgo-src 
+.PHONY: build gopkglist gopkgsinstall ginkgo-src netagent-build
 
 gopkgsinstall:
 	@$(shell cd ${GOPATH}/src/github.com/pensando/sw && CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ./vendor/github.com/haya14busa/gopkgs/cmd/gopkgs)
@@ -179,8 +180,12 @@ gopkglist: gopkgsinstall
 	$(eval GO_PKG_UTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep -v ${INTEG_TEST_PATTERNS} | sort ))
 	$(eval GO_PKG_INTEGTEST := $(shell ${GOPATH}/bin/gopkgs -short 2>/dev/null | grep github.com/pensando/sw | egrep -v ${EXCLUDE_PATTERNS} | egrep ${INTEG_TEST_PATTERNS} | sort))
 
+# netagent-build builds pipeline aware netagent
+netagent-build:
+	$(MAKE) -C nic/agent/dscagent
+
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
-build: gopkglist
+build: gopkglist netagent-build
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
 		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -ldflags '-X main.GitVersion=${GIT_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
 	else \
@@ -188,7 +193,7 @@ build: gopkglist
 	fi
 
 # build installs all go binaries. Use VENICE_CCOMPILE_FORCE=1 to force a rebuild of all packages
-upgrade-build: gopkglist
+upgrade-build: gopkglist netagent-build
 	@if [ -z ${VENICE_CCOMPILE_FORCE} ]; then \
 		echo "+++ building go sources"; CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install -ldflags '-X main.GitVersion=${GIT_UPGRADE_VERSION} -X main.GitCommit=${GIT_COMMIT} -X main.BuildDate=${BUILD_DATE}' ${GO_PKG};\
 	else \
@@ -270,6 +275,7 @@ c-stop:
 
 install:
 	@#copy the agent binaries to netagent
+	@cp -p ${PWD}/bin/cbin/fakehal tools/docker-files/netagent/fakehal
 	@cp -p ${PWD}/bin/cbin/fakedelphihub tools/docker-files/netagent/fakedelphihub
 	@cp -p ${PWD}/bin/cbin/fwgen tools/docker-files/netagent/fwgen
 	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
@@ -312,6 +318,7 @@ endif
 upgrade-install:
 	@#copy the agent binaries to netagent
 	@cp -p ${PWD}/bin/cbin/fakedelphihub tools/docker-files/netagent/fakedelphihub
+	@cp -p ${PWD}/bin/cbin/fakehal tools/docker-files/netagent/fakehal
 	@cp -p ${PWD}/bin/cbin/fwgen tools/docker-files/netagent/fwgen
 	@cp -p ${PWD}/bin/cbin/ctctl tools/docker-files/citadel/ctctl
 	@cp -p ${PWD}/bin/cbin/nmd tools/docker-files/netagent/nmd

@@ -2,11 +2,6 @@
  templates:
    - template: "restgen.tmpl"
      outputpath: "{FILE}_api.go"
-   - template: "restgen_test.tmpl"
-     outputpath: "{FILE}_api_test.go"
    - template: "restapi_global.tmpl"
      outputpath: "restapi.go"
-     once: true
-   - template: "restapi_test_global.tmpl"
-     outputpath: "restapi_test.go"
      once: true

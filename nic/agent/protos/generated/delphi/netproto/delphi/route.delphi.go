@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto5 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto6 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type RoutingConfig struct {
 	Meta          *delphi.ObjectMeta       `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key           string                   `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	RoutingConfig *netproto5.RoutingConfig `protobuf:"bytes,3,opt,name=RoutingConfig" json:"RoutingConfig,omitempty"`
+	RoutingConfig *netproto6.RoutingConfig `protobuf:"bytes,3,opt,name=RoutingConfig" json:"RoutingConfig,omitempty"`
 }
 
 func (m *RoutingConfig) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type RoutingConfigReactor interface {
 func (m *RoutingConfig) Reset()                    { *m = RoutingConfig{} }
 func (m *RoutingConfig) String() string            { return proto.CompactTextString(m) }
 func (*RoutingConfig) ProtoMessage()               {}
-func (*RoutingConfig) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (*RoutingConfig) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
 
 func (m *RoutingConfig) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *RoutingConfig) GetKey() string {
 	return ""
 }
 
-func (m *RoutingConfig) GetRoutingConfig() *netproto5.RoutingConfig {
+func (m *RoutingConfig) GetRoutingConfig() *netproto6.RoutingConfig {
 	if m != nil {
 		return m.RoutingConfig
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*RoutingConfig)(nil), "dnetproto.RoutingConfig")
 }
 
-func init() { proto.RegisterFile("delphi/route.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("delphi/route.proto", fileDescriptor5) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor5 = []byte{
 	// 194 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4a, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0xca, 0x2f, 0x2d, 0x49, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2,

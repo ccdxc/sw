@@ -5,14 +5,24 @@
     "flags": [],
     "timeout": 0.0
 }, {
-    "name": "netagent",
+    "name": "pen-netagent",
     "command": "/naples/nic/bin/netagent",
     "dependencies": [
         {
             "kind": "service",
             "service-name": "delphi"
+        },
+        {
+            "kind:": "service",
+            "service-name": "fakehal"
         }
     ],
+    "flags": ["restartable", "save_stdout_on_crash"],
+    "timeout": 0.0
+}, {
+    "name": "fakehal",
+    "command": "/naples/nic/bin/fakehal",
+    "dependencies": [ ],
     "flags": ["restartable", "save_stdout_on_crash"],
     "timeout": 0.0
 }, {
@@ -22,6 +32,10 @@
         {
             "kind": "service",
             "service-name": "delphi"
+        },
+        {
+            "kind": "service",
+            "service-name": "pen-netagent"
         }
     ],
     "flags": ["restartable", "save_stdout_on_crash"],

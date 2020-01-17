@@ -11,6 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/nic/agent/protos/nmd"
+
 	"github.com/boltdb/bolt"
 	"github.com/sirupsen/logrus"
 
@@ -22,6 +25,32 @@ import (
 func testEmstoreAddDelete(t *testing.T, dbType DbType, dbPath string) {
 	db, err := NewEmstore(dbType, dbPath)
 	AssertOk(t, err, "Error opening db")
+
+	config := nmd.DistributedServiceCard{
+		ObjectMeta: api.ObjectMeta{
+			Name: "DistributedServiceCardConfig",
+		},
+		TypeMeta: api.TypeMeta{
+			Kind: "DistributedServiceCard",
+		},
+		Spec: nmd.DistributedServiceCardSpec{
+			Mode:       nmd.MgmtMode_HOST.String(),
+			PrimaryMAC: "baba:baba:baba",
+			ID:         "baba:baba:baba",
+			DSCProfile: "default",
+			IPConfig: &cluster.IPConfig{
+				IPAddress:  "",
+				DefaultGW:  "",
+				DNSServers: nil,
+			},
+		},
+	}
+	err = db.Write(&config)
+	AssertOk(t, err, "Failed to write DSC Mode")
+	o, err := db.Read(&config)
+	AssertOk(t, err, "Failed to read DSC Mode")
+	c := *o.(*nmd.DistributedServiceCard)
+	AssertEquals(t, config.Spec.PrimaryMAC, c.Spec.PrimaryMAC, "Unmarshaled read resp did not match what was written")
 
 	// test object
 	obj := netproto.Network{
@@ -114,6 +143,66 @@ func TestBoltdbAddDelete(t *testing.T) {
 
 func TestMemstoreAddDelete(t *testing.T) {
 	testEmstoreAddDelete(t, MemStoreType, "")
+}
+
+func TestBoltDBRawRead_RawList(t *testing.T) {
+	dbPath, err := ioutil.TempFile("", "")
+	defer os.Remove(dbPath.Name())
+	AssertOk(t, err, "Failed to create bolt DB")
+	db, err := NewEmstore(BoltDBType, dbPath.Name())
+	AssertOk(t, err, "Error opening db")
+
+	vrf1 := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default-infra",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: 42,
+		},
+	}
+
+	vrf2 := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default-customer",
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: 65,
+		},
+	}
+
+	vrf1RawBytes, _ := vrf1.Marshal()
+	vrf2RawBytes, _ := vrf2.Marshal()
+
+	err = db.RawWrite(vrf1.Kind, vrf1.GetKey(), vrf1RawBytes)
+	AssertOk(t, err, "Failed to raw write vrf1")
+	err = db.RawWrite(vrf2.Kind, vrf2.GetKey(), vrf2RawBytes)
+	AssertOk(t, err, "Failed to raw write vrf2")
+
+	// Perform Raw Read
+	dat1, err := db.RawRead(vrf1.Kind, vrf1.GetKey())
+	AssertOk(t, err, "Failed to find vrf1")
+	AssertEquals(t, vrf1RawBytes, dat1, "Write to Read inconsistency detected for vrf1")
+
+	dat2, err := db.RawRead(vrf2.Kind, vrf2.GetKey())
+	AssertOk(t, err, "Failed to find vrf2")
+	AssertEquals(t, vrf2RawBytes, dat2, "Write to Read inconsistency detected for vrf2")
+
+	rawBytesList, err := db.RawList("Vrf")
+	AssertOk(t, err, "Failed to list raw bytes")
+	AssertEquals(t, 2, len(rawBytesList), "Expect two entries in the raw list")
+
 }
 
 func TestBoltdbBenchmark(t *testing.T) {

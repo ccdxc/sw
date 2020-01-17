@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	tpmprotos "github.com/pensando/sw/nic/agent/protos/netproto"
+
 	"github.com/calmh/ipfix"
 
 	vflow "github.com/pensando/sw/venice/utils/ipfix"
@@ -21,7 +23,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	"github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/globals"
@@ -265,6 +266,7 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/delete multiple flow export policy with the same collector", func() {
+			Skip("Test skipped till agents move to to agg watch and all the refcounting is done on the controllers. Since Agent will not have any state")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -483,6 +485,7 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/delete multiple flow export policy with the same match-rule", func() {
+			Skip("Test skipped till agents move to to agg watch and all the refcounting is done on the controllers. Since Agent will not have any state")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -701,6 +704,8 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should receive ipfix templates in collector", func() {
+			Skip("Test skipped temporarily till agent sends ipfix template packtets.")
+
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -730,7 +735,7 @@ var _ = Describe("flow export policy tests", func() {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:          globals.DefaultVrf,
 					Interval:         "10s",
-					TemplateInterval: "5m",
+					TemplateInterval: "1m",
 					Format:           monitoring.FlowExportPolicySpec_Ipfix.String(),
 					Exports: []monitoring.ExportConfig{
 						{
@@ -806,7 +811,7 @@ var _ = Describe("flow export policy tests", func() {
 						Expect(err).Should(BeNil())
 						Expect(int(hdr.Length)).Should(Equal(len(t)), "invalid length %v", hdr.Length)
 
-					case <-time.After(time.Second * 5):
+					case <-time.After(time.Second * 30):
 						Expect(false).Should(BeTrue(), "timed-out to receive template")
 					}
 				}

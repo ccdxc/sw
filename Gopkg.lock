@@ -574,6 +574,14 @@
   version = "v1.0"
 
 [[projects]]
+  digest = "1:cc0d19e56620f43c9b134fae155edfe44584b77076f7fb4d36ad9fa2d3ac7cb8"
+  name = "github.com/fatih/structtag"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3878f9fb88e63e26ea1e6c97ab985cb55452fee5"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:1b91ae0dc69a41d4c2ed23ea5cffb721ea63f5037ca4b81e6d6771fbb8f45129"
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
@@ -1450,6 +1458,27 @@
   packages = ["."]
   pruneopts = "NUT"
   revision = "640d790d2bdd9420ffa04d44e5568b80260e28dc"
+
+[[projects]]
+  branch = "master"
+  digest = "1:dafd1a22cca232d69b3230a57cc44cce093452684308c53cc0572e1dc0600465"
+  name = "github.com/mgechev/dots"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "c36f7dcfbb81d2220bbddabf29c757c861c3e4d8"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2d259e8012028a75685a849e1615def6ebed052ccd9d2d1a6b1cc481df7b9cfc"
+  name = "github.com/mgechev/revive"
+  packages = [
+    ".",
+    "formatter",
+    "lint",
+    "rule",
+  ]
+  pruneopts = "NUT"
+  revision = "48f88ad8f2ba52b9da1aa9561a71c106e9182d4a"
 
 [[projects]]
   digest = "1:0ec0157fd7fc1c385d1f46fc446f07ef6751e1b7d0f6e0402a33509097b5f38b"
@@ -2962,6 +2991,7 @@
     "github.com/krolaw/dhcp4/conn",
     "github.com/looplab/fsm",
     "github.com/mdlayher/arp",
+    "github.com/mgechev/revive",
     "github.com/miekg/pkcs11",
     "github.com/minio/minio-go",
     "github.com/minio/minio/cmd",

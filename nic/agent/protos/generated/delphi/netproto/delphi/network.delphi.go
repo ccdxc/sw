@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto4 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto5 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Network struct {
 	Meta    *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key     string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Network *netproto4.Network `protobuf:"bytes,3,opt,name=Network" json:"Network,omitempty"`
+	Network *netproto5.Network `protobuf:"bytes,3,opt,name=Network" json:"Network,omitempty"`
 }
 
 func (m *Network) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type NetworkReactor interface {
 func (m *Network) Reset()                    { *m = Network{} }
 func (m *Network) String() string            { return proto.CompactTextString(m) }
 func (*Network) ProtoMessage()               {}
-func (*Network) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (*Network) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
 
 func (m *Network) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *Network) GetKey() string {
 	return ""
 }
 
-func (m *Network) GetNetwork() *netproto4.Network {
+func (m *Network) GetNetwork() *netproto5.Network {
 	if m != nil {
 		return m.Network
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*Network)(nil), "dnetproto.Network")
 }
 
-func init() { proto.RegisterFile("delphi/network.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("delphi/network.proto", fileDescriptor4) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor4 = []byte{
 	// 184 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x49, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0xcf, 0x4b, 0x2d, 0x29, 0xcf, 0x2f, 0xca, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9,

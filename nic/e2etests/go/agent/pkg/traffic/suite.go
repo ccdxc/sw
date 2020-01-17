@@ -45,7 +45,6 @@ func EpsReachable(ep *netproto.Endpoint, otherEp *netproto.Endpoint) bool {
 	return false
 }
 
-
 func getEpPairs(agentCfg *pkg.AgentConfig, trafficType int, maxTrafficPair int) []TestApi.EpPair {
 	eps := []TestApi.EpPair{}
 	trafficPair := 0
@@ -128,9 +127,7 @@ func (*suite) runModule(module string, trafficHelper TrafficHelper, agentCfg *pk
 			deleteRoute(srcEphandle, dstEphandle)
 			deleteEp(srcEphandle)
 			deleteEp(dstEphandle)
+			}
 		}
-
-	}
-
 	return nil
 }

@@ -1,5 +1,3 @@
-// +build !linux
-
 package state
 
 // CreateLateralNetAgentObjects is a stubbed out method for non linux systems.

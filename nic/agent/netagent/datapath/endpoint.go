@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/netagent/state/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
@@ -587,12 +587,6 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		halIPAddresses = append(halIPAddresses, v4Addr)
 	}
 
-	l2Handle := halproto.L2SegmentKeyHandle{
-		KeyOrHandle: &halproto.L2SegmentKeyHandle_L2SegmentHandle{
-			L2SegmentHandle: nw.Status.NetworkID,
-		},
-	}
-
 	ifKeyHandle := halproto.InterfaceKeyHandle{
 		KeyOrHandle: &halproto.InterfaceKeyHandle_IfHandle{
 			IfHandle: 0, //FIXME
@@ -609,9 +603,7 @@ func (hd *Datapath) UpdateRemoteEndpoint(ep *netproto.Endpoint, nw *netproto.Net
 		KeyOrHandle: &halproto.EndpointKeyHandle_EndpointKey{
 			EndpointKey: &halproto.EndpointKey{
 				EndpointL2L3Key: &halproto.EndpointKey_L2Key{
-					L2Key: &halproto.EndpointL2Key{
-						L2SegmentKeyHandle: &l2Handle,
-					},
+					L2Key: &halproto.EndpointL2Key{},
 				},
 			},
 		},

@@ -720,34 +720,6 @@ func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
 	}
 }
 
-// dummy functions. these polcies are handled in netagent
-
-// CreateFlowExportPolicy is the POST() entry point
-func (s *PolicyState) CreateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) (err error) {
-	return nil
-}
-
-// UpdateFlowExportPolicy is the PUT entry point
-func (s *PolicyState) UpdateFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
-	return nil
-}
-
-// DeleteFlowExportPolicy is the DELETE entry point
-func (s *PolicyState) DeleteFlowExportPolicy(ctx context.Context, p *tpmprotos.FlowExportPolicy) error {
-	return nil
-}
-
-// GetFlowExportPolicy is the GET entry point
-func (s *PolicyState) GetFlowExportPolicy(tx context.Context, p *tpmprotos.FlowExportPolicy) (*tpmprotos.FlowExportPolicy, error) {
-
-	return nil, nil
-}
-
-// ListFlowExportPolicy is the LIST all entry point
-func (s *PolicyState) ListFlowExportPolicy(tx context.Context) ([]*tpmprotos.FlowExportPolicy, error) {
-	return []*tpmprotos.FlowExportPolicy{}, nil
-}
-
 // Debug is the debug entry point from REST
 func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 	ipcInfo := map[string]string{}
@@ -775,7 +747,7 @@ func (s *PolicyState) Debug(r *http.Request) (interface{}, error) {
 	}
 
 	if flowExp, err := s.emstore.List(
-		&tpmprotos.FlowExportPolicy{
+		&netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "flowExportPolicy",
 			},

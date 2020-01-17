@@ -12,22 +12,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
 )
 
 type AppReactor interface {
-	CreateApp(appObj *netproto.App) error               // creates an App
-	FindApp(meta api.ObjectMeta) (*netproto.App, error) // finds an App
-	ListApp() []*netproto.App                           // lists all Apps
-	UpdateApp(appObj *netproto.App) error               // updates an App
-	DeleteApp(appObj, ns, name string) error            // deletes an App
+	HandleApp(oper types.Operation, appObj netproto.App) ([]netproto.App, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type AppOStream struct {
@@ -164,7 +161,14 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListApp()
+	o := netproto.App{
+		TypeMeta: api.TypeMeta{Kind: "App"},
+	}
+
+	localObjs, err := reactor.HandleApp(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Err: %v", types.Operation(types.List), err))
+	}
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -172,7 +176,7 @@ func (client *NimbusClient) diffApps(objList *netproto.AppList, reactor AppReact
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.AppEvent{
 					EventType: api.EventType_DeleteEvent,
-					App:       *lobj,
+					App:       lobj,
 				}
 				log.Infof("diffApps(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.App.GetObjectKind(), evt.App.ObjectMeta)
@@ -213,21 +217,21 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.FindApp(evt.App.ObjectMeta)
+			_, err = reactor.HandleApp(types.Get, evt.App)
 			if err != nil {
 				// create the App
-				err = reactor.CreateApp(&evt.App)
+				_, err = reactor.HandleApp(types.Create, evt.App)
 				if err != nil {
-					log.Errorf("Error creating the App {%+v}. Err: %v", evt.App.ObjectMeta, err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Key: %s | Err: %v", types.Operation(types.Create), evt.App.GetKey(), err))
 					client.debugStats.AddInt("CreateAppError", 1)
 				} else {
 					client.debugStats.AddInt("CreateApp", 1)
 				}
 			} else {
 				// update the App
-				err = reactor.UpdateApp(&evt.App)
+				_, err = reactor.HandleApp(types.Update, evt.App)
 				if err != nil {
-					log.Errorf("Error updating the App {%+v}. Err: %v", evt.App.GetKey(), err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Key: %s | Err: %v", types.Operation(types.Update), evt.App.GetKey(), err))
 					client.debugStats.AddInt("UpdateAppError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateApp", 1)
@@ -235,14 +239,10 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 			}
 
 		case api.EventType_DeleteEvent:
-			// delete the object
-			err = reactor.DeleteApp(evt.App.Tenant, evt.App.Namespace, evt.App.Name)
-			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("App {%+v} not found", evt.App.ObjectMeta)
-				err = nil
-			}
+			// update the App
+			_, err = reactor.HandleApp(types.Delete, evt.App)
 			if err != nil {
-				log.Errorf("Error deleting the App {%+v}. Err: %v", evt.App.ObjectMeta, err)
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: App | Key: %s | Err: %v", types.Operation(types.Delete), evt.App.GetKey(), err))
 				client.debugStats.AddInt("DeleteAppError", 1)
 			} else {
 				client.debugStats.AddInt("DeleteApp", 1)
@@ -265,7 +265,7 @@ func (client *NimbusClient) processAppEvent(evt netproto.AppEvent, reactor AppRe
 
 			// send oper status
 			ostream.Lock()
-			modificationTime, _ := types.TimestampProto(time.Now())
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.App.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 			err := ostream.stream.Send(&robj)
 			if err != nil {
@@ -301,7 +301,7 @@ func (client *NimbusClient) processAppDynamic(evt api.EventType,
 	client.lockObject(appEvt.App.GetObjectKind(), appEvt.App.ObjectMeta)
 
 	err := client.processAppEvent(appEvt, reactor, nil)
-	modificationTime, _ := types.TimestampProto(time.Now())
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
 	return err

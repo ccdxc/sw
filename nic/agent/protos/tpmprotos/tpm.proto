@@ -13,8 +13,6 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/telemetry.proto";
-import "export.proto";
-import "github.com/pensando/sw/nic/agent/protos/netproto/mirror.proto";
 
 //================================ statsPolicy ==========================================================
 
@@ -85,62 +83,4 @@ service FwlogPolicyApi {
 
     rpc ListFwlogPolicy(api.ObjectMeta) returns (FwlogPolicyEventList) {};
     rpc WatchFwlogPolicy (api.ObjectMeta) returns (stream FwlogPolicyEvent) {};
-}
-//============================ flowExportPolicy ==========================================================
-
-message FlowExportPolicyEvent {
-    // event type create/update/delete
-    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-
-    // flow export policy
-    FlowExportPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
-}
-
-message FlowExportPolicyEventList {
-    repeated FlowExportPolicyEvent EventList = 1 [(gogoproto.jsontag) = "event-list,omitempty"];
-}
-
-message FlowExportPolicySpec {
-    //  VrfName specifies the name of the VRF that the current Flow Export Policy belongs to
-    string VrfName                              = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
-
-    // Interval defines how often to push the records to an external or internal collector
-    // The value is specified as a string format to be '10s', '20m', '20mins', '10secs', '10seconds'
-    string Interval                             = 2 [(gogoproto.jsontag) = "interval,omitempty"];
-
-    // TemplateInterval defines how often to send ipfix templates to an external collector
-    // The value is specified as a string format, '3m', '10m'
-    string TemplateInterval                     = 3 [(gogoproto.jsontag) = "template-interval,omitempty"];
-
-    string Format                               = 4 [(gogoproto.jsontag) = "format,omitempty"];
-
-    repeated netproto.MatchRule  MatchRules     = 5 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "match-rules,omitempty"];
-
-    // Export contains export parameters.
-    repeated monitoring.ExportConfig Exports    = 6 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "exports,omitempty"];
-}
-
-message FlowExportPolicyStatus {
-
-}
-
-// FlowExportPolicy flow export Policy object
-message FlowExportPolicy {
-    api.TypeMeta            TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta          ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    FlowExportPolicySpec    Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    FlowExportPolicyStatus  Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// FlowExportPolicyApi REST interface for agent
-service FlowExportPolicyApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "FlowExportPolicy",
-        Method: ["get", "list", "post", "delete", "put"],
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
-    };
-
-    rpc ListFlowExportPolicy (api.ObjectMeta) returns (FlowExportPolicyEventList) {};
-    rpc WatchFlowExportPolicy (api.ObjectMeta) returns (stream FlowExportPolicyEvent) {};
 }

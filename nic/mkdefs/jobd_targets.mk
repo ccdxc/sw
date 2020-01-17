@@ -353,10 +353,10 @@ jobd/make/nic:
 
 .PHONY: jobd/agent
 jobd/agent: ${JOBD_PREREQS}
-	${MAKE} -C ${GOPATH}/src/github.com/pensando/sw checks
+	cd ${NICDIR}/.. && ${MAKE} -C nic/agent/dscagent
 	cd ${NICDIR}/.. && python2 nic/tools/package/package.py --pipeline iris --target sim --no-strip
 	${NICDIR}/tools/release.sh
-	go test github.com/pensando/sw/nic/agent/netagent/state
+	cd ${NICDIR}/.. go test -tags iris ./nic/agent/dscagent/...
 	# TODO uncomment the sanities once these are fixed
 	#${NICDIR}/e2etests/go/agent/scripts/golden-sanity.sh
 

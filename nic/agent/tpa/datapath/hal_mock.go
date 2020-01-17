@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
-
 	"google.golang.org/grpc"
+
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 )
 
 // Mock is the HAL mock

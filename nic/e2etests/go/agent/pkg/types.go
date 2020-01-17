@@ -28,6 +28,13 @@ type Object struct {
 	TemplateFile string `yaml:"tmpl-file,omitempty"`
 }
 
+// Response captures the HTTP Response sent by Agent REST Server
+type Response struct {
+	StatusCode int      `json:"status-code,omitempty"`
+	Error      string   `json:"error,omitempty"`
+	References []string `json:"references,omitempty"`
+}
+
 type Config struct {
 	Objects []Object `yaml:"objects"`
 }

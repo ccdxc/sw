@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+
 	"github.com/pensando/sw/api/generated/monitoring"
 	tpmProtos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	vLog "github.com/pensando/sw/venice/utils/log"
@@ -383,12 +385,12 @@ func TestListFlowExportPolicy(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwlogClient := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
+	fwlogClient := netproto.NewFlowExportPolicyApiV1Client(grpc.ClientConn)
 	evList, err := fwlogClient.ListFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 	tu.AssertOk(t, err, "failed to list policy")
-	tu.Assert(t, len(evList.EventList) == len(fp), fmt.Sprintf("got %d, expected %d", len(evList.EventList), len(fp)))
+	tu.Assert(t, len(evList.FlowExportPolicyEvents) == len(fp), fmt.Sprintf("got %d, expected %d", len(evList.FlowExportPolicyEvents), len(fp)))
 
-	for _, p := range evList.EventList {
+	for _, p := range evList.FlowExportPolicyEvents {
 		fp, ok := fp[p.Policy.Name]
 		tu.Assert(t, ok == true, "failed to find policy")
 		tu.Assert(t, fp.Spec.TemplateInterval == p.Policy.Spec.TemplateInterval, "failed to match policy %v", p.Policy.Name)
@@ -425,6 +427,19 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 						Transport:   "UDP/514",
 					},
 				},
+				MatchRules: []*monitoring.MatchRule{
+					{
+						Src: &monitoring.MatchSelector{
+							IPAddresses: []string{"10.10.10.1"},
+						},
+						Dst: &monitoring.MatchSelector{
+							IPAddresses: []string{"10.10.10.2"},
+						},
+						AppProtoSel: &monitoring.AppProtoSelector{
+							ProtoPorts: []string{"tcp/80"},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -444,15 +459,15 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create rpc client")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	flowClient := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
+	flowClient := netproto.NewFlowExportPolicyApiV1Client(grpc.ClientConn)
 	evWatch, err := flowClient.WatchFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 	tu.AssertOk(t, err, "failed to watch flow export policy")
 
 	for i := 0; i < len(flow); i++ {
 		obj, err := evWatch.Recv()
 		tu.AssertOk(t, err, "failed to receive flow export policy")
-		tu.Assert(t, obj.EventType == api.EventType_CreateEvent, fmt.Sprintf("invalid event type in object %+v", obj))
-		evPolicy := obj.Policy
+		tu.Assert(t, obj.FlowExportPolicyEvents[0].EventType == api.EventType_CreateEvent, fmt.Sprintf("invalid event type in object %+v", obj))
+		evPolicy := obj.FlowExportPolicyEvents[0].Policy
 		cfgPolicy := flow[evPolicy.GetName()]
 		tu.Assert(t, evPolicy.TypeMeta == cfgPolicy.TypeMeta,
 			fmt.Sprintf("policy [%v] didn't match in policy, {%+v} ", evPolicy, cfgPolicy))
@@ -476,7 +491,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 	policyDb.UpdateObject(flowObj)
 	updObj, err := evWatch.Recv()
 	tu.AssertOk(t, err, "failed to receive flow export policy update")
-	tu.Assert(t, updObj.EventType == api.EventType_UpdateEvent, fmt.Sprintf("got event: %+v, expected: %v",
+	tu.Assert(t, updObj.FlowExportPolicyEvents[0].EventType == api.EventType_UpdateEvent, fmt.Sprintf("got event: %+v, expected: %v",
 		updObj, api.EventType_UpdateEvent))
 
 	// client cancel
@@ -518,7 +533,7 @@ func TestRpcError(t *testing.T) {
 	defer cancel()
 
 	if true {
-		client := tpmProtos.NewFlowExportPolicyApiClient(grpc.ClientConn)
+		client := netproto.NewFlowExportPolicyApiV1Client(grpc.ClientConn)
 		evWatch, err := client.WatchFlowExportPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 		tu.AssertOk(t, err, "failed to watch export policy")
 		_, err = evWatch.Recv()

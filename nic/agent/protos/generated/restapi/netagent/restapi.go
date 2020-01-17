@@ -6,15 +6,15 @@ Package netproto is a auto generated package.
 package restapi
 
 import (
-	"github.com/pensando/sw/nic/agent/netagent/state/types"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 )
 
 // this package contains the REST API provided by the agent
 
 // RestServer is the REST api server
 type RestServer struct {
-	listenURL string           // URL where http server is listening
-	agent     types.CtrlerIntf // net Agent API
+	listenURL   string            // URL where http server is listening
+	pipelineAPI types.PipelineAPI // net Agent API
 }
 
 // Response captures the HTTP Response sent by Agent REST Server
@@ -38,11 +38,11 @@ func MakeErrorResponse(code int, err error) (*Response, error) {
 }
 
 // NewRestServer creates a new HTTP server servicg REST api
-func NewRestServer(agent types.CtrlerIntf, listenURL string) (*RestServer, error) {
+func NewRestServer(pipelineAPI types.PipelineAPI, listenURL string) (*RestServer, error) {
 	// create server instance
 	srv := RestServer{
-		listenURL: listenURL,
-		agent:     agent,
+		listenURL:   listenURL,
+		pipelineAPI: pipelineAPI,
 	}
 
 	return &srv, nil

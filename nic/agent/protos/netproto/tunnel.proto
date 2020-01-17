@@ -20,7 +20,7 @@ service TunnelApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Tunnel",
-        Method: ["list", "post", "delete", "put"],
+        Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
         Prefix: "api/tunnels"
     };

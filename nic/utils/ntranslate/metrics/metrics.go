@@ -10,9 +10,9 @@ import (
 
 func init() {
 	tstr := ntranslate.MustGetTranslator()
-
+	macMetricsXlator := newMacMetricsTranslator()
 	tstr.Register("LifMetricsKey", &lifMetricsXlate{})
-	tstr.Register("MacMetricsKey", &macMetricsXlate{})
+	tstr.Register("MacMetricsKey", macMetricsXlator)
 }
 
 // delphi client

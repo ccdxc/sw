@@ -5,6 +5,8 @@ package npminteg
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,12 +14,11 @@ import (
 	"gopkg.in/check.v1"
 	. "gopkg.in/check.v1"
 
-	"github.com/pensando/sw/venice/utils/featureflags"
-
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
-	"github.com/pensando/sw/nic/agent/netagent/datapath"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	fakehal "github.com/pensando/sw/nic/agent/cmd/fakehal/hal"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/delphi/gosdk"
 	testutils "github.com/pensando/sw/test/utils"
 	"github.com/pensando/sw/venice/apiserver"
@@ -25,11 +26,15 @@ import (
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/npm"
+	"github.com/pensando/sw/venice/ctrler/tpm"
+	"github.com/pensando/sw/venice/ctrler/tsm"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/balancer"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	mockevtsrecorder "github.com/pensando/sw/venice/utils/events/recorder/mock"
+	"github.com/pensando/sw/venice/utils/featureflags"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/netutils"
 	"github.com/pensando/sw/venice/utils/resolver"
 	rmock "github.com/pensando/sw/venice/utils/resolver/mock"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -41,7 +46,9 @@ import (
 // integ test suite parameters
 const (
 	numIntegTestAgents = 3
-	integTestRPCURL    = "localhost:9595"
+	integTestNpmRPCURL = "localhost:9595"
+	integTestTpmRPCURL = "localhost:9093"
+	integTestTsmRPCURL = "localhost:9500"
 	integTestRESTURL   = "localhost:9596"
 	agentDatapathKind  = "mock"
 	integTestApisrvURL = "localhost:8082"
@@ -52,15 +59,17 @@ const (
 type integTestSuite struct {
 	apiSrv         apiserver.Server
 	apiSrvAddr     string
-	ctrler         *npm.Netctrler
+	npmCtrler      *npm.Netctrler
+	tsmCtrler      *tsm.TsCtrler
+	tpmCtrler      *tpm.PolicyManager
 	agents         []*Dpagent
-	datapathKind   datapath.Kind
 	numAgents      int
 	logger         log.Logger
 	resolverSrv    *rpckit.RPCServer
 	resolverClient resolver.Interface
 	apisrvClient   apiclient.Services
 	hub            gosdk.Hub
+	fakehal        *fakehal.Hal
 }
 
 // test args
@@ -90,9 +99,17 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	it.hub = gosdk.NewFakeHub()
 	it.hub.Start()
 
+	// start fake hal
+	var halLis netutils.TestListenAddr
+	halLis.GetAvailablePort()
+	it.fakehal = fakehal.NewFakeHalServer(halLis.ListenURL.String())
+	if err := os.Setenv("HAL_GRPC_PORT", strings.Split(halLis.ListenURL.String(), ":")[1]); err != nil {
+		log.Errorf("Test Setup Failed. Err: %v", err)
+		os.Exit(1)
+	}
+
 	// test parameters
 	it.numAgents = 1
-	it.datapathKind = datapath.Kind(*datapathKind)
 
 	err := testutils.SetupIntegTLSProvider()
 	if err != nil {
@@ -125,9 +142,35 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 		},
 		Service: globals.Npm,
 		Node:    "localhost",
-		URL:     integTestRPCURL,
+		URL:     integTestNpmRPCURL,
 	}
 	m.AddServiceInstance(&npmSi)
+
+	tpmSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-tpm-test",
+		},
+		Service: globals.Tpm,
+		Node:    "localhost",
+		URL:     integTestTpmRPCURL,
+	}
+	m.AddServiceInstance(&tpmSi)
+
+	tsmSi := types.ServiceInstance{
+		TypeMeta: api.TypeMeta{
+			Kind: "ServiceInstance",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: "pen-tsm-test",
+		},
+		Service: globals.Tsm,
+		Node:    "localhost",
+		URL:     integTestTsmRPCURL,
+	}
+	m.AddServiceInstance(&tsmSi)
 
 	// start API server
 	it.apiSrv, it.apiSrvAddr, err = serviceutils.StartAPIServer(integTestApisrvURL, "npm-integ-test", logger.WithContext("submodule", "pen-apiserver"))
@@ -153,16 +196,24 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	featureflags.SetInitialized()
 
 	// create a controller
-	ctrler, err := npm.NewNetctrler(integTestRPCURL, integTestRESTURL, integTestApisrvURL, rc, logger.WithContext("submodule", "pen-npm"), false)
+	ctrler, err := npm.NewNetctrler(integTestNpmRPCURL, integTestRESTURL, integTestApisrvURL, rc, logger.WithContext("submodule", "pen-npm"), false)
 	c.Assert(err, IsNil)
-	it.ctrler = ctrler
+	it.npmCtrler = ctrler
 	it.resolverClient = rc
+
+	pm, err := tpm.NewPolicyManager(integTestTpmRPCURL, rc, "localhost:")
+	c.Assert(err, check.IsNil)
+	it.tpmCtrler = pm
+
+	tsCtrler, err := tsm.NewTsCtrler(integTestTsmRPCURL, "localhost:", globals.APIServer, rc)
+	c.Assert(err, check.IsNil)
+	it.tsmCtrler = tsCtrler
 
 	log.Infof("Creating %d/%d agents", it.numAgents, *numHosts)
 
 	// create agents
 	for i := 0; i < it.numAgents; i++ {
-		agent, err := CreateAgent(it.datapathKind, globals.Npm, fmt.Sprintf("testHost-%d", i), rc)
+		agent, err := CreateAgent(it.logger, resolverServer.GetListenURL(), fmt.Sprintf("testHost-%d", i))
 		c.Assert(err, IsNil)
 		it.agents = append(it.agents, agent)
 	}
@@ -196,7 +247,7 @@ func (it *integTestSuite) SetUpSuite(c *C) {
 	// verify agents are all connected
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			return ag.nagent.IsNpmClientConnected(), nil
+			return ag.dscAgent.InfraAPI.GetConfig().IsConnectedToVenice, nil
 		}, "agents are not connected to NPM", "1s", it.pollTimeout())
 	}
 	time.Sleep(time.Second * 2)
@@ -218,18 +269,19 @@ func (it *integTestSuite) TearDownSuite(c *C) {
 
 	// stop the agents
 	for _, ag := range it.agents {
-		ag.nagent.Stop()
+		ag.dscAgent.Stop()
 	}
 	it.agents = []*Dpagent{}
 
 	// stop server and client
-	it.ctrler.Stop()
-	it.ctrler = nil
+	it.npmCtrler.Stop()
+	it.npmCtrler = nil
 	it.resolverSrv.Stop()
 	it.resolverSrv = nil
 	it.resolverClient.Stop()
 	it.resolverClient = nil
 	testutils.CleanupIntegTLSProvider()
+	it.fakehal.Stop()
 
 	time.Sleep(time.Millisecond * 100) // allow goroutines to cleanup and terminate gracefully
 
@@ -247,12 +299,13 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// verify agent receives the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found on agent", "10ms", it.pollTimeout())
-		nt, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
-		AssertOk(c, nerr, "error finding network")
-		Assert(c, nt.Spec.VlanID == 42, "Network params didnt match", nt)
 	}
 
 	// delete the network
@@ -262,7 +315,11 @@ func (it *integTestSuite) TestNpmAgentBasic(c *C) {
 	// verify network is removed from all agents
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"})
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr != nil), nil
 		}, "Network still found on agent", "100ms", it.pollTimeout())
 	}
@@ -275,10 +332,13 @@ func (it *integTestSuite) DeleteAllEndpoints(c *C) error {
 	waitCh := make(chan error, it.numAgents*2)
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
-			for _, ep := range ag.nagent.NetworkAgent.ListEndpoint() {
+			epMeta := netproto.Endpoint{
+				TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+			}
+			endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+			for _, ep := range endpoints {
 				// make the call
 				it.DeleteEndpoint("default", "default", ep.Name)
-				ag.nagent.NetworkAgent.DeleteEndpoint("default", "default", ep.Name)
 			}
 			waitCh <- nil
 		}(ag)
@@ -292,7 +352,11 @@ func (it *integTestSuite) DeleteAllEndpoints(c *C) error {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -318,15 +382,19 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	err = it.CreateNetwork("default", "default", "testNetwork", "10.1.0.0/22", "10.1.1.254")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
 	// wait till agent has the network
 	for _, ag := range it.agents {
 		AssertEventually(c, func() (bool, interface{}) {
-			ometa := api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"}
-			_, nerr := ag.nagent.NetworkAgent.FindNetwork(ometa)
+
+			nt := netproto.Network{
+				TypeMeta:   api.TypeMeta{Kind: "Network"},
+				ObjectMeta: api.ObjectMeta{Tenant: "default", Namespace: "default", Name: "testNetwork"},
+			}
+			_, nerr := ag.dscAgent.PipelineAPI.HandleNetwork(agentTypes.Get, nt)
 			return (nerr == nil), nil
 		}, "Network not found in agent")
 	}
@@ -360,21 +428,32 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
-				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(ag.nagent.NetworkAgent.ListEndpoint()))
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(endpoints))
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
 			for i := range it.agents {
 				epname := fmt.Sprintf("testEndpoint-%d", i)
-				epmeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      epname,
+				epmeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					},
 				}
-				_, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+				_, perr := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint not found in datapath")
 					return
@@ -396,7 +475,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 
 			// make the call
 			cerr := it.DeleteEndpoint("default", "default", epname)
-			if cerr != nil && cerr != state.ErrEndpointNotFound {
+			if cerr != nil {
 				waitCh <- fmt.Errorf("Endpoint delete failed: %v", cerr)
 				return
 			}
@@ -414,7 +493,11 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -433,7 +516,7 @@ func (it *integTestSuite) TestNpmEndpointCreateDelete(c *C) {
 	err = it.DeleteNetwork("default", "testNetwork")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "testNetwork")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "testNetwork")
 		return (nerr != nil), nil
 	}, "Network still found in statemgr")
 }

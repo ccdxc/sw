@@ -12,7 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
+	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	netAgentState "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/nic/agent/troubleshooting/state/types"
@@ -273,7 +273,7 @@ func (tsa *Tagent) allocateDropRuleID(dropReason halproto.DropReasons) (uint64, 
 	if _, v := tsa.DB.DropRuleToID[dropReason]; v {
 		ruleID = tsa.DB.DropRuleToID[dropReason]
 	} else {
-		ruleID, err = tsa.Store.GetNextID(mirrorSessionDropRuleIDType)
+		ruleID, err = tsa.Store.GetNextID(mirrorSessionDropRuleIDType, 0)
 		if err != nil {
 			log.Errorf("Could not allocate drop rule id. {%+v}", err)
 			return 0, allocated, err
@@ -292,7 +292,7 @@ func (tsa *Tagent) allocateFlowMonitorRuleID(flowRule types.FlowMonitorRuleSpec)
 	if _, v := tsa.DB.FlowMonitorRuleToID[flowRule]; v {
 		ruleID = tsa.DB.FlowMonitorRuleToID[flowRule]
 	} else {
-		ruleID, err = tsa.Store.GetNextID(types.FlowMonitorRuleIDType)
+		ruleID, err = tsa.Store.GetNextID(types.FlowMonitorRuleIDType, 0)
 		if err != nil {
 			log.Errorf("Could not allocate drop rule id. {%+v}", err)
 			return 0, allocated, err

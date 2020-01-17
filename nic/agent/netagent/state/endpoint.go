@@ -140,7 +140,7 @@ func (na *Nagent) CreateEndpoint(ep *netproto.Endpoint) error {
 
 		// Allocate ID only on first object creates and use existing ones during config replay
 		if ep.Status.EnicID == 0 {
-			enicID, err := na.Store.GetNextID(types.InterfaceID)
+			enicID, err := na.Store.GetNextID(types.InterfaceID, 0)
 			if err != nil {
 				log.Errorf("Could not allocate enic for the local EP. %v", err)
 				return err

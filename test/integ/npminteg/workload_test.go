@@ -12,6 +12,10 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/workload"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	//"github.com/pensando/sw/api/generated/cluster"
+	//"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
@@ -33,7 +37,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 
 	// verify the network got created for external vlan
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
 		return (nerr == nil), nil
 	}, "Network not found in statemgr")
 
@@ -41,10 +45,18 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
-				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(ag.nagent.NetworkAgent.ListEndpoint()))
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				log.Infof("Endpoint count expected [%v] found [%v]", it.numAgents, len(endpoints))
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
 				return
 			}
@@ -53,22 +65,25 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 				macAddr := fmt.Sprintf("0002.0000.%02x00", idx)
 				name, _ := strconv.ParseMacAddr(macAddr)
 				epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
-				epmeta := api.ObjectMeta{
-					Tenant:    "default",
-					Namespace: "default",
-					Name:      epname,
+				epmeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					ObjectMeta: api.ObjectMeta{
+						Tenant:    "default",
+						Namespace: "default",
+						Name:      epname,
+					},
 				}
-				sep, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+				sep, perr := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 				if perr != nil {
 					waitCh <- fmt.Errorf("Endpoint %s not found in netagent, err=%v", epname, perr)
 					return
 				}
-				if sep.Spec.NodeUUID == ag.nagent.NetworkAgent.NodeUUID {
+				if sep[0].Spec.NodeUUID == ag.dscAgent.InfraAPI.GetDscName() {
 					foundLocal = true
 				}
 			}
 			if !foundLocal {
-				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.nagent.NetworkAgent.NodeUUID)
+				waitCh <- fmt.Errorf("No local endpoint found on %s", ag.dscAgent.InfraAPI.GetDscName())
 				return
 			}
 			waitCh <- nil
@@ -90,7 +105,11 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -109,7 +128,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDelete(c *C) {
 	err := it.DeleteNetwork("default", "Network-Vlan-1")
 	c.Assert(err, IsNil)
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
+		_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", "Network-Vlan-1")
 		return (nerr != nil), nil
 	}, "Network still found in statemgr")
 }
@@ -133,7 +152,7 @@ func (it *integTestSuite) TestNpmWorkloadValidators(c *C) {
 
 	// verify we can find the endpoint
 	AssertEventually(c, func() (bool, interface{}) {
-		_, nerr := it.ctrler.StateMgr.FindEndpoint("default", fmt.Sprintf("testWorkload-validator-%s", wpname))
+		_, nerr := it.npmCtrler.StateMgr.FindEndpoint("default", fmt.Sprintf("testWorkload-validator-%s", wpname))
 		return (nerr == nil), nil
 	}, "Endpoint not found in statemgr")
 
@@ -199,7 +218,11 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -230,8 +253,12 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 		for _, ag := range it.agents {
 			go func(ag *Dpagent) {
 				found := CheckEventually(func() (bool, interface{}) {
-					if len(ag.nagent.NetworkAgent.ListEndpoint()) != it.numAgents {
-						log.Warnf("Incorrect endpoint count %d on agent %v", len(ag.nagent.NetworkAgent.ListEndpoint()), ag.nagent.NetworkAgent.NodeUUID)
+					epMeta := netproto.Endpoint{
+						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					}
+					endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+					if len(endpoints) != it.numAgents {
+						log.Warnf("Incorrect endpoint count %d on agent %v", len(endpoints), ag.dscAgent.InfraAPI.GetDscName())
 						return false, nil
 					}
 
@@ -239,14 +266,17 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 						macAddr := fmt.Sprintf("0002.00%02x.%02x%02x", iter, idx, numChange-1)
 						name, _ := strconv.ParseMacAddr(macAddr)
 						epname := fmt.Sprintf("testWorkload-%d-%s", idx, name)
-						epmeta := api.ObjectMeta{
-							Tenant:    "default",
-							Namespace: "default",
-							Name:      epname,
+						epmeta := netproto.Endpoint{
+							TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+							ObjectMeta: api.ObjectMeta{
+								Tenant:    "default",
+								Namespace: "default",
+								Name:      epname,
+							},
 						}
-						_, perr := ag.nagent.NetworkAgent.FindEndpoint(epmeta)
+						_, perr := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.Get, epmeta)
 						if perr != nil {
-							log.Warnf("Could not find endpoint %v on agent %v", epname, ag.nagent.NetworkAgent.NodeUUID)
+							log.Warnf("Could not find endpoint %v on agent %v", epname, ag.dscAgent.InfraAPI.GetDscName())
 							return false, nil
 						}
 					}
@@ -278,7 +308,11 @@ func (it *integTestSuite) TestNpmWorkloadUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -313,7 +347,11 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -356,7 +394,11 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -397,7 +439,11 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			found := CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == it.numAgents, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == it.numAgents, nil
 			}, "10ms", it.pollTimeout())
 			if !found {
 				waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -419,7 +465,11 @@ func (it *integTestSuite) TestNpmHostUpdate(c *C) {
 	for _, ag := range it.agents {
 		go func(ag *Dpagent) {
 			if !CheckEventually(func() (bool, interface{}) {
-				return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+				epMeta := netproto.Endpoint{
+					TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+				}
+				endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+				return len(endpoints) == 0, nil
 			}, "10ms", it.pollTimeout()) {
 				waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 				return
@@ -482,7 +532,11 @@ func (it *integTestSuite) TestNpmWorkloadCreateDeleteWithMultiIntf(c *C) {
 		for _, ag := range it.agents {
 			go func(ag *Dpagent) {
 				found := CheckEventually(func() (bool, interface{}) {
-					return len(ag.nagent.NetworkAgent.ListEndpoint()) == numWorkloads*numIntf, nil
+					epMeta := netproto.Endpoint{
+						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					}
+					endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+					return len(endpoints) == numWorkloads*numIntf, nil
 				}, "10ms", it.pollTimeout())
 				if !found {
 					waitCh <- fmt.Errorf("Endpoint count incorrect in datapath")
@@ -524,7 +578,11 @@ func (it *integTestSuite) TestNpmWorkloadCreateDeleteWithMultiIntf(c *C) {
 		for _, ag := range it.agents {
 			go func(ag *Dpagent) {
 				if !CheckEventually(func() (bool, interface{}) {
-					return len(ag.nagent.NetworkAgent.ListEndpoint()) == 0, nil
+					epMeta := netproto.Endpoint{
+						TypeMeta: api.TypeMeta{Kind: "Endpoint"},
+					}
+					endpoints, _ := ag.dscAgent.PipelineAPI.HandleEndpoint(agentTypes.List, epMeta)
+					return len(endpoints) == 0, nil
 				}, "10ms", it.pollTimeout()) {
 					waitCh <- fmt.Errorf("Endpoint was not deleted from datapath")
 					return
@@ -545,7 +603,7 @@ func (it *integTestSuite) TestNpmWorkloadCreateDeleteWithMultiIntf(c *C) {
 		err := it.DeleteNetwork("default", fmt.Sprintf("Network-Vlan-%d", j+1))
 		c.Assert(err, IsNil)
 		AssertEventually(c, func() (bool, interface{}) {
-			_, nerr := it.ctrler.StateMgr.FindNetwork("default", fmt.Sprintf("Network-Vlan-%d", j+1))
+			_, nerr := it.npmCtrler.StateMgr.FindNetwork("default", fmt.Sprintf("Network-Vlan-%d", j+1))
 			return (nerr != nil), nil
 		}, "Network still found in NPM")
 	}

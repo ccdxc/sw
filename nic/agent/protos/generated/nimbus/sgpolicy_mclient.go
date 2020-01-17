@@ -12,22 +12,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogo/protobuf/types"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/netagent/state"
+	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/status"
 )
 
 type NetworkSecurityPolicyReactor interface {
-	CreateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // creates an NetworkSecurityPolicy
-	FindNetworkSecurityPolicy(meta api.ObjectMeta) (*netproto.NetworkSecurityPolicy, error)     // finds an NetworkSecurityPolicy
-	ListNetworkSecurityPolicy() []*netproto.NetworkSecurityPolicy                               // lists all NetworkSecurityPolicys
-	UpdateNetworkSecurityPolicy(networksecuritypolicyObj *netproto.NetworkSecurityPolicy) error // updates an NetworkSecurityPolicy
-	DeleteNetworkSecurityPolicy(networksecuritypolicyObj, ns, name string) error                // deletes an NetworkSecurityPolicy
+	HandleNetworkSecurityPolicy(oper types.Operation, networksecuritypolicyObj netproto.NetworkSecurityPolicy) ([]netproto.NetworkSecurityPolicy, error)
 	GetWatchOptions(cts context.Context, kind string) api.ListWatchOptions
 }
 type NetworkSecurityPolicyOStream struct {
@@ -164,7 +161,14 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.ListNetworkSecurityPolicy()
+	o := netproto.NetworkSecurityPolicy{
+		TypeMeta: api.TypeMeta{Kind: "NetworkSecurityPolicy"},
+	}
+
+	localObjs, err := reactor.HandleNetworkSecurityPolicy(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Err: %v", types.Operation(types.List), err))
+	}
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -172,7 +176,7 @@ func (client *NimbusClient) diffNetworkSecurityPolicys(objList *netproto.Network
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.NetworkSecurityPolicyEvent{
 					EventType:             api.EventType_DeleteEvent,
-					NetworkSecurityPolicy: *lobj,
+					NetworkSecurityPolicy: lobj,
 				}
 				log.Infof("diffNetworkSecurityPolicys(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.NetworkSecurityPolicy.GetObjectKind(), evt.NetworkSecurityPolicy.ObjectMeta)
@@ -213,21 +217,21 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 		case api.EventType_CreateEvent:
 			fallthrough
 		case api.EventType_UpdateEvent:
-			_, err = reactor.FindNetworkSecurityPolicy(evt.NetworkSecurityPolicy.ObjectMeta)
+			_, err = reactor.HandleNetworkSecurityPolicy(types.Get, evt.NetworkSecurityPolicy)
 			if err != nil {
 				// create the NetworkSecurityPolicy
-				err = reactor.CreateNetworkSecurityPolicy(&evt.NetworkSecurityPolicy)
+				_, err = reactor.HandleNetworkSecurityPolicy(types.Create, evt.NetworkSecurityPolicy)
 				if err != nil {
-					log.Errorf("Error creating the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.ObjectMeta, err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Create), evt.NetworkSecurityPolicy.GetKey(), err))
 					client.debugStats.AddInt("CreateNetworkSecurityPolicyError", 1)
 				} else {
 					client.debugStats.AddInt("CreateNetworkSecurityPolicy", 1)
 				}
 			} else {
 				// update the NetworkSecurityPolicy
-				err = reactor.UpdateNetworkSecurityPolicy(&evt.NetworkSecurityPolicy)
+				_, err = reactor.HandleNetworkSecurityPolicy(types.Update, evt.NetworkSecurityPolicy)
 				if err != nil {
-					log.Errorf("Error updating the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.GetKey(), err)
+					log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Update), evt.NetworkSecurityPolicy.GetKey(), err))
 					client.debugStats.AddInt("UpdateNetworkSecurityPolicyError", 1)
 				} else {
 					client.debugStats.AddInt("UpdateNetworkSecurityPolicy", 1)
@@ -235,14 +239,10 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 			}
 
 		case api.EventType_DeleteEvent:
-			// delete the object
-			err = reactor.DeleteNetworkSecurityPolicy(evt.NetworkSecurityPolicy.Tenant, evt.NetworkSecurityPolicy.Namespace, evt.NetworkSecurityPolicy.Name)
-			if err == state.ErrObjectNotFound { // give idempotency to caller
-				log.Debugf("NetworkSecurityPolicy {%+v} not found", evt.NetworkSecurityPolicy.ObjectMeta)
-				err = nil
-			}
+			// update the NetworkSecurityPolicy
+			_, err = reactor.HandleNetworkSecurityPolicy(types.Delete, evt.NetworkSecurityPolicy)
 			if err != nil {
-				log.Errorf("Error deleting the NetworkSecurityPolicy {%+v}. Err: %v", evt.NetworkSecurityPolicy.ObjectMeta, err)
+				log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: NetworkSecurityPolicy | Key: %s | Err: %v", types.Operation(types.Delete), evt.NetworkSecurityPolicy.GetKey(), err))
 				client.debugStats.AddInt("DeleteNetworkSecurityPolicyError", 1)
 			} else {
 				client.debugStats.AddInt("DeleteNetworkSecurityPolicy", 1)
@@ -265,7 +265,7 @@ func (client *NimbusClient) processNetworkSecurityPolicyEvent(evt netproto.Netwo
 
 			// send oper status
 			ostream.Lock()
-			modificationTime, _ := types.TimestampProto(time.Now())
+			modificationTime, _ := protoTypes.TimestampProto(time.Now())
 			robj.NetworkSecurityPolicy.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 			err := ostream.stream.Send(&robj)
 			if err != nil {
@@ -301,7 +301,7 @@ func (client *NimbusClient) processNetworkSecurityPolicyDynamic(evt api.EventTyp
 	client.lockObject(networksecuritypolicyEvt.NetworkSecurityPolicy.GetObjectKind(), networksecuritypolicyEvt.NetworkSecurityPolicy.ObjectMeta)
 
 	err := client.processNetworkSecurityPolicyEvent(networksecuritypolicyEvt, reactor, nil)
-	modificationTime, _ := types.TimestampProto(time.Now())
+	modificationTime, _ := protoTypes.TimestampProto(time.Now())
 	object.ObjectMeta.ModTime = api.Timestamp{Timestamp: *modificationTime}
 
 	return err

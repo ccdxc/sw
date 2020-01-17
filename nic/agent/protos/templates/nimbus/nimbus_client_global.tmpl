@@ -5,11 +5,10 @@ package nimbus
 {{$manifest := (getNimbusManifest "../generated/nimbus/manifest")}}
 
 import (
-	"errors"
 	"sync"
-
-	"github.com/gogo/protobuf/types"
 	"github.com/pensando/sw/api"
+	protoTypes "github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	debugStats "github.com/pensando/sw/venice/utils/debug/stats"
 	"github.com/pensando/sw/venice/utils/log"
@@ -112,9 +111,9 @@ func (client *NimbusClient) watchAggWatchRecvLoop(stream netproto.AggWatchApiV1_
 }
 
 // GetObject retrieves the runtime.Object from a svc watch event
-func GetObject(obj *netproto.AggObject) (*types.DynamicAny, error) {
-	robj := &types.DynamicAny{}
-	err := types.UnmarshalAny(&obj.Object.Any, robj)
+func GetObject(obj *netproto.AggObject) (*protoTypes.DynamicAny, error) {
+	robj := &protoTypes.DynamicAny{}
+	err := protoTypes.UnmarshalAny(&obj.Object.Any, robj)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +169,15 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 	}
 
 	// see if we need to delete any locally found object
-	localObjs := reactor.List{{$value.Object}}()
+	o := netproto.{{$value.Object}} {
+		TypeMeta: api.TypeMeta{Kind: "{{$value.Object}}"},
+	}
+
+	localObjs, err := reactor.Handle{{$value.Object}}(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: {{$value.Object}} | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.List{{$value.Object}}()
 	for _, lobj := range localObjs {
 		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
 		if ok && ctby == "Venice" {
@@ -178,7 +185,7 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 			if _, ok := objmap[key]; !ok {
 				evt := netproto.{{$value.Object}}Event{
 					EventType: api.EventType_DeleteEvent,
-					{{$value.Object}}:  *lobj,
+					{{$value.Object}}:  lobj,
 				}
 				log.Infof("diff{{$value.Object}}s(): Deleting object %+v", lobj.ObjectMeta)
 				client.lockObject(evt.{{$value.Object}}.GetObjectKind(), evt.{{$value.Object}}.ObjectMeta)
@@ -199,7 +206,7 @@ func (client *NimbusClient) diff{{$value.Object}}sDynamic(objList *netproto.{{$v
 		err := client.process{{$value.Object}}Event(evt, reactor, nil)
 
 		if err == nil {
-			mobj, err := types.MarshalAny(obj)
+			mobj, err := protoTypes.MarshalAny(obj)
 			aggObj := netproto.AggObject{Kind: "{{$value.Object}}", Object: &api.Any{}}
 			aggObj.Object.Any = *mobj
 			robj := netproto.AggObjectEvent{
@@ -234,7 +241,7 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 	//This will order be diffed
 	listOrderObjects := []*listObject{}
 
-	addToListOrder := func(kind string, obj *types.DynamicAny) {
+	addToListOrder := func(kind string, obj *protoTypes.DynamicAny) {
 		for _, lobj := range listOrderObjects {
 			if lobj.kind == kind {
 				switch kind {

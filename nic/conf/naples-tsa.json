@@ -220,6 +220,10 @@
                                         "Name" : "PenCtl Version",
                                         "Method" : 0,
                                         "Command" : "/nic/bin/penctl --version"
+                                },
+                                {       "Name" : "DscAgent State",
+                                        "Method": 0,
+                                        "Command": "mkdir dscagent-state && cp /sysconfig/config0/*.db dscagent-state/"
                                 }
 			],
 

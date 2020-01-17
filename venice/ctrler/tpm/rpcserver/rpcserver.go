@@ -235,14 +235,14 @@ func (p *fwlogPolicyRPCServer) WatchFwlogPolicy(in *api.ObjectMeta, out tpmProto
 	}
 }
 
-func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, meta *api.ObjectMeta) (*tpmProtos.FlowExportPolicyEventList, error) {
+func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, meta *api.ObjectMeta) (*netproto.FlowExportPolicyEventList, error) {
 	// track clients
 	peer := ctxutils.GetPeerAddress(ctx)
 	if len(peer) > 0 {
 		p.clients.Store(peer, time.Now().Format(time.RFC3339))
 	}
 
-	ev := &tpmProtos.FlowExportPolicyEventList{}
+	ev := &netproto.FlowExportPolicyEventList{}
 	for _, obj := range p.policyDb.ListObjects("FlowExportPolicy", nil) {
 		if apiPol, ok := obj.(*apiProtos.FlowExportPolicy); ok {
 			p, err := json.Marshal(apiPol)
@@ -250,16 +250,16 @@ func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, me
 				rpcLog.Errorf("invalid flow export policy from list %+v", obj)
 				continue
 			}
-			fp := &tpmProtos.FlowExportPolicy{}
+			fp := &netproto.FlowExportPolicy{}
 
 			if err := json.Unmarshal(p, &fp); err != nil {
 				rpcLog.Errorf("failed to convert flow export policy from list %+v", obj)
 				continue
 			}
 
-			ev.EventList = append(ev.EventList, &tpmProtos.FlowExportPolicyEvent{
+			ev.FlowExportPolicyEvents = append(ev.FlowExportPolicyEvents, &netproto.FlowExportPolicyEvent{
 				EventType: api.EventType_CreateEvent,
-				Policy: &tpmProtos.FlowExportPolicy{
+				Policy: &netproto.FlowExportPolicy{
 					TypeMeta:   fp.TypeMeta,
 					ObjectMeta: fp.ObjectMeta,
 					Spec:       fp.Spec,
@@ -269,7 +269,7 @@ func (p *flowExportPolicyRPCServer) ListFlowExportPolicy(ctx context.Context, me
 	}
 	return ev, nil
 }
-func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, out tpmProtos.FlowExportPolicyApi_WatchFlowExportPolicyServer) error {
+func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, out netproto.FlowExportPolicyApiV1_WatchFlowExportPolicyServer) error {
 
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
@@ -296,14 +296,19 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 			return fmt.Errorf("invalid flow export policy from list")
 		}
 
-		flowExportPolicy := &tpmProtos.FlowExportPolicy{
+		flowExportPolicy := &netproto.FlowExportPolicy{
 			TypeMeta:   fePolicy.TypeMeta,
 			ObjectMeta: fePolicy.ObjectMeta,
 			Spec:       convertFlowExportPolicySpec(&fePolicy.Spec),
 		}
 
-		if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: api.EventType_CreateEvent,
-			Policy: flowExportPolicy}); err != nil {
+		if err := out.Send(&netproto.FlowExportPolicyEventList{
+			FlowExportPolicyEvents: []*netproto.FlowExportPolicyEvent{
+				{
+					EventType: api.EventType_CreateEvent,
+					Policy:    flowExportPolicy,
+				},
+			}}); err != nil {
 			rpcLog.Errorf("failed to send flowexport policy to %s, error %s", peer, err)
 			return err
 		}
@@ -329,14 +334,20 @@ func (p *flowExportPolicyRPCServer) WatchFlowExportPolicy(in *api.ObjectMeta, ou
 				return fmt.Errorf("invalid flow export policy from list")
 			}
 
-			flowExportPolicy := &tpmProtos.FlowExportPolicy{
+			flowExportPolicy := &netproto.FlowExportPolicy{
 				TypeMeta:   fePolicy.TypeMeta,
 				ObjectMeta: fePolicy.ObjectMeta,
 				Spec:       convertFlowExportPolicySpec(&fePolicy.Spec),
 			}
 
-			if err := out.Send(&tpmProtos.FlowExportPolicyEvent{EventType: apiEventTypeMap[event.EventType],
-				Policy: flowExportPolicy}); err != nil {
+			if err := out.Send(
+				&netproto.FlowExportPolicyEventList{
+					FlowExportPolicyEvents: []*netproto.FlowExportPolicyEvent{
+						{
+							EventType: apiEventTypeMap[event.EventType],
+							Policy:    flowExportPolicy,
+						},
+					}}); err != nil {
 				rpcLog.Errorf("failed to send flowexport policy to %s, error %s", peer, err)
 				return err
 			}
@@ -434,7 +445,7 @@ func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval st
 	// register RPCs
 	tpmProtos.RegisterStatsPolicyApiServer(server.GrpcServer, stats)
 	tpmProtos.RegisterFwlogPolicyApiServer(server.GrpcServer, fwlog)
-	tpmProtos.RegisterFlowExportPolicyApiServer(server.GrpcServer, flowexp)
+	netproto.RegisterFlowExportPolicyApiV1Server(server.GrpcServer, flowexp)
 	if diagSvc != nil {
 		diagnostics.RegisterService(server.GrpcServer, diagSvc)
 	}
@@ -443,10 +454,11 @@ func NewRPCServer(listenURL string, policyDb *memdb.Memdb, collectionInterval st
 	return rpcServer, nil
 }
 
-func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) tpmProtos.FlowExportPolicySpec {
+func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) netproto.FlowExportPolicySpec {
 	var (
 		matchRules                 []netproto.MatchRule
 		srcAddresses, dstAddresses []string
+		exports                    []netproto.ExportConfig
 	)
 
 	for _, r := range fePolicySpec.MatchRules {
@@ -488,16 +500,38 @@ func convertFlowExportPolicySpec(fePolicySpec *apiProtos.FlowExportPolicySpec) t
 				ProtoPorts: protoPorts,
 			},
 		}
-
 		matchRules = append(matchRules, m)
 	}
 
-	spec := tpmProtos.FlowExportPolicySpec{
+	for _, exp := range fePolicySpec.Exports {
+		var protoPort netproto.ProtoPort
+		components := strings.Split(exp.Transport, "/")
+		switch len(components) {
+		case 1:
+			protoPort.Protocol = components[0]
+		case 2:
+			protoPort.Protocol = components[0]
+			protoPort.Port = components[1]
+		case 3:
+			protoPort.Protocol = components[0]
+			protoPort.Port = fmt.Sprintf("%s/%s", components[1], components[2])
+		default:
+			continue
+		}
+		e := netproto.ExportConfig{
+			Destination: exp.Destination,
+			Transport:   &protoPort,
+		}
+
+		exports = append(exports, e)
+	}
+
+	spec := netproto.FlowExportPolicySpec{
 		VrfName:          fePolicySpec.VrfName,
 		Interval:         fePolicySpec.Interval,
 		TemplateInterval: fePolicySpec.TemplateInterval,
 		Format:           fePolicySpec.Format,
-		Exports:          fePolicySpec.Exports,
+		Exports:          exports,
 		MatchRules:       matchRules,
 	}
 

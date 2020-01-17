@@ -16,13 +16,10 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 	agstate "github.com/pensando/sw/nic/agent/netagent/state"
 	"github.com/pensando/sw/nic/agent/netagent/state/dependencies"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/protos/tpmprotos"
-	mockdatapath "github.com/pensando/sw/nic/agent/tpa/datapath"
 	"github.com/pensando/sw/nic/agent/tpa/state/types"
 	"github.com/pensando/sw/venice/utils/emstore"
 	tu "github.com/pensando/sw/venice/utils/testutils"
@@ -36,7 +33,7 @@ const (
 func cleanup(t *testing.T, ag *PolicyState) {
 
 	l, err := ag.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
 		},
 	})
@@ -83,17 +80,17 @@ func TestValidateMeta(t *testing.T) {
 	}
 	na.LateralDB = make(map[string][]string)
 
-	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
-	err = ag.CreateFlowExportPolicy(context.Background(), &tpmprotos.FlowExportPolicy{
+	err = ag.CreateFlowExportPolicy(context.Background(), &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{},
 	})
 	tu.Assert(t, err != nil, fmt.Sprintf("create succeeded with invalid meta"))
 
-	err = ag.CreateFlowExportPolicy(context.Background(), &tpmprotos.FlowExportPolicy{
+	err = ag.CreateFlowExportPolicy(context.Background(), &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{},
 		ObjectMeta: api.ObjectMeta{},
 	})
@@ -112,13 +109,13 @@ func TestStoreOps(t *testing.T) {
 	}
 	na.LateralDB = make(map[string][]string)
 
-	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
 	for i := 1; i < 4; i++ {
 		pol := &types.FlowExportPolicyTable{
-			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			FlowExportPolicy: &netproto.FlowExportPolicy{
 				TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
 			},
@@ -130,7 +127,7 @@ func TestStoreOps(t *testing.T) {
 
 	for i := 1; i < 4; i++ {
 		pol := &types.FlowExportPolicyTable{
-			FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+			FlowExportPolicy: &netproto.FlowExportPolicy{
 				TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 				ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
 			},
@@ -225,15 +222,15 @@ func TestFindNumExports(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
 	for i := 1; i <= 9; i++ {
-		spec := tpmprotos.FlowExportPolicy{
+		spec := netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("test-%d", i), Tenant: "default", Namespace: "default"},
-			Spec: tpmprotos.FlowExportPolicySpec{
+			Spec: netproto.FlowExportPolicySpec{
 				MatchRules: []netproto.MatchRule{
 					{
 						Src: &netproto.MatchSelector{
@@ -253,14 +250,20 @@ func TestFindNumExports(t *testing.T) {
 				Interval:         "15s",
 				TemplateInterval: "5m",
 				Format:           "IPFIX",
-				Exports: []monitoring.ExportConfig{
+				Exports: []netproto.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", i+1),
-						Transport:   "udp/5555",
+						Transport:   &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "5555",
+						},
 					},
 					{
 						Destination: fmt.Sprintf("192.168.4.%d", i+1),
-						Transport:   "udp/6666",
+						Transport:   &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "6666",
+						},
 					},
 				},
 			},
@@ -345,11 +348,11 @@ func TestValidatePolicy(t *testing.T) {
 		},
 	}
 
-	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, ag)
 
-	pol := &tpmprotos.FlowExportPolicy{
+	pol := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 	}
@@ -357,10 +360,10 @@ func TestValidatePolicy(t *testing.T) {
 	_, err = ag.validatePolicy(pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("nil target didnt fail"))
 
-	pol = &tpmprotos.FlowExportPolicy{
+	pol = &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			MatchRules: []netproto.MatchRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -394,36 +397,39 @@ func TestValidatePolicy(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "6m",
 			Format:           "IPFIX",
-			Exports:          []monitoring.ExportConfig{},
+			Exports:          []netproto.ExportConfig{},
 		}}
 
 	_, err = ag.validatePolicy(pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("nil export didnt fail"))
 
-	pol = &tpmprotos.FlowExportPolicy{
+	pol = &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			Exports: []monitoring.ExportConfig{
-				{Transport: "UDP/1234"},
+			Exports: []netproto.ExportConfig{
+				{Transport: &netproto.ProtoPort{
+					Protocol: "udp",
+					Port:     "1234",
+				}},
 			},
 		}}
 
 	_, err = ag.validatePolicy(pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("nil destination didnt fail"))
 
-	pol = &tpmprotos.FlowExportPolicy{
+	pol = &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: destAddr,
 				},
@@ -433,10 +439,10 @@ func TestValidatePolicy(t *testing.T) {
 	_, err = ag.validatePolicy(pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("nil transport didnt fail"))
 
-	pol = &tpmprotos.FlowExportPolicy{
+	pol = &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default", Namespace: "default"},
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			MatchRules: []netproto.MatchRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -470,10 +476,13 @@ func TestValidatePolicy(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: destAddr,
-					Transport:   "UDP/1234",
+					Transport:  &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		}}
@@ -483,10 +492,10 @@ func TestValidatePolicy(t *testing.T) {
 	tu.Assert(t, len(c) == 1, fmt.Sprintf("expected num exports: 1, got %+v", c))
 
 	// check interval
-	pol = &tpmprotos.FlowExportPolicy{
+	pol = &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			MatchRules: []netproto.MatchRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -519,10 +528,13 @@ func TestValidatePolicy(t *testing.T) {
 			},
 			Format:           "IPFIX",
 			TemplateInterval: "5m",
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: destAddr,
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		}}
@@ -560,13 +572,13 @@ func TestNewTpAgent(t *testing.T) {
 	}
 	na.LateralDB = make(map[string][]string)
 
-	ag, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	ag, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, ag)
 
 	pol := &types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "test1", Tenant: "default"},
 		},
@@ -582,7 +594,7 @@ func TestNewTpAgent(t *testing.T) {
 	tu.Assert(t, rp == pol, fmt.Sprintf("export policy  didn't match, %+v, %+v", rp, pol))
 
 	pol2 := &types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "test2", Tenant: "default"},
 		},
@@ -591,7 +603,7 @@ func TestNewTpAgent(t *testing.T) {
 	err = ag.store.Write(pol2)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy"))
 	l, err := ag.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{},
 		},
@@ -605,7 +617,7 @@ func TestNewTpAgent(t *testing.T) {
 	defer os.Remove(tpafile)
 
 	// check reboot cleanup
-	ng, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	ng, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, ng)
 
@@ -679,17 +691,17 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, mockdatapath.MockHal())
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 	defer cleanup(t, s)
 
 	policyPrefix := "flowmon"
 	for l := 0; l < tpm.MaxNumExportPolicy+1; l++ {
-		pol := &tpmprotos.FlowExportPolicy{
+		pol := &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
-			Spec: tpmprotos.FlowExportPolicySpec{
+			Spec: netproto.FlowExportPolicySpec{
 				MatchRules: []netproto.MatchRule{
 					{
 						Src: &netproto.MatchSelector{
@@ -709,10 +721,13 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Interval:         "15s",
 				TemplateInterval: "5m",
 				Format:           "IPFIX",
-				Exports: []monitoring.ExportConfig{
+				Exports: []netproto.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-						Transport:   "UDP/1234",
+						Transport:   &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "1234",
+						},
 					},
 				},
 			},
@@ -732,11 +747,11 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 	tu.Assert(t, len(rp) == tpm.MaxNumExportPolicy, fmt.Sprintf("expected %d export policy, got %d {%+v}", tpm.MaxNumExportPolicy, len(rp), rp))
 
 	for l := 0; l < tpm.MaxNumExportPolicy; l++ {
-		pol := &tpmprotos.FlowExportPolicy{
+		pol := &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 
-			Spec: tpmprotos.FlowExportPolicySpec{
+			Spec: netproto.FlowExportPolicySpec{
 				MatchRules: []netproto.MatchRule{
 					{
 						Src: &netproto.MatchSelector{
@@ -756,16 +771,19 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 				Interval:         "15s",
 				TemplateInterval: "5m",
 				Format:           "IPFIX",
-				Exports: []monitoring.ExportConfig{
+				Exports: []netproto.ExportConfig{
 					{
 						Destination: fmt.Sprintf("192.168.3.%d", 10+l),
-						Transport:   "UDP/1234",
+						Transport:  &netproto.ProtoPort{
+							Protocol: "udp",
+							Port:     "1234",
+						},
 					},
 				},
 			},
 		}
 
-		rp, err := s.GetFlowExportPolicy(context.Background(), &tpmprotos.FlowExportPolicy{
+		rp, err := s.GetFlowExportPolicy(context.Background(), &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 		})
@@ -776,7 +794,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 	}
 
 	for l := 0; l < tpm.MaxNumExportPolicy; l++ {
-		err = s.DeleteFlowExportPolicy(context.Background(), &tpmprotos.FlowExportPolicy{
+		err = s.DeleteFlowExportPolicy(context.Background(), &netproto.FlowExportPolicy{
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: fmt.Sprintf("%s-%d", policyPrefix, l), Tenant: "default", Namespace: "default"},
 		})
@@ -786,7 +804,7 @@ func TestCreateFlowExportPolicy(t *testing.T) {
 
 	// verify all policie are removed
 	pl, err := s.store.List(&types.FlowExportPolicyTable{
-		FlowExportPolicy: &tpmprotos.FlowExportPolicy{
+		FlowExportPolicy: &netproto.FlowExportPolicy{
 			TypeMeta: api.TypeMeta{
 				Kind: "FlowExportPolicy",
 			},
@@ -867,7 +885,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -898,11 +916,11 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 	halMock.EXPECT().FlowMonitorRuleCreate(gomock.Any(), gomock.Any()).Return(flowResp, nil).Times(1)
 
 	policyPrefix := "mockflow"
-	pol := &tpmprotos.FlowExportPolicy{
+	pol := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: policyPrefix, Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
@@ -922,10 +940,13 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 					},
 				},
 			},
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: fmt.Sprintf("192.168.3.11"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -960,7 +981,7 @@ func TestCreateFlowExportPolicyWithMock(t *testing.T) {
 func TestNetagentInfo(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()
-	halMock := halproto.NewMockTelemetryClient(c)
+	//halMock := halproto.NewMockTelemetryClient(c)
 
 	ds, err := createDataStore()
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create database"))
@@ -975,16 +996,16 @@ func TestNetagentInfo(t *testing.T) {
 	}
 	na.LateralDB = make(map[string][]string)
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
 
-	pol := &tpmprotos.FlowExportPolicy{
+	pol := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "flowexport", Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			MatchRules: []netproto.MatchRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -1018,10 +1039,13 @@ func TestNetagentInfo(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: "10.10.10.1",
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -1074,23 +1098,38 @@ func TestNetagentInfo(t *testing.T) {
 		},
 	}
 
-	pol.Spec.Exports[0].Transport = "IPIP/100"
+	pol.Spec.Exports[0].Transport = &netproto.ProtoPort{
+		Protocol: "ipip",
+		Port:     "1234",
+	}
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid protocol didn't fail"))
 
-	pol.Spec.Exports[0].Transport = "ICMP/1000"
+	pol.Spec.Exports[0].Transport = &netproto.ProtoPort{
+		Protocol: "icmp",
+		Port:     "1234",
+	}
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid protocol didn't fail"))
 
-	pol.Spec.Exports[0].Transport = "TCP/UDP"
+	pol.Spec.Exports[0].Transport = &netproto.ProtoPort{
+		Protocol: "tcp",
+		Port:     "udp",
+	}
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid port didn't fail"))
 
-	pol.Spec.Exports[0].Transport = "TCP/65536"
+	pol.Spec.Exports[0].Transport =&netproto.ProtoPort{
+		Protocol: "tcp",
+		Port:     "65536",
+	}
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid port didn't fail"))
 
-	pol.Spec.Exports[0].Transport = "UDP/1234"
+	pol.Spec.Exports[0].Transport = &netproto.ProtoPort{
+		Protocol: "udp",
+		Port:     "1234",
+	}
 	pol.Spec.Format = "NETFLOW"
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.Assert(t, err != nil, fmt.Sprintf("invalid format didn't fail"))
@@ -1137,16 +1176,16 @@ func TestTpaDebug(t *testing.T) {
 	}
 	na.LateralDB = make(map[string][]string)
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
 
-	pol1 := &tpmprotos.FlowExportPolicy{
+	pol1 := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "flowexport1", Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			MatchRules: []netproto.MatchRule{
 				{
 					Src: &netproto.MatchSelector{
@@ -1176,14 +1215,20 @@ func TestTpaDebug(t *testing.T) {
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: "10.10.10.1",
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 				{
 					Destination: "10.10.10.2",
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -1363,7 +1408,7 @@ func TestPolicyOps(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -1390,11 +1435,11 @@ func TestPolicyOps(t *testing.T) {
 		},
 	}
 
-	pol := &tpmprotos.FlowExportPolicy{
+	pol := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-1", Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
@@ -1414,14 +1459,20 @@ func TestPolicyOps(t *testing.T) {
 					},
 				},
 			},
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: fmt.Sprintf("192.168.3.11"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 				{
 					Destination: fmt.Sprintf("192.168.3.12"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -1470,11 +1521,11 @@ func TestPolicyOps(t *testing.T) {
 	err = s.CreateFlowExportPolicy(context.Background(), pol)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create export policy %+v", pol))
 
-	dup := &tpmprotos.FlowExportPolicy{
+	dup := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
@@ -1494,15 +1545,21 @@ func TestPolicyOps(t *testing.T) {
 					},
 				},
 			},
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 
 				{
 					Destination: fmt.Sprintf("192.168.3.12"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 				{
 					Destination: fmt.Sprintf("192.168.3.14"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -1521,11 +1578,11 @@ func TestPolicyOps(t *testing.T) {
 	err = s.DeleteFlowExportPolicy(context.Background(), dup)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to delete export policy %+v", dup))
 
-	overlap := &tpmprotos.FlowExportPolicy{
+	overlap := &netproto.FlowExportPolicy{
 		TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{Name: "matchrule-overlap", Tenant: "default", Namespace: "default"},
 
-		Spec: tpmprotos.FlowExportPolicySpec{
+		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "15s",
 			TemplateInterval: "5m",
 			Format:           "IPFIX",
@@ -1545,14 +1602,20 @@ func TestPolicyOps(t *testing.T) {
 					},
 				},
 			},
-			Exports: []monitoring.ExportConfig{
+			Exports: []netproto.ExportConfig{
 				{
 					Destination: fmt.Sprintf("192.168.3.11"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 				{
 					Destination: fmt.Sprintf("192.168.3.12"),
-					Transport:   "UDP/1234",
+					Transport:   &netproto.ProtoPort{
+						Protocol: "udp",
+						Port:     "1234",
+					},
 				},
 			},
 		},
@@ -1645,7 +1708,7 @@ func TestMatchRule(t *testing.T) {
 		}
 	}
 
-	s, err := NewTpAgent(na, mockGetMgmtIPAddr, halMock)
+	s, err := NewTpAgent(na, mockGetMgmtIPAddr)
 	tu.AssertOk(t, err, fmt.Sprintf("failed to create telemetry agent"))
 
 	defer cleanup(t, s)
@@ -2308,7 +2371,7 @@ func TestMatchRule(t *testing.T) {
 		    "192.168.100.104:0.0.0.0/0:0:0:0:6:65535:65535:0:501"
 
 	*/
-	pol := &tpmprotos.FlowExportPolicy{}
+	pol := &netproto.FlowExportPolicy{}
 
 	err = json.Unmarshal([]byte(policyJSON), pol)
 	tu.AssertOk(t, err, "failed to convert json to policy")
@@ -2372,13 +2435,13 @@ func TestMatchRule(t *testing.T) {
 func TestValidateFlowExportPolicy(t *testing.T) {
 	testFlowExpSpecList := []struct {
 		name   string
-		policy monitoring.FlowExportPolicy
+		policy netproto.FlowExportPolicy
 		fail   bool
 	}{
 		{
 			name: "invalid protocol, should be UDP",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2388,30 +2451,24 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2419,10 +2476,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "TCP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "tcp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2432,7 +2492,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "empty transport",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2442,30 +2502,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2473,10 +2528,9 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "",
 						},
 					},
 				},
@@ -2486,7 +2540,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "empty destination",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2496,30 +2550,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2527,10 +2576,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					Format:           "IPFIX",
 					TemplateInterval: "5m",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2540,7 +2592,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "duplicate targets",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2550,30 +2602,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2581,14 +2628,20 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					Format:           "IPFIX",
 					TemplateInterval: "5m",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2598,7 +2651,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "invalid interval",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2608,39 +2661,37 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
 
 					Format: "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2650,7 +2701,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "invalid format",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2660,30 +2711,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2691,10 +2737,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "NETFLOW",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:  &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2704,7 +2753,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "invalid transport, missing port",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2714,30 +2763,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2745,10 +2789,12 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+							},
 						},
 					},
 				},
@@ -2758,7 +2804,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "invalid transport, missing protocol",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2768,30 +2814,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2799,10 +2840,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
@@ -2812,7 +2856,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "invalid port (aaaa)",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2822,30 +2866,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2853,10 +2892,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/aaaa",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "aaaa",
+							},
 						},
 					},
 				},
@@ -2866,7 +2908,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "empty targets",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2876,30 +2918,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2913,7 +2950,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "too many collectors",
 			fail: true,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2923,22 +2960,31 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
+				Spec: netproto.FlowExportPolicySpec{
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1235",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1235",
+							},
 						},
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1236",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1236",
+							},
 						},
 					},
 				},
@@ -2948,7 +2994,7 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 		{
 			name: "valid policy",
 			fail: false,
-			policy: monitoring.FlowExportPolicy{
+			policy: netproto.FlowExportPolicy{
 				TypeMeta: api.TypeMeta{
 					Kind: "flowExportPolicy",
 				},
@@ -2958,30 +3004,25 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 				},
 
-				Spec: monitoring.FlowExportPolicySpec{
-					MatchRules: []*monitoring.MatchRule{
+				Spec: netproto.FlowExportPolicySpec{
+					MatchRules: []netproto.MatchRule{
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.1"},
 							},
 
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.1.2"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.1.2"},
 							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1000"},
-							},
+							
 						},
 
 						{
-							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.1"},
+							Src: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.1"},
 							},
-							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{"1.1.2.2"},
-							},
-							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"TCP/1010"},
+							Dst: &netproto.MatchSelector{
+								Addresses: []string{"1.1.2.2"},
 							},
 						},
 					},
@@ -2989,10 +3030,13 @@ func TestValidateFlowExportPolicy(t *testing.T) {
 					Interval:         "15s",
 					TemplateInterval: "5m",
 					Format:           "IPFIX",
-					Exports: []monitoring.ExportConfig{
+					Exports: []netproto.ExportConfig{
 						{
 							Destination: "10.1.1.100",
-							Transport:   "UDP/1234",
+							Transport:   &netproto.ProtoPort{
+								Protocol: "udp",
+								Port:     "1234",
+							},
 						},
 					},
 				},
