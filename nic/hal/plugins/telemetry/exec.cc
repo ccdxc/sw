@@ -23,14 +23,17 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
 {
     fte::flow_update_t                  mirror_flowupd;
     fte::flow_update_t                  export_flowupd;
-    hal::ipv4_tuple                     acl_key = {};
+    hal::ipv4_tuple                     acl_key;
     hal_ret_t                           ret = HAL_RET_OK;
     const hal::flow_monitor_rule_t      *frule = NULL;
     const hal::ipv4_rule_t              *rule = NULL;
     const acl::acl_ctx_t                *acl_ctx = NULL;
 
-    mirror_flowupd.mirror_info.mirror_en = 0;
-    export_flowupd.export_info.export_en = 0;
+    bzero(&mirror_flowupd, sizeof(fte::flow_update_t));
+    bzero(&export_flowupd, sizeof(fte::flow_update_t));
+    bzero(&acl_key, sizeof(hal::ipv4_tuple));
+    mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
+    export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
     const char *ctx_name = flowmon_acl_ctx_name(ctx.get_key().svrf_id, mirror_action);
     acl_ctx = acl::acl_get(ctx_name);
     HAL_TRACE_VERBOSE("ctx_name: {} acl_ctx: {:#x}", ctx_name, (uint64_t) acl_ctx);
@@ -93,8 +96,6 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
         frule = (const hal::flow_monitor_rule_t *) RULE_MATCH_USER_DATA(rc, hal::flow_monitor_rule_t, ref_count);
 
         if (mirror_action) {
-            memset(&mirror_flowupd, 0, sizeof(fte::flow_update_t));
-            mirror_flowupd.type = fte::FLOWUPD_MIRROR_INFO;
             if (frule->action.num_mirror_dest > 0) {
                 mirror_flowupd.mirror_info.mirror_en = true;
                 mirror_flowupd.mirror_info.ing_mirror_session = 0;
@@ -115,16 +116,8 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
                     }
                 }
             }
-
-            ret = ctx.update_flow(mirror_flowupd);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error updating mirror info");
-                return ret;
-            }
         }
         else {
-            memset(&export_flowupd, 0, sizeof(fte::flow_update_t));
-            export_flowupd.type = fte::FLOWUPD_EXPORT_INFO;
             if (frule->action.num_collector > 0) {
                 int n = frule->action.num_collector;
                 export_flowupd.export_info.export_en = 0;
@@ -149,12 +142,6 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
                     frule->action.collectors[3];
                 }
             }
-
-            ret = ctx.update_flow(export_flowupd);
-            if (ret != HAL_RET_OK) {
-                HAL_TRACE_ERR("Error updating export info");
-                return ret;
-            }
         }
     } else {
         HAL_TRACE_DEBUG("Flow did not match any telemetry rules!");
@@ -162,9 +149,22 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
 
 end:
 
+    if (mirror_action) {
+        ret = ctx.update_flow(mirror_flowupd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Error updating mirror info");
+        }
+    } else {
+        ret = ctx.update_flow(export_flowupd);
+        if (ret != HAL_RET_OK) {
+           HAL_TRACE_ERR("Error updating export info");
+        }
+    }
+
     if (acl_ctx) {
         acl::acl_deref(acl_ctx);
     }
+
     return ret;
 }
 

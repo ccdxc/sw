@@ -188,7 +188,8 @@ typedef struct flow_monitor_rule_s {
     rule_match_t    rule_match;
     // Actions
     flow_monitor_rule_action_t action;
-    acl::ref_t  ref_count;
+    acl::ref_t      ref_count;
+    ht_ctxt_t       flowmon_rules_ht_ctxt;
 } flow_monitor_rule_t;
 
 typedef struct mirror_session_s {
@@ -460,6 +461,8 @@ hal_ret_t drop_monitor_rule_delete(DropMonitorRuleDeleteRequest &req, DropMonito
 hal_ret_t drop_monitor_rule_get(DropMonitorRuleGetRequest &req, DropMonitorRuleGetResponseMsg *rsp);
 
 hal_ret_t flow_monitor_acl_ctx_create(void);
+void *flowmon_rules_get_key_func(void *entry);
+uint32_t flowmon_rules_key_size(void);
 
 }    // namespace
 

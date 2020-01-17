@@ -480,12 +480,13 @@ init_rule_data(rule_data_t *rule_data, void *usr_data, void *ctr)
     memset(rule_data, 0, sizeof(rule_data_t));
     ref_init(&rule_data->ref_cnt, [] (const ref_t *ref) {
         rule_data_t *data = container_of(ref, rule_data_t, ref_cnt);
-        HAL_TRACE_VERBOSE("Freeing rule data");
+        HAL_TRACE_DEBUG("Freeing rule data {:p}", (void *)&data->ref_cnt);
         ref_dec((acl::ref_t *)data->ctr);
         ref_dec((acl::ref_t *)data->user_data);
         g_hal_state->rule_data_slab()->free(data);
     });
 
+    HAL_TRACE_DEBUG("Allocing rule data {:p}", (void *)&rule_data->ref_cnt);
     ref_inc((const acl::ref_t *)usr_data);
     rule_data->user_data = usr_data;
     rule_data->ctr = ctr;
@@ -570,13 +571,14 @@ rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_t *rule_cb)
     memcpy(&rcfg->name, name, 64);
     ref_init(&rcfg->ref_count, [] (const ref_t *ref) {
         rule_cfg_t *rcfg = container_of(ref, rule_cfg_t, ref_count);
-        HAL_TRACE_DEBUG("Free rule cfg :{}", rcfg->name);
+        HAL_TRACE_DEBUG("Free rule cfg :{} {:p}", rcfg->name, (void *)&rcfg->ref_count);
         if (rcfg->rule_ctr_ht) {
             ht::destroy(rcfg->rule_ctr_ht);
         }
         g_hal_state->rule_cfg_slab()->free(rcfg);
     });
     
+    HAL_TRACE_VERBOSE("Allocing rule cfg {:p}", (void *)&rcfg->ref_count);
     rcfg->acl_ctx = acl_create(name, (const acl_config_t *)&rcfg->acl_cfg);
 
     rcfg->rule_ctr_ht = ht::factory(8192,
@@ -594,6 +596,7 @@ rule_lib_init(const char *name, acl_config_t *cfg, rule_lib_cb_t *rule_cb)
 
     return rcfg->acl_ctx;
 }
+
 rule_cfg_t *
 rule_cfg_get(const char *name)
 {
@@ -768,6 +771,7 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                         src_addr = RULE_MATCH_GET_ADDR(sa_entry);
                         /* IP-DA loop */
                         dllist_for_each(da_entry, &match->dst_addr_list) {
+                            HAL_TRACE_DEBUG("Rule match rule add proto: {}", match->proto);
                             dst_addr = RULE_MATCH_GET_ADDR(da_entry);
                             if ((match->proto == types::IPPROTO_TCP) || (match->proto == types::IPPROTO_UDP)) {
                                 /* L4 Src-Port loop */
@@ -804,6 +808,10 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                                 HAL_TRACE_ERR("Unable to delete the acl rules: {}", ret);
                                                 return ret;
                                             }
+                                            // Increment the userdata so it gets decremented
+                                            // during rule_deref & commit
+                                            ref_inc((acl::ref_t *)(rule->data.userdata));
+
                                             /* acl_rule_deref calls ref_dec of the userdata (refcount) */
                                             acl_rule_deref((const acl_rule_t *)rule);
                                         }
@@ -841,6 +849,10 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                        HAL_TRACE_ERR("Unable to delete the acl rules:{}", ret);
                                        return ret;
                                    }
+                                   // Increment the userdata so it gets decremented
+                                   // during rule_deref & commit
+                                   ref_inc((acl::ref_t *)(rule->data.userdata)); 
+
                                    /* acl_rule_deref calls ref_dec of the userdata (refcount) */
                                    acl_rule_deref((const acl_rule_t *)rule);
                                 }
@@ -879,6 +891,10 @@ rule_match_process_rule (const acl_ctx_t **acl_ctx,
                                         HAL_TRACE_ERR("Unable to delete the acl rules:{}",ret);
                                         return ret;
                                     }
+ 
+                                    // during rule_deref & commit
+                                   ref_inc((acl::ref_t *)(rule->data.userdata));
+ 
                                     /* acl_rule_deref calls ref_dec of the userdata (refcount) */
                                     acl_rule_deref((const acl_rule_t *)rule);
                                 }

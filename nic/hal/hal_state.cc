@@ -1013,6 +1013,13 @@ hal_oper_db::init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr)
                   true, false, mmgr);
     SDK_ASSERT_RETURN((session_hal_rflow_ht_ != NULL), false);
 
+    HAL_HT_CREATE("flowmon-rules", flowmon_rules_ht_,
+                  MAX_FLOW_MONITOR_RULES >> 1,
+                  hal::flowmon_rules_get_key_func,
+                  hal::flowmon_rules_key_size(),
+                  true, false, mmgr);
+    SDK_ASSERT_RETURN((flowmon_rules_ht_ != NULL), false);
+
 #ifdef __x86_64__
     // initialize l4lb related data structures
     HAL_HT_CREATE("L4 LB", l4lb_ht_,

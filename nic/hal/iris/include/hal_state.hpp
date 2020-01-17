@@ -262,6 +262,7 @@ public:
     ht *session_hal_iflow_ht(void)  const { return session_hal_iflow_ht_; }
     ht *session_hal_rflow_ht(void)  const { return session_hal_rflow_ht_; }
     ht *qos_class_ht(void) const { return qos_class_ht_; }
+    ht *flowmon_rules_ht(void) const { return flowmon_rules_ht_; }
     bitmap *telemetry_collectors_bmp(void) const { return telemetry_collectors_bmp_; }
     bitmap *telemetry_flowmon_bmp(void) const { return telemetry_flowmon_bmp_; }
     bitmap *qos_cmap_pcp_bmp(void) const { return qos_cmap_pcp_bmp_; }
@@ -403,6 +404,7 @@ private:
     ht    *session_hal_handle_ht_;
     ht    *session_hal_iflow_ht_;
     ht    *session_hal_rflow_ht_;
+    ht    *flowmon_rules_ht_;
     ht    *l4lb_ht_;
     ht    *tlscb_id_ht_;
     ht    *tcpcb_id_ht_;
@@ -596,6 +598,7 @@ public:
     ht *session_hal_handle_ht(void) const { return oper_db_->session_hal_handle_ht(); }
     ht *session_hal_iflow_ht(void) const { return oper_db_->session_hal_iflow_ht(); }
     ht *session_hal_rflow_ht(void) const { return oper_db_->session_hal_rflow_ht(); }
+    ht *flowmon_rules_ht(void) const { return oper_db_->flowmon_rules_ht(); }
 
     // get APIs for Crypto Cert Store State
     slab *crypto_cert_store_slab(void) const { return cfg_db_->crypto_cert_store_slab(); }
