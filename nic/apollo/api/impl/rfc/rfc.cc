@@ -7,6 +7,7 @@
  */
 
 #include <string>
+#include "include/sdk/platform.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/impl/lpm/lpm.hpp"
 #include "nic/apollo/api/impl/rfc/rfc.hpp"
@@ -108,6 +109,81 @@ rfc_p0_eq_class_tables_dump (rfc_ctxt_t *rfc_ctxt)
 }
 
 sdk_ret_t
+rfc_tree_add_defaults (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table)
+{
+    uint8_t       *bits;
+    uint16_t      class_id;
+    rte_bitmap    *cbm_new;
+
+    //Allocate memory for bitmap, and initialize
+    posix_memalign((void **)&bits, CACHE_LINE_SIZE, rfc_ctxt->cbm_size);
+    cbm_new = rte_bitmap_init(rfc_ctxt->policy->max_rules, bits, rfc_ctxt->cbm_size);
+
+    if (cbm_new == NULL) {
+        PDS_TRACE_ERR("cant allocate memory for bitmap");
+        return SDK_RET_OOM;
+    }
+
+    class_id = rfc_table->num_classes++;
+    PDS_TRACE_DEBUG("class id allocated is %u", class_id);
+    rfc_table->cbm_table[class_id].class_id = class_id;
+    rfc_table->cbm_table[class_id].cbm = cbm_new;
+    rfc_table->cbm_map[cbm_new] = class_id;
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+rfc_policy_add_defaults (rfc_ctxt_t *rfc_ctxt)
+{
+    sdk_ret_t ret;
+
+    if (rfc_ctxt->sip_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->sip_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (rfc_ctxt->dip_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->dip_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (rfc_ctxt->stag_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->stag_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (rfc_ctxt->dtag_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->dtag_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (rfc_ctxt->port_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->port_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    if (rfc_ctxt->proto_port_tree.num_intervals == 0) {
+        ret = rfc_tree_add_defaults(rfc_ctxt, &rfc_ctxt->proto_port_tree.rfc_table);
+        if (ret != SDK_RET_OK) {
+            return ret;
+        }
+    }
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
                    uint32_t mem_size)
 {
@@ -140,6 +216,8 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
         PDS_TRACE_ERR("Failed to build RFC LPM trees, err %u", ret);
         goto cleanup;
     }
+
+    ret = rfc_policy_add_defaults(&rfc_ctxt);
 
     // build equivalence class index tables and result tables for subsequent
     // phases of RFC
