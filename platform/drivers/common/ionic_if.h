@@ -1821,7 +1821,7 @@ enum qos_sched_type {
  * union qos_config - Qos configuration structure
  * @flags:		Configuration flags
  *	IONIC_QOS_CONFIG_F_ENABLE		enable
- *	IONIC_QOS_CONFIG_F_DROP			drop/nodrop
+ *	IONIC_QOS_CONFIG_F_NO_DROP			drop/nodrop
  *	IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		enable dot1q pcp rewrite
  *	IONIC_QOS_CONFIG_F_RW_IP_DSCP		enable ip dscp rewrite
  * @sched_type:		Qos class scheduling type (enum qos_sched_type)
@@ -1841,7 +1841,7 @@ enum qos_sched_type {
 union qos_config {
 	struct {
 #define IONIC_QOS_CONFIG_F_ENABLE		BIT(0)
-#define IONIC_QOS_CONFIG_F_DROP			BIT(1)
+#define IONIC_QOS_CONFIG_F_NO_DROP			BIT(1)
 /* Used to rewrite PCP or DSCP value. */
 #define IONIC_QOS_CONFIG_F_RW_DOT1Q_PCP		BIT(2)
 #define IONIC_QOS_CONFIG_F_RW_IP_DSCP		BIT(3)

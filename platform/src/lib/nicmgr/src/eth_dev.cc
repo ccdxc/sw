@@ -1464,7 +1464,7 @@ Eth::_CmdQosIdentify(void *req, void *req_data, void *resp, void *resp_data)
         }
 
         if(info->no_drop)
-            cfg->flags |= IONIC_QOS_CONFIG_F_DROP;
+            cfg->flags |= IONIC_QOS_CONFIG_F_NO_DROP;
 
         cfg->pfc_cos = info->pause_dot1q_pcp;
 
@@ -1559,7 +1559,7 @@ Eth::_CmdQosInit(void *req, void *req_data, void *resp, void *resp_data)
         info.rewrite_ip_dscp = cfg->rw_ip_dscp;
     }
 
-    if (cfg->flags & IONIC_QOS_CONFIG_F_DROP) {
+    if (cfg->flags & IONIC_QOS_CONFIG_F_NO_DROP) {
         info.no_drop = true;
     } else {
         info.no_drop = false;
@@ -1637,7 +1637,7 @@ Eth::_CmdQosUpdate(void *req, void *req_data, void *resp, void *resp_data)
         info.rewrite_ip_dscp = cfg->rw_ip_dscp;
     }
 
-    if (cfg->flags & IONIC_QOS_CONFIG_F_DROP) {
+    if (cfg->flags & IONIC_QOS_CONFIG_F_NO_DROP) {
         info.no_drop = true;
     } else {
         info.no_drop = false;

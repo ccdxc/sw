@@ -670,7 +670,7 @@ ionic_qos_init(struct ionic *ionic)
 		if (ionic->qos.enable_flag[tc] == 0)
 			continue;
 
-		ionic->qos.no_drop[tc] = (qos->flags & IONIC_QOS_CONFIG_F_DROP) ? 1 : 0;
+		ionic->qos.no_drop[tc] = (qos->flags & IONIC_QOS_CONFIG_F_NO_DROP) ? 1 : 0;
 		ionic->qos.sched_type[tc] = qos->sched_type;
 		ionic->qos.dwrr_bw_perc[tc] = qos->dwrr_weight;
 		ionic->qos.pfc_cos[tc] = qos->pfc_cos;
@@ -698,7 +698,7 @@ ionic_qos_tc_init(struct ionic *ionic, int tc, union qos_config *qos)
 	    " class: %d pause_type: %d pfc_cos: %d flags: 0x%x "
 	    "ndscp: %d[%d,%d,%d,%d]\n",
 	    tc, qos->dot1q_pcp, qos->dwrr_weight,
-	    (qos->flags & IONIC_QOS_CONFIG_F_DROP) ? "true" : "false",
+	    (qos->flags & IONIC_QOS_CONFIG_F_NO_DROP) ? "false" : "true",
 	    qos->class_type, qos->pause_type, qos->pfc_cos, qos->flags,
 	    qos->ndscp, qos->ip_dscp[0], qos->ip_dscp[1], qos->ip_dscp[2],
 	    qos->ip_dscp[3]);
@@ -720,11 +720,11 @@ ionic_qos_tc_update(struct ionic *ionic, int tc, union qos_config *qos)
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
 
-	IONIC_DEV_PRINT(ionic->dev, "Update TC: %d pcp: %d weight: %d drop: %s "
+	IONIC_DEV_INFO(ionic->dev, "Update TC: %d pcp: %d weight: %d drop: %s "
 	    " class: %d pause_type: %d pfc_cos: %d flags: 0x%x "
 	    "ndscp: %d[%d,%d,%d,%d]\n",
 	    tc, qos->dot1q_pcp, qos->dwrr_weight,
-	    (qos->flags & IONIC_QOS_CONFIG_F_DROP) ? "true" : "false",
+	    (qos->flags & IONIC_QOS_CONFIG_F_NO_DROP) ? "false" : "true",
 	    qos->class_type, qos->pause_type, qos->pfc_cos, qos->flags,
 	    qos->ndscp, qos->ip_dscp[0], qos->ip_dscp[1], qos->ip_dscp[2],
 	    qos->ip_dscp[3]);
@@ -772,7 +772,7 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 
 	// By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped); 
 	// if the PCP is already mapped to some other TC, pick the first available PCP
-	for (i=0; i < ionic->qos.max_tcs; i++) {
+	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (ident->qos.config[i].dot1q_pcp == tc)
 			tc_pcp_available = false;
 
@@ -783,7 +783,7 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 
 	if(!tc_pcp_available) {
 		// TC PCP not available; pick the first free PCP
-		for(i=0; i<IONIC_QOS_PCP_MAX; i++) {
+		for(i = 0; i < IONIC_QOS_PCP_MAX; i++) {
 			if(pcp_to_tc_map[i] == -1)
 				def_pcp = i;
 		}
@@ -798,7 +798,7 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	qos->sched_type = QOS_SCHED_TYPE_DWRR;
 	qos->dwrr_weight = 25; // TODO: set this to 0 when bw_perc is enabled
 
-	IONIC_NETDEV_DEBUG(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d "
+	IONIC_NETDEV_INFO(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d "
 				"sched_type: %d wt: %d\n", 
 				tc, qos->pause_type, qos->dot1q_pcp, 
 				qos->sched_type, qos->dwrr_weight);
@@ -1002,7 +1002,7 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 	int tc, error;
 
 	ionic_qos_class_identify(ionic);
-	for(tc = 0; tc < ionic->qos.max_tcs; tc++) {
+	for(tc = 1; tc < ionic->qos.max_tcs; tc++) {
 		qos = &ident->qos.config[tc];
 		if (enable[tc] == (qos->flags & IONIC_QOS_CONFIG_F_ENABLE))
 			continue;
@@ -1050,14 +1050,14 @@ ionic_qos_no_drop_update(struct ionic_lif *lif, uint8_t *no_drop)
 			continue;
 		}
 
-		if (no_drop[tc] == (qos->flags & IONIC_QOS_CONFIG_F_DROP))
+		if (no_drop[tc] == (qos->flags & IONIC_QOS_CONFIG_F_NO_DROP))
 			continue;
 
 		ionic_qos_set_default(lif, tc, qos);
 		if (no_drop[tc])
-			qos->flags |= IONIC_QOS_CONFIG_F_DROP;
+			qos->flags |= IONIC_QOS_CONFIG_F_NO_DROP;
 		else
-			qos->flags &= ~IONIC_QOS_CONFIG_F_DROP;
+			qos->flags &= ~IONIC_QOS_CONFIG_F_NO_DROP;
 
 		error = ionic_qos_tc_update(ionic, tc, qos);
 		if (error) {
