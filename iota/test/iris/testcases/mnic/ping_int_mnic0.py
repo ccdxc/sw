@@ -20,11 +20,11 @@ def Trigger(tc):
     api.Logger.info("Starting ping test for int_mnic0")
 
     if w1.IsNaples():
-        ip = api.GetPrimaryIntNicMgmtIpNext()
+        ip = api.GetHostNicIntMgmtIP(w1.node_name)
         api.Trigger_AddNaplesCommand(req, w1.node_name, "ping -I int_mnic0 -c3 " + ip)
 
     if w2.IsNaples():
-        ip = api.GetPrimaryIntNicMgmtIpNext()
+        ip = api.GetHostNicIntMgmtIP(w2.node_name)
         api.Trigger_AddNaplesCommand(req, w2.node_name, "ping -I int_mnic0 -c3 " + ip)
 
     trig_resp = api.Trigger(req)

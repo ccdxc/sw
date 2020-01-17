@@ -90,8 +90,10 @@ typedef struct pcieport_info_s pcieport_info_t;
 static inline pcieport_info_t *
 pcieport_info_get(void)
 {
-    extern pcieport_info_t *pcieport_info;
-    return pcieport_info;
+    extern pcieport_info_t *
+    pcieport_info_get_or_map(pciemgr_initmode_t initmode);
+
+    return pcieport_info_get_or_map(INHERIT_ONLY);
 }
 
 static inline pcieport_t *

@@ -20,6 +20,7 @@
 #include "cap_pp_c_hdr.h"
 
 #include "cmd.h"
+#include "utils.hpp"
 
 static const char *
 ltssm_str(const unsigned int ltssm)
@@ -99,7 +100,7 @@ linkpoll(int argc, char *argv[])
     u_int64_t otm, ntm;
     int port, polltm_us, opt, showall;
 
-    port = 0;
+    port = default_pcieport();
     polltm_us = 0;
     showall = 0;
 

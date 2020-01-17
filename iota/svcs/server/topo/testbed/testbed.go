@@ -228,9 +228,9 @@ func (n *TestNode) InitNode(reboot bool, c *ssh.ClientConfig, commonArtifacts []
 		return err
 	}
 
-	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v Nic Finder Script: %v", n.Node.Name, n.Node.IpAddress, constants.EsxNicFinderScript)
-	if err := n.CopyTo(c, constants.DstIotaAgentDir, []string{constants.EsxNicFinderScript}); err != nil {
-		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to TestNode: %v, at IPAddress: %v", constants.EsxNicFinderScript, n.Node.Name, n.Node.IpAddress)
+	log.Infof("TOPO SVC | InitTestBed | Running init for TestNode: %v, IPAddress: %v Nic Finder Script: %v", n.Node.Name, n.Node.IpAddress, constants.NicFinderScript)
+	if err := n.CopyTo(c, constants.DstIotaAgentDir, []string{constants.NicFinderScript}); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to TestNode: %v, at IPAddress: %v", constants.NicFinderScript, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
 

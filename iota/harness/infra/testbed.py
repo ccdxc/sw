@@ -285,6 +285,12 @@ class _Testbed:
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                nics = getattr(instance, "Nics", None)
+                if nics != None and len(nics) != 0:
+                    for nic in nics:
+                        for port in getattr(nic, "Ports", []):
+                            cmd.extend(["--mac-hint", port.MAC])
+                            break
                 images = self.curr_ts.GetImages()
                 nap_img = getattr(images, 'naples', None)
                 if nap_img is None:

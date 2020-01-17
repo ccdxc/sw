@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sched.h>
 #include <cinttypes>
 #include <sys/types.h>
@@ -21,6 +22,7 @@
 #include "platform/pal/include/pal.h"
 #include "platform/evutils/include/evutils.h"
 #include "platform/misc/include/misc.h"
+#include "platform/misc/include/bdf.h"
 #include "platform/pciemgrutils/include/pciesys.h"
 #include "platform/pciemgr/include/pciemgr.h"
 #include "platform/pcieport/include/pcieport.h"
@@ -43,6 +45,39 @@ reboot_the_system(void)
 {
     int r = system("/nic/tools/pcie_hostdn.sh");
     if (r) pciesys_logerror("failed to reboot %d\n", r);
+}
+
+/*
+ * To make the IP address of the "int_mnic0" internal management
+ * interface unique we make a component of the IP address based
+ * on the primary PCIe bus address of this Naples.
+ *
+ * Set int_mnic0 169.254.<bus>.1.
+ */
+static void
+handle_buschg(const int port)
+{
+    pciehwdev_t *phwdev = pciehwdev_get_by_id(port,
+                                              PCI_VENDOR_ID_PENSANDO,
+                                              PCI_DEVICE_ID_PENSANDO_MGMT);
+
+    if (phwdev) {
+        const uint16_t bdf = pciehwdev_get_hostbdf(phwdev);
+        const uint8_t bus = bdf_to_bus(bdf);
+        /* 169.254.<bus>.1 */
+        const uint32_t ip = ((169 << 24) | (254 << 16) | (bus << 8) | 1);
+        const uint32_t nm = 0xffffff00;
+        const char *ifname = "int_mnic0";
+
+        if (netif_setip(ifname, ip, nm) < 0) {
+            pciesys_logerror("netif_setip %s ip 0x%08x nm 0x%08x failed: %s\n",
+                             ifname, ip, nm, strerror(errno));
+        }
+        if (netif_up(ifname) < 0) {
+            pciesys_logerror("netif_up %s failed: %s\n",
+                             ifname, strerror(errno));
+        }
+    }
 }
 
 static void
@@ -88,6 +123,7 @@ port_evhandler(pcieport_event_t *ev, void *arg)
         const u_int8_t secbus = ev->buschg.secbus;
         pciesys_loginfo("port%d: buschg 0x%02x\n", ev->port, secbus);
         pciehw_event_buschg(ev->port, secbus);
+        handle_buschg(ev->port);
         break;
     }
     case PCIEPORT_EVENT_FAULT: {

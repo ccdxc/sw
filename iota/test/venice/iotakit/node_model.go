@@ -98,7 +98,6 @@ const (
 	hostToolsDir        = "/pensando/iota"
 	penctlPath          = "nic/bin"
 	penctlPkgName       = "../nic/host.tar"
-	penctlNaplesURL     = "http://169.254.0.1"
 	penctlLinuxBinary   = "penctl.linux"
 	penctlFreebsdBinary = "penctl.freebsd"
 )

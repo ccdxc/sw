@@ -18,54 +18,14 @@
 #include "nic/sdk/platform/pciemgrd/pciemgrd.hpp"
 
 #include "cmd.h"
-
-static int
-portmap_init_from_catalog()
-{
-    portmap_init();
-#ifdef __aarch64__
-    sdk::lib::catalog *catalog = sdk::lib::catalog::factory();
-    if (catalog == NULL) {
-        pciesys_logerror("no catalog!\n");
-        return -1;
-    }
-
-    int nportspecs = catalog->pcie_nportspecs();
-    for (int i = 0; i < nportspecs; i++) {
-        pcieport_spec_t ps = { 0 };
-        ps.host  = catalog->pcie_host(i);
-        ps.port  = catalog->pcie_port(i);
-        ps.gen   = catalog->pcie_gen(i);
-        ps.width = catalog->pcie_width(i);
-        if (portmap_addhost(&ps) < 0) {
-            pciesys_logerror("portmap_add i %d h%d p%d gen%dx%d failed\n",
-                             i, ps.host, ps.port, ps.gen, ps.width);
-            return-1;
-        }
-    }
-    sdk::lib::catalog::destroy(catalog);
-#else
-    pcieport_spec_t ps = { 0 };
-    ps.host  = 0;
-    ps.port  = 0;
-    ps.gen   = 3;
-    ps.width = 16;
-
-    if (portmap_addhost(&ps) < 0) {
-        pciesys_logerror("portmap_add h%d p%d gen%dx%d failed\n",
-                         ps.host, ps.port, ps.gen, ps.width);
-            return -1;
-    }
-#endif
-    return 0;
-}
+#include "utils.hpp"
 
 static void
 port(int argc, char *argv[])
 {
     int opt, port;
 
-    port = 0;
+    port = default_pcieport();
     optind = 0;
     while ((opt = getopt(argc, argv, "p:")) != -1) {
         switch (opt) {
@@ -124,7 +84,7 @@ portstats(int argc, char *argv[])
     unsigned int flags;
 
     flags = PSF_NONE;
-    port = 0;
+    port = default_pcieport();
     do_clear = 0;
     optind = 0;
     while ((opt = getopt(argc, argv, "acp:")) != -1) {

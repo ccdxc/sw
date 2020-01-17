@@ -236,6 +236,10 @@ void pciehw_aximst_show(const unsigned int port,
 
 void pciehw_dbg(int argc, char *argv[]);
 
+u_int16_t pciehwdev_get_hostbdf(const pciehwdev_t *phwdev);
+pciehwdev_t *pciehwdev_get_by_id(const u_int8_t port,
+                                 const u_int16_t venid, const u_int16_t devid);
+
 int pciehw_cfgrd(const u_int8_t port, const u_int16_t bdf,
                  const u_int16_t offset, const u_int8_t size, u_int32_t *valp);
 int pciehw_cfgwr(const u_int8_t port, const u_int16_t bdf,

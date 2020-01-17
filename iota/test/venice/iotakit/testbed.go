@@ -463,7 +463,7 @@ func (tb *TestBed) preapareNodeParams(nodeType iota.TestBedNodeType, personality
 						NicType:         "naples",
 						Name:            node.NodeName + "_naples" + "-" + strconv.Itoa(nicID),
 						//Enable this with BRAD PR
-						//NicHint: port.MAC,
+						NicHint: port.MAC,
 					}
 					log.Infof("Using MaC Hinst %v", port.MAC)
 					node.NaplesConfigs.Configs = append(node.NaplesConfigs.Configs, config)
@@ -1374,13 +1374,16 @@ func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
 		if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES {
 			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
 			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s update ssh-pub-key -f ~/.ssh/id_rsa.pub",
-				penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			//enable sshd
-			cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s system enable-sshd",
-				penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			for _, naples := range node.NaplesConfigs.Configs {
+				penctlNaplesURL := "http://" + naples.NaplesIpAddress
+				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s update ssh-pub-key -f ~/.ssh/id_rsa.pub",
+					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				//enable sshd
+				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s system enable-sshd",
+					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
+				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+			}
 		}
 	}
 
@@ -1482,9 +1485,12 @@ func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
 				}
 
 				// trigger mode switch
-				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
-					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
-				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				for _, naples := range node.NaplesConfigs.Configs {
+					penctlNaplesURL := "http://" + naples.NaplesIpAddress
+					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
+						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
+					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+				}
 			}
 		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
 			// trigger mode switch on Naples sim

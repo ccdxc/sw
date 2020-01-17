@@ -1714,8 +1714,11 @@ func (sm *SysModel) CollectLogs() error {
 				case iota.PersonalityType_PERSONALITY_NAPLES:
 					cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
 					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
-					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+					for _, naples := range node.NaplesConfigs.Configs {
+						penctlNaplesURL := "http://" + naples.NaplesIpAddress
+						cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s system tech-support -a %s -b %s-tech-support", penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile, node.NodeName)
+						trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
+					}
 				}
 			}
 			resp, err := trig.Run()

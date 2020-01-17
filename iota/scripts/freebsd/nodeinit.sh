@@ -9,6 +9,7 @@ while [[ "$#" > 0 ]]; do
         -c|--cleanup) cleanup=1;;
         --skip-install) skip_install=1;;
         --own_ip) own_ip=$2; shift;;
+        --no-mgmt) no_mgmt=1;;
         --trg_ip) trg_ip=$2; shift;;
         *) echo "Unknown parameter passed: $1"; exit 1;;
     esac; shift;

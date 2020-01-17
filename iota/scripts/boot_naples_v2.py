@@ -14,6 +14,7 @@ import atexit
 import paramiko
 import threading
 import traceback
+import ipaddress
 from enum import auto, Enum, unique
 
 HOST_NAPLES_DIR                 = "/naples"
@@ -47,6 +48,8 @@ parser.add_argument('--server', dest='server', default='ucs',
                     help='Node Server type')
 
 # Optional parameters
+parser.add_argument('--mac-hint', dest='mac_hint',
+                    default="", help='Mac hint')
 parser.add_argument('--console-username', dest='console_username',
                     default="admin", help='Console Server Username.')
 parser.add_argument('--console-password', dest='console_password',
@@ -268,6 +271,7 @@ sys.stdout = FlushFile(sys.stdout)
 class EntityManagement:
     def __init__(self, ipaddr = None, username = None, password = None):
         self.ipaddr = ipaddr
+        self.mac_addr = None
         self.host = None
         self.hdl = None
         self.username = username
@@ -342,6 +346,17 @@ class EntityManagement:
             print("ERROR: Failed to run command: %s (exit = %d)" % (command,retcode))
             raise Exception(full_command)
         return retcode
+
+    @_exceptionWrapper(_errCodes.ENTITY_SSH_CMD_FAILED, "SSH cmd failed")
+    def RunSshCmdWithOutput(self, command, ignore_failure = False):
+        date_command = "%s %s \"date\"" % (self.ssh_pfx, self.ssh_host)
+        os.system(date_command)
+        full_command = "%s %s %s" % (self.ssh_pfx, self.ssh_host, command)
+        print(full_command)
+        cmd0 = list(filter(None, full_command.split(" ")))
+        stdout, stderr = subprocess.Popen(cmd0, stdout=subprocess.PIPE).communicate()
+        print ("Cmd output ", full_command, stdout, stderr)
+        return str(stdout, "UTF-8"), ""
 
     def __run_cmd(self, cmd):
         os.system("date")
@@ -542,13 +557,23 @@ class NaplesManagement(EntityManagement):
             self.ipaddr = x[0].decode('utf-8')
             self.SSHPassInit()
 
+
+    def __read_mac(self):
+        print(self.RunCommoandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether"))
+        output = self.RunCommoandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
+        mac_regexp = '(?:[0-9a-fA-F]:?){12}'
+        x = re.findall(mac_regexp.encode(), output)
+        if len(x) > 0:
+            self.mac_addr = x[0].decode('utf-8')
+
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True):
         self.__login()
+        print("sleeping 60 seconds in Login")
+        time.sleep(60)
         if bringup_oob:
-            print("sleeping 60 seconds in Login")
-            time.sleep(60)
             self.__read_ip()
+        self.__read_mac()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
@@ -702,14 +727,28 @@ class HostManagement(EntityManagement):
             return
 
         if driver_pkg:
-            nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
-            if GlobalOptions.no_mgmt:
-                nodeinit_args += " --no-mgmt"
             print('running nodeinit.sh cleanup with args: {0}'.format(nodeinit_args))
             self.RunSshCmd("sudo rm -rf /naples &&  sudo mkdir -p /naples && sudo chown vm:vm /naples")
             self.RunSshCmd("sudo mkdir -p /pensando && sudo chown vm:vm /pensando")
+            self.CopyIN("scripts/pen_nics.py",  HOST_NAPLES_DIR)
             self.CopyIN("scripts/%s/nodeinit.sh" % GlobalOptions.os, HOST_NAPLES_DIR)
             self.CopyIN(driver_pkg, HOST_NAPLES_DIR)
+
+            nodeinit_args = ""
+            if GlobalOptions.mac_hint != "":
+                #Run with not mgmt first
+                self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
+                mgmtIPCmd = "sudo python3  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, GlobalOptions.os)
+                output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
+                print("Command output ", output)
+                mnic_ip = ipaddress.ip_address(output.split("\n")[0])
+                own_ip = str(mnic_ip + 1)
+                nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
+            else:
+                nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
+
+            if GlobalOptions.no_mgmt:
+                nodeinit_args += " --no-mgmt"
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
 

@@ -34,7 +34,9 @@ typedef pcieport_event_linkinfo_t pcieport_event_hostup_t;
 typedef pcieport_event_linkinfo_t pcieport_event_hostdn_t;
 
 typedef struct pcieport_event_buschg_s {
-    u_int8_t secbus;            /* new secondary bus number */
+    u_int8_t pribus;            /* new primary     bus number */
+    u_int8_t secbus;            /* new secondary   bus number */
+    u_int8_t subbus;            /* new subordinate bus number */
 } pcieport_event_buschg_t;
 
 typedef struct pcieport_event_fault_s {

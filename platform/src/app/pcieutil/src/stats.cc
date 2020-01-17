@@ -12,6 +12,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciemgr.h"
 
 #include "cmd.h"
+#include "utils.hpp"
 
 static void
 stats(int argc, char *argv[])
@@ -19,7 +20,7 @@ stats(int argc, char *argv[])
     int opt, port, do_clear;
     unsigned int flags;
 
-    port = 0;
+    port = default_pcieport();
     flags = PMGRSF_NONE;
     do_clear = 0;
     optind = 0;

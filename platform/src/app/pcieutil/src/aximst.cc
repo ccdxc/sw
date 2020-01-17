@@ -19,6 +19,7 @@
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
 
 #include "cmd.h"
+#include "utils.hpp"
 
 #define IND_INFO_BASE \
     (CAP_ADDR_BASE_PXB_PXB_OFFSET + CAP_PXB_CSR_STA_TGT_IND_INFO_BYTE_OFFSET)
@@ -104,10 +105,11 @@ sighand(int s)
 static void
 aximst(int argc, char *argv[])
 {
-    static int port;
+    int port;
     int opt, entry, first_entry, flags, follow;
     u_int64_t otm, ntm;
 
+    port = default_pcieport();
     flags = 0;
     follow = 0;
     optind = 0;

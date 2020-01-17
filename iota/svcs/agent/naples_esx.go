@@ -25,9 +25,9 @@ import (
 )
 
 var (
-	fileName                = filepath.Base(Common.DstEsxNicFinderScript)
-	esxNicFinderHostdstDir  = "/tmp"
-	esxNicFinderHostdstFile = esxNicFinderHostdstDir + "/" + fileName
+	fileName             = filepath.Base(Common.DstNicFinderScript)
+	nicFinderHostdstDir  = "/tmp"
+	nicFinderHostdstFile = nicFinderHostdstDir + "/" + fileName
 )
 
 type esxHwNode struct {
@@ -226,7 +226,7 @@ func (node *esxHwNode) getDataIntfs(nicType, hint string) ([]string, error) {
 		if err := node.setupUpEsxNicFinder(); err != nil {
 			return nil, err
 		}
-		fullCmd = []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "data-nic", "--op", "vmnics"}
+		fullCmd = []string{nicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "data-nic", "--op", "intfs", "--os", "esx"}
 	}
 
 	cmdResp, _, _ := hostEntity.(iotaWorkload).workload.RunCommand(fullCmd, "", 0, 0, false, true)
@@ -270,7 +270,7 @@ func (node *esxHwNode) setupUpEsxNicFinder() error {
 	addr := node.hostIP + ":" + strconv.Itoa(sshPort)
 	sshConfig := node.getHostSSHCfg()
 
-	cmd := []string{"rm", esxNicFinderHostdstFile}
+	cmd := []string{"rm", nicFinderHostdstFile}
 
 	sshHandle, err := ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
@@ -281,7 +281,7 @@ func (node *esxHwNode) setupUpEsxNicFinder() error {
 
 	copyHandle := copier.NewCopierWithSSHClient(sshHandle, sshConfig)
 
-	if err := copyHandle.CopyTo(addr, esxNicFinderHostdstDir, []string{Common.DstEsxNicFinderScript}); err != nil {
+	if err := copyHandle.CopyTo(addr, nicFinderHostdstDir, []string{Common.DstNicFinderScript}); err != nil {
 		return errors.Wrap(err, "Copy failed for esx nic finder script")
 	}
 
@@ -305,7 +305,7 @@ func (node *esxHwNode) getNaplesMgmtIntf(hint string) (string, error) {
 			return "", err
 		}
 
-		cmd := []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "vmnics"}
+		cmd := []string{nicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "intfs", "--os", "esx"}
 		cmdResp, _ := Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
 
 		if cmdResp.Ctx.ExitCode != 0 {
@@ -401,7 +401,7 @@ func (node *esxHwNode) setUpNaplesMgmtIP(hint string) (string, error) {
 			return "", errors.Wrap(err, "Unable to connect to ssh")
 		}
 
-		cmd := []string{esxNicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "mnic-ip"}
+		cmd := []string{nicFinderHostdstFile, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "mnic-ip", "--os", "esx"}
 		cmdResp, _ := Cmd.RunSSHCommand(sshHandle, strings.Join(cmd, " "), 0, false, false, node.logger)
 
 		if cmdResp.Ctx.ExitCode != 0 {

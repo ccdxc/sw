@@ -23,7 +23,7 @@
 #include "portmap.h"
 #include "pcieport_impl.h"
 
-pcieport_info_t *pcieport_info;
+static pcieport_info_t *pcieport_info;
 
 static pcieport_info_t *
 pcieport_info_map(pciemgr_initmode_t initmode)
@@ -362,6 +362,9 @@ pcieport_showport(const int port)
     P("config",   "gen%dx%d", p->cap_gen, p->cap_width);
     P("current",  "gen%dx%d", p->cur_gen, p->cur_width);
     P("required", "gen%dx%d", p->req_gen, p->req_width);
+    P("pribus", "0x%02x", p->pribus);
+    P("secbus", "0x%02x", p->secbus);
+    P("subbus", "0x%02x", p->subbus);
     P("lanemask", "0x%04x", p->lanemask);
     P("subvendorid", "0x%04x", p->subvendorid);
     P("subdeviceid", "0x%04x", p->subdeviceid);

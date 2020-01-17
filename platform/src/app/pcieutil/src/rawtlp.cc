@@ -20,6 +20,7 @@
 #include "nic/sdk/platform/pcieport/include/portcfg.h"
 #include "nic/sdk/platform/pcieport/include/rawtlp.h"
 #include "cmd.h"
+#include "utils.hpp"
 
 static void
 hexdump(uint64_t addr, char *buf, const size_t size)
@@ -86,7 +87,7 @@ memrd(int argc, char *argv[], int memcat)
     size = optind + 1 < argc ? strtoul(argv[optind + 1], NULL, 0) : 4;
 
     if (port == -1) {
-        port = 0;
+        port = default_pcieport();
     }
 
     if (reqid == -1) {
@@ -177,7 +178,7 @@ rawtlp_memwr(int argc, char *argv[])
     addr = strtoull(argv[optind++], NULL, 0);
 
     if (port == -1) {
-        port = 0;
+        port = default_pcieport();
     }
 
     if (reqid == -1) {
@@ -242,7 +243,7 @@ rawtlp_raw(int argc, char *argv[])
     }
 
     if (port == -1) {
-        port = 0;
+        port = default_pcieport();
     }
 
     rawtlp_req_t req;

@@ -1234,4 +1234,19 @@ func init() {
 	controlIntf = Utils.GetIntfsMatchingPrefix("e")[0]
 	naplesHwUUIDFile = "/mnt/sysuuid"
 	Workload.ContainerPrivileged = false
+
+	hostIntfCmd = func(osType string, nicType, hint string) []string {
+		return []string{"date"}
+	}
+
+	naplesIPCmd = func(osType string, nicType, hint string) []string {
+		return []string{"date"}
+	}
+
+	naplesMgmtIntfCmd = func(osType string, nicType, hint string) []string {
+		return []string{"date"}
+	}
+
+	common.NaplesMnicIP = "127.0.0.1"
+
 }

@@ -45,8 +45,15 @@ while true
 do
     if [ -d "/sys/class/net/int_mnic0" ] && [ $int_mnic0_up -eq 0 ] ; then
         if [ $int_mnic0_admin_up -eq 0 ]; then
-            log "bringing up int_mnic0"
-            ifconfig int_mnic0 169.254.0.1 netmask 255.255.255.0 up && int_mnic0_admin_up=1
+	    bus=`/platform/bin/pcieutil dev -D 1dd8:1004`
+	    if [ ! -z "$bus" ]; then
+		ipaddr="169.254.$bus.1"
+		log "bringing up int_mnic0 $ipaddr"
+		ifconfig int_mnic0 $ipaddr netmask 255.255.255.0 up && int_mnic0_admin_up=1
+	    else
+		log "Waiting for ipaddr for int_mnic0"
+		ifconfig int_mnic0 up && int_mnic0_admin_up=1
+	    fi
         fi
 
         irq_number=`find /proc/irq  -name *int_mnic0* | awk -F/ '{ print $4 }'`

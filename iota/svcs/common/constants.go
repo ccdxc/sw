@@ -29,7 +29,7 @@ const (
 	NicFinderConfFileName = "nic.conf"
 
 	//NicFinderConfFileName
-	EsxPenNicFinderScriptName = "esx_pen_nics.py"
+	PenNicFinderScriptName = "pen_nics.py"
 
 	// VlansPerTestBed vlans that a testbed can manage
 	VlansPerTestBed = 36
@@ -83,7 +83,9 @@ const (
 	DstNicFinderConf = DstIotaAgentDir + "/" + NicFinderConfFileName
 
 	//DstEsxNicFinderScript file to be used on node.
-	DstEsxNicFinderScript = DstIotaAgentDir + "/" + EsxPenNicFinderScriptName
+	DstNicFinderScript = DstIotaAgentDir + "/" + PenNicFinderScriptName
+
+	DstIotaNicFinderCommand = "python3 " + DstIotaAgentDir + "/" + PenNicFinderScriptName
 
 	// EsxControlVmCpus Esx Control VM Cpus
 	EsxControlVMCpus = 4
@@ -109,7 +111,6 @@ const (
 	// DataVmImageDirectory
 	DataVMImageDirectory = "/pensando/iota"
 
-	NaplesMnicIP            = "169.254.0.1"
 	CtrlVMNaplesInterfaceIP = "169.254.0.2/24"
 
 	EsxDataVMUsername            = "vm"
@@ -172,6 +173,7 @@ const (
 
 // global derived vars  from the constants
 var (
+	NaplesMnicIP = "169.254.0.1"
 	// IotaAgentBinaryPathLinux captures the location of the build IOTA Agent Binary for Linux
 	IotaAgentBinaryPathLinux = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/bin/agent/%s", os.Getenv("GOPATH"), IotaAgentBinaryNameLinux)
 
@@ -181,7 +183,7 @@ var (
 	//NicFinderConf nic finder conf
 	NicFinderConf = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), NicFinderConfFileName)
 
-	EsxNicFinderScript = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), EsxPenNicFinderScriptName)
+	NicFinderScript = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/scripts/%s", os.Getenv("GOPATH"), PenNicFinderScriptName)
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)

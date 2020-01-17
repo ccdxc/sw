@@ -925,6 +925,113 @@ func (naples *naplesHwNode) getHwUUID(naplesEntityKey string) (uuid string, err 
 
 }
 
+var hostIntfCmd = func(osType string, nicType, hint string) []string {
+	fullCmd := []string{Common.DstIotaNicFinderCommand, "--mac-hint", hint, "--intf-type", "data-nic", "--op", "intfs", "--os"}
+
+	if osType == "freebsd" {
+		fullCmd = append(fullCmd, "freebsd")
+	} else {
+		fullCmd = append(fullCmd, "linux")
+	}
+
+	return fullCmd
+}
+
+func (naples *naplesHwNode) getHostInterfaces(osType string, nicType, hint string) ([]string, error) {
+	var hostIntfs []string
+
+	if hint == "" {
+		return naples.dataNode.getHostInterfaces(osType, nicType, hint)
+	}
+	fullCmd := hostIntfCmd(osType, nicType, hint)
+
+	_, stdout, err := Utils.RunCmd(fullCmd, 0, false, true, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to run command to discover interfaces %v", strings.Join(fullCmd, " "))
+		return nil, errors.New(msg)
+	}
+	naples.logger.Printf("Host interfaces cmd : %v", strings.Join(fullCmd, " "))
+	naples.logger.Printf("Host interfaces output : %v", strings.Split(stdout, "\n"))
+
+	for _, intf := range strings.Split(stdout, "\n") {
+		if intf != "" {
+			hostIntfs = append(hostIntfs, intf)
+		}
+
+	}
+	return hostIntfs, nil
+}
+
+var naplesIPCmd = func(osType string, nicType, hint string) []string {
+	fullCmd := []string{Common.DstIotaNicFinderCommand, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "mnic-ip", "--os"}
+
+	if osType == "freebsd" {
+		fullCmd = append(fullCmd, "freebsd")
+	} else {
+		fullCmd = append(fullCmd, "linux")
+	}
+
+	return fullCmd
+}
+
+var naplesMgmtIntfCmd = func(osType string, nicType, hint string) []string {
+	fullCmd := []string{Common.DstIotaNicFinderCommand, "--mac-hint", hint, "--intf-type", "int-mnic", "--op", "intfs", "--os"}
+
+	if osType == "freebsd" {
+		fullCmd = append(fullCmd, "freebsd")
+	} else {
+		fullCmd = append(fullCmd, "linux")
+	}
+
+	return fullCmd
+}
+
+func (naples *naplesHwNode) getNaplesMgmtIP(osType string, nicType, hint string) (string, error) {
+
+	if hint == "" {
+		return Common.NaplesMnicIP, nil
+	}
+
+	fullCmd := naplesIPCmd(osType, nicType, hint)
+	exitCode, stdout, err := Utils.RunCmd(fullCmd, 0, false, true, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to run command to discover naples mgmt IP %v", strings.Join(fullCmd, " "))
+		return "", errors.New(msg)
+	}
+	naples.logger.Printf("Naple Mgmt  IP cmd : %v", strings.Join(fullCmd, " "))
+	naples.logger.Printf("Naple Mgmt output  cmd : %v", strings.Split(stdout, "\n"))
+
+	if exitCode != 0 {
+		return "", errors.Errorf("Running command failed %s: %s", strings.Join(fullCmd, " "), stdout)
+	}
+
+	return strings.TrimSpace(strings.Split(stdout, "\n")[0]), nil
+
+}
+
+func (naples *naplesHwNode) getNaplesMgmtInterface(osType string, nicType, hint string) (string, error) {
+
+	if hint == "" {
+		return "", nil
+	}
+
+	fullCmd := naplesMgmtIntfCmd(osType, nicType, hint)
+	exitCode, stdout, err := Utils.RunCmd(fullCmd, 0, false, true, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to run command to discover naples mgmt IP %v", strings.Join(fullCmd, " "))
+		return "", errors.New(msg)
+	}
+	naples.logger.Printf("Naple Mgmt Interface cmd : %v", strings.Join(fullCmd, " "))
+	naples.logger.Printf("Naple Mgmt Interface output  cmd : %v", strings.Split(stdout, "\n"))
+
+	if exitCode != 0 {
+		return "", errors.Errorf("Running command failed %s: %s", strings.Join(fullCmd, " "), stdout)
+	}
+
+	return strings.TrimSpace(strings.Split(stdout, "\n")[0]), nil
+
+}
+
 //Init initalize node type
 func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
@@ -954,8 +1061,37 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
 		}
 		naplesConfig.HostIntfs = hostIntfs
-
 		naples.logger.Printf("Naples host interfaces : %v", naplesConfig.HostIntfs)
+
+		//IF IP is already set, then skip this procedure
+		if naplesConfig.NaplesIpAddress == "" {
+			naplesIPddress, err := naples.getNaplesMgmtIP(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+			if err != nil {
+				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+				naples.logger.Error(msg)
+			}
+			naplesConfig.NaplesIpAddress = naplesIPddress
+			naples.logger.Printf("Naples Mgmt IP is : %v", naplesIPddress)
+
+			naplesMgmtIntf, err := naples.getNaplesMgmtInterface(nodOSMap[in.GetOs()], naplesConfig.GetNicType(), naplesConfig.GetNicHint())
+			if err != nil {
+				msg := fmt.Sprintf("Error in reading naples mgmt IP address : %s", err.Error())
+				naples.logger.Error(msg)
+			}
+			naples.logger.Printf("Naples Mgmt intf is : %v", naplesMgmtIntf)
+			if naplesMgmtIntf != "" {
+				intfIP := incrementIP(naplesIPddress) + "/24"
+				cmd := []string{"sudo", "ifconfig", naplesMgmtIntf, intfIP, "up"}
+				naples.logger.Infof("Bringing up intf : %v with IP %v with %v",
+					naplesMgmtIntf, intfIP, strings.Join(cmd, " "))
+				if _, stdout, err := Utils.Run(cmd, 0, false, true, nil); err != nil {
+					msg := fmt.Sprintf("Failed to bring interface %s up err : %s", naplesMgmtIntf, stdout)
+					naples.logger.Error(msg)
+					//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+				}
+			}
+		}
+
 		for _, intf := range naplesConfig.HostIntfs {
 			cmd := []string{"ifconfig", intf, "up"}
 			naples.logger.Info("Bringing up intf " + intf)
@@ -982,6 +1118,7 @@ func (naples *naplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 				//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 			}
 			naplesConfig.NodeUuid = nodeUUID
+
 		}
 
 	}

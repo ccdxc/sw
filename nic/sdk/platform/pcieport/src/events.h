@@ -12,7 +12,7 @@ void pcieport_event_linkup(pcieport_t *p, const int genid);
 void pcieport_event_linkdn(pcieport_t *p, const int genid);
 void pcieport_event_hostup(pcieport_t *p, const int genid);
 void pcieport_event_hostdn(pcieport_t *p, const int genid);
-void pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus);
+void pcieport_event_buschg(pcieport_t *p);
 void pcieport_event_fault(pcieport_t *p);
 
 #endif /* __EVENTS_H__ */

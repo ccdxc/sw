@@ -107,7 +107,7 @@ pcieport_event_hostdn(pcieport_t *p, const int genid)
 }
 
 void
-pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus)
+pcieport_event_buschg(pcieport_t *p)
 {
     pcieport_event_t ev;
     pcieport_event_buschg_t *buschg;
@@ -116,7 +116,9 @@ pcieport_event_buschg(pcieport_t *p, const u_int8_t secbus)
     ev.type = PCIEPORT_EVENT_BUSCHG;
     ev.port = p->port;
     buschg = &ev.buschg;
-    buschg->secbus = secbus;
+    buschg->pribus = p->pribus;
+    buschg->secbus = p->secbus;
+    buschg->subbus = p->subbus;
     send_event(&ev);
 }
 

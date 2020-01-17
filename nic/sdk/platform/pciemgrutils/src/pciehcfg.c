@@ -215,8 +215,10 @@ pciehcfg_setconf_defaults(pciehcfg_t *pcfg)
 {
     pciemgr_params_t *params = pciehcfg_get_params();
 
-    assert(params->cap_gen);
-    assert(params->cap_width);
+    pcfg->vendorid = params->vendorid;
+    /* pcfg->deviceid does not get a default */
+    pcfg->subvendorid = params->subvendorid;
+    pcfg->subdeviceid = params->subdeviceid;
     pcfg->cap_gen = params->cap_gen;
     pcfg->cap_width = params->cap_width;
     pcfg->flr = 1;

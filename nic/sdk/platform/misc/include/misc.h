@@ -40,6 +40,10 @@ void *mapfile_region(const char *file,
                      const int oflags);
 void unmapfile(void *va, const size_t sz);
 
+int netif_up(const char *ifname);
+int netif_down(const char *ifname);
+int netif_setip(const char *ifname, const u_int32_t ip, const u_int32_t nm);
+
 #ifdef __cplusplus
 }
 #endif

@@ -52,7 +52,6 @@ pciehwdevh_t pciehwdev_geth(const pciehwdev_t *phwdev);
 pciehwdev_t *pciehwdev_getvf(pciehwdev_t *phwdev, const int vfidx);
 void pciehwdev_get_cfgspace(const pciehwdev_t *phwdev, cfgspace_t *cs);
 const char *pciehwdev_get_name(const pciehwdev_t *phwdev);
-u_int16_t pciehwdev_get_hostbdf(const pciehwdev_t *phwdev);
 pciehwdev_t *pciehwdev_find_by_name(const char *name);
 
 u_int16_t pciehw_hostbdf(const int port, const u_int16_t lbdf);

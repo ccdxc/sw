@@ -6,6 +6,7 @@ import sys
 import re
 import subprocess
 import traceback
+import ipaddress
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
@@ -66,7 +67,7 @@ class Node(object):
         def __init__(self, name):
             self.__name = name
             self.__uuid = None
-            self.__mac = None
+            self.__mac = ""
             self.__host_intfs = None
             self.__host_if_alloc_idx = 0
             self.__nic_mgmt_ip = None
@@ -90,7 +91,7 @@ class Node(object):
         def SetMac(self, mac):
             self.__mac = mac
 
-        def Mac(self):
+        def GetMac(self):
             return self.__mac
 
         def SetHostIntfs(self, host_intfs):
@@ -106,6 +107,10 @@ class Node(object):
 
         def GetNicIntMgmtIP(self):
            return self.__nic_int_mgmt_ip
+
+        def GetHostNicIntMgmtIP(self):
+           mnic_ip = ipaddress.ip_address(self.__nic_int_mgmt_ip)
+           return str(mnic_ip + 1)
 
         def GetNicConsoleIP(self):
            return self.__nic_console_ip
@@ -131,7 +136,7 @@ class Node(object):
         def SetNicMgmtIntf(self, intf):
             self.__nic_mgmt_intf = intf
 
-        def read_mgmt_ip_from_console(self):
+        def read_from_console(self):
             if self.__nic_console_ip != "" and self.__nic_console_port != "":
                 try:
                     ip_read = False
@@ -141,8 +146,9 @@ class Node(object):
                             for _, dev in node["Devices"].items():
                                 if dev["NicConsoleIP"] == self.__nic_console_ip and \
                                     dev["NicConsolePort"] == self.__nic_console_port and \
-                                    dev["NicMgmtIP"] not in [ "N/A", "" ]:
+                                    dev["NicMgmtIP"] not in [ "N/A", "" ] and dev["Mac"] not in [ "N/A", "" ]:
                                     self.__nic_mgmt_ip = dev["NicMgmtIP"]
+                                    sellf.__mac = dev["Mac"]
                                     ip_read = True
                     if not ip_read:
                         raise
@@ -154,6 +160,13 @@ class Node(object):
                         if len(x) > 0:
                             Logger.info("Read management IP %s %s" % (self.__name, x[0]))
                             self.__nic_mgmt_ip = x[0]
+
+                        output = self.__console_hdl.RunCmdGetOp("ip link | grep oob_mnic0 -A 1 | grep ether")
+                        mac_regexp = '(?:[0-9a-fA-F]:?){12}'
+                        x = re.findall(mac_regexp.encode(), output)
+                        if len(x) > 0:
+                            self.__mac = x[0].decode('utf-8')
+                            Logger.info("Read oob mac %s %s" % (self.__name, x[0]))
             else:
                 Logger.info("Skipping management IP read as no console info %s" % self.__name)
 
@@ -186,7 +199,7 @@ class Node(object):
                 for port in getattr(nic, "Ports", []):
                     device.SetMac(port.MAC)
                     break
-                device.read_mgmt_ip_from_console()       
+                device.read_from_console()       
 
         else:
             for index in range(1):
@@ -199,7 +212,7 @@ class Node(object):
                 device.SetNicConsolePort(getattr(self.__inst, "NicConsolePort", ""))
                 device.SetNicIntMgmtIP(getattr(self.__inst, "NicIntMgmtIP", api.GetPrimaryIntNicMgmtIp()))
                 device.SetNicMgmtIntf(getattr(self.__inst, "NicMgmtIntf", "oob_mnic0"))
-                device.read_mgmt_ip_from_console()
+                device.read_from_console()
 
         self.__nic_pci_info = {}
         self.__nic_info = {}
@@ -308,6 +321,10 @@ class Node(object):
     def GetNicIntMgmtIP(self, device = None):
         dev = self.__get_device(device)
         return dev.GetNicIntMgmtIP()
+
+    def GetHostNicIntMgmtIP(self, device = None):
+        dev = self.__get_device(device)
+        return dev.GetHostNicIntMgmtIP()
 
     def GetNicConsoleIP(self, device = None):
         dev = self.__get_device(device)
@@ -462,12 +479,12 @@ class Node(object):
                     naples_config.naples_username = "root"
                     naples_config.naples_password = "pen123"
                     #Enable this with Brad's PR
-                    #naples_config.nic_hint = device.GetMac()
+                    naples_config.nic_hint = device.GetMac()
 
                     if device.GetNicIntMgmtIP() == "N/A" or self.IsNaplesCloudPipeline():
                         naples_config.naples_ip_address = device.GetNicMgmtIP()
-                    else:
-                        naples_config.naples_ip_address = device.GetNicIntMgmtIP()
+                    #else:
+                    #    #naples_config.naples_ip_address = device.GetNicIntMgmtIP()
 
                     for n in topology.Nodes():
                         if n.Role() != topo_pb2.PERSONALITY_VENICE: continue
@@ -506,6 +523,7 @@ class Node(object):
                 assert(device)
                 device.SetUuid(naples_config.node_uuid)
                 device.SetHostIntfs(naples_config.host_intfs)
+                device.SetNicIntMgmtIP(naples_config.naples_ip_address)
                 Logger.info("Nic: %s UUID: %s" % (naples_config.name, naples_config.node_uuid))
                 self.__host_intfs.extend(naples_config.host_intfs)
         elif self.IsThirdParty():
@@ -548,6 +566,7 @@ class Node(object):
                 "NicMgmtIP" : device.GetNicMgmtIP(),
                 "NicConsoleIP" : device.GetNicConsoleIP(),
                 "NicConsolePort" : device.GetNicConsolePort(),
+                "Mac" : device.GetMac()
             }
             info["Devices"][device.Name()] = dev_info
         return info
@@ -814,6 +833,9 @@ class Topology(object):
 
     def GetNicIntMgmtIP(self, node_name, device = None):
         return self.__nodes[node_name].GetNicIntMgmtIP(device)
+
+    def GetHostNicIntMgmtIP(self, node_name, device = None):
+        return self.__nodes[node_name].GetHostNicIntMgmtIP(device)
 
     def GetMaxConcurrentWorkloads(self, node_name):
         return self.__nodes[node_name].GetMaxConcurrentWorkloads()

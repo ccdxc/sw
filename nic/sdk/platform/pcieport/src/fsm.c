@@ -181,7 +181,7 @@ pcieport_buschg(pcieport_t *p)
      */
     if (p->secbus && p->secbus != secbus_prev) {
         pciesys_logdebug("port%d: secbus 0x%02x\n", p->port, p->secbus);
-        pcieport_event_buschg(p, p->secbus);
+        pcieport_event_buschg(p);
     }
 }
 

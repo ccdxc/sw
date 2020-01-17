@@ -757,7 +757,6 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
     }
 
     std::string catalog_file = catalog_file_path + catalog_file_name;
-    SDK_TRACE_DEBUG("catalog file for platform: %d: %s", platform, catalog_file.c_str());
 
     // make sure file exists
     if (access(catalog_file.c_str(), R_OK) < 0) {

@@ -16,6 +16,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <linux/pci_regs.h>
 
 #include "platform/misc/include/misc.h"
 #include "platform/misc/include/bdf.h"
@@ -109,6 +110,28 @@ pciehwdev_get_hostbdf(const pciehwdev_t *phwdev)
     return pciehw_hostbdf(phwdev->port, phwdev->bdf);
 }
 
+typedef int (*pciehw_cb_t)(pciehwdev_t *phwdev, void *cbarg);
+
+static void
+pciehw_foreach(int port, pciehw_cb_t cb, void *cbarg)
+{
+    pciehw_shmem_t *pshmem = pciehw_get_shmem();
+    pciehwdevh_t phwdevh;
+    pciehwdev_t *phwdev;
+
+    /*
+     * XXX Use better data structures for per-port searches.
+     */
+    phwdev = &pshmem->dev[1];
+    for (phwdevh = 1; phwdevh <= pshmem->allocdev; phwdevh++, phwdev++) {
+        if (phwdev->port == port) {
+            if (cb(phwdev, cbarg) < 0) {
+                break;
+            }
+        }
+    }
+}
+
 pciehwdev_t *
 pciehwdev_find_by_name(const char *name)
 {
@@ -123,6 +146,40 @@ pciehwdev_find_by_name(const char *name)
         }
     }
     return NULL;
+}
+
+struct find_by_id_args {
+    u_int16_t venid;
+    u_int16_t devid;
+    pciehwdev_t *phwdev;
+};
+
+static int
+pciehw_find_by_id(pciehwdev_t *phwdev, void *arg)
+{
+    struct find_by_id_args *a = arg;
+    cfgspace_t cs;
+    u_int16_t venid, devid;
+
+    pciehwdev_get_cfgspace(phwdev, &cs);
+    venid = cfgspace_getw(&cs, PCI_VENDOR_ID);
+    devid = cfgspace_getw(&cs, PCI_DEVICE_ID);
+    if (venid == a->venid &&
+        devid == a->devid) {
+        a->phwdev = phwdev;
+        return -1; /* found it, stop search early */
+    }
+    return 0;
+}
+
+pciehwdev_t *
+pciehwdev_get_by_id(const u_int8_t port,
+                    const u_int16_t venid, const u_int16_t devid)
+{
+    struct find_by_id_args a = { .venid = venid, .devid = devid };
+
+    pciehw_foreach(port, pciehw_find_by_id, &a);
+    return a.phwdev;
 }
 
 void
@@ -204,32 +261,12 @@ pciehw_hwinit(void)
     pciehw_indirect_init();
 }
 
-typedef void (*pciehw_cb_t)(pciehwdev_t *phwdev, void *cbarg);
-
-void
-pciehw_foreach(int port, pciehw_cb_t cb, void *cbarg)
-{
-    pciehw_shmem_t *pshmem = pciehw_get_shmem();
-    pciehwdevh_t phwdevh;
-    pciehwdev_t *phwdev;
-
-    /*
-     * XXX Use better data structures for per-port searches.
-     */
-    phwdev = &pshmem->dev[1];
-    for (phwdevh = 1; phwdevh <= pshmem->allocdev; phwdevh++, phwdev++) {
-        if (phwdev->port == port) {
-            cb(phwdev, cbarg);
-        }
-    }
-}
-
 struct hostup_args {
     int gen;
     int width;
 };
 
-static void
+static int
 pciehw_hostup(pciehwdev_t *phwdev, void *arg)
 {
     struct hostup_args *a = arg;
@@ -237,6 +274,7 @@ pciehw_hostup(pciehwdev_t *phwdev, void *arg)
 
     pciehwdev_get_cfgspace(phwdev, &cs);
     cfgspace_update(&cs, a->gen, a->width);
+    return 0;
 }
 
 void
