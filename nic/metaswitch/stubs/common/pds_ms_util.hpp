@@ -178,5 +178,10 @@ pdsobjkey2msidx (const pds_obj_key_t& key) {
     return (uint32_t)atoi((const char *)key.id);
 }
 
+static inline bool
+is_pds_obj_key_invalid (const pds_obj_key_t& key) {
+    static pds_obj_key_t invalid_key = {0};
+    return (key == invalid_key);
+}
 } // End namespace
 #endif

@@ -27,7 +27,6 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_evpn_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_interface_utils_gen.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/metaswitch/stubs/test/common/test_config.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
@@ -51,41 +50,30 @@ static sdk::lib::thread *g_routing_thread;
 std::string g_grpc_server_addr;
 #define GRPC_API_PORT   50057
 
-static int g_vpc_uuid = 100;
-static int g_bgp_uuid = 200;
+static int g_vpc_uuid = 10;
+static int g_underlay_rttbl_uuid = 30;
+static int g_underlay_vpc_uuid = 100;
+static int g_overlay_rttbl_uuid = 130;
+static int g_bgp_uuid = 50;
 static int g_subnet_uuid = 300;
+static int g_l3_if_uuid = 400;
+static int g_lo_if_uuid = 401;
+static int g_bd_id = 1;
 
 namespace pds_ms_test {
-
 static test_config_t  g_test_conf;
 
 static NBB_VOID
 pds_ms_sim_test_loopback ()
 {
-    // Start CTM
-    PDS_MS_START_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
-
     // Loopback interface
-    pds::CPInterfaceSpec cp_intf_spec;
-    cp_intf_spec.set_ifid (1);
-    cp_intf_spec.set_iftype (pds::CP_IF_TYPE_LOOPBACK);
-    pds_ms_set_amb_lim_software_if (cp_intf_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-
-    // Loopback IP
-    pds::CPInterfaceAddrSpec lim_addr_spec;
-    lim_addr_spec.set_ifid (1);
-    lim_addr_spec.set_iftype (pds::CP_IF_TYPE_LOOPBACK);
-    auto ifipaddr = lim_addr_spec.mutable_ipaddr();
-    lim_addr_spec.set_prefixlen (32);
-    ifipaddr->set_af(types::IP_AF_INET);
-    ifipaddr->set_v4addr(g_test_conf.local_lo_ip_addr);
-    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
-
-    // End CTM transaction
-    PDS_MS_END_TXN (PDS_MS_CTM_GRPC_CORRELATOR);
-
-    // Wait for MS response
-    pds_ms::mgmt_state_t::ms_response_wait();
+    pds_if_spec_t lo_if_spec = {0};
+    lo_if_spec.type = PDS_IF_TYPE_LOOPBACK;
+    lo_if_spec.key = msidx2pdsobjkey(g_lo_if_uuid);
+    lo_if_spec.loopback_if_info.ip_prefix.len = 32;
+    lo_if_spec.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf.local_lo_ip_addr;
+    lo_if_spec.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
+    pds_ms::interface_create (&lo_if_spec, 0);
 }
 
 static NBB_VOID
@@ -97,7 +85,7 @@ pds_ms_sim_test_bgp_update ()
     // BGP Global Spec
     pds::BGPGlobalSpec bgp_global_spec;
     bgp_global_spec.set_localasn (g_test_conf.local_asn);
-    bgp_global_spec.set_uuid (msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
+    bgp_global_spec.set_id (msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     // Router ID should be in host order
     bgp_global_spec.set_routerid (ntohl(g_test_conf.local_lo_ip_addr));
     pds_ms_set_amb_bgp_rm_ent (bgp_global_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -106,7 +94,7 @@ pds_ms_sim_test_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
+    bgp_peer_spec.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -121,11 +109,12 @@ pds_ms_sim_test_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
+    bgp_peer_spec.set_password ("test");
     pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
+    bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -161,7 +150,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds::BGPPeerSpec bgp_peer_spec;
     bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
-    bgp_peer_spec.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
+    bgp_peer_spec.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
 
     auto peeraddr = bgp_peer_spec.mutable_peeraddr();
@@ -176,11 +165,12 @@ pds_ms_sim_test_overlay_bgp_update ()
     bgp_peer_spec.set_connectretry(10);
     bgp_peer_spec.set_sendcomm(pds::BOOL_TRUE);
     bgp_peer_spec.set_sendextcomm(pds::BOOL_TRUE);
+    bgp_peer_spec.set_password ("test");
     pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
     pds::BGPPeerAf bgp_peer_af;
-    bgp_peer_af.set_uuid(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
+    bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
@@ -240,7 +230,8 @@ pds_ms_sim_test_config ()
 
     // Underlay VPC update
     pds_vpc_spec_t u_vpc_spec = {0};
-    u_vpc_spec.key = msidx2pdsobjkey(g_vpc_uuid++);
+    u_vpc_spec.key = msidx2pdsobjkey(g_underlay_vpc_uuid);
+    u_vpc_spec.v4_route_table = msidx2pdsobjkey (g_underlay_rttbl_uuid);
     u_vpc_spec.type = PDS_VPC_TYPE_UNDERLAY;
     pds_ms::vpc_create (&u_vpc_spec, 0);
     cout << "Config thread: VPC Proto is done!\n";
@@ -248,6 +239,7 @@ pds_ms_sim_test_config ()
     // Create L3 interface
     pds_if_spec_t l3_if_spec = {0};
     l3_if_spec.type = PDS_IF_TYPE_L3;
+    l3_if_spec.key = msidx2pdsobjkey(g_l3_if_uuid);
     l3_if_spec.l3_if_info.ip_prefix.len = 24;
     l3_if_spec.l3_if_info.eth_ifindex = g_test_conf.eth_if_index;
     l3_if_spec.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf.local_ip_addr;
@@ -273,6 +265,7 @@ pds_ms_sim_test_config ()
     // VPC update
     pds_vpc_spec_t vpc_spec = {0};
     vpc_spec.key = msidx2pdsobjkey(g_vpc_uuid);
+    vpc_spec.v4_route_table = msidx2pdsobjkey (g_overlay_rttbl_uuid);
     u_vpc_spec.type = PDS_VPC_TYPE_TENANT;
     vpc_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     vpc_spec.fabric_encap.val.vnid = g_test_conf.vni;
@@ -329,13 +322,13 @@ pds_ms_sim_test_config ()
         mac_addr_t  mac;
         str2ipaddr((char*) "10.17.0.1", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.2", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.5", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -344,7 +337,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -353,7 +346,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac);
+        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac);
     }
 }
 } // End of pds_ms_test  namespace

@@ -31,7 +31,11 @@ static constexpr uint32_t k_ms_lif_if_base =
     (lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE |
      (AMB_LIM_SOFTWIF_DUMMY << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT) |
      lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
-static constexpr uint32_t k_ms_lif_if_mask = 0xFFFFF000;
+static constexpr uint32_t k_ms_loopback_if_base =
+    (lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE |
+     (AMB_LIM_SOFTWIF_LOOPBACK << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT) |
+     lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
+static constexpr uint32_t k_ms_sw_if_mask = 0xFFFFF000;
 
 // Used in the Mgmt Stubs to convert from PDS IfIndex to MS IfIndex
 static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type) {
@@ -45,6 +49,8 @@ static inline uint32_t pds_to_ms_ifindex(uint32_t pds_ifindex, uint32_t if_type)
                 (ETH_IF_SLOT_MASK << ETH_IF_SLOT_SHIFT));
     } else if (if_type == IF_TYPE_LIF) {
         return (k_ms_lif_if_base + LIF_IFINDEX_TO_LIF_ID(pds_ifindex));
+    } else if (if_type == IF_TYPE_LOOPBACK) {
+        return (k_ms_loopback_if_base + pds_ifindex);
     }
     // Return the pds_ifindex if it is not Eth or Lif
     return pds_ifindex;
@@ -57,19 +63,15 @@ static inline uint32_t bd_id_to_ms_ifindex (uint32_t bd_id) {
             lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
 }
 
-// Used in Mgmt stubs to convert Loopback interface ID to MS SW/Loopback IfIndex
-static inline uint32_t loopback_to_ms_ifindex (uint32_t loopback_if_id) {
-    return ((lim::IfIndexBase::SOFTWARE_IF_INDEX_BASE + loopback_if_id +
-            (AMB_LIM_SOFTWIF_LOOPBACK << lim::IfIndexBase::SOFTWIF_BASE_BIT_SHIFT)) |
-            lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE);
-}
-
 // Used at MS initialization to set up SMI HW Desc from the PDS catalog
 uint32_t pds_port_to_ms_ifindex_and_ifname(uint32_t port, std::string* ifname);
 
 static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
-    if ((ms_ifindex & k_ms_lif_if_mask) == k_ms_lif_if_base) {
+    if ((ms_ifindex & k_ms_sw_if_mask) == k_ms_lif_if_base) {
         return IF_TYPE_LIF;
+    }
+    if ((ms_ifindex & k_ms_sw_if_mask) == k_ms_loopback_if_base) {
+        return IF_TYPE_LOOPBACK;
     }
     if (ms_ifindex >= lim::IfIndexBase::LIM_ALLOCATED_INDEX_BASE) {
         // LIM allocated internal MS interface

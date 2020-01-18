@@ -17,17 +17,10 @@ evpn_evi_pre_set (EvpnEviSpec  &req,
     // Local variables
     pds_obj_key_t uuid = {0};
     pds_obj_key_t subnet_uuid = {0};
-    pds_obj_key_t zero_uuid = {0};
 
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
-
-    if (uuid == zero_uuid) {
-        // zero is an invalid uuid 
-        SDK_TRACE_ERR ("EVPN EVI request with Invalid UUID key");
-        return;
-    }
 
     if (uuid ==  subnet_uuid) {
         // spec uuid is same as subnet uuid
@@ -60,16 +53,10 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     // Local variables
     pds_obj_key_t uuid = {0};
     pds_obj_key_t subnet_uuid = {0};
-    pds_obj_key_t zero_uuid = {0};
     
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
-
-    if (uuid == zero_uuid) {
-        SDK_TRACE_ERR ("EVPN EVI RT request with Invalid UUID key");
-        return;
-    }
 
     if (strncmp (uuid.id, subnet_uuid.id, PDS_MAX_KEY_LEN) == 0) {
         // spec uuid is same as subnet uuid
@@ -101,17 +88,11 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
     // Local variables
     pds_obj_key_t uuid = {0};
     pds_obj_key_t vpc_uuid = {0};
-    pds_obj_key_t zero_uuid = {0};
 
     
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
-
-    if (uuid == zero_uuid) {
-        SDK_TRACE_ERR ("EVPN IP VRF request with Invalid UUID key");
-        return;
-    }
 
     if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
         // spec uuid is same as vpcuuid
@@ -148,16 +129,10 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
     // Local variables
     pds_obj_key_t uuid = {0};
     pds_obj_key_t vpc_uuid = {0};
-    pds_obj_key_t zero_uuid = {0};
 
     // get uuids
     pds_ms_get_uuid (&uuid, req.id());
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
-
-    if (uuid == zero_uuid) {
-        SDK_TRACE_ERR ("EVPN IP VRF RT request with Invalid UUID key");
-        return;
-    }
 
     if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
         // spec uuid is same as vpcuuid

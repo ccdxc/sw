@@ -21,6 +21,7 @@ enum {
     IF_TYPE_UPLINK_PC  = 6,
     IF_TYPE_L3         = 7,
     IF_TYPE_LIF        = 8,
+    IF_TYPE_LOOPBACK   = 9,
 };
 
 #define IFINDEX_INVALID                          0x0
@@ -35,6 +36,7 @@ enum {
 #define ETH_IF_DEFAULT_CHILD_PORT                1
 #define ETH_IF_DEFAULT_SLOT                      1
 #define LIF_IF_LIF_ID_MASK                       0xFFFFFF
+#define LOOPBACK_IF_ID_MASK                      0xFFFFFF
 
 ///< interface index is formed from
 ///<     t_ --> type of the interface (4 bits)
@@ -55,6 +57,7 @@ enum {
                                     (pc_id_))
 #define L3_IFINDEX(if_id_)         ((IF_TYPE_L3 << IF_TYPE_SHIFT) | (if_id_))
 #define LIF_IFINDEX(if_id_)        ((IF_TYPE_LIF << IF_TYPE_SHIFT) | (if_id_))
+#define LOOPBACK_IFINDEX(if_id_)   ((IF_TYPE_LOOPBACK << IF_TYPE_SHIFT) | (if_id_))
 
 #define IFINDEX_TO_IFTYPE(ifindex_)         \
             ((ifindex_ >> IF_TYPE_SHIFT) & IF_TYPE_MASK)
@@ -75,5 +78,7 @@ enum {
 
 #define LIF_IFINDEX_TO_LIF_ID(ifindex_)    \
             (ifindex_ & LIF_IF_LIF_ID_MASK)
+#define LOOPBACK_IFINDEX_TO_LOOPBACK_IF_ID(ifindex_)    \
+            (ifindex_ & LOOPBACK_IF_ID_MASK)
 
 #endif    // __IF_HPP__

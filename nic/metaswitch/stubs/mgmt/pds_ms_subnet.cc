@@ -5,14 +5,12 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_ctm.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_uuid_obj.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_internal_utils_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_interface_utils_gen.hpp"
 #include "gen/proto/internal.pb.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
-#include "gen/proto/cp_interface.pb.h"
 
 //---------------------------------------------------------------------
 // 2 ways in which HAL is updated -
@@ -164,11 +162,11 @@ populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
 }
 
 static void
-populate_lim_soft_if_spec (pds::CPInterfaceSpec& req,
+populate_lim_soft_if_spec (pds::LimInterfaceSpec& req,
                            pds_ifindex_t           host_ifindex)
 {
     req.set_ifid (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
-    req.set_iftype (pds::CP_IF_TYPE_LIF);
+    req.set_iftype (pds::LIM_IF_TYPE_LIF);
 }
 
 static types::ApiStatus
@@ -205,14 +203,14 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     ip_prefix.len = subnet_spec->v4_prefix.len;
     ip_prefix.addr.af = IP_AF_IPV4;
     ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
-    pds::CPInterfaceAddrSpec lim_addr_spec;
+    pds::LimInterfaceAddrSpec lim_addr_spec;
     populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
-                            pds::CP_IF_TYPE_IRB, bd_id);
+                            pds::LIM_IF_TYPE_IRB, bd_id);
     pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
     if (subnet_spec->host_ifindex != IFINDEX_INVALID) {
         // Create Lif here for now
-        pds::CPInterfaceSpec lim_swif_spec;
+        pds::LimInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -268,7 +266,7 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
         SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);  
-        pds::CPInterfaceSpec lim_swif_spec;
+        pds::LimInterfaceSpec lim_swif_spec;
         populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -295,9 +293,9 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
         ip_prefix.len = subnet_spec->v4_prefix.len;
         ip_prefix.addr.af = IP_AF_IPV4;
         ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
-        pds::CPInterfaceAddrSpec lim_addr_spec;
+        pds::LimInterfaceAddrSpec lim_addr_spec;
         populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
-                                pds::CP_IF_TYPE_IRB, bd_id);
+                                pds::LIM_IF_TYPE_IRB, bd_id);
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 

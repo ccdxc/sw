@@ -88,7 +88,7 @@ message BGPGlobalSpec {
       Mib:    "bgpRmEntTable"
   };
   // unique key/identifier of BGP global config
-  bytes   UUID     = 1; // FillFn to convert UUID to uint32 MS Ent index
+  bytes   Id       = 1;
   // The local autonomous system number
   uint32  LocalASN = 2 [(venice.pdsaFields) = {Field: "local_as"}];
   // Router ID for this bgp instance
@@ -153,7 +153,7 @@ message BGPPeerSpec {
       Mib:    "bgpPeerStatusTable"
   };
   // unique key/identifier of peer
-  bytes          UUID          = 1; // FillFn to convert UUID to uint32 MS Ent index
+  bytes           Id           = 1;
   // The local autonomous system number
   uint32          LocalASN     = 2 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}];
   // Whether BGP peer is enabled ? If peer is not enabled then
@@ -181,16 +181,18 @@ message BGPPeerSpec {
   uint32          HoldTime     = 12 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
   // BGP session keepalive timer in seconds
   uint32          KeepAlive    = 13 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
+  // MD5 Authentication
+  bytes           Password     = 14 [(venice.pdsaFields) = {Field: "password", IgnoreIfEmpty: true}];
   
-  // Get-Only fields follows
+  // TODO: Get-Only fields follows. Will be moved to status table
   // BGP session Status
-  uint32          Status       = 14 [(venice.pdsaFields) = {Field: "state"}];
+  uint32          Status       = 100 [(venice.pdsaFields) = {Field: "state"}];
   // BGP session Prev Status
-  uint32          PrevStatus   = 15 [(venice.pdsaFields) = {Field: "last_state"}];
+  uint32          PrevStatus   = 101 [(venice.pdsaFields) = {Field: "last_state"}];
   // Last Error Received
-  bytes           LastErrorRcvd = 16 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
+  bytes           LastErrorRcvd = 102 [(venice.pdsaFields) = {Field: "last_error_rcvd"}];
   // Last Error Sent
-  bytes           LastErrorSent = 17 [(venice.pdsaFields) = {Field: "last_error_sent"}];
+  bytes           LastErrorSent = 103 [(venice.pdsaFields) = {Field: "last_error_sent"}];
 }
 
 // BGP PeerAF configurations
@@ -206,7 +208,7 @@ message BGPPeerAf {
   };
 
   // unique key/identifier of peer AF config
-  bytes           UUID        = 1; // FillFn to convert UUID to uint32 MS Ent index
+  bytes           Id          = 1;
   // BGP Peer IP Address
   types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
   // BGP Local IP Address

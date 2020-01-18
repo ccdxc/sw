@@ -72,6 +72,10 @@ void mgmt_state_t::set_pending_uuid_create(const pds_obj_key_t& uuid,
 }
 
 uuid_obj_t* mgmt_state_t::lookup_uuid(const pds_obj_key_t& uuid) {
+    if (is_pds_obj_key_invalid (uuid)) {
+        throw Error (std::string("Invalid key ").append(uuid.str()), 
+                     SDK_RET_INVALID_ARG);
+    }
     auto obj = uuid_store_.find(uuid);
     if (obj != uuid_store_.end()) {return obj->second.get();}
     // Some UUID objects are held in pending cache until

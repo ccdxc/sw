@@ -48,7 +48,7 @@ NBB_VOID
 bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlator) 
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.uuid());
+    pds_ms_get_uuid(&uuid, req.id());
 
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
@@ -95,7 +95,7 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAf &req, NBB_LONG row_status,
                           NBB_ULONG correlator) 
 {
     pds_obj_key_t uuid = {0};
-    pds_ms_get_uuid(&uuid, req.uuid());
+    pds_ms_get_uuid(&uuid, req.id());
 
     auto mgmt_ctxt = mgmt_state_t::thread_context();
     auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
@@ -188,7 +188,7 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
 
     pds_obj_key_t uuid = {0};
     bgp_uuid_obj_t::ms_id_t entity_index = 0;
-    pds_ms_get_uuid(&uuid, req.uuid());
+    pds_ms_get_uuid(&uuid, req.id());
     {
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);

@@ -4,11 +4,13 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "evpn_prod.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "lim_mgmt_if.h"
 
+using namespace pds_ms;
 namespace pds {
 NBB_VOID
-lim_intf_addr_fill_func (CPInterfaceAddrSpec&   req,
+lim_intf_addr_fill_func (LimInterfaceAddrSpec&   req,
                          AMB_GEN_IPS            *mib_msg,
                          AMB_LIM_L3_IF_ADDR     *data,
                          NBB_LONG               row_status)
@@ -26,17 +28,17 @@ lim_intf_addr_fill_func (CPInterfaceAddrSpec&   req,
     // Convert Spec Interface ID to MS interface Index
     switch (if_type)
     {
-        case CP_IF_TYPE_IRB:
-            if_index = pds_ms::bd_id_to_ms_ifindex (if_id);
+        case LIM_IF_TYPE_IRB:
+            if_index = bd_id_to_ms_ifindex (if_id);
             break;
-
-        case CP_IF_TYPE_ETH:
-        case CP_IF_TYPE_LIF:
-            if_index = pds_ms::pds_to_ms_ifindex (if_id, if_type);
+        case LIM_IF_TYPE_ETH:
+            if_index = pds_to_ms_ifindex (if_id, IF_TYPE_ETH);
             break;
-
-        case CP_IF_TYPE_LOOPBACK:
-            if_index = pds_ms::loopback_to_ms_ifindex (if_id);
+        case LIM_IF_TYPE_LIF:
+            if_index = pds_to_ms_ifindex (if_id, IF_TYPE_LIF);
+            break;
+        case LIM_IF_TYPE_LOOPBACK:
+            if_index = pds_to_ms_ifindex(if_id, IF_TYPE_LOOPBACK);
             break;
 
         default:
@@ -48,7 +50,7 @@ lim_intf_addr_fill_func (CPInterfaceAddrSpec&   req,
 }
 
 NBB_VOID
-lim_sw_intf_fill_func (CPInterfaceSpec&    req,
+lim_sw_intf_fill_func (LimInterfaceSpec&    req,
                        AMB_GEN_IPS         *mib_msg,
                        AMB_LIM_SOFTWARE_IF *data,
                        NBB_LONG            row_status)
@@ -64,12 +66,14 @@ lim_sw_intf_fill_func (CPInterfaceSpec&    req,
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_SOFTWIF_ENT_IX);
 
     // Set SW interface type
-    if (if_type == CP_IF_TYPE_LIF) {
+    if (if_type == LIM_IF_TYPE_LIF) {
         ms_if_subtype = AMB_LIM_SOFTWIF_DUMMY;
-    } else if (if_type == CP_IF_TYPE_LOOPBACK) {
+    } else if (if_type == LIM_IF_TYPE_LOOPBACK) {
         ms_if_subtype = AMB_LIM_SOFTWIF_LOOPBACK;
     } else {
-        SDK_TRACE_ERR ("Invalid Interface Creation Req %d\n", if_type);
+        throw Error(std::string("Invalid SW Interface Create request. "
+                                "if_type="+std::to_string(if_type)),
+                                SDK_RET_INVALID_ARG);
     }
     data->type                   = ms_if_subtype;
     oid[AMB_LIM_SOFTWIF_IF_TYPE] = ms_if_subtype;

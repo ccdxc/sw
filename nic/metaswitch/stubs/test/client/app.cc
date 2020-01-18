@@ -24,7 +24,6 @@
 #include <gen/proto/bgp.grpc.pb.h>
 #include <gen/proto/evpn.grpc.pb.h>
 #include <gen/proto/cp_route.grpc.pb.h>
-#include <gen/proto/cp_interface.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -42,7 +41,6 @@ static unique_ptr<pds::BGPSvc::Stub>    g_bgp_stub_;
 static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
-static unique_ptr<pds::CPInterfaceSvc::Stub>    g_intf_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
 
 // Simulate random UUIDs
@@ -52,6 +50,8 @@ static constexpr int k_vpc_id = 200;
 static constexpr int k_overlay_rttbl_id = 230;
 static constexpr int k_subnet_id = 300;
 static constexpr int k_bgp_id = 50;
+static constexpr int k_l3_if_id  = 400;
+static constexpr int k_lo_if_id  = 401;
 
 static void create_device_proto_grpc () {
     ClientContext   context;
@@ -78,7 +78,7 @@ static void create_device_proto_grpc () {
     }
 }
 
-static void create_l3_intf_proto_grpc () {
+static void create_intf_proto_grpc (bool lo=false) {
     InterfaceRequest    request;
     InterfaceResponse   response;
     ClientContext       context;
@@ -87,17 +87,26 @@ static void create_l3_intf_proto_grpc () {
 
     request.mutable_batchctxt()->set_batchcookie(1);
 
-    pds_if.type = PDS_IF_TYPE_L3;
-    pds_if.admin_state = PDS_IF_STATE_UP;
-    pds_if.l3_if_info.vpc = msidx2pdsobjkey(k_underlay_vpc_id);
-    pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
-    pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
-    pds_if.l3_if_info.ip_prefix.len = 16;
-    pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index;
+    if (lo) {
+        pds_if.key = msidx2pdsobjkey(k_lo_if_id);
+        pds_if.type = PDS_IF_TYPE_LOOPBACK;
+        pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
+        pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
+        pds_if.loopback_if_info.ip_prefix.len = 32;
+    } else {
+        pds_if.key = msidx2pdsobjkey(k_l3_if_id);
+        pds_if.type = PDS_IF_TYPE_L3;
+        pds_if.admin_state = PDS_IF_STATE_UP;
+        pds_if.l3_if_info.vpc = msidx2pdsobjkey(k_underlay_vpc_id);
+        pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
+        pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
+        pds_if.l3_if_info.ip_prefix.len = 16;
+        pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index;
+    }
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
 
-    printf ("Pushing Interface Proto...\n");
+    printf ("Pushing %sInterface Proto...\n", lo?"lo ":"");
     ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
@@ -114,7 +123,7 @@ static void create_bgp_global_proto_grpc () {
     Status          ret_status;
 
     auto proto_spec = request.mutable_request();
-    proto_spec->set_uuid (msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_id (msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_localasn (g_test_conf_.local_asn);
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
@@ -203,6 +212,7 @@ static void create_route_proto_grpc () {
     proto_spec->set_override (BOOL_TRUE);
     proto_spec->set_admindist (250);
     proto_spec->set_action (STRT_ACTION_FWD);
+    proto_spec->set_index (1);
 
     printf ("Pushing Default (0/0) Static Route proto...\n");
     ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
@@ -227,7 +237,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
     proto_spec->set_adminen(pds::ADMIN_UP);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
@@ -242,6 +252,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     proto_spec->set_connectretry(5);
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
+    proto_spec->set_password("test");
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
     ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
@@ -268,7 +279,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     } else {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_uuid(msidx2pdsobjkey(k_bgp_id).id);
+    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -427,49 +438,6 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     }
 }
 
-static void create_loopback_proto_grpc () {
-    CPInterfaceRequest  request;
-    CPInterfaceResponse   response;
-    ClientContext         context;
-    Status                ret_status;
-
-    auto proto_spec = request.add_request();
-    proto_spec->set_iftype (pds::CPIntfType::CP_IF_TYPE_LOOPBACK);
-    proto_spec->set_ifid (10);
-
-    printf ("Pushing Loopback Interface proto...\n");
-    ret_status = g_intf_stub_->CPInterfaceSpecCreate (&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
-                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
-                response.apistatus());
-        exit(1);
-    }
-}
-
-static void create_loopback_addr_proto_grpc () {
-    CPInterfaceAddrRequest  request;
-    CPInterfaceResponse     response;
-    ClientContext           context;
-    Status                  ret_status;
-
-    auto proto_spec = request.add_request();
-    proto_spec->set_iftype (pds::CPIntfType::CP_IF_TYPE_LOOPBACK);
-    proto_spec->set_ifid (10);
-    auto ipaddr = proto_spec->mutable_ipaddr();
-    ipaddr->set_af (types::IP_AF_INET);
-    ipaddr->set_v4addr (g_test_conf_.local_lo_ip_addr);
-    proto_spec->set_prefixlen (32);
-
-    printf ("Pushing Loopback Interface IP Address proto...0x%x\n", g_test_conf_.local_lo_ip_addr);
-    ret_status = g_intf_stub_->CPInterfaceAddrSpecCreate (&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
-                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
-                response.apistatus());
-        exit(1);
-    }
-}
 static void get_peer_status_all() {
     BGPPeerRequest       request;
     BGPPeerSpecResponse  response;
@@ -477,7 +445,7 @@ static void get_peer_status_all() {
     Status               ret_status;
 
     auto proto_spec = request.add_request();
-    proto_spec->set_uuid(msidx2pdsobjkey(1).id);
+    proto_spec->set_id(msidx2pdsobjkey(1).id);
 
     ret_status = g_bgp_stub_->BGPPeerSpecGetAll (&context, request, &response);
     if (ret_status.ok()) {
@@ -565,16 +533,14 @@ int main(int argc, char** argv)
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
-    g_intf_stub_    = CPInterfaceSvc::NewStub (channel);
 
     if (argc == 1)
     {
         // Send protos to grpc server
         create_device_proto_grpc();
         create_underlay_vpc_proto_grpc();
-        create_l3_intf_proto_grpc();
-        create_loopback_proto_grpc();
-        create_loopback_addr_proto_grpc();
+        create_intf_proto_grpc();
+        create_intf_proto_grpc(true /*loopback*/);
         create_route_proto_grpc();
         create_bgp_global_proto_grpc();
         create_bgp_peer_proto_grpc();

@@ -32,7 +32,6 @@ extern "C" {
 #include "gen/proto/internal.pb.h"
 #include "gen/proto/bgp.pb.h"
 #include "gen/proto/evpn.pb.h"
-#include "gen/proto/cp_interface.pb.h"
 #include "gen/proto/cp_route.pb.h"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_bgp_utils_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_evpn_utils_gen.hpp"
@@ -207,11 +206,11 @@ NBB_VOID rtm_strt_fill_func (CPStaticRouteSpec&      req,
                              AMB_GEN_IPS             *mib_msg,
                              AMB_CIPR_RTM_STATIC_RT  *data,
                              NBB_LONG                row_status);
-NBB_VOID lim_intf_addr_fill_func (CPInterfaceAddrSpec&  req,
+NBB_VOID lim_intf_addr_fill_func (LimInterfaceAddrSpec&  req,
                                   AMB_GEN_IPS           *mib_msg,
                                   AMB_LIM_L3_IF_ADDR    *data,
                                   NBB_LONG              row_status);
-NBB_VOID lim_sw_intf_fill_func (CPInterfaceSpec&    req,
+NBB_VOID lim_sw_intf_fill_func (LimInterfaceSpec&    req,
                                 AMB_GEN_IPS         *mib_msg,
                                 AMB_LIM_SOFTWARE_IF *data,
                                 NBB_LONG            row_status);
@@ -245,7 +244,7 @@ NBB_VOID pds_ms_test_row_update_l2f_mac_ip_cfg (ip_addr_t ip_addr,
 
 namespace pds_ms {
 void populate_lim_addr_spec (ip_prefix_t                 *ip_prefix,
-                             pds::CPInterfaceAddrSpec&   req,
+                             pds::LimInterfaceAddrSpec&   req,
                              uint32_t                    if_type,
                              uint32_t                    if_id);
 } // end namespace pds_ms

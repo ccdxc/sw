@@ -23,7 +23,7 @@ class Client {
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_uuid(std::to_string(1));
+        ent->set_id(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
@@ -54,7 +54,7 @@ class Client {
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_uuid(std::to_string(1));
+        ent->set_id(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
@@ -70,7 +70,7 @@ class Client {
             for (int i=0; i<res.response_size(); i++) {
                 auto resp = res.response(i);
                 std::cout << "===== Entry #" << i << " =====" << std::endl;
-                std::cout << "vrfid: " << resp.uuid() << std::endl;
+                std::cout << "vrfid: " << resp.id() << std::endl;
                 auto paddr = resp.peeraddr().v4addr();
                 struct in_addr ip_addr;
                 ip_addr.s_addr = paddr;
@@ -99,7 +99,7 @@ class Client {
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_uuid(std::to_string(1));
+        ent->set_id(std::to_string(1));
         ent->set_adminen(pds::ADMIN_UP);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
@@ -126,7 +126,7 @@ class Client {
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(0);
-        ent->set_uuid(std::to_string(1));
+        ent->set_id(std::to_string(1));
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(0);
@@ -138,7 +138,7 @@ class Client {
             for (int i=0; i<res.response_size(); i++) {
                 auto resp = res.response(i);
 		std::cout << "===== Entry #" << i << " =====" << std::endl;
-                std::cout << "vrfid: " << resp.uuid() << std::endl;
+                std::cout << "vrfid: " << resp.id() << std::endl;
 		auto paddr = resp.peeraddr().v4addr();
 		struct in_addr ip_addr;
 		ip_addr.s_addr = paddr;
