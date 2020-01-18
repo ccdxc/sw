@@ -42,6 +42,7 @@ public:
     sdk_ret_t lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff);
     sdk_ret_t lif_upd_bcast_filter(uint32_t lif_id, lif_bcast_filter_t bcast_filter);
     sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter);
+    sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en);
 
     // Qos APIs
     sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info);
@@ -65,16 +66,21 @@ public:
     // Single Wire Management(SWM) APIs
     sdk_ret_t swm_enable(void);
     sdk_ret_t swm_disable(void);
-    sdk_ret_t swm_set_port(uint32_t port_num);
-    sdk_ret_t swm_add_mac(mac_t mac);
-    sdk_ret_t swm_del_mac(mac_t mac);
-    sdk_ret_t swm_add_vlan(vlan_t vlan);
-    sdk_ret_t swm_del_vlan(vlan_t vlan);
-    sdk_ret_t swm_upd_rx_bmode(bool broadcast);
-    sdk_ret_t swm_upd_rx_mmode(bool all_multicast);
-    sdk_ret_t swm_upd_rx_pmode(bool promiscuous);
-    sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter);
-    sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter);
+    sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num);
+    sdk_ret_t swm_get_channels_info(std::set<channel_info_t *>* channels_info);
+    sdk_ret_t swm_add_mac(mac_t mac, uint32_t channel);
+    sdk_ret_t swm_del_mac(mac_t mac, uint32_t channel);
+    sdk_ret_t swm_add_vlan(vlan_t vlan, uint32_t channel);
+    sdk_ret_t swm_del_vlan(vlan_t vlan, uint32_t channel);
+    sdk_ret_t swm_upd_rx_bmode(bool broadcast, uint32_t channel);
+    sdk_ret_t swm_upd_rx_mmode(bool all_multicast, uint32_t channel);
+    sdk_ret_t swm_upd_rx_pmode(bool promiscuous, uint32_t channel);
+    sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel);
+    sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel);
+    sdk_ret_t swm_enable_tx(uint32_t channel);
+    sdk_ret_t swm_disable_tx(uint32_t channel);
+    sdk_ret_t swm_enable_rx(uint32_t channel);
+    sdk_ret_t swm_disable_rx(uint32_t channel);
 
     // Port APIs
     sdk_ret_t port_get_status(uint32_t port_num,

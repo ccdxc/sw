@@ -25,6 +25,7 @@
 #include "gen/hal/svc/nwsec_svc_gen.hpp"
 #include "gen/hal/svc/qos_svc_gen.hpp"
 #include "gen/hal/svc/acl_svc_gen.hpp"
+#include "gen/hal/svc/ncsi_svc_gen.hpp"
 #ifdef __x86_64__
 #include "gen/hal/svc/ipsec_svc_gen.hpp"
 #include "gen/hal/svc/cpucb_svc_gen.hpp"
@@ -65,6 +66,7 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     MulticastServiceImpl     multicast_svc;
     SystemServiceImpl        system_svc;
     SoftwarePhvServiceImpl   swphv_svc;
+    NcsiServiceImpl          ncsi_svc;
     //DosServiceImpl           dos_svc;
 
     HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");

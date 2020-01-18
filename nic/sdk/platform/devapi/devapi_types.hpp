@@ -8,9 +8,11 @@
 #include "include/sdk/eth.hpp"
 #include "nic/include/accel_ring.h"
 #include "nic/sdk/platform/capri/capri_barco_crypto.hpp"
+#include <set>
 
 namespace sdk {
 namespace platform {
+using std::set;
 
 #define NUM_QUEUE_TYPES 8
 
@@ -73,6 +75,22 @@ typedef struct lif_mcast_filter_s {
     bool    ipv6_neigh_sol;
 } __PACK__ lif_mcast_filter_t;
 
+typedef struct channel_info_s {
+    uint32_t channel;
+    uint32_t port_num;
+
+    uint32_t swm_lif_id;
+    std::set<mac_t> mac_table;
+    std::set<vlan_t> vlan_table;
+    bool receive_broadcast;
+    bool receive_all_multicast;
+    bool receive_promiscuous;
+    bool rx_en;
+    bool tx_en;
+    lif_bcast_filter_t bcast_filter;
+    lif_mcast_filter_t mcast_filter;
+} channel_info_t;
+
 typedef struct lif_info_s {
     uint64_t lif_id;
     char name[256];
@@ -86,6 +104,7 @@ typedef struct lif_info_s {
     bool receive_promiscuous;
     bool enable_rdma;
     bool rdma_sniff;
+    bool rx_en; // Only for SWM lifs
     uint64_t rx_limit_bytes;
     uint64_t rx_burst_bytes;
     uint64_t tx_limit_bytes;
@@ -263,5 +282,6 @@ using sdk::platform::qos_class_type_t;
 using sdk::platform::pause_type_t;
 using sdk::platform::lif_bcast_filter_t;
 using sdk::platform::lif_mcast_filter_t;
+using sdk::platform::channel_info_t;
 
 #endif    // __DEVAPI_TYPES_HPP__

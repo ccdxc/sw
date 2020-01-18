@@ -541,6 +541,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     uint8_t                     tm_oport = 0;
     output_mapping_actiondata_t   data;
     directmap                   *dm_omap = NULL;
+    if_t                        *hal_if = (if_t *)pd_upif->pi_if;
 
     memset(&data, 0, sizeof(data));
 
@@ -551,6 +552,7 @@ uplinkif_pd_pgm_output_mapping_tbl(pd_uplinkif_t *pd_upif)
     om_tmoport.egress_mirror_en = 1;
     om_tmoport.egress_port1 = tm_oport;
     om_tmoport.dst_lif = pd_upif->hw_lif_id;
+    om_tmoport.nacl_egress_drop_en = hal_if->is_oob_management;
 
     // Program OutputMapping table
     //  - Get tmoport from PI

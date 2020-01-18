@@ -152,6 +152,8 @@ devapi_iris::lif_add_vlan(uint32_t lif_id, vlan_t vlan)
     sdk_ret_t ret = SDK_RET_OK;
     devapi_lif *lif = NULL;
 
+    NIC_LOG_DEBUG("lif_add_vlan: Adding lif: {}, vlan: {}",
+                  lif_id, vlan);
     lif = devapi_lif::lookup(lif_id);
     if (!lif) {
         NIC_LOG_ERR("Failed to add vlan. lif id: {}. Not found",
@@ -354,6 +356,25 @@ devapi_iris::lif_upd_mcast_filter(uint32_t lif_id,
         goto end;
     }
     return lif->update_mcast_filters(mcast_filter);
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_iris::lif_upd_rx_en(uint32_t lif_id, bool rx_en)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    devapi_lif *lif = NULL;
+
+    lif = devapi_lif::lookup(lif_id);
+    if (!lif) {
+        NIC_LOG_ERR("Failed to update rx enable. lif id: {}. Not found",
+                    lif_id);
+        ret = SDK_RET_ERR;
+        goto end;
+    }
+    return lif->upd_rx_en(rx_en);
 
 end:
     return ret;
@@ -896,63 +917,93 @@ end:
 }
 
 sdk_ret_t
-devapi_iris::swm_set_port(uint32_t port_num)
+devapi_iris::swm_create_channel(uint32_t channel, uint32_t port_num)
 {
-    return devapi_swm::swm()->upd_uplink(port_num);
+    return devapi_swm::swm()->create_channel(channel, port_num);
 }
 
 sdk_ret_t
-devapi_iris::swm_add_mac(mac_t mac)
+devapi_iris::swm_get_channels_info(std::set<channel_info_t *>* channels_info)
 {
-    return devapi_swm::swm()->add_mac(mac);
+    return devapi_swm::swm()->get_channels_info(channels_info);
 }
 
 sdk_ret_t
-devapi_iris::swm_del_mac(mac_t mac)
+devapi_iris::swm_add_mac(mac_t mac, uint32_t channel)
 {
-    return devapi_swm::swm()->del_mac(mac);
+    return devapi_swm::swm()->add_mac(mac, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_add_vlan(vlan_t vlan)
+devapi_iris::swm_del_mac(mac_t mac, uint32_t channel)
 {
-    return devapi_swm::swm()->add_vlan(vlan);
+    return devapi_swm::swm()->del_mac(mac, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_del_vlan(vlan_t vlan)
+devapi_iris::swm_add_vlan(vlan_t vlan, uint32_t channel)
 {
-    return devapi_swm::swm()->del_vlan(vlan);
+    return devapi_swm::swm()->add_vlan(vlan, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_upd_rx_bmode(bool broadcast)
+devapi_iris::swm_del_vlan(vlan_t vlan, uint32_t channel)
 {
-    return devapi_swm::swm()->upd_rx_bmode(broadcast);
+    return devapi_swm::swm()->del_vlan(vlan, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_upd_rx_mmode(bool all_multicast)
+devapi_iris::swm_upd_rx_bmode(bool broadcast, uint32_t channel)
 {
-    return devapi_swm::swm()->upd_rx_mmode(all_multicast);
+    return devapi_swm::swm()->upd_rx_bmode(broadcast, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_upd_rx_pmode(bool promiscuous)
+devapi_iris::swm_upd_rx_mmode(bool all_multicast, uint32_t channel)
 {
-    return devapi_swm::swm()->upd_rx_pmode(promiscuous);
+    return devapi_swm::swm()->upd_rx_mmode(all_multicast, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+devapi_iris::swm_upd_rx_pmode(bool promiscuous, uint32_t channel)
 {
-    return devapi_swm::swm()->upd_bcast_filter(bcast_filter);
+    return devapi_swm::swm()->upd_rx_pmode(promiscuous, channel);
 }
 
 sdk_ret_t
-devapi_iris::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter)
+devapi_iris::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel)
 {
-    return devapi_swm::swm()->upd_mcast_filter(mcast_filter);
+    return devapi_swm::swm()->upd_bcast_filter(bcast_filter, channel);
+}
+
+sdk_ret_t
+devapi_iris::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel)
+{
+    return devapi_swm::swm()->upd_mcast_filter(mcast_filter, channel);
+}
+
+sdk_ret_t
+devapi_iris::swm_enable_tx(uint32_t channel)
+{
+    return devapi_swm::swm()->enable_tx(channel);
+}
+
+sdk_ret_t
+devapi_iris::swm_disable_tx(uint32_t channel)
+{
+    return devapi_swm::swm()->disable_tx(channel);
+}
+
+sdk_ret_t
+devapi_iris::swm_enable_rx(uint32_t channel)
+{
+    return devapi_swm::swm()->enable_rx(channel);
+}
+
+sdk_ret_t
+devapi_iris::swm_disable_rx(uint32_t channel)
+{
+    return devapi_swm::swm()->disable_rx(channel);
 }
 
 }    // namespace iris

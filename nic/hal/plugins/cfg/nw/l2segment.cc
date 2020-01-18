@@ -1103,6 +1103,11 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
     uint32_t        if_idx = 0;
     if_t            *uplink_if = NULL;
 
+    HAL_TRACE_DEBUG("Updating l2seg: {} for if: {}, add: {}, only_non_design: {}, "
+                    "update_bcast: {}, update_mcast: {}, update_prmsc: {}",
+                    l2seg->seg_id, hal_if->if_id, add, only_non_designated,
+                    update_bcast, update_mcast, update_prmsc);
+
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
 
     // TODO: Have to see how for BM L2seg it will work.
@@ -1136,6 +1141,8 @@ l2seg_update_oiflist_oif (l2seg_t *l2seg, if_t *hal_if, bool add,
     if (only_non_designated && vrf_if_is_designated_uplink(vrf, hal_if)) {
         return ret;
     }
+
+    HAL_TRACE_DEBUG("Base oifl: {}", base_oifl_id);
 
     oif.intf = hal_if;
     oif.l2seg = l2seg;

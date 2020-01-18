@@ -210,6 +210,12 @@ devapi_impl::lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filt
     return SDK_RET_OK;
 }
 
+sdk_ret_t 
+devapi_impl::lif_upd_rx_en(uint32_t lif_id, bool rx_en){
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 devapi_impl::lif_get_max_filters(uint32_t *ucast_filters,
                                  uint32_t *mcast_filters) {
@@ -345,70 +351,105 @@ devapi_impl::swm_disable()
 }
 
 sdk_ret_t
-devapi_impl::swm_set_port(uint32_t port_num)
+devapi_impl::swm_create_channel (uint32_t channel, uint32_t port_num)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_add_mac(mac_t mac)
+devapi_impl::swm_get_channels_info(std::set<channel_info_t *>* channels_info)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_del_mac(mac_t mac)
+devapi_impl::swm_add_mac(mac_t mac, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_add_vlan(vlan_t vlan)
+devapi_impl::swm_del_mac(mac_t mac, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_del_vlan(vlan_t vlan)
+devapi_impl::swm_add_vlan(vlan_t vlan, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_upd_rx_bmode(bool broadcast)
+devapi_impl::swm_del_vlan(vlan_t vlan, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_upd_rx_mmode(bool all_multicast)
+devapi_impl::swm_upd_rx_bmode(bool broadcast, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_upd_rx_pmode(bool promiscuous)
+devapi_impl::swm_upd_rx_mmode(bool all_multicast, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+devapi_impl::swm_upd_rx_pmode(bool promiscuous, uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter)
+devapi_impl::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+
+sdk_ret_t 
+devapi_impl::swm_enable_tx (uint32_t channel)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+    
+sdk_ret_t 
+devapi_impl::swm_disable_tx(uint32_t channel)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+    
+sdk_ret_t 
+devapi_impl::swm_enable_rx(uint32_t channel)
+{
+    PDS_TRACE_WARN("Not implemented");
+    return SDK_RET_OK;
+}
+    
+sdk_ret_t 
+devapi_impl::swm_disable_rx(uint32_t channel)
 {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;

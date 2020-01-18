@@ -19,6 +19,8 @@ std::string g_grpc_server_addr;
 #include "nic/hal/svc/proxy_svc.hpp"
 #include "nic/hal/svc/nic_svc.hpp"
 #include "nic/hal/svc/hal_ext.hpp"
+#include "nic/utils/eventmgr/eventmgr.hpp"
+#include "nic/hal/core/event_ipc.hpp"
 
 #include "gen/hal/svc/vrf_svc_gen.hpp"
 #include "gen/hal/svc/l2segment_svc_gen.hpp"
@@ -33,9 +35,73 @@ std::string g_grpc_server_addr;
 #include "gen/hal/svc/acl_svc_gen.hpp"
 #include "gen/hal/svc/tcp_proxy_svc_gen.hpp"
 #include "gen/hal/svc/multicast_svc_gen.hpp"
+#include "gen/hal/svc/ncsi_svc_gen.hpp"
+
+static void*
+grpc_server_run (void *ctxt)
+{
+    ServerBuilder            *server_builder = (ServerBuilder *)hal::g_hal_cfg.server_builder;
+    VrfServiceImpl           vrf_svc;
+    NetworkServiceImpl       nw_svc;
+    InterfaceServiceImpl     if_svc;
+    InternalServiceImpl      internal_svc;
+    L2SegmentServiceImpl     l2seg_svc;
+    DebugServiceImpl         debug_svc;
+    TableServiceImpl         table_svc;
+    NicServiceImpl           nic_svc;
+    SessionServiceImpl       session_svc;
+    EndpointServiceImpl      endpoint_svc;
+    NwSecurityServiceImpl    nwsec_svc;
+    QOSServiceImpl           qos_svc;
+    AclServiceImpl           acl_svc;
+    TelemetryServiceImpl     telemetry_svc;
+    ProxyServiceImpl         proxy_svc;
+    TcpProxyServiceImpl      tcp_proxy_svc;
+    EventServiceImpl         event_svc;
+    MulticastServiceImpl     multicast_svc;
+    SystemServiceImpl        system_svc;
+    SoftwarePhvServiceImpl   swphv_svc;
+    SoftwarePhvServiceImpl   ncsi_svc;
+    //DosServiceImpl           dos_svc;
+
+    HAL_TRACE_DEBUG("Bringing gRPC server for all API services ...");
+    // register all services
+    // server_builder->RegisterService(&vrf_svc);
+    server_builder->RegisterService(&internal_svc);
+    server_builder->RegisterService(&debug_svc);
+    server_builder->RegisterService(&table_svc);
+    server_builder->RegisterService(&nic_svc);
+    server_builder->RegisterService(&proxy_svc);
+    server_builder->RegisterService(&tcp_proxy_svc);
+    server_builder->RegisterService(&event_svc);
+    server_builder->RegisterService(&system_svc);
+    server_builder->RegisterService(&swphv_svc);
+
+    HAL_TRACE_DEBUG("gRPC server listening on ... {}",
+                    g_grpc_server_addr.c_str());
+    hal::utils::hal_logger()->flush();
+    HAL_SYSLOG_INFO("HAL-STATUS:UP");
+
+#if 0
+    // notify sysmgr that we are up
+    hal::svc::hal_init_done();
+    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
+    // raise HAL_UP event
+    sdk::ipc::broadcast(event_id_t::EVENT_ID_HAL_UP, NULL, 0);
+#endif
+
+    // assemble the server
+    std::unique_ptr<Server> server(server_builder->BuildAndStart());
+
+    // wait for server to shutdown (some other thread must be responsible for
+    // shutting down the server or else this call won't return)
+    server->Wait();
+
+    return NULL;
+}
 
 static void inline
-hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)
+hal_initialize (bool disable_fte, const char c_file[], string vmotion_port, bool grpc)
 {
     char        cfg_file[32];
     char        def_cfg_file[] = "hal.json";
@@ -107,20 +173,20 @@ hal_initialize (bool disable_fte, const char c_file[], string vmotion_port)
     }
     hal::g_hal_cfg.device_cfg.forwarding_mode = hal::HAL_FORWARDING_MODE_SMART_HOST_PINNED;
 
-#if 0
-    sdk::lib::thread *grpc_thread =
-        sdk::lib::thread::factory(std::string("grpc-server").c_str(),
-                              hal::HAL_THREAD_ID_CFG,
-                              sdk::lib::THREAD_ROLE_CONTROL,
-                              0x0 /* use all control cores */,
-                              grpc_server_run,
-                              sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                              sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                              true);
-    grpc_thread->start(grpc_thread);
-#endif
+    if (grpc) {
+        sdk::lib::thread *grpc_thread =
+            sdk::lib::thread::factory(std::string("grpc-server").c_str(),
+                                      hal::HAL_THREAD_ID_CFG,
+                                      sdk::lib::THREAD_ROLE_CONTROL,
+                                      0x0 /* use all control cores */,
+                                      grpc_server_run,
+                                      sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                      sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+                                      true);
+        grpc_thread->start(grpc_thread);
+    }
 
-    sleep(30);
+    sleep(5);
     printf("HAL Initialized\n");
 }
 
@@ -141,13 +207,19 @@ hal_uninitialize (void)
 void
 hal_base_test::SetUpTestCase (void)
 {
-    hal_initialize(true, "hal.json", "0");
+    hal_initialize(true, "hal.json", "0", false);
+}
+
+void
+hal_base_test::SetUpTestCaseGrpc (void)
+{
+    hal_initialize(true, "hal.json", "0", true);
 }
 
 void
 hal_base_test::SetUpTestCase (bool disable_fte, std::string c_file, std::string vmotion_port)
 {
-    hal_initialize(disable_fte, c_file.c_str(), vmotion_port);
+    hal_initialize(disable_fte, c_file.c_str(), vmotion_port, false);
 }
 
 #if 0

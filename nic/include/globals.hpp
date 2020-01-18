@@ -20,7 +20,9 @@
 #define HAL_LIF_ID_MAX                     (HAL_LIF_ID_SVC_LIF_MAX)
 
 // nicmgr lifs
-#define NICMGR_SVC_LIF                     65     // nicmgr service lif
+#define NICMGR_NCSI_LIF_MIN                65     // NCSI LIF
+#define NICMGR_NCSI_LIF_MAX                66     // NCSI LIF
+#define NICMGR_SVC_LIF                     67     // nicmgr service lif
 #define NICMGR_LIF_MAX                     2047   // nicmgr lif id range max
 
 // vrf id ranges

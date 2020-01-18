@@ -119,6 +119,8 @@ populate_permit_actions (nacl_actiondata_t *data, acl_action_spec_t *as)
         as->ing_mirror_session;
     data->action_u.nacl_nacl_permit.egress_mirror_session_id =
         as->egr_mirror_session;
+    data->action_u.nacl_nacl_permit.egress_drop = as->egress_drop;
+
 }
 
 #ifdef ACL_DOL_TEST_ONLY

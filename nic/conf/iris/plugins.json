@@ -178,6 +178,15 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
+            "name"      : "ncsi",
+            "provider"  : "pensando.io",
+            "lib"       : "libcfg_plugin_ncsi.so",
+            "init_func" : "ncsi_init",
+            "exit_func" : "ncsi_exit",
+            "auto_load" : "true",
+            "deps"      : ["pensando.io/nw"]
+        },
+        {
             "name"      : "ipsec",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_ipsec.so",

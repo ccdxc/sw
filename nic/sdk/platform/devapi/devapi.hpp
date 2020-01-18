@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 #include "include/sdk/base.hpp"
 #include "platform/devapi/devapi_types.hpp"
 
@@ -14,6 +15,7 @@ namespace platform {
 
 using std::string;
 using std::vector;
+using std::set;
 
 class devapi {
 public:
@@ -45,6 +47,7 @@ public:
                                            lif_bcast_filter_t bcast_filter) = 0; 
     virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, 
                                            lif_mcast_filter_t mcast_filter) = 0; 
+    virtual sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en) = 0;
 
     // qos APIs
     virtual sdk_ret_t qos_class_get(uint8_t group, qos_class_info_t *info) = 0;
@@ -78,16 +81,21 @@ public:
     // single wire management APIs
     virtual sdk_ret_t swm_enable(void) = 0;
     virtual sdk_ret_t swm_disable(void) = 0;
-    virtual sdk_ret_t swm_set_port(uint32_t port_num) = 0;
-    virtual sdk_ret_t swm_add_mac(mac_t mac) = 0;
-    virtual sdk_ret_t swm_del_mac(mac_t mac) = 0;
-    virtual sdk_ret_t swm_add_vlan(vlan_t vlan) = 0;
-    virtual sdk_ret_t swm_del_vlan(vlan_t vlan) = 0;
-    virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast) = 0;
-    virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast) = 0;
-    virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous) = 0;
-    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter) = 0;
-    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter) = 0;
+    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num) = 0;
+    virtual sdk_ret_t swm_get_channels_info(std::set<channel_info_t *>* channels_info) = 0;
+    virtual sdk_ret_t swm_add_mac(mac_t mac, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_del_mac(mac_t mac, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_add_vlan(vlan_t vlan, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_del_vlan(vlan_t vlan, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel) = 0;
+    virtual sdk_ret_t swm_enable_tx(uint32_t channel) = 0;
+    virtual sdk_ret_t swm_disable_tx(uint32_t channel) = 0;
+    virtual sdk_ret_t swm_enable_rx(uint32_t channel) = 0;
+    virtual sdk_ret_t swm_disable_rx(uint32_t channel) = 0;
 
     // accel APIs
     virtual sdk_ret_t accel_rgroup_add(string name,

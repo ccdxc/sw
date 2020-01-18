@@ -14,6 +14,7 @@
 #include "multicast.hpp"
 #include "devapi_iris.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
+#include "nic/include/globals.hpp"
 
 namespace iris {
 
@@ -49,37 +50,115 @@ end:
 sdk_ret_t
 devapi_swm::init_()
 {
-    port_num_ = INVALID_PORT_NUM;
+    lif_base_ = NICMGR_NCSI_LIF_MIN;
+    tx_channel_ = -1;
     return SDK_RET_OK;
+}
+
+void
+devapi_swm::free_channel_info_()
+{
+    channel_info_t *cinfo = NULL;
+
+    for (auto it = channel_state_.cbegin(); it != channel_state_.cend(); it++) {
+        cinfo = (channel_info_t *)(it->second);
+        DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);
+    }
 }
 
 void
 devapi_swm::destroy(devapi_swm *v)
 {
+    v->free_channel_info_();
     v->~devapi_swm();
     DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM, v);
 }
 
 devapi_swm::~devapi_swm()
 {
-    mac_table_.clear();
-    vlan_table_.clear();
+    channel_state_.clear();
 }
 
 sdk_ret_t
-devapi_swm::add_mac_filters_()
+devapi_swm::create_channel(uint32_t channel, uint32_t port_num)
 {
-    for (auto it = mac_table_.cbegin(); it != mac_table_.cend(); it++) {
-        devapi_swm::add_mac(*it);
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo = NULL;
+    std::map<uint32_t, channel_info_t*>::iterator it;
+    void *mem = NULL;
+
+    it = channel_state_.find(channel);
+    if (it != channel_state_.end()) {
+        NIC_LOG_ERR("Duplicate create of channel: {}", channel);
+        return SDK_RET_ERR;
+    }
+
+    mem = (channel_info_t *)DEVAPI_CALLOC(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO,
+                                          sizeof(channel_info_t));
+    cinfo = new (mem) channel_info_t();
+    cinfo->channel = channel;
+    cinfo->port_num = port_num;
+    cinfo->swm_lif_id = lif_base_++;
+
+    channel_state_[channel] = cinfo;
+
+    NIC_LOG_DEBUG("Creating channel {}, for port: {}",
+                  channel, port_num);
+
+    // Create lif, enic in hal
+    ret = initialize_lif_(cinfo);    // Create lif, enic, l2seg etc.
+
+    return ret;
+}
+
+channel_info_t *
+devapi_swm::lookup_channel_info_(uint32_t channel)
+{
+    if (channel_state_.find(channel) != channel_state_.end()) {
+        return channel_state_[channel];
+    }
+    return NULL;
+}
+
+sdk_ret_t
+devapi_swm::get_channels_info(std::set<channel_info_t *>* channels_info)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *dst_cinfo = NULL, *src_cinfo = NULL;;
+    void *mem = NULL;
+
+    for (auto it = channel_state_.cbegin(); it != channel_state_.cend(); it++) {
+        src_cinfo = (channel_info_t *)(it->second);
+        mem = (channel_info_t *)DEVAPI_CALLOC(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO,
+                                              sizeof(channel_info_t));
+        dst_cinfo = new (mem) channel_info_t();
+        *dst_cinfo = *src_cinfo;
+        channels_info->insert(dst_cinfo); 
+    }
+
+    return ret;
+}
+
+sdk_ret_t
+devapi_swm::add_mac_filters_(uint32_t channel)
+{
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    for (auto it = cinfo->mac_table.cbegin(); it != cinfo->mac_table.cend(); it++) {
+        devapi_swm::add_mac(*it, channel);
     }
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_swm::add_vlan_filters_()
+devapi_swm::add_vlan_filters_(uint32_t channel)
 {
-    for (auto it = vlan_table_.cbegin(); it != vlan_table_.cend(); it++) {
-        devapi_swm::add_vlan(*it);
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
+        devapi_swm::add_vlan(*it, channel);
     }
     return SDK_RET_OK;
 }
@@ -92,18 +171,17 @@ devapi_swm::add_vlan_filters_()
 //   - Adds swm uplink on the above l2seg
 //-----------------------------------------------------------------------------
 sdk_ret_t
-devapi_swm::initialize_lif_()
+devapi_swm::initialize_lif_(channel_info_t *cinfo)
 {
     sdk_ret_t ret         = SDK_RET_OK;
     lif_info_t info       = {0};
-
-    swm_lif_id_ = oob_up_->get_lif_id();
+    char buf[256]         = {0};
 
     // Create lif
-    info.lif_id                   = swm_lif_id_;
-    strcpy(info.name, "swm_lif");
+    snprintf(buf, sizeof(buf), "swm_lif_%d", cinfo->port_num);
+    info.lif_id                   = cinfo->swm_lif_id;
     info.type                     = sdk::platform::LIF_TYPE_SWM;
-    info.pinned_uplink_port_num   = port_num_;
+    info.pinned_uplink_port_num   = cinfo->port_num;
     info.is_management            = true;
     info.receive_broadcast        = true;
     info.receive_all_multicast    = true;
@@ -120,16 +198,17 @@ devapi_swm::initialize_lif_()
 }
 
 sdk_ret_t
-devapi_swm::uninitialize_lif_()
+devapi_swm::uninitialize_lif_(channel_info_t *cinfo)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
     // Destroy lif
-    ret = dapi_->lif_destroy(swm_lif_id_);
+    ret = dapi_->lif_destroy(cinfo->swm_lif_id);
 
     return ret;
 }
 
+#if 0
 sdk_ret_t
 devapi_swm::config_oob_l2seg_swm_uplink_change_(devapi_uplink *old_swm_up,
                                                 devapi_uplink *new_swm_up)
@@ -164,6 +243,7 @@ devapi_swm::config_oob_l2seg_swm_uplink_change_(devapi_uplink *old_swm_up,
     }
     return ret;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // Programs OOB with the vlan
@@ -171,7 +251,7 @@ devapi_swm::config_oob_l2seg_swm_uplink_change_(devapi_uplink *old_swm_up,
 // - Adding swm uplink to flood lists for BMC -> swm_uplink (MC, BC, PRMSC)
 //-----------------------------------------------------------------------------
 sdk_ret_t
-devapi_swm::config_oob_uplink_vlan_(vlan_t vlan)
+devapi_swm::config_oob_uplink_vlan_(vlan_t vlan, channel_info_t *cinfo)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_vrf *oob_vrf = NULL;
@@ -192,11 +272,12 @@ devapi_swm::config_oob_uplink_vlan_(vlan_t vlan)
         }
 #endif
     }
-    NIC_LOG_DEBUG("Configuring oob: {} l2seg: {}, vlan: {}", 
-                  oob_up_->get_id(), oob_l2seg->get_id(), vlan);
+    NIC_LOG_DEBUG("TX: Configuring oob: {} l2seg: {}, vlan: {}, channel: {}", 
+                  oob_up_->get_id(), oob_l2seg->get_id(), vlan,
+                  cinfo->channel);
     oob_l2seg->set_single_wire_mgmt(true);
-    oob_l2seg->set_undesignated_up(swm_up_);
-    oob_l2seg->add_uplink(swm_up_);          // Trigger l2seg upd to hal
+    oob_l2seg->set_undesignated_up(devapi_uplink::get_uplink(cinfo->port_num));
+    oob_l2seg->add_uplink(devapi_uplink::get_uplink(cinfo->port_num));// Trigger l2seg upd to hal
 #if 0
     NIC_LOG_DEBUG("Adding swm uplink to mcast groups for oob: {} l2seg: {}",
                   oob_up->get_id(), 
@@ -213,7 +294,7 @@ devapi_swm::config_oob_uplink_vlan_(vlan_t vlan)
 // - Adding swm uplink to flood lists for BMC -> swm_uplink (MC, BC, PRMSC)
 //-----------------------------------------------------------------------------
 sdk_ret_t
-devapi_swm::unconfig_oob_uplink_vlan_(vlan_t vlan)
+devapi_swm::unconfig_oob_uplink_vlan_(vlan_t vlan, channel_info_t *cinfo)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_vrf *oob_vrf = NULL;
@@ -227,8 +308,9 @@ devapi_swm::unconfig_oob_uplink_vlan_(vlan_t vlan)
         ret = SDK_RET_ERR;
         goto end;
     }
-    NIC_LOG_DEBUG("Unconfiguring oob: {} l2seg: {}, vlan: {}", 
-                  oob_up_->get_id(), oob_l2seg->get_id(), vlan);
+    NIC_LOG_DEBUG("TX: Unconfiguring oob: {} l2seg: {}, vlan: {}, channel: {}", 
+                  oob_up_->get_id(), oob_l2seg->get_id(), vlan,
+                  cinfo->channel);
     if ((oob_l2seg->get_vlan() != NATIVE_VLAN_ID && oob_l2seg->num_enics() == 0) ||
         (oob_l2seg->get_vlan() == NATIVE_VLAN_ID && oob_up_->get_num_lifs() == 0)) {
         /*
@@ -244,7 +326,7 @@ devapi_swm::unconfig_oob_uplink_vlan_(vlan_t vlan)
         // Update oob l2seg
         oob_l2seg->set_single_wire_mgmt(false);
         oob_l2seg->set_undesignated_up(NULL);
-        oob_l2seg->del_uplink(swm_up_);      // Trigger l2seg upd to hal
+        oob_l2seg->del_uplink(devapi_uplink::get_uplink(cinfo->port_num));      // Trigger l2seg upd to hal
 #if 0
         NIC_LOG_DEBUG("Deleting oob from mcast groups for oob uplink's uplink: {} l2seg: {}",
                       oob_up->get_id(), 
@@ -257,6 +339,7 @@ end:
     return ret;
 }
 
+#if 0
 sdk_ret_t
 devapi_swm::upd_uplink(uint32_t port_num)
 {
@@ -305,112 +388,193 @@ devapi_swm::upd_uplink(uint32_t port_num)
 end:
     return ret;
 }
+#endif
+
+void 
+devapi_swm::set_mac(mac_t mac, channel_info_t *cinfo) 
+{
+    cinfo->mac_table.insert(mac);
+}
+
+void
+devapi_swm::set_vlan(vlan_t vlan, channel_info_t *cinfo)
+{
+    cinfo->vlan_table.insert(vlan);
+}
+
+void
+devapi_swm::unset_mac(mac_t mac, channel_info_t *cinfo)
+{
+    cinfo->mac_table.erase(mac);
+}
+
+void
+devapi_swm::unset_vlan(vlan_t vlan, channel_info_t *cinfo)
+{
+    cinfo->vlan_table.erase(vlan);
+}
+
+void 
+devapi_swm::set_rx_bmode(bool broadcast, channel_info_t *cinfo)
+{
+    cinfo->receive_broadcast = broadcast;
+}
+
+void
+devapi_swm::set_rx_mmode(bool multicast, channel_info_t *cinfo) 
+{
+    cinfo->receive_all_multicast = multicast;
+}
+
+void
+devapi_swm::set_rx_pmode(bool promiscuous, channel_info_t *cinfo) 
+{
+    cinfo->receive_promiscuous = promiscuous;
+}
 
 sdk_ret_t 
-devapi_swm::add_mac(mac_t mac)
+devapi_swm::add_mac(mac_t mac, uint32_t channel)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    ret = dapi_->lif_add_mac(swm_->swm_lif(), mac);
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    ret = dapi_->lif_add_mac(cinfo->swm_lif_id, mac);
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Failed to add mac {} to lif {}", macaddr2str(mac), 
-                    swm_lif_id_);
+        NIC_LOG_ERR("Failed to add mac {} to lif {}, channel: {}", 
+                    macaddr2str(mac), 
+                    cinfo->swm_lif_id, channel);
     }
-    swm_->set_mac(mac);
+    swm_->set_mac(mac, cinfo);
     return ret;
 }
 
 sdk_ret_t 
-devapi_swm::del_mac(mac_t mac)
+devapi_swm::del_mac(mac_t mac, uint32_t channel)
 {
     sdk_ret_t ret = SDK_RET_OK;
-    ret = dapi_->lif_del_mac(swm_->swm_lif(), mac);
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    ret = dapi_->lif_del_mac(cinfo->swm_lif_id, mac);
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Failed to del mac {} from lif {}", macaddr2str(mac), 
-                    swm_lif_id_);
+        NIC_LOG_ERR("Failed to del mac {} from lif {}, channel: {}", 
+                    macaddr2str(mac), 
+                    cinfo->swm_lif_id, channel);
     }
-    swm_->unset_mac(mac);
+    swm_->unset_mac(mac, cinfo);
     return ret;
 }
 
 sdk_ret_t 
-devapi_swm::add_vlan(vlan_t vlan)
+devapi_swm::add_vlan(vlan_t vlan, uint32_t channel)
 {
     sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
 
     if (vlan == 0) {
         vlan = 8192;
     }
+    NIC_LOG_DEBUG("Adding NCSI Vlan filter vlan: {}, channel: {}", vlan, channel);
     // Add vlan to lif. Sets up swm_uplink => oob_uplink
-    ret = dapi_->lif_add_vlan(swm_->swm_lif(), vlan);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Failed to add vlan {} to lif {}", vlan, swm_lif_id_);
+    cinfo = lookup_channel_info_(channel);
+    if (cinfo) {
+        ret = dapi_->lif_add_vlan(cinfo->swm_lif_id, vlan);
+        if (ret != SDK_RET_OK) {
+            NIC_LOG_ERR("Failed to add vlan {} to lif {}, channel: {}", vlan, 
+                        cinfo->swm_lif_id, channel);
+        }
+        swm_->set_vlan(vlan, cinfo);
+    } else {
+        NIC_LOG_ERR("Unable to find the channel info. channel: {}", channel);
     }
-
-    // Bringup OOB uplink with the vlan. Sets up swm_uplink => oob_uplink
-    ret = swm_->config_oob_uplink_vlan_(vlan);
-    if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Failed to add vlan {} to oob", vlan);
-    }
-
-    swm_->set_vlan(vlan);
     return ret;
 }
 
 sdk_ret_t 
-devapi_swm::del_vlan(vlan_t vlan)
+devapi_swm::del_vlan(vlan_t vlan, uint32_t channel)
 {
     sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
 
+    if (vlan == 0) {
+        vlan = 8192;
+    }
     // Del vlan from lif. 
-    ret = dapi_->lif_del_vlan(swm_->swm_lif(), vlan);
+    cinfo = lookup_channel_info_(channel);
+    ret = dapi_->lif_del_vlan(cinfo->swm_lif_id, vlan);
     if (ret != SDK_RET_OK) {
-        NIC_LOG_ERR("Failed to del vlan {} from lif {}", vlan, swm_lif_id_);
+        NIC_LOG_ERR("Failed to del vlan {} from lif {}, channel: {}", vlan, 
+                    cinfo->swm_lif_id, channel);
     }
 
+#if 0
     // Bringup OOB uplink with the vlan. Sets up swm_uplink => oob_uplink
     ret = swm_->unconfig_oob_uplink_vlan_(vlan);
     if (ret != SDK_RET_OK) {
         NIC_LOG_ERR("Failed to del vlan {} from oob", vlan);
     }
+#endif
 
-    swm_->unset_vlan(vlan);
+    swm_->unset_vlan(vlan, cinfo);
     return ret;
 }
 
 sdk_ret_t 
-devapi_swm::upd_rx_bmode(bool broadcast)
+devapi_swm::upd_rx_bmode(bool broadcast, uint32_t channel)
 {
-    swm_->set_rx_bmode(broadcast);
-    return dapi_->lif_upd_rx_bmode(swm_->swm_lif(), 
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    swm_->set_rx_bmode(broadcast, cinfo);
+    return dapi_->lif_upd_rx_bmode(cinfo->swm_lif_id,
                                    broadcast);
 }
 
 sdk_ret_t 
-devapi_swm::upd_rx_mmode(bool all_multicast)
+devapi_swm::upd_rx_mmode(bool all_multicast, uint32_t channel)
 {
-    swm_->set_rx_mmode(all_multicast);
-    return dapi_->lif_upd_rx_mmode(swm_->swm_lif(), 
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    swm_->set_rx_mmode(all_multicast, cinfo);
+    return dapi_->lif_upd_rx_mmode(cinfo->swm_lif_id,
                                    all_multicast);
 }
 
 sdk_ret_t 
-devapi_swm::upd_rx_pmode(bool promiscuous)
+devapi_swm::upd_rx_pmode(bool promiscuous, uint32_t channel)
 {
-    swm_->set_rx_pmode(promiscuous);
-    return dapi_->lif_upd_rx_pmode(swm_->swm_lif(), 
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    swm_->set_rx_pmode(promiscuous, cinfo);
+    return dapi_->lif_upd_rx_pmode(cinfo->swm_lif_id,
                                    promiscuous);
 }
 
 sdk_ret_t
-devapi_swm::upd_bcast_filter(lif_bcast_filter_t bcast_filter)
+devapi_swm::upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel)
 {
-    return dapi_->lif_upd_bcast_filter(swm_->swm_lif(), bcast_filter);
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    ret = dapi_->lif_upd_bcast_filter(cinfo->swm_lif_id, bcast_filter);
+    cinfo->bcast_filter = bcast_filter;
+    return ret;
 }
 
 sdk_ret_t
-devapi_swm::upd_mcast_filter(lif_mcast_filter_t mcast_filter)
+devapi_swm::upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel)
 {
-    return dapi_->lif_upd_mcast_filter(swm_->swm_lif(), mcast_filter);
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    cinfo = lookup_channel_info_(channel);
+    ret = dapi_->lif_upd_mcast_filter(cinfo->swm_lif_id, mcast_filter);
+    cinfo->mcast_filter = mcast_filter;
+    return ret;
 }
 
 #if 0
@@ -562,11 +726,29 @@ devapi_swm::swm_initialize(devapi *dapi)
 }
 
 sdk_ret_t
+devapi_swm::swm_uninitialize_lif(void)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo = NULL;
+
+    for (auto it = channel_state_.cbegin(); it != channel_state_.cend(); it++) {
+        cinfo = (channel_info_t *)(it->second);
+        // Uninitialize lif
+        ret = swm_->uninitialize_lif_(cinfo);
+    }
+    return ret;
+}
+
+sdk_ret_t
 devapi_swm::swm_uninitialize(void)
 {
     sdk_ret_t ret = SDK_RET_OK;
 
-    // Uninitialize lif
+    ret = swm_->swm_uninitialize_lif();
+
+    // free up memory for swm
+    devapi_swm::destroy(swm_);
+#if 0
     swm_->uninitialize_lif_();
 
     // Remove swm_up from oob_l2segs
@@ -574,6 +756,7 @@ devapi_swm::swm_uninitialize(void)
 
     // free up memory for swm
     devapi_swm::destroy(swm_);
+#endif
 
 
 #if 0
@@ -672,6 +855,112 @@ devapi_swm::swm_uninitialize(void)
     swm_ = NULL;
 end:
 #endif
+    return ret;
+}
+
+sdk_ret_t 
+devapi_swm::enable_tx(uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo = NULL;
+
+    if (tx_channel_ != -1) {
+        NIC_LOG_ERR("Channel {} already is tx enabled. Disable it before enabling: {}.",
+                    tx_channel_, channel);
+    }
+
+    if (tx_channel_ == channel) {
+        NIC_LOG_DEBUG("channel {} already tx-enabled. noop", channel);
+        goto end;
+    }
+
+    NIC_LOG_DEBUG("TX enable for channel: {}", channel);
+
+    cinfo = lookup_channel_info_(channel);
+    for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
+        ret = swm_->config_oob_uplink_vlan_(*it, cinfo);
+    }
+
+    tx_channel_ = channel;
+    cinfo->tx_en = true;
+
+end:
+    return ret;
+}
+
+sdk_ret_t 
+devapi_swm::disable_tx(uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo = NULL;
+
+    if (tx_channel_ == -1) {
+        NIC_LOG_DEBUG("Tx channel {} already disabled. noop", channel);
+        goto end;
+    }
+
+    if (tx_channel_ != (int)channel) {
+        NIC_LOG_ERR("Current TX Channel {}. Trying to disable: {}",
+                    tx_channel_, channel);
+    }
+
+    NIC_LOG_DEBUG("TX disable for channel: {}", channel);
+
+    cinfo = lookup_channel_info_(channel);
+    for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
+        ret = swm_->unconfig_oob_uplink_vlan_(*it, cinfo);
+    }
+
+    tx_channel_ = -1;
+    cinfo->tx_en = false;
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_swm::enable_rx (uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    NIC_LOG_DEBUG("RX enable for channel: {}", channel);
+    cinfo = lookup_channel_info_(channel);
+    if (cinfo->rx_en) {
+        NIC_LOG_DEBUG("Channel {} already is enabled. noop", channel);
+        goto end;
+    }
+    ret = dapi_->lif_upd_rx_en(cinfo->swm_lif_id, true);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to enable rx on lif: {}, channel: {}", 
+                    cinfo->swm_lif_id, channel);
+    }
+    cinfo->rx_en = true;
+
+end:
+    return ret;
+}
+
+sdk_ret_t
+devapi_swm::disable_rx (uint32_t channel)
+{
+    sdk_ret_t ret = SDK_RET_OK;
+    channel_info_t *cinfo;
+
+    NIC_LOG_DEBUG("RX disable for channel: {}", channel);
+    cinfo = lookup_channel_info_(channel);
+    if (!cinfo->rx_en) {
+        NIC_LOG_DEBUG("Channel {} already is disabled. noop", channel);
+        goto end;
+    }
+    ret = dapi_->lif_upd_rx_en(cinfo->swm_lif_id, false);
+    if (ret != SDK_RET_OK) {
+        NIC_LOG_ERR("Failed to disable rx on lif: {}, channel: {}", 
+                    cinfo->swm_lif_id, channel);
+    }
+    cinfo->rx_en = false;
+
+end:
     return ret;
 }
 

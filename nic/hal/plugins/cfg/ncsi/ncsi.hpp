@@ -11,22 +11,26 @@ using ncsi::VlanFilterRequest;
 using ncsi::VlanFilterResponse;
 using ncsi::VlanFilterGetRequest;
 using ncsi::VlanFilterGetResponseMsg;
+using ncsi::VlanFilterGetResponse;
 using ncsi::MacFilterRequest;
 using ncsi::MacFilterResponse;
 using ncsi::MacFilterGetRequest;
 using ncsi::MacFilterGetResponseMsg;
+using ncsi::MacFilterGetResponse;
 using ncsi::BcastFilterRequest;
 using ncsi::BcastFilterResponse;
 using ncsi::BcastFilterDeleteRequest;
 using ncsi::BcastFilterDeleteResponse;
 using ncsi::BcastFilterGetRequest;
 using ncsi::BcastFilterGetResponseMsg;
+using ncsi::BcastFilterGetResponse;
 using ncsi::McastFilterRequest;
 using ncsi::McastFilterResponse;
 using ncsi::McastFilterDeleteRequest;
 using ncsi::McastFilterDeleteResponse;
 using ncsi::McastFilterGetRequest;
 using ncsi::McastFilterGetResponseMsg;
+using ncsi::McastFilterGetResponse;
 using ncsi::VlanModeRequest;
 using ncsi::VlanModeResponse;
 using ncsi::VlanModeGetRequest;
@@ -35,6 +39,7 @@ using ncsi::ChannelRequest;
 using ncsi::ChannelResponse;
 using ncsi::ChannelGetRequest;
 using ncsi::ChannelGetResponseMsg;
+using ncsi::ChannelGetResponse;
 
 namespace hal {
 

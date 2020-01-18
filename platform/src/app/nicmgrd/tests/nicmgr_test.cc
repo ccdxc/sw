@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #include "nic/sdk/lib/device/device.hpp"
-#include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_dev.hpp"
 #include "platform/src/lib/nicmgr/include/eth_if.h"
@@ -11,6 +10,7 @@
 #include "gen/proto/interface.grpc.pb.h"
 #include <boost/multiprecision/cpp_int.hpp>
 #include <chrono>
+// #include "devapi_types.hpp"
 // #include "logger.hpp"
 
 using grpc::Channel;
@@ -26,6 +26,10 @@ using boost::multiprecision::uint128_t;
 using namespace std::chrono;
 
 using namespace std;
+
+namespace nicmgr {
+// shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
+}
 
 DeviceManager *devmgr = NULL;
 sdk::lib::dev_forwarding_mode_t g_fwd_mode;
@@ -116,9 +120,8 @@ nicmgr_init()
 {
     utils::logger::init(false);
     sdk_init();
-    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
-                               "",
-                               sdk::lib::FORWARDING_MODE_NONE, false);
+    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM, "../nic/conf/device.conf",
+                    sdk::lib::FORWARDING_MODE_NONE, false);
     EXPECT_TRUE(devmgr != NULL);
     devmgr->LoadProfile("../platform/src/app/nicmgrd/etc/eth.json", false);
     devmgr->HalEventHandler(true);
@@ -161,6 +164,7 @@ uint8_t *memrev(uint8_t *block, size_t elnum)
     return block;
 }
 
+#if 0
 TEST_F(nicmgr_test, test1)
 {
     struct rx_filter_add_cmd rx_cmd = {0};
@@ -376,6 +380,7 @@ TEST_F(nicmgr_test, test2)
     eth_dev->CmdHandler(&d_cmd, NULL, &d_comp, NULL);
 }
 
+#endif
 TEST_F(nicmgr_test, test3)
 {
     struct rx_filter_add_cmd rx_cmd = {0};
@@ -454,6 +459,56 @@ TEST_F(nicmgr_test, test3)
 
 
     devapi *dev_api = devmgr->DevApi();
+    // Add Mac
+    dev_api->swm_add_mac(0x000000010001, 0);
+    // Add Vlan
+    dev_api->swm_add_vlan(0, 0);
+    // Add Mac
+    dev_api->swm_add_mac(0x000000010001, 1);
+    // Enable TX for channel 0
+    dev_api->swm_enable_tx(0);
+    // Disable TX for channel 0
+    dev_api->swm_disable_tx(0);
+    // Del Mac
+    dev_api->swm_del_mac(0x000000010001, 1);
+    // Add Mac
+    dev_api->swm_add_mac(0x000000010001, 1);
+    // Enable rx
+    dev_api->swm_enable_rx(0);
+    // Enable rx
+    dev_api->swm_disable_rx(0);
+    // Enable bcast filters
+    lif_bcast_filter_t bc_filter = {0}; 
+    bc_filter.arp = true;
+    bc_filter.dhcp_client = true;
+    bc_filter.dhcp_server = true;
+    bc_filter.netbios = true;
+    dev_api->swm_upd_bcast_filter(bc_filter, 0);
+    // Modify bcast filters
+    bc_filter.arp = false;
+    bc_filter.dhcp_client = false;
+    bc_filter.dhcp_server = false;
+    bc_filter.netbios = true;
+    dev_api->swm_upd_bcast_filter(bc_filter, 0);
+    // Enable mcast filters
+    lif_mcast_filter_t mc_filter = {0};
+    mc_filter.ipv6_neigh_adv = true;
+    mc_filter.ipv6_router_adv = true;
+    mc_filter.dhcpv6_relay = true;
+    mc_filter.dhcpv6_mcast = true;
+    mc_filter.ipv6_mld = true;
+    mc_filter.ipv6_neigh_sol = true;
+    dev_api->swm_upd_mcast_filter(mc_filter, 1);
+
+
+#if 0
+    // Add Vlan
+    dev_api->swm_add_vlan(10);
+#endif
+
+
+
+#if 0
     // Enable SWM
     dev_api->swm_enable();
     // Add Uplink
@@ -470,12 +525,19 @@ TEST_F(nicmgr_test, test3)
     dev_api->swm_upd_rx_bmode(true);
     // Add to ALL_MC 
     dev_api->swm_upd_rx_mmode(true);
+    // Add Bcast filter
+    lif_bcast_filter_t bcast_filter = {0};
+    bcast_filter.arp = true;
+    dev_api->swm_upd_bcast_filter(bcast_filter);
+    // Change Uplink
+    dev_api->swm_set_port(5);
     // Add a new vlan
     dev_api->swm_add_vlan(10);
     // Del vlan
     dev_api->swm_del_vlan(10);
     // Disable SWM
     dev_api->swm_disable();
+#endif
 
     
 

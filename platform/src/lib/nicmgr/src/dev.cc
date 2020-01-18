@@ -134,10 +134,15 @@ DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
 
     // Reserve all the LIF ids used by HAL
     NIC_LOG_DEBUG("Reserving HAL lifs {}-{}", HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
-    // int ret = pd->lm_->LIFRangeAlloc(HAL_LIF_ID_MIN, HAL_LIF_ID_MAX);
     int ret = pd->lm_->reserve_id(HAL_LIF_ID_MIN, (HAL_LIF_ID_MAX - HAL_LIF_ID_MIN + 1));
     if (ret < 0) {
         throw runtime_error("Failed to reserve HAL LIFs");
+    }
+    NIC_LOG_DEBUG("Reserving NCSI lifs {}-{}", NICMGR_NCSI_LIF_MIN, NICMGR_NCSI_LIF_MAX);
+    ret = pd->lm_->reserve_id(NICMGR_NCSI_LIF_MIN, 
+                              (NICMGR_NCSI_LIF_MAX - NICMGR_NCSI_LIF_MIN + 1));
+    if (ret < 0) {
+        throw runtime_error("Failed to reserve NCSI LIFs");
     }
     if (!skip_hwinit) {
         ret = sdk::platform::utils::lif_mgr::lifs_reset(NICMGR_SVC_LIF, NICMGR_LIF_MAX);
@@ -635,6 +640,17 @@ DeviceManager::HalEventHandler(bool status)
                 uplink_t *up = it->second;
                 dev_api->uplink_create(up->id, up->port, up->is_oob);
             }
+            dev_api->swm_enable();
+            // Create NCSI Channels for non-oob uplinks
+            int cid = 0;
+            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+                uplink_t *up = it->second;
+                if (!up->is_oob) {
+                    dev_api->swm_create_channel(cid++, up->port);
+                }
+            }
+
+            // dev_api->swm_set_port(1);
         }
 
         // Setting hal clients in all devices
@@ -695,10 +711,12 @@ void
 DeviceManager::swm_update(bool enable,
                           uint32_t port_num, uint32_t vlan, mac_t mac)
 {
+#if 0
     dev_api->swm_enable();
     dev_api->swm_set_port(port_num);
     dev_api->swm_add_mac(mac);
     dev_api->swm_add_vlan(vlan);
+#endif
 }
 
 void

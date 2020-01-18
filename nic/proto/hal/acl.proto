@@ -112,7 +112,6 @@ message AclInternalActionInfo {
   types.EncapInfo encap_info        = 6;    // encap info
   types.CpucbId   qid               = 7;    // qid
   bool            qid_valid         = 8;    // qid is valid
-  bool            egress_drop       = 9;
 }
 
 // AclSelector has all the match criteria for an ACL entry
@@ -148,8 +147,9 @@ message AclActionInfo {
   repeated kh.MirrorSessionKeyHandle egr_mirror_sessions    = 3 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
   kh.CoppKeyHandle                   copp_key_handle        = 4 [(gogoproto.moretags) = "venice:ref"];    // copp policer
   kh.InterfaceKeyHandle              redirect_if_key_handle = 5 [(gogoproto.moretags) = "venice:ref,venice:constraints={acl.AclActionInfo.action==acl_pb2.ACL_ACTION_REDIRECT}"];    // redirect interface
+  bool                               egress_drop            = 6;
                                                                     // TODO: REMOVE
-  AclInternalActionInfo              internal_actions       = 6 [(gogoproto.moretags) = "venice:constraints={acl.AclActionInfo.action!=acl_pb2.ACL_ACTION_DENY}"];    // Internal action fields
+  AclInternalActionInfo              internal_actions       = 7 [(gogoproto.moretags) = "venice:constraints={acl.AclActionInfo.action!=acl_pb2.ACL_ACTION_DENY}"];    // Internal action fields
 }
 
 // ACL entry configuration

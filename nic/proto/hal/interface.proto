@@ -177,6 +177,7 @@ message LifSpec {
   kh.InterfaceKeyHandle      swm_oob                     = 29;   // SWM: Uplink to reach BMC
   BcastPktFilter             bcast_pkt_filter            = 30;
   McastPktFilter             mcast_pkt_filter            = 31;
+  bool                       rx_en                       = 32;   // SWM: Applicable only for SWM LIFs
 }
 
 // LifRequestMsg is batched request used to create/update of LIFs

@@ -576,10 +576,14 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
         goto end;
     }
 
-    // De-Program Output Mapping Table
-    ret = pd_enicif_pd_depgm_output_mapping_tbl(pd_enicif);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("unable to deprogram hw");
+    // Only for SWM LIF, check if rx_en is set.
+    if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
+        (!enicif_is_swm(hal_if)) || lif->rx_en) {
+        // De-Program Output Mapping Table
+        ret = pd_enicif_pd_depgm_output_mapping_tbl(pd_enicif);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("unable to deprogram hw");
+        }
     }
 
     // De-program native input properties. Classic
@@ -814,9 +818,13 @@ pd_enicif_program_hw(pd_enicif_t *pd_enicif)
         goto end;
     }
 
-    // Program Output Mapping
-    ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, NULL,
-                                              TABLE_OPER_INSERT);
+    // Only for SWM LIF, check if rx_en is set.
+    if ((hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) ||
+        (!enicif_is_swm(hal_if)) || lif->rx_en) {
+        // Program Output Mapping
+        ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, NULL,
+                                                  TABLE_OPER_INSERT);
+    }
 
     // Check if classic
     if (hal_if->enic_type == intf::IF_ENIC_TYPE_CLASSIC) {
@@ -1617,6 +1625,22 @@ pd_enicif_lif_update(pd_if_lif_update_args_t *args)
             // Program Input Properties Mac Vlan
             ret = pd_enicif_pgm_inp_prop_mac_vlan_tbl(pd_enicif, NULL, args,
                                                       TABLE_OPER_UPDATE);
+        }
+    }
+
+    HAL_TRACE_DEBUG("swm_enable: {}, rx_en_changed: {}, rx_en: {}",
+                    enicif_is_swm(hal_if), args->rx_en_changed, args->rx_en);
+
+    if (enicif_is_swm(hal_if)) {
+        if (args->rx_en_changed) {
+            if (args->rx_en) {
+                // Program output mapping
+                ret = pd_enicif_pd_pgm_output_mapping_tbl(pd_enicif, NULL, NULL,
+                                                          TABLE_OPER_INSERT);
+            } else {
+                // Un-program output mapping
+                ret = pd_enicif_pd_depgm_output_mapping_tbl(pd_enicif);
+            }
         }
     }
 

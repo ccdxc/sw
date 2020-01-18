@@ -666,6 +666,8 @@ typedef struct pd_if_lif_update_args_s {
     bool            vlan_insert_en_changed;
     bool            vlan_insert_en;
     bool            pinned_uplink_changed;
+    bool            rx_en_changed;
+    bool            rx_en;
 } __PACK__ pd_if_lif_update_args_t;
 
 static inline void

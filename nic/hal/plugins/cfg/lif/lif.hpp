@@ -120,6 +120,7 @@ typedef struct lif_s {
     lif_rss_info_t      rss;             // rss configuration
     uint32_t            qcount;
     bool                qstate_pgm_in_hal;
+    bool                rx_en;           // Applicable only for swm lif
 
     // operational state of interface
     hal_handle_t        hal_handle;      // HAL allocated handle
@@ -179,6 +180,8 @@ typedef struct lif_update_app_ctxt_s {
     bool         status_changed:1;
     bool         bcast_filters_changed:1;
     bool         mcast_filters_changed:1;
+    bool         rx_en_changed:1;
+    bool         rx_en:1;
 } __PACK__ lif_update_app_ctxt_t;
 
 typedef struct lif_sched_control_cb_ctxt_s {
@@ -222,7 +225,9 @@ hal_ret_t lif_update_trigger_if(lif_t *lif,
                                 bool vlan_insert_en_changed,
                                 bool vlan_insert_en,
                                 bool pinned_uplink_changed,
-                                hal_handle_t pinned_uplink);
+                                hal_handle_t pinned_uplink,
+                                bool rx_en_changed,
+                                bool rx_en);
 void LifGetQState(const intf::QStateGetReq &req, intf::QStateGetResp *resp);
 void LifSetQState(const intf::QStateSetReq &req, intf::QStateSetResp *resp);
 void lif_spec_dump (LifSpec& spec);

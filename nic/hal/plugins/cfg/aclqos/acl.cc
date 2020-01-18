@@ -1172,6 +1172,7 @@ extract_action_spec (acl_action_spec_t *as,
     as->ing_mirror_session = ingress;
     as->egr_mirror_en = egress ? true : false;
     as->egr_mirror_session = egress;
+    as->egress_drop = ainfo.egress_drop();
 
     if (ainfo.has_redirect_if_key_handle()) {
         if (as->action != acl::ACL_ACTION_REDIRECT) {

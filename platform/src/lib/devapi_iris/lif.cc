@@ -668,6 +668,22 @@ devapi_lif::del_macvlan(mac_t mac, vlan_t vlan, bool update_db, bool add_failure
 }
 
 sdk_ret_t
+devapi_lif::upd_rx_en(bool rx_en)
+{
+    sdk_ret_t status = SDK_RET_OK;
+
+    if (rx_en == info_.rx_en) {
+        NIC_LOG_WARN("Rx en: {}. No change in rx enable. Nop", rx_en);
+        return SDK_RET_OK;
+    }
+
+    info_.rx_en = rx_en;
+    status = lif_halupdate();
+
+    return status;
+}
+
+sdk_ret_t
 devapi_lif::upd_rxmode(bool broadcast, bool all_multicast, bool promiscuous)
 {
     sdk_ret_t status = SDK_RET_OK;
@@ -861,8 +877,9 @@ devapi_lif::update_bcast_filters(lif_bcast_filter_t bcast_filter)
 {
     sdk_ret_t status = SDK_RET_OK;
     
-    NIC_LOG_DEBUG("Bcast filters update: arp: {}, dhcp_client: {}, "
+    NIC_LOG_DEBUG("Bcast filters update lif: {}: arp: {}, dhcp_client: {}, "
                   "dhcp_server: {}, netbios: {}",
+                  get_id(), 
                   bcast_filter.arp, bcast_filter.dhcp_client, 
                   bcast_filter.dhcp_server, bcast_filter.netbios);
     if (bcast_filter.arp != info_.bcast_filter.arp ||
@@ -887,8 +904,9 @@ devapi_lif::update_mcast_filters(lif_mcast_filter_t mcast_filter)
 {
     sdk_ret_t status = SDK_RET_OK;
 
-    NIC_LOG_DEBUG("Mcast filters Update: ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
+    NIC_LOG_DEBUG("Mcast filters Update lif: {}: ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
                   "dhcpv6_relay: {}, dhcpv6_mcast: {}, ipv6_mld: {}, ipv6_neigh_sol: {}",
+                  get_id(), 
                   mcast_filter.ipv6_neigh_adv, mcast_filter.ipv6_router_adv,
                   mcast_filter.dhcpv6_relay, mcast_filter.dhcpv6_mcast, 
                   mcast_filter.ipv6_mld, mcast_filter.ipv6_neigh_sol);
@@ -1305,6 +1323,7 @@ devapi_lif::populate_req(LifRequestMsg &req_msg,
     if (lif_info->type == sdk::platform::LIF_TYPE_SWM) {
         req->mutable_swm_oob()->
             set_interface_id(devapi_uplink::get_oob_uplink()->get_id());
+        req->set_rx_en(lif_info->rx_en);
     }
 
     if (lif_info->rx_limit_bytes) {

@@ -59,6 +59,7 @@ public:
                                            lif_bcast_filter_t bcast_filter) override;
     virtual sdk_ret_t lif_upd_mcast_filter(uint32_t lif_id, 
                                            lif_mcast_filter_t mcast_filter) override;
+    virtual sdk_ret_t lif_upd_rx_en(uint32_t lif_id, bool rx_en) override;
     static sdk_ret_t lif_program_tx_scheduler(lif_info_t *info);
 
     // qos APIs
@@ -89,16 +90,21 @@ public:
     // single wire management APIs
     virtual sdk_ret_t swm_enable() override;
     virtual sdk_ret_t swm_disable() override;
-    virtual sdk_ret_t swm_set_port(uint32_t port_num) override;
-    virtual sdk_ret_t swm_add_mac(mac_t mac) override;
-    virtual sdk_ret_t swm_del_mac(mac_t mac) override;
-    virtual sdk_ret_t swm_add_vlan(vlan_t vlan) override;
-    virtual sdk_ret_t swm_del_vlan(vlan_t vlan) override;
-    virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast) override;
-    virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast) override;
-    virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous) override;
-    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter) override;
-    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter) override;
+    virtual sdk_ret_t swm_create_channel(uint32_t channel, uint32_t port_num) override;
+    virtual sdk_ret_t swm_get_channels_info(std::set<channel_info_t *>* channels_info) override; // caller has to free elems
+    virtual sdk_ret_t swm_add_mac(mac_t mac, uint32_t channel) override;
+    virtual sdk_ret_t swm_del_mac(mac_t mac, uint32_t channel) override;
+    virtual sdk_ret_t swm_add_vlan(vlan_t vlan, uint32_t channel) override;
+    virtual sdk_ret_t swm_del_vlan(vlan_t vlan, uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_rx_bmode(bool broadcast, uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_rx_mmode(bool all_multicast, uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_rx_pmode(bool promiscuous, uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel) override;
+    virtual sdk_ret_t swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel) override;
+    virtual sdk_ret_t swm_enable_tx(uint32_t channel) override;
+    virtual sdk_ret_t swm_disable_tx(uint32_t channel) override;
+    virtual sdk_ret_t swm_enable_rx(uint32_t channel) override;
+    virtual sdk_ret_t swm_disable_rx(uint32_t channel) override;
 
 private:
     devapi_impl() {}

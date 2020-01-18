@@ -764,10 +764,30 @@ lif_create_add_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     if (lif->type == types::LIF_TYPE_SWM) {
         if (lif_bcast_filter_any_set(lif)) {
+            // Release write lock
+            hal_handle_cfg_db_lock(false, false);
+            // Take read lock
+            hal_handle_cfg_db_lock(true, true);
+
             lif_bcast_filter_install(lif);
+
+            // Release read lock
+            hal_handle_cfg_db_lock(true, false);
+            // Take write lock
+            hal_handle_cfg_db_lock(false, true);
         }
         if (lif_mcast_filter_any_set(lif)) {
+            // Release write lock
+            hal_handle_cfg_db_lock(false, false);
+            // Take read lock
+            hal_handle_cfg_db_lock(true, true);
+
             lif_mcast_filter_install(lif);
+
+            // Release read lock
+            hal_handle_cfg_db_lock(true, false);
+            // Take write lock
+            hal_handle_cfg_db_lock(false, true);
         }
     }
 
@@ -940,6 +960,8 @@ lif_populate_filters (lif_t *lif, LifSpec& spec)
     lif->mcast_filter.dhcpv6_mcast = spec.mcast_pkt_filter().dhcpv6_mcast();
     lif->mcast_filter.ipv6_mld = spec.mcast_pkt_filter().ipv6_mld();
     lif->mcast_filter.ipv6_neigh_sol = spec.mcast_pkt_filter().ipv6_neigh_sol();
+
+    return HAL_RET_OK;
 }
 
 bool
@@ -951,7 +973,8 @@ lif_bcast_filter_any_set (lif_t *lif) {
 }
 
 bool
-lif_mcast_filter_any_set (lif_t *lif) {
+lif_mcast_filter_any_set (lif_t *lif) 
+{
     return (lif->mcast_filter.ipv6_neigh_adv ||
             lif->mcast_filter.ipv6_router_adv ||
             lif->mcast_filter.dhcpv6_relay ||
@@ -961,89 +984,103 @@ lif_mcast_filter_any_set (lif_t *lif) {
 }
 
 hal_ret_t
-lif_bcast_filter_install (lif_t *lif) {
+lif_bcast_filter_install (lif_t *lif) 
+{
+    if_t *hal_if = NULL;
+    hal_if = find_if_by_handle(lif->pinned_uplink);
+
     if (lif->bcast_filter.arp) {
-        acl_install_bcast_arp();
+        acl_install_bcast_arp(hal_if);
     }
     if (lif->bcast_filter.dhcp_client) {
-        acl_install_bcast_dhcp_client();
+        acl_install_bcast_dhcp_client(hal_if);
     }
     if (lif->bcast_filter.dhcp_server) {
-        acl_install_bcast_dhcp_server();
+        acl_install_bcast_dhcp_server(hal_if);
     }
     if (lif->bcast_filter.netbios) {
-        acl_install_bcast_netbios();
+        acl_install_bcast_netbios(hal_if);
     }
-    acl_install_bcast_all();
+    acl_install_bcast_all(hal_if);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
-lif_bcast_filter_uninstall (lif_t *lif) {
+lif_bcast_filter_uninstall (lif_t *lif) 
+{
+    if_t *hal_if = NULL;
+    hal_if = find_if_by_handle(lif->pinned_uplink);
+
     if (lif->bcast_filter.arp) {
-        acl_uninstall_bcast_arp();
+        acl_uninstall_bcast_arp(hal_if);
     }
     if (lif->bcast_filter.dhcp_client) {
-        acl_uninstall_bcast_dhcp_client();
+        acl_uninstall_bcast_dhcp_client(hal_if);
     }
     if (lif->bcast_filter.dhcp_server) {
-        acl_uninstall_bcast_dhcp_server();
+        acl_uninstall_bcast_dhcp_server(hal_if);
     }
     if (lif->bcast_filter.netbios) {
-        acl_uninstall_bcast_netbios();
+        acl_uninstall_bcast_netbios(hal_if);
     }
-    acl_uninstall_bcast_all();
+    acl_uninstall_bcast_all(hal_if);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
 lif_mcast_filter_install (lif_t *lif) {
+    if_t *hal_if = NULL;
+    hal_if = find_if_by_handle(lif->pinned_uplink);
+
     if (lif->mcast_filter.ipv6_neigh_adv) {
-        acl_install_mcast_ipv6_nadv();
+        acl_install_mcast_ipv6_nadv(hal_if);
     }
     if (lif->mcast_filter.ipv6_router_adv) {
-        acl_install_mcast_ipv6_radv();
+        acl_install_mcast_ipv6_radv(hal_if);
     }
     if (lif->mcast_filter.dhcpv6_relay) {
-        acl_install_mcast_dhcpv6_relay();
+        acl_install_mcast_dhcpv6_relay(hal_if);
     } 
     if (lif->mcast_filter.dhcpv6_mcast) {
-        acl_install_mcast_dhcpv6_mcast();
+        acl_install_mcast_dhcpv6_mcast(hal_if);
     }
     if (lif->mcast_filter.ipv6_mld) {
-        acl_install_mcast_mld();
+        acl_install_mcast_mld(hal_if);
     }
     if (lif->mcast_filter.ipv6_neigh_sol) {
-        acl_install_mcast_ipv6_nsol();
+        acl_install_mcast_ipv6_nsol(hal_if);
     }
-    acl_install_mcast_all();
+    acl_install_mcast_all(hal_if);
 
     return HAL_RET_OK;
 }
 
 hal_ret_t
 lif_mcast_filter_uninstall (lif_t *lif) {
+    if_t *hal_if = NULL;
+    hal_if = find_if_by_handle(lif->pinned_uplink);
+
     if (lif->mcast_filter.ipv6_neigh_adv) {
-        acl_uninstall_mcast_ipv6_nadv();
+        acl_uninstall_mcast_ipv6_nadv(hal_if);
     }
     if (lif->mcast_filter.ipv6_router_adv) {
-        acl_uninstall_mcast_ipv6_radv();
+        acl_uninstall_mcast_ipv6_radv(hal_if);
     }
     if (lif->mcast_filter.dhcpv6_relay) {
-        acl_uninstall_mcast_dhcpv6_relay();
+        acl_uninstall_mcast_dhcpv6_relay(hal_if);
     } 
     if (lif->mcast_filter.dhcpv6_mcast) {
-        acl_uninstall_mcast_dhcpv6_mcast();
+        acl_uninstall_mcast_dhcpv6_mcast(hal_if);
     }
     if (lif->mcast_filter.ipv6_mld) {
-        acl_uninstall_mcast_mld();
+        acl_uninstall_mcast_mld(hal_if);
     }
     if (lif->mcast_filter.ipv6_neigh_sol) {
-        acl_uninstall_mcast_ipv6_nsol();
+        acl_uninstall_mcast_ipv6_nsol(hal_if);
     }
-    acl_uninstall_mcast_all();
+    acl_uninstall_mcast_all(hal_if);
 
     return HAL_RET_OK;
 }
@@ -1115,6 +1152,7 @@ lif_create (LifSpec& spec, LifResponse *rsp, lif_hal_info_t *lif_hal_info)
     lif->packet_filters.receive_all_multicast = spec.packet_filter().
                                                 receive_all_multicast();
     lif_populate_filters(lif, spec);
+    lif->rx_en               = spec.rx_en();
 
     // RSS configuration
     lif->rss.type = spec.rss().type();
@@ -1461,18 +1499,25 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (app_ctxt->vlan_strip_en_changed || app_ctxt->vlan_insert_en_changed
-        || app_ctxt->pinned_uplink_changed) {
+        || app_ctxt->pinned_uplink_changed || app_ctxt->rx_en_changed) {
         // Triggers reprogramming of output mapping table for enicifs and uplinks
         ret = lif_update_trigger_if(lif, app_ctxt->vlan_strip_en_changed,
                                     app_ctxt->vlan_strip_en,
                                     app_ctxt->vlan_insert_en_changed,
                                     app_ctxt->vlan_insert_en,
                                     app_ctxt->pinned_uplink_changed,
-                                    app_ctxt->new_pinned_uplink);
+                                    app_ctxt->new_pinned_uplink,
+                                    app_ctxt->rx_en_changed,
+                                    app_ctxt->rx_en);
     }
 
     lif_populate_filters(lif_clone, *spec);
     if (app_ctxt->bcast_filters_changed) {
+        // Release write lock
+        hal_handle_cfg_db_lock(false, false);
+        // Take read lock
+        hal_handle_cfg_db_lock(true, true);
+
         bcast_old = lif_bcast_filter_any_set(lif);
         bcast_new = lif_bcast_filter_any_set(lif_clone);
         if (bcast_old != bcast_new) {
@@ -1487,8 +1532,17 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                 lif_bcast_filter_install(lif_clone);
             }
         }
+        // Release read lock
+        hal_handle_cfg_db_lock(true, false);
+        // Take write lock
+        hal_handle_cfg_db_lock(false, true);
     }
     if (app_ctxt->mcast_filters_changed) {
+        // Release write lock
+        hal_handle_cfg_db_lock(false, false);
+        // Take read lock
+        hal_handle_cfg_db_lock(true, true);
+
         mcast_old = lif_mcast_filter_any_set(lif);
         mcast_new = lif_mcast_filter_any_set(lif_clone);
         if (mcast_old != mcast_new) {
@@ -1503,6 +1557,10 @@ lif_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
                 lif_mcast_filter_install(lif_clone);
             }
         }
+        // Release read lock
+        hal_handle_cfg_db_lock(true, false);
+        // Take write lock
+        hal_handle_cfg_db_lock(false, true);
     }
 end:
     return ret;
@@ -1599,6 +1657,10 @@ lif_update_commit_cb(cfg_op_ctxt_t *cfg_ctxt)
     // TBD trigger a LIF GET here
     if (app_ctxt->status_changed) {
         lif_clone->admin_status = lif->admin_status;
+    }
+
+    if (app_ctxt->rx_en_changed) {
+        lif_clone->rx_en = app_ctxt->rx_en;
     }
 
     // Free PD
@@ -1795,10 +1857,26 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         app_ctxt->status_changed = true;
     }
 
+    if (lif->rx_en != spec->rx_en()) {
+        app_ctxt->rx_en_changed = true;
+        HAL_TRACE_DEBUG("Rx enable changed: {} => {}", 
+                        lif->rx_en, spec->rx_en()); 
+        app_ctxt->rx_en = spec->rx_en();
+    }
+
     if (lif->bcast_filter.arp != spec->bcast_pkt_filter().arp() ||
         lif->bcast_filter.dhcp_client != spec->bcast_pkt_filter().dhcp_client() ||
         lif->bcast_filter.dhcp_server != spec->bcast_pkt_filter().dhcp_server() ||
         lif->bcast_filter.netbios != spec->bcast_pkt_filter().netbios()) {
+        HAL_TRACE_DEBUG("Bcast filters change arp: {}, dhcp_client: {}, "
+                        "dhcp_server: {}, netbios: {} => "
+                        "arp: {}, dhcp_client: {}, dhcp_server: {}, netbios: {}",
+                        lif->bcast_filter.arp, lif->bcast_filter.dhcp_client,
+                        lif->bcast_filter.dhcp_server, lif->bcast_filter.netbios,
+                        spec->bcast_pkt_filter().arp(), 
+                        spec->bcast_pkt_filter().dhcp_client(), 
+                        spec->bcast_pkt_filter().dhcp_server(),
+                        spec->bcast_pkt_filter().netbios());
         app_ctxt->bcast_filters_changed = true;
     }
     if (lif->mcast_filter.ipv6_neigh_adv != spec->mcast_pkt_filter().ipv6_neigh_adv() ||
@@ -1807,6 +1885,23 @@ lif_handle_update (lif_update_app_ctxt_t *app_ctxt, lif_t *lif)
         lif->mcast_filter.dhcpv6_mcast != spec->mcast_pkt_filter().dhcpv6_mcast() ||
         lif->mcast_filter.ipv6_mld != spec->mcast_pkt_filter().ipv6_mld() ||
         lif->mcast_filter.ipv6_neigh_sol != spec->mcast_pkt_filter().ipv6_neigh_sol()) {
+        HAL_TRACE_DEBUG("Mcast filters change ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
+                        "dhcpv6_relay: {}, dhcpv6_mcast: {}, ipv6_mld: {}, "
+                        "ipv6_neigh_sol: {} => ipv6_neigh_adv: {}, ipv6_router_adv: {}, "
+                        "dhcpv6_relay: {}, dhcpv6_mcast: {}, ipv6_mld: {}, "
+                        "ipv6_neigh_sol: {}",
+                        lif->mcast_filter.ipv6_neigh_adv,
+                        lif->mcast_filter.ipv6_router_adv,
+                        lif->mcast_filter.dhcpv6_relay,
+                        lif->mcast_filter.dhcpv6_mcast,
+                        lif->mcast_filter.ipv6_mld,
+                        lif->mcast_filter.ipv6_neigh_sol,
+                        spec->mcast_pkt_filter().ipv6_neigh_adv(),
+                        spec->mcast_pkt_filter().ipv6_router_adv(),
+                        spec->mcast_pkt_filter().dhcpv6_relay(),
+                        spec->mcast_pkt_filter().dhcpv6_mcast(),
+                        spec->mcast_pkt_filter().ipv6_mld(),
+                        spec->mcast_pkt_filter().ipv6_neigh_sol());
         app_ctxt->mcast_filters_changed = true;
     }
 
@@ -1897,9 +1992,12 @@ lif_update (LifSpec& spec, LifResponse *rsp)
           app_ctxt.pkt_filter_prom_changed ||
           app_ctxt.pkt_filter_bcast_changed ||
           app_ctxt.pkt_filter_allmc_changed ||
+          app_ctxt.bcast_filters_changed ||
+          app_ctxt.mcast_filters_changed ||
           app_ctxt.pinned_uplink_changed ||
           app_ctxt.name_changed ||
           app_ctxt.status_changed ||
+          app_ctxt.rx_en_changed ||
           app_ctxt.rdma_sniff_en_changed)) {
         HAL_TRACE_DEBUG("{}:no change in lif update: noop", __FUNCTION__);
         goto end;
@@ -2058,8 +2156,19 @@ lif_delete_del_cb (cfg_op_ctxt_t *cfg_ctxt)
     }
 
     if (lif->type == types::LIF_TYPE_SWM) {
+        // Release write lock
+        hal_handle_cfg_db_lock(false, false);
+        // Take read lock
+        hal_handle_cfg_db_lock(true, true);
+
         lif_bcast_filter_uninstall(lif);
         lif_mcast_filter_uninstall(lif);
+
+
+        // Release read lock
+        hal_handle_cfg_db_lock(true, false);
+        // Take write lock
+        hal_handle_cfg_db_lock(false, true);
     }
 
     // P4+ delete code for the lif
@@ -2456,7 +2565,9 @@ lif_update_trigger_if (lif_t *lif,
                        bool vlan_insert_en_changed,
                        bool vlan_insert_en,
                        bool pinned_uplink_changed,
-                       hal_handle_t pinned_uplink)
+                       hal_handle_t pinned_uplink,
+                       bool rx_en_changed,
+                       bool rx_en)
 {
     hal_ret_t                  ret     = HAL_RET_OK;
     dllist_ctxt_t              *lnode  = NULL;
@@ -2489,6 +2600,8 @@ lif_update_trigger_if (lif_t *lif,
         args.vlan_insert_en = vlan_insert_en;
         args.pinned_uplink_changed = pinned_uplink_changed;
         args.pinned_uplink = pinned_uplink;
+        args.rx_en_changed = rx_en_changed;
+        args.rx_en         = rx_en;
         if_handle_lif_update(&args);
     }
 
