@@ -68,7 +68,6 @@ var _ = Describe("flow export policy tests", func() {
 		})
 
 		It("Should create/update/delete flow export policy", func() {
-			Skip("Temporarily skipped till #18681 is merged")
 			pctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
@@ -1390,9 +1389,17 @@ func cmpExportPolicy(naples string, vp []*monitoring.FlowExportPolicy, np []*tpm
 
 		for i, v := range vspec.Exports {
 			n := nspec.Exports[i]
-			if v.String() != n.String() {
-				err := fmt.Errorf("exports[%d] didn't match in %v, got %v expected %v", i, naples,
-					n.String(), v.String())
+			components := strings.Split(v.Transport, "/")
+
+			if components[0] != n.Transport.Protocol {
+				err := fmt.Errorf("exports[%d] protocol didn't match in %v, got %v expected %v", i, naples,
+					components[0], n.Transport.Protocol)
+				fmt.Print(err)
+				return err
+			}
+			if components[1] != n.Transport.Port {
+				err := fmt.Errorf("exports[%d] port didn't match in %v, got %v expected %v", i, naples,
+					components[1], n.Transport.Port)
 				fmt.Print(err)
 				return err
 			}
