@@ -8239,13 +8239,20 @@
     },
     "networkOrchestratorInfo": {
       "type": "object",
+      "required": [
+        "orchestrator-name",
+        "namespace"
+      ],
       "properties": {
         "orchestrator-name": {
           "type": "string",
+          "minLength": 1,
+          "description": "length of string should be at least 1",
           "title": "Name of Orchestrator object to which this network should be applied to"
         },
         "namespace": {
           "type": "string",
+          "minLength": 1,
           "description": "Namespace in the orchestrator in which this network should be created in."
         }
       }

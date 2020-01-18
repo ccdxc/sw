@@ -335,6 +335,18 @@ func init() {
 		return nil
 	})
 
+	validatorMapOrchestration["OrchestratorSpec"]["all"] = append(validatorMapOrchestration["OrchestratorSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*OrchestratorSpec)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "-1")
+
+		if err := validators.StrLen(m.URI, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"URI", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapOrchestration["OrchestratorStatus"] = make(map[string][]func(string, interface{}) error)
 	validatorMapOrchestration["OrchestratorStatus"]["all"] = append(validatorMapOrchestration["OrchestratorStatus"]["all"], func(path string, i interface{}) error {
 		m := i.(*OrchestratorStatus)

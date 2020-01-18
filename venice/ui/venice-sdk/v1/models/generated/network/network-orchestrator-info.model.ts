@@ -9,25 +9,25 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface INetworkOrchestratorInfo {
-    'orchestrator-name'?: string;
-    'namespace'?: string;
+    'orchestrator-name': string;
+    'namespace': string;
 }
 
 
 export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrchestratorInfo {
-    /** Name of Orchestrator object to which this network should be applied to */
+    /** Name of Orchestrator object to which this network should be applied tolength of string should be at least 1 */
     'orchestrator-name': string = null;
     /** Namespace in the orchestrator in which this network should be created in. */
     'namespace': string = null;
     public static propInfo: { [prop in keyof INetworkOrchestratorInfo]: PropInfoItem } = {
         'orchestrator-name': {
-            description:  `Name of Orchestrator object to which this network should be applied to`,
-            required: false,
+            description:  `Name of Orchestrator object to which this network should be applied tolength of string should be at least 1`,
+            required: true,
             type: 'string'
         },
         'namespace': {
             description:  `Namespace in the orchestrator in which this network should be created in.`,
-            required: false,
+            required: true,
             type: 'string'
         },
     }
@@ -84,8 +84,8 @@ export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrches
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'orchestrator-name': CustomFormControl(new FormControl(this['orchestrator-name']), NetworkOrchestratorInfo.propInfo['orchestrator-name']),
-                'namespace': CustomFormControl(new FormControl(this['namespace']), NetworkOrchestratorInfo.propInfo['namespace']),
+                'orchestrator-name': CustomFormControl(new FormControl(this['orchestrator-name'], [required, minLengthValidator(1), ]), NetworkOrchestratorInfo.propInfo['orchestrator-name']),
+                'namespace': CustomFormControl(new FormControl(this['namespace'], [required, minLengthValidator(1), ]), NetworkOrchestratorInfo.propInfo['namespace']),
             });
         }
         return this._formGroup;

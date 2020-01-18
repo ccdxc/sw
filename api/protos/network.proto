@@ -53,9 +53,10 @@ message NetworkSpec {
 message OrchestratorInfo {
     // Name of Orchestrator object to which this network should be applied to
     string Name      = 1 [(gogoproto.jsontag) = "orchestrator-name, omitempty",
+                                 (venice.check) = "StrLen(1,-1)",
                                  (venice.objRelation) = {Type: "NamedRef", To: "orchestration/Orchestrator"}];
     // Namespace in the orchestrator in which this network should be created in.
-    string Namespace = 2 [(gogoproto.jsontag) = "namespace, omitempty"];
+    string Namespace = 2 [(gogoproto.jsontag) = "namespace, omitempty", (venice.check) = "StrLen(1,-1)"];
 }
 
 // status part of network object

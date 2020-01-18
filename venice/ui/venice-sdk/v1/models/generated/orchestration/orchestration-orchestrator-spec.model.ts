@@ -12,29 +12,35 @@ import { MonitoringExternalCred, IMonitoringExternalCred } from './monitoring-ex
 
 export interface IOrchestrationOrchestratorSpec {
     'type': OrchestrationOrchestratorSpec_type;
-    'uri'?: string;
+    'uri': string;
     'credentials'?: IMonitoringExternalCred;
     'login-data'?: object;
 }
 
 
 export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchestrationOrchestratorSpec {
+    /** Type of orchestrator */
     'type': OrchestrationOrchestratorSpec_type = null;
+    /** URI of the orchestratorlength of string should be at least 1 */
     'uri': string = null;
+    /** Credentials for the orchestrator */
     'credentials': MonitoringExternalCred = null;
     'login-data': object = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorSpec]: PropInfoItem } = {
         'type': {
             enum: OrchestrationOrchestratorSpec_type_uihint,
             default: 'vcenter',
+            description:  `Type of orchestrator`,
             required: true,
             type: 'string'
         },
         'uri': {
-            required: false,
+            description:  `URI of the orchestratorlength of string should be at least 1`,
+            required: true,
             type: 'string'
         },
         'credentials': {
+            description:  `Credentials for the orchestrator`,
             required: false,
             type: 'object'
         },
@@ -110,7 +116,7 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(OrchestrationOrchestratorSpec_type), ]), OrchestrationOrchestratorSpec.propInfo['type']),
-                'uri': CustomFormControl(new FormControl(this['uri']), OrchestrationOrchestratorSpec.propInfo['uri']),
+                'uri': CustomFormControl(new FormControl(this['uri'], [required, minLengthValidator(1), ]), OrchestrationOrchestratorSpec.propInfo['uri']),
                 'credentials': CustomFormGroup(this['credentials'].$formGroup, OrchestrationOrchestratorSpec.propInfo['credentials'].required),
                 'login-data': CustomFormControl(new FormControl(this['login-data']), OrchestrationOrchestratorSpec.propInfo['login-data']),
             });

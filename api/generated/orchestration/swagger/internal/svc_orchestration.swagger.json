@@ -373,12 +373,14 @@
           },
           {
             "name": "spec.type",
+            "description": "Type of orchestrator.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.uri",
+            "description": "URI of the orchestrator. length of string should be at least 1",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1201,7 +1203,8 @@
     "orchestrationOrchestratorSpec": {
       "type": "object",
       "required": [
-        "type"
+        "type",
+        "uri"
       ],
       "properties": {
         "type": {
@@ -1212,13 +1215,18 @@
           "default": "vcenter",
           "x-ui-hints": {
             "vcenter": "vcenter"
-          }
+          },
+          "title": "Type of orchestrator"
         },
         "uri": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1,
+          "description": "length of string should be at least 1",
+          "title": "URI of the orchestrator"
         },
         "credentials": {
-          "$ref": "#/definitions/monitoringExternalCred"
+          "$ref": "#/definitions/monitoringExternalCred",
+          "title": "Credentials for the orchestrator"
         },
         "login-data": {
           "type": "object",

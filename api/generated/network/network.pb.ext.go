@@ -108,6 +108,12 @@ func (m *NetworkSpec) Clone(into interface{}) (interface{}, error) {
 // Default sets up the defaults for the object
 func (m *NetworkSpec) Defaults(ver string) bool {
 	var ret bool
+	for k := range m.Orchestrators {
+		if m.Orchestrators[k] != nil {
+			i := m.Orchestrators[k]
+			ret = i.Defaults(ver) || ret
+		}
+	}
 	ret = true
 	switch ver {
 	default:
@@ -155,7 +161,8 @@ func (m *OrchestratorInfo) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *OrchestratorInfo) Defaults(ver string) bool {
-	return false
+	var ret bool
+	return ret
 }
 
 // Validators and Requirements
@@ -312,6 +319,16 @@ func (m *NetworkSpec) References(tenant string, path string, resp map[string]api
 
 func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	for k, v := range m.Orchestrators {
+		dlmtr := "."
+		if path == "" {
+			dlmtr = ""
+		}
+		npath := fmt.Sprintf("%s%sOrchestrators[%v]", path, dlmtr, k)
+		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
+			ret = append(ret, errs...)
+		}
+	}
 
 	if m.RouteImportExport != nil {
 		{
@@ -342,6 +359,13 @@ func (m *NetworkSpec) Validate(ver, path string, ignoreStatus bool, ignoreSpec b
 }
 
 func (m *NetworkSpec) Normalize() {
+
+	for k, v := range m.Orchestrators {
+		if v != nil {
+			v.Normalize()
+			m.Orchestrators[k] = v
+		}
+	}
 
 	if m.RouteImportExport != nil {
 		m.RouteImportExport.Normalize()
@@ -392,6 +416,19 @@ func (m *OrchestratorInfo) References(tenant string, path string, resp map[strin
 
 func (m *OrchestratorInfo) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
 	var ret []error
+	if vs, ok := validatorMapNetwork["OrchestratorInfo"][ver]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	} else if vs, ok := validatorMapNetwork["OrchestratorInfo"]["all"]; ok {
+		for _, v := range vs {
+			if err := v(path, m); err != nil {
+				ret = append(ret, err)
+			}
+		}
+	}
 	return ret
 }
 
@@ -419,6 +456,31 @@ func init() {
 				vals = append(vals, k1)
 			}
 			return fmt.Errorf("%v did not match allowed strings %v", path+"."+"Type", vals)
+		}
+		return nil
+	})
+
+	validatorMapNetwork["OrchestratorInfo"] = make(map[string][]func(string, interface{}) error)
+	validatorMapNetwork["OrchestratorInfo"]["all"] = append(validatorMapNetwork["OrchestratorInfo"]["all"], func(path string, i interface{}) error {
+		m := i.(*OrchestratorInfo)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "-1")
+
+		if err := validators.StrLen(m.Name, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Name", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapNetwork["OrchestratorInfo"]["all"] = append(validatorMapNetwork["OrchestratorInfo"]["all"], func(path string, i interface{}) error {
+		m := i.(*OrchestratorInfo)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "-1")
+
+		if err := validators.StrLen(m.Namespace, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Namespace", err.Error())
 		}
 		return nil
 	})

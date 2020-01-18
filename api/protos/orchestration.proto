@@ -43,8 +43,11 @@ message OrchestratorSpec {
         VCenter = 0 [(venice.enumValueStr) = "vcenter"];
     }
 
-    string Type = 1 [(gogoproto.jsontag) = "type", (venice.check) = "StrEnum(OrchestratorSpec.OrchestratorType)"];
-    string URI = 2 [(gogoproto.jsontag) = "uri"]; 
+    // Type of orchestrator
+    string Type = 1 [(gogoproto.jsontag) = "type", (venice.check) = "StrEnum(OrchestratorSpec.OrchestratorType)", (venice.mutable) = false];
+    // URI of the orchestrator
+    string URI = 2 [(gogoproto.jsontag) = "uri", (venice.check) = "StrLen(1,-1)"]; 
+    // Credentials for the orchestrator
     monitoring.ExternalCred Credentials = 3 [(gogoproto.jsontag) = "credentials,omitempty"];
     map<string, string>  LoginData = 4 [(gogoproto.jsontag) = "login-data,omitempty"];
 }
