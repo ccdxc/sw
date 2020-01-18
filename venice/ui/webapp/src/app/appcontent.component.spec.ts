@@ -55,13 +55,13 @@ import { MessageService } from './services/message.service';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
 import { PortalModule } from '@angular/cdk/portal';
 import { BgfileuploadComponent } from '@app/widgets/bgfileupload/bgfileupload.component';
-import { MonitoringAlert, MonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
-import {RolloutService} from '@app/services/generated/rollout.service';
-import {RolloutRolloutStatus_state} from '@sdk/v1/models/generated/rollout';
+import { MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { RolloutRolloutStatus_state } from '@sdk/v1/models/generated/rollout';
 import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
-import { BehaviorSubject } from 'rxjs';
-import {Router} from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { Router } from '@angular/router';
 import { Utility } from './common/Utility';
 import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 
@@ -191,6 +191,10 @@ describe('UIBlock during rollout progress', () => {
   let clusterService: ClusterService;
   let rolloutService: RolloutService;
   const mockRouter = {
+    events: new Observable(observer => {
+      observer.next();
+      observer.complete();
+    }),
     navigate: jasmine.createSpy('navigate')
   };
   const versionObj = {events: [

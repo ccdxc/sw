@@ -109,8 +109,7 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   getAlertItemSourceNameLink(): string {
-    const name = (this.alert.status['object-ref'].name) ? this.alert.status['object-ref'].name :  this.alert.status.source['node-name'];
-    return '#/' + Utility.genSelfLinkUIRoute(this.alert.status['object-ref'].kind, name);
+    return Utility.getAlertSourceLink(this.alert);
   }
 
   getAlertItemSourceNameTooltip(): string {

@@ -37,7 +37,7 @@ import { NaplesdetailComponent } from './naplesdetail.component';
 class MockActivatedRoute extends ActivatedRoute {
   id = '4444.4444.0002';
   paramObserver = new BehaviorSubject<any>({ id: this.id });
-  snapshot: any = { url: ['cluster', 'naples', '4444.4444.0002'] };
+  snapshot: any = { url: ['cluster', 'naples', '4444.4444.0002'], queryParamMap: { get: () => { } } };
 
   constructor() {
     super();

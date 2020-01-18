@@ -3,7 +3,7 @@ import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } 
 import { SearchExpression } from '@app/components/search/index.ts';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
-import { FieldsRequirement_operator, IFieldsSelector, IApiObjectMeta } from '@sdk/v1/models/generated/monitoring';
+import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -1083,7 +1083,7 @@ export class Utility {
       case 'Node':
         return cat + '/cluster' + (name ? '/' + name : '');
       case 'DistributedServiceCard':
-        return cat + '/dscs';
+        return cat + '/dscs' + (name ? '/' + name : '');
       case 'Host':
         return cat + '/hosts';
       case 'Workload':
@@ -1122,6 +1122,18 @@ export class Utility {
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
+  }
+
+  /**
+   * Return link for the source of an alert item
+   * @param alert MonitoringAlert object used in alerts list and table
+   */
+  public static getAlertSourceLink(alert: MonitoringAlert): string {
+    const kind = alert.status['object-ref'].kind;
+    const query = kind === 'DistributedServiceCard' ? '?action=lookup' : '';
+    const name = `${alert.status['object-ref'].name || alert.status.source['node-name']}${query}`;
+
+    return '#/' + Utility.genSelfLinkUIRoute(kind, name);
   }
 
   /**

@@ -8,7 +8,7 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { ControllerService } from '@app/services/controller.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
@@ -27,6 +27,8 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
 import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
+import { SearchService } from '@app/services/generated/search.service';
+import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
 
 @Component({
   selector: 'app-naplesdetail',
@@ -112,26 +114,84 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
+    private _router: Router,
     protected clusterService: ClusterService,
     protected metricsqueryService: MetricsqueryService,
     protected UIConfigService: UIConfigsService,
     protected workloadService: WorkloadService,
-    protected networkService: NetworkService
+    protected networkService: NetworkService,
+    protected searchService: SearchService,
   ) {
     super(_controllerService, UIConfigService);
   }
 
+  /**
+   * There are 2 ways for this component to be initialized, based on route /cluster/dscs/{id} and query param ?action=lookup.
+   * On init, the component subscribes to changes in params {id}.
+   * This can happen if user is on a DSC details page and clicks on a link (e.g. alert list item) to another DSC's details page.
+   * If the {id} changes, we unsub all subscriptions and re-initialize everything.
+   * Initialization flows:
+   * 1. Normally, {id} is the mac address and the component can just go ahead and make API requests and initialize the page
+   * 2. Sometimes, like in alert list items, the DSC name is passed in for {id}. In those situations, query param ?action=lookup
+   *    is added to the URL. If the component sees that query param, then a lookup in searchDsc() is done to get the DSC object.
+   *    The "name" is taken from the returned object, which is used to reroute the application to /cluster/dscs/{id}, bringing the
+   *    component through flow 1.
+   */
   ngOnInit() {
     this._controllerService.publish(Eventtypes.COMPONENT_INIT, { 'component': 'NapledetailComponent', 'state': Eventtypes.COMPONENT_INIT });
     this._route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      this.selectedId = id;
-      this.initializeData();
-      this.getWorkloads();
-      this.getNetworkInterfaces();
-      this.getNaplesDetails();
-      this.setNapleDetailToolbar(id); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
+      this.selectedId = params.get('id');
+      this.subscriptions.forEach(subscription => {
+        subscription.unsubscribe();
+      });
+      const queryAction = this._route.snapshot.queryParamMap.get('action');
+      if (queryAction === 'lookup') {
+        this.searchDsc();
+      } else {
+        this.init();
+      }
     });
+  }
+
+  init() {
+    this.initializeData();
+    this.getWorkloads();
+    this.getNetworkInterfaces();
+    this.getNaplesDetails();
+    this.setNapleDetailToolbar(this.selectedId); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
+  }
+
+  searchDsc() {
+    const query: SearchSearchRequest = new SearchSearchRequest({
+      aggregate: false,
+      query: {
+        kinds: ['DistributedServiceCard'],
+        fields: {
+          requirements: [
+            {
+              key: 'spec.id.keyword',
+              operator: 'equals',
+              values: [this.selectedId]
+            }
+          ]
+        }
+      }
+    });
+    this.searchService.PostQuery(query).subscribe(
+      resp => {
+        const body = resp.body as any;
+        const entries = body.entries || [];
+        const entry = entries[0];
+
+        if (!entry) {
+          this.init();
+        }
+
+        const name = entry.object.meta.name;
+        this._router.navigateByUrl(`cluster/dscs/${name}`);
+      },
+      () => this.init()
+    );
   }
 
   getNetworkInterfaces() {

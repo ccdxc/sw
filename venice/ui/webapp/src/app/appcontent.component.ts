@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { Component, HostBinding, OnDestroy, OnInit, ViewChild, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MatSidenav, MatSidenavContainer } from '@angular/material/sidenav';
+import { NavigationEnd, Router } from '@angular/router';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { logout, AUTH_BODY } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
@@ -17,7 +18,7 @@ import { IApiStatus, IAuthUser } from '@sdk/v1/models/generated/auth';
 import { ClusterVersion, ClusterCluster } from '@sdk/v1/models/generated/cluster';
 import { MonitoringAlert, IMonitoringAlert, IMonitoringAlertList } from '@sdk/v1/models/generated/monitoring';
 import { Subject, Subscription, timer, interval } from 'rxjs';
-import { map, takeUntil, tap, retryWhen, delayWhen } from 'rxjs/operators';
+import { filter, map, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@app/components/base/base.component';
 import { Utility } from './common/Utility';
 import { selectorSettings } from './components/settings-group';
@@ -132,6 +133,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     protected clusterService: ClusterService,
     protected authService: AuthService,
     protected rolloutService: RolloutService,
+    protected router: Router,
   ) {
     super(_controllerService, uiconfigsService);
   }
@@ -440,6 +442,16 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this.subscriptions[Eventtypes.FETCH_USER_OBJ] = this._controllerService.subscribe(Eventtypes.FETCH_USER_OBJ, (payload) => {
       this.getUserObj(payload);
     });
+
+    this.subscriptions[Eventtypes.SIDENAV_NAVIGATION_END] = this.router.events.pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        const linkBase = `/${event.url.split('/')[1]}`;
+        const isMenu = sideNavMenu.find(item => item.link[0] === linkBase && Array.isArray(item.children) && item.children.length > 0);
+        if (isMenu) {
+          this.openedMenuItems[linkBase] = true;
+          this.storeMenuInfo();
+        }
+      });
   }
 
   getUserObj(req: GetUserObjRequest) {

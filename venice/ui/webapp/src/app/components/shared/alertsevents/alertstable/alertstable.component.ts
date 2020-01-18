@@ -269,8 +269,7 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
   }
 
   getAlertSourceNameLink(rowData: MonitoringAlert): string {
-    const name = (rowData.status['object-ref'].name) ? rowData.status['object-ref'].name :  rowData.status.source['node-name'];
-    return '#/' + Utility.genSelfLinkUIRoute(rowData.status['object-ref'].kind, name);
+    return Utility.getAlertSourceLink(rowData);
   }
 
   getAlertSourceNameTooltip(rowData: MonitoringAlert): string {
