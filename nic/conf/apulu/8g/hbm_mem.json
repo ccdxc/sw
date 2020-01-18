@@ -284,9 +284,9 @@
         {
             "name": "session",
             "kind": "opertbl",
-            "size": "64M",
+            "size": "128M",
             "cache": "p4eg",
-            "_comment": "2M * 32B"
+            "_comment": "2M * 64B"
         },
         {
             "name": "session_stats",
