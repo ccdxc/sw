@@ -467,6 +467,8 @@ asicrw_loop (void *ctxt)
 
         // all queues scanned once, check if any work was found
         if (!work_done) {
+            // if there is a cancellation request
+            pthread_testcancel();
             // didn't find any work, yield and give chance to other threads
             pthread_yield();
         }

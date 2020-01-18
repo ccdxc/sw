@@ -23,7 +23,6 @@ using boost::property_tree::ptree;
 
 static sdk::lib::thread    *g_hal_threads[HAL_THREAD_ID_MAX];
 bool                       gl_super_user = false;
-
 //------------------------------------------------------------------------------
 // initialize all the signal handlers
 //------------------------------------------------------------------------------
@@ -111,14 +110,25 @@ hal_get_thread (uint32_t thread_id)
 hal_ret_t
 hal_thread_destroy (void)
 {
-    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_PERIODIC] != NULL);
-    g_hal_threads[HAL_THREAD_ID_PERIODIC]->stop();
 
-    HAL_ABORT(g_hal_threads[HAL_THREAD_ID_NICMGR] != NULL);
-    g_hal_threads[HAL_THREAD_ID_NICMGR]->stop();
-
-    hal::utils::trace_deinit();
-
+    for (uint32_t tid = HAL_THREAD_ID_MIN; tid < HAL_THREAD_ID_MAX; tid++) {
+        if (!g_hal_threads[tid]) {
+            continue;
+        }
+        // config thread is handled differently during init
+        if (tid == HAL_THREAD_ID_CFG) {
+            continue;
+        }
+        if(g_hal_threads[tid]->is_running()) {
+            // stop the thread
+            HAL_TRACE_INFO("Stopping thread {}", g_hal_threads[tid]->name());
+            g_hal_threads[tid]->stop();
+        } else {
+            HAL_TRACE_INFO("Thread {} is not running", g_hal_threads[tid]->name());
+        }
+    }
+    sdk::linkmgr::linkmgr_threads_stop();
+    hal::utils::hal_logger()->flush();
     return HAL_RET_OK;
 }
 
@@ -132,16 +142,24 @@ hal_wait (void)
     int         rv;
     uint32_t    tid;
 
-    for (tid = HAL_THREAD_ID_PERIODIC; tid < HAL_THREAD_ID_MAX; tid++) {
-        if (g_hal_threads[tid]) {
-            rv = pthread_join(g_hal_threads[tid]->pthread_id(), NULL);
-            if (rv != 0) {
-                HAL_TRACE_ERR("pthread_join failure, thread {}, err : {}",
-                              g_hal_threads[tid]->name(), rv);
-                return HAL_RET_ERR;
-            }
+    for (tid = HAL_THREAD_ID_MIN; tid < HAL_THREAD_ID_MAX; tid++) {
+        if (!g_hal_threads[tid]) {
+            continue;
+        }
+        // config thread is handled differently during init
+        if (tid == HAL_THREAD_ID_CFG) {
+            continue;
+        }
+        HAL_TRACE_INFO("Waiting for thread {} to stop", g_hal_threads[tid]->name());
+        hal::utils::hal_logger()->flush();
+        rv = pthread_join(g_hal_threads[tid]->pthread_id(), NULL);
+        if (rv != 0) {
+            HAL_TRACE_ERR("pthread_join failure, thread {}, err : {}",
+                          g_hal_threads[tid]->name(), rv);
+            return HAL_RET_ERR;
         }
     }
+    sdk::linkmgr::linkmgr_threads_wait();
     return HAL_RET_OK;
 }
 
@@ -300,42 +318,44 @@ hal_thread_init (hal_cfg_t *hal_cfg)
     uint64_t            cores_mask = 0x0;
     sdk::lib::thread    *hal_thread;
 
-    if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
-        // 1 FTE thread for fte-span
-        tid = HAL_THREAD_ID_FTE_MIN;
-        HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
-        snprintf(thread_name, sizeof(thread_name), "fte-%u",
-                 ffsl(data_cores_mask) - 1);
-        hal_thread =
-            hal_thread_create(static_cast<const char *>(thread_name),
-                              tid, sdk::lib::THREAD_ROLE_CONTROL,
-                              0x0, // use all control cores
-                              fte_pkt_loop_start,
-                              0, /* priority. used only for real time */
-                              SCHED_OTHER, /* sched. policy: non-real time */
-                              hal_cfg);
-        SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
-                                "FTE thread {} creation failed", tid);
-
-    } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
-        // spawn data core threads and pin them to their cores
-        for (i = 0; i < hal_cfg->num_data_cores; i++) {
-            // pin each data thread to a specific core
-            cores_mask = 1 << (ffsl(data_cores_mask) - 1);
-            tid = HAL_THREAD_ID_FTE_MIN + i;
+    if (!getenv("DISABLE_FTE")) {
+        if (hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC) {
+            // 1 FTE thread for fte-span
+            tid = HAL_THREAD_ID_FTE_MIN;
             HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
             snprintf(thread_name, sizeof(thread_name), "fte-%u",
                      ffsl(data_cores_mask) - 1);
             hal_thread =
                 hal_thread_create(static_cast<const char *>(thread_name),
-                                  tid, sdk::lib::THREAD_ROLE_DATA,
-                                  cores_mask, fte_pkt_loop_start,
-                                  sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
-                                  sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
+                                  tid, sdk::lib::THREAD_ROLE_CONTROL,
+                                  0x0, // use all control cores
+                                  fte_pkt_loop_start,
+                                  0, /* priority. used only for real time */
+                                  SCHED_OTHER, /* sched. policy: non-real time */
                                   hal_cfg);
             SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
                                     "FTE thread {} creation failed", tid);
-            data_cores_mask = data_cores_mask & (data_cores_mask-1);
+
+        } else if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
+            // spawn data core threads and pin them to their cores
+            for (i = 0; i < hal_cfg->num_data_cores; i++) {
+                // pin each data thread to a specific core
+                cores_mask = 1 << (ffsl(data_cores_mask) - 1);
+                tid = HAL_THREAD_ID_FTE_MIN + i;
+                HAL_TRACE_DEBUG("Spawning FTE thread {}", tid);
+                snprintf(thread_name, sizeof(thread_name), "fte-%u",
+                         ffsl(data_cores_mask) - 1);
+                hal_thread =
+                    hal_thread_create(static_cast<const char *>(thread_name),
+                                      tid, sdk::lib::THREAD_ROLE_DATA,
+                                      cores_mask, fte_pkt_loop_start,
+                                      sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
+                                      sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
+                                      hal_cfg);
+                SDK_ASSERT_TRACE_RETURN((hal_thread != NULL), HAL_RET_ERR,
+                                        "FTE thread {} creation failed", tid);
+                data_cores_mask = data_cores_mask & (data_cores_mask-1);
+            }
         }
     }
 

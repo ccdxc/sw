@@ -450,6 +450,13 @@ linkmgr_threads_stop (void)
             g_linkmgr_threads[thread_id]->stop();
         }
     }
+}
+
+void
+linkmgr_threads_wait (void)
+{
+    int thread_id;
+
     for (thread_id = 0; thread_id < LINKMGR_THREAD_ID_MAX; thread_id++) {
         if (g_linkmgr_threads[thread_id] != NULL) {
             SDK_TRACE_DEBUG("Waiting thread %s to exit", g_linkmgr_threads[thread_id]->name());

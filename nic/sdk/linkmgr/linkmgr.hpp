@@ -106,6 +106,7 @@ sdk_ret_t start_aacs_server(int port);
 void stop_aacs_server(void);
 port_admin_state_t port_default_admin_state(void);
 void linkmgr_threads_stop(void);
+void linkmgr_threads_wait(void);
 
 static inline void
 port_args_init (port_args_t *args)

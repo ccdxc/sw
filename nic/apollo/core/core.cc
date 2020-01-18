@@ -355,6 +355,13 @@ threads_stop (void)
             g_thread_store[thread_id]->stop();
         }
     }
+}
+
+void
+threads_wait (void)
+{
+    int thread_id;
+
     for (thread_id = 0; thread_id < PDS_THREAD_ID_MAX; thread_id++) {
         if (g_thread_store[thread_id] != NULL) {
             PDS_TRACE_DEBUG("Waiting thread %s to exit", g_thread_store[thread_id]->name());

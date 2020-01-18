@@ -336,7 +336,9 @@ pds_teardown (void)
     // 6. kill FTE threads and other other threads
     // 7. flush all logs
     sdk::linkmgr::linkmgr_threads_stop();
+    sdk::linkmgr::linkmgr_threads_wait();
     core::threads_stop();
+    core::threads_wait();
     if (!sdk::asic::is_soft_init()) {
         impl_base::destroy();
     }

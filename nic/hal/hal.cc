@@ -75,6 +75,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
             ipc_logger::deinit();
         }
         HAL_GCOV_FLUSH();
+        hal_destroy();
         raise(SIGKILL);
         break;
 
@@ -225,6 +226,7 @@ nicmgr_thread_start (void *ctxt)
 static void
 nicmgr_thread_exit (void *ctxt)
 {
+    HAL_TRACE_DEBUG("Nicmgr exiting ..");
     nicmgr::nicmgr_exit();
 }
 
@@ -405,9 +407,13 @@ hal_ret_t
 hal_destroy (void)
 {
     // cancel  all necessary PI threads
+    HAL_TRACE_DEBUG("Cancelling  all HAL threads");
     HAL_ABORT(hal_thread_destroy() == HAL_RET_OK);
-    HAL_TRACE_DEBUG("Cancelled  all HAL threads");
-
+    HAL_TRACE_DEBUG("Waiting for  all HAL threads to stop");
+    HAL_ABORT(hal_wait() == HAL_RET_OK);
+    HAL_TRACE_DEBUG("HAL exiting ...");
+    hal::utils::hal_logger()->flush();
+    hal::utils::trace_deinit();
     return HAL_RET_OK;
 }
 
