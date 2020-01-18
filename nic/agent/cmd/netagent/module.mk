@@ -8,5 +8,5 @@ else
 MODULE_PREREQS  := agent_apuluproto.submake
 endif
 MODULE_FLAGS    := -tags ${PIPELINE} -ldflags="-s -w"
-MODULE_DEPS     := $(shell find ${NICDIR}/agent/ -name '*.go')
+MODULE_DEPS     := $(shell find ${NICDIR}/agent/dscagent -name '*.go')
 include ${MKDEFS}/post.mk
