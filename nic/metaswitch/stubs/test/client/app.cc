@@ -199,7 +199,6 @@ static void create_route_proto_grpc () {
     Status                ret_status;
 
     auto proto_spec = request.add_request ();
-    proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id);
     proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
@@ -212,7 +211,6 @@ static void create_route_proto_grpc () {
     proto_spec->set_override (BOOL_TRUE);
     proto_spec->set_admindist (250);
     proto_spec->set_action (STRT_ACTION_FWD);
-    proto_spec->set_index (1);
 
     printf ("Pushing Default (0/0) Static Route proto...\n");
     ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);

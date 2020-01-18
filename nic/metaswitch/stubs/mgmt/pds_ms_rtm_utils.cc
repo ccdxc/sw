@@ -14,6 +14,11 @@ rtm_strt_fill_func (CPStaticRouteSpec&      req,
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
 
+    // For now, static route will always be configured on default VRF
+    data->fte_index                   = PDS_MS_RTM_DEF_ENT_INDEX;
+    oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDS_MS_RTM_DEF_ENT_INDEX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_FTE_INDEX);
+
     // Let the DC-RTM decide the outgoing interface of this route 
     data->if_index                    = 0;
     oid[AMB_QCR_STRT_IF_INDEX_INDEX]  = 0;
