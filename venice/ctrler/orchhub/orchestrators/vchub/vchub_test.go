@@ -1,13 +1,17 @@
 package vchub
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
+
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
-	. "github.com/pensando/sw/venice/utils/testutils"
 
 	// need tsdb
 	// _ "github.com/pensando/sw/venice/utils/tsdb"
@@ -17,6 +21,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/utils/log"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 var defaultTestParams = &testutils.TestParams{
@@ -108,6 +113,13 @@ func TestVCWrite(t *testing.T) {
 	}
 	smmock.CreateNetwork(sm, "default", "n2", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo2)
 
+	c, err := govmomi.NewClient(context.Background(), u, true)
+	AssertOk(t, err, "Failed to create govmomi client")
+	restCl := rest.NewClient(c.Client)
+	tagClient := tags.NewManager(restCl)
+	err = tagClient.Login(context.Background(), u.User)
+	AssertOk(t, err, "Failed to create tags client")
+
 	verifyPg := func(dcPgMap map[string][]string) {
 		AssertEventually(t, func() (bool, interface{}) {
 			for name, pgNames := range dcPgMap {
@@ -117,6 +129,12 @@ func TestVCWrite(t *testing.T) {
 					logger.Errorf("%s", err)
 					return false, err
 				}
+
+				attachedTags, err := tagClient.GetAttachedTags(context.Background(), dc.dcRef)
+				AssertOk(t, err, "failed to get tags")
+				AssertEquals(t, 1, len(attachedTags), "DC didn't have expected tags")
+				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DC didn't have managed tag")
+
 				dvs := dc.GetPenDVS(createDVSName(name))
 				if dvs == nil {
 					err := fmt.Errorf("Failed to find dvs in DC %s", name)
@@ -124,12 +142,27 @@ func TestVCWrite(t *testing.T) {
 					return false, err
 				}
 
+				attachedTags, err = tagClient.GetAttachedTags(context.Background(), dvs.DvsRef)
+				AssertOk(t, err, "failed to get tags")
+				AssertEquals(t, 1, len(attachedTags), "DVS didn't have expected tags")
+				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DVS didn't have managed tag")
+
 				for _, pgName := range pgNames {
 					pgObj := dvs.GetPenPG(pgName)
 					if pgObj == nil {
 						err := fmt.Errorf("Failed to find %s in DC %s", pgName, name)
 						logger.Errorf("%s", err)
 						return false, err
+					}
+					attachedTags, err := tagClient.GetAttachedTags(context.Background(), pgObj.PgRef)
+					AssertOk(t, err, "failed to get tags")
+					AssertEquals(t, 2, len(attachedTags), "PG didn't have expected tags")
+					expTags := []string{
+						fmt.Sprintf("%s", defs.VCTagManaged),
+						fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 100),
+					}
+					for _, tag := range attachedTags {
+						AssertOneOf(t, tag.Name, expTags)
 					}
 				}
 				dvs.Lock()

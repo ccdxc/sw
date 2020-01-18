@@ -16,6 +16,7 @@ type PenDVS struct {
 	*defs.State
 	DcName  string
 	DvsName string
+	DvsRef  types.ManagedObjectReference
 	// Map from PG display name to PenPG
 	Pgs map[string]*PenPG
 	// Map from PG ID to PenPG
@@ -46,6 +47,11 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 		return err
 	}
 
+	dvs, err := d.probe.GetPenDVS(dcName, dvsName)
+	if err != nil {
+		return err
+	}
+
 	useg, err := useg.NewUsegAllocator()
 	if err != nil {
 		d.Log.Errorf("Creating useg mgr for DC %s - penDVS %s failed, %v", dcName, dvsName, err)
@@ -56,12 +62,20 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 		probe:   d.probe,
 		DcName:  dcName,
 		DvsName: dvsName,
+		DvsRef:  dvs.Reference(),
 		UsegMgr: useg,
 		Pgs:     map[string]*PenPG{},
 		pgIDMap: map[string]*PenPG{},
 	}
 
 	d.DvsMap[dvsName] = penDVS
+
+	err = d.probe.TagObjAsManaged(dvs.Reference())
+	if err != nil {
+		d.Log.Errorf("Failed to tag DVS as managed, %s", err)
+		// Error isn't worth failing the operation for
+	}
+
 	return nil
 }
 

@@ -52,6 +52,13 @@ type ProbeInf interface {
 	GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error)
 	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error)
+
+	// Tag methods
+	TagObjAsManaged(ref types.ManagedObjectReference) error
+	RemoveTagObjManaged(ref types.ManagedObjectReference) error
+	TagObjWithVlan(ref types.ManagedObjectReference, vlan int) error
+	RemoveTagObjVlan(ref types.ManagedObjectReference) error
+	RemovePensandoTags(ref types.ManagedObjectReference) []error
 }
 
 // NewVCProbe returns a new probe
@@ -78,6 +85,8 @@ func (v *VCProbe) Start() error {
 	v.Started = true
 	v.Wg.Add(1)
 	go v.PeriodicSessionCheck(v.Wg)
+
+	v.tp.Start()
 
 	v.Wg.Add(1)
 	go v.run()
@@ -210,7 +219,7 @@ func (v *VCProbe) StartWatchers() {
 		})
 
 		tryForever(func() {
-			v.tp.Start()
+			v.tp.StartWatch()
 			v.Log.Infof("tag probe finished")
 		})
 		// tryForever(func() {
@@ -233,8 +242,8 @@ func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func
 	kind := string(vcKind)
 
 	var err error
-	client, _, viewMgr := v.GetClientWithRLock()
-	v.ReleaseClientRLock()
+	client, _, viewMgr, _ := v.GetClientsWithRLock()
+	v.ReleaseClientsRLock()
 
 	root := client.ServiceContent.RootFolder
 	if container == nil {
@@ -344,8 +353,8 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 
 // ListObj performs a list operation in vCenter
 func (v *VCProbe) ListObj(vcKind defs.VCObject, props []string, dst interface{}, container *types.ManagedObjectReference) error {
-	client, _, viewMgr := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
+	client, _, viewMgr, _ := v.GetClientsWithRLock()
+	defer v.ReleaseClientsRLock()
 
 	root := client.ServiceContent.RootFolder
 
@@ -396,4 +405,29 @@ func (v *VCProbe) ListHosts(dcRef *types.ManagedObjectReference) []mo.HostSystem
 	var hosts []mo.HostSystem
 	v.ListObj(defs.HostSystem, []string{"config", "name"}, &hosts, dcRef)
 	return hosts
+}
+
+// TagObjAsManaged tags the given ref with a Pensando managed tag
+func (v *VCProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
+	return v.tp.TagObjAsManaged(ref)
+}
+
+// RemoveTagObjManaged removes the pensando managed tag
+func (v *VCProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
+	return v.tp.RemoveTagObjManaged(ref)
+}
+
+// TagObjWithVlan tags the object with the given vlan value
+func (v *VCProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {
+	return v.tp.TagObjWithVlan(ref, vlanValue)
+}
+
+// RemoveTagObjVlan removes the vlan tag on the given object
+func (v *VCProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
+	return v.tp.RemoveTagObjVlan(ref)
+}
+
+// RemovePensandoTags removes all pensando tags
+func (v *VCProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
+	return v.tp.RemovePensandoTags(ref)
 }

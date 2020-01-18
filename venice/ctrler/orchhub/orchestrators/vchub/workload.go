@@ -474,8 +474,8 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, hKey, hName string
 	if !isPensandoHost(hConfig) {
 		return
 	}
-	wlName := createVmkWorkloadName(v.VcID, penDC.VcID, hKey)
-	hostName := createHostName(v.VcID, penDC.VcID, hKey)
+	wlName := createVmkWorkloadName(v.VcID, penDC.dcRef.Value, hKey)
+	hostName := createHostName(v.VcID, penDC.dcRef.Value, hKey)
 	workloadObj := v.getVmkWorkload(penDC, wlName, hostName)
 	newNicMap := map[string]bool{}
 	interfaces := []workload.WorkloadIntfSpec{}
@@ -539,7 +539,7 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, hKey, hName string
 	if len(interfaces) == 0 {
 		// vmkNics became zero, delete the workload
 		v.Log.Infof("Delete vmkWorkload %s due to no EPs", wlName)
-		v.deleteWorkloadByName(penDC.VcID, wlName)
+		v.deleteWorkloadByName(penDC.dcRef.Value, wlName)
 		return
 	}
 	sort.Slice(interfaces, func(i, j int) bool {
@@ -548,7 +548,7 @@ func (v *VCHub) syncHostVmkNics(penDC *PenDC, penDvs *PenDVS, hKey, hName string
 	workloadObj.Spec.Interfaces = interfaces
 	// Allocate useg vlans for all interface added to workload
 	// TODO it may be better to pass dvs to assignUseg in future
-	v.assignUsegs(penDC.VcID, penDC.Name, wlName, workloadObj)
+	v.assignUsegs(penDC.dcRef.Value, penDC.Name, wlName, workloadObj)
 	v.addWorkloadLabels(workloadObj, hName)
 	v.Log.Infof("Create/Update vmkWorkload %s", wlName)
 	v.pCache.Set(workloadKind, workloadObj)

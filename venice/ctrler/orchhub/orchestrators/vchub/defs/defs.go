@@ -13,6 +13,24 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
+// VCTagCategory is the category name in vcenter for all tags we write to VC
+const VCTagCategory = "Pensando Systems"
+
+// VCTagCategoryDescription is the description for VCTagCategory
+const VCTagCategoryDescription = "Category for Pensando System tags."
+
+// VCTagVlanPrefix is the tag prefix to apply to PGs to show their wire vlan value
+const VCTagVlanPrefix = "VLAN: "
+
+// VCTagVlanDescription is the description for VCTagVlan
+const VCTagVlanDescription = "VLAN that will be used when packets leave the DSCs."
+
+// VCTagManaged is the tag to apply to objects we manage
+const VCTagManaged = "Pensando Managed"
+
+// VCTagManagedDescription is the description for VCTagManaged
+const VCTagManagedDescription = "This object is managed by Pensando and should not be renamed or modified."
+
 // DefaultPrefix is the naming prefix for objects we create in vcenter
 const DefaultPrefix = "#Pen-"
 

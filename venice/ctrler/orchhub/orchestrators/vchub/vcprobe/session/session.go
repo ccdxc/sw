@@ -8,6 +8,8 @@ import (
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
+	"github.com/vmware/govmomi/vapi/rest"
+	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/view"
 
 	"github.com/pensando/sw/venice/utils/log"
@@ -37,9 +39,10 @@ type Session struct {
 	vcURL      *url.URL
 	logger     log.Logger
 
-	finder  *find.Finder
-	client  *govmomi.Client
-	viewMgr *view.Manager
+	finder    *find.Finder
+	client    *govmomi.Client
+	viewMgr   *view.Manager
+	tagClient *tags.Manager
 
 	WatcherWg     *sync.WaitGroup
 	ClientCtx     context.Context
@@ -76,16 +79,48 @@ func (s *Session) ClearClientCtx() {
 	s.ClientCtx = nil
 }
 
-// GetClientWithRLock acquires a reader lock and returns the client objects
-// Caller must call ReleaseClientRLock when they are done
-func (s *Session) GetClientWithRLock() (*govmomi.Client, *find.Finder, *view.Manager) {
+// GetClientsWithRLock acquires a reader lock and returns the client objects
+// Caller must call ReleaseClientsRLock when they are done
+func (s *Session) GetClientsWithRLock() (*govmomi.Client, *find.Finder, *view.Manager, *tags.Manager) {
 	// Get lock
 	s.clientLock.RLock()
-	return s.client, s.finder, s.viewMgr
+	return s.client, s.finder, s.viewMgr, s.tagClient
 }
 
-// ReleaseClientRLock releases the client lock
-func (s *Session) ReleaseClientRLock() {
+// GetClientWithRLock acquires a reader lock and returns the govmomi client
+// Caller must call ReleaseClientsRLock when they are done
+func (s *Session) GetClientWithRLock() *govmomi.Client {
+	// Get lock
+	s.clientLock.RLock()
+	return s.client
+}
+
+// GetFinderWithRLock acquires a reader lock and returns the finder object
+// Caller must call ReleaseClientsRLock when they are done
+func (s *Session) GetFinderWithRLock() *find.Finder {
+	// Get lock
+	s.clientLock.RLock()
+	return s.finder
+}
+
+// GetViewManagerWithRLock acquires a reader lock and returns the view manager object
+// Caller must call ReleaseClientsRLock when they are done
+func (s *Session) GetViewManagerWithRLock() *view.Manager {
+	// Get lock
+	s.clientLock.RLock()
+	return s.viewMgr
+}
+
+// GetTagClientWithRLock acquires a reader lock and returns the tag client object
+// Caller must call ReleaseClientsRLock when they are done
+func (s *Session) GetTagClientWithRLock() *tags.Manager {
+	// Get lock
+	s.clientLock.RLock()
+	return s.tagClient
+}
+
+// ReleaseClientsRLock releases the client lock
+func (s *Session) ReleaseClientsRLock() {
 	s.clientLock.RUnlock()
 }
 
@@ -102,9 +137,18 @@ func (s *Session) ClearSession() {
 			s.logger.Errorf("Received err while logging out %s", err)
 		}
 	}
+	if s.tagClient != nil {
+		// Using background context since it's likely that
+		// VCHub's context has been cancelled
+		err := s.tagClient.Logout(context.Background())
+		if err != nil {
+			s.logger.Errorf("Received err while logging tag client out %s", err)
+		}
+	}
 	s.client = nil
 	s.finder = nil
 	s.viewMgr = nil
+	s.tagClient = nil
 }
 
 // PeriodicSessionCheck starts a goroutine that re-establishes the session
@@ -148,9 +192,17 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		s.client = c
 		s.finder = find.NewFinder(c.Client, true)
 		s.viewMgr = view.NewManager(c.Client)
+		restCl := rest.NewClient(c.Client)
+		s.tagClient = tags.NewManager(restCl)
 
 		s.CheckSession = false
 		s.SessionReady = true
+
+		err := s.tagClient.Login(s.ClientCtx, s.vcURL.User)
+		if err != nil {
+			s.logger.Errorf("Tags client failed to login, %s", err)
+			s.CheckSession = true
+		}
 
 		s.clientLock.Unlock()
 
@@ -164,7 +216,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			case <-time.After(retryDelay):
 				// if any of the watchers is experiencing the problem, check the session state
 				if s.CheckSession {
-					client, _, _ := s.GetClientWithRLock()
+					client := s.GetClientWithRLock()
 					active, err := client.SessionManager.SessionIsActive(s.ClientCtx)
 					if err != nil {
 						s.logger.Errorf("Received err %v while testing session", err)
@@ -176,7 +228,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 						s.logger.Infof("Session is not active .. retry")
 						count--
 					}
-					s.ReleaseClientRLock()
+					s.ReleaseClientsRLock()
 				}
 			}
 		}
@@ -192,9 +244,13 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		if s.client != nil {
 			s.client.Logout(s.ClientCtx)
 		}
+		if s.tagClient != nil {
+			s.tagClient.Logout(s.ClientCtx)
+		}
 		s.client = nil
 		s.finder = nil
 		s.viewMgr = nil
+		s.tagClient = nil
 		s.watcherCancel = nil
 		// Hold onto lock
 	}

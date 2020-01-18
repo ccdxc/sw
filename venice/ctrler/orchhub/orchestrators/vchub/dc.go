@@ -15,8 +15,8 @@ import (
 type PenDC struct {
 	sync.Mutex
 	*defs.State
-	Name string
-	VcID string
+	Name  string
+	dcRef types.ManagedObjectReference
 	// Map from dvs display name to PenDVS inside this DC
 	DvsMap map[string]*PenDVS
 	probe  vcprobe.ProbeInf
@@ -32,14 +32,23 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 	if dcExisting, ok := v.DcMap[dcName]; ok {
 		dc = dcExisting
 	} else {
+		dcRef := types.ManagedObjectReference{
+			Type:  string(defs.Datacenter),
+			Value: dcID,
+		}
 		dc = &PenDC{
 			State:  v.State,
 			probe:  v.probe,
 			Name:   dcName,
-			VcID:   dcID,
+			dcRef:  dcRef,
 			DvsMap: map[string]*PenDVS{},
 		}
 		v.DcMap[dcName] = dc
+		err := v.probe.TagObjAsManaged(dcRef)
+		if err != nil {
+			v.Log.Errorf("Failed to tag DC as managed, %s", err)
+			// Error isn't worth failing the operation for
+		}
 	}
 
 	dvsName := createDVSName(dcName)

@@ -12,8 +12,8 @@ import (
 // AddPenPG returns a new instance of PenPG
 func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error {
 	pgName := pgConfigSpec.Name
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
+	finder := v.GetFinderWithRLock()
+	defer v.ReleaseClientsRLock()
 
 	// Check if it exists already
 	if _, err := v.getPenPG(dcName, pgName, finder); err == nil {
@@ -45,8 +45,8 @@ func (v *VCProbe) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgro
 
 // GetPenPG returns the PG if it exists, or an error
 func (v *VCProbe) GetPenPG(dcName string, pgName string) (*object.DistributedVirtualPortgroup, error) {
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
+	finder := v.GetFinderWithRLock()
+	defer v.ReleaseClientsRLock()
 	return v.getPenPG(dcName, pgName, finder)
 }
 
@@ -79,8 +79,8 @@ func (v *VCProbe) getPenPG(dcName string, pgName string, finder *find.Finder) (*
 
 // RemovePenPG removes the pg with the given name
 func (v *VCProbe) RemovePenPG(dcName, pgName string) error {
-	_, finder, _ := v.GetClientWithRLock()
-	defer v.ReleaseClientRLock()
+	finder := v.GetFinderWithRLock()
+	defer v.ReleaseClientsRLock()
 
 	objPG, err := v.getPenPG(dcName, pgName, finder)
 	if err != nil {

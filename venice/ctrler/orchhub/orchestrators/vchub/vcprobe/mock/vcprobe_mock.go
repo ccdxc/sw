@@ -228,3 +228,63 @@ func (m *MockProbeInf) GetPenDVSPorts(dcName, dvsName string, criteria *types.Di
 func (mr *MockProbeInfMockRecorder) GetPenDVSPorts(dcName, dvsName, criteria interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVSPorts", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVSPorts), dcName, dvsName, criteria)
 }
+
+// TagObjAsManaged mocks base method
+func (m *MockProbeInf) TagObjAsManaged(ref types.ManagedObjectReference) error {
+	ret := m.ctrl.Call(m, "TagObjAsManaged", ref)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TagObjAsManaged indicates an expected call of TagObjAsManaged
+func (mr *MockProbeInfMockRecorder) TagObjAsManaged(ref interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagObjAsManaged", reflect.TypeOf((*MockProbeInf)(nil).TagObjAsManaged), ref)
+}
+
+// RemoveTagObjManaged mocks base method
+func (m *MockProbeInf) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
+	ret := m.ctrl.Call(m, "RemoveTagObjManaged", ref)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTagObjManaged indicates an expected call of RemoveTagObjManaged
+func (mr *MockProbeInfMockRecorder) RemoveTagObjManaged(ref interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTagObjManaged", reflect.TypeOf((*MockProbeInf)(nil).RemoveTagObjManaged), ref)
+}
+
+// TagObjWithVlan mocks base method
+func (m *MockProbeInf) TagObjWithVlan(ref types.ManagedObjectReference, vlan int) error {
+	ret := m.ctrl.Call(m, "TagObjWithVlan", ref, vlan)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// TagObjWithVlan indicates an expected call of TagObjWithVlan
+func (mr *MockProbeInfMockRecorder) TagObjWithVlan(ref, vlan interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TagObjWithVlan", reflect.TypeOf((*MockProbeInf)(nil).TagObjWithVlan), ref, vlan)
+}
+
+// RemoveTagObjVlan mocks base method
+func (m *MockProbeInf) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
+	ret := m.ctrl.Call(m, "RemoveTagObjVlan", ref)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTagObjVlan indicates an expected call of RemoveTagObjVlan
+func (mr *MockProbeInfMockRecorder) RemoveTagObjVlan(ref interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTagObjVlan", reflect.TypeOf((*MockProbeInf)(nil).RemoveTagObjVlan), ref)
+}
+
+// RemovePensandoTags mocks base method
+func (m *MockProbeInf) RemovePensandoTags(ref types.ManagedObjectReference) []error {
+	ret := m.ctrl.Call(m, "RemovePensandoTags", ref)
+	ret0, _ := ret[0].([]error)
+	return ret0
+}
+
+// RemovePensandoTags indicates an expected call of RemovePensandoTags
+func (mr *MockProbeInfMockRecorder) RemovePensandoTags(ref interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePensandoTags", reflect.TypeOf((*MockProbeInf)(nil).RemovePensandoTags), ref)
+}

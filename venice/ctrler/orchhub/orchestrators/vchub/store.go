@@ -63,7 +63,7 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		name := prop.Val.(string)
 		v.Log.Infof("Handle DC %s", name)
 		v.DcMapLock.Lock()
-		if penDc, ok := v.DcMap[m.Key]; ok {
+		if penDc, ok := v.DcMap[name]; ok {
 			penDc.Lock()
 			if _, ok := penDc.DvsMap[createDVSName(name)]; ok {
 				v.DcMapLock.Unlock()
@@ -111,6 +111,7 @@ func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.N
 	case kvstore.Updated:
 		// If wire vlan changes, workloads should be modified
 		// TODO: update workloads
+		// TODO: Update vcenter vlan tags
 		v.Log.Info("Update network event")
 	case kvstore.Deleted:
 		if len(nw.Spec.Orchestrators) == 0 {

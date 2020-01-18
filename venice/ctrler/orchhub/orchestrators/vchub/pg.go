@@ -15,7 +15,7 @@ type PenPG struct {
 	*defs.State
 	probe       vcprobe.ProbeInf
 	PgName      string
-	PgID        string
+	PgRef       types.ManagedObjectReference
 	NetworkMeta api.ObjectMeta
 	PgMutex     sync.Mutex
 }
@@ -84,12 +84,31 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		State:       d.State,
 		probe:       d.probe,
 		PgName:      pgName,
-		PgID:        pg.Reference().Value,
+		PgRef:       pg.Reference(),
 		NetworkMeta: networkMeta,
 	}
 
 	d.Pgs[pgName] = penPG
 	d.pgIDMap[pg.Reference().Value] = penPG
+
+	err = d.probe.TagObjAsManaged(pg.Reference())
+	if err != nil {
+		d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)
+		// Error isn't worth failing the operation for
+	}
+
+	nw, err := d.StateMgr.Controller().Network().Find(&networkMeta)
+	if err == nil {
+		externalVlan := int(nw.Spec.VlanID)
+		err = d.probe.TagObjWithVlan(pg.Reference(), externalVlan)
+		if err != nil {
+			d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)
+			// Error isn't worth failing the operation for
+		}
+	} else {
+		d.Log.Errorf("Couldn't tag PG %s with vlan tag since we couldn't find the network info: networkMeta %v, err %s", pgName, networkMeta, err)
+		// Error isn't worth failing the operation for
+	}
 
 	return nil
 }
@@ -125,13 +144,10 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 	d.Lock()
 	defer d.Unlock()
 
-	err := d.probe.RemovePenPG(d.DcName, pgName)
-	if err != nil {
-		return err
-	}
-
+	var ref types.ManagedObjectReference
 	if penPG, ok := d.Pgs[pgName]; ok {
-		id := penPG.PgID
+		ref = penPG.PgRef
+		id := penPG.PgRef.Value
 		delete(d.Pgs, pgName)
 
 		if _, ok := d.pgIDMap[id]; ok {
@@ -140,6 +156,17 @@ func (d *PenDVS) RemovePenPG(pgName string) error {
 			d.Log.Errorf("Removed entry in PG map that wasn't in pgIDMap, pgName %s", pgName)
 		}
 	}
+
+	err := d.probe.RemovePenPG(d.DcName, pgName)
+	if err != nil {
+		d.Log.Errorf("Failed to delete PG %s, removing management tag", pgName)
+		tagErrs := d.probe.RemovePensandoTags(ref)
+		if len(tagErrs) != 0 {
+			d.Log.Errorf("Failed to remove tags, errs %v", tagErrs)
+		}
+		return err
+	}
+
 	return nil
 
 }

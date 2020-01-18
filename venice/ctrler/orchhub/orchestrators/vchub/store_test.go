@@ -1892,6 +1892,10 @@ func addDCState(t *testing.T, vchub *VCHub, dcName string) {
 	vchub.DcMap[dcName] = &PenDC{
 		State: vchub.State,
 		Name:  dcName,
+		dcRef: types.ManagedObjectReference{
+			Type:  string(defs.Datacenter),
+			Value: "DC1",
+		},
 		DvsMap: map[string]*PenDVS{
 			dvsName: penDVS,
 		},
@@ -1905,7 +1909,10 @@ func addPGState(t *testing.T, vchub *VCHub, dcName, pgName, pgID, networkName st
 		State:  vchub.State,
 		probe:  vchub.probe,
 		PgName: pgName,
-		PgID:   pgID,
+		PgRef: types.ManagedObjectReference{
+			Type:  string(defs.DistributedVirtualPortgroup),
+			Value: pgID,
+		},
 		NetworkMeta: api.ObjectMeta{
 			Name:      networkName,
 			Tenant:    "default",

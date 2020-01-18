@@ -1,11 +1,10 @@
 package vcprobe
 
 import (
-	"context"
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/tags"
 	"github.com/vmware/govmomi/vim25/types"
 
@@ -35,41 +34,223 @@ type itemKey struct {
 type tagsProbe struct {
 	*defs.State
 	*session.Session
-	tc       *tags.Manager
-	outbox   chan<- defs.Probe2StoreMsg
-	vmsOnKey map[itemKey]*DeltaStrSet // vms that have catID:tagID
-	vmInfo   map[string]*DeltaStrSet  // tags on a VM
-	tagMap   map[string]*tagEntry     // catID:tagID to tag info
-	catMap   map[string]string        // catID to cat info
+	outbox       chan<- defs.Probe2StoreMsg
+	vmsOnKey     map[itemKey]*DeltaStrSet // vms that have catID:tagID
+	vmInfo       map[string]*DeltaStrSet  // tags on a VM
+	tagMap       map[string]*tagEntry     // catID:tagID to tag info
+	catMap       map[string]string        // catID to cat info
+	writeTagInfo map[string]string        // Tag/cat Name to ID. These cat/tags are objects we write to vc objects
 }
 
 // newTagsProbe creates a new instance of tagsProbe
 func (v *VCProbe) newTagsProbe() {
 	v.tp = &tagsProbe{
-		State:    v.State,
-		Session:  v.Session,
-		outbox:   v.outbox,
-		vmsOnKey: make(map[itemKey]*DeltaStrSet),
-		vmInfo:   make(map[string]*DeltaStrSet),
-		tagMap:   make(map[string]*tagEntry),
-		catMap:   make(map[string]string),
+		State:        v.State,
+		Session:      v.Session,
+		outbox:       v.outbox,
+		vmsOnKey:     make(map[itemKey]*DeltaStrSet),
+		vmInfo:       make(map[string]*DeltaStrSet),
+		tagMap:       make(map[string]*tagEntry),
+		catMap:       make(map[string]string),
+		writeTagInfo: make(map[string]string),
 	}
 }
 
 // Start starts the client
 func (t *tagsProbe) Start() {
-	ctx := t.ClientCtx
-	client, _, _ := t.GetClientWithRLock()
-	t.ReleaseClientRLock()
-	restCl := rest.NewClient(client.Client)
-	tagCl := tags.NewManager(restCl)
-	t.tc = tagCl
-	err := t.tc.Login(ctx, t.VcURL.User)
-	if err != nil {
-		t.Log.Errorf("Tags client failed to login, %s", err.Error())
-		return
-	}
+	t.Log.Debug("Start tags called")
+	t.Wg.Add(1)
+	go func() {
+		defer t.Wg.Done()
+		for !t.SessionReady {
+			select {
+			case <-t.Ctx.Done():
+				return
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+		t.Log.Debug("Setting up tags...")
+		t.SetupVCTags()
+	}()
+}
+
+func (t *tagsProbe) StartWatch() {
+	t.Log.Debugf("Tag Start Watch starting")
 	t.pollTags()
+}
+
+func (t *tagsProbe) SetupVCTags() {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	var tagCategory *tags.Category
+	var err error
+	retryUntilSuccessful := func(fn func() bool) {
+		for t.ClientCtx.Err() == nil {
+			if fn() {
+				break
+			}
+			select {
+			case <-t.ClientCtx.Done():
+				return
+			case <-time.After(tagsPollDelay):
+			}
+		}
+	}
+	// Create category
+	retryUntilSuccessful(func() bool {
+		tagCategory, err = tc.GetCategory(t.ClientCtx, defs.VCTagCategory)
+		if err == nil {
+			t.writeTagInfo[defs.VCTagCategory] = tagCategory.ID
+			return true
+		}
+		t.Log.Info("Tag category does not exist, creating default category")
+		// Create category
+		tagCategory = &tags.Category{
+			Name:        defs.VCTagCategory,
+			Description: defs.VCTagCategoryDescription,
+			Cardinality: "MULTIPLE",
+		}
+		catID, err := tc.CreateCategory(t.ClientCtx, tagCategory)
+		if err == nil {
+			t.Log.Info("Created tag category")
+			t.writeTagInfo[defs.VCTagCategory] = catID
+			return true
+		}
+		t.Log.Errorf("Failed to create default category: %s", err)
+		return false
+	})
+
+	// Get tags for category
+	var tagObjs []tags.Tag
+	retryUntilSuccessful(func() bool {
+		var err error
+		tagObjs, err = tc.GetTagsForCategory(t.ClientCtx, tagCategory.Name)
+		if err == nil {
+			t.Log.Debug("Got tags in Pensando category")
+			return true
+		}
+		t.Log.Errorf("Failed to get tags for category %s: %s", tagCategory.Name, err)
+		return false
+	})
+
+	for _, tag := range tagObjs {
+		t.writeTagInfo[tag.Name] = tag.ID
+	}
+
+	// Create VCTagManaged
+	retryUntilSuccessful(func() bool {
+		if _, ok := t.writeTagInfo[defs.VCTagManaged]; ok {
+			t.Log.Debug("Pensando managed tag already exists")
+			return true
+		}
+		tag := &tags.Tag{
+			Name:        defs.VCTagManaged,
+			Description: defs.VCTagManagedDescription,
+			CategoryID:  tagCategory.Name,
+		}
+		tagID, err := tc.CreateTag(t.ClientCtx, tag)
+		if err == nil {
+			t.writeTagInfo[defs.VCTagManaged] = tagID
+			t.Log.Debug("Pensando managed tag created")
+			return true
+		}
+		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
+		return false
+	})
+
+}
+
+func (t *tagsProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	t.Log.Debug("Tagging object %s as pensando managed", ref.Value)
+	return tc.AttachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
+}
+
+func (t *tagsProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	t.Log.Debug("Removing tag managed from object %s", ref.Value)
+	return tc.DetachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
+}
+
+func (t *tagsProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	t.Log.Debug("Tagging object %s with vlan %d", ref.Value, vlanValue)
+	tagName := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, vlanValue)
+	var tagID string
+	var ok bool
+	if tagID, ok = t.writeTagInfo[tagName]; !ok {
+		var err error
+		catID, ok := t.writeTagInfo[defs.VCTagCategory]
+		if !ok {
+			return fmt.Errorf("Cateogry tag hasn't been created yet")
+		}
+		// Create tag
+		tagReq := &tags.Tag{
+			Name:        tagName,
+			Description: defs.VCTagVlanDescription,
+			CategoryID:  catID,
+		}
+		tagID, err = tc.CreateTag(t.ClientCtx, tagReq)
+		if err != nil {
+			t.Log.Errorf("Failed to create vlan tag %s for obj %s, err %s", tagName, ref.Value, err)
+			return err
+		}
+		t.writeTagInfo[tagName] = tagID
+	}
+
+	return tc.AttachTag(t.ClientCtx, tagID, ref)
+}
+
+func (t *tagsProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	t.Log.Debug("Removing vlan tag from object %s", ref.Value)
+
+	tags, err := tc.GetAttachedTags(t.ClientCtx, ref)
+	if err != nil {
+		return err
+	}
+	for _, tag := range tags {
+		if tag.CategoryID == t.writeTagInfo[defs.VCTagCategory] && strings.HasPrefix(tag.Name, defs.VCTagVlanPrefix) {
+			// Tag is a vlan tag
+			// There should never be more than one vlan tag
+			// so we can return after the first one we find
+			return tc.DetachTag(t.ClientCtx, tag.ID, ref)
+		}
+	}
+
+	t.Log.Infof("Received tag remove for %s, but it didn't have a vlan tag", ref.Value)
+
+	return nil
+}
+
+func (t *tagsProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	t.Log.Debug("Removing all pensando tags from object %s", ref.Value)
+
+	errs := []error{}
+
+	tags, err := tc.GetAttachedTags(t.ClientCtx, ref)
+	if err != nil {
+		errs = append(errs, err)
+		return errs
+	}
+	for _, tag := range tags {
+		if tag.CategoryID == t.writeTagInfo[defs.VCTagCategory] {
+			// Tag is a pensando tag
+			err = tc.DetachTag(t.ClientCtx, tag.ID, ref)
+			if err != nil {
+				t.Log.Errorf("Removing tag %s failed: err %s", tag.Name, err)
+				errs = append(errs, err)
+			}
+		}
+	}
+
+	return errs
 }
 
 // pollTags polls the cis rest server for tag information
@@ -77,30 +258,30 @@ func (t *tagsProbe) pollTags() {
 	for {
 		select {
 		case <-t.ClientCtx.Done():
-			// delete session using another ctx
-			doneCtx, cancel := context.WithTimeout(context.Background(), deleteDelay)
-			t.tc.Logout(doneCtx)
-			cancel()
 			return
 		case <-time.After(tagsPollDelay):
-			// t.fetchTags()
+			t.fetchTags()
 		}
 	}
 }
 
 func (t *tagsProbe) fetchTags() error {
-	tagList, err := t.tc.ListTags(t.ClientCtx)
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+
+	tagList, err := tc.ListTags(t.ClientCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list tags failed, %s", err.Error())
 		if strings.Contains(err.Error(), "code: 401") { // auth error
-			loginErr := t.tc.Login(t.ClientCtx, t.VcURL.User)
+			loginErr := tc.Login(t.ClientCtx, t.VcURL.User)
 			if loginErr != nil {
 				t.Log.Errorf("Tags client attempted to re-login but failed, %s", loginErr.Error())
+				t.CheckSession = true
 			}
 		}
 		return err
 	}
-	catList, err := t.tc.GetCategories(t.ClientCtx)
+	catList, err := tc.GetCategories(t.ClientCtx)
 	if err != nil {
 		t.Log.Errorf("Tags client list categories failed, %s", err.Error())
 		return err
@@ -138,7 +319,9 @@ func (t *tagsProbe) fetchTags() error {
 }
 
 func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
-	objs, err := t.tc.GetAttachedObjectsOnTags(t.ClientCtx, []string{tagID})
+	tc := t.GetTagClientWithRLock()
+	defer t.ReleaseClientsRLock()
+	objs, err := tc.GetAttachedObjectsOnTags(t.ClientCtx, []string{tagID})
 	if err != nil {
 		t.Log.Errorf("tag: %s error: %v", tagID, err)
 		return
