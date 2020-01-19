@@ -143,7 +143,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
       return returnObject;
     }
     if (!this.syslogServerForm.get(['targets']).valid) {
-      returnObject.errorMessage = 'Error:Transport Field is Invalid.';
+      returnObject.errorMessage = 'Error: Input in either transport field or destination field is invalid.';
       returnObject.valid = false;
       return returnObject;
     }

@@ -88,8 +88,11 @@
           <span *ngIf="syslogRequiredOption" [ngClass]="{
                           'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['destination'])
                         }">
+            <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
+                   class="syslog-input syslog-destination"
+                   spellcheck="false" type="text" pInputText appFloatLabel="Destination">
           </span>
-          <span>
+          <span *ngIf="!syslogRequiredOption">
             <input formControlName="destination" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-destination"
                    spellcheck="false" type="text" pInputText appFloatLabel="Destination">
@@ -99,8 +102,11 @@
           <span *ngIf="syslogRequiredOption" [ngClass]="{
                       'requiredField': isFieldEmptySysLog(syslogServerForm.get(['targets', index]).value['transport'])
                     }">
+            <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
+                   class="syslog-input syslog-transport"
+                   spellcheck="false" type="text" pInputText appFloatLabel="Transport">
           </span>
-          <span>
+          <span *ngIf="!syslogRequiredOption">
             <input formControlName="transport" appErrorTooltip fxFlex="nogrow"
                    class="syslog-input syslog-transport"
                    spellcheck="false" type="text" pInputText appFloatLabel="Transport">

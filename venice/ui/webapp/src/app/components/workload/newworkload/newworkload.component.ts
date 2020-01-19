@@ -43,7 +43,7 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
 
   // Empty Hook
   postNgInit() {
-    if (this.hostOptions.length) {
+    if (!this.isInline && this.hostOptions.length) {
       this.newObject.$formGroup.get(['spec', 'host-name']).setValue(this.hostOptions[0].value);
     }
     // Add one interface if it doesn't already have one

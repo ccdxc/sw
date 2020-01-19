@@ -1,20 +1,22 @@
 <div [style.width]="'100%'" fxLayout="column">
   <div fxFlex="auto" fxLayout="row" fxLayoutAlign="center start" class="newdestination-container">
     <!-- Limiting the size of the creation form - If it is inline, we have more room to fit in the save/cancel buttons -->
-    <div fxFlex="auto" fxLayout="row" [style.max-width]="isInline ? '1300px' : '1200px'"
+    <div fxFlex="auto" fxLayout="row"
          fxLayoutAlign="start stretch" class="newdestination-content"
          [formGroup]="newDestination.$formGroup">
 
-      <div fxFlex="nogrow" fxLayout="column">
-        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" class="newdestination-row">
+      <div fxFlex="nogrow" fxLayout="column" fxLayoutAlign="center start">
+        <div fxFlex="nogrow" fxLayout="row" formGroupName="meta" [ngClass]="{
+          'requiredField': isFieldEmpty(newDestination.$formGroup.get(['meta', 'name']))
+        }">
           <!-- First row-->
           <input fxFlex="300px" formControlName="name" class="newdestination-name" appErrorTooltip
-                 spellcheck="false" type="text" pInputText placeholder="Unique Destination Name...">
+                 spellcheck="false" type="text" pInputText
+                 appFloatLabel="Unique Destination Name...">
           <!-- Commented out as it still isn't decided whether there will be a description -->
           <!-- <input fxFlex class="newdestination-description" spellcheck="false" type="text"  pInputText  placeholder="Brief Description (optional)..."> -->
 
         </div>
-        <div fxFlex="25px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
         <div fxFlex="noshrink" fxLayout="row" class="newdestination-row">
@@ -30,17 +32,20 @@
           </app-fieldselector> -->
         </div>
 
+        <!--
         <div fxFlex="20px" fxLayout="row">
           <div fxFlex="30px"></div>
           <div fxFlex="auto" class="newdestination-divider"></div>
           <div fxFlex="30px"></div>
         </div>
+      -->
 
         <div fxFlex="10px"></div>
         <!-- Buffer, creating as a div so there are no hiccups in the animation-->
 
         <div fxFlex="noshrink" fxLayout="column">
           <ng-container *ngTemplateOutlet="syslog"></ng-container>
+          <div fxFlex="10px"></div>
           <ng-container *ngIf="enableSnmpTrap">
             <ng-container *ngTemplateOutlet="snmp"></ng-container>
           </ng-container>
@@ -63,6 +68,8 @@
 
 <ng-template #syslog>
   <app-syslog #syslogComponent
+              [syslogFieldsetWidth]="true"
+              [syslogRequiredOption]="true"
               [syslogExport]="newDestination.$formGroup.get(['spec', 'syslog-export']).value"
               targetTransport="<TCP/UDP>/<port>"
               fxFlex="nogrow" fxLayout="column"></app-syslog>

@@ -12,6 +12,7 @@ import { BaseComponent } from '@app/components/base/base.component';
 import { SyslogComponent } from '@app/components/shared/syslog/syslog.component';
 import { FieldselectorComponent } from '@app/components/shared/fieldselector/fieldselector.component';
 import { required } from '@sdk/v1/utils/validators';
+import { AbstractControl } from '@angular/forms';
 
 @Component({
   selector: 'app-newdestination',
@@ -23,6 +24,9 @@ import { required } from '@sdk/v1/utils/validators';
 export class NewdestinationComponent extends BaseComponent implements OnInit, AfterViewInit {
   @ViewChild('syslogComponent') syslogServers: SyslogComponent;
   @ViewChild('fieldSelector') fieldSelector: FieldselectorComponent;
+
+  createButtonTooltip: string ;
+
   enableSnmpTrap: boolean = false;
 
   newDestination: MonitoringAlertDestination;
@@ -75,6 +79,7 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
           cssClass: 'global-button-primary eventalertpolicies-button eventalertpolicies-button-destination-SAVE',
           text: 'CREATE DESTINATION',
           callback: () => { this.saveDestination(); },
+          genTooltip: () => this.getTooltip(),
           computeClass: () => this.computeButtonClass()
         },
         {
@@ -89,11 +94,27 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
   }
 
   computeButtonClass() {
-    if (this.newDestination.$formGroup.get('meta.name').status === 'VALID') {
-      return '';
-    } else {
+    if (Utility.isEmpty(this.newDestination.$formGroup.get(['meta', 'name']).value)) {
       return 'global-button-disabled';
     }
+    if (!this.newDestination.$formGroup.get(['meta', 'name']).valid)  {
+      return 'global-button-disabled';
+    }
+    if (this.syslogServers.syslogServerForm.invalid) {
+      this.createButtonTooltip = this.syslogServers.isSyLogFormValid()['errorMessage'];
+      return 'global-button-disabled';
+    }
+    return '';
+  }
+
+  getTooltip() {
+    if (Utility.isEmpty(this.newDestination.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Name field is empty.';
+    }
+    if (!this.newDestination.$formGroup.get(['meta', 'name']).valid)  {
+      return 'Error: Name field is invalid.';
+    }
+    return this.createButtonTooltip;
   }
 
   getSelectedCredentialMethod(syslog: any): string {
@@ -110,6 +131,10 @@ export class NewdestinationComponent extends BaseComponent implements OnInit, Af
       currToolbar.buttons = this.oldButtons;
       this._controllerService.setToolbarData(currToolbar);
     }
+  }
+
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
   }
 
 

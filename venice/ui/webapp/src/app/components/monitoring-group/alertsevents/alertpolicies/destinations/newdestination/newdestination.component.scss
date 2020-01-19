@@ -9,11 +9,17 @@ $vertical-gutter: 5px;
   &:hover {
     background: white;
   }
+
+  .syslog-format-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
 }
 
 .newdestination-content {
   background: white;
   min-height: 180px;
+  max-width: 540px !important;
   margin-top: 4* $vertical-gutter;
   @include primary-font();
 }
