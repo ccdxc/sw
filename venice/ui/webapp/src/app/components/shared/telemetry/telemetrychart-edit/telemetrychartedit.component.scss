@@ -130,6 +130,10 @@ $vertical-gutter: 5px;
   border-radius: 50%;
 }
 
+.telemetrychartedit-field-label {
+  width: 100px;
+}
+
 .telemetrychartedit-field-selector-title {
   margin-top: 9px;
 }
@@ -147,6 +151,24 @@ $vertical-gutter: 5px;
 
 .telemetrychartedit-field-selector-edit {
   margin-right: 20px;
+
+  .repeater-and {
+    SPAN {
+      display: none;
+    }
+  }
+
+  .repeater-key {
+    display: none;
+  }
+
+  .repeater-operator {
+    display: none;
+  }
+
+  .repeater-value {
+    width: 290px;
+  }
 }
 
 .telemetrychartedit-name {

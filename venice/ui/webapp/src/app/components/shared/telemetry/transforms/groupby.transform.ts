@@ -36,7 +36,11 @@ export class GroupByTransform extends MetricTransform<GroupByTransformConfig> {
     const options = MetricsMetadata[this.measurement].fields.filter(x => x.isTag).map( f => {
       return {label: f.displayName, value: f.name};
     });
-    options.unshift({label: 'None', value: null});
+    if (options && options.length > 0) {
+      this.groupBy = options[0].value;
+    }
+    // block none option for A release
+    // options.unshift({label: 'None', value: null});
     this.groupByOptions = options;
   }
 

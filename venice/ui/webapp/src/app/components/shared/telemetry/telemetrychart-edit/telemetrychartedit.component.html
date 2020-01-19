@@ -195,12 +195,12 @@
             <ng-container *ngTemplateOutlet="FieldSelectorEdit; context:{transform: t}">
             </ng-container>
           </ng-container>
-
+          <!-- comment out for A release
           <ng-container *ngSwitchCase="'LabelSelector'">
             <ng-container *ngTemplateOutlet="LabelSelectorEdit; context:{transform: t}">
             </ng-container>
           </ng-container>
-
+          -->
         </ng-container>
       </div>
 
@@ -254,10 +254,10 @@
 <!-- -------------- DATA TRANSFORMS -------------- -->
 <!-- Group By -->
 <ng-template #GroupByEdit let-transform="transform">
-  <div *ngIf="transform.groupByOptions != null && transform.groupByOptions.length > 1"
+  <div *ngIf="transform.groupByOptions != null && transform.groupByOptions.length > 0"
        fxFlex="nogrow" fxLayout="row" fxLayoutAlign="start center">
-    <div fxFlex="nogrow">Group by: </div>
-    <div fxFlex="50px"></div>
+    <div fxFlex="nogrow" class="telemetrychartedit-field-label">Group by: </div>
+    <div fxFlex="10px"></div>
     <p-dropdown appendTo="body" fxFlex="290px" [options]="transform.groupByOptions"
                 [(ngModel)]="transform.groupBy"></p-dropdown>
   </div>
@@ -266,7 +266,7 @@
 <ng-template #GroupByView let-transform="transform">
   <div *ngIf="transform.groupBy != null" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
        fxLayoutAlign="start center">
-    <div fxFlex="none">Group by:</div>
+    <div fxFlex="none" class="telemetrychartedit-field-label">Group by:</div>
     <div fxFlex="none" class="telemetrychartedit-wrap">{{ transform.groupBy }} </div>
   </div>
 </ng-template>
@@ -277,13 +277,16 @@
   <div *ngIf="transform.fieldData != null && transform.fieldData.length >= 1" fxFlex="nogrow"
        fxLayout="row" fxLayoutAlign="start start"
        class="telemetrychartedit-field-selector-edit">
-    <div fxFlex="nogrow" class="telemetrychartedit-field-selector-title">Filter: </div>
-    <div fxFlex="5px"></div>
+    <div fxFlex="nogrow"
+         class="telemetrychartedit-field-selector-title telemetrychartedit-field-label">Select
+      DSCs: </div>
     <app-repeater fxFlex="auto"
-                  [data]="transform.fieldData"
+                  [enableMultiSelectAll]="false"
+                  [enableMultiSelectFilter]="true"
+                  [data]="getCardFieldData(transform.fieldData)"
                   [formArray]="transform.formArray"
                   [keyDropdownFilter]="true"
-                  (repeaterValues)="transform.valueChange($event)"
+                  (repeaterValues)="onCardValuesChanged($event, transform)"
                   [buildValuePlaceholder]="transform.buildFieldValuePlaceholder">
     </app-repeater>
   </div>
@@ -292,7 +295,7 @@
 <ng-template #FieldSelectorView let-transform="transform">
   <div *ngIf="transform.stringForm.length > 0" fxFlex="none" fxLayout="row" fxLayoutGap="5px"
        fxLayoutAlign="start center">
-    <div fxFlex="none">Filter:</div>
+    <div fxFlex="none" class="telemetrychartedit-field-label">Select DSCs:</div>
     <div class="telemetrychartedit-field-transforms" fxFlex="none" class="telemetrychartedit-wrap">
       {{ transform.stringForm }} </div>
   </div>

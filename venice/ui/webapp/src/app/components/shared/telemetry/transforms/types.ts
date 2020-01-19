@@ -27,6 +27,10 @@ export enum TransformNames {
 
 /** Types used for hook signatures */
 
+export interface DatasourceOptions {
+  checkTransforms?: (transformMap: {[key: string]: any}) => boolean;
+}
+
 export interface ChartDataSets extends ChartJSDataSets {
   sourceID: string;
   sourceMeasurement: string;
@@ -165,6 +169,9 @@ export class DataSource {
   private _fields: string[] = [];
   private _debugMode: boolean = false;
 
+  // option is set by other components for plugin functions
+  datasourceOptions: DatasourceOptions = {};
+
   // Unique id is used to differentiate datasets that are exactly the same,
   // but come from two different data sources
   id: string = Utility.s4() + '-' + Utility.s4() ;
@@ -290,7 +297,10 @@ export class DataSource {
       }
       const isReady = this.transformQuery({query: query.query});
       if (isReady) {
-        return query;
+        if (!this.datasourceOptions.checkTransforms ||
+            this.datasourceOptions.checkTransforms(this.transformMap)) {
+          return query;
+        }
       }
       return null;
   }

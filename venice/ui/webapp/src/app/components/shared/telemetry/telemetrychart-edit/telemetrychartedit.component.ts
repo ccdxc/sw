@@ -9,11 +9,14 @@ import { AuthService } from '@app/services/generated/auth.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { MetricMeasurement, MetricsMetadata } from '@sdk/metrics/generated/metadata';
 import { Subject, Subscription } from 'rxjs';
 import { TelemetrychartComponent } from '../telemetrychart/telemetrychart.component';
-import { DataSource, TransformNames } from '../transforms';
+import { DataSource, MetricTransform, GroupByTransform, TransformNames } from '../transforms';
+import { FieldSelectorTransform } from '../transforms/fieldselector.transform';
 import { GraphTitleTransform } from '../transforms/graphtitle.transform';
+import { RepeaterData, ValueType } from 'web-app-framework';
 
 /**
  * A data source allows a user to select a single measurement,
@@ -130,6 +133,52 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     return this.chart.addDataSource();
   }
 
+  checkTransforms(transformMap: {[key: string]: any}): boolean {
+    const groupByTransform: GroupByTransform = transformMap.GroupBy;
+    const fieldSelectorTransform: FieldSelectorTransform = transformMap.FieldSelector;
+    if (groupByTransform.groupBy && (fieldSelectorTransform.currValue.length === 0 ||
+        fieldSelectorTransform.currValue[0].valueFormControl.length > 10)) {
+      return false;
+    }
+    return true;
+  }
+
+  // all card data are all from telemetrychart component, can not build it
+  // form fieldselector.transform; therefore create an convert function to
+  // change repeator data.
+  getCardFieldData (res: RepeaterData[]) {
+    if (res && res.length > 0 && this.chart.naples && this.chart.naples.length > 0) {
+      res[0].valueType = ValueType.multiSelect;
+      // for release A, only equals is allowed.
+      res[0].operators = res[0].operators.filter(op => op.label === 'equals');
+      res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
+        return {
+          label: naple.spec.id,
+          value: naple.status['primary-mac']
+        };
+      });
+    }
+    return res;
+  }
+
+  // check how may cards selected before we submit this event to the transformer
+  onCardValuesChanged (event: any, transform: any) {
+    const values = Utility.formatRepeaterData(event);
+    if (values && values[0] && values[0].valueFormControl &&
+        values[0].valueFormControl.length > 10) {
+      this._controllerService.invokeConfirm({
+        header: 'Failed adding DSC to the chart',
+        message: 'Only a maximum of 10 DSCs can be selected to show on the chart.',
+        acceptLabel: 'Close',
+        acceptVisible: true,
+        rejectVisible: false,
+        accept: () => {}
+      });
+      return;
+    }
+    transform.valueChange(event);
+  }
+
   removeDataSource(index: number) {
     this.chart.removeDataSource(index);
     if (this.selectedDataSourceIndex === index) {
@@ -160,7 +209,11 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
     if (this.chart == null || this.chart.dataSources.length  === 0) {
       return null;
     }
-    return this.chart.dataSources[this.selectedDataSourceIndex];
+    const ds: DataSource = this.chart.dataSources[this.selectedDataSourceIndex];
+    if (!ds.datasourceOptions.checkTransforms) {
+      ds.datasourceOptions.checkTransforms = this.checkTransforms;
+    }
+    return;
   }
 
   // User is allowed to add a new data source if there are no incomplete data sources
