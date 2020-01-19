@@ -17,17 +17,29 @@
 #define MS_(n)      (CAP_MS_BASE + CAP_MS_CSR_ ## n ## _BYTE_ADDRESS)
 
 #ifndef __ASSEMBLER__
+
+#define dsb()       asm volatile("dsb sy" ::: "memory")
+
 static inline uint32_t readreg(uint64_t addr)
 {
     uint32_t r = *(volatile uint32_t *)addr;
-    asm volatile("dsb sy" ::: "memory");
+    dsb();
     return r;
 }
 
+/*
+ * Capri APB devices have a side-effect-free readable register at offset 0xfc.
+ */
+#define CAP_APB_READBACK(a) (((a) & -0x100ULL) | 0xfc)
+
 static inline void writereg(uint64_t addr, uint32_t val)
 {
-    asm volatile("dsb sy" ::: "memory");
+    dsb();
     *(volatile uint32_t *)addr = val;
+    if (addr < 0x8000) {
+        dsb();
+        (void)readreg(CAP_APB_READBACK(addr));
+    }
 }
 
 #define wdt_writereg(c, r, v)   writereg(WDT_CTR_BASE(c) + (r), v)

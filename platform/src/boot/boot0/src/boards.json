@@ -1,4 +1,5 @@
 {
     "board_map": [
+        { "part_number": "#",       "min_version": "2" }
     ]
 }

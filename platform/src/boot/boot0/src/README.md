@@ -94,13 +94,21 @@ all boards.  Here is an example:
     "board_map": [
         { "part-number": "68-0004", "min_version": 2 },
         { "part-number": "68-0007", "min_version": 3 }
+        { "part-number": "#",       "min_version": 1 }
     ]
 }
 ```
 This file says that:
 * Board part number 68-0004 requires a boot0.bin version >= 2.
 * Board 68-0007 requires a boot0.bin version >= 3.
-* All other boards require a boot0.bin version >= 0.
+* All other boards require a boot0.bin version >= 1.
+
+The first match is used, so it is valid to lock a part-number to
+a low numbered min_version while advancing other boards to a higher version.
+
+During a firmware update, the boot0 image will be update if
+the currently installed version < the match min_version, and the
+package version > the installed version.
 
 The expected workflow is that only when a field-update is actually
 required will an entry be added for a specific board, and ideally this

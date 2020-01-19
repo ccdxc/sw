@@ -856,12 +856,12 @@ rev2_is_update_required()
 
     # Compare the version of the installed boot0 with the minversion
     # for this board.
-    if [ ! -f $FRU ]; then
-        # No update for unknown board
-        log_info "$FRU not found; skipping boot0 upgrade"
-        return 1
+    if [ -f $FRU ]; then
+        this_pn=`jq -r '.["part-number"]' $FRU | awk -F'[ -]' '{print $1"-"$2}'`
+    else
+        log_info "FRU info not found in rev2_is_update_required"
+        this_pn="99-9999" # fake pn to match global min version
     fi
-    this_pn=`jq -r '.["part-number"]' $FRU | awk -F'[ -]' '{print $1"-"$2}'`
     log_info "Considering boot0 upgrade for board $this_pn"
 
     s=`get_boot0_info`
@@ -877,7 +877,7 @@ rev2_is_update_required()
     l=`mani_length ".firmware.boot0.board_map"`
     for i in `seq $l`; do
         pn=`mani_value ".firmware.boot0.board_map[$i - 1].part_number"`
-        if [ "$pn" = "$this_pn" ]; then
+        if [ "$pn" = '#' -o "$pn" = "$this_pn" ]; then
             min_ver=`mani_value ".firmware.boot0.board_map[$i - 1].min_version"`
             break
         fi
@@ -1763,6 +1763,12 @@ do_install_bitfile_images()
     local running_cpld_rev part_number bitfileslength partnumberlength i
     local bitfile_cpld_rev manipartnumber found mani_cpld_rev path
 
+    if [ ! -f $FRU ]; then
+        log_info "FRU info not found in do_install_bitfile_images"
+        echo "===> FRU information unavailable; skipping bitfile update"
+        return
+    fi
+
     # Get current id and revision of CPLD.
     running_cpld_rev=`printf "%d" \`cpldapp -r 0x0\``
 
@@ -1840,12 +1846,15 @@ check_rev2_transition()
     # Read the boot0 type
     s=`get_boot0_info`
     set -- $s; b_type=$1; b_ver=$2
-    if [ "$b_type" = "boot0" ]; then
+    if [ "$b_type" = "boot0" -a $b_ver -gt 1 ]; then
         return 0
     fi
 
-    log_info "Performing first-time install of new boot path"
-    echo "===> Performing first-time install of new boot path"
+    # This is either a legecy card not running boot0, or its running
+    # ver 1 of boot0, which means we need to replace the boot image set
+
+    log_info "Performing install of new boot image set"
+    echo "===> Performing install of new boot image set"
     INSTALL_BOOT0_UPG=0
     $DRY_RUN do_rev2_pre_install
     INSTALL_BOOT0_UPG=$p

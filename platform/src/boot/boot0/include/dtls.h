@@ -28,6 +28,7 @@ typedef struct {
 // board.c
 int get_chip_type(void);
 int cap_board_type(void);
+int get_cpld_id(void);
 uint32_t board_qspi_frequency(void);
 uint8_t board_qspi_read_delay(void);
 const bsm_fwid_map_t *board_bsm_fwid_map(void);

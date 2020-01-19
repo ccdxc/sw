@@ -113,13 +113,11 @@ static void
 qspi_mx_set_cr_dc(uint32_t dc)
 {
     uint32_t cr;
-    qspi_enable();
     cr = qspi_stig_op(OP_MX_READ_CONFIG_REGISTER, 1, 0, 0);
     cr = (cr & 0x3f) | (dc << 6);
     qspi_stig_op(OP_WRITE_ENABLE, 0, 0, 0);
     qspi_stig_op(OP_WRITE_SR, 0, 2, cr << 8);
     qspi_wait_write_complete();
-    qspi_disable();
 }
 
 static void
@@ -151,11 +149,8 @@ qspi_mx_set_144_dummy(int ndummy)
 }
 
 static void
-qspi_set_read_144_mode(int is_mx)
+qspi_set_read_144_mode(void)
 {
-    if (is_mx) {
-        qspi_mx_set_144_dummy(10);
-    }
     // read command 0xec - 4-BYTE QUAD I/O FAST READ, 10 dummy clocks
     qspi_writereg(QSPI_READ_IR,
             QSPI_READ_IR_DUMMY(10) |
@@ -166,11 +161,8 @@ qspi_set_read_144_mode(int is_mx)
 }
 
 static void
-qspi_set_read_122_mode(int is_mx)
+qspi_set_read_122_mode(void)
 {
-    if (is_mx) {
-        qspi_mx_set_122_dummy(8);
-    }
     // read command 0xbc - 4-BYTE DUAL I/O FAST READ, 8 dummy clocks
     qspi_writereg(QSPI_READ_IR,
             QSPI_READ_IR_DUMMY(8) |
@@ -203,15 +195,23 @@ qspi_set_read_delay(uint32_t n)
 void
 qspi_init(void)
 {
+    int chip_type = get_chip_type();
     int is_mx = qspi_is_mx();
 
+    if (is_mx) {
+        if (chip_type == CHIP_TYPE_HAPS) {
+            qspi_mx_set_144_dummy(10);
+        } else {
+            qspi_mx_set_122_dummy(8);
+        }
+    }
     qspi_disable();
-    if (get_chip_type() == CHIP_TYPE_HAPS) {
+    if (chip_type == CHIP_TYPE_HAPS) {
         qspi_set_div(4);
-        qspi_set_read_144_mode(is_mx);
+        qspi_set_read_144_mode();
     } else {
         qspi_set_div(QSPI_CLK_FREQ_ASIC / board_qspi_frequency());
-        qspi_set_read_122_mode(is_mx);
+        qspi_set_read_122_mode();
     }
     qspi_set_read_delay(board_qspi_read_delay());
     qspi_enable();

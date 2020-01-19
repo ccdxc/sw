@@ -16,7 +16,7 @@ static const bsm_fwid_map_t std_bsm_fwid_map = {
         [FW_MAIN_A] = { FW_MAIN_A, FW_MAIN_B, FW_GOLD,   FW_GOLD   },
         [FW_MAIN_B] = { FW_MAIN_B, FW_MAIN_A, FW_GOLD,   FW_GOLD   },
         [FW_GOLD]   = { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD   },
-        [FW_DIAG]   = { FW_DIAG,   FW_GOLD,   FW_GOLD,   FW_GOLD   },
+        [FW_DIAG]   = { FW_DIAG,   FW_DIAG,   FW_GOLD,   FW_GOLD   },
     }
 };
 
@@ -58,6 +58,7 @@ static const struct board_info brd[BOARD_TYPE_NUM] = {
         .chip_type          = CHIP_TYPE_ASIC,
         .cpld_id            = CPLD_ID_FORIO,
         .qspi_read_delay    = 1,
+        .qspi_frequency     = 40000000,
     },
     [BOARD_TYPE_VOMERO] = {
         .chip_type          = CHIP_TYPE_ASIC,
@@ -76,13 +77,26 @@ get_chip_type(void)
     return CAP_MS_CSR_STA_VER_CHIP_TYPE_GET(sta_ver);
 }
 
+int
+get_cpld_id(void)
+{
+    static int cpld_id = -1;
+    int chip_type;
+
+    if (cpld_id < 0) {
+        chip_type = get_chip_type();
+        cpld_id = (chip_type == CHIP_TYPE_ASIC) ? cpld_read(CPLD_ID) : 0;
+    }
+    return cpld_id;
+}
+
 static int
 init_board_type(void)
 {
     int chip_type, cpld_id, i, board_type;
 
     chip_type = get_chip_type();
-    cpld_id = (chip_type == CHIP_TYPE_ASIC) ? cpld_read(CPLD_ID) : 0;
+    cpld_id = get_cpld_id();
     board_type = BOARD_TYPE_UNKNOWN;
     for (i = 0; i < ARRAY_SIZE(brd); i++) {
         if (brd[i].chip_type == chip_type && brd[i].cpld_id == cpld_id) {

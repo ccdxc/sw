@@ -147,7 +147,7 @@ main(void)
     qspi_init();
     gpio_init();
 
-    printf("Boot0 v%d\n", BOOT0_VERSION);
+    printf("Boot0 v%d, Id 0x%02x\n", BOOT0_VERSION, get_cpld_id());
 
     /*
      * Loop around trying to boot.
