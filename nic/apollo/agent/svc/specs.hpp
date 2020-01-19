@@ -1770,6 +1770,14 @@ pds_policy_rule_match_proto_to_api_spec (pds_obj_key_t policy,
                                          rule_match_t *match,
                                          const pds::SecurityRule &proto_rule)
 {
+    if (unlikely(proto_rule.priority() > PDS_MAX_RULE_PRIORITY)) {
+        PDS_TRACE_ERR("Security policy {}, rule {} priority {} is invalid, "
+                      "must be <= {}",
+                      policy.str(), rule_id, proto_rule.priority(),
+                      PDS_MAX_RULE_PRIORITY);
+        return SDK_RET_INVALID_ARG;
+    }
+
     if (unlikely(proto_rule.has_match() == false)) {
         PDS_TRACE_ERR("Security policy {}, rule {} has no match condition, "
                       "IP protocol is a mandatory match condition",

@@ -1322,6 +1322,7 @@ create_security_policy (uint32_t num_vpcs, uint32_t num_subnets,
                     if (priority_step == TESTAPP_POLICY_PRIORITY_STEP) {
                         priority = idx + (priority_step - 1);
                     }
+                    priority = (priority > 1022) ? (1022) : priority;
                     rule->priority = priority;
                     priority--;
                     priority_step--;

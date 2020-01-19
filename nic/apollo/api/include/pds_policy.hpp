@@ -22,6 +22,7 @@
 #define PDS_MAX_SECURITY_POLICY                  1023    ///< Maximum security policies
 #define PDS_MAX_RULES_PER_IPV4_SECURITY_POLICY   1023    ///< Maximum IPV4 rules per policy
 #define PDS_MAX_RULES_PER_IPV6_SECURITY_POLICY     15    ///< Maximum IPV6 rules per policy
+#define PDS_MAX_RULE_PRIORITY                    1022    ///< Numerically highest priority
 
 /// \brief    rule direction
 typedef enum rule_dir_e {
