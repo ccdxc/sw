@@ -1038,11 +1038,11 @@ func (srv *fakeRPCServer) ListMirrorSessions(ctx context.Context, oMeta *api.Obj
 
 func (srv *fakeRPCServer) WatchFlowExportPolicy(oMeta *api.ObjectMeta, stream netproto.FlowExportPolicyApiV1_WatchFlowExportPolicyServer) error {
 	netflow := netproto.FlowExportPolicy{
-		TypeMeta: api.TypeMeta{Kind: "Mirror"},
+		TypeMeta: api.TypeMeta{Kind: "FlowExportPolicy"},
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      "testMirror",
+			Name:      "testNetflow",
 		},
 		Spec: netproto.FlowExportPolicySpec{
 			Interval:         "30s",
