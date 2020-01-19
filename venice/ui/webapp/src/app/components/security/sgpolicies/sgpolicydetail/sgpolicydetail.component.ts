@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ViewEncapsulation, OnDestroy, AfterViewInit, ChangeDetectorRef } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { FormControl, FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { IPUtility } from '@app/common/IPUtility';
@@ -12,7 +12,7 @@ import { SearchService } from '@app/services/generated/search.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchPolicySearchRequest, ISearchPolicyMatchEntry, ISearchPolicySearchResponse, SearchPolicySearchResponse_status } from '@sdk/v1/models/generated/search';
-import { ISecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
+import { ISecuritySGRule, SecuritySGRule, SecurityNetworkSecurityPolicy, SecuritySGRule_action_uihint, ISecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
 import { CustomFormControl } from '@sdk/v1/utils/validators';
 import { TableCol, CustomExportMap, CustomExportFunctionOpts } from '@app/components/shared/tableviewedit';
 import { MetricsqueryService, TelemetryPollingMetricQueries } from '@app/services/metricsquery.service';
@@ -24,6 +24,8 @@ import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster'
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { Animations } from '@app/animations';
 import { TableviewAbstract, TablevieweditHTMLComponent } from '@app/components/shared/tableviewedit/tableviewedit.component';
+import { Observable } from 'rxjs';
+import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
 
 /**
  * Component for displaying a security policy and providing IP searching
@@ -188,6 +190,12 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   // Helps avoid rebuidling the string unless there are changes
   ruleMetricsTooltip: { [hash: string]: string } = {};
 
+  // EDIT MODE
+  ruleEditableMap: {[index: number]: boolean} = {};
+  ruleDeleteMap: {[index: number]: boolean} = {};
+  delCount = 0;
+  editObject: SecurityNetworkSecurityPolicy = null;
+
   // properties from tableview component
   disableTableWhenRowExpanded: boolean = true;
   isTabComponent: boolean = false;
@@ -219,6 +227,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
         return String(entry.TotalHits); // to return string
     }
   };
+
+  display: boolean = false;
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
@@ -574,6 +584,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
           this.getPolicyMetrics();
           this.updateRulesByPolicy();
           this.exportFilename = this.selectedPolicy.meta.name;
+          this.resetMapsAndSelection();
         } else {
           // Must have received a delete event.
           this.showDeletionScreen = true;
@@ -766,5 +777,139 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     return protoPorts.concat(apps).join(', ');
   }
 
+  isAnythingSelected() {
+    if (this.tableContainer) {
+      if (this.tableContainer.selectedDataObjects.length) {
+        return true;
+      }
+    }
+    return false;
+  }
 
+  isAnythingToBeDeleted() {
+    if (this.delCount) {
+      return true;
+    }
+    return false;
+  }
+
+  checkboxClicked(event) {
+    const index = event.data.order;
+    this.ruleEditableMap[index] = !this.ruleEditableMap[index];
+  }
+
+  rowDeleteClicked(rowData) {
+    const index = rowData.order;
+    this.ruleDeleteMap[index] = true;
+    this.delCount++;
+  }
+
+  rowResetClicked(rowData) {
+    const index = rowData.order;
+    this.ruleDeleteMap[index] = false;
+    this.delCount--;
+  }
+
+  showDialog() {
+    this.createEditObject();
+    this.display = true;
+  }
+
+  createEditObject() {
+
+    const editrules: Array<SecuritySGRule> = [];
+    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
+    this.tableContainer.selectedDataObjects.forEach((ruleObj, index) => {
+        editrules.push(ruleObj.rule);
+    });
+
+    this.editObject.spec.rules = editrules;
+  }
+
+  resetMapsAndSelection() {
+    this.ruleEditableMap = {};
+    this.ruleDeleteMap = {};
+    this.delCount = 0;
+    this.tableContainer.selectedDataObjects = [];
+  }
+
+  onSave(editedObject: SecurityNetworkSecurityPolicy) {
+    let policy;
+    if ( editedObject ) {
+      policy = this.updateFromEditObject(editedObject);
+    } else {
+      policy = this.deleteFromSelectedObject();
+    }
+    let handler: Observable<{ body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number }>;
+    (<any>policy).meta.name = (<any>this.selectedPolicy).meta.name;
+    handler = this.updateObject(policy, this.selectedPolicy);
+
+    handler.subscribe(
+      (response) => {
+        this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Successfully updated policy.');
+        // this.cancelObject();
+      },
+      (error) => {
+          this.controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+      }
+    );
+  }
+
+  onCancel() {
+    this.resetMapsAndSelection();
+  }
+
+  closeDialog() {
+    this.display = false;
+  }
+
+  updateObject(newObject: ISecurityNetworkSecurityPolicy, oldObject: ISecurityNetworkSecurityPolicy) {
+    return this.securityService.UpdateNetworkSecurityPolicy(oldObject.meta.name, newObject, null, oldObject);
+  }
+
+  deleteSelectedRows() {
+    this.tableContainer.selectedDataObjects.forEach((rowData, index) => {
+      if (!this.ruleDeleteMap[rowData.order]) {
+        this.ruleDeleteMap[rowData.order] = true;
+        this.delCount++;
+      }
+    });
+  }
+
+  deleteFromSelectedObject() {
+
+    const policy1 = this.selectedPolicy.getFormGroupValues();
+
+    const rules = [];
+
+    for (let i = 0; i < policy1.spec.rules.length; i++) {
+      if (!this.ruleDeleteMap[i]) {
+        rules.push(policy1.spec.rules[i]);
+      }
+    }
+    policy1.spec.rules = rules;
+
+    return policy1;
+
+  }
+
+  updateFromEditObject(editedObject) {
+    const policy = editedObject;
+    const policy1 = this.selectedPolicy.getFormGroupValues();
+
+    let count = 0;
+
+    for (let i = 0; i < policy1.spec.rules.length; i++) {
+      if (this.ruleEditableMap[i]) {
+        policy1.spec.rules[i] = policy.spec.rules[count];
+        count++;
+      }
+    }
+
+    for (let i = count; i < policy.spec.rules.length; i++) {
+      policy1.spec.rules[i].push(policy.spec.rules[count]);
+    }
+
+    return policy1;
+  }
 }

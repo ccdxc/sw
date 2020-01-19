@@ -52,7 +52,8 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon *roleGuard="'monitoringfwlogpolicy_update'" matTooltip="Edit policy"
+    <mat-icon [matTooltip]="editTooltip(rowData)" *roleGuard="'monitoringfwlogpolicy_update'"
+              matTooltip="Edit policy"
               class="global-table-action-icon fwlogpolicies-table-action-icon-edit"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
     <mat-icon *roleGuard="'monitoringfwlogpolicy_delete'" matTooltip="Delete policy"
@@ -62,7 +63,9 @@
 </ng-template>
 
 <ng-template #expandTemplate let-rowData let-columns="columns">
-  <app-newsgpolicy [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
-                   (formClose)="closeRowExpand()" fxFlex="none">
-  </app-newsgpolicy>
+  <ng-container *ngIf="attemptInlineEdit(rowData)">
+    <app-newsgpolicy [style.width]="'100%'" [objectData]="rowData" [isInline]="true"
+                     (formClose)="closeRowExpand()" fxFlex="none">
+    </app-newsgpolicy>
+  </ng-container>
 </ng-template>

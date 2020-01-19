@@ -24,7 +24,8 @@
              #primengTable
              class="global-primeng-table-lazyload" [responsive]="true"
              [(selection)]="selectedDataObjects"
-             [loading]="tableLoading" [resizableColumns]="false" rowExpandMode="single">
+             [loading]="tableLoading" [resizableColumns]="false" rowExpandMode="single"
+             (onRowSelect)="rowSelected($event)" (onRowUnselect)="rowUnselected($event)">
 
       <ng-template pTemplate="caption" *ngIf="captionTemplate != null">
         <div fxLayout="row">
@@ -69,7 +70,7 @@
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-rowData>
+      <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
         <tr (mouseover)="rowHover(rowData)" (mouseleave)="resetHover(rowData)"
             [ngClass]="expandedRowData ?checkIfSelected(rowData) : ''" [pSelectableRow]="rowData"
             class="tableviewedit-tr tableviewedit-tr_{{rowData?.meta?.name}}"
@@ -85,7 +86,7 @@
               [colSpan]="last && actionTemplate != null ? 2 : 1"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container
-                          *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData}">
+                          *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData, rowIndex: rowIndex}">
             </ng-container>
           </td>
           <!--

@@ -1,0 +1,111 @@
+@import 'src/global-mixins';
+
+$horizontal-gutter: 10px;
+$vertical-gutter: 5px;
+
+.partial-edit-sgpolicy-name {
+  margin: $vertical-gutter $horizontal-gutter;
+  margin-left: 53px;
+  height: 30px !important;
+}
+
+.partial-edit-sgpolicy-attach-radio {
+  margin-left: 5px;
+  margin-top: 6px;
+  @include global-mat-radio(12px);
+
+  .mat-radio-label-content {
+    @include primary-font(14px);
+  }
+}
+
+.partial-edit-sgpolicy-save,
+.partial-edit-sgpolicy-cancel {
+  font-size: 16px;
+  display: inline-block;
+  padding: 4px 10px;
+  line-height: 25px;
+  margin: 0px $horizontal-gutter $vertical-gutter $horizontal-gutter;
+}
+
+.partial-edit-sgpolicy-container {
+  padding: 20px 15px;
+  @include primary-font();
+}
+
+.partial-edit-sgpolicy-multiselect {
+  height: 30px !important;
+}
+
+.partial-edit-sgpolicy-subtext {
+  margin-top: 2px;
+  @include primary-font(12px, #b2b3b4, 300);
+}
+
+.partial-edit-sgpolicy-bold {
+  @include primary-font(16px, #383838, 500);
+}
+
+.partial-edit-sgpolicy-bold-subtext {
+  @include primary-font(16px, #383838);
+}
+
+.partial-edit-sgpolicy-number {
+  @include primary-font(18px, #97b8df);
+  height: 30px
+}
+
+.partial-edit-sgpolicy-number-edit {
+  @include primary-font(18px);
+  height: 30px
+}
+
+.partial-edit-sgpolicy-rule-template {
+  margin-left: 15px;
+}
+
+.partial-edit-sgpolicy-add-rule {
+  @include primary-font(16px, #6ba0e5, 500);
+  width: 100px;
+  cursor: pointer;
+}
+
+.partial-edit-sgpolicy-chip {
+  // width: 400px;
+  // height: 30px;
+}
+
+.partial-edit-sgpolicy-input {
+  width: 155px;
+  height: 30px;
+}
+
+.partial-edit-sgpolicy-divider {
+  border-top: #dddddd 1px solid;
+}
+
+.partial-edit-sgpolicy-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
+.partial-edit-sgpolicy-rule-template {
+  cursor: pointer;
+
+  .partial-edit-sgpolicy-edit-hoverbuttons {
+    display: none;
+  }
+
+  &:hover {
+    .partial-edit-sgpolicy-edit-hoverbuttons {
+      display: inherit;
+    }
+  }
+}
+
+.partial-edit-sgpolicy-rule-template.partial-edit-sgpolicy-hide-primeng-panel .partial-edit-sgpolicy-select-panel {
+  display: none;
+}
+
+.popup {
+  width: 80%;
+}

@@ -245,3 +245,12 @@ $vertical-gutter: 5px;
   @include primary-font(18px);
   font-size: 14px !important;
 }
+
+.sgpolicy-edit-delete {
+  text-decoration: line-through;
+}
+
+.sgpolicy-icons-button {
+  cursor: pointer;
+  color: #676763;
+}

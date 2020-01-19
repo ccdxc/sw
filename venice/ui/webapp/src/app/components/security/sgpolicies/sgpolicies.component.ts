@@ -26,6 +26,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   // Currently venice supports only one security policy.
   MAX_POLICY_NUM: number = 1;
+  EDIT_INLINE_MAX_RULES_LIMIT: number = 20;
 
   // Holds all policy objects
   sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
@@ -114,5 +115,20 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   generateDeleteSuccessMsg(object: ISecurityNetworkSecurityPolicy) {
     return 'Deleted SG Policy ' + object.meta.name;
+  }
+
+  editTooltip(rowData) {
+    if (rowData.spec.rules.length > this.EDIT_INLINE_MAX_RULES_LIMIT) {
+      return 'Edit Policy on Details Page';
+    } else {
+      return 'Edit Policy Inline';
+    }
+  }
+
+  attemptInlineEdit(rowData): boolean {
+    if (rowData.spec.rules.length > this.EDIT_INLINE_MAX_RULES_LIMIT) {
+      this._controllerService.navigate(['/security', 'sgpolicies', rowData.meta.name]);
+    }
+    return true;
   }
 }

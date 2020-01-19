@@ -94,6 +94,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   @Output() rowClick: EventEmitter<RowClickEvent> = new EventEmitter();
 
   @Output() rowExpandAnimationComplete: EventEmitter<any> = new EventEmitter();
+  @Output() rowSelectedEmitter: EventEmitter<any> = new EventEmitter();
+  @Output() rowUnselectedEmitter: EventEmitter<any> = new EventEmitter();
 
   selectedcolumns: TableCol[];
 
@@ -307,6 +309,15 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
       this.mouseUpListener(); // Stop listening to mouseup when user releases click.
     });
   }
+
+  rowSelected(event) {
+    this.rowSelectedEmitter.emit(event);
+  }
+
+  rowUnselected(event) {
+    this.rowUnselectedEmitter.emit(event);
+  }
+
 }
 
 export abstract class TableviewAbstract<I, T extends I> extends BaseComponent implements OnInit, OnDestroy, OnChanges, TabcontentInterface {

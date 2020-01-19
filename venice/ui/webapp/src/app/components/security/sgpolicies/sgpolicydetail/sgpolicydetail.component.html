@@ -100,68 +100,131 @@
                      [runDoCheck]="false"
                      [expandedRowData]="expandedRowData"
                      [captionTemplate]="captionTemplate"
+                     [actionTemplate]="actionTemplate"
                      [bodyTemplate]="bodyTemplate"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+                     [enableCheckbox]="true"
+                     [dataKey]="'order'"
+                     (rowSelectedEmitter)="checkboxClicked($event)"
+                     (rowUnselectedEmitter)="checkboxClicked($event)">
   </app-tableviewedit>
 </ng-template>
 
 <!-- TABLE HEADER -->
 <ng-template #captionTemplate let-count="count">
-  <app-tableheader title="Policy Rules" [total]="count" [icon]="policyIcon"
-                   [enableColumnSelect]="true"
-                   [icon]="tableIcon" [cols]="cols" [tableMenuItems]="tableMenuItems"
-                   (columnSelectChange)="onColumnSelectChange($event)">
-    <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center">
-      Search:
-      <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
-        <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-               [formControl]="sourceIpFormControl" type="text" pInputText
-               (keyup)="keyUpInput($event)" appErrorTooltip
-               placeholder="Source IP" maxlength="15" autocomplete="off">
+  <div fxFlex fxLayout="row">
+    <div fxFlex fxLayout="column">
+      <div fxFlex fxLayout="row">
+        <app-tableheader fxFlex title="Policy Rules" [total]="count" [icon]="policyIcon"
+                         [enableColumnSelect]="true"
+                         [icon]="tableIcon" [cols]="cols" [tableMenuItems]="tableMenuItems"
+                         (columnSelectChange)="onColumnSelectChange($event)">
+          <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center">
+            Search:
+            <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+              <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                     [formControl]="sourceIpFormControl" type="text" pInputText
+                     (keyup)="keyUpInput($event)" appErrorTooltip
+                     placeholder="Source IP" maxlength="15" autocomplete="off">
+            </div>
+            <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+              <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                     [formControl]="destIpFormControl" type="text" pInputText
+                     (keyup)="keyUpInput($event)" appErrorTooltip
+                     placeholder="Destination IP" maxlength="15" autocomplete="off">
+            </div>
+            <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
+              <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
+                     [formControl]="portFormControl" type="text" pInputText
+                     (keyup)="keyUpInput($event)" appErrorTooltip
+                     placeholder="<Protocol>/<Port> or App" maxlength="100" autocomplete="off">
+            </div>
+            <mat-icon fxFlex="none" class="sgpolicy-search-button"
+                      (click)="invokePolicySearch()"
+                      (keydown)="($event.which ==13)? invokePolicySearch() : '' " tabindex="0"
+                      *ngIf="showSearchButton()">
+              search
+            </mat-icon>
+            <mat-icon fxFlex="none" class="sgpolicy-search-clear-button"
+                      (click)="clearSearch()" (keydown)="($event.which ==13)? clearSearch() : '' "
+                      tabindex="0"
+                      *ngIf="showSearchButton()" tabindex="0">
+              close
+            </mat-icon>
+            <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center"
+                 *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">
+              <mat-icon fxFlex="none">error</mat-icon>
+              <div fxFlex="none">
+                {{searchErrorMessage}}
+              </div>
+            </div>
+            <div fxFlex></div>
+          </div>
+        </app-tableheader>
       </div>
-      <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
-        <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-               [formControl]="destIpFormControl" type="text" pInputText
-               (keyup)="keyUpInput($event)" appErrorTooltip
-               placeholder="Destination IP" maxlength="15" autocomplete="off">
+      <div *ngIf="delCount>0 || isAnythingSelected()" fxFlex fxLayout="row"
+           fxLayoutAlign="center center" [@fastSlideInOut]>
+        <mat-icon [matTooltip]="'Save and Upate Policy'" *ngIf="delCount>0"
+                  class="sgpolicy-icons-button" (click)="onSave(null)"
+                  fxFlex="none">
+          save</mat-icon>
+        <mat-icon [matTooltip]="'Edit Selected Rules'" *ngIf="isAnythingSelected()"
+                  class="sgpolicy-icons-button" (click)="showDialog()"
+                  fxFlex="none">edit</mat-icon>
+        <mat-icon [matTooltip]="'Mark For Deletion'" *ngIf="isAnythingSelected()"
+                  class="sgpolicy-icons-button"
+                  (click)="deleteSelectedRows()"
+                  fxFlex="none">delete</mat-icon>
+        <mat-icon [matTooltip]="'Reset All Selection'" *ngIf="delCount>0 || isAnythingSelected()"
+                  class="sgpolicy-icons-button"
+                  (click)="resetMapsAndSelection()"
+                  fxFlex="none">cancel</mat-icon>
       </div>
-      <div fxflex="nogrow" fxlayout="row" class="sgpolicydetail-value">
-        <input fxflex="nogrow" class="sgpolicydetail-inputip" spellcheck="false"
-               [formControl]="portFormControl" type="text" pInputText
-               (keyup)="keyUpInput($event)" appErrorTooltip
-               placeholder="<Protocol>/<Port> or App" maxlength="100" autocomplete="off">
-      </div>
-      <mat-icon fxFlex="none" class="sgpolicy-search-button"
-                (click)="invokePolicySearch()"
-                (keydown)="($event.which ==13)? invokePolicySearch() : '' " tabindex="0"
-                *ngIf="showSearchButton()">
-        search
-      </mat-icon>
-      <mat-icon fxFlex="none" class="sgpolicy-search-clear-button"
-                (click)="clearSearch()" (keydown)="($event.which ==13)? clearSearch() : '' "
-                tabindex="0"
-                *ngIf="showSearchButton()" tabindex="0">
-        close
-      </mat-icon>
-      <div class="sgpolicy-search-error" fxFlex="none" fxLayoutAlign="start center"
-           *ngIf="searchErrorMessage !== null && searchErrorMessage !== ''">
-        <mat-icon fxFlex="none">error</mat-icon>
-        <div fxFlex="none">
-          {{searchErrorMessage}}
-        </div>
-      </div>
-      <div fxFlex></div>
+
+      <ng-container *ngIf="display">
+        <ng-container *ngTemplateOutlet="policyEditor"></ng-container>
+      </ng-container>
     </div>
-  </app-tableheader>
+  </div>
+</ng-template>
+
+<ng-template #policyEditor>
+  <p-dialog header="Policy Editing" [(visible)]="display" [appendTo]="'body'" [maximizable]="true"
+            [modal]="true" [styleClass]="'popup'">
+    <app-partial-edit-sgpolicy [style.width]="'100%'" [objectData]="this.editObject"
+                               [isInline]="true"
+                               fxFlex="none" (saveEmitter)="onSave($event)"
+                               (closeEmitter)="closeDialog()">
+    </app-partial-edit-sgpolicy>
+  </p-dialog>
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">
   <ng-container>
-    <div
-         [matTooltip]=" col.field === 'TotalHits' ? ruleMetricsTooltip[rowData.ruleHash]: ''"
-         [matTooltipShowDelay]="100"
-         [matTooltipClass]="'global-info-tooltip sgpolicy-tooltip'">
-      {{displayColumn(rowData, col)}}
-    </div>
+    <ng-container>
+      <div [ngClass]="this.ruleDeleteMap[rowData.order]?'sgpolicy-edit-delete':''"
+           [matTooltip]=" col.field === 'TotalHits' ? ruleMetricsTooltip[rowData.ruleHash]: ''"
+           [matTooltipShowDelay]="100"
+           [matTooltipClass]="'global-info-tooltip sgpolicy-tooltip'">
+        {{displayColumn(rowData, col)}}
+      </div>
+    </ng-container>
   </ng-container>
+</ng-template>
+
+<ng-template #actionTemplate let-rowData>
+  <div *ngIf="!this.ruleDeleteMap[rowData.order]"
+       class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon [matTooltip]="'Mark For Deletion'" matTooltip="Delete image"
+              class="sgpolicy-icons-button global-table-action-icon"
+              (click)="rowDeleteClicked(rowData)">
+      delete</mat-icon>
+  </div>
+  <div *ngIf="this.ruleDeleteMap[rowData.order]"
+       class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon [matTooltip]="'Unmark Rule for Deletion'" matTooltip="Delete image"
+              class="sgpolicy-icons-button global-table-action-icon"
+              (click)="rowResetClicked(rowData)">
+      refresh</mat-icon>
+  </div>
 </ng-template>

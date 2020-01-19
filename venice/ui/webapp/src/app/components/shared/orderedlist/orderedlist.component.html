@@ -1,4 +1,13 @@
 <div>
+  <div *ngIf="enableDragDrop" fxLayout="column" class="orderedlist-list">
+    <ng-container *ngTemplateOutlet="withDrag"></ng-container>
+  </div>
+  <div *ngIf="!enableDragDrop" fxLayout="column" class="orderedlist-list">
+    <ng-container *ngTemplateOutlet="withoutDrag;"></ng-container>
+  </div>
+</div>
+
+<ng-template #withDrag>
   <div cdkDropList (cdkDropListDropped)="drop($event)" fxLayout="column" class="orderedlist-list">
     <!-- Not using the default slideInOut as animation has issues with drag/drop
         After dragging and dropping an element into a different spot, angular seems to be adding an element and removing it instantly. This causes an entrance animation to play when a deletion animation should be playing instead -->
@@ -8,7 +17,7 @@
          class="orderedlist-order" fxLayout="column" fxFlex="auto">
       <div class="orderedlist-placeholder" *cdkDragPlaceholder></div>
       <div fxLayout="row">
-        <div class="orderedlist-numbering" fxFlex="nogrow" fxLayout="column"
+        <div *ngIf="enableOrdering" class="orderedlist-numbering" fxFlex="nogrow" fxLayout="column"
              fxLayoutAlign="center center">
           <mat-icon [ngClass]="first?'orderedlist-order-disabledarrow':'orderedlist-order-buttons'"
                     (click)="moveItem(index, index-1)">arrow_drop_up</mat-icon>
@@ -33,4 +42,34 @@
       </div>
     </div>
   </div>
-</div>
+</ng-template>
+
+<ng-template #withoutDrag>
+  <div fxLayout="column" class="orderedlist-list">
+    <div [@slideInOutLeave]
+         *ngFor="let data of dataArray; let index = index; let first = first;let last = last;trackBy: trackByFunc"
+         class="orderedlist-order" fxLayout="column" fxFlex="auto">
+      <div fxLayout="row">
+        <div *ngIf="enableOrdering" class="orderedlist-numbering" fxFlex="nogrow" fxLayout="column"
+             fxLayoutAlign="center center">
+          <mat-icon [ngClass]="first?'orderedlist-order-disabledarrow':'orderedlist-order-buttons'"
+                    (click)="moveItem(index, index-1)">arrow_drop_up</mat-icon>
+          <div class="orderedlist-order-index">{{index+1}}</div>
+          <mat-icon [ngClass]="last?'orderedlist-order-disabledarrow':'orderedlist-order-buttons'"
+                    (click)="moveItem(index, index+1)">arrow_drop_down</mat-icon>
+        </div>
+        <div class="orderedlist-order-label"
+             [ngClass]="{'orderedlist-order-label-selected': data.inEdit}"
+             fxFlex="auto" fxLayout="row"
+             fxLayoutAlign="start center"
+             (click)="itemClick.emit(index)">
+          <div fxFlex="auto" fxLayout="row" fxLayoutAlign="start center">
+            <ng-container
+                          *ngTemplateOutlet="template; context:{data: data.data, index: index, first: first, last: last, inEdit: data.inEdit}">
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

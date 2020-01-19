@@ -20,6 +20,8 @@ export class OrderedlistComponent implements OnInit {
   // Variables available in template
   // data, index, first, last, inEdit
   @Input() template: TemplateRef<any>;
+  @Input() enableDragDrop: boolean = true;
+  @Input() enableOrdering: boolean = true;
   // Emits the index of the clicked element
   @Output() itemClick: EventEmitter<number> = new EventEmitter<number>();
   @Output() orderChange: EventEmitter<any> = new EventEmitter<any>();

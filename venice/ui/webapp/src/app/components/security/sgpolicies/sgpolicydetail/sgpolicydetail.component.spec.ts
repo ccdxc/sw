@@ -121,12 +121,18 @@ describe('SgpolicydetailComponent', () => {
     rows.forEach((row, rowIndex) => {
       const rowData = data[rowIndex];
       row.children.forEach((field, fieldIndex) => {
-        if (fieldIndex === 0) {
+        if (fieldIndex === 0 ) {
+          return 0;
+        }
+        if (fieldIndex === 1) {
           // SG Policy doesn't have a header for the first column
           expect(field.nativeElement.textContent).toContain(rowIndex + 1);
           return;
         }
-        const colData = columns[fieldIndex];
+        const colData = columns[fieldIndex - 1];
+        if (colData === undefined) {
+          return 0;
+        }
         switch (colData.field) {
           case 'sourceIPs':
             expect(field.nativeElement.textContent)
