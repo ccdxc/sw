@@ -148,7 +148,7 @@ class Node(object):
                                     dev["NicConsolePort"] == self.__nic_console_port and \
                                     dev["NicMgmtIP"] not in [ "N/A", "" ] and dev["Mac"] not in [ "N/A", "" ]:
                                     self.__nic_mgmt_ip = dev["NicMgmtIP"]
-                                    sellf.__mac = dev["Mac"]
+                                    self.__mac = dev["Mac"]
                                     ip_read = True
                     if not ip_read:
                         raise
