@@ -175,10 +175,9 @@ devapi_swm::initialize_lif_(channel_info_t *cinfo)
 {
     sdk_ret_t ret         = SDK_RET_OK;
     lif_info_t info       = {0};
-    char buf[256]         = {0};
 
     // Create lif
-    snprintf(buf, sizeof(buf), "swm_lif_%d", cinfo->port_num);
+    snprintf(info.name, sizeof(info.name), "swm_lif_%d", cinfo->port_num);
     info.lif_id                   = cinfo->swm_lif_id;
     info.type                     = sdk::platform::LIF_TYPE_SWM;
     info.pinned_uplink_port_num   = cinfo->port_num;

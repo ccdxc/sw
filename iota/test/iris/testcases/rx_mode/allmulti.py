@@ -180,7 +180,8 @@ def Trigger(tc):
                 result = api.types.status.FAILURE
 
         else:
-            if lif_am_flag == True:
+            # Ignore for SWM lifs
+            if lif_am_flag == True and lif_obj['spec']['type'] != 7:
                 api.Logger.error("halctl AM flag set for LIF [%s]" %(lif_obj['spec']['name']))
                 result = api.types.status.FAILURE
 
