@@ -3,6 +3,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	cmd "github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 )
 
@@ -67,8 +67,42 @@ var _ = Describe("ntp tests", func() {
 	})
 
 	It("ntp leader config file should be updated when external NTP servers change", func() {
-		cl.Spec.NTPServers = []string{"1.pool.ntp.org"}
+		ntpServersBak := cl.Spec.NTPServers
+		// use a server name that is not resolvable, otherwise the config file will contain the IP
+		cl.Spec.NTPServers = []string{"e2e-test-ntp-ext-server-new"}
 		ctx := ts.tu.MustGetLoggedInContext(context.Background())
+		cl, err = clusterIf.Update(ctx, cl)
+		Expect(err).ShouldNot(HaveOccurred())
+		getValidatedNtpObject(cl.Spec.NTPServers, cl.Status.Leader, "")
+
+		// now check that if a resolvable pool name is given, we resolve it and insert multiple IP addresses in leader config
+		cl.Spec.NTPServers = []string{"pool.ntp.org"}
+		// we expect ntp.pool.org to return at least 4 valid IPv4 addresses
+		minIPAddresses := 4
+		cl, err = clusterIf.Update(ctx, cl)
+		Expect(err).ShouldNot(HaveOccurred())
+		Eventually(func() bool {
+			leaderIP := ts.tu.NameToIPMap[cl.Status.Leader]
+			ntpConf := ts.tu.CommandOutput(leaderIP, "bash -c 'if [ -f /etc/pensando/pen-ntp/chrony.conf ] ; then  cat /etc/pensando/pen-ntp/chrony.conf; fi' ")
+			numIPv4Addrs := 0
+			for _, line := range strings.Split(ntpConf, "\n") {
+				var addr string
+				if n, err := fmt.Sscanf(line, "server %s iburst", &addr); n == 0 || err != nil {
+					continue
+				}
+				a := net.ParseIP(addr)
+				if a != nil && a.IsGlobalUnicast() && a.To4() != nil {
+					numIPv4Addrs++
+				}
+			}
+			if numIPv4Addrs < minIPAddresses {
+				By(fmt.Sprintf("Expected at least %d IP addresses in leader config, found %d. Config: %s", minIPAddresses, numIPv4Addrs, ntpConf))
+				return false
+			}
+			return true
+		}, 75, 5).Should(BeTrue(), "NTP config for leader node should contain IP addresses of NTP servers")
+
+		cl.Spec.NTPServers = ntpServersBak
 		cl, err = clusterIf.Update(ctx, cl)
 		Expect(err).ShouldNot(HaveOccurred())
 		getValidatedNtpObject(cl.Spec.NTPServers, cl.Status.Leader, "")
@@ -104,9 +138,11 @@ func validateNtpOnCluster(ntpObj ntpTest) {
 		if ip == ntpObj.oldLeaderIP {
 			continue // skip validation as cmd is paused on that node
 		}
-		ntpServers := utils.GetOtherQuorumNodes(ts.tu.QuorumNodes, qnode)
+		var ntpServers []string
 		if ip == ntpObj.ntpLeaderIP {
-			ntpServers = append(ntpServers, ntpObj.externalNtpServers...)
+			ntpServers = ntpObj.externalNtpServers
+		} else {
+			ntpServers = []string{ntpObj.ntpLeaderIP}
 		}
 
 		Eventually(func() bool {

@@ -111,6 +111,13 @@ func init() {
 		Desc:       "Node is unreachable",
 		SuppressMM: true}
 
+	eventTypes[CLOCK_SYNC_FAILED] = &EventTypeAttributes{
+		EType:      CLOCK_SYNC_FAILED.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "Node failed to synchronize clock",
+		SuppressMM: true}
+
 	eventTypes[QUORUM_MEMBER_ADD] = &EventTypeAttributes{
 		EType:      QUORUM_MEMBER_ADD.String(),
 		Severity:   "info",

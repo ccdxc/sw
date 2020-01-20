@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/auth"
@@ -21,6 +23,7 @@ import (
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/errors"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -102,7 +105,17 @@ func (o *clusterCreateOp) Run() (interface{}, error) {
 	o.populateClusterDefaults()
 	o.populateVersionDefaults()
 
-	utils.SyncTimeOnce(o.cluster.Spec.NTPServers)
+	ntpErrs := utils.SyncTimeOnce(o.cluster.Spec.NTPServers)
+	if ntpErrs != nil {
+		var errMsgs []string
+		for _, e := range ntpErrs {
+			errMsgs = append(errMsgs, e.Error())
+		}
+		errStr := strings.Join(errMsgs, ", ")
+		log.Errorf("Unable to perform clock sync: %v", errStr)
+		recorder.Event(eventtypes.CLOCK_SYNC_FAILED, fmt.Sprintf("Node failed to synchronize clock, errors: %v", errStr), o.cluster)
+		// continue anyway. Either this is ok or we will catch up later
+	}
 
 	// Generate etcd quorum configuration.
 	quorumConfig, err := makeQuorumConfig(o.cluster.UUID, o.cluster.Spec.QuorumNodes, false)

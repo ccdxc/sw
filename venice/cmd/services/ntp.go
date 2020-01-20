@@ -3,10 +3,10 @@ package services
 import (
 	"bytes"
 	"io"
+	"net"
 	"os"
 	"reflect"
 	"sort"
-	"strings"
 	"sync"
 	"text/template"
 
@@ -24,10 +24,9 @@ type ntpParams struct {
 const chronydConfigFile = `
 {{range .NtpServer}}
 server {{.}} iburst
-initstepslew 10 {{.}}
 {{end}}
 
-makestep 1 3
+makestep 1 0
 rtcsync
 rtconutc
 local stratum 10
@@ -43,7 +42,6 @@ type ntpService struct {
 	sysSvc   types.SystemdService
 	openFile func(string, int, os.FileMode) (*os.File, error)
 	nodeID   string
-	ntpConf  string
 }
 
 // NtpOption fills the optional params
@@ -87,10 +85,22 @@ func NewNtpService(externalNtpServers []string, envQuorumNodes []string, nodeID 
 }
 
 // NtpConfigFile writes config file with servers to synchronize the time to
-func (n *ntpService) NtpConfigFile(servers []string) {
+func (n *ntpService) NtpConfigFile(serverNames []string) {
 	tmpl, err := template.New("test").Parse(chronydConfigFile)
 	if err != nil {
 		panic(err)
+	}
+	// if we are given a DNS name, we should expand it because it could be a pool name
+	// like pool.ntp.org and chronyc does not support adding pools, so it would treat it
+	// as a single server, which is not good for accuracy and redundancy.
+	var servers []string
+	for _, n := range serverNames {
+		addrs, err := net.LookupHost(n)
+		if err == nil {
+			servers = append(servers, addrs...)
+		} else {
+			servers = append(servers, n)
+		}
 	}
 	nc := ntpParams{NtpServer: servers}
 	f, err := n.openFile(globals.NtpConfigFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
@@ -106,7 +116,7 @@ func (n *ntpService) NtpConfigFile(servers []string) {
 		log.Errorf("error %v while writing to ntp config file", err)
 		return
 	}
-	n.ntpConf = buf.String()
+	log.Infof("Updated NTP config files: %v", buf.String())
 	n.restartNtpd()
 }
 
@@ -121,6 +131,8 @@ func (n *ntpService) Start() {
 	n.enabled = true
 	if n.isLeader() {
 		n.leaderConfig()
+	} else {
+		n.memberConfig()
 	}
 }
 
@@ -160,36 +172,33 @@ func (n *ntpService) restartNtpd() {
 
 func (n *ntpService) leaderConfig() {
 	ntpServers := make([]string, 0)
+	// Leader only syncs with external servers, if any.
+	// it also advertise its clock to non-leaders but does not sync from non-leaders
+	// otherwise we can end up in a "no majority" case if clocks are significantly different
 	ntpServers = append(ntpServers, n.externalNtpServers...)
-	ntpServers = append(ntpServers, n.quorumNodes...)
 	n.NtpConfigFile(ntpServers)
 }
 
 func (n *ntpService) memberConfig() {
-	n.NtpConfigFile(n.quorumNodes)
+	// Members only sync with the leader
+	if n.leader == "" {
+		// not much we can do in this case
+		// pass other quorum nodes so we can stay in sync if they are reachable
+		log.Errorf("Error generating NTP config for non-leader node: leader is empty")
+		n.NtpConfigFile(n.quorumNodes)
+		return
+	}
+	n.NtpConfigFile([]string{n.leader})
 }
 
 func (n *ntpService) UpdateNtpConfig(leader string) {
 	n.Lock()
 	defer n.Unlock()
-	// check if ntp conf contains external servers
-	var isLeaderConf bool
-	for _, server := range n.externalNtpServers {
-		if strings.Contains(n.ntpConf, server) {
-			isLeaderConf = true
-			break
-		}
-	}
-	// if node was not a leader and new leader is not this node then no need to update config
-	if n.ntpConf != "" && !isLeaderConf && !n.isLeader() && leader != n.nodeID {
-		n.leader = leader
-		return
-	}
 	n.leader = leader
-	if !n.isLeader() {
-		n.memberConfig()
-	} else {
+	if n.isLeader() {
 		n.leaderConfig()
+	} else {
+		n.memberConfig()
 	}
 }
 

@@ -18,6 +18,11 @@
    "Desc": "Auto generated certificate is being used for API Gateway TLS"
   },
   {
+   "Name": "CLOCK_SYNC_FAILED",
+   "Severity": "warn",
+   "Desc": "Node failed to synchronize clock"
+  },
+  {
    "Name": "CONFIG_RESTORED",
    "Severity": "info",
    "Desc": "Configuration was restored"

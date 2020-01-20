@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	"github.com/pensando/sw/venice/cmd/types"
+	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
 type mockFile struct {
@@ -17,7 +18,7 @@ type mockFile struct {
 
 type ntpTest struct {
 	s types.SystemdService
-	n types.NtpService
+	n *ntpService
 	f *mockFile
 }
 
@@ -34,12 +35,11 @@ func (m *mockFile) mockFileOpen(desiredFilename string, flag int, perms os.FileM
 	return tmpfile, nil
 }
 
-func setupNtp(t *testing.T) *ntpTest {
+func setupNtp(t *testing.T, extServers, quorumNodes []string, nodeID string) *ntpTest {
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	f := mockFile{t: t}
-	envQuorumNodes := []string{t.Name(), t.Name() + "something"}
-	n := NewNtpService([]string{"server1", "server2"}, envQuorumNodes, t.Name(), WithSystemdSvcNtpOption(s), WithOpenFileNtpOption(f.mockFileOpen))
-	return &ntpTest{s: s, f: &f, n: n}
+	n := NewNtpService(extServers, quorumNodes, nodeID, WithSystemdSvcNtpOption(s), WithOpenFileNtpOption(f.mockFileOpen))
+	return &ntpTest{s: s, f: &f, n: n.(*ntpService)}
 }
 
 func cleanupNtp(ntpT *ntpTest) {
@@ -49,90 +49,54 @@ func cleanupNtp(ntpT *ntpTest) {
 
 func checkNtpNodeConfig(t *testing.T, ntpT *ntpTest) {
 	content, err := ioutil.ReadFile(ntpT.f.tmpFileName)
-	if err != nil {
-		t.Errorf("error %v reading temp file", err)
-		return
-	}
-	if strings.Count(string(content[:]), "server ") != 1 {
-		t.Errorf("didnt find 1 servers in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server "+t.Name()+"something iburst") == -1 {
-		t.Errorf("something not present in config. found %v", string(content[:]))
-		return
-	}
+	conf := string(content[:])
+	AssertOk(t, err, "error reading temp file %s", ntpT.f.tmpFileName)
+	Assert(t, strings.Contains(conf, "server "+ntpT.n.leader), "did not find leader in node config %s", conf)
+	Assert(t, strings.Count(conf, "server ") == 1, "expected exactly 1 servers in node config %v", conf)
 }
 
 func checkNtpMasterConfig(t *testing.T, ntpT *ntpTest) {
 	content, err := ioutil.ReadFile(ntpT.f.tmpFileName)
-	if err != nil {
-		t.Errorf("error %v reading temp file %v", err, ntpT.f.tmpFileName)
-		return
+	conf := string(content[:])
+	AssertOk(t, err, "error reading temp file %s", ntpT.f.tmpFileName)
+	for _, s := range ntpT.n.externalNtpServers {
+		Assert(t, strings.Contains(conf, s), "did not find external server %s in master node config: %v", s, conf)
 	}
-	if strings.Count(string(content[:]), "server ") != 3 {
-		t.Errorf("didnt find 3 servers in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server server1 iburst") == -1 {
-		t.Errorf("server1 not present in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server server2 iburst") == -1 {
-		t.Errorf("server2 not present in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server "+t.Name()+"something iburst") == -1 {
-		t.Errorf("something not present in config. found %v", string(content[:]))
-		return
-	}
-}
-
-func checkNtpMasterConfigAfterUpdate(t *testing.T, ntpT *ntpTest) {
-	content, err := ioutil.ReadFile(ntpT.f.tmpFileName)
-	if err != nil {
-		t.Errorf("error %v reading temp file %v", err, ntpT.f.tmpFileName)
-		return
-	}
-	if strings.Count(string(content[:]), "server ") != 3 {
-		t.Errorf("didnt find 3 servers in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server server3 iburst") == -1 {
-		t.Errorf("server3 not present in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server server4 iburst") == -1 {
-		t.Errorf("server4 not present in config. found %v", string(content[:]))
-		return
-	}
-	if strings.Index(string(content[:]), "server "+t.Name()+"something iburst") == -1 {
-		t.Errorf("something not present in config. found %v", string(content[:]))
-		return
+	for _, n := range ntpT.n.quorumNodes {
+		Assert(t, !strings.Contains(conf, n), "found unexpected quorum node %s in master node config: %v", n, conf)
 	}
 }
 
 func TestNtpServiceGiveupLeadership(t *testing.T) {
-	t.Parallel()
-	ntpT := setupNtp(t)
+	extServers := []string{"cmd-ntp-test-ext-srv1", "cmd-ntp-test-ext-srv2"}
+	quorumNodes := []string{"cmd-ntp-test-quorum1", "cmd-ntp-test-quorum2"}
+
+	ntpT := setupNtp(t, extServers, quorumNodes, quorumNodes[0])
+	defer cleanupNtp(ntpT)
 	ntpT.n.Start()
 
-	ntpT.n.UpdateNtpConfig(t.Name())
+	ntpT.n.UpdateNtpConfig(quorumNodes[0])
 	checkNtpMasterConfig(t, ntpT)
 
-	ntpT.n.UpdateNtpConfig(t.Name() + "something")
+	ntpT.n.UpdateNtpConfig(quorumNodes[1])
 	checkNtpNodeConfig(t, ntpT)
-	cleanupNtp(ntpT)
+
+	ntpT.n.UpdateNtpConfig(quorumNodes[0])
+	checkNtpMasterConfig(t, ntpT)
 }
 
 func TestNtpServiceCheckIfServersUpdated(t *testing.T) {
-	t.Parallel()
-	ntpT := setupNtp(t)
+	extServers := []string{"cmd-ntp-test-ext-srv1", "cmd-ntp-test-ext-srv2"}
+	quorumNodes := []string{"cmd-ntp-test-quorum1", "cmd-ntp-test-quorum2"}
+
+	ntpT := setupNtp(t, extServers, quorumNodes, quorumNodes[0])
+	defer cleanupNtp(ntpT)
 	ntpT.n.Start()
-	ntpT.n.UpdateNtpConfig(t.Name())
+
+	ntpT.n.UpdateNtpConfig(quorumNodes[0])
 	checkNtpMasterConfig(t, ntpT)
 
-	externalNtpServers := []string{"server3", "server4"}
-
-	ntpT.n.UpdateServerList(externalNtpServers)
-	checkNtpMasterConfigAfterUpdate(t, ntpT)
+	extServers = []string{"cmd-ntp-test-ext-srv3", "cmd-ntp-test-ext-srv4"}
+	ntpT.n.UpdateServerList(extServers)
+	checkNtpMasterConfig(t, ntpT)
 }

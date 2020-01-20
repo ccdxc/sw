@@ -240,7 +240,7 @@ def initCluster(nodeAddr, quorumNodes, clustervip):
             "auto-admit-dscs": True,
             "quorum-nodes": quorumNodes,
             "virtual-ip":  clustervip,
-            "ntp-servers": ["1.pool.ntp.org", "2.pool.ntp.org"]
+            "ntp-servers": ["e2e-test-ntp-ext-server-srv1", "e2e-test-ntp-ext-server-srv2"] # use unresolvable names
         }
     })
 

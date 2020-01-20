@@ -83,6 +83,11 @@ enum EventTypes {
                                           (desc)        = "Node is unreachable",
                                           (suppress_mm) = true];
 
+    CLOCK_SYNC_FAILED                = 11 [(category)    = Cluster,
+                                          (severity)    = WARN,
+                                          (desc)        = "Node failed to synchronize clock",
+                                          (suppress_mm) = true];
+
     // ------------------------------- Quorum events ----------------------------- //
     QUORUM_MEMBER_ADD               = 15 [(category)   = Cluster,
                                          (severity)    = INFO,

@@ -11,6 +11,9 @@ import (
 
 	context "golang.org/x/net/context"
 
+	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/cmd/credentials"
 	"github.com/pensando/sw/venice/cmd/env"
 	"github.com/pensando/sw/venice/cmd/grpc"
@@ -22,6 +25,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/utils"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
+	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/etcd"
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -55,8 +59,25 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 	} else if cluster != nil {
 		return nil, fmt.Errorf("Already part of cluster +%v", cluster)
 	}
-	utils.SyncTimeOnce(req.NtpServers)
+
 	log.Infof("Received PreJoin request: %+v", req)
+
+	ntpErrs := utils.SyncTimeOnce(req.NtpServers)
+	if ntpErrs != nil {
+		var errMsgs []string
+		for _, e := range ntpErrs {
+			errMsgs = append(errMsgs, e.Error())
+		}
+		errStr := strings.Join(errMsgs, ", ")
+		log.Errorf("Unable to perform clock sync: %v", errStr)
+		tmpCluster := cluster.Cluster{
+			ObjectMeta: api.ObjectMeta{
+				Name: req.Name,
+			},
+		}
+		recorder.Event(eventtypes.CLOCK_SYNC_FAILED, fmt.Sprintf("Node failed to synchronize clock, errors: %v", errStr), &tmpCluster)
+		// continue anyway. Either this is ok or we will catch up later
+	}
 
 	var transportKeyBytes []byte
 	if req.TransportKey != nil {

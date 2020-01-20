@@ -13,6 +13,7 @@ export const categoryToEventType: { [cat: string]: string[] } = {
   cluster: [
     'AUDITING_FAILED',
     'AUTO_GENERATED_TLS_CERT',
+    'CLOCK_SYNC_FAILED',
     'CONFIG_RESTORED',
     'CONFIG_RESTORE_ABORTED',
     'CONFIG_RESTORE_FAILED',
@@ -92,6 +93,11 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "AUTO_GENERATED_TLS_CERT",
       "Severity": EventsEvent_severity.warn,
       "Desc": "Auto generated certificate is being used for API Gateway TLS",
+  },
+  'CLOCK_SYNC_FAILED' : {
+      "Name": "CLOCK_SYNC_FAILED",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "Node failed to synchronize clock",
   },
   'CONFIG_RESTORED' : {
       "Name": "CONFIG_RESTORED",
