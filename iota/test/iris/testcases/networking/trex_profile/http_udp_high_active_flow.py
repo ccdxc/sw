@@ -16,7 +16,7 @@ class Prof1():
 
     def crunch_number(self, max_active_flow, no_pairs, cps):
         no_temp = self.no_temp_types * no_pairs
-        flow_time = (max_active_flow / cps) * 1000000
+        flow_time = (max_active_flow / (cps)) * 1000000
         self.delay = int(flow_time / self.loop)
         self.cps = int(cps / no_temp)
 
@@ -126,10 +126,9 @@ class Prof1():
         return out
 
     def get_profile(self, **kwargs):
-        K = 1000
-        client_server_pair = kwargs.get("client_server_pair", "192.168.100.103,192.168.100.101")
-        max_active_flow    = int(kwargs.get("max_active_flow", 32*K))
-        cps                = int(kwargs.get("cps", 600))
+        client_server_pair = kwargs.get("client_server_pair", None)
+        max_active_flow    = int(kwargs.get("max_active_flow", None))
+        cps                = int(kwargs.get("cps", None))
         client_server_pair = self.parse_client_server_pair(client_server_pair)
         return self.create_profile(client_server_pair, max_active_flow, cps)
 

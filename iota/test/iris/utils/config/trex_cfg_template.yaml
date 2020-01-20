@@ -6,30 +6,9 @@
   rx_desc         : 64
   rx_desc_drop    : 64
   port_bandwidth_gb : 1
-  limit_memory    : 512
+  limit_memory    : 1024
   port_info       :
           - ip         : 0.0.0.0
             default_gw : 0.0.0.0
           - ip         : 0.0.0.0
             default_gw : 0.0.0.0
-  memory    :
-         mbuf_64     : 512
-         mbuf_128    : 512
-         mbuf_256    : 512
-         mbuf_512    : 256
-         mbuf_1024   : 256
-         mbuf_2048   : 128
-         mbuf_4096   : 64
-         mbuf_8192   : 64
-         mbuf_9216   : 32
-         traffic_mbuf_64     : 512
-         traffic_mbuf_128    : 512
-         traffic_mbuf_256    : 512
-         traffic_mbuf_512    : 256
-         traffic_mbuf_1024   : 256
-         traffic_mbuf_2048   : 128
-         traffic_mbuf_4096   : 64
-         traffic_mbuf_8192   : 64
-         traffic_mbuf_9216   : 32
-         dp_flows            : 10000
-         active_flows        : 10000
