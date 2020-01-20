@@ -45,7 +45,7 @@ using grpc::ServerContext;
 using grpc::Status;
 
 std::string g_grpc_server_addr;
-#define GRPC_API_PORT    9999
+#define GRPC_API_PORT    50054
 namespace hooks {
 hooks_func_t hooks_func = NULL;
 }     // namespace hooks

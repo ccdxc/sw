@@ -40,15 +40,16 @@ protected:
 };
 
 // ----------------------------------------------------------------------------
-// Creating a event notification 
+// Creating a event notification
 // ----------------------------------------------------------------------------
 TEST_F(event_test, notify_listeners)
 {
      auto channel =
         grpc::CreateChannel("localhost:50054", grpc::InsecureChannelCredentials());
      auto stub = Event::NewStub(channel);
-     grpc::ClientContext context; 
+     grpc::ClientContext context;
      EventRequest req;
+
      req.set_event_id(event::EVENT_ID_PORT_STATE);
      req.set_event_operation(event::EVENT_OP_SUBSCRIBE);
      std::unique_ptr<grpc::ClientReader<EventResponse>> stream(stub->EventListen(&context, req));
@@ -59,6 +60,7 @@ TEST_F(event_test, notify_listeners)
              grpc::ServerWriter<EventResponse> *stream =
                               (grpc::ServerWriter<EventResponse> *)ctxt;
              EventResponse   evtresponse;
+
              std::cout << "Listener available";
              evtresponse.set_event_id(event::EVENT_ID_PORT_STATE);
              stream->Write(evtresponse);
@@ -78,7 +80,7 @@ TEST_F(event_test, notify_listeners)
      grpc::Status status = stream->Finish();
      if (!status.ok()) {
          std::cout << "Event test failed: " << status.ok() << std::endl;
-     }    
+     }
 }
 
 int main(int argc, char **argv) {

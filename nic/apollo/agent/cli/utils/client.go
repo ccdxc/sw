@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	pdsGRPCDefaultPort    = "9999"
+	pdsGRPCDefaultPort    = "50054"
 	pdsGRPCDefaultBaseURL = "localhost"
 )
 
 // CreateNewGRPCClient creates a grpc connection to HAL
 func CreateNewGRPCClient() (*grpc.ClientConn, error) {
 
-	pdsPort := os.Getenv("PDS_GRPC_PORT")
+	pdsPort := os.Getenv("HAL_GRPC_PORT")
 	if pdsPort == "" {
 		pdsPort = pdsGRPCDefaultPort
 	}
