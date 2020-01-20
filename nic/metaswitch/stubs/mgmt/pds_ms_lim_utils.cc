@@ -2,6 +2,7 @@
 // Purpose: Helper APIs for metaswitch LIM stub programming 
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_config.hpp"
 #include "evpn_prod.h"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
@@ -9,6 +10,28 @@
 
 using namespace pds_ms;
 namespace pds {
+
+NBB_VOID
+lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req, NBB_LONG row_status,
+                       NBB_ULONG correlator)
+{
+    pds_ms::pds_ms_config_t  conf = {0};
+    conf.correlator  = correlator;
+    conf.row_status  = AMB_ROW_ACTIVE;
+    conf.entity_index = PDS_MS_RTM_DEF_ENT_INDEX;
+    conf.admin_status = AMB_ADMIN_STATUS_UP;
+
+    ip_addr_t lo_ipaddr;
+    ip_addr_spec_to_ip_addr (req.ipaddr(), &lo_ipaddr);
+    pds_ms_convert_ip_addr_to_amb_ip_addr(lo_ipaddr, &conf.lo_addr_type,
+                                          &conf.lo_addr_len, conf.lo_addr, false);
+
+    SDK_TRACE_INFO("Adding redistributed connected rule to BGP for address %s",
+                   ipaddr2str(&lo_ipaddr));
+    pds_ms::pds_ms_rtm_redis_connected (&conf);
+}
+
+
 NBB_VOID
 lim_intf_addr_fill_func (LimInterfaceAddrSpec&   req,
                          AMB_GEN_IPS            *mib_msg,
@@ -48,6 +71,8 @@ lim_intf_addr_fill_func (LimInterfaceAddrSpec&   req,
     oid[AMB_LIM_L3_ADDR_IF_IX_INDEX] = if_index;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_LIM_L3_ADDR_IF_IX);
 }
+
+
 
 NBB_VOID
 lim_sw_intf_fill_func (LimInterfaceSpec&    req,

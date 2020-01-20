@@ -281,6 +281,9 @@ pds_ms_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
         // RM Entity is always admin down during init
         data->admin_status = AMB_BGP_ADMIN_STATUS_DOWN;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ADMIN_STATUS);
+
+        data->max_ibgp_ecmp_routes = 2;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_MAX_INT_ECMP_RTS);      
     }
 
     NBB_TRC_EXIT();

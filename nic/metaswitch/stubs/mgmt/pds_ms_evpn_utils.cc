@@ -59,6 +59,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
     pds_ms_get_uuid (&subnet_uuid, req.subnetid());
 
     if (strncmp (uuid.id, subnet_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // Venice case
         // spec uuid is same as subnet uuid
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_uuid);
@@ -76,6 +77,7 @@ evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                             uuid_obj_type_str(uuid_obj->obj_type()));
         }
     } else {
+        // Non Venice case
         // TODO: spec uuid doesnt match with subnet uuid. need to key-map
     }
 }
@@ -95,6 +97,7 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
 
     if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // Venice case
         // spec uuid is same as vpcuuid
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(vpc_uuid);
@@ -105,18 +108,17 @@ evpn_ip_vrf_pre_set (EvpnIpVrfSpec &req,
             return;
         } 
         if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
-#if 0 // TODO: uncomment this block after VPC uuid obj is available
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
             std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
             req.set_vrfname(vrf_name);
-           SDK_TRACE_DEBUG("EVPN IP VRF request: %s evi-index: %d, vrf-name:%s",
-                            uuid.str(), subnet_uuid_obj->ms_id(), vrf_name.c_str());
-#endif    
+            SDK_TRACE_DEBUG("EVPN IP VRF request: %s vrf-id: %d, vrf-name:%s",
+                            uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
         } else {
             SDK_TRACE_ERR ("EVPN IP VRF request with non-matching reference type %s",
                             uuid_obj_type_str(uuid_obj->obj_type()));
         }
     } else {
+        // Non-Venice case
         // TODO: spec uuid doesnt match with VPC uuid. need to key-map
     }
 }
@@ -135,6 +137,7 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
     pds_ms_get_uuid (&vpc_uuid, req.vpcid());
 
     if (strncmp (uuid.id, vpc_uuid.id, PDS_MAX_KEY_LEN) == 0) {
+        // Venice case
         // spec uuid is same as vpcuuid
         auto mgmt_ctxt = mgmt_state_t::thread_context();
         auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(vpc_uuid);
@@ -145,19 +148,18 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
             return;
         } 
         if (uuid_obj->obj_type() == uuid_obj_type_t::VPC) {
-#if 0 // TODO: uncomment this block after VPC uuid obj is available
             auto vpc_uuid_obj = (vpc_uuid_obj_t *)uuid_obj;
             std::string vrf_name = std::to_string (vpc_uuid_obj->ms_id());
             req.set_vrfname(vrf_name);
             SDK_TRACE_DEBUG
-                ("EVPN IP RT VRF request: %s evi-index: %d, vrf-name:%s",
-                 uuid.str(), subnet_uuid_obj->ms_id(), vrf_name.c_str());
-#endif            
+                ("EVPN IP RT VRF request: %s vrf-id: %d, vrf-name:%s",
+                 uuid.str(), vpc_uuid_obj->ms_id(), vrf_name.c_str());
         } else {
             SDK_TRACE_ERR ("EVPN IP VRF RT request with non-matching reference type %s",
                             uuid_obj_type_str(uuid_obj->obj_type()));
         }
     } else {
+        // Non-Venice case
         // TODO: spec uuid doesnt match with VPC uuid. need to key-map
     }
 }

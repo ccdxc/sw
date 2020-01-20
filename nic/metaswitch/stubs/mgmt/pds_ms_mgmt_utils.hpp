@@ -216,9 +216,13 @@ NBB_VOID lim_sw_intf_fill_func (LimInterfaceSpec&    req,
                                 NBB_LONG            row_status);
 types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTest   *req, 
                                             CPL2fTestResponse *resp);
+NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
+                                NBB_LONG row_status,
+                                NBB_ULONG correlator);
 } // namespace pds
 
 namespace pds_ms {
+NBB_VOID pds_ms_rtm_redis_connected (pds_ms::pds_ms_config_t *conf);
 NBB_VOID pds_ms_li_stub_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_l2f_stub_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_smi_stub_create (pds_ms_config_t *conf);

@@ -99,8 +99,14 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         if (!get_linux_intf_params(ips_info_.if_name,
                                    &phy_port_prop.lnx_ifindex,
                                    phy_port_prop.mac_addr)) {
+#if 0 /* TODO Container may come up with different interface names
+         Need to fix name */
             throw Error (std::string("Could not fetch Linux params for ")
                          .append(ips_info_.if_name));
+#else
+            SDK_TRACE_ERR("Could not fetch Linux params (S-MAC) for %s",
+                          ips_info_.if_name);
+#endif
         }
     } else {
         // Create a new object in order to store the updated fields

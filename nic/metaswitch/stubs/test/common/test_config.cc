@@ -65,6 +65,8 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     try {
     value                   = pt.get <std::string>("local.ip");
     conf->local_ip_addr     = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("local.ip2");
+    conf->local_ip_addr_2     = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.lo-ip");
     conf->local_lo_ip_addr  = inet_addr (value.c_str());
     value                   = pt.get <std::string>("local.gwip");
@@ -73,10 +75,14 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     conf->local_mai_ip      = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.ip");
     conf->remote_ip_addr    = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("remote.ip2");
+    conf->remote_ip_addr_2    = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.lo-ip");
     conf->remote_lo_ip_addr = inet_addr (value.c_str());
     value                   = pt.get <std::string>("eth-if-index");
     conf->eth_if_index      = strtol (value.c_str(),NULL, 0);
+    value                   = pt.get <std::string>("eth-if-index-2");
+    conf->eth_if_index_2    = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("lif-if-index");
     conf->lif_if_index      = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("local.as");

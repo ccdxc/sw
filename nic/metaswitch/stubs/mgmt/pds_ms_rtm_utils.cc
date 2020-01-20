@@ -2,6 +2,7 @@
 // Purpose: Helper APIs for metaswitch RTM component
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "qc0rtmib.h"
 
 namespace pds {
@@ -183,6 +184,16 @@ pds_ms_fill_amb_cipr_rtm_redist (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 
         data->redist_flag = AMB_TRUE;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_RDS_REDIST_FLAG);
+
+        data->addr_filter_type = conf->lo_addr_type;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_RDS_ADDR_FLT_TYP);
+
+        data->addr_filter_length = conf->lo_addr_len;
+        memcpy(data->addr_filter, conf->lo_addr, conf->lo_addr_len);
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_RDS_ADDR_FILTER);
+       
+        data->addr_flt_len = 32; // Prefix len
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_RDS_ADDR_FLT_LEN);
     }
 
     NBB_TRC_EXIT();
@@ -259,9 +270,6 @@ pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
         conf->admin_status          = AMB_ADMIN_STATUS_UP;
         pds_ms_row_update_rtm_mj (conf);
 
-        // rtm Redistribute connected
-        conf->admin_status          = AMB_ADMIN_STATUS_UP;
-        pds_ms_rtm_redis_connected (conf);
     } else {
         // Join FTM only for Tenant VRF to configure Type 5 routes to ROPI stub 
         conf->slave_entity_index    = PDS_MS_FTM_ENT_INDEX;

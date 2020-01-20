@@ -39,6 +39,9 @@ typedef struct pds_ms_config_s {
     NBB_ULONG   join_index;
     NBB_LONG    afi;
     NBB_LONG    safi;
+    NBB_LONG    lo_addr_type;
+    NBB_BYTE    lo_addr[AMB_RTM_MAX_ADDR_LEN];
+    NBB_ULONG   lo_addr_len;
 }pds_ms_config_t;
 
 }

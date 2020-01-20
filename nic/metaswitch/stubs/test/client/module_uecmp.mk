@@ -1,10 +1,10 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 #
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = pds_ms_grpc_test.bin
+MODULE_TARGET   = pds_ms_uecmp_grpc_test.bin
 MODULE_PREREQS  = metaswitch.submake
 MODULE_PIPELINE = apulu
-MODULE_SRCS     = ${MODULE_SRC_DIR}/app.cc
+MODULE_SRCS     = ${MODULE_SRC_DIR}/app_uecmp.cc
 MODULE_SOLIBS   = pdsgenproto pdsproto pdsmstestcommon
 MODULE_INCS     = $(TOPDIR)/nic/metaswitch/stubs/hals \
                   $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))  ${MODULE_GEN_DIR}

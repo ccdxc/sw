@@ -72,6 +72,8 @@ process_interface_update (pds_if_spec_t *if_spec,
         populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
                                 lim_addr_spec, pds::LIM_IF_TYPE_LOOPBACK,
                                 LOOPBACK_IF_ID);
+        pds::lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
+                               PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     // Configure IP Address
