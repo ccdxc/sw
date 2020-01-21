@@ -41,6 +41,8 @@ import { AlerttableService } from '@app/services/alerttable.service';
 import { TelemetryqueryService as TelemetryqueryServiceGen } from '@app/services/generated/telemetryquery.service';
 import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { NetworkService} from '@app/services/generated/network.service';
+import { BrowserService } from '@app/services/generated/browser.service';
+
 
 // Pensando UI components
 import { AppRoutingModule } from '@app/app.routing';
@@ -181,6 +183,7 @@ import { LoginModule } from './components/login/login.module';
     MessageService,
     ConfirmationService,
     NetworkService,
+    BrowserService,
 
     { provide: LocationStrategy, useClass: HashLocationStrategy },
     { provide: HTTP_INTERCEPTORS, useClass: VeniceUIHttpInterceptor, multi: true },

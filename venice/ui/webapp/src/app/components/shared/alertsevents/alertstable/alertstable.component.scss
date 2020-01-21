@@ -17,7 +17,8 @@
 }
 
 .alertdetail-container {
-  border-bottom: 1px solid;
+  border-bottom: 1px solid #676763;
+  padding-bottom: 5px;
   @include primary-font(14px, #676763);
 }
 

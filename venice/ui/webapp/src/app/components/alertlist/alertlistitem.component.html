@@ -25,7 +25,7 @@
     <div>
       <span
             class="alertlistitem-display-text-small alertlistitem-user">{{alert.status.source.component}}
-        <a href="{{getAlertItemSourceNameLink()}}" [matTooltip]="getAlertItemSourceNameTooltip()"
+        <a href="{{alert['alertSourceNameLink']}}" [matTooltip]="getAlertItemSourceNameTooltip()"
            (click)="onAlertItemSourceNameClick()">{{alert.status.source['node-name']}}</a>
         {{alert.status['object-ref'].kind}}</span>
       <span

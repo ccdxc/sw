@@ -7,15 +7,15 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import {RepeaterComponent, RepeaterData, RepeaterItem, ValueType} from 'web-app-framework';
-import {FormArray, FormControl} from '@angular/forms';
-import {SearchUtil} from '@components/search/SearchUtil';
-import {Animations} from '@app/animations';
-import {TableCol} from '@components/shared/tableviewedit';
+import { RepeaterComponent, RepeaterData, RepeaterItem, ValueType } from 'web-app-framework';
+import { FormArray, FormControl } from '@angular/forms';
+import { SearchUtil } from '@components/search/SearchUtil';
+import { Animations } from '@app/animations';
+import { TableCol } from '@components/shared/tableviewedit';
 import * as _ from 'lodash';
-import {SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
-import {ControllerService} from '@app/services/controller.service';
-import {Utility} from '@common/Utility';
+import { SearchSearchRequest, SearchSearchRequest_sort_order, FieldsRequirement, IFieldsRequirement } from '@sdk/v1/models/generated/search';
+import { ControllerService } from '@app/services/controller.service';
+import { Utility } from '@common/Utility';
 import * as moment from 'moment';
 
 
@@ -42,7 +42,7 @@ import * as moment from 'moment';
  */
 
 export interface LocalSearchRequest {
-  query: Array<IFieldsRequirement | FieldsRequirement >;
+  query: Array<IFieldsRequirement | FieldsRequirement>;
   sortBy: string;
   sortOrder: SearchSearchRequest_sort_order;
 }
@@ -76,7 +76,7 @@ export class AdvancedSearchComponent implements OnInit {
   @Output() searchEmitter: EventEmitter<any> = new EventEmitter();
   @Output() cancelEmitter: EventEmitter<any> = new EventEmitter();
 
-  localSearchFields: {[key: string]: boolean} = {};
+  localSearchFields: { [key: string]: boolean } = {};
   showAdvancedPanel: boolean = false;
   fieldData: RepeaterData[] = [];
   search: string = '';
@@ -121,21 +121,23 @@ export class AdvancedSearchComponent implements OnInit {
    * @param queryArray
    */
   generateFieldData(queryArray: RepeaterData[]): RepeaterData[] {
-    const {repeaterData, localFields} = SearchUtil.tableColsToRepeaterData(this.cols, this.kind);
-    queryArray.forEach(obj => {
-      for (let i = 0; i < repeaterData.length; i++) {
-        if (repeaterData[i].key.value === obj.key.value) {
-          repeaterData[i] = obj;
-          if (obj.valueType === ValueType.singleSelect && (obj.key.value in localFields)) {
-            localFields[obj.key.value].singleSelect = true;
+    const { repeaterData, localFields } = SearchUtil.tableColsToRepeaterData(this.cols, this.kind);
+    if (queryArray) {
+      queryArray.forEach(obj => {
+        for (let i = 0; i < repeaterData.length; i++) {
+          if (repeaterData[i].key.value === obj.key.value) {
+            repeaterData[i] = obj;
+            if (obj.valueType === ValueType.singleSelect && (obj.key.value in localFields)) {
+              localFields[obj.key.value].singleSelect = true;
+            }
+            return;
           }
-          return;
         }
-      }
-    });
-    Object.values(localFields).forEach(f => {
-      this.localSearchFields[f.field] = f.singleSelect;
-    });
+      });
+      Object.values(localFields).forEach(f => {
+        this.localSearchFields[f.field] = f.singleSelect;
+      });
+    }
     return repeaterData;
   }
 
@@ -154,27 +156,27 @@ export class AdvancedSearchComponent implements OnInit {
   setDefaultData() {
     this.fieldData = [
       {
-        key: {label: 'name', value: 'name'},
+        key: { label: 'name', value: 'name' },
         operators: SearchUtil.stringOperators,
         valueType: ValueType.inputField
       },
       {
-        key: {label: 'tenant', value: 'tenant'},
+        key: { label: 'tenant', value: 'tenant' },
         operators: SearchUtil.stringOperators,
         valueType: ValueType.inputField
       },
       {
-        key: {label: 'namespace', value: 'namespace'},
+        key: { label: 'namespace', value: 'namespace' },
         operators: SearchUtil.stringOperators,
         valueType: ValueType.inputField
       },
       {
-        key: {label: 'creation-time', value: 'creation-time'},
+        key: { label: 'creation-time', value: 'creation-time' },
         operators: SearchUtil.numberOperators,
         valueType: ValueType.inputField
       },
       {
-        key: {label: 'modified-time', value: 'mod-time'},
+        key: { label: 'modified-time', value: 'mod-time' },
         valueType: ValueType.inputField,
         operators: SearchUtil.numberOperators
       }
@@ -354,7 +356,7 @@ export class AdvancedSearchComponent implements OnInit {
         }
         if (!(ele.keyFormControl in this.localSearchFields)) {
           fields.push({
-            key:  ele.keyFormControl, // this.buildSearchKindFieldKey(ele) ,  // VS-774 ele.keyFormControl,
+            key: ele.keyFormControl, // this.buildSearchKindFieldKey(ele) ,  // VS-774 ele.keyFormControl,
             operator: ele.operatorFormControl,
             values: processedValue
           });
@@ -362,8 +364,8 @@ export class AdvancedSearchComponent implements OnInit {
       });
       const payload = {
         'query': {
-          'fields': {'requirements': fields},
-          'labels': {'requirements': []},
+          'fields': { 'requirements': fields },
+          'labels': { 'requirements': [] },
           'texts': [
             {
               'text': texts
@@ -412,7 +414,7 @@ export class AdvancedSearchComponent implements OnInit {
     return localSearchResult;
   }
 
-  getLocalSearchRequest(field: any, order: any ) {
+  getLocalSearchRequest(field: any, order: any) {
     let sortOrder = SearchSearchRequest_sort_order.ascending;
     const localQueryFields: Array<IFieldsRequirement> = [];
     if (order === -1) {
@@ -458,7 +460,7 @@ export class AdvancedSearchComponent implements OnInit {
    * @param searchReq Local Search Query
    * @param searchObj Object which is to be queried
    */
-  localSearch(searchReq: LocalSearchRequest, searchObj: {[key: string]: any}): LocalSearchResult {
+  localSearch(searchReq: LocalSearchRequest, searchObj: { [key: string]: any }): LocalSearchResult {
     const res: LocalSearchResult = {
       searchRes: [],
       err: false
@@ -469,7 +471,7 @@ export class AdvancedSearchComponent implements OnInit {
     return res;
   }
 
-   localSearchQueryRequirement(res: LocalSearchResult, q: FieldsRequirement | IFieldsRequirement, searchObj: { [key: string]: any; }) {
+  localSearchQueryRequirement(res: LocalSearchResult, q: FieldsRequirement | IFieldsRequirement, searchObj: { [key: string]: any; }) {
     if (!res.err && q.key in searchObj) {
       if (this.localSearchFields[q.key] && q.values.length !== 1) {
         res.err = true;

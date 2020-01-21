@@ -44,6 +44,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
    * Component enters init stage. It is about to show up
    */
   ngOnInit() {
+     Utility.getInstance().clearAllVeniceObjectCacheData(); // clear all cached data
     if (this._controllerService.isUserLogin()) {
       this.redirect();
       return;
@@ -73,6 +74,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
       this.onLoginSuccess(payload);
     });
     this.subscriptions.push(subLoginSucceed);
+
   }
 
   /**

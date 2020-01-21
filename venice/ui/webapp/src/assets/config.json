@@ -1,6 +1,7 @@
 {
   "enabled-features" : [
-    "help"
+    "help",
+    "dataCache"
   ],
   "condition-thresholds": {
     "critical": 95,

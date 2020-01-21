@@ -17,8 +17,7 @@
                      [dataKey]="'meta.name'" [sortOrder]="-1"
                      [captionTemplate]="captionTemplate" [bodyTemplate]="bodyTemplate"
                      (rowClick)="selectAlert($event)"
-                     [enableCheckbox]="true"
-                     [actionTemplate]="actionTemplate">
+                     [enableCheckbox]="true" [actionTemplate]="actionTemplate">
   </app-tableviewedit>
 
 </div>
@@ -26,8 +25,7 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'resolved'"
-              matTooltip="Resolve Alert"
+    <mat-icon *ngIf="alertUpdatable && rowData.spec.state !== 'resolved'" matTooltip="Resolve Alert"
               class="global-table-action-icon" (click)="resolveAlert(rowData, $event)">
       done_all
     </mat-icon>
@@ -162,12 +160,13 @@
         </div>
       </div>
 
+
       <div fxFlex fxLayout="row">
         <div fxFlex fxLayout="column">
           <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Source Node &
+            <a fxFlex="25" fxLayoutAlign="start center" class="alertdetail-key">Source Node &
               Component:</a>
-            <a fxFlex fxLayoutAlign="start center" class="alertdetail-value">
+            <a fxFlex="75" fxLayoutAlign="start center" class="alertdetail-value">
               <a class="alertdetail-link" href="{{getAlertSourceNameLink(this.selectedAlert)}}"
                  [matTooltip]="getAlertSourceNameTooltip(this.selectedAlert)">
                 {{ this.selectedAlert.status.source['node-name'] }} </a> :
@@ -175,13 +174,15 @@
             </a>
           </div>
         </div>
+      </div>
+
+      <div fxFlex fxLayout="row">
         <div fxFlex fxLayout="column">
           <div fxLayout="row">
-            <a fxFlex fxLayoutAlign="start center" class="alertdetail-key">Event URI:</a>
-            <a class="alertdetail-link alertdetail-value" fxFlex fxLayoutAlign="start center"
+            <a fxFlex="25" fxLayoutAlign="start center" class="alertdetail-key">Event URI:</a>
+            <a fxFlex="75" fxLayoutAlign="start center" class="alertdetail-value alertdetail-link"
                [routerLink]="['/monitoring/alertsevents/']"
                [queryParams]="{'event': getEventNameFromURI(this.selectedAlert.status['event-uri'])}">
-              <!-- routerLink="/monitoring/alertsevents/{{'event=' + getEventNameFromURI(this.selectedAlert.status['event-uri'])}}" -->
               {{ this.selectedAlert.status['event-uri'] }}
             </a>
           </div>
@@ -198,6 +199,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </ng-template>

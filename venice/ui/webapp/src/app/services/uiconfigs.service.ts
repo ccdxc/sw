@@ -16,7 +16,8 @@ export enum Features {
   workloadWidgets = 'workloadWidgets',
   showDebugMetrics = 'showDebugMetrics',
   troubleshooting = 'troubleshooting',
-  securitygroup = 'securitygroup'
+  securitygroup = 'securitygroup',
+  dataCache = 'dataCache'
 }
 
 interface MetricsQuery {

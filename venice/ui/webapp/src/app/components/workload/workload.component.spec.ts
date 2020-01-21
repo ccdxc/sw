@@ -47,6 +47,7 @@ import { NewworkloadComponent } from './newworkload/newworkload.component';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { SearchService } from '@app/services/generated/search.service';
+import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 
 
 @Component({
@@ -211,6 +212,17 @@ describe('WorkloadComponent', () => {
   it('should populate table', fakeAsync(() => {
     TestingUtility.setAllPermissions();
     const service = TestBed.get(WorkloadServiceGen);
+    const searchService = TestBed.get(SearchService);
+
+    const searchResp: ISearchSearchResponse = {
+      'total-hits': '3'
+    };
+
+    spyOn(searchService, 'PostQuery').and.returnValue(
+      new BehaviorSubject({
+        body: searchResp
+      })
+    );
     spyOn(service, 'WatchWorkload').and.returnValue(
       new BehaviorSubject({
         events: [
@@ -229,6 +241,7 @@ describe('WorkloadComponent', () => {
         ]
       })
     );
+
     fixture.detectChanges();
     tick(1000);
     fixture.detectChanges();

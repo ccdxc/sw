@@ -1,8 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { AbstractControl, FormArray, FormGroup, ValidatorFn, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormArray, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { NaplesCondition, NaplesConditionValues, NodeConditionValues } from '@app/components/cluster-group/naples/index.ts';
 import { SearchExpression } from '@app/components/search/index.ts';
+import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
+import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
 import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
+import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type } from '@sdk/v1/models/generated/cluster';
+import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
@@ -16,19 +22,38 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
-import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
-import { ClusterDistributedServiceCard, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode } from '@sdk/v1/models/generated/cluster';
-import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
-import { NaplesCondition, NaplesConditionValues, NodeConditionValues } from '@app/components/cluster-group/naples/index.ts';
-import { IAuthUser } from '@sdk/v1/models/generated/auth';
-import { ClusterNodeCondition_type, ClusterNodeCondition_status, ClusterDistributedServiceCardStatus_admission_phase } from '@sdk/v1/models/generated/cluster';
-import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
+import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
 
+/**
+ * VeniceObjectCacheStore is for data-cache.
+ * In 2020-01, release-A.  UI has to build relation map among hosts, DSCs and workloads
+ * In a scaled setup, there are 1000 +  DSCs/Hosts and 8000 + workloads. It will take too long fow web-socket to push objects to UI.
+ * So if one page (say, DSCs or Host) retrieve all [hosts, DSCs, workloads], page.onDestry() can save data to Utility.getInsance().veniceObjectCacheStore
+ * Thus, other page can get data from cache without spending time to fetch data from server.
+ * For example:
+ *     Switching DSCs page and DSC-detail page will be fast if DSCs page have all the data and store them in data-cache.
+ *
+ *  uiConfig.service.ts Feature defines "dataCache" feature. config.json enables this feature
+ *
+ */
+export interface VeniceObjectCacheStore {
+  [kind: string]: VeniceObjectCache;
+}
+
+export interface VeniceObjectCache {
+  timestamp?: number; // (new Date()).getTime()
+  duration?: number; // how many seconds
+  data?: any[];
+}
 
 
 export class Utility {
 
   static instance: Utility;
+
+  // Define how long to keep cache data.
+  public static DEFAULT_CACHE_DURATION: number = 1000 * 60 * 60; // 60 minutes
+  public static DEFAULT_OPEN_ALERTS_NUMBER_TO_STOP_TOASTER: number = 1000;
 
   // Define Valid Mac address format
   public static MACADDRESS_REGEX =
@@ -60,12 +85,20 @@ export class Utility {
 
   public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
 
+  public static UNSUPPORTED_CATEGORIES = ['Diagnostics'];
+  public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'ArchiveRequest', 'Network', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter', 'NetworkInterface', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
+
+
   myControllerService: ControllerService;
   myLogService: LogService;
   myUIConfigsService: UIConfigsService;
 
   private _maintenanceMode: boolean = false;
   private _currentRollout: RolloutRollout = null;
+  private _enableDataCache: boolean = false;
+
+  // Defince data cache store
+  private veniceObjectCacheStore: VeniceObjectCacheStore = {};
 
   private constructor() { }
 
@@ -889,6 +922,7 @@ export class Utility {
     return this.instance;
   }
 
+
   /**
    * var string = Utility.stringInject("This is a {0} string for {1}", ["test", "stringInject"]);
    *  output is
@@ -993,6 +1027,7 @@ export class Utility {
 
   public static getCategories(): any[] {
     let cats = Object.keys(CategoryMapping);
+    cats  = cats.filter( (cat) => !Utility.UNSUPPORTED_CATEGORIES.includes(cat) ); // filter out unsupported categories
     cats = cats.sort();
     return cats;
   }
@@ -1001,7 +1036,8 @@ export class Utility {
     const cats = Utility.getCategories();
     let kinds = [];
     cats.filter((cat) => {
-      const catKeys = Object.keys(CategoryMapping[cat]);
+      let catKeys = Object.keys(CategoryMapping[cat]);
+      catKeys = catKeys.filter ( (kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
       kinds = kinds.concat(catKeys);
     });
     kinds = kinds.sort();
@@ -1036,7 +1072,9 @@ export class Utility {
     if (!obj) {
       return [];
     }
-    return Object.keys(obj);
+    let kinds  = Object.keys(obj);
+    kinds = kinds.filter( (kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
+    return kinds;
   }
 
   /**
@@ -1090,9 +1128,9 @@ export class Utility {
       case 'Endpoint':
         return 'workload';  // VS-363, when search is:Workload or is:Endpoint, we should /workload page
       case 'Alert':
-        return cat + '/alertsevents/?alert=' + name;
+        return cat + '/alertsevents?alert=' + name;
       case 'Event':
-        return cat + '/alertsevents/?event=' + name;
+        return cat + '/alertsevents?event=' + name;
       case 'AlertPolicy':
         return cat + '/alertsevents/alertpolicies';
       case 'AlertDestination':
@@ -1118,7 +1156,7 @@ export class Utility {
       case 'EventPolicy':
         return 'monitoring/alertsevents/eventpolicy';
       case 'SnapshotRestore':
-          return 'admin/snapshots'; // VS-1059
+        return 'admin/snapshots'; // VS-1059
       default:
         return (!isToUseDefault) ? null : cat + '/' + pluralize.plural(kind.toLowerCase()) + '/' + name;
     }
@@ -1880,6 +1918,29 @@ export class Utility {
     return `rgba(${ret.r}, ${ret.g}, ${ret.b}, ${opacity})`;
   }
 
+  /**
+   * This API build a search request object to fetch total number of records of a given object kind.
+   * For example, fetch how many  'DistributedServiceCard' is curretly in Venice.
+   * @param kind
+   */
+  public static buildObjectTotalSearchQuery(kind: string): SearchSearchRequest {
+    const query: SearchSearchRequest = new SearchSearchRequest({
+      'query-string': null,
+      'from': null,
+      'max-results': 2,
+      'sort-by': null,
+      'sort-order': 'ascending',
+      'mode': SearchSearchRequest_mode.preview,
+      query: {
+        kinds: [
+          kind       // for example - 'DistributedServiceCard'
+        ]
+      },
+      aggregate: false,
+    });
+    return query;
+  }
+
   setControllerService(controllerService: ControllerService) {
     this.myControllerService = controllerService;
   }
@@ -1988,5 +2049,53 @@ export class Utility {
   setCurrentRollout(rollout: RolloutRollout) {
     this._currentRollout = rollout;
   }
+
+  isDataCacheEnabled(): boolean {
+    return this._enableDataCache;
+  }
+
+  setEnableDataCache(flag: boolean) {
+    this._enableDataCache = flag;
+  }
+
+
+  /**
+   * @param kind
+   * @param veniceObjectCache
+   */
+  setVeniceObjectCache(kind: string, veniceObjectCache: VeniceObjectCache) {
+    if (this.isDataCacheEnabled()) {
+      return this.veniceObjectCacheStore[kind] = veniceObjectCache;
+     }
+  }
+
+  getVeniceObjectCache(kind: string): VeniceObjectCache {
+    return this.veniceObjectCacheStore[kind];
+  }
+
+  hasVeniceObjectCacheExpired(kind: string): boolean {
+    const veniceObjectCache = this.veniceObjectCacheStore[kind];
+    if (veniceObjectCache && veniceObjectCache.duration && veniceObjectCache.timestamp) {
+      const now = (new Date()).getTime();
+      if ((now - veniceObjectCache.timestamp) > veniceObjectCache.duration) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  getVeniceObjectCacheData(kind: string): any[] {
+    const wlVeniceObjectCache = this.getVeniceObjectCache(kind);
+    if (wlVeniceObjectCache && wlVeniceObjectCache.data && wlVeniceObjectCache.data.length > 0 && !this.hasVeniceObjectCacheExpired(kind)) {
+      return wlVeniceObjectCache.data;
+    }
+    return null;
+  }
+
+  clearAllVeniceObjectCacheData() {
+    this.veniceObjectCacheStore = {};
+  }
+
+
 
 }

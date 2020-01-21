@@ -9,7 +9,7 @@ import { logout, AUTH_BODY } from '@app/core';
 import { AlerttableService } from '@app/services/alerttable.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
 import { LogService } from '@app/services/logging/log.service';
-import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
 import { IdleWarningComponent } from '@app/widgets/idlewarning/idlewarning.component';
 import { ToolbarComponent } from '@app/widgets/toolbar/toolbar.component';
 import { DEFAULT_INTERRUPTSOURCES, Idle } from '@ng-idle/core';
@@ -156,7 +156,13 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     this._subscribeToEvents();
     this._bindtoStore();
     this.userName = Utility.getInstance().getLoginName();
+
     this.setMomentJSSettings();
+
+    // Control whether to enable data cache. - change config.json to enable -  "dataCache"
+    if (this.uiconfigsService && this.uiconfigsService.isFeatureEnabled(Features.dataCache)) {
+      Utility.getInstance().setEnableDataCache(true);
+    }
 
     this.clocktimer = setInterval(() => {
       this.clock = new Date();
@@ -752,15 +758,26 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
         this.alerts = this.alertsEventUtility.array.filter((alert: MonitoringAlert) => {
           return (this.isAlertInOpenState(alert));
         });
+
         // VS-630 sort the alerts in desc order
         this.alerts = Utility.sortDate(this.alerts, ['meta', 'creation-time'], -1);
         this.updateHighestSeverity();
+
+        if (Array.isArray(this.alertsEventUtility.array) && this.alertsEventUtility.array.length > 0 && this.alerts.length === 0) {
+          // UI helps VS-952.
+          // It is possible that user resolves all alerts in backend. It make this.startingAlertCount number outdated.
+          this.alertNumbers = 0;
+        }
+
         // We are watching alerts. So when there are new alerts coming in, we display a toaster.
         if (this.alertNumbers > 0 && this.alertNumbers < this.alerts.length) {
           const diff = this.alerts.length - this.alertNumbers;
           const alertMsg = (diff === 1) ? diff + ' new alert arrived' : diff + 'new alerts arrived';
-          // User has no wa to see alerts if we are in maintenance mode
-          if (!Utility.getInstance().getMaintenanceMode()) {
+          const tooManyOpenAlerts: boolean = (this.alerts.length > Utility.DEFAULT_OPEN_ALERTS_NUMBER_TO_STOP_TOASTER);
+          // User has no way to see alerts if Venice is in maintenance mode.
+          // If there are too many open alerts already and alerts keep coming from web-socket connection, it is likely system is running alert script or system is big problem.
+          // There is no point to pop alert toasters
+          if (!Utility.getInstance().getMaintenanceMode() && !tooManyOpenAlerts) {
             this._controllerService.invokeInfoToaster('Alert', alertMsg);
           }
         }

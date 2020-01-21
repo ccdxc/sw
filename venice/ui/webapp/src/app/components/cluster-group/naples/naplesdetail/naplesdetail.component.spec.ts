@@ -32,7 +32,7 @@ import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
 import { BehaviorSubject, Observable, ReplaySubject } from 'rxjs';
 import { NaplesdetailComponent } from './naplesdetail.component';
-
+import { BrowserService } from '@app/services/generated/browser.service';
 
 class MockActivatedRoute extends ActivatedRoute {
   id = '4444.4444.0002';
@@ -162,6 +162,7 @@ describe('NaplesdetailComponent', () => {
         AuthService,
         AuthServiceGen,
         MonitoringService,
+        BrowserService,
         WorkloadService,
         {
           provide: ActivatedRoute,

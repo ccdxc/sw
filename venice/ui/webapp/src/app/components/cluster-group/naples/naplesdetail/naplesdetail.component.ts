@@ -8,6 +8,7 @@ import { HeroCardOptions } from '@app/components/shared/herocard/herocard.compon
 import { MetricsUtility } from '@app/common/MetricsUtility';
 import { ITelemetry_queryMetricsQueryResponse } from '@sdk/v1/models/telemetry_query';
 import { ControllerService } from '@app/services/controller.service';
+
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClusterService } from '@app/services/generated/cluster.service';
 import { MetricsqueryService, MetricsPollingOptions, TelemetryPollingMetricQueries, MetricsPollingQuery } from '@app/services/metricsquery.service';
@@ -22,13 +23,26 @@ import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
 import { WorkloadService } from '@app/services/generated/workload.service';
-import { NetworkService} from '@app/services/generated/network.service';
+import { NetworkService } from '@app/services/generated/network.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { NetworkNetworkInterface } from '@sdk/v1/models/generated/network';
 import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
 import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
 import { SearchService } from '@app/services/generated/search.service';
 import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
+import { BrowserService } from '@app/services/generated/browser.service';
+import { IBrowserBrowseRequestList, BrowserBrowseRequestList, BrowserBrowseResponseList } from '@sdk/v1/models/generated/browser';
+
+/**
+ * This component displays DSC detail information.
+ * For performance's reason,  we employ different tricks
+ * 1. ngOnInit (), we fetch DSC id from browser URL.
+ * 2. init(), we fetch metrics before invoking getNaplesDetails().
+ * 3. getNaplesDetails() -> watch DSC --> use browseDSCWorkload() to find workload associted with this DSC
+ * 4. watchWorkload() will update DSC-workloads map in run time.
+ *
+ * In addition, we try to take advantage of data-cache. (If user first visit DSC-table page, then DSC-detail page, we may have complete list of workloads. See init()
+ */
 
 @Component({
   selector: 'app-naplesdetail',
@@ -111,6 +125,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   networkInterfacesEventUtility: HttpEventUtility<NetworkNetworkInterface>;
   networkInterfaces: ReadonlyArray<NetworkNetworkInterface> = [];
+  workloadList: WorkloadWorkload[] = [];
 
   constructor(protected _controllerService: ControllerService,
     private _route: ActivatedRoute,
@@ -121,6 +136,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
     protected workloadService: WorkloadService,
     protected networkService: NetworkService,
     protected searchService: SearchService,
+    protected browserService: BrowserService
   ) {
     super(_controllerService, UIConfigService);
   }
@@ -155,8 +171,13 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   init() {
     this.initializeData();
-    this.getWorkloads();
-    this.getNetworkInterfaces();
+    const wlVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('Workload');
+    if (wlVeniceObjectCacheData && wlVeniceObjectCacheData.length > 0) {
+      this.workloadList = wlVeniceObjectCacheData;
+      console.log(this.getClassName() + ' .init(), use cached data');
+    }
+    this.watchWorkloads();
+    // this.getNetworkInterfaces(); // comment it out for 2020-01 release-A
     this.getNaplesDetails();
     this.setNapleDetailToolbar(this.selectedId); // Build the toolbar with naple.id first. Toolbar will be over-written when naple object is available.
   }
@@ -196,22 +217,22 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
 
   getNetworkInterfaces() {
     if (this.uiconfigsService.isAuthorized(UIRolePermissions.networknetworkinterface_read)) {
-      /*  This block is for test only
+       /*  This block is for test only
       this.networkService.ListNetworkInterface().subscribe(
         (response) => {
             console.log('get NetworkNetworkInterface list', response);
         }
       );
-      // */
       this.networkInterfacesEventUtility = new HttpEventUtility<NetworkNetworkInterface>();
       this.networkInterfaces = this.networkInterfacesEventUtility.array;
-    const subscription = this.networkService.WatchNetworkInterface().subscribe(
-      (response) => {
-        this.networkInterfacesEventUtility.processEvents(response);
-      },
-      this._controllerService.webSocketErrorHandler('Failed to get NetworkInterfaces')
-    );
-    this.subscriptions.push(subscription);
+      const subscription = this.networkService.WatchNetworkInterface().subscribe(
+        (response) => {
+          this.networkInterfacesEventUtility.processEvents(response);
+        },
+        this._controllerService.webSocketErrorHandler('Failed to get NetworkInterfaces')
+      );
+      this.subscriptions.push(subscription);
+      // */
     }
   }
 
@@ -256,14 +277,65 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
   }
 
   /**
+   *
+  */
+  browseDSCWorkload() {
+    const hostname = this.selectedObj.status.host;
+    const list = [];
+    const obj = {
+      'uri': '/configs/cluster/v1/hosts/' + hostname,
+      'query-type': 'depended-by',
+      'max-depth': 2,
+      'count-only': null
+    };
+    list.push(obj);
+    const body: BrowserBrowseRequestList = new BrowserBrowseRequestList(
+      {
+        'requestlist': list,
+      }
+    );
+    this.browserService.PostQuery(body).subscribe(
+      (response) => {
+        const browserBrowseResponseList = response.body as BrowserBrowseResponseList;
+        // browserBrowseResponseList looks like:
+        // {"kind":"","meta":{"name":"","generation-id":"","creation-time":"","mod-time":""},"responselist":[{"root-uri":"/configs/cluster/v1/hosts/naples3-host","query-type":"depended-by","max-depth":2,"total-count":2,"objects":{"/configs/cluster/v1/hosts/naples3-host":{"kind":"Host","api-version":"v1","meta":{"name":"naples3-host","generation-id":"7","resource-version":"447663","uuid":"3e41523f-80ec-4f3a-97b3-18ac71ae654d","creation-time":"2020-01-16T22:56:04.310139027Z","mod-time":"2020-01-16T22:57:51.494345219Z","self-link":"/configs/cluster/v1/hosts/naples3-host"},"uri":"/configs/cluster/v1/hosts/naples3-host","reverse":"","query-type":"depended-by","links":{"spec.host-name":{"ref-type":"named-reference","uri":[{"tenant":"default","namespace":"default","kind":"Workload","name":"Saroj","uri":"/configs/workload/v1/tenant/default/workloads/Saroj"}]}}},"/configs/workload/v1/tenant/default/workloads/Saroj":{"kind":"Workload","api-version":"v1","meta":{"name":"Saroj","tenant":"default","namespace":"default","generation-id":"1","resource-version":"447663","uuid":"33e90343-56b2-4138-8734-e831e1d9ab26","creation-time":"2020-01-19T11:10:48.221308018Z","mod-time":"2020-01-19T11:10:48.22131401Z","self-link":"/configs/workload/v1/tenant/default/workloads/Saroj"},"uri":"/configs/workload/v1/tenant/default/workloads/Saroj","reverse":"","query-type":"depended-by","links":null}}}]}
+
+        // TODO : debug me
+        // https://10.30.2.173/ browser API does not return workloads attached to host (hostname)
+
+        const hostWorkloadMap = {};
+        for (let i = 0; browserBrowseResponseList && browserBrowseResponseList.responselist && i < browserBrowseResponseList.responselist.length; i++) {
+          const responselistObject = browserBrowseResponseList.responselist[i].objects;
+          const keys = Object.keys(responselistObject);
+          let hostNameInList: string;
+          for (let j = 0; j < keys.length; j++) {
+            const objItem = responselistObject[keys[j]];
+            if (objItem.uri === browserBrowseResponseList.responselist[i]['root-uri'] && objItem.kind === 'Host' ) {
+              hostNameInList = objItem.meta.name;
+              hostWorkloadMap[hostNameInList] = [];
+            } else if (objItem.kind === 'Workload') {
+              hostWorkloadMap[hostNameInList].push(objItem);
+            }
+          }
+        }
+        this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] = hostWorkloadMap[hostname];
+      },
+      (error) => {
+        this._controllerService.invokeRESTErrorToaster('Failed to invoke browser', error);
+      }
+    );
+  }
+
+  /**
    * Fetch workloads.
    */
-  getWorkloads() {
+  watchWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
+        // TODO: workloads may change. worklist is not update. It is better to have browser.api working.
       },
       this._controllerService.webSocketErrorHandler('Failed to get Workloads')
     );
@@ -332,9 +404,16 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
           this.selectedObj = null;
         }
         if (this.selectedObj) {
-          this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.objList);
+          // When we first get the DSC object. We try to user browser API to populate DSC's workload array.
+          if ( !this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] || this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS].length === 0) {
+            this.browseDSCWorkload();
+          }
+          const myWorkloads = (this.workloadList && this.workloadList.length > 0) ? this.workloadList : this.workloads;
+          if (myWorkloads && myWorkloads.length > 0) {
+          this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(myWorkloads, this.objList);
           this.selectedObj[NaplesdetailComponent.NAPLEDETAIL_FIELD_WORKLOADS] = (this.dscsWorkloadsTuple[this.selectedObj.meta.name]) ?
             this.dscsWorkloadsTuple[this.selectedObj.meta.name].workloads : [];
+          }
         }
       },
       this._controllerService.webSocketErrorHandler('Failed to get NAPLES')
@@ -613,7 +692,7 @@ export class NaplesdetailComponent extends BaseComponent implements OnInit, OnDe
       }
       const sub = this.clusterService.UpdateDistributedServiceCard(dscNaple, dscs[0], '', this.objList[0]).subscribe(
         response => {
-             this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${dscNaple}'s labels`);
+          this._controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, `Successfully updated ${dscNaple}'s labels`);
         },
         this._controllerService.restErrorHandler(Utility.UPDATE_FAILED_SUMMARY)
       );

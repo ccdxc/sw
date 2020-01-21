@@ -1,12 +1,13 @@
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { FormArray } from '@angular/forms';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { EventTypes, HttpEventUtility } from '@app/common/HttpEventUtility';
 import { MetricsUtility } from '@app/common/MetricsUtility';
-import { DSCWorkloadsTuple, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
-import { Utility } from '@app/common/Utility';
+import { DSCWorkloadsTuple, HandleWatchItemResult, ObjectsRelationsUtility } from '@app/common/ObjectsRelationsUtility';
+import { Utility, VeniceObjectCache } from '@app/common/Utility';
 import { CardStates, StatArrowDirection } from '@app/components/shared/basecard/basecard.component';
 import { HeroCardOptions } from '@app/components/shared/herocard/herocard.component';
 import { CustomExportMap, TableCol } from '@app/components/shared/tableviewedit';
+import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
@@ -18,17 +19,17 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { SearchUtil } from '@components/search/SearchUtil';
 import { AdvancedSearchComponent } from '@components/shared/advanced-search/advanced-search.component';
 import { LabelEditorMetadataModel } from '@components/shared/labeleditor';
-import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard, ClusterDistributedServiceCardList } from '@sdk/v1/models/generated/cluster';
+import { ClusterDistributedServiceCard, ClusterDistributedServiceCardSpec_mgmt_mode, ClusterDistributedServiceCardStatus_admission_phase, IClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
 import { IApiStatus } from '@sdk/v1/models/generated/monitoring';
-import { SearchSearchRequest, SearchSearchResponse } from '@sdk/v1/models/generated/search';
-import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
+import { FieldsRequirement, ISearchSearchResponse, SearchSearchRequest, SearchSearchRequest_mode, SearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { IWorkloadAutoMsgWorkloadWatchHelper, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
 import { ITelemetry_queryMetricsQueryResponse, ITelemetry_queryMetricsQueryResult } from '@sdk/v1/models/telemetry_query';
+import * as _ from 'lodash';
 import { forkJoin, Observable, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { RepeaterData, ValueType } from 'web-app-framework';
 import { NaplesCondition, NaplesConditionValues } from '.';
-import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
-import { FieldsRequirement } from '@sdk/v1/models/generated/search';
-import * as _ from 'lodash';
+
 
 @Component({
   selector: 'app-naples',
@@ -54,8 +55,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
   @ViewChild('advancedSearchComponent') advancedSearchComponent: AdvancedSearchComponent;
 
-  naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  // naples: ReadonlyArray<ClusterDistributedServiceCard> = [];
   dataObjects: ReadonlyArray<ClusterDistributedServiceCard> = [];
+  dataObjectsBackUp: ReadonlyArray<ClusterDistributedServiceCard> = null;
   inLabelEditMode: boolean = false;
   labelEditorMetaData: LabelEditorMetadataModel;
 
@@ -76,6 +78,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   isTabComponent: boolean = false;
   // Used for the table - when true there is a loading icon displayed
   tableLoading: boolean = false;
+  hasDSC: boolean = false;
 
   cols: TableCol[] = [
     { field: 'spec.id', header: 'Name/Spec.id', class: '', sortable: true, width: 10 },
@@ -84,8 +87,10 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     { field: 'status.ip-config.ip-address', header: 'Management IP Address', class: '', sortable: false, width: '160px' },
     { field: 'spec.admit', header: 'Admit', class: '', sortable: false, localSearch: true, width: 5, filterfunction: this.searchAdmits },
     { field: 'status.admission-phase', header: 'Phase', class: '', sortable: false, width: '120px' },
-    { field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10,
-        filterfunction: this.searchConditions},
+    {
+      field: 'status.conditions', header: 'Condition', class: '', sortable: true, localSearch: true, width: 10,
+      filterfunction: this.searchConditions
+    },
     { field: 'status.host', header: 'Host', class: '', sortable: true, width: 10 },
     { field: 'meta.labels', header: 'Labels', class: '', sortable: true, width: 7 },
     { field: 'workloads', header: 'Workloads', class: '', sortable: false, localSearch: true, width: 10 },
@@ -152,6 +157,9 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   disableTableWhenRowExpanded: boolean = false;
   exportFilename: string = 'Venice-DistributedServiceCards';
 
+  workloadList: WorkloadWorkload[] = [];
+  searchDSCsCount: number = 0;
+
   constructor(private clusterService: ClusterService,
     protected controllerService: ControllerService,
     protected metricsqueryService: MetricsqueryService,
@@ -159,9 +167,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     protected workloadService: WorkloadService,
     protected cdr: ChangeDetectorRef,
     protected uiconfigsService: UIConfigsService
+
   ) {
     super(controllerService, cdr, uiconfigsService);
   }
+
 
   deleteRecord(object: ClusterDistributedServiceCard): Observable<{ body: IClusterDistributedServiceCard | IApiStatus | Error; statusCode: number; }> {
     throw new Error('Method not implemented.');
@@ -175,19 +185,90 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   setDefaultToolbar(): void {
   }
 
-  postNgInit(): void {
+  /**
+   * 2020-01-17 Release-A note:
+   *  Flow:
+   *  1. User search API to check DSC total number
+   *     2. If there are DSC in Venice, this.launch()
+   *        3. Fetch all workloads
+   *           4. watchWorkloads, watchDSCs.
+   */
+  postNgInit() {
     this.buildAdvSearchCols();
-    this.getMetrics();
     this.provideCustomOptions();
     this.controllerService.setToolbarData({
       buttons: [],
       breadcrumb: [{ label: 'Distributed Services Cards', url: Utility.getBaseUIUrl() + 'cluster/dscs' }]
     });
+    this.getDSCTotalCount();  // start retrieving data.
+  }
+
+  getDSCTotalCount() {
+    const query: SearchSearchRequest = Utility.buildObjectTotalSearchQuery('DistributedServiceCard');
+    const searchDSCTotalSubscription = this.searchService.PostQuery(query).subscribe(
+      resp => {
+        if (resp) {
+          const body = resp.body as ISearchSearchResponse;
+          const dscTotal = parseInt(body['total-hits'], 10);
+          // To test VS-1129, hard code -- const  dscTotal = 0;
+          if (dscTotal > 0) {
+            this.hasDSC = true;
+            this.searchDSCsCount = dscTotal;
+            this.launch();
+          } else {
+            this.hasDSC = false;
+            this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in Venice');
+            this.fetechAll();
+          }
+        }
+      },
+      this._controllerService.webSocketErrorHandler('Failed to get Distributed Services Cards'),
+    );
+    this.subscriptions.push(searchDSCTotalSubscription);
+  }
+
+  launch(): void {
+    this.getMetrics();
     setTimeout(() => {
       // delay initiating websocket watches until metrics polling begins
-      this.getWorkloads();
-      this.getNaples();
+      const wlVeniceObjectCacheData = Utility.getInstance().getVeniceObjectCacheData('Workload');
+      if (wlVeniceObjectCacheData && wlVeniceObjectCacheData.length > 0) {
+        this.workloadList = wlVeniceObjectCacheData;
+        console.log(this.getClassName() + ' .launch(), use cached data');
+        this.invokeWatch();
+      } else {
+        console.log(this.getClassName() + ' .launch(), use fetechAll()');
+        this.fetechAll();
+      }
     }, 2000);
+  }
+
+  fetechAll() {
+    this.tableLoading = true;
+    const observables: Observable<any>[] = [];
+    observables.push(this.workloadService.ListWorkload()); // workloads
+    const forkJoinSub = forkJoin(observables).subscribe((results: any[]) => {
+      for (let i = 0; i < results.length; i++) {
+        if (i === 0) {
+          const body0 = results[0].body as WorkloadWorkloadList;
+          this.workloadList = (body0.items) ? body0.items : [];
+          this.workloads = this.workloadList;
+        }
+      }
+    },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Error', 'Failed to get Fetch Hosts');
+      },
+      () => {
+        this.invokeWatch();
+      }
+    );
+    this.subscriptions.push(forkJoinSub);
+  }
+
+  invokeWatch() {
+    this.watchWorkloads();
+    this.watchNaples();
   }
 
   buildAdvSearchCols() {
@@ -206,17 +287,88 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   /**
    * Fetch workloads.
    */
-  getWorkloads() {
+  watchWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.workloads = this.workloadEventUtility.array;
-    const subscription = this.workloadService.WatchWorkload().subscribe(
+    const debounceDeley = (this.workloadList && this.workloadList.length > 100) ? 300 : 1;
+    const subscription = this.workloadService.WatchWorkload().pipe(debounceTime(debounceDeley)).subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
+
+        const updatedMap: { [type: string]: Array<WorkloadWorkload>  } = this.workloadEventUtility.updateRecordMap;
+        const addedWLItems =  updatedMap[EventTypes.create];
+        const deletedWLIems = updatedMap[EventTypes.delete];
+        const updatedWLIems = updatedMap[EventTypes.update];
+
+        if (addedWLItems.length > 0) {
+          this.handleAddedWorkloads(addedWLItems);
+        }
+        if (deletedWLIems.length > 0) {
+          this.handleDeletededWorkloads(deletedWLIems);
+        }
+        if (updatedWLIems.length > 0) {
+          this.handleUpdatedWorkloads(updatedWLIems);
+        }
       },
-      this._controllerService.webSocketErrorHandler('Failed to get Workloads')
+      this._controllerService.webSocketErrorHandler('Failed to watch Workloads')
     );
     this.subscriptions.push(subscription);
   }
+
+  /**
+   * Remove objects from workloadList and recompute host-workloads map
+   * @param deletedIems
+   */
+  handleDeletededWorkloads(deletedIems: any[]) {
+    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleDeletedItemsFromWatch(deletedIems, this.workloadList);
+    if (handleWatchItemResult.hasChange) {
+      this.workloadList = handleWatchItemResult.list;
+      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+    }
+  }
+
+  /**
+   * Update objects to workloadList and recompute host-workloads map
+   * @param deletedIems
+   */
+  handleUpdatedWorkloads(updatedItems: any[]) {
+    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleUpdatedItemsFromWatch(updatedItems, this.workloadList, (item) => new WorkloadWorkload(item));
+    if (handleWatchItemResult.hasChange) {
+      this.workloadList = handleWatchItemResult.list;
+      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+    }
+  }
+
+  /**
+   * Add newly created objects to workloadList and recompute the host-workloads map
+   * @param addedItems
+   */
+  handleAddedWorkloads(addedItems: any[]) {
+
+    const handleWatchItemResult: HandleWatchItemResult = ObjectsRelationsUtility.handleAddedItemsFromWatch(addedItems, this.workloadList, (item) => new WorkloadWorkload(item));
+    if (handleWatchItemResult.hasChange) {
+      this.workloadList = handleWatchItemResult.list;
+      this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+    }
+  }
+
+  /**
+   * This is a key API.  It computes the DSC-Workloads map and updates each DSC's workload list
+   * @param myworkloads
+   * @param dscs
+   */
+  buildDSCWorkloadsMap(myworkloads: ReadonlyArray<WorkloadWorkload> | WorkloadWorkload[],
+    dscs: ReadonlyArray<ClusterDistributedServiceCard> | ClusterDistributedServiceCard[]) {
+    if (myworkloads && dscs) {
+      this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(myworkloads, dscs);
+      this.dataObjects.map(naple => {
+        naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
+      });
+      // backup dataObjects
+      this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
+    }
+  }
+
 
   formatLabels(labelObj) {
     const labels = [];
@@ -258,34 +410,25 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
    * Watches NapDistributed Services Cards data on KV Store and fetch new DSC data
    * Generates column based search object, currently facilitates condition search
    */
-  getNaples() {
-    this.tableLoading = true;
-    const getSubscription = this.clusterService.ListDistributedServiceCard().subscribe(
-      response => {
-        const nicsList: ClusterDistributedServiceCardList = response.body as ClusterDistributedServiceCardList;
-        if (!(nicsList && nicsList.items && nicsList.items.length === 0)) {
-          // Where there is no DSC, we turn off loading indicator.
-          this.tableLoading = false;
-        }
-      },
-      error => {
-        this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get distributed service cards');
-        this.tableLoading = false;
-      }
-    );
-    this.subscriptions.push(getSubscription);
+  watchNaples() {
     this._clearDSCMaps();
     this.naplesEventUtility = new HttpEventUtility<ClusterDistributedServiceCard>(ClusterDistributedServiceCard);
-    this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     this.dataObjects = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
-    this.tableLoading = true;
+    // this.naples = this.naplesEventUtility.array as ReadonlyArray<ClusterDistributedServiceCard>;
     const subscription = this.clusterService.WatchDistributedServiceCard().subscribe(
       response => {
         this.naplesEventUtility.processEvents(response);
         this.tableLoading = false;
         this._clearDSCMaps(); // VS-730.  Want to clear maps when we get updated data.
-        this.dscsWorkloadsTuple = ObjectsRelationsUtility.buildDscWorkloadsMaps(this.workloads, this.naples);
-        for (const naple of this.naples) {
+        this.buildDSCWorkloadsMap(this.workloadList, this.dataObjects);
+        if (this.dataObjects && this.dataObjects.length > 0 && !this.hasDSC) {
+          this.hasDSC = true;  // In a scenario where Venice has no DSC, this page is in idle.  We receive any new DSC, it will turn on hero-cards.
+          this.getMetrics();
+        }
+        if (this.dataObjects.length >= this.searchDSCsCount) {
+          this.searchDSCsCount = this.dataObjects.length;
+        }
+        for (const naple of this.dataObjects) {
           this.naplesMap[naple.meta.name] = naple;
           const dscHealthCond: NaplesCondition = Utility.getNaplesConditionObject(naple);
           // Create search object for condition
@@ -521,8 +664,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   getNaplesByKey(name: string): ClusterDistributedServiceCard {
-    for (let index = 0; index < this.naples.length; index++) {
-      const naple = this.naples[index];
+    for (let index = 0; index < this.dataObjects.length; index++) {
+      const naple = this.dataObjects[index];
       if (naple.meta.name === name) {
         return naple;
       }
@@ -615,10 +758,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
  * @param $event
  */
   onCancelSearch($event) {
-    this.populateFieldSelector();
-    this.cancelSearch = true;
-    this.getDistributedServiceCards();
+    /*  Previous remote search code. Comment out for now.
+     this.populateFieldSelector();
+     this.cancelSearch = true;
+     this.getDistributedServiceCards();
+      */
     this.controllerService.invokeInfoToaster('Information', 'Cleared search criteria, DSCs refreshed.');
+    this.dataObjects = this.dataObjectsBackUp;
   }
 
   /**
@@ -733,10 +879,26 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     this.inLabelEditMode = false;
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(subscription => {
-      subscription.unsubscribe();
-    });
+  ngOnDestroyHook() {
+    const ts = (new Date()).getTime();
+    const hour = Utility.DEFAULT_CACHE_DURATION;
+
+    const workloadVeniceObjectCache: VeniceObjectCache = {
+      timestamp: ts,
+      duration: hour,
+      data: this.workloadList
+    };
+    Utility.getInstance().setVeniceObjectCache('Workload', workloadVeniceObjectCache);
+
+    if (this.dataObjects && this.dataObjects.length >= this.searchDSCsCount) {
+      const dscsVeniceObjectCache: VeniceObjectCache = {
+        timestamp: ts,
+        duration: hour,
+        data: this.dataObjects as any[]
+      };
+
+      Utility.getInstance().setVeniceObjectCache('DistributedServiceCard', dscsVeniceObjectCache);
+    }
   }
 
   buildMoreWorkloadTooltip(dsc: ClusterDistributedServiceCard): string {

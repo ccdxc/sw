@@ -472,7 +472,15 @@ export abstract class TableviewAbstract<I, T extends I> extends BaseComponent im
     this.controllerService.invokeInfoToaster('FileExported', this.exportFilename + '.json');
   }
 
+  /**
+   * This is an API hook for child class to override
+   */
+  ngOnDestroyHook() {
+    // do nothing;
+  }
+
   ngOnDestroy() {
+    this.ngOnDestroyHook();
     this.subscriptions.forEach(sub => {
       sub.unsubscribe();
     });

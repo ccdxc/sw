@@ -28,6 +28,8 @@ export class HttpEventUtility<T> {
   private isSingleton: boolean;
   private isToTrim: boolean = false;
 
+  private _updateRecordsMap: { [type: string]: Array<T>  } = {};
+
   /**
    * @param objectConstructor   Constructor that will be called on all
    *                            the objects before being put in the array
@@ -55,6 +57,10 @@ export class HttpEventUtility<T> {
 
   public processEvents(eventChunk): ReadonlyArray<T> {
     try {
+
+      this._updateRecordsMap = {};
+      Object.keys(EventTypes).forEach( (key) => this._updateRecordsMap[EventTypes[key]] = []);
+
       const events = eventChunk.events;
       if (events == null) {
         return;
@@ -78,9 +84,11 @@ export class HttpEventUtility<T> {
         switch (event.type) {
           case EventTypes.create:
             this.addItem(obj, objName);
+            this._updateRecordsMap[EventTypes.create].push(obj);
             break;
           case EventTypes.delete:
             this.deleteItem(objName);
+            this._updateRecordsMap[EventTypes.delete].push(obj);
             break;
           case EventTypes.update:
             if (this.isSingleton && this.dataArray.length > 0) {
@@ -95,6 +103,7 @@ export class HttpEventUtility<T> {
               // last modified time ordering.
               this.deleteItem(objName);
               this.addItem(obj, objName);
+              this._updateRecordsMap[EventTypes.update].push(obj);
             } else {
               console.error('Update event received but object was not found ', JSON.stringify(event));
             }
@@ -157,6 +166,10 @@ export class HttpEventUtility<T> {
 
   public get array(): ReadonlyArray<T> {
     return this.dataArray;
+  }
+
+  public get updateRecordMap(): { [type: string]: Array<T>  }  {
+    return this._updateRecordsMap;
   }
 
 }

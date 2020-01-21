@@ -23,6 +23,8 @@ import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster'
 import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
 import { NaplesComponent } from './naples.component';
+import { BehaviorSubject } from 'rxjs';
+import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 
 
 @Component({
@@ -118,6 +120,70 @@ describe('NaplesComponent', () => {
     }
   };
 
+  const workload1 = {
+    'kind': 'Workload',
+    'api-version': 'v1',
+    'meta': {
+      'name': 'w1',
+      'tenant': 'default',
+      'namespace': 'default',
+      'generation-id': '2',
+      'resource-version': '139282',
+      'uuid': 'f3b01b40-5f21-4fa2-9c63-e3bb0b243d29',
+      'labels': {
+        'type': 'test'
+      },
+      'creation-time': '2019-10-18T20:29:41.577867228Z',
+      'mod-time': '2019-10-18T22:55:50.128243229Z',
+      'self-link': '/configs/workload/v1/tenant/default/workloads/w1'
+    },
+    'spec': {
+      'host-name': 'test-host',
+      'interfaces': [
+        {
+          'mac-address': 'aaaa.bbbb.cccc',
+          'micro-seg-vlan': 1,
+          'external-vlan': 1,
+          'ip-addresses': [
+            '1.1.11.1'
+          ]
+        }
+      ]
+    }
+  };
+
+  const workload2 = {
+    'kind': 'Workload',
+    'api-version': 'v1',
+    'meta': {
+      'name': 'w2',
+      'tenant': 'default',
+      'namespace': 'default',
+      'generation-id': '2',
+      'resource-version': '139282',
+      'uuid': 'f3b01b40-5f21-4fa2-9c63-e3bb0b243d29',
+      'labels': {
+        'type': 'test'
+      },
+      'creation-time': '2019-10-18T20:29:41.577867228Z',
+      'mod-time': '2019-10-18T22:55:50.128243229Z',
+      'self-link': '/configs/workload/v1/tenant/default/workloads/w1'
+    },
+    'spec': {
+      'host-name': 'naples1-host',
+      'interfaces': [
+        {
+          'mac-address': 'aaaa.bbbb.cccc',
+          'micro-seg-vlan': 1,
+          'external-vlan': 1,
+          'ip-addresses': [
+            '1.1.11.1'
+          ]
+        }
+      ]
+    }
+  };
+
   configureTestSuite(() => {
      TestBed.configureTestingModule({
       declarations: [
@@ -154,10 +220,39 @@ describe('NaplesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NaplesComponent);
     component = fixture.componentInstance;
-    const service = TestBed.get(ClusterService);
-    spyOn(service, 'WatchDistributedServiceCard').and.returnValue(
+
+    const serviceCluster = TestBed.get(ClusterService);
+    const searchService = TestBed.get(SearchService);
+    const serviceWorkload = TestBed.get(WorkloadService);
+
+    const searchResp: ISearchSearchResponse = {
+      'total-hits': '3'
+    };
+
+    spyOn(searchService, 'PostQuery').and.returnValue(
+      new BehaviorSubject({
+        body: searchResp
+      })
+    );
+
+    const subject = TestingUtility.createWatchEventsSubject([
+      workload1, workload2
+    ]);
+
+    spyOn(serviceWorkload, 'ListWorkload').and.returnValue(
+      subject
+    );
+
+    spyOn(serviceWorkload, 'WatchWorkload').and.returnValue(
+      TestingUtility.createWatchEventsSubject([
+        workload1, workload2
+      ])
+    );
+    spyOn(serviceCluster, 'WatchDistributedServiceCard').and.returnValue(
       TestingUtility.createWatchEventsSubject([naples1, naples2, naples3])
     );
+
+    subject.complete();
   });
 
   it('should populate table', <any>fakeAsync(() => {

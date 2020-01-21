@@ -144,6 +144,11 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     this.eventsService.GetGetEvent(this.searchedEvent).subscribe(
       (response) => {
         this.selectedEvent = response.body as EventsEvent;
+      },
+      (error) => {
+        // User may tweak browser url and make invalid event name in the url, we will catch and throw error.
+        this.selectedEvent = null;
+        this.controllerService.invokeRESTErrorToaster('Failed to fetch event ' + this.searchedEvent, error);
       }
     );
   }

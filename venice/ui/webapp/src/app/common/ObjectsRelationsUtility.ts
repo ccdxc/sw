@@ -1,7 +1,8 @@
-import { WorkloadWorkload, IWorkloadWorkload, IApiStatus, WorkloadWorkloadIntfSpec } from '@sdk/v1/models/generated/workload';
-import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceCardID } from '@sdk/v1/models/generated/cluster';
+import { WorkloadWorkload, IWorkloadWorkload, IApiStatus, WorkloadWorkloadIntfSpec, IWorkloadAutoMsgWorkloadWatchHelper } from '@sdk/v1/models/generated/workload';
+import { ClusterDistributedServiceCard, ClusterHost, IClusterDistributedServiceCardID, IClusterAutoMsgHostWatchHelper } from '@sdk/v1/models/generated/cluster';
 import { Utility } from '@app/common/Utility';
 import { SecuritySecurityGroup, SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
+import { EventTypes } from './HttpEventUtility';
 
 
 export interface SecuritygroupWorkloadPolicyTuple {
@@ -43,6 +44,11 @@ export interface DSCmacToNameMap {
 export interface DSCsNameMacMap {
     nameToMacMap: DSCnameToMacMap;
     macToNameMap: DSCmacToNameMap;
+}
+
+export interface HandleWatchItemResult {
+    hasChange: boolean;
+    list: any[];
 }
 
 /**
@@ -481,7 +487,7 @@ export class ObjectsRelationsUtility {
                     break;
                 }
             } */
-            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload );
+            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload);
             if (allRequirementMatch) {
                 workloadWorkloads.push(workload);
             }
@@ -532,7 +538,7 @@ export class ObjectsRelationsUtility {
     static getSecurityGroupsByWorkload(securitygroups: ReadonlyArray<SecuritySecurityGroup> | SecuritySecurityGroup[], workload: WorkloadWorkload): SecuritySecurityGroup[] {
         const linkedSecurityGroups: SecuritySecurityGroup[] = [];
         for (const securityGroup of securitygroups) {
-            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload );
+            const allRequirementMatch = this.isSecurityGroupWorkloadLabelMatchWorkloadLabels(securityGroup, workload);
             if (allRequirementMatch) {
                 linkedSecurityGroups.push(securityGroup);
             }
@@ -540,4 +546,73 @@ export class ObjectsRelationsUtility {
         return linkedSecurityGroups;
     }
 
+
+    /**
+    *
+    * @param veniceObjectWatchHelper
+    * @param type
+    */
+    public static findTypedItemsFromWSResponse(veniceObjectWatchHelper: IWorkloadAutoMsgWorkloadWatchHelper | IClusterAutoMsgHostWatchHelper, type: EventTypes) {
+        const typedItemList = [];
+        if (!veniceObjectWatchHelper) {
+            return [];
+        }
+        const events = veniceObjectWatchHelper.events;
+        for (let i = 0; events && i < events.length; i++) {
+            if (events[i].type === type && events[i].object) {
+                typedItemList.push(events[i].object);
+            }
+        }
+        return typedItemList;
+    }
+
+    public static handleAddedItemsFromWatch(addedItems: any[], dataList: any[], genFunc: (item: any) => any): HandleWatchItemResult {
+        let needUpdate: boolean = false;
+        for (let i = 0; i < addedItems.length; i++) {
+            const index = dataList.findIndex((w) => w.meta.name === addedItems[i].meta.name);
+            if (index < 0) {
+                const workload = genFunc(addedItems[i]);  // genFunc is like: new WorkloadWorkload(addedItems[i]);
+                dataList = dataList.concat(workload); // insert into workloadList
+                needUpdate = true;
+            }
+        }
+        const handleWatchItemResult: HandleWatchItemResult = {
+            hasChange: needUpdate,
+            list: dataList
+        };
+        return handleWatchItemResult;
+    }
+
+    public static handleUpdatedItemsFromWatch(updatedItems: any[], dataList: any[], genFunc: (item: any) => any): HandleWatchItemResult {
+        let needUpdate: boolean = false;
+        for (let i = 0; i < updatedItems.length; i++) {
+            const index = dataList.findIndex((w) => w.meta.name === updatedItems[i].meta.name);
+            if (index >= 0) {
+                const workload = genFunc(updatedItems[i]);
+                dataList[index] = workload;  // update to new value
+                needUpdate = true;
+            }
+        }
+        const handleWatchItemResult: HandleWatchItemResult = {
+            hasChange: needUpdate,
+            list: dataList
+        };
+        return handleWatchItemResult;
+    }
+
+    public static handleDeletedItemsFromWatch(deletedIems: any[], dataList: any[]): HandleWatchItemResult {
+        let needUpdate: boolean = false;
+        for (let i = 0; i < deletedIems.length; i++) {
+            const index = dataList.findIndex((w) => w.meta.name === deletedIems[i].meta.name);
+            if (index >= 0) {
+                dataList.splice(index, 1);
+                needUpdate = true;
+            }
+        }
+        const handleWatchItemResult: HandleWatchItemResult = {
+            hasChange: needUpdate,
+            list: dataList
+        };
+        return handleWatchItemResult;
+    }
 }

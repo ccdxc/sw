@@ -267,11 +267,17 @@ describe('HostsComponent', () => {
     TestingUtility.setAllPermissions();
     const serviceCluster = TestBed.get(ClusterService);
     const serviceWorkload = TestBed.get(WorkloadService);
-    const subject = TestingUtility.createWatchEventsSubject([
-      naple1, workload1, workload2
+    const subjectDSC = TestingUtility.createWatchEventsSubject([
+      naple1
+    ]);
+    const subjectWL = TestingUtility.createWatchEventsSubject([
+       workload1, workload2
     ]);
     spyOn(serviceCluster, 'ListDistributedServiceCard').and.returnValue(
-      subject
+      subjectDSC
+    );
+    spyOn(serviceWorkload, 'ListWorkload').and.returnValue(
+      subjectWL
     );
     spyOn(serviceCluster, 'WatchHost').and.returnValue(
       TestingUtility.createWatchEventsSubject([
@@ -285,7 +291,8 @@ describe('HostsComponent', () => {
       ])
     );
 
-    subject.complete();
+    subjectDSC.complete();
+    subjectWL.complete();
 
     fixture.detectChanges();
 
@@ -313,7 +320,7 @@ describe('HostsComponent', () => {
           expect(fieldElem.nativeElement.textContent.length).toEqual(0);
         }
       }
-    }, '', true);
+    }, 'delete ', true);
   });
 
   /**

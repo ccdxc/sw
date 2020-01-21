@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { ObjectsRelationsUtility, WorkloadDSCHostSecurityTuple } from '@app/common/ObjectsRelationsUtility';
-import { Utility } from '@app/common/Utility';
+import { Utility, VeniceObjectCache } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { ClusterService } from '@app/services/generated/cluster.service';
@@ -13,7 +13,7 @@ import { SecurityService } from '@app/services/generated/security.service';
 import { WorkloadService } from '@app/services/generated/workload.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
-import { FieldsRequirement, SearchSearchRequest, SearchSearchResponse, SearchTextRequirement } from '@sdk/v1/models/generated/search';
+import { FieldsRequirement, SearchSearchRequest, SearchSearchResponse, SearchTextRequirement, SearchSearchRequest_mode, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { SecuritySecurityGroup } from '@sdk/v1/models/generated/security';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { IApiStatus, IWorkloadWorkload, WorkloadWorkload, WorkloadWorkloadList } from '@sdk/v1/models/generated/workload';
@@ -27,6 +27,7 @@ import { LabelEditorMetadataModel } from '../shared/labeleditor';
 import { CustomExportMap, TableCol } from '../shared/tableviewedit';
 import { TableUtility } from '../shared/tableviewedit/tableutility';
 import { TablevieweditAbstract } from '../shared/tableviewedit/tableviewedit.component';
+import { debounceTime } from 'rxjs/operators';
 
 /**
  * Creates the workload page. Uses workload widget for the hero stats
@@ -139,26 +140,28 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
 
   securitygroupsEventUtility: HttpEventUtility<SecuritySecurityGroup>;
   securitygroups: ReadonlyArray<SecuritySecurityGroup>;
+  searchWorkloadCount: number = 0;
+  starttimeWatchWorkload: number;
 
   /**
    * This API is to assist searchWorkloadInterfaces().  We use public static function is to avoid "this" keyword confusion
    * @param requirement
    */
-  public static getsearchWorkloadInterfaceKey(requirement: FieldsRequirement): string [] {
+  public static getsearchWorkloadInterfaceKey(requirement: FieldsRequirement): string[] {
     const key = requirement.key;
     if (key === 'interface.mac') {
-        return ['mac-address'];
+      return ['mac-address'];
     }
     if (key === 'interface.micro_seg_vlan') {
-      return [ 'micro-seg-vlan'];
+      return ['micro-seg-vlan'];
     }
     if (key === 'interface.external_vlan') {
-      return [ 'external-vlan'];
+      return ['external-vlan'];
     }
     if (key === 'interface.ipaddress') {
-      return [ 'ip-addresses'];
+      return ['ip-addresses'];
     }
- }
+  }
 
 
 
@@ -385,33 +388,63 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     }
   }
 
-  /**
-   * Fetch workloads.
-   * We start a GET, then watch workloads.
-   */
   getWorkloads() {
-    const getSubscription = this.workloadService.ListWorkload().subscribe(
-      response => {
-        const workloadList: WorkloadWorkloadList = response.body as WorkloadWorkloadList;
-        if (! ( workloadList && workloadList.items && workloadList.items.length === 0 ) ) {
-          // Where there is no workload, we turn off loading indicator. //  VS-1064
-          this.tableLoading = false;
+    const query: SearchSearchRequest = new SearchSearchRequest({
+      'query-string': null,
+      'from': null,
+      'max-results': 2,
+      'sort-by': null,
+      'sort-order': 'ascending',
+      'mode': SearchSearchRequest_mode.preview,
+      query: {
+        kinds: [
+          'Workload'
+        ]
+      },
+      aggregate: false,
+    });
+    const searchDSCTotalSubscription = this.searchService.PostQuery(query).subscribe(
+      resp => {
+        if (resp) {
+          const body = resp.body as ISearchSearchResponse;
+          const dscTotal = parseInt(body['total-hits'], 10);
+          if (dscTotal > 0) {
+            this.searchWorkloadCount = dscTotal;
+          } else {
+            this.tableLoading = false;
+          }
+          this.starttimeWatchWorkload = (new Date()).getTime();
+          this.watchWorkloads();
         }
       },
-      error => {
-        this._controllerService.invokeRESTErrorToaster('Error', 'Failed to get workloads');
-        this.tableLoading = false;
-      }
+      this._controllerService.webSocketErrorHandler('Failed to get Distributed Services Cards'),
     );
-    this.subscriptions.push(getSubscription);
+    this.subscriptions.push(searchDSCTotalSubscription);
+  }
+
+  watchWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.dataObjects = this.workloadEventUtility.array;
+    const debounceDeley = (this.searchWorkloadCount > 100) ? 300 : 1; // if there are too many workloads in Venice, take longer time in  debounce(.. , xx). Table has time to render.
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
-        this.buildObjectsMap();
-        this.tableLoading = false;
-        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
+        const currenttimeWatchWorkload = (new Date()).getTime();
+        const timeDiff = currenttimeWatchWorkload - this.starttimeWatchWorkload;
+        const timeOut = (timeDiff > 2 * 60 * 1000);
+        // wait up to 2 * 60 seconds, then turn off tableLoading.  Or current # of  workloads is up to 90% of searchWorkloadCount.
+        if (timeOut || (this.dataObjects && this.dataObjects.length > 0.9 * this.searchWorkloadCount)) {
+          this.tableLoading = false;
+        }
+        _.debounce(() => {
+          this.buildObjectsMap();
+          this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
+        }, debounceDeley);
+
+        // once we have get more workload objects than searchWorkloadCount, we reset this.searchWorkloadCount. It is need in DestroyHook()
+        if (this.dataObjects.length >= this.searchWorkloadCount) {
+          this.searchWorkloadCount = this.dataObjects.length;
+        }
       },
       (error) => {
         this.tableLoading = false;
@@ -550,7 +583,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
    * @param order
    */
   onSearchWorkloads(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
-    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent) ;
+    const searchResults = this.onSearchDataObjects(field, order, 'Workload', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;
@@ -610,7 +643,7 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
     return outputs;
   }
 
-  searchWorkloadInterfaces (requirement: FieldsRequirement, data = this.dataObjects): any[] {
+  searchWorkloadInterfaces(requirement: FieldsRequirement, data = this.dataObjects): any[] {
     const outputs: any[] = [];
     for (let i = 0; data && i < data.length; i++) {
       const interfaces = data[i].spec.interfaces;
@@ -628,6 +661,22 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       }
     }
     return outputs;
+  }
+
+  ngOnDestroyHook() {
+    // we save workloads to host only we have full set of workloads.
+    if (this.dataObjects && this.dataObjects.length >= this.searchWorkloadCount) {
+      const ts = (new Date()).getTime();
+      const hour = Utility.DEFAULT_CACHE_DURATION;
+
+      const workloadVeniceObjectCache: VeniceObjectCache = {
+        timestamp: ts,
+        duration: hour,
+        data: this.dataObjects as any[]
+      };
+
+      Utility.getInstance().setVeniceObjectCache('Workload', workloadVeniceObjectCache);
+    }
   }
 
 }

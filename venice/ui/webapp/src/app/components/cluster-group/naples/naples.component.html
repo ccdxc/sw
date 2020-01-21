@@ -1,6 +1,6 @@
 <app-pagebody [icon]="bodyicon" header="Distributed Services Cards Overview">
   <div fxFlex="none" fxLayout="row">
-    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container">
+    <div fxFlex="nogrow" fxLayout="row wrap" class="naples-card-container" *ngIf="hasDSC">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"
@@ -20,6 +20,7 @@
   </div>
 
   <app-tableviewedit fxFlex="auto" fxLayout="column" class="naples-table-container"
+                     style="height: 100%;"
                      [data]="dataObjects" [cols]="cols"
                      [virtualRowHeight]="36" [sortField]="'meta.mod-time'"
                      [runDoCheck]="true"

@@ -123,6 +123,11 @@ export class AlertstableComponent extends TablevieweditAbstract<IMonitoringAlert
     this.monitoringService.GetAlert(this.searchedAlert).subscribe(
       response => {
         this.selectedAlert = response.body as MonitoringAlert;
+      },
+      (error) => {
+         // User may tweak browser url and make invalid alert name in the url, we will catch and throw error.
+        this.selectedAlert = null;
+        this.controllerService.invokeRESTErrorToaster('Failed to fetch alert ' + this.searchedAlert, error);
       }
     );
   }

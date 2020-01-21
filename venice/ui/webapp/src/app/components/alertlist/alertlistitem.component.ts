@@ -58,7 +58,7 @@ import { Utility } from '@app/common/Utility';
   encapsulation: ViewEncapsulation.None
 })
 export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
-
+  public static ALERT_SOURCE_NAME_LINK: string = 'alertSourceNameLink';
   @Input() data;
 
   @Output() alertClick: EventEmitter<any> = new EventEmitter();
@@ -75,7 +75,11 @@ export class AlertlistitemComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges() {
+    if (this.data) {
+    // add a UI_FIELD_PROPERTY to avoid constant function running in html template.
     this.alert = this.data;
+    this.alert[AlertlistitemComponent.ALERT_SOURCE_NAME_LINK] = this.getAlertItemSourceNameLink();
+    }
   }
 
   /**
