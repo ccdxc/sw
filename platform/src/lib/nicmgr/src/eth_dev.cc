@@ -320,6 +320,9 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
 
     // reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
+
+    // Set fw status on this interface when it is created
+    SetFwStatus(1);
 }
 
 Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
@@ -530,6 +533,9 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
 
     // reset the active_lif_ref_cnt to 0
     active_lif_ref_cnt = 0;
+
+    // Set fw status on this interface when it is created
+    SetFwStatus(1);
 }
 
 std::vector<Eth *>
@@ -1824,12 +1830,6 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
 
     // Update link status
     eth_lif->LinkEventHandler((port_status_t *)port_status);
-
-    // Assumption that we will allow host to send cmds on host lifs only after
-    // mgmt mnic is INITed
-    if (spec->eth_type == ETH_MNIC_INTERNAL_MGMT) {
-        DeviceManager::GetInstance()->SetFwStatus(1);
-    }
 
     return (ret);
 }
