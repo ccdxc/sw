@@ -47,6 +47,7 @@ using namespace sdk::platform::capri;
 #define JLIFQSTATE      "lif2qstate_map"
 #define JPKTBUFFER      "rxdma_to_txdma_buf"
 #define JPKTDESC        "rxdma_to_txdma_desc"
+#define JSTATSBASE      "session_stats"
 #define JP4_PRGM        "p4_program"
 
 #define MEM_REGION_LIF_STATS_BASE       "lif_stats_base"
@@ -420,6 +421,12 @@ device_init (void)
 
     capri_tm_uplink_lif_set(TM_PORT_UPLINK_0, g_lif0);
     capri_tm_uplink_lif_set(TM_PORT_UPLINK_1, g_lif1);
+
+    uint64_t session_stats_addr;
+    session_stats_addr = get_mem_addr(JSTATSBASE);
+    session_stats_addr -= ((uint64_t)1 << 31);
+    sdk::asic::pd::asicpd_program_table_constant(P4TBL_ID_SESSION,
+                                                 session_stats_addr);
 }
 
 static void

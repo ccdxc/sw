@@ -24,7 +24,9 @@ p4e_inter_pipe:
 
 egress_to_rxdma:
     // r7 actual packet len
+    // c7 ctag_1 valid
     add             r7, r0, k.capri_p4_intrinsic_packet_len
+    seq             c7, k.ctag_1_valid, TRUE
     phvwr           p.capri_rxdma_intrinsic_valid, TRUE
     phvwr           p.{p4e_to_p4plus_classic_nic_ip_valid, \
                         p4e_to_p4plus_classic_nic_valid}, 0x3
@@ -32,8 +34,22 @@ egress_to_rxdma:
     bcf             [c1], egress_to_rxdma_arm
     add             r6, r0, r7
     seq             c1, k.control_metadata_rx_packet, TRUE
+    phvwr.c1        p.capri_intrinsic_tm_span_session, k.p4e_i2e_mirror_session
+
+    seq             c1, k.rewrite_metadata_vlan_strip_en, TRUE
+    bcf             ![c1&c7], egress_to_rxdma_common
+    nop
+    phvwr           p.p4e_to_p4plus_classic_nic_vlan_valid, TRUE
+    phvwr           p.ethernet_1_etherType, k.ctag_1_etherType
+    phvwr           p.{p4e_to_p4plus_classic_nic_vlan_pcp, \
+                        p4e_to_p4plus_classic_nic_vlan_dei, \
+                        p4e_to_p4plus_classic_nic_vlan_vid}, \
+                        k.{ctag_1_pcp,ctag_1_dei,ctag_1_vid}
+    phvwr           p.ctag_1_valid, FALSE
+    sub             r7, r7, 4
+    sub             r6, r6, 6
     b               egress_to_rxdma_common
-    phvwr.c1       p.capri_intrinsic_tm_span_session, k.p4e_i2e_mirror_session
+    sne             c7, r0, r0
 
 egress_to_rxdma_arm:
     add             r6, r6, APULU_P4_TO_ARM_HDR_SZ
@@ -58,9 +74,8 @@ egress_to_rxdma_common:
 
     // l2 checksum computation
     phvwr           p.p4e_to_p4plus_classic_nic_l2csum, TRUE
-    seq             c1, k.ctag_1_valid, TRUE
-    phvwr.c1        p.ctag_1_l2csum, TRUE
-    phvwrpair.!c1   p.ipv4_1_l2csum, k.ipv4_1_valid, \
+    phvwr.c7        p.ctag_1_l2csum, TRUE
+    phvwrpair.!c7   p.ipv4_1_l2csum, k.ipv4_1_valid, \
                         p.ipv6_1_l2csum, k.ipv6_1_valid
     sub             r6, r7, 14
     phvwr           p.capri_deparser_len_l2_checksum_len, r6

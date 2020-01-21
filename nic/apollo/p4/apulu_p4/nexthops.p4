@@ -192,8 +192,8 @@ action ipv6_vxlan_encap(dmac, smac) {
     add(capri_p4_intrinsic.packet_len, scratch_metadata.ip_totallen, (40 + 14));
 }
 
-action nexthop_info(lif, qtype, qid, port, vlan, dmaco, smaco, dmaci,
-                    tunnel2_id) {
+action nexthop_info(lif, qtype, qid, vlan_strip_en, port, vlan, dmaco, smaco,
+                    dmaci, tunnel2_id) {
     if (p4e_i2e.nexthop_id == 0) {
         egress_drop(P4E_DROP_NEXTHOP_INVALID);
     }
@@ -251,6 +251,7 @@ action nexthop_info(lif, qtype, qid, port, vlan, dmaco, smaco, dmaci,
         modify_field(capri_intrinsic.lif, lif);
         modify_field(capri_rxdma_intrinsic.qtype, qtype);
         modify_field(capri_rxdma_intrinsic.qid, qid);
+        modify_field(rewrite_metadata.vlan_strip_en, vlan_strip_en);
     }
     modify_field(scratch_metadata.mac, smaco);
 }

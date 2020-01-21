@@ -30,6 +30,8 @@ nexthop_info2:
     phvwr           p.capri_intrinsic_lif, d.nexthop_info_d.lif
     phvwr           p.capri_rxdma_intrinsic_qtype, d.nexthop_info_d.qtype
     phvwr           p.capri_rxdma_intrinsic_qid, d.nexthop_info_d.qid
+    phvwr           p.rewrite_metadata_vlan_strip_en, \
+                        d.nexthop_info_d.vlan_strip_en
 
 nexthop_rewrite:
     bbeq            k.control_metadata_rx_packet, TRUE, nexthop_rx_rewrite

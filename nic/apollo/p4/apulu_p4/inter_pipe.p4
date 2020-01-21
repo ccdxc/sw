@@ -154,10 +154,6 @@ action egress_to_rxdma() {
     add_header(p4e_to_p4plus_classic_nic);
     add_header(p4e_to_p4plus_classic_nic_ip);
 
-    // l2 checksum code in ASM
-    if (ctag_1.valid == TRUE) {
-    }
-
     if (p4e_to_arm.valid == TRUE) {
         add_to_field(capri_p4_intrinsic.packet_len, APULU_P4_TO_ARM_HDR_SZ);
         modify_field(p4e_to_arm.rx_packet, control_metadata.rx_packet);
@@ -173,6 +169,22 @@ action egress_to_rxdma() {
             modify_field(capri_intrinsic.tm_span_session,
                          p4e_i2e.mirror_session);
         }
+        if ((rewrite_metadata.vlan_strip_en == TRUE) and
+            (ctag_1.valid == TRUE)) {
+            modify_field(ethernet_1.etherType, ctag_1.etherType);
+            modify_field(p4e_to_p4plus_classic_nic.vlan_pcp, ctag_1.pcp);
+            modify_field(p4e_to_p4plus_classic_nic.vlan_dei, ctag_1.dei);
+            modify_field(p4e_to_p4plus_classic_nic.vlan_vid, ctag_1.vid);
+            modify_field(p4e_to_p4plus_classic_nic.vlan_valid, TRUE);
+            remove_header(ctag_1);
+            subtract(capri_p4_intrinsic.packet_len,
+                     capri_p4_intrinsic.packet_len, 4);
+        }
+
+    }
+
+    // l2 checksum code in ASM
+    if (ctag_1.valid == TRUE) {
     }
 
     modify_field(p4e_to_p4plus_classic_nic.packet_len,

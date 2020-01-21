@@ -90,6 +90,7 @@ header_type rewrite_metadata_t {
         tunnel2_id          : 8;
         tunnel2_vni         : 24;
         tunnel_tos          : 8;
+        vlan_strip_en       : 1;
     }
 }
 
