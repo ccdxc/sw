@@ -339,6 +339,21 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "Vrf":
+			objlist, err := eh.server.ListVrfs(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		}
 	}
 
@@ -455,6 +470,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
 
+			case "Vrf":
+				if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
+					err = eh.statusReactor.(VrfStatusReactor).OnVrfOperUpdate(nodeID,
+						object.Message.(*netproto.Vrf))
+					if err != nil {
+						log.Errorf("Error updating Vrf oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Vrf).GetObjectMeta())
+
 			}
 		case api.EventType_DeleteEvent:
 			switch oper.AggObj.Kind {
@@ -538,6 +563,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.SecurityProfile).GetObjectMeta())
+
+			case "Vrf":
+				if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
+					err = eh.statusReactor.(VrfStatusReactor).OnVrfOperDelete(nodeID,
+						object.Message.(*netproto.Vrf))
+					if err != nil {
+						log.Errorf("Error updating Vrf oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Vrf).GetObjectMeta())
 
 			}
 		}
@@ -879,6 +914,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "Vrf":
+			objlist, err := eh.server.ListVrfs(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		}
 
 		// walk all objects and send it out
@@ -1023,6 +1073,17 @@ Watching:
 
 			case "SecurityProfile":
 				obj, err := SecurityProfileFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Vrf":
+				obj, err := VrfFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

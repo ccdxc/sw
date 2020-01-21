@@ -52,7 +52,8 @@ message IPAMPolicySpec {
 }
 
 message IPAMPolicyStatus {
-    //Empty
+    // IPAMPolicy ID in the datapath
+    uint64 IPAMPolicyID  = 1 [(gogoproto.jsontag) = "ipam-policy-id,omitempty"]; // IPAMPolicy identifier
 }
 
 message IPAMPolicyEvent {

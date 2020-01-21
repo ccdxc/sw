@@ -9,6 +9,11 @@
 		vpc.proto
 		device.proto
 		policy.proto
+		subnet.proto
+		dhcp.proto
+		interface.proto
+		port.proto
+		event.proto
 
 	It has these top-level messages:
 		Empty
@@ -85,6 +90,72 @@
 		SecurityProfileGetResponse
 		SecurityProfileDeleteRequest
 		SecurityProfileDeleteResponse
+		SubnetSpec
+		SubnetStatus
+		SubnetStats
+		Subnet
+		SubnetRequest
+		SubnetResponse
+		SubnetGetRequest
+		SubnetGetResponse
+		SubnetDeleteRequest
+		SubnetDeleteResponse
+		DHCPRelaySpec
+		DHCPRelayStatus
+		DHCPRelayStats
+		DHCPRelay
+		DHCPRelayRequest
+		DHCPRelayResponse
+		DHCPRelayGetRequest
+		DHCPRelayGetResponse
+		DHCPRelayDeleteRequest
+		DHCPRelayDeleteResponse
+		DHCPPolicySpec
+		DHCPPolicyStatus
+		DHCPPolicyStats
+		DHCPPolicy
+		DHCPPolicyRequest
+		DHCPPolicyResponse
+		DHCPPolicyGetRequest
+		DHCPPolicyGetResponse
+		DHCPPolicyDeleteRequest
+		DHCPPolicyDeleteResponse
+		UplinkSpec
+		UplinkPCSpec
+		L3IfSpec
+		LoopbackIfSpec
+		InterfaceSpec
+		UplinkIfStatus
+		LoopbackIfStatus
+		InterfaceStatus
+		InterfaceStats
+		Interface
+		InterfaceRequest
+		InterfaceResponse
+		InterfaceGetRequest
+		InterfaceGetResponse
+		InterfaceDeleteRequest
+		InterfaceDeleteResponse
+		LifSpec
+		LifStatus
+		LifStats
+		Lif
+		LifGetRequest
+		LifGetResponse
+		MacStats
+		MgmtMacStats
+		PortStats
+		PortSpec
+		PortLinkStatus
+		PortXcvrStatus
+		PortStatus
+		Port
+		PortGetRequest
+		PortGetResponse
+		PortUpdateRequest
+		PortUpdateResponse
+		EventRequest
+		EventResponse
 */
 package pds
 

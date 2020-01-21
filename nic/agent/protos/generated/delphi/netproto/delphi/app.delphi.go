@@ -13,6 +13,7 @@ It is generated from these files:
 	delphi/route.proto
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
+	delphi/vrf.proto
 
 It has these top-level messages:
 	App
@@ -23,6 +24,7 @@ It has these top-level messages:
 	RoutingConfig
 	NetworkSecurityPolicy
 	SecurityProfile
+	Vrf
 */
 package dnetproto
 

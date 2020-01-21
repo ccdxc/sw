@@ -14,6 +14,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	iristypes "github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/types"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
@@ -407,7 +408,7 @@ func convertIPAddress(addresses ...string) []*halapi.IPAddressObj {
 		kind, IPHigh, IPLow, IPMask := convertIPAddressKind(a)
 		switch kind {
 		case types.IPAddressAny:
-			halAddresses = append(halAddresses, types.HalIPAddressAny)
+			halAddresses = append(halAddresses, iristypes.HalIPAddressAny)
 		case types.IPAddressSingleton, types.IPAddressCIDR:
 			addr := &halapi.IPAddressObj{
 				Formats: &halapi.IPAddressObj_Address{

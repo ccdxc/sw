@@ -14,10 +14,10 @@
         "timeout": 0.0
     },
     {
-        "name": "operd-daemon",
-        "command": "/nic/bin/operd-daemon /nic/conf/operd-daemon.json",
-        "dependencies": [ ],
-        "flags": [],
+        "name": "pen-netagent",
+        "command": "/nic/bin/netagent",
+        "dependencies": [],
+        "flags": ["restartable", "save_stdout_on_crash"],
         "timeout": 0.0
     }
 ]

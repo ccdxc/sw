@@ -5,7 +5,10 @@
 package utils
 
 import (
+	"encoding/binary"
+	"fmt"
 	"net"
+
 	"strconv"
 
 	"github.com/pkg/errors"
@@ -43,6 +46,36 @@ func HandleErr(oper int, apiStatus halapi.ApiStatus, err error, format string) e
 	return nil
 }
 
+func convertID64(agentID uint64) []byte {
+	pipelineID := make([]byte, 8)
+	binary.LittleEndian.PutUint64(pipelineID, agentID)
+	return pipelineID
+}
+
+func convertID32(agentID uint32) []byte {
+	pipelineID := make([]byte, 4)
+	binary.LittleEndian.PutUint32(pipelineID, agentID)
+	return pipelineID
+}
+
+// ConvertID32 converts agent object 32 bit ID to HAL Object ID
+func ConvertID32(agentIDs ...uint32) [][]byte {
+	var halIDs [][]byte
+	for _, a := range agentIDs {
+		halIDs = append(halIDs, convertID32(a))
+	}
+	return halIDs
+}
+
+// ConvertID64 converts agent object 32 bit ID to HAL Object ID
+func ConvertID64(agentIDs ...uint64) [][]byte {
+	var halIDs [][]byte
+	for _, a := range agentIDs {
+		halIDs = append(halIDs, convertID64(a))
+	}
+	return halIDs
+}
+
 // ConvertMacAddress converts string MAC address into uint64 value
 func ConvertMacAddress(mac string) (macAddress uint64) {
 	hex := types.MacStringRegex.ReplaceAllLiteralString(mac, "")
@@ -63,4 +96,21 @@ func ConvertIPAddresses(addresses ...string) (ipAddresses []*halapi.IPAddress) {
 		ipAddresses = append(ipAddresses, v4Addr)
 	}
 	return
+}
+
+// MacStrtoUint64 converts a MAC string to uint64
+func MacStrtoUint64(macStr string) uint64 {
+	var bytes [6]uint64
+	var mac uint64
+
+	fmt.Sscanf(macStr, "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1], &bytes[2], &bytes[3], &bytes[4], &bytes[5])
+
+	mac = (bytes[0] << 40)
+	mac |= (bytes[1] << 32)
+	mac |= (bytes[2] << 24)
+	mac |= (bytes[3] << 16)
+	mac |= (bytes[4] << 8)
+	mac |= bytes[5]
+
+	return mac
 }

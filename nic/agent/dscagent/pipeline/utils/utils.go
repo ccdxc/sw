@@ -18,8 +18,45 @@ import (
 )
 
 // CreateNewGRPCClient creates a new RPC Client to the pipeline
-func CreateNewGRPCClient() (rpcClient *grpc.ClientConn, err error) {
-	return waitForHAL()
+func CreateNewGRPCClient(portEnvVar string, defaultPort string) (rpcClient *grpc.ClientConn, err error) {
+	return waitForHAL(portEnvVar, defaultPort)
+}
+
+func isHalConnected(portEnvVar string, defaultPort string) (*grpc.ClientConn, error) {
+	halPort := os.Getenv(portEnvVar)
+	if halPort == "" {
+		halPort = defaultPort
+	}
+	halURL := fmt.Sprintf("%s:%s", types.HalGRPCDefaultBaseURL, halPort)
+	log.Infof("HAL URL: %s", halURL)
+	return grpc.Dial(halURL, grpc.WithMaxMsgSize(math.MaxInt32-1), grpc.WithInsecure(), grpc.WithBlock())
+}
+
+func waitForHAL(portEnvVar string, defaultPort string) (rpcClient *grpc.ClientConn, err error) {
+	halUP := make(chan bool, 1)
+	ticker := time.NewTicker(types.HalGRPCTickerDuration)
+	timeout := time.After(types.HalGRPCWaitTimeout)
+	rpcClient, err = isHalConnected(portEnvVar, defaultPort)
+	if err == nil {
+		log.Infof("1st TickStaus: %s", types.InfoConnectedToHAL)
+		return
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			rpcClient, err = isHalConnected(portEnvVar, defaultPort)
+			if err != nil {
+				halUP <- true
+			}
+		case <-halUP:
+			log.Infof("Agent HAL Status: %v", types.InfoConnectedToHAL)
+			return
+		case <-timeout:
+			log.Errorf("Agent could not connect to HAL. | Err: %v", err)
+			return nil, errors.Wrapf(types.ErrPipelineNotAvailabe, "Agent could not connect to HAL. Err: %v | Err: %v", types.ErrPipelineTimeout, err)
+		}
+	}
 }
 
 // ValidateMeta validates object keys based on kind.
@@ -103,15 +140,15 @@ func ValidateMacAddresses(macAddresses ...string) error {
 	return nil
 }
 
-func isHalConnected() (*grpc.ClientConn, error) {
-	halPort := os.Getenv("HAL_GRPC_PORT")
-	if halPort == "" {
-		halPort = types.HalGRPCDefaultPort
-	}
-	halURL := fmt.Sprintf("%s:%s", types.HalGRPCDefaultBaseURL, halPort)
-	log.Infof("HAL URL: %s", halURL)
-	return grpc.Dial(halURL, grpc.WithMaxMsgSize(math.MaxInt32-1), grpc.WithInsecure(), grpc.WithBlock())
-}
+//func isHalConnected() (*grpc.ClientConn, error) {
+//	halPort := os.Getenv("HAL_GRPC_PORT")
+//	if halPort == "" {
+//		halPort = types.HalGRPCDefaultPort
+//	}
+//	halURL := fmt.Sprintf("%s:%s", types.HalGRPCDefaultBaseURL, halPort)
+//	log.Infof("HAL URL: %s", halURL)
+//	return grpc.Dial(halURL, grpc.WithMaxMsgSize(math.MaxInt32-1), grpc.WithInsecure(), grpc.WithBlock())
+//}
 
 // ResolveIPAddress resolves IPAddresses and returns its ARP Cache.
 //func ResolveIPAddress(mgmtIPAddress, mgmtIntf string, ipAddresses ...string) (map[string]string, error) {
@@ -173,32 +210,32 @@ func isHalConnected() (*grpc.ClientConn, error) {
 //	}
 //}
 
-func waitForHAL() (rpcClient *grpc.ClientConn, err error) {
-	halUP := make(chan bool, 1)
-	ticker := time.NewTicker(types.HalGRPCTickerDuration)
-	timeout := time.After(types.HalGRPCWaitTimeout)
-	rpcClient, err = isHalConnected()
-	if err == nil {
-		log.Infof("1st TickStaus: %s", types.InfoConnectedToHAL)
-		return
-	}
-
-	for {
-		select {
-		case <-ticker.C:
-			rpcClient, err = isHalConnected()
-			if err != nil {
-				halUP <- true
-			}
-		case <-halUP:
-			log.Infof("Agent HAL Status: %v", types.InfoConnectedToHAL)
-			return
-		case <-timeout:
-			log.Errorf("Agent could not connect to HAL. | Err: %v", err)
-			return nil, errors.Wrapf(types.ErrPipelineNotAvailabe, "Agent could not connect to HAL. Err: %v | Err: %v", types.ErrPipelineTimeout, err)
-		}
-	}
-}
+//func waitForHAL() (rpcClient *grpc.ClientConn, err error) {
+//	halUP := make(chan bool, 1)
+//	ticker := time.NewTicker(types.HalGRPCTickerDuration)
+//	timeout := time.After(types.HalGRPCWaitTimeout)
+//	rpcClient, err = isHalConnected()
+//	if err == nil {
+//		log.Infof("1st TickStaus: %s", types.InfoConnectedToHAL)
+//		return
+//	}
+//
+//	for {
+//		select {
+//		case <-ticker.C:
+//			rpcClient, err = isHalConnected()
+//			if err != nil {
+//				halUP <- true
+//			}
+//		case <-halUP:
+//			log.Infof("Agent HAL Status: %v", types.InfoConnectedToHAL)
+//			return
+//		case <-timeout:
+//			log.Errorf("Agent could not connect to HAL. | Err: %v", err)
+//			return nil, errors.Wrapf(types.ErrPipelineNotAvailabe, "Agent could not connect to HAL. Err: %v | Err: %v", types.ErrPipelineTimeout, err)
+//		}
+//	}
+//}
 
 // Ipv4Touint32 converts net.IP to 32 bit integer
 func Ipv4Touint32(ip net.IP) uint32 {

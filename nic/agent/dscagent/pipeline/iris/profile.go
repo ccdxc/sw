@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	iristypes "github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/types"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/iris/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
@@ -270,29 +271,29 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 				IpNormalizationEn:      true,
 
 				// Default Normalization action allow
-				IpDfAction:            types.IPDFAction,
-				IpOptionsAction:       types.IPOptionsAction,
-				IcmpInvalidCodeAction: types.ICMPInvalidCodeAction,
+				IpDfAction:            iristypes.IPDFAction,
+				IpOptionsAction:       iristypes.IPOptionsAction,
+				IcmpInvalidCodeAction: iristypes.ICMPInvalidCodeAction,
 
 				// Default Normalization actino edit
-				IpInvalidLenAction:          types.IPInvalidLenAction,
-				TcpUnexpectedMssAction:      types.TCPUnexpectedMSSAction,
-				TcpUnexpectedWinScaleAction: types.TCPUnexpectedWinScaleAction,
-				TcpUnexpectedSackPermAction: types.TCPUnexpectedSACKPermAction,
-				TcpUrgPtrNotSetAction:       types.TCPUrgentPtrNotSetAction,
-				TcpUrgFlagNotSetAction:      types.TCPUrgentFlagNotSetAction,
-				TcpUrgPayloadMissingAction:  types.TCPUrgentPayloadMissingAction,
-				TcpDataLenGtMssAction:       types.TCPDataLenGreaterThanMSSAction,
-				TcpDataLenGtWinSizeAction:   types.TCPDataLenGreaterThanWinSizeAction,
-				TcpUnexpectedTsOptionAction: types.TCPUnexpectedTSOptionAction,
+				IpInvalidLenAction:          iristypes.IPInvalidLenAction,
+				TcpUnexpectedMssAction:      iristypes.TCPUnexpectedMSSAction,
+				TcpUnexpectedWinScaleAction: iristypes.TCPUnexpectedWinScaleAction,
+				TcpUnexpectedSackPermAction: iristypes.TCPUnexpectedSACKPermAction,
+				TcpUrgPtrNotSetAction:       iristypes.TCPUrgentPtrNotSetAction,
+				TcpUrgFlagNotSetAction:      iristypes.TCPUrgentFlagNotSetAction,
+				TcpUrgPayloadMissingAction:  iristypes.TCPUrgentPayloadMissingAction,
+				TcpDataLenGtMssAction:       iristypes.TCPDataLenGreaterThanMSSAction,
+				TcpDataLenGtWinSizeAction:   iristypes.TCPDataLenGreaterThanWinSizeAction,
+				TcpUnexpectedTsOptionAction: iristypes.TCPUnexpectedTSOptionAction,
 
 				// Default Normalization action drop
-				TcpUnexpectedEchoTsAction:     types.TCPUnexpectedEchoTSAction,
-				TcpUnexpectedSackOptionAction: types.TCPUnexpectedSACKOptionAction,
-				TcpRsvdFlagsAction:            types.TCPReservedFlagsAction,
+				TcpUnexpectedEchoTsAction:     iristypes.TCPUnexpectedEchoTSAction,
+				TcpUnexpectedSackOptionAction: iristypes.TCPUnexpectedSACKOptionAction,
+				TcpRsvdFlagsAction:            iristypes.TCPReservedFlagsAction,
 
 				// Default Normalization action none
-				TcpRstWithDataAction: types.TCPRSTWithDataAction,
+				TcpRstWithDataAction: iristypes.TCPRSTWithDataAction,
 			},
 		},
 	}

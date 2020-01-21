@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto6 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto7 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type RoutingConfig struct {
 	Meta          *delphi.ObjectMeta       `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key           string                   `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	RoutingConfig *netproto6.RoutingConfig `protobuf:"bytes,3,opt,name=RoutingConfig" json:"RoutingConfig,omitempty"`
+	RoutingConfig *netproto7.RoutingConfig `protobuf:"bytes,3,opt,name=RoutingConfig" json:"RoutingConfig,omitempty"`
 }
 
 func (m *RoutingConfig) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *RoutingConfig) GetKey() string {
 	return ""
 }
 
-func (m *RoutingConfig) GetRoutingConfig() *netproto6.RoutingConfig {
+func (m *RoutingConfig) GetRoutingConfig() *netproto7.RoutingConfig {
 	if m != nil {
 		return m.RoutingConfig
 	}

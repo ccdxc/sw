@@ -81,6 +81,9 @@ type PipelineAPI interface {
 	// HandleNetworkSecurityPolicy handles CRUDs for Mirror object
 	HandleMirrorSession(oper Operation, obj netproto.MirrorSession) ([]netproto.MirrorSession, error)
 
+	// HandleIPAMPolicy handles CRUDs for IPAM policy object
+	HandleIPAMPolicy(oper Operation, obj netproto.IPAMPolicy) ([]netproto.IPAMPolicy, error)
+
 	//HandleFlowExportPolicy handles CRUDs for NetworkSecurityPolicy object
 	HandleFlowExportPolicy(oper Operation, obj netproto.FlowExportPolicy) ([]netproto.FlowExportPolicy, error)
 

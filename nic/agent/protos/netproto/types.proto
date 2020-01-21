@@ -1,0 +1,33 @@
+syntax = "proto3";
+package netproto;
+
+option go_package="netproto";
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+
+enum IPAF {
+    IP_AF_NONE  = 0;
+    IP_AF_INET  = 1; // IPv4
+    IP_AF_INET6 = 2; // IPv6
+}
+
+message IPAddress {
+    // Type is the address type
+    IPAF Type           = 1 [(gogoproto.jsontag) = "type"];
+    // V4Address is valid if Type is AF_INET
+    uint32 V4Address    = 2 [(gogoproto.jsontag) = "v4-address,omitempty"];
+    // V6Address is valid if Type is AF_INET6
+    bytes V6Address     = 3 [(gogoproto.jsontag) = "v6-address,omitempty"];
+}
+
+message IPPrefix {
+    // PrefixLen is the length of the prefix
+    uint32 PrefixLen = 1 [(gogoproto.jsontag) = "prefix-len"];
+
+    // IP Address for the prefix
+    IPAddress  Address = 2 [(gogoproto.jsontag) = "address", (gogoproto.nullable) = false];
+}

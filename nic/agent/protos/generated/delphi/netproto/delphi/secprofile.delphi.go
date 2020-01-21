@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto8 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto9 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type SecurityProfile struct {
 	Meta            *delphi.ObjectMeta         `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key             string                     `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	SecurityProfile *netproto8.SecurityProfile `protobuf:"bytes,3,opt,name=SecurityProfile" json:"SecurityProfile,omitempty"`
+	SecurityProfile *netproto9.SecurityProfile `protobuf:"bytes,3,opt,name=SecurityProfile" json:"SecurityProfile,omitempty"`
 }
 
 func (m *SecurityProfile) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *SecurityProfile) GetKey() string {
 	return ""
 }
 
-func (m *SecurityProfile) GetSecurityProfile() *netproto8.SecurityProfile {
+func (m *SecurityProfile) GetSecurityProfile() *netproto9.SecurityProfile {
 	if m != nil {
 		return m.SecurityProfile
 	}

@@ -6,7 +6,6 @@ package apulu
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"strings"
 
@@ -19,7 +18,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// HandleVPC handles crud operations on vrf TODO use VPCClient here
+// HandleVPC handles crud operations on vrf
 func HandleVPC(infraAPI types.InfraAPI, client halapi.VPCSvcClient, oper types.Operation, vrf netproto.Vrf) error {
 	switch oper {
 	case types.Create:
@@ -69,13 +68,8 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, vrf n
 }
 
 func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, vrf netproto.Vrf) error {
-	vpcID := make([]byte, 8)
-	binary.LittleEndian.PutUint64(vpcID, vrf.Status.VrfID)
-
 	vpcDelReq := &halapi.VPCDeleteRequest{
-		Id: [][]byte{
-			vpcID,
-		},
+		Id: utils.ConvertID64(vrf.Status.VrfID),
 	}
 
 	resp, err := client.VPCDelete(context.Background(), vpcDelReq)
@@ -99,15 +93,24 @@ func convertVrfToVPC(vrf netproto.Vrf) *halapi.VPCRequest {
 	} else {
 		vpcType = halapi.VPCType_VPC_TYPE_TENANT
 	}
-	vpcID := make([]byte, 8)
-	binary.LittleEndian.PutUint64(vpcID, vrf.Status.VrfID)
 
 	return &halapi.VPCRequest{
 		BatchCtxt: nil,
 		Request: []*halapi.VPCSpec{
 			{
-				Id:   vpcID,
-				Type: vpcType,
+				Id:               utils.ConvertID64(vrf.Status.VrfID)[0],
+				Type:             vpcType,
+				V4RouteTableId:   utils.ConvertID32(vrf.Spec.V4RouteTableID)[0],
+				V6RouteTableId:   utils.ConvertID32(vrf.Spec.V6RouteTableID)[0],
+				VirtualRouterMac: utils.MacStrtoUint64(vrf.Spec.RouterMAC),
+				FabricEncap: &halapi.Encap{
+					Type: halapi.EncapType_ENCAP_TYPE_VXLAN,
+					Value: &halapi.EncapVal{
+						Val: &halapi.EncapVal_Vnid{
+							Vnid: vrf.Spec.VxLANVNI,
+						},
+					},
+				},
 			},
 		},
 	}

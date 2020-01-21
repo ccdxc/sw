@@ -29,7 +29,7 @@ func MacStrtoUint64(macStr string) uint64 {
 	var bytes [6]uint64
 	var mac uint64
 
-	fmt.Sscanf(macStr, "%d:%d:%d:%d:%d:%d", &bytes[0], &bytes[1], &bytes[2], &bytes[3], &bytes[4], &bytes[5])
+	fmt.Sscanf(macStr, "%x:%x:%x:%x:%x:%x", &bytes[0], &bytes[1], &bytes[2], &bytes[3], &bytes[4], &bytes[5])
 
 	mac = (bytes[0] << 40)
 	mac |= (bytes[1] << 32)

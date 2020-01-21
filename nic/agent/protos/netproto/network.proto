@@ -4,11 +4,15 @@ syntax = "proto3";
 
 package netproto;
 
+option go_package="netproto";
+
 // Mandatory imports.
 import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
+
+import "types.proto";
 
 // ---------------------------- Network API ----------------------------
 // network controller api
@@ -53,8 +57,46 @@ message Network {
 // network spec
 message NetworkSpec {
     // VrfName specifies the name of the VRF that the current Network belongs to
-    string VrfName     = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
-    uint32 VlanID      = 2 [(gogoproto.jsontag)="vlan-id,omitempty"];
+    string VrfName                          = 1 [(gogoproto.jsontag) = "vrf-name,omitempty"];
+
+    // VLANID allocated for the network
+    uint32 VlanID                           = 2 [(gogoproto.jsontag) = "vlan-id,omitempty"];
+
+    // VRFID is the VRF that this network belongs to
+    uint32 VRFID                            = 3 [(gogoproto.jsontag) = "vrf-id,omitempty"];
+
+    // V4Address allocated to this network
+    repeated IPPrefix V4Address             = 4  [(gogoproto.jsontag) = "v4-address,omitempty", (gogoproto.nullable) = false];
+
+    // V6Address allocated to this network
+    repeated IPPrefix V6Address             = 5  [(gogoproto.jsontag) = "v6-address,omitempty", (gogoproto.nullable) = false];
+
+    // RouterMAC for the network
+    string RouterMAC                        = 6  [(gogoproto.jsontag) = "router-mac,omitempty"];
+
+    // VxLANVNI is the fabric encap to be used for bridged traffic of the network if VxLAN encapsulated.
+    uint32 VxLANVNI                         = 7  [(gogoproto.jsontag) = "vxlan-vni,omitempty"];
+
+    // IPAMPolicy attached to this VRF
+    string IPAMPolicy                       = 8 [(gogoproto.jsontag) = "ipam-policy,omitempty"];
+
+    // V4RouteTableID is the allocated routing table for the VRF
+    uint32 V4RouteTableID                   = 9 [(gogoproto.jsontag) = "v4-route-table-id,omitempty"];
+
+    // V6RouteTableID is the allocated routing table for the VRF
+    uint32 V6RouteTableID                   = 10 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
+
+    // Ingress v4 Security Policies applied to this network
+    repeated uint32 IngV4SecurityPolicyID   = 11 [(gogoproto.jsontag) = "ing-v4-sec-pol-id,omitempty"];
+
+    // Egress v4 Security Policies applied to this network
+    repeated uint32 EgV4SecurityPolicyID    = 12 [(gogoproto.jsontag) = "eg-v4-sec-pol-id,omitempty"];
+
+    // Ingress v6 Security Policies applied to this network
+    repeated uint32 IngV6SecurityPolicyID   = 13 [(gogoproto.jsontag) = "ing-v6-sec-pol-id,omitempty"];
+
+    // Egress v6 Security Policies applied to this network
+    repeated uint32 EgV6SecurityPolicyID    = 14 [(gogoproto.jsontag) = "eg-v6-sec-pol-id,omitempty"];
 }
 
 // network status

@@ -129,6 +129,7 @@ const (
 	InfoDefaultVrfCreate             = Info("InfoDefaultVrfCreate")
 	InfoSingletonLifGet              = Info("InfoSingletonLifGet")
 	InfoConnectedToHAL               = Info("InfoConnectedToHAL")
+	InfoConnectedToPDS               = Info("InfoConnectedToPDS")
 	InfoHandleObjBegin               = Info("InfoHandleObjBegin")
 	InfoHandleObjEnd                 = Info("InfoHandleObjEnd")
 	InfoTSDBInitDone                 = Info("InfoTSDBInitDone")

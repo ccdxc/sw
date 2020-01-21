@@ -21,6 +21,7 @@
 		secprofile.proto
 		tenant.proto
 		tunnel.proto
+		types.proto
 		vrf.proto
 
 	It has these top-level messages:
@@ -143,6 +144,8 @@
 		TunnelList
 		TunnelEvent
 		TunnelEventList
+		IPAddress
+		IPPrefix
 		Vrf
 		VrfSpec
 		VrfStatus

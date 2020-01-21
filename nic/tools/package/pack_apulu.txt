@@ -230,6 +230,7 @@ nic/build/$ARCH/$PIPELINE/lib/libagentclient.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsfte.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsagent                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/netagent                            /nic/bin/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/

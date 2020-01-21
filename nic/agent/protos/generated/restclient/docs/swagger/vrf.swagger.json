@@ -110,6 +110,16 @@
     }
   },
   "definitions": {
+    "apiEventType": {
+      "type": "string",
+      "enum": [
+        "CreateEvent",
+        "UpdateEvent",
+        "DeleteEvent"
+      ],
+      "default": "CreateEvent",
+      "title": "Watch event types"
+    },
     "apiListWatchOptions": {
       "type": "object",
       "required": [
@@ -363,6 +373,20 @@
         }
       }
     },
+    "apiTypeMeta": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Kind represents the type of the API object."
+        },
+        "api-version": {
+          "type": "string",
+          "title": "APIVersion defines the version of the API object. This can only be set by the server"
+        }
+      },
+      "description": "TypeMeta contains the metadata about kind and version for all API objects."
+    },
     "apiWatchEvent": {
       "type": "object",
       "properties": {
@@ -416,6 +440,114 @@
           }
         }
       }
+    },
+    "netprotoVrf": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoVrfSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoVrfStatus"
+        }
+      },
+      "title": "Vrf object"
+    },
+    "netprotoVrfEvent": {
+      "type": "object",
+      "properties": {
+        "event-type": {
+          "$ref": "#/definitions/apiEventType"
+        },
+        "vrf": {
+          "$ref": "#/definitions/netprotoVrf"
+        }
+      },
+      "title": "vrf watch event"
+    },
+    "netprotoVrfEventList": {
+      "type": "object",
+      "properties": {
+        "VrfEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoVrfEvent"
+          }
+        }
+      },
+      "title": "vrf watch events batched"
+    },
+    "netprotoVrfList": {
+      "type": "object",
+      "properties": {
+        "vrfs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoVrf"
+          }
+        }
+      }
+    },
+    "netprotoVrfSpec": {
+      "type": "object",
+      "required": [
+        "vrf-type"
+      ],
+      "properties": {
+        "vrf-type": {
+          "type": "string",
+          "enum": [
+            "customer",
+            "infra"
+          ],
+          "default": "customer",
+          "description": "Type of the Vrf.\nInfra type creates a overlay VRF in the datapath. This is automatically created on bringup.\nCustomer type creates a VRF in the datapath.\ndefault and infra vrf under default tenant are automatically created during init time."
+        },
+        "v4-route-table-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "V4RouteTableID is the allocated routing table for the VRF"
+        },
+        "v6-route-table-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "V6RouteTableID is the allocated routing table for the VRF"
+        },
+        "router-mac": {
+          "type": "string",
+          "title": "RouterMAC for the VRF"
+        },
+        "vxlan-vni": {
+          "type": "integer",
+          "format": "int64",
+          "description": "VxLANVNI is the fabric encap to be used for routed traffic of the VRF if VxLAN encapsulated."
+        },
+        "ipam-policy": {
+          "type": "string",
+          "title": "IPAMPolicy attached to this VRF"
+        }
+      },
+      "title": "VrfSpec captures all the vrf level configuration"
+    },
+    "netprotoVrfStatus": {
+      "type": "object",
+      "properties": {
+        "vrf-id": {
+          "type": "string",
+          "format": "uint64",
+          "title": "VRF ID in the datapath"
+        }
+      },
+      "title": "Vrf Status"
     }
   }
 }

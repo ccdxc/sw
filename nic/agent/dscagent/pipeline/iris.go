@@ -46,7 +46,7 @@ type IrisAPI struct {
 // NewPipelineAPI returns the implementer or PipelineAPI for Iris Pipeline
 func NewPipelineAPI(infraAPI types.InfraAPI) (*IrisAPI, error) {
 
-	conn, err := utils.CreateNewGRPCClient()
+	conn, err := utils.CreateNewGRPCClient("HAL_GRPC_PORT", types.HalGRPCDefaultPort)
 	if err != nil {
 		log.Errorf("Failed to create GRPC Connection to HAL. Err: %v", err)
 		return nil, err
@@ -1307,6 +1307,11 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 	}
 
 	return
+}
+
+// HandleIPAMPolicy handles CRUD methods for IPAMPolicy
+func (i *IrisAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPolicy) (policies []netproto.IPAMPolicy, err error) {
+	return nil, err
 }
 
 // ReplayConfigs replays last known configs from boltDB

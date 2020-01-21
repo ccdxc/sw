@@ -441,6 +441,48 @@
         }
       }
     },
+    "netprotoIPAF": {
+      "type": "string",
+      "enum": [
+        "IP_AF_NONE",
+        "IP_AF_INET",
+        "IP_AF_INET6"
+      ],
+      "default": "IP_AF_NONE"
+    },
+    "netprotoIPAddress": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/netprotoIPAF",
+          "title": "Type is the address type"
+        },
+        "v4-address": {
+          "type": "integer",
+          "format": "int64",
+          "title": "V4Address is valid if Type is AF_INET"
+        },
+        "v6-address": {
+          "type": "string",
+          "format": "byte",
+          "title": "V6Address is valid if Type is AF_INET6"
+        }
+      }
+    },
+    "netprotoIPPrefix": {
+      "type": "object",
+      "properties": {
+        "prefix-len": {
+          "type": "integer",
+          "format": "int64",
+          "title": "PrefixLen is the length of the prefix"
+        },
+        "address": {
+          "$ref": "#/definitions/netprotoIPAddress",
+          "title": "IP Address for the prefix"
+        }
+      }
+    },
     "netprotoNetwork": {
       "type": "object",
       "properties": {
@@ -506,7 +548,82 @@
         },
         "vlan-id": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "VLANID allocated for the network"
+        },
+        "vrf-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "VRFID is the VRF that this network belongs to"
+        },
+        "v4-address": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPPrefix"
+          },
+          "title": "V4Address allocated to this network"
+        },
+        "v6-address": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoIPPrefix"
+          },
+          "title": "V6Address allocated to this network"
+        },
+        "router-mac": {
+          "type": "string",
+          "title": "RouterMAC for the network"
+        },
+        "vxlan-vni": {
+          "type": "integer",
+          "format": "int64",
+          "description": "VxLANVNI is the fabric encap to be used for bridged traffic of the network if VxLAN encapsulated."
+        },
+        "ipam-policy": {
+          "type": "string",
+          "title": "IPAMPolicy attached to this VRF"
+        },
+        "v4-route-table-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "V4RouteTableID is the allocated routing table for the VRF"
+        },
+        "v6-route-table-id": {
+          "type": "integer",
+          "format": "int64",
+          "title": "V6RouteTableID is the allocated routing table for the VRF"
+        },
+        "ing-v4-sec-pol-id": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "Ingress v4 Security Policies applied to this network"
+        },
+        "eg-v4-sec-pol-id": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "Egress v4 Security Policies applied to this network"
+        },
+        "ing-v6-sec-pol-id": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "Ingress v6 Security Policies applied to this network"
+        },
+        "eg-v6-sec-pol-id": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "Egress v6 Security Policies applied to this network"
         }
       },
       "title": "network spec"

@@ -2,7 +2,8 @@ GEN_DIR = ${CURDIR}
 TOP_DIR = ../../../../..
 LD_LIBRARY_PATH=$(TOP_DIR)/nic/hal/third-party/google/x86_64/lib/
 PROTO_DIR = ${TOP_DIR}/nic/apollo/agent/protos/
-HAL_PROTO_FILES = types.proto vpc.proto device.proto policy.proto
+HAL_PROTO_FILES = types.proto vpc.proto device.proto policy.proto subnet.proto \
+                  dhcp.proto interface.proto port.proto event.proto
 
 default: clean-proto
 	# Compile proto definitions

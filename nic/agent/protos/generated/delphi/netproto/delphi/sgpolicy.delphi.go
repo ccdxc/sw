@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto7 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto8 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type NetworkSecurityPolicy struct {
 	Meta                  *delphi.ObjectMeta               `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key                   string                           `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	NetworkSecurityPolicy *netproto7.NetworkSecurityPolicy `protobuf:"bytes,3,opt,name=NetworkSecurityPolicy" json:"NetworkSecurityPolicy,omitempty"`
+	NetworkSecurityPolicy *netproto8.NetworkSecurityPolicy `protobuf:"bytes,3,opt,name=NetworkSecurityPolicy" json:"NetworkSecurityPolicy,omitempty"`
 }
 
 func (m *NetworkSecurityPolicy) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *NetworkSecurityPolicy) GetKey() string {
 	return ""
 }
 
-func (m *NetworkSecurityPolicy) GetNetworkSecurityPolicy() *netproto7.NetworkSecurityPolicy {
+func (m *NetworkSecurityPolicy) GetNetworkSecurityPolicy() *netproto8.NetworkSecurityPolicy {
 	if m != nil {
 		return m.NetworkSecurityPolicy
 	}

@@ -38,7 +38,7 @@ type FakeAgentAPI struct {
 // NewPipelineAPI returns the implementer or PipelineAPI for FakeAgent Pipeline
 func NewPipelineAPI(infraAPI types.InfraAPI) (*FakeAgentAPI, error) {
 
-	conn, err := utils.CreateNewGRPCClient()
+	conn, err := utils.CreateNewGRPCClient("HAL_GRPC_PORT", types.HalGRPCDefaultPort)
 	if err != nil {
 		log.Errorf("Failed to create GRPC Connection to HAL. Err: %v", err)
 		return nil, err
@@ -1310,6 +1310,11 @@ func (i *FakeAgentAPI) HandleFlowExportPolicy(oper types.Operation, netflow netp
 // HandleDevice handles CRUD methods for Device objects
 func (i *FakeAgentAPI) HandleDevice(oper types.Operation) error {
 	return nil
+}
+
+// HandleIPAMPolicy handles CRUD methods for IPAMPolicy objects
+func (i *FakeAgentAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPolicy) (policies []netproto.IPAMPolicy, err error) {
+	return nil, err
 }
 
 // ReplayConfigs replays last known configs from boltDB

@@ -159,6 +159,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "SecurityProfile":
 		err = client.processSecurityProfileDynamic(evt.EventType, object.Message.(*netproto.SecurityProfile), reactor.(SecurityProfileReactor))
 
+	case "Vrf":
+		err = client.processVrfDynamic(evt.EventType, object.Message.(*netproto.Vrf), reactor.(VrfReactor))
+
 	}
 	if err == nil {
 		robj := netproto.AggObjectEvent{
@@ -731,6 +734,75 @@ func (client *NimbusClient) diffSecurityProfilesDynamic(objList *netproto.Securi
 	}
 }
 
+// diffVrfsDynamic diffs local state with controller state
+func (client *NimbusClient) diffVrfsDynamic(objList *netproto.VrfList, reactor VrfReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Vrf)
+	for _, obj := range objList.Vrfs {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+	}
+
+	localObjs, err := reactor.HandleVrf(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Vrf | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListVrf()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.VrfEvent{
+					EventType: api.EventType_DeleteEvent,
+					Vrf:       lobj,
+				}
+				log.Infof("diffVrfs(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
+				client.processVrfEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Vrfs {
+		evt := netproto.VrfEvent{
+			EventType: api.EventType_UpdateEvent,
+			Vrf:       *obj,
+		}
+		client.lockObject(evt.Vrf.GetObjectKind(), evt.Vrf.ObjectMeta)
+		err := client.processVrfEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Vrf", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
 // diffApp diffs local state with controller state
 // FIXME: this is not handling deletes today
 func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList, reactor AggReactor, ostream *AggWatchOStream) {
@@ -788,6 +860,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
 					return
 
+				case "Vrf":
+					msglist := lobj.objects.(*netproto.VrfList)
+					msglist.Vrfs = append(msglist.Vrfs, obj.Message.(*netproto.Vrf))
+					return
+
 				}
 			}
 		}
@@ -835,6 +912,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			msglist := listObj.objects.(*netproto.SecurityProfileList)
 			msglist.SecurityProfiles = append(msglist.SecurityProfiles, obj.Message.(*netproto.SecurityProfile))
 
+		case "Vrf":
+			listObj.objects = &netproto.VrfList{}
+			msglist := listObj.objects.(*netproto.VrfList)
+			msglist.Vrfs = append(msglist.Vrfs, obj.Message.(*netproto.Vrf))
+
 		}
 		listOrderObjects = append(listOrderObjects, listObj)
 	}
@@ -874,6 +956,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 
 		case "SecurityProfile":
 			client.diffSecurityProfilesDynamic(lobj.objects.(*netproto.SecurityProfileList), reactor.(SecurityProfileReactor), ostream)
+
+		case "Vrf":
+			client.diffVrfsDynamic(lobj.objects.(*netproto.VrfList), reactor.(VrfReactor), ostream)
 
 		}
 	}
@@ -967,6 +1052,15 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(SecurityProfileReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "SecurityProfileReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "Vrf":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(VrfReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "VrfReactor")
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind

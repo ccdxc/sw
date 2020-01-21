@@ -25,11 +25,9 @@ service VrfApiV1 {
         Prefix: "api/vrfs"
     };
 
-//    rpc GetVrf (api.ObjectMeta) returns (Vrf) {};
-//    rpc ListVrfs (api.ObjectMeta) returns (VrfList) {};
-//    rpc WatchVrfs (api.ObjectMeta) returns (stream VrfEventList) {};
-//    rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
-
+    rpc ListVrfs (api.ListWatchOptions) returns (VrfList) {};
+    rpc WatchVrfs (api.ListWatchOptions) returns (stream VrfEventList) {};
+    rpc VrfOperUpdate (stream VrfEvent) returns (api.TypeMeta) {};
 }
 
 // Vrf object
@@ -51,11 +49,28 @@ message VrfSpec {
     // Infra type creates a overlay VRF in the datapath. This is automatically created on bringup.
     // Customer type creates a VRF in the datapath.
     // default and infra vrf under default tenant are automatically created during init time.
-    string VrfType  = 1 [(venice.check) = "StrEnum(VrfSpec.Type)",
-                         (gogoproto.nullable) = true, (gogoproto.jsontag) = "vrf-type,omitempty"];
+    string VrfType              = 1 [(venice.check) = "StrEnum(VrfSpec.Type)",
+                                    (gogoproto.nullable) = true, (gogoproto.jsontag) = "vrf-type,omitempty"];
 
+    // V4RouteTableID is the allocated routing table for the VRF
+    uint32 V4RouteTableID       = 2 [(gogoproto.jsontag) = "v4-route-table-id,omitempty"];
 
+    // V6RouteTableID is the allocated routing table for the VRF
+    uint32 V6RouteTableID       = 3 [(gogoproto.jsontag) = "v6-route-table-id,omitempty"];
+
+    // RouterMAC for the VRF
+    string RouterMAC            = 4  [(gogoproto.jsontag) = "router-mac,omitempty"];
+
+    // VxLANVNI is the fabric encap to be used for routed traffic of the VRF if VxLAN encapsulated.
+    uint32 VxLANVNI             = 5  [(gogoproto.jsontag) = "vxlan-vni,omitempty"];
+
+    // IPAMPolicy attached to this VRF
+    string IPAMPolicy           = 6 [(gogoproto.jsontag) = "ipam-policy,omitempty"];
+
+    // RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the VRF
+//     RDSpec RouteImportExport   = 8 [(gogoproto.jsontag) = "route-import-export,omitempty"];
 }
+
 // Vrf Status
 message VrfStatus {
     // VRF ID in the datapath

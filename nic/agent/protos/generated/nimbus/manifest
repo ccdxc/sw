@@ -7,4 +7,5 @@ Network NetworkApiV1
 NetworkSecurityPolicy NetworkSecurityPolicyApiV1
 RoutingConfig RoutingConfigApiV1
 SecurityProfile SecurityProfileApiV1
-SecurityProfile SecurityProfileApiV1
+Vrf VrfApiV1
+Vrf VrfApiV1

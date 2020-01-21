@@ -1,0 +1,17 @@
+// Vrf object
+
+syntax = "proto3";
+
+package dnetproto;
+
+// Mandatory imports.
+import "github.com/pensando/sw/nic/agent/protos/netproto/vrf.proto";
+import "delphi.proto";
+
+// app object
+message Vrf {
+    option (delphi.update_event) = true;
+    delphi.ObjectMeta   Meta        = 1;
+    string              Key         = 2;
+    netproto.Vrf        Vrf         = 3;
+}

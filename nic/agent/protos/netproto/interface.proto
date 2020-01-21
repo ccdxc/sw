@@ -63,13 +63,6 @@ message PauseSpec {
 
 }
 
-enum IFType {
-    NONE                = 0;
-    ENIC                = 1;
-    UPLINK_ETH          = 2;
-    UPLINK_MGMT         = 3;
-}
-
 enum IFStatus {
     UP                = 0;
     DOWN              = 1;
@@ -82,6 +75,8 @@ message InterfaceSpec {
         HOST_PF           = 1 [(venice.enumValueStr) = "host-pf"];
         UPLINK_ETH        = 3 [(venice.enumValueStr) = "uplink-eth"];
         UPLINK_MGMT       = 4 [(venice.enumValueStr) = "uplink-mgmt"];
+        L3                = 5 [(venice.enumValueStr) = "l3"];
+        LOOPBACK          = 6 [(venice.enumValueStr) = "loopback"];
         // TB Added for SR-IOV: HOST_VF
     }
 

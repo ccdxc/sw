@@ -479,7 +479,9 @@
             "none",
             "host-pf",
             "uplink-eth",
-            "uplink-mgmt"
+            "uplink-mgmt",
+            "l3",
+            "loopback"
           ],
           "default": "none"
         },
