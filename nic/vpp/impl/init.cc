@@ -9,6 +9,7 @@
 #include <nic/sdk/asic/pd/pd.hpp>
 #include <nic/apollo/api/include/pds_init.hpp>
 #include <pd_utils.h>
+#include <nat.h>
 
 using namespace sdk;
 using namespace sdk::table;
@@ -44,6 +45,10 @@ initialize_pds(void)
     init_params.scale_profile = PDS_SCALE_PROFILE_DEFAULT;
     ret = pds_init(&init_params);
     SDK_ASSERT(ret == SDK_RET_OK);
+
+    // NAT hw init
+    pds_nat_init();
+
     return ret;
 }
 }

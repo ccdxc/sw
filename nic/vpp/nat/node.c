@@ -8,6 +8,7 @@
 #include "node.h"
 #include <pkt.h>
 #include "nat_api.h"
+#include "nat_utils.h"
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
@@ -47,6 +48,8 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     nat_trace_t *trace;
     ip4_header_t *ip40;
     udp_header_t *udp0;
+    icmp46_header_t *icmp0;
+    icmp_echo_header_t *echo0;
     ip4_address_t sip, pvt_ip, dip;
     u16 sport, pvt_port, dport;
     u16 vpc_id;
@@ -65,15 +68,27 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     pvt_ip.as_u32 = ip40->src_address.as_u32;
     dip.as_u32 = ip40->dst_address.as_u32;
     protocol = ip40->protocol;
-    // TODO : ICMP
-    if (protocol != IP_PROTOCOL_UDP && protocol != IP_PROTOCOL_TCP) {
+    if (protocol == IP_PROTOCOL_UDP || protocol == IP_PROTOCOL_TCP) {
+        udp0 = (udp_header_t *) (((u8 *) ip40) +
+               (vnet_buffer (p0)->l4_hdr_offset -
+               vnet_buffer (p0)->l3_hdr_offset));
+        pvt_port = clib_net_to_host_u16(udp0->src_port);
+        dport = clib_net_to_host_u16(udp0->dst_port);
+    } else if (protocol == IP_PROTOCOL_ICMP) {
+        icmp0 = (icmp46_header_t *) (((u8 *) ip40) +
+                (vnet_buffer (p0)->l4_hdr_offset -
+                vnet_buffer (p0)->l3_hdr_offset));
+        if (icmp4_is_query_message(icmp0)) {
+            echo0 = (icmp_echo_header_t *)(icmp0 + 1);
+            pvt_port = clib_net_to_host_u16(echo0->identifier);
+            dport = 0;
+        } else {
+            // TODO : handle ICMP error
+            goto error;
+        }
+    } else {
         goto error;
     }
-    udp0 = (udp_header_t *) (((u8 *) ip40) +
-            (vnet_buffer (p0)->l4_hdr_offset -
-             vnet_buffer (p0)->l3_hdr_offset));
-    pvt_port = clib_net_to_host_u16(udp0->src_port);
-    dport = clib_net_to_host_u16(udp0->dst_port);
 
     if (vnet_buffer(p0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
         nat_address_type = NAT_TYPE_INFRA;

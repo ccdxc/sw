@@ -27,3 +27,9 @@ modules:
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
 
+    - module:
+        name    : IPV4_ICMP_NAPT
+        spec    : local2igw_icmp.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
+

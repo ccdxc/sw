@@ -167,7 +167,7 @@ node:
           nat:
             count : 2
             addrtype : PUBLIC_AND_SERVICE
-            protocol : tcp,udp
+            protocol : tcp,udp,icmp
           nexthop:
             - type : overlay
               count : 8
