@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   := penctl.gobin
-MODULE_PREREQS  = penctl.submake nmd_halproto.submake
+MODULE_PREREQS  = penctl.submake
 MODULE_PIPELINE := iris
 MODULE_FLAGS    := -ldflags="-s -w"
 MODULE_DEPS     = $(shell find ${MODULE_SRC_DIR}/ -name '*.go')
