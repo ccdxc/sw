@@ -13,6 +13,9 @@ bin/*
 *#
 .#*
 cscope.*
+GPATH
+GTAGS
+GRTAGS
 __pycache__/
 *.pyc
 *.test
