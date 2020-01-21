@@ -24,11 +24,6 @@ flow_hash:
     sne         c2, d.flow_hash_d.hint2, r0
     bcf         [c1&c2], label_flow_hash_hit
     add         r2, r0, d.flow_hash_d.hint2
-    // Check hash3 and hint3
-    seq         c1, r1[FLOW_HASH_MSB], d.flow_hash_d.hash3
-    sne         c2, d.flow_hash_d.hint3, r0
-    bcf         [c1&c2], label_flow_hash_hit
-    add         r2, r0, d.flow_hash_d.hint3
     // Check for more hashes
     seq         c1, d.flow_hash_d.more_hashes, TRUE
     sne         c2, d.flow_hash_d.more_hints, r0

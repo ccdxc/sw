@@ -115,15 +115,15 @@
         },
         {
             "name": "flow",
-            "size": "512M",
-            "cache": "p4ig",
-            "_comment": "8M * 64B"
-        },
-        {
-            "name": "flow_ohash",
             "size": "256M",
             "cache": "p4ig",
             "_comment": "4M * 64B"
+        },
+        {
+            "name": "flow_ohash",
+            "size": "32M",
+            "cache": "p4ig",
+            "_comment": "512K * 64B"
         },
         {
             "name": "session_info",

@@ -1,7 +1,6 @@
-action session_info(valid_flag, pop_hdr_flag, pad6, timestamp, config1_epoch, config2_epoch,
-                    config1_idx, config2_idx, config_substrate_src_ip,
-                    throttle_pps, throttle_bw, counterset1, counterset2,
-                    histogram) {
+action session_info(valid_flag, pop_hdr_flag, pad6, timestamp, config_substrate_src_ip,
+                    config1_epoch, config1_idx, config2_epoch, config2_idx,
+                    throttle_pps, throttle_bw, counterset1, counterset2, histogram) {
     if (valid_flag == TRUE) {
 
         if (control_metadata.direction == RX_FROM_SWITCH) {
@@ -49,20 +48,21 @@ action session_info(valid_flag, pop_hdr_flag, pad6, timestamp, config1_epoch, co
         modify_field(scratch_metadata.flag, valid_flag);
         modify_field(scratch_metadata.pad6, pad6);
         modify_field(scratch_metadata.timestamp, timestamp);
+        modify_field(scratch_metadata.config_substrate_src_ip, config_substrate_src_ip);
 
         if (config1_idx != 0) {
             modify_field(control_metadata.config1_idx_valid, TRUE);
         }
-        modify_field(control_metadata.config1_epoch, config1_epoch);
-        modify_field(control_metadata.config1_idx, config1_idx);
 
         if (config2_idx != 0) {
             modify_field(control_metadata.config2_idx_valid, TRUE);
         }
+
+        modify_field(control_metadata.config1_epoch, config1_epoch);
+        modify_field(control_metadata.config1_idx, config1_idx);
         modify_field(control_metadata.config2_epoch, config2_epoch);
         modify_field(control_metadata.config2_idx, config2_idx);
 
-        modify_field(scratch_metadata.config_substrate_src_ip, config_substrate_src_ip);
 
         if (throttle_pps!= 0) {
             modify_field(control_metadata.throttle_pps_valid, TRUE);

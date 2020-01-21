@@ -5,9 +5,6 @@ action native_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
     modify_field(key_metadata.src, ipv4_1.srcAddr);
     modify_field(key_metadata.dst, ipv4_1.dstAddr);
-    if (ctag_1.valid == TRUE) {
-        modify_field(key_metadata.vlan, ctag_1.vid);
-    }
     if (udp_1.valid == TRUE) {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
@@ -28,9 +25,6 @@ action native_ipv6_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
     modify_field(key_metadata.src, ipv6_1.srcAddr);
     modify_field(key_metadata.dst, ipv6_1.dstAddr);
-    if (ctag_1.valid == TRUE) {
-        modify_field(key_metadata.vlan, ctag_1.vid);
-    }
     if (udp_1.valid == TRUE) {
         modify_field(key_metadata.sport, udp_1.srcPort);
         modify_field(key_metadata.dport, udp_1.dstPort);
@@ -61,12 +55,6 @@ action tunneled_ipv4_packet() {
     if (tcp.valid == TRUE) {
         modify_field(key_metadata.sport, tcp.srcPort);
         modify_field(key_metadata.dport, tcp.dstPort);
-    }
-    if (mpls_label1_1.valid == TRUE) {
-        modify_field(key_metadata.tenant_id, mpls_label1_1.label);
-    }
-    if (mpls_label2_1.valid == TRUE) {
-        modify_field(key_metadata.tenant_id, mpls_label2_1.label);
     }
     modify_field(key_metadata.ingress_port, control_metadata.direction);
     modify_field(key_metadata.tcp_flags, tcp.flags);

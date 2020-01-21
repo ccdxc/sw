@@ -4,7 +4,7 @@
 @pragma capi appdatafields session_index
 @pragma capi hwfields_access_api
 action flow_hash(entry_valid, session_index, pad,
-                 hash1, hint1, hash2, hint2, hash3, hint3,
+                 hash1, hint1, hash2, hint2,
                  more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
@@ -25,11 +25,6 @@ action flow_hash(entry_valid, session_index, pad,
         if ((scratch_metadata.hint_valid == FALSE) and
             (scratch_metadata.flow_hash == hash2)) {
             modify_field(scratch_metadata.flow_hint, hint2);
-            modify_field(scratch_metadata.hint_valid, TRUE);
-        }
-        if ((scratch_metadata.hint_valid == FALSE) and
-            (scratch_metadata.flow_hash == hash3)) {
-            modify_field(scratch_metadata.flow_hint, hint3);
             modify_field(scratch_metadata.hint_valid, TRUE);
         }
         modify_field(scratch_metadata.flag, more_hashes);
@@ -56,23 +51,21 @@ action flow_hash(entry_valid, session_index, pad,
     modify_field(scratch_metadata.flow_data_pad, pad);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
-    modify_field(scratch_metadata.flow_hash, hash3);
 }
 
 @pragma stage 1
 @pragma hbm_table
 table flow {
     reads {
-        key_metadata.tenant_id          : exact;
+        key_metadata.vnic_id            : exact;
+        key_metadata.smac               : exact;
+        key_metadata.dmac               : exact;
         key_metadata.src                : exact;
         key_metadata.dst                : exact;
         key_metadata.proto              : exact;
         key_metadata.sport              : exact;
         key_metadata.dport              : exact;
-        key_metadata.vlan               : exact;
-        key_metadata.tcp_flags          : exact;
         key_metadata.ktype              : exact;
-        key_metadata.ingress_port       : exact;
     }
     actions {
         flow_hash;
@@ -158,7 +151,7 @@ action ipv4_flow_hash(entry_valid, session_index, pad,
 @pragma hbm_table
 table ipv4_flow {
     reads {
-        key_metadata.tenant_id  : exact;
+        key_metadata.vnic_id    : exact;
         key_metadata.ipv4_src   : exact;
         key_metadata.ipv4_dst   : exact;
         key_metadata.proto      : exact;

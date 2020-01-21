@@ -353,13 +353,8 @@ create_h2s_v4_flow (uint8_t port, uint16_t vlan,
 
     flow_entry.key_metadata_proto = proto;
 
-    flow_entry.key_metadata_vlan_sbit0_ebit7 = (vlan >> 4);
-    flow_entry.key_metadata_vlan_sbit8_ebit11 = (vlan & 0x00f);
-
     memcpy(flow_entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
     memcpy(flow_entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
-
-    flow_entry.key_metadata_ingress_port = port;
 
     flow_entry.session_index = session_index;
 
@@ -502,9 +497,9 @@ create_s2h_v4_session_info_rewrite(uint32_t session_index,
 }
 
 sdk_ret_t
-create_s2h_v4_flow (uint8_t port, uint32_t mpls1_label, uint32_t mpls2_label,
-        ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
-        uint8_t proto, uint16_t sport, uint16_t dport, uint32_t session_index)
+create_s2h_v4_flow (uint8_t port, ipv4_addr_t v4_addr_sip,
+        ipv4_addr_t v4_addr_dip, uint8_t proto, uint16_t sport,
+        uint16_t dport, uint32_t session_index)
 {
     flow_hash_entry_t   flow_entry;
     ipv6_addr_t         v6_addr_sip, v6_addr_dip;
@@ -516,8 +511,6 @@ create_s2h_v4_flow (uint8_t port, uint32_t mpls1_label, uint32_t mpls2_label,
 
     flow_entry.clear();
 
-    flow_entry.key_metadata_tenant_id = ((uint64_t)mpls2_label << 20) | mpls1_label;
-
     flow_entry.key_metadata_sport = sport;
     flow_entry.key_metadata_dport = dport;
 
@@ -527,8 +520,6 @@ create_s2h_v4_flow (uint8_t port, uint32_t mpls1_label, uint32_t mpls2_label,
 
     memcpy(flow_entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
     memcpy(flow_entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
-
-    flow_entry.key_metadata_ingress_port = port;
 
     flow_entry.session_index = session_index;
 
@@ -541,7 +532,7 @@ create_s2h_v4_flow (uint8_t port, uint32_t mpls1_label, uint32_t mpls2_label,
 }
 
 /*
- * Session into rewrite
+ * Session info rewrite
  */
 mac_addr_t  ep_smac = {0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0};
 mac_addr_t  ep_dmac = {0x00, 0x00, 0x00, 0x40, 0x08, 0x01};
@@ -569,8 +560,8 @@ flow_init_s2h ()
         printf("Failed to program session info rewrite @ %u\n", g_session_index);
     }
 
-    ret = create_s2h_v4_flow (g_s2h_port, g_s2h_mpls1_label, g_s2h_mpls2_label, g_s2h_sip,
-            g_s2h_dip, g_s2h_proto, g_s2h_sport, g_s2h_dport, g_session_index);
+    ret = create_s2h_v4_flow (g_s2h_port, g_s2h_sip, g_s2h_dip, g_s2h_proto,
+            g_s2h_sport, g_s2h_dport, g_session_index);
     if (ret != SDK_RET_OK) {
         printf("Failed to insert flow entry\n");
     }

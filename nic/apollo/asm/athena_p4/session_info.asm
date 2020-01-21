@@ -21,8 +21,7 @@ session_info:
     bcf             [c2], session_info_config_check_failed
     nop
 
-    phvwr           p.{control_metadata_config1_epoch,control_metadata_config2_epoch}, \
-                    d.{session_info_d.config1_epoch,session_info_d.config2_epoch}
+    phvwr           p.control_metadata_config1_epoch, d.session_info_d.config1_epoch
 
     sne             c1, d.session_info_d.config1_idx, 0
     phvwr.c1        p.control_metadata_config1_idx_valid, TRUE
@@ -32,9 +31,8 @@ session_info:
     phvwr.c1        p.control_metadata_config2_idx_valid, TRUE
 
     phvwr           p.control_metadata_config1_idx, d.session_info_d.config1_idx
-    phvwr           p.control_metadata_config2_idx, d.session_info_d.config2_idx
-    phvwr           p.{control_metadata_config1_epoch...control_metadata_throttle_bw},\
-                    d.{session_info_d.config1_epoch...session_info_d.throttle_bw};
+    phvwr           p.{control_metadata_config2_epoch...control_metadata_throttle_bw},\
+                    d.{session_info_d.config2_epoch...session_info_d.throttle_bw};
 
     sne             c1, d.session_info_d.throttle_pps, 0
     phvwr.c1        p.control_metadata_throttle_pps_valid, TRUE

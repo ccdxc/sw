@@ -35,18 +35,16 @@ pds_flow6_key2str (void *key)
     flow_swkey_t *k = (flow_swkey_t *)key;
     char srcstr[INET6_ADDRSTRLEN + 1];
     char dststr[INET6_ADDRSTRLEN + 1];
-    uint64_t tenant_id;
+    uint16_t    vnic_id;
 
     inet_ntop(AF_INET6, k->key_metadata_src, srcstr, INET6_ADDRSTRLEN);
     inet_ntop(AF_INET6, k->key_metadata_dst, dststr, INET6_ADDRSTRLEN);
-    memcpy(&tenant_id, k->key_metadata_tenant_id, 5); 
     sprintf(str, "Src:%s Dst:%s Dport:%u Sport:%u Proto:%u "
-            "Ktype:%u Ingport:%u Vlan:%u TCPFlags:%u Tenant:%lu",
+            "Ktype:%u VNICID:%hu",
             srcstr, dststr,
             k->key_metadata_dport, k->key_metadata_sport,
             k->key_metadata_proto, k->key_metadata_ktype,
-            k->key_metadata_ingress_port, k->key_metadata_vlan,
-            k->key_metadata_tcp_flags, tenant_id);
+            k->key_metadata_vnic_id);
     return str;
 }
 
@@ -63,46 +61,22 @@ static sdk_ret_t
 flow_cache_setup_entry_key (flow_hash_entry_t *entry,
                             pds_flow_key_t *key)
 {
-    pds_flow_key_switch_to_host_t *sw2host;
-    pds_flow_key_host_to_switch_t *host2sw;
-
     if (!entry) {
         PDS_TRACE_ERR("entry is null");
         return SDK_RET_INVALID_ARG;
     }
 
-    ftlv6_set_key_ingress_port(entry, key->flow_dir);
-    if (key->flow_dir == PDS_FLOW_DIR_SWITCH_TO_HOST) {
-        sw2host = &key->u.switch_to_host;
-        ftlv6_set_key_tcp_flags(entry, sw2host->tcp_flags);
-        if (sw2host->ip_addr_family == IP_AF_IPV4) { 
-            ftlv6_set_key_ktype(entry, IP_AF_IPV4);
-        } else {
-            ftlv6_set_key_ktype(entry, IP_AF_IPV6);
-        }
-        ftlv6_set_key_src_ip(entry, sw2host->ip_saddr);
-        ftlv6_set_key_dst_ip(entry, sw2host->ip_daddr);
-        ftlv6_set_key_sport(entry, sw2host->l4_sport);
-        ftlv6_set_key_dport(entry, sw2host->l4_dport);
-        ftlv6_set_key_proto(entry, sw2host->ip_proto);
-        ftlv6_set_key_tenant_id(entry, 
-            ((((uint64_t)sw2host->mpls1_label << 20) & 0xFFFFF00000) |
-            (sw2host->mpls2_label & 0xFFFFF)));
+    if (key->ip_addr_family == IP_AF_IPV4) { 
+        ftlv6_set_key_ktype(entry, IP_AF_IPV4);
     } else {
-        host2sw = &key->u.host_to_switch;
-        ftlv6_set_key_tcp_flags(entry, host2sw->tcp_flags);
-        if (host2sw->ip_addr_family == IP_AF_IPV4) {
-            ftlv6_set_key_ktype(entry, IP_AF_IPV4);
-        } else {
-            ftlv6_set_key_ktype(entry, IP_AF_IPV6);
-        }
-        ftlv6_set_key_src_ip(entry, host2sw->ip_saddr);
-        ftlv6_set_key_dst_ip(entry, host2sw->ip_daddr);
-        ftlv6_set_key_sport(entry, host2sw->l4_sport);
-        ftlv6_set_key_dport(entry, host2sw->l4_dport);
-        ftlv6_set_key_proto(entry, host2sw->ip_proto);
-        ftlv6_set_key_vlan(entry, host2sw->vlan_id);
+        ftlv6_set_key_ktype(entry, IP_AF_IPV6);
     }
+    ftlv6_set_key_src_ip(entry, key->ip_saddr);
+    ftlv6_set_key_dst_ip(entry, key->ip_daddr);
+    ftlv6_set_key_sport(entry, key->l4_sport);
+    ftlv6_set_key_dport(entry, key->l4_dport);
+    ftlv6_set_key_proto(entry, key->ip_proto);
+
     return SDK_RET_OK;
 }
 

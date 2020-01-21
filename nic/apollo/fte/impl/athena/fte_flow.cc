@@ -82,6 +82,7 @@ fte_flow_dump (void)
 static sdk_ret_t
 fte_flow_extract_prog_args_x1 (struct rte_mbuf *m, pds_flow_spec_t *spec)
 {
+#if 0 /* Rewrite needed to support new key format */
     struct ether_hdr *eth0;
     struct ipv4_hdr *ip40;
     struct tcp_hdr *tcp0;
@@ -202,7 +203,7 @@ fte_flow_extract_prog_args_x1 (struct rte_mbuf *m, pds_flow_spec_t *spec)
         PDS_TRACE_DEBUG("IPv6 support is yet to be added.\n");
         return SDK_RET_INVALID_OP;
     }
-
+#endif
     return SDK_RET_OK;
 }
 

@@ -19,12 +19,6 @@ tunneled_ipv4_packet:
     phvwr           p.key_metadata_tcp_flags, k.tcp_flags
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
 
-    seq             c1, k.mpls_label1_1_valid, TRUE
-    add.c1          r1, k.mpls_label1_1_label, r0
-    seq             c1, k.mpls_label2_1_valid, TRUE
-    add.c1          r1, r1, k.mpls_label2_1_label, 20
-    phvwr           p.key_metadata_tenant_id, r1
-    
     phvwr           p.key_metadata_src, k.ipv4_2_srcAddr
     seq             c1, k.udp_2_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_2_srcPort
@@ -40,17 +34,10 @@ tunneled_ipv4_packet:
 tunneled_ipv6_packet:
     phvwr           p.key_metadata_ingress_port, k.control_metadata_direction
 
-    seq             c1, k.mpls_label1_1_valid, TRUE
-    add.c1          r1, k.mpls_label1_1_label, r0
-    seq             c1, k.mpls_label2_1_valid, TRUE
-    add.c1          r1, r1, k.mpls_label2_1_label, 20
-    phvwr           p.key_metadata_tenant_id, r1
-
     phvwr           p.key_metadata_tcp_flags, k.tcp_flags
     phvwr           p.key_metadata_src, \
                         k.ipv6_2_srcAddr
-    phvwr           p.key_metadata_dst[127:120], k.ipv6_2_dstAddr_s120_e127
-    phvwr           p.key_metadata_dst[119:0], k.ipv6_2_dstAddr_s0_e119
+    phvwr           p.key_metadata_dst, k.ipv6_2_dstAddr
     seq             c1, k.udp_2_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_2_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_2_dstPort

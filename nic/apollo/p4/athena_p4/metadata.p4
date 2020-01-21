@@ -11,13 +11,14 @@ header_type capri_deparser_len_t {
 header_type key_metadata_t {
     fields {
         ktype               : 2;
-        vlan                : 12;
-        tenant_id           : 40;
+        vnic_id             : 10;
         src                 : 128;
         dst                 : 128;
+        smac                : 48;
+        dmac                : 48;
         proto               : 8;
-        dport               : 16;
         sport               : 16;
+        dport               : 16;
         ipv4_src            : 32;
         ipv4_dst            : 32;
         tcp_flags           : 6;
@@ -88,7 +89,7 @@ header_type scratch_metadata_t {
         mac                 : 48;
         ipv4                : 32;
 
-        flow_data_pad       : 15;
+        flow_data_pad       : 4;
 
         // Session info
         timestamp           : 20;

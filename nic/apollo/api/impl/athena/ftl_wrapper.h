@@ -24,9 +24,9 @@ ftlv6_set_session_index (flow_hash_entry_t *entry, uint32_t session)
 }
 
 static inline void
-ftlv6_set_key_tenant_id (flow_hash_entry_t *entry, uint64_t tenant_id)
+ftlv6_set_vnic_id (flow_hash_entry_t *entry, uint16_t vnic_id)
 {
-    return entry->set_key_metadata_tenant_id(tenant_id);
+    return entry->set_key_metadata_vnic_id(vnic_id);
 }
 
 static inline void
@@ -54,12 +54,6 @@ ftlv6_set_key_proto (flow_hash_entry_t *entry, uint64_t proto)
 }
 
 static inline void
-ftlv6_set_key_vlan (flow_hash_entry_t *entry, uint64_t vlan)
-{
-    return entry->set_key_metadata_vlan(vlan);
-}
-
-static inline void
 ftlv6_set_key_src_ip (flow_hash_entry_t *entry, uint8_t *src)
 {
     return entry->set_key_metadata_src(src);
@@ -69,18 +63,6 @@ static inline void
 ftlv6_set_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
 {
     return entry->set_key_metadata_dst(dst);
-}
-
-static inline void
-ftlv6_set_key_ingress_port (flow_hash_entry_t *entry, uint8_t port)
-{
-    return entry->set_key_metadata_ingress_port(port);
-}
-
-static inline void
-ftlv6_set_key_tcp_flags (flow_hash_entry_t *entry, uint8_t tcp_flags)
-{
-    return entry->set_key_metadata_tcp_flags(tcp_flags);
 }
 
 static inline uint32_t

@@ -28,38 +28,14 @@ typedef enum pds_flow_direction_e {
     PDS_FLOW_DIR_SWITCH_TO_HOST     ///< Switch to host direction
 } pds_flow_direction_t;
 
-/// \brief Flow key for host to switch direction
-typedef struct pds_flow_key_host_to_switch_s {
-    uint16_t    vlan_id;                       ///< vlan id
-    uint8_t     ip_addr_family;                ///< IP addr family
-    uint8_t     ip_saddr[INET6_ADDRSTRLEN];    ///< IP src addr
-    uint8_t     ip_daddr[INET6_ADDRSTRLEN];    ///< IP dst addr
-    uint8_t     ip_proto;                      ///< IP protocol
-    uint16_t    l4_sport;                      ///< L4 src port
-    uint16_t    l4_dport;                      ///< L4 dest port
-    uint8_t     tcp_flags;                     ///< TCP flags
-} __PACK__ pds_flow_key_host_to_switch_t;
-
-/// \brief Flow key for switch to host direction
-typedef struct pds_flow_key_switch_to_host_s {
-    uint32_t    mpls1_label;                   ///< MPLS label 1
-    uint32_t    mpls2_label;                   ///< MPLS label 2
+/// \brief Generic flow key 
+typedef struct pds_flow_key_s {
     uint8_t     ip_addr_family;                ///< IP addr family
     uint8_t     ip_saddr[INET6_ADDRSTRLEN];    ///< IP src addr
     uint8_t     ip_daddr[INET6_ADDRSTRLEN];    ///< IP dest addr
     uint8_t     ip_proto;                      ///< IP protocol
     uint16_t    l4_sport;                      ///< L4 src port
     uint16_t    l4_dport;                      ///< L4 dest port
-    uint8_t     tcp_flags;                     ///< TCP flags
-} __PACK__ pds_flow_key_switch_to_host_t;
-
-/// \brief Generic flow key 
-typedef struct pds_flow_key_s {
-    pds_flow_direction_t                 flow_dir;          ///< flow direction
-    union {
-        pds_flow_key_host_to_switch_t    host_to_switch;    ///< host to sw key
-        pds_flow_key_switch_to_host_t    switch_to_host;    ///< sw to host key
-    } u;
 } __PACK__ pds_flow_key_t;
 
 /// \brief Flow data
