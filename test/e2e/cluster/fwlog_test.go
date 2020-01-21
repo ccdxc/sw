@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -120,6 +121,7 @@ var _ = Describe("fwlog policy tests", func() {
 
 		It("Should create/update/delete fwlog policy", func() {
 			ctx := ts.tu.MustGetLoggedInContext(context.Background())
+			fwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 
 			By("create fwlog Policy")
 			for i := range testFwSpecList {
@@ -134,6 +136,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 					Spec: testFwSpecList[i],
 				}
+				fwlogMap[fwPolicy.GetKey()] = testFwSpecList[i]
 				_, err := fwlogClient.Create(ctx, fwPolicy)
 				Expect(err).ShouldNot(HaveOccurred())
 			}
@@ -150,12 +153,21 @@ var _ = Describe("fwlog policy tests", func() {
 					return err
 				}
 
+				// check length
 				if len(pl) != len(testFwSpecList) {
 					By(fmt.Sprintf("received fwlog policy from venice %+v", pl))
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
 				}
 
+				// deep check
+				listFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
+				for _, policy := range pl {
+					listFwlogMap[policy.GetKey()] = policy.Spec
+				}
+				Expect(reflect.DeepEqual(fwlogMap, listFwlogMap)).To(Equal(true))
+
 				for _, naples := range ts.tu.NaplesNodes {
+					napleFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					var naplesPol []monitoring.FwlogPolicy
@@ -164,10 +176,17 @@ var _ = Describe("fwlog policy tests", func() {
 						return err
 					}
 
+					// check length
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %v, %v", naples, string([]byte(st)), naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 					}
+
+					// deep check
+					for _, policy := range naplesPol {
+						napleFwlogMap[policy.GetKey()] = policy.Spec
+					}
+					Expect(reflect.DeepEqual(fwlogMap, napleFwlogMap)).To(Equal(true))
 				}
 				return nil
 			}, 300, 2).Should(BeNil(), "failed to find fwlog policy")
@@ -185,6 +204,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 					Spec: testFwSpecList[len(testFwSpecList)-i-1],
 				}
+				fwlogMap[fwPolicy.GetKey()] = fwPolicy.Spec
 				_, err := fwlogClient.Update(ctx, fwPolicy)
 				Expect(err).Should(BeNil())
 			}
@@ -196,12 +216,21 @@ var _ = Describe("fwlog policy tests", func() {
 					return err
 				}
 
+				// check length
 				if len(pl) != len(testFwSpecList) {
 					By(fmt.Sprintf("received fwlog policy from venice %+v", pl))
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %+v", len(pl), len(testFwSpecList))
 				}
 
+				// deep check
+				listFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
+				for _, policy := range pl {
+					listFwlogMap[policy.GetKey()] = policy.Spec
+				}
+				Expect(reflect.DeepEqual(fwlogMap, listFwlogMap)).To(Equal(true))
+
 				for _, naples := range ts.tu.NaplesNodes {
+					napleFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
 					if !utils.IsEmpty(st) {
@@ -211,10 +240,18 @@ var _ = Describe("fwlog policy tests", func() {
 							return err
 						}
 
+						// check length
 						if len(naplesPol) != len(testFwSpecList) {
 							By(fmt.Sprintf("received fwlog policy from naples: %v, %v", naples, naplesPol))
 							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
 						}
+
+						// deep check
+						for _, policy := range naplesPol {
+							napleFwlogMap[policy.GetKey()] = policy.Spec
+						}
+						Expect(reflect.DeepEqual(fwlogMap, napleFwlogMap)).To(Equal(true))
+
 					} else {
 						return fmt.Errorf("failed to get fwlog policy from naples %s . got (%s)", naples, st)
 					}
@@ -276,6 +313,7 @@ var _ = Describe("fwlog policy tests", func() {
 			defer os.Remove(nodeAuthFile)
 
 			By(fmt.Sprintf("create %v fwlog Policy", len(testFwSpecList)))
+			fwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 			for i := range testFwSpecList {
 				fwPolicy := &monitoring.FwlogPolicy{
 					TypeMeta: api.TypeMeta{
@@ -288,6 +326,7 @@ var _ = Describe("fwlog policy tests", func() {
 					},
 					Spec: testFwSpecList[i],
 				}
+				fwlogMap[fwPolicy.GetKey()] = testFwSpecList[i]
 				_, err := fwlogClient.Create(ctx, fwPolicy)
 				Expect(err).ShouldNot(HaveOccurred())
 			}
@@ -299,10 +338,19 @@ var _ = Describe("fwlog policy tests", func() {
 					return err
 				}
 
+				// check length
 				if len(pl) != len(testFwSpecList) {
 					By(fmt.Sprintf("received fwlog policy from venice %+v", pl))
 					return fmt.Errorf("invalid number of policy in Venice, got %v expected %v, %+v", len(pl), len(testFwSpecList), testFwSpecList)
 				}
+
+				// deep check
+				veniceFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
+				for _, policy := range pl {
+					veniceFwlogMap[policy.GetKey()] = policy.Spec
+				}
+				Expect(reflect.DeepEqual(fwlogMap, veniceFwlogMap)).To(Equal(true))
+
 				return nil
 			}, "20s", "2s").Should(BeNil(), "failed to find fwlog policy")
 
