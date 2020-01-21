@@ -736,15 +736,15 @@ class HostManagement(EntityManagement):
 
             nodeinit_args = ""
             #Run with not mgmt first
-            self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
-            mgmtIPCmd = "sudo python3  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, GlobalOptions.os)
-            output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
-            print("Command output ", output)
-            mnic_ip = ipaddress.ip_address(output.split("\n")[0])
-            own_ip = str(mnic_ip + 1)
-            nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
-
-            if GlobalOptions.no_mgmt:
+            if not GlobalOptions.no_mgmt:
+                self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
+                mgmtIPCmd = "sudo python3  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, GlobalOptions.os)
+                output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
+                print("Command output ", output)
+                mnic_ip = ipaddress.ip_address(output.split("\n")[0])
+                own_ip = str(mnic_ip + 1)
+                nodeinit_args = " --own_ip " + own_ip + " --trg_ip " + str(mnic_ip)
+            else:
                 nodeinit_args += " --no-mgmt"
             self.RunSshCmd("sudo %s/nodeinit.sh %s" % (HOST_NAPLES_DIR, nodeinit_args))
         return
