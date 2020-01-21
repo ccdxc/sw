@@ -9,6 +9,7 @@
 //----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/if_state.hpp"
 #include "nic/apollo/api/internal/pds_if.hpp"
@@ -30,6 +31,7 @@ pds_if_read (_In_ pds_ifindex_t *key, _Out_ pds_if_info_t *info)
     }
 
     if ((entry = pds_if_entry_find(key)) == NULL) {
+        PDS_TRACE_ERR("Failed to find interface 0x%x", *key);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

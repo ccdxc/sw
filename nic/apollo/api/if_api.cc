@@ -96,7 +96,7 @@ pds_if_info_from_entry (void *entry, void *ctxt)
 sdk_ret_t
 pds_if_read_all (if_read_cb_t cb, void *ctxt)
 {
-    pds_if_read_args_t args = {0};
+    pds_if_read_args_t args = { 0 };
     args.ctxt = ctxt;
     args.cb = cb;
 

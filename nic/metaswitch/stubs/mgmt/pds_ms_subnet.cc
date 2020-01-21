@@ -10,13 +10,14 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 
 //---------------------------------------------------------------------
 // 2 ways in which HAL is updated -
 //
 // a) Configure Metaswitch MIB - SlowPath update to HAL
-//    Metaswitch will process the MIB config and asynchronously call  
+//    Metaswitch will process the MIB config and asynchronously call
 //    Metaswitch Stub APIs depending on controlplane state machine.
 //    PDS HAL APIs are invoked in async completion mode from the
 //    Metaswitch Stub APIs.
@@ -33,7 +34,7 @@
 // a) Owned by Metaswitch (Slowpath update to HAL) -
 //    Fields that have dependencies to/from other Metaswitch HAL objects.
 //    These fields will be updated to HAL by Metaswitch Stub based on
-//    control plane state machine and should NOT be modified in a 
+//    control plane state machine and should NOT be modified in a
 //    direct Fastpath update to HAL
 //         i) VNI
 //        ii) HostIfIndex - LIF bind/unbind to subnet
@@ -44,36 +45,36 @@
 //    Updates to these fields need to be directly sent to HAL immediately
 //    since these fields may be references to other HAL objects that are
 //    sent to HAL (Fastpath updated) directly from the PDSA SVC.
-//        i) Policy references, 
+//        i) Policy references,
 //       ii) Route table references
 //      iii) TOS
 //       iv) Virtual-MAC
-//    Metaswitch Stub APIs should use the latest value of these fields 
+//    Metaswitch Stub APIs should use the latest value of these fields
 //    when invoking PDS HAL APIs in the slowpath.
 //
 // c) Owned by PDS HAL, also known to Metaswitch (Fastpath update to HAL +
 //                                                Metaswitch MIB condig) -
-//    Fields that are known to Metaswitch and HAL but do not have 
+//    Fields that are known to Metaswitch and HAL but do not have
 //    dependencies to/from other Metaswitch HAL objects.
 //    Hence the HAL programming for these fields need not be in lock-step
 //    with Metaswitch controlplane as long as they eventually converge.
 //         i) Subnet gateway IP/prefix
 //              Used by Metaswitch to advertise as BGP route to other TEPs.
 //              Used by HAL/VPP to respond to host ping
-//    Metaswitch Stub APIs should use the latest value of these fields 
+//    Metaswitch Stub APIs should use the latest value of these fields
 //    when invoking PDS HAL APIs in the slowpath.
 //
 // Assumptions -
-// 1) Subnet's VPC-ID cannot be modified - existing subnet will be deleted and 
+// 1) Subnet's VPC-ID cannot be modified - existing subnet will be deleted and
 //    a new subnet created under new VPC.
 //
-// 2) Since Subnet Delete is always driven through Metaswitch 
+// 2) Since Subnet Delete is always driven through Metaswitch
 //    HAL subnet delete will be delayed until Metaswitch state machines
 //    clean up all dependent objects.
 //    Fields in Subnet Spec that are references to other Fastpath updated
 //    objects need to removed in an explicit Update from the upper layer
 //    (NetAgent/NPM) before Subnet Delete.
-//--------------------------------------------------------------------    
+//--------------------------------------------------------------------
 
 namespace pds_ms {
 
@@ -95,7 +96,7 @@ populate_lim_irb_spec (pds_subnet_spec_t     *subnet_spec,
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
     req.set_bdindex (bd_id);
     req.set_bdtype (AMB_LIM_BRIDGE_DOMAIN_EVPN);
-} 
+}
 
 static void
 populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
@@ -121,7 +122,7 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
     auto vrf_id = ((vpc_uuid_obj_t*)uuid_obj)->ms_id();
     vrf_name = std::to_string (vrf_id);
 
-    SDK_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d", 
+    SDK_TRACE_DEBUG("IRB Interface:: VRF ID: %d MSIfIndex: 0x%X VRF name %s len %d",
                     vrf_id, if_index, vrf_name.c_str(), vrf_name.length());
 
     req.set_entityindex (PDS_MS_LIM_ENT_INDEX);
@@ -137,7 +138,7 @@ populate_lim_irb_if_cfg_spec (pds_subnet_spec_t          *subnet_spec,
 
 static void
 populate_evpn_if_bing_cfg_spec (pds_subnet_spec_t        *subnet_spec,
-                                pds::EvpnIfBindCfgSpec&  req, 
+                                pds::EvpnIfBindCfgSpec&  req,
                                 uint32_t                 bd_id,
                                 uint32_t                 if_index)
 {
@@ -163,7 +164,7 @@ populate_lim_swif_cfg_spec (pds::LimInterfaceCfgSpec& req,
 
 static void
 populate_lim_soft_if_spec (pds::LimInterfaceSpec& req,
-                           pds_ifindex_t           host_ifindex)
+                           pds_ifindex_t          host_ifindex)
 {
     req.set_ifid (LIF_IFINDEX_TO_LIF_ID(host_ifindex));
     req.set_iftype (pds::LIM_IF_TYPE_LIF);
@@ -175,7 +176,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
                        NBB_LONG            row_status)
 {
     uint32_t if_index;
-    
+
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
@@ -190,7 +191,7 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
 
     // Get IRB If Index
     if_index = bd_id_to_ms_ifindex (bd_id);
-    SDK_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X", 
+    SDK_TRACE_DEBUG("IRB Interface:: BD ID: %d MSIfIndex: 0x%X",
                      bd_id, if_index);
 
     // Update IRB to VRF binding
@@ -198,26 +199,27 @@ process_subnet_update (pds_subnet_spec_t   *subnet_spec,
     populate_lim_irb_if_cfg_spec (subnet_spec, lim_if_spec, if_index);
     pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    // Configure IRB IP Address 
+    // Configure IRB IP Address
     ip_prefix_t ip_prefix;
     ip_prefix.len = subnet_spec->v4_prefix.len;
     ip_prefix.addr.af = IP_AF_IPV4;
     ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
     pds::LimInterfaceAddrSpec lim_addr_spec;
-    populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
+    populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
                             pds::LIM_IF_TYPE_IRB, bd_id);
     pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    if (subnet_spec->host_ifindex != IFINDEX_INVALID) {
+    if (!is_pds_obj_key_invalid(subnet_spec->host_if)) {
         // Create Lif here for now
         pds::LimInterfaceSpec lim_swif_spec;
-        populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
+        auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
+        populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // Get Lif's MS IfIndex
-        if_index = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
-        SDK_TRACE_DEBUG ("SW Interface:: PDS IfIndex: 0x%X MSIfIndex: 0x%X",
-                          subnet_spec->host_ifindex, if_index);
+        if_index = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
+        SDK_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+                          subnet_spec->host_if.str(), lif_ifindex, if_index);
 
         // Set Lif interface settings
         pds::LimInterfaceCfgSpec lim_swifcfg_spec;
@@ -251,13 +253,13 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
                              uint32_t             bd_id,
                              NBB_LONG             row_status)
 {
-    uint32_t lif_ifindex;
+    uint32_t ms_ifindex;
 
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // EVPN BD Row Update
     if (ms_upd_flags.bd) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD Update", subnet_spec->key.str(), bd_id);
         pds::EvpnBdSpec evpn_bd_spec;
         populate_evpn_bd_spec (subnet_spec, bd_id, evpn_bd_spec);
         pds_ms_set_amb_evpn_bd (evpn_bd_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
@@ -265,36 +267,37 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
 
     // Create Lif here for now
     if (ms_upd_flags.bd_if) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS BD If Update", subnet_spec->key.str(), bd_id);
         pds::LimInterfaceSpec lim_swif_spec;
-        populate_lim_soft_if_spec (lim_swif_spec, subnet_spec->host_ifindex);
+        auto lif_ifindex = api::objid_from_uuid(subnet_spec->host_if);
+        populate_lim_soft_if_spec (lim_swif_spec, lif_ifindex);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // Get Lif's MS IfIndex
-        lif_ifindex = pds_to_ms_ifindex (subnet_spec->host_ifindex, IF_TYPE_LIF);
-        SDK_TRACE_DEBUG ("SW Interface:: PDS IfIndex: 0x%X MSIfIndex: 0x%X",
-                         subnet_spec->host_ifindex, lif_ifindex);
+        ms_ifindex = pds_to_ms_ifindex (lif_ifindex, IF_TYPE_LIF);
+        SDK_TRACE_DEBUG ("SW Interface:: LIF UUID %s PDS IfIndex: 0x%X MSIfIndex: 0x%X",
+                         subnet_spec->host_if.str(), lif_ifindex, ms_ifindex);
 
         // Set Lif interface settings
         pds::LimInterfaceCfgSpec lim_swifcfg_spec;
-        populate_lim_swif_cfg_spec (lim_swifcfg_spec, lif_ifindex);
+        populate_lim_swif_cfg_spec (lim_swifcfg_spec, ms_ifindex);
         pds_ms_set_amb_lim_if_cfg (lim_swifcfg_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
 
         // evpnIfBindCfgTable Row Update
         pds::EvpnIfBindCfgSpec evpn_if_bind_spec;
-        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, lif_ifindex);
+        populate_evpn_if_bing_cfg_spec (subnet_spec, evpn_if_bind_spec, bd_id, ms_ifindex);
         pds_ms_set_amb_evpn_if_bind_cfg (evpn_if_bind_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
 
     if (ms_upd_flags.irb) {
-        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);  
+        SDK_TRACE_DEBUG("Subnet %s BD %d Update: Trigger MS IRB Update", subnet_spec->key.str(), bd_id);
         // Configure IRB IP Address
         ip_prefix_t ip_prefix;
         ip_prefix.len = subnet_spec->v4_prefix.len;
         ip_prefix.addr.af = IP_AF_IPV4;
         ip_prefix.addr.addr.v4_addr = subnet_spec->v4_prefix.v4_addr;
         pds::LimInterfaceAddrSpec lim_addr_spec;
-        populate_lim_addr_spec (&ip_prefix, lim_addr_spec, 
+        populate_lim_addr_spec (&ip_prefix, lim_addr_spec,
                                 pds::LIM_IF_TYPE_IRB, bd_id);
         pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
     }
@@ -305,8 +308,8 @@ process_subnet_field_update (pds_subnet_spec_t   *subnet_spec,
     return pds_ms::mgmt_state_t::ms_response_wait();
 }
 
-static void 
-cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete) 
+static void
+cache_subnet_spec(pds_subnet_spec_t* spec, uint32_t bd_id, bool op_delete)
 {
     auto state_ctxt = state_t::thread_context();
     if (op_delete) {
@@ -377,10 +380,10 @@ subnet_create (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
             cache_subnet_spec (spec, bd_id, true /* Delete */);
             return pds_ms_api_to_sdk_ret (ret_status);
         }
-        SDK_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed", 
+        SDK_TRACE_DEBUG ("Subnet %s bd %d create is successfully processed",
                          spec->key.str(), bd_id);
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("Subnet %s creation failed %s", 
+        SDK_TRACE_ERR ("Subnet %s creation failed %s",
                         spec->key.str(), e.what());
         return e.rc();
     }
@@ -405,7 +408,7 @@ subnet_delete (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
         cache_subnet_spec (spec, bd_id, true /* Delete */);
         SDK_TRACE_DEBUG ("subnet %s bd %d delete is successfully processed",
                          spec->key.str(), bd_id);
-    
+
     } catch (const Error& e) {
         SDK_TRACE_ERR ("Subnet %s deletion failed %s",
                         spec->key.str(), e.what());
@@ -429,7 +432,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
     }
 
     auto& state_pds_spec = subnet_obj->spec();
-    if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap, 
+    if (memcmp (&state_pds_spec.fabric_encap, &spec->fabric_encap,
                 sizeof(state_pds_spec.fabric_encap)) != 0) {
         ms_upd_flags.bd = true;
         SDK_TRACE_INFO("Subnet %s BD %d VNI change - Old %d New %d",
@@ -438,12 +441,12 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
                        spec->fabric_encap.val.vnid);
         state_pds_spec.fabric_encap = spec->fabric_encap;
     }
-    if (state_pds_spec.host_ifindex != spec->host_ifindex) {
+    if (state_pds_spec.host_if != spec->host_if) {
         ms_upd_flags.bd_if = true;
-        SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old 0x%x New 0x%x",
-                       spec->key.str(), bd_id, state_pds_spec.host_ifindex, 
-                       spec->host_ifindex);
-        state_pds_spec.host_ifindex = spec->host_ifindex;
+        SDK_TRACE_INFO("Subnet %s BD %d Host If change - Old %s New %s",
+                       spec->key.str(), bd_id, state_pds_spec.host_if.str(),
+                       spec->host_if.str());
+        state_pds_spec.host_if = spec->host_if;
     }
     if (state_pds_spec.v4_vr_ip != spec->v4_vr_ip) {
         ms_upd_flags.irb = true;
@@ -463,7 +466,7 @@ parse_subnet_update (pds_subnet_spec_t *spec, ms_bd_id_t bd_id,
         // received from MS.
         auto ret = l2f_bd_update_pds_synch(std::move(state_ctxt),
                                            bd_id, subnet_obj);
-        // Do not state_ctxt has been released above 
+        // Do not state_ctxt has been released above
         // Do not access global state beyond this
         if (ret != SDK_RET_OK) {
             throw Error(std::string("Failed to update fastpath fields for Subnet ")
@@ -496,7 +499,7 @@ subnet_update (pds_subnet_spec_t *spec, pds_batch_ctxt_t bctxt)
                              spec->key.str());
         }
     } catch (const Error& e) {
-        SDK_TRACE_ERR ("Subnet %s update failed %s", 
+        SDK_TRACE_ERR ("Subnet %s update failed %s",
                         spec->key.str(), e.what());
         return e.rc();
     }

@@ -16,6 +16,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
@@ -199,36 +200,6 @@ static void create_evpn_evi_rt_proto_grpc () {
     }
 }
 
-static void create_route_proto_grpc () {
-    CPStaticRouteRequest  request;
-    CPStaticRouteResponse response;
-    ClientContext         context;
-    Status                ret_status;
-
-    if (g_node_id == 1) return;
-    auto proto_spec = request.add_request ();
-    proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
-    auto dest_addr  = proto_spec->mutable_destaddr();
-    dest_addr->set_af (types::IP_AF_INET);
-    dest_addr->set_v4addr (0);
-    proto_spec->set_prefixlen (0);
-    auto next_hop   = proto_spec->mutable_nexthopaddr();
-    next_hop->set_af (types::IP_AF_INET);
-    next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
-    proto_spec->set_adminstatus (ADMIN_UP);
-    proto_spec->set_override (BOOL_TRUE);
-    proto_spec->set_admindist (250);
-    proto_spec->set_action (STRT_ACTION_FWD);
-
-    printf ("Pushing Default (0/0) Static Route proto...\n");
-    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
-                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
-                response.apistatus());
-    }
-}
-
 static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     BGPPeerRequest  request;
     BGPResponse     response;
@@ -336,7 +307,8 @@ static void create_subnet_proto_grpc () {
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
-    proto_spec->set_hostifindex(g_test_conf_.lif_if_index);
+    proto_spec->set_hostif(api::uuid_from_objid(g_test_conf_.lif_if_index).id,
+                           PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();
@@ -552,7 +524,6 @@ int main(int argc, char** argv)
         create_intf_proto_grpc();
         create_intf_proto_grpc(true /*loopback*/);
         create_intf_proto_grpc(false, true /* second interface */);
-        //create_route_proto_grpc();
         create_bgp_global_proto_grpc();
         create_bgp_peer_proto_grpc();
         create_bgp_peer_af_proto_grpc();

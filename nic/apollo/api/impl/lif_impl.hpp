@@ -53,6 +53,14 @@ public:
         return (void *)&(lif->key_);
     }
 
+    /// \brief     helper function to get (internal) lif idgiven lif entry
+    /// \param[in] entry    pointer to lif instance
+    /// \return    pointer to the lif instance's key
+    static void *lif_id_func_get(void *entry) {
+        lif_impl *lif = (lif_impl *)entry;
+        return (void *)&(lif->id_);
+    }
+
     /// \brief    handle all programming during lif creation
     ///< \param[in] spec    lif configuration parameters
     /// \return    SDK_RET_OK on success, failure status code on error
@@ -77,7 +85,11 @@ public:
 
     /// \brief     return lif key
     /// \return    key of the lif
-    pds_lif_key_t key(void) const { return key_; }
+    const pds_obj_key_t& key(void) const { return key_; }
+
+    /// \brief     return (internal) lif id
+    /// \return    id of the lif
+    pds_lif_id_t id(void) const { return id_; }
 
     /// \brief     return vnic hw id of this lif
     /// \return    vnic hw id
@@ -159,20 +171,24 @@ private:
 
 private:
     ///< name of the lif
-    pds_lif_key_t    key_;            ///< (s/w & h/w) lif id
+    pds_obj_key_t    key_;            //< lif key
+    pds_lif_id_t     id_;             ///< (s/w & h/w) internal lif id
     pds_ifindex_t    pinned_if_idx_;  ///< pinnned if index, if any
     lif_type_t       type_;           ///< type of the lif
-    char             name_[SDK_MAX_NAME_LEN];    ///< lif name
+    /// name of the lif, if any
+    char             name_[SDK_MAX_NAME_LEN];
     mac_addr_t       mac_;            ///< MAC address of lif
 
     /// operational state
     // TODO: we can have state per pipeline in this class
     //       ideally, we should have the concrete class inside pipeline specific
     //       dir and this should be a base class !!
+    pds_ifindex_t    ifindex_;        ///< ifindex of this lif
     uint32_t         nh_idx_;         ///< nexthop idx of this lif
     uint16_t         vnic_hw_id_;     ///< vnic hw id
-    lif_state_t      state_;                     ///< operational state
+    lif_state_t      state_;          ///< operational state
     ht_ctxt_t        ht_ctxt_;        ///< hash table context
+    ht_ctxt_t        id_ht_ctxt_;     ///< id based hash table context
     ///< lif_impl_state is friend of lif_impl
     friend class lif_impl_state;
 } __PACK__;

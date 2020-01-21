@@ -42,8 +42,15 @@ lif_impl::destroy(lif_impl *impl) {
 
 lif_impl::lif_impl(pds_lif_spec_t *spec) {
     memcpy(&key_, &spec->key, sizeof(key_));
+    id_ = spec->id;
     pinned_if_idx_ = spec->pinned_ifidx;
     type_ = spec->type;
+    memcpy(mac_, spec->mac, ETH_ADDR_LEN);
+    ifindex_ = LIF_IFINDEX(id_);
+    nh_idx_ = 0xFFFFFFFF;
+    vnic_hw_id_ = 0xFFFF;
+    ht_ctxt_.reset();
+    id_ht_ctxt_.reset();
 }
 
 #define lif_egress_rl_params       action_u.tx_table_s5_t4_lif_rate_limiter_table_tx_stage5_lif_egress_rl_params
@@ -95,7 +102,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
 
     // ARM -> uplink
-    key.capri_intrinsic_lif = key_;
+    key.capri_intrinsic_lif = id_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.pipe_id = PIPE_UPLINK;
@@ -104,7 +111,7 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
-                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
+                      "uplink 0x%x, err %u", id_, pinned_if_idx_, ret);
         return ret;
     }
 
@@ -119,12 +126,12 @@ lif_impl::create_oob_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.pipe_id = PIPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = key_;
+    data.nacl_redirect_action.lif = id_;
     data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+                      "lif %u, err %u", pinned_if_idx_, id_, ret);
     }
 
     return ret;
@@ -140,7 +147,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     uint32_t idx;
 
     // ARM -> uplink (untag packets)
-    key.capri_intrinsic_lif = key_;
+    key.capri_intrinsic_lif = id_;
     mask.capri_intrinsic_lif_mask = 0xFFFF;
     key.ctag_1_valid = 0;
     mask.ctag_1_valid_mask = 0xF;
@@ -153,7 +160,7 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for mnic lif %u -> "
-                      "uplink 0x%x, err %u", key_, pinned_if_idx_, ret);
+                      "uplink 0x%x, err %u", id_, pinned_if_idx_, ret);
         return ret;
     }
 
@@ -172,12 +179,12 @@ lif_impl::create_inb_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.app_id = P4PLUS_APPTYPE_CLASSIC_NIC;
     data.nacl_redirect_action.oport = TM_PORT_DMA;
-    data.nacl_redirect_action.lif = key_;
+    data.nacl_redirect_action.lif = id_;
     data.nacl_redirect_action.vlan_strip = spec->vlan_strip_en;
     ret = apollo_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for uplink %u -> mnic "
-                      "lif %u, err %u", pinned_if_idx_, key_, ret);
+                      "lif %u, err %u", pinned_if_idx_, id_, ret);
     }
 #endif
     return ret;
@@ -197,14 +204,14 @@ lif_impl::create_datapath_mnic_(pds_lif_spec_t *spec) {
     data.action_id = NACL_NACL_REDIRECT_ID;
     data.nacl_redirect_action.pipe_id = PIPE_ARM;
     data.action_u.nacl_nacl_redirect.oport = TM_PORT_DMA;
-    data.action_u.nacl_nacl_redirect.lif = key_;
+    data.action_u.nacl_nacl_redirect.lif = id_;
     data.action_u.nacl_nacl_redirect.qtype = 0;
     data.action_u.nacl_nacl_redirect.qid = 0;
     data.action_u.nacl_nacl_redirect.vlan_strip = 0;
     ret = artemis_impl_db()->nacl_tbl()->insert(&key, &mask, &data, &idx);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to program NACL entry for redirect to arm, "
-                      "lif %u, err %u", key_, ret);
+                      "lif %u, err %u", id_, ret);
     }
     return ret;
 }

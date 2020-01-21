@@ -16,6 +16,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
@@ -324,7 +325,8 @@ static void create_subnet_proto_grpc () {
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
-    proto_spec->set_hostifindex(g_test_conf_.lif_if_index);
+    proto_spec->set_hostif(api::uuid_from_objid(g_test_conf_.lif_if_index).id,
+                           PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();

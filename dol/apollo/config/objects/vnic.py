@@ -100,9 +100,12 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
-        if self.SUBNET.HostIf:
-            logger.info("- HostInterface:%s|%s" %\
-                (self.SUBNET.HostIf.Ifname, self.SUBNET.HostIf.lif.GID()))
+        hostif = self.SUBNET.HostIf
+        if hostif:
+            lif = hostif.lif
+            lififindex = utils.LifId2LifIfIndex(lif.id)
+            logger.info("- HostInterface:%s|%s|%s|%s" %\
+                (hostif.Ifname, lif.GID(), lififindex, utils.GetUUID(lififindex)))
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
@@ -154,7 +157,7 @@ class VnicObject(base.ConfigObjectBase):
             spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
-                spec.HostIfIndex = utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id)
+                spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id))
         return
 
     def ValidateSpec(self, spec):
@@ -170,7 +173,7 @@ class VnicObject(base.ConfigObjectBase):
                 return False
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
-                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
+                if utils.GetIdfromUUID(spec.HostIf) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
         if spec.MACAddress != self.MACAddr.getnum():
             return False
@@ -188,7 +191,7 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
-                if spec['hostifindex'] != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
+                if utils.GetYamlSpecAttr(spec, 'hostif', True) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False

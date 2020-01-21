@@ -230,17 +230,17 @@ IfSvcImpl::LifGet(ServerContext *context,
                   const pds::LifGetRequest *proto_req,
                   pds::LifGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    pds_lif_key_t key;
+    pds_obj_key_t key;
 
     if (proto_req) {
-        for (int i = 0; i < proto_req->lifid_size(); i ++) {
+        for (int i = 0; i < proto_req->id_size(); i ++) {
             pds_lif_info_t info = { 0 };
-            proto_req->lifid(i);
+            pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
             ret = pds_lif_read(&key, &info);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
             pds_lif_api_info_to_proto(&info, proto_rsp);
         }
-        if (proto_req->lifid_size() == 0) {
+        if (proto_req->id_size() == 0) {
             ret = pds_lif_read_all(pds_lif_api_info_to_proto, proto_rsp);
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         }

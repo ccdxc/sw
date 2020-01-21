@@ -37,23 +37,24 @@ pds_lif_to_lif_info (pds_lif_info_t *info, api::impl::lif_impl *lif) {
     pds_lif_status_t *status = &info->status;
 
     spec->key = lif->key();
+    spec->id = lif->id();
     spec->pinned_ifidx = lif->pinned_ifindex();
     spec->type = lif->type();
     strncpy(status->name, lif->name(), SDK_MAX_NAME_LEN);
     memcpy(spec->mac, lif->mac(), ETH_ADDR_LEN);
     status->state = lif_state_to_if_state(lif->state());
-    status->ifindex = LIF_IFINDEX(spec->key);
+    status->ifindex = LIF_IFINDEX(spec->id);
     return SDK_RET_OK;
 }
 
 static inline api::impl::lif_impl *
-pds_lif_find (pds_lif_key_t *key)
+pds_lif_find (pds_obj_key_t *key)
 {
     return ((api::impl::lif_impl *)lif_db()->find(key));
 }
 
 sdk_ret_t
-pds_lif_read (_In_ pds_lif_key_t *key, _Out_ pds_lif_info_t *info)
+pds_lif_read (_In_ pds_obj_key_t *key, _Out_ pds_lif_info_t *info)
 {
     api::impl::lif_impl *lif;
 
@@ -64,7 +65,6 @@ pds_lif_read (_In_ pds_lif_key_t *key, _Out_ pds_lif_info_t *info)
     if ((lif = pds_lif_find(key)) == NULL) {
         return SDK_RET_ENTRY_NOT_FOUND;
     }
-
     return pds_lif_to_lif_info(info, lif);
 }
 

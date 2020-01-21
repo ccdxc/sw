@@ -23,14 +23,16 @@
 /// \brief interface type
 typedef enum pds_if_type_e {
     PDS_IF_TYPE_NONE      = 0,
+    // physical ports
+    PDS_IF_TYPE_ETH       = 1,
     // L2 uplink interface
-    PDS_IF_TYPE_UPLINK    = 1,
+    PDS_IF_TYPE_UPLINK    = 2,
     // L2 port-channel
-    PDS_IF_TYPE_UPLINK_PC = 2,
+    PDS_IF_TYPE_UPLINK_PC = 3,
     // L3 interface
-    PDS_IF_TYPE_L3        = 3,
+    PDS_IF_TYPE_L3        = 4,
     // Loopback interface
-    PDS_IF_TYPE_LOOPBACK  = 4,
+    PDS_IF_TYPE_LOOPBACK  = 5,
 } pds_if_type_t;
 
 /// \brief interface admin/operational state
@@ -82,6 +84,10 @@ typedef struct pds_if_uplink_status_s {
     uint16_t lif_id;
 } __PACK__ pds_if_uplink_status_t;
 
+/// \brief L3 interface status
+typedef struct pds_l3_if_status_s {
+} __PACK__ pds_l3_if_status_t;
+
 typedef struct pds_if_loopback_status_s {
     ///< name of the loopback interface as seen on linux
     char name[SDK_MAX_NAME_LEN];
@@ -89,10 +95,13 @@ typedef struct pds_if_loopback_status_s {
 
 /// \brief interface status
 typedef struct pds_if_status_s {
+    pds_ifindex_t ifindex;      ///< encoded interface index
     pds_if_state_t    state;    ///< operational status of the interface
     union {
         /// uplink interface operational status
         pds_if_uplink_status_t uplink_status;
+        /// L3 interface operational status
+        pds_l3_if_status_t l3_if_status;
         /// loopback interface operational status
         pds_if_loopback_status_t loopback_status;
     };

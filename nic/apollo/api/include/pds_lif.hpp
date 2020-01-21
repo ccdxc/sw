@@ -15,7 +15,9 @@
 
 typedef struct pds_lif_spec_s {
     ///< key for the lif
-    pds_lif_key_t    key;
+    pds_obj_key_t    key;
+    ///< internal lif id
+    pds_lif_id_t     id;
     ///< if index of the pinned port/lif
     pds_ifindex_t    pinned_ifidx;
     ///< type of lif
@@ -46,7 +48,7 @@ typedef struct pds_lif_info_s {
 /// \param[in]  key     key
 /// \param[out] info    lif info
 /// \return #SDK_RET_OK on success, failure status code on error
-sdk_ret_t pds_lif_read(pds_lif_key_t *key, pds_lif_info_t *info);
+sdk_ret_t pds_lif_read(pds_obj_key_t *key, pds_lif_info_t *info);
 
 typedef void (*lif_read_cb_t)(void *spec, void *ctxt);
 

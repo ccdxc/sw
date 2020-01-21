@@ -54,7 +54,7 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Subnet
 		req = &pds.SubnetGetRequest{
-            Id: [][]byte{[]byte(subnetID)},
+			Id: [][]byte{[]byte(subnetID)},
 		}
 	} else {
 		// Get all Subnets
@@ -107,8 +107,8 @@ func printSubnetHeader() {
 func printSubnet(subnet *pds.Subnet) {
 	spec := subnet.GetSpec()
 	lifName := "-"
-	if spec.GetHostIfIndex() != 0 {
-		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
+	if len(spec.GetHostIf()) > 0 {
+		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 	v4rtTblID := string(spec.GetV4RouteTableId())
 	v6rtTblID := string(spec.GetV6RouteTableId())

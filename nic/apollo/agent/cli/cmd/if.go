@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	lifID uint32
+	lifID string
 	ifID  string
 )
 
@@ -37,7 +37,7 @@ var ifShowCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(lifShowCmd)
 	showCmd.AddCommand(ifShowCmd)
-	lifShowCmd.Flags().Uint32Var(&lifID, "id", 0, "Specify Lif ID")
+	lifShowCmd.Flags().StringVar(&lifID, "id", "", "Specify Lif ID")
 	ifShowCmd.Flags().StringVar(&ifID, "id", "", "Specify interface ID")
 }
 
@@ -98,7 +98,7 @@ func printIfHeader() {
 func printIf(intf *pds.Interface) {
 	spec := intf.GetSpec()
 	status := intf.GetStatus()
-    ifIndex := status.GetIfIndex()
+	ifIndex := status.GetIfIndex()
 	ifStr := ifIndexToPortIdStr(ifIndex)
 	adminState := strings.Replace(spec.GetAdminStatus().String(),
 		"IF_STATUS_", "", -1)
@@ -125,7 +125,7 @@ func printIf(intf *pds.Interface) {
 		vpc, ipPrefix, encap, mac)
 }
 
-func lifGetNameFromIfIndex(ifIndex uint32) string {
+func lifGetNameFromKey(key []byte) string {
 	// Connect to PDS
 	c, err := utils.CreateNewGRPCClient()
 	if err != nil {
@@ -135,11 +135,10 @@ func lifGetNameFromIfIndex(ifIndex uint32) string {
 	defer c.Close()
 
 	req := &pds.LifGetRequest{
-		LifId: []uint32{ifIndex},
+		Id: [][]byte{key},
 	}
 
 	client := pds.NewIfSvcClient(c)
-
 	respMsg, err := client.LifGet(context.Background(), req)
 	if err != nil {
 		fmt.Printf("Get Lif failed. %v\n", err)
@@ -150,9 +149,7 @@ func lifGetNameFromIfIndex(ifIndex uint32) string {
 		fmt.Printf("Operation failed with %v error\n", respMsg.ApiStatus)
 		return ""
 	}
-
 	resp := respMsg.Response[0]
-
 	return resp.GetStatus().GetName()
 }
 
@@ -174,11 +171,11 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("id") == false {
 		req = &pds.LifGetRequest{
-			LifId: []uint32{},
+			Id: [][]byte{},
 		}
 	} else {
 		req = &pds.LifGetRequest{
-			LifId: []uint32{lifID},
+			Id: [][]byte{[]byte(lifID)},
 		}
 	}
 
@@ -202,9 +199,9 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printLifHeader() {
-	hdrLine := strings.Repeat("-", 99)
+	hdrLine := strings.Repeat("-", 149)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-6s%-12s%-15s%-20s%-16s%-25s%-5s\n",
+	fmt.Printf("%-36s%-12s%-15s%-20s%-26s%-25s%-5s\n",
 		"ID", "IfIndex", "Name", "MAC Address", "PinnedInterface", "Type", "State")
 	fmt.Println(hdrLine)
 }
@@ -214,10 +211,9 @@ func printLif(lif *pds.Lif) {
 	status := lif.GetStatus()
 	lifType := strings.Replace(spec.GetType().String(), "LIF_TYPE_", "", -1)
 	lifType = strings.Replace(lifType, "_", "-", -1)
-	state := strings.Replace(status.GetOperStatus().String(), "IF_STATUS_", "", -1)
-	fmt.Printf("%-6d0x%-10x%-15s%-20s%-16s%-25s%-5s\n",
-		spec.GetLifId(), status.GetIfIndex(), status.GetName(),
+	state := strings.Replace(status.GetStatus().String(), "IF_STATUS_", "", -1)
+	fmt.Printf("%-36s%-10x%-15s%-20s%-36s%-25s%-5s\n",
+		string(spec.GetId()), status.GetIfIndex(), status.GetName(),
 		utils.MactoStr(spec.GetMacAddress()),
-		ifIndexToPortIdStr(spec.GetPinnedInterfaceId()),
-		lifType, state)
+		string(spec.GetPinnedInterface()), lifType, state)
 }

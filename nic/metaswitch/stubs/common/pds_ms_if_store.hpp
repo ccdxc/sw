@@ -124,35 +124,6 @@ class if_store_t : public obj_store_t <ms_ifindex_t, if_obj_t> {
 
 void if_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
 
-class host_lif_obj_t: public slab_obj_t<host_lif_obj_t>,
-                 public base_obj_t {
-public:
-    struct properties_t {
-        pds_lif_key_t host_lif;
-        ms_bd_id_t  bd_id;
-        ms_ifindex_t ifindex;
-        properties_t(pds_lif_key_t host_lif_, ms_bd_id_t bd_id_, ms_ifindex_t ifindex_)
-            : host_lif(host_lif_), bd_id(bd_id_), ifindex(ifindex_) {};
-    };
-    host_lif_obj_t(const properties_t& prop)
-        : prop_(prop) {};
-
-    properties_t& properties(void) {return prop_;}
-    const properties_t& properties(void) const {return prop_;}
-    void set_properties(const properties_t& prop) {prop_ = prop;}
-    pds_lif_key_t key (void) const {return prop_.host_lif;}
-    void update_store(state_t* state, bool op_delete) override;
-    void print_debug_str(void) override {};
-
-private:
-    properties_t prop_;
-};
-
-class host_lif_store_t : public obj_store_t <pds_lif_key_t, host_lif_obj_t> {
-};
-
-void host_lif_slab_init (slab_uptr_t slabs[], sdk::lib::slab_id_t slab_id);
-
 }
 
 #endif

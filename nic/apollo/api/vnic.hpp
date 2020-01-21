@@ -234,9 +234,9 @@ public:
     /// \return    ethernet MAC address of this vnic
     mac_addr_t& mac(void) { return mac_; }
 
-    /// \brief     return the associated host lif's ifindex
-    /// \return    ifindex of the host lif corresponding to this vnic
-    pds_ifindex_t host_ifindex(void) const { return host_ifindex_; }
+    /// \brief     return the associated host lif
+    /// \return    host lif corresponding to this vnic
+    pds_obj_key_t host_if(void) const { return host_if_; }
 
     /// \brief     return number of IPv4 ingress policies on the vnic
     /// \return    number of IPv4 ingress policies on the vnic
@@ -316,25 +316,25 @@ private:
     pds_encap_t   fabric_encap_;    ///< fabric encap information
     bool          switch_vnic_;     ///< TRUE if this is switch vnic
     mac_addr_t    mac_;             ///< MAC address of this vnic
-    pds_ifindex_t host_ifindex_;    ///< PF/VF this vnic is behind
+    pds_obj_key_t host_if_;         ///< PF/VF this vnic is behind
     ///< number of ingress IPv4 policies
-    uint8_t           num_ing_v4_policy_;
+    uint8_t       num_ing_v4_policy_;
     ///< ingress IPv4 policies
-    pds_obj_key_t  ing_v4_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t ing_v4_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of ingress IPv6 policies
-    uint8_t           num_ing_v6_policy_;
+    uint8_t       num_ing_v6_policy_;
     ///< ingress IPv6 policies
-    pds_obj_key_t  ing_v6_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t ing_v6_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of egress IPv4 policies
-    uint8_t           num_egr_v4_policy_;
+    uint8_t       num_egr_v4_policy_;
     ///< egress IPv4 policies
-    pds_obj_key_t  egr_v4_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t egr_v4_policy_[PDS_MAX_VNIC_POLICY];
     ///< number of egress IPv6 policies
-    uint8_t           num_egr_v6_policy_;
+    uint8_t       num_egr_v6_policy_;
     ///< egress IPv6 policies
-    pds_obj_key_t  egr_v6_policy_[PDS_MAX_VNIC_POLICY];
-    ht_ctxt_t         ht_ctxt_;          ///< hash table context
-    impl_base         *impl_;            ///< impl object instance
+    pds_obj_key_t egr_v6_policy_[PDS_MAX_VNIC_POLICY];
+    ht_ctxt_t     ht_ctxt_;          ///< hash table context
+    impl_base     *impl_;            ///< impl object instance
 
     friend class vnic_state;    ///< vnic_state is friend of vnic_entry
 } __PACK__;

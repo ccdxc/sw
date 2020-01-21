@@ -32,7 +32,15 @@ lif_state::impl_state_set(void *impl_state) {
 }
 
 void *
-lif_state::find(pds_lif_key_t *key) const {
+lif_state::find(pds_lif_id_t *key) const {
+    if (lif_impl_state_) {
+        return ((api::impl::lif_impl_state *)lif_impl_state_)->find(key);
+    }
+    return NULL;
+}
+
+void *
+lif_state::find(pds_obj_key_t *key) const {
     if (lif_impl_state_) {
         return ((api::impl::lif_impl_state *)lif_impl_state_)->find(key);
     }

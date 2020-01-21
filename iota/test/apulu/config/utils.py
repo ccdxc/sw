@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import ctypes
 import sys
 import enum
 import ipaddress
@@ -82,6 +83,20 @@ def LifId2LifIfIndex(lifid):
 def LifIfindex2LifId(lififindex):
     return (lififindex & LIF_IF_LIF_ID_MASK)
 
+UUID_MAX_LEN = 16
+UUID_SIGN_POS = 9
+UUID_SIGN_VAL = ctypes.c_char(0x42)
+def GetUUID(id):
+    id = format(id, 'x')
+    uuid = ctypes.create_string_buffer(UUID_MAX_LEN)
+    uuid.value = str.encode(id)
+    uuid[UUID_SIGN_POS] = UUID_SIGN_VAL
+    return uuid.raw
+
+def GetIdfromUUID(uuid):
+    id = ctypes.create_string_buffer(uuid)
+    return int(id.value, 16)
+
 def PortToEthIfIdx(port):
     ifidx = InterfaceTypes.ETH << 28
     ifidx = ifidx | (1 << 24)
@@ -156,8 +171,10 @@ def Sleep(timeout=1):
     time.sleep(timeout)
     return
 
-def GetYamlSpecAttr(spec, attr):
+def GetYamlSpecAttr(spec, attr, uuid2id=False):
     val = spec[attr]
+    if uuid2id:
+        val[UUID_SIGN_POS] = 0
     return int("".join(map(chr, val)))
 
 def ValidateRpcIPAddr(srcaddr, dstaddr):

@@ -214,15 +214,14 @@ message Encap {
 
 // Types of lif
 enum LifType {
-  LIF_TYPE_NONE                     = 0;
-  LIF_TYPE_HOST                     = 1;
-  LIF_TYPE_HOST_MANAGEMENT          = 2;
-  LIF_TYPE_MNIC_OOB_MANAGEMENT      = 3;
-  LIF_TYPE_MNIC_INTERNAL_MANAGEMENT = 4;
-  LIF_TYPE_MNIC_INBAND_MANAGEMENT   = 5;
-  LIF_TYPE_MNIC_CPU                 = 6;
-  LIF_TYPE_SWM                      = 7;
-  LIF_TYPE_LEARN                    = 8;
+  LIF_TYPE_NONE          = 0;
+  LIF_TYPE_HOST          = 1;
+  LIF_TYPE_HOST_MGMT     = 2;
+  LIF_TYPE_OOB_MGMTT     = 3;
+  LIF_TYPE_INBAND_MGMT   = 4;
+  LIF_TYPE_INTERNAL_MGMT = 5;
+  LIF_TYPE_DATAPATH      = 6;
+  LIF_TYPE_LEARN         = 7;
 }
 
 // Security rule action is one of the below

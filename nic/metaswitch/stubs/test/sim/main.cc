@@ -12,6 +12,7 @@
 #include "nic/sdk/include/sdk/if.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
@@ -304,7 +305,7 @@ pds_ms_sim_test_config ()
     subnet_spec.vpc = pds_ms::msidx2pdsobjkey(g_vpc_uuid);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid = g_test_conf.vni;
-    subnet_spec.host_ifindex = g_test_conf.lif_if_index;
+    subnet_spec.host_if = api::uuid_from_objid(g_test_conf.lif_if_index);
     subnet_spec.v4_prefix.len = 24;
     subnet_spec.v4_prefix.v4_addr = g_test_conf.local_gwip_addr;
     pds_ms::subnet_create (&subnet_spec, 0);

@@ -142,9 +142,9 @@ class VnicObject(base.ConfigObjectBase):
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
         if self.HostIfIdx:
-            spec.HostIfIndex = self.HostIfIdx
+            spec.HostIf = utils.GetUUID(self.HostIfIdx)
         if self.HostIf:
-            spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+            spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.HostIf.lif.id))
         return
 
     def ValidateSpec(self, spec):
@@ -160,7 +160,7 @@ class VnicObject(base.ConfigObjectBase):
                 return False
         if utils.IsPipelineApulu():
             if self.HostIf:
-                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                if utils.GetIdfromUUID(spec.HostIf) != utils.LifId2LifIfIndex(self.HostIf.lif.id):
                     return False
         if spec.MACAddress != self.MACAddr.getnum():
             return False
@@ -178,7 +178,7 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if utils.IsPipelineApulu():
             if self.HostIf:
-                if spec['hostifindex'] != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                if utils.GetYamlSpecAttr(spec, 'hostif', True) != utils.LifId2LifIfIndex(self.HostIf.lif.id):
                     return False
         if spec['vpcid'] != self.SUBNET.VPC.VPCId:
             return False

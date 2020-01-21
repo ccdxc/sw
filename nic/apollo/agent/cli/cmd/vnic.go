@@ -116,8 +116,8 @@ func printVnic(vnic *pds.Vnic) {
 			fmt.Sprint(spec.GetRxMirrorSessionId()), "[]"), " ", ",", -1)
 	}
 	lifName := "-"
-	if spec.GetHostIfIndex() != 0 {
-		lifName = lifGetNameFromIfIndex(spec.GetHostIfIndex())
+	if len(spec.GetHostIf()) > 0 {
+		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 
 	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-36s%-36s%-10s\n",

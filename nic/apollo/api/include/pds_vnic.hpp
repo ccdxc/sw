@@ -56,7 +56,7 @@ typedef struct pds_vnic_spec_s {
     /// PFs/VFs present, datapath should be told which VF/PF (aka. lif or
     /// host interface) a particular vnic is attached to by passing
     /// host_ifindex (of type IF_TYPE_LIF)
-    pds_ifindex_t host_ifindex;
+    pds_obj_key_t host_if;
     /// Tx policer, if any
     pds_obj_key_t tx_policer;
     /// Rx policer, if any

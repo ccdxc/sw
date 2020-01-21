@@ -264,7 +264,7 @@ public:
 
     /// \brief      return host interface on which this subnet is deployed
     /// \return     host interface on which this subnet is deployed
-    pds_ifindex_t host_ifindex(void) const { return host_ifindex_; }
+    pds_obj_key_t host_if(void) const { return host_if_; }
 
     /// \brief     return impl instance of this subnet object
     /// \return    impl instance of the subnet object
@@ -309,7 +309,7 @@ private:
     ///< egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_SUBNET_POLICY];
     mac_addr_t vr_mac_;                       ///< virtual router MAC
-    pds_ifindex_t host_ifindex_;              ///< PF/VF attached to this subnet
+    pds_obj_key_t host_if_;                   ///< PF/VF attached to this subnet
 
     ht_ctxt_t ht_ctxt_;                       ///< hash table context
 

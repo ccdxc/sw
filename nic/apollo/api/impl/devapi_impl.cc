@@ -21,6 +21,7 @@
 #include "nic/sdk/linkmgr/port_mac.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
@@ -60,7 +61,8 @@ devapi_impl::lif_create(lif_info_t *info) {
     // program tx scheduler
     lif_program_tx_scheduler(info);
 
-    spec.key = info->lif_id;
+    spec.key = uuid_from_objid(LIF_IFINDEX(info->lif_id));
+    spec.id = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
     spec.type = info->type;
     spec.vlan_strip_en = info->vlan_strip_en;
@@ -71,8 +73,8 @@ devapi_impl::lif_create(lif_info_t *info) {
     }
     ret = lif->create(&spec);
     if (ret == SDK_RET_OK) {
-        PDS_TRACE_DEBUG("Programmed lif %u %s %u %s",
-                        info->lif_id, info->name, info->type,
+        PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",
+                        spec.key.str(), info->lif_id, info->name, info->type,
                         macaddr2str(info->mac));
         lif_impl_db()->insert(lif);
     }
@@ -163,10 +165,8 @@ devapi_impl::lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) {
 sdk_ret_t
 devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
     lif_impl *lif;
-    pds_lif_key_t key;
 
-    key = lif_id;
-    lif = lif_impl_db()->find(&key);
+    lif = lif_impl_db()->find((pds_lif_id_t *)&lif_id);
     lif->set_name(name.c_str());
     return SDK_RET_OK;
 }
@@ -174,12 +174,10 @@ devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
 sdk_ret_t
 devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
     lif_impl *lif;
-    pds_lif_key_t key;
     ::core::event_t event;
 
     // lookup lif and update the state
-    key = lif_id;
-    lif = lif_impl_db()->find(&key);
+    lif = lif_impl_db()->find((pds_lif_id_t *)&lif_id);
     lif->set_state(state);
 
     // notify rest of the system
@@ -199,13 +197,15 @@ devapi_impl::lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) {
 }
 
 sdk_ret_t
-devapi_impl::lif_upd_bcast_filter(uint32_t lif_id, lif_bcast_filter_t bcast_filter) {
+devapi_impl::lif_upd_bcast_filter(uint32_t lif_id,
+                                  lif_bcast_filter_t bcast_filter) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
-devapi_impl::lif_upd_mcast_filter(uint32_t lif_id, lif_mcast_filter_t mcast_filter) {
+devapi_impl::lif_upd_mcast_filter(uint32_t lif_id,
+                                  lif_mcast_filter_t mcast_filter) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
 }
@@ -269,7 +269,7 @@ devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
 
 sdk_ret_t
 devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     if_entry *intf;
     port_args_t port_args = { 0 };
 
@@ -300,7 +300,7 @@ devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
 // TODO: @akoradha please look at iris and fill this properly
 sdk_ret_t
 devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
-    sdk_ret_t ret = SDK_RET_OK;
+    sdk_ret_t ret;
     if_entry *intf;
     port_args_t port_args = { 0 };
 
@@ -325,7 +325,6 @@ devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
     PDS_TRACE_DEBUG("if 0x%x, status %u, xcvr state %u, pid %u",
                     ifidx, status->status, status->xcvr.state,
                     status->xcvr.pid);
-
     return ret;
 }
 
@@ -457,8 +456,8 @@ devapi_impl::swm_disable_rx(uint32_t channel)
 
 sdk_ret_t
 devapi_impl::lif_program_tx_scheduler(lif_info_t *info) {
+    sdk_ret_t ret;
     asicpd_scheduler_lif_params_t   apd_lif;
-    sdk_ret_t                       ret = SDK_RET_OK;
 
     apd_lif.lif_id = info->lif_id;
     apd_lif.hw_lif_id = info->lif_id;
@@ -471,7 +470,7 @@ devapi_impl::lif_program_tx_scheduler(lif_info_t *info) {
     apd_lif.tx_sched_num_table_entries = info->tx_sched_num_table_entries;
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_alloc(&apd_lif);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to alloc tx sched. lif %lu. err %d",
+        PDS_TRACE_ERR("Failed to alloc tx sched. lif %lu, err %u",
                       info->lif_id, ret);
         return ret;
     }
@@ -482,7 +481,7 @@ devapi_impl::lif_program_tx_scheduler(lif_info_t *info) {
     // program tx scheduler and policer
     ret = sdk::asic::pd::asicpd_tx_scheduler_map_program(&apd_lif);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to program tx sched. lif %lu. err %d",
+        PDS_TRACE_ERR("Failed to program tx sched. lif %lu, err %u",
                       info->lif_id, ret);
         return ret;
     }
@@ -495,11 +494,11 @@ devapi_impl::lif_get_qcount_(lif_info_t *info) {
 
      for (uint32_t i = 0; i < NUM_QUEUE_TYPES; i++) {
          auto & qinfo = info->queue_info[i];
-         if (qinfo.size < 1) continue;
-
+         if (qinfo.size < 1) {
+             continue;
+         }
          PDS_TRACE_DEBUG("Queue type_num %lu, entries %lu, purpose %lu",
-                         qinfo.type_num,
-                         qinfo.entries, qinfo.purpose);
+                         qinfo.type_num, qinfo.entries, qinfo.purpose);
          qcount += pow(2, qinfo.entries);
      }
      PDS_TRACE_DEBUG("Lifid %u, qcount %lu", info->lif_id, qcount);

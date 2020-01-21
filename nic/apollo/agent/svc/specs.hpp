@@ -22,6 +22,7 @@
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/api/internal/pds_if.hpp"
 #include "nic/apollo/api/include/pds_meter.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_tep.hpp"
@@ -568,6 +569,7 @@ pds_if_api_status_to_proto (pds::InterfaceStatus *proto_status,
                             const pds_if_status_t *api_status,
                             pds_if_type_t type)
 {
+    proto_status->set_ifindex(api_status->ifindex);
     switch (type) {
     case PDS_IF_TYPE_UPLINK:
         {
@@ -594,7 +596,8 @@ pds_if_api_info_to_proto (void *entry, void *ctxt)
     pds_if_info_t *info = (pds_if_info_t *)entry;
 
     pds_if_api_spec_to_proto(intf->mutable_spec(), &info->spec);
-    pds_if_api_status_to_proto(intf->mutable_status(), &info->status, info->spec.type);
+    pds_if_api_status_to_proto(intf->mutable_status(),
+                               &info->status, info->spec.type);
     pds_if_api_stats_to_proto(intf->mutable_stats(), &info->stats);
 }
 
@@ -745,14 +748,23 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
     auto proto_spec = rsp->mutable_spec();
     auto proto_status = rsp->mutable_status();
     pds_lif_info_t *api_info = (pds_lif_info_t *)entry;
+    pds_if_info_t pinned_ifinfo = { 0 };
 
-    proto_spec->set_lifid(api_info->spec.key);
-    proto_spec->set_pinnedinterfaceid(api_info->spec.pinned_ifidx);
+    proto_spec->set_id(api_info->spec.key.id);
+    if (api_info->spec.pinned_ifidx != IFINDEX_INVALID) {
+        auto ret = pds_if_read(&api_info->spec.pinned_ifidx, &pinned_ifinfo);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to find if for {}",
+                          api_info->spec.pinned_ifidx);
+        } else {
+            proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id);
+        }
+    }
     proto_spec->set_type(types::LifType(api_info->spec.type));
     proto_spec->set_macaddress(MAC_TO_UINT64(api_info->spec.mac));
     proto_status->set_name(api_info->status.name);
     proto_status->set_ifindex(api_info->status.ifindex);
-    proto_status->set_operstatus(pds_admin_state_to_proto_admin_state(api_info->status.state));
+    proto_status->set_status(pds_admin_state_to_proto_admin_state(api_info->status.state));
 }
 
 static inline void
@@ -1167,7 +1179,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
         pds_obj_key_proto_to_api_spec(&api_spec->egr_v6_policy[i],
                                       proto_spec.egv6securitypolicyid(i));
     }
-    api_spec->host_ifindex = proto_spec.hostifindex();
+    pds_obj_key_proto_to_api_spec(&api_spec->host_if, proto_spec.hostif());
     pds_obj_key_proto_to_api_spec(&api_spec->tx_policer, proto_spec.txpolicerid());
     pds_obj_key_proto_to_api_spec(&api_spec->rx_policer, proto_spec.rxpolicerid());
     api_spec->primary = proto_spec.primary();
@@ -1225,7 +1237,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
         proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
     }
-    proto_spec->set_hostifindex(api_spec->host_ifindex);
+    proto_spec->set_hostif(api_spec->host_if.id);
     proto_spec->set_txpolicerid(api_spec->tx_policer.id);
     proto_spec->set_rxpolicerid(api_spec->rx_policer.id);
     proto_spec->set_primary(api_spec->primary);
@@ -3291,7 +3303,7 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     }
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
-    proto_spec->set_hostifindex(api_spec->host_ifindex);
+    proto_spec->set_hostif(api_spec->host_if.id);
     proto_spec->set_dhcppolicyid(api_spec->dhcp_policy.id);
     proto_spec->set_tos(api_spec->tos);
 }
@@ -3387,7 +3399,7 @@ pds_subnet_proto_to_api_spec (pds_subnet_spec_t *api_spec,
                                       proto_spec.egv6securitypolicyid(i));
     }
     api_spec->fabric_encap = proto_encap_to_pds_encap(proto_spec.fabricencap());
-    api_spec->host_ifindex = proto_spec.hostifindex();
+    pds_obj_key_proto_to_api_spec(&api_spec->host_if, proto_spec.hostif());
     pds_obj_key_proto_to_api_spec(&api_spec->dhcp_policy,
                                   proto_spec.dhcppolicyid());
     api_spec->tos = proto_spec.tos();

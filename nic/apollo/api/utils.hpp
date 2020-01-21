@@ -34,6 +34,32 @@ pick_older_epoch_idx (uint32_t epoch1, uint32_t epoch2)
     return 0;
 }
 
+// construct a 'sticky' uuid given an integer so that same uuid is generated
+// even across reboots i.e., same input gives same uuid everytime
+static inline pds_obj_key_t
+uuid_from_objid (uint32_t id)
+{
+    pds_obj_key_t key = { 0 };
+    sprintf (key.id, "%x", id);
+
+    // stash a signature in 10th byte
+    key.id[9] = 0x42;
+    return key;
+}
+
+// extract integer id from given 'sticky' uuid
+static inline uint32_t
+objid_from_uuid (const pds_obj_key_t& key) {
+    char *buf;
+    static thread_local uint8_t next_buf = 0;
+    char id_buf[4][9];
+
+    buf = id_buf[next_buf++ & 0x3];
+    memcpy(buf, key.id, 8);
+    buf[8] = '\0';
+    return stoul((const char *)buf, 0, 16);
+}
+
 }    // namespace api
 
 #endif    /** __UTILS_HPP__ */

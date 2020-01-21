@@ -24,11 +24,17 @@ namespace impl {
 lif_impl_state::lif_impl_state(pds_state *state) {
     p4pd_table_properties_t    tinfo;
 
-    // maintain all lifs in the system in a hash table
+    // uuid based lif database
     lif_ht_ = ht::factory(PDS_MAX_LIFS >> 2,
                           lif_impl::lif_key_func_get,
-                          sizeof(pds_lif_key_t));
+                          sizeof(pds_obj_key_t));
     SDK_ASSERT(lif_ht_ != NULL);
+
+    // lif (internal) id based lif database
+    lif_id_ht_ = ht::factory(PDS_MAX_LIFS >> 2,
+                          lif_impl::lif_id_func_get,
+                          sizeof(pds_lif_id_t));
+    SDK_ASSERT(lif_id_ht_ != NULL);
 
     p4pluspd_txdma_table_properties_get(
                 P4_P4PLUS_TXDMA_TBL_ID_TX_TABLE_S5_T4_LIF_RATE_LIMITER_TABLE,
@@ -43,6 +49,7 @@ lif_impl_state::lif_impl_state(pds_state *state) {
 
 lif_impl_state::~lif_impl_state() {
     ht::destroy(lif_ht_);
+    ht::destroy(lif_id_ht_);
     directmap::destroy(tx_rate_limiter_tbl_);
 }
 

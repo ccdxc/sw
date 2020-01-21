@@ -184,7 +184,7 @@ class SubnetObject(base.ConfigObjectBase):
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
             if self.HostIf:
-                spec.HostIfIndex = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+                spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.HostIf.lif.id))
         return
 
     def ValidateSpec(self, spec):
@@ -210,7 +210,7 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if utils.IsPipelineApulu():
             if self.HostIf:
-                if spec.HostIfIndex != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+                if utils.GetIdfromUUID(spec.HostIf) != utils.LifId2LifIfIndex(self.HostIf.lif.id):
                     return False
         return True
 

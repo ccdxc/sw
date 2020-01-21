@@ -11,6 +11,7 @@
 #include <l2f_c_includes.hpp>
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
+#include "nic/apollo/api/utils.hpp"
 
 namespace pds_ms_test {
 using pds_ms::ms_ifindex_t;
@@ -53,8 +54,9 @@ public:
     void trigger_update(void) override {
         if (test_if_bind) {
             pds_ms::l2f_bd_t  bd;
-            auto ms_ifindex = pds_ms::pds_to_ms_ifindex(subnet_spec.host_ifindex,
-                                                        IF_TYPE_LIF);
+            auto lifindex =  api::objid_from_uuid(subnet_spec.host_if);
+            auto ms_ifindex =
+                pds_ms::pds_to_ms_ifindex(lifindex, IF_TYPE_LIF);
             bd.handle_add_if(bd_id, ms_ifindex);
             prev_if_bind = ms_ifindex;
             test_if_bind = false;

@@ -33,9 +33,14 @@ public:
     void impl_state_set(void *impl_state);
 
     /// \brief     find lif_impl object
+    /// \param[in] key    internal lif key for the LIF object
+    /// \return    pointer to the LIF instance found or NULL
+    void *find(pds_lif_id_t *key) const;
+
+    /// \brief     find lif_impl object
     /// \param[in] key    lif key for the LIF object
     /// \return    pointer to the LIF instance found or NULL
-    void *find(pds_lif_key_t *key) const;
+    void *find(pds_obj_key_t *key) const;
 
     /// \brief     walk lif_impl object
     /// \param[in] walk_cb    callback function

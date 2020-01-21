@@ -172,9 +172,10 @@ if_impl::activate_create_(pds_epoch_t epoch, if_entry *intf,
         // program the lif id in the TM
         tm_port =
             g_pds_state.catalogue()->logical_port_to_tm_port(spec->uplink_info.port_num);
-        PDS_TRACE_DEBUG("Creating uplink if %s, port %u, hw_id_ %u, "
-                        "tm_port %u", spec->key.str(),
-                        spec->uplink_info.port_num, hw_id_, tm_port);
+        PDS_TRACE_DEBUG("Creating uplink if %s, ifidx 0x%x, port %u, "
+                        "hw_id_ %u, tm_port %u", spec->key.str(),
+                        intf->ifindex(), spec->uplink_info.port_num,
+                        hw_id_, tm_port);
         ret = sdk::platform::capri::capri_tm_uplink_lif_set(tm_port, hw_id_);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to program uplink %s's lif %u in TM "
@@ -289,14 +290,16 @@ if_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
 
 sdk_ret_t
 if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
+    if_entry *intf;
+    uint32_t port_num;
     pds_if_spec_t *spec;
     p4pd_error_t p4pd_ret;
-    p4i_device_info_actiondata_t p4i_device_info_data;
     pds_if_info_t *if_info = (pds_if_info_t *)info;
+    p4i_device_info_actiondata_t p4i_device_info_data;
 
+    intf = if_db()->find((pds_obj_key_t *)key);
     spec = &if_info->spec;
-    uint32_t port_num;
-
+    if_info->status.ifindex = intf->ifindex();
     if (spec->type == PDS_IF_TYPE_L3) {
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                           NULL, NULL, &p4i_device_info_data);
@@ -314,8 +317,7 @@ if_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
                              p4i_device_info_data.p4i_device_info.device_mac_addr2,
                              ETH_ADDR_LEN);
         }
-    }
-    if (spec->type == PDS_IF_TYPE_UPLINK) {
+    } else if (spec->type == PDS_IF_TYPE_UPLINK) {
         if_info->status.uplink_status.lif_id = hw_id_;
     }
     return SDK_RET_OK;

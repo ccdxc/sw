@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_vpc.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 
 namespace pds_ms_test{
@@ -42,6 +43,7 @@ public:
     route_table.num_routes = 0;
 
 
+    memset(&subnet_spec, 0, sizeof(subnet_spec));
     subnet_spec.key = pds_ms::msidx2pdsobjkey(bd_uuid);
     subnet_spec.vpc = pds_ms::msidx2pdsobjkey(vrf_uuid);
     subnet_spec.v4_prefix.len = 24;
@@ -57,7 +59,6 @@ public:
     subnet_spec.egr_v4_policy[2] = pds_ms::msidx2pdsobjkey(7);
     subnet_spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
     subnet_spec.fabric_encap.val.vnid  = 100;
-    subnet_spec.host_ifindex = 0;
     subnet_spec.dhcp_policy = pds_ms::msidx2pdsobjkey(10);
     subnet_spec.tos = 5;
    }
@@ -74,11 +75,12 @@ public:
        subnet_spec.fabric_encap.val.vnid += 100;
    }
    void add_if_bind(void) {
-       subnet_spec.host_ifindex = LIF_IFINDEX(1);
+       pds_ifindex_t lif_ifindex = LIF_IFINDEX(1);
+       subnet_spec.host_if = api::uuid_from_objid(lif_ifindex);
        test_if_bind = true;
    }
    void del_if_bind(void) {
-       subnet_spec.host_ifindex = 0;
+       memset (&subnet_spec.host_if, 0, sizeof(subnet_spec.host_if));
        test_if_unbind = true;
    }
    void next(void) override { 

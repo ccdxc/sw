@@ -40,6 +40,7 @@ if_entry::factory(pds_obj_key_t& key, pds_ifindex_t ifindex) {
         new (intf) if_entry();
     }
     memcpy(&intf->key_, &key, sizeof(key_));
+    //intf->type_ = PDS_IF_TYPE_ETH;
     intf->ifindex_ = ifindex;
     return intf;
 }
@@ -230,6 +231,7 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
     memcpy(&spec->key, &key_, sizeof(key_));
     spec->type = type_;
     spec->admin_state = admin_state_;
+
     switch (spec->type) {
     case PDS_IF_TYPE_UPLINK:
         spec->uplink_info.port_num = if_info_.uplink_.port_;
@@ -241,6 +243,8 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
         spec->l3_if_info.encap = if_info_.l3_.encap_;
         memcpy(spec->l3_if_info.mac_addr, if_info_.l3_.mac_,
                ETH_ADDR_LEN);
+        break;
+    case PDS_IF_TYPE_ETH:
         break;
     default:
         return SDK_RET_ERR;

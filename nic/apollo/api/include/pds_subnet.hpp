@@ -50,7 +50,7 @@ typedef struct pds_subnet_spec_s {
     pds_encap_t fabric_encap;                ///< fabric encap for this subnet
     /// when operating in PDS_DEV_OPER_MODE_HOST mode with multiple host
     /// PFs/VFs present, subnet can be attached to PF/VF
-    pds_ifindex_t host_ifindex;
+    pds_obj_key_t host_if;
     pds_obj_key_t dhcp_policy;       ///< DHCP policy, if any
     uint8_t tos;                             ///< type of service to be used
                                              ///< in the outer header in

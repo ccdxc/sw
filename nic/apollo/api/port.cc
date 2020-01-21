@@ -6,8 +6,6 @@
  * @brief   This file handles port operations
  */
 
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
 #include "nic/sdk/linkmgr/port.hpp"
 #include "nic/sdk/platform/drivers/xcvr.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
@@ -17,10 +15,9 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/apollo/api/if.hpp"
 #include "nic/apollo/api/port.hpp"
-
-namespace uuids = boost::uuids;
 
 namespace api {
 
@@ -155,7 +152,6 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
 {
     if_entry *intf;
     void *port_info;
-    uuids::uuid uuid;
     pds_obj_key_t key;
 
     PDS_TRACE_DEBUG("Creating port %u", port_args->port_num);
@@ -183,9 +179,7 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
         PDS_TRACE_ERR("port %u create failed", port_args->port_num);
         return SDK_RET_ERR;
     }
-    uuid = uuids::random_generator()();
-    memcpy(&key, &uuid, PDS_MAX_KEY_LEN);
-    key.id[PDS_MAX_KEY_LEN] = '\0';
+    key = uuid_from_objid(ifindex);
     intf = if_entry::factory(key, ifindex);
     if (intf == NULL) {
         sdk::linkmgr::port_delete(port_info);

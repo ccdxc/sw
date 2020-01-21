@@ -20,7 +20,6 @@ state_t::state_t(void)
 {    
     tep_slab_init(slabs_, PDS_MS_TEP_SLAB_ID);
     if_slab_init(slabs_, PDS_MS_IF_SLAB_ID);
-    host_lif_slab_init(slabs_, PDS_MS_HOST_LIF_SLAB_ID);
     subnet_slab_init(slabs_, PDS_MS_SUBNET_SLAB_ID);
     bd_slab_init(slabs_, PDS_MS_BD_SLAB_ID);
     vpc_slab_init (slabs_, PDS_MS_VPC_SLAB_ID);

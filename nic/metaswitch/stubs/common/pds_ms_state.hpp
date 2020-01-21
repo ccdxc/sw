@@ -33,7 +33,6 @@ namespace pds_ms {
 enum slab_id_e {
     PDS_MS_TEP_SLAB_ID = 1,
     PDS_MS_IF_SLAB_ID,
-    PDS_MS_HOST_LIF_SLAB_ID,
     PDS_MS_SUBNET_SLAB_ID,
     PDS_MS_BD_SLAB_ID,
     PDS_MS_VPC_SLAB_ID,
@@ -98,7 +97,6 @@ public:
     tep_store_t& tep_store(void) {return tep_store_;}
     bd_store_t&  bd_store(void) {return bd_store_;}
     if_store_t&  if_store(void) {return if_store_;}
-    host_lif_store_t&  host_lif_store(void) {return host_lif_store_;}
     vpc_store_t& vpc_store(void) {return vpc_store_;}
     subnet_store_t& subnet_store(void) {return subnet_store_;}
     route_table_store_t& route_table_store(void) {return route_table_store_;}
@@ -137,7 +135,6 @@ private:
     tep_store_t tep_store_; 
     bd_store_t bd_store_; 
     if_store_t if_store_; 
-    host_lif_store_t host_lif_store_;
     vpc_store_t vpc_store_;
     subnet_store_t subnet_store_;
     route_table_store_t route_table_store_;

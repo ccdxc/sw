@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <thread>
 
@@ -94,13 +95,18 @@ pds_obj_key_t l2f_bd_t::make_pds_subnet_key_(void) {
 }
 
 pds_subnet_spec_t l2f_bd_t::make_pds_subnet_spec_(void) {
-    pds_subnet_spec_t spec;
+    pds_subnet_spec_t spec = {0};
     spec = store_info_.subnet_obj->spec();
     // Spec contains MS + PDS owned fields. Overwrite the MS owned fields only
     spec.fabric_encap = store_info_.bd_obj->properties().fabric_encap;
-    spec.host_ifindex = store_info_.bd_obj->properties().host_ifindex;
-    SDK_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x",
-                    ips_info_.bd_id, spec.fabric_encap.val.vnid, spec.host_ifindex);
+    auto lif_ifindex = store_info_.bd_obj->properties().host_ifindex;
+    if (lif_ifindex != 0) {
+        spec.host_if = api::uuid_from_objid(lif_ifindex);
+    }
+    SDK_TRACE_INFO ("MS BD %d: Using VNI %d Host IfIndex 0x%x LIF UUID %s",
+                    ips_info_.bd_id, spec.fabric_encap.val.vnid,
+                    store_info_.bd_obj->properties().host_ifindex,
+                    spec.host_if.str());
 
     return spec;
 }
@@ -157,10 +163,10 @@ pds_batch_ctxt_guard_t l2f_bd_t::make_batch_pds_spec_(state_t::context_t& state_
 pds_batch_ctxt_guard_t l2f_bd_t::prepare_pds(state_t::context_t& state_ctxt,
                                              bool async) {
     auto& pds_spec = store_info_.subnet_obj->spec();
-    SDK_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s Host IfIndex 0x%x",
+    SDK_TRACE_INFO ("MS BD %d Subnet %s VPC %s VNI %d IP %s",
                     ips_info_.bd_id, pds_spec.key.str(), pds_spec.vpc.str(), 
                     pds_spec.fabric_encap.val.vnid,
-                    ipv4addr2str(pds_spec.v4_vr_ip), pds_spec.host_ifindex);
+                    ipv4addr2str(pds_spec.v4_vr_ip));
 
     auto pds_bctxt_guard = make_batch_pds_spec_(state_ctxt, async); 
 
@@ -388,6 +394,7 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
             return;
         }
         store_info_.bd_obj->properties().host_ifindex = ms_to_pds_ifindex(ifindex);
+
         SDK_TRACE_INFO ("MS BD %d If 0x%x: Bind IPS PDS IfIndex 0x%x", 
                         bd_id, ifindex,
                         store_info_.bd_obj->properties().host_ifindex);

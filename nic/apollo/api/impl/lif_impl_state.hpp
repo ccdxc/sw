@@ -48,7 +48,16 @@ public:
     /// \param[in] impl    lif to be added to the db
     /// \return   SDK_RET_OK on success, failure status code on error
     sdk_ret_t insert(lif_impl *impl) {
-        return lif_ht_->insert_with_key(&impl->key_, impl, &impl->ht_ctxt_);
+        sdk_ret_t ret;
+
+        ret = lif_ht_->insert_with_key(&impl->key_, impl, &impl->ht_ctxt_);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to insert lif %s, id %u to lif db, err %u",
+                          impl->key_.str(), impl->id_, ret);
+            return ret;
+        }
+        return lif_id_ht_->insert_with_key(&impl->id_, impl,
+                                           &impl->id_ht_ctxt_);
     }
 
     /// \brief     remove the given instance of lif object from db
@@ -56,7 +65,8 @@ public:
     /// \return    pointer to the removed lif instance or NULL,
     ///            if not found
     lif_impl *remove(lif_impl *impl) {
-        return (lif_impl *)(lif_ht_->remove(&impl->key_));
+        lif_ht_->remove(&impl->key_);
+        return (lif_impl *)(lif_id_ht_->remove(&impl->id_));
     }
 
     /// \brief      free lif impl instance
@@ -65,16 +75,23 @@ public:
         SDK_FREE(SDK_MEM_ALLOC_PDS_LIF_IMPL, impl);
     }
 
-    /// \brief     lookup a lif in database given the key
-    /// \param[in] key    lif key
+    /// \brief     lookup a lif in database given its key
+    /// \param[in] key    lif's key
     /// \return pointer to the lif impl instance or NULL if not found
-    lif_impl *find(pds_lif_key_t *key) const {
+    lif_impl *find(pds_obj_key_t *key) const {
         return (lif_impl *)(lif_ht_->lookup(key));
+    }
+
+    /// \brief     lookup a lif in database given its internal id
+    /// \param[in] id lif's internal id
+    /// \return pointer to the lif impl instance or NULL if not found
+    lif_impl *find(pds_lif_id_t *id) const {
+        return (lif_impl *)(lif_id_ht_->lookup(id));
     }
 
     /// \brief     lookup a lif in database given its type, if multiple lifs
     ///            exist for given type the 1st one encountered will be returned
-    /// \param[in] key    lif key
+    /// \param[in] type    type of the lif of interest
     /// \return pointer to the lif impl instance or NULL if not found
     lif_impl *find(lif_type_t type) {
         lif_find_cb_ctxt_t lif_cb_ctxt;
@@ -116,8 +133,9 @@ private:
     friend class lif_impl;    // lif_impl class is friend of lif_impl_state
 
 private:
-    ht           *lif_ht_;
-    directmap    *tx_rate_limiter_tbl_;
+    ht *lif_ht_;
+    ht *lif_id_ht_;
+    directmap *tx_rate_limiter_tbl_;
 };
 
 lif_impl_state *lif_impl_db(void);

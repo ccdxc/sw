@@ -28,7 +28,7 @@ namespace api {
 
 vnic_entry::vnic_entry() {
     switch_vnic_ = false;
-    host_ifindex_ = IFINDEX_INVALID;
+    host_if_ = k_pds_obj_key_invalid;
     ht_ctxt_.reset();
 }
 
@@ -112,7 +112,6 @@ vnic_entry::nuke_resources_(void) {
 
 sdk_ret_t
 vnic_entry::init_config(api_ctxt_t *api_ctxt) {
-     pds_lif_key_t lif_key = { 0 };
     pds_vnic_spec_t *spec = &api_ctxt->api_params->vnic_spec;
 
     memcpy(&key_, &spec->key, sizeof(pds_obj_key_t));
@@ -163,12 +162,11 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     if (is_mac_set(spec->mac_addr)) {
         memcpy(mac_, spec->mac_addr, ETH_ADDR_LEN);
     }
-    host_ifindex_ = spec->host_ifindex;
-    if (host_ifindex_ != IFINDEX_INVALID) {
-        lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
-        if (unlikely(lif_db()->find(&lif_key) == NULL)) {
-            PDS_TRACE_ERR("lif 0x%x not found, vnic %s init failed",
-                          spec->host_ifindex, spec->key.str());
+    host_if_ = spec->host_if;
+    if (host_if_ != k_pds_obj_key_invalid) {
+        if (unlikely(lif_db()->find(&host_if_) == NULL)) {
+            PDS_TRACE_ERR("host if %s not found, vnic %s init failed",
+                          spec->host_if.str(), spec->key.str());
             return SDK_RET_INVALID_ARG;
         }
     }
@@ -196,7 +194,7 @@ vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, v4 meter id %u, "
                     "v6 meter id %u, mac %s\nvnic encap %s, fabric encap %s, "
                     "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
-                    "host if 0x%x",
+                    "host if %s",
                     key_.str(), spec->subnet.str(),
                     spec->v4_meter.id, spec->v6_meter.id,
                     macaddr2str(spec->mac_addr),
@@ -204,7 +202,7 @@ vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
                     pds_encap2str(&spec->fabric_encap),
                     spec->rx_mirror_session_bmap,
                     spec->tx_mirror_session_bmap,
-                    spec->switch_vnic, spec->host_ifindex);
+                    spec->switch_vnic, spec->host_if.str());
     return impl_->program_hw(this, obj_ctxt);
 }
 
@@ -250,7 +248,7 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
                    num_egr_v6_policy_ * sizeof(egr_v6_policy_[0])))) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICY;
     }
-    if (host_ifindex_ != spec->host_ifindex) {
+    if (host_if_ != spec->host_if) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;
     }
     PDS_TRACE_DEBUG("vnic %s upd bmap 0x%lx", key_.str(), obj_ctxt->upd_bmap);
@@ -301,7 +299,7 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
     spec->v4_meter = v4_meter_;
     spec->v6_meter = v6_meter_;
     spec->switch_vnic = switch_vnic_;
-    spec->host_ifindex = host_ifindex_;
+    spec->host_if = host_if_;
     return SDK_RET_OK;
 }
 

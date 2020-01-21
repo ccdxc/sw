@@ -39,6 +39,18 @@ uint32_t tep_id = 0;
 #define HOST_LIF_ID_MIN        72
 #define HOST_LIF_ID_MAX        79
 
+static inline pds_obj_key_t
+uuid_from_objid (uint32_t id)
+{
+    pds_obj_key_t key = { 0 };
+    std::string id_str = std::to_string(id);
+
+    memcpy(key.id, id_str.data(), id_str.length());
+    // stash a signature in 10th byte
+    key.id[9] = 0x42;
+    return key;
+}
+
 //----------------------------------------------------------------------------
 // create route tables
 //------------------------------------------------------------------------------
@@ -555,7 +567,7 @@ create_vnics (uint32_t num_vpcs, uint32_t num_subnets,
                 }
                 if (apulu() && hw() &&
                     (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
-                    pds_vnic.host_ifindex = LIF_IFINDEX(lif_id++);
+                    pds_vnic.host_if = uuid_from_objid(LIF_IFINDEX(lif_id++));
                     if (lif_id > HOST_LIF_ID_MAX) {
                         lif_id = HOST_LIF_ID_MIN;
                     }
@@ -642,7 +654,7 @@ create_subnets (uint32_t vpc_id, uint32_t num_vpcs,
             pds_subnet.fabric_encap.val.vnid =
                 num_vpcs + (vpc_id - 1) * num_subnets + i;
             if (hw() && (g_device.dev_oper_mode == PDS_DEV_OPER_MODE_HOST)) {
-                pds_subnet.host_ifindex = LIF_IFINDEX(lif_id++);
+                pds_subnet.host_if = uuid_from_objid(LIF_IFINDEX(lif_id++));
                 if (lif_id > HOST_LIF_ID_MAX) {
                     lif_id = HOST_LIF_ID_MIN;
                 }

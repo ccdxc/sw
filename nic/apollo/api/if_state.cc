@@ -46,13 +46,13 @@ sdk_ret_t
 if_state::insert(if_entry *intf) {
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Inserting interface id 0x%x, key 0x%x",
-                    intf->key_.id, intf->ifindex_);
+    PDS_TRACE_VERBOSE("Inserting interface %s, ifindex 0x%x",
+                      intf->key_.str(), intf->ifindex_);
     ret = ifindex_ht_->insert_with_key(&intf->ifindex_, intf,
                                        &intf->ifindex_ht_ctxt_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to insert interface id 0x%x, key 0x%x into "
-                      "if db, err %u", intf->key_.id, intf->ifindex_);
+        PDS_TRACE_ERR("Failed to insert interface %s, ifindex 0x%x into "
+                      "if db, err %u", intf->key_.str(), intf->ifindex_, ret);
         return ret;
     }
     return if_ht_->insert_with_key(&intf->key_, intf, &intf->ht_ctxt_);
@@ -60,7 +60,7 @@ if_state::insert(if_entry *intf) {
 
 if_entry *
 if_state::remove(if_entry *intf) {
-    ifindex_ht_->remove(&intf->key_);
+    ifindex_ht_->remove(&intf->ifindex_);
     return (if_entry *)(if_ht_->remove(&intf->key_));
 }
 

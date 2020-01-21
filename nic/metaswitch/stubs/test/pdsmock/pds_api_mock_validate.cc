@@ -100,10 +100,10 @@ pds_subnet_mock_validate (const spec_t&  expected_pds,
         std::cout << "Rcvd: " << &(rcvd_pds.subnet) << std::endl;
         return false;
     }
-    if (feeder.spec.host_ifindex != rcvd_pds.subnet.host_ifindex) {
+    if (feeder.spec.host_if != rcvd_pds.subnet.host_if) {
         std::cout << "Subnet Host IfIndex failed" << std::endl;
-        std::cout << "Expected: " << feeder.spec.host_ifindex <<std::endl;
-        std::cout << "Rcvd: " << rcvd_pds.subnet.host_ifindex << std::endl;
+        std::cout << "Expected: " << feeder.spec.host_if.str() <<std::endl;
+        std::cout << "Rcvd: " << rcvd_pds.subnet.host_if.str() << std::endl;
         return false;
     }
     return true;

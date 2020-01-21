@@ -179,22 +179,22 @@ message InterfaceDeleteResponse {
 /// Lif (Logical interface) object represents a device (eth/storage etc.)
 message LifSpec {
   // unique key of the lif
-  uint32        LifId             = 1;
-  // pinned interface, if applicable for this device
-  uint32        PinnedInterfaceId = 2;
+  bytes         Id              = 1;
   // type of the lif device
-  types.LifType Type              = 3;
+  types.LifType Type            = 2;
   // MAC address of the lif, if any
-  uint64        MacAddress        = 4;
+  uint64        MacAddress      = 3;
+  // pinned uplink interface, if applicable for this device
+  bytes         PinnedInterface = 4;
 }
 
 message LifStatus {
   // encoded ifindex of this lif
-  uint32   IfIndex    = 1;
+  uint32   IfIndex = 1;
   // name of this lif (as seen on the host)
-  string   Name       = 2;
+  string   Name    = 2;
   // operational status of this lif
-  IfStatus OperStatus = 3;
+  IfStatus Status  = 3;
 }
 
 message LifStats {
@@ -203,13 +203,13 @@ message LifStats {
 message Lif {
   meta.TypeMeta TypeMeta = 1 [(gogoproto.embed) = true, (gogoproto.jsontag) = ",inline"];
   meta.ObjMeta  ObjMeta  = 2 [(gogoproto.embed) = true, (gogoproto.jsontag) = "meta,omitempty"];
-  LifSpec       Spec     = 3;
-  LifStatus     Status   = 4;
-  LifStats      Stats    = 5;
+  LifSpec       Spec     = 3 [(gogoproto.jsontag) = "spec,omitempty"];
+  LifStatus     Status   = 4 [(gogoproto.jsontag) = "status,omitempty"];
+  LifStats      Stats    = 5 [(gogoproto.jsontag) = "stats,omitempty"];
 }
 
 message LifGetRequest {
-  repeated uint32 LifId = 1;
+  repeated bytes Id = 1;
 }
 
 message LifGetResponse {

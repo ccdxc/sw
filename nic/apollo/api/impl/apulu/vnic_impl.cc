@@ -79,7 +79,6 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
     lif_impl *lif;
     subnet_entry *subnet;
-    pds_lif_key_t lif_key;
     sdk_table_api_params_t tparams;
     mapping_swkey_t mapping_key = { 0 };
     local_mapping_swkey_t local_mapping_key = { 0 };
@@ -104,7 +103,7 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         }
 
         if ((spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) ||
-            (spec->host_ifindex == IFINDEX_INVALID)) {
+            (spec->host_if == k_pds_obj_key_invalid)) {
             // allocate hw id for this vnic
             if ((ret = vnic_impl_db()->vnic_idxr()->alloc(&idx)) !=
                     SDK_RET_OK) {
@@ -114,16 +113,19 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             }
             hw_id_ = idx;
         } else {
-            // inherit vnic hw id of the corresponding lif
-            if (IFINDEX_TO_IFTYPE(spec->host_ifindex) != IF_TYPE_LIF) {
-                PDS_TRACE_ERR("Incorrect interface type %u vnic %s spec, "
-                              "ifindex 0x%x",
-                              IFINDEX_TO_IFTYPE(spec->host_ifindex),
-                              spec->key.str(), spec->host_ifindex);
+            lif = lif_impl_db()->find(&spec->host_if);
+            if (lif == NULL) {
+                PDS_TRACE_ERR("lif %s not found, vnic %s create failed",
+                              spec->host_if.str(), spec->key.str());
                 return SDK_RET_INVALID_ARG;
             }
-            lif_key = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
-            lif = lif_impl_db()->find(&lif_key);
+            // inherit vnic hw id of the corresponding lif
+            if (lif->type() != sdk::platform::LIF_TYPE_HOST) {
+                PDS_TRACE_ERR("Incorrect type %u lif %s in vnic %s spec",
+                              lif->type(), spec->host_if.str(),
+                              spec->key.str());
+                return SDK_RET_INVALID_ARG;
+            }
             hw_id_ = lif->vnic_hw_id();
         }
 
@@ -200,7 +202,7 @@ vnic_impl::release_resources(api_base *api_obj) {
 
     // if the vnic_hw_id_ is not inherited from the lif, release it
     if (((vnic->vnic_encap().type == PDS_ENCAP_TYPE_DOT1Q) ||
-         (vnic->host_ifindex() == IFINDEX_INVALID) ||
+         (vnic->host_if() == k_pds_obj_key_invalid) ||
          (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM)) &&
         (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
@@ -263,7 +265,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
 
     // free the vnic hw id, if its not inherited from lif
     if (((vnic->vnic_encap().type == PDS_ENCAP_TYPE_DOT1Q) ||
-         (vnic->host_ifindex() == IFINDEX_INVALID) ||
+         (vnic->host_if() == k_pds_obj_key_invalid) ||
          (g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_SIM))
         && (hw_id_ != 0xFFFF)) {
         vnic_impl_db()->vnic_idxr()->free(hw_id_);
@@ -533,6 +535,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
 sdk_ret_t
 vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    lif_impl *lif;
     vpc_entry *vpc;
     device_entry *device;
     subnet_entry *subnet;
@@ -587,7 +590,10 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
         nh_data.nexthop_info.port = 0;
     } else {
-        nh_data.nexthop_info.lif = LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex);
+        lif = lif_impl_db()->find(&spec->host_if);
+        if (lif) {
+            nh_data.nexthop_info.lif = lif->id();
+        }
         nh_data.nexthop_info.port = TM_PORT_DMA;
     }
     if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
@@ -615,10 +621,12 @@ sdk_ret_t
 vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
                      api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    lif_impl *lif;
     vpc_entry *vpc;
     p4pd_error_t p4pd_ret;
     device_entry *device;
     subnet_entry *subnet;
+    pds_obj_key_t lif_key;
     pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
     nexthop_actiondata_t nh_data = { 0 };
@@ -636,8 +644,9 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
             nh_data.nexthop_info.port = 0;
         } else {
-            nh_data.nexthop_info.lif =
-                LIF_IFINDEX_TO_LIF_ID(vnic->host_ifindex());
+            lif_key = vnic->host_if();
+            lif = lif_impl_db()->find(&lif_key);
+            nh_data.nexthop_info.lif = lif->id();
             nh_data.nexthop_info.port = TM_PORT_DMA;
         }
         if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
@@ -1051,11 +1060,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
     if (device->oper_mode() == PDS_DEV_OPER_MODE_BITW) {
         spec->vnic_encap.val.vlan_tag = nh_data.nexthop_info.vlan;
         spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
-    } else {
-        SDK_ASSERT(LIF_IFINDEX_TO_LIF_ID(spec->host_ifindex) ==
-                   nh_data.nexthop_info.lif);
     }
-
     return SDK_RET_OK;
 }
 
