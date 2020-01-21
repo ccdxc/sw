@@ -292,7 +292,7 @@ func (tb *TestBed) CopyToNaples(nodeName string, files []string, destDir string)
 			if tb.NodeName == nodeName {
 				//Copy to all naples
 				for _, config := range tb.NaplesConfigs.Configs {
-					copyCmd := fmt.Sprintf("sshpass -p %v scp -o StrictHostKeyChecking=no  %s %s@%s:%s", naplesPasswd, fullSrcPath, "root", config.NaplesIpAddress, destDir)
+					copyCmd := fmt.Sprintf("sshpass -p %v scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no  %s %s@%s:%s", naplesPasswd, fullSrcPath, "root", config.NaplesIpAddress, destDir)
 					trig.AddCommand(copyCmd, nodeName+"_host", nodeName)
 				}
 			}

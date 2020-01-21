@@ -876,7 +876,7 @@ func (tb *TestBed) startNaplesConsoleLogging() error {
 				return
 			}
 			command.Wait()
-			logFile := fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs/%s_console.log", os.Getenv("GOPATH"), name)
+			logFile := fmt.Sprintf("%s/src/github.com/pensando/sw/iota/%s_console.log", os.Getenv("GOPATH"), name)
 			cmdStr = fmt.Sprintf("telnet %s %s | tee %s ", consoleIP, consolePort, logFile)
 
 			command = exec.Command("sh", "-c", cmdStr)
