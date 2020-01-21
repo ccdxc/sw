@@ -24,6 +24,8 @@ function finish {
     ${NICDIR}/apollo/test/tools/savelogs.sh
     rm -f ${NICDIR}/conf/pipeline.json
     pkill -9 vpp
+    rm -f /tmp/pen_ipc_*
+    rm -f /dev/ipc_*
 }
 trap finish EXIT
 

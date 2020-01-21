@@ -32,6 +32,7 @@
 #define vnic_tx_stats_action          action_u.vnic_tx_stats_vnic_tx_stats
 #define vnic_rx_stats_action          action_u.vnic_rx_stats_vnic_rx_stats
 #define rxdma_vnic_info               action_u.vnic_info_rxdma_vnic_info_rxdma
+#define ing_vnic_info                 action_u.vnic_vnic_info
 #define nexthop_info                  action_u.nexthop_nexthop_info
 
 namespace api {
@@ -542,7 +543,9 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     pds_obj_key_t vpc_key;
     pds_vnic_spec_t *spec;
     p4pd_error_t p4pd_ret;
+    vnic_actiondata_t vnic_data = { 0 };
     nexthop_actiondata_t nh_data = { 0 };
+    meter_stats_actiondata_t meter_stats_data = { 0 };
     vnic_rx_stats_actiondata_t vnic_rx_stats_data = { 0 };
     vnic_tx_stats_actiondata_t vnic_tx_stats_data = { 0 };
 
@@ -550,7 +553,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     // get the subnet of this vnic
     subnet = subnet_find(&spec->subnet);
     if (subnet == NULL) {
-        PDS_TRACE_ERR("Failed to find subnet %u", spec->subnet.id);
+        PDS_TRACE_ERR("Failed to find subnet %s", spec->subnet.str());
         return sdk::SDK_RET_INVALID_ARG;
     }
 
@@ -568,8 +571,8 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                        hw_id_, NULL, NULL,
                                        &vnic_tx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program vnic %s TX_STATS table entry",
-                      spec->key.str());
+        PDS_TRACE_ERR("Failed to program vnic %s TX_STATS table entry at %u",
+                      spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -579,8 +582,43 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                        hw_id_, NULL, NULL,
                                        &vnic_rx_stats_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program vnic %s RX_STATS table entry",
-                      spec->key.str());
+        PDS_TRACE_ERR("Failed to program vnic %s RX_STATS table entry at %u",
+                      spec->key.str(), hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // initialize the meter table entries for this vnic
+    // NOTE: each vnic takes two entries in the METER_STATS table, one for Rx
+    //       and one for Tx direction traffic
+    meter_stats_data.action_id = METER_STATS_METER_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_METER_STATS,
+                                       hw_id_, NULL, NULL,
+                                       &meter_stats_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program vnic %s METER_STATS table entry at %u",
+                      spec->key.str(), hw_id_);
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+    meter_stats_data.action_id = METER_STATS_METER_STATS_ID;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_METER_STATS,
+                                       hw_id_ << 1, NULL, NULL,
+                                       &meter_stats_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program vnic %s METER_STATS table entry at %u",
+                      spec->key.str(), (hw_id_ << 1));
+        return sdk::SDK_RET_HW_PROGRAM_ERR;
+    }
+
+    // program vnic table entry in the ingress pipeline
+    vnic_data.action_id = VNIC_VNIC_INFO_ID;
+    vnic_data.ing_vnic_info.meter_enabled = spec->meter;
+    vnic_data.ing_vnic_info.rx_mirror_session = spec->rx_mirror_session_bmap;
+    vnic_data.ing_vnic_info.tx_mirror_session = spec->tx_mirror_session_bmap;
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VNIC, hw_id_,
+                                       NULL, NULL, &vnic_data);
+    if (p4pd_ret != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to program vnic %s ingress VNIC table "
+                      "entry at %u", spec->key.str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
