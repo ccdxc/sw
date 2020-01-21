@@ -163,7 +163,6 @@ func (app *AppState) attachPolicy(sgpName string) error {
 	app.App.Status.AttachedPolicies = append(app.App.Status.AttachedPolicies, sgpName)
 
 	// save the updated app
-	app.stateMgr.mbus.UpdateObject(convertApp(app))
 	app.App.Write()
 
 	return nil
@@ -178,7 +177,6 @@ func (app *AppState) detachPolicy(sgpName string) error {
 		}
 	}
 	// save the updated app
-	app.stateMgr.mbus.UpdateObject(convertApp(app))
 	app.App.Write()
 
 	return nil
@@ -229,7 +227,7 @@ func (sm *Statemgr) OnAppUpdate(app *ctkit.App, napp *security.App) error {
 	}
 
 	// save the updated app
-	sm.mbus.UpdateObject(convertApp(aps))
+	sm.mbus.UpdateObjectWithReferences(app.MakeKey("security"), convertApp(aps), references(app))
 
 	return nil
 }
