@@ -2,9 +2,9 @@
 export const UrlMap: { [url: string]: string } = {
   '/dashboard': 'dashboard',
   '/cluster/cluster': 'cluster',
-  '/cluster/cluster/:id': 'cluster',
+  '/cluster/cluster/:id': 'clusternode',
   '/cluster/dscs': 'dscs',
-  '/cluster/dscs/:id': 'dscs',
+  '/cluster/dscs/:id': 'dscdetails',
   '/cluster/hosts': 'hosts',
   '/monitoring/alertsevents': 'alertsevents',
   '/monitoring/alertsevents/alertpolicies': 'alertsevents',
