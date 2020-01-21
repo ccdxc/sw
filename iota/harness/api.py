@@ -829,8 +829,8 @@ def CopyFromNaples(node_name, files, dest_dir):
 def CopyFromWorkload(node_name, workload_name, files, dest_dir):
     return __CopyCommon(topo_svc.DIR_OUT, node_name, workload_name, files, dest_dir)
 
-def RestartNodes(nodes):
-    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes)
+def RestartNodes(nodes, restartMode=''):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes,restartMode)
 
 def GetCoverageFiles(src_cov_file, dst_dir):
     for node in GetNaplesHostnames():

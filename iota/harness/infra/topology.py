@@ -4,7 +4,9 @@ import pdb
 import json
 import sys
 import re
+import socket
 import subprocess
+import time
 import traceback
 import ipaddress
 
@@ -52,6 +54,40 @@ def GetNodeType(role):
     return "bm"
 
 class Node(object):
+
+    class ApcInfo:
+        def __init__(self, ip, port, username, password):
+            self.__ip = ip
+            self.__port = port
+            self.__username = username
+            self.__password = password
+
+        def GetIp(self):
+            return self.__ip
+
+        def GetPort(self):
+            return self.__port
+
+        def GetUsername(self):
+            return self.__username
+
+        def GetPassword(self):
+            return self.__password
+
+    class CimcInfo:
+        def __init__(self, ip, username, password):
+            self.__ip = ip
+            self.__username = username
+            self.__password = password
+
+        def GetIp(self):
+            return self.__ip
+
+        def GetUsername(self):
+            return self.__username
+
+        def GetPassword(self):
+            return self.__password
 
     class PciInfo:
         def __init__(self, nic, bus, device, function):
@@ -181,6 +217,9 @@ class Node(object):
         self.__ip_address = self.__inst.NodeMgmtIP
         self.__os = getattr(self.__inst, "NodeOs", "linux")
 
+        self.__apcInfo = self.__update_apc_info()
+        self.__cimcInfo = self.__update_cimc_info()
+
         self.__dev_index = 1
         self.__devices = {}
 
@@ -247,6 +286,24 @@ class Node(object):
                     (spec.name, self.__ip_address, topo_pb2.PersonalityType.Name(self.__role)))
         return
 
+    def __update_apc_info(self):
+        try:
+            res = self._Node__inst.Resource
+            if getattr(res,"ApcIP",None):
+                return Node.ApcInfo(res.ApcIP, res.ApcPort, res.ApcUsername, res.ApcPassword)
+        except:
+            Logger.debug("failed to parse apc info. error was: {0}".format(traceback.format_exc()))
+        return None
+
+    def __update_cimc_info(self):
+        try:
+            if self._Node__inst.NodeCimcIP == "":
+                return None
+            return Node.CimcInfo(self._Node__inst.NodeCimcIP, getattr(self._Node__inst,"NodeCimcUsername","admin"), getattr(self._Node__inst,"NodeCimcPassword","N0isystem$"))
+        except:
+            Logger.debug("failed to parse cimc info. error was: {0}".format(traceback.format_exc()))
+        return None
+
     def __get_instance_role(self, role):
         if role != 'auto':
             return topo_pb2.PersonalityType.Value(role)
@@ -264,7 +321,42 @@ class Node(object):
             sys.exit(1)
         return role
 
+    def GetApcInfo(self):
+        return self.__apcInfo
 
+    def GetCimcInfo(self):
+        return self.__cimcInfo
+
+    def IpmiPowerCycle(self):
+        cimc = self.GetCimcInfo()
+        if not cimc:
+            raise Exception('no cimc info for node {0} in warmd.json'.format(self.__name))
+        cmd="ipmitool -I lanplus -H %s -U %s -P %s power cycle" %\
+              (cimc.GetIp(), cimc.GetUsername(), cimc.GetPassword())
+        subprocess.check_call(cmd, shell=True)
+        time.sleep(30)
+
+    def ApcPowerCycle(self):
+        self.PowerOffNode()
+        time.sleep(20)
+        self.PowerOnNode()
+        time.sleep(20)
+
+    def PowerOffNode(self):
+        apcInfo = self.GetApcInfo()
+        if not apcInfo:
+            raise Exception('no apc info for node {0} in warmd.json'.format(self.__name))
+        apcctrl = ApcControl(host=apcInfo.GetIp(), username=apcInfo.GetUsername(),
+                                password=apcInfo.GetPassword())
+        apcctrl.portOff(apcInfo.GetPort())
+
+    def PowerOnNode(self):
+        apcInfo = self.GetApcInfo()
+        if not apcInfo:
+            raise Exception('no apc info for node {0} in warmd.json'.format(self.__name))
+        apcctrl = ApcControl(host=apcInfo.GetIp(), username=apcInfo.GetUsername(),
+                                password=apcInfo.GetPassword())
+        apcctrl.portOn(apcInfo.GetPort())
 
     def GetNicPciInfo(self,nic):
         if nic not in self.__nic_pci_info:
@@ -434,6 +526,12 @@ class Node(object):
         msg.ip_address = self.__ip_address
         msg.name = self.__name
 
+        cimcInfo = self.GetCimcInfo()
+        if cimcInfo:
+            msg.cimc_ip_address = cimcInfo.GetIp()
+            msg.cimc_username = cimcInfo.GetUsername()
+            msg.cimc_password = cimcInfo.GetPassword()
+
         if self.__os== 'esx':
             msg.os = topo_pb2.TESTBED_NODE_OS_ESX
             msg.esx_config.username = self.__esx_username
@@ -583,8 +681,26 @@ class Node(object):
         output = subprocess.check_output(cmd,shell=True,stderr=subprocess.STDOUT)
         return output.decode("utf-8")
 
+    def WaitForHost(self, port=22):
+        Logger.debug("waiting for host {0} to be up".format(self.__ip_address))
+        for retry in range(60):
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            ret = sock.connect_ex(('%s' % self.__ip_address, port))
+            sock.settimeout(10)
+            if not ret:
+                return True
+            time.sleep(5)
+        raise Exception("host {0} not up".format(self.__ip_address))
+
 
 class Topology(object):
+
+    RestartMethodAuto = ''
+    RestartMethodApc = 'apc'
+    RestartMethodIpmi = 'ipmi'
+    RestartMethodReboot = 'reboot'
+    RestartMethods = [RestartMethodAuto, RestartMethodApc, RestartMethodIpmi, RestartMethodReboot]
+
     def __init__(self, spec):
         self.__nodes = {}
 
@@ -607,16 +723,24 @@ class Topology(object):
     def Nodes(self):
         return self.__nodes.values()
 
-    def RestartNodes(self, node_names):
+    def RestartNodes(self, node_names, restartMethod=RestartMethodAuto):
+        if restartMethod not in self.RestartMethods:
+            raise ValueError('restartMethod must be one of {0}'.format(self.RestartMethods))
         req = topo_pb2.ReloadMsg()
-
+        req.restart_method = restartMethod
         for node_name in node_names:
             if node_name not in self.__nodes:
                 Logger.error("Node %s not found" % node_name)
                 return types.status.FAILURE
+            node = self.__nodes[node_name]
             msg = req.node_msg.nodes.add()
             msg.name = node_name
-
+            apcInfo = node.GetApcInfo()
+            if apcInfo:
+                msg.apc_info.ip = apcInfo.GetIp()
+                msg.apc_info.port = apcInfo.GetPort()
+                msg.apc_info.username = apcInfo.GetUsername()
+                msg.apc_info.password = apcInfo.GetPassword()
 
         resp = api.ReloadNodes(req)
         if not api.IsApiResponseOk(resp):

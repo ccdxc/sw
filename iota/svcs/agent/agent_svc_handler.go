@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+    "os/exec"
+    "time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -145,6 +147,8 @@ func (agent *Service) SaveNode(ctx context.Context, req *iota.Node) (*iota.Node,
 
 	}
 
+    exec.Command("sync")
+    time.Sleep(5 * time.Second)
 	return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}}, nil
 }
 

@@ -105,6 +105,7 @@ message ReloadMsg {
 
     bool skip_restore               = 3;
 
+    string restart_method           = 4;
 }
 
 enum PersonalityType {
@@ -206,6 +207,23 @@ message Node {
 
     // Flag to indicate that node is being reload from saved config
     bool                reload          = 17;
+
+    ApcInfo             apc_info        = 18;
+
+    string              RestartMethod   = 19;
+
+    string     cimc_ip_address = 20;
+
+    string     cimc_username   = 21;
+
+    string     cimc_password   = 22;
+ }
+
+message ApcInfo {
+    string ip = 1;
+    string port = 2;
+    string username = 3;
+    string password = 4;
 }
 
 message NaplesMultiSimConfig {

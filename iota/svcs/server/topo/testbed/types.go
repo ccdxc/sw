@@ -22,4 +22,6 @@ type TestNode struct {
 	CimcUserName string
 	CimcPassword string
 	CimcIP       string
+    ApcInfo      *iota.ApcInfo
+    RestartMethod string
 }

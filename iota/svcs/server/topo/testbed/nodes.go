@@ -8,12 +8,13 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+	"os"
 
 	"golang.org/x/crypto/ssh"
-
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	constants "github.com/pensando/sw/iota/svcs/common"
 	"github.com/pensando/sw/iota/svcs/common/runner"
+	apc "github.com/pensando/sw/iota/svcs/common/apc"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -165,48 +166,100 @@ func (n *TestNode) RestartNode() error {
 
 	log.Infof("Restarting node: %v", n.Node)
 
-	if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
-		//Node not up, do a cimc reset
-		cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
-			n.CimcIP, n.CimcUserName, n.CimcPassword)
+    if n.RestartMethod == "" {
+    	if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
+	    	//Node not up, do a cimc reset
+		    cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+			    n.CimcIP, n.CimcUserName, n.CimcPassword)
 
-		splitCmd := strings.Split(cmd, " ")
-		if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
-			log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
-		} else {
-			log.Errorf("TOPO SVC | Reset Node Success")
-		}
+    		splitCmd := strings.Split(cmd, " ")
+	    	if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+		    	log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+	    	} else {
+    			log.Errorf("TOPO SVC | Reset Node Success")
+		    }
+    	} else {
+    		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	    		//First shutdown control node
+		    	sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
+			    nrunner = runner.NewRunner(n.SSHCfg)
+    			if ip, err = n.GetNodeIP(); err == nil {
+	    			addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+		    		command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+			    	nrunner.Run(addr, command, constants.RunCommandForeground)
+    			}
+	    		addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
+		    	command = fmt.Sprintf("reboot && sleep 30")
+			    nrunner = runner.NewRunner(sshCfg)
+    		} else {
+	    		addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+    			command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
+	    		nrunner = runner.NewRunner(n.SSHCfg)
+		    }
+    		nrunner.Run(addr, command, constants.RunCommandForeground)
+        }
+    } else if n.RestartMethod == "ipmi" {
+        log.Infof("restarting node %s using ipmi",n.Node.Name)
+        if n.CimcIP == "" {
+            log.Errorf("user requested ipmi reset but no cimc ip in node object")
+        } else {
+            cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+                n.CimcIP, n.CimcUserName, n.CimcPassword)
 
-	} else {
+            splitCmd := strings.Split(cmd, " ")
+            if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+                log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+            } else {
+                log.Errorf("TOPO SVC | Reset Node Success")
+            }
+        }
+    } else if n.RestartMethod == "apc" {
+        if n.ApcInfo == nil {
+            log.Errorf("user requested apc power cycle but node %s missing apc info", n.Node.Name)
+        } else {
+            log.Infof("restarting node %s using apc power cycle(ip:%s, user:%s, pass:%s)", n.Node.Name, n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password)
 
-		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-			//First shutdown control node
-			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
-			nrunner = runner.NewRunner(n.SSHCfg)
-			if ip, err = n.GetNodeIP(); err == nil {
-				addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-				command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
-				nrunner.Run(addr, command, constants.RunCommandForeground)
-			}
-			addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
-			command = fmt.Sprintf("reboot && sleep 30")
-			nrunner = runner.NewRunner(sshCfg)
-		} else {
-			addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-			command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
-			nrunner = runner.NewRunner(n.SSHCfg)
-		}
-
-		nrunner.Run(addr, command, constants.RunCommandForeground)
-
-	}
+            h, err := apc.Dial(n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, os.Stdout)
+            if err != nil {
+                log.Errorf("failed to connect to apc %s with username %s and password %s. error was: %v", n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, err)
+            } else {
+                defer h.Close()
+                if err := h.PowerOff(n.ApcInfo.Port); err != nil {
+                log.Errorf("failed to power off port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
+                }
+                time.Sleep(30 * time.Second)
+                if err := h.PowerOn(n.ApcInfo.Port); err != nil {
+                log.Errorf("failed to power on port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
+                }
+            }
+        }
+    } else if n.RestartMethod == "reboot" {
+        if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+            //First shutdown control node
+            sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
+            nrunner = runner.NewRunner(n.SSHCfg)
+            if ip, err = n.GetNodeIP(); err == nil {
+                addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+                command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+                nrunner.Run(addr, command, constants.RunCommandForeground)
+            }
+            addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
+            command = fmt.Sprintf("reboot && sleep 30")
+            nrunner = runner.NewRunner(sshCfg)
+        } else {
+            addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
+            command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
+            nrunner = runner.NewRunner(n.SSHCfg)
+        }
+        nrunner.Run(addr, command, constants.RunCommandForeground)
+    }
 
 	if n.GrpcClient != nil {
 		n.GrpcClient.Client.Close()
 		n.GrpcClient = nil
 	}
 
-	time.Sleep(3 * time.Second)
+   	time.Sleep(60 * time.Second)
 
 	if err = n.waitForNodeUp(restartTimeout); err != nil {
 		return err

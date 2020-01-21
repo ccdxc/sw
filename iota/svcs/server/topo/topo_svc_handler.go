@@ -582,6 +582,10 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			return req, nil
 		}
 
+        tbNode.CimcIP = n.CimcIpAddress
+        tbNode.CimcUserName = n.CimcUsername
+        tbNode.CimcPassword = n.CimcPassword
+
 		ts.ProvisionedNodes[n.Name] = tbNode
 		tbNode.Node = n
 		log.Infof("Adding provisioned node %v : %v\n", n.Name, tbNode.Node.Name)
@@ -667,8 +671,16 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg)
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Reload on unprovisioned node : %v", node.GetName())
 			return req, nil
 		}
+        if node.ApcInfo != nil {
+            n.ApcInfo = &iota.ApcInfo {
+                Ip : node.ApcInfo.Ip,
+                Port : node.ApcInfo.Port,
+                Username : node.ApcInfo.Username,
+                Password : node.ApcInfo.Password,
+            }
+        }
+        n.RestartMethod = req.RestartMethod
 		rNodes = append(rNodes, n)
-
 	}
 
 	reloadNodes := func(ctx context.Context) error {
