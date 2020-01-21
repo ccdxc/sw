@@ -14,8 +14,6 @@
 namespace test {
 namespace api {
 
-extern pds_nh_type_t g_rt_def_nh_type;
-
 // Route table test feeder class
 class route_table_feeder : public feeder {
 public:
@@ -44,7 +42,7 @@ public:
     // Build routines
     void key_build(pds_obj_key_t *key) const;
     void spec_build(pds_route_table_spec_t *spec) const;
-    void fill_spec(pds_nh_type_t type,
+    void spec_fill(pds_nh_type_t type,
                    pds_route_table_spec_t *spec, uint32_t index) const;
     // Compare routines
     bool key_compare(const pds_obj_key_t *key) const;

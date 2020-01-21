@@ -242,15 +242,15 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
     // test max v4 route tables with zero routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_4<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_4<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_4<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
@@ -266,7 +266,7 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
     feeder2.init("125.100.100.1/21", IP_AF_IPV4, 0, 50, 201);
     feeder3.init("150.100.100.1/21", IP_AF_IPV4, 0, 50, 301);
     // test v4 route tables with zero routes
-    workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
 
     feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
     feeder2.init("125:100:100:1:1::0/65",
@@ -274,7 +274,7 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
     feeder3.init("150:100:100:1:1::0/65",
                  IP_AF_IPV6, 0, 50, 351);
     // test v6 route tables with zero routes
-    workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
@@ -283,7 +283,7 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
     feeder3.init("150.100.100.1/21", IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 301);
     // test v4 route tables with max routes
-    workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
 
     feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
                  k_max_route_per_tbl, 50, 151);
@@ -434,15 +434,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
     // test max v4 route tables with zero routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_1<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_1<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_1<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);
@@ -503,15 +503,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
     // test max v4 route tables with zero routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_3<route_table_feeder>(feeder);
     // test max v6 route tables with zero routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 0, k_max_v6_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_3<route_table_feeder>(feeder);
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    workflow_neg_3<route_table_feeder>(feeder);
     // test max v6 route tables with max routes
     feeder.init(k_base_v6_pfx, IP_AF_IPV6,
                 k_max_route_per_tbl, k_max_v6_route_table);

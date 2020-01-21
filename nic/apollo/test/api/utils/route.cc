@@ -9,25 +9,38 @@
 namespace test {
 namespace api {
 
-pds_nh_type_t nhtype_supported[] = {
-    PDS_NH_TYPE_OVERLAY,
-    PDS_NH_TYPE_PEER_VPC,
-#ifdef ARTEMIS
-    PDS_NH_TYPE_IP,
-#endif
-#ifdef APULU
-    PDS_NH_TYPE_OVERLAY_ECMP,
-    PDS_NH_TYPE_VNIC,
-#endif
-};
-
-pds_nh_type_t g_rt_def_nh_type = (apulu() || apollo()) ? PDS_NH_TYPE_OVERLAY
-                                                         : PDS_NH_TYPE_IP;
-
-uint8_t get_num_supported_types (void)
+static const pds_nh_type_t k_rt_def_nh_type = (apulu() || apollo()) ?
+                                               PDS_NH_TYPE_OVERLAY
+                                               : PDS_NH_TYPE_IP;
+static void
+set_nhtype_bit (uint16_t &bmap, uint8_t pos)
 {
-    return sizeof(nhtype_supported)/sizeof(nhtype_supported[0]);
+    bmap |= ((uint16_t)1 << pos);
 }
+
+uint8_t
+learn_nhtypes_supported (uint16_t &nhtypes_bmap)
+{
+    uint8_t num_types = 0;
+
+    set_nhtype_bit(nhtypes_bmap, PDS_NH_TYPE_OVERLAY);
+    set_nhtype_bit(nhtypes_bmap, PDS_NH_TYPE_PEER_VPC);
+    num_types += 2;
+
+    if (artemis()) {
+        set_nhtype_bit(nhtypes_bmap, PDS_NH_TYPE_IP);
+        num_types++;
+    } else if (apulu()) {
+        set_nhtype_bit(nhtypes_bmap, PDS_NH_TYPE_OVERLAY_ECMP);
+        set_nhtype_bit(nhtypes_bmap, PDS_NH_TYPE_VNIC);
+        num_types += 2;
+    }
+
+    return num_types;
+}
+
+static uint16_t g_nhtypes_supported_bmap;
+static const uint8_t k_num_nhtypes_supported = learn_nhtypes_supported(g_nhtypes_supported_bmap);
 
 //----------------------------------------------------------------------------
 // Route table feeder class routines
@@ -61,8 +74,9 @@ void
 route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
     ip_prefix_t route_pfx;
     ip_addr_t route_addr;
-    uint32_t num_routes_per_type, route_index;
-    uint32_t num_types;
+    uint32_t num_routes_per_type, route_index = 0;
+    uint16_t tmp_bmap;
+    uint32_t index = 0;
 
     test::extract_ip_pfx(base_route_pfx_str.c_str(), &route_pfx);
 
@@ -73,22 +87,26 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
         spec->routes = (pds_route_t *)SDK_CALLOC(PDS_MEM_ALLOC_ID_ROUTE_TABLE,
                                       (spec->num_routes * sizeof(pds_route_t)));
     }
-    num_types = get_num_supported_types();
-    num_routes_per_type = spec->num_routes/num_types;
 
-    route_index = 0;
-    for (uint32_t i = 0; i < num_types; i++) {
-        for (uint32_t j = 0; j < num_routes_per_type; j++) {
-            spec->routes[route_index].prefix = route_pfx;
-            fill_spec(nhtype_supported[i], spec, route_index);
-            ip_prefix_ip_next(&route_pfx, &route_addr);
-            route_pfx.addr = route_addr;
-            route_index++;
+    num_routes_per_type = spec->num_routes/k_num_nhtypes_supported;
+    tmp_bmap = g_nhtypes_supported_bmap;
+    while (tmp_bmap) {
+        if (tmp_bmap & 0x1) {
+            for (uint32_t j = 0; j < num_routes_per_type; j++) {
+                spec->routes[route_index].prefix = route_pfx;
+                spec_fill((pds_nh_type_e)index, spec, route_index);
+                ip_prefix_ip_next(&route_pfx, &route_addr);
+                route_pfx.addr = route_addr;
+                route_index++;
+            }
         }
+        index++;
+        tmp_bmap >>= 1;
     }
+
     while (route_index < spec->num_routes) {
         spec->routes[route_index].prefix = route_pfx;
-        fill_spec(g_rt_def_nh_type, spec, route_index);
+        spec_fill(k_rt_def_nh_type, spec, route_index);
         ip_prefix_ip_next(&route_pfx, &route_addr);
         route_pfx.addr = route_addr;
         route_index++;
@@ -96,7 +114,7 @@ route_table_feeder::spec_build(pds_route_table_spec_t *spec) const {
 }
 
 void
-route_table_feeder::fill_spec(pds_nh_type_t type,
+route_table_feeder::spec_fill(pds_nh_type_t type,
                               pds_route_table_spec_t *spec,
                               uint32_t index) const {
     uint32_t num = 0;
