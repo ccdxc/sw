@@ -74,7 +74,7 @@ vpc:
           v4prefixlen      : 24
           v6prefixlen      : 64
           v4prefix         : '2.1.0.0\24'
-          hostifidx        : 0x80000046
+          hostifidx        : 0x80000048
           fabricencap      : vxlan # vxlan or mplsodup
           fabricencapvalue : 202
           v4routerip       : '2.1.0.0'
@@ -83,7 +83,7 @@ vpc:
             - id        : 1
               count     : 1             # 1 untagged VNIC
               vmac      : macaddr/00ae.cd00.000a
-              hostifidx : 0x80000046
+              hostifidx : 0x80000048
               ipcount : 1             # Local IP mapping per vnic
               lmap    :
                 - id       : 1

@@ -36,8 +36,8 @@ uint32_t tep_id = 0;
 
 #define TEP_ID_START 1
 #define TEP_ID_MYTEP TEP_ID_START
-#define HOST_LIF_ID_MIN        70
-#define HOST_LIF_ID_MAX        77
+#define HOST_LIF_ID_MIN        72
+#define HOST_LIF_ID_MAX        79
 
 //----------------------------------------------------------------------------
 // create route tables
