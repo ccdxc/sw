@@ -123,6 +123,33 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  
+ e2e-compatibility:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-9
+       count: 1
+       resources:
+         # Freebsd works with only server-d
+         server-type: server-d
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
  e2e-linux-bm-regression-storage:
    commands: ["sh", "-c", "make regression-storage && ./run_iota.sh --testsuite classic --regression --testbundle storage"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]

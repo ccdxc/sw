@@ -36,6 +36,8 @@ regression-eth: extract-artifacts
 
 regression-infra: extract-artifacts
 
+compatibility: extract-artifacts
+
 linkmgr-25Gb: extract-naples-fw
 	ls -lR /sw
 	sshpass -h

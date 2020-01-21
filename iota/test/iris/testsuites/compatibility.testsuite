@@ -1,0 +1,38 @@
+meta:
+    name        : compatibility
+    description : Server Compatibility
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : classic
+    os          : [ linux ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/classic_baremetal_1Naples/classic_baremetal.topology
+    config  :
+
+        - step : utils.cleanup
+        - step : utils.naples_workloads
+        - step : config.netagent.hw_push_config
+        - step : testcases.penctl.install
+
+common:
+    verifs:
+        # N/A
+    debugs:
+        # N/A
+    setup:
+        # N/A
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        # - networking/connectivity.testbundle
+        - server_compatibility/compatibility.testbundle
+
+teardown:
+        # N/A

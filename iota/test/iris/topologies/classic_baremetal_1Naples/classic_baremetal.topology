@@ -1,0 +1,15 @@
+meta:
+    name: ClassicBM
+    description: Classic NIC Baremetal Topology
+
+nodes:
+    - node: node1
+      name: node1
+      role: auto
+      workloads:
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+        freebsd:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
