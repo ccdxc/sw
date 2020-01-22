@@ -86,7 +86,7 @@ docker_root "cp /bin/gmake_default /bin/gmake"
 echo 'Building Naples gold firmware'
 docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PLATFORM=hw clean"
 docker_exec "cd /usr/src/github.com/pensando/sw/ && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ws-tools"
-docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PLATFORM=hw FWTYPE=gold gold-firmware"
+docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PIPELINE=iris PLATFORM=hw FWTYPE=gold gold-firmware"
 
 image_sz=`stat -c %s $TOPDIR/nic/buildroot/output_gold/images/kernel.img`
 
