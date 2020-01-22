@@ -409,8 +409,10 @@ void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
 	sysctl_ctx_init(ctx);
 
 	oidp = ionic_node(ctx, parent, "rdma", "RDMA Device");
-	if (!oidp)
+	if (!oidp) {
+		dev_err(&dev->ibdev.dev, "failed to create rdma node\n");
 		return;
+	}
 
 	dev->debug = oidp;
 
@@ -455,8 +457,10 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 		   "reset", "Device Reset (write)");
 
 	oidp = ionic_node(ctx, parent, "info", "Rdma Device Info");
-	if (!oidp)
+	if (!oidp) {
+		dev_err(&dev->ibdev.dev, "failed to create info node\n");
 		return;
+	}
 
 	parent = SYSCTL_CHILDREN(oidp);
 
