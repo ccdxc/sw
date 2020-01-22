@@ -1,38 +1,11 @@
 #! /usr/bin/python3
-import pdb
-import os
-import json
 import ipaddress
-from collections import defaultdict
-
-
-import iota.test.apulu.config.init as init
-
 #Following come from dol/infra
-import infra.common.defs as defs
-import infra.common.utils as utils
-import infra.common.parser as parser
-import infra.common.timeprofiler as timeprofiler
 
-import iota.test.apulu.config.agent.api as agentapi
-import iota.test.apulu.config.resmgr as resmgr
-import iota.test.apulu.config.agent.api as agentapi
-
-#import apulu.config.objects.batch as batch
-import iota.test.apulu.config.objects.device as device
-import iota.test.apulu.config.objects.vpc as vpc
-import iota.test.apulu.config.objects.route as route
-import iota.test.apulu.config.objects.policy as policy
-import iota.test.apulu.config.objects.subnet as subnet
-import iota.test.apulu.config.objects.vnic as vnic
-import iota.test.apulu.config.objects.tunnel as tunnel
-import iota.test.apulu.config.objects.lmapping as lmapping
-#import apulu.config.objects.mirror as mirror
-from infra.common.logging import logger as logger
+import apollo.config.objects.vnic as vnic
+import apollo.config.objects.lmapping as lmapping
 
 import iota.harness.api as api
-from iota.test.apulu.config.store import Store
-from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1

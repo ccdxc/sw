@@ -13,22 +13,23 @@ device:
     macaddress  : macaddr/0000.aaaa.aaa1
     encap       : vxlan # vxlan or mplsodup
 
+uplink:
+    - entry:
+        id      : uplink0
+        port    : 1
+        mode    : switch
+        status  : UP
+    - entry:
+        id      : uplink1
+        port    : 2
+        mode    : switch
+        status  : UP
+
 vpc:
     - id         : 100
       stack      : ipv4 # dual, ipv4 , ipv6
       count      : 1
       type       : underlay
-      uplink:
-        - entry:
-            id      : uplink0
-            port    : 1
-            mode    : switch
-            status  : UP
-        - entry:
-            id      : uplink1
-            port    : 2
-            mode    : switch
-            status  : UP
       interface:
         - iid           : 1
           iftype        : l3

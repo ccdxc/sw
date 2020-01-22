@@ -84,5 +84,3 @@ class CfgJsonObjectHelper:
         #s = json.dumps(self.__obj.__dict__, indent=4)
         #print(s)
         return
-
-CfgJsonHelper = CfgJsonObjectHelper()

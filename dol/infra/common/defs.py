@@ -50,6 +50,7 @@ FACTORY_SPEC_PATH           = "factory/specs/"
 
 DOL_PATH            = "/dol/"
 
+TEST_TYPE           = "DOL"
 DEFAULT_MODULES_LIST_FILE = "modules.list"
 LOGGING_DEFAULT_REV_OFFSET = 4
 PAD_BYTE = 0x0

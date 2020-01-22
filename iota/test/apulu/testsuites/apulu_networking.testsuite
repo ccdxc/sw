@@ -18,11 +18,11 @@ setup:
         #- step : utils.naples_workloads
         - step : verif.config.verify_oob
         - step : config.set_max_mtu
-        - step : config.generator
+        - step : config.topology
           args :
              spec : 2naples_bm_static_node1.cfgyml
              node : node1
-        - step : config.generator
+        - step : config.topology
           args :
              spec : 2naples_bm_static_node2.cfgyml
              node : node2

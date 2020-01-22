@@ -2,6 +2,7 @@
 from infra.common.objects   import ObjectDatabase as ObjectDatabase
 from infra.common.logging   import logger as logger
 from infra.config.store     import ConfigStore as ConfigStore
+import infra.common.defs as defs
 
 class ApolloConfigStore:
     def __init__(self):
@@ -24,7 +25,7 @@ class ApolloConfigStore:
         return
 
     def SetDUTNode(self, node):
-        self.dutNode = 1
+        self.dutNode = node
 
     def GetDUTNode(self):
         return self.dutNode
@@ -36,12 +37,18 @@ class ApolloConfigStore:
         return self.batchClient
 
     def SetTunnels(self, objs):
+        if defs.TEST_TYPE == "IOTA":
+            self.tunnels.db.clear()
         return self.tunnels.SetAll(objs)
 
     def SetNexthops(self, objs):
+        if defs.TEST_TYPE == "IOTA":
+            self.nexthops.db.clear()
         return self.nexthops.SetAll(objs)
 
     def SetNexthopgroups(self, objs):
+        if defs.TEST_TYPE == "IOTA":
+            self.nexthopgroups.db.clear()
         return self.nexthopgroups.SetAll(objs)
 
     def SetDevice(self,obj):

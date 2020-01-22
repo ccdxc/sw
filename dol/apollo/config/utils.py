@@ -17,6 +17,7 @@ from apollo.config.store import EzAccessStore
 import apollo.config.topo as topo
 import apollo.config.agent.api as api
 from infra.common.glopts import GlobalOptions
+import infra.common.defs as defs
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
@@ -660,5 +661,4 @@ class rrobiniter:
         return self.size
 
 def IsDol():
-    return True
-    #return os.environ.get("TEST_TYPE", "") == "DOL"
+    return defs.TEST_TYPE == "DOL"

@@ -7,7 +7,6 @@ import os
 from infra.common.logging import logger
 
 import iota.harness.api as api
-import iota.test.apulu.config.utils as utils
 
 __CMDBASE  = '/nic/bin/pdsctl'
 __CMDSEP  = ' '

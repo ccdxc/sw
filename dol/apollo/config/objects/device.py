@@ -15,13 +15,14 @@ import apollo.config.utils as utils
 
 import device_pb2 as device_pb2
 import types_pb2 as types_pb2
+import ipaddress
 
 class DeviceObject(base.ConfigObjectBase):
     def __init__(self, node, spec):
         super().__init__(api.ObjectTypes.DEVICE, node)
         self.SetSingleton(True)
         self.GID("Device1")
-        self.stack = getattr(spec, 'stack', 'ipv4')
+        self.Stack = getattr(spec, 'stack', 'ipv4')
         ################# PUBLIC ATTRIBUTES OF DEVICE OBJECT #####################
         self.Mode = getattr(spec, 'mode', 'auto')
         if self.Mode == 'auto':

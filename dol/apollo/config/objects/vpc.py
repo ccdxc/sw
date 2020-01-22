@@ -100,7 +100,7 @@ class VpcObject(base.ConfigObjectBase):
 
         # Generate Interface Configuration
         InterfaceClient.GenerateObjects(node, self, spec)
-        
+       
         # Generate NextHop configuration
         NhClient.GenerateObjects(node, self, spec)
 
@@ -187,7 +187,7 @@ class VpcObject(base.ConfigObjectBase):
         if self.Stack == 'dual':
             paf = utils.IP_VERSION_6 if count % 2 == 0 else utils.IP_VERSION_4
         else:
-            paf = utils.IP_VERSION_6 if stack == 'ipv6' else utils.IP_VERSION_4
+            paf = utils.IP_VERSION_6 if self.Stack == 'ipv6' else utils.IP_VERSION_4
         if paf == utils.IP_VERSION_6:
             return next(resmgr.ProviderIpV6AddressAllocator), 'IPV6'
         else:
@@ -327,10 +327,11 @@ class VpcObjectClient(base.ConfigClientBase):
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()
         mtr = meter.client.GetNumMeterPerVPC()
-        cfgjson.CfgJsonHelper.SetNumNexthopPerVPC(nh)
-        cfgjson.CfgJsonHelper.SetNumMeterPerVPC(mtr[0], mtr[1])
-        cfgjson.CfgJsonHelper.SetVPCCount(vpc_count)
-        cfgjson.CfgJsonHelper.WriteConfig()
+        CfgJsonHelper = cfgjson.CfgJsonObjectHelper()
+        CfgJsonHelper.SetNumNexthopPerVPC(nh)
+        CfgJsonHelper.SetNumMeterPerVPC(mtr[0], mtr[1])
+        CfgJsonHelper.SetVPCCount(vpc_count)
+        CfgJsonHelper.WriteConfig()
 
     def GenerateObjects(self, node, topospec):
         vpc_count = 0

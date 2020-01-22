@@ -53,7 +53,7 @@ IGWVxlanIdAllocator = iter(irange(50001, 51024))
 VxlanIdAllocator = iter(irange(80001, 81024))
 InvalidVxlanIdAllocator = iter(irange(10001,12000))
 MirrorSessionIdAllocator = iter(irange(1, 8))
-PortIdAllocator = iter(irange(1, 2))
+PortIdAllocator = iter(irange(1, 4))
 DhcpIdAllocator = iter(irange(1, 16))
 NatPoolIdAllocator = iter(irange(1, 1000))
 

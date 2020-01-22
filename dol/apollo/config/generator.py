@@ -1,23 +1,18 @@
 #! /usr/bin/python3
-import pdb
 import sys
-import time
 
-import infra.common.parser as parser
 import infra.common.timeprofiler as timeprofiler
 
-from apollo.config.store import EzAccessStore
-import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
-import apollo.config.objects.lmapping as lmapping
+#import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.meter as meter
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.nexthop as nexthop
 import apollo.config.objects.policy as policy
-import apollo.config.objects.rmapping as rmapping
+#import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tag as tag
@@ -31,8 +26,6 @@ import apollo.config.objects.nat_pb as nat_pb
 import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
-from infra.asic.model import ModelConnector
-from infra.common.glopts import GlobalOptions
 
 ObjectInfo = [None] * agentapi.ObjectTypes.MAX
 
@@ -75,8 +68,9 @@ def __generate(node, topospec):
     # Generate Port Configuration
     port.client.GenerateObjects(node, topospec)
 
-    # Generate Interface Configuration
-    interface.client.GenerateObjects(node, None, topospec)
+    if utils.IsDol():
+        # Generate Interface Configuration
+        interface.client.GenerateObjects(node, None, topospec)
 
     # Generate Mirror session configuration before vnic
     mirror.client.GenerateObjects(node, topospec)
@@ -84,8 +78,9 @@ def __generate(node, topospec):
     # Generate VPC configuration
     vpc.client.GenerateObjects(node, topospec)
 
-    # Generate DHCP configuration
-    dhcp_relay.client.GenerateObjects(node, topospec)
+    if utils.IsDol():
+        # Generate DHCP configuration
+        dhcp_relay.client.GenerateObjects(node, topospec)
 
     # Validate configuration
     __validate(node)
@@ -100,8 +95,9 @@ def __create(node):
     # Create Device Object
     device.client.CreateObjects(node)
 
-    # Create Interface Objects
-    interface.client.CreateObjects(node)
+    if utils.IsDol():
+        # Create Interface Objects
+        interface.client.CreateObjects(node)
 
     # Create VPC Objects
     vpc.client.CreateObjects(node)
@@ -139,63 +135,32 @@ def __read(node):
     tag.client.ReadObjects(node)
     route.client.ReadObjects(node)
     # dhcp_relay.client.ReadObjects(node)
-    nat_pb.client.ReadObjects(node)
+    if utils.IsDol():
+        nat_pb.client.ReadObjects(node)
     # lmapping.client.ReadObjects(node)
     # rmapping.client.ReadObjects(node)
     return
 
-def __get_topo_file():
-    topo_file = '%s.topo' % GlobalOptions.topology
-    return topo_file
-
-def __get_topo_path(default=False):
-    pipeline = utils.GetPipelineName()
-    if default:
-        pipeline = 'apollo'
-    topo_file = '%s/config/topology/%s/' % (pipeline, GlobalOptions.topology)
-    return topo_file
-
-def __get_topo_spec():
-    topofile = __get_topo_file()
-    topopaths = []
-    # get pipeline specfic topo
-    topopaths.append(__get_topo_path())
-    # fallback to apollo topo
-    topopaths.append(__get_topo_path(True))
-    for path in topopaths:
-        logger.info("Generating Configuration for Topology %s/%s" % (path, topofile))
-        topospec = parser.ParseFile(path, topofile)
-        if topospec:
-            return topospec
-    logger.error("Invalid topofile %s" % (topofile))
-    assert(0)
-    return None
-
-def Main():
+def Main(node, topospec, ip=None):
     timeprofiler.ConfigTimeProfiler.Start()
 
     logger.info("Initializing object info")
     __initialize_object_info()
 
-    topospec = __get_topo_spec()
-    if hasattr(topospec, "dutnode"):
-        EzAccessStore.SetDUTNode(topospec.dutnode)
-    
-    for node in topospec.node:
-        agentapi.Init(node.id)
-    resmgr.Init()
+    agentapi.Init(node, ip)
 
-    for node in topospec.node:
-        __generate(node.id, node)
+    __generate(node, topospec)
 
-        logger.info("Creating objects in Agent for node ", node.id)
-        __create(node.id)
+    logger.info("Creating objects in Agent for node ", node)
+    __create(node)
 
-        logger.info("Reading objects via Agent for node ", node.id)
-        __read(node.id)
+    if utils.IsDol():
+        logger.info("Reading objects via Agent for node ", node)
+        __read(node)
 
     timeprofiler.ConfigTimeProfiler.Stop()
 
-    ModelConnector.ConfigDone()
+    if utils.IsDol():
+        from infra.asic.model import ModelConnector
+        ModelConnector.ConfigDone()
     return
-

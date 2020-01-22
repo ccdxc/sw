@@ -18,7 +18,7 @@ APOLLO_CONFIG_TOPO_SPEC_PATH = "apollo/config/topology/%s" % GlobalOptions.topol
 APOLLO_TEST_PATH             = "apollo/test/"
 APOLLO_PROTO_PATH            = os.environ['WS_TOP'] + '/nic/build/x86_64/apollo/gen/proto/'
 sys.path.insert(0, APOLLO_PROTO_PATH)
-import apollo.config.generator    as generator
+import apollo.config.topology    as topology
 
 def InitConfig():
     logger.info("Initializing APOLLO Config Templates and Specs")    
@@ -30,7 +30,7 @@ def InitEngine():
     return
 
 def GenerateConfig():
-    generator.Main()
+    topology.Main()
     return
 
 def Init():

@@ -76,6 +76,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def BuildDependency(self):
         dependees = self.GetDependees(self.Node)
         for dependee in dependees:
+            if not dependee:
+                continue
             # add ourself as an dependent to dependee
             dependee.AddDependent(self)
         return

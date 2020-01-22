@@ -20,7 +20,7 @@ APULU_TEST_PATH             = "apulu/test/"
 APULU_TEST_CALLBACK_PATH    = "apollo.test.callbacks"
 APULU_PROTO_PATH            = os.environ['WS_TOP'] + '/nic/build/x86_64/apulu/gen/proto/'
 sys.path.insert(0, APULU_PROTO_PATH)
-import apollo.config.generator    as generator
+import apollo.config.topology    as topology
 
 def InitConfig():
     logger.info("Initializing APULU Config Templates and Specs")
@@ -32,7 +32,7 @@ def InitEngine():
     return
 
 def GenerateConfig():
-    generator.Main()
+    topology.Main()
     return
 
 def Init():

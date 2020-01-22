@@ -6,6 +6,7 @@ import pdb
 paths = [
     '/dol/',
     '/dol/third_party/',
+    '/nic/sdk',
     '/nic/build/aarch64/apulu/gen/proto',
 ]
 

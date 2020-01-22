@@ -12,6 +12,7 @@ import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 
 import tunnel_pb2 as tunnel_pb2
+import ipaddress
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
@@ -25,7 +26,10 @@ class TunnelObject(base.ConfigObjectBase):
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
-        self.LocalIPAddr = self.DEVICE.IPAddr
+        if (hasattr(spec, 'srcaddr')):
+            self.LocalIPAddr = ipaddress.IPv4Address(spec.srcaddr)
+        else:
+            self.LocalIPAddr = self.DEVICE.IPAddr
         self.EncapValue = 0
         self.Nat = False
         self.NexthopId = 0
@@ -59,7 +63,7 @@ class TunnelObject(base.ConfigObjectBase):
                     self.Remote = False
                 self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
             else:
-                if utils.IsV4Stack(self.DEVICE.stack):
+                if utils.IsV4Stack(self.DEVICE.Stack):
                     if getattr(spec, 'dstaddr', None) != None:
                         self.RemoteIPAddr = ipaddress.IPv4Address(spec.dstaddr)
                     else:
@@ -112,7 +116,7 @@ class TunnelObject(base.ConfigObjectBase):
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
                 self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
             else:
-                if utils.IsV4Stack(self.DEVICE.stack):
+                if utils.IsV4Stack(self.DEVICE.Stack):
                     self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
                 else:
                     self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
