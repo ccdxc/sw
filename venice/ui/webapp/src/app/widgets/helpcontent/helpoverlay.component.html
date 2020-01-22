@@ -1,25 +1,38 @@
-<button mat-icon-button (click)="toggleHelp($event)">
-  <mat-icon>help_outline</mat-icon>
-</button>
+<div class="helpsidenav helpoverlay">
+  <div fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header">
+    <ng-container *ngTemplateOutlet="HelpHeader"></ng-container>
+  </div>
+  <ng-container *ngTemplateOutlet="HelpBody"></ng-container>
+</div>
 
 <ng-template cdkPortal #HelpShell="cdkPortal">
   <div class="helpoverlay" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
     <div fxLayout="row" fxLayoutAlign="start center" class="helpoverlay-header"
          cdkDragHandle>
-      <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="backClick()"
-                [ngClass]="isBackButtonDisabled() ? 'global-button-disabled' : ''">chevron_left
-      </mat-icon>
-      <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="forwardClick()"
-                [ngClass]="isForwardButtonDisabled() ? 'global-button-disabled' : ''">chevron_right
-      </mat-icon>
-      <div fxFlex="nogrow">Venice Help</div>
-      <div fxFlex></div>
-      <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
+      <ng-container *ngTemplateOutlet="HelpHeader"></ng-container>
     </div>
-    <div class="helpoverlay-content-wrapper">
-      <div class="helpoverlay-content">
-        <ng-template [cdkPortalOutlet]="helpPortal"></ng-template>
-      </div>
+    <ng-container *ngTemplateOutlet="HelpBody"></ng-container>
+  </div>
+</ng-template>
+
+<ng-template #HelpHeader>
+  <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="backClick()"
+            [ngClass]="isBackButtonDisabled() ? 'global-button-disabled' : ''">chevron_left
+  </mat-icon>
+  <mat-icon fxFlex="nogrow" class="helpoverlay-history-buttons" (click)="forwardClick()"
+            [ngClass]="isForwardButtonDisabled() ? 'global-button-disabled' : ''">chevron_right
+  </mat-icon>
+  <div fxFlex="nogrow">Venice Help</div>
+  <div fxFlex></div>
+  <mat-icon fxFlex="nogrow" (click)="toggleMode($event)" class="helpoverlay-toggle-mode">
+    {{ dialogMode ? 'exit_to_app' : 'open_in_new' }}</mat-icon>
+  <mat-icon fxFlex="nogrow" (click)="closeHelp()" class="helpoverlay-close">close</mat-icon>
+</ng-template>
+
+<ng-template #HelpBody>
+  <div class="helpoverlay-content-wrapper">
+    <div class="helpoverlay-content">
+      <ng-template [cdkPortalOutlet]="helpPortal"></ng-template>
     </div>
   </div>
 </ng-template>

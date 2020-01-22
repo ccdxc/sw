@@ -42,7 +42,10 @@
               <button [disableRipple]="true" mat-button>DOCS</button>
             </a>
             <ng-container *ngIf="!isUINavigationBlocked">
-              <app-helpoverlay *featureGuard="'help'" fxFlex="none"></app-helpoverlay>
+              <button *featureGuard="'help'" mat-icon-button
+                      (click)="onToolbarIconClick($event, 'help')">
+                <mat-icon>help_outline</mat-icon>
+              </button>
               <!-- Commenting out for August release -->
               <!-- <button mat-button>Save</button> -->
               <button *roleGuard="'monitoringAlert_read'" mat-icon-button
@@ -93,13 +96,17 @@
 
       </mat-toolbar>
 
-      <mat-sidenav-container #container class="app-shell-container" autosize>
+      <mat-sidenav-container #container class="app-shell-container" autosize
+                             [hasBackdrop]="whichRightSideNav() === 'help' ? false : undefined">
         <mat-sidenav #rightSideNav opened="false" mode="over" position="end"
                      [ngSwitch]="whichRightSideNav()"
                      class="app-shell-right-sidenav">
           <div *ngSwitchCase="'notifications'" style="width:100%">
             <!-- VS-240. when there is no alert -->
             <ng-container *ngTemplateOutlet="sideNavNotification; "></ng-container>
+          </div>
+          <div *ngSwitchCase="'help'">
+            <ng-container *ngTemplateOutlet="sideNavHelp; "></ng-container>
           </div>
           <ng-container *ngSwitchCase="'settings'">
             <ng-container *ngTemplateOutlet="sideNavSettings; "></ng-container>
@@ -249,8 +256,16 @@
 
 <ng-template #sideNavNotification let-item="item">
   <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Notification">
-    <app-alertlist *ngIf="alerts" [data]="alerts" (alertsClose)="onAlertsClose()"
+    <app-alertlist *ngIf="alerts" [data]="alerts" (alertsClose)="onRightSideNavClose()"
                    (expandAllAlertsClick)="onExpandAllAlertsClick($event)"></app-alertlist>
+  </div>
+</ng-template>
+
+<ng-template #sideNavHelp let-item="item">
+  <div class="app-shell-sideNav-right-panel-div app-shell-sideNav-right-Help">
+    <app-helpoverlay #helpOverlay *featureGuard="'help'" fxFlex="none"
+                     (toggleHelpSideNav)="handleRightSideNavToggle($event, 'help')">
+    </app-helpoverlay>
   </div>
 </ng-template>
 

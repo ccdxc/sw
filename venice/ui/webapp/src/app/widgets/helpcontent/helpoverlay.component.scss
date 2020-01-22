@@ -42,12 +42,15 @@
   }
 }
 
-.helpoverlay-history-buttons {
+.helpoverlay-close,
+.helpoverlay-history-buttons,
+.helpoverlay-toggle-mode {
   cursor: pointer;
 }
 
-.helpoverlay-close {
-  cursor: pointer;
+.helpoverlay-toggle-mode {
+  font-size: 18px;
+  line-height: 24px;
 }
 
 .helpoverlay-missing-icon {
@@ -62,4 +65,24 @@
 .helpoverlay-missing-text {
   @include primary-font(30px, #676763, 600);
   text-align: center
+}
+
+.helpsidenav.helpoverlay {
+  height: calc(100vh - 124px);
+  width: 356px;
+  max-height: calc(100vh - 124px);
+  max-width: 356px;
+  min-height: calc(100vh - 124px);
+  min-width: 356px;
+  resize: none;
+}
+
+.helpsidenav .helpoverlay-content {
+  padding-left: 10px;
+  padding-right: 10px;
+  width: 100%;
+}
+
+.helpsidenav .default-url-help {
+  width: 100%;
 }

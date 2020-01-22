@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ViewEncapsulation  } from '@angular/core';
+import { Component, ViewChild, OnInit, OnDestroy, AfterViewInit, ViewEncapsulation, EventEmitter, Output, Input, SimpleChanges  } from '@angular/core';
 import { ControllerService } from '@app/services/controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { OverlayRef, Overlay, GlobalPositionStrategy } from '@angular/cdk/overlay';
@@ -32,12 +32,15 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('DefaultURLHelp') defaultURLHelp: TemplatePortalDirective;
 
   helpOverlayRef: OverlayRef;
+  dialogMode: boolean;
 
   loadedHTML: string = '';
 
   backHistory: string[] = [];
   forwardHistory: string[] = [];
   currentContentUrl: string = '';
+
+  @Output() toggleHelpSideNav: EventEmitter<any> = new EventEmitter();
 
   constructor(protected controllerService: ControllerService,
     protected http: HttpClient,
@@ -104,7 +107,6 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       route = route.firstChild;
     }
-    console.log('generated url ', url);
     return url;
   }
 
@@ -140,20 +142,31 @@ export class HelpoverlayComponent implements OnInit, OnDestroy, AfterViewInit {
   toggleHelp($event) {
     if (!this.helpOverlayRef.hasAttached()) {
       this.helpOverlayRef.attach(this.helpShell);
+      this.dialogMode = true;
     }  else {
       this.helpOverlayRef.detach();
+      this.dialogMode = false;
     }
+  }
+
+  toggleMode($event) {
+    this.toggleHelp($event);
+    this.toggleHelpSideNav.emit();
   }
 
   closeHelp() {
     if (this.helpOverlayRef.hasAttached()) {
       this.helpOverlayRef.detach();
+    } else {
+      this.toggleHelpSideNav.emit();
     }
+    this.dialogMode = false;
   }
 
   openHelp() {
     if (!this.helpOverlayRef.hasAttached()) {
       this.helpOverlayRef.attach(this.helpShell);
+      this.dialogMode = true;
     }
   }
 

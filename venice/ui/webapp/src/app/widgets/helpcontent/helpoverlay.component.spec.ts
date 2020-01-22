@@ -97,8 +97,6 @@ describe('HelpoverlayComponent', () => {
 
   it('should load help content', () => {
     // Should start with default text
-    const helpButton = fixture.debugElement.query(By.css('button'));
-    tu.sendClick(helpButton);
     const defaultHelpContent = fixture.debugElement.query(By.css('.helpoverlay-content div'));
     expect(defaultHelpContent).toBeTruthy();
     expect(defaultHelpContent.nativeElement.textContent).toContain('No help content is available');

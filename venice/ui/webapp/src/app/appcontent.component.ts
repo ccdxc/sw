@@ -34,6 +34,7 @@ import { RolloutRollout, RolloutRolloutStatus_state } from '@sdk/v1/models/gener
 import { ConfirmDialog } from 'primeng/primeng';
 import { SearchService } from './services/generated/search.service';
 import { ISearchSearchRequest, SearchSearchRequest_mode, SearchSearchRequest, FieldsRequirement_operator, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -109,10 +110,11 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   @ViewChild('rightSideNav') _rightSideNav: MatSidenav;
   @ViewChild('container') _container: MatSidenavContainer;
   @ViewChild('breadcrumbToolbar') _breadcrumbToolbar: ToolbarComponent;
+  @ViewChild('helpOverlay') helpOverlay: HelpoverlayComponent;
   @ViewChild('AppHelp') helpTemplate: TemplatePortalDirective;
   @ViewChild('confirmDialog') confirmDialog: ConfirmDialog;
 
-  protected _rightSivNavIndicator = 'notifications';
+  protected _rightSideNavIndicator = 'notifications';
 
   // isScreenBlocked generates an greyed-out overlay over the entire screen, prevents the user clicking anything else.
   // isUINavigationBlocked stops the sidenav and other elements from rendering.
@@ -663,7 +665,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
    * It tells the right-sideNav which ng-template to use
    */
   whichRightSideNav() {
-    return this._rightSivNavIndicator;
+    return this._rightSideNavIndicator;
   }
 
   /**
@@ -672,11 +674,22 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
    * @param id
    */
   onToolbarIconClick($event, id) {
+    // special case for help window popout overlay
+    if (this.helpOverlay && this.helpOverlay.helpOverlayRef && this.helpOverlay.helpOverlayRef.hasAttached()) {
+      this.helpOverlay.closeHelp();
+      if (id !== 'help') {
+        this.handleRightSideNavToggle($event, id);
+      }
+    } else {
+      this.handleRightSideNavToggle($event, id);
+    }
+  }
 
-    if (this._rightSivNavIndicator === id) {
+  handleRightSideNavToggle($event, id) {
+    if (this._rightSideNavIndicator === id) {
       this._rightSideNav.toggle();
     } else {
-      this._rightSivNavIndicator = id;
+      this._rightSideNavIndicator = id;
       this._rightSideNav.open();
     }
     setTimeout(() => {
@@ -801,7 +814,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     return (alert.spec.state === 'open');
   }
 
-  onAlertsClose() {
+  onRightSideNavClose() {
     this._rightSideNav.close();
   }
 
