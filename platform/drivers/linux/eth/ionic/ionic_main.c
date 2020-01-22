@@ -24,7 +24,7 @@ unsigned int rx_copybreak = IONIC_RX_COPYBREAK_DEFAULT;
 module_param(rx_copybreak, uint, 0);
 MODULE_PARM_DESC(rx_copybreak, "Maximum size of packet that is copied to a bounce buffer on RX");
 
-unsigned int devcmd_timeout = 30;
+unsigned int devcmd_timeout = DEVCMD_TIMEOUT;
 module_param(devcmd_timeout, uint, 0);
 MODULE_PARM_DESC(devcmd_timeout, "Devcmd timeout in seconds (default 30 secs)");
 
@@ -616,6 +616,11 @@ static int __init ionic_init_module(void)
 
 static void __exit ionic_cleanup_module(void)
 {
+	/* If there's a long devcmd_timeout set, don't let
+	 * hung FW slow us down when exiting
+	 */
+	devcmd_timeout = min_t(int, devcmd_timeout, SHORT_TIMEOUT);
+
 	ionic_bus_unregister_driver();
 	ionic_debugfs_destroy();
 

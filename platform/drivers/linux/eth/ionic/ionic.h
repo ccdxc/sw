@@ -25,6 +25,9 @@ struct ionic_lif;
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF	0x1003
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
 
+#define DEVCMD_TIMEOUT  30
+#define SHORT_TIMEOUT   3
+
 extern unsigned int max_slaves;
 extern unsigned int rx_copybreak;
 extern unsigned int devcmd_timeout;

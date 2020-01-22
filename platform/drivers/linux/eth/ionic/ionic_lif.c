@@ -351,7 +351,9 @@ static void ionic_lif_qcq_deinit(struct ionic_lif *lif, struct ionic_qcq *qcq)
 	if (qcq->flags & IONIC_QCQ_F_INTR) {
 		ionic_intr_mask(idev->intr_ctrl, qcq->intr.index,
 				IONIC_INTR_MASK_SET);
+		irq_set_affinity_hint(qcq->intr.vector, NULL);
 		devm_free_irq(dev, qcq->intr.vector, &qcq->napi);
+		qcq->intr.vector = 0;
 	}
 
 	qcq->flags &= ~IONIC_QCQ_F_INITED;
@@ -406,19 +408,23 @@ static void ionic_qcqs_free(struct ionic_lif *lif)
 		lif->adminqcq = NULL;
 	}
 
-	for (i = 0; i < lif->nxqs; i++)
-		if (lif->rxqcqs[i].stats)
-			devm_kfree(dev, lif->rxqcqs[i].stats);
+	if (lif->rxqcqs) {
+		for (i = 0; i < lif->nxqs; i++)
+			if (lif->rxqcqs[i].stats)
+				devm_kfree(dev, lif->rxqcqs[i].stats);
 
-	devm_kfree(dev, lif->rxqcqs);
-	lif->rxqcqs = NULL;
+		devm_kfree(dev, lif->rxqcqs);
+		lif->rxqcqs = NULL;
+	}
 
-	for (i = 0; i < lif->nxqs; i++)
-		if (lif->txqcqs[i].stats)
-			devm_kfree(dev, lif->txqcqs[i].stats);
+	if (lif->txqcqs) {
+		for (i = 0; i < lif->nxqs; i++)
+			if (lif->txqcqs[i].stats)
+				devm_kfree(dev, lif->txqcqs[i].stats);
 
-	devm_kfree(dev, lif->txqcqs);
-	lif->txqcqs = NULL;
+		devm_kfree(dev, lif->txqcqs);
+		lif->txqcqs = NULL;
+	}
 }
 
 static void ionic_link_qcq_interrupts(struct ionic_qcq *src_qcq,
@@ -1853,7 +1859,13 @@ static int ionic_lif_open(struct ionic_lif *lif)
 {
 	int err;
 
-	dev_dbg(lif->ionic->dev, "%s: %s\n", __func__, lif->name);
+	dev_dbg(lif->ionic->dev, "%s: %s carrier %d\n",
+		__func__, lif->name, netif_carrier_ok(lif->netdev));
+
+	/* wait until carrier is up before creating rx and tx queues */
+	if (!netif_carrier_ok(lif->netdev))
+		return 0;
+
 	err = ionic_txrx_alloc(lif);
 	if (err)
 		return err;
@@ -1890,13 +1902,15 @@ int ionic_open(struct net_device *netdev)
 	int err;
 
 	if (test_bit(IONIC_LIF_F_UP, lif->state)) {
-		dev_warn(lif->ionic->dev, "%s: %s called when state=UP\n",
-			 __func__, lif->name);
+		dev_dbg(lif->ionic->dev, "%s: %s called when state=UP\n",
+			__func__, lif->name);
 		return 0;
 	}
 
 	if (test_and_set_bit(IONIC_LIF_F_TRANS, lif->state))
 		return -EBUSY;
+
+	ionic_link_status_check_request(lif);
 
 	err = ionic_lif_open(lif);
 	if (err)
@@ -1905,7 +1919,6 @@ int ionic_open(struct net_device *netdev)
 	netif_set_real_num_tx_queues(netdev, lif->nxqs);
 	netif_set_real_num_rx_queues(netdev, lif->nxqs);
 
-	ionic_link_status_check_request(lif);
 	if (netif_carrier_ok(netdev))
 		netif_tx_wake_all_queues(netdev);
 
@@ -1924,8 +1937,8 @@ static int ionic_lif_stop(struct ionic_lif *lif)
 	int err = 0;
 
 	if (!test_bit(IONIC_LIF_F_UP, lif->state)) {
-		dev_warn(lif->ionic->dev, "%s: %s called when state=DOWN\n",
-			 __func__, lif->name);
+		dev_dbg(lif->ionic->dev, "%s: %s called when state=DOWN\n",
+			__func__, lif->name);
 		return 0;
 	}
 	dev_dbg(lif->ionic->dev, "%s: %s state=UP\n", __func__, lif->name);
@@ -2201,6 +2214,9 @@ static int ionic_get_vf_config(struct net_device *netdev,
 	struct ionic *ionic = lif->ionic;
 	int ret = 0;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	down_read(&ionic->vf_op_lock);
 
 	if (vf >= pci_num_vf(ionic->pdev) || !ionic->vfs) {
@@ -2227,6 +2243,9 @@ static int ionic_get_vf_stats(struct net_device *netdev, int vf,
 	struct ionic *ionic = lif->ionic;
 	struct lif_stats *vs;
 	int ret = 0;
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	down_read(&ionic->vf_op_lock);
 
@@ -2265,6 +2284,9 @@ static int ionic_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 	if (!(is_zero_ether_addr(mac) || is_valid_ether_addr(mac)))
 		return -EINVAL;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	down_read(&ionic->vf_op_lock);
 
 	if (vf >= pci_num_vf(ionic->pdev) || !ionic->vfs) {
@@ -2296,6 +2318,9 @@ static int ionic_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan,
 	if (proto != htons(ETH_P_8021Q))
 		return -EPROTONOSUPPORT;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	down_read(&ionic->vf_op_lock);
 
 	if (vf >= pci_num_vf(ionic->pdev) || !ionic->vfs) {
@@ -2322,6 +2347,9 @@ static int ionic_set_vf_rate(struct net_device *netdev, int vf,
 	if (tx_min)
 		return -EINVAL;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	down_read(&ionic->vf_op_lock);
 
 	if (vf >= pci_num_vf(ionic->pdev) || !ionic->vfs) {
@@ -2344,6 +2372,9 @@ static int ionic_set_vf_spoofchk(struct net_device *netdev, int vf, bool set)
 	u8 data = set;  /* convert to u8 for config */
 	int ret;
 
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
+
 	down_read(&ionic->vf_op_lock);
 
 	if (vf >= pci_num_vf(ionic->pdev) || !ionic->vfs) {
@@ -2365,6 +2396,9 @@ static int ionic_set_vf_trust(struct net_device *netdev, int vf, bool set)
 	struct ionic *ionic = lif->ionic;
 	u8 data = set;  /* convert to u8 for config */
 	int ret;
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	down_read(&ionic->vf_op_lock);
 
@@ -2401,6 +2435,9 @@ static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 	default:
 		return -EINVAL;
 	}
+
+	if (test_bit(IONIC_LIF_F_FW_RESET, lif->state))
+		return -EBUSY;
 
 	down_read(&ionic->vf_op_lock);
 
