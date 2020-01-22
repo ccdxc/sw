@@ -166,7 +166,6 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
                   dev_resources.regs_mem_addr, devcmd_mem_addr);
 
     regs = (union dev_regs *)MEM_MAP(dev_resources.regs_mem_addr, sizeof(union dev_regs), 0);
-    ;
     if (regs == NULL) {
         NIC_LOG_ERR("{}: Failed to map register region", spec->name);
         throw;

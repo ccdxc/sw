@@ -199,8 +199,8 @@ dependencies:
       exclude_dirs: ["test/venice", "test/apollo"]
     - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["test/venice", "test/apollo"]
-#   - reference: iota/test/standalone/sanity/apulu-networking
-#     exclude_dirs: ["test/venice", "test/iris"]
+    - reference: iota/test/standalone/sanity/apulu-networking
+      exclude_dirs: ["test/venice", "test/iris"]
   metrics:
     - reference: venice/ui
   minio:
@@ -227,7 +227,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
-#   - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/apulu-networking
   nic/conf:
     - reference: iota/test/standalone/sanity/linux
   nic/conf/apulu:
@@ -320,8 +320,8 @@ dependencies:
       exclude_dirs: ["linux","esxi"]
     - reference: iota/test/standalone/sanity/linux
       exclude_dirs: ["freebsd","esxi"]
-#   - reference: iota/test/standalone/sanity/apulu-networking
-#     exclude_dirs: ["freebsd","esxi"]
+    - reference: iota/test/standalone/sanity/apulu-networking
+      exclude_dirs: ["freebsd","esxi"]
   platform/src/app/asicerrord:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/captrace:
@@ -344,6 +344,7 @@ dependencies:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
+    - reference: iota/test/standalone/sanity/apulu-networking
   platform/src/lib/devapi_iris:
     - reference: iota/test/standalone/sanity/linux
   platform/src/app/pciemgrd:
