@@ -3,10 +3,10 @@
 package statemgr
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -476,39 +476,61 @@ func (sm *Statemgr) CreateSnapshot(ms *monitoring.TechSupportRequest) error {
 	}
 
 	snapshotURI := snaps.Status.LastSnapshot.URI[strings.LastIndex(snaps.Status.LastSnapshot.URI, "/")+1:]
-	var ret bytes.Buffer
-
 	snapshotFr, err := sm.snapshotObjstoreCl.GetObject(context.Background(), snapshotURI)
 	if err == nil {
-		buf := make([]byte, 10*1024)
-		totsize := 0
+		defer snapshotFr.Close()
+		localFile := fmt.Sprintf("/tmp/%s-snapshot.json", ms.Name)
+		of, err := os.Create(localFile)
+		if err != nil {
+			log.Errorf("failed to create local snapshot json %v. Err : %v", localFile, err)
+			return err
+		}
+		defer os.Remove(localFile)
+
+		buf := make([]byte, 1024)
+		log.Infof("Downloading snapshot file to %v", localFile)
 		for {
 			n, err := snapshotFr.Read(buf)
 			if err != nil && err != io.EOF {
+				log.Errorf("Failed to read object. Err : %v", err)
 				return err
 			}
 
 			if n == 0 {
-				idSplit := strings.Split(ms.Status.InstanceID, "-")
-				vosTarget := fmt.Sprintf("%s-%s-%s.json", ms.Name, idSplit[0], snapshotURI)
-				log.Infof("Uploading object to object store. %v", vosTarget)
-				meta := map[string]string{
-					"techsupport": vosTarget,
-				}
-
-				b := bytes.NewBuffer(buf)
-				_, err = sm.objstoreClient.PutObject(context.Background(), vosTarget, b, meta)
-				if err != nil {
-					return err
-				}
-				return nil
+				break
 			}
 
-			totsize += n
-			if _, err = ret.Write(buf[:n]); err != nil {
+			if _, err := of.Write(buf[:n]); err != nil {
+				log.Errorf("Failed to write to output file. Err : %v", err)
 				return err
 			}
 		}
+		log.Infof("Successfully saved snapshot file %v locally", localFile)
+		log.Infof("Starting snapshot file %v upload", localFile)
+
+		idSplit := strings.Split(ms.Status.InstanceID, "-")
+		vosTarget := fmt.Sprintf("%s-%s-%s.json", ms.Name, idSplit[0], snapshotURI)
+		log.Infof("Uploading object to object store. %v", vosTarget)
+		meta := map[string]string{
+			"techsupport": vosTarget,
+		}
+
+		stat, err := os.Stat(localFile)
+		if err != nil {
+			return err
+		}
+
+		f, err := os.Open(localFile)
+		if err != nil {
+			return err
+		}
+
+		_, err = sm.objstoreClient.PutObjectOfSize(context.Background(), vosTarget, f, stat.Size(), meta)
+		if err != nil {
+			return err
+		}
+		log.Infof("Successfully uploaded %v to VOS", localFile)
+
 	}
 
 	return err
