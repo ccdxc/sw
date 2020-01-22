@@ -31,12 +31,10 @@
 #include "nic/apollo/agent/init.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/hooks.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-#include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
-#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
 
 using std::string;
 using grpc::Server;
@@ -75,9 +73,6 @@ svc_reg (void)
     PolicerSvcImpl        policer_svc;
     DHCPSvcImpl           dhcp_svc;
     NatSvcImpl            nat_svc;
-    BGPSvcImpl            bgp_svc;
-    EvpnSvcImpl           evpn_svc;
-    CPRouteSvcImpl        cp_route_svc;
 
     // do gRPC initialization
     grpc_init();
@@ -111,10 +106,7 @@ svc_reg (void)
     server_builder->RegisterService(&policer_svc);
     server_builder->RegisterService(&dhcp_svc);
     server_builder->RegisterService(&nat_svc);
-    server_builder->RegisterService(&bgp_svc);
-    server_builder->RegisterService(&evpn_svc);
-    server_builder->RegisterService(&cp_route_svc);
-
+    pds_ms::mgmt_svc_init(server_builder);
     PDS_TRACE_INFO("gRPC server listening on ... {}",
                    g_grpc_server_addr.c_str());
     core::trace_logger()->flush();

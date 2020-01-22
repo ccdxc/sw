@@ -6,7 +6,7 @@ MODULE_TARGET   = pds_ms_hals_test_mockapi.gtest
 MODULE_PREREQS  = metaswitch.submake
 MODULE_PIPELINE = apulu
 MODULE_ARCH     = x86_64
-MODULE_INCS     = $(TOPDIR)/nic/metaswitch/stubs/hals \
+MODULE_INCS     = ${BLD_PROTOGEN_DIR} $(TOPDIR)/nic/metaswitch/stubs/hals \
                   $(addprefix $(MS_ROOT)/,$(MS_INCLPATH))
 MODULE_FLAGS    = $(addprefix -D,$(MS_COMPILATION_SWITCH))
 MODULE_SOLIBS   = shmmgr pdsmscommon pdsmshals pdstestapiutils \

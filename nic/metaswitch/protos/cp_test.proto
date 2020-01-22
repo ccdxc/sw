@@ -14,17 +14,27 @@ import "types.proto";
 // service definition
 service CPTestSvc
 {
-  rpc CPL2fTestCreate (CPL2fTest) returns (CPL2fTestResponse) {}
+  rpc CPL2fTestCreate (CPL2fTestCreateSpec) returns (CPL2fTestResponse) {}
+  rpc CPL2fTestDelete (CPL2fTestDeleteSpec) returns (CPL2fTestResponse) {}
 }
 
-message CPL2fTest {
+message CPL2fTestCreateSpec {
   option (venice.pdsaSetGlobOpts) = {
     ActionFn: "l2f_test_local_mac_ip_add"
   };
-    uint32          SubnetId = 1;
+    bytes           SubnetId = 1;
     types.IPAddress IPAddr   = 2;
     bytes           MACAddr  = 3;
     uint32          IfId     = 4;
+}
+
+message CPL2fTestDeleteSpec {
+  option (venice.pdsaSetGlobOpts) = {
+    ActionFn: "l2f_test_local_mac_ip_del"
+  };
+    bytes           SubnetId = 1;
+    types.IPAddress IPAddr   = 2;
+    bytes           MACAddr  = 3;
 }
 
 message CPL2fTestResponse {

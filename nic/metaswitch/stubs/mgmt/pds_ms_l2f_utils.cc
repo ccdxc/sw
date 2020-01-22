@@ -82,16 +82,42 @@ pds_ms_l2f_stub_create (pds_ms_config_t *conf)
 
 namespace pds {
 types::ApiStatus
-l2f_test_local_mac_ip_add (const CPL2fTest *req, CPL2fTestResponse *resp)
+l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec *req, CPL2fTestResponse *resp)
 {
     ip_addr_t   ip_addr;
     mac_addr_t  mac_addr = {0};
+    pds_obj_key_t subnet_uuid = {0};
 
+    pds_ms_get_uuid (&subnet_uuid, req->subnetid());
     ip_addr_spec_to_ip_addr (req->ipaddr(), &ip_addr);
+    // Simulate IP coming from HAL which is in host order
+    if (ip_addr.af == IP_AF_IPV4) {
+        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
+    }
     NBB_MEMCPY(mac_addr, req->macaddr().c_str(), req->macaddr().length());
     
-    pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(req->subnetid()), 
-                                  ip_addr, mac_addr, req->ifid());
+    pds_ms::l2f_local_mac_ip_add (subnet_uuid, ip_addr, mac_addr,
+                                  req->ifid());
+
+    return types::ApiStatus::API_STATUS_OK;
+}
+
+types::ApiStatus
+l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec *req, CPL2fTestResponse *resp)
+{
+    ip_addr_t   ip_addr;
+    mac_addr_t  mac_addr = {0};
+    pds_obj_key_t subnet_uuid = {0};
+
+    pds_ms_get_uuid (&subnet_uuid, req->subnetid());
+    ip_addr_spec_to_ip_addr (req->ipaddr(), &ip_addr);
+    // Simulate IP coming from HAL which is in host order
+    if (ip_addr.af == IP_AF_IPV4) {
+        ip_addr.addr.v4_addr = ntohl(ip_addr.addr.v4_addr);
+    }
+    NBB_MEMCPY(mac_addr, req->macaddr().c_str(), req->macaddr().length());
+    
+    pds_ms::l2f_local_mac_ip_del (subnet_uuid, ip_addr, mac_addr);
 
     return types::ApiStatus::API_STATUS_OK;
 }

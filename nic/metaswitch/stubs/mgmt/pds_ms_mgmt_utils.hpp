@@ -214,7 +214,9 @@ NBB_VOID lim_sw_intf_fill_func (LimInterfaceSpec&    req,
                                 AMB_GEN_IPS         *mib_msg,
                                 AMB_LIM_SOFTWARE_IF *data,
                                 NBB_LONG            row_status);
-types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTest   *req, 
+types::ApiStatus l2f_test_local_mac_ip_add (const CPL2fTestCreateSpec   *req,
+                                            CPL2fTestResponse *resp);
+types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,
                                             CPL2fTestResponse *resp);
 NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,

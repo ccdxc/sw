@@ -35,12 +35,26 @@ void
 l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac, pds_ifindex_t lif_ifindex)
 {
-    NBB_CREATE_THREAD_CONTEXT
-    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
-    NBS_GET_SHARED_DATA();
-
     ms_ifindex_t ms_lif_index = pds_to_ms_ifindex(lif_ifindex, IF_TYPE_LIF);
-    ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
+    ms_bd_id_t bd_id;
+
+    { // Enter Mgmt thread context
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_key);
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR("Received MAC %s IP %s learn for unknown Subnet %s",
+                          macaddr2str(mac), ipaddr2str(&ip), subnet_key.str());
+            return;
+        }
+        if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
+            SDK_TRACE_ERR("Received MAC %s IP %s learn with invalid UUID %s of type %s",
+                          macaddr2str(mac), ipaddr2str(&ip), subnet_key.str(),
+                          uuid_obj_type_str(uuid_obj->obj_type()));
+            return;
+        }
+        bd_id = ((subnet_uuid_obj_t*) uuid_obj)->ms_id();
+    } // Exit Mgmt thread context
+
     if (ip_addr_is_zero(&ip)) {
         SDK_TRACE_DEBUG("Advertise MAC learn for Subnet %s BD %d MAC %s LIF 0x%x MS-LIF 0x%x",
                         subnet_key.str(), bd_id, macaddr2str(mac), lif_ifindex, ms_lif_index);
@@ -50,6 +64,10 @@ l2f_local_mac_ip_add (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                         subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac),
                         lif_ifindex, ms_lif_index);
     }
+
+    NBB_CREATE_THREAD_CONTEXT
+    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
+    NBS_GET_SHARED_DATA();
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
     mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;

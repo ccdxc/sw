@@ -6,6 +6,11 @@
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
+#include "nic/apollo/agent/svc/service.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_test_gen.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -273,3 +278,27 @@ bool pds_ms_mgmt_init()
     nbase_init();
     return true;
 }
+
+namespace pds_ms {
+
+static    CPTestSvcImpl        cp_test_svc;
+static    BGPSvcImpl            bgp_svc;
+static    EvpnSvcImpl           evpn_svc;
+static    CPRouteSvcImpl        cp_route_svc;
+
+void
+mgmt_svc_init (grpc::ServerBuilder* server_builder)
+{
+    server_builder->RegisterService(&bgp_svc);
+    server_builder->RegisterService(&evpn_svc);
+    server_builder->RegisterService(&cp_route_svc);
+
+    if (PDS_MOCK_MODE()) {
+        SDK_TRACE_INFO("Registering CP test proto");
+        server_builder->RegisterService(&cp_test_svc);
+    }
+
+    SDK_TRACE_INFO("Mgmt SVC init successful");
+}
+
+} // End namespace

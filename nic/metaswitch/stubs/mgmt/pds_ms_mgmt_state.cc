@@ -99,6 +99,7 @@ mgmt_state_init (void)
     }
     if (std::getenv("PDS_MOCK_MODE")) {
         mgmt_state_t::thread_context().state()->set_pds_mock_mode(true);
+        SDK_TRACE_INFO("Running in PDS MOCK MODE");
     }
 
     SDK_TRACE_INFO ("Mgmt State Initialization successful");

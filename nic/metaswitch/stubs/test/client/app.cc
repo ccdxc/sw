@@ -25,6 +25,7 @@
 #include <gen/proto/bgp.grpc.pb.h>
 #include <gen/proto/evpn.grpc.pb.h>
 #include <gen/proto/cp_route.grpc.pb.h>
+#include <gen/proto/cp_test.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
 using grpc::Channel;
@@ -42,7 +43,8 @@ static unique_ptr<pds::BGPSvc::Stub>    g_bgp_stub_;
 static unique_ptr<pds::EvpnSvc::Stub>    g_evpn_stub_;
 static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
-static unique_ptr<pds::CPRouteSvc::Stub>        g_route_stub_;
+static unique_ptr<pds::CPRouteSvc::Stub> g_route_stub_;
+static unique_ptr<pds::CPTestSvc::Stub>  g_cp_test_stub_;
 
 // Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
@@ -65,7 +67,7 @@ static void create_device_proto_grpc () {
     device_spec.device_ip_addr.af  = types::IP_AF_INET;
     device_spec.device_ip_addr.addr.v4_addr = (g_test_conf_.local_lo_ip_addr);
     device_spec.gateway_ip_addr.af          = types::IP_AF_INET;
-    device_spec.gateway_ip_addr.addr.v4_addr = g_test_conf_.local_gwip_addr;
+    device_spec.gateway_ip_addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
 
     pds_device_api_spec_to_proto (request.mutable_request(), &device_spec);
 
@@ -185,6 +187,31 @@ static void create_evpn_evi_rt_proto_grpc () {
 
     printf ("Pushing EVPN Evi RT proto...\n");
     ret_status = g_evpn_stub_->EvpnEviRtSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_l2f_test_mac_ip_proto_grpc () {
+    CPL2fTestCreateSpec request;
+    CPL2fTestResponse   response;
+    ClientContext       context;
+    Status              ret_status;
+
+    auto proto_spec = &request;
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    auto ipaddr = proto_spec->mutable_ipaddr();
+    ipaddr->set_af(types::IP_AF_INET);
+    ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
+    char mac_addr[] = {0x00,0x12,0x23,0x45,0x67,0x8};
+    proto_spec->set_macaddr (mac_addr, 6);
+    proto_spec->set_ifid (g_test_conf_.lif_if_index);
+
+    printf ("Simulating EVPN MAC/IP learn...\n");
+    ret_status = g_cp_test_stub_->CPL2fTestCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -524,7 +551,7 @@ int main(int argc, char** argv)
         exit(1);
     }
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:9999",
+    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
@@ -533,6 +560,7 @@ int main(int argc, char** argv)
     g_vpc_stub_     = VPCSvc::NewStub (channel);
     g_subnet_stub_  = SubnetSvc::NewStub (channel);
     g_route_stub_   = CPRouteSvc::NewStub (channel);
+    g_cp_test_stub_ = CPTestSvc::NewStub (channel);
 
     if (argc == 1)
     {
@@ -555,6 +583,9 @@ int main(int argc, char** argv)
         create_evpn_evi_proto_grpc();
         if (g_test_conf_.manual_rt) {
             create_evpn_evi_rt_proto_grpc();
+        }
+        if (g_node_id == 1) {
+            create_l2f_test_mac_ip_proto_grpc();
         }
         printf ("Testapp Config Init is successful!\n");
         return 0;

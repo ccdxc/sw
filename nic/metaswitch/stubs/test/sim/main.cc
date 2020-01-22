@@ -59,7 +59,6 @@ static int g_bgp_uuid = 50;
 static int g_subnet_uuid = 300;
 static int g_l3_if_uuid = 400;
 static int g_lo_if_uuid = 401;
-static int g_bd_id = 1;
 
 namespace pds_ms_test {
 static test_config_t  g_test_conf;
@@ -323,13 +322,13 @@ pds_ms_sim_test_config ()
         mac_addr_t  mac;
         str2ipaddr((char*) "10.17.0.1", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.2", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
         str2ipaddr((char*) "10.17.0.5", &ip);
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -338,7 +337,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac, g_test_conf.lif_if_index);
+        pds_ms::l2f_local_mac_ip_add (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac, g_test_conf.lif_if_index);
     }
     sleep(10);
     if (g_node_id == 2) {
@@ -347,7 +346,7 @@ pds_ms_sim_test_config ()
         str2ipaddr((char*) "0.0.0.0", &ip);
         mac_addr_t  mac;
         mac_str_to_addr((char*) "00:11:11:11:11:22", mac);
-        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(g_bd_id), ip, mac);
+        pds_ms::l2f_local_mac_ip_del (pds_ms::msidx2pdsobjkey(g_subnet_uuid), ip, mac);
     }
 }
 } // End of pds_ms_test  namespace

@@ -169,14 +169,18 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
 
     vxlan_port_add_upd_ips->return_code = ATG_OK;
 
+    parse_ips_info_(vxlan_port_add_upd_ips);
     if (!vxlan_port_add_upd_ips->port_properties.l3_capable) {
         // Only interested in L3 VXLAN Ports
+            SDK_TRACE_INFO ("Ignore Type2 TEP %s Local VNI %d Remote VNI %d MS L2 VXLAN Port 0x%x IPS",
+                            ipaddr2str(&ips_info_.tep_ip),
+                            vxlan_port_add_upd_ips->port_properties.local_vni,
+                            ips_info_.vni, ips_info_.if_index);
         return;
     }
 
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
 
-    parse_ips_info_(vxlan_port_add_upd_ips);
     // Alloc new cookie and cache IPS, VXLAN Port If Obj
     cookie_uptr_.reset (new cookie_t);
 
@@ -187,14 +191,16 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
 
         if (store_info_.vxp_if_obj != nullptr) {
             // Update Port
-            SDK_TRACE_INFO ("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x Update IPS",
-                            ipaddr2str(&ips_info_.tep_ip), ips_info_.vni,
-                            ips_info_.if_index);
+            SDK_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Update IPS",
+                            ipaddr2str(&ips_info_.tep_ip),
+                            vxlan_port_add_upd_ips->port_properties.local_vni,
+                            ips_info_.vni, ips_info_.if_index);
         } else {
             // Create VXLAN Port
-            SDK_TRACE_INFO ("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x Create IPS",
-                            ipaddr2str(&ips_info_.tep_ip), ips_info_.vni,
-                            ips_info_.if_index);
+            SDK_TRACE_INFO ("Type5 TEP %s Local VNI %d Remote VNI %d MS L3 VXLAN Port 0x%x Create IPS",
+                            ipaddr2str(&ips_info_.tep_ip),
+                            vxlan_port_add_upd_ips->port_properties.local_vni,
+                            ips_info_.vni, ips_info_.if_index);
             op_create_ = true;
         }
         cache_obj_in_cookie_(); 
