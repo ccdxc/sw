@@ -34,9 +34,9 @@ import (
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/staging"
 	"github.com/pensando/sw/api/generated/workload"
-	"github.com/pensando/sw/api/hooks/apiserver"
+	impl "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/api/labels"
-	"github.com/pensando/sw/api/utils"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/test/utils"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apiserver"
@@ -151,6 +151,9 @@ func TestCrudOps(t *testing.T) {
 		pub2 = bookstore.Publisher{
 			ObjectMeta: api.ObjectMeta{
 				Name: "Kalahari",
+				Labels: map[string]string{
+					"userLabel": "v1",
+				},
 			},
 			TypeMeta: api.TypeMeta{
 				Kind: "Publisher",
@@ -1244,6 +1247,143 @@ func TestCrudOps(t *testing.T) {
 		t.Errorf("REST: Outage action did not go through hook")
 	}
 
+}
+
+func TestSystemLabels(t *testing.T) {
+	apiserverAddr := "localhost" + ":" + tinfo.apiserverport
+
+	ctx := context.Background()
+	// gRPC client
+	apicl, err := client.NewGrpcUpstream("test", apiserverAddr, tinfo.l)
+	if err != nil {
+		t.Fatalf("cannot create grpc client")
+	}
+	defer apicl.Close()
+
+	// REST Client
+	restcl, err := apiclient.NewRestAPIClient("https://localhost:" + tinfo.apigwport)
+	if err != nil {
+		t.Fatalf("cannot create REST client")
+	}
+	defer restcl.Close()
+	// create logged in context
+	ctx, err = NewLoggedInContext(ctx, "https://localhost:"+tinfo.apigwport, tinfo.userCred)
+	AssertOk(t, err, "cannot create logged in context")
+
+	// Create some objects for use
+	systemLabel := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, ".test")
+	var customer1, customer2 bookstore.Customer
+	{
+		customer1 = bookstore.Customer{
+			ObjectMeta: api.ObjectMeta{
+				Name: "TestCustomer1",
+				Labels: map[string]string{
+					systemLabel: "v1",
+					"userLabel": "v1",
+				},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Customer",
+			},
+			Spec: bookstore.CustomerSpec{
+				Id: "id",
+				PasswordRecoveryInfo: bookstore.CustomerPersonalInfo{
+					DateOfBirth: "12/20/2016",
+				},
+			},
+		}
+		customer2 = bookstore.Customer{
+			ObjectMeta: api.ObjectMeta{
+				Name: "TestCustomer2",
+				Labels: map[string]string{
+					systemLabel: "v1",
+					"userLabel": "v1",
+				},
+			},
+			TypeMeta: api.TypeMeta{
+				Kind: "Customer",
+			},
+			Spec: bookstore.CustomerSpec{
+				Id: "id",
+				PasswordRecoveryInfo: bookstore.CustomerPersonalInfo{
+					DateOfBirth: "12/20/2016",
+				},
+			},
+		}
+	}
+
+	{ // --- create resource via grpc --- //
+		if ret, err := apicl.BookstoreV1().Customer().Create(ctx, &customer1); err != nil {
+			t.Fatalf("failed to create Customer(%s)", err)
+		} else {
+			// system labels should be present since it is over grpc
+			if !(labels.Equals(customer1.Labels, ret.Labels)) {
+				t.Fatalf("updated object [add] does not match \n\t[%+v]\n\t[%+v]", customer1, ret)
+			}
+		}
+	}
+	{ // --- update resource via grpc --- //
+		customer1.Labels[systemLabel] = "v2"
+		if ret, err := apicl.BookstoreV1().Customer().Update(ctx, &customer1); err != nil {
+			t.Fatalf("failed to update Customer(%s)", err)
+		} else {
+			// system labels should be present since it is over grpc
+			if !(labels.Equals(customer1.Labels, ret.Labels)) {
+				t.Fatalf("updated object labels [add] does not match \n\t[%+v]\n\t[%+v]", customer1, ret)
+			}
+		}
+	}
+
+	// Create over rest should not have system label
+	// Update over rest should not have system label
+
+	{ // ---  POST of the object via REST --- //
+		ret, err := restcl.BookstoreV1().Customer().Create(ctx, &customer2)
+		if err != nil {
+			t.Fatalf("Create of Customer failed (%s)", err)
+		}
+
+		delete(customer2.Labels, systemLabel)
+		if !(labels.Equals(customer2.Labels, ret.Labels)) {
+			t.Fatalf("updated object labels [add] does not match \n\t[%+v]\n\t[%+v]", customer2, ret)
+		}
+	}
+	// Updating object over grpc so that it has a system label
+	{ // --- update resource via grpc --- //
+		customer2.Labels[systemLabel] = "v1"
+		if ret, err := apicl.BookstoreV1().Customer().Update(ctx, &customer2); err != nil {
+			t.Fatalf("failed to create Customer(%s)", err)
+		} else {
+			// system labels should be present since it is over grpc
+			if !(labels.Equals(customer2.Labels, ret.Labels)) {
+				t.Fatalf("updated object labels [add] does not match \n\t[%+v]\n\t[%+v]", customer2, ret)
+			}
+		}
+	}
+	{ // ---  Update of the object via REST --- //
+		delete(customer2.Labels, systemLabel)
+		ret, err := restcl.BookstoreV1().Customer().Update(ctx, &customer2)
+		if err != nil {
+			t.Fatalf("Create of Customer failed (%s)", err)
+		}
+
+		// Returned object should have the system label
+		customer2.Labels[systemLabel] = "v1"
+		if !(labels.Equals(customer2.Labels, ret.Labels)) {
+			t.Fatalf("updated object labels [add] does not match \n\t[%+v]\n\t[%+v]", customer2, ret)
+		}
+	}
+
+	{ // Cleanup objects
+		_, err := restcl.BookstoreV1().Customer().Delete(ctx, &customer1.ObjectMeta)
+		if err != nil {
+			t.Fatalf("Error deleting object %s", err)
+		}
+		_, err = restcl.BookstoreV1().Customer().Delete(ctx, &customer2.ObjectMeta)
+		if err != nil {
+			t.Fatalf("Error deleting object %s", err)
+		}
+	}
 }
 
 func TestFilters(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gogo/protobuf/types"
@@ -23,6 +24,7 @@ import (
 	"github.com/pensando/sw/api/listerwatcher"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/rpckit"
@@ -291,7 +293,14 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					return rete, nil
 				}
 				if ret, ok := oldObj.(*staging.Buffer); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
+					ret.Name, ret.Tenant, ret.Namespace, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.ModTime, n.SelfLink
+					// Add system labels that are on the existing object
+					for k, v := range ret.Labels {
+						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							n.Labels[k] = v
+						}
+					}
+					ret.Labels = n.Labels
 					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 					if err != nil {
 						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
@@ -569,7 +578,14 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					return rete, nil
 				}
 				if ret, ok := oldObj.(*staging.ClearAction); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
+					ret.Name, ret.Tenant, ret.Namespace, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.ModTime, n.SelfLink
+					// Add system labels that are on the existing object
+					for k, v := range ret.Labels {
+						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							n.Labels[k] = v
+						}
+					}
+					ret.Labels = n.Labels
 					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 					if err != nil {
 						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)
@@ -847,7 +863,14 @@ func (s *sstagingStagingBackend) regMsgsFunc(l log.Logger, scheme *runtime.Schem
 					return rete, nil
 				}
 				if ret, ok := oldObj.(*staging.CommitAction); ok {
-					ret.Name, ret.Tenant, ret.Namespace, ret.Labels, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.Labels, n.ModTime, n.SelfLink
+					ret.Name, ret.Tenant, ret.Namespace, ret.ModTime, ret.SelfLink = n.Name, n.Tenant, n.Namespace, n.ModTime, n.SelfLink
+					// Add system labels that are on the existing object
+					for k, v := range ret.Labels {
+						if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+							n.Labels[k] = v
+						}
+					}
+					ret.Labels = n.Labels
 					gen, err := strconv.ParseUint(ret.GenerationID, 10, 64)
 					if err != nil {
 						l.ErrorLog("msg", "invalid GenerationID, reset gen ID", "generation", ret.GenerationID, "err", err)

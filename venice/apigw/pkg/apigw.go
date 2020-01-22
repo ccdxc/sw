@@ -609,6 +609,12 @@ func (a *apiGw) cleanupObjMeta(i interface{}) {
 		objmeta.CreationTime = api.Timestamp{}
 		objmeta.ModTime = api.Timestamp{}
 		objmeta.SelfLink = ""
+		// Remove system labels from request
+		for key := range objmeta.Labels {
+			if strings.HasPrefix(key, globals.SystemLabelPrefix) {
+				delete(objmeta.Labels, key)
+			}
+		}
 	}
 }
 

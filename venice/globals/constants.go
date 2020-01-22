@@ -14,6 +14,9 @@ const (
 	// Default Vrf
 	DefaultVrf = "default"
 
+	// System label prefix. Any label keys that begin with this can only be set by the system.
+	SystemLabelPrefix = "io.pensando."
+
 	// Localhost name
 	// The Go resolver by default will contact the DNS servers listed in /etc/resolver.conf,
 	// by passing /etc/hosts and ignoring /etc/nsswitch.conf

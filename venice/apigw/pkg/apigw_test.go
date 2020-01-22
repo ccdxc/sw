@@ -416,6 +416,40 @@ func TestErrorHandlers(t *testing.T) {
 	}
 }
 
+func TestCleanupObjMeta(t *testing.T) {
+	_ = MustGetAPIGateway()
+	a := singletonAPIGw
+
+	creationTime := &api.Timestamp{}
+	creationTime.Parse("2018-11-09T23:16:17Z")
+	systemLabel := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "systemLabel")
+
+	input := struct {
+		api.ObjectMeta
+		api.TypeMeta
+	}{
+		ObjectMeta: api.ObjectMeta{
+			Name:         "input",
+			CreationTime: *creationTime,
+			ModTime:      *creationTime,
+			SelfLink:     "selfLink",
+			Labels: map[string]string{
+				"userLabel": "v1",
+				systemLabel: "v1",
+			},
+		},
+	}
+	a.cleanupObjMeta(&input)
+
+	AssertEquals(t, input.CreationTime, api.Timestamp{}, "Creation time was not cleared")
+	AssertEquals(t, input.ModTime, api.Timestamp{}, "Mod time was not cleared")
+	AssertEquals(t, "", input.SelfLink, "Self link was not cleared")
+	AssertEquals(t, 1, len(input.Labels), "Number of labels did not match expected")
+	AssertEquals(t, "v1", input.Labels["userLabel"], "Number of labels did not match expected")
+	_, ok := input.Labels[systemLabel]
+	Assert(t, !ok, "System label was not removed")
+}
+
 func TestHandleRequest(t *testing.T) {
 	prof := NewServiceProfile(nil, "", "", apiintf.UnknownOper)
 	mock := &testHooks{}
