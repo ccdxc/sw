@@ -306,6 +306,7 @@ struct ionic_sq_meta {
 	u8			ibsts;
 	bool			remote;
 	bool			signal;
+	bool			local_comp;
 };
 
 struct ionic_rq_meta {
@@ -350,7 +351,6 @@ struct ionic_qp {
 	u16			sq_old_prod;
 	u16			sq_msn_prod;
 	u16			sq_msn_cons;
-	u16			sq_npg_cons;
 	u16			sq_cmb_prod;
 
 	spinlock_t		rq_lock; /* for posting and polling */

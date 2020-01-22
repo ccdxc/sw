@@ -1002,8 +1002,6 @@ static int ionic_qp_info_show(struct seq_file *s, void *v)
 				   qp->sq_msn_prod);
 			seq_printf(s, "sq_msn_cons:\t%#06x\n",
 				   qp->sq_msn_cons);
-			seq_printf(s, "sq_npg_cons:\t%#06x\n",
-				   qp->sq_npg_cons);
 		}
 
 		if (qp->sq_umem)

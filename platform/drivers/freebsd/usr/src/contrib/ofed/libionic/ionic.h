@@ -114,6 +114,7 @@ struct ionic_sq_meta {
 	uint8_t			ibsts;
 	bool			remote;
 	bool			signal;
+	bool			local_comp;
 };
 
 struct ionic_rq_meta {
@@ -150,7 +151,6 @@ struct ionic_qp {
 	uint16_t		sq_old_prod;
 	uint16_t		sq_msn_prod;
 	uint16_t		sq_msn_cons;
-	uint16_t		sq_npg_cons;
 	uint16_t		sq_cmb_prod;
 
 	pthread_spinlock_t	rq_lock;

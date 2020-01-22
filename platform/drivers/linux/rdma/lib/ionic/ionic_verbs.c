@@ -547,14 +547,14 @@ static bool ionic_peek_send(struct ionic_qp *qp)
 	if (ionic_queue_empty(&qp->sq))
 		return false;
 
-	/* waiting for local completion? */
-	if (qp->sq.cons == qp->sq_npg_cons)
-		return false;
-
 	meta = &qp->sq_meta[qp->sq.cons];
 
 	/* waiting for remote completion? */
 	if (meta->remote && meta->seq == qp->sq_msn_cons)
+		return false;
+
+	/* waiting for local completion? */
+	if (!meta->remote && !meta->local_comp)
 		return false;
 
 	return true;
@@ -574,14 +574,14 @@ static int ionic_poll_send(struct ionic_cq *cq, struct ionic_qp *qp,
 		if (ionic_queue_empty(&qp->sq))
 			goto out_empty;
 
-		/* waiting for local completion? */
-		if (qp->sq.cons == qp->sq_npg_cons)
-			goto out_empty;
-
 		meta = &qp->sq_meta[qp->sq.cons];
 
 		/* waiting for remote completion? */
 		if (meta->remote && meta->seq == qp->sq_msn_cons)
+			goto out_empty;
+
+		/* waiting for local completion? */
+		if (!meta->remote && !meta->local_comp)
 			goto out_empty;
 
 		ionic_dbg(ctx,
@@ -685,22 +685,14 @@ static int ionic_comp_msn(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 		meta->remote = false;
 	}
 
-	/* remote completion coalesces local requests, too */
-	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
-	if (!ionic_validate_cons(qp->sq.prod,
-				 qp->sq_npg_cons,
-				 cqe_seq, qp->sq.mask))
-		qp->sq_npg_cons = cqe_seq;
-
 	return 0;
 }
 
 static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 {
 	struct ionic_sq_meta *meta;
-	uint16_t cqe_seq, cqe_idx;
+	uint16_t cqe_idx;
 	uint32_t st_len;
-	int rc;
 
 	if (qp->sq_flush)
 		return 0;
@@ -721,21 +713,10 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	}
 
 	cqe_idx = cqe->send.npg_wqe_id & qp->sq.mask;
-	cqe_seq = ionic_queue_next(&qp->sq, cqe_idx);
-
-	rc = ionic_validate_cons(qp->sq.prod,
-				 qp->sq_npg_cons,
-				 cqe_seq, qp->sq.mask);
-	if (rc) {
-		ionic_err("wqe is not posted %#lx (id)",
-			  (unsigned long)cqe->send.npg_wqe_id);
-		return rc;
-	}
-
-	qp->sq_npg_cons = cqe_seq;
+	meta = &qp->sq_meta[cqe_idx];
+	meta->local_comp = true;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		meta = &qp->sq_meta[cqe_idx];
 		meta->len = st_len;
 		meta->ibsts = ionic_to_ibv_status(st_len);
 		meta->remote = false;
@@ -1371,7 +1352,6 @@ static void ionic_reset_qp(struct ionic_qp *qp)
 		qp->sq_flush_rcvd = false;
 		qp->sq_msn_prod = 0;
 		qp->sq_msn_cons = 0;
-		qp->sq_npg_cons = 0;
 		qp->sq_cmb_prod = 0;
 		qp->sq.prod = 0;
 		qp->sq.cons = 0;
@@ -1591,6 +1571,7 @@ static void ionic_v1_prep_base(struct ionic_qp *qp,
 	meta->wrid = wr->wr_id;
 	meta->ibsts = IBV_WC_SUCCESS;
 	meta->signal = false;
+	meta->local_comp = false;
 
 	wqe->base.wqe_id = qp->sq.prod;
 

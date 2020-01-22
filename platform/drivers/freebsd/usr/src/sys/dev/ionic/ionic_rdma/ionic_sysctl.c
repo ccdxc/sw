@@ -955,8 +955,6 @@ void ionic_dbg_add_qp(struct ionic_ibdev *dev, struct ionic_qp *qp)
 			  "sq_msn_prod", "SQ MSN Producer Index");
 		ionic_u16(ctx, parent, &qp->sq_msn_cons,
 			  "sq_msn_cons", "SQ MSN Consumer Index");
-		ionic_u16(ctx, parent, &qp->sq_npg_cons,
-			  "sq_npg_cons", "SQ NPG Consumer Index");
 
 		ionic_bool(ctx, parent, &qp->sq_is_cmb,
 			   "sq_is_cmb", "SQ in Ctrl Mem");
