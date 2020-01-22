@@ -249,7 +249,7 @@ static void create_route_proto_grpc () {
     }
 }
 
-static void create_bgp_peer_proto_grpc (bool lo=false) {
+static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerRequest  request;
     BGPResponse     response;
     ClientContext   context;
@@ -274,14 +274,17 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     }
     proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
-    proto_spec->set_localasn(g_test_conf_.local_asn);
     proto_spec->set_connectretry(5);
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
     proto_spec->set_password("test");
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
-    ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    if (op_del) {
+        ret_status = g_bgp_stub_->BGPPeerSpecDelete(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -290,7 +293,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false) {
     }
 }
 
-static void create_bgp_peer_af_proto_grpc (bool lo=false) {
+static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerAfRequest  request;
     BGPResponse     response;
     ClientContext   context;
@@ -329,7 +332,11 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false) {
     proto_spec->set_defaultorig(pds::BOOL_FALSE);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
-    ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
+    if (op_del ) {
+        ret_status = g_bgp_stub_->BGPPeerAfDelete(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -490,7 +497,6 @@ static void get_peer_status_all() {
             ip_addr.s_addr = paddr;
             printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
             printf ("  If Id                : %d\n", resp.ifid());
-            printf ("  Local ASN            : %d\n", resp.localasn());
             printf ("  Remote ASN           : %d\n", resp.remoteasn());
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());
@@ -592,17 +598,27 @@ int main(int argc, char** argv)
     } else if (argc == 2) {
         if (!strcmp(argv[1], "peer_status")) {
             get_peer_status_all();
-            return 0;
         } else if (!strcmp (argv[1], "evpn_mac_ip")) {
             get_evpn_mac_ip_all();
-            return 0;
+        } else if (!strcmp(argv[1], "delete-peer")) {
+            create_bgp_peer_af_proto_grpc(true, true );
+            create_bgp_peer_proto_grpc(true, true);
+        } else if (!strcmp(argv[1], "add-peer")) {
+            create_bgp_peer_proto_grpc(true);
+            create_bgp_peer_af_proto_grpc(true);
+        } else {
+            goto help_str;
         }
+        return 0;
     }
 
+help_str:
     printf ("Invalid CLI Arguments!  Usage: \n"
             "no arguments : run test init config\n"
             "peer_status  : display Peer Status Table\n"
-            "evpn_mac_ip  : display EVPN MAC IP Table\n");
+            "evpn_mac_ip  : display EVPN MAC IP Table\n"
+            "delete-peer  : delete RR iBGP peer config\n"
+            "add-peer     : add RR iBGP peer config\n");
     return 0;
 
 }

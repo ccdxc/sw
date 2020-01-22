@@ -254,7 +254,6 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     }
     proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
-    proto_spec->set_localasn(g_test_conf_.local_asn);
     proto_spec->set_connectretry(5);
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
@@ -472,7 +471,6 @@ static void get_peer_status_all() {
             ip_addr.s_addr = paddr;
             printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
             printf ("  If Id                : %d\n", resp.ifid());
-            printf ("  Local ASN            : %d\n", resp.localasn());
             printf ("  Remote ASN           : %d\n", resp.remoteasn());
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());

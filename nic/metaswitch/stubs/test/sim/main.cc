@@ -92,7 +92,6 @@ pds_ms_sim_test_bgp_update ()
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
-    bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
     bgp_peer_spec.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);
@@ -148,7 +147,6 @@ pds_ms_sim_test_overlay_bgp_update ()
 
     //BGP PeerTable
     pds::BGPPeerSpec bgp_peer_spec;
-    bgp_peer_spec.set_localasn (g_test_conf.local_asn);
     bgp_peer_spec.set_remoteasn (g_test_conf.remote_asn);
     bgp_peer_spec.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
     bgp_peer_spec.set_adminen(pds::ADMIN_UP);

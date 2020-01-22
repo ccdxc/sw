@@ -284,6 +284,10 @@ pds_ms_fill_amb_bgp_rm (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
 
         data->max_ibgp_ecmp_routes = 2;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_MAX_INT_ECMP_RTS);      
+
+        // Enable ORF support
+        data->orf_supported  = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_ORF_SUPPORTED);
     }
 
     NBB_TRC_EXIT();
@@ -487,6 +491,54 @@ pds_ms_fill_amb_bgp_rm_afm_join (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     return;
 }
 
+// Fill bgpOrfCapabilityTable: AMB_BGP_ORF_CAP
+NBB_VOID
+pds_ms_fill_amb_bgp_orf_cap (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
+{
+    // Local variables
+    NBB_ULONG       *oid = NULL; 
+    AMB_BGP_ORF_CAP *data= NULL;
+
+    NBB_TRC_ENTRY ("pds_ms_fill_amb_bgp_orf_cap");
+
+    // Get oid and data offset 
+    oid     = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
+    data    = (AMB_BGP_ORF_CAP *)((NBB_BYTE *)mib_msg + mib_msg->data_offset); 
+
+    // Set all fields absent
+    AMB_SET_ALL_FIELDS_NOT_PRESENT (mib_msg);
+
+    // Set OID len and family
+    oid[0] = AMB_BGP_ORF_OID_LEN;
+    oid[1] = AMB_FAM_BGP_ORF_CAP;
+
+    // Set all incoming fields
+    oid[AMB_BGP_ORF_CAP_ENT_INDEX_INDEX] = conf->entity_index;
+    data->ent_index                      = conf->entity_index;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_ENT_INDEX);
+
+    oid[AMB_BGP_ORF_CAP_AFI_INDEX] = conf->afi;
+    data->afi                      = conf->afi;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_AFI);
+
+    oid [AMB_BGP_ORF_CAP_SAFI_INDEX] = conf->safi;
+    data->safi                       = conf->safi;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_SAFI);
+
+    oid[AMB_BGP_ORF_CAP_ORF_TYPE_INDEX] = AMB_BGP_ORF_CAP_TYPE_PREFIX;
+    data->orf_type                      = AMB_BGP_ORF_CAP_TYPE_PREFIX;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_ORF_TYPE);
+
+    data->admin_status = AMB_BGP_ADMIN_STATUS_UP;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_ADMIN_STAT);
+
+    data->send_receive = AMB_BGP_ORF_CAP_SR_BOTH;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_ORF_CAP_SEND_RECV);
+
+    NBB_TRC_EXIT();
+    return;
+}
+
 // row_update for BGP-RM
 NBB_VOID
 pds_ms_row_update_bgp_rm (pds_ms_config_t *conf)
@@ -572,6 +624,23 @@ pds_ms_row_update_bgp_rm_afm_join (pds_ms_config_t *conf)
     return;
 }
 
+// row_update for bgpOrfCapabilityTable
+NBB_VOID
+pds_ms_row_update_bgp_orf_cap (pds_ms_config_t *conf)
+{
+    NBB_TRC_ENTRY ("pds_ms_row_update_bgp_orf_cap");
+
+    // Set params
+    conf->oid_len       = AMB_BGP_ORF_OID_LEN;
+    conf->data_len      = sizeof (AMB_BGP_ORF_CAP);
+
+    // Convert to row_update and send
+    pds_ms_ctm_send_row_update_common (conf, pds_ms_fill_amb_bgp_orf_cap); 
+
+    NBB_TRC_EXIT();
+    return;
+}
+
 NBB_VOID
 pds_ms_bgp_create (pds_ms_config_t *conf)
 {
@@ -604,6 +673,8 @@ pds_ms_bgp_create (pds_ms_config_t *conf)
     conf->safi               = AMB_BGP_EVPN;
     conf->partner_index      = PDS_MS_EVPN_ENT_INDEX;
     pds_ms_row_update_bgp_rm_afm_join (conf);
+    // TODO: Enable ORF cap on L2VPN AF
+    // pds_ms_row_update_bgp_orf_cap (conf);
 
     // bgpRmAfiSafiTable
     conf->entity_index      = 1;

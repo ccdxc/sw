@@ -43,12 +43,11 @@ message CPRouteSpec {
   uint32          RouteTableId  = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
   types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest"}];
   uint32          DestPrefixLen = 3 [(venice.pdsaFields) = {Field:"dest_len", GetKeyOidIndex: "AMB_QCR_RIB_DEST_LEN_INDEX"}];
-  uint32          ToS           = 4 [(venice.pdsaFields) = {Field:"tos", GetKeyOidIndex: "AMB_QCR_RIB_TOS_INDEX"}];
-  types.IPAddress NHAddr        = 5 [(venice.pdsaFields) = {Field:"next_hop"}];
-  uint32          IfIndex       = 6 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_QCR_RIB_IF_INDEX_INDEX"}];
-  RouteType       Type          = 7 [(venice.pdsaFields) = {Field:"type"}];
-  RouteProto      proto         = 8 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
-  uint32          RpmIndex      = 9 [(venice.pdsaFields) = {Field:"rpm_index", GetKeyOidIndex: "AMB_QCR_RIB_RPM_INDEX_INDEX"}];
+  types.IPAddress NHAddr        = 4 [(venice.pdsaFields) = {Field:"next_hop"}];
+  uint32          IfIndex       = 5 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_QCR_RIB_IF_INDEX_INDEX"}];
+  RouteType       Type          = 6 [(venice.pdsaFields) = {Field:"type"}];
+  RouteProto      proto         = 7 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
+  uint32          RpmIndex      = 8 [(venice.pdsaFields) = {Field:"rpm_index", GetKeyOidIndex: "AMB_QCR_RIB_RPM_INDEX_INDEX"}];
 }
 
 message CPRouteSpecRequest {

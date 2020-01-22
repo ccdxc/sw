@@ -154,35 +154,33 @@ message BGPPeerSpec {
   };
   // unique key/identifier of peer
   bytes           Id           = 1;
-  // The local autonomous system number
-  uint32          LocalASN     = 2 [(venice.pdsaFields) = {Field: "conf_alt_local_as"}];
   // Whether BGP peer is enabled ? If peer is not enabled then
   // local router must not initiate connections to the neighbor
   // and must not respond to TCP connections attempts from
   // neighbor
-  AdminSt         AdminEn      = 3 [(venice.pdsaFields) = {Field: "admin_status"}];
+  AdminSt         AdminEn      = 2 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
-  types.IPAddress PeerAddr     = 4 [(venice.pdsaFields) = {Field: "remote_addr"}];
+  types.IPAddress PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr    = 5 [(venice.pdsaFields) = {Field: "local_addr"}];
+  types.IPAddress LocalAddr    = 4 [(venice.pdsaFields) = {Field: "local_addr"}];
   // IfId
-  uint32          IfId         = 6 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
+  uint32          IfId         = 5 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
   // Remote 4-byte (32-bit) AS number
-  uint32          RemoteASN    = 7 [(venice.pdsaFields) = {Field: "remote_as"}];
+  uint32          RemoteASN    = 6 [(venice.pdsaFields) = {Field: "remote_as"}];
   // Send regular community attributes to neighbor
-  AMBBool         SendComm     = 8 [(venice.pdsaFields) = {Field: "send_comm"}];
+  AMBBool         SendComm     = 7 [(venice.pdsaFields) = {Field: "send_comm"}];
   // Send extended community attributes to neighbor
-  AMBBool         SendExtComm  = 9 [(venice.pdsaFields) = {Field: "send_ext_comm"}];
+  AMBBool         SendExtComm  = 8 [(venice.pdsaFields) = {Field: "send_ext_comm"}];
   // Peer is a route reflector client
-  BGPPeerRRClient RRClient     = 10 [(venice.pdsaFields) = {Field: "reflector_client"}];
+  BGPPeerRRClient RRClient     = 9 [(venice.pdsaFields) = {Field: "reflector_client"}];
   // BGP session connect-retry timer in seconds
-  uint32          ConnectRetry = 11 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
+  uint32          ConnectRetry = 10 [(venice.pdsaFields) = {Field: "connect_retry_interval"}];
   // BGP session holdtime timer in seconds
-  uint32          HoldTime     = 12 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
+  uint32          HoldTime     = 11 [(venice.pdsaFields) = {Field: "hold_time_configd"}];
   // BGP session keepalive timer in seconds
-  uint32          KeepAlive    = 13 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
+  uint32          KeepAlive    = 12 [(venice.pdsaFields) = {Field: "keep_alive_configd"}];
   // MD5 Authentication
-  bytes           Password     = 14 [(venice.pdsaFields) = {Field: "password", IgnoreIfEmpty: true}];
+  bytes           Password     = 13 [(venice.pdsaFields) = {Field: "password", IgnoreIfEmpty: true}];
   
   // TODO: Get-Only fields follows. Will be moved to status table
   // BGP session Status

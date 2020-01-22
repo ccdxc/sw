@@ -30,7 +30,6 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
-        ent->set_localasn(0);
         ent->set_connectretry(1);
         ent->set_sendcomm(pds::BOOL_TRUE);
         ent->set_sendextcomm(pds::BOOL_TRUE);
@@ -61,7 +60,6 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
-        ent->set_localasn(0);
 
         grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
 
@@ -82,7 +80,6 @@ class Client {
                 std::cout << "adminen: " << resp.adminen() << std::endl;
                 std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
                 std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
-                std::cout << "localasn: " << resp.localasn() << std::endl;
             }
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
@@ -106,7 +103,6 @@ class Client {
         localaddr->set_v4addr(1);
         ent->set_ifid(0);
         ent->set_remoteasn(1);
-        ent->set_localasn(0);
         grpc::Status status = stub_->BGPPeerSpecDelete(&context, req, &res);
 
         if (status.ok()) {
@@ -150,7 +146,6 @@ class Client {
                 std::cout << "adminen: " << resp.adminen() << std::endl;
                 std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
                 std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
-                std::cout << "localasn: " << resp.localasn() << std::endl;
             }
         } else {
             std::cout << status.error_code() << ": " << status.error_message()
