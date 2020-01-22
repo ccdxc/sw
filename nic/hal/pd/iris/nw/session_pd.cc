@@ -1048,10 +1048,14 @@ pd_session_create (pd_func_args_t *pd_func_args)
 
     // add flow info table entries
     ret = p4pd_add_flow_info_table_entries(args);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    if (ret != HAL_RET_OK) {
+        goto cleanup;
+    }
 
     ret = p4pd_add_upd_flow_hash_table_entries(session_pd, args, false);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    if (ret != HAL_RET_OK) {
+        goto cleanup;
+    }
 
     return HAL_RET_OK;
 
@@ -1192,7 +1196,7 @@ pd_session_delete (pd_func_args_t *pd_func_args)
 
     // del flow hash table entries
     ret = p4pd_del_flow_hash_table_entries(session_pd);
-    SDK_ASSERT(ret == HAL_RET_OK);
+    //SDK_ASSERT(ret == HAL_RET_OK);
 
     session_pd_free(session_pd);
     args->session->pd = NULL;
