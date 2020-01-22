@@ -192,14 +192,20 @@ var _ = Describe("elastic cluster test", func() {
 			}
 
 			if stats.Shards.Total != stats.Shards.Successful { // wait until all the shards become ready
-				return fmt.Errorf("expected successful shards: %v, got : %v", stats.Shards.Total, stats.Shards.Successful)
+				cmd := fmt.Sprintf("wget -O- --no-check-certificate --private-key=/var/lib/pensando/pki/shared/elastic"+
+					"-client-auth/key.pem  --certificate=/var/lib/pensando/pki/shared/elastic-client-auth/cert."+
+					"pem https://%s:9200/_cat/shards/%s", ts.tu.VeniceNodeIPs[0], eventsIndex)
+				shardsOut := ts.tu.CommandOutput(ts.tu.VeniceNodeIPs[0], cmd)
+
+				return fmt.Errorf("expected successful shards: %v, got : %v, shard status: %s", stats.Shards.Total,
+					stats.Shards.Successful, shardsOut)
 			}
 			si.Total = stats.Shards.Total
 			si.Successful = stats.Shards.Successful
 			si.Failed = stats.Shards.Failed
 
 			return nil
-		}, 60, 1).Should(BeNil(), "failed to get index stats")
+		}, 120, 1).Should(BeNil(), "failed to get index stats")
 
 		log.Infof("%v index shard stats: %+v", eventsIndex, si)
 
