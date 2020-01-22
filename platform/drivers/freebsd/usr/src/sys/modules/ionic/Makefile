@@ -39,3 +39,4 @@ CFLAGS+= -I${SRCTOP}/sys/compat/linuxkpi/common/include
 .include <bsd.kmod.mk>
 
 CFLAGS+= -Wno-pointer-arith
+CFLAGS+= -Werror
