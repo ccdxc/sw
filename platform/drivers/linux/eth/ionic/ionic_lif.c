@@ -2444,6 +2444,9 @@ static const struct net_device_ops ionic_netdev_ops = {
 #ifdef HAVE_RHEL7_NETDEV_OPS_EXT_NDO_SET_VF_VLAN
 	.extended.ndo_set_vf_vlan	= ionic_set_vf_vlan,
 #endif
+#ifdef HAVE_RHEL7_NETDEV_OPS_EXT_NDO_SET_VF_TRUST
+	.extended.ndo_set_vf_trust	= ionic_set_vf_trust,
+#endif
 #else
 	.ndo_dfwd_add_station	= ionic_dfwd_add_station,
 	.ndo_dfwd_del_station	= ionic_dfwd_del_station,

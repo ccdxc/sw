@@ -4855,6 +4855,10 @@ of_get_mac_address(struct device_node __always_unused *np)
 #define HAVE_UDP_ENC_RX_OFFLOAD
 #endif /* RHEL >= 7.4 */
 
+#if (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(7,6))
+#define HAVE_RHEL7_NETDEV_OPS_EXT_NDO_SET_VF_TRUST
+#endif
+
 #define qdisc_reset_all_tx(a)
 #endif /* RHEL >= 7.0 && RHEL < 8.0 */
 
