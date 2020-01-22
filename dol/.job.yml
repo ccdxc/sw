@@ -3,13 +3,13 @@ version: 2.0
 targets:
   infra:
     commands: [ "bash", "-c", "cd /sw/dol && ./sanity.sh" ]
-    owners: ["email:vikasd@pensando.io"]
+    owners: ["email:param@pensando.io"]
     area:
     sub-area:
     feature:
   regr:
     commands: [ "bash", "-c", "cd /sw/dol && ./regression.sh" ]
-    owners: ["email:vikasd@pensando.io"]
+    owners: ["email:param@pensando.io"]
     area:
     sub-area:
     feature:

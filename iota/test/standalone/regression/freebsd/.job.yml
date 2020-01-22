@@ -93,7 +93,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-eth:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite classic --regression --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr"]
-   owners: ["email:ci-status@pensando.io"]
+   owners: ["email:anish@pensando.io"]
    area:
    sub-area:
    feature:
@@ -119,7 +119,7 @@ e2e-targets:
           EsxPassword: Pen0trl!
  e2e-freebsd-regression-infra:
    commands: ["sh", "-c", "make regression-infra && ./run_iota.sh --testsuite classic --regression --testbundle connectivity,mode_change,post_diag_check,asic_tools,obfl_check"]
-   owners: ["email:ci-status@pensando.io"]
+   owners: ["email:anish@pensando.io"]
    area:
    sub-area:
    feature:

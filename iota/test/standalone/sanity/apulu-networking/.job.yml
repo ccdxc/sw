@@ -11,7 +11,7 @@ e2e-targets:
   # baremetal + baremetal Esx test cases
  e2e-linux-bm:
    commands: ["sh", "-c", "make apulu-networking && ./run_iota.sh --pipeline apulu --testsuite apulu_networking"]
-   owners: ["email:ci-status@pensando.io"]
+   owners: ["email:raghava@pensando.io"]
    area:
    sub-area:
    feature:

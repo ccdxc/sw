@@ -109,7 +109,7 @@ targets:
   # ====================== DOL Tests ===========================
   dol/rdma:
     commands: ["make", "jobd/dol/rdma"]
-    owners: ["email:ksmurty@pensando.io"]
+    owners: ["email:rdma-dpath@pensando.io"]
     area:
     sub-area:
     feature:
@@ -117,7 +117,7 @@ targets:
     - build-iris-x86
   dol/rdma_ext:
     commands: ["make", "jobd/dol/rdma_ext"]
-    owners: ["email:ksmurty@pensando.io"]
+    owners: ["email:rdma-dpath@pensando.io"]
     area:
     sub-area:
     feature:
@@ -339,7 +339,7 @@ targets:
   #  - build-iris-x86
   dol/basetopo:
     commands: ["make", "jobd/dol/basetopo"]
-    owners: ["email:vikasd@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -347,7 +347,7 @@ targets:
     - build-iris-x86
   dol/swphv:
     commands: ["make", "jobd/dol/swphv"]
-    owners: ["email:shaleman@pensando.io"]
+    owners: ["email:bharat@pensando.io"]
     area:
     sub-area:
     feature:
@@ -365,7 +365,7 @@ targets:
   #  - build-gft-x86
   #dol/gft/rdma:
   #commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma"]
-  #  owners: ["email:ksmurty@pensando.io"]
+  #  owners: ["email:rdma-dpath@pensando.io"]
   #  area:
   #  sub-area:
   #  feature:
@@ -373,7 +373,7 @@ targets:
   #  - build-gft-x86
   #dol/gft/rdma_l2l:
   #  commands: ["make", "PIPELINE=gft", "jobd/dol/gft/rdma_l2l"]
-  #  owners: ["email:ksmurty@pensando.io"]
+  #  owners: ["email:rdma-dpath@pensando.io"]
   #  area:
   #  sub-area:
   #  feature:
@@ -431,7 +431,7 @@ targets:
   # feature:
   #make/nic:
   # commands: ["make", "jobd/make/nic"]
-  # owners: ["email:vikasd@pensando.io"]
+  # owners: ["email:bharat@pensando.io"]
   # area:
   # sub-area:
   # feature:

@@ -26,7 +26,7 @@ targets:
 
   artemis/ftlite:
     commands: ["make", "PIPELINE=artemis", "jobd/artemis/ftlite"]
-    owners: ["email:vikasd@pensando.io"]
+    owners: ["email:avinash@pensando.io"]
     area:
     sub-area:
     feature:
