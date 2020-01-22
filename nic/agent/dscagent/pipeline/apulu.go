@@ -42,7 +42,7 @@ type ApuluAPI struct {
 
 // NewPipelineAPI returns the implemetor of PipelineAPI
 func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
-	conn, err := utils.CreateNewGRPCClient("PDS_GRPC_PORT", types.PdsGRPCDefaultPort)
+	conn, err := utils.CreateNewGRPCClient("PDS_GRPC_PORT", types.HalGRPCDefaultPort)
 	if err != nil {
 		log.Errorf("Failed to create GRPC Connection to HAL. Err: %v", err)
 		return nil, err

@@ -114,9 +114,6 @@ const (
 	// HalGRPCDefaultPort is the default port for HAL
 	HalGRPCDefaultPort = "50054"
 
-	// PdsGRPCDefaultPort is the default port for pds
-	PdsGRPCDefaultPort = "9999"
-
 	// HalGRPCWaitTimeout is the timeout for which agent will wait for HAL to be up
 	HalGRPCWaitTimeout = time.Minute * 10
 
