@@ -38,7 +38,7 @@ def __initialize_object_info():
     ObjectInfo[agentapi.ObjectTypes.ROUTE] = route
     ObjectInfo[agentapi.ObjectTypes.POLICY] = policy
     ObjectInfo[agentapi.ObjectTypes.MIRROR] = mirror
-    ObjectInfo[agentapi.ObjectTypes.DHCPRELAY] = dhcp_relay
+    ObjectInfo[agentapi.ObjectTypes.DHCP_RELAY] = dhcp_relay
     ObjectInfo[agentapi.ObjectTypes.NAT_PB] = nat_pb
     return
 

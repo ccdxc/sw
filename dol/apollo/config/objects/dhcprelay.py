@@ -11,7 +11,7 @@ import apollo.config.objects.base as base
 
 class DhcpRelayObject(base.ConfigObjectBase):
     def __init__(self, node, vpc, serverip, agentip):
-        super().__init__(api.ObjectTypes.DHCPRELAY, node)
+        super().__init__(api.ObjectTypes.DHCP_RELAY, node)
         self.Id = next(resmgr.DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
 
@@ -62,7 +62,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
 
 class DhcpRelayObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.DHCPRELAY, resmgr.MAX_DHCP_RELAY)
+        super().__init__(api.ObjectTypes.DHCP_RELAY, resmgr.MAX_DHCP_RELAY)
         return
 
     def GetKeyfromSpec(self, spec, yaml=False):

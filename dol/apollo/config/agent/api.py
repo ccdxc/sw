@@ -72,7 +72,7 @@ class ObjectTypes(enum.IntEnum):
     METER = 14
     TAG = 15
     INTERFACE = 16
-    DHCPRELAY = 17
+    DHCP_RELAY = 17
     NAT_PB = 18
     MAX = 19
 
@@ -205,7 +205,7 @@ class ApolloAgentClient:
                                                       self.__channel, 'Tag')
         self.__stubs[ObjectTypes.METER] = ClientStub(meter_pb2_grpc.MeterSvcStub,
                                                       self.__channel, 'Meter')
-        self.__stubs[ObjectTypes.DHCPRELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
+        self.__stubs[ObjectTypes.DHCP_RELAY] = ClientStub(dhcp_pb2_grpc.DHCPSvcStub,
                                                       self.__channel, 'DHCPRelay')
         self.__stubs[ObjectTypes.NAT_PB] = ClientStub(nat_pb2_grpc.NatSvcStub,
                                                       self.__channel, 'NatPortBlock')
@@ -226,7 +226,7 @@ class ApolloAgentClient:
         self.__msgreqs[ObjectTypes.TUNNEL] = ClientModule(tunnel_pb2, 'Tunnel')
         self.__msgreqs[ObjectTypes.VPC] = ClientModule(vpc_pb2, 'VPC')
         self.__msgreqs[ObjectTypes.VNIC] = ClientModule(vnic_pb2, 'Vnic')
-        self.__msgreqs[ObjectTypes.DHCPRELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
+        self.__msgreqs[ObjectTypes.DHCP_RELAY] = ClientModule(dhcp_pb2, 'DHCPRelay')
         self.__msgreqs[ObjectTypes.NAT_PB] = ClientModule(nat_pb2, 'NatPortBlock')
         return
 

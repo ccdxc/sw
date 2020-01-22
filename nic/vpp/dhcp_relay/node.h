@@ -10,6 +10,19 @@
 #include <nic/vpp/infra/pkt.h>
 #include <nic/vpp/infra/utils.h>
 
+#define PDS_DHCP_OPT_82_CIRC_ID             1
+#define PDS_DHCP_OPT_82_CIRC_ID_LEN         7
+#define PDS_DHCP_OPT_82_LINK_SEL            5
+#define PDS_DHCP_OPT_82_LINK_SEL_LEN        4
+#define PDS_DHCP_OPT_82_SVR_IDENT           11
+#define PDS_DHCP_OPT_82_SVR_IDENT_LEN       4
+#define PDS_DHCP_OPT_82_VSS                 151
+#define PDS_DHCP_OPT_82_VSS_LEN             8
+#define PDS_DHCP_OPT_82_VSS_CONTROL         152
+#define PDS_DHCP_OPT_82_VSS_CONTROL_LEN     0
+#define PDS_IP4_PREFIX_LEN                  4
+#define PDS_VNIC_ID_LEN                     4
+
 // clfy node related defines
 #define foreach_dhcp_relay_clfy_counter                     \
     _(TO_SERVER, "Sent to Server " )                        \

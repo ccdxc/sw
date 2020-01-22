@@ -472,8 +472,8 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
     dhcp_header_t *dh;
     ip4_header_t *ip;
     dhcp_option_t *o, *end;
-    uint32_t l2_vni;
-    uint32_t l3_vni;
+    u32 l2_vni;
+    u32 l3_vni;
 
     ip = vlib_buffer_get_current(b);
     uh = (udp_header_t *) (ip + 1);
@@ -487,44 +487,64 @@ pds_dhcp_options_callback (vlib_main_t * vm, vlib_buffer_t *b)
 
     while (o->option != DHCP_PACKET_OPTION_END && o < end) {
         if(o->option == 82) {
-            o->length = 34; // for suboptions 1,5, 11, 151 and 152
+            int len = 0;
 
             // suboption 1
-            o->data[0] = 1;     // circuit id option will be used for BD VNID and vnic_id
-            o->data[1] = 7;     // BD VNID takes 3 bytes and vnicid takes 4 bytes
-            clib_memcpy(&o->data[2], &l2_vni, 3);  // l2 vnid
-            uint32_t *vnic_id = (uint32_t *) & o->data[5];
+            // circuit id option will be used for BD VNID and vnic_id
+            o->data[len++] = PDS_DHCP_OPT_82_CIRC_ID;
+            // BD VNID takes 3 bytes and vnicid takes 4 bytes
+            o->data[len++] = PDS_DHCP_OPT_82_CIRC_ID_LEN;
+            clib_memcpy(&o->data[len], &l2_vni, 3);  // l2 vnid
+            len += 3;
+            u32 *vnic_id = (u32 *) & o->data[len];
             *vnic_id = vnet_buffer(b)->pds_dhcp_data.vnic_id;  // vnic id
+            len += PDS_VNIC_ID_LEN;
 
             // suboption 5
-            o->data[9] = 5;     // suboption which stores subnet prefix
-            o->data[10] = 4;     // prefix lenght is 4 bytes
-            uint32_t *subnet_prefix = (uint32_t *) & o->data[11];
-            clib_memset(subnet_prefix, 0x0, sizeof(uint32_t));
+            // suboption which stores subnet prefix
+            o->data[len++] = PDS_DHCP_OPT_82_LINK_SEL;
+            // prefix lenght is 4 bytes
+            o->data[len++] = PDS_DHCP_OPT_82_LINK_SEL_LEN;
+            u32 *subnet_prefix = (u32 *) & o->data[len];
+            clib_memset(subnet_prefix, 0x0, PDS_IP4_PREFIX_LEN);
             //TODO o->data[11-14] = fill subnet prefix
+            len += PDS_IP4_PREFIX_LEN;
 
             // suboption 11
-            o->data[15] = 11;     // suboption which stores subnet ip
-            o->data[16] = 4;      // prefix lenght is 4 bytes
-            uint32_t *subnet_ip = (uint32_t *) & o->data[17];
-            clib_memset(subnet_ip, 0x0, sizeof(uint32_t));
+            // suboption which stores subnet ip
+            o->data[len++] = PDS_DHCP_OPT_82_SVR_IDENT;
+            // prefix lenght is 4 bytes
+            o->data[len++] = PDS_DHCP_OPT_82_SVR_IDENT_LEN;
+            u32 *subnet_ip = (u32 *) & o->data[len];
+            clib_memset(subnet_ip, 0x0, PDS_IP4_PREFIX_LEN);
             //TODO o->data[17-20] = fill subnet prefix
+            len += PDS_IP4_PREFIX_LEN;
 
             // suboption 151
-            o->data[21] = 151;     // suboption which stores vss type and vrf to choose subnet from
-            o->data[22] = 8;       // 1 byte for vss type, 3 bytes for l3 vni and 4 bytes padded 0x0
-            o->data[23] = 0x01;    // vss type 1
-            clib_memcpy(&o->data[24], &l3_vni, 3);  // l3 vnid or vrf
-            clib_memset(&o->data[27], 0x0, 4);
+            // suboption which stores vss type and vrf to choose subnet from
+            o->data[len++] = PDS_DHCP_OPT_82_VSS;
+            // 1 byte for vss type, 3 bytes for l3 vni and 4 bytes padded 0x0
+            o->data[len++] = PDS_DHCP_OPT_82_VSS_LEN;
+            o->data[len++] = 0x01;    // vss type 1
+            clib_memcpy(&o->data[len], &l3_vni, 3);  // l3 vnid or vrf
+            len += 3;
+            clib_memset(&o->data[len], 0x0, 4);
+            len+= sizeof(u32);
 
             // suboption 152
-            o->data[21] = 152;     // suboption for vss control
-            o->data[32] = 0;       // no data to store
+            // suboption for vss control
+            o->data[len++] = PDS_DHCP_OPT_82_VSS_CONTROL;
+            // no data to store
+            o->data[len++] = PDS_DHCP_OPT_82_VSS_CONTROL_LEN;
+
+            o->length = len;    // length of all suboptions
 
             // suboption marking end
-            o->data[33] = DHCP_PACKET_OPTION_END;     // suboption fto identify end
+            o->data[len] = DHCP_PACKET_OPTION_END;     // suboption fto identify end
 
         }
+
+        o = (dhcp_option_t *) (o->data + o->length);
     }
     return 0;
 }

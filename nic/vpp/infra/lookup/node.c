@@ -5,6 +5,7 @@
 #include <vnet/plugin/plugin.h>
 #include <init.h>
 #include <api.h>
+#include <pdsa_impl_db_hdlr.h>
 #include "node.h"
 
 // *INDENT-OFF*
@@ -309,6 +310,14 @@ pds_infra_init (vlib_main_t * vm)
     int ret = pds_vpp_ipc_init();
 
     if (ret != 0) {
+        ASSERT(0);
+    }
+
+    if (0 != pds_cfg_db_init()) {
+        ASSERT(0);
+    }
+
+    if (0 != pds_impl_db_init()) {
         ASSERT(0);
     }
 
