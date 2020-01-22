@@ -29,6 +29,9 @@ def Trigger(tc):
     req = api.Trigger_CreateExecuteCommandsRequest()
     for n in tc.Nodes:
         common.AddPenctlCommand(req, n, "system tech-support")
+        common.AddPenctlCommand(req, n, "show system statistics pb detail")
+        common.AddPenctlCommand(req, n, "show qos-class queues")
+        
 
     tc.resp = api.Trigger(req)
 
