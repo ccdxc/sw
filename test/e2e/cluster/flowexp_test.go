@@ -145,6 +145,8 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						fmt.Printf("received flow export policy from naples: %v, %+v \n", naples, st)
@@ -199,6 +201,8 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						fmt.Printf("received flow export policy from naples: %v, %+v", naples, st)
@@ -248,6 +252,8 @@ var _ = Describe("flow export policy tests", func() {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						fmt.Printf("received flow export policy from naples:%v, %+v \n", naples, st)
@@ -341,6 +347,8 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []*tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -425,6 +433,8 @@ var _ = Describe("flow export policy tests", func() {
 					for _, naples := range ts.tu.NaplesNodes {
 						By(fmt.Sprintf("verify flow export policy in %v", naples))
 						st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+						fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 						var naplesPol []tpmprotos.FlowExportPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -557,6 +567,8 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -643,6 +655,8 @@ var _ = Describe("flow export policy tests", func() {
 					for _, naples := range ts.tu.NaplesNodes {
 						By(fmt.Sprintf("verify flow export policy in %v", naples))
 						st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+						fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 						var naplesPol []tpmprotos.FlowExportPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
@@ -780,6 +794,8 @@ var _ = Describe("flow export policy tests", func() {
 				for _, naples := range ts.tu.NaplesNodes {
 					By(fmt.Sprintf("verify flow export policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/flowexports/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy  %+v\n", naples, st)
+
 					var naplesPol []tpmprotos.FlowExportPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("failed to unmarshal %v, %v", string(st), err))

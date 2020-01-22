@@ -170,6 +170,8 @@ var _ = Describe("fwlog policy tests", func() {
 					napleFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy %v \n", naples, st)
+
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
@@ -233,6 +235,8 @@ var _ = Describe("fwlog policy tests", func() {
 					napleFwlogMap := make(map[string]monitoring.FwlogPolicySpec)
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy %v \n", naples, st)
+
 					if !utils.IsEmpty(st) {
 						var naplesPol []monitoring.FwlogPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
@@ -288,6 +292,8 @@ var _ = Describe("fwlog policy tests", func() {
 					By(fmt.Sprintf("verify fwlog policy in %v", naples))
 
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy %v \n", naples, st)
+
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples:%v,  %+v", naples, st))
@@ -358,6 +364,8 @@ var _ = Describe("fwlog policy tests", func() {
 				By(fmt.Sprintf("verify fwlog policy in %v", naples))
 				Eventually(func() error {
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/telemetry/fwlog/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy %v \n", naples, st)
+
 					var naplesPol []monitoring.FwlogPolicy
 					if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
 						By(fmt.Sprintf("received fwlog policy from naples: %v, %+v", naples, st))
@@ -393,6 +401,8 @@ var _ = Describe("fwlog policy tests", func() {
 			for _, naples := range ts.tu.NaplesNodes {
 				Eventually(func() error {
 					st := ts.tu.LocalCommandOutput(fmt.Sprintf("curl -s -k --key %s --cert %s https://%s:8888/api/vrfs/", nodeAuthFile, nodeAuthFile, ts.tu.NameToIPMap[naples]))
+					fmt.Printf("naples-%v: policy %v \n", naples, st)
+
 					var vrfs []netproto.Vrf
 					err := json.Unmarshal([]byte(st), &vrfs)
 					Expect(err).Should(BeNil())
