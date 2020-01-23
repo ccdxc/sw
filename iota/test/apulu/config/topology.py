@@ -10,7 +10,6 @@ glopts.GlobalOptions = GlobalOptions
 #glopts.GlobalOptions.debug = True
 #glopts.GlobalOptions.verbose = True
 import infra.common.parser as parser
-import iota.test.apulu.config.agent.api as agentapi
 import iota.harness.api as api
 from infra.common.logging import logger as logger
 import apollo.config.generator as generator
@@ -27,7 +26,6 @@ def Main(args):
     if args.spec == 'dummy':
         return api.types.status.SUCCESS
     cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%args.spec)
-    agentapi.Init(node, api.GetNicMgmtIP(node)) 
     generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
 
     return api.types.status.SUCCESS

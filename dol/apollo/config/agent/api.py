@@ -163,7 +163,7 @@ class ApolloAgentClient:
 
     def __connect(self):
         if GlobalOptions.dryrun: return
-        endpoint = "%s:%s" % (self.__get_agent_ip(), self.__get_agent_port())
+        endpoint = "%s:%s" % (self.agentip, self.__get_agent_port())
         logger.info("Connecting to Agent %s" % endpoint)
         self.__channel = grpc.insecure_channel(endpoint)
         logger.info("Waiting for Agent to be ready ...")

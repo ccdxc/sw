@@ -95,9 +95,8 @@ def __create(node):
     # Create Device Object
     device.client.CreateObjects(node)
 
-    if utils.IsDol():
-        # Create Interface Objects
-        interface.client.CreateObjects(node)
+    # Create Interface Objects
+    interface.client.CreateObjects(node)
 
     # Create VPC Objects
     vpc.client.CreateObjects(node)
@@ -147,6 +146,7 @@ def Main(node, topospec, ip=None):
     logger.info("Initializing object info")
     __initialize_object_info()
 
+    logger.info("Initializing Agent ", ip)
     agentapi.Init(node, ip)
 
     __generate(node, topospec)
