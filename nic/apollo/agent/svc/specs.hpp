@@ -3183,11 +3183,17 @@ static inline void
 pds_device_api_spec_to_proto (pds::DeviceSpec *proto_spec,
                               const pds_device_spec_t *api_spec)
 {
-    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_ipaddr(),
-                                  &api_spec->device_ip_addr);
+    if ((api_spec->device_ip_addr.af == IP_AF_IPV4) ||
+        (api_spec->device_ip_addr.af == IP_AF_IPV6)) {
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_ipaddr(),
+                                      &api_spec->device_ip_addr);
+    }
     proto_spec->set_macaddr(MAC_TO_UINT64(api_spec->device_mac_addr));
-    ipaddr_api_spec_to_proto_spec(proto_spec->mutable_gatewayip(),
-                                  &api_spec->gateway_ip_addr);
+    if ((api_spec->gateway_ip_addr.af == IP_AF_IPV4) ||
+        (api_spec->gateway_ip_addr.af == IP_AF_IPV6)) {
+        ipaddr_api_spec_to_proto_spec(proto_spec->mutable_gatewayip(),
+                                      &api_spec->gateway_ip_addr);
+    }
     proto_spec->set_bridgingen(api_spec->bridging_en);
     proto_spec->set_learningen(api_spec->learning_en);
     proto_spec->set_learnagetimeout(api_spec->learn_age_timeout);
