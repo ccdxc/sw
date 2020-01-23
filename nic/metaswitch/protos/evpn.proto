@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------EvpnEviRt 
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 // protobuf specification for EVPN EVI/IP VRF and associated RT configurations
 //------------------------------------------------------------------------------
@@ -16,25 +16,25 @@ service EvpnSvc
   rpc EvpnEviSpecCreate (EvpnEviRequest) returns (EvpnResponse) {}
   rpc EvpnEviSpecUpdate (EvpnEviRequest) returns (EvpnResponse) {}
   rpc EvpnEviSpecDelete (EvpnEviRequest) returns (EvpnResponse) {}
-  rpc EvpnEviSpecGet (EvpnEviRequest) returns (EvpnEviSpecResponse) {}
-  rpc EvpnEviSpecGetAll (EvpnEviRequest) returns (EvpnEviSpecResponse) {}
+  rpc EvpnEviSpecGet (EvpnEviRequest) returns (EvpnEviGetResponse) {}
+  rpc EvpnEviSpecGetAll (EvpnEviRequest) returns (EvpnEviGetResponse) {}
   rpc EvpnEviRtSpecCreate (EvpnEviRtRequest) returns (EvpnResponse) {}
   rpc EvpnEviRtSpecUpdate (EvpnEviRtRequest) returns (EvpnResponse) {}
   rpc EvpnEviRtSpecDelete (EvpnEviRtRequest) returns (EvpnResponse) {}
-  rpc EvpnEviRtSpecGet (EvpnEviRtRequest) returns (EvpnEviRtSpecResponse) {}
-  rpc EvpnEviRtSpecGetAll (EvpnEviRtRequest) returns (EvpnEviRtSpecResponse) {}
+  rpc EvpnEviRtSpecGet (EvpnEviRtRequest) returns (EvpnEviRtGetResponse) {}
+  rpc EvpnEviRtSpecGetAll (EvpnEviRtRequest) returns (EvpnEviRtGetResponse) {}
   rpc EvpnIpVrfSpecCreate (EvpnIpVrfRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfSpecUpdate (EvpnIpVrfRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfSpecDelete (EvpnIpVrfRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfSpecGet (EvpnIpVrfRequest) returns (EvpnIpVrfSpecResponse) {}
-  rpc EvpnIpvrfSpecGetAll (EvpnIpVrfRequest) returns (EvpnIpVrfSpecResponse) {}
+  rpc EvpnIpVrfSpecGet (EvpnIpVrfRequest) returns (EvpnIpVrfGetResponse) {}
+  rpc EvpnIpvrfSpecGetAll (EvpnIpVrfRequest) returns (EvpnIpVrfGetResponse) {}
   rpc EvpnIpVrfRtSpecCreate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfRtSpecUpdate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfRtSpecDelete (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
-  rpc EvpnIpVrfRtSpecGet (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtSpecResponse) {}
-  rpc EvpnIpvrfRtSpecGetAll (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtSpecResponse) {}
-  rpc EvpnMacIpSpecGet  (EvpnMacIpSpecRequest) returns (EvpnMacIpSpecResponse) {}
-  rpc EvpnMacIpSpecGetAll  (EvpnMacIpSpecRequest) returns (EvpnMacIpSpecResponse) {}
+  rpc EvpnIpVrfRtSpecGet (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtGetResponse) {}
+  rpc EvpnIpvrfRtSpecGetAll (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtGetResponse) {}
+  rpc EvpnMacIpSpecGet  (EvpnMacIpSpecRequest) returns (EvpnMacIpGetResponse) {}
+  rpc EvpnMacIpSpecGetAll  (EvpnMacIpSpecRequest) returns (EvpnMacIpGetResponse) {}
 }
 
 // EVPN Configured or Auto Values
@@ -62,12 +62,13 @@ enum EvpnRtType {
 message EvpnEviSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_EVPN_EVI_OID_LEN",
-    Mib:    "evpnEviTable"
-    FillFn: "evpn_evi_fill_func"
+    Mib:    "evpnEviTable",
+    FillFn: "evpn_evi_set_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
     OidLen: "AMB_EVPN_EVI_OID_LEN",
-    Mib:    "evpnEviTable"
+    Mib:    "evpnEviTable",
+    FillFn: "evpn_evi_get_fill_func"
   };
 
   bytes       Id       = 1; // spec UUID key 
@@ -86,12 +87,13 @@ message EvpnEviSpec {
 message EvpnIpVrfSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
-    Mib:    "evpnIpVrfTable"
-    FillFn: "evpn_ip_vrf_fill_func"
+    Mib:    "evpnIpVrfTable",
+    FillFn: "evpn_ip_vrf_set_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
     OidLen: "AMB_EVPN_IP_VRF_OID_LEN",
-    Mib:    "evpnIpVrfTable"
+    Mib:    "evpnIpVrfTable",
+    FillFn: "evpn_ip_vrf_get_fill_func"
   };
 
   bytes   Id     = 1; // spec UUID key 
@@ -108,12 +110,13 @@ message EvpnIpVrfSpec {
 message EvpnEviRtSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
-    Mib:    "evpnEviRtTable"
-    FillFn: "evpn_evi_rt_fill_func"
+    Mib:    "evpnEviRtTable",
+    FillFn: "evpn_evi_rt_set_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
     OidLen: "AMB_EVPN_EVI_RT_OID_LEN",
-    Mib:    "evpnEviRtTable"
+    Mib:    "evpnEviRtTable",
+    FillFn: "evpn_evi_rt_get_fill_func"
   };
 
   bytes      Id       = 1; // spec UUID key
@@ -129,12 +132,13 @@ message EvpnEviRtSpec {
 message EvpnIpVrfRtSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_EVPN_IP_VRF_RT_OID_LEN",
-    Mib:    "evpnIpVrfRtTable"
-    FillFn: "evpn_ip_vrf_rt_fill_func"
+    Mib:    "evpnIpVrfRtTable",
+    FillFn: "evpn_ip_vrf_rt_set_fill_func"
   };
   option (venice.pdsaGetGlobOpts) = {
     OidLen: "AMB_EVPN_IP_VRF_RT_OID_LEN",
-    Mib:    "evpnIpVrfRtTable"
+    Mib:    "evpnIpVrfRtTable",
+    FillFn: "evpn_ip_vrf_rt_get_fill_func"
   };
 
   bytes      Id     = 1; // spec UUID key
@@ -161,7 +165,7 @@ message EvpnIpVrfRequest {
 //EvpnEviRtSpec create and update request
 message EvpnEviRtRequest {
   // requests
-  repeated EvpnEviRtSpec  Request = 1;
+  repeated EvpnEviRtSpec Request = 1;
 }
 
 message EvpnIpVrfRtRequest {
@@ -179,28 +183,44 @@ message EvpnResponse {
   EvpnStatus Response       = 2;
 }
 
+message EvpnEvi {
+  EvpnEviSpec Spec = 1;
+}
+
 // EvpnEviSpec get response
-message EvpnEviSpecResponse {
-  types.ApiStatus        ApiStatus = 1;
-  repeated EvpnEviSpec   Response  = 2;
+message EvpnEviGetResponse {
+  types.ApiStatus  ApiStatus = 1;
+  repeated EvpnEvi Response  = 2;
+}
+
+message EvpnIpVrf {
+  EvpnIpVrfSpec Spec = 1;
 }
 
 // EvpnIpVrfSpec get response
-message EvpnIpVrfSpecResponse {
-  types.ApiStatus           ApiStatus   = 1;
-  repeated EvpnIpVrfSpec    Response    = 2;
+message EvpnIpVrfGetResponse {
+  types.ApiStatus    ApiStatus   = 1;
+  repeated EvpnIpVrf Response    = 2;
+}
+
+message EvpnEviRt {
+  EvpnEviRtSpec Spec = 1;
 }
 
 // EvpnEviRtSpec get response
-message EvpnEviRtSpecResponse {
-  types.ApiStatus           ApiStatus   = 1;
-  repeated EvpnEviRtSpec    Response    = 2;
+message EvpnEviRtGetResponse {
+  types.ApiStatus    ApiStatus   = 1;
+  repeated EvpnEviRt Response    = 2;
+}
+
+message EvpnIpVrfRt {
+  EvpnIpVrfRtSpec Spec = 1;
 }
 
 // EvpnIpVrfRtSpec get response
-message EvpnIpVrfRtSpecResponse {
-  types.ApiStatus           ApiStatus   = 1;
-  repeated EvpnIpVrfRtSpec  Response    = 2;
+message EvpnIpVrfRtGetResponse {
+  types.ApiStatus      ApiStatus   = 1;
+  repeated EvpnIpVrfRt Response    = 2;
 }
 enum EvpnSource {
     EVPN_SOURCE_NONE    = 0;
@@ -231,8 +251,12 @@ message EvpnMacIpSpecRequest {
   repeated EvpnMacIpSpec Request = 1;
 }
 
+message EvpnMacIp {
+  EvpnMacIpSpec Spec = 1;
+}
+
 // EVPN MAC IP get response
-message EvpnMacIpSpecResponse {
-  types.ApiStatus           ApiStatus = 1;
-  repeated EvpnMacIpSpec    Response  = 2;
+message EvpnMacIpGetResponse {
+  types.ApiStatus    ApiStatus = 1;
+  repeated EvpnMacIp Response  = 2;
 }

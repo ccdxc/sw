@@ -112,7 +112,7 @@ pds_ms_sim_test_bgp_update ()
     pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer (bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    pds::BGPPeerAf bgp_peer_af;
+    pds::BGPPeerAfSpec bgp_peer_af;
     bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();
@@ -167,7 +167,7 @@ pds_ms_sim_test_overlay_bgp_update ()
     pds_ms_pre_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
     pds_ms_set_amb_bgp_peer(bgp_peer_spec, AMB_ROW_ACTIVE, PDS_MS_CTM_GRPC_CORRELATOR);
 
-    pds::BGPPeerAf bgp_peer_af;
+    pds::BGPPeerAfSpec bgp_peer_af;
     bgp_peer_af.set_id(msidx2pdsobjkey(g_bgp_uuid).id, PDS_MAX_KEY_LEN);
 
     peeraddr = bgp_peer_af.mutable_peeraddr();

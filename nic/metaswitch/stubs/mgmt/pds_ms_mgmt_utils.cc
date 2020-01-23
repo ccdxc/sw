@@ -385,6 +385,12 @@ pds_ms_get_address(const NBB_CHAR  *tableName,
                                                   data->remote_addr_type,
                                                   data->remote_addr_len,
                                                   &pds_ms_ip_addr);
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
+            AMB_BGP_PEER *data = (AMB_BGP_PEER *)src;
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->remote_addr,
+                                                  data->remote_addr_type,
+                                                  data->remote_addr_len,
+                                                  &pds_ms_ip_addr);
         } else {
             assert(0);
         }
@@ -395,8 +401,20 @@ pds_ms_get_address(const NBB_CHAR  *tableName,
                                                   data->local_addr_type,
                                                   data->local_addr_len,
                                                   &pds_ms_ip_addr);
+        } else if (strcmp(tableName, "bgpPeerAfiSafiTable") == 0) {
+            AMB_BGP_PEER_AFI_SAFI *data = (AMB_BGP_PEER_AFI_SAFI *)src;
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
+                                                  data->local_addr_type,
+                                                  data->local_addr_len,
+                                                  &pds_ms_ip_addr);
         } else if (strcmp(tableName, "bgpPeerStatusTable") == 0) {
             AMB_BGP_PEER_STATUS *data = (AMB_BGP_PEER_STATUS *)src;
+            pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
+                                                  data->local_addr_type,
+                                                  data->local_addr_len,
+                                                  &pds_ms_ip_addr);
+        } else if (strcmp(tableName, "bgpPeerTable") == 0) {
+            AMB_BGP_PEER *data = (AMB_BGP_PEER *)src;
             pds_ms_convert_amb_ip_addr_to_ip_addr(data->local_addr,
                                                   data->local_addr_type,
                                                   data->local_addr_len,

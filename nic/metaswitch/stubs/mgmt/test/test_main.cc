@@ -46,7 +46,7 @@ class Client {
 
     void peerGet() {
         pds::BGPPeerRequest req;
-        pds::BGPPeerSpecResponse res;
+        pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
         auto ent = req.add_request();
@@ -66,7 +66,7 @@ class Client {
         if (status.ok()) {
             std::cout << "got 1 entry" << std::endl;
             for (int i=0; i<res.response_size(); i++) {
-                auto resp = res.response(i);
+                auto resp = res.response(i).spec();
                 std::cout << "===== Entry #" << i << " =====" << std::endl;
                 std::cout << "vrfid: " << resp.id() << std::endl;
                 auto paddr = resp.peeraddr().v4addr();
@@ -115,7 +115,7 @@ class Client {
 
     void peerGetAll() {
         pds::BGPPeerRequest req;
-        pds::BGPPeerSpecResponse res;
+        pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
         auto ent = req.add_request();
@@ -132,7 +132,7 @@ class Client {
         if (status.ok()) {
             std::cout << "got peer status table with " << res.response_size() << " entry" << std::endl;
             for (int i=0; i<res.response_size(); i++) {
-                auto resp = res.response(i);
+                auto resp = res.response(i).spec();
 		std::cout << "===== Entry #" << i << " =====" << std::endl;
                 std::cout << "vrfid: " << resp.id() << std::endl;
 		auto paddr = resp.peeraddr().v4addr();

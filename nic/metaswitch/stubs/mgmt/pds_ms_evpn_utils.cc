@@ -165,7 +165,14 @@ evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec &req,
 }
 
 NBB_VOID
-evpn_evi_fill_func (EvpnEviSpec&    req,
+evpn_evi_get_fill_func (EvpnEviSpec&    req,
+                        NBB_ULONG*       oid)
+{
+    oid[AMB_EVPN_EVI_ENTITY_IX_INDEX] = PDS_MS_EVPN_ENT_INDEX;
+}
+
+NBB_VOID
+evpn_evi_set_fill_func (EvpnEviSpec&    req,
                     AMB_GEN_IPS     *mib_msg,
                     AMB_EVPN_EVI    *data,
                     NBB_LONG        row_status)
@@ -179,7 +186,14 @@ evpn_evi_fill_func (EvpnEviSpec&    req,
 }
 
 NBB_VOID
-evpn_ip_vrf_fill_func (EvpnIpVrfSpec&   req,
+evpn_ip_vrf_get_fill_func (EvpnIpVrfSpec&   req,
+                       NBB_ULONG*        oid)
+{
+    oid[AMB_EVPN_IP_VRF_ENT_INDEX]  = PDS_MS_EVPN_ENT_INDEX;
+}
+
+NBB_VOID
+evpn_ip_vrf_set_fill_func (EvpnIpVrfSpec&   req,
                        AMB_GEN_IPS      *mib_msg,
                        AMB_EVPN_IP_VRF  *data,
                        NBB_LONG         row_status)
@@ -193,7 +207,14 @@ evpn_ip_vrf_fill_func (EvpnIpVrfSpec&   req,
 }
 
 NBB_VOID
-evpn_evi_rt_fill_func (EvpnEviRtSpec&   req,
+evpn_evi_rt_get_fill_func (EvpnEviRtSpec&   req,
+                           NBB_ULONG*        oid)
+{
+    oid[AMB_EVPN_EVI_RT_ENT_INDEX]  = PDS_MS_EVPN_ENT_INDEX;
+}
+
+NBB_VOID
+evpn_evi_rt_set_fill_func (EvpnEviRtSpec&   req,
                        AMB_GEN_IPS      *mib_msg,
                        AMB_EVPN_EVI_RT  *data,
                        NBB_LONG         row_status)
@@ -207,7 +228,14 @@ evpn_evi_rt_fill_func (EvpnEviRtSpec&   req,
 }
 
 NBB_VOID
-evpn_ip_vrf_rt_fill_func (EvpnIpVrfRtSpec&      req,
+evpn_ip_vrf_rt_get_fill_func (EvpnIpVrfRtSpec&      req,
+                          NBB_ULONG*              oid)
+{
+    oid[AMB_EVPN_IP_VRF_RT_ENT_INDEX]   = PDS_MS_EVPN_ENT_INDEX;
+}
+
+NBB_VOID
+evpn_ip_vrf_rt_set_fill_func (EvpnIpVrfRtSpec&      req,
                           AMB_GEN_IPS           *mib_msg,
                           AMB_EVPN_IP_VRF_RT    *data,
                           NBB_LONG              row_status)

@@ -448,7 +448,7 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
 
 static void get_peer_status_all() {
     BGPPeerRequest       request;
-    BGPPeerSpecResponse  response;
+    BGPPeerGetResponse   response;
     ClientContext        context;
     Status               ret_status;
 
@@ -459,7 +459,7 @@ static void get_peer_status_all() {
     if (ret_status.ok()) {
         printf ("No of BGP Peer Status Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
-            auto resp = response.response(i);
+            auto resp = response.response(i).status();
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  VRF Id               : %d\n", 1); // TODO: how to convert UUID to VrfID.. auto-gen wont support fillFn in get
@@ -492,7 +492,7 @@ static void get_peer_status_all() {
 
 static void get_evpn_mac_ip_all () {
     EvpnMacIpSpecRequest    request;
-    EvpnMacIpSpecResponse   response;
+    EvpnMacIpGetResponse    response;
     ClientContext           context;
     Status                  ret_status;
 
@@ -502,7 +502,7 @@ static void get_evpn_mac_ip_all () {
     if (ret_status.ok()) {
         printf ("No of EVPN MAC IP Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
-            auto resp = response.response(i);
+            auto resp = response.response(i).spec();
             printf (" Entry :: %d\n", i+1);
             printf (" ===========\n");
             printf ("  Source       : %s\n", (resp.source() == 2) ? "Remote" : "Local");

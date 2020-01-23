@@ -28,7 +28,7 @@ bgp_peer_fill_keys_(pds::BGPPeerSpec& req, bgp_peer_uuid_obj_t* uuid_obj)
 }
 
 static NBB_VOID 
-bgp_peer_af_fill_keys_(pds::BGPPeerAf& req,
+bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
                        bgp_peer_af_uuid_obj_t* uuid_obj)
 {
     auto bgp_peer_af_uuid_obj = (bgp_peer_af_uuid_obj_t*) uuid_obj;
@@ -91,7 +91,7 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlato
 }
 
 NBB_VOID
-bgp_peer_afi_safi_pre_set(pds::BGPPeerAf &req, NBB_LONG row_status,
+bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator) 
 {
     pds_obj_key_t uuid = {0};
@@ -136,8 +136,15 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAf &req, NBB_LONG row_status,
     }
 }
 
+NBB_VOID
+bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
+                        NBB_ULONG*           oid)
+{
+    oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
+}
+
 NBB_VOID 
-bgp_peer_fill_func (pds::BGPPeerSpec&   req,
+bgp_peer_set_fill_func (pds::BGPPeerSpec&   req,
                     AMB_GEN_IPS         *mib_msg,
                     AMB_BGP_PEER        *v_amb_bgp_peer,
                     NBB_LONG            row_status)
@@ -177,8 +184,36 @@ bgp_peer_fill_func (pds::BGPPeerSpec&   req,
     }
 }
 
+NBB_VOID
+bgp_rm_ent_get_fill_func (pds::BGPGlobalSpec &req,
+                          NBB_ULONG *oid)
+{
+    pds_obj_key_t uuid = {0};
+    bgp_uuid_obj_t::ms_id_t entity_index = 0;
+    pds_ms_get_uuid(&uuid, req.id());
+    {
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+        if (uuid_obj == nullptr) {
+            bgp_uuid_obj_uptr_t bgp_uuid_obj(new bgp_uuid_obj_t (uuid));
+            entity_index = bgp_uuid_obj->ms_id();
+            mgmt_ctxt.state()->set_pending_uuid_create(uuid,
+                                                       std::move(bgp_uuid_obj));
+            SDK_TRACE_VERBOSE("BGP RM Pre-set Create UUID %s Entity %d",
+                              uuid.str(), entity_index);
+        } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP) {
+            auto bgp_uuid_obj = (bgp_uuid_obj_t*)uuid_obj;
+            entity_index = bgp_uuid_obj->ms_id();
+        } else {
+            SDK_TRACE_ERR("BGP RM Request with unknown UUID %s of type %d",
+                          uuid.str(), uuid_obj_type_str(uuid_obj->obj_type()));
+        }
+    }
+    oid[AMB_BGP_RM_INDEX_INDEX] = entity_index;
+}
+
 NBB_VOID 
-bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
+bgp_rm_ent_set_fill_func (pds::BGPGlobalSpec &req,
                       AMB_GEN_IPS        *mib_msg,
                       AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent,
                       NBB_LONG           row_status)
@@ -226,8 +261,15 @@ bgp_rm_ent_fill_func (pds::BGPGlobalSpec &req,
     }
 }
 
+NBB_VOID
+bgp_peer_af_get_fill_func (pds::BGPPeerAfSpec    &req,
+                           NBB_ULONG*             oid)
+{
+    oid[AMB_BGP_PAS_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
+}
+
 NBB_VOID 
-bgp_peer_af_fill_func (pds::BGPPeerAf        &req,
+bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec    &req,
                        AMB_GEN_IPS           *mib_msg,
                        AMB_BGP_PEER_AFI_SAFI *v_amb_bgp_peer_af,
                        NBB_LONG               row_status)

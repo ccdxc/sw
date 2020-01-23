@@ -834,6 +834,9 @@ func getCppTypeFieldFromProto(protoFieldType gogoproto.FieldDescriptorProto_Type
 	if protoFieldType == gogoproto.FieldDescriptorProto_TYPE_ENUM {
 		return strings.ReplaceAll(protoFieldTypeName, ".", "::")
 	}
+	if protoFieldType == gogoproto.FieldDescriptorProto_TYPE_MESSAGE {
+		return strings.ReplaceAll(strings.TrimPrefix(protoFieldTypeName, "."), ".", "::")
+	}
 	return ""
 }
 
@@ -2508,6 +2511,39 @@ func getListTypeMsg(msg *descriptor.Message) (*descriptor.Message, error) {
 	return nil, errors.New("list item not found")
 }
 
+func getRootMsgFromMap(msgmap map[string]string, msg string, pkg string) string {
+	parent := msgmap[msg]
+	if parent == "" {
+		return msg
+	}
+	return getRootMsgFromMap(msgmap, parent, pkg)
+}
+
+func getRootMsg(file *descriptor.File, pkg string, childMsg *descriptor.Message, msgType string) *descriptor.Message {
+	var msgmap = make(map[string]string)
+	for _, msg := range file.Messages {
+		for _, f := range msg.Fields {
+			if typeIsMessage(f) && !strings.Contains(msg.GetName(), msgType) {
+				msgmap[f.GetTypeName()] = "." + pkg + "." + msg.GetName()
+			}
+		}
+	}
+	root := getRootMsgFromMap(msgmap, "."+pkg+"."+childMsg.GetName(), pkg)
+	ret, err := file.Reg.LookupMsg("", root)
+	if err != nil {
+		glog.Fatalf("Could not find message (%s)", pkg+"."+root)
+	}
+	return ret
+}
+
+func getRequestRootMsg(file *descriptor.File, pkg string, childMsg *descriptor.Message) *descriptor.Message {
+	return getRootMsg(file, pkg, childMsg, "Response")
+}
+
+func getResponseRootMsg(file *descriptor.File, pkg string, childMsg *descriptor.Message) *descriptor.Message {
+	return getRootMsg(file, pkg, childMsg, "Request")
+}
+
 func getWatchType(msg *descriptor.Message, fq bool) (string, error) {
 	for _, f := range msg.Fields {
 		if *f.Name == "Events" {
@@ -3890,6 +3926,8 @@ func init() {
 	reg.RegisterFunc("getRowStatusOid", getRowStatusOid)
 	reg.RegisterFunc("isRepeatedField", isRepeatedField)
 	reg.RegisterFunc("addStr", addStr)
+	reg.RegisterFunc("getResponseRootMsg", getResponseRootMsg)
+	reg.RegisterFunc("getRequestRootMsg", getRequestRootMsg)
 
 	// Register request mutators
 	reg.RegisterReqMutator("pensando", reqMutator)

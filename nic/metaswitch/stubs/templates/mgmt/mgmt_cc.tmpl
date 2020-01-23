@@ -10,6 +10,7 @@
 
 {{$cam := getMetaswitchMibTablesInfo}}
 
+{{$file := .}}
 {{$fileName := .GetName}}
 {{$pkgName := .Package}}
 #include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_{{TrimSuffix $fileName ".proto"}}_utils_gen.hpp"
@@ -266,6 +267,13 @@
     {{$fillFn := $param.FillFn}}
     {{if not (eq $oidLen "")}}
     /*===== Get MS Table: {{$struct}} =====*/
+    {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
+    {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
+    NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_spec_response_count;
+    {{end}}
+    {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+    NBB_LONG pds_ms_check_get_{{$struct | ToLower}}_status_response_count;
+    {{end}}
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT)
     {
         /***************************************************************************/
@@ -284,7 +292,7 @@
         NBB_ASSERT_NUM_EQ(SHARED.saved_ips->ips_type, IPS_AMB_GET);
 
         v_amb_get = (AMB_GET *)SHARED.saved_ips;
-        pds::{{$msgName}}Response *resp = (pds::{{$msgName}}Response*)v_amb_get->correlator.pds_ms_resp_ctx;
+        pds::{{$rootMsg.GetName}} *resp = (pds::{{$rootMsg.GetName}}*)v_amb_get->correlator.pds_ms_resp_ctx;
         SHARED.saved_ips = NULL;
 
         if (v_amb_get->ret_code == AMB_RC_NO_ERROR)
@@ -304,20 +312,44 @@
 
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
-                {{$resPkgName:= (addStr $pkgName ".") }}
-                {{$myMsg := (addStr $msgName "Response")}}
-                {{$resMsgPkgName := (addStr $resPkgName $myMsg)}}
-                {{$reqMsg := (.File.Reg.LookupMsg "" $resMsgPkgName) }}
-                {{$reqfields := $reqMsg.Fields}}
-                {{range $reqfields}}
-                  {{if (eq .GetName "Response")}}
-                    {{if (isRepeatedField .)}}
-                auto ent = resp->add_response();
-                    {{else}}
-                auto ent = resp->mutable_response();
-                    {{end}}
+        {{$reqfields := $rootMsg.Fields}}
+        {{range $reqfields}}
+          {{if (eq .GetName "Response")}}
+            {{if HasSuffix $msg.GetName "Status"}}
+              {{$specPresent := false}}
+              {{$fieldMsg := ($file.Reg.LookupMsg "" .GetTypeName)}}
+              {{$fields := $fieldMsg.Fields}}
+                {{range $fields}}
+                  {{if or (HasSuffix .GetName "Spec") (HasSuffix .GetName "spec")}}
+                    {{$specPresent = true}}
                   {{end}}
                 {{end}}
+                {{if $specPresent}}
+                  {{if (isRepeatedField .)}}
+                auto res = resp->mutable_response(pds_ms_check_get_{{$struct | ToLower}}_status_response_count + bulk_row);
+                  {{else}}
+                auto res = resp->response();
+                  {{end}}
+                auto ent = res->mutable_status();
+                {{else}}
+                  {{if (isRepeatedField .)}}
+                auto res = resp->add_response();
+                  {{else}}
+                auto res = resp->mutable_response();
+                  {{end}}
+                auto ent = res->mutable_status();
+                {{end}}
+              {{end}}
+              {{if HasSuffix $msg.GetName "Spec"}}
+                {{if (isRepeatedField .)}}
+                auto res = resp->add_response();
+                {{else}}
+                auto res = resp->mutable_response();
+                {{end}}
+                auto ent = res->mutable_spec();
+              {{end}}
+            {{end}}
+          {{end}}
                 /*************************************************************************/
                 /* TODO: Extract the fields.                                             */
                 /*************************************************************************/
@@ -373,17 +405,17 @@
                                         NBB_ALIGN_OFFSET(v_amb_get->data_len));
             }
 
+            {{if HasSuffix $msg.GetName "Status"}}
+            pds_ms_check_get_{{$struct | ToLower}}_status_response_count += v_amb_get->bulk_returned;
+            {{else}}
+            pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += v_amb_get->bulk_returned;
+            {{end}}
             if (specific_get) {
-                /*************************************************************************/
-                /* Send response back to the caller.                                     */
-                /*************************************************************************/
-                pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
-                v_amb_get->correlator.pds_ms_resp_ctx = NULL;
-
                 /*************************************************************************/
                 /* Free the buffer.                                                      */
                 /*************************************************************************/
                 NBB_FREE_BUFFER(v_amb_get);
+                v_amb_get = NULL;
 
                 /*************************************************************************/
                 /* The wait_check_get callback determines which procedure is responsible */
@@ -392,6 +424,13 @@
                 /* the callback.                                                         */
                 /*************************************************************************/
                 SHARED.wait_check_get = NULL;
+                {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+                pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+                {{end}}
+                /*************************************************************************/
+                /* Send response back to the caller.                                     */
+                /*************************************************************************/
+                pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
             } else {
                 /*************************************************************************/
                 /* Send back the GET response as a GET request.  Because the             */
@@ -399,8 +438,8 @@
                 /*************************************************************************/
                 NBB_SEND_IPS(SHARED.sm_pid, AMB_MIB_Q, v_amb_get);
                 SMS_GET_INC();
+                v_amb_get = NULL;
             }
-            v_amb_get = NULL;
         }
         else if (v_amb_get->ret_code == AMB_RC_GET_RESCHEDULE)
         {
@@ -433,6 +472,7 @@
             /* the next FSM action.                                                  */
             /*************************************************************************/
             NBB_TRC_FLOW((NBB_FORMAT "GET failure"));
+            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
             NBB_FREE_BUFFER(v_amb_get);
             v_amb_get = NULL;
 
@@ -440,12 +480,14 @@
             /* We are no longer responsible for incoming GETs.                       */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
+            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            {{end}}
 
             /*************************************************************************/
             /* Send response back to the caller.                                     */
             /*************************************************************************/
             pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OUT_OF_RESOURCE);
-            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
         }
         else
         {
@@ -456,14 +498,9 @@
             NBB_ASSERT_NUM_EQ(v_amb_get->ret_code, AMB_RC_END_OF_TABLE);
 
             /*************************************************************************/
-            /* Send response back to the caller.                                     */
-            /*************************************************************************/
-            pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
-            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
-
-            /*************************************************************************/
             /* Free the buffer.                                                      */
             /*************************************************************************/
+            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
             NBB_FREE_BUFFER(v_amb_get);
             v_amb_get = NULL;
 
@@ -474,6 +511,13 @@
             /* the callback.                                                         */
             /*************************************************************************/
             SHARED.wait_check_get = NULL;
+            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            {{end}}
+            /*************************************************************************/
+            /* Send response back to the caller.                                     */
+            /*************************************************************************/
+            pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OK);
         }
 
         NBB_TRC_EXIT();
@@ -532,7 +576,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_get_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp) {
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -545,6 +589,12 @@
         /***************************************************************************/
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
+        {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
+        pds_ms_check_get_{{$struct | ToLower}}_spec_response_count = 0;
+        {{end}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+        {{end}}
         SHARED.wait_check_get = pds_ms_check_get_{{$struct | ToLower}};
 
         /***************************************************************************/
@@ -591,8 +641,7 @@
         return;
     } /* pds_ms_get_{{$struct | ToLower}} */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
-                                       NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -608,7 +657,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_getall_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp) {
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -621,6 +670,12 @@
         /***************************************************************************/
         /* Define the routine to be used on receipt of a GET response.             */
         /***************************************************************************/
+        {{if or (HasSuffix $msg.GetName "Spec") (HasSuffix $msg.GetName "spec")}}
+        pds_ms_check_get_{{$struct | ToLower}}_spec_response_count = 0;
+        {{end}}
+        {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+        pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+        {{end}}
         SHARED.wait_check_get = pds_ms_check_get_{{$struct | ToLower}};
 
         /***************************************************************************/
@@ -630,13 +685,13 @@
         /***************************************************************************/
         /* Set up the OID to pass in on the AMB_TEST                               */
         /***************************************************************************/
-        pds_ms_getall_{{$struct | ToLower}}_oid(req, oid);
+        pds_ms_getall_{{$struct | ToLower}}_oid(oid);
 
         /***************************************************************************/
         /* Invoke custom fill function registered by the user                      */
         /***************************************************************************/
         {{if not (eq $fillFn "")}}
-        {{$fillFn}}(req, oid);
+        //{{$fillFn}}(req, oid);
         {{end}}
 
         /***************************************************************************/

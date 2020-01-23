@@ -21,7 +21,9 @@ using grpc::ServerContext;
 using {{$pkgName}}::{{$svcname}};
 {{range .Methods}}
 {{$rpc := .Name}}
+  {{if not (HasSuffix .RequestType.Name "Empty")}}
 using {{$pkgName}}::{{.RequestType.Name}};
+  {{end}}
 using {{$pkgName}}::{{.ResponseType.Name}};
 {{end}}
 {{end}}

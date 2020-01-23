@@ -25,6 +25,8 @@ extern "C" {
 
 {{$cam := getMetaswitchMibTablesInfo}} 
 
+{{$file := .}}
+{{$pkgName := .Package}}
 {{$msgs := .Messages}}
 {{range $msgs}}
   {{$msgName := .GetName}}
@@ -60,14 +62,14 @@ extern "C" {
     {{$struct := $param.Struct}}
     {{$mib    := $param.Mib}}
     {{if not (eq $oidLen "")}}
+    {{$rootMsg := getResponseRootMsg $file $pkgName $msg}}
     /*===== Get helpers for MS Table: {{$struct}} =====*/
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
     NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
-                                       NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$msgName}}Response* resp);
+    NBB_VOID pds_ms_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}_oid(NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
     {{end}}
   {{end}}
 {{end}}

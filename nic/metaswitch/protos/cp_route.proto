@@ -55,10 +55,13 @@ message CPRouteSpecRequest {
   repeated CPRouteSpec Request = 1;
 }
 
+message CPRouteResponse {
+  CPRouteSpec Spec = 1;
+}
 // EVPN MAC IP get response
 message CPRouteSpecResponse {
-  types.ApiStatus       ApiStatus = 1;
-  repeated CPRouteSpec    Response  = 2;
+  types.ApiStatus          ApiStatus = 1;
+  repeated CPRouteResponse Response  = 2;
 }
 
 enum StRtAction {
