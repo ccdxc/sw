@@ -9,7 +9,8 @@
     </app-penuitab>
     <app-penuitab title="DESTINATIONS" [count]="destinations?.length">
       <ng-template>
-        <app-destinations #tabContent [dataObjects]="destinations"></app-destinations>
+        <app-destinations #tabContent [dataObjects]="destinations" [eventPolices]="eventPolicies">
+        </app-destinations>
       </ng-template>
     </app-penuitab>
   </app-penuitabs>

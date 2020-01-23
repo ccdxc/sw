@@ -4,7 +4,7 @@ import { Utility } from '@app/common/Utility';
 import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { MonitoringService } from '@app/services/generated/monitoring.service';
-import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination } from '@sdk/v1/models/generated/monitoring';
+import { IApiStatus, IMonitoringAlertDestination, MonitoringAlertDestination, MonitoringAlertPolicy } from '@sdk/v1/models/generated/monitoring';
 import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
@@ -20,7 +20,10 @@ import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit'
   encapsulation: ViewEncapsulation.None
 })
 export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitoringAlertDestination, MonitoringAlertDestination> {
+
   @Input() dataObjects: MonitoringAlertDestination[] = [];
+  @Input() eventPolices: MonitoringAlertPolicy[] = [];
+
   isTabComponent = true;
   disableTableWhenRowExpanded = true;
 
@@ -99,6 +102,19 @@ export class DestinationpolicyComponent extends TablevieweditAbstract<IMonitorin
 
   generateDeleteSuccessMsg(object: IMonitoringAlertDestination): string {
     return 'Deleted destination ' + object.meta.name;
+  }
+
+  showDeleteButton(rowData: MonitoringAlertDestination): boolean {
+    const isOKtoDelete: boolean  = true;
+    for (let i = 0; i < this.eventPolices.length; i ++) {
+      const policy: MonitoringAlertPolicy = this.eventPolices[i];
+      const destinations: string[] = policy.spec.destinations;
+      const matched  = destinations.find( (destination: string) =>  destination === rowData.meta.name);
+      if (matched ) {
+        return false;
+      }
+    }
+     return isOKtoDelete;
   }
 
 }
