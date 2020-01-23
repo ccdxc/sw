@@ -46,7 +46,7 @@ func HandleFlowExportPolicy(infraAPI types.InfraAPI, telemetryClient halapi.Tele
 
 func createFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, netflow netproto.FlowExportPolicy, vrfID uint64) error {
 	var collectorKeys []*halapi.CollectorKeyHandle
-	_, mgmtIP, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		var destPort int
 		dstIP := c.Destination
