@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewEncapsulation, OnInit, OnDestroy } from '@angular/core';
 import { Animations } from '@app/animations';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { Utility } from '@app/common/Utility';
@@ -12,6 +12,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { TableCol, RowClickEvent, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { TableUtility } from '@app/components/shared/tableviewedit/tableutility';
+import { error } from 'protractor';
 
 
 @Component({
@@ -21,8 +22,8 @@ import { TableUtility } from '@app/components/shared/tableviewedit/tableutility'
   animations: [Animations],
   encapsulation: ViewEncapsulation.None
 })
-export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechSupportRequest, MonitoringTechSupportRequest> implements OnInit {
-  public static  TS_DOWNLOAD = 'techsupportdownload';
+export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechSupportRequest, MonitoringTechSupportRequest> implements OnInit, OnDestroy {
+  public static TS_DOWNLOAD = 'techsupportdownload';
   dataObjects: ReadonlyArray<MonitoringTechSupportRequest> = [];
 
   techsupportrequestsEventUtility: HttpEventUtility<MonitoringTechSupportRequest>;
@@ -44,9 +45,9 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   cols: TableCol[] = [
     { field: 'meta.name', header: 'Name', class: 'techsupportrequests-column-name', sortable: true, width: 15, notReorderable: true },
-    { field: 'meta.creation-time', header: 'Creation Time', class: 'techsupportrequests-column-date', sortable: true, width: '180px' , notReorderable: true  },
+    { field: 'meta.creation-time', header: 'Creation Time', class: 'techsupportrequests-column-date', sortable: true, width: '180px', notReorderable: true },
     { field: 'spec.node-selector', header: 'Selected Nodes', class: ' techsupportrequests-column-node_selector', sortable: false, width: 45 },
-    { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true,  width: 15}
+    { field: 'status.status', header: 'Status', class: ' techsupportrequests-column-status_status', sortable: true, width: 15 }
   ];
 
   exportFilename: string = 'Venice-tech-support-requests';
@@ -54,6 +55,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
+  tableLoading: boolean;
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -74,17 +76,17 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     this.getTechSupportRequests();
     if (!this.checkPermissions()) {
       this.controllerService.invokeInfoToaster('Additional authorizaiton required', 'Cluster node and DSC read permissions are required to create tech-support request.');
-     }
+    }
   }
 
   setDefaultToolbar() {
     let buttons = [];
     if (this.checkPermissions()) {
       buttons = [{
-          cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-button-ADD',
-          text: 'ADD TECH-SUPPORT REQUEST',
-          computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-          callback: () => { this.createNewObject(); }
+        cssClass: 'global-button-primary techsupportrequests-toolbar-button techsupportrequests-toolbar-button-ADD',
+        text: 'ADD TECH-SUPPORT REQUEST',
+        computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
+        callback: () => { this.createNewObject(); }
       }];
     }
     this.controllerService.setToolbarData({
@@ -94,20 +96,32 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   checkPermissions(): boolean {
-    const boolClusterNodeRead  = this.uiconfigsService.isAuthorized(UIRolePermissions.clusternode_read);
-    const boolClusterDSCRead  = this.uiconfigsService.isAuthorized(UIRolePermissions.clusterdistributedservicecard_read);
-    const boolMonitoryTechSupportCreate  = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringtechsupportrequest_create);
-    return  (boolClusterNodeRead && boolClusterDSCRead && boolMonitoryTechSupportCreate);
+    const boolClusterNodeRead = this.uiconfigsService.isAuthorized(UIRolePermissions.clusternode_read);
+    const boolClusterDSCRead = this.uiconfigsService.isAuthorized(UIRolePermissions.clusterdistributedservicecard_read);
+    const boolMonitoryTechSupportCreate = this.uiconfigsService.isAuthorized(UIRolePermissions.monitoringtechsupportrequest_create);
+    return (boolClusterNodeRead && boolClusterDSCRead && boolMonitoryTechSupportCreate);
+
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach((subscription) => {
+      subscription.unsubscribe();
+    });
   }
 
   getTechSupportRequests() {
+    this.tableLoading = true;
     this.techsupportrequestsEventUtility = new HttpEventUtility<MonitoringTechSupportRequest>(MonitoringTechSupportRequest);
     this.dataObjects = this.techsupportrequestsEventUtility.array;
     const sub = this.monitoringService.WatchTechSupportRequest().subscribe(
       response => {
         this.techsupportrequestsEventUtility.processEvents(response);
+        this.tableLoading = false;
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Tech Support Requests')
+      () => {
+        this.tableLoading = false;
+        this.controllerService.webSocketErrorHandler('Failed to get Tech Support Requests');
+      }
     );
     this.subscriptions.push(sub);
   }
@@ -138,7 +152,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const value = Utility.getObjectValueByPropertyPath(rowData, fields);
     const column = col.field;
     const isComplete = (value === MonitoringTechSupportRequestStatus_status.completed);
-    if (isComplete  && !rowData[TechsupportComponent.TS_DOWNLOAD]) {
+    if (isComplete && !rowData[TechsupportComponent.TS_DOWNLOAD]) {
       // when TS.status is complete, we build UI model to list available download links. We build only once
       this.buildTSDownload(rowData);
     }
@@ -150,14 +164,14 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   isTSFailure(rowData: MonitoringTechSupportRequest): boolean {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
+    if (rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
       return true;
     }
     return false;
   }
 
   isTSTimeout(rowData: MonitoringTechSupportRequest): boolean {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
+    if (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
       return true;
     }
     return false;
@@ -176,10 +190,10 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       });
     }
     if (nics != null) {
-       Object.keys(nics).forEach((key) => {
-         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
-           reasonArray.push(key + ' timed out during operation');
-          }
+      Object.keys(nics).forEach((key) => {
+        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.timeout) {
+          reasonArray.push(key + ' timed out during operation');
+        }
       });
     }
 
@@ -204,8 +218,8 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
       Object.keys(nics).forEach((key) => {
         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
           reasonArray.push(key + ' ' + nics[key].reason);
-         }
-     });
+        }
+      });
     }
     const nonNullArray = reasonArray.filter(function (el) {
       return el != null;
@@ -223,17 +237,17 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     const nics = rowData.status['dsc-results'];
     const reasonArray: string[] = [];
     if (nodes != null) {
-    Object.keys(nodes).forEach((key) => {
-      if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.failed) {
-        reasonArray.push(key + 'is unhealthy and causing the operation to fail');
-      }
-    });
-  }
+      Object.keys(nodes).forEach((key) => {
+        if (key != null && nodes[key].status != null && nodes[key].status === MonitoringTechSupportRequestStatus_status.failed) {
+          reasonArray.push(key + 'is unhealthy and causing the operation to fail');
+        }
+      });
+    }
     if (nics != null) {
-       Object.keys(nics).forEach((key) => {
-         if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
-           reasonArray.push(key + ' is unhealthy and causing the operation to fail');
-          }
+      Object.keys(nics).forEach((key) => {
+        if (key != null && nics[key].status != null && nics[key].status === MonitoringTechSupportRequestStatus_status.failed) {
+          reasonArray.push(key + ' is unhealthy and causing the operation to fail');
+        }
       });
     }
 
@@ -245,7 +259,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
 
   displayMessage(rowData: MonitoringTechSupportRequest): any {
-    if  (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
+    if (rowData.status.status === MonitoringTechSupportRequestStatus_status.timeout) {
       return this.displayTimeOutMessage(rowData);
     } else if (rowData.status.status === MonitoringTechSupportRequestStatus_status.failed) {
       return this.displayFailureMessage(rowData);
@@ -282,7 +296,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     };
     downloadObj['bundleAll'] = this.buildTSBundleAllDownloadHelper(tsName, instanceId);
     if (smartNICNodeResults) {
-        downloadObj['nicNodes'] = this.buildTSDownloadHelper(smartNICNodeResults, instanceId, tsName);
+      downloadObj['nicNodes'] = this.buildTSDownloadHelper(smartNICNodeResults, instanceId, tsName);
     }
     if (ctrlrNnodeResults) {
       downloadObj['controlnodes'] = this.buildTSDownloadHelper(ctrlrNnodeResults, instanceId, tsName);
@@ -291,8 +305,8 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   triggerBuildDownloaZip(rowData: MonitoringTechSupportRequest): boolean {
-      this.buildTSDownload(rowData);
-      return true;
+    this.buildTSDownload(rowData);
+    return true;
   }
 
   /**
@@ -308,13 +322,13 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   buildTSDownloadHelper(results, instanceId: string, tsName: string): any {
     const list = [];
     const keys = Object.keys(results);
-     keys.forEach( key => {
-       const obj = {
-         name : key,
-         url :  results[key].uri
-       };
-       list.push(obj);
-     });
+    keys.forEach(key => {
+      const obj = {
+        name: key,
+        url: results[key].uri
+      };
+      list.push(obj);
+    });
     return list;
   }
 
@@ -365,14 +379,6 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
     return labelselectors.join(',');
   }
 
-  onTechSupportTableRowClick(event: RowClickEvent) {
-    if (this.expandedRowData === event.rowData) {
-      this.closeRowExpand();
-    } else {
-      this.expandRowRequest(event.event, event.rowData);
-    }
-  }
-
   deleteRecord(object: MonitoringTechSupportRequest): Observable<{ body: IMonitoringTechSupportRequest | IApiStatus | Error, statusCode: number }> {
     return this.monitoringService.DeleteTechSupportRequest(object.meta.name);
   }
@@ -390,7 +396,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
    * @param rowData
    */
   showDeleteIcon(rowData: MonitoringTechSupportRequest): boolean {
-     return ( rowData.status.status !==  MonitoringTechSupportRequestStatus_status.running);
+    return (rowData.status.status !== MonitoringTechSupportRequestStatus_status.running);
   }
 
 }

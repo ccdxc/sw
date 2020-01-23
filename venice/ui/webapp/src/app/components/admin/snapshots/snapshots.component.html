@@ -36,12 +36,15 @@
     </div>
   </mat-expansion-panel>
 
-  <app-tableviewedit fxLayout="column" class="snapshots-widget" [creatingMode]="creatingMode"
+  <app-tableviewedit fxLayout="column" class="snapshots-widget"
+                     dataKey="meta.name"
+                     [creatingMode]="creatingMode"
                      [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
                      [virtualRowHeight]="50"
                      [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
                      [bodyTemplate]="bodyTemplate"
-                     [actionTemplate]="actionTemplate" [enableCheckbox]="false"
+                     [actionTemplate]="actionTemplate" [enableCheckbox]="true"
+                     [tableLoading]="tableLoading"
                      (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
   </app-tableviewedit>
 
@@ -53,7 +56,20 @@
                    [tableMenuItems]="tableMenuItems"
                    [enableColumnSelect]="true" [cols]="cols"
                    (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
+    <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>
+
   </app-tableheader>
+</ng-template>
+
+<ng-template #actionButtonsTemplate>
+  <div fxFlex="none" fxLayoutAlign="start center">
+    <!-- TABLE FUNCTION ICONS HERE -->
+    <mat-icon class="global-multi-records-delete-icon"
+              *ngIf="hasSelectedRows()"
+              [matTooltip]="'Delete selected snapshots'"
+              (click)="onDeleteSelectedRows($event)">delete</mat-icon>
+  </div>
+
 </ng-template>
 
 <ng-template #bodyTemplate let-rowData let-col="col">

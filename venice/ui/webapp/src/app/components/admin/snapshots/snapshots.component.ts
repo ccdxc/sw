@@ -48,6 +48,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   showUploadButton: boolean = true;
   uploadInForeground: boolean = false;
   _xhr: XMLHttpRequest = null;
+  tableLoading: boolean;
   /** file upload variables */
 
   bodyicon: Icon = {
@@ -92,7 +93,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   postNgInit(): void {
     this.checkAndMakeSnapshotPolicy();
     this.getSnapshots();
-    }
+  }
 
 
   setDefaultToolbar() {
@@ -105,7 +106,7 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
         callback: () => { this.refresh(); }
       };
       if (this.uiconfigsService.isAuthorized(UIRolePermissions.objstorebucket_create) &&
-          this.uiconfigsService.isAuthorized(UIRolePermissions.clusterconfigurationsnapshot_create)) {
+        this.uiconfigsService.isAuthorized(UIRolePermissions.clusterconfigurationsnapshot_create)) {
         const saveButton = {
           cssClass: 'global-button-primary snapshots-toolbar-button snapshots-toolbar-button-ADD',
           text: 'SAVE A CONFIG SNAPSHOT',
@@ -229,16 +230,22 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
 
 
   getSnapshots() {
+    this.tableLoading = true;
     const sub = this.objstoreService.ListObject(SnapshotsComponent.SNAPSHOT_NAMESPACES).subscribe(
       (response) => {
         this.processSnapshotImages(response);
+        this.tableLoading = false;
       },
-      this.controllerService.restErrorHandler('Failed to fetch snapshot images.')
+      () => {
+        this.tableLoading = false;
+        this.controllerService.restErrorHandler('Failed to fetch snapshot images.');
+      }
     );
     this.subscriptions.push(sub);
   }
 
   deleteRecord(object: ObjstoreObject): Observable<{ body: ObjstoreObject | IApiStatus | Error, statusCode: number }> {
+    this.refresh();
     return this.objstoreService.DeleteObject(SnapshotsComponent.SNAPSHOT_NAMESPACES, object.meta.name);
   }
 
