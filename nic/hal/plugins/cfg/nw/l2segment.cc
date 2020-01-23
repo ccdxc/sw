@@ -583,21 +583,23 @@ l2seg_add_oifs (l2seg_t *l2seg)
     hal_ret_t       ret = HAL_RET_OK;
     if_t            *hal_if = NULL;
     hal_handle_t    *p_hdl_id = NULL;
-    oif_t           oif = {};
-    bool            is_mgmt = false;
+    // bool            is_mgmt = false;
 
+#if 0
     if (l2seg_is_mgmt(l2seg)) {
         is_mgmt = true;
     }
+#endif
 
     if (l2seg->mbrif_list) {
         for (const void *ptr : *l2seg->mbrif_list) {
             p_hdl_id = (hal_handle_t *)ptr;
             hal_if = find_if_by_handle(*p_hdl_id);
-            oif.intf = hal_if;
-            oif.l2seg = l2seg;
 
 #if 0
+            oif_t           oif = {};
+            oif.intf = hal_if;
+            oif.l2seg = l2seg;
             if (!is_mgmt) {
                 ret = oif_list_add_oif(l2seg_bc_mseg_bm_oifl(l2seg), &oif);
                 ret = oif_list_add_oif(l2seg_mc_mseg_bm_oifl(l2seg), &oif);
@@ -635,7 +637,6 @@ l2seg_add_non_designated_uplink(l2seg_t *l2seg)
     if_t            *hal_if = NULL;
     hal_handle_t    *p_hdl_id = NULL;
     vrf_t           *vrf = NULL;
-    oif_t           oif = {};
 
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
 
@@ -651,6 +652,7 @@ l2seg_add_non_designated_uplink(l2seg_t *l2seg)
                                                true, true, true, true);
 
 #if 0
+                oif_t           oif = {};
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
                 ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), 
@@ -701,7 +703,6 @@ l2seg_del_non_designated_uplink(l2seg_t *l2seg)
     if_t            *hal_if = NULL;
     hal_handle_t    *p_hdl_id = NULL;
     vrf_t           *vrf = NULL;
-    oif_t           oif = {};
 
     vrf = vrf_lookup_by_handle(l2seg->vrf_handle);
 
@@ -716,6 +717,7 @@ l2seg_del_non_designated_uplink(l2seg_t *l2seg)
                 ret = l2seg_update_oiflist_oif(l2seg, hal_if, false,
                                                true, true, true, true);
 #if 0
+                oif_t           oif = {};
                 oif.intf = hal_if;
                 oif.l2seg = l2seg;
                 ret = oif_list_remove_oif(l2seg_get_bcast_oif_list(l2seg), 
@@ -1338,7 +1340,6 @@ l2seg_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     ret = l2seg_add_to_db_and_refs(l2seg, hal_handle, app_ctxt->vrf);
 
-end:
     return ret;
 }
 
@@ -1959,14 +1960,14 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     pd::pd_l2seg_update_args_t  pd_l2seg_args = {};
     dllist_ctxt_t               *lnode = NULL;
     dhl_entry_t                 *dhl_entry = NULL;
-    l2seg_t                    *l2seg = NULL, *l2seg_clone = NULL;
+    l2seg_t                    /**l2seg = NULL, */*l2seg_clone = NULL;
     l2seg_update_app_ctxt_t    *app_ctxt = NULL;
     pd::pd_func_args_t          pd_func_args = {};
 
     lnode = cfg_ctxt->dhl.next;
     dhl_entry = dllist_entry(lnode, dhl_entry_t, dllist_ctxt);
     app_ctxt = (l2seg_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
-    l2seg = (l2seg_t *)dhl_entry->obj;
+    // l2seg = (l2seg_t *)dhl_entry->obj;
     l2seg_clone = (l2seg_t *)dhl_entry->cloned_obj;
 
     // pd call
@@ -1999,7 +2000,6 @@ l2seg_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->nwlist_change) {
     }
 
-end:
     return ret;
 }
 
@@ -2220,7 +2220,6 @@ l2seg_update_abort_cb (cfg_op_ctxt_t *cfg_ctxt)
     // Free Clone
     l2seg_free(l2seg);
 
-end:
     return ret;
 }
 
@@ -3499,7 +3498,6 @@ hal_ret_t
 l2seg_detach_mgmt_oifls (l2seg_t *l2seg)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    oif_list_id_t               cl_oifl_id;
     l2seg_t                     *shared_mgmt_l2seg = NULL;
     vrf_t                       *vrf = NULL;
     if_t                        *uplink_if = NULL;
@@ -3596,14 +3594,14 @@ l2seg_detach_oifls (l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *uplink_if)
     hal_ret_t       ret = HAL_RET_OK;
     oif_list_id_t   cl_oifl_id, hp_oifl_id, 
                     cl_base_oifl_id = OIF_LIST_ID_INVALID,
-                    hp_base_oifl_id = OIF_LIST_ID_INVALID,
+                    /*hp_base_oifl_id = OIF_LIST_ID_INVALID,*/
                     hp_shared_base_oifl_id = OIF_LIST_ID_INVALID;
     uint32_t        if_idx = 0;
 
     if_idx = uplink_if_get_idx(uplink_if);
 
     cl_base_oifl_id = l2seg_base_oifl_id(cl_l2seg, NULL);
-    hp_base_oifl_id = l2seg_base_oifl_id(hp_l2seg, uplink_if);
+    // hp_base_oifl_id = l2seg_base_oifl_id(hp_l2seg, uplink_if);
     hp_shared_base_oifl_id = hp_l2seg->shared_cust_oifl_id[if_idx];
 
     // BC MSeg
@@ -3636,6 +3634,8 @@ l2seg_detach_oifls (l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *uplink_if)
     ret = oif_list_delete_block(hp_l2seg->shared_cust_oifl_id[if_idx],
                                 HAL_SHARED_OIFLIST_BLOCK);
     hp_l2seg->shared_cust_oifl_id[if_idx] = OIF_LIST_ID_INVALID;
+
+    return ret;
 }
 
 hal_ret_t
@@ -3647,9 +3647,6 @@ l2seg_attach_mgmt (l2seg_t *l2seg)
     hal_handle_t                *p_hdl_id = NULL;
     if_t                        *uplink_if = NULL;
     vrf_t                       *vrf = NULL;
-    oif_list_id_t               cl_oifl_id, hp_oifl_id, 
-                                cl_base_oifl_id = OIF_LIST_ID_INVALID,
-                                hp_base_oifl_id = OIF_LIST_ID_INVALID;
     bool                        shared_mgmt_l2seg_exists = false;
 
     if (l2seg_is_cust(l2seg)) {

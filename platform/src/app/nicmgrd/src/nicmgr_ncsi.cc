@@ -49,7 +49,7 @@ ncsi_ipc_vlan_filter_get (ncsi_ipc_msg_t *msg)
 
     devmgr->DevApi()->swm_get_channels_info(&channels_info);
 
-    for (auto it = channels_info.cbegin(); it != channels_info.cend(); it) {
+    for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
         cinfo = *it;
         for (auto it1 = cinfo->vlan_table.cbegin(); it1 != cinfo->vlan_table.cend(); it1++) {
             vlan = *it1;
@@ -98,7 +98,7 @@ ncsi_ipc_mac_filter_get (ncsi_ipc_msg_t *msg)
 
     devmgr->DevApi()->swm_get_channels_info(&channels_info);
 
-    for (auto it = channels_info.cbegin(); it != channels_info.cend(); it) {
+    for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
         cinfo = *it;
         for (auto it1 = cinfo->mac_table.cbegin(); it1 != cinfo->mac_table.cend(); it1++) {
             mac = *it1;
@@ -149,8 +149,8 @@ ncsi_ipc_bcast_filter_get (ncsi_ipc_msg_t *msg)
     std::set<channel_info_t *> channels_info;
     channel_info_t *cinfo;
     BcastFilterGetResponseMsg *rsp_msg = dynamic_cast<BcastFilterGetResponseMsg *>(msg->rsp);
+    BcastFilterGetRequest *req = dynamic_cast<BcastFilterGetRequest *>(msg->msg);
     BcastFilterGetResponse *rsp;
-    mac_t mac;
 
     NIC_LOG_DEBUG("NCSI Bcast filter get");
 
@@ -158,16 +158,18 @@ ncsi_ipc_bcast_filter_get (ncsi_ipc_msg_t *msg)
 
     for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
         cinfo = *it;
-        rsp = rsp_msg->add_response();
-        rsp->mutable_request()->set_channel(cinfo->channel);
-        rsp->mutable_request()->set_enable_arp(cinfo->bcast_filter.arp);
-        rsp->mutable_request()->set_enable_dhcp_client(cinfo->bcast_filter.dhcp_client);
-        rsp->mutable_request()->set_enable_dhcp_server(cinfo->bcast_filter.dhcp_server);
-        rsp->mutable_request()->set_enable_netbios(cinfo->bcast_filter.netbios);
-        rsp->set_api_status(types::API_STATUS_OK);
-        NIC_LOG_DEBUG("Channel: {}, arp: {}, dhcp_client: {}, dhcp_server: {}, netbios: {}", 
-                      cinfo->channel, cinfo->bcast_filter.arp, cinfo->bcast_filter.dhcp_client,
-                      cinfo->bcast_filter.dhcp_server, cinfo->bcast_filter.netbios);
+        if (req->channel() == 0xFF || req->channel() == cinfo->channel) {
+            rsp = rsp_msg->add_response();
+            rsp->mutable_request()->set_channel(cinfo->channel);
+            rsp->mutable_request()->set_enable_arp(cinfo->bcast_filter.arp);
+            rsp->mutable_request()->set_enable_dhcp_client(cinfo->bcast_filter.dhcp_client);
+            rsp->mutable_request()->set_enable_dhcp_server(cinfo->bcast_filter.dhcp_server);
+            rsp->mutable_request()->set_enable_netbios(cinfo->bcast_filter.netbios);
+            rsp->set_api_status(types::API_STATUS_OK);
+            NIC_LOG_DEBUG("Channel: {}, arp: {}, dhcp_client: {}, dhcp_server: {}, netbios: {}", 
+                          cinfo->channel, cinfo->bcast_filter.arp, cinfo->bcast_filter.dhcp_client,
+                          cinfo->bcast_filter.dhcp_server, cinfo->bcast_filter.netbios);
+        }
         channels_info.erase(it++);
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);
     }
@@ -214,8 +216,8 @@ ncsi_ipc_mcast_filter_get (ncsi_ipc_msg_t *msg)
     std::set<channel_info_t *> channels_info;
     channel_info_t *cinfo;
     McastFilterGetResponseMsg *rsp_msg = dynamic_cast<McastFilterGetResponseMsg *>(msg->rsp);
+    McastFilterGetRequest *req = dynamic_cast<McastFilterGetRequest *>(msg->msg);
     McastFilterGetResponse *rsp;
-    mac_t mac;
 
     NIC_LOG_DEBUG("NCSI Mcast filter get");
 
@@ -223,21 +225,23 @@ ncsi_ipc_mcast_filter_get (ncsi_ipc_msg_t *msg)
 
     for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
         cinfo = *it;
-        rsp = rsp_msg->add_response();
-        rsp->mutable_request()->set_channel(cinfo->channel);
-        rsp->mutable_request()->set_enable_ipv6_neigh_adv(cinfo->mcast_filter.ipv6_neigh_adv);
-        rsp->mutable_request()->set_enable_ipv6_router_adv(cinfo->mcast_filter.ipv6_router_adv);
-        rsp->mutable_request()->set_enable_dhcpv6_relay(cinfo->mcast_filter.dhcpv6_relay);
-        rsp->mutable_request()->set_enable_dhcpv6_mcast(cinfo->mcast_filter.dhcpv6_mcast);
-        rsp->mutable_request()->set_enable_ipv6_mld(cinfo->mcast_filter.ipv6_mld);
-        rsp->mutable_request()->set_enable_ipv6_neigh_sol(cinfo->mcast_filter.ipv6_neigh_sol);
-        rsp->set_api_status(types::API_STATUS_OK);
-        NIC_LOG_DEBUG("Channel: {}, ipv6_neigh_adv: {}, ipv6_router_adv: {}, dhcpv6_relay: {}, "
-                      "dhcpv6_mcast: {}, ipv6_mld: {}, ipv6_neigh_sol: {}", 
-                      cinfo->channel, cinfo->mcast_filter.ipv6_neigh_adv, 
-                      cinfo->mcast_filter.ipv6_router_adv, cinfo->mcast_filter.dhcpv6_relay, 
-                      cinfo->mcast_filter.dhcpv6_mcast, cinfo->mcast_filter.ipv6_mld,
-                      cinfo->mcast_filter.ipv6_neigh_sol);
+        if (req->channel() == 0xFF || req->channel() == cinfo->channel) {
+            rsp = rsp_msg->add_response();
+            rsp->mutable_request()->set_channel(cinfo->channel);
+            rsp->mutable_request()->set_enable_ipv6_neigh_adv(cinfo->mcast_filter.ipv6_neigh_adv);
+            rsp->mutable_request()->set_enable_ipv6_router_adv(cinfo->mcast_filter.ipv6_router_adv);
+            rsp->mutable_request()->set_enable_dhcpv6_relay(cinfo->mcast_filter.dhcpv6_relay);
+            rsp->mutable_request()->set_enable_dhcpv6_mcast(cinfo->mcast_filter.dhcpv6_mcast);
+            rsp->mutable_request()->set_enable_ipv6_mld(cinfo->mcast_filter.ipv6_mld);
+            rsp->mutable_request()->set_enable_ipv6_neigh_sol(cinfo->mcast_filter.ipv6_neigh_sol);
+            rsp->set_api_status(types::API_STATUS_OK);
+            NIC_LOG_DEBUG("Channel: {}, ipv6_neigh_adv: {}, ipv6_router_adv: {}, dhcpv6_relay: {}, "
+                          "dhcpv6_mcast: {}, ipv6_mld: {}, ipv6_neigh_sol: {}", 
+                          cinfo->channel, cinfo->mcast_filter.ipv6_neigh_adv, 
+                          cinfo->mcast_filter.ipv6_router_adv, cinfo->mcast_filter.dhcpv6_relay, 
+                          cinfo->mcast_filter.dhcpv6_mcast, cinfo->mcast_filter.ipv6_mld,
+                          cinfo->mcast_filter.ipv6_neigh_sol);
+        }
         channels_info.erase(it++);
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);
     }
@@ -287,8 +291,8 @@ ncsi_ipc_channel_get (ncsi_ipc_msg_t *msg)
     std::set<channel_info_t *> channels_info;
     channel_info_t *cinfo;
     ChannelGetResponseMsg *rsp_msg = dynamic_cast<ChannelGetResponseMsg *>(msg->rsp);
+    ChannelGetRequest *req = dynamic_cast<ChannelGetRequest *>(msg->msg);
     ChannelGetResponse *rsp;
-    mac_t mac;
 
     NIC_LOG_DEBUG("NCSI Channel get");
 
@@ -296,13 +300,15 @@ ncsi_ipc_channel_get (ncsi_ipc_msg_t *msg)
 
     for (auto it = channels_info.cbegin(); it != channels_info.cend();) {
         cinfo = *it;
-        rsp = rsp_msg->add_response();
-        rsp->mutable_request()->set_channel(cinfo->channel);
-        rsp->mutable_request()->set_tx_enable(cinfo->tx_en);
-        rsp->mutable_request()->set_rx_enable(cinfo->rx_en);
-        rsp->set_api_status(types::API_STATUS_OK);
-        NIC_LOG_DEBUG("Channel: {}, tx_en: {}, rx_en: {}",
-                      cinfo->channel, cinfo->tx_en, cinfo->rx_en);
+        if (req->channel() == 0xFF || req->channel() == cinfo->channel) {
+            rsp = rsp_msg->add_response();
+            rsp->mutable_request()->set_channel(cinfo->channel);
+            rsp->mutable_request()->set_tx_enable(cinfo->tx_en);
+            rsp->mutable_request()->set_rx_enable(cinfo->rx_en);
+            rsp->set_api_status(types::API_STATUS_OK);
+            NIC_LOG_DEBUG("Channel: {}, tx_en: {}, rx_en: {}",
+                          cinfo->channel, cinfo->tx_en, cinfo->rx_en);
+        }
         channels_info.erase(it++);
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);
     }
@@ -376,7 +382,7 @@ ncsi_ipc_handler_cb (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     rsp_msg.rsp_ret = ret;
 
     NIC_LOG_DEBUG("Nicmgr response for NCSI message to hal: msg_id: {}, ret: {}",
-                  rsp_msg.msg_id, rsp_msg.rsp_ret);
+                  rsp_msg.msg_id, SDK_RET_ENTRIES_str(rsp_msg.rsp_ret));
 
     sdk::ipc::respond(msg, &rsp_msg, sizeof(rsp_msg));
 }

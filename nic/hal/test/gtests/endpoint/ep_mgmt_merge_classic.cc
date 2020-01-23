@@ -321,14 +321,14 @@ TEST_F(ep_mgmt_merge_classic_test, test1)
     uint32_t       test_id = 1;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
                    uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
-    uint32_t       up_ifid[2] = {0, 0}, ifid[2] = {0, 0}, ifid_count = 0;
-    uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20,
-                   vrf_id_hp1 = 65;
-    uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3, l2seg_id_hp1 = 103;
+    uint32_t       up_ifid[2] = {0, 0}, /*ifid[2] = {0, 0},*/ ifid_count = 0;
+    uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20/*,
+                   vrf_id_hp1 = 65*/;
+    uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3 /*,l2seg_id_hp1 = 103*/;
     uint32_t       up_port1 = 1, up_port2 = 5, up_port3 = 9;
     uint32_t       inb_lifid1 = 66, inb_lifid2 = 67, host_lifid1 = 68, host_lifid2 = 69, oob_lifid = 70;
-    uint32_t       enic_inb1 = 257, enic_inb2 = 258, enic_oob = 259, enic_wl1 = 200;
-    uint32_t       wl_encap1 = 100;
+    uint32_t       enic_inb1 = 257, enic_inb2 = 258, enic_oob = 259/*, enic_wl1 = 200*/;
+    // uint32_t       wl_encap1 = 100;
 
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 

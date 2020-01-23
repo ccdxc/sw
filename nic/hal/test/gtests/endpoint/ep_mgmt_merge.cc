@@ -276,7 +276,7 @@ TEST_F(ep_mgmt_merge_test, test2)
     uint32_t       test_id = 1;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
                    uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
-    uint32_t       up_ifid[2] = {0, 0}, ifid[2] = {0, 0}, ifid_count = 0;
+    uint32_t       up_ifid[2] = {0, 0}, /*ifid[2] = {0, 0},*/ ifid_count = 0;
     uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20,
                    vrf_id_hp1 = 65;
     uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3, l2seg_id_hp1 = 103;
@@ -508,7 +508,7 @@ TEST_F(ep_mgmt_merge_test, test3)
     uint32_t       test_id = 1;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
                    uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
-    uint32_t       up_ifid[2] = {0, 0}, ifid[2] = {0, 0}, ifid_count = 0;
+    uint32_t       up_ifid[2] = {0, 0}, /*ifid[2] = {0, 0},*/ ifid_count = 0;
     uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20,
                    vrf_id_hp1 = 65;
     uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3, l2seg_id_hp1 = 103;
@@ -741,7 +741,7 @@ TEST_F(ep_mgmt_merge_test, test4)
     uint32_t       test_id = 1;
     uint32_t       uplinkif_id1 = UPLINK_IF_ID_OFFSET + test_id,
                    uplinkif_id2 = uplinkif_id1 + 1, uplinkif_id3 = uplinkif_id1 + 2;
-    uint32_t       up_ifid[2] = {0, 0}, ifid[2] = {0, 0}, ifid_count = 0;
+    uint32_t       up_ifid[2] = {0, 0}, /*ifid[2] = {0, 0},*/ ifid_count = 0;
     uint32_t       vrf_id_cl_up1 = 18, vrf_id_cl_up2 = 19, vrf_id_cl_up3 = 20,
                    vrf_id_hp1 = 65;
     uint32_t       l2seg_id_cl_up1 = 1, l2seg_id_cl_up2 = 2, l2seg_id_cl_up3 = 3, 

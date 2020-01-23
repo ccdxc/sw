@@ -251,7 +251,7 @@ TEST_F(ncsi_test, test1)
     ASSERT_TRUE(ch_rsp.api_status() == types::API_STATUS_OK);
 
     // To test halctl in sim
-    // sleep(10000);
+    sleep(10000);
 }
 
 #if 0

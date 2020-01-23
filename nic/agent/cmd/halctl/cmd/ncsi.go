@@ -19,7 +19,11 @@ import (
 	"github.com/pensando/sw/nic/agent/netagent/datapath/halproto"
 )
 
-var ()
+var (
+	channelID uint32
+	mFchannelID uint32
+	bFchannelID uint32
+)
 
 var ncsiShowCmd = &cobra.Command{
 	Use:   "ncsi",
@@ -69,6 +73,12 @@ func init() {
 	ncsiShowCmd.AddCommand(ncsiBcastShowCmd)
 	ncsiShowCmd.AddCommand(ncsiMcastShowCmd)
 	ncsiShowCmd.AddCommand(ncsiChannelShowCmd)
+
+	// Mcast filter command
+	ncsiMcastShowCmd.Flags().Uint32Var(&mFchannelID, "id", 0xFF, "Specify channelid")
+	ncsiBcastShowCmd.Flags().Uint32Var(&bFchannelID, "id", 0xFF, "Specify channelid")
+	// Channel command
+	ncsiChannelShowCmd.Flags().Uint32Var(&channelID, "id", 0xFF, "Specify channelid")
 }
 
 func ncsiVlanShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -224,7 +234,9 @@ func ncsiBcastShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewNcsiClient(c)
 
 	var req *halproto.BcastFilterGetRequest
-	req = &halproto.BcastFilterGetRequest{}
+	req = &halproto.BcastFilterGetRequest{
+		Channel: bFchannelID,
+	}
 
 	bcastFilterGetRequestMsg := &halproto.BcastFilterGetRequestMsg{
 		Request: []*halproto.BcastFilterGetRequest{req},
@@ -317,7 +329,9 @@ func ncsiMcastShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewNcsiClient(c)
 
 	var req *halproto.McastFilterGetRequest
-	req = &halproto.McastFilterGetRequest{}
+	req = &halproto.McastFilterGetRequest{
+		Channel: mFchannelID,
+	}
 
 	mcastFilterGetRequestMsg := &halproto.McastFilterGetRequestMsg{
 		Request: []*halproto.McastFilterGetRequest{req},
@@ -416,7 +430,18 @@ func ncsiChannelShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := halproto.NewNcsiClient(c)
 
 	var req *halproto.ChannelGetRequest
-	req = &halproto.ChannelGetRequest{}
+	req = &halproto.ChannelGetRequest{
+		Channel: channelID,
+	}
+	// if cmd.Flags().Changed("id") {
+	// 	req = &halproto.ChannelGetRequest{
+	// 		Channel = channelID,
+	// 	}
+	// } else {
+	// 	req = &halproto.ChannelGetRequest{
+	// 		Channel = 0xFF,
+	// 	}
+	// }
 
 	channelGetRequestMsg := &halproto.ChannelGetRequestMsg{
 		Request: []*halproto.ChannelGetRequest{req},

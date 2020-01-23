@@ -168,6 +168,7 @@ message BcastFilterDeleteResponseMsg {
 }
 
 message BcastFilterGetRequest {
+  uint32 channel = 1;
 }
 
 message BcastFilterGetRequestMsg {
@@ -225,6 +226,7 @@ message McastFilterDeleteResponseMsg {
 }
 
 message McastFilterGetRequest {
+  uint32 channel = 1;
 }
 
 message McastFilterGetRequestMsg {
@@ -302,7 +304,7 @@ message ChannelResponseMsg {
 }
 
 message ChannelGetRequest {
-    uint32 channel = 1;
+  uint32 channel = 1;
 }
 
 message ChannelGetRequestMsg {

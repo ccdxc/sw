@@ -98,11 +98,11 @@ hal_get_mpart_file_path (hal_cfg_t *hal_cfg)
 {
     std::string cfg_path = hal_cfg->cfg_path;
     char *feature_set = hal_cfg->feature_set;
-    hal_forwarding_mode_t forwarding_mode = hal_cfg->device_cfg.forwarding_mode;
     hal_feature_profile_t profile = hal_cfg->device_cfg.feature_profile;
     std::string profile_name;
 
 #if 0
+    hal_forwarding_mode_t forwarding_mode = hal_cfg->device_cfg.forwarding_mode;
     if (forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)
     {
         return cfg_path + "/" + feature_set + "/hbm_classic_mem.json";

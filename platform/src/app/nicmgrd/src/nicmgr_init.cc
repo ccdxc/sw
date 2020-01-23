@@ -127,7 +127,6 @@ nicmgr_init (platform_type_t platform,
     bool micro_seg_en = false;
     sdk::lib::device *device = NULL;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
-    sdk::lib::dev_feature_profile_t feature_profile;
     UpgradeMode upg_mode;
 
     // instantiate the logger
@@ -150,10 +149,10 @@ nicmgr_init (platform_type_t platform,
     // Load device configuration
     device = sdk::lib::device::factory(device_file.c_str());
     fwd_mode = device->get_forwarding_mode();
-    feature_profile = device->get_feature_profile();
     micro_seg_en = (device->get_micro_seg_en() == device::MICRO_SEG_ENABLE);
 
 #if 0
+    feature_profile = device->get_feature_profile();
     // TODO: Profile should be independent of forwarding mode.
     // TODO: No need to figure out the profile while upgrading.
     if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||

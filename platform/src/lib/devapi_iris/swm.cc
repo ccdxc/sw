@@ -868,7 +868,7 @@ devapi_swm::enable_tx(uint32_t channel)
                     tx_channel_, channel);
     }
 
-    if (tx_channel_ == channel) {
+    if (tx_channel_ == (int)channel) {
         NIC_LOG_DEBUG("channel {} already tx-enabled. noop", channel);
         goto end;
     }

@@ -600,15 +600,15 @@ enicif_classic_update_l2seg_oiflist(if_t *hal_if, l2seg_t *l2seg,
                                     lif_update_app_ctxt_t *lif_upd)
 {
     hal_ret_t                   ret = HAL_RET_OK;
-    oif_t                       oif = {};
 
-    oif.intf = hal_if;
-    oif.l2seg = l2seg;
 
     if (lif_upd->pkt_filter_bcast_changed) {
         ret = l2seg_update_oiflist_oif(l2seg, hal_if, lif_upd->receive_broadcast, false,
                                        true, false, false); 
 #if 0
+        oif_t                       oif = {};
+        oif.intf = hal_if;
+        oif.l2seg = l2seg;
         if (lif_upd->receive_broadcast) {
             ret = oif_list_add_oif(l2seg_get_bcast_oif_list(l2seg), &oif);
             SDK_ASSERT(ret == HAL_RET_OK);
@@ -691,7 +691,6 @@ if_update_classic_oif_lists(if_t *hal_if, lif_update_app_ctxt_t *lif_upd)
 hal_ret_t
 if_update_oif_lists (if_t *hal_if, bool add)
 {
-    oif_t oif = {};
     hal_ret_t  ret = HAL_RET_OK;
     l2seg_t    *l2seg = NULL, *nat_l2seg = NULL;
 
@@ -708,8 +707,6 @@ if_update_oif_lists (if_t *hal_if, bool add)
         if (hal_if->enic_type != intf::IF_ENIC_TYPE_CLASSIC) {
             l2seg = l2seg_lookup_by_handle(hal_if->l2seg_handle);
             if (l2seg) {
-                oif.intf = hal_if;
-                oif.l2seg = l2seg;
 
                 ret = l2seg_update_oiflist_oif(l2seg, hal_if, add,
                                                false, 
@@ -717,6 +714,9 @@ if_update_oif_lists (if_t *hal_if, bool add)
                                                true,    // MC
                                                false);  // Prom
 #if 0
+                oif_t oif = {};
+                oif.intf = hal_if;
+                oif.l2seg = l2seg;
                 // Add the new interface to the broadcast list of the associated
                 // l2seg.
                 if (add) {
@@ -1660,8 +1660,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     if_t                        *hal_if    = NULL, *hal_if_clone = NULL;
     if_update_app_ctxt_t        *app_ctxt  = NULL;
     pd::pd_func_args_t          pd_func_args = {0};
-    l2seg_t                     *native_l2seg_old;
-    oif_t                       oif = {};
+    // oif_t                       oif = {};
     hal_handle_t                *p_hdl = NULL;
     ep_t                        *ep = NULL;
 
@@ -1818,6 +1817,7 @@ if_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
 
     // Deprecated. Not support smart switch mode. 
 #if 0
+    l2seg_t                     *native_l2seg_old;
     // Change Flood replication entry for change of native l2seg
     if (is_forwarding_mode_smart_switch() && pd_if_args.native_l2seg_change &&
         hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) {
@@ -2797,7 +2797,6 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                       ret = HAL_RET_OK;
     if_t                            *hal_if = NULL;
     l2seg_t                         *l2seg = NULL;
-    oif_t                           oif = {};
     pd::pd_add_l2seg_uplink_args_t  pd_l2seg_uplink_args;
     pd::pd_func_args_t              pd_func_args = {0};
 
@@ -2848,6 +2847,7 @@ add_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // Deprecated: smart switch is no longer supported
 #if 0
+    // oif_t                           oif = {};
     // Add the uplink to the broadcast list of the l2seg
     if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;
@@ -2879,7 +2879,6 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
     hal_ret_t                       ret = HAL_RET_OK;
     l2seg_t                         *l2seg = NULL;
     if_t                            *hal_if = NULL;
-    oif_t                           oif = {};
     pd::pd_del_l2seg_uplink_args_t  pd_l2seg_uplink_args;
     pd::pd_func_args_t              pd_func_args = {0};
 
@@ -2911,6 +2910,7 @@ del_l2seg_on_uplink (InterfaceL2SegmentSpec& spec,
 
     // Deprecated: smart switch is no longer supported
 #if 0
+    oif_t                           oif = {};
     // Del the uplink from the broadcast list of the l2seg
     if (is_forwarding_mode_smart_switch()) {
         oif.intf = hal_if;

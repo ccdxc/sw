@@ -33,7 +33,7 @@ ncsi_init (hal_cfg_t *hal_cfg)
 
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
 
-    return HAL_RET_OK;
+    return ret;
 }
 
 // cleanup routine for network module
