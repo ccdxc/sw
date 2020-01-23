@@ -225,6 +225,7 @@ action mapping_info(entry_valid,
     if (p4e_i2e.mapping_bypass == TRUE) {
         modify_field(rewrite_metadata.nexthop_type, p4e_i2e.nexthop_type);
         modify_field(egress_recirc.mapping_done, TRUE);
+        modify_field(control_metadata.mapping_done, TRUE);
         // return
     }
 
@@ -233,6 +234,7 @@ action mapping_info(entry_valid,
         modify_field(p4e_to_arm.nexthop_type, txdma_to_p4e.nexthop_type);
         modify_field(p4e_to_arm.nexthop_id, txdma_to_p4e.nexthop_id);
         modify_field(egress_recirc.mapping_done, TRUE);
+        modify_field(control_metadata.mapping_done, TRUE);
         // return
     }
 
@@ -252,6 +254,7 @@ action mapping_info(entry_valid,
             }
         }
         modify_field(egress_recirc.mapping_done, TRUE);
+        modify_field(control_metadata.mapping_done, TRUE);
         // return
 
         // if hardware register indicates miss, compare hashes with r1
@@ -313,6 +316,7 @@ action mapping_info(entry_valid,
             modify_field(control_metadata.mapping_ohash_lkp, TRUE);
         } else {
             modify_field(egress_recirc.mapping_done, TRUE);
+            modify_field(control_metadata.mapping_done, TRUE);
         }
     } else {
         if (p4e_to_arm.valid == TRUE) {
@@ -320,6 +324,7 @@ action mapping_info(entry_valid,
             modify_field(p4e_to_arm.nexthop_id, txdma_to_p4e.nexthop_id);
         }
         modify_field(egress_recirc.mapping_done, TRUE);
+        modify_field(control_metadata.mapping_done, TRUE);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);

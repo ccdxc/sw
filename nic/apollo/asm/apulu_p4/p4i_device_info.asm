@@ -25,7 +25,6 @@ p4i_recirc:
     phvwr           p.control_metadata_local_mapping_ohash_lkp, r1
     xor             r1, k.ingress_recirc_flow_done, 0x1
     phvwr           p.control_metadata_flow_ohash_lkp, r1
-    phvwr           p.capri_p4_intrinsic_recirc, FALSE
 
 p4i_recirc_done:
     seq             c1, k.ethernet_1_dstAddr, \

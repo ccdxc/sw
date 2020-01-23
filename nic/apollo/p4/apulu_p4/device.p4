@@ -7,7 +7,6 @@ action p4i_recirc() {
                      ~ingress_recirc.local_mapping_done);
         modify_field(control_metadata.flow_ohash_lkp,
                      ~ingress_recirc.flow_done);
-        modify_field(capri_p4_intrinsic.recirc, FALSE);
     }
 }
 
@@ -51,12 +50,20 @@ control ingress_device_info {
     apply(p4i_device_info);
 }
 
+action p4e_recirc() {
+    if (egress_recirc.valid == TRUE) {
+        modify_field(control_metadata.mapping_ohash_lkp,
+                     ~egress_recirc.mapping_done);
+    }
+}
+
 action p4e_device_info(device_ipv4_addr, device_ipv6_addr) {
     modify_field(rewrite_metadata.device_ipv4_addr, device_ipv4_addr);
     modify_field(rewrite_metadata.device_ipv6_addr, device_ipv6_addr);
+    p4e_recirc();
 }
 
-@pragma stage 2
+@pragma stage 0
 table p4e_device_info {
     reads {
         control_metadata.device_profile_id  : exact;

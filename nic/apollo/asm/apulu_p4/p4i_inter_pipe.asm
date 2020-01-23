@@ -117,7 +117,7 @@ ingress_recirc:
                         arm_to_p4i_valid, \
                         p4plus_to_p4_vlan_valid, \
                         p4plus_to_p4_valid, \
-                        capri_txdma_intrinsic_valid}, 0x030
+                        capri_txdma_intrinsic_valid}, 0x050
     phvwr.f         p.capri_intrinsic_tm_oport, TM_PORT_INGRESS
 
 tunnel_decap:

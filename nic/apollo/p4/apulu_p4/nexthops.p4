@@ -417,14 +417,16 @@ table tunnel2 {
 }
 
 control nexthops {
-    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_ECMP) {
-        apply(ecmp);
-    }
-    if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
-        apply(tunnel);
-    }
-    apply(nexthop);
-    if (control_metadata.apply_tunnel2 == TRUE) {
-        apply(tunnel2);
+    if (control_metadata.mapping_done == TRUE) {
+        if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_ECMP) {
+            apply(ecmp);
+        }
+        if (rewrite_metadata.nexthop_type == NEXTHOP_TYPE_TUNNEL) {
+            apply(tunnel);
+        }
+        apply(nexthop);
+        if (control_metadata.apply_tunnel2 == TRUE) {
+            apply(tunnel2);
+        }
     }
 }

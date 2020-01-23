@@ -10,6 +10,9 @@ struct phv_                 p;
 %%
 
 p4e_device_info:
+    seq             c1, k.egress_recirc_valid, TRUE
+    xor             r1, k.egress_recirc_mapping_done, 0x1
+    phvwr.c1        p.control_metadata_mapping_ohash_lkp, r1
     phvwr.e         p.rewrite_metadata_device_ipv4_addr, \
                         d.p4e_device_info_d.device_ipv4_addr
     phvwr.f         p.rewrite_metadata_device_ipv6_addr, \

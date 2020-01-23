@@ -69,6 +69,7 @@ header_type control_metadata_t {
         apply_tunnel2           : 1;
         lif_type                : 3;
         binding_check_enabled   : 1;
+        mapping_done            : 1;
     }
 }
 

@@ -37,6 +37,8 @@
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "nic/apollo/test/golden/apulu_pkts.h"
 
+#define LOG2_U32(x) (((x) == 0) ? 0 : (31 - __builtin_clz((x))))
+
 #define EPOCH 0x55
 
 using namespace sdk::platform::utils;
@@ -96,6 +98,8 @@ uint16_t g_vnic_id = 0x2FE;
 uint32_t g_device_ipv4_addr = 0x64656667;
 uint64_t g_device_mac = 0x00AABBCCDDEEULL;
 uint32_t g_nexthop_id_arm = 0x137;
+uint32_t g_flow_ohash_id = 0x4A54;
+uint32_t g_mapping_ohash_id = 0x77A10;
 
 uint64_t g_dmac1 = 0x000102030405ULL;
 uint64_t g_smac1 = 0x00C1C2C3C4C5ULL;
@@ -136,6 +140,9 @@ uint32_t g_tunnel_id5 = 0x1E5;
 uint32_t g_nexthop_id5 = 0x2E5;
 uint32_t g_tunnel2_id5 = 0x75;
 uint32_t g_vni5 = 0xAFEED;
+
+uint32_t g_dip6 = 0x0A0A0102;
+uint32_t g_dip7 = 0x0A0A0103;
 
 mpartition *g_mempartition;
 
@@ -325,10 +332,11 @@ generate_hash_ (void *key, uint32_t key_len, uint32_t crc_init_val)
     return hash_val;
 }
 
-static void
+static uint32_t
 entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
              bool hash_table, uint32_t table_size)
 {
+    uint32_t hash = 0;
     if (key || mask) {
         // prepare entry and write hardware
         uint32_t hwkey_len = 0;
@@ -346,7 +354,9 @@ entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
         memset(hwmask, 0, hwmask_len);
         p4pd_hwkey_hwmask_build(tbl_id, key, mask, hwkey, hwmask);
         if (hash_table) {
-            index = generate_hash_(hwkey, hwkey_len, 0);
+            if (index == 0) {
+                hash = index = generate_hash_(hwkey, hwkey_len, 0);
+            }
             index &= table_size - 1;
         }
         p4pd_entry_write(tbl_id, index, hwkey, hwmask, data);
@@ -355,6 +365,7 @@ entry_write (uint32_t tbl_id, uint32_t index, void *key, void *mask, void *data,
     } else {
         p4pd_entry_write(tbl_id, index, NULL, NULL, data);
     }
+    return hash;
 }
 
 static uint32_t
@@ -689,6 +700,98 @@ mappings_init (void)
     entry_write(tbl_id, 0, &key, NULL, &data, true, MAPPING_TABLE_SIZE);
 }
 
+
+static void
+mappings_with_ohash_init (void)
+{
+    mapping_swkey_t key;
+    mapping_actiondata_t data;
+    mapping_mapping_info_t *mapping_info = &data.action_u.mapping_mapping_info;
+    uint32_t hash = 0;
+    uint32_t hint = 0;
+    uint32_t hint_nxt = 0;
+
+    // no recirc
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip6, 4);
+    hash = entry_write(P4TBL_ID_MAPPING, 0, &key, NULL, &data, true,
+                       MAPPING_TABLE_SIZE);
+    hint = g_mapping_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    mapping_info->entry_valid = 1;
+    mapping_info->hash1 = hash >> LOG2_U32(MAPPING_TABLE_SIZE);
+    mapping_info->hint1 = hint;
+    entry_write(P4TBL_ID_MAPPING, hash, &key, NULL, &data, true,
+                MAPPING_TABLE_SIZE);
+    // ohash table with result
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip6, 4);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+    mapping_info->nexthop_id = g_tunnel_id1;
+    mapping_info->egress_bd_id = g_egress_bd_id1;
+    memcpy(mapping_info->dmaci, &g_dmaci1, 6);
+    entry_write(P4TBL_ID_MAPPING_OHASH, hint, &key, NULL, &data, true,
+                MAPPING_OHASH_TABLE_SIZE);
+
+    // 2 recircs
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip7, 4);
+    hash = entry_write(P4TBL_ID_MAPPING, 0, &key, NULL, &data, true,
+                       MAPPING_TABLE_SIZE);
+    hint = g_mapping_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    mapping_info->entry_valid = 1;
+    mapping_info->hash1 = hash >> LOG2_U32(MAPPING_TABLE_SIZE);
+    mapping_info->hint1 = hint;
+    entry_write(P4TBL_ID_MAPPING, hash, &key, NULL, &data, true,
+                MAPPING_TABLE_SIZE);
+    // ohash table, force 1st recirc
+    hint_nxt = g_mapping_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    mapping_info->entry_valid = 1;
+    mapping_info->hash1 = hash >> LOG2_U32(MAPPING_TABLE_SIZE);
+    mapping_info->hint1 = hint_nxt;
+    entry_write(P4TBL_ID_MAPPING_OHASH, hint, &key, NULL, &data, true,
+                MAPPING_OHASH_TABLE_SIZE);
+    // ohash table, force 2nd recirc
+    hint = hint_nxt;
+    hint_nxt = g_mapping_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    mapping_info->entry_valid = 1;
+    mapping_info->hash1 = hash >> LOG2_U32(MAPPING_TABLE_SIZE);
+    mapping_info->hint1 = hint_nxt;
+    entry_write(P4TBL_ID_MAPPING_OHASH, hint, &key, NULL, &data, true,
+                MAPPING_OHASH_TABLE_SIZE);
+    // ohash table with result
+    hint = hint_nxt;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.p4e_i2e_mapping_lkp_type = KEY_TYPE_IPV4;
+    key.p4e_i2e_mapping_lkp_id = g_vpc_id1;
+    memcpy(key.p4e_i2e_mapping_lkp_addr, &g_dip7, 4);
+    mapping_info->entry_valid = 1;
+    mapping_info->nexthop_valid = 1;
+    mapping_info->nexthop_type = NEXTHOP_TYPE_TUNNEL;
+    mapping_info->nexthop_id = g_tunnel_id1;
+    mapping_info->egress_bd_id = g_egress_bd_id1;
+    memcpy(mapping_info->dmaci, &g_dmaci1, 6);
+    entry_write(P4TBL_ID_MAPPING_OHASH, hint, &key, NULL, &data, true,
+                MAPPING_OHASH_TABLE_SIZE);
+}
+
 static void
 flows_init (void)
 {
@@ -753,6 +856,106 @@ flows_init (void)
     flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
     flow_hash_info->epoch = EPOCH;
     entry_write(tbl_id, 0, &key, NULL, &data, true, IPV4_FLOW_TABLE_SIZE);
+}
+
+static void
+flows_with_ohash_init (void)
+{
+    ipv4_flow_swkey_t key;
+    ipv4_flow_actiondata_t data;
+    ipv4_flow_ipv4_flow_hash_t *flow_hash_info =
+        &data.action_u.ipv4_flow_ipv4_flow_hash;
+    uint32_t hash = 0;
+    uint32_t hint = 0;
+    uint32_t hint_nxt = 0;
+
+    // no recirc
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip6;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    hash = entry_write(P4TBL_ID_IPV4_FLOW, 0, &key, NULL, &data, true,
+                       IPV4_FLOW_TABLE_SIZE);
+    hint = g_flow_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->hash1 = hash >> LOG2_U32(IPV4_FLOW_TABLE_SIZE);
+    flow_hash_info->hint1 = hint;
+    entry_write(P4TBL_ID_IPV4_FLOW, hash, &key, NULL, &data, true,
+                IPV4_FLOW_TABLE_SIZE);
+    // ohash table with result
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip6;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(P4TBL_ID_IPV4_FLOW_OHASH, hint, &key, NULL, &data, true,
+                IPV4_FLOW_OHASH_TABLE_SIZE);
+
+    // 2 recircs
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip7;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    hash = entry_write(P4TBL_ID_IPV4_FLOW, 0, &key, NULL, &data, true,
+                       IPV4_FLOW_TABLE_SIZE);
+    hint = g_flow_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->hash1 = hash >> LOG2_U32(IPV4_FLOW_TABLE_SIZE);
+    flow_hash_info->hint1 = hint;
+    entry_write(P4TBL_ID_IPV4_FLOW, hash, &key, NULL, &data, true,
+                IPV4_FLOW_TABLE_SIZE);
+    // ohash table, force 1st recirc
+    hint_nxt = g_flow_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->hash1 = hash >> LOG2_U32(IPV4_FLOW_TABLE_SIZE);
+    flow_hash_info->hint1 = hint_nxt;
+    entry_write(P4TBL_ID_IPV4_FLOW_OHASH, hint, &key, NULL, &data, true,
+                IPV4_FLOW_OHASH_TABLE_SIZE);
+    // ohash table, force 2nd recirc
+    hint = hint_nxt;
+    hint_nxt = g_flow_ohash_id++;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->hash1 = hash >> LOG2_U32(IPV4_FLOW_TABLE_SIZE);
+    flow_hash_info->hint1 = hint_nxt;
+    entry_write(P4TBL_ID_IPV4_FLOW_OHASH, hint, &key, NULL, &data, true,
+                IPV4_FLOW_OHASH_TABLE_SIZE);
+    // ohash table with result
+    hint = hint_nxt;
+    memset(&key, 0, sizeof(key));
+    memset(&data, 0, sizeof(data));
+    key.vnic_metadata_bd_id = g_bd_id1;
+    key.key_metadata_ipv4_src = g_sip1;
+    key.key_metadata_ipv4_dst = g_dip7;
+    key.key_metadata_proto = g_proto1;
+    key.key_metadata_sport = g_sport1;
+    key.key_metadata_dport = g_dport1;
+    flow_hash_info->entry_valid = 1;
+    flow_hash_info->session_index = g_session_id1;
+    flow_hash_info->flow_role = TCP_FLOW_INITIATOR;
+    flow_hash_info->epoch = EPOCH;
+    entry_write(P4TBL_ID_IPV4_FLOW_OHASH, hint, &key, NULL, &data, true,
+                IPV4_FLOW_OHASH_TABLE_SIZE);
 }
 
 static void
@@ -1035,7 +1238,9 @@ TEST_F(apulu_test, test1)
     local_mappings_init();
     bindings_init();
     mappings_init();
+    mappings_with_ohash_init();
     flows_init();
+    flows_with_ohash_init();
     sessions_init();
     egress_properties_init();
     tunnels_init();
@@ -1175,6 +1380,44 @@ TEST_F(apulu_test, test1)
             if (!getenv("SKIP_VERIFY")) {
                 get_next_pkt(opkt, port, cos);
                 EXPECT_TRUE(opkt == epkt);
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt7));
+        memcpy(ipkt.data(), g_snd_pkt7, sizeof(g_snd_pkt7));
+        epkt.resize(sizeof(g_rcv_pkt7));
+        memcpy(epkt.data(), g_rcv_pkt7, sizeof(g_rcv_pkt7));
+        std::cout << "[TCID=" << tcid << "] OHASH:No recirc" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt8));
+        memcpy(ipkt.data(), g_snd_pkt8, sizeof(g_snd_pkt8));
+        epkt.resize(sizeof(g_rcv_pkt8));
+        memcpy(epkt.data(), g_rcv_pkt8, sizeof(g_rcv_pkt8));
+        std::cout << "[TCID=" << tcid << "] OHASH:2 recircs" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
                 EXPECT_TRUE(port == TM_PORT_UPLINK_1);
             }
             testcase_end(tcid, i + 1);

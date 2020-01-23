@@ -81,13 +81,14 @@ mapping_miss:
 
 mapping_done:
     phvwr.e         p.egress_recirc_mapping_done, TRUE
-    nop
+    phvwr.f         p.control_metadata_mapping_done, TRUE
 
 mapping_hit:
     phvwr           p.vnic_metadata_egress_bd_id, d.mapping_info_d.egress_bd_id
     bbne            d.mapping_info_d.nexthop_valid, TRUE, mapping_done
     phvwr           p.rewrite_metadata_dmaci, d.mapping_info_d.dmaci
     phvwr           p.egress_recirc_mapping_done, TRUE
+    phvwr           p.control_metadata_mapping_done, TRUE
     seq             c7, k.p4e_to_arm_valid, TRUE
     phvwr.!c7.e     p.rewrite_metadata_nexthop_type, \
                         d.mapping_info_d.nexthop_type
