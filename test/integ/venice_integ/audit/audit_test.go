@@ -723,6 +723,11 @@ func TestAuditingWithElasticNotAvailable(t *testing.T) {
 	tsr := &monitoring.TechSupportRequest{}
 	tsr.Defaults("all")
 	tsr.Name = "t1"
+	tsr.Spec = monitoring.TechSupportRequestSpec{
+		NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{
+			Names: []string{"host1-dsc1"},
+		},
+	}
 	tsr, err = ti.restcl.MonitoringV1().TechSupportRequest().Create(ctx, tsr)
 	AssertOk(t, err, "unable to create techsupport request")
 	_, err = ti.restcl.MonitoringV1().TechSupportRequest().Delete(ctx, &tsr.ObjectMeta)

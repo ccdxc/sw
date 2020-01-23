@@ -13,6 +13,7 @@ func registerMonitoringHooks(svc apiserver.Service, l log.Logger) {
 	registerFwlogPolicyHooks(svc, l)
 	registerFlowExpPolicyHooks(svc, l)
 	registerArchiveHooks(svc, l)
+	registerTechSupportRequestHooks(svc, l)
 }
 
 func init() {
