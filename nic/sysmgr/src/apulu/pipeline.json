@@ -3,21 +3,21 @@
         "name": "agent",
         "command": "/nic/tools/start-agent.sh",
         "dependencies": [],
-        "flags": [],
+        "flags": ["save_stdout_on_crash"],
         "timeout": 0.0
     },
     {
         "name": "vpp",
         "command": "/nic/tools/start-vpp.sh",
         "dependencies": [],
-        "flags": [],
+        "flags": ["save_stdout_on_crash"],
         "timeout": 0.0
     },
     {
         "name": "pen-netagent",
         "command": "/nic/bin/netagent",
         "dependencies": [],
-        "flags": ["restartable", "save_stdout_on_crash"],
+        "flags": ["save_stdout_on_crash"],
         "timeout": 0.0
     }
 ]

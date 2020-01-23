@@ -703,6 +703,18 @@ func (a *ApuluAPI) initEventStream() {
 	evtReqMsg := &halapi.EventRequest{
 		Request: []*halapi.EventRequest_EventSpec{
 			{
+				EventId: halapi.EventId_EVENT_ID_PORT_CREATE,
+				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
+			},
+			{
+				EventId: halapi.EventId_EVENT_ID_PORT_UP,
+				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
+			},
+			{
+				EventId: halapi.EventId_EVENT_ID_PORT_DOWN,
+				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
+			},
+			{
 				EventId: halapi.EventId_EVENT_ID_LIF_CREATE,
 				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
 			},
@@ -716,18 +728,6 @@ func (a *ApuluAPI) initEventStream() {
 			},
 			{
 				EventId: halapi.EventId_EVENT_ID_LIF_DOWN,
-				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
-			},
-			{
-				EventId: halapi.EventId_EVENT_ID_PORT_CREATE,
-				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
-			},
-			{
-				EventId: halapi.EventId_EVENT_ID_PORT_UP,
-				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
-			},
-			{
-				EventId: halapi.EventId_EVENT_ID_PORT_DOWN,
 				Action:  halapi.EventOp_EVENT_OP_SUBSCRIBE,
 			},
 		},

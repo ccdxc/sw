@@ -11,6 +11,7 @@
 #ifndef __LIST_HPP__
 #define __LIST_HPP__
 
+#include <stddef.h>
 #include "include/sdk/base.hpp"
 
 namespace sdk {

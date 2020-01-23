@@ -94,6 +94,7 @@ enum {
     SDK_MEM_ALLOC_LFQ_MSG,
     SDK_MEM_ALLOC_LIB_DPDK_DEVICE,
     SDK_MEM_ALLOC_LIB_DPDK_BUFFER,
+    SDK_MEM_ALLOC_EVENT_MGR,
 };
 
 static inline void *

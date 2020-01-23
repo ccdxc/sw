@@ -59,6 +59,7 @@ nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgr.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdklinkmgrcsr.so                 /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmemhash*.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkftl.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkeventmgr.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbm_allocator.so                  /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libbitmap.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmtrack.so                        /nic/lib/

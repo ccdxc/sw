@@ -39,6 +39,7 @@
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
+#include "nic/apollo/agent/core/event.hpp"
 #include "nic/apollo/agent/svc/tag.hpp"
 #include "nic/apollo/agent/svc/meter.hpp"
 #include "nic/apollo/agent/svc/vnic.hpp"
@@ -58,6 +59,7 @@
 #include "nic/apollo/agent/svc/interface.hpp"
 #include "nic/apollo/agent/svc/nat.hpp"
 #include "nic/apollo/agent/svc/dhcp.hpp"
+#include "nic/apollo/agent/svc/event.hpp"
 #include "gen/proto/types.pb.h"
 
 using sdk::asic::pd::port_queue_credit_t;
@@ -754,8 +756,8 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
     if (api_info->spec.pinned_ifidx != IFINDEX_INVALID) {
         auto ret = pds_if_read(&api_info->spec.pinned_ifidx, &pinned_ifinfo);
         if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to find if for {}",
-                          api_info->spec.pinned_ifidx);
+            PDS_TRACE_ERR("Failed to find if for {}, err {}",
+                          api_info->spec.pinned_ifidx, ret);
         } else {
             proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id);
         }
@@ -3870,6 +3872,54 @@ pds_port_to_proto (sdk::linkmgr::port_args_t *port_info, void *ctxt)
     pds_port_spec_to_proto(spec, port_info);
     pds_port_stats_to_proto(stats, port_info);
     pds_port_status_to_proto(status, port_info);
+}
+
+static inline sdk_ret_t
+pds_event_spec_proto_to_api_spec (pds_event_spec_t *api_spec,
+                                  const pds::EventRequest_EventSpec& proto_spec)
+{
+    switch (proto_spec.eventid()) {
+    case pds::EVENT_ID_PORT_CREATE:
+        api_spec->event_id = PDS_EVENT_ID_PORT_CREATE;
+        break;
+    case pds::EVENT_ID_PORT_UP:
+        api_spec->event_id = PDS_EVENT_ID_PORT_UP;
+        break;
+    case pds::EVENT_ID_PORT_DOWN:
+        api_spec->event_id = PDS_EVENT_ID_PORT_DOWN;
+        break;
+    case pds::EVENT_ID_LIF_CREATE:
+        api_spec->event_id = PDS_EVENT_ID_LIF_CREATE;
+        break;
+    case pds::EVENT_ID_LIF_UPDATE:
+        api_spec->event_id = PDS_EVENT_ID_LIF_UPDATE;
+        break;
+    case pds::EVENT_ID_LIF_UP:
+        api_spec->event_id = PDS_EVENT_ID_LIF_UP;
+        break;
+    case pds::EVENT_ID_LIF_DOWN:
+        api_spec->event_id = PDS_EVENT_ID_LIF_DOWN;
+        break;
+    default:
+        PDS_TRACE_ERR("Unknown event id {}", proto_spec.eventid());
+        return SDK_RET_INVALID_ARG;
+        break;
+    }
+
+    switch (proto_spec.action()) {
+    case pds::EVENT_OP_SUBSCRIBE:
+        api_spec->event_op = PDS_EVENT_OP_SUBSCRIBE;
+        break;
+    case pds::EVENT_OP_UNSUBSCRIBE:
+        api_spec->event_op = PDS_EVENT_OP_UNSUBSCRIBE;
+        break;
+    default:
+        PDS_TRACE_ERR("Unknown event {} operation {}",
+                      proto_spec.eventid(), proto_spec.action());
+        return SDK_RET_INVALID_ARG;
+        break;
+    }
+    return SDK_RET_OK;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

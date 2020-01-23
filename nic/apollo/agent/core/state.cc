@@ -2,8 +2,10 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 
+#include "nic/sdk/lib/eventmgr/eventmgr.hpp"
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/event.hpp"
 
 namespace core {
 
@@ -299,9 +301,13 @@ cfg_db::destroy(cfg_db *cfg_db) {
 agent_state::agent_state(void) {
     cfg_db_ = cfg_db::factory();
     SDK_ASSERT_GOTO(cfg_db_, error);
+    pds_mock_mode_ = false;
+    epoch_ = 0;
+    evmgr_ = eventmgr::factory(PDS_EVENT_ID_MAX);
     return;
 
 error:
+
     cleanup();
 }
 

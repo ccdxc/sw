@@ -7,6 +7,7 @@
 
 #include <unordered_map>
 #include "nic/sdk/lib/slab/slab.hpp"
+#include "nic/sdk/lib/eventmgr/eventmgr.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
 #include "nic/apollo/api/include/pds_vpc.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -23,6 +24,7 @@
 using std::unordered_map;
 using std::make_pair;
 using sdk::lib::slab;
+using sdk::lib::eventmgr;
 
 namespace core {
 
@@ -291,6 +293,7 @@ public:
     void pds_mock_mode_set(bool val) { pds_mock_mode_ = val; }
     uint64_t epoch(void) const { return epoch_; }
     uint64_t new_epoch(void) { return SDK_ATOMIC_INC_UINT64(&epoch_, 1); }
+    eventmgr *event_mgr(void) { return evmgr_; }
 
 private:
     void cleanup(void);
@@ -316,6 +319,7 @@ private:
     cfg_db   *cfg_db_;
     bool     pds_mock_mode_;    // true if we are in PDS HAL mock mode
     uint64_t epoch_;            // config epoch
+    eventmgr *evmgr_;           // event manager instance
 };
 
 }    // namespace core
