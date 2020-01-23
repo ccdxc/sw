@@ -26,7 +26,7 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
   IPS_LABEL: string = 'IP Addresses';
   IPS_ERRORMSG: string = 'Invalid IP addresses';
   MACS_LABEL: string = 'MAC Addresses';
-  MACS_ERRORMSG: string = 'Invalid MAC addresses';
+  MACS_ERRORMSG: string = 'Invalid MAC addresses. It should be aaaa.bbbb.cccc format.';
   validationMessage: string;
   defaultHostName: string;
 
@@ -118,11 +118,14 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
   isValidMacAddress(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const macAddress = control.value;
+      if (!macAddress) {
+        return null;
+      }
       if (!Utility.MACADDRESS_REGEX.test(macAddress)) {
         return {
           objectName: {
             required: true,
-            message: 'Invalid mac address.'
+            message: this.MACS_ERRORMSG
           }
         };
       }

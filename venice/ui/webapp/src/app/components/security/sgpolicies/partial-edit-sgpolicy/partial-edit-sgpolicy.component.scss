@@ -3,11 +3,39 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
+.partial-edit-sgpolicy-appContainer {
+  padding-top: 10px;
+}
+
 .partial-edit-sgpolicy-name {
   margin: $vertical-gutter $horizontal-gutter;
   margin-left: 53px;
   height: 30px !important;
 }
+
+.partial-edit-sgpolicy-name-box {
+  height: 30px;
+  font-size: 14px;
+  width: 200px;
+}
+
+.partial-edit-sgpolicy-input {
+  width: 200px;
+}
+
+.partial-edit-sgpolicy-multiselect {
+  height: 30px !important;
+}
+
+.partial-edit-sgpolicy-chip {
+  width: 400px;
+  height: 30px;
+}
+
+.partial-edit-sgpolicy-fieldtitle {
+  margin: $vertical-gutter $horizontal-gutter;
+}
+
 
 .partial-edit-sgpolicy-attach-radio {
   margin-left: 5px;
@@ -31,6 +59,7 @@ $vertical-gutter: 5px;
 .partial-edit-sgpolicy-container {
   padding: 20px 15px;
   @include primary-font();
+  max-height: calc(100vh - 100px);
 }
 
 .partial-edit-sgpolicy-multiselect {
@@ -93,17 +122,20 @@ $vertical-gutter: 5px;
 
   .partial-edit-sgpolicy-edit-hoverbuttons {
     display: none;
+    cursor: default;
   }
 
   &:hover {
     .partial-edit-sgpolicy-edit-hoverbuttons {
       display: inherit;
+      cursor: default;
     }
   }
 }
 
 .partial-edit-sgpolicy-rule-template.partial-edit-sgpolicy-hide-primeng-panel .partial-edit-sgpolicy-select-panel {
   display: none;
+  cursor: default;
 }
 
 .popup {

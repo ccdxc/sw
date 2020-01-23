@@ -14,6 +14,7 @@ import { LogPublishersService } from '@app/services/logging/log-publishers.servi
 import { MatIconRegistry } from '@angular/material';
 import { SecurityService } from '@app/services/generated/security.service';
 import { PrimengModule } from '@app/lib/primeng.module';
+import { WidgetsModule } from 'web-app-framework';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { BehaviorSubject } from 'rxjs';
 import { SecurityNetworkSecurityPolicy } from '@sdk/v1/models/generated/security';
@@ -43,6 +44,7 @@ describe('SgpoliciesComponent', () => {
         HttpClientTestingModule,
         SharedModule,
         PrimengModule,
+        WidgetsModule,
         MaterialdesignModule,
         FormsModule,
         ReactiveFormsModule,

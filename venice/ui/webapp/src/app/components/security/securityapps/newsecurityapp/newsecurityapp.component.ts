@@ -462,7 +462,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
   isPortRequired(formGroup: any): boolean {
     const protocol = formGroup.get(['protocol']).value;
     const portsCtrl: FormControl = formGroup.get(['ports']);
-    const shouldEnable: boolean = protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
+    const shouldEnable: boolean = protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp' || protocol.trim() === 'any');
     if (shouldEnable) {
       portsCtrl.enable();
     } else {
@@ -473,7 +473,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
     if (val && val.trim()) {
       return false;
     }
-    return shouldEnable;
+    return protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
   }
 
   addFieldValidator(ctrl: AbstractControl, validator: ValidatorFn) {

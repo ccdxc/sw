@@ -5,11 +5,12 @@ import { Icon } from '@app/models/frontend/shared/icon.interface';
 import { ControllerService } from '@app/services/controller.service';
 import { SecurityService } from '@app/services/generated/security.service';
 import { UIConfigsService, Features } from '@app/services/uiconfigs.service';
-import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus } from '@sdk/v1/models/generated/security';
+import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy, IApiStatus, ISecurityNetworkSecurityPolicyList } from '@sdk/v1/models/generated/security';
 import { Observable } from 'rxjs';
 import { TablevieweditAbstract } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
 
 @Component({
   selector: 'app-sgpolicies',
@@ -26,7 +27,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   // Currently venice supports only one security policy.
   MAX_POLICY_NUM: number = 1;
-  EDIT_INLINE_MAX_RULES_LIMIT: number = 20;
+  EDIT_INLINE_MAX_RULES_LIMIT: number = 0;
 
   // Holds all policy objects
   sgPoliciesEventUtility: HttpEventUtility<SecurityNetworkSecurityPolicy>;
@@ -60,6 +61,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
     protected cdr: ChangeDetectorRef,
   ) {
     super(_controllerService, cdr, uiconfigsService);
+    this.shouldEnableButtons = false;
   }
 
   postNgInit() {
@@ -68,7 +70,7 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create) && this.dataObjects.length < this.MAX_POLICY_NUM ) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)  ) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD POLICY',
@@ -83,6 +85,19 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
   }
 
   getSecurityPolicies() {
+    this.securityService.ListNetworkSecurityPolicy().subscribe (
+      (response) => {
+        if (response && response.body ) {
+          const body: ISecurityNetworkSecurityPolicyList = response.body as ISecurityNetworkSecurityPolicyList;
+            if ( body.items && body.items.length < this.MAX_POLICY_NUM) {
+              this.shouldEnableButtons = true;
+            }
+        }
+      },
+      (error) => {
+        this.controllerService.invokeRESTErrorToaster('Failed to get network security policy', error);
+      }
+    );
     this.sgPoliciesEventUtility = new HttpEventUtility<SecurityNetworkSecurityPolicy>(SecurityNetworkSecurityPolicy);
     this.dataObjects = this.sgPoliciesEventUtility.array;
     const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(

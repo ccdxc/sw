@@ -3,10 +3,20 @@
 $horizontal-gutter: 10px;
 $vertical-gutter: 5px;
 
-.newsgpolicy-name {
-  margin: $vertical-gutter $horizontal-gutter;
-  margin-left: 53px;
-  height: 30px !important;
+
+.newsgpolicy-appContainer {
+  padding-top: 10px;
+}
+
+.newsgpolicy-name-box,
+.newsgpolicy-general-box {
+  height: 30px;
+  font-size: 14px;
+  width: 200px;
+}
+
+.newsgpolicy-action-input {
+  width: 200px;
 }
 
 .newsgpolicy-attach-radio {

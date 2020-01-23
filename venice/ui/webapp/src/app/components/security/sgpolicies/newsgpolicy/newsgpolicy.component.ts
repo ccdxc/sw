@@ -9,7 +9,7 @@ import { OrderedItem } from '@app/components/shared/orderedlist/orderedlist.comp
 import { Utility } from '@app/common/Utility';
 import { SelectItem } from 'primeng/api';
 import { IPUtility } from '@app/common/IPUtility';
-import { FormArray, FormControl, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormGroup, FormArray, FormControl, ValidatorFn, ValidationErrors } from '@angular/forms';
 import { HttpEventUtility } from '@app/common/HttpEventUtility';
 import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 import { WorkloadService } from '@app/services/generated/workload.service';
@@ -26,6 +26,9 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   // TODO: either prevent adding new rule while one is incomplete,
   //       or add indicator that a rule is invalid/incomplete
 
+  IPS_LABEL: string = 'IP Addresses';
+  IPS_ERRORMSG: string = 'Invalid IP addresses';
+  IPS_TOOLTIP: string = 'Type in ip address and hit enter or space key to add more.';
 
   ATTACH_TENANT: string = 'tenant';
   ATTACH_SG: string = 'securityGroups';
@@ -33,6 +36,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   PROTO_PORTS_OPTION: string = 'proto-ports';
   APPS_OPTION: string = 'apps';
 
+  createButtonTooltip: string = '';
 
   constructor(protected _controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -74,7 +78,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   actionEnum = SecuritySGRule.propInfo.action.enum;
   actionOptions: SelectItem[] = Utility.convertEnumToSelectItem(SecuritySGRule.propInfo.action.enum);
 
-  rules: OrderedItem<SecuritySGRule>[] = [];
+  rules: OrderedItem<{ rule: SecuritySGRule, selectedProtoAppOption: string }>[] = [];
 
   sgpolicyOptions;
 
@@ -114,21 +118,24 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     this.getSecurityApps();
     this.getWorkloads();
     this.getSecuritygroups();
-    if (!this.isInline) {
-      if (this.rules.length === 0) {
-        this.addRule();
-      }
-    } else {
+    if (this.isInline) {
       // TODO: comment out me and implement editing policy
       this.objectData.spec.rules.forEach((rule: SecuritySGRule) => {
         const uiIRule = new SecuritySGRule(rule);
-
+        let selectedProtoAppOption = this.PROTO_PORTS_OPTION;
+        if (uiIRule.$formGroup.get(['apps']).value.length > 0) {
+          selectedProtoAppOption = this.APPS_OPTION;
+        }
         this.rules.push({
           id: Utility.s4(),
-          data: uiIRule,
+          data: { rule: uiIRule, selectedProtoAppOption: selectedProtoAppOption },
           inEdit: false,
         });
       });
+    }
+
+    if (this.rules.length === 0) {
+      this.addRule();
     }
 
     this.setValidationRules();
@@ -213,14 +220,105 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     this.subscriptions.push(subscription);
   }
 
+  isFieldEmpty(field: AbstractControl): boolean {
+    return Utility.isEmpty(field.value);
+  }
+
   // Empty Hook
   isFormValid() {
-    if (!Utility.isEmpty(this.newObject.$formGroup.get('meta.name').value)
-      && this.newObject.$formGroup.valid
-    ) {
-      return true;
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return false;
     }
-    return false;
+    if (!this.newObject.$formGroup.get(['meta', 'name']).disabled &&
+        !this.newObject.$formGroup.get(['meta', 'name']).valid)  {
+      return false;
+    }
+    for (let i = 0; i < this.rules.length; i++) {
+      const rule: SecuritySGRule = this.rules[i].data.rule;
+      const fromIpField: AbstractControl = rule.$formGroup.get(['from-ip-addresses']);
+      if (Utility.isEmpty(fromIpField.value)) {
+        this.createButtonTooltip =
+          'Error: Rule ' + (i + 1) + ' source IP addresses are empty.';
+        return false;
+      }
+      if (!fromIpField.valid) {
+        this.createButtonTooltip =
+          'Error: Rule ' + (i + 1) + ' source IP addresses are invalid.';
+        return false;
+      }
+      const toIpField: AbstractControl = rule.$formGroup.get(['to-ip-addresses']);
+      if (Utility.isEmpty(toIpField.value)) {
+        this.createButtonTooltip =
+          'Error: Rule ' + (i + 1) + ' destination IP addresses are empty.';
+        return false;
+      }
+      if (!toIpField.valid) {
+        this.createButtonTooltip =
+          'Error: Rule ' + (i + 1) + ' destination IP addresses are invalid.';
+        return false;
+      }
+      if (this.rules[i].data.selectedProtoAppOption === this.APPS_OPTION) {
+        const appField: AbstractControl = rule.$formGroup.get(['apps']);
+        if (Utility.isEmpty(appField.value) || appField.value.length === 0) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' applications are empty.';
+          return false;
+        }
+      }
+      if (this.rules[i].data.selectedProtoAppOption === this.PROTO_PORTS_OPTION) {
+        const protoArr: FormArray = rule.$formGroup.get(['proto-ports']) as FormArray;
+        if (protoArr.length === 0) {
+          this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' protocol-ports are empty.';
+          return false;
+        }
+        for (let j = 0; j < protoArr.length; j++) {
+          const protocolField: AbstractControl = protoArr.controls[j].get(['protocol']);
+          if (Utility.isEmpty(protocolField.value)) {
+            this.createButtonTooltip =
+              'Error: Rule ' + (i + 1) + ' protocol ' + (j + 1) + ' is empty.';
+            return false;
+          }
+          if (!protocolField.valid) {
+            this.createButtonTooltip =
+            'Error: Rule ' + (i + 1) + ' protocol ' + (j + 1) + ' is invalid.';
+            return false;
+          }
+          const portsField: AbstractControl = protoArr.controls[j].get(['ports']);
+          if (protocolField.value === 'tcp' || protocolField.value === 'udp') {
+            if (Utility.isEmpty(portsField.value)) {
+              this.createButtonTooltip =
+                'Error: Rule ' + (i + 1) + ' ports ' + (j + 1) + ' are empty.';
+              return false;
+            }
+            if (!portsField.valid) {
+              this.createButtonTooltip =
+              'Error: Rule ' + (i + 1) + ' ports ' + (j + 1) + ' are invalid.';
+              return false;
+            }
+          }
+          if (protocolField.value === 'any') {
+            if (!portsField.valid) {
+              this.createButtonTooltip =
+              'Error: Rule ' + (i + 1) + ' ports ' + (j + 1) + ' are invalid.';
+              return false;
+            }
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  getTooltip(): string {
+    if (Utility.isEmpty(this.newObject.$formGroup.get(['meta', 'name']).value)) {
+      return 'Error: Name field is empty.';
+    }
+    if (!this.newObject.$formGroup.get(['meta', 'name']).disabled &&
+        !this.newObject.$formGroup.get(['meta', 'name']).valid)  {
+      return 'Error: Name field is invalid.';
+    }
+    return this.createButtonTooltip;
   }
 
   setToolbar() {
@@ -229,6 +327,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
       {
         cssClass: 'global-button-primary global-button-padding',
         text: 'CREATE POLICY',
+        genTooltip: () => this.getTooltip(),
         callback: () => { this.saveObject(); },
         computeClass: () => this.computeButtonClass()
       },
@@ -259,93 +358,45 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   }
 
   getObjectValues() {
-    const currValue: ISecurityNetworkSecurityPolicy = this.newObject.getFormGroupValues();
+    const currValue = this.newObject.getFormGroupValues();
     if (this.selectedAttachOption === this.ATTACH_TENANT) {
       currValue.spec['attach-tenant'] = true;
     }
     currValue.spec.rules = this.rules.map(r => {
-      return r.data.getFormGroupValues();
+      const formValues = r.data.rule.getFormGroupValues();
+      if (r.data.selectedProtoAppOption === this.PROTO_PORTS_OPTION) {
+        formValues['apps'] = null;
+      } else {
+        formValues['proto-ports'] = null;
+      }
+      return formValues;
     });
     return currValue;
-  }
-
-  moveRule(start, target) {
-    if (target > this.rules.length - 1) {
-      target = this.rules.length - 1;
-    }
-    if (target === start) {
-      return;
-    }
-    const currRule = this.rules[start].data;
-    // deleting previous item
-    this.rules.splice(start, 1);
-    // inserting new item
-    if (target > start) {
-      // adjust target since length changed.
-      target -= 1;
-    }
-    this.rules.splice(target, 0, {
-      id: Utility.s4(),
-      data: currRule,
-      inEdit: false,
-    });
-  }
-
-  editRule(index) {
-    // Collapse any other open rules, and make index rule open
-    this.rules.forEach((r, i) => {
-        // Before we collapse rule, we clear the unused protoAppOption
-        if (this.selectedProtoAppOption === this.PROTO_PORTS_OPTION) {
-          r.data.$formGroup.get('apps').setValue([]);
-        } else {
-          const protoPort = r.data.$formGroup.get('proto-ports') as FormArray;
-          while (protoPort.controls.length !== 0) {
-            protoPort.removeAt(0);
-          }
-        }
-        // If rule number has changed we move it now
-        // TODO: Check if number is valid, reset it if it isn't
-        if ( r.inEdit && this.ruleNumberEditControl.value !== i + 1) {
-          this.moveRule(i, this.ruleNumberEditControl.value - 1);
-        }
-        r.inEdit = false;
-    });
-    this.rules.some((r, i) => {
-      if (i === index) {
-        r.inEdit = true;
-        const appVal = r.data.$formGroup.get('apps').value;
-        const hasApp = appVal != null && appVal.length > 0;
-        if (hasApp) {
-          this.selectedProtoAppOption = this.APPS_OPTION;
-        } else {
-          this.selectedProtoAppOption = this.PROTO_PORTS_OPTION;
-        }
-        if ((r.data.$formGroup.get('proto-ports') as FormArray).length === 0) {
-          this.addProtoTarget(index);
-        }
-        this.ruleNumberEditControl.setValue(index + 1);
-        return true;
-      }
-      return false;
-    });
-
-    if (this.indexToSkipAnimation != null) {
-      setTimeout(() => {
-        this.indexToSkipAnimation = null;
-      }, 300);
-    }
   }
 
   addRule() {
     const rule = new SecuritySGRule();
     this.rules.push({
       id: Utility.s4(),
-      data: rule,
+      data: { rule: rule, selectedProtoAppOption: this.PROTO_PORTS_OPTION },
       inEdit: false,
     });
     this.editRule(this.rules.length - 1);
   }
 
+  editRule(index) {
+    // Collapse any other open rules, and make index rule open
+    this.rules.forEach( (r, i) => {
+      if (i === index) {
+        r.inEdit = true;
+        if ((r.data.rule.$formGroup.get('proto-ports') as FormArray).length === 0) {
+          this.addProtoTarget(index);
+        }
+      } else {
+        r.inEdit = false;
+      }
+    });
+  }
 
   deleteRule(index) {
     if (this.rules.length > 1) {
@@ -357,38 +408,105 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
     // Only toggle if the rule we are clicking on isn't in edit mode
     if (!this.rules[index].inEdit) {
       this.editRule(index);
+
+      setTimeout(() => {
+        // programmatically trigger window resize to tell sideNav container adjust widow size
+        window.dispatchEvent(new Event('resize'));
+      }, 500);
     }
   }
 
-  onOrderChange() {
-    // We disable animation while the re-order animation happens
-    // to prevent app-repeater from stuttering
-    this.repeaterAnimationEnabled = false;
-    this.indexToSkipAnimation = this.rules.findIndex(x => x.inEdit);
-    setTimeout(() => {
-      this.repeaterAnimationEnabled = true;
-    }, 500);
+  isValidIP(ip: string) {
+    return IPUtility.isValidIPWithOptionalMask(ip);
   }
 
-  isValidIP(ip: string) {
-    return IPUtility.isValidIP(ip);
+  addFieldValidator(ctrl: AbstractControl, validator: ValidatorFn) {
+    if (!ctrl.validator) {
+      ctrl.setValidators([validator]);
+    } else {
+      ctrl.setValidators([ctrl.validator, validator]);
+    }
+  }
+
+  isProtocolFieldValid(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      let val: string = control.value;
+      if (!val || !val.trim()) {
+        return null;
+      }
+      val = val.trim();
+      if (val === 'tcp' || val === 'udp' || val === 'icmp' || val === 'any') {
+        return null;
+      }
+      return {
+        fieldProtocol: {
+          required: false,
+          message: 'Invalid Protocol. Only tcp, udp, icmp and any are allowed.'
+        }
+      };
+    };
+  }
+
+  isPortsFieldValid(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val: string = control.value;
+      if (!val || !val.trim()) {
+        return null;
+      }
+      const errorMsg = Utility.isPortsValid(val);
+      if (errorMsg) {
+        return {
+          fieldPort: {
+            required: false,
+            message: errorMsg
+          }
+        };
+      }
+      return null;
+    };
+  }
+
+  isPortRequired(formGroup: any): boolean {
+    const protocol = formGroup.get(['protocol']).value;
+    const portsCtrl: FormControl = formGroup.get(['ports']);
+    const shouldEnable: boolean = protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp' || protocol.trim() === 'any');
+    if (shouldEnable) {
+      portsCtrl.enable();
+    } else {
+      portsCtrl.setValue(null);
+      portsCtrl.disable();
+    }
+    const val = portsCtrl.value;
+    if (val && val.trim()) {
+      return false;
+    }
+    return protocol && (protocol.trim() === 'tcp' || protocol.trim() === 'udp');
   }
 
   addProtoTarget(ruleIndex: number) {
-    const tempTargets = this.rules[ruleIndex].data.$formGroup.get(['proto-ports']) as FormArray;
-    tempTargets.insert(0, new SecurityProtoPort().$formGroup);
+    const tempTargets = this.rules[ruleIndex].data.rule.$formGroup.get(['proto-ports']) as FormArray;
+    const newFormGroup: FormGroup = new SecurityProtoPort().$formGroup;
+    const ctrl: AbstractControl = newFormGroup.get(['ports']);
+    ctrl.disable();
+    this.addFieldValidator(ctrl, this.isPortsFieldValid());
+    const ctrl2: AbstractControl = newFormGroup.get(['protocol']);
+    this.addFieldValidator(ctrl2, this.isProtocolFieldValid());
+    tempTargets.insert(ruleIndex + 1, newFormGroup);
   }
 
   removeProtoTarget(ruleIndex: number, index: number) {
-    const tempTargets = this.rules[ruleIndex].data.$formGroup.get(['proto-ports']) as FormArray;
+    const tempTargets = this.rules[ruleIndex].data.rule.$formGroup.get(['proto-ports']) as FormArray;
     if (tempTargets.length > 1) {
       tempTargets.removeAt(index);
     }
   }
 
   displayArrayField(rule, field) {
+    if (field === 'action') {
+      return this.actionEnum[rule.rule.$formGroup.get('action').value];
+    }
     if (field === 'proto-ports') {
-      const protoPorts = rule.$formGroup.get(field).value.filter((entry) => {
+      const protoPorts = rule.rule.$formGroup.get(field).value.filter((entry) => {
         return entry.protocol != null;
       }).map((entry) => {
         if (entry.ports == null || entry.ports.length === 0) {
@@ -398,7 +516,7 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
       });
       return protoPorts.join(', ');
     }
-    return rule.$formGroup.get(field).value.join(', ');
+    return rule.rule.$formGroup.get(field).value.join(', ');
   }
 
 }

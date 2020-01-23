@@ -302,7 +302,8 @@
   }
 
   // create required label class
-  div.requiredLabel {
+  div.requiredLabel,
+  span.requiredLabel {
     color: red;
 
     &:before {
@@ -313,6 +314,7 @@
     }
   }
 
+  .app-formchips-requiredField,
   .requiredField {
     color: #dd3b09;
 
@@ -324,14 +326,28 @@
       margin-right: 2px;
     }
 
-    :first-child {
-      width: calc(100% - 10px) !important;
-    }
-
     >label {
       left: 1.25em;
     }
   }
+
+  .requiredField {
+    :first-child {
+      width: calc(100% - 10px) !important;
+    }
+  }
+
+  .app-formchips-requiredField {
+    &:before {
+      top: 14px;
+    }
+
+    label {
+      left: 1em;
+    }
+  }
+
+
 }
 
 $sidenavWidth: 220px;

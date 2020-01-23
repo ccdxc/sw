@@ -162,18 +162,29 @@
           </div>
         </app-tableheader>
       </div>
-      <div *ngIf="delCount>0 || isAnythingSelected()" fxFlex fxLayout="row"
+      <div *roleGuard="'monitoringfwlogpolicy_update'" fxFlex fxLayout="row"
            fxLayoutAlign="center center" [@fastSlideInOut]>
-        <mat-icon [matTooltip]="'Save and Upate Policy'" *ngIf="delCount>0"
+        <mat-icon [matTooltip]="'Save and Upate Policy'"
+                  *ngIf="delCount > 0 || reorderToIndex > 0"
                   class="sgpolicy-icons-button" (click)="onSave(null)"
                   fxFlex="none">
           save</mat-icon>
+        <div *ngIf="isAnythingSelected() && showReorder">
+          <input fxflex="nogrow" class="sgpolicydetail-input-reorder" spellcheck="false"
+                 [formControl]="" type="number" pInputText appErrorTooltip
+                 placeholder="row # to insert above..." autocomplete="off"
+                 (change)="reorderChanged($event)" (keyup)="reorderChanged($event)">
+        </div>
+        <mat-icon [matTooltip]="'Change Order'"
+                  *ngIf="isOneSelected()"
+                  class="sgpolicy-icons-button" (click)="reorderClicked()"
+                  fxFlex="none">open_with</mat-icon>
         <mat-icon [matTooltip]="'Edit Selected Rules'" *ngIf="isAnythingSelected()"
                   class="sgpolicy-icons-button" (click)="showDialog()"
                   fxFlex="none">edit</mat-icon>
         <mat-icon [matTooltip]="'Mark For Deletion'" *ngIf="isAnythingSelected()"
                   class="sgpolicy-icons-button"
-                  (click)="deleteSelectedRows()"
+                  (click)="onDelete()"
                   fxFlex="none">delete</mat-icon>
         <mat-icon [matTooltip]="'Reset All Selection'" *ngIf="delCount>0 || isAnythingSelected()"
                   class="sgpolicy-icons-button"
@@ -213,18 +224,11 @@
 </ng-template>
 
 <ng-template #actionTemplate let-rowData>
-  <div *ngIf="!this.ruleDeleteMap[rowData.order]"
-       class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon [matTooltip]="'Mark For Deletion'" matTooltip="Delete image"
+  <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
+    <mat-icon *roleGuard="'monitoringfwlogpolicy_update'"
+              [matTooltip]="'Insert Rule Before'" matTooltip="Add a rule"
               class="sgpolicy-icons-button global-table-action-icon"
-              (click)="rowDeleteClicked(rowData)">
-      delete</mat-icon>
-  </div>
-  <div *ngIf="this.ruleDeleteMap[rowData.order]"
-       class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon [matTooltip]="'Unmark Rule for Deletion'" matTooltip="Delete image"
-              class="sgpolicy-icons-button global-table-action-icon"
-              (click)="rowResetClicked(rowData)">
-      refresh</mat-icon>
+              (click)="insertRuleBefore(rowData)">
+      add</mat-icon>
   </div>
 </ng-template>

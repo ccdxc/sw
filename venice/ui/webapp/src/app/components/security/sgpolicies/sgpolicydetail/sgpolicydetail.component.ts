@@ -195,6 +195,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   ruleDeleteMap: {[index: number]: boolean} = {};
   delCount = 0;
   editObject: SecurityNetworkSecurityPolicy = null;
+  newRuleIndex: number = -1;
 
   // properties from tableview component
   disableTableWhenRowExpanded: boolean = true;
@@ -229,6 +230,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
   };
 
   display: boolean = false;
+  showReorder: boolean = false;
+  reorderToIndex: number;
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
@@ -786,6 +789,15 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     return false;
   }
 
+  isOneSelected() {
+    if (this.tableContainer) {
+      if (this.tableContainer.selectedDataObjects.length === 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   isAnythingToBeDeleted() {
     if (this.delCount) {
       return true;
@@ -815,6 +827,19 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     this.display = true;
   }
 
+  reorderClicked() {
+    this.showReorder = !this.showReorder;
+    if (this.showReorder) {
+      this.createEditObject();
+    } else {
+      this.reorderToIndex = null;
+    }
+  }
+
+  reorderChanged($event) {
+    this.reorderToIndex = $event.target.valueAsNumber;
+  }
+
   createEditObject() {
 
     const editrules: Array<SecuritySGRule> = [];
@@ -826,33 +851,86 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     this.editObject.spec.rules = editrules;
   }
 
+  createNewRule() {
+    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
+    this.editObject.spec.rules = [];
+  }
+
   resetMapsAndSelection() {
+    this.newRuleIndex = -1;
     this.ruleEditableMap = {};
     this.ruleDeleteMap = {};
     this.delCount = 0;
     this.tableContainer.selectedDataObjects = [];
+    this.showReorder = false;
+    this.reorderToIndex = null;
   }
 
   onSave(editedObject: SecurityNetworkSecurityPolicy) {
     let policy;
-    if ( editedObject ) {
-      policy = this.updateFromEditObject(editedObject);
-    } else {
-      policy = this.deleteFromSelectedObject();
-    }
-    let handler: Observable<{ body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number }>;
-    (<any>policy).meta.name = (<any>this.selectedPolicy).meta.name;
-    handler = this.updateObject(policy, this.selectedPolicy);
-
-    handler.subscribe(
-      (response) => {
-        this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Successfully updated policy.');
-        // this.cancelObject();
-      },
-      (error) => {
-          this.controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+    if (this.reorderToIndex > 0) {
+      policy = this.updateFromEditObject(this.selectedPolicy);
+    } else if ( editedObject ) {
+      if (this.newRuleIndex > -1) {
+        policy = this.updateFromNewRule(editedObject, this.newRuleIndex);
+      } else {
+        policy = this.updateFromEditObject(editedObject);
       }
-    );
+    }
+    if (policy) {
+      this.updatePolicy(policy);
+    }
+  }
+
+  onDelete() {
+    const selectedObjs = this.tableContainer.selectedDataObjects;
+    if (selectedObjs && selectedObjs.length > 0) {
+      const length = selectedObjs.length;
+      const msg = `Are you sure you want to delete ${length > 1 ? 'these' : 'this'} \
+        SG Policy ${length > 1 ? 'Rules' : 'Rule'}?`;
+      this.controllerService.invokeConfirm({
+        header: msg,
+        message: 'This action cannot be reversed',
+        acceptLabel: 'Delete',
+        accept: () => {
+          const ruleDelMap: {[index: number]: boolean} = {};
+          selectedObjs.forEach(rowData => {
+            if (!ruleDelMap[rowData.order]) {
+              ruleDelMap[rowData.order] = true;
+            }
+          });
+          const policy1 = this.selectedPolicy.getFormGroupValues();
+          const rules = [];
+          for (let i = 0; i < policy1.spec.rules.length; i++) {
+            if (!ruleDelMap[i]) {
+              rules.push(policy1.spec.rules[i]);
+            }
+          }
+          policy1.spec.rules = rules;
+          this.updatePolicy(policy1);
+        }
+      });
+    }
+  }
+
+  updatePolicy(policy) {
+    if (policy) {
+      let handler: Observable<{ body: ISecurityNetworkSecurityPolicy | IApiStatus | Error, statusCode: number }>;
+      (<any>policy).meta.name = (<any>this.selectedPolicy).meta.name;
+      handler = this.updateObject(policy, this.selectedPolicy);
+
+      handler.subscribe(
+        (response) => {
+          this.controllerService.invokeSuccessToaster(Utility.UPDATE_SUCCESS_SUMMARY, 'Successfully updated policy.');
+          // this.cancelObject();
+          this.resetMapsAndSelection();
+        },
+        (error) => {
+            this.controllerService.invokeRESTErrorToaster(Utility.CREATE_FAILED_SUMMARY, error);
+            this.resetMapsAndSelection();
+        }
+      );
+    }
   }
 
   onCancel() {
@@ -867,30 +945,17 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     return this.securityService.UpdateNetworkSecurityPolicy(oldObject.meta.name, newObject, null, oldObject);
   }
 
-  deleteSelectedRows() {
-    this.tableContainer.selectedDataObjects.forEach((rowData, index) => {
-      if (!this.ruleDeleteMap[rowData.order]) {
-        this.ruleDeleteMap[rowData.order] = true;
-        this.delCount++;
-      }
-    });
+  insertRuleBefore(rowData) {
+    this.newRuleIndex = rowData.order;
+    this.createNewRule();
+    this.display = true;
   }
 
-  deleteFromSelectedObject() {
-
+  updateFromNewRule(editedObject, index: number) {
+    const policy = editedObject;
     const policy1 = this.selectedPolicy.getFormGroupValues();
-
-    const rules = [];
-
-    for (let i = 0; i < policy1.spec.rules.length; i++) {
-      if (!this.ruleDeleteMap[i]) {
-        rules.push(policy1.spec.rules[i]);
-      }
-    }
-    policy1.spec.rules = rules;
-
+    policy1.spec.rules.splice(index, 0, policy.spec.rules[0]);
     return policy1;
-
   }
 
   updateFromEditObject(editedObject) {
@@ -900,7 +965,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     let count = 0;
 
     for (let i = 0; i < policy1.spec.rules.length; i++) {
-      if (this.ruleEditableMap[i]) {
+      if (this.ruleEditableMap[i] || this.reorderToIndex > 0) {
         policy1.spec.rules[i] = policy.spec.rules[count];
         count++;
       }
@@ -908,6 +973,12 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
     for (let i = count; i < policy.spec.rules.length; i++) {
       policy1.spec.rules[i].push(policy.spec.rules[count]);
+    }
+
+    if (this.reorderToIndex > 0) {
+      const originalIndex = Number(Object.keys(this.ruleEditableMap)[0]);
+      const realReorderIndex = this.reorderToIndex > originalIndex ? this.reorderToIndex - 2 : this.reorderToIndex - 1;
+      policy1.spec.rules.splice(realReorderIndex, 0, policy1.spec.rules.splice(originalIndex, 1)[0]);
     }
 
     return policy1;

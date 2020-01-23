@@ -41,7 +41,7 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   IPS_ERRORMSG: string = 'Invalid IP addresses';
   IPS_TOOLTIP: string = 'Type in ip address and hit enter or space key to add more.';
   MACS_LABEL: string = 'MAC Addresses';
-  MACS_ERRORMSG: string = 'Invalid MAC addresses';
+  MACS_ERRORMSG: string = 'Invalid MAC addresses. It should be aaaa.bbbb.cccc format.';
   MACS_TOOLTIP: string = 'Type in mac address and hit enter or space key to add more.';
   PROTS_ERRORMSG: string = 'Invalid Protocol/Port';
   PROTS_TOOLTIP: string = 'Type in valid layer3 or layer 4 protocol and protocol/port, ' +
