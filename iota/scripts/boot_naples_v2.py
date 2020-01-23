@@ -496,8 +496,8 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image),
                             "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
-        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
-            raise Exception('failed to switch firmware to mainfwa')
+        #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
+        #    raise Exception('failed to switch firmware to mainfwa')
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FAILED, "Gold Firmware Install failed")
     def InstallGoldFirmware(self):
@@ -654,8 +654,8 @@ class NaplesManagement(EntityManagement):
 
         if goldfw:
             self.SendlineExpect("fwupdate -s goldfw", "#")
-        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
-            raise Exception('failed to switch firmware to goldfw')
+        #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
+        #    raise Exception('failed to switch firmware to goldfw')
 
     def Close(self):
         if self.hdl:
@@ -684,8 +684,8 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
     def SwitchToGoldFW(self):
         self.SendlineExpect("fwupdate -s goldfw", "#")
-        if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
-            raise Exception('failed to switch firmware to goldfw')
+        #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
+        #    raise Exception('failed to switch firmware to goldfw')
 
     def Close(self):
         if self.hdl:
