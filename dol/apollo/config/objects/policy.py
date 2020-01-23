@@ -26,6 +26,7 @@ class RulePriority(enum.IntEnum):
     MAX = 1022
 
 class SupportedIPProtos(enum.IntEnum):
+    ICMP = 1
     TCP = 6
     UDP = 17
 
@@ -412,11 +413,22 @@ class PolicyObjectClient(base.ConfigClientBase):
 
     def Generate_Allow_All_Rules(self, spfx, dpfx):
         rules = []
-        l4match = L4MatchObject(True)
+        # allow all ports
+        l4AllPorts = L4MatchObject(True)
+        # allow icmp reply
+        l4IcmpReply = L4MatchObject(True, icmptype=0, icmpcode=0)
+        # allow icmp request
+        l4IcmpRequest = L4MatchObject(True, icmptype=8, icmpcode=0)
+        icmpL4Matches = [l4IcmpReply, l4IcmpRequest]
         for proto in SupportedIPProtos:
             l3match = L3MatchObject(True, proto, srcpfx=spfx, dstpfx=dpfx)
-            rule = RuleObject(l3match, l4match)
-            rules.append(rule)
+            if proto == SupportedIPProtos.ICMP:
+                for icmpl4match in icmpL4Matches:
+                    rule = RuleObject(l3match, icmpl4match)
+                    rules.append(rule)
+            else:
+                rule = RuleObject(l3match, l4AllPorts)
+                rules.append(rule)
         return rules
 
     def Generate_random_rules_from_nacl(self, naclobj, subnetpfx, af):
