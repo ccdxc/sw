@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	channelID uint32
+	channelID   uint32
 	mFchannelID uint32
 	bFchannelID uint32
 )
