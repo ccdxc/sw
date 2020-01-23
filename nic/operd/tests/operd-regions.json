@@ -1,0 +1,6 @@
+{
+    "vpp": {
+        "chunk-count": 1024,
+        "severity": 4
+    }
+}

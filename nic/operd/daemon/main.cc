@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "lib/operd/operd.hpp"
+#include "lib/operd/decoder.h"
 
 #include "output.hpp"
 #include "rotated_file.hpp"
@@ -15,7 +16,9 @@
 namespace pt = boost::property_tree;
 
 const int SLEEP_DURATION = 250000;
+const int DECODER_BUFFER = 2048;
 
+std::map<uint8_t, decoder_fn> g_decoders;
 
 class library : public output {
 public:
@@ -44,6 +47,22 @@ private:
     std::string name_;
 };
 typedef std::shared_ptr<input> input_ptr;
+
+class decoded_log : public sdk::operd::log {
+public:
+    static std::shared_ptr<decoded_log> create(sdk::operd::log_ptr log);
+    uint8_t severity(void) override;
+    pid_t pid(void) override;
+    const struct timeval *timestamp(void) override;
+    uint8_t encoder(void) override;
+    const char *data(void) override;
+    size_t data_length(void) override;
+private:
+    sdk::operd::log_ptr orig_;
+    char buffer_[DECODER_BUFFER];
+    size_t decoded_length_;
+};
+typedef std::shared_ptr<decoded_log> decoded_log_ptr;
 
 void
 library::handle(sdk::operd::log_ptr entry) {
@@ -79,7 +98,7 @@ library::try_load_(void) {
     assert(this->dlhandle_ == NULL);
 
     if (access(this->path_.c_str(), F_OK) != 0) {
-        fprintf(stderr, "Can't access %s", this->path_.c_str());
+        fprintf(stderr, "Can't access %s\n", this->path_.c_str());
         return false;
     }
     
@@ -118,13 +137,71 @@ input::read(void) {
     if (e == nullptr) {
         return false;
     }
+
+    if (e->encoder() != OPERD_DECODER_PLAIN_TEXT) {
+        decoded_log_ptr de;
+        de = decoded_log::create(e);
+        if (de == nullptr) {
+            fprintf(stderr, "Failed to decode %hhu\n", e->encoder());
+            return true;
+        }
+        e = de;
+    }
     for (auto out: this->outputs_) {
         out->handle(e);
     }
     return true;
 }
 
-output_ptr
+decoded_log_ptr
+decoded_log::create(sdk::operd::log_ptr log) {
+    decoded_log_ptr dl;
+
+    if (g_decoders.count(log->encoder()) == 0) {
+        return nullptr;
+    }
+
+    dl = std::make_shared<decoded_log>();
+    dl->orig_ = log;
+
+    dl->decoded_length_ = g_decoders[log->encoder()](
+        log->encoder(), log->data(), log->data_length(), dl->buffer_,
+        DECODER_BUFFER);
+
+    return dl;
+}
+
+uint8_t
+decoded_log::severity(void) {
+    return this->orig_->severity();
+}
+
+pid_t
+decoded_log::pid(void) {
+    return this->orig_->pid();
+}
+
+const struct timeval *
+decoded_log::timestamp(void) {
+    return this->orig_->timestamp();
+}
+
+uint8_t
+decoded_log::encoder(void) {
+    return this->orig_->encoder();
+}
+
+const char *
+decoded_log::data(void) {
+    return this->buffer_;
+}
+
+size_t
+decoded_log::data_length(void) {
+    return this->decoded_length_;
+}
+
+static output_ptr
 parse_output (pt::ptree obj)
 {
     std::string type = obj.get<std::string>("type");
@@ -174,7 +251,7 @@ parse_output (pt::ptree obj)
     return nullptr;
 }
 
-std::map<std::string, input_ptr>
+static std::map<std::string, input_ptr>
 load_config (std::string config_file)
 {
     pt::ptree root;
@@ -206,18 +283,81 @@ load_config (std::string config_file)
 }
 
 int
+register_decoder(uint8_t encoder_id, decoder_fn fn)
+{
+    if (g_decoders.count(encoder_id) != 0) {
+        fprintf(stderr, "Error: duplicate encoder_id registration for %hhu\n",
+                encoder_id);
+        return -1;
+    }
+
+    g_decoders[encoder_id] = fn;
+    return 0;
+}
+
+static std::map<uint8_t, decoder_fn>
+load_decoders (std::string decoders_file)
+{
+    pt::ptree root;
+    std::map<uint8_t, decoder_fn> decoders;
+
+    if (access(decoders_file.c_str(), F_OK) != 0) {
+        fprintf(stderr, "Warning: decoders file not found: %s\n",
+                decoders_file.c_str());
+        return decoders;
+    }
+
+    read_json(decoders_file, root);
+
+    for (auto obj: root) {
+        void *handle;
+        decoder_lib_init_fn fn;
+        const char *path;
+
+        path = obj.second.data().c_str();
+
+        fprintf(stderr, "Loading %s\n", path);
+        if (access(path, F_OK) != 0) {
+            fprintf(stderr, "Can't access %s\n", path);
+            continue;
+        }
+        handle = dlopen(path, RTLD_LAZY);
+        if (handle == NULL) {
+            fprintf(stderr, "%s\n", dlerror());
+            continue;
+        }
+        *(void **)&fn = dlsym(handle, "decoder_lib_init");
+        if (fn == NULL) {
+            fprintf(stderr, "%s\n", dlerror());
+            dlclose(handle);
+            continue;
+        }
+        fn(register_decoder);
+    }
+
+    return decoders;
+}
+
+int
 main (int argc, const char *argv[])
 {
     std::map<std::string, input_ptr> inputs;
+    std::map<uint8_t, decoder_fn> decoders;
     std::string config;
 
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <config.json>", argv[0]);
+    // Don't buffer stdout and stderr, so we read it in
+    // sysmgr log files immediatelly
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+    
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <outputs.json> <decoders.json>\n", argv[0]);
         exit(-1);
     }
     config = argv[1];
     inputs = load_config(config);
-
+    decoders = load_decoders(argv[2]);
+    
     while (true) {
         bool more = false;
         for (auto pair: inputs) {

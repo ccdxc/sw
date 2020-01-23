@@ -24,7 +24,7 @@ typedef std::shared_ptr<log> log_ptr;
 class producer {
 public:
     static std::shared_ptr<producer> create(std::string name);
-    virtual void write(uint8_t encoder, uint8_t severity, const char *data,
+    virtual void write(uint8_t encoder, uint8_t severity, const void *data,
                        size_t data_length) = 0;
     int vprintf(uint8_t severity, const char *fmt, va_list ap);
     int printf(uint8_t severity, const char *fmt, ...)

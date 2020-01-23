@@ -65,7 +65,7 @@ class region : public producer,
                public consumer {
 public:
     region(std::string name);
-    void write(uint8_t encoder, uint8_t severity, const char *data,
+    void write(uint8_t encoder, uint8_t severity, const void *data,
                size_t data_length) override;
     // Read is NOT thread safe
     std::shared_ptr<log> read(void) override;

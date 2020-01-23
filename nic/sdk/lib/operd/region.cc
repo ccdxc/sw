@@ -157,7 +157,7 @@ region::get_chunk_(serial_t serial) {
 }
 
 void
-region::write(uint8_t encoder, uint8_t severity, const char *data,
+region::write(uint8_t encoder, uint8_t severity, const void *data,
               size_t data_length) {
     int chunk_count;
     serial_t starting_serial;

@@ -33,8 +33,6 @@ private:
 };
 typedef std::shared_ptr<logger> logger_ptr;
 
-    
-
 } // namespace operd
 } // namespace sdk
 

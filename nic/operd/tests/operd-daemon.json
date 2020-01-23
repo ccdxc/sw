@@ -1,0 +1,12 @@
+[
+    {
+        "output": {
+            "type": "file",
+            "location": "./vpp.log",
+            "max-size": "1",
+            "max-files": "5",
+            "level": "5"
+        },
+        "input": ["vpp"]
+    }
+]
