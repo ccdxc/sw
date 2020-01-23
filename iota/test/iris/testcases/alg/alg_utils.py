@@ -122,6 +122,7 @@ def update_sgpolicy(app_name, allowDefault=False):
             newRule.destination.addresses = ['any']
             newRule.app_name = app_name
             newRule.destination.app_configs = None
+            newRule.destination.proto_ports = None
             newRule.action = 'PERMIT'
             object.spec.policy_rules.append(newRule)
 
