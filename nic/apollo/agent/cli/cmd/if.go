@@ -201,8 +201,9 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 func printLifHeader() {
 	hdrLine := strings.Repeat("-", 149)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-12s%-15s%-20s%-26s%-25s%-5s\n",
-		"ID", "IfIndex", "Name", "MAC Address", "PinnedInterface", "Type", "State")
+	fmt.Printf("%-36s%-12s%-15s%-20s%-36s%-25s%-5s\n",
+		"ID", "IfIndex", "Name", "MAC Address", "PinnedInterface",
+		"Type", "State")
 	fmt.Println(hdrLine)
 }
 

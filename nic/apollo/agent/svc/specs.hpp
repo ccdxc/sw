@@ -12,9 +12,8 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/slab/slab.hpp"
-#include "nic/utils/ftlite/ftlite_ipv4_structs.hpp"
-#include "nic/utils/ftlite/ftlite_ipv6_structs.hpp"
 #include "nic/sdk/platform/capri/capri_tm_utils.hpp"
+#include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_subnet.hpp"
@@ -742,6 +741,65 @@ pds_queue_credits_to_proto (uint32_t port_num,
     }
 }
 
+static inline types::LifType
+pds_lif_type_to_proto_lif_type (lif_type_t lif_type)
+{
+    switch (lif_type) {
+    case lif_type_t::LIF_TYPE_HOST:
+        return types::LIF_TYPE_HOST;
+    case lif_type_t::LIF_TYPE_HOST_MGMT:
+        return types::LIF_TYPE_HOST_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_OOB_MGMT:
+        return types::LIF_TYPE_OOB_MGMTT;
+    case lif_type_t::LIF_TYPE_MNIC_INBAND_MGMT:
+        return types::LIF_TYPE_INBAND_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_INTERNAL_MGMT:
+        return types::LIF_TYPE_INTERNAL_MGMT;
+    case lif_type_t::LIF_TYPE_MNIC_CPU:
+        return types::LIF_TYPE_DATAPATH;
+    case lif_type_t::LIF_TYPE_LEARN:
+        return types::LIF_TYPE_LEARN;
+    default:
+        break;
+    }
+    return types::LIF_TYPE_NONE;
+}
+
+static inline sdk_ret_t
+pds_lif_api_spec_to_proto_spec (pds::LifSpec *proto_spec,
+                                const pds_lif_spec_t *api_spec)
+{
+    sdk_ret_t ret;
+    pds_if_info_t pinned_ifinfo = { 0 };
+
+    if (!api_spec || !proto_spec) {
+        return SDK_RET_INVALID_ARG;
+    }
+    proto_spec->set_id(api_spec->key.id);
+    if (api_spec->pinned_ifidx != IFINDEX_INVALID) {
+        ret = pds_if_read(&api_spec->pinned_ifidx, &pinned_ifinfo);
+        if (unlikely(ret != SDK_RET_OK)) {
+            PDS_TRACE_ERR("Failed to find if for {}, err {}",
+                          api_spec->pinned_ifidx, ret);
+        } else {
+            proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id);
+        }
+    }
+    proto_spec->set_type(pds_lif_type_to_proto_lif_type(api_spec->type));
+    proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac));
+    return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_lif_api_status_to_proto (pds::LifStatus *proto_status,
+                             const pds_lif_status_t *api_status)
+{
+    proto_status->set_name(api_status->name);
+    proto_status->set_ifindex(api_status->ifindex);
+    proto_status->set_status(pds_admin_state_to_proto_admin_state(api_status->state));
+    return SDK_RET_OK;
+}
+
 // populate proto buf from lif api spec
 static inline void
 pds_lif_api_info_to_proto (void *entry, void *ctxt)
@@ -750,23 +808,9 @@ pds_lif_api_info_to_proto (void *entry, void *ctxt)
     auto proto_spec = rsp->mutable_spec();
     auto proto_status = rsp->mutable_status();
     pds_lif_info_t *api_info = (pds_lif_info_t *)entry;
-    pds_if_info_t pinned_ifinfo = { 0 };
 
-    proto_spec->set_id(api_info->spec.key.id);
-    if (api_info->spec.pinned_ifidx != IFINDEX_INVALID) {
-        auto ret = pds_if_read(&api_info->spec.pinned_ifidx, &pinned_ifinfo);
-        if (unlikely(ret != SDK_RET_OK)) {
-            PDS_TRACE_ERR("Failed to find if for {}, err {}",
-                          api_info->spec.pinned_ifidx, ret);
-        } else {
-            proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id);
-        }
-    }
-    proto_spec->set_type(types::LifType(api_info->spec.type));
-    proto_spec->set_macaddress(MAC_TO_UINT64(api_info->spec.mac));
-    proto_status->set_name(api_info->status.name);
-    proto_status->set_ifindex(api_info->status.ifindex);
-    proto_status->set_status(pds_admin_state_to_proto_admin_state(api_info->status.state));
+    pds_lif_api_spec_to_proto_spec(proto_spec, &api_info->spec);
+    pds_lif_api_status_to_proto(proto_status, &api_info->status);
 }
 
 static inline void
@@ -3880,38 +3924,60 @@ pds_port_to_proto (sdk::linkmgr::port_args_t *port_info, void *ctxt)
     pds_port_status_to_proto(status, port_info);
 }
 
+static inline pds::EventId
+pds_event_id_api_to_proto_event_id (pds_event_id_t event_id)
+{
+    switch (event_id) {
+    case PDS_EVENT_ID_LIF_CREATE:
+        return pds::EVENT_ID_LIF_CREATE;
+    case PDS_EVENT_ID_LIF_UPDATE:
+        return pds::EVENT_ID_LIF_UPDATE;
+    case PDS_EVENT_ID_LIF_UP:
+        return pds::EVENT_ID_LIF_UP;
+    case PDS_EVENT_ID_LIF_DOWN:
+        return pds::EVENT_ID_LIF_DOWN;
+    case PDS_EVENT_ID_PORT_CREATE:
+        return pds::EVENT_ID_PORT_CREATE;
+    case PDS_EVENT_ID_PORT_UP:
+        return pds::EVENT_ID_PORT_UP;
+    case PDS_EVENT_ID_PORT_DOWN:
+        return pds::EVENT_ID_PORT_DOWN;
+    default:
+        break;
+    }
+    return pds::EVENT_ID_NONE;
+}
+
+static inline pds_event_id_t
+pds_proto_event_id_to_api_event_id (pds::EventId proto_event_id)
+{
+    switch (proto_event_id) {
+    case pds::EVENT_ID_PORT_CREATE:
+        return PDS_EVENT_ID_PORT_CREATE;
+    case pds::EVENT_ID_PORT_UP:
+        return PDS_EVENT_ID_PORT_UP;
+    case pds::EVENT_ID_PORT_DOWN:
+        return PDS_EVENT_ID_PORT_DOWN;
+    case pds::EVENT_ID_LIF_CREATE:
+        return PDS_EVENT_ID_LIF_CREATE;
+    case pds::EVENT_ID_LIF_UPDATE:
+        return PDS_EVENT_ID_LIF_UPDATE;
+    case pds::EVENT_ID_LIF_UP:
+        return PDS_EVENT_ID_LIF_UP;
+    case pds::EVENT_ID_LIF_DOWN:
+        return PDS_EVENT_ID_LIF_DOWN;
+    default:
+        break;
+    }
+    return PDS_EVENT_ID_NONE;
+}
+
 static inline sdk_ret_t
 pds_event_spec_proto_to_api_spec (pds_event_spec_t *api_spec,
                                   const pds::EventRequest_EventSpec& proto_spec)
 {
-    switch (proto_spec.eventid()) {
-    case pds::EVENT_ID_PORT_CREATE:
-        api_spec->event_id = PDS_EVENT_ID_PORT_CREATE;
-        break;
-    case pds::EVENT_ID_PORT_UP:
-        api_spec->event_id = PDS_EVENT_ID_PORT_UP;
-        break;
-    case pds::EVENT_ID_PORT_DOWN:
-        api_spec->event_id = PDS_EVENT_ID_PORT_DOWN;
-        break;
-    case pds::EVENT_ID_LIF_CREATE:
-        api_spec->event_id = PDS_EVENT_ID_LIF_CREATE;
-        break;
-    case pds::EVENT_ID_LIF_UPDATE:
-        api_spec->event_id = PDS_EVENT_ID_LIF_UPDATE;
-        break;
-    case pds::EVENT_ID_LIF_UP:
-        api_spec->event_id = PDS_EVENT_ID_LIF_UP;
-        break;
-    case pds::EVENT_ID_LIF_DOWN:
-        api_spec->event_id = PDS_EVENT_ID_LIF_DOWN;
-        break;
-    default:
-        PDS_TRACE_ERR("Unknown event id {}", proto_spec.eventid());
-        return SDK_RET_INVALID_ARG;
-        break;
-    }
-
+    api_spec->event_id =
+        pds_proto_event_id_to_api_event_id(proto_spec.eventid());
     switch (proto_spec.action()) {
     case pds::EVENT_OP_SUBSCRIBE:
         api_spec->event_op = PDS_EVENT_OP_SUBSCRIBE;
@@ -3926,6 +3992,33 @@ pds_event_spec_proto_to_api_spec (pds_event_spec_t *api_spec,
         break;
     }
     return SDK_RET_OK;
+}
+
+static inline sdk_ret_t
+pds_event_to_proto_event_response (pds::EventResponse *proto_rsp,
+                                   const pds_event_t *event)
+{
+    proto_rsp->set_status(types::ApiStatus::API_STATUS_OK);
+    proto_rsp->set_eventid(pds_event_id_api_to_proto_event_id(event->event_id));
+
+    switch (event->event_id) {
+    case PDS_EVENT_ID_LIF_CREATE:
+    case PDS_EVENT_ID_LIF_UPDATE:
+    case PDS_EVENT_ID_LIF_UP:
+    case PDS_EVENT_ID_LIF_DOWN:
+        pds_lif_api_spec_to_proto_spec(proto_rsp->mutable_lifeventinfo()->mutable_spec(),
+                                       &event->lif_info.spec);
+        pds_lif_api_status_to_proto(proto_rsp->mutable_lifeventinfo()->mutable_status(),
+                                    &event->lif_info.status);
+        return SDK_RET_OK;
+    default:
+    case PDS_EVENT_ID_PORT_CREATE:
+    case PDS_EVENT_ID_PORT_UP:
+    case PDS_EVENT_ID_PORT_DOWN:
+        // TODO:
+        PDS_TRACE_ERR("event response conversion not implemented");
+    }
+    return SDK_RET_INVALID_ARG;
 }
 
 #endif    // __AGENT_SVC_SPECS_HPP__

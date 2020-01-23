@@ -63,4 +63,3 @@ objid_from_uuid (const pds_obj_key_t& key) {
 }    // namespace api
 
 #endif    /** __UTILS_HPP__ */
-

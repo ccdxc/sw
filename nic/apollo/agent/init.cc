@@ -11,6 +11,7 @@
 #include "nic/apollo/agent/core/core.hpp"
 #include "nic/apollo/agent/core/cmd.hpp"
 #include "nic/apollo/agent/core/state.hpp"
+#include "nic/apollo/agent/core/event.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/metaswitch/stubs/pds_ms_stubs_init.hpp"
 
@@ -154,6 +155,7 @@ init_pds (std::string cfg_file, std::string profile, std::string pipeline)
             init_params.scale_profile = PDS_SCALE_PROFILE_P2;
         }
     }
+    init_params.event_cb = handle_event_ntfn;
     ret = pds_init(&init_params);
     return ret;
 }

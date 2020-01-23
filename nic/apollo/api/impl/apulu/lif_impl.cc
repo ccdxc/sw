@@ -16,6 +16,7 @@
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
+#include "nic/apollo/api/internal/lif.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/apulu/if_impl.hpp"
@@ -862,7 +863,7 @@ sdk_ret_t
 lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
     uint32_t idx;
     sdk_ret_t ret;
-    ::core::event_t event;
+    pds_event_t event;
     lif_actiondata_t lif_data = { 0 };
 
     PDS_TRACE_DEBUG("Creating host lif %u", id_);
@@ -881,11 +882,11 @@ lif_impl::create_host_lif_(pds_lif_spec_t *spec) {
         goto error;
     }
 
-    // notify rest of the system
-    memset(&event, 0, sizeof(event));
-    event.lif.ifindex = LIF_IFINDEX(id_);
-    event.lif.state = lif_state_t::LIF_STATE_NONE;
-    sdk::ipc::broadcast(EVENT_ID_HOST_LIF_CREATE, &event, sizeof(event));
+    // notify lif creation
+    event.event_id = PDS_EVENT_ID_LIF_CREATE;
+    pds_lif_to_lif_spec(&event.lif_info.spec, this);
+    pds_lif_to_lif_status(&event.lif_info.status, this);
+    g_pds_state.event_notify(&event);
     return SDK_RET_OK;
 
 error:

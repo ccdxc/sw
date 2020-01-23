@@ -34,6 +34,7 @@
 #include "nic/apollo/api/nat_state.hpp"
 #include "nic/apollo/api/dhcp_state.hpp"
 #include "nic/apollo/api/security_profile.hpp"
+#include "nic/apollo/api/include/pds_event.hpp"
 
 using std::string;
 
@@ -198,6 +199,13 @@ public:
     dhcp_state *dhcp_db(void) {
         return (dhcp_state *)state_[PDS_STATE_DHCP];
     }
+    pds_event_cb_t event_cb(void) const { return event_cb_; }
+    void set_event_cb(pds_event_cb_t event_cb) { event_cb_ = event_cb; }
+    void event_notify(const pds_event_t *event) {
+        if (event_cb_) {
+            event_cb_(event);
+        }
+    }
 
 private:
     string                  cfg_path_;
@@ -214,6 +222,7 @@ private:
     uint64_t                data_cores_mask_;
     uint16_t                num_data_cores_;
     state_base              *state_[PDS_STATE_MAX];
+    pds_event_cb_t          event_cb_;
 };
 extern pds_state g_pds_state;
 

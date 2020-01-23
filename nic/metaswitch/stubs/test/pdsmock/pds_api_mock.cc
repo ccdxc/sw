@@ -122,10 +122,10 @@ sdk_ret_t pds_batch_commit(pds_batch_ctxt_t bctxt)
             break;
         }
         ++count;
-        if (expected_pds.prereq) prereq = true; 
+        if (expected_pds.prereq) prereq = true;
     }
     if (prereq) {
-        // Call hal callback if this is a prerequisite Object for the actual test 
+        // Call hal callback if this is a prerequisite Object for the actual test
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, pds_mock->cookie);
         cb.detach();
         return SDK_RET_OK;
@@ -158,7 +158,7 @@ sdk_ret_t pds_if_read(pds_obj_key_t *key, pds_if_info_t *info) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_if_read(pds_ifindex_t *key, pds_if_info_t *info) {
+sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
     info->status.state = PDS_IF_STATE_UP;
     return SDK_RET_OK;
 }

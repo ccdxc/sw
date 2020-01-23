@@ -204,6 +204,11 @@ DeviceSvcImpl::DeviceGet(ServerContext *context,
     memcpy(&info.spec, api_spec, sizeof(pds_device_spec_t));
     if (!core::agent_state::state()->pds_mock_mode()) {
         ret = pds_device_read(&info);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Device object not found");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_NOT_FOUND);
+            return Status::OK;
+        }
     }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     if (ret != SDK_RET_OK) {

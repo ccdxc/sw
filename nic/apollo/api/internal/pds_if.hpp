@@ -19,6 +19,6 @@
 /// \param[out] info information of the interface
 /// \return     #SDK_RET_OK on success, failure status code on error
 /// \remark     valid interface key should be passed
-sdk_ret_t pds_if_read(_In_ pds_ifindex_t *key, _Out_ pds_if_info_t *info);
+sdk_ret_t pds_if_read(_In_ const pds_ifindex_t *key, _Out_ pds_if_info_t *info);
 
 #endif    // __INTERNAL_PDS_IF_HPP__

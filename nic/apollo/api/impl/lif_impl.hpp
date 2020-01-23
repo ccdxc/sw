@@ -91,6 +91,10 @@ public:
     /// \return    id of the lif
     pds_lif_id_t id(void) const { return id_; }
 
+    /// \brief     return encoded ifindex of lif
+    /// \return    ifindex of the lif
+    pds_ifindex_t ifindex(void) const { return ifindex_; }
+
     /// \brief     return vnic hw id of this lif
     /// \return    vnic hw id
     uint16_t vnic_hw_id(void) const { return vnic_hw_id_; }

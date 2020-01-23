@@ -3,6 +3,7 @@
 // -----------------------------------------------------------------------------
 
 #include "nic/sdk/include/sdk/base.hpp"
+#include "nic/sdk/lib/eventmgr/eventmgr.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/apollo/agent/svc/event.hpp"
@@ -17,7 +18,7 @@ EventSvcImpl::EventSubscribe(ServerContext* context,
     do {
         while (stream->Read(&event_req)) {
             for (int i = 0; i < event_req.request_size(); i++) {
-                PDS_TRACE_DEBUG("Got a event msg from agent, id {}, op {}",
+                PDS_TRACE_DEBUG("Rcvd event request, id {}, op {}",
                                 event_req.request(i).eventid(),
                                 event_req.request(i).action());
                 memset(&event_spec, 0, sizeof(event_spec));
@@ -34,6 +35,29 @@ EventSvcImpl::EventSubscribe(ServerContext* context,
         }
         pthread_yield();
     } while (TRUE);
-    PDS_TRACE_DEBUG("Closing the listener stream {}", (void *)stream);
+    PDS_TRACE_DEBUG("Closing the listener stream 0x{:x}", (void *)stream);
     return Status::OK;
+}
+
+static inline bool
+event_send_cb (sdk::lib::event_id_t event_id_t, void *event_ctxt, void *ctxt)
+{
+    EventResponse *rsp = (EventResponse *)event_ctxt;
+    grpc::ServerReaderWriter<EventResponse, EventRequest> *stream =
+        (grpc::ServerReaderWriter<EventResponse, EventRequest> *)ctxt;
+    PDS_TRACE_DEBUG("Sending event {} to stream {}", event_id_t, ctxt)
+    auto ret = stream->Write(*rsp);
+    PDS_TRACE_DEBUG("stream->Write returned {}", ret);
+    return true;
+}
+
+void
+publish_event (const pds_event_t *event)
+{
+    EventResponse event_rsp;
+
+    pds_event_to_proto_event_response(&event_rsp, event);
+    core::agent_state::state()->event_mgr()->notify_event(event->event_id,
+                                                          &event_rsp,
+                                                          event_send_cb);
 }

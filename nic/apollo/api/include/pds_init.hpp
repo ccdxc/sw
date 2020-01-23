@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_event.hpp"
 
 /// \defgroup PDS_INIT Initialization and teardown API
 /// @{
@@ -57,6 +58,7 @@ typedef struct pds_init_params_s {
                                                 ///< all config files are present,
                                                 ///< files under \<cfg_path\>/pipeline/
                                                 ///< are picked by the software
+    pds_event_cb_t            event_cb;         ///< callback registered for events
 } pds_init_params_t;
 
 /// \brief initialize routine

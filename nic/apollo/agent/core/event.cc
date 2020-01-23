@@ -6,6 +6,8 @@
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/trace.hpp"
 
+extern void publish_event(const pds_event_t *event);
+
 namespace core {
 
 sdk_ret_t
@@ -32,6 +34,13 @@ update_event_listener (void *ctxt)
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
+}
+
+void
+handle_event_ntfn (const pds_event_t *event)
+{
+    PDS_TRACE_DEBUG("Rcvd event {} ntfn", event->event_id);
+    publish_event(event);
 }
 
 }    // namespace core
