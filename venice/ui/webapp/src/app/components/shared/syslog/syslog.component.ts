@@ -45,8 +45,11 @@ export class SyslogComponent extends BaseComponent implements OnInit {
     }
     this.syslogServerForm = syslogExport.$formGroup;
     const targets: any = this.syslogServerForm.get('targets');
+    // When there is no target, we will add an target. We set validators for all targets.
     if (targets.controls.length === 0) {
       this.addTarget();
+    } else {
+      this.setValidatorToTargets();
     }
     this.targets = (<any>this.syslogServerForm.get(['targets'])).controls;
   }
@@ -71,6 +74,10 @@ export class SyslogComponent extends BaseComponent implements OnInit {
   addTarget() {
     const targets = this.syslogServerForm.get('targets') as FormArray;
     targets.insert(0, new MonitoringExportConfig().$formGroup);
+    this.setValidatorToTargets();
+  }
+
+  setValidatorToTargets() {
     const targetArr = (<any>this.syslogServerForm.get(['targets'])).controls;
     for (let i = 0; i < targetArr.length; i++) {
       this.syslogServerForm.get(['targets', i]).get('transport').setValidators([
@@ -167,7 +174,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
       return {
         fieldProtocol: {
           required: false,
-          message: 'Invalid Protocol. Only tcp and udp are allowed,port should be a number between 1 to 65536.'
+          message: 'Invalid Protocol. Only udp is allowed, port should be a number between 1 to 65536.'
         }
       };
     };

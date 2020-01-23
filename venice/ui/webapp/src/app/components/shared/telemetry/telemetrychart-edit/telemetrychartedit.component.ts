@@ -148,15 +148,20 @@ export class TelemetrycharteditComponent extends BaseComponent implements OnInit
   // change repeator data.
   getCardFieldData (res: RepeaterData[]) {
     if (res && res.length > 0 && this.chart.naples && this.chart.naples.length > 0) {
-      res[0].valueType = ValueType.multiSelect;
-      // for release A, only equals is allowed.
-      res[0].operators = res[0].operators.filter(op => op.label === 'equals');
-      res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
-        return {
-          label: naple.spec.id,
-          value: naple.status['primary-mac']
-        };
-      });
+      // VS-1164.  For 2020-01 release, we use multi-select to pick DSC for chart.
+      // html template user getCardFieldData(transform.fieldData) to feed app-repeater data, there's a slight initial stutter loading saved chart for editing.
+      if (res[0].valueType !== ValueType.multiSelect) {
+        res[0].valueType = ValueType.multiSelect;
+        // for release A, only equals is allowed.
+        res[0].operators = res[0].operators.filter(op => op.label === 'equals');
+        res[0].values = this.chart.naples.map((naple: ClusterDistributedServiceCard) => {
+          return {
+            label: naple.spec.id,
+            value: naple.status['primary-mac']
+          };
+        });
+        res = Utility.getLodash().cloneDeep(res);
+      }
     }
     return res;
   }

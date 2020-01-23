@@ -586,7 +586,16 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
         }
       });
       this.newRollout.$formGroup.get(['spec', 'version']).enable(); // enable version dropdown
-      if ( this.rolloutImageOptions.length > 0 ) {
+       if ( this.rolloutImageOptions.length > 0 ) {
+        const emptyImageLabel: RolloutImageLabel  = { Description: '', Version: ''};
+        const emptyVersion: RolloutImageOption = {
+          label: 'Select...',
+          value: '',
+          model:  emptyImageLabel
+        };
+
+        // VS-1170. We make an empty verion and make it as default selected version  (html 128 appFloatLabel has conflict with placeholder )
+        this.rolloutImageOptions = [emptyVersion].concat(this.rolloutImageOptions); // this.rolloutImageOptions.unshift([emptyVersion]);
         this.newRollout.$formGroup.get(['spec', 'version']).setValue(this.rolloutImageOptions[0].value);  // VS-1054. Assign a value to version control
       }
     }
