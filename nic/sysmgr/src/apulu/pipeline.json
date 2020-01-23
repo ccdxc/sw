@@ -12,12 +12,5 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0
-    },
-    {
-        "name": "pen-netagent",
-        "command": "/nic/bin/netagent",
-        "dependencies": [],
-        "flags": ["save_stdout_on_crash"],
-        "timeout": 0.0
     }
 ]
