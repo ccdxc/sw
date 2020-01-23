@@ -13,6 +13,8 @@ from apollo.config.store import EzAccessStore
 def irange(start, end):
     return range(start, end+1)
 
+#TODO - make resmgr node aware
+ResmgrInitDone = False
 HostMemoryAllocator = None
 HostIfs = dict()
 NICMGR_HOST_LIF_BASE = 71
@@ -378,11 +380,15 @@ def __initialize_hostifs():
         lifbase += lifcount
 
 def Init():
+    global ResmgrInitDone
+    if ResmgrInitDone:
+        return
     __initialize_hostifs()
     if utils.IsDryRun():
         return
     if utils.IsInterfaceSupported():
         InitNicMgrObjects()
+    ResmgrInitDone = True
     return
 
 def ResetRouteIdAllocator():

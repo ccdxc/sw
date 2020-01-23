@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 from apollo.config.store import EzAccessStore
-import apollo.config.resmgr as resmgr
 import apollo.config.utils as utils
 import apollo.config.generator as generator
 
@@ -38,7 +37,6 @@ def __get_topo_spec():
 def Main():
     topospec = __get_topo_spec()
     EzAccessStore.SetDUTNode(topospec.dutnode)
-    resmgr.Init()
     
     for node in topospec.node:
         generator.Main(node.id, node)

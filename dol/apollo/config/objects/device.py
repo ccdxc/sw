@@ -196,9 +196,8 @@ class DeviceObjectClient(base.ConfigClientBase):
         super().CreateObjects(node)
 
         # Create Nexthop group object before tunnel as tep impl looks up nhgroup
-        if utils.IsDol():
-            NhGroupClient.CreateObjects(node)
-            tunnel.client.CreateObjects(node)
+        NhGroupClient.CreateObjects(node)
+        tunnel.client.CreateObjects(node)
         return
 
     def GetGrpcReadAllMessage(self, node):

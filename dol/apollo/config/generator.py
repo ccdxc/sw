@@ -2,7 +2,7 @@
 import sys
 
 import infra.common.timeprofiler as timeprofiler
-
+import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
@@ -148,6 +148,9 @@ def Main(node, topospec, ip=None):
 
     logger.info("Initializing Agent ", ip)
     agentapi.Init(node, ip)
+
+    if utils.IsDol():
+        resmgr.Init()
 
     __generate(node, topospec)
 
