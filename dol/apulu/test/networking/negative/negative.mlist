@@ -18,6 +18,7 @@ modules:
     - module:
         name    : L2_IPV6_TCP_QTAG_INVIP
         spec    : local2remote_ip_invalid.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
@@ -44,5 +45,6 @@ modules:
     - module:
         name    : L2L_VNIC_IPV6_INVALID_DST_IP
         spec    : local2local_invalid_dstip.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2L,L2LType=SAME_VNIC,Label=NETWORKING

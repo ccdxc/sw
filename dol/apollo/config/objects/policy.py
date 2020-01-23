@@ -288,6 +288,10 @@ class PolicyObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             return True
+        def __isIPv6PolicySupported():
+            if utils.IsPipelineApulu():
+                return False
+            return True
         super().__init__(api.ObjectTypes.POLICY, resmgr.MAX_POLICY)
         self.__v4ingressobjs = defaultdict(dict)
         self.__v6ingressobjs = defaultdict(dict)
@@ -298,6 +302,7 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.__v4epolicyiter = defaultdict(dict)
         self.__v6epolicyiter = defaultdict(dict)
         self.__supported = __isObjSupported()
+        self.__v6supported = __isIPv6PolicySupported()
         return
 
     def GetKeyfromSpec(self, spec, yaml=False):
@@ -452,7 +457,8 @@ class PolicyObjectClient(base.ConfigClientBase):
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
-        isV6Stack = utils.IsV6Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack) and self.__v6supported
+
         self.__v4ingressobjs[node][vpcid] = []
         self.__v6ingressobjs[node][vpcid] = []
         self.__v4egressobjs[node][vpcid] = []

@@ -19,6 +19,7 @@ modules:
     - module:
         name    : L2_IPV6_TCP_ENCAP
         spec    : remote2local.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
@@ -31,6 +32,7 @@ modules:
     - module:
         name    : L3_IPV6_TCP_ENCAP
         spec    : remote2local.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
@@ -72,7 +74,6 @@ modules:
         name    : L2_IPV6_ICMP_ECHO_ENCAP
         spec    : remote2local_icmp6_echo_request.testspec
         enable  : False
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
@@ -86,7 +87,6 @@ modules:
         name    : L2_IPV6_ICMP_ECHO_REPLY_ENCAP
         spec    : remote2local_icmp6_echo_reply.testspec
         enable  : False
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L2,Label=NETWORKING
 
@@ -100,7 +100,6 @@ modules:
         name    : L3_IPV6_ICMP_ECHO_ENCAP
         spec    : remote2local_icmp6_echo_request.testspec
         enable  : False
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 
@@ -114,7 +113,6 @@ modules:
         name    : L3_IPV6_ICMP_ECHO_REPLY_ENCAP
         spec    : remote2local_icmp6_echo_reply.testspec
         enable  : False
-        ignore  : True
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=L3,Label=NETWORKING
 

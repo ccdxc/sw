@@ -300,12 +300,17 @@ class RouteObjectClient(base.ConfigClientBase):
     def __init__(self):
         def __isObjSupported():
             return utils.IsRouteTableSupported()
+        def __isIPv6RouteTableSupported():
+            if utils.IsPipelineApulu():
+                return False
+            return True
         super().__init__(api.ObjectTypes.ROUTE, resmgr.MAX_ROUTE_TABLE)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)
         self.__v6iter = defaultdict(dict)
         self.__supported = __isObjSupported()
+        self.__v6supported = __isIPv6RouteTableSupported()
         return
 
     def GetKeyfromSpec(self, spec, yaml=False):
@@ -397,7 +402,8 @@ class RouteObjectClient(base.ConfigClientBase):
 
         vpcid = parent.VPCId
         isV4Stack = utils.IsV4Stack(parent.Stack)
-        isV6Stack = utils.IsV6Stack(parent.Stack)
+        isV6Stack = utils.IsV6Stack(parent.Stack) and self.__v6supported
+
         self.__v4objs[node][vpcid] = dict()
         self.__v6objs[node][vpcid] = dict()
         self.__v4iter[node][vpcid] = None

@@ -18,6 +18,7 @@ modules:
     - module:
         name    : IPV6_UDP_ENCAP
         spec    : igw2local.testspec
+        enable  : False
         iterate :
             - flow : filter://FlType=MAPPING,AddrFamily=IPV6,FwdMode=IGW,Label=NETWORKING
 
