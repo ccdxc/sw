@@ -1470,6 +1470,8 @@ sdk_ret_t
 port::port_mac_stats_get (uint64_t *stats_data)
 {
     mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
+    // correct mac errata stats
+    this->port_mac_stats_errata_correct(stats_data);
     // add persist stats to this current stats_data and return
     this->port_mac_stats_persist_collate(stats_data);
     // Publish collated stats to HBM
@@ -1585,6 +1587,40 @@ port::port_mac_stats_persist_collect_disable(void)
     return SDK_RET_OK;
 }
 
+// Receiving PFC frames increments PORT_FRAMES_RX_PRIPAUSE, PORT_FRAMES_RX_PRI_x and PORT_FRAMES_RX_PAUSE
+// Receiving LLC frames increments PORT_FRAMES_RX_PAUSE and PORT_FRAMES_RX_PRIPAUSE
+// PORT_FRAMES_RX_PRIPAUSE counter doesn’t match aggregation of PORT_FRAMES_RX_PRI_x
+sdk_ret_t
+port::port_mac_stats_errata_correct(uint64_t *stats_data)
+{
+    uint64_t rx_pri_pause_all = 0;
+
+    // pripause frames summation is correct; PORT_FRAMES_RX_PRIPAUSE incorrect
+    rx_pri_pause_all = stats_data[PORT_FRAMES_RX_PRI_0] +
+                       stats_data[PORT_FRAMES_RX_PRI_1] +
+                       stats_data[PORT_FRAMES_RX_PRI_2] +
+                       stats_data[PORT_FRAMES_RX_PRI_3] +
+                       stats_data[PORT_FRAMES_RX_PRI_4] +
+                       stats_data[PORT_FRAMES_RX_PRI_5] +
+                       stats_data[PORT_FRAMES_RX_PRI_6] +
+                       stats_data[PORT_FRAMES_RX_PRI_7];
+
+    stats_data[PORT_FRAMES_RX_PRIPAUSE] = rx_pri_pause_all;
+    if (rx_pri_pause_all == 0) {
+        // PORT_FRAMES_RX_PAUSE (llfc) only
+        return SDK_RET_OK;
+    }
+
+    // counters can increment between each read (sw latency)
+    if (stats_data[PORT_FRAMES_RX_PAUSE] >= rx_pri_pause_all) {
+        stats_data[PORT_FRAMES_RX_PAUSE] = stats_data[PORT_FRAMES_RX_PAUSE] - rx_pri_pause_all;
+    } else {
+        // clearly, if we are here, no LLFC stats incremented
+        stats_data[PORT_FRAMES_RX_PAUSE] = 0;
+    }
+    return SDK_RET_OK;
+}
+
 sdk_ret_t
 port::port_mac_stats_persist_collate(uint64_t *stats_data)
 {
@@ -1672,6 +1708,8 @@ port::port_mac_stats_persist_update(void)
     if (this->persist_stats_collect_ == true) {
         mac_fns()->mac_stats_get(this->mac_id_, this->mac_ch_, stats_data);
 
+        // correct mac errata stats
+        this->port_mac_stats_errata_correct(stats_data);
         SDK_PORT_SM_TRACE(this, "Updating persistent stats");
         for (iter = 0; iter < MAX_MAC_STATS; iter++) {
             this->persist_stats_data_[iter] += stats_data[iter];

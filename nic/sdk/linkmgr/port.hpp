@@ -469,6 +469,7 @@ private:
     serdes_fn_t* serdes_fns(void) { return this->serdes_fns_; }  // serdes functions
 
     sdk_ret_t port_mac_state_reset(void);
+    sdk_ret_t port_mac_stats_errata_correct(uint64_t *stats_data);
     sdk_ret_t port_serdes_state_reset(void);
     void port_link_sm_counters_reset(void);
     sdk_ret_t port_link_sm_retry_enabled(bool serdes_reset = true);

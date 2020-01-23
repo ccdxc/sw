@@ -10,6 +10,18 @@
 namespace sdk {
 namespace linkmgr {
 
+// MAC stats offsets in stats_data that need errata correction
+#define PORT_FRAMES_RX_PAUSE      9
+#define PORT_FRAMES_RX_PRIPAUSE  15
+#define PORT_FRAMES_RX_PRI_0     63
+#define PORT_FRAMES_RX_PRI_1     64
+#define PORT_FRAMES_RX_PRI_2     65
+#define PORT_FRAMES_RX_PRI_3     66
+#define PORT_FRAMES_RX_PRI_4     67
+#define PORT_FRAMES_RX_PRI_5     68
+#define PORT_FRAMES_RX_PRI_6     69
+#define PORT_FRAMES_RX_PRI_7     70
+
 #define MAX_MGMT_MAC_STATS 32
 
 typedef struct mac_info_s {
