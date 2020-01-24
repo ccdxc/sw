@@ -3,6 +3,7 @@
 //
 
 #include "nic/vpp/infra/cfg/pdsa_db.hpp"
+#include "nic/vpp/impl/impl_db.h"
 #include "nat_api.h"
 
 extern "C" {
@@ -33,8 +34,7 @@ pds_nat_cfg_set(const pds_cfg_msg_t *cfg_msg) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    // TODO : map nat_msg->spec.vpc to vpc_hw_id
-    vpc_hw_id = 0;
+    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
 
     if (cfg_msg->op == API_OP_CREATE) {
         for (addr = nat_msg->spec.nat_ip_range.ip_lo.v4_addr;
@@ -82,8 +82,7 @@ pds_nat_cfg_del(const pds_cfg_msg_t *cfg_msg) {
 
     SDK_ASSERT(nat_msg->spec.nat_ip_range.af == IP_AF_IPV4);
 
-    // TODO : map nat_msg->spec.vpc to vpc_hw_id
-    vpc_hw_id = 0;
+    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
@@ -120,8 +119,7 @@ pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    // TODO : map nat_msg->spec.vpc to vpc_hw_id
-    vpc_hw_id = 0;
+    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
 
     for (addr = nat_msg->spec.nat_ip_range.ip_lo.v4_addr;
          addr <= nat_msg->spec.nat_ip_range.ip_hi.v4_addr; addr++) {

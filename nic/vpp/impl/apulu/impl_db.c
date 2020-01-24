@@ -29,6 +29,41 @@ pds_impl_db_##_obj##_del (_type hw_id)                          \
     return 0;                                                   \
 }
 
+void
+pds_impl_db_vpc_init(void)
+{
+    impl_db_ctx.vpc_ht = hash_create_mem(0, PDS_MAX_KEY_LEN, sizeof(uword));
+    return;
+}
+
+int
+pds_impl_db_vpc_set(const uint8_t key[PDS_MAX_KEY_LEN],
+                    uint16_t vpc_hw_id)
+{
+    hash_set_mem_alloc(&impl_db_ctx.vpc_ht, (void *)key, (uword)vpc_hw_id);
+    return 0;
+}
+
+int
+pds_impl_db_vpc_del(const uint8_t key[PDS_MAX_KEY_LEN])
+{
+    hash_unset_mem_free(&impl_db_ctx.vpc_ht, (void *)key);
+    return 0;
+}
+
+uint16_t
+pds_impl_db_vpc_get(const uint8_t key[PDS_MAX_KEY_LEN])
+{
+    uword *data;
+    data = hash_get_mem(impl_db_ctx.vpc_ht, (void *)key);
+    if (data) {
+        return *data;
+    }
+
+    return PDS_VPP_INVALID_VPC_HW_ID;
+}
+                    
+
 int
 pds_impl_db_vnic_set (uint8_t *mac,
                       uint32_t max_sessions,
@@ -92,6 +127,7 @@ pds_subnet_impl_db_init (void)
 int
 pds_impl_db_init (void)
 {
+    pds_impl_db_vpc_init();
     pds_vnic_impl_db_init();
     pds_subnet_impl_db_init();
     

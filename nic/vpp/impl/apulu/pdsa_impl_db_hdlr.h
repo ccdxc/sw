@@ -5,9 +5,15 @@
 #ifndef __VPP_IMPL_APULU_PDSA_IMPL_DB_HDLR_H__
 #define __VPP_IMPL_APULU_PDSA_IMPL_DB_HDLR_H__
 
+#include "nic/vpp/infra/ipc/pdsa_vpp_hdlr.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int pds_impl_db_vpc_set(const uint8_t key[PDS_MAX_KEY_LEN],
+                        uint16_t vpc_hw_id);
+int pds_impl_db_vpc_del(const uint8_t key[PDS_MAX_KEY_LEN]);
 
 int pds_impl_db_vnic_set(uint8_t *mac,
                          uint32_t max_sessions,

@@ -131,6 +131,15 @@ vpc_impl::nuke_resources(api_base *api_obj) {
 }
 
 sdk_ret_t
+vpc_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
+                        api_obj_ctxt_t *obj_ctxt) {
+    vpc_entry *vpc = (vpc_entry *)api_obj;
+
+    msg->cfg_msg.vpc.status.hw_id = vpc->hw_id();
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };

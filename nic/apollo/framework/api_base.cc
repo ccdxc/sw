@@ -508,6 +508,7 @@ api_base::stateless(obj_id_t obj_id) {
 bool
 api_base::circulate(obj_id_t obj_id) {
     switch (obj_id) {
+    case OBJ_ID_VPC:
     case OBJ_ID_SUBNET:
     case OBJ_ID_VNIC:
     case OBJ_ID_NAT_PORT_BLOCK:

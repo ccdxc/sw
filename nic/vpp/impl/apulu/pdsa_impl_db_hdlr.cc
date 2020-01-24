@@ -6,6 +6,35 @@
 #include "pdsa_impl_db_hdlr.h"
 
 static sdk::sdk_ret_t
+pds_cfg_db_vpc_set_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+
+    rc = pds_impl_db_vpc_set((const uint8_t *)msg->vpc.spec.key.id,
+                             msg->vpc.status.hw_id);
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
+static sdk::sdk_ret_t
+pds_cfg_db_vpc_del_cb (const pds_cfg_msg_t *msg)
+{
+    int rc;
+
+    rc = pds_impl_db_vpc_del((const uint8_t *)msg->vpc.spec.key.id);
+
+    if (rc == 0) {
+        return sdk::SDK_RET_OK;
+    } else {
+        return sdk::SDK_RET_ERR;
+    }
+}
+
+static sdk::sdk_ret_t
 pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
@@ -92,6 +121,7 @@ pds_impl_db_cb_register (void)
                                pds_cfg_db_##_obj##_del_cb,  \
                                NULL);
 
+    _(VPC, vpc)
     _(VNIC, vnic)
     _(SUBNET, subnet)
 #undef _

@@ -211,14 +211,7 @@ nat_port_block_add(const u8 id[PDS_MAX_KEY_LEN], u32 vpc_id, ip4_address_t addr,
         // Entry already exists
         // This can happen in rollback case
 
-#if 0
         return NAT_ERR_EXISTS;
-#else
-        // TODO : Return success for scale test to pass
-        // Until we can retrieve hw_vpc_id in VPP, we are hardcoding it to 0,
-        // but apulu scale test uses multiple vpc ids.
-        return NAT_ERR_OK; // FIXME
-#endif
     }
 
     if (vpc->num_port_blocks == 0) {

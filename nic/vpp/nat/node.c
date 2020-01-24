@@ -57,13 +57,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     nat_hw_index_t xlate_idx, xlate_idx_rflow;
     nat_type_t nat_address_type = NAT_TYPE_INTERNET;
 
-    // TODO : Until we nat_port_block cfg in VPP can do
-    // vpc_id --> hw_vpc_id translation, use vpc_id = 0
-#if 0
     vpc_id = vnet_buffer (p0)->pds_data.vpc_id;
-#else
-    vpc_id = 0;
-#endif
     ip40 = vlib_buffer_get_current(p0);
     pvt_ip.as_u32 = ip40->src_address.as_u32;
     dip.as_u32 = ip40->dst_address.as_u32;

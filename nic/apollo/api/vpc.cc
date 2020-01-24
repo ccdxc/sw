@@ -170,6 +170,22 @@ vpc_entry::nuke_resources_(void) {
 }
 
 sdk_ret_t
+vpc_entry::populate_msg(pds_msg_t *msg, api_obj_ctxt_t *obj_ctxt) {
+    msg->id = PDS_CFG_MSG_ID_VPC;
+    msg->cfg_msg.op = obj_ctxt->api_op;
+    msg->cfg_msg.obj_id = OBJ_ID_VPC;
+    if (obj_ctxt->api_op == API_OP_DELETE) {
+        msg->cfg_msg.vpc.key = obj_ctxt->api_params->vpc_key;
+    } else {
+        msg->cfg_msg.vpc.spec = obj_ctxt->api_params->vpc_spec;
+        if (impl_) {
+            impl_->populate_msg(msg, this, obj_ctxt);
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 vpc_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     if (impl_) {
         return impl_->program_hw(this, obj_ctxt);

@@ -59,6 +59,14 @@ public:
     /// \return    SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t init_config(api_ctxt_t *api_ctxt) override;
 
+    /// \brief populate the IPC msg with object specific information
+    ///        so it can be sent to other components
+    /// \param[in] msg         IPC message to be filled in
+    /// \param[in] obj_ctxt    transient state associated with this API
+    /// \return #SDK_RET_OK on success, failure status code on error
+    virtual sdk_ret_t populate_msg(pds_msg_t *msg,
+                                   api_obj_ctxt_t *obj_ctxt) override;
+
     /// \brief     allocate h/w resources for this object
     /// \param[in] orig_obj old version of the unmodified object
     /// \param[in] obj_ctxt transient state associated with this API

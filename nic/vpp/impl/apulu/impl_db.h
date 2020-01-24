@@ -16,6 +16,8 @@ extern "C" {
 #define PDS_VPP_MAX_SUBNET  64
 #define PDS_VPP_MAX_VNIC    128
 
+#define PDS_VPP_INVALID_VPC_HW_ID 0
+
 typedef struct {
     mac_addr_t mac;             // vnic mac
     uint32_t max_sessions;      // max number of sessions from this vnic
@@ -37,6 +39,7 @@ typedef struct {
     _(subnet)
     _(vnic)
 #undef _
+    uword *vpc_ht;
 } pds_impl_db_ctx_t;
 
 extern pds_impl_db_ctx_t impl_db_ctx;
