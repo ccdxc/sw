@@ -561,8 +561,12 @@ int main(int argc, char** argv)
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
+    struct in_addr ip_addr;
+    ip_addr.s_addr = g_test_conf_.local_ip_addr;
+    std::string end_point = std::string(inet_ntoa(ip_addr))+":50054";
+    printf ("Endpoint: %s\n",end_point.c_str());
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
+    std::shared_ptr<Channel> channel = grpc::CreateChannel(end_point,
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
