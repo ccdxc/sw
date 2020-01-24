@@ -62,7 +62,7 @@ if opts.password is not None:
 
 if opts.addrtype is not None:
     # Determine the interface
-    cmd = "nmcli device status | grep ethernet | awk '{print $1}'"
+    cmd = "nmcli device status | grep ethernet | awk '{print $1}' | head -n 1"
     output = subprocess.check_output(cmd, shell=True)
     properties['ifname'] = output.strip()
     cmd = "ip link show dev " + properties["ifname"] + " | grep link | awk '{print $2}'"

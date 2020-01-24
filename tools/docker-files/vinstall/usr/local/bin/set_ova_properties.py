@@ -28,7 +28,7 @@ dns_tmpl = ""
 
 network_tmpl = "{hostname}\n"
 
-hosts_tmpl = "{ipaddress} {hostname} {hostname}.{domain}\n"
+hosts_tmpl = "{ipaddress} {hostname}.{domain} {hostname}\n"
 
 def calculate_cidr_len(mask):
     return sum(bin(int(x)).count('1') for x in mask.split('.'))
@@ -79,7 +79,7 @@ def get_ovf_properties():
         write_log("* network manager check error: " + e.output)
       time.sleep(30)
     # Get the interface name and MAC
-    cmd = "nmcli device status | grep ethernet | awk '{print $1}'"
+    cmd = "nmcli device status | grep ethernet | awk '{print $1}' | head -n 1"
     output = subprocess.check_output(cmd, shell=True)
     properties["ifname"] = output.strip()
     cmd = "ip link show dev " + properties["ifname"] + " | grep link | awk '{print $2}'"
