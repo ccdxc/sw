@@ -1478,11 +1478,14 @@ func (i *IrisAPI) initLifStream() {
 	go func(stream halapi.Event_EventListenClient) {
 		for {
 			resp, err := stream.Recv()
-			if err != io.EOF {
-				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "Iris init: %v", err))
+			if err == io.EOF {
+				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "HAL Event stream closed"))
 				break
 			}
-
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "Init: %v", err))
+				break
+			}
 			if resp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 				log.Error(errors.Wrapf(types.ErrDatapathHandling, "Iris Init: %v", err))
 			}

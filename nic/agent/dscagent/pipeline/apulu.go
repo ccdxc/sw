@@ -761,7 +761,11 @@ func (a *ApuluAPI) initEventStream() {
 	go func(stream halapi.EventSvc_EventSubscribeClient) {
 		for {
 			resp, err := stream.Recv()
-			if err != io.EOF {
+			if err == io.EOF {
+				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "PDS Event stream closed"))
+				break
+			}
+			if err != nil {
 				log.Error(errors.Wrapf(types.ErrPipelineEventStreamClosed, "Init: %v", err))
 				break
 			}
