@@ -1,5 +1,4 @@
 #!/bin/sh
-
 set -e
 
 pwd | grep -q "\/sw\/nic$" || { echo Please run from "sw/nic" directory; exit -1; }
@@ -30,6 +29,20 @@ start_shell() {
 cleanup() {
     # stop shell
     docker stop $DOCKER_ID
+}
+
+check_pen_lib_deps() {
+    PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/
+    bin_list=`file $TOPDIR/nic/buildroot/output_gold/target/nic/bin/* $TOPDIR/nic/buildroot/output_gold/target/platform/bin/* | grep ELF | cut -d':' -f1`
+    rm -f /tmp/libs_list.txt /tmp/pen_libs_deps.txt
+
+    for bin in $bin_list 
+    do
+        aarch64-linux-gnu-readelf -d $bin | grep NEEDED | awk -F':' {'print $2'} >> /tmp/libs_list.txt
+    done
+    sort -u < /tmp/libs_list.txt > /tmp/pen_libs_deps.txt
+
+    $TOPDIR/nic/tools/check_gold_libs_deps.py -f /tmp/pen_libs_deps.txt -s $TOPDIR/nic/buildroot/output_gold/target/ > /tmp/missing_libs.txt
 }
 
 if [ "x${JOB_ID}" = "x" ] || [ "x${IGNORE_BUILD_PIPELINE}" != "x" ]; then
@@ -87,6 +100,36 @@ echo 'Building Naples gold firmware'
 docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PLATFORM=hw clean"
 docker_exec "cd /usr/src/github.com/pensando/sw/ && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ws-tools"
 docker_exec "cd /usr/src/github.com/pensando/sw/nic && PATH=$PATH:/tool/toolchain/aarch64-1.1/bin/ make ARCH=aarch64 PIPELINE=iris PLATFORM=hw FWTYPE=gold gold-firmware"
+
+rm -f /tmp/missing_libs.txt
+
+check_pen_lib_deps
+if [ -f "/tmp/missing_libs.txt" ]; then
+    set +e
+    missing_libs=`grep "lib" /tmp/missing_libs.txt`
+    ret=$?
+    set -e
+else
+    echo ""
+    echo "Error in checking goldfw libs dependency"
+    echo ""
+    echo "!!! Goldfw Build Failed !!!"
+    exit 1
+fi
+
+if [ $ret -eq 0 ]; then
+    echo "Some libs are missing in goldfw filesystem"
+    echo ""
+    echo "Missing libs are: `cat /tmp/missing_libs.txt`"
+    echo ""
+    echo "!!! Goldfw Build Failed !!!"
+
+    exit 1
+fi
+
+echo ""
+echo "lib dependency check for goldfw is successful"
+echo ""
 
 image_sz=`stat -c %s $TOPDIR/nic/buildroot/output_gold/images/kernel.img`
 
