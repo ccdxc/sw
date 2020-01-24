@@ -25,7 +25,7 @@
   <div fxFlex="none" fxLayoutAlign="start center">
     <!-- TABLE FUNCTION ICONS HERE -->
     <mat-icon class="global-multi-records-delete-icon"
-              *ngIf="hasSelectedRows()"
+              *ngIf="areSelectedRowsDeletable()"
               [matTooltip]="'Delete selected hosts'"
               (click)="onDeleteSelectedRows($event)">delete</mat-icon>
   </div>

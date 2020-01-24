@@ -81,8 +81,10 @@
               *ngIf="enableCheckbox  && selectedcolumns.length > 0">
             <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
           </td>
+          <!-- below "col.width + '% !important'" , 'important' key work is needed for VS-981. please test column selection if you change it -->
           <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"
-              [class]="col.class ? col.class : ''" [style.min-width]="col.width + '%'"
+              [class]="col.class ? col.class : ''"
+              [style.min-width]="col.width + '% !important' | safeStyle"
               [colSpan]="last && actionTemplate != null ? 2 : 1"
               [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
             <ng-container

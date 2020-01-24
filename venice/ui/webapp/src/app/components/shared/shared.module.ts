@@ -14,6 +14,7 @@ import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { TableheaderComponent } from '@app/components/shared/tableheader/tableheader.component';
 import { LazyrenderComponent } from './lazyrender/lazyrender.component';
 import { PrettyDatePipe } from '@app/components/shared/Pipes/PrettyDate.pipe';
+import { SafeStylePipe } from '@app/components/shared/Pipes/SafeStyle.pipe';
 import { AlertseventsComponent } from '@app/components/shared/alertsevents/alertsevents.component';
 import { PrimengModule } from '@app/lib/primeng.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -68,6 +69,7 @@ import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/tel
     TableheaderComponent,
     LazyrenderComponent,
     PrettyDatePipe,
+    SafeStylePipe,
     AlertseventsComponent,
     WhitespaceTrimDirective,
     FieldselectorComponent,
@@ -106,6 +108,7 @@ import { TelemetrychartviewComponent } from './telemetry/telemetrychart-view/tel
     TableheaderComponent,
     LazyrenderComponent,
     PrettyDatePipe,
+    SafeStylePipe,
     AlertseventsComponent,
     WhitespaceTrimDirective,
     FieldselectorComponent,

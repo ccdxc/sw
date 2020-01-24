@@ -570,6 +570,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
   populateRolloutVersions() {
     const selectedVersion = this.newRollout.spec.version;
     this.rolloutImageOptions.length = 0;
+    this.newRollout.$formGroup.get(['spec', 'version']).disable();  // disable version dropdown first. VS-1192
     if (this.rolloutImages && this.rolloutImages.items) {
       this.rolloutImages.items.forEach(image => {
         if (image.meta.name.endsWith(RolloutUtil.ROLLOUT_METADATA_JSON)) {
@@ -585,13 +586,13 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
           }
         }
       });
-      this.newRollout.$formGroup.get(['spec', 'version']).enable(); // enable version dropdown
-       if ( this.rolloutImageOptions.length > 0 ) {
-        const emptyImageLabel: RolloutImageLabel  = { Description: '', Version: ''};
+      if (this.rolloutImageOptions.length > 0) {
+        this.newRollout.$formGroup.get(['spec', 'version']).enable();  // enable version dropdown if there are version choices.
+        const emptyImageLabel: RolloutImageLabel = { Description: '', Version: '' };
         const emptyVersion: RolloutImageOption = {
-          label: 'Select...',
+          label: 'Select a image version',
           value: '',
-          model:  emptyImageLabel
+          model: emptyImageLabel
         };
 
         // VS-1170. We make an empty verion and make it as default selected version  (html 128 appFloatLabel has conflict with placeholder )
@@ -753,7 +754,7 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   computeVersionDescription(selectedVersion: string) {
     const rolloutImageLabel = this.getImageVersionData(selectedVersion);
-    this.versiondescription = rolloutImageLabel ? this.buildVersionDisplay(rolloutImageLabel) : '';
+    this.versiondescription = rolloutImageLabel ? this.buildVersionDisplay(rolloutImageLabel) : 'No image available.';
   }
 
   buildVersionDisplay(rolloutImageLabel: RolloutImageLabel): string {

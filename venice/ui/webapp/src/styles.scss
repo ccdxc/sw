@@ -301,7 +301,7 @@
         }
 
         >td {
-          // height: 100%;
+          // Table header has hidden div for column resize. We add little padding space here
           padding: 4px 7px;
           height: inherit;
         }

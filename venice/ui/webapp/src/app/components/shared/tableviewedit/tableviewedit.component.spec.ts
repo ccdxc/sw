@@ -30,7 +30,7 @@ import { ApiObjectMeta, IApiObjectMeta } from '@sdk/v1/models/generated/auth';
 import { FormGroup, FormsModule } from '@angular/forms';
 import { AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
 import { WidgetsModule } from 'web-app-framework';
-
+import { SafeStylePipe} from '../Pipes/SafeStyle.pipe';
 
 
 export class TestTablevieweditRBAC {
@@ -393,7 +393,8 @@ describe('TablevieweditComponent', () => {
         LazyrenderComponent,
         SorticonComponent,
         RoleGuardDirective,
-        AdvancedSearchComponent
+        AdvancedSearchComponent,
+        SafeStylePipe
       ],
       imports: [
         NoopAnimationsModule,

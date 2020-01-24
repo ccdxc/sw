@@ -608,4 +608,13 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
     }
   }
 
+  // VS-1185.  UI blocks batch delete if selected hosts conttains any hosts that have associated workloads.
+  areSelectedRowsDeletable(): boolean {
+    const selectedRows = this.getSelectedDataObjects();
+    if (selectedRows.length  === 0  ) {
+      return false;
+    }
+    const list  = this.getSelectedDataObjects().filter( (rowData) =>  (rowData[HostsComponent.HOST_FIELD_WORKLOADS] && rowData[HostsComponent.HOST_FIELD_WORKLOADS].length > 0));
+    return (list.length === 0 );
+  }
 }

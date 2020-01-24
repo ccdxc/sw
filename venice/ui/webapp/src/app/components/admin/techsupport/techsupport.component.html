@@ -25,7 +25,7 @@
 
 <ng-template #captionTemplate let-count="count">
   <app-tableheader title="Tech Supports" [total]="count" fxFlex="auto" fxLayout="row"
-                   [tableMenuItems]="tableMenuItems" [enableColumnSelect]="true" [cols]="cols"
+                   [tableMenuItems]="tableMenuItems" [enableColumnSelect]="false" [cols]="cols"
                    (columnSelectChange)="onColumnSelectChange($event)" [icon]="headerIcon">
 
     <ng-container *ngTemplateOutlet="actionButtonsTemplate"></ng-container>

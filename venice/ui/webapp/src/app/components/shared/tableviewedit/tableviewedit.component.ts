@@ -17,7 +17,7 @@ import { LazyrenderComponent } from '../lazyrender/lazyrender.component';
 import { TableMenuItem } from '../tableheader/tableheader.component';
 import { TableUtility } from './tableutility';
 import { LocalSearchRequest, AdvancedSearchComponent } from '../advanced-search/advanced-search.component';
-
+import { SafeStylePipe} from '../Pipes/SafeStyle.pipe';
 
 /**
  * Table view edit component provides an easy way for other pages
@@ -192,10 +192,11 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
     const selectedColumns = $event.value;
     if (selectedColumns.length > 0) {
       this.orderSelectedColumns(selectedColumns);
-      this.updateWidthPercentages();
+      // this.updateWidthPercentages();
     } else {
       this.selectedcolumns = selectedColumns;
     }
+    this.updateWidthPercentages();
   }
 
   /**
