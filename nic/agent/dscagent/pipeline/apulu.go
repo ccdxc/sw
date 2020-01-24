@@ -806,7 +806,7 @@ func (a *ApuluAPI) initEventStream() {
 
 	// Store initial Lifs
 	for _, lif := range lifs.Response {
-		log.Errorf("Processing lif get response");
+		log.Infof("Processing lif get response. Resp: %v", lif)
 		intfID, _ := binary.Uvarint(lif.Spec.GetId())
 		l := netproto.Interface{
 			TypeMeta: api.TypeMeta{
