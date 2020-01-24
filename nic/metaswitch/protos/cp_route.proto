@@ -64,14 +64,6 @@ message CPRouteSpecResponse {
   repeated CPRouteResponse Response  = 2;
 }
 
-enum StRtAction {
-  STRT_ACTION_NONE    = 0;
-  STRT_ACTION_LOCAL   = 1;
-  STRT_ACTION_FWD     = 2;
-  STRT_ACTION_REJECT  = 3;
-  STRT_ACTION_DISCARD = 4;
-}
-
 message CPStaticRouteSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_QCR_STRT_OID_LEN",
@@ -93,8 +85,6 @@ message CPStaticRouteSpec {
   AMBBool         Override     = 6 [(venice.pdsaFields) = {Field: "override"}];
   // Admin Distance
   uint32          AdminDist    = 7 [(venice.pdsaFields) = {Field: "admin_dist"}];
-  // Route Action 
-  StRtAction      Action       = 8  [(venice.pdsaFields) = {Field: "action"}];
 }
 
 // CRUD request message

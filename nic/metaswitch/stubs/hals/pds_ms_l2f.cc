@@ -83,8 +83,6 @@ NBB_ULONG l2f_integ_subcomp_t::add_upd_mac_ip(ATG_MAI_MAC_IP_ID *mac_ip_id,
                                               NBB_BYTE sticky)
 {
     if (mac_ip_id->ip_address.length ==0) {
-        SDK_TRACE_INFO("L2F MAC IP ADD BD %d MAC only %s",
-                       mac_ip_id->bd_id.bd_id, macaddr2str(mac_ip_id->mac_address));
         return ATG_OK;
     }
     try {
@@ -100,8 +98,6 @@ void l2f_integ_subcomp_t::delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                         bool programmed)
 {
     if (mac_ip_id->ip_address.length ==0) {
-        SDK_TRACE_INFO("L2F MAC IP DEL BD %d MAC only %s", mac_ip_id->bd_id.bd_id,
-                       macaddr2str(mac_ip_id->mac_address));
         return;
     }
     try {
@@ -116,30 +112,12 @@ void l2f_integ_subcomp_t::delete_mac_ip(const ATG_MAI_MAC_IP_ID *mac_ip_id,
 NBB_BYTE l2f_integ_subcomp_t::add_upd_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                                     const char *vrf_name)
 {
-    if (mac_ip_id->ip_address.length ==0) {
-        SDK_TRACE_INFO("L2F VRF MAC IP ADD BD %d MAC only %s VRF %s",
-                       mac_ip_id->bd_id.bd_id, macaddr2str(mac_ip_id->mac_address), vrf_name);
-        return ATG_OK;
-    }
-    ip_addr_t ip;
-    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
-    SDK_TRACE_INFO("L2F VRF MAC IP ADD BD %d IP %s MAC %s VRF %s", mac_ip_id->bd_id.bd_id,
-                   ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address), vrf_name);
     return ATG_OK;
 }
 
 void l2f_integ_subcomp_t::delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                                const char *vrf_name)
 {
-    if (mac_ip_id->ip_address.length ==0) {
-        SDK_TRACE_INFO("L2F VRF MAC IP DEL BD %d MAC only %s VRF %s",
-                       mac_ip_id->bd_id.bd_id, macaddr2str(mac_ip_id->mac_address), vrf_name);
-        return;
-    }
-    ip_addr_t ip;
-    pds_ms::ms_to_pds_ipaddr(mac_ip_id->ip_address, &ip);
-    SDK_TRACE_INFO("L2F VRF MAC IP DEL BD %d IP %s MAC %s VRF %s", mac_ip_id->bd_id.bd_id,
-                   ipaddr2str(&ip), macaddr2str(mac_ip_id->mac_address), vrf_name);
 }
 
 } // End namespace

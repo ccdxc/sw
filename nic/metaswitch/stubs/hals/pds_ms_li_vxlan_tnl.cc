@@ -49,7 +49,7 @@ pds_tep_spec_t li_vxlan_tnl::make_pds_tep_spec_(void) {
     spec.remote_ip = tep_prop.tep_ip;
     spec.ip_addr = ips_info_.src_ip;
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
-    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx);
+    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
     spec.type = PDS_TEP_TYPE_WORKLOAD;
     spec.nat = false;
     return spec;
@@ -270,7 +270,7 @@ void li_vxlan_tnl::handle_add_upd_ips(ATG_LIPI_VXLAN_ADD_UPDATE* vxlan_tnl_add_u
                 auto send_response = li::VxLan::set_ips_rc(&vxlan_tnl_add_upd_ips->ips_hdr, 
                                                           (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode",
+                SDK_TRACE_DEBUG("++++++ VXLAN Tunnel 0x%x: Send Async IPS reply %s stateless mode ++++++",
                                 key, (pds_status) ? "Success": "Failure");
                 li::Fte::get().get_lipi_join()->send_ips_reply(&vxlan_tnl_add_upd_ips->ips_hdr);
             } else {
@@ -352,7 +352,7 @@ void li_vxlan_tnl::handle_delete(NBB_ULONG tnl_ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("TEP %s Delete: Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++++ TEP %s Delete: Rcvd Async PDS response %s +++++++++",
                             ipaddr2str(&tep_ip), (pds_status)?"Success": "Failure");
 
         };

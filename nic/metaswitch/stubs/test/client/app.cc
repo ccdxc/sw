@@ -16,7 +16,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
@@ -238,7 +238,6 @@ static void create_route_proto_grpc () {
     proto_spec->set_adminstatus (ADMIN_UP);
     proto_spec->set_override (BOOL_TRUE);
     proto_spec->set_admindist (250);
-    proto_spec->set_action (STRT_ACTION_FWD);
 
     printf ("Pushing Default (0/0) Static Route proto...\n");
     ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
@@ -278,7 +277,13 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
     proto_spec->set_password("test");
-
+    if (lo) {
+    proto_spec->set_keepalive(10);
+    proto_spec->set_holdtime(30);
+    } else {
+    proto_spec->set_keepalive(3);
+    proto_spec->set_holdtime(9);
+    }
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
     if (op_del) {
         ret_status = g_bgp_stub_->BGPPeerSpecDelete(&context, request, &response);
@@ -359,7 +364,7 @@ static void create_subnet_proto_grpc () {
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
-    proto_spec->set_hostif(api::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
                            PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);

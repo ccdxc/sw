@@ -204,8 +204,8 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
                     hals::Route::set_ips_rc(&add_upd_route_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("MS Route %s: Send Async IPS "
-                                 "reply %s stateless mode",
+                SDK_TRACE_DEBUG ("+++++++ MS Route %s: Send Async IPS "
+                                 "reply %s stateless mode +++++++",
                                 ippfx2str(&l_ips_info_.pfx),
                                 (pds_status) ? "Success" : "Failure");
                 ropi_join->send_ips_reply(&add_upd_route_ips->ips_hdr);
@@ -281,7 +281,8 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS Route %s Delete: Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++ MS Route %s Delete: Rcvd Async PDS"
+                            " response %s +++++++",
                          ippfx2str(&pfx), (pds_status) ? "Success" : "Failure");
         };
     // All processing complete, only batch commit remains - 

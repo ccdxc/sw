@@ -19,6 +19,7 @@ extern "C" {
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_error.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
+#include <string>
 
 namespace pds_ms {
 
@@ -164,18 +165,36 @@ public:
     }
 };
 
+// generate a sticky uuid from an interger id
+// same id always returs the same uuid
 static inline pds_obj_key_t
-msidx2pdsobjkey (uint32_t id) {
+msidx2pdsobjkey (uint32_t id, bool underlay=false) {
     pds_obj_key_t key = { 0 };
-    std::string id_str = std::to_string(id);
+    sprintf (key.id, "%x", id);
 
-    memcpy(key.id, id_str.data(), id_str.length());
+    // stash a signature in 10th byte
+    if (!underlay) {
+        key.id[9] = 0x40;
+    } else {
+        // Use signature to differentiate overlay and underlay indexes
+        // since both indexes are allocated independently in MS HAL
+        // but go into the same PDS HAL table
+        key.id[9] = 0x41;
+    }
     return key;
 }
 
+// extract integer id from given 'sticky' uuid
 static inline uint32_t
 pdsobjkey2msidx (const pds_obj_key_t& key) {
-    return (uint32_t)atoi((const char *)key.id);
+    char *buf;
+    static thread_local uint8_t next_buf = 0;
+    char id_buf[4][9];
+
+    buf = id_buf[next_buf++ & 0x3];
+    memcpy(buf, key.id, 8);
+    buf[8] = '\0';
+    return std::stoul((const char *)buf, 0, 16);
 }
 
 static inline bool

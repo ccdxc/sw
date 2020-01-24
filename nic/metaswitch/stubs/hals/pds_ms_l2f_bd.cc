@@ -248,8 +248,8 @@ void l2f_bd_t::handle_add_upd_ips(ATG_BDPI_UPDATE_BD* bd_add_upd_ips) {
                     l2f::Bd::set_ips_rc(&bd_add_upd_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("MS BD %d: Send Async IPS "
-                                 "reply %s stateless mode",
+                SDK_TRACE_DEBUG ("+++++++ MS BD %d: Send Async IPS "
+                                 "reply %s stateless mode ++++++++",
                                 bd_add_upd_ips->bd_id.bd_id, 
                                 (pds_status) ? "Success" : "Failure");
                 bdpi_join->send_ips_reply(&bd_add_upd_ips->ips_hdr);
@@ -352,7 +352,8 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d Delete: Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("++++++++++ MS BD %d Delete: Rcvd Async PDS"
+                            " response %s +++++++++++++",
                             l_bd_id, (pds_status) ? "Success" : "Failure");
             auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->remove_uuid(subnet_uuid);
@@ -416,7 +417,8 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d If 0x%x: Bind - Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++++++++ MS BD %d If 0x%x: Bind - Rcvd Async"
+                            " PDS response %s ++++++++++",
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
         };
@@ -473,7 +475,8 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d If 0x%x: Unbind - Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("++++++++++ MS BD %d If 0x%x: Unbind - Rcvd Async"
+                            " PDS response %s +++++++++++",
                             bd_id, ifindex, (pds_status) ? "Success" : "Failure");
 
         };

@@ -38,17 +38,17 @@ void li_vxlan_port::parse_ips_info_(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_add_
 }
 
 void li_vxlan_port::fetch_store_info_(pds_ms::state_t* state) {
+    store_info_.vxp_if_obj = state->if_store().get(ips_info_.if_index);
+    if (op_delete_) {
+        if (store_info_.vxp_if_obj == nullptr) {
+            return;
+        }
+        ips_info_.tep_ip = store_info_.vxp_if_obj->vxlan_port_properties().tep_ip;
+    }
     store_info_.tep_obj = state->tep_store().get(ips_info_.tep_ip);
     if (unlikely(store_info_.tep_obj == nullptr)) {
         throw Error(std::string("Unknown VXLAN Tunnel ")
                     .append(ipaddr2str(&ips_info_.tep_ip)));
-    }
-    store_info_.vxp_if_obj = state->if_store().get(ips_info_.if_index);
-    if (op_delete_) {
-        if (unlikely(store_info_.vxp_if_obj == nullptr)) {
-            throw Error(std::string("Unknown VXLAN Port ")
-                        .append(std::to_string(ips_info_.if_index)));
-        }
     }
 }
 
@@ -65,7 +65,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     auto& tep_prop = store_info_.tep_obj->properties();
     spec.nh_type = PDS_NH_TYPE_UNDERLAY_ECMP;
     // Underlay NH is shared with Type 2 TEP
-    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx);
+    spec.nh_group = msidx2pdsobjkey(tep_prop.hal_uecmp_idx, true);
     spec.nat = false;
     return spec;
 }
@@ -186,7 +186,6 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
-
         fetch_store_info_(state_ctxt.state());
 
         if (store_info_.vxp_if_obj != nullptr) {
@@ -236,8 +235,8 @@ void li_vxlan_port::handle_add_upd_ips(ATG_LIPI_VXLAN_PORT_ADD_UPD* vxlan_port_a
                     li::VxLanPort::set_ips_rc(&vxlan_port_add_upd_ips->ips_hdr,
                                               (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
-                                " Send Async IPS reply %s stateless mode",
+                SDK_TRACE_DEBUG("+++++++ Type5 TEP %s VNI %d MS L3 VXLAN Port 0x%x"
+                                " Send Async IPS reply %s stateless mode ++++++++",
                                  ipaddr2str(&l_tep_ip), l_vni, key,
                                  (pds_status) ? "Success": "Failure");
                 li::Fte::get().get_lipi_join()->
@@ -300,8 +299,13 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
-
         fetch_store_info_(state_ctxt.state());
+
+        if (store_info_.vxp_if_obj == nullptr) {
+            SDK_TRACE_DEBUG("Ignoring possible L2 VXLAN Port 0x%x Delete", vxlan_port_ifindex);
+            return;
+        }
+
         tep_ip = store_info_.vxp_if_obj->vxlan_port_properties().tep_ip;
         SDK_TRACE_INFO ("Type5 TEP %s MS L3 VXLAN Port 0x%x: Delete IPS",
                         ipaddr2str(&tep_ip), vxlan_port_ifindex);
@@ -320,8 +324,8 @@ void li_vxlan_port::handle_delete(ms_ifindex_t vxlan_port_ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("Type5 TEP %s MS L3 VXLAN Port 0x%x Delete"
-                            " Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++++ Type5 TEP %s MS L3 VXLAN Port 0x%x Delete"
+                            " Rcvd Async PDS response %s +++++++",
                             ipaddr2str(&tep_ip), vxlan_port_ifindex, 
                             (pds_status)?"Success": "Failure");
 

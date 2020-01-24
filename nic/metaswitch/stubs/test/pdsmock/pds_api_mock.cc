@@ -8,6 +8,7 @@
 #include "nic/apollo/api/include/pds_init.hpp"
 #include "nic/apollo/api/include/pds_batch.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/api/internal/pds_if.hpp"
 #include "nic/apollo/api/include/pds_mapping.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"

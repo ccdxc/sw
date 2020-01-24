@@ -549,8 +549,11 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
                       MAC_TO_UINT64(api_spec->l3_if_info.mac_addr));
             pds_encap_to_proto_encap(proto_l3->mutable_encap(),
                                      &api_spec->l3_if_info.encap);
-            ippfx_api_spec_to_proto_spec(proto_l3->mutable_prefix(),
-                                         &api_spec->l3_if_info.ip_prefix);
+            auto af = api_spec->l3_if_info.ip_prefix.addr.af;
+            if (af == IP_AF_IPV4 || af == IP_AF_IPV6) {
+                ippfx_api_spec_to_proto_spec(proto_l3->mutable_prefix(),
+                                             &api_spec->l3_if_info.ip_prefix);
+            }
         }
         break;
     case PDS_IF_TYPE_LOOPBACK:

@@ -194,7 +194,7 @@ pds_mapping_key_t l2f_mai_t::make_pds_mapping_key_(void) {
         key.ip_addr = ips_info_.ip_address;
     } else {
         key.type = PDS_MAPPING_TYPE_L2;
-        key.subnet = msidx2pdsobjkey(ips_info_.bd_id);
+        key.subnet = store_info_.bd_obj->properties().subnet;
         MAC_ADDR_COPY(key.mac_addr, ips_info_.mac_address);
     }
     return key;
@@ -336,8 +336,8 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                 // ----------------------------------------------------------------
                 // This block is executed asynchronously when PDS response is rcvd
                 // ----------------------------------------------------------------
-                SDK_TRACE_DEBUG("MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS " 
-                                "response %s", l_bd_id, macaddr2str(l_mac), 
+                SDK_TRACE_DEBUG("+++++++++ MS BD %d MAC %s: MAC AddUpd Rcvd Async PDS " 
+                                "response %s ++++++++++", l_bd_id, macaddr2str(l_mac), 
                                 (pds_status) ? "Success" : "Failure");
 
                 if (!pds_status && l_op_create) {
@@ -376,8 +376,8 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
                             l2f::FdbMac::set_ips_rc(&update_fdb_mac->ips_hdr,
                                                     (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                         SDK_ASSERT(send_response);
-                        SDK_TRACE_DEBUG ("MS BD %d MAC %s: Send Async IPS "
-                                         "reply %s stateless mode",
+                        SDK_TRACE_DEBUG ("++++++++ MS BD %d MAC %s: Send Async IPS "
+                                         "reply %s stateless mode +++++++++++",
                                          l_bd_id, macaddr2str(l_mac), 
                                          (pds_status) ? "Success" : "Failure");
                         bdpi_join->send_ips_reply(&update_fdb_mac->ips_hdr);
@@ -460,7 +460,8 @@ void l2f_mai_t::handle_delete_mac(l2f::FdbMacKey *key) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d MAC %s: MAC Del Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("++++++++ MS BD %d MAC %s: MAC Del Rcvd Async PDS"
+                            " response %s +++++++++++",
                             l_bd_id, macaddr2str(l_mac),
                             (pds_status) ? "Success" : "Failure");
 
@@ -545,8 +546,8 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
-                            " PDS response %s",
+            SDK_TRACE_DEBUG("++++++++++ MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
+                            " PDS response %s ++++++++++",
                             l_bd_id, ipaddr2str(&l_ip),
                             (pds_status) ? "Success" : "Failure");
 
@@ -598,8 +599,8 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("MS BD %d IP %s: Remote IP AddUpd Rcvd Async"
-                            " PDS response %s",
+            SDK_TRACE_DEBUG("++++++++ MS BD %d IP %s: Remote IP Delete Rcvd Async"
+                            " PDS response %s +++++++++++++",
                             l_bd_id, ipaddr2str(&l_ip),
                             (pds_status) ? "Success" : "Failure");
 

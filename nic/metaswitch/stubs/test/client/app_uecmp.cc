@@ -16,7 +16,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
 #include "nic/apollo/api/include/pds_device.hpp"
-#include "nic/apollo/api/utils.hpp"
+#include "nic/apollo/test/base/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include "gen/proto/device.grpc.pb.h"
 #include "gen/proto/interface.grpc.pb.h"
@@ -258,6 +258,13 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     proto_spec->set_sendcomm(pds::BOOL_TRUE);
     proto_spec->set_sendextcomm(pds::BOOL_TRUE);
     proto_spec->set_password("test");
+    if (lo) {
+    proto_spec->set_keepalive(10);
+    proto_spec->set_holdtime(30);
+    } else {
+    proto_spec->set_keepalive(3);
+    proto_spec->set_holdtime(9);
+    }
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
     ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
@@ -319,7 +326,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
     }
 }
 
-static void create_subnet_proto_grpc () {
+static void create_subnet_proto_grpc (bool second=false) {
     SubnetRequest   request;
     SubnetResponse  response;
     ClientContext   context;
@@ -328,18 +335,32 @@ static void create_subnet_proto_grpc () {
     request.mutable_batchctxt()->set_batchcookie(1);
 
     auto proto_spec = request.add_request();
+    if (second) {
+    proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_subnet_id+1).id, PDS_MAX_KEY_LEN);
+    } else {
     proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    }
     proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
+    if (second) {
+    proto_encap->mutable_value()->set_vnid(g_test_conf_.vni+1);
+    } else {
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
-    proto_spec->set_hostif(api::uuid_from_objid(g_test_conf_.lif_if_index).id,
-                           PDS_MAX_KEY_LEN);
+    }
+    // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
+    //       Else failure in non-mock PDS mode.
+    //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    //                       PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();
     v4_prefix->set_len(24);
+    if (second) {
+    v4_prefix->set_addr (g_test_conf_.local_gwip_addr+1);
+    } else {
     v4_prefix->set_addr (g_test_conf_.local_gwip_addr);
+    }
 
     printf ("Pushing Subnet proto...\n");
     ret_status = g_subnet_stub_->SubnetCreate(&context, request, &response);
@@ -562,6 +583,7 @@ int main(int argc, char** argv)
         create_evpn_ip_vrf_proto_grpc();
         create_evpn_ip_vrf_rt_proto_grpc();
         create_subnet_proto_grpc();
+        create_subnet_proto_grpc(true);
         create_evpn_evi_proto_grpc();
         if (g_test_conf_.manual_rt) {
             create_evpn_evi_rt_proto_grpc();

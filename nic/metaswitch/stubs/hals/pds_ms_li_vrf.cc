@@ -240,8 +240,8 @@ void li_vrf_t::handle_add_upd_ips(ATG_LIPI_VRF_ADD_UPDATE* vrf_add_upd_ips) {
                     li::Vrf::set_ips_rc(&vrf_add_upd_ips->ips_hdr,
                                         (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG ("MS VRF %d: Send Async IPS "
-                                "reply %s stateless mode",
+                SDK_TRACE_DEBUG ("++++++++ MS VRF %d: Send Async IPS "
+                                "reply %s stateless mode +++++++++",
                                 l_vrf_id, (pds_status) ? "Success" : "Failure");
                 li::Fte::get().get_lipi_join()->
                     send_ips_reply(&vrf_add_upd_ips->ips_hdr);
@@ -378,7 +378,8 @@ void li_vrf_t::handle_delete(const NBB_BYTE* vrf_name, NBB_ULONG vrf_name_len) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("VPC %s MS VRF %d Delete: Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++++  VPC %s MS VRF %d Delete: Rcvd Async PDS"
+                            " response %s +++++++++",
                             vpc_uuid.str(), vrf_id,
                             (pds_status) ? "Success" : "Failure");
             auto mgmt_ctxt = mgmt_state_t::thread_context();

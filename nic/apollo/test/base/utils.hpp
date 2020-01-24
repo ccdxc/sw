@@ -235,6 +235,18 @@ operator<<(std::ostream& os, const pds_obj_key_t *key) {
     return os;
 }
 
+static inline pds_obj_key_t
+uuid_from_objid (uint32_t id)
+{
+    pds_obj_key_t key = { 0 };
+    std::string id_str = std::to_string(id);
+
+    memcpy(key.id, id_str.data(), id_str.length());
+    // stash a signature in 10th byte
+    key.id[9] = 0x42;
+    return key;
+}
+
 }    // namespace test
 
 #endif    // __TEST_BASE_UTILS_HPP__

@@ -32,11 +32,12 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     auto eth_ifindex = ms_to_pds_eth_ifindex(ifindex);
     ret = pds_if_read(&eth_ifindex, &info);
     if (unlikely (ret != SDK_RET_OK)) {
-        throw Error(std::string("PDS If Get failed for Eth If ")
+        SDK_TRACE_ERR("%s", (std::string("PDS If Get failed for Eth If ")
                     .append(std::to_string(eth_ifindex))
                     .append(" MS If ")
                     .append(std::to_string(ifindex))
-                    .append(" err=").append(std::to_string(ret)));
+                    .append(" err=").append(std::to_string(ret))).c_str());
+        return ATG_FRI_FAULT_NONE;
     }
     if (info.status.state == PDS_IF_STATE_DOWN) {
         SDK_TRACE_DEBUG("MS If 0x%lx: Port DOWN", ifindex);
@@ -285,7 +286,8 @@ void li_intf_t::handle_add_upd_ips(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
                     li::Port::set_ips_rc(&port_add_upd_ips->ips_hdr,
                                          (pds_status) ? ATG_OK : ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("Phy port 0x%x: Send Async IPS reply %s stateless mode",
+                SDK_TRACE_DEBUG("+++++++ Phy port 0x%x: Send Async IPS reply"
+                                " %s stateless mode +++++++",
                                 key.index, (pds_status) ? "Success" : "Failure");
                 li::Fte::get().get_lipi_join()->
                     send_ips_reply(&port_add_upd_ips->ips_hdr);
@@ -355,7 +357,8 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
             // ----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("Phy port 0x%x Delete: Rcvd Async PDS response %s",
+            SDK_TRACE_DEBUG("+++++++ Phy port 0x%x Delete: Rcvd Async PDS"
+                            " response %s ++++++++",
                             ifindex, (pds_status) ? "Success" : "Failure");
 
         };

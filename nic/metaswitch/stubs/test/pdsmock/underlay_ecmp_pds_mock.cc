@@ -26,7 +26,7 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
     test::api::nexthop_group_feeder nhgroup_feeder;
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
                         input.nexthops.size(), // Num Nexthops
-                        pds_ms::msidx2pdsobjkey(input.pathset_id),  // ID
+                        pds_ms::msidx2pdsobjkey(input.pathset_id, true),  // ID
                         PDS_MAX_NEXTHOP_GROUP);
     int i = 0;
     for (auto& nh: input.nexthops) {
@@ -53,7 +53,7 @@ void underlay_ecmp_pds_mock_t::generate_del_specs(const underlay_ecmp_input_para
                                           batch_spec_t& pds_batch) 
 {
     pds_batch.emplace_back (OBJ_ID_NEXTHOP_GROUP, API_OP_DELETE);
-    pds_batch.back().nhgroup.key = pds_ms::msidx2pdsobjkey(input.pathset_id);
+    pds_batch.back().nhgroup.key = pds_ms::msidx2pdsobjkey(input.pathset_id, true);
 }
 
 void underlay_ecmp_pds_mock_t::validate_()

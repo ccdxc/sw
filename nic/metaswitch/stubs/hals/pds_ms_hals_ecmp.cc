@@ -82,12 +82,14 @@ void hals_ecmp_t::fetch_store_info_(state_t* state) {
 
 pds_obj_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
     ms_hw_tbl_id_t idx;
+    bool underlay = false;
     if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
         idx = ips_info_.pathset_id;
+        underlay = true;
     } else {
         idx = store_info_.pathset_obj->hal_oecmp_idx_guard->idx();
     }
-    return msidx2pdsobjkey(idx);
+    return msidx2pdsobjkey(idx, underlay);
 }
 
 void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
@@ -98,12 +100,22 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
     if (op_create_) {
         num_repeats = 1;
     } else {
-        // The only update allowed is when the number of nexthops in the Group
-        // gets cut by half due to a link failure. 
-        // In this case the remaining set of nexthops need to repeated twice
-        SDK_TRACE_DEBUG("MS ECMP %ld Update - setting repeat to 2", 
-                        ips_info_.pathset_id);
-        num_repeats = 2;
+        if (ips_info_.num_added_nh == 0) {
+            // The only removal allowed is when the number of nexthops in the Group
+            // gets cut by half due to a link failure. 
+            // In this case the remaining set of nexthops need to repeated twice
+            SDK_TRACE_DEBUG("MS ECMP %ld Update with removal %d - setting repeat to 2", 
+                            ips_info_.pathset_id, ips_info_.num_deleted_nh);
+            num_repeats = 2;
+        } else {
+            // NH Group Update to add NH entries assumes recovery from the
+            // optimized NH removal case above where the actual number of
+            // NH entries in the group was never reduced in the datapath. 
+            // Reclaim the removed NH entries in the NH Group.
+            SDK_TRACE_DEBUG("MS ECMP %ld Update with addition %d - setting repeat to 1", 
+                            ips_info_.pathset_id, ips_info_.num_added_nh);
+            num_repeats = 1;
+        }
     }
 
     for (int repeat = 0; repeat < num_repeats; ++repeat) {
@@ -240,28 +252,46 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
             SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Create IPS Num nexthops %ld", 
                              ips_info_.pathset_id, num_nexthops);
         } else {
-            // NH Group Update - optimization to quickly update in-place in case of
-            // link failure. Adding new Nexthops to an existing Group is not 
-            // supported by HAL.
-            SDK_ASSERT(ips_info_.num_added_nh == 0);
+            if (ips_info_.num_added_nh == 0) {
+                // NH Group Update with NH removal
+                // Optimization to quickly update ECMP Group in-place in case of
+                // link failure without waiting for BGP keep-alive timeout.
+                auto prev_num_nexthops = (num_nexthops + ips_info_.num_deleted_nh); 
 
-            auto prev_num_nexthops = (num_nexthops + ips_info_.num_deleted_nh); 
-
-            // Only removal of exactly half the nexthops is supported for an 
-            // NH Group update
-            if ((num_nexthops*2) != prev_num_nexthops) {
-                // Ignore this optimized update - 
-                // MS will anyway program a separate NH Group that does not have
-                // the deleted nexthops when the routing protocol converges and
-                // then re-program each TEP with the new ECMP group
-                SDK_TRACE_ERR("MS Underlay ECMP %ld Update - Number of nexthops"
-                              " %d needs to be half of previous number %d -"
-                              " Ignore this update", ips_info_.pathset_id,
-                              num_nexthops, prev_num_nexthops); 
-                return;
+                // Only removal of exactly half the nexthops is supported for an 
+                // NH Group update. Since we cannot change the actual number of
+                // NH entries for the NH group in the datapath simulate removal
+                // repeat the active NH entry in the place of the inactive NH entry.
+                if ((num_nexthops*2) != prev_num_nexthops) {
+                    // Ignore this optimized update - 
+                    // MS will anyway program a separate NH Group that does not have
+                    // the deleted nexthops when the routing protocol converges and
+                    // then re-program each TEP with the new ECMP group
+                    SDK_TRACE_ERR("MS Underlay ECMP %ld Update - Number of nexthops"
+                                  " %d needs to be half of previous number %d -"
+                                  " Ignore this update", ips_info_.pathset_id,
+                                  num_nexthops, prev_num_nexthops); 
+                    return;
+                }
+                SDK_TRACE_DEBUG ("MS Underlay ECMP %ld update - NH Removal"
+                                 " (optimization)", ips_info_.pathset_id);
+            } else {
+                // Adding new Nexthops to an existing NH Group is not supported.
+                // But the corner case of recovery from the link failure
+                // optimization above before BGP timeout needs to be handled
+                // to avoid permanently excluding the recovered link from the 
+                // NH Group since we tweaked the NH Group in datapath
+                // without BGP's knowledge.  
+                // TODO - assuming that since the total number of NH entries
+                // in the ECMP Group never changed reclaim the unused entries
+                // now.
+                SDK_TRACE_DEBUG ("MS Underlay ECMP %ld update - NH Add %d"
+                                 " Total NH %d (receovery from optimization)",
+                                 ips_info_.pathset_id,
+                                 ips_info_.num_added_nh, num_nexthops);
+                SDK_TRACE_INFO("Nexthop update with in-place NH add"
+                               " - recovery from optimized case !!!");
             }
-            SDK_TRACE_DEBUG ("MS Underlay ECMP %ld: Update IPS (optimization)",
-                             ips_info_.pathset_id);
         }
     }
 
@@ -325,8 +355,8 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     dp_corr = pathset_obj->hal_oecmp_idx_guard->idx();
                 }
             }
-            SDK_TRACE_DEBUG("Return Overlay Pathset %d dp_correlator %d",
-                            pathset_id, dp_corr);
+            SDK_TRACE_DEBUG("Return %s Pathset %d dp_correlator %d",
+                            (l_overlay) ? "Overlay": "Underlay", pathset_id, dp_corr);
             NBB_CORR_PUT_VALUE(add_upd_ecmp_ips->dp_correlator, dp_corr);
            
             // Copy all nexthops to the programmed next_hop_objects
@@ -356,13 +386,14 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     hals::Ecmp::set_ips_rc(&add_upd_ecmp_ips->ips_hdr,
                                          (pds_status)?ATG_OK:ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("Send ECMP %ld Async IPS response stateless mode",
-                                pathset_id);
+                SDK_TRACE_DEBUG("+++++++ Send ECMP %ld Async IPS response %s"
+                                " stateless mode ++++++++",
+                                pathset_id, (pds_status) ? "Success" : "Failure");
                 hals::Fte::get().get_nhpi_join()->
                     send_ips_reply(&add_upd_ecmp_ips->ips_hdr);
             } else {
-                SDK_TRACE_DEBUG("Send ECMP %ld Async IPS response stateful mode",
-                                pathset_id);
+                SDK_TRACE_DEBUG("Send ECMP %ld Async IPS response %s stateful mode",
+                                pathset_id, (pds_status) ? "Success" : "Failure");
                 if (pds_status) {
                     (*it)->update_complete(ATG_OK);
                 } else {
@@ -435,8 +466,8 @@ void hals_ecmp_t::handle_delete(NBB_CORRELATOR ms_pathset_id) {
             //-----------------------------------------------------------------
             // This block is executed asynchronously when PDS response is rcvd
             //-----------------------------------------------------------------
-            SDK_TRACE_DEBUG("Async PDS ECMP %ld delete successful",
-                            pathset_id);
+            SDK_TRACE_DEBUG("++++++ Async PDS ECMP %ld delete %s ++++++",
+                            pathset_id, (pds_status) ? "Success" : "Failure");
 
         };
 

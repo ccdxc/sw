@@ -26,53 +26,21 @@ NBB_VOID pds_ms_ctm_send_row_update_common (pds_ms::pds_ms_config_t  *conf,
 
 class ms_txn_guard_t {
 public:
-    ms_txn_guard_t(uint32_t pid, NBB_ULONG correlator) {
-        if (nbb_thread_global_data == nullptr) {
-            nbb_thread_global_data = nbb_alloc_tgd();
-        }
-        nbs_enter_shared_context(pid, &saved_context NBB_CCXT);
-        NBS_GET_SHARED_DATA();
-        NBB_TRC_FLOW ((NBB_FORMAT "Start CTM Transaction"));
-        pds_ms_ctm_send_transaction_start (correlator);
-    }
-    void end_txn(void) {end_txn_ = true;}
-    ~ms_txn_guard_t() {
-        if (end_txn_) {
-            pds_ms_ctm_send_transaction_end (correlator);
-        } else {
-            pds_ms_ctm_send_transaction_abort (correlator);
-        }
-        NBS_RELEASE_SHARED_DATA();
-        nbs_exit_shared_context(&saved_context  NBB_CCXT);
-        if (nbb_thread_global_data != nullptr) {
-            nbb_free_tgd(NBB_CXT);
-        }
-    }
+    ms_txn_guard_t(uint32_t pid, NBB_ULONG correlator);
+    void end_txn(void);
+    ~ms_txn_guard_t();
 private:
-    NBB_SAVED_CONTEXT saved_context;
-    NBB_ULONG   correlator;
+    NBB_SAVED_CONTEXT saved_context_;
+    NBB_ULONG   correlator_ = 0;
     bool end_txn_ = false;
 };
 
 class ms_thr_ctxt_guard_t {
 public:
-    ms_thr_ctxt_guard_t(uint32_t pid) {
-        if (nbb_thread_global_data == nullptr) {
-            nbb_thread_global_data = nbb_alloc_tgd();
-        }
-        nbs_enter_shared_context(pid, &saved_context NBB_CCXT);
-        NBB_TRC_FLOW ((NBB_FORMAT "Start PDS_MS_GET_SHARED_START"));
-        NBS_GET_SHARED_DATA();
-    }
-    ~ms_thr_ctxt_guard_t() {
-        NBS_RELEASE_SHARED_DATA();
-        nbs_exit_shared_context(&saved_context  NBB_CCXT);
-        if (nbb_thread_global_data != nullptr) {
-            nbb_free_tgd(NBB_CXT);
-        }
-    }
+    ms_thr_ctxt_guard_t(uint32_t pid);
+    ~ms_thr_ctxt_guard_t();
 private:
-    NBB_SAVED_CONTEXT saved_context;
+    NBB_SAVED_CONTEXT saved_context_;
 };
 
 #define PDS_MS_START_TXN(correlator) \
