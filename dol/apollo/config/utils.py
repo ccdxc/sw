@@ -178,7 +178,7 @@ def ValidateCreate(obj, resps):
             obj.Show()
     return
 
-def ValidateRead(obj, resps, expApiStatus=types_pb2.API_STATUS_OK):
+def ValidateRead(obj, resps):
     if IsDryRun(): return
     # set the appropriate expected status
     if obj.IsHwHabitant():
@@ -264,10 +264,10 @@ def CreateObject(obj):
     for childObj in obj.Children:
         CreateObject(childObj)
 
-def ReadObject(obj, expRetCode):
+def ReadObject(obj):
     msg = obj.GetGrpcReadMessage()
     resps = api.client[obj.Node].Get(obj.ObjType, [msg])
-    return ValidateRead(obj, resps, expRetCode)
+    return ValidateRead(obj, resps)
 
 def UpdateObject(obj):
     logger.info("Updating object %s" % (obj))
@@ -611,11 +611,6 @@ def getTunInfo(nh_type, id):
         return (None, None)
     elif nh_type == "vpcpeer":
         return (None, None)
-
-def IsIpInPrefix(ipaddr, prefix):
-    ip = ipaddress.ip_network(u'{}'.format(ipaddr))
-    pfx = ipaddress.ip_network(u'{}'.format(prefix))
-    return pfx.overlaps(ip)
 
 # For debug purposes
 def dump(obj):

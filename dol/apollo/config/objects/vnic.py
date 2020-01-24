@@ -60,10 +60,7 @@ class VnicObject(base.ConfigObjectBase):
             self.Vnid = next(resmgr.VxlanIdAllocator)
         else:
             self.Vnid = parent.Vnid
-        self.SourceGuard = False
-        c = getattr(spec, 'srcguard', None)
-        if c != None:
-            self.SourceGuard = c
+        self.SourceGuard = getattr(spec, 'srcguard', False)
         self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
@@ -384,29 +381,17 @@ class VnicObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'vnic', None) == None:
             return
-        def __get_rxmirror(vnicspec):
-            ms = []
-            if hasattr(vnicspec, 'rxmirror'):
-                if vnicspec.rxmirror is None:
-                    return ms;
-                for rxmirror in vnicspec.rxmirror:
-                    ms.append(rxmirror.msid)
-            return ms
 
-        def __get_txmirror(vnicspec):
-            ms = []
-            if hasattr(vnicspec, 'txmirror'):
-                if vnicspec.txmirror is None:
-                    return ms;
-                for txmirror in vnicspec.txmirror:
-                    ms.append(txmirror.msid)
+        def __get_mirrors(vnicspec, attr):
+            vnicmirror = getattr(vnicspec, attr, None)
+            ms = [mirrorspec.msid for mirrorspec in vnicmirror or []]
             return ms
 
         for vnic_spec_obj in subnet_spec_obj.vnic:
             for c in range(vnic_spec_obj.count):
                 # Alternate src dst validations
-                rxmirror = __get_rxmirror(vnic_spec_obj)
-                txmirror = __get_txmirror(vnic_spec_obj)
+                rxmirror = __get_mirrors(vnic_spec_obj, 'rxmirror')
+                txmirror = __get_mirrors(vnic_spec_obj, 'txmirror')
                 obj = VnicObject(node, parent, vnic_spec_obj, rxmirror, txmirror)
                 self.Objs[node].update({obj.VnicId: obj})
         return

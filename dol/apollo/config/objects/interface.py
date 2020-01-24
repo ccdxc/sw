@@ -230,32 +230,29 @@ class InterfaceObjectClient(base.ConfigClientBase):
                     self.__uplinkl3ifs[node].update({ifobj.InterfaceId: ifobj})
 
         if self.__uplinkl3ifs[node]:
-            logger.info(" In uplinkl3ifs generate-objects node %s size %d" % (node, len(self.__uplinkl3ifs[node])))
             self.__uplinkl3ifs_iter[node] = utils.rrobiniter(self.__uplinkl3ifs[node].values())
         return
 
-    def GenerateObjects(self, node, parent, topospec):
-        if utils.IsInterfaceSupported() is False:
+    def GenerateHostInterfaces(self, node, topospec):
+        if not utils.IsInterfaceSupported():
             return
         hostifspec = getattr(topospec, 'hostinterface', None)
-        if hostifspec:
-            self.__generate_host_interfaces(node, hostifspec)
+        if not hostifspec:
+            return
+        self.__generate_host_interfaces(node, hostifspec)
+        return
+
+    def GenerateObjects(self, node, parent, topospec):
+        if not utils.IsL3InterfaceSupported():
             return
         iflist = getattr(topospec, 'interface', [])
-        #if iflist:
-        #    hostifspec = getattr(iflist, 'host', None)
-        #    self.__generate_host_interfaces(node, hostifspec)
-        if utils.IsL3InterfaceSupported():
-            # TODO: move these under underlay VPC
-            # generate l3 if for uplink interface
-            self.__generate_l3_uplink_interfaces(node, parent, iflist)
+        self.__generate_l3_uplink_interfaces(node, parent, iflist)
         return
 
     def CreateObjects(self, node):
         cookie = utils.GetBatchCookie(node)
         if utils.IsL3InterfaceSupported():
             # create l3 if for uplink interface
-            logger.info(" Interface createObjects node %s: count %d" % (node, len(self.__uplinkl3ifs[node])))
             logger.info("Creating L3 interface Objects in agent")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs[node].values()))
             api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)

@@ -67,8 +67,7 @@ class SubnetObject(base.ConfigObjectBase):
             self.Vnid = spec.fabricencapvalue
         else:
             self.Vnid = next(resmgr.VxlanIdAllocator)
-        if getattr(spec, 'hostifidx', None) != None:
-            self.HostIfIdx = spec.hostifidx
+        self.HostIfIdx = getattr(spec, 'hostifidx', None)
         self.HostIf = InterfaceClient.GetHostInterface(node)
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################

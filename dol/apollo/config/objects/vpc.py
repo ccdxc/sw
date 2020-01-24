@@ -104,23 +104,23 @@ class VpcObject(base.ConfigObjectBase):
         # Generate NextHop configuration
         NhClient.GenerateObjects(node, self, spec)
 
-        # Generate NextHop configuration
+        # Generate NextHopGroup configuration
         NhGroupClient.GenerateObjects(node, self, spec)
 
-        # Generate NextHop configuration
+        # Generate Tunnel configuration
         if hasattr(spec, "tunnel"):
             tunnel.client.GenerateObjects(node, self, spec.tunnel)
 
         # Generate Tag configuration.
-        if getattr(spec, 'tagtbl', None) != None:
+        if hasattr(spec, 'tagtbl'):
             tag.client.GenerateObjects(node, self, spec)
 
         # Generate Policy configuration.
-        if getattr(spec, 'policy', None) != None:
+        if hasattr(spec, 'policy'):
             policy.client.GenerateObjects(node, self, spec)
 
         # Generate Route configuration.
-        if getattr(spec, 'routetbl', None) != None:
+        if hasattr(spec, 'routetbl'):
             # find peer vpcid
             if (index + 1) == maxcount:
                 vpc_peerid = self.VPCId - maxcount + 1
@@ -136,12 +136,12 @@ class VpcObject(base.ConfigObjectBase):
         self.V4RouteTable = route.client.GetRouteV4Table(node, self.VPCId, self.V4RouteTableId)
         self.V6RouteTable = route.client.GetRouteV6Table(node, self.VPCId, self.V6RouteTableId)
         # Generate Subnet configuration post policy & route
-        if getattr(spec, 'subnet', None) != None:
+        if hasattr(spec, 'subnet'):
             subnet.client.GenerateObjects(node, self, spec)
         self.DeriveOperInfo()
 
         # Generate NAT Port Block configuration
-        if getattr(spec, 'nat', None) != None:
+        if hasattr(spec, 'nat'):
             self.NatPrefix = {}
             self.__nat_pool = {}
             self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC] = \

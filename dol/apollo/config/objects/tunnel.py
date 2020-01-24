@@ -23,6 +23,7 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
+        # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################

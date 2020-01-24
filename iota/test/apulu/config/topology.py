@@ -5,20 +5,13 @@ import iota.test.apulu.config.init as init
 import infra.common.defs as defs
 from iota.harness.infra.glopts import GlobalOptions
 import infra.common.glopts as glopts
-#class GlobalOptions: pass
 glopts.GlobalOptions = GlobalOptions
-#glopts.GlobalOptions.debug = True
-#glopts.GlobalOptions.verbose = True
 import infra.common.parser as parser
 import iota.harness.api as api
 from infra.common.logging import logger as logger
 import apollo.config.generator as generator
 
 def Main(args):
-    #Store.reset()
-    #Have to look into config push
-    #resmgr.Init()
-
     node = args.node
     defs.DOL_PATH = "/iota/"
     defs.TEST_TYPE = "IOTA"

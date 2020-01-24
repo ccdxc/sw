@@ -36,7 +36,6 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Deps = defaultdict(list)
         self.Precedent = None
         self.Mutable = False
-        self.deleted = False
         self.Dirty = False
         self.Node = node
         return
@@ -122,15 +121,11 @@ class ConfigObjectBase(base.ConfigObjectBase):
         utils.CreateObject(self)
         return
 
-    def Read(self, spec=None, expRetCode=types_pb2.API_STATUS_OK):
-        if self.Dirty == False:
-            return utils.ReadObject(self, expRetCode)
-        else:
+    def Read(self, spec=None):
+        if self.Dirty:
             logger.info("Not reading object from Hw since it is marked Dirty")
             return True
-
-    def ReadAfterDelete(self, spec=None):
-        return self.Read(types_pb2.API_STATUS_NOT_FOUND)
+        return utils.ReadObject(self)
 
     def Delete(self, spec=None):
         utils.DeleteObject(self)

@@ -181,7 +181,7 @@ def __reset_tunnel(routetbl, addr):
         result = None
         for route in routes.values():
             if route.Priority == 0: assert 0
-            if utils.IsIpInPrefix(addr, route.ipaddr): #TODO fix this
+            if addr in route.ipaddr:
                 if route.Priority < min_priority:
                     min_priority = route.Priority
                     nh_type_res = route.NextHopType

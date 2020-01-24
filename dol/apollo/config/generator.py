@@ -7,12 +7,10 @@ import apollo.config.agent.api as agentapi
 
 import apollo.config.objects.batch as batch
 import apollo.config.objects.device as device
-#import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.meter as meter
 import apollo.config.objects.mirror as mirror
 import apollo.config.objects.nexthop as nexthop
 import apollo.config.objects.policy as policy
-#import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tag as tag
@@ -69,8 +67,8 @@ def __generate(node, topospec):
     port.client.GenerateObjects(node, topospec)
 
     if utils.IsDol():
-        # Generate Interface Configuration
-        interface.client.GenerateObjects(node, None, topospec)
+        # Generate Host Interface Configuration
+        interface.client.GenerateHostInterfaces(node, topospec)
 
     # Generate Mirror session configuration before vnic
     mirror.client.GenerateObjects(node, topospec)
@@ -88,7 +86,7 @@ def __generate(node, topospec):
     return
 
 def __create(node):
-    logger.info("Creating objects in Agent")
+    logger.info("Creating objects in pds-agent for node ", node)
     # Start the Batch
     batch.client.Start(node)
 
@@ -120,7 +118,7 @@ def __create(node):
 
 def __read(node):
     # Read all objects
-    logger.info("Reading objects via Agent")
+    logger.info("Reading objects from pds-agent for node ", node)
     interface.client.ReadObjects(node)
     device.client.ReadObjects(node)
     vpc.client.ReadObjects(node)
@@ -141,12 +139,9 @@ def __read(node):
     return
 
 def Main(node, topospec, ip=None):
-    timeprofiler.ConfigTimeProfiler.Start()
-
     logger.info("Initializing object info")
     __initialize_object_info()
 
-    logger.info("Initializing Agent ", ip)
     agentapi.Init(node, ip)
 
     if utils.IsDol():
@@ -154,16 +149,12 @@ def Main(node, topospec, ip=None):
 
     __generate(node, topospec)
 
-    logger.info("Creating objects in Agent for node ", node)
+    timeprofiler.ConfigTimeProfiler.Start()
     __create(node)
-
-    if utils.IsDol():
-        logger.info("Reading objects via Agent for node ", node)
-        __read(node)
-
     timeprofiler.ConfigTimeProfiler.Stop()
 
     if utils.IsDol():
+        __read(node)
         from infra.asic.model import ModelConnector
         ModelConnector.ConfigDone()
     return
