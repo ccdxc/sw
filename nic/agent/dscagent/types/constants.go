@@ -141,8 +141,11 @@ const (
 	// LifPrefix is the name prefix for the LIFs. TODO Change this once NetworkInterface canonical naming gets formalized
 	LifPrefix = "lif-"
 
-	// UplinkPrefix is the name prefix for the Uplinks.  TODO Change this once NetworkInterface canonical naming gets formalized
+	// UplinkPrefix is the name prefix for the Uplink interfaces.  TODO Change this once NetworkInterface canonical naming gets formalized
 	UplinkPrefix = "uplink-"
+
+	// EthPrefix is the name prefix for the physical uplink ports. TODO Change this once NetworkInterface canonical naming gets formalized
+	EthPrefix = "eth-"
 
 	// DefaultGCDuration captures the frequency of garbage collection of marked go-routine's heap space
 	DefaultGCDuration = time.Minute

@@ -747,7 +747,6 @@ func (a *ApuluAPI) initEventStream() {
 		log.Error(errors.Wrapf(types.ErrPipelineLifGet, "Init: %v", err))
 	}
 
-	/* TODO: get ports and uplinks
 	// get all the ports known at this time
 	portReqMsg := &halapi.PortGetRequest{
 		Id: []uint32{},
@@ -756,7 +755,6 @@ func (a *ApuluAPI) initEventStream() {
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelinePortGet, "Init: %v", err))
 	}
-	*/
 
 	go func(stream halapi.EventSvc_EventSubscribeClient) {
 		for {
@@ -838,5 +836,30 @@ func (a *ApuluAPI) initEventStream() {
 		}
 	}
 
-	// TODO: Store ports and uplink interfaces
+	// handle the ports
+	for _, port := range ports.Response {
+		log.Infof("Processing port get response. Resp: %v", port)
+		portID := uint64(port.Spec.GetId())
+		p := netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("%s%d", types.EthPrefix, portID),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "Eth",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: portID,
+				OperStatus:  port.Status.GetLinkStatus().GetOperState().String(),
+			},
+		}
+		dat, _ := p.Marshal()
+		if err := a.InfraAPI.Store(p.Kind, p.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", p.GetKey(), err))
+		}
+	}
 }
