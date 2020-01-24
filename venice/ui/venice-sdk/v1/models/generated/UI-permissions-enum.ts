@@ -339,5 +339,6 @@ export enum UIRolePermissions {
   'auditevent_read' = 'auditevent_read',
   'eventsevent_read' = 'eventsevent_read',
   'fwlogsquery_read' = 'fwlogsquery_read',
+  'metrics_read' = 'metrics_read',
   'adminrole' = 'adminrole',
 }

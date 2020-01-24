@@ -140,7 +140,7 @@ describe('DashboardComponent', () => {
     });
 
     it('policy health card', () => {
-      TestingUtility.addPermissions([UIRolePermissions.adminrole]);
+      TestingUtility.addPermissions([UIRolePermissions.metrics_read]);
       fixture.detectChanges();
       // metrics should be hidden
       const cards = fixture.debugElement.queryAll(By.css('app-flip'));

@@ -144,7 +144,7 @@ export const sideNavMenu: SideNavItem[] = [
         },
         roleGuard: {
           opt: [
-            UIRolePermissions.adminrole,
+            UIRolePermissions.metrics_read,
           ]
         },
         link: ['/monitoring', 'metrics']

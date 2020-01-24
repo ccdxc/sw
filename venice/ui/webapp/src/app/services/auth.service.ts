@@ -14,6 +14,7 @@ import { GenServiceUtility } from './generated/GenUtility';
 
 @Injectable()
 export class AuthService extends AbstractService {
+  protected O_Tenant: string = this.getTenant(); protected baseUrlAndPort = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
   redirectUrl: string;
   protected serviceUtility: GenServiceUtility;
 

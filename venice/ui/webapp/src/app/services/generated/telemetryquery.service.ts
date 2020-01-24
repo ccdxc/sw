@@ -68,6 +68,10 @@ export class TelemetryqueryService extends Telemetry_queryv1Service {
         }
         const cat = Utility.findCategoryByKind(q.kind);
         if (cat == null) {
+          if (this.uiconfigsService.isAuthorized(UIRolePermissions.metrics_read)) {
+            // Allowed to read unknown kinds
+            return;
+          }
           metricAllowed = false;
           return;
         }

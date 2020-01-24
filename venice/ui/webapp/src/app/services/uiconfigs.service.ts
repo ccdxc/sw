@@ -4,7 +4,7 @@ import { AUTH_BODY } from '@app/core';
 import { ActivatedRouteSnapshot, Resolve, Router, RouterStateSnapshot } from '@angular/router';
 import { Subject, of, forkJoin } from 'rxjs';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
-import { IAuthOperationStatus, IAuthSubjectAccessReviewRequest, AuthPermission_actions, IAuthOperation, IAuthUser, AuthOperation_action } from '@sdk/v1/models/generated/auth';
+import { IAuthOperationStatus, IAuthSubjectAccessReviewRequest, AuthPermission_actions, IAuthOperation, IAuthUser, AuthOperation_action, AuthOperation } from '@sdk/v1/models/generated/auth';
 import { ControllerService } from './controller.service';
 import { Eventtypes } from '@app/enum/eventtypes.enum';
 import { Utility } from '@app/common/Utility';
@@ -171,6 +171,7 @@ export class UIConfigsService {
           if (resp != null) {
             const body = resp.body as IAuthUser;
             this.userPermissions = body.status['access-review'];
+            this.checkMetricPermissions();
           }
         },
         (error) => {
@@ -208,6 +209,58 @@ export class UIConfigsService {
 
     // Publish to roleGuards that UI permissions have been changed
     this.controllerService.publish(Eventtypes.NEW_USER_PERMISSIONS, null);
+
+    // Request metric permissions
+  }
+
+  checkMetricPermissions() {
+    console.log('sessionsummarymetrics_read');
+    const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
+    if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
+      const req: IAuthSubjectAccessReviewRequest = {
+        meta: {
+          name: authBody.meta.name,
+          tenant: authBody.meta.tenant,
+        },
+        operations: [{
+          resource: {
+            tenant: authBody.meta.tenant,
+            // This kind does not need to be an actual
+            // table name
+            // We are just checking that we can read arbitrary tables from the db
+            kind: 'randomKind',
+          },
+          action: AuthOperation_action.read
+        }],
+      };
+      this.authService.IsAuthorized(authBody.meta.name, req).subscribe(
+        (resp: any) => {
+          if (resp != null) {
+            const body = resp.body as IAuthUser;
+            const hasMetricPerm = body.status['access-review'].some(v => {
+              return v.allowed;
+            });
+            if (hasMetricPerm) {
+              const perm: IAuthOperationStatus = {
+                allowed: true,
+                operation: {
+                  resource: {
+                    kind: 'metrics',
+                  },
+                  action: AuthOperation_action.read,
+                }
+              };
+              body.status['access-review'].push(perm);
+            }
+            const userPermissions = this.userPermissions;
+            this.userPermissions = userPermissions.concat(body.status['access-review']);
+          }
+        },
+        (error) => {
+          console.warn('Failed to get user permissions for metrics', error);
+        }
+      );
+    }
   }
 
 
@@ -353,6 +406,7 @@ export class UIConfigsService {
     const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
     if (authBody != null && authBody.status != null && authBody.status['access-review'] != null) {
       this.userPermissions = authBody.status['access-review'];
+      this.checkMetricPermissions();
     } else {
       // remove all permissions
       this.userPermissions = [];
