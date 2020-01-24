@@ -3,6 +3,7 @@ package vcprobe
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/url"
 	"sync"
 	"testing"
@@ -15,9 +16,30 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	smmock "github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	conv "github.com/pensando/sw/venice/utils/strconv"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
+
+var defaultTestParams = &testutils.TestParams{
+	// TestHostName: "barun-vc.pensando.io",
+	// TestUser:     "administrator@pensando.io",
+	// TestPassword: "N0isystem$",
+	TestHostName: "127.0.0.1:8989",
+	TestUser:     "user",
+	TestPassword: "pass",
+
+	TestDCName:             "PenTestDC",
+	TestDVSName:            "#Pen-DVS-PenTestDC",
+	TestPGNameBase:         defs.DefaultPGPrefix,
+	TestMaxPorts:           4096,
+	TestNumStandalonePorts: 512,
+	TestNumPVLANPair:       5,
+	StartPVLAN:             500,
+	TestNumPG:              5,
+	TestNumPortsPerPG:      20,
+}
 
 func TestListAndWatch(t *testing.T) {
 	testParams := &testutils.TestParams{
@@ -344,4 +366,122 @@ func TestDVSAndPG(t *testing.T) {
 	_, err = vcp.GetPenDVS(testParams.TestDCName, testParams.TestDVSName)
 	Assert(t, err != nil, "Found deleted DVS %s", testParams.TestDVSName)
 
+}
+
+func TestEventReceiver(t *testing.T) {
+
+	err := testutils.ValidateParams(defaultTestParams)
+	if err != nil {
+		t.Fatalf("Failed at validating test parameters")
+	}
+
+	// SETTING UP LOGGER
+	config := log.GetDefaultConfig("vmotion_test")
+	config.LogToStdout = true
+	config.Filter = log.AllowAllFilter
+	logger := log.SetConfig(config)
+
+	// SETTING UP VCSIM
+	vcURL := &url.URL{
+		Scheme: "http",
+		Host:   defaultTestParams.TestHostName,
+		Path:   "/sdk",
+	}
+	vcURL.User = url.UserPassword(defaultTestParams.TestUser, defaultTestParams.TestPassword)
+
+	s, err := sim.NewVcSim(sim.Config{Addr: vcURL.String()})
+	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
+
+	dc, err := s.AddDC(defaultTestParams.TestDCName)
+	AssertOk(t, err, "failed dc create")
+
+	// Create Host1 (pensando)
+	penHost1, err := dc.AddHost("host1")
+	AssertOk(t, err, "failed to add Host to DC")
+
+	pNicMac := net.HardwareAddr{}
+	pNicMac = append(pNicMac, globals.PensandoOUI[0])
+	pNicMac = append(pNicMac, globals.PensandoOUI[1])
+	pNicMac = append(pNicMac, globals.PensandoOUI[2])
+	pNicMac = append(pNicMac, 0xbb)
+	pNicMac = append(pNicMac, 0x00)
+	pNicMac = append(pNicMac, 0x00)
+	// Make it Pensando host
+	err = penHost1.AddNic("vmnic0", conv.MacString(pNicMac))
+	AssertOk(t, err, "failed to add pNic")
+	// Create a VM on host1
+	vm1, err := dc.AddVM("vm1", "host1", []sim.VNIC{
+		sim.VNIC{
+			MacAddress:   "aaaa.bbbb.ddde",
+			PortgroupKey: "pg-1",
+			PortKey:      "11",
+		},
+	})
+	AssertOk(t, err, "Failed to create vm1")
+
+	storeCh := make(chan defs.Probe2StoreMsg, 24)
+	ctx, cancel := context.WithCancel(context.Background())
+	state := &defs.State{
+		VcURL: vcURL,
+		VcID:  "vcenter",
+		Ctx:   ctx,
+		Log:   logger,
+		Wg:    &sync.WaitGroup{},
+	}
+	defer func() {
+		cancel()
+		state.Wg.Wait()
+	}()
+	vmEventArg := types.VmEventArgument{Vm: vm1.Reference()}
+	destHost := types.HostEventArgument{Host: penHost1.Obj.Reference()}
+	vcp := NewVCProbe(storeCh, state)
+
+	// build a bunch of events and call event receiver
+	events1 := []types.BaseEvent{
+		&types.VmBeingHotMigratedEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 1, Vm: &vmEventArg}},
+			DestHost: destHost,
+		},
+		&types.VmBeingMigratedEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 2, Vm: &vmEventArg}},
+			DestHost: destHost,
+		},
+		&types.VmBeingRelocatedEvent{
+			VmRelocateSpecEvent: types.VmRelocateSpecEvent{
+				VmEvent: types.VmEvent{Event: types.Event{Key: 3, Vm: &vmEventArg}},
+			},
+			DestHost: destHost,
+		},
+	}
+	events2 := []types.BaseEvent{
+		&types.VmMigratedEvent{
+			VmEvent:    types.VmEvent{Event: types.Event{Key: 11, Vm: &vmEventArg}},
+			SourceHost: destHost,
+		},
+		&types.VmRelocatedEvent{
+			VmRelocateSpecEvent: types.VmRelocateSpecEvent{
+				VmEvent: types.VmEvent{Event: types.Event{Key: 12, Vm: &vmEventArg}},
+			},
+			SourceHost: destHost,
+		},
+	}
+	events3 := []types.BaseEvent{
+		&types.VmRelocateFailedEvent{
+			VmRelocateSpecEvent: types.VmRelocateSpecEvent{
+				VmEvent: types.VmEvent{Event: types.Event{Key: 21, Vm: &vmEventArg}},
+			},
+			DestHost: destHost,
+		},
+		&types.VmFailedMigrateEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 22, Vm: &vmEventArg}},
+			DestHost: destHost,
+		},
+		&types.MigrationEvent{
+			VmEvent: types.VmEvent{Event: types.Event{Key: 23, Vm: &vmEventArg}},
+		},
+	}
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events2)
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events3)
 }

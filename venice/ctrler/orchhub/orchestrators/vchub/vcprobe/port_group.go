@@ -2,6 +2,7 @@ package vcprobe
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
@@ -61,6 +62,10 @@ func (v *VCProbe) getPenPG(dcName string, pgName string, finder *find.Finder) (*
 	finder.SetDatacenter(dc)
 
 	net, err := finder.Network(v.ClientCtx, pgName)
+	if err != nil {
+		v.Log.Errorf("Port group for %s is not present in vCenter", pgName)
+		return nil, fmt.Errorf("Port group for %s is not present in vCenter", pgName)
+	}
 	objPg, ok := net.(*object.DistributedVirtualPortgroup)
 	if !ok {
 		v.Log.Errorf("Failed at getting dvs port group(%s) object. Net obj %v", pgName, net)

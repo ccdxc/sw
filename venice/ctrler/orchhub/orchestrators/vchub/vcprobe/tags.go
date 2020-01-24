@@ -58,7 +58,7 @@ func (v *VCProbe) newTagsProbe() {
 
 // Start starts the client
 func (t *tagsProbe) Start() {
-	t.Log.Debug("Start tags called")
+	t.Log.Debugf("Start tags called")
 	t.Wg.Add(1)
 	go func() {
 		defer t.Wg.Done()
@@ -69,7 +69,7 @@ func (t *tagsProbe) Start() {
 			case <-time.After(50 * time.Millisecond):
 			}
 		}
-		t.Log.Debug("Setting up tags...")
+		t.Log.Debugf("Setting up tags...")
 		t.SetupVCTags()
 	}()
 }
@@ -126,7 +126,7 @@ func (t *tagsProbe) SetupVCTags() {
 		var err error
 		tagObjs, err = tc.GetTagsForCategory(t.ClientCtx, tagCategory.Name)
 		if err == nil {
-			t.Log.Debug("Got tags in Pensando category")
+			t.Log.Debugf("Got tags in Pensando category")
 			return true
 		}
 		t.Log.Errorf("Failed to get tags for category %s: %s", tagCategory.Name, err)
@@ -140,7 +140,7 @@ func (t *tagsProbe) SetupVCTags() {
 	// Create VCTagManaged
 	retryUntilSuccessful(func() bool {
 		if _, ok := t.writeTagInfo[defs.VCTagManaged]; ok {
-			t.Log.Debug("Pensando managed tag already exists")
+			t.Log.Debugf("Pensando managed tag already exists")
 			return true
 		}
 		tag := &tags.Tag{
@@ -151,7 +151,7 @@ func (t *tagsProbe) SetupVCTags() {
 		tagID, err := tc.CreateTag(t.ClientCtx, tag)
 		if err == nil {
 			t.writeTagInfo[defs.VCTagManaged] = tagID
-			t.Log.Debug("Pensando managed tag created")
+			t.Log.Debugf("Pensando managed tag created")
 			return true
 		}
 		t.Log.Errorf("Failed to create VCTagManaged for category: %s", err)
@@ -163,21 +163,21 @@ func (t *tagsProbe) SetupVCTags() {
 func (t *tagsProbe) TagObjAsManaged(ref types.ManagedObjectReference) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
-	t.Log.Debug("Tagging object %s as pensando managed", ref.Value)
+	t.Log.Debugf("Tagging object %s as pensando managed", ref.Value)
 	return tc.AttachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
 }
 
 func (t *tagsProbe) RemoveTagObjManaged(ref types.ManagedObjectReference) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
-	t.Log.Debug("Removing tag managed from object %s", ref.Value)
+	t.Log.Debugf("Removing tag managed from object %s", ref.Value)
 	return tc.DetachTag(t.ClientCtx, t.writeTagInfo[defs.VCTagManaged], ref)
 }
 
 func (t *tagsProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue int) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
-	t.Log.Debug("Tagging object %s with vlan %d", ref.Value, vlanValue)
+	t.Log.Debugf("Tagging object %s with vlan %d", ref.Value, vlanValue)
 	tagName := fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, vlanValue)
 	var tagID string
 	var ok bool
@@ -207,7 +207,7 @@ func (t *tagsProbe) TagObjWithVlan(ref types.ManagedObjectReference, vlanValue i
 func (t *tagsProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
-	t.Log.Debug("Removing vlan tag from object %s", ref.Value)
+	t.Log.Debugf("Removing vlan tag from object %s", ref.Value)
 
 	tags, err := tc.GetAttachedTags(t.ClientCtx, ref)
 	if err != nil {
@@ -230,7 +230,7 @@ func (t *tagsProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
 func (t *tagsProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
 	tc := t.GetTagClientWithRLock()
 	defer t.ReleaseClientsRLock()
-	t.Log.Debug("Removing all pensando tags from object %s", ref.Value)
+	t.Log.Debugf("Removing all pensando tags from object %s", ref.Value)
 
 	errs := []error{}
 

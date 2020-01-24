@@ -100,7 +100,7 @@ func TestVCSyncPG(t *testing.T) {
 	vchub.probe = mockProbe
 	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
-		if !mockProbe.SessionReady {
+		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -198,7 +198,7 @@ func TestVCSyncHost(t *testing.T) {
 	vchub.probe = mockProbe
 	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
-		if !mockProbe.SessionReady {
+		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -375,7 +375,7 @@ func TestVCSyncVM(t *testing.T) {
 	vchub.probe = mockProbe
 	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
-		if !mockProbe.SessionReady {
+		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
@@ -429,14 +429,14 @@ func TestVCSyncVM(t *testing.T) {
 		},
 	})
 	AssertOk(t, err, "Failed to create vmExisting")
-	vnNew, err := dc1.AddVM("vnNew", "host1", []sim.VNIC{
+	vmNew, err := dc1.AddVM("vmNew", "host1", []sim.VNIC{
 		sim.VNIC{
 			MacAddress:   "aaaa.bbbb.ddde",
 			PortgroupKey: pg1.Reference().Value,
 			PortKey:      "11",
 		},
 	})
-	AssertOk(t, err, "Failed to create vnNew")
+	AssertOk(t, err, "Failed to create vmNew")
 
 	// CREATING HOSTS
 	host1 := cluster.Host{
@@ -561,7 +561,7 @@ func TestVCSyncVM(t *testing.T) {
 	}
 
 	dcWorkloadMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{workloadExisting.Name, utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, vnNew.Self.Value)},
+		defaultTestParams.TestDCName: []string{workloadExisting.Name, utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, vmNew.Self.Value)},
 	}
 
 	verifyWorkloads(dcWorkloadMap)
@@ -649,16 +649,12 @@ func TestSyncVmkNics(t *testing.T) {
 	vchub.probe = mockProbe
 	mockProbe.Start()
 	AssertEventually(t, func() (bool, interface{}) {
-		if !mockProbe.SessionReady {
+		if !mockProbe.IsSessionReady() {
 			return false, fmt.Errorf("Session not ready")
 		}
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 	defer vchub.Destroy()
-
-	for !mockProbe.IsSessionReady() {
-		time.Sleep(1 * time.Second)
-	}
 
 	// Add DC
 	dc, err := s.AddDC(defaultTestParams.TestDCName)

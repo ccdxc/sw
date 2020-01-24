@@ -115,6 +115,12 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 
 	v.Wg.Add(1)
 	go v.probe.StartWatchers()
+
+	v.DcMapLock.Lock()
+	defer v.DcMapLock.Unlock()
+	for _, dc := range v.DcMap {
+		v.probe.StartEventReceiver([]types.ManagedObjectReference{dc.dcRef})
+	}
 }
 
 func (v *VCHub) createProbe(config *orchestration.Orchestrator) {

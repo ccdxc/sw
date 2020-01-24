@@ -88,9 +88,9 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	var DSCs []cluster.DistributedServiceCardID
 	// sort pnics based on MAC address to find/use correct
 	// MAC for DSC idenitification. the management MAC is numerically highest MAC addr
+	// DSC objects use the base (lowest) mac address
 	sort.Slice(nwInfo.Pnic, func(i, j int) bool {
-		// reverse sort
-		return nwInfo.Pnic[i].Mac > nwInfo.Pnic[j].Mac
+		return nwInfo.Pnic[i].Mac < nwInfo.Pnic[j].Mac
 	})
 
 	for _, pnic := range nwInfo.Pnic {
@@ -106,7 +106,15 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 			MACAddress: macStr,
 		})
 		// TODO : Currently we do not allow more than one DSC per host to be added to Venice.
+		// Currently hConfig.Network.ProxySwitch[].Pnic[] is not checked to see if the host is
+		// connected to penDVS or not. When multiple DSCs are present, EP->DSC mapping gets tricky
+		// it depends on how PG's uplink teaming is configured
 		break
+	}
+
+	if len(DSCs) == 0 {
+		// Not a pensando host
+		return
 	}
 
 	// Sort before storing, so that if we receive the Pnics
@@ -149,4 +157,15 @@ func (v *VCHub) deleteHost(obj *cluster.Host) {
 	// Delete from apiserver
 	v.StateMgr.Controller().Host().Delete(obj)
 	return
+}
+
+func (v *VCHub) findHostByName(hostName string) *cluster.Host {
+	meta := &api.ObjectMeta{
+		Name: hostName,
+	}
+	ctkitHost, err := v.StateMgr.Controller().Host().Find(meta)
+	if err != nil {
+		return nil
+	}
+	return &ctkitHost.Host
 }

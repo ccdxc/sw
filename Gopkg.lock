@@ -2209,10 +2209,11 @@
   revision = "be1fbeda19366dea804f00efff2dd73a1642fdcc"
 
 [[projects]]
-  digest = "1:f4e40ea36d1ec3dc0a4143edfbebce22ac7d4a072bf14433e6aa0b31c5f544a9"
+  digest = "1:97f772ef8bb1ebfb1e05dff8bb7ecbd3989dc4049209f98d2dd5ac88b8ea002a"
   name = "github.com/vmware/govmomi"
   packages = [
     ".",
+    "event",
     "find",
     "list",
     "nfc",
@@ -3038,6 +3039,7 @@
     "github.com/vishvananda/netlink",
     "github.com/vishvananda/netns",
     "github.com/vmware/govmomi",
+    "github.com/vmware/govmomi/event",
     "github.com/vmware/govmomi/find",
     "github.com/vmware/govmomi/object",
     "github.com/vmware/govmomi/ovf",

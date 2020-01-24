@@ -133,7 +133,7 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 		return fmt.Errorf("Failed to get object meta, %v", err)
 	}
 	key := objMeta.GetKey()
-	p.Log.Debugf("set for %s", key)
+	p.Log.Debugf("validateAndPush for %s", key)
 
 	if valid && shouldCommit {
 		// Try to write to statemgr
@@ -155,6 +155,10 @@ func (p *PCache) validateAndPush(kindMap *kindEntry, in interface{}, validateFn 
 	} else {
 		if valid {
 			p.Log.Debugf("%s object passed validation but shouldCommit was false, putting in cache", key)
+		} else if shouldCommit {
+			// not valid but commit, means remove from apiserver if previously committed
+			p.Log.Debugf("%s object failed  validation but shouldCommit was true, remove from stateMgr and put it in cache", key)
+			p.deleteStatemgr(in)
 		} else {
 			p.Log.Debugf("%s object failed validation, putting in cache", key)
 		}
@@ -262,8 +266,8 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 			// Object exists
 			p.Log.Debugf("%s %s deleting from statemgr", "Workload", meta.GetKey())
 			writeErr = ctrler.Workload().Delete(obj)
+			p.Log.Debugf("%s %s deleting from statemgr returned %v", "Workload", meta.GetKey(), writeErr)
 		}
-		p.Log.Debugf("%s %s deleting from statemgr returned %v", "Workload", meta.GetKey(), writeErr)
 		return writeErr
 	}
 	// Unsupported object, we only write it to cache

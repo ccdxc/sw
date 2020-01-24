@@ -43,6 +43,8 @@ var DefaultDVSPrefix = fmt.Sprintf("%sDVS-", DefaultPrefix)
 const (
 	// VCEvent indicates a vc event
 	VCEvent = Probe2StoreMsgType("VCEvent")
+	// VCNotification indicates a notification (event) received from vCenter
+	VCNotification = Probe2StoreMsgType("VCNotification")
 )
 
 // VmkWorkloadPrefix - used when creating name for dummy workload for vmkernel networking
@@ -118,6 +120,37 @@ type VCEventMsg struct {
 	DcID       string
 	DcName     string
 	Originator string // Identifier for the VC that originated the update
+}
+
+// VCNotificationType indicates notification types
+type VCNotificationType string
+
+const (
+	// VMotionStart indicates start of a VM migration/relocation
+	VMotionStart = VCNotificationType("VMotion Start")
+	// VMotionFailed indicates failure/cancellation of a VM migration/relocation
+	VMotionFailed = VCNotificationType("VMotion Failed")
+)
+
+// VCNotificationMsg defines notifications from VC Event manager
+type VCNotificationMsg struct {
+	Type VCNotificationType
+	Msg  interface{}
+}
+
+// VMotionStartMsg indicates start of VM migration
+type VMotionStartMsg struct {
+	VMKey       string
+	DestHostKey string
+	DcID        string
+}
+
+// VMotionFailedMsg indicates that VMtion operation failed/stopped
+type VMotionFailedMsg struct {
+	VMKey       string
+	Reason      string
+	DestHostKey string
+	DcID        string
 }
 
 // TagEntry is an item of a TagMsg

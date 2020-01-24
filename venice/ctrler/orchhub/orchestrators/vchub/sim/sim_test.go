@@ -2,6 +2,7 @@ package sim
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -30,10 +31,14 @@ func TestList(t *testing.T) {
 	AssertOk(t, err, "failed to create DC")
 	host, err := dc.AddHost("host1")
 	AssertOk(t, err, "failed to create host1")
+	host2, err := dc.AddHost("host2")
+	AssertOk(t, err, "failed to create host2")
+	host.ClearNics()
+	host.ClearVmkNics()
 	err = host.AddNic("testNIC", "aaaa:bbbb:cccc")
 	AssertOk(t, err, "failed to add nic")
 	vnicMac := "aaaa.bbbb.cccc"
-	_, err = dc.AddVM("testVM", "host1", []VNIC{
+	vm1, err := dc.AddVM("testVM", "host1", []VNIC{
 		VNIC{
 			MacAddress: vnicMac,
 		},
@@ -57,9 +62,12 @@ func TestList(t *testing.T) {
 	dvsCreateSpec.ConfigSpec = &types.VMwareDVSConfigSpec{
 		DVSConfigSpec: dvsConfigSpec,
 	}
-	dvs, err := dc.AddDVS(&dvsCreateSpec)
+	_, err = dc.AddDVS(&dvsCreateSpec)
 	AssertOk(t, err, "failed to create DVS")
+	dvs, _ := dc.GetDVS("dvs1")
+	Assert(t, dvs != nil, "GetDVS failed")
 	_ = dvs.AddHost(host)
+	_ = dvs.AddHost(host2)
 
 	pgConfigSpec0 := []types.DVPortgroupConfigSpec{
 		types.DVPortgroupConfigSpec{
@@ -86,6 +94,7 @@ func TestList(t *testing.T) {
 	}
 	_, err = dvs.AddPortgroup(pgConfigSpec1)
 	AssertOk(t, err, "failed to add portgroup")
+	_ = dc.UpdateVMHost(vm1, "host2")
 
 	ctx := context.Background()
 
@@ -105,7 +114,10 @@ func TestList(t *testing.T) {
 	// Check Hosts
 	var hss []mo.HostSystem
 	getKind(t, c, "HostSystem", []string{"name", "config"}, &hss)
-	AssertEquals(t, 1, len(hss), "Recieved incorrect amount of dcs")
+	AssertEquals(t, 2, len(hss), "Recieved incorrect amount of hosts")
+	sort.Slice(hss, func(i, j int) bool {
+		return hss[i].Name < hss[j].Name
+	})
 	AssertEquals(t, "host1", hss[0].Name, "host had incorrect name")
 	hasNic := false
 	for _, pnic := range hss[0].Config.Network.Pnic {
@@ -119,7 +131,10 @@ func TestList(t *testing.T) {
 	host.RemoveNic("testNIC")
 	var hss2 []mo.HostSystem
 	getKind(t, c, "HostSystem", []string{"name", "config"}, &hss2)
-	AssertEquals(t, 1, len(hss), "Recieved incorrect amount of dcs")
+	AssertEquals(t, 2, len(hss), "Recieved incorrect amount of dcs")
+	sort.Slice(hss2, func(i, j int) bool {
+		return hss2[i].Name < hss2[j].Name
+	})
 	AssertEquals(t, "host1", hss[0].Name, "host had incorrect name")
 	hasNic = false
 	for _, pnic := range hss2[0].Config.Network.Pnic {

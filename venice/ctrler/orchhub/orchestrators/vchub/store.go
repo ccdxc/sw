@@ -4,6 +4,8 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/utils/kvstore"
+
+	"github.com/vmware/govmomi/vim25/types"
 )
 
 func (v *VCHub) startEventsListener() {
@@ -27,6 +29,8 @@ func (v *VCHub) startEventsListener() {
 			}
 
 			switch m.MsgType {
+			case defs.VCNotification:
+				v.handleVCNotification(m.Val.(defs.VCNotificationMsg))
 			case defs.VCEvent:
 				v.handleVCEvent(m.Val.(defs.VCEventMsg))
 			default:
@@ -55,6 +59,17 @@ func (v *VCHub) handleVCEvent(m defs.VCEventMsg) {
 	}
 }
 
+func (v *VCHub) handleVCNotification(m defs.VCNotificationMsg) {
+	v.Log.Debugf("Received VC Notification %s %v", m.Type, m.Msg)
+	// XXX Do we need m.Type or just use type switching
+	switch m.Msg.(type) {
+	case defs.VMotionStartMsg:
+		v.handleVMotionStart(m.Msg.(defs.VMotionStartMsg))
+	case defs.VMotionFailedMsg:
+		v.handleVMotionFailed(m.Msg.(defs.VMotionFailedMsg))
+	}
+}
+
 func (v *VCHub) handleDC(m defs.VCEventMsg) {
 	// TODO: HANDLE RENAME
 	// Check if we have a DC object
@@ -79,7 +94,10 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 			continue
 		}
 		v.Log.Infof("new DC %s", name)
-		v.NewPenDC(name, m.Key)
+		penDC, err := v.NewPenDC(name, m.Key)
+		if err != nil {
+			v.probe.StartEventReceiver([]types.ManagedObjectReference{penDC.dcRef})
+		}
 	}
 }
 

@@ -68,6 +68,7 @@ func TestVCWrite(t *testing.T) {
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
+	defer s.Destroy()
 	_, err = s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 	dc2 := "DC2"

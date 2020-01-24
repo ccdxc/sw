@@ -70,6 +70,9 @@ func isObjForDC(key string, vcID string, dcID string) bool {
 }
 
 func isPensandoHost(hConfig *types.HostConfigInfo) bool {
+	if hConfig == nil || hConfig.Network == nil {
+		return false
+	}
 	for _, pnic := range hConfig.Network.Pnic {
 		macStr, err := conv.ParseMacAddr(pnic.Mac)
 		if err != nil {

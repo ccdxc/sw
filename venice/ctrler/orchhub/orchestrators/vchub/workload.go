@@ -24,7 +24,7 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 		return false, false
 	}
 	if len(obj.Spec.HostName) == 0 {
-		return false, false
+		return false, true
 	}
 	hostMeta := &api.ObjectMeta{
 		Name: obj.Spec.HostName,
@@ -32,16 +32,17 @@ func (v *VCHub) validateWorkload(in interface{}) (bool, bool) {
 	// check that host has been created already
 	if _, err := v.StateMgr.Controller().Host().Find(hostMeta); err != nil {
 		v.Log.Errorf("Couldn't find host %s for workload %s", hostMeta.Name, obj.GetObjectMeta().Name)
-		return false, false
+		return false, true
 	}
 	if len(obj.Spec.Interfaces) == 0 {
 		v.Log.Errorf("workload %s has no interfaces", obj.GetObjectMeta().Name)
-		return false, false
+		return false, true
 	}
 	// check that workload is no longer in pvlan mode
 	for _, inf := range obj.Spec.Interfaces {
 		if inf.MicroSegVlan == 0 {
 			v.Log.Errorf("inf %s has no useg for workload %s", inf.MACAddress, obj.GetObjectMeta().Name)
+			// TODO check if this should be removed from apiserver
 			return false, false
 		}
 	}
@@ -113,6 +114,65 @@ func (v *VCHub) handleWorkload(m defs.VCEventMsg) {
 
 	v.syncUsegs(m.DcID, m.DcName, m.Key, existingWorkload, workloadObj)
 	v.pCache.Set(workloadKind, workloadObj)
+}
+
+func (v *VCHub) handleVMotionStart(m defs.VMotionStartMsg) {
+	// If workload object for the VM and host object for destination host are present,
+	// then this Vmotion should be started on corresponding DSCs.
+	// If workload is present but no destination host, then this VM is going out to non-pensando host - don't care
+	// If workload is not present but dest host is present, this VM is coming in - Need special
+	// 		handling for stateful flows - TBD
+	// If workload is not present and destination host is not present, don't care
+	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
+	hostName := createHostName(v.VcID, m.DcID, m.DestHostKey)
+	meta := &api.ObjectMeta{
+		Name: wlName,
+		// TODO: Don't use default tenant
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+	}
+	workloadObj := v.pCache.GetWorkload(meta)
+	if workloadObj == nil {
+		v.Log.Debugf("Ignore VMotionStart Event for VM %s - No workload", m.VMKey)
+		return
+	}
+	// We keep partial workload objects in pCache.. so workloads that are not on Pen-hosts can
+	// be present in pCache. Check its host too
+	srcHostName := workloadObj.Spec.HostName
+	if srcHostName == "" || v.findHostByName(srcHostName) == nil {
+		// VMs coming from non-pensando hosts requires special flow state handling
+		v.Log.Infof("Ignore VMotionStart Event for VM %s from non-pensando host %s", m.VMKey, srcHostName)
+		// This will be new WL creation, which will happen when we receive WL watch. the additional
+		// info needed by DSC is to allow existing sessions to continue - TBD
+		return
+	}
+	// Check new host
+	if v.findHostByName(hostName) == nil {
+		v.Log.Infof("Ignore VMotion Event for VM %s - to non-pensando host %s", m.VMKey, hostName)
+		// Workload update will happen as part of WL watch when vMotion is complete
+		// Don't return from here.. we still need to update the workload
+		return
+	}
+	if srcHostName == hostName {
+		// This could be an old vmotion event - Ignore it
+		v.Log.Infof("Ignore VMotionStart Event for VM %s - same host")
+		return
+	}
+	// Both src and destination hosts are pensando, Trigger vMotion
+	// update workload object with new host
+	// TODO - updating workload object with newHost means oldHost info is lost, cannot cancel vMotion
+	// on failure or user triggered cancel - need new proto to fix it
+	v.Log.Infof("Trigger vMotion for %s from %s to %s host", wlName, srcHostName, hostName)
+	workloadObj.Spec.HostName = hostName
+	v.pCache.Set(workloadKind, workloadObj)
+}
+
+func (v *VCHub) handleVMotionFailed(m defs.VMotionFailedMsg) {
+	// TODO Since old host information is lost, this cannot be done until proto changes for workload
+	// are done
+	wlName := createVMWorkloadName(v.VcID, m.DcID, m.VMKey)
+	hostName := createHostName(v.VcID, m.DcID, m.DestHostKey)
+	v.Log.Errorf("Cannot Cancel vMotion for %s to host %s - Not Implemented", wlName, hostName)
 }
 
 func (v *VCHub) deleteWorkload(workloadObj *workload.Workload, dcName string) {

@@ -11,6 +11,7 @@ import (
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/simulator"
 	"github.com/vmware/govmomi/simulator/vpx"
+
 	// Set up simulator rest api
 	_ "github.com/vmware/govmomi/vapi/simulator"
 	"github.com/vmware/govmomi/vim25"
@@ -314,11 +315,29 @@ func (v *Host) RemoveNic(name string) {
 	})
 }
 
+// ClearNics remove all pnics
+func (v *Host) ClearNics() {
+	v.Obj.Config.Network.Pnic = []types.PhysicalNic{}
+	h := simulator.Map.Get(v.Obj.Reference())
+	simulator.Map.Update(h, []types.PropertyChange{
+		{Name: "config", Val: v.Obj.Config},
+	})
+}
+
 // VNIC is a VMs vnic
 type VNIC struct {
 	MacAddress   string
 	PortKey      string
 	PortgroupKey string
+}
+
+// ClearVmkNics remove all vmknics
+func (v *Host) ClearVmkNics() {
+	v.Obj.Config.Network.Vnic = []types.HostVirtualNic{}
+	h := simulator.Map.Get(v.Obj.Reference())
+	simulator.Map.Update(h, []types.PropertyChange{
+		{Name: "config", Val: v.Obj.Config},
+	})
 }
 
 // AddVmkNic adds a Vmknic to the host
@@ -450,6 +469,21 @@ func (v *Datacenter) AddVMWithSpec(name string, hostName string, spec types.Virt
 	}
 
 	return nil, fmt.Errorf("VM create was successful but couldn't be found in inventory")
+}
+
+// UpdateVMHost updates the host for the virtual machine
+func (v *Datacenter) UpdateVMHost(vm *simulator.VirtualMachine, hostName string) error {
+	vmMap := simulator.Map.Get(vm.Reference())
+	host := v.hostMap[hostName]
+	if host == nil {
+		return fmt.Errorf("Host not found %s", hostName)
+	}
+	hRef := host.Obj.Reference()
+	vm.Runtime.Host = &hRef
+	simulator.Map.Update(vmMap, []types.PropertyChange{
+		{Name: "runtime", Val: vm.Runtime},
+	})
+	return nil
 }
 
 // AddHost adds a host to the DVS

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vmware/govmomi"
+	"github.com/vmware/govmomi/event"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/vapi/rest"
 	"github.com/vmware/govmomi/vapi/tags"
@@ -43,10 +44,11 @@ type Session struct {
 	client    *govmomi.Client
 	viewMgr   *view.Manager
 	tagClient *tags.Manager
+	eventMgr  *event.Manager
 
-	WatcherWg     *sync.WaitGroup
-	ClientCtx     context.Context
-	watcherCancel context.CancelFunc
+	WatcherWg    *sync.WaitGroup
+	ClientCtx    context.Context
+	clientCancel context.CancelFunc
 
 	clientLock sync.RWMutex
 
@@ -54,7 +56,9 @@ type Session struct {
 	// SessionReady indicates whether watchers should join the wg or not.
 	// When we cancel the watcherWg, we don't want watchers adding themselves back on before
 	// all of them have finished cancelling.
-	SessionReady bool
+	SessionReady     bool
+	LastEvent        map[string]int32 // last event processed for a given vc object (datacenter)
+	EventTrackerLock sync.Mutex
 }
 
 // NewSession returns a new session object
@@ -65,6 +69,7 @@ func NewSession(ctx context.Context, VcURL *url.URL, logger log.Logger) *Session
 		logger:     logger,
 		WatcherWg:  &sync.WaitGroup{},
 		ConnUpdate: make(chan bool, 100),
+		LastEvent:  make(map[string]int32),
 	}
 }
 
@@ -73,10 +78,10 @@ func (s *Session) IsSessionReady() bool {
 	return s.SessionReady
 }
 
-// ClearClientCtx sets the watcher ctx to be nil
-func (s *Session) ClearClientCtx() {
-	s.logger.Info("Clearing watcher ctx")
-	s.ClientCtx = nil
+// GetEventManagerWithRLock returns EventManager while holding read lock
+func (s *Session) GetEventManagerWithRLock() *event.Manager {
+	s.clientLock.RLock()
+	return s.eventMgr
 }
 
 // GetClientsWithRLock acquires a reader lock and returns the client objects
@@ -124,11 +129,15 @@ func (s *Session) ReleaseClientsRLock() {
 	s.clientLock.RUnlock()
 }
 
-// ClearSession sets internal state to be nil
-func (s *Session) ClearSession() {
-	s.logger.Debug("Clearing session")
+// ClearSessionWithLock Acquires clientLock and sets internal state to be nil
+func (s *Session) ClearSessionWithLock() {
 	s.clientLock.Lock()
 	defer s.clientLock.Unlock()
+	s.clearSession()
+}
+
+func (s *Session) clearSession() {
+	s.logger.Debug("Clearing session")
 	if s.client != nil {
 		// Using background context since it's likely that
 		// VCHub's context has been cancelled
@@ -145,10 +154,19 @@ func (s *Session) ClearSession() {
 			s.logger.Errorf("Received err while logging tag client out %s", err)
 		}
 	}
+	// Stop watchers and Event receivers
+	if s.clientCancel != nil {
+		s.clientCancel()
+	}
+	s.WatcherWg.Wait()
 	s.client = nil
 	s.finder = nil
 	s.viewMgr = nil
 	s.tagClient = nil
+	s.eventMgr = nil
+	s.SessionReady = false
+	s.clientCancel = nil
+	s.ClientCtx = nil
 }
 
 // PeriodicSessionCheck starts a goroutine that re-establishes the session
@@ -167,7 +185,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 			break
 		}
 		// Set ClientCtx
-		s.ClientCtx, s.watcherCancel = context.WithCancel(s.ctx)
+		s.ClientCtx, s.clientCancel = context.WithCancel(s.ctx)
 
 		// Forever try to login until it succeeds
 		for {
@@ -194,6 +212,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		s.viewMgr = view.NewManager(c.Client)
 		restCl := rest.NewClient(c.Client)
 		s.tagClient = tags.NewManager(restCl)
+		s.eventMgr = event.NewManager(c.Client)
 
 		s.CheckSession = false
 		s.SessionReady = true
@@ -236,22 +255,7 @@ func (s *Session) PeriodicSessionCheck(wg *sync.WaitGroup) {
 		// Lock will not be released until
 		// we re-establish the client, or the ctx is cancelled
 		s.clientLock.Lock()
-		s.SessionReady = false
-		if s.watcherCancel != nil {
-			s.watcherCancel()
-		}
-		s.WatcherWg.Wait()
-		if s.client != nil {
-			s.client.Logout(s.ClientCtx)
-		}
-		if s.tagClient != nil {
-			s.tagClient.Logout(s.ClientCtx)
-		}
-		s.client = nil
-		s.finder = nil
-		s.viewMgr = nil
-		s.tagClient = nil
-		s.watcherCancel = nil
+		s.clearSession()
 		// Hold onto lock
 	}
 	// Exiting run release lock

@@ -36,6 +36,8 @@ type ProbeInf interface {
 	IsSessionReady() bool
 	ClearState()
 	StartWatchers()
+	StartEventReceiver(refs []types.ManagedObjectReference)
+	TestReceiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent)
 	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
 	ListDC() []mo.Datacenter
 	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
@@ -117,8 +119,7 @@ func (v *VCProbe) waitForExit() {
 // ClearState tears down Session state
 func (v *VCProbe) ClearState() {
 	v.vcProbeLock.Lock()
-	v.ClearClientCtx()
-	v.ClearSession()
+	v.ClearSessionWithLock()
 	v.vcProbeLock.Unlock()
 }
 
@@ -322,7 +323,7 @@ func (v *VCProbe) vcEventHandlerForDC(dcID string, dcName string) func(update ty
 				Originator: v.VcID,
 			},
 		}
-		v.Log.Debugf("Sending message to store, key: %s, obj: %s, update: %+v", key, kind, update)
+		v.Log.Debugf("Sending message to store, key: %s, obj: %s", key, kind)
 		v.outbox <- m
 	}
 }
@@ -430,4 +431,192 @@ func (v *VCProbe) RemoveTagObjVlan(ref types.ManagedObjectReference) error {
 // RemovePensandoTags removes all pensando tags
 func (v *VCProbe) RemovePensandoTags(ref types.ManagedObjectReference) []error {
 	return v.tp.RemovePensandoTags(ref)
+}
+
+// StartEventReceiver starts receiving events on specified objects
+func (v *VCProbe) StartEventReceiver(refs []types.ManagedObjectReference) {
+	// This is called from another watcher, so ClientCtx is protected by WatcherWg
+	// Increment the WatcherWg counter
+	// It is also called from store when newDC is detected. Use Wg for that
+	if v.Ctx == nil {
+		// This can happen during unit tests where client login may not be done at all
+		return
+	}
+	v.WatcherWg.Add(1)
+	go v.runEventReceiver(refs)
+}
+
+func (v *VCProbe) runEventReceiver(refs []types.ManagedObjectReference) {
+	defer v.WatcherWg.Done()
+	v.EventTrackerLock.Lock()
+	for _, r := range refs {
+		v.Log.Debugf("Start Event Receiver for %s", r.Value)
+		v.LastEvent[r.Value] = 0
+	}
+	v.EventTrackerLock.Unlock()
+
+releaseEventTracker:
+	for v.ClientCtx.Err() == nil {
+		for !v.SessionReady {
+			select {
+			case <-v.ClientCtx.Done():
+				break releaseEventTracker
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+		eventMgr := v.GetEventManagerWithRLock()
+		v.ReleaseClientsRLock()
+		if eventMgr == nil {
+			break releaseEventTracker
+		}
+		// Events() return after delivering last N events, restart it
+		// TODO there should be a way to request events older than a eventId, not clear if that is
+		// supported
+		eventMgr.Events(v.ClientCtx, refs, 10, false, false, v.receiveEvents)
+		time.Sleep(500 * time.Millisecond)
+	}
+	v.EventTrackerLock.Lock()
+	for _, r := range refs {
+		v.Log.Debugf("Stop Event Receiver for %s", r.Value)
+		delete(v.LastEvent, r.Value)
+	}
+	v.EventTrackerLock.Unlock()
+	v.Log.Infof("Event Receiver Exited")
+}
+
+func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent) error {
+	// This may execute in the contect of go routine
+	for _, ev := range events {
+		// TODO handle roll-over or becoming -ve
+		v.EventTrackerLock.Lock()
+		lastEvent, ok := v.LastEvent[ref.Value]
+		if !ok {
+			v.Log.Errorf("Incorrect object key for received event")
+			v.EventTrackerLock.Unlock()
+			return nil
+		}
+		if ev.GetEvent().Key <= lastEvent {
+			// old event
+			// v.Log.Infof("Old Event %d, last %d", ev.GetEvent().Key, v.LastEvent)
+			v.EventTrackerLock.Unlock()
+			break
+		}
+		v.LastEvent[ref.Value] = ev.GetEvent().Key
+		v.EventTrackerLock.Unlock()
+
+		// Capture Vmotion events -
+		// VmBeingMitrages/Relocated are received at the start of vMotion (about 2sec delay obsered
+		// 	on lightly loaded VC/Venice).
+		// VmMigrated/Relocated event is received on successful vmotion. Also VM watcher is triggered
+		// as VM's runtime info now points to new host. So there is no additinal processing to be
+		// done on Migrated event.
+		// RelocateFailedEvents are received when vmotion fails or cancelled. In this case there is
+		// no workload watch event, as there is no change done to workload.
+
+		var msgType defs.VCNotificationType
+		var vmRef *types.ManagedObjectReference
+		var hostRef *types.ManagedObjectReference
+		var reason string
+
+		// Ignore all events that do not point to Pen-DVS, e.Dvs.Dvs is not populated
+		switch ev.(type) {
+		case *types.VmBeingHotMigratedEvent:
+			e := ev.(*types.VmBeingHotMigratedEvent)
+			msgType = defs.VMotionStart
+			vmRef = &e.Vm.Vm
+			hostRef = &e.DestHost.Host
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Dest Host %v", e.DestHost.Host.Value)
+		case *types.VmBeingMigratedEvent:
+			e := ev.(*types.VmBeingMigratedEvent)
+			msgType = defs.VMotionStart
+			vmRef = &e.Vm.Vm
+			hostRef = &e.DestHost.Host
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Dest Host %v", e.DestHost.Host.Value)
+		case *types.VmBeingRelocatedEvent:
+			e := ev.(*types.VmBeingRelocatedEvent)
+			msgType = defs.VMotionStart
+			vmRef = &e.Vm.Vm
+			hostRef = &e.DestHost.Host
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Dest Host %v", e.DestHost.Host.Value)
+		case *types.VmMigratedEvent:
+			e := ev.(*types.VmMigratedEvent)
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Src Host %v", e.SourceHost.Host.Value)
+		case *types.VmRelocatedEvent:
+			e := ev.(*types.VmRelocatedEvent)
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Src Host %v", e.SourceHost.Host.Value)
+		case *types.VmRelocateFailedEvent:
+			e := ev.(*types.VmRelocateFailedEvent)
+			msgType = defs.VMotionFailed
+			vmRef = &e.Vm.Vm
+			hostRef = &e.DestHost.Host
+			reason = e.Reason.LocalizedMessage
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Dest Host %v", e.DestHost.Host.Value)
+		case *types.VmFailedMigrateEvent:
+			e := ev.(*types.VmFailedMigrateEvent)
+			msgType = defs.VMotionFailed
+			vmRef = &e.Vm.Vm
+			hostRef = &e.DestHost.Host
+			reason = e.Reason.LocalizedMessage
+			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Dest Host %v", e.DestHost.Host.Value)
+		case *types.MigrationEvent:
+			// TODO: This may be a generic vMotion failure.. but it does not have DestHost Info
+			// Do we need to handle it?
+			e := ev.(*types.MigrationEvent)
+			reason = e.Fault.LocalizedMessage
+			v.Log.Infof("Event %d - %T for VM %s reason %s", e.GetEvent().Key, e, e.Vm.Vm.Value, reason)
+		default:
+			// v.Log.Debugf("Event %d - %T received ... ignored", ev.GetEvent().Key, ev)
+		}
+		switch msgType {
+		case defs.VMotionStart:
+			// TODO: create a new hight priority channel for events
+			v.outbox <- defs.Probe2StoreMsg{
+				MsgType: defs.VCNotification,
+				Val: defs.VCNotificationMsg{
+					Type: msgType,
+					Msg: defs.VMotionStartMsg{
+						VMKey:       vmRef.Value,
+						DestHostKey: hostRef.Value,
+						DcID:        ref.Value,
+					},
+				},
+			}
+		case defs.VMotionFailed:
+			v.outbox <- defs.Probe2StoreMsg{
+				MsgType: defs.VCNotification,
+				Val: defs.VCNotificationMsg{
+					Type: msgType,
+					Msg: defs.VMotionFailedMsg{
+						VMKey:       vmRef.Value,
+						Reason:      reason,
+						DestHostKey: hostRef.Value,
+						DcID:        ref.Value,
+					},
+				},
+			}
+		default:
+		}
+	}
+	return nil
+}
+
+// TestReceiveEvents provides entry point for unit testing events
+func (v *VCProbe) TestReceiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent) {
+	v.Log.Debugf("Test ReceiveEvents")
+	v.EventTrackerLock.Lock()
+	v.LastEvent[ref.Value] = 0
+	v.EventTrackerLock.Unlock()
+
+	v.receiveEvents(ref, events)
+
+	v.EventTrackerLock.Lock()
+	delete(v.LastEvent, ref.Value)
+	v.EventTrackerLock.Unlock()
 }
