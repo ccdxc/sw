@@ -194,7 +194,8 @@ class VnicObject(base.ConfigObjectBase):
             return False
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
-                if utils.GetYamlSpecAttr(spec, 'hostif', True) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
+                # last digit in hostif is signature, get rid of it for compare
+                if (utils.GetYamlSpecAttr(spec, 'hostif', True) >> 4) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False

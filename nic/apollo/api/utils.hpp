@@ -40,10 +40,10 @@ static inline pds_obj_key_t
 uuid_from_objid (uint32_t id)
 {
     pds_obj_key_t key = { 0 };
-    sprintf (key.id, "%x", id);
+    sprintf (key.id, "%08x", id);
 
-    // stash a signature in 10th byte
-    key.id[9] = 0x42;
+    // stash a signature in 9th byte
+    key.id[8] = 0x42;
     return key;
 }
 

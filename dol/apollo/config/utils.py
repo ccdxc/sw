@@ -60,17 +60,17 @@ def LifIfindex2LifId(lififindex):
     return (lififindex & LIF_IF_LIF_ID_MASK)
 
 UUID_MAX_LEN = 16
-UUID_SIGN_POS = 9
+UUID_SIGN_POS = 8
 UUID_SIGN_VAL = ctypes.c_char(0x42)
 def GetUUID(id):
-    id = format(id, 'x')
+    id = format(id, '08x')
     uuid = ctypes.create_string_buffer(UUID_MAX_LEN)
     uuid.value = str.encode(id)
     uuid[UUID_SIGN_POS] = UUID_SIGN_VAL
     return uuid.raw
 
 def GetIdfromUUID(uuid):
-    id = ctypes.create_string_buffer(uuid)
+    id = ctypes.create_string_buffer(uuid[0:8])
     return int(id.value, 16)
 
 def GetRandomObject(objList):
