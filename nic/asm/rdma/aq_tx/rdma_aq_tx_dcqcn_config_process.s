@@ -25,7 +25,7 @@ rdma_aq_tx_dcqcn_config_process:
     phvwrpair   p.dcqcn_cb.byte_counter_thr, d.rp_byte_reset, p.dcqcn_cb.alpha_value, d.rp_initial_alpha_value
     phvwr       p.dcqcn_cb.rate_enforced, d.rp_qp_rate
     phvwr       p.dcqcn_cb.target_rate, QP_MAX_RATE
-    phvwr.c1    p.dcqcn_cb.max_rate_reached, 1
+    phvwr       p.dcqcn_cb.max_rate_reached, 1
     add         r3, r0, d.rp_token_bucket_size
     phvwrpair   p.dcqcn_cb.cur_avail_tokens, r3, p.dcqcn_cb.token_bucket_size, r3
     DMA_CMD_STATIC_BASE_GET(DMA_CMD_BASE, AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_DCQCN_CB)
