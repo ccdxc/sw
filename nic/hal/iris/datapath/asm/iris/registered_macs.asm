@@ -33,6 +33,7 @@ registered_macs_hit_common:
   seq         c1, d.registered_macs_d.multicast_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_en, 1
   phvwr.c1    p.capri_intrinsic_tm_replicate_ptr, d.registered_macs_d.dst_lport
+  phvwr.!c1   p.control_metadata_clear_promiscuous_repl, FALSE
   phvwr.!c1   p.control_metadata_dst_lport, d.registered_macs_d.dst_lport
   seq         c1, d.registered_macs_d.flow_learn, 1
   phvwr.c1    p.control_metadata_flow_learn, TRUE

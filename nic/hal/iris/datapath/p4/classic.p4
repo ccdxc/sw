@@ -30,6 +30,10 @@ action registered_macs(dst_lport, multicast_en,
         modify_field(capri_intrinsic.tm_replicate_ptr, dst_lport);
     } else {
         modify_field(control_metadata.dst_lport, dst_lport);
+        // Pkt Uplink -> Host (Access Vlan). Inp Props drive clear_promiscous_repl: 1
+        // Pkt has a flow hit and ALG replication has to happen to CPU.
+        // clear_promiscuous_repl is killing the replication.
+        modify_field(control_metadata.clear_promiscuous_repl, FALSE);
     }
     if (flow_learn == TRUE) {
         modify_field(control_metadata.flow_learn, flow_learn);
