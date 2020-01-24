@@ -747,13 +747,20 @@ func (a *ApuluAPI) initEventStream() {
 		log.Error(errors.Wrapf(types.ErrPipelineLifGet, "Init: %v", err))
 	}
 
-	// get all the ports known at this time
+	// get all the physical ports
 	portReqMsg := &halapi.PortGetRequest{
 		Id: []uint32{},
 	}
 	ports, err := a.PortClient.PortGet(context.Background(), portReqMsg)
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelinePortGet, "Init: %v", err))
+	}
+
+	// get all the interfaces known at this time
+	intfReqMsg := &halapi.InterfaceGetRequest{}
+	intfs, err := a.InterfaceClient.InterfaceGet(context.Background(), intfReqMsg)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrPipelineInterfaceGet, "Init: %v", err))
 	}
 
 	go func(stream halapi.EventSvc_EventSubscribeClient) {
@@ -808,7 +815,6 @@ func (a *ApuluAPI) initEventStream() {
 
 	// Store initial Lifs
 	for _, lif := range lifs.Response {
-		log.Infof("Processing lif get response. Resp: %v", lif)
 		intfID, _ := binary.Uvarint(lif.Spec.GetId())
 		l := netproto.Interface{
 			TypeMeta: api.TypeMeta{
@@ -838,7 +844,6 @@ func (a *ApuluAPI) initEventStream() {
 
 	// handle the ports
 	for _, port := range ports.Response {
-		log.Infof("Processing port get response. Resp: %v", port)
 		portID := uint64(port.Spec.GetId())
 		p := netproto.Interface{
 			TypeMeta: api.TypeMeta{
@@ -860,6 +865,31 @@ func (a *ApuluAPI) initEventStream() {
 		dat, _ := p.Marshal()
 		if err := a.InfraAPI.Store(p.Kind, p.GetKey(), dat); err != nil {
 			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", p.GetKey(), err))
+		}
+	}
+
+	// handle the interfaces
+	for _, intf := range intfs.Response {
+		u := netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      fmt.Sprintf("%s%d", types.UplinkPrefix, intf.Status.GetIfIndex()),
+			},
+			Spec: netproto.InterfaceSpec{
+				Type: "Uplink",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceID: uint64(intf.Status.GetIfIndex()),
+				OperStatus:  intf.Status.GetOperStatus().String(),
+			},
+		}
+		dat, _ := u.Marshal()
+		if err := a.InfraAPI.Store(u.Kind, u.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", u.GetKey(), err))
 		}
 	}
 }

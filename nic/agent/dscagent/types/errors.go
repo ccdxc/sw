@@ -110,6 +110,7 @@ const (
 	ErrMirrorDeleteLateralObjects         = Error("ErrMirrorDeleteLateralObjects")
 	ErrNetflowDeleteLateralObjects        = Error("ErrNetflowDeleteLateralObjects")
 	ErrMaxMirrorSessionsConfigured        = Error("ErrMaxMirrorSessionsConfigured")
+	ErrPipelineInterfaceGet               = Error("ErrInterfaceGet")
 )
 
 // Const Info
