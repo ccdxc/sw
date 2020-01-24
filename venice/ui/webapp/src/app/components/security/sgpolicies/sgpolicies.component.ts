@@ -89,9 +89,9 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
       (response) => {
         if (response && response.body ) {
           const body: ISecurityNetworkSecurityPolicyList = response.body as ISecurityNetworkSecurityPolicyList;
-            if ( body.items && body.items.length < this.MAX_POLICY_NUM) {
-              this.shouldEnableButtons = true;
-            }
+          if (!body.items || (body.items && body.items.length < this.MAX_POLICY_NUM)) {
+            this.shouldEnableButtons = true;
+          }
         }
       },
       (error) => {

@@ -79,8 +79,8 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     newInterface.get('mac-address').setValidators([
       this.isValidMacAddress()
     ]);
-    newInterface.get('external-vlan').setValidators([this.minVLanValueValidator()]);
-    newInterface.get('micro-seg-vlan').setValidators([this.minVLanValueValidator()]);
+    newInterface.get('external-vlan').setValidators([this.minVLanValueValidator('External VLAN')]);
+    newInterface.get('micro-seg-vlan').setValidators([this.minVLanValueValidator('Micro Segement VLAN')]);
 
     interfaces.insert(interfaces.length, newInterface);
     this.editInterface(interfaces.length - 1);
@@ -133,26 +133,17 @@ export class NewworkloadComponent extends CreationForm<IWorkloadWorkload, Worklo
     };
   }
 
-  minVLanValueValidator(): ValidatorFn {
+  minVLanValueValidator(vlanName: string): ValidatorFn {
+    const min: number = vlanName === 'External VLAN' ? 0 : 1;
     return (control: AbstractControl): ValidationErrors | null => {
       const actual = Number(control.value);
-      if (actual < 1 || actual > 4095) {
-        if (actual === 0) {
-          return {
-            objectName: {
-              required: true,
-              message: 'Field is required'
-            }
-          };
-        } else {
-          return {
-            objectName: {
-              required: true,
-              message: actual + ' not a valid vlan number'
-            }
-          };
-        }
-
+      if (actual < min || actual > 4095) {
+        return {
+          objectName: {
+            required: true,
+            message: actual + ' is not a valid ' + vlanName + ' number'
+          }
+        };
       }
       return null;
     };
