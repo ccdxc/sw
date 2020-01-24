@@ -979,7 +979,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   onSearchDSCs(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {
-    const searchResults = this.onSearchDataObjects(field, order, 'DistributedServiceCard', this.maxSearchRecords, this.advSearchCols, this.dataObjects, this.advancedSearchComponent);
+    const searchResults = this.onSearchDataObjects(field, order, 'DistributedServiceCard', this.maxSearchRecords, this.advSearchCols, this.dataObjectsBackUp, this.advancedSearchComponent);
     if (searchResults && searchResults.length > 0) {
       this.dataObjects = [];
       this.dataObjects = searchResults;

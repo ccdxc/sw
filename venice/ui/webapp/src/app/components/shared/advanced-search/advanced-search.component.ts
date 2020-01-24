@@ -257,6 +257,7 @@ export class AdvancedSearchComponent implements OnInit {
    */
   searchTextToFormArrayModal() {
     if (this.search === null || this.search === '') {
+      this.generalSearch = '';
       this.formArray = new FormArray([]);  // clear formArray
       return;
     }

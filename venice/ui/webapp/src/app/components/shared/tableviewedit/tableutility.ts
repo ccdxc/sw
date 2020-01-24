@@ -320,6 +320,10 @@ export class TableUtility {
    * @param data
    */
   public static searchTable(requirements: FieldsRequirement[], localRequirements: FieldsRequirement[], searchTexts: SearchTextRequirement[], cols: TableCol[], data: any[] | ReadonlyArray<any>) {
+    if (!requirements.length && !localRequirements.length && !searchTexts.some(searchText => searchText.text.some((str: string) => str.trim().length > 0))) {
+      return data;
+    }
+
     let output: any[] | ReadonlyArray<any> = [];
     let searchResults: any[] | ReadonlyArray<any> = [];
     let customizeSearchResults: any[] | ReadonlyArray<any> = [];
@@ -366,7 +370,7 @@ export class TableUtility {
       for (let j = 0; texts && j < texts.length; j++) {
         const text = trimTextValueFunction(texts[j]);
         const activateFunc = TableUtility.filterConstraints['contains'];
-        if (activateFunc && activateFunc(recordValue, text)) {
+        if (activateFunc && activateFunc(recordValue, text) && !outputs.find(output => _.isEqual(output, data[i]))) {
           outputs.push(data[i]);
         }
       }
