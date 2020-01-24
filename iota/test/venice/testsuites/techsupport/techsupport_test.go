@@ -29,7 +29,7 @@ var _ = Describe("techsupport tests", func() {
 					Name: "techsupport-test",
 				},
 				Spec: monitoring.TechSupportRequestSpec{
-					NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{},
+					NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{Names:[]string{"00ae.cd88.0011"}},
 				},
 			}
 			err := ts.model.Action().PerformTechsupport(techsupport)
