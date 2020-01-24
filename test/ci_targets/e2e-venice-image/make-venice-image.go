@@ -31,4 +31,9 @@ func main() {
 		logrus.Errorf("Failed to sftp artifact: %v", err)
 		os.Exit(-1)
 	}
+	err = infra.CopyLogs([]string{"/import/src/github.com/pensando/sw/bin/venice_apidoc.pdf"}, "/sw/bin")
+	if err != nil {
+		logrus.Errorf("Failed to sftp artifact: %v", err)
+		os.Exit(-1)
+	}
 }

@@ -75,6 +75,7 @@ fi
 echo "Copy artifacts..."
 mkdir -p /sw/output/bundle
 cp /sw/build_iris_sim.tar.gz /sw/output
+cp /sw/bin/venice_apidoc.pdf /sw/output
 mv bin/venice.tgz /sw/output
 mv tools/docker-files/ova/output/venice.ova /sw/output
 mv tools/docker-files/ova/output/venice.qcow2 /sw/output

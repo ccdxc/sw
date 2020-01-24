@@ -62,6 +62,7 @@ builds:
     owners: ["email:jainvipin@pensando.io"]
     artifacts:
       - /sw/bin/venice.tgz
+      - /sw/bin/venice_apidoc.pdf
     repo_dir: "/import/src/github.com/pensando/sw"
     create:
       image: build-150
