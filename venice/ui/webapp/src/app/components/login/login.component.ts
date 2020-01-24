@@ -120,6 +120,7 @@ export class LoginComponent extends BaseComponent implements OnInit, OnDestroy {
   onLoginSuccess(payload) {
     // Not setting loginInProgress back to false because we should be getting redirected
     // and this component will be destroyed.
+    this.loginInProgress = false;
     this.redirect();
   }
 

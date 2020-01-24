@@ -21,7 +21,7 @@
         </div>
         <div class="form-group">
           <button type="submit" class="btn btn-info button-bg login-signin-btn"
-                  [disabled]="!isLoginInputValided()">SIGN IN</button>
+                  [disabled]="loginInProgress || !isLoginInputValided()">SIGN IN</button>
         </div>
         <div>
           <div>Copyright (c) 2020 Pensando Systems Inc. All rights reserved.</div>

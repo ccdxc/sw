@@ -43,6 +43,10 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
   MACS_ERRORMSG: string = 'Invalid MAC addresses. It should be aaaa.bbbb.cccc format.';
   MACS_TOOLTIP: string = 'Type in mac address and hit enter or space key to add more.';
   PORTS_ERRORMSG: string = 'Invalid Protocol/Port';
+  PROTS_ERRORMSG: string = 'Invalid Protocol/Port';
+  PROTS_TOOLTIP: string = 'Type in valid layer3 or layer 4 protocol and protocol/port, ' +
+                          'hit enter or space key to add more. Port can be individual or range.' +
+                          'for example: icmp, any/2345, tcp/60001-60100...';
 
   protoAppOptions: Object[] = [
     { label: 'PROTO-PORTS', value: 'Protocols Ports' },
@@ -164,12 +168,12 @@ export class NewflowexportpolicyComponent extends CreationForm<IMonitoringFlowEx
       return false;
     }
     if (arr.length === 1) {
-      return prot !== 'tcp' && prot !== 'udp';
+      return prot === 'any' || prot === 'icmp';
     }
-    if (prot !== 'tcp' && prot !== 'udp') {
+    if (prot !== 'tcp' && prot !== 'udp' && prot !== 'any') {
       return false;
     }
-    return Utility.isPortValid(arr[1]);
+    return Utility.isPortRangeValid(arr[1]);
   }
 
   areAllRulesEmpty() {

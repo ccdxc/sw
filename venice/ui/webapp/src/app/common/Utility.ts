@@ -600,6 +600,23 @@ export class Utility {
     return this.getLodash().isEmpty(obj);
   }
 
+  public static isPortRangeValid(port: string): boolean {
+    if (!port || !port.trim()) {
+      return false;
+    }
+    const portsArr = port.split('-');
+    if (portsArr.length > 2) {
+      return false;
+    }
+    if (portsArr.length === 1) {
+      return this.isPortValid(portsArr[0]);
+    }
+    if (!this.isPortValid(portsArr[0]) || !this.isPortValid(portsArr[1])) {
+      return false;
+    }
+    return parseInt(portsArr[1].trim(), 10) > parseInt(portsArr[0].trim(), 10);
+  }
+
   public static isPortValid(port: string): boolean {
     if (!port || !port.trim()) {
       return false;

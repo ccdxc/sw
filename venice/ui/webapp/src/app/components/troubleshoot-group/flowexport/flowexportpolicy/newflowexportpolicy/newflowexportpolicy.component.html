@@ -136,14 +136,14 @@
             <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
                            [formControl]="data.rule.$formGroup.get(['source', 'ip-addresses'])"
                            boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
-                           [itemErrorMsg]="IPS_ERRORMSG" appErrorTooltip>
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
             </app-formchips>
           </div>
           <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
             <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
                            [formControl]="data.rule.$formGroup.get(['source', 'mac-addresses'])"
                            boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidMAC"
-                           [itemErrorMsg]="MACS_ERRORMSG" appErrorTooltip>
+                           [itemErrorMsg]="MACS_ERRORMSG" [toolTip]="MACS_TOOLTIP">
             </app-formchips>
           </div>
         </div>
@@ -157,14 +157,14 @@
             <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
                            [formControl]="data.rule.$formGroup.get(['destination', 'ip-addresses'])"
                            boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidIP"
-                           [itemErrorMsg]="IPS_ERRORMSG" appErrorTooltip>
+                           [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
             </app-formchips>
           </div>
           <div fxFlex="none" fxLayout="column" class="flow-export-policy-rule-inputs">
             <app-formchips fxFlex="none" [chipsLabel]="MACS_LABEL"
                            [formControl]="data.rule.$formGroup.get(['destination', 'mac-addresses'])"
                            boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidMAC"
-                           [itemErrorMsg]="MACS_ERRORMSG" appErrorTooltip>
+                           [itemErrorMsg]="MACS_ERRORMSG" [toolTip]="MACS_TOOLTIP">
             </app-formchips>
           </div>
         </div>
@@ -178,7 +178,7 @@
           <app-formchips fxFlex="none" [chipsLabel]="protoAppOptions[0]['value']"
                          [formControl]="data.rule.$formGroup.get(['app-protocol-selectors', 'proto-ports'])"
                          boxStyleClass="export-policy-rule-boxes" [itemValidator]="isValidProto"
-                         [itemErrorMsg]="PORTS_ERRORMSG" appErrorTooltip>
+                         [itemErrorMsg]="PORTS_ERRORMSG" [toolTip]="PROTS_TOOLTIP">
           </app-formchips>
         </div>
       </fieldset>

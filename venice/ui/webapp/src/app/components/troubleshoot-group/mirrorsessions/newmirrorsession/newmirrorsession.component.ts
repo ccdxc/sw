@@ -45,7 +45,8 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
   MACS_TOOLTIP: string = 'Type in mac address and hit enter or space key to add more.';
   PROTS_ERRORMSG: string = 'Invalid Protocol/Port';
   PROTS_TOOLTIP: string = 'Type in valid layer3 or layer 4 protocol and protocol/port, ' +
-                          'hit enter or space key to add more.';
+                          'hit enter or space key to add more. Port can be individual or range.' +
+                          'for example: icmp, any/2345, tcp/60001-60100...';
 
   createButtonTooltip: string = '';
   minDate: Date = new Date();
@@ -506,12 +507,12 @@ export class NewmirrorsessionComponent extends CreationForm<IMonitoringMirrorSes
       return false;
     }
     if (arr.length === 1) {
-      return prot !== 'tcp' && prot !== 'udp';
+      return prot === 'any' || prot === 'icmp';
     }
-    if (prot !== 'tcp' && prot !== 'udp') {
+    if (prot !== 'tcp' && prot !== 'udp' && prot !== 'any') {
       return false;
     }
-    return Utility.isPortValid(arr[1]);
+    return Utility.isPortRangeValid(arr[1]);
   }
 
   createObject(newObject: IMonitoringMirrorSession) {
