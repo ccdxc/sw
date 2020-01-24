@@ -185,6 +185,8 @@ class SubnetObject(base.ConfigObjectBase):
         if utils.IsPipelineApulu():
             if self.HostIf:
                 spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.HostIf.lif.id))
+            elif self.HostIfIdx:
+                spec.HostIf = utils.GetUUID(self.HostIfIdx)
         return
 
     def ValidateSpec(self, spec):

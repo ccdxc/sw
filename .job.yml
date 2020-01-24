@@ -182,6 +182,7 @@ dependencies:
     - reference: venice/ui
   dol/apollo:
     - reference: nic/apollo
+    - reference: iota/test/standalone/sanity/apulu-networking
   dol/apulu:
     - reference: nic/apollo
   dol/artemis:

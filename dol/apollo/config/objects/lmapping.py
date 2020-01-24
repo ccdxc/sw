@@ -152,14 +152,20 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         c = 0
         v6c = 0
         v4c = 0
-        while c < vnic_spec_obj.ipcount:
+        if utils.IsDol():
+            lmap_spec = vnic_spec_obj
+            lmap_count = vnic_spec_obj.ipcount
+        else:
+            lmap_spec = vnic_spec_obj.lmap[0]
+            lmap_count = lmap_spec.count
+        while c < lmap_count:
             if isV6Stack:
-                obj = LocalMappingObject(node, parent, vnic_spec_obj, utils.IP_VERSION_6, v6c)
+                obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_6, v6c)
                 self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
                 v6c = v6c + 1
-            if c < vnic_spec_obj.ipcount and isV4Stack:
-                obj = LocalMappingObject(node, parent, vnic_spec_obj, utils.IP_VERSION_4, v4c)
+            if c < lmap_count and isV4Stack:
+                obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_4, v4c)
                 self.Objs[node].update({obj.MappingId: obj})
                 c = c + 1
                 v4c = v4c + 1

@@ -64,6 +64,7 @@ class VnicObject(base.ConfigObjectBase):
         c = getattr(spec, 'srcguard', None)
         if c != None:
             self.SourceGuard = c
+        self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
         self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
@@ -158,6 +159,8 @@ class VnicObject(base.ConfigObjectBase):
         if utils.IsPipelineApulu():
             if self.SUBNET.HostIf:
                 spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id))
+            elif self.HostIfIdx:
+                spec.HostIf = utils.GetUUID(self.HostIfIdx)
         return
 
     def ValidateSpec(self, spec):
