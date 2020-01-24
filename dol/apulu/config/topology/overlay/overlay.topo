@@ -1,0 +1,186 @@
+# VxLAN Topology Specification for Host mode Overlay
+meta:
+    id: TOPO_VxLAN_HOSTMODE_OVERLAY
+
+dutnode : 1
+node:
+  - id : 1
+    device:
+        mode            : host # bitw (default), host
+        stack           : ipv4 # ipv4 (default), ipv6
+        bridging        : false # false (default), true
+        learning        : false # false (default), true
+        ipaddress       : None # Taken from resmgr
+        gateway         : None # Taken from resmgr
+        encap           : vxlan # vxlan or mplsodup
+        overlayrouting  : true
+    uplink:
+       - entry:
+           id      : uplink0
+           port    : 1
+           mode    : switch
+           status  : UP
+
+       - entry:
+           id      : uplink1
+           port    : 2
+           mode    : switch
+           status  : UP
+    hostinterface:
+        lif         : ref://store/specs/id=LIF_ETH
+    dhcprelay:
+        - vpcid : 10
+          serverip : '100.1.1.1'
+          agentip : '1.1.1.1'
+    vpc:
+        # underlay vpc
+        - stack  : ipv4 # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay 
+          routetbl: # Only for read op
+             - type: specific # route table with only default routes
+               routetype: only_default
+               v4routes:
+                  - '0.0.0.0\0'
+               v6routes:
+                  - '0::\0'
+               teptype : underlay
+          nexthop: # Only for read op
+            - type : underlay
+              count : 2
+          interface:
+            - iid           : 1
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '10.1.1.1\24'
+              macaddress    : macaddr/00ae.cd00.4fde
+              portid        : 1
+              encap         : none
+            - iid           : 2
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '11.1.1.1\24'
+              macaddress    : macaddr/00ae.cd00.4fdd
+              portid        : 2
+              encap         : none
+            - iid           : 3
+              iftype        : loopback
+              ifadminstatus : UP
+              ipprefix      : '1.1.1.1\32'
+              encap         : none
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
+          bgpglobal:
+            - id            : 1
+              localasn      : 100
+              routerid      : 1.1.1.1
+          # underlay bgp peer 1
+          bgppeer:
+            - id            : 1
+              peeraddr      : 10.1.1.2
+              localaddr     : 0.0.0.0
+              bgppeeraf:
+                - afi       : ipv4
+                  safi      : unicast
+            # underlay bgp peer 2
+            - id            : 2
+              peeraddr      : 11.1.1.2
+              localaddr     : 0.0.0.0
+              bgppeeraf:
+                - afi       : ipv4
+                  safi      : unicast
+            # bgp evpn peer 3
+            - id            : 3
+              peeraddr      : 2.2.2.2
+              localaddr     : 1.1.1.1
+              bgppeeraf:
+                - afi       : l2vpn
+                  safi      : evpn
+            # bgp evpn peer 4
+            - id            : 4
+              peeraddr      : 10.1.1.3
+              localaddr     : 1.1.1.1
+              bgppeeraf:
+                - afi       : l2vpn
+                  safi      : evpn
+        # tenant vpc
+        - stack : ipv4 # dual, ipv4 , ipv6
+          count : 1
+          type  : tenant
+          subnet:
+            - count       : 2
+              v4prefixlen : 24
+              v6prefixlen : 64
+              vnic: # Only for read op
+                - count   : 1             # VNICs per subnet
+                  ipcount : 4             # Local IP mapping per vnic
+                  srcguard : false        # true or false (default false)
+                  public  : true
+              rmap:                       # Only for read op
+                - count : 4
+              evpnevi:
+                - id    : 1
+              evpnevi:
+                - id    : 2
+              evpnevirt:
+                - id    : 1
+                  rt    : 0:1000
+              evpnevirt:
+                - id    : 2
+                  rt    : 0:1001
+          nexthop: # Only for read op
+            - type : overlay
+              count : 2
+            - type : overlay
+              dual-ecmp : true
+              count : 2
+          nexthop-group: # Only for read op
+            - type : underlay
+              count : 2
+            - type : overlay
+              count : 2
+            - type : overlay
+              dual-ecmp : true
+              count : 2
+          routetbl: # Only for read op
+            - type: base
+              routetype: overlap
+              count : 1
+              v4base: '67.0.0.0\16'
+              v4prefixlen: 24
+              nv4routes   : 10
+              v6base: '2003::\65'
+              v6prefixlen: 120
+              nv6routes   : 10
+              v4routes:
+              v6routes:
+              teptype : overlay-ecmp
+              dual-ecmp : true
+          meter:
+            - count: 1
+              auto_fill: False
+              rule:
+                - type: PDS_METER_TYPE_ACCOUNTING
+                  priority: 1
+                  num_prefixes: 4
+                  v4base: '100.0.0.0\8'
+                  v6base: '2002::\120'
+                  v4prefixes:
+                    - '0.0.0.0\0'
+                  v6prefixes:
+                    - '0::\0'
+          policy:
+            - type : specific
+              policytype : default
+              direction : bidir
+          nat46 : false
+          evpnipvrf:
+            - id    : 1
+              vni   : 10000
+          evpnipvrfrt:
+            - id    : 1
+              rt    : 0:20000
+
+

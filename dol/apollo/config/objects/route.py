@@ -25,6 +25,8 @@ MAX_ROUTE_PRIORITY = 1
 class RouteObject():
     def __init__(self, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
         super().__init__()
+        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         self.Id = next(resmgr.RouteIdAllocator)
         self.ipaddr = ipaddress
         self.Priority = priority

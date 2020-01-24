@@ -53,7 +53,8 @@ class DeviceObject(base.ConfigObjectBase):
         self.DeriveOperInfo()
         self.Show()
         if utils.IsDol():
-            tunnel.client.GenerateObjects(node, self, spec.tunnel)
+            if (hasattr(spec, 'tunnel')):
+                tunnel.client.GenerateObjects(node, self, spec.tunnel)
         return
 
     def UpdateAttributes(self):
@@ -163,6 +164,9 @@ class DeviceObject(base.ConfigObjectBase):
 
     def IsLearningEnabled(self):
         return self.LearningEnabled
+
+    def IsOverlayRoutingEnabled(self):
+        return self.OverlayRoutingEnabled
 
     def IsEncapTypeMPLS(self):
         if self.EncapType == types_pb2.ENCAP_TYPE_MPLSoUDP:

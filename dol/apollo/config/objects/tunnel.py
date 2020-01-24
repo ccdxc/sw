@@ -26,6 +26,8 @@ class TunnelObject(base.ConfigObjectBase):
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
+        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         if (hasattr(spec, 'srcaddr')):
             self.LocalIPAddr = ipaddress.IPv4Address(spec.srcaddr)

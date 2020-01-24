@@ -105,6 +105,11 @@ class ApolloConfigStore:
     def IsDeviceLearningEnabled(self):
         return self.device.IsLearningEnabled()
 
+    def IsDeviceOverlayRoutingEnabled(self):
+        if self.device is None:
+            return False
+        return self.device.IsOverlayRoutingEnabled()
+
     def GetDeviceEncapType(self):
         return self.device.EncapType
 

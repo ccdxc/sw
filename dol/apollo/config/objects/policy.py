@@ -769,8 +769,9 @@ class PolicyObjectClient(base.ConfigClientBase):
 
         def __get_num_subnets(vpc_spec_obj):
             count = 0
-            for subnet_obj in vpc_spec_obj.subnet:
-                count += subnet_obj.count
+            if (hasattr(vpc_spec_obj, 'subnet')):
+                for subnet_obj in vpc_spec_obj.subnet:
+                    count += subnet_obj.count
             return count
 
         def __add_default_policies(vpc_spec_obj, policyspec):

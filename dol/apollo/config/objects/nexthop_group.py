@@ -17,6 +17,8 @@ import nh_pb2 as nh_pb2
 class NexthopGroupObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec):
         super().__init__(api.ObjectTypes.NEXTHOPGROUP, node)
+        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF NEXTHOPGROUP OBJECT ############
         if (hasattr(spec, 'id')):
             self.Id = spec.id

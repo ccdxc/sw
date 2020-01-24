@@ -219,6 +219,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
             spec.id = 'Uplink%d' % spec.port
             spec.status = port.AdminState
             for ifspec in iflist:
+                if ifspec.iftype != 'l3':
+                    continue
                 if ifspec.portid == port.Port:
                     if (hasattr(ifspec, 'macaddress')):
                         spec.MACAddr = ifspec.macaddress

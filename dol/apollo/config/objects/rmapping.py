@@ -15,6 +15,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, tunobj, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING, node)
         parent.AddChild(self)
+        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+            self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         if (hasattr(spec, 'id')):
             self.MappingId = spec.id

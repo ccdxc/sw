@@ -38,7 +38,8 @@ class VnicObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC, node)
         parent.AddChild(self)
-        if (EzAccessStore.IsDeviceLearningEnabled()):
+        if (EzAccessStore.IsDeviceLearningEnabled()) or \
+                (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
         if (hasattr(spec, 'id')):

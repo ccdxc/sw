@@ -348,7 +348,8 @@ class VpcObjectClient(base.ConfigClientBase):
         # Write the flow and nexthop config to agent hook file
         if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)
-        if utils.IsPipelineApulu():
+        if utils.IsPipelineApulu() and not \
+                (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
             # Associate Nexthop objects
             NhGroupClient.CreateAllocator(node)
             NhClient.AssociateObjects(node)
