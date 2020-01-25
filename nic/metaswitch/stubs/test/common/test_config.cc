@@ -79,6 +79,8 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     conf->remote_ip_addr_2    = inet_addr (value.c_str());
     value                   = pt.get <std::string>("remote.lo-ip");
     conf->remote_lo_ip_addr = inet_addr (value.c_str());
+    value                   = pt.get <std::string>("remote.lo-ip2");
+    conf->remote_lo_ip_addr_2 = inet_addr (value.c_str());
     value                   = pt.get <std::string>("eth-if-index");
     conf->eth_if_index      = strtol (value.c_str(),NULL, 0);
     value                   = pt.get <std::string>("eth-if-index-2");
@@ -118,7 +120,7 @@ parse_json_config (test_config_t *conf, uint8_t node) {
     } catch (std::exception const&  ex) {
         fprintf(stderr, "Config file %s doesn't have required fields\n",
                 file.c_str());
-        exit(0);
+        exit(1);
     }
 
     return 0;

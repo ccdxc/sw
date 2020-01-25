@@ -237,7 +237,11 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     auto peeraddr = proto_spec->mutable_peeraddr();
     peeraddr->set_af(types::IP_AF_INET);
     if (lo) {
-        peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+        if (second) {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr_2);
+        } else {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+        }
     } else if (second) {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr_2);
     } else {
@@ -247,7 +251,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     proto_spec->set_adminen(pds::ADMIN_UP);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
-    if (lo) {
+    if (lo && g_node_id !=3) {
         localaddr->set_v4addr(g_test_conf_.local_lo_ip_addr);
     } else {
         localaddr->set_v4addr(0);
@@ -287,7 +291,11 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
     peeraddr->set_af(types::IP_AF_INET);
 
     if (lo) {
-        peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+        if (second) {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr_2);
+        } else {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+        }
     } else if (second) {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr_2);
     } else {
@@ -296,7 +304,7 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
     proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
-    if (lo) {
+    if (lo && g_node_id != 3) {
         localaddr->set_v4addr(g_test_conf_.local_lo_ip_addr);
     } else {
         localaddr->set_v4addr(0);
@@ -544,6 +552,38 @@ static void get_evpn_mac_ip_all () {
     }
 }
 
+static void create_route_proto_grpc (bool second=false) {
+    CPStaticRouteRequest  request;
+    CPStaticRouteResponse response;
+    ClientContext         context;
+    Status                ret_status;
+
+    auto proto_spec = request.add_request ();
+    proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
+    auto dest_addr  = proto_spec->mutable_destaddr();
+    dest_addr->set_af (types::IP_AF_INET);
+    dest_addr->set_v4addr (0);
+    proto_spec->set_prefixlen (0);
+    auto next_hop   = proto_spec->mutable_nexthopaddr();
+    next_hop->set_af (types::IP_AF_INET);
+    if (second) {
+        next_hop->set_v4addr (g_test_conf_.remote_ip_addr_2);
+    } else {
+        next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
+    }
+    proto_spec->set_adminstatus (ADMIN_UP);
+    proto_spec->set_override (BOOL_TRUE);
+    proto_spec->set_admindist (250);
+
+    printf ("Pushing Default (0/0) Static Route proto...\n");
+    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+    }
+}
+
 int main(int argc, char** argv)
 {
     // parse json config file
@@ -551,8 +591,12 @@ int main(int argc, char** argv)
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
+    struct in_addr ip_addr;
+    ip_addr.s_addr = g_test_conf_.local_ip_addr;
+    std::string end_point = std::string(inet_ntoa(ip_addr))+":50054";
+    printf ("Endpoint: %s\n",end_point.c_str());
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
+    std::shared_ptr<Channel> channel = grpc::CreateChannel(end_point,
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
@@ -568,17 +612,29 @@ int main(int argc, char** argv)
         // Send protos to grpc server
         create_device_proto_grpc();
         create_underlay_vpc_proto_grpc();
+        if (g_node_id != 3) {
+            create_intf_proto_grpc(true /*loopback*/);
+            create_intf_proto_grpc(false, true /* second interface */);
+        }
+
         create_intf_proto_grpc();
-        create_intf_proto_grpc(true /*loopback*/);
-        create_intf_proto_grpc(false, true /* second interface */);
+        if (g_node_id ==1 ) {
+            create_route_proto_grpc();
+            create_route_proto_grpc(true);
+        }
         create_bgp_global_proto_grpc();
-        create_bgp_peer_proto_grpc();
-        create_bgp_peer_af_proto_grpc();
-        create_bgp_peer_proto_grpc(false, true /* second peer */);
-        create_bgp_peer_af_proto_grpc(false, true);
-        sleep(5);
+        if (g_node_id != 3) {
+            /*no IPv4 BGP sessions for 3rd container*/
+            create_bgp_peer_proto_grpc();
+            create_bgp_peer_af_proto_grpc();
+            create_bgp_peer_proto_grpc(false, true /* second peer */);
+            create_bgp_peer_af_proto_grpc(false, true);
+            sleep(5);
+        }
         create_bgp_peer_proto_grpc(true /* loopback */);
         create_bgp_peer_af_proto_grpc(true /* loopback */);
+        create_bgp_peer_proto_grpc(true, true);
+        create_bgp_peer_af_proto_grpc(true, true );
         create_vpc_proto_grpc();
         create_evpn_ip_vrf_proto_grpc();
         create_evpn_ip_vrf_rt_proto_grpc();
