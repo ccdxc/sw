@@ -15,6 +15,7 @@ import paramiko
 import threading
 import traceback
 import ipaddress
+import random
 from enum import auto, Enum, unique
 
 HOST_NAPLES_DIR                 = "/naples"
@@ -299,12 +300,36 @@ class EntityManagement:
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
 
-    def SendlineExpect(self, line, expect, hdl = None,
-                       timeout = GlobalOptions.timeout):
+    def __syncLine(self, hdl):
+        for i in range(3):
+            try:
+                syncTag = "SYNC{0}".format(random.randint(0,0xFFFF))
+                syncCmd = "echo " + syncTag
+                syncSearch = syncTag + "\r\n#"
+                print("attempting to sync buffer with \"{0}\"".format(syncCmd))
+                hdl.sendline(syncCmd)
+                hdl.expect_exact(syncSearch,30)
+                return
+            except:
+                print("failed to find sync message, trying again")
+        raise Exception("buffer sync failed")
+
+    def __sendlineExpect(self, line, expect, hdl, timeout):
         os.system("date")
-        if hdl is None: hdl = self.hdl
         hdl.sendline(line)
         return hdl.expect_exact(expect, timeout)
+
+    def SendlineExpect(self, line, expect, hdl = None,
+                       timeout = GlobalOptions.timeout, trySync=False):
+        if hdl is None: hdl = self.hdl
+        try:
+            return self.__sendlineExpect(line, expect, hdl, timeout)
+        except pexpect.TIMEOUT:
+            if trySync:
+                self.__syncLine(hdl)
+                return self.__sendlineExpect(line, expect, hdl, timeout)
+            else:
+                raise
 
     def Spawn(self, command):
         hdl = pexpect.spawn(command)
@@ -358,13 +383,21 @@ class EntityManagement:
         print ("Cmd output ", full_command, stdout, stderr)
         return str(stdout, "UTF-8"), ""
 
-    def __run_cmd(self, cmd):
+    def __run_cmd(self, cmd, trySync=False):
         os.system("date")
-        self.hdl.sendline(cmd)
-        self.hdl.expect("#")
+        try:
+            self.hdl.sendline(cmd)
+            self.hdl.expect("#")
+        except pexpect.TIMEOUT:
+            if trySync:
+                self.__syncLine(self.hdl)
+                self.hdl.sendline(cmd)
+                self.hdl.expect("#")
+            else:
+                raise
 
-    def RunCommandOnConsoleWithOutput(self, cmd):
-        self.__run_cmd(cmd)
+    def RunCommandOnConsoleWithOutput(self, cmd, trySync=False):
+        self.__run_cmd(cmd, trySync)
         return self.hdl.before.decode('utf-8')
 
     @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
@@ -443,6 +476,7 @@ class NaplesManagement(EntityManagement):
             midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                    hdl = self.hdl, timeout = 180)
             if midx == 0: return
+            self.SendlineExpect(GlobalOptions.username, "")
             # Got capri login prompt, send username/password.
             self.SendlineExpect(GlobalOptions.username, "Password:")
             ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
@@ -491,9 +525,11 @@ class NaplesManagement(EntityManagement):
         if copy_fw:
             self.CopyIN(GlobalOptions.image, entity_dir = NAPLES_TMP_DIR)
         self.InstallPrep()
+        self.SendlineExpect("", "#", trySync=True)
+        self.SendlineExpect("", "#", trySync=True)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image),
                             "#", timeout = UPGRADE_TIMEOUT)
-        self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#")
+        self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#", trySync=True)
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
         #    raise Exception('failed to switch firmware to mainfwa')
 
@@ -502,7 +538,7 @@ class NaplesManagement(EntityManagement):
         self.CopyIN(GlobalOptions.gold_fw_img, entity_dir = NAPLES_TMP_DIR)
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.gold_fw_img),
                             "#", timeout = UPGRADE_TIMEOUT)
-        self.SendlineExpect("/nic/tools/fwupdate -l", "#")
+        self.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
 
     def __connect_to_console(self):
         for _ in range(3):
@@ -533,7 +569,7 @@ class NaplesManagement(EntityManagement):
     def _getMemorySize(self):
         mem_check_cmd = '''cat /proc/iomem | grep "System RAM" | grep "240000000" | cut  -d'-' -f 1'''
         try:
-            self.SendlineExpect(mem_check_cmd, "240000000" + '\r\n' + '#', timeout = 1)
+            self.SendlineExpect(mem_check_cmd, "240000000" + '\r\n' + '#', timeout = 1, trySync=True)
             return "8G"
         except:
             return "4G"
@@ -621,7 +657,6 @@ class NaplesManagement(EntityManagement):
 
     def CleanUpOldFiles(self):
         self.SendlineExpect("clear_nic_config.sh remove-config", "#")
-        #clean up db that was setup by previous
         self.SendlineExpect("rm -rf /sysconfig/config0/*.db", "#")
         self.SendlineExpect("rm -rf /sysconfig/config0/*.conf", "#")
         self.SendlineExpect("rm -rf /sysconfig/config1/*.db", "#")
@@ -634,8 +669,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("rm -rf /data/core/* && sync", "#")
         self.SendlineExpect("rm -rf /data/*.dat && sync", "#")
         self.SendlineExpect("rm -rf /obfl/asicerrord_err*", "#")
-        # Make sure console is enabled, with no need of authentication.
-        # Setup config spec json file to do just that.
+
         CreateConfigConsoleNoAuth()
         self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
                     entity_dir = "/sysconfig/config0")
@@ -649,7 +683,7 @@ class NaplesManagement(EntityManagement):
     def InitForUpgrade(self, goldfw = True, mode = True, uuid = True):
 
         if goldfw:
-            self.SendlineExpect("fwupdate -s goldfw", "#")
+            self.SendlineExpect("fwupdate -s goldfw", "#", trySync=True)
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
         #    raise Exception('failed to switch firmware to goldfw')
 
@@ -679,7 +713,7 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
     def SwitchToGoldFW(self):
-        self.SendlineExpect("fwupdate -s goldfw", "#")
+        self.SendlineExpect("fwupdate -s goldfw", "#", trySync=True)
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
         #    raise Exception('failed to switch firmware to goldfw')
 
@@ -1029,7 +1063,7 @@ class EsxHostManagement(HostManagement):
 
 def AtExitCleanup():
     global naples
-    try: naples.SendlineExpect("/nic/tools/fwupdate -l", "#")
+    try: naples.SendlineExpect("/nic/tools/fwupdate -l", "#", trySync=True)
     except: print("failed to read firmware. error was: {0}".format(traceback.format_exc()))
     naples.Close()
 
@@ -1148,9 +1182,9 @@ def Main():
                 pass
             host.WaitForSsh()
             host.UnloadDriver()
-
-    naples.Connect()
-    host.WaitForSsh()
+    else:
+            naples.Connect()
+            host.WaitForSsh()
 
     if GlobalOptions.only_init == True:
         # Case 3: Only INIT option.
