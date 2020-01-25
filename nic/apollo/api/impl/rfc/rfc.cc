@@ -217,7 +217,12 @@ rfc_policy_create (policy_t *policy, mem_addr_t rfc_tree_root_addr,
         goto cleanup;
     }
 
+    // Add default rules for RFC trees that dont have at least one rule
     ret = rfc_policy_add_defaults(&rfc_ctxt);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to add default rules, err %u", ret);
+        goto cleanup;
+    }
 
     // build equivalence class index tables and result tables for subsequent
     // phases of RFC

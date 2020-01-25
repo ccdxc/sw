@@ -72,6 +72,18 @@ itable_add_tag_inodes (uint32_t rule, inode_t *tag_inode, uint32_t tag)
 }
 
 void
+itable_update_icmp_type_code (port_range_t *sport_range,
+                              port_range_t *dport_range,
+                              uint8_t icmp_type,
+                              uint8_t icmp_code)
+{
+    dport_range->port_lo = ((icmp_type << 8) | icmp_code);
+    dport_range->port_hi = dport_range->port_lo;
+    sport_range->port_lo = 0;
+    sport_range->port_hi = 65535;
+}
+
+void
 itable_add_port_inodes (uint32_t rule, inode_t *port_inode,
                         port_range_t *port_range)
 {

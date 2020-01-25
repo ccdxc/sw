@@ -824,6 +824,7 @@ rfc_compute_p3_result (rfc_ctxt_t *rfc_ctxt, rfc_table_t *rfc_table,
         // no bit is set in the bitmap
         PDS_TRACE_DEBUG("No bits set in bitmap, setting lowest priority");
         RFC_RESULT_SET_PRIORITY_BITS(result, SACL_PRIORITY_LOWEST);
+        RFC_RESULT_SET_ACTION_BIT(result, RFC_RESULT_RULE_ACTION_DENY);
     } else {
         do {
             posn = RTE_BITMAP_START_SLAB_SCAN_POS;

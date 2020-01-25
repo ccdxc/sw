@@ -217,7 +217,8 @@ pds_init (pds_init_params_t *params)
 
     // instantiate the catalog
     api::g_pds_state.set_catalog(catalog::factory(
-        api::g_pds_state.cfg_path(), "", api::g_pds_state.platform_type()));
+        api::g_pds_state.cfg_path() + params->pipeline, "",
+        api::g_pds_state.platform_type()));
     PDS_TRACE_DEBUG("Memory capacity of the system %s",
                     api::g_pds_state.catalogue()->memory_capacity_str().c_str());
 

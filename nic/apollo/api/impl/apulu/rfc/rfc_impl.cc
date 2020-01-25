@@ -145,6 +145,13 @@ rfc_build_itables (rfc_ctxt_t *rfc_ctxt)
             dtag_inode += 2;
         }
 
+        if (rule->match.l3_match.ip_proto == IP_PROTO_ICMP) {
+            itable_update_icmp_type_code(&rule->match.l4_match.sport_range,
+                                         &rule->match.l4_match.dport_range,
+                                         rule->match.l4_match.icmp_type,
+                                         rule->match.l4_match.icmp_code);
+        }
+
         // handle source port match condition
         itable_add_port_inodes(rule_num, port_inode,
                                &rule->match.l4_match.sport_range);

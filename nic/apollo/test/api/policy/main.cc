@@ -67,10 +67,12 @@ TEST_F(policy, policy_workflow_b1) {
                 POLICY_TYPE_FIREWALL, IP_AF_IPV4, "10.0.0.0/16", 1);
     workflow_b1<policy_feeder>(feeder);
 
-    // v6 policy
-    feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+    if (!apulu()) {
+        // v6 policy
+        feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
-    workflow_b1<policy_feeder>(feeder);
+        workflow_b1<policy_feeder>(feeder);
+    }
 }
 
 /// \brief Policy WF_B2
@@ -88,12 +90,14 @@ TEST_F(policy, policy_workflow_b2) {
                   POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.0/16", 1);
     workflow_b2<policy_feeder>(feeder1, feeder1A);
 
-    // v6 policy
-    feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "1001::1/64", 1);
-    feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
-                 POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
-    workflow_b2<policy_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        // v6 policy
+        feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "1001::1/64", 1);
+        feeder1A.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
+                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64", 1);
+        workflow_b2<policy_feeder>(feeder1, feeder1A);
+    }
 }
 
 /// \brief Policy WF_1
@@ -227,6 +231,7 @@ TEST_F(policy, policy_workflow_6) {
 		  g_num_policy);
     workflow_6<policy_feeder>(feeder1, feeder1A, feeder1B);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -239,6 +244,7 @@ TEST_F(policy, policy_workflow_6) {
                       g_num_policy);
         workflow_6<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
+#endif
 }
 
 /// \brief Policy WF_7
@@ -258,6 +264,7 @@ TEST_F(policy, policy_workflow_7) {
 		  g_num_policy);
     workflow_7<policy_feeder>(feeder1, feeder1A, feeder1B);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -270,6 +277,7 @@ TEST_F(policy, policy_workflow_7) {
                       g_num_policy);
         workflow_7<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
+#endif
 }
 
 /// \brief Policy WF_8
@@ -291,6 +299,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
                   g_num_policy);
     workflow_8<policy_feeder>(feeder1, feeder1A, feeder1B);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -303,6 +312,7 @@ TEST_F(policy, DISABLED_policy_workflow_8) {
                       g_num_policy);
         workflow_8<policy_feeder>(feeder1, feeder1A, feeder1B);
     }
+#endif
 }
 
 /// \brief Policy WF_9
@@ -321,6 +331,7 @@ TEST_F(policy, DISABLED_policy_workflow_9) {
                   g_num_policy);
     workflow_9<policy_feeder>(feeder1, feeder1A);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -330,6 +341,7 @@ TEST_F(policy, DISABLED_policy_workflow_9) {
                       g_num_policy);
         workflow_9<policy_feeder>(feeder1, feeder1A);
     }
+#endif
 }
 
 /// \brief Policy WF_10
@@ -363,6 +375,7 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
     workflow_10<policy_feeder>(
         feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
 
+#if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -385,6 +398,7 @@ TEST_F(policy, DISABLED_policy_workflow_10) {
         workflow_10<policy_feeder>(
             feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
     }
+#endif
 }
 
 /// \brief Policy WF_N_1
@@ -398,12 +412,14 @@ TEST_F(policy, policy_workflow_neg_1) {
                 g_num_policy);
     workflow_neg_1<policy_feeder>(feeder);
 
+#if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_neg_1<policy_feeder>(feeder);
     }
+#endif
 }
 
 /// \brief Policy WF_N_2
@@ -422,12 +438,14 @@ TEST_F(policy, policy_workflow_neg_2) {
                 g_num_policy + 3);
     workflow_neg_2<policy_feeder>(feeder);
 
+#if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
                     g_num_policy + 3);
         workflow_neg_2<policy_feeder>(feeder);
     }
+#endif
 }
 
 /// \brief Policy WF_N_3
@@ -441,12 +459,14 @@ TEST_F(policy, policy_workflow_neg_3) {
                 g_num_policy);
     workflow_neg_3<policy_feeder>(feeder);
 
+#if 0
     if (apulu()) {
         feeder.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                     POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
                     g_num_policy);
         workflow_neg_3<policy_feeder>(feeder);
     }
+#endif
 }
 
 /// \brief Policy WF_N_4
@@ -462,6 +482,7 @@ TEST_F(policy, policy_workflow_neg_4) {
                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", num_policy);
     workflow_neg_4<policy_feeder>(feeder1, feeder2);
 
+#if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6,
@@ -471,6 +492,7 @@ TEST_F(policy, policy_workflow_neg_4) {
                      "3001::1/64", num_policy);
         workflow_neg_4<policy_feeder>(feeder1, feeder2);
     }
+#endif
 }
 
 /// \brief Policy WF_N_5
@@ -487,6 +509,7 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
                   g_num_policy);
     workflow_neg_5<policy_feeder>(feeder1, feeder1A);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -496,6 +519,7 @@ TEST_F(policy, DISABLED_policy_workflow_neg_5) {
                       g_num_policy);
         workflow_neg_5<policy_feeder>(feeder1, feeder1A);
     }
+#endif
 }
 
 /// \brief Policy WF_N_6
@@ -512,6 +536,7 @@ TEST_F(policy, policy_workflow_neg_6) {
                   g_num_policy);
     workflow_neg_6<policy_feeder>(feeder1, feeder1A);
 
+#if 0
     if (apulu()) {
         feeder1.init(key, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -521,6 +546,7 @@ TEST_F(policy, policy_workflow_neg_6) {
                       g_num_policy);
         workflow_neg_6<policy_feeder>(feeder1, feeder1A);
     }
+#endif
 }
 
 /// \brief Policy WF_N_7
@@ -540,6 +566,7 @@ TEST_F(policy, policy_workflow_neg_7) {
                  g_num_policy);
     workflow_neg_7<policy_feeder>(feeder1, feeder1A, feeder2);
 
+#if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6, "2001::1/64",
@@ -552,6 +579,7 @@ TEST_F(policy, policy_workflow_neg_7) {
                      g_num_policy);
         workflow_neg_7<policy_feeder>(feeder1, feeder1A, feeder2);
     }
+#endif
 }
 
 /// \brief Policy WF_N_8
@@ -567,6 +595,7 @@ TEST_F(policy, policy_workflow_neg_8) {
                  POLICY_TYPE_FIREWALL, IP_AF_IPV4, "11.0.0.1/16", num_policy);
     workflow_neg_8<policy_feeder>(feeder1, feeder2);
 
+#if 0
     if (apulu()) {
         feeder1.init(key1, g_num_stateful_rules, RULE_DIR_INGRESS,
                      POLICY_TYPE_FIREWALL, IP_AF_IPV6,
@@ -576,6 +605,7 @@ TEST_F(policy, policy_workflow_neg_8) {
                      "3001::1/64", num_policy);
         workflow_neg_8<policy_feeder>(feeder1, feeder2);
     }
+#endif
 }
 
 /// \brief Policy WF_N_9

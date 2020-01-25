@@ -107,17 +107,21 @@ TEST_F(route_test, v4v6_route_table_workflow_b1) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, 1);
     workflow_b1<route_table_feeder>(feeder);
 
-    // test one v6 route table with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
-    workflow_b1<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test one v6 route table with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
+        workflow_b1<route_table_feeder>(feeder);
+    }
 
     // test one v4 route table with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4, k_max_route_per_tbl, 1);
     workflow_b1<route_table_feeder>(feeder);
 
-    // test one v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
-    workflow_b1<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test one v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
+        workflow_b1<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_B2
@@ -132,20 +136,24 @@ TEST_F(route_test, v4v6_route_table_workflow_b2) {
     feeder1A.init(k_base_v4_pfx1, IP_AF_IPV4, 0, 1);
     workflow_b2<route_table_feeder>(feeder1, feeder1A);
 
-    // test one v6 route table with zero routes
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
-    feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, 0, 1);
-    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        // test one v6 route table with zero routes
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 1);
+        feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, 0, 1);
+        workflow_b2<route_table_feeder>(feeder1, feeder1A);
+    }
 
     // test one v4 route table with max routes
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4, k_max_route_per_tbl, 1);
     feeder1A.init(k_base_v4_pfx1, IP_AF_IPV4, k_max_route_per_tbl, 1);
     workflow_b2<route_table_feeder>(feeder1, feeder1A);
 
-    // test one v6 route tables with max routes
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
-    feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, k_max_route_per_tbl, 1);
-    workflow_b2<route_table_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        // test one v6 route tables with max routes
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 1);
+        feeder1A.init(k_base_v6_pfx1, IP_AF_IPV6, k_max_route_per_tbl, 1);
+        workflow_b2<route_table_feeder>(feeder1, feeder1A);
+    }
 }
 
 /// \brief Route table WF_1
@@ -157,19 +165,23 @@ TEST_F(route_test, v4v6_route_table_workflow_1) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
 
-    // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test max v6 route tables with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
+        workflow_1<route_table_feeder>(feeder);
+    }
 
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_1<route_table_feeder>(feeder);
 
-    // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table);
-    workflow_1<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test max v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table);
+        workflow_1<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_2
@@ -181,19 +193,23 @@ TEST_F(route_test, v4v6_route_table_workflow_2) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4, 0, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
 
-    // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
-    workflow_2<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test max v6 route tables with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6, 0, k_max_v6_route_table);
+        workflow_2<route_table_feeder>(feeder);
+    }
 
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_2<route_table_feeder>(feeder);
 
-    // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table);
-    workflow_2<route_table_feeder>(feeder);
+    if (!apulu()) {
+        // test max v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table);
+        workflow_2<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_3
@@ -207,13 +223,15 @@ TEST_F(route_test, v4v6_route_table_workflow_3) {
     // test v4 route tables with zero routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65",
-                 IP_AF_IPV6, 0, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65",
-                 IP_AF_IPV6, 0, 50, 351);
-    // test v6 route tables with zero routes
-    workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65",
+                     IP_AF_IPV6, 0, 50, 251);
+        feeder3.init("150:100:100:1:1::0/65",
+                     IP_AF_IPV6, 0, 50, 351);
+        // test v6 route tables with zero routes
+        workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    }
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
@@ -224,14 +242,16 @@ TEST_F(route_test, v4v6_route_table_workflow_3) {
     // test v4 route tables with max routes
     workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 351);
-    // test v6 route tables with max routes
-    workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 251);
+        feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 351);
+        // test v6 route tables with max routes
+        workflow_3<route_table_feeder>(feeder1, feeder2, feeder3);
+    }
 }
 
 /// \brief Route table WF_4
@@ -243,18 +263,25 @@ TEST_F(route_test, v4v6_route_table_workflow_4) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_4<route_table_feeder>(feeder);
-    // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table);
-    workflow_4<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    0, k_max_v6_route_table);
+        workflow_4<route_table_feeder>(feeder);
+    }
+
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_4<route_table_feeder>(feeder);
-    // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table);
-    workflow_4<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table);
+        workflow_4<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_5
@@ -268,13 +295,15 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
     // test v4 route tables with zero routes
     workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65",
-                 IP_AF_IPV6, 0, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65",
-                 IP_AF_IPV6, 0, 50, 351);
-    // test v6 route tables with zero routes
-    workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65",
+                     IP_AF_IPV6, 0, 50, 251);
+        feeder3.init("150:100:100:1:1::0/65",
+                     IP_AF_IPV6, 0, 50, 351);
+        // test v6 route tables with zero routes
+        workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
+    }
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 50, 101);
@@ -285,14 +314,16 @@ TEST_F(route_test, v4v6_route_table_workflow_5) {
     // test v4 route tables with max routes
     workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 351);
-    // test v6 route tables with max routes
-    workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 251);
+        feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 351);
+        // test v6 route tables with max routes
+        workflow_5<route_table_feeder>(feeder1, feeder2, feeder3);
+    }
 }
 
 /// \brief Route table WF_6
@@ -309,14 +340,16 @@ TEST_F(route_test, v4v6_route_table_workflow_6) {
                   k_max_v4_route_table);
     workflow_6<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A,1B = feeder1 with less routes per table
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
-                  k_max_v6_route_table);
-    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
-                  k_max_v6_route_table);
-    workflow_6<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, k_max_v6_route_table);
+        // feeder1A,1B = feeder1 with less routes per table
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                      k_max_v6_route_table);
+        feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
+                      k_max_v6_route_table);
+        workflow_6<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    }
 }
 
 /// \brief Route table WF_7
@@ -333,14 +366,16 @@ TEST_F(route_test, v4v6_route_table_workflow_7) {
                   k_max_v4_route_table);
     workflow_7<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A,1B = feeder1 with less routes per table
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
-                  k_max_v6_route_table);
-    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
-                  k_max_v6_route_table);
-    workflow_7<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, k_max_v6_route_table);
+        // feeder1A,1B = feeder1 with less routes per table
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                      k_max_v6_route_table);
+        feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
+                      k_max_v6_route_table);
+        workflow_7<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    }
 }
 
 /// \brief Route table WF_8
@@ -359,14 +394,16 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_8) {
                   k_max_v4_route_table);
     workflow_8<route_table_feeder>(feeder1, feeder1A, feeder1B);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, k_max_v6_route_table);
-    // feeder1A,1B = feeder1 with less routes per table
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
-                  k_max_v6_route_table);
-    feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
-                  k_max_v6_route_table);
-    workflow_8<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, k_max_v6_route_table);
+        // feeder1A,1B = feeder1 with less routes per table
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                      k_max_v6_route_table);
+        feeder1B.init(k_base_v6_pfx, IP_AF_IPV6, 100,
+                      k_max_v6_route_table);
+        workflow_8<route_table_feeder>(feeder1, feeder1A, feeder1B);
+    }
 }
 
 /// \brief Route table WF_9
@@ -382,11 +419,13 @@ TEST_F(route_test, DISABLED_v4v6_route_table_workflow_9) {
                   k_max_v4_route_table);
     workflow_9<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, k_max_v6_route_table);
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
-                  k_max_v6_route_table);
-    workflow_9<route_table_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, k_max_v6_route_table);
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6, 512,
+                      k_max_v6_route_table);
+        workflow_9<route_table_feeder>(feeder1, feeder1A);
+    }
 }
 
 /// \brief Route table WF_10
@@ -411,19 +450,21 @@ TEST_F(route_test, v4v6_route_table_workflow_10) {
     workflow_10<route_table_feeder>(
                 feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 251);
-    feeder2A.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                  512, 50, 251);
-    feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 351);
-    feeder3A.init("150:100:100:1:1::0/65", IP_AF_IPV6,
-                  512, 50, 351);
-    feeder4.init("175:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 451);
-    workflow_10<route_table_feeder>(
-                feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, k_max_route_per_tbl, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 251);
+        feeder2A.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                      512, 50, 251);
+        feeder3.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 351);
+        feeder3A.init("150:100:100:1:1::0/65", IP_AF_IPV6,
+                      512, 50, 351);
+        feeder4.init("175:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 451);
+        workflow_10<route_table_feeder>(
+                    feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4);
+    }
 }
 
 /// \brief Route table WF_N_1
@@ -435,18 +476,25 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_1) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_neg_1<route_table_feeder>(feeder);
-    // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table);
-    workflow_neg_1<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    0, k_max_v6_route_table);
+        workflow_neg_1<route_table_feeder>(feeder);
+    }
+
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_neg_1<route_table_feeder>(feeder);
-    // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table);
-    workflow_neg_1<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table);
+        workflow_neg_1<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_N_2
@@ -460,20 +508,24 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
     // using max + 2 as max+1 is reserved to handle update
     workflow_neg_2<route_table_feeder>(feeder);
 
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table+2);
-    // test MAX+1 v6 route tables with zero routes
-    workflow_neg_2<route_table_feeder>(feeder);
+    if (!apulu()) {
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    0, k_max_v6_route_table+2);
+        // test MAX+1 v6 route tables with zero routes
+        workflow_neg_2<route_table_feeder>(feeder);
+    }
 
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table+2);
     // test MAX+1 v4 route tables with max routes
     workflow_neg_2<route_table_feeder>(feeder);
 
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table+2);
-    // test MAX+1 v6 route tables with max routes
-    workflow_neg_2<route_table_feeder>(feeder);
+    if (!apulu()) {
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table+2);
+        // test MAX+1 v6 route tables with max routes
+        workflow_neg_2<route_table_feeder>(feeder);
+    }
 #if 0
     // TODO: move this input validation testcase to agent test
     // as hal should not catch this and will only assert
@@ -485,13 +537,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_2) {
         IP_AF_IPV4, k_max_route_per_tbl+1) == SDK_RET_OK);
     ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
 
-    // trigger - test max v6 route tables with MAX+1 routes
-    batch_params.epoch = ++g_batch_epoch;
-    ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
-    ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
-        first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
-        IP_AF_IPV6, k_max_route_per_tbl+1) == SDK_RET_OK);
-    ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    if (!apulu()) {
+        // trigger - test max v6 route tables with MAX+1 routes
+        batch_params.epoch = ++g_batch_epoch;
+        ASSERT_TRUE(pds_batch_start(&batch_params) == SDK_RET_OK);
+        ASSERT_TRUE(route_table_util::many_create(k_max_v6_route_table,
+            first_v6_route_table_id, k_first_v6_pfx_str, k_first_nh_ip_str,
+            IP_AF_IPV6, k_max_route_per_tbl+1) == SDK_RET_OK);
+        ASSERT_TRUE(pds_batch_commit() == sdk::SDK_RET_NO_RESOURCE);
+    }
 #endif
 }
 
@@ -504,18 +558,25 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_3) {
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 0, k_max_v4_route_table);
     workflow_neg_3<route_table_feeder>(feeder);
-    // test max v6 route tables with zero routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                0, k_max_v6_route_table);
-    workflow_neg_3<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with zero routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    0, k_max_v6_route_table);
+        workflow_neg_3<route_table_feeder>(feeder);
+    }
+
     // test max v4 route tables with max routes
     feeder.init(k_base_v4_pfx, IP_AF_IPV4,
                 k_max_route_per_tbl, k_max_v4_route_table);
     workflow_neg_3<route_table_feeder>(feeder);
-    // test max v6 route tables with max routes
-    feeder.init(k_base_v6_pfx, IP_AF_IPV6,
-                k_max_route_per_tbl, k_max_v6_route_table);
-    workflow_neg_3<route_table_feeder>(feeder);
+
+    if (!apulu()) {
+        // test max v6 route tables with max routes
+        feeder.init(k_base_v6_pfx, IP_AF_IPV6,
+                    k_max_route_per_tbl, k_max_v6_route_table);
+        workflow_neg_3<route_table_feeder>(feeder);
+    }
 }
 
 /// \brief Route table WF_N_4
@@ -528,10 +589,12 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
     // test v4 route tables with zero routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 150);
-    feeder2.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 350);
-    // test v6 route tables with zero routes
-    workflow_neg_4<route_table_feeder>(feeder1, feeder2);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 150);
+        feeder2.init(k_base_v6_pfx, IP_AF_IPV6, 0, 40, 350);
+        // test v6 route tables with zero routes
+        workflow_neg_4<route_table_feeder>(feeder1, feeder2);
+    }
 
     feeder1.init(k_base_v4_pfx, IP_AF_IPV4,
                  k_max_route_per_tbl, 40, 100);
@@ -540,12 +603,14 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_4) {
     // test v4 route tables with max routes
     workflow_neg_4<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 40, 150);
-    feeder2.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 40, 350);
-    // test v6 route tables with max routes
-    workflow_neg_4<route_table_feeder>(feeder1, feeder2);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 40, 150);
+        feeder2.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 40, 350);
+        // test v6 route tables with max routes
+        workflow_neg_4<route_table_feeder>(feeder1, feeder2);
+    }
 }
 
 /// \brief Route table WF_N_5
@@ -559,13 +624,14 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_5) {
     // test max route tables with addition of max routes
     workflow_neg_5<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
-                  512, k_max_v6_route_table);
-    // test max route tables with addition of max routes
-    workflow_neg_5<route_table_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                      512, k_max_v6_route_table);
+        // test max route tables with addition of max routes
+        workflow_neg_5<route_table_feeder>(feeder1, feeder1A);
+    }
 }
-
 
 /// \brief Route table WF_N_6
 /// \ref WF_N_6
@@ -578,11 +644,13 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_6) {
     // test max route tables with addition of max routes
     workflow_neg_6<route_table_feeder>(feeder1, feeder1A);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
-                  512, k_max_v6_route_table);
-    // test max route tables with addition of max routes
-    workflow_neg_6<route_table_feeder>(feeder1, feeder1A);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6);
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                      512, k_max_v6_route_table);
+        // test max route tables with addition of max routes
+        workflow_neg_6<route_table_feeder>(feeder1, feeder1A);
+    }
 }
 
 /// \brief Route table WF_N_7
@@ -598,13 +666,15 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_7) {
                  k_max_route_per_tbl, 50, 201);
     workflow_neg_7<route_table_feeder>(feeder1, feeder1A, feeder2);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 151);
-    feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
-                  512, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 251);
-    workflow_neg_7<route_table_feeder>(feeder1, feeder1A, feeder2);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 151);
+        feeder1A.init(k_base_v6_pfx, IP_AF_IPV6,
+                      512, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 251);
+        workflow_neg_7<route_table_feeder>(feeder1, feeder1A, feeder2);
+    }
 }
 
 /// \brief Route table WF_N_8
@@ -618,11 +688,13 @@ TEST_F(route_test, v4v6_route_table_workflow_neg_8) {
                  k_max_route_per_tbl, 50, 201);
     workflow_neg_8<route_table_feeder>(feeder1, feeder2);
 
-    feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 151);
-    feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
-                 k_max_route_per_tbl, 50, 251);
-    workflow_neg_8<route_table_feeder>(feeder1, feeder2);
+    if (!apulu()) {
+        feeder1.init(k_base_v6_pfx, IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 151);
+        feeder2.init("125:100:100:1:1::0/65", IP_AF_IPV6,
+                     k_max_route_per_tbl, 50, 251);
+        workflow_neg_8<route_table_feeder>(feeder1, feeder2);
+    }
 }
 
 // TEST_F input validation with assert_death
