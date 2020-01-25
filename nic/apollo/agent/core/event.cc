@@ -30,7 +30,7 @@ update_event_listener (void *ctxt)
 {
     if (!core::agent_state::state()->event_mgr()->is_listener_active(ctxt)) {
         PDS_TRACE_DEBUG("Listener {} is not active, removing ...", ctxt);
-        //core::agent_state::state()->event_mgr()->unsubscribe_listener(ctxt);
+        core::agent_state::state()->event_mgr()->unsubscribe_listener(ctxt);
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
