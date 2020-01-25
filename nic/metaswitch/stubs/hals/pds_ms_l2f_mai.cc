@@ -320,10 +320,12 @@ void l2f_mai_t::handle_add_upd_mac(ATG_BDPI_UPDATE_FDB_MAC* update_fdb_mac) {
         // Add to batch
         for (auto ip_address: store_info_.mac_obj->out_of_seq_ip) {
             ips_info_.ip_address = ip_address;
+            ips_info_.has_ip = true;
             SDK_TRACE_DEBUG("PDS Create Remote Mapping for out-of-seq IP %s",
                             ipaddr2str(&ip_address));
             add_pds_mapping_spec_(pds_bctxt_guard.get());
         }
+        ips_info_.has_ip = false;
 
         auto l_bd_id = ips_info_.bd_id;
         auto l_op_create = op_create_;
