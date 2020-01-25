@@ -31,6 +31,7 @@ var (
 	nwSecClient     halapi.NwSecurityClient
 	vrfClient       halapi.VrfClient
 	telemetryClient halapi.TelemetryClient
+	systemClient    halapi.SystemClient
 )
 
 // Implements InfraAPI that return errors for testing
@@ -79,6 +80,7 @@ func TestMain(m *testing.M) {
 	nwSecClient = halapi.NewNwSecurityClient(conn)
 	vrfClient = halapi.NewVrfClient(conn)
 	telemetryClient = halapi.NewTelemetryClient(conn)
+	systemClient = halapi.NewSystemClient(conn)
 	code := m.Run()
 	mockHal.Stop()
 	infraAPI.Close()

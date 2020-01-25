@@ -535,6 +535,17 @@ func (h Hal) CollectorDelete(ctx context.Context, req *irisproto.CollectorDelete
 	}, nil
 }
 
+// SysSpecUpdate Stubbed out
+func (h Hal) SysSpecUpdate(ctx context.Context, req *irisproto.SysSpec) (*irisproto.SysSpecResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SysSpecUpdate Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.SysSpecResponse{
+		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
 // Stop stops the Fake HAL
 func (h Hal) Stop() {
 	log.Infof("Stopping HAL at: %s", h.ListenURL)
@@ -570,6 +581,7 @@ func NewFakeHalServer(listenURL string) *Hal {
 	irisproto.RegisterPortServer(f.Srv, &f)
 	irisproto.RegisterEventServer(f.Srv, &f)
 	irisproto.RegisterTelemetryServer(f.Srv, &f)
+	irisproto.RegisterSystemServer(f.Srv, &f)
 
 	go f.Srv.Serve(lis)
 

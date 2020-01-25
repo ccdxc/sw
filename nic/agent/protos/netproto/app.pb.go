@@ -23,6 +23,7 @@
 		tunnel.proto
 		types.proto
 		vrf.proto
+		profile.proto
 
 	It has these top-level messages:
 		App
@@ -152,6 +153,12 @@
 		VrfList
 		VrfEvent
 		VrfEventList
+		Profile
+		ProfileSpec
+		ProfileStatus
+		ProfileList
+		ProfileEvent
+		ProfileEventList
 */
 package netproto
 

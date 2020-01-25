@@ -41,6 +41,7 @@ type IrisAPI struct {
 	EventClient     halapi.EventClient
 	PortClient      halapi.PortClient
 	TelemetryClient halapi.TelemetryClient
+	SystemClient    halapi.SystemClient
 }
 
 // NewPipelineAPI returns the implementer or PipelineAPI for Iris Pipeline
@@ -62,6 +63,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*IrisAPI, error) {
 		EventClient:     halapi.NewEventClient(conn),
 		PortClient:      halapi.NewPortClient(conn),
 		TelemetryClient: halapi.NewTelemetryClient(conn),
+		SystemClient:    halapi.NewSystemClient(conn),
 	}
 
 	if err := i.PipelineInit(); err != nil {
@@ -128,6 +130,27 @@ func (i *IrisAPI) PipelineInit() error {
 		return err
 	}
 	log.Infof("Iris API: %s | %s", types.InfoPipelineInit, types.InfoDefaultUntaggedNetworkCreate)
+
+	// Add the default profile to boltDB during pipeline init
+	defaultProfile := netproto.Profile{
+		TypeMeta: api.TypeMeta{Kind: "Profile"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+		},
+		Spec: netproto.ProfileSpec{
+			FwdMode:    string(netproto.ProfileSpec_TRANSPARENT),
+			PolicyMode: string(netproto.ProfileSpec_BASENET),
+		},
+	}
+
+	dat, _ := defaultProfile.Marshal()
+
+	if err := i.InfraAPI.Store(defaultProfile.Kind, defaultProfile.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", defaultProfile.GetKey(), err))
+		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", defaultProfile.GetKey(), err)
+	}
 
 	i.initLifStream()
 
@@ -1309,6 +1332,123 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 	return
 }
 
+// HandleProfile handles CRUD Methods for Profile Object
+func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) (profiles []netproto.Profile, err error) {
+	i.Lock()
+	defer i.Unlock()
+
+	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.Profile
+		)
+		dat, err = i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		profiles = append(profiles, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = i.InfraAPI.List(profile.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var profile netproto.Profile
+			err := proto.Unmarshal(o, &profile)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+				continue
+			}
+			profiles = append(profiles, profile)
+		}
+
+		return
+	case types.Create:
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingProfile netproto.Profile
+		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingProfile.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&profile.Spec, &existingProfile.Spec) {
+			//log.Infof("Profile: %s | Info: %s ", profile.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
+	case types.Delete:
+		var existingProfile netproto.Profile
+		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingProfile.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		// Delete restores the default profile
+		profile = netproto.Profile{
+			TypeMeta: api.TypeMeta{Kind: "Profile"},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      "default",
+			},
+			Spec: netproto.ProfileSpec{
+				FwdMode:    string(netproto.ProfileSpec_TRANSPARENT),
+				PolicyMode: string(netproto.ProfileSpec_BASENET),
+			},
+		}
+	}
+	log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjBegin)
+	defer log.Infof("Profile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	if err := validator.ValidateProfile(profile); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	// Take a lock to ensure a single HAL API is active at any given point
+	if err := iris.HandleProfile(i.InfraAPI, i.SystemClient, oper, profile); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
 // HandleIPAMPolicy handles CRUD methods for IPAMPolicy
 func (i *IrisAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPolicy) (policies []netproto.IPAMPolicy, err error) {
 	return nil, err
@@ -1391,6 +1531,26 @@ func (i *IrisAPI) ReplayConfigs() error {
 				log.Info("Replaying persisted NetworkSecurityPolicy objects")
 				if _, err := i.HandleNetworkSecurityPolicy(types.Create, sgp); err != nil {
 					log.Errorf("Failed to recreate NetworkSecurityPolicy: %v. Err: %v", sgp.GetKey(), err)
+				}
+			}
+		}
+	}
+
+	// Replay Profile Object
+	profiles, err := i.InfraAPI.List("Profile")
+	if err == nil {
+		for _, o := range profiles {
+			var profile netproto.Profile
+			err := profile.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Profile. Err: %v", err)
+				continue
+			}
+			creator, ok := profile.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Profile object")
+				if _, err := i.HandleProfile(types.Create, profile); err != nil {
+					log.Errorf("Failed to recreate Profile: %v. Err: %v", profile.GetKey(), err)
 				}
 			}
 		}

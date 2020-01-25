@@ -27,13 +27,13 @@ using types::Empty;
 
 class SystemServiceImpl final : public System::Service {
 public:
-    Status ApiStatsGet(ServerContext *context,
+    Status APIStatsGet(ServerContext *context,
                        const Empty *request,
                        ApiStatsResponse *rsp) override;
     Status SystemGet(ServerContext *context,
                      const SystemGetRequest *request,
                      SystemResponse *rsp) override;
-    Status SystemUuidGet(ServerContext *context,
+    Status SystemUUIDGet(ServerContext *context,
                          const Empty *request,
                          SystemResponse *rsp) override;
     Status ClearIngressDropStats(ServerContext *context,

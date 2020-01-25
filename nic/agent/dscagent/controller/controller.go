@@ -103,6 +103,7 @@ func (c *API) newRestServer(url string, pipelineAPI types.PipelineAPI) *http.Ser
 		"/api/security/profiles/":     agServer.AddSecurityProfileAPIRoutes,
 		"/api/mirror/sessions/":       agServer.AddMirrorSessionAPIRoutes,
 		"/api/telemetry/flowexports/": agServer.AddFlowExportPolicyAPIRoutes,
+		"/api/profiles/":              agServer.AddProfileAPIRoutes,
 		"/api/mode/":                  c.addVeniceCoordinateRoutes,
 		"/api/debug/":                 c.addDebugRoutes,
 		"/api/mapping/":               c.addAPIMappingRoutes,
@@ -275,6 +276,13 @@ func (c *API) Start(ctx context.Context) error {
 			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"RoutingConfig"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}
+		}()
+
+		go func() {
+			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
+				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+			}
+
 		}()
 
 		c.tsmWG.Add(1)

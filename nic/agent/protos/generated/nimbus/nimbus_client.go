@@ -153,6 +153,9 @@ func (client *NimbusClient) processAggObjectWatchEvent(evt netproto.AggObjectEve
 	case "NetworkSecurityPolicy":
 		err = client.processNetworkSecurityPolicyDynamic(evt.EventType, object.Message.(*netproto.NetworkSecurityPolicy), reactor.(NetworkSecurityPolicyReactor))
 
+	case "Profile":
+		err = client.processProfileDynamic(evt.EventType, object.Message.(*netproto.Profile), reactor.(ProfileReactor))
+
 	case "RoutingConfig":
 		err = client.processRoutingConfigDynamic(evt.EventType, object.Message.(*netproto.RoutingConfig), reactor.(RoutingConfigReactor))
 
@@ -596,6 +599,75 @@ func (client *NimbusClient) diffNetworkSecurityPolicysDynamic(objList *netproto.
 	}
 }
 
+// diffProfilesDynamic diffs local state with controller state
+func (client *NimbusClient) diffProfilesDynamic(objList *netproto.ProfileList, reactor ProfileReactor,
+	ostream *AggWatchOStream) {
+	// build a map of objects
+	objmap := make(map[string]*netproto.Profile)
+	for _, obj := range objList.Profiles {
+		key := obj.ObjectMeta.GetKey()
+		objmap[key] = obj
+	}
+
+	// see if we need to delete any locally found object
+	o := netproto.Profile{
+		TypeMeta: api.TypeMeta{Kind: "Profile"},
+	}
+
+	localObjs, err := reactor.HandleProfile(types.List, o)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrNimbusHandling, "Op: %s | Kind: Profile | Err: %v", types.Operation(types.List), err))
+	}
+	//localObjs := reactor.ListProfile()
+	for _, lobj := range localObjs {
+		ctby, ok := lobj.ObjectMeta.Labels["CreatedBy"]
+		if ok && ctby == "Venice" {
+			key := lobj.ObjectMeta.GetKey()
+			if _, ok := objmap[key]; !ok {
+				evt := netproto.ProfileEvent{
+					EventType: api.EventType_DeleteEvent,
+					Profile:   lobj,
+				}
+				log.Infof("diffProfiles(): Deleting object %+v", lobj.ObjectMeta)
+				client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
+				client.processProfileEvent(evt, reactor, nil)
+			}
+		} else {
+			log.Infof("Not deleting non-venice object %+v", lobj.ObjectMeta)
+		}
+	}
+
+	// add/update all new objects
+	for _, obj := range objList.Profiles {
+		evt := netproto.ProfileEvent{
+			EventType: api.EventType_UpdateEvent,
+			Profile:   *obj,
+		}
+		client.lockObject(evt.Profile.GetObjectKind(), evt.Profile.ObjectMeta)
+		err := client.processProfileEvent(evt, reactor, nil)
+
+		if err == nil {
+			mobj, err := protoTypes.MarshalAny(obj)
+			aggObj := netproto.AggObject{Kind: "Profile", Object: &api.Any{}}
+			aggObj.Object.Any = *mobj
+			robj := netproto.AggObjectEvent{
+				EventType: api.EventType_UpdateEvent,
+				AggObj:    aggObj,
+			}
+			// send oper status
+			ostream.Lock()
+			err = ostream.stream.Send(&robj)
+			if err != nil {
+				log.Errorf("failed to send Agg oper Status, %s", err)
+				client.debugStats.AddInt("AggOperSendError", 1)
+			} else {
+				client.debugStats.AddInt("AggOperSent", 1)
+			}
+			ostream.Unlock()
+		}
+	}
+}
+
 // diffRoutingConfigsDynamic diffs local state with controller state
 func (client *NimbusClient) diffRoutingConfigsDynamic(objList *netproto.RoutingConfigList, reactor RoutingConfigReactor,
 	ostream *AggWatchOStream) {
@@ -850,6 +922,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 					msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
 					return
 
+				case "Profile":
+					msglist := lobj.objects.(*netproto.ProfileList)
+					msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
+					return
+
 				case "RoutingConfig":
 					msglist := lobj.objects.(*netproto.RoutingConfigList)
 					msglist.RoutingConfigs = append(msglist.RoutingConfigs, obj.Message.(*netproto.RoutingConfig))
@@ -902,6 +979,11 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 			msglist := listObj.objects.(*netproto.NetworkSecurityPolicyList)
 			msglist.NetworkSecurityPolicys = append(msglist.NetworkSecurityPolicys, obj.Message.(*netproto.NetworkSecurityPolicy))
 
+		case "Profile":
+			listObj.objects = &netproto.ProfileList{}
+			msglist := listObj.objects.(*netproto.ProfileList)
+			msglist.Profiles = append(msglist.Profiles, obj.Message.(*netproto.Profile))
+
 		case "RoutingConfig":
 			listObj.objects = &netproto.RoutingConfigList{}
 			msglist := listObj.objects.(*netproto.RoutingConfigList)
@@ -950,6 +1032,9 @@ func (client *NimbusClient) diffAggWatchObjects(objList *netproto.AggObjectList,
 
 		case "NetworkSecurityPolicy":
 			client.diffNetworkSecurityPolicysDynamic(lobj.objects.(*netproto.NetworkSecurityPolicyList), reactor.(NetworkSecurityPolicyReactor), ostream)
+
+		case "Profile":
+			client.diffProfilesDynamic(lobj.objects.(*netproto.ProfileList), reactor.(ProfileReactor), ostream)
 
 		case "RoutingConfig":
 			client.diffRoutingConfigsDynamic(lobj.objects.(*netproto.RoutingConfigList), reactor.(RoutingConfigReactor), ostream)
@@ -1034,6 +1119,15 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			//Make sure all kinds are implemented by the reactor to avoid later failures
 			if _, ok := reactor.(NetworkSecurityPolicyReactor); !ok {
 				return fmt.Errorf("Reactor does not implement %v", "NetworkSecurityPolicyReactor")
+			}
+			aggKind := api.KindWatchOptions{}
+			aggKind.Kind = kind
+			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
+
+		case "Profile":
+			//Make sure all kinds are implemented by the reactor to avoid later failures
+			if _, ok := reactor.(ProfileReactor); !ok {
+				return fmt.Errorf("Reactor does not implement %v", "ProfileReactor")
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind

@@ -20,9 +20,9 @@ package sys;
 // System service definition
 service System {
   // System related APIs
-  rpc ApiStatsGet(types.Empty) returns (ApiStatsResponse) {}
+  rpc APIStatsGet(types.Empty) returns (ApiStatsResponse) {}
   rpc SystemGet(SystemGetRequest) returns (SystemResponse) {}
-  rpc SystemUuidGet(types.Empty) returns (SystemResponse) {}
+  rpc SystemUUIDGet(types.Empty) returns (SystemResponse) {}
   rpc ClearIngressDropStats(types.Empty) returns (types.Empty) {}
   rpc ClearEgressDropStats(types.Empty) returns (types.Empty) {}
   rpc ClearPbDropStats(types.Empty) returns (types.Empty) {}
@@ -492,15 +492,17 @@ message MicroSegUpdateResponseMsg {
 
 // Forwarding Mode
 enum ForwardMode {
-    FWD_MODE_TRANSPARENT    = 0;
-    FWD_MODE_MICROSEG       = 1;
+    FWD_MODE_NONE           = 0;
+    FWD_MODE_TRANSPARENT    = 1;
+    FWD_MODE_MICROSEG       = 2;
 }
 
 // Policy Mode
 enum PolicyMode {
-    POLICY_MODE_BASE_NET    = 0;
-    POLICY_MODE_FLOW_AWARE  = 1;
-    POLICY_MODE_ENFORCE     = 2;
+    POLICY_MODE_NONE        = 0;
+    POLICY_MODE_BASE_NET    = 1;
+    POLICY_MODE_FLOW_AWARE  = 2;
+    POLICY_MODE_ENFORCE     = 3;
 }
 
 // System Spec

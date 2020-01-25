@@ -302,6 +302,17 @@ func ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile)
 	return
 }
 
+// ValidateProfile validates Profile object
+func ValidateProfile(profile netproto.Profile) error {
+	if _, ok := netproto.ProfileSpec_Fwd_Mode_value[strings.ToUpper(profile.Spec.FwdMode)]; !ok {
+		return errors.Wrapf(types.ErrInvalidProfileFwdMode, "Type: %s | Err: %v", strings.ToUpper(profile.Spec.FwdMode), types.ErrBadRequest)
+	}
+	if _, ok := netproto.ProfileSpec_Policy_Mode_value[strings.ToUpper(profile.Spec.PolicyMode)]; !ok {
+		return errors.Wrapf(types.ErrInvalidProfilePolicyMode, "Type: %s | Err: %v", strings.ToUpper(profile.Spec.PolicyMode), types.ErrBadRequest)
+	}
+	return nil
+}
+
 func validateSingletonALG(alg *netproto.ALG) (err error) {
 	var algMapper int
 	if alg == nil {

@@ -87,6 +87,9 @@ type PipelineAPI interface {
 	//HandleFlowExportPolicy handles CRUDs for NetworkSecurityPolicy object
 	HandleFlowExportPolicy(oper Operation, obj netproto.FlowExportPolicy) ([]netproto.FlowExportPolicy, error)
 
+	//HandleProfile handles CRUDs for Profile object
+	HandleProfile(oper Operation, obj netproto.Profile) ([]netproto.Profile, error)
+
 	// ReplayConfigs replays stored configs to avoid dataplane downtime on a reboot
 	ReplayConfigs() error
 

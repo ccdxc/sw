@@ -201,7 +201,7 @@ func (hd *Hal) setExpectations() {
 	//hd.MockClients.MockPortClient.EXPECT().PortDelete(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	//hd.MockClients.MockPortClient.EXPECT().PortInfoGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	//
-	//hd.MockClients.MockSystemClient.EXPECT().SystemUuidGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
+	//hd.MockClients.MockSystemClient.EXPECT().SystemUUIDGet(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 	//
 	//hd.MockClients.MockEventClient.EXPECT().EventListen(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
 

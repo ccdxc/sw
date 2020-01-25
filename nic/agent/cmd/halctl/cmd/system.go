@@ -1633,7 +1633,7 @@ func systemStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	if api {
 		var empty *halproto.Empty
-		respMsg, err := client.ApiStatsGet(context.Background(), empty)
+		respMsg, err := client.APIStatsGet(context.Background(), empty)
 		if err != nil {
 			fmt.Printf("Getting API Stats failed. %v\n", err)
 			return

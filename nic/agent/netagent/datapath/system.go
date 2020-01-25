@@ -5,7 +5,7 @@ func (hd *Datapath) GetUUID() (string, error) {
 
 	//// Get the
 	//if hd.Kind == "hal" {
-	//	resp, err := hd.Hal.SystemClient.SystemUuidGet(context.Background(), &halproto.Empty{})
+	//	resp, err := hd.Hal.SystemClient.SystemUUIDGet(context.Background(), &halproto.Empty{})
 	//	if err != nil {
 	//		log.Errorf("Error creating next hop. Err: %v", err)
 	//		return "", err

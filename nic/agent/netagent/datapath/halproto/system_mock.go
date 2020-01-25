@@ -35,22 +35,22 @@ func (m *MockSystemClient) EXPECT() *MockSystemClientMockRecorder {
 	return m.recorder
 }
 
-// ApiStatsGet mocks base method
-func (m *MockSystemClient) ApiStatsGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ApiStatsResponse, error) {
+// APIStatsGet mocks base method
+func (m *MockSystemClient) APIStatsGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ApiStatsResponse, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "ApiStatsGet", varargs...)
+	ret := m.ctrl.Call(m, "APIStatsGet", varargs...)
 	ret0, _ := ret[0].(*ApiStatsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ApiStatsGet indicates an expected call of ApiStatsGet
-func (mr *MockSystemClientMockRecorder) ApiStatsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+// APIStatsGet indicates an expected call of APIStatsGet
+func (mr *MockSystemClientMockRecorder) APIStatsGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiStatsGet", reflect.TypeOf((*MockSystemClient)(nil).ApiStatsGet), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIStatsGet", reflect.TypeOf((*MockSystemClient)(nil).APIStatsGet), varargs...)
 }
 
 // SystemGet mocks base method
@@ -71,22 +71,22 @@ func (mr *MockSystemClientMockRecorder) SystemGet(ctx, in interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemGet", reflect.TypeOf((*MockSystemClient)(nil).SystemGet), varargs...)
 }
 
-// SystemUuidGet mocks base method
-func (m *MockSystemClient) SystemUuidGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SystemResponse, error) {
+// SystemUUIDGet mocks base method
+func (m *MockSystemClient) SystemUUIDGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SystemResponse, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "SystemUuidGet", varargs...)
+	ret := m.ctrl.Call(m, "SystemUUIDGet", varargs...)
 	ret0, _ := ret[0].(*SystemResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SystemUuidGet indicates an expected call of SystemUuidGet
-func (mr *MockSystemClientMockRecorder) SystemUuidGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+// SystemUUIDGet indicates an expected call of SystemUUIDGet
+func (mr *MockSystemClientMockRecorder) SystemUUIDGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemUuidGet", reflect.TypeOf((*MockSystemClient)(nil).SystemUuidGet), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemUUIDGet", reflect.TypeOf((*MockSystemClient)(nil).SystemUUIDGet), varargs...)
 }
 
 // ClearIngressDropStats mocks base method
@@ -346,17 +346,17 @@ func (m *MockSystemServer) EXPECT() *MockSystemServerMockRecorder {
 	return m.recorder
 }
 
-// ApiStatsGet mocks base method
-func (m *MockSystemServer) ApiStatsGet(arg0 context.Context, arg1 *Empty) (*ApiStatsResponse, error) {
-	ret := m.ctrl.Call(m, "ApiStatsGet", arg0, arg1)
+// APIStatsGet mocks base method
+func (m *MockSystemServer) APIStatsGet(arg0 context.Context, arg1 *Empty) (*ApiStatsResponse, error) {
+	ret := m.ctrl.Call(m, "APIStatsGet", arg0, arg1)
 	ret0, _ := ret[0].(*ApiStatsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ApiStatsGet indicates an expected call of ApiStatsGet
-func (mr *MockSystemServerMockRecorder) ApiStatsGet(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiStatsGet", reflect.TypeOf((*MockSystemServer)(nil).ApiStatsGet), arg0, arg1)
+// APIStatsGet indicates an expected call of APIStatsGet
+func (mr *MockSystemServerMockRecorder) APIStatsGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "APIStatsGet", reflect.TypeOf((*MockSystemServer)(nil).APIStatsGet), arg0, arg1)
 }
 
 // SystemGet mocks base method
@@ -372,17 +372,17 @@ func (mr *MockSystemServerMockRecorder) SystemGet(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemGet", reflect.TypeOf((*MockSystemServer)(nil).SystemGet), arg0, arg1)
 }
 
-// SystemUuidGet mocks base method
-func (m *MockSystemServer) SystemUuidGet(arg0 context.Context, arg1 *Empty) (*SystemResponse, error) {
-	ret := m.ctrl.Call(m, "SystemUuidGet", arg0, arg1)
+// SystemUUIDGet mocks base method
+func (m *MockSystemServer) SystemUUIDGet(arg0 context.Context, arg1 *Empty) (*SystemResponse, error) {
+	ret := m.ctrl.Call(m, "SystemUUIDGet", arg0, arg1)
 	ret0, _ := ret[0].(*SystemResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// SystemUuidGet indicates an expected call of SystemUuidGet
-func (mr *MockSystemServerMockRecorder) SystemUuidGet(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemUuidGet", reflect.TypeOf((*MockSystemServer)(nil).SystemUuidGet), arg0, arg1)
+// SystemUUIDGet indicates an expected call of SystemUUIDGet
+func (mr *MockSystemServerMockRecorder) SystemUUIDGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SystemUUIDGet", reflect.TypeOf((*MockSystemServer)(nil).SystemUUIDGet), arg0, arg1)
 }
 
 // ClearIngressDropStats mocks base method

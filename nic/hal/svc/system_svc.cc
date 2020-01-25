@@ -15,7 +15,7 @@
 #include "nic/hal/src/internal/system.hpp"
 
 Status
-SystemServiceImpl::ApiStatsGet(ServerContext *context,
+SystemServiceImpl::APIStatsGet(ServerContext *context,
                                const Empty *request,
                                ApiStatsResponse *rsp)
 {
@@ -39,7 +39,7 @@ SystemServiceImpl::SystemGet(ServerContext *context,
 }
 
 Status
-SystemServiceImpl::SystemUuidGet(ServerContext *context,
+SystemServiceImpl::SystemUUIDGet(ServerContext *context,
                                  const Empty *request,
                                  SystemResponse *rsp)
 {

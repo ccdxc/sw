@@ -309,6 +309,21 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "Profile":
+			objlist, err := eh.server.ListProfiles(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return nil, err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return nil, err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "RoutingConfig":
 			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nil)
 			if err != nil {
@@ -450,6 +465,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
 
+			case "Profile":
+				if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
+					err = eh.statusReactor.(ProfileStatusReactor).OnProfileOperUpdate(nodeID,
+						object.Message.(*netproto.Profile))
+					if err != nil {
+						log.Errorf("Error updating Profile oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
+
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
 					err = eh.statusReactor.(RoutingConfigStatusReactor).OnRoutingConfigOperUpdate(nodeID,
@@ -543,6 +568,16 @@ func (eh *AggregateTopic) ObjectOperUpdate(stream netproto.AggWatchApiV1_ObjectO
 					}
 				}
 				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.NetworkSecurityPolicy).GetObjectMeta())
+
+			case "Profile":
+				if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
+					err = eh.statusReactor.(ProfileStatusReactor).OnProfileOperDelete(nodeID,
+						object.Message.(*netproto.Profile))
+					if err != nil {
+						log.Errorf("Error updating Profile oper state. Err: %v", err)
+					}
+				}
+				eh.updateAckedObjStatus(nodeID, oper.AggObj.Kind, oper.EventType, object.Message.(*netproto.Profile).GetObjectMeta())
 
 			case "RoutingConfig":
 				if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
@@ -884,6 +919,21 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				addAggObjectEvent(mobj, obj.GetObjectMeta())
 			}
 
+		case "Profile":
+			objlist, err := eh.server.ListProfiles(context.Background(), nil)
+			if err != nil {
+				log.Errorf("Error getting a list of objects. Err: %v", err)
+				return err
+			}
+			for _, obj := range objlist {
+				mobj, err := types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+				addAggObjectEvent(mobj, obj.GetObjectMeta())
+			}
+
 		case "RoutingConfig":
 			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nil)
 			if err != nil {
@@ -1051,6 +1101,17 @@ Watching:
 
 			case "NetworkSecurityPolicy":
 				obj, err := NetworkSecurityPolicyFromObj(evt.Obj)
+				if err != nil {
+					return err
+				}
+				mobj, err = types.MarshalAny(obj)
+				if err != nil {
+					log.Errorf("Error  marshalling any object. Err: %v", err)
+					return err
+				}
+
+			case "Profile":
+				obj, err := ProfileFromObj(evt.Obj)
 				if err != nil {
 					return err
 				}

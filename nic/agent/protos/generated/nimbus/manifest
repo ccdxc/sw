@@ -5,6 +5,7 @@ IPAMPolicy IPAMPolicyApiV1
 Interface InterfaceApiV1
 Network NetworkApiV1
 NetworkSecurityPolicy NetworkSecurityPolicyApiV1
+Profile ProfileApiV1
 RoutingConfig RoutingConfigApiV1
 SecurityProfile SecurityProfileApiV1
 Vrf VrfApiV1

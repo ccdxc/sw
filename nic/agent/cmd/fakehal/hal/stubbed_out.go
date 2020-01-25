@@ -379,3 +379,138 @@ func (h Hal) MirrorSessionGet(ctx context.Context, req *irisproto.MirrorSessionG
 
 	return nil, nil
 }
+
+// APIStatsGet Stubbed out
+func (h Hal) APIStatsGet(ctx context.Context, req *irisproto.Empty) (*irisproto.ApiStatsResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got APIStatsGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// SystemGet Stubbed out
+func (h Hal) SystemGet(ctx context.Context, req *irisproto.SystemGetRequest) (*irisproto.SystemResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SystemGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// SystemUUIDGet Stubbed out
+func (h Hal) SystemUUIDGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SystemResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SystemUUIDGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearIngressDropStats Stubbed out
+func (h Hal) ClearIngressDropStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearIngressDropStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearEgressDropStats Stubbed out
+func (h Hal) ClearEgressDropStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearEgressDropStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearPbDropStats Stubbed out
+func (h Hal) ClearPbDropStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearPbDropStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearFteStats Stubbed out
+func (h Hal) ClearFteStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearFteStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearFteTxRxStats Stubbed out
+func (h Hal) ClearFteTxRxStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearFteTxRxStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearTableStats Stubbed out
+func (h Hal) ClearTableStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearTableStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ClearPbStats Stubbed out
+func (h Hal) ClearPbStats(ctx context.Context, req *irisproto.Empty) (*irisproto.Empty, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ClearPbStats Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// ForwardingModeGet Stubbed out
+func (h Hal) ForwardingModeGet(ctx context.Context, req *irisproto.Empty) (*irisproto.ForwardingModeResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got ForwardingModeGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// FeatureProfileGet Stubbed out
+func (h Hal) FeatureProfileGet(ctx context.Context, req *irisproto.Empty) (*irisproto.FeatureProfileResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got FeatureProfileGet Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// MicroSegUpdate Stubbed out
+func (h Hal) MicroSegUpdate(ctx context.Context, req *irisproto.MicroSegUpdateRequestMsg) (*irisproto.MicroSegUpdateResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MicroSegUpdate Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// MicroSegStatusUpdate Stubbed out
+func (h Hal) MicroSegStatusUpdate(ctx context.Context, req *irisproto.MicroSegRequestMsg) (*irisproto.MicroSegResponseMsg, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got MicroSegStatusUpdate Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}
+
+// SysSpecCreate Stubbed out
+func (h Hal) SysSpecCreate(ctx context.Context, req *irisproto.SysSpec) (*irisproto.SysSpecResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SysSpecCreate Request:")
+	fmt.Println(string(dat))
+
+	return nil, nil
+}

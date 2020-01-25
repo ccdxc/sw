@@ -1303,6 +1303,117 @@ func (i *FakeAgentAPI) HandleFlowExportPolicy(oper types.Operation, netflow netp
 	return
 }
 
+// HandleProfile handles CRUD Methods for Profile Object
+func (i *FakeAgentAPI) HandleProfile(oper types.Operation, profile netproto.Profile) (profiles []netproto.Profile, err error) {
+	i.Lock()
+	defer i.Unlock()
+
+	err = utils.ValidateMeta(oper, profile.Kind, profile.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.Profile
+		)
+		dat, err = i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		profiles = append(profiles, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = i.InfraAPI.List(profile.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var profile netproto.Profile
+			err := proto.Unmarshal(o, &profile)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+				continue
+			}
+			profiles = append(profiles, profile)
+		}
+
+		return
+	case types.Create:
+		profileBytes, _ := profile.Marshal()
+
+		if err := i.InfraAPI.Store(profile.Kind, profile.GetKey(), profileBytes); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		return nil, nil
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingProfile netproto.Profile
+		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingProfile.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&profile.Spec, &existingProfile.Spec) {
+			//log.Infof("Profile: %s | Info: %s ", profile.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
+		profileBytes, _ := profile.Marshal()
+		if err := i.InfraAPI.Store(profile.Kind, profile.GetKey(), profileBytes); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrBoltDBStoreCreate, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		return nil, nil
+
+	case types.Delete:
+		var existingProfile netproto.Profile
+		dat, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingProfile.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		profile = existingProfile
+		if err := i.InfraAPI.Delete(profile.Kind, profile.GetKey()); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Profile: %s | Err: %v", profile.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrBoltDBStoreDelete, "Profile: %s | Err: %v", profile.GetKey(), err)
+		}
+		return nil, nil
+	}
+
+	return
+}
+
 //func (i *FakeAgentAPI) HandleTelemetry(oper int, tm *netproto.Telemetry) ([]*netproto.Telemetry, error) {
 //	return nil, nil
 //}

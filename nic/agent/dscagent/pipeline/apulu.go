@@ -448,6 +448,11 @@ func (a *ApuluAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netprot
 	return nil, errors.Wrapf(types.ErrNotImplemented, "NetworkSecurityPolicy %s is not implemented by Apulu Pipeline", oper)
 }
 
+// HandleProfile unimplemented
+func (a *ApuluAPI) HandleProfile(oper types.Operation, profile netproto.Profile) ([]netproto.Profile, error) {
+	return nil, errors.Wrapf(types.ErrNotImplemented, "Profile %s is not implemented by Apulu Pipeline", oper)
+}
+
 // HandleSecurityProfile handles CRUD methods for SecurityProfile objects
 func (a *ApuluAPI) HandleSecurityProfile(oper types.Operation, profile netproto.SecurityProfile) (profiles []netproto.SecurityProfile, err error) {
 	a.Lock()

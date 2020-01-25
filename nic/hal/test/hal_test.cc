@@ -554,7 +554,7 @@ public:
 
         std::cout << "API Stats Get" << std::endl;
 
-        status = system_stub_->ApiStatsGet(&context, request, &response);
+        status = system_stub_->APIStatsGet(&context, request, &response);
         if (status.ok()) {
             count = response.api_entries_size();
 

@@ -1,0 +1,77 @@
+
+//------------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+// protobuf specification for DSC profiles ( network, forwarding etc..
+//------------------------------------------------------------------------------
+syntax = "proto3";
+package netproto;
+
+// Mandatory imports.
+import "google/api/annotations.proto";
+import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/pensando/sw/api/meta.proto";
+import "match.proto";
+
+// ---------------------------- Profile API --------------------------
+
+// Profile API
+service ProfileApiV1 {
+    // options for auto generating rest endpoints
+    option(venice.naplesRestService) = {
+        Object: "Profile",
+        Method: ["list", "post", "delete", "put"],
+        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}",
+        Prefix: "api/profiles"
+    };
+    rpc ListProfiles (api.ListWatchOptions) returns(ProfileList) {};
+    rpc WatchProfiles (api.ListWatchOptions) returns(stream ProfileEventList){};
+    rpc ProfileOperUpdate (stream ProfileEvent) returns(api.TypeMeta) {};
+}
+
+message Profile {
+    api.TypeMeta   TypeMeta   = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag)= ",inline"];
+    api.ObjectMeta ObjectMeta = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
+    ProfileSpec    Spec       = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
+    ProfileStatus  Status     = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status, omitempty"];
+}
+// ProfileSpec captureal all the profile configurations per DSC
+message ProfileSpec {
+  enum Fwd_Mode 
+  {
+     TRANSPARENT = 0; //Transparent Packet fwding mode
+     USEG        = 1; //MicroSeg mode where naples attracts traffic   
+  }  
+
+  enum Policy_Mode 
+  {
+     BASENET    = 0; // Basic networking mode. Non intrusive
+     FLOWAWARE  = 1; // Flow learning is enabled in this mode
+     ENFORCED   = 2; // Flows obey the policy enforcement
+  } 
+  string    FwdMode   =  1 [(venice.check) = "StrEnum(ProfileSpec.Fwd_Mode)",
+                      (gogoproto.nullable) = true, (gogoproto.jsontag) = "fwd-mode,omitempty"];
+  string    PolicyMode = 2 [(venice.check) = "StrEnum(ProfileSpec.Policy_Mode)",
+                           (gogoproto.nullable) = true, (gogoproto.jsontag) = "policy-mode, omitempty"];
+}
+
+// Profile Status 
+message ProfileStatus {
+    uint64 ProfileID              = 1 [(gogoproto.jsontag) = "id,omitempty"];
+}
+
+message ProfileList {
+  repeated Profile  Profiles = 1;
+}
+
+// Profile watch event
+message ProfileEvent {
+    api.EventType  EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
+    Profile        Profile   = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "profile,omitempty"];
+}
+
+// Profile watch events batched
+message ProfileEventList {
+    repeated ProfileEvent ProfileEvents  = 1;
+}
