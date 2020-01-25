@@ -30,7 +30,7 @@ else
             exit 0
         fi
         cd $driver_dir
-        kldunload sys/modules/ionic/ionic.ko 2> /dev/null || rc=$?
+        kldunload ionic 2> /dev/null || rc=$?
         if [ -n "$rc" ] && [ $rc -ne 0 ]; then
             echo "Failed to unload ionic driver. Ignore"
             exit 0
@@ -48,13 +48,14 @@ else
         cat /tmp/log.txt
         echo '---'
 
+        kldunload ionic 2> /dev/null || rc=$?
         cd /naples
         tar xf drivers-freebsd-eth.tar.xz
         cd drivers-freebsd-eth
         env OS_DIR=/usr/src ./build.sh
-        kldunload sys/modules/ionic/ionic.ko 2> /dev/null || rc=$?
         kldload sys/modules/ionic/ionic.ko || (dmesg && exit 1)
         sleep 2
+
         intmgmt=`pciconf -l | grep chip=0x10041dd8 | cut -d'@' -f1 | sed "s/ion/ionic/g"`
         ifconfig $intmgmt $own_ip/24
         if [ -n "$no_mgmt" ]; then

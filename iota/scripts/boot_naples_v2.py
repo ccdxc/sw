@@ -363,11 +363,9 @@ class EntityManagement:
         self.hdl.sendline(cmd)
         self.hdl.expect("#")
 
-    def RunCommoandOnConsoleWithOutput(self, cmd):
+    def RunCommandOnConsoleWithOutput(self, cmd):
         self.__run_cmd(cmd)
-        output = self.hdl.before
-        print("output of command \"{0}\" is \"{1}\"".format(cmd,output))
-        return output
+        return self.hdl.before.decode('utf-8')
 
     @_exceptionWrapper(_errCodes.ENTITY_COPY_FAILED, "Entity command failed")
     def CopyIN(self, src_filename, entity_dir):
@@ -549,22 +547,21 @@ class NaplesManagement(EntityManagement):
 
     def __read_ip(self):
         self.__run_dhclient()
-        print(self.RunCommoandOnConsoleWithOutput("ifconfig"))
-        output = self.RunCommoandOnConsoleWithOutput("ifconfig oob_mnic0")
+        self.RunCommandOnConsoleWithOutput("ifconfig -a")
+        output = self.RunCommandOnConsoleWithOutput("ifconfig oob_mnic0")
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
-        x = re.findall(ifconfig_regexp.encode(), output)
+        x = re.findall(ifconfig_regexp, output)
         if len(x) > 0:
-            self.ipaddr = x[0].decode('utf-8')
+            self.ipaddr = x[0]
             self.SSHPassInit()
 
 
     def __read_mac(self):
-        print(self.RunCommoandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether"))
-        output = self.RunCommoandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
+        output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
         mac_regexp = '(?:[0-9a-fA-F]:?){12}'
-        x = re.findall(mac_regexp.encode(), output)
+        x = re.findall(mac_regexp, output)
         if len(x) > 0:
-            self.mac_addr = x[0].decode('utf-8')
+            self.mac_addr = x[0]
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Login Failed")
     def Login(self, bringup_oob=True):
@@ -577,29 +574,28 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
-        global gold_fw_latest
+        global gold_fw_latest, gold_fw_old
         gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
-        try:
-            self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_latest_ver + '\r\n' + '#')
-            gold_fw_latest = True
+        output = self.RunCommandOnConsoleWithOutput(gold_fw_cmd)
+        gold_fw_latest = re.search(GlobalOptions.gold_fw_latest_ver, output)
+        gold_fw_old = re.search(GlobalOptions.gold_fw_old_ver, output)
+        if gold_fw_latest and not gold_fw_old:
             print ("Matched gold fw latest")
-        except:
-            try:
-                self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_old_ver)
-                gold_fw_latest = False
-                print ("Matched gold fw older")
-            except:
-                msg = "Did not match any available gold fw"
-                print(msg)
-                if self.IsSSHUP():
-                    print("SSH working, skipping gold fw version check")
-                    gold_fw_latest = False
-                    return
-                raise Exception(msg)
+        elif gold_fw_old and not gold_fw_latest:
+            print ("Matched gold fw old")
+        elif gold_fw_latest and gold_fw_old:
+            print ("Matched gold fw latest & old, coz they are same")
+        else:
+            msg = "Did not match any available gold fw, ver = %s" % output
+            print(msg)
+            if self.IsSSHUP():
+                print("SSH working, skipping gold fw version check")
+                return
+            raise Exception(msg)
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadRunningFirmwareType(self):
-        fwType = self.RunCommoandOnConsoleWithOutput("fwupdate -r").decode('utf-8')
+        fwType = self.RunCommandOnConsoleWithOutput("fwupdate -r")
         if re.search('\nmainfw',fwType):
             print('determined running firmware to be type MAIN')
             return FIRMWARE_TYPE_MAIN
@@ -612,7 +608,7 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadSavedFirmwareType(self):
-        fwType = self.RunCommoandOnConsoleWithOutput("fwupdate -S").decode('utf-8')
+        fwType = self.RunCommandOnConsoleWithOutput("fwupdate -S")
         if re.search('\nmainfw',fwType):
             print('determined saved firmware to be type MAIN')
             return FIRMWARE_TYPE_MAIN
@@ -788,7 +784,7 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        try: self.RunSshCmd("sudo lspci | grep 1dd8")
+        try: self.RunSshCmd("lspci -d 1dd8:")
         except:
             print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
@@ -882,7 +878,7 @@ class EsxHostManagement(HostManagement):
         return retcode
 
     def __check_naples_deivce(self):
-        try: self.RunSshCmd("lspci | grep Pensando")
+        try: self.RunSshCmd("lspci -d 1dd8:")
         except: 
             print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()

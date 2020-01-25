@@ -54,20 +54,20 @@ else
             exit 0
         fi
         cd $driver_dir
-        rmmod drivers/eth/ionic/ionic.ko 2> /dev/null || rc=$?
+        rmmod ionic 2> /dev/null || rc=$?
         if [ -n "$rc" ] && [ $rc -ne 0 ]; then
             echo "Failed to unload ionic driver. Ignore"
             exit 0
         fi
         echo "Unloaded ionic driver."
     else
+        rmmod ionic 2> /dev/null || rc=$?
         cd /naples/
         tar xf drivers-linux-eth.tar.xz
         cd drivers-linux-eth
-        rmmod drivers/eth/ionic/ionic.ko 2> /dev/null || rc=$?
         ./setup_libs.sh
         ./build.sh
-        insmod drivers/eth/ionic/ionic.ko
+        insmod drivers/eth/ionic/ionic.ko || (dmesg && exit 1)
         sleep 2
 
         #intmgmt=`systool -c net | grep "Class Device"  | tail -4 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
