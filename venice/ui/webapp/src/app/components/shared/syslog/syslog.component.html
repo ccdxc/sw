@@ -29,7 +29,8 @@
                             *ngIf="controlAsFormArray(syslogServerForm.get(['targets'])).length > 1"
                             (click)="removeTarget(index)">
                     delete</mat-icon>
-                  <span fxFlex="nogrow" *ngIf="last" class="syslog-add" (click)="addTarget()">+
+                  <span fxFlex="nogrow" *ngIf="last && targets.length < 2" class="syslog-add"
+                        (click)="addTarget()">+
                     ADD</span>
                 </div>
               </div>

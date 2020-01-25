@@ -73,7 +73,7 @@ export class SyslogComponent extends BaseComponent implements OnInit {
 
   addTarget() {
     const targets = this.syslogServerForm.get('targets') as FormArray;
-    targets.insert(0, new MonitoringExportConfig().$formGroup);
+    targets.insert(targets.length, new MonitoringExportConfig().$formGroup);
     this.setValidatorToTargets();
   }
 
