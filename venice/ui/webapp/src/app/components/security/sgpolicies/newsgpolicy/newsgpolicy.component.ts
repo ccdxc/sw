@@ -514,7 +514,10 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
         }
         return entry.protocol + '/' + entry.ports;
       });
-      return protoPorts.join(', ');
+      return protoPorts.join('<br>');
+    }
+    if (field === 'apps') {
+      return rule.rule.$formGroup.get(field).value.join('<br>');
     }
     return rule.rule.$formGroup.get(field).value.join(', ');
   }

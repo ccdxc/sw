@@ -192,8 +192,6 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
   // EDIT MODE
   ruleEditableMap: {[index: number]: boolean} = {};
-  ruleDeleteMap: {[index: number]: boolean} = {};
-  delCount = 0;
   editObject: SecurityNetworkSecurityPolicy = null;
   newRuleIndex: number = -1;
 
@@ -231,7 +229,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
   display: boolean = false;
   showReorder: boolean = false;
-  reorderToIndex: number;
+  reorderToIndex: number = 0;
 
   constructor(protected _controllerService: ControllerService,
     protected securityService: SecurityService,
@@ -780,6 +778,9 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     return protoPorts.concat(apps).join(', ');
   }
 
+  /*
+   * the below sections are for the action icons added to the rule tables
+   */
   isAnythingSelected() {
     if (this.tableContainer) {
       if (this.tableContainer.selectedDataObjects.length) {
@@ -798,87 +799,78 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     return false;
   }
 
-  isAnythingToBeDeleted() {
-    if (this.delCount) {
-      return true;
-    }
-    return false;
-  }
-
   checkboxClicked(event) {
     const index = event.data.order;
     this.ruleEditableMap[index] = !this.ruleEditableMap[index];
-  }
-
-  rowDeleteClicked(rowData) {
-    const index = rowData.order;
-    this.ruleDeleteMap[index] = true;
-    this.delCount++;
-  }
-
-  rowResetClicked(rowData) {
-    const index = rowData.order;
-    this.ruleDeleteMap[index] = false;
-    this.delCount--;
-  }
-
-  showDialog() {
-    this.createEditObject();
-    this.display = true;
-  }
-
-  reorderClicked() {
-    this.showReorder = !this.showReorder;
-    if (this.showReorder) {
-      this.createEditObject();
-    } else {
-      this.reorderToIndex = null;
+    // when the number box and reorder icon is hidden
+    // need to reset the reorderToIndex otherwise once the
+    // box and icon shows again, the reorder icon will be eneabled
+    const selectedObjs = this.tableContainer.selectedDataObjects;
+    if (selectedObjs.length !== 1) {
+      this.reorderToIndex = 0;
     }
-  }
-
-  reorderChanged($event) {
-    this.reorderToIndex = $event.target.valueAsNumber;
-  }
-
-  createEditObject() {
-
-    const editrules: Array<SecuritySGRule> = [];
-    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
-    this.tableContainer.selectedDataObjects.forEach((ruleObj, index) => {
-        editrules.push(ruleObj.rule);
-    });
-
-    this.editObject.spec.rules = editrules;
-  }
-
-  createNewRule() {
-    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
-    this.editObject.spec.rules = [];
   }
 
   resetMapsAndSelection() {
     this.newRuleIndex = -1;
     this.ruleEditableMap = {};
-    this.ruleDeleteMap = {};
-    this.delCount = 0;
     this.tableContainer.selectedDataObjects = [];
     this.showReorder = false;
-    this.reorderToIndex = null;
+    this.reorderToIndex = 0;
   }
 
-  onSave(editedObject: SecurityNetworkSecurityPolicy) {
-    let policy;
-    if (this.reorderToIndex > 0) {
-      policy = this.updateFromEditObject(this.selectedPolicy);
-    } else if ( editedObject ) {
-      if (this.newRuleIndex > -1) {
-        policy = this.updateFromNewRule(editedObject, this.newRuleIndex);
-      } else {
-        policy = this.updateFromEditObject(editedObject);
-      }
+  reorderKeyUp(event) {
+    // hit enter to submit
+    if (event.keyCode === 13) {
+      this.onReorder();
+      return;
     }
-    if (policy) {
-      this.updatePolicy(policy);
+    // no '.' ,  '+' , '-'
+    if (event.keyCode === 187 || event.keyCode === 189 ||
+      event.keyCode === 190) {
+      event.preventDefault();
+    }
+    this.reorderToIndex = event.target.value;
+  }
+
+  isReorderReady() {
+    return this.reorderToIndex > 0;
+  }
+
+  onClose() {
+    this.display = false;
+  }
+
+  onUpdate() {
+    const editrules: Array<SecuritySGRule> = [];
+    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
+    this.tableContainer.selectedDataObjects.forEach((ruleObj, index) => {
+        editrules.push(ruleObj.rule);
+    });
+    this.editObject.spec.rules = editrules;
+    this.display = true;
+  }
+
+  onAdd(rowData) {
+    this.newRuleIndex = rowData.order;
+    this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
+    this.editObject.spec.rules = [];
+    this.display = true;
+  }
+
+  onReorder() {
+    const selectedObjs = this.tableContainer.selectedDataObjects;
+    if (selectedObjs.length === 1 && this.reorderToIndex > 0) {
+      const policy1 = this.selectedPolicy.getFormGroupValues();
+      const curIdx: number = selectedObjs[0].order;
+      // delte selected rule
+      const arrDeletedItems = policy1.spec.rules.splice(curIdx, 1);
+      let insertIndex = this.reorderToIndex - 1;
+      if (insertIndex > policy1.spec.rules.length) {
+        insertIndex = policy1.spec.rules.length;
+      }
+      policy1.spec.rules.splice(insertIndex, 0, arrDeletedItems[0]);
+      this.updatePolicy(policy1);
     }
   }
 
@@ -893,24 +885,42 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
         message: 'This action cannot be reversed',
         acceptLabel: 'Delete',
         accept: () => {
-          const ruleDelMap: {[index: number]: boolean} = {};
-          selectedObjs.forEach(rowData => {
-            if (!ruleDelMap[rowData.order]) {
-              ruleDelMap[rowData.order] = true;
-            }
-          });
           const policy1 = this.selectedPolicy.getFormGroupValues();
-          const rules = [];
-          for (let i = 0; i < policy1.spec.rules.length; i++) {
-            if (!ruleDelMap[i]) {
-              rules.push(policy1.spec.rules[i]);
-            }
-          }
+          const rules = policy1.spec.rules.filter((rule, idx) => !this.ruleEditableMap[idx]);
           policy1.spec.rules = rules;
           this.updatePolicy(policy1);
         }
       });
     }
+  }
+
+  onSave(editedObject: SecurityNetworkSecurityPolicy) {
+    if (editedObject) {
+      const policy = (this.newRuleIndex > -1) ?
+        this.updateFromNewRule(editedObject, this.newRuleIndex) :
+        this.updateFromEditObject(editedObject);
+        this.updatePolicy(policy);
+    }
+  }
+
+  updateFromNewRule(editedObject, index: number) {
+    const policy = editedObject;
+    const policy1 = this.selectedPolicy.getFormGroupValues();
+    policy1.spec.rules.splice(index, 0, policy.spec.rules[0]);
+    return policy1;
+  }
+
+  updateFromEditObject(editedObject) {
+    const policy = editedObject;
+    const policy1 = this.selectedPolicy.getFormGroupValues();
+    let count = 0;
+    for (let i = 0; i < policy1.spec.rules.length; i++) {
+      if (this.ruleEditableMap[i] || this.reorderToIndex > 0) {
+        policy1.spec.rules[i] = policy.spec.rules[count];
+        count++;
+      }
+    }
+    return policy1;
   }
 
   updatePolicy(policy) {
@@ -933,54 +943,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     }
   }
 
-  onCancel() {
-    this.resetMapsAndSelection();
-  }
-
-  closeDialog() {
-    this.display = false;
-  }
-
   updateObject(newObject: ISecurityNetworkSecurityPolicy, oldObject: ISecurityNetworkSecurityPolicy) {
     return this.securityService.UpdateNetworkSecurityPolicy(oldObject.meta.name, newObject, null, oldObject);
-  }
-
-  insertRuleBefore(rowData) {
-    this.newRuleIndex = rowData.order;
-    this.createNewRule();
-    this.display = true;
-  }
-
-  updateFromNewRule(editedObject, index: number) {
-    const policy = editedObject;
-    const policy1 = this.selectedPolicy.getFormGroupValues();
-    policy1.spec.rules.splice(index, 0, policy.spec.rules[0]);
-    return policy1;
-  }
-
-  updateFromEditObject(editedObject) {
-    const policy = editedObject;
-    const policy1 = this.selectedPolicy.getFormGroupValues();
-
-    let count = 0;
-
-    for (let i = 0; i < policy1.spec.rules.length; i++) {
-      if (this.ruleEditableMap[i] || this.reorderToIndex > 0) {
-        policy1.spec.rules[i] = policy.spec.rules[count];
-        count++;
-      }
-    }
-
-    for (let i = count; i < policy.spec.rules.length; i++) {
-      policy1.spec.rules[i].push(policy.spec.rules[count]);
-    }
-
-    if (this.reorderToIndex > 0) {
-      const originalIndex = Number(Object.keys(this.ruleEditableMap)[0]);
-      const realReorderIndex = this.reorderToIndex > originalIndex ? this.reorderToIndex - 2 : this.reorderToIndex - 1;
-      policy1.spec.rules.splice(realReorderIndex, 0, policy1.spec.rules.splice(originalIndex, 1)[0]);
-    }
-
-    return policy1;
   }
 }

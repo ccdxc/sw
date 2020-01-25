@@ -56,12 +56,10 @@
 </ng-template>
 
 <ng-template #createTemplate>
-  <div fxFlex>
-    <app-newhost (formClose)="creationFormClose()"
-                 fxFlex="grow" [existingObjects]='dataObjects' [notAdmittedCount]="notAdmittedCount"
-                 [dataObjects]="naplesWithoutHosts">
-    </app-newhost>
-  </div>
+  <app-newhost (formClose)="creationFormClose()"
+               fxFlex="grow" [existingObjects]='dataObjects' [notAdmittedCount]="notAdmittedCount"
+               [dataObjects]="naplesWithoutHosts">
+  </app-newhost>
 </ng-template>
 
 <!-- TABLE BODY -->

@@ -33,14 +33,6 @@ export class PartialEditSgpolicyComponent extends NewsgpolicyComponent implement
     super(_controllerService, uiconfigsService, securityService, workloadService);
   }
 
-  computeInlineButtonClass() {
-    if (this.isFormValid()) {
-      return '';
-    } else {
-      return 'global-button-disabled';
-    }
-  }
-
   getClassName(): string {
     return this.constructor.name;
   }

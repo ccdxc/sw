@@ -5,16 +5,17 @@
     <div fxFlex></div>
     <div *ngIf="isInline" class="neweventpolicy-buttoncontainer" fxFlex="nogrow" fxLayout="row wrap"
          fxLayoutAlign="start start">
-      <div fxFlex="nogrow">
-        <span (click)="saveObject()"
-              class="global-button-primary global-button-padding partial-edit-sgpolicy-save"
-              [title]="getTooltip()"
-              [ngClass]="computeInlineButtonClass()">SAVE</span>
-      </div>
-      <div fxFlex="nogrow">
-        <span (click)="cancelObject()"
-              class="global-button-neutral global-button-padding partial-edit-sgpolicy-save">CANCEL</span>
-      </div>
+      <span (click)="saveObject()"
+            [title]="getTooltip()"
+            [matTooltip]="'test'"
+            [ngClass]="{
+              'global-button-primary': true,
+              'global-button-padding': true,
+              'partial-edit-sgpolicy-save': true,
+              'global-button-disabled': !isFormValid()
+            }">SAVE</span>
+      <span (click)="cancelObject()"
+            class="global-button-neutral global-button-padding partial-edit-sgpolicy-save">CANCEL</span>
     </div>
   </div>
   <!--
@@ -148,7 +149,7 @@
                   [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['from-ip-addresses']))}">
               <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
                              [formControl]="data.rule.$formGroup.get(['from-ip-addresses'])"
-                             boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
+                             boxStyleClass="partial-edit-sgpolicy-chip" [itemValidator]="isValidIP"
                              [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
               </app-formchips>
             </span>
@@ -183,7 +184,7 @@
                   [ngClass]="{'app-formchips-requiredField': isFieldEmpty(data.rule.$formGroup.get(['to-ip-addresses']))}">
               <app-formchips fxFlex="none" [chipsLabel]="IPS_LABEL"
                              [formControl]="data.rule.$formGroup.get(['to-ip-addresses'])"
-                             boxStyleClass="newsgpolicy-chip" [itemValidator]="isValidIP"
+                             boxStyleClass="partial-edit-sgpolicy-chip" [itemValidator]="isValidIP"
                              [itemErrorMsg]="IPS_ERRORMSG" [toolTip]="IPS_TOOLTIP">
               </app-formchips>
             </span>
@@ -219,12 +220,12 @@
       </mat-radio-button>
     </mat-radio-group>
 
-    <div [@slideInOut] *ngIf="data.selectedProtoAppOption === PROTO_PORTS_OPTION"
+    <div *ngIf="data.selectedProtoAppOption === PROTO_PORTS_OPTION"
          fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
       <ng-container *ngTemplateOutlet="protoandportsTemplate; context:{data: data, index: index}">
       </ng-container>
     </div>
-    <div [@slideInOut] *ngIf="data.selectedProtoAppOption === APPS_OPTION"
+    <div *ngIf="data.selectedProtoAppOption === APPS_OPTION"
          fxFlex="grow" fxLayout="column" fxLayoutAlign="start start">
       <ng-container *ngTemplateOutlet="appsTemplate; context:{data: data, index: index}">
       </ng-container>
@@ -282,15 +283,15 @@
 
     <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
       <div fxFlex="15px"></div>
-      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="19px">
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center start" fxLayoutGap="19px">
         <div *ngIf="data.selectedProtoAppOption === APPS_OPTION"
              fxFlex="auto" class="partial-edit-sgpolicy-bold">APPS</div>
-        <div *ngIf="data.selectedProtoAppOption === APPS_OPTION"
-             fxFlex="auto">{{ displayArrayField(data, 'apps') }}</div>
+        <div *ngIf="data.selectedProtoAppOption === APPS_OPTION" fxFlex="auto"
+             [innerHTML]="displayArrayField(data, 'apps')"></div>
         <div *ngIf="data.selectedProtoAppOption !== APPS_OPTION"
              fxFlex="auto" class="partial-edit-sgpolicy-bold">PROTO-PORTS</div>
-        <div *ngIf="data.selectedProtoAppOption !== APPS_OPTION"
-             fxFlex="auto">{{ displayArrayField(data, 'proto-ports') }}</div>
+        <div *ngIf="data.selectedProtoAppOption !== APPS_OPTION" fxFlex="auto"
+             [innerHTML]="displayArrayField(data, 'proto-ports')"></div>
       </div>
     </div>
   </div>

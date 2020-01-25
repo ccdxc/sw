@@ -55,7 +55,7 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
 
   isTabComponent = false;
   disableTableWhenRowExpanded = true;
-  tableLoading: boolean;
+  tableLoading: boolean = false;
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
@@ -110,16 +110,13 @@ export class TechsupportComponent extends TablevieweditAbstract<IMonitoringTechS
   }
 
   getTechSupportRequests() {
-    this.tableLoading = true;
     this.techsupportrequestsEventUtility = new HttpEventUtility<MonitoringTechSupportRequest>(MonitoringTechSupportRequest);
     this.dataObjects = this.techsupportrequestsEventUtility.array;
     const sub = this.monitoringService.WatchTechSupportRequest().subscribe(
       response => {
         this.techsupportrequestsEventUtility.processEvents(response);
-        this.tableLoading = false;
       },
       () => {
-        this.tableLoading = false;
         this.controllerService.webSocketErrorHandler('Failed to get Tech Support Requests');
       }
     );

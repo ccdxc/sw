@@ -8,20 +8,20 @@
   </app-tableviewedit>
 </div>
 <ng-template #captionTemplate>
-  <div fxFlex fxLayout="column">
+  <div fxFlex="none" fxLayout="column">
     <div *ngIf="this.selectedEvent" [@slideInOut] fxFlex="auto" fxLayout="row"
          class="eventdetail-container">
       <ng-container *ngTemplateOutlet="selectedEventDetail;"></ng-container>
     </div>
-    <div fxFlex fxLayout="row">
-      <div fxFlex fxLayout="row" fxLayoutAlign="center center">
+    <div fxFlex="none" fxLayout="row">
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
         <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
                          [icon]="eventsIcon"
                          width="250px">
         </app-tableheader>
         <div fxFlex></div>
       </div>
-      <div fxFlex fxLayout="row" fxLayoutAlign="end center">
+      <div fxFlex="none" fxLayout="row" fxLayoutAlign="end center">
         <!-- All events are currently informational, so we do not display severity filters or search filter -->
         <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
         <!-- Find Event by:  -->

@@ -225,13 +225,6 @@ $vertical-gutter: 5px;
   @include primary-font();
 }
 
-.sgpolicydetail-input-reorder {
-  width: 190px;
-  height: 30px;
-  margin: 0 5px;
-  @include primary-font();
-}
-
 .sgpolicydetail-value {
   margin: $vertical-gutter $horizontal-gutter;
   @include primary-font();
@@ -257,7 +250,32 @@ $vertical-gutter: 5px;
   text-decoration: line-through;
 }
 
-.sgpolicy-icons-button {
-  cursor: pointer;
-  color: #676763;
+
+
+.ui-inputgroup {
+  .sgpolicydetail-input-reorder {
+    width: 90px;
+    height: 30px;
+    border-top-left-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
+    @include primary-font();
+  }
+
+  .sgpolicy-icon-addon-span {
+    height: 30px;
+    border-radius: 0px;
+    background-color: #f7f7f7;
+
+    .sgpolicy-icons-button {
+      cursor: pointer;
+      color: rgb(27, 29, 31);
+    }
+  }
+
+  button:disabled {
+    .sgpolicy-icons-button {
+      cursor: default;
+      opacity: 0.3;
+    }
+  }
 }
