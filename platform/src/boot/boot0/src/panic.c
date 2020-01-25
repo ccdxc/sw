@@ -12,10 +12,10 @@ panic(const char *s)
 {
     bsm_t bsm = { 0 };
 
+    bsm_save(&bsm);                 // zero BSM state for full restart
     logf_printf("panic: %s\n", s);
     if (board_reset_on_panic()) {
         // Complete reset upon panic.
-        bsm_save(&bsm);             // zero BSM state for full restart
         uart_wait_idle();           // wait for panic message to drain
         wdt_sys_reset();            // chip reset
     }

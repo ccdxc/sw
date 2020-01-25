@@ -98,13 +98,25 @@ static int
 select_image(void)
 {
     const bsm_fwid_map_t *fwid_map = board_bsm_fwid_map();
+    static int first = 1;
+    int enabled = 1;
 
     bsm_load(&bsm);
     if (!bsm.running) {
         // New boot
-        bsm.wdt = board_bsm_wdt_disable() ? 0 : 1;
-        bsm.attempt = 0;
-        bsm.track = select_track();
+        if (first) {
+            // First time through; select the track.
+            first = 0;
+            bsm.track = select_track();
+            enabled = (fwid_map->track[bsm.track].enable != 0);
+            bsm.wdt = (enabled && !board_bsm_wdt_disable());
+            bsm.attempt = 0;
+        } else {
+            // Second time through, with the bsm disabled.
+            // Get here if fwid_map->track[bsm.track].enable == 0 and the
+            // selected u-boot fails crc check.
+            panic("No boot path found");
+        }
     } else {
         // Restart, new attempt 
         logf("boot0: restart from stage=%u, track=%u, attempt=%u, fwid=%u\n",
@@ -116,10 +128,10 @@ select_image(void)
         ++bsm.attempt;
     }
 
-    bsm.autoboot = 1;
-    bsm.running = 1;
+    bsm.autoboot = enabled;
+    bsm.running = enabled;
     bsm.stage = BSM_STG_BOOT0;
-    bsm.fwid = fwid_map->map[bsm.track][bsm.attempt];
+    bsm.fwid = fwid_map->track[bsm.track].fwid[bsm.attempt];
     bsm_save(&bsm);
 
     return bsm.fwid;

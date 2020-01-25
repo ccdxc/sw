@@ -1,1 +1,1 @@
-2 f5e216bce2cc8a0dfff07a5a3527fb3b  boot0.bin
+3 8c1e5f527bbde367d4244d389b58a0b9  boot0.bin

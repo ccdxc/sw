@@ -12,11 +12,11 @@
 
 // Mapping of [track][attempt] to fwid
 static const bsm_fwid_map_t std_bsm_fwid_map = {
-    .map = {
-        [FW_MAIN_A] = { FW_MAIN_A, FW_MAIN_B, FW_GOLD,   FW_GOLD   },
-        [FW_MAIN_B] = { FW_MAIN_B, FW_MAIN_A, FW_GOLD,   FW_GOLD   },
-        [FW_GOLD]   = { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD   },
-        [FW_DIAG]   = { FW_DIAG,   FW_DIAG,   FW_GOLD,   FW_GOLD   },
+    .track = {    // enable  fwid...
+        [FW_MAIN_A] = { 1, { FW_MAIN_A, FW_MAIN_B, FW_GOLD,   FW_GOLD } },
+        [FW_MAIN_B] = { 1, { FW_MAIN_B, FW_MAIN_A, FW_GOLD,   FW_GOLD } },
+        [FW_GOLD]   = { 1, { FW_GOLD,   FW_GOLD,   FW_GOLD,   FW_GOLD } },
+        [FW_DIAG]   = { 0, { FW_DIAG,   FW_DIAG,   FW_DIAG,   FW_DIAG } }
     }
 };
 

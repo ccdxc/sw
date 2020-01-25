@@ -22,7 +22,10 @@
 
 // Mapping from [track][attempt] to selected fwid.
 typedef struct {
-    uint8_t map[4][4];
+    struct {
+        uint8_t enable;                 // BSM enable for this track
+        uint8_t fwid[4];                // fwid for each successive attempt
+    } track[4];
 } bsm_fwid_map_t;
 
 // board.c
