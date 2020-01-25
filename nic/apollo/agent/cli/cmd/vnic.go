@@ -92,12 +92,11 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 225)
+	hdrLine := strings.Repeat("-", 187)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s%-10s%-10s\n",
+	fmt.Printf("%-36s%-36s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s\n",
 		"VnicID", "SubnetID", "VnicEncap", "MAC", "SrcGuard", "FabricEncap",
-		"RxMirrorSessionID", "TxMirrorSessionID", "SwitchVnic", "V4MeterId",
-		"V6MeterID", "HostIf")
+		"RxMirrorSessionID", "TxMirrorSessionID", "SwitchVnic", "HostIf")
 	fmt.Println(hdrLine)
 }
 
@@ -120,9 +119,9 @@ func printVnic(vnic *pds.Vnic) {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 
-	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-36s%-36s%-10s\n",
+	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10s\n",
 		string(spec.GetVnicId()), string(spec.GetSubnetId()), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
-		spec.GetSwitchVnic(), string(spec.GetV4MeterId()), string(spec.GetV6MeterId()), lifName)
+		spec.GetSwitchVnic(), lifName)
 }

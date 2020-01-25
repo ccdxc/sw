@@ -92,14 +92,14 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 276)
+	hdrLine := strings.Repeat("-", 249)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
 	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-10s%-20s%-20s%-16s%-16s%-20s%-73s%-12s%-12s%-3s\n",
-		"ID", "VpcID", "HostIf", "IPv4Prefix", "IPv6Prefix", "VR IPv4", "VR IPv6", "VR MAC",
+	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3s\n",
+		"ID", "VpcID", "HostIf", "IPv4Prefix", "VR IPv4", "VR MAC",
 		"RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
 }
@@ -111,16 +111,13 @@ func printSubnet(subnet *pds.Subnet) {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 	v4rtTblID := string(spec.GetV4RouteTableId())
-	v6rtTblID := string(spec.GetV6RouteTableId())
-	rtTblID := fmt.Sprintf("%-36s/%-36s", v4rtTblID, v6rtTblID)
-	ingSGID := fmt.Sprintf("%d/%d", spec.GetIngV4SecurityPolicyId(), spec.GetIngV6SecurityPolicyId())
-	egSGID := fmt.Sprintf("%d/%d", spec.GetEgV4SecurityPolicyId(), spec.GetEgV6SecurityPolicyId())
-	fmt.Printf("%-36s%-36d%-10s%-20s%-20s%-16s%-16s%-20s%-73s%-12s%-12s%-3d\n",
+	rtTblID := fmt.Sprintf("%-36s", v4rtTblID)
+	ingSGID := fmt.Sprintf("%-36s", spec.GetIngV4SecurityPolicyId()[0])
+	egSGID := fmt.Sprintf("%-36s", spec.GetEgV4SecurityPolicyId()[0])
+	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3d\n",
 		string(spec.GetId()), string(spec.GetVPCId()), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
-		utils.IPv6PrefixToStr(spec.GetV6Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
-		utils.ByteIPv6AddrtoStr(spec.GetIPv6VirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		rtTblID, ingSGID, egSGID, spec.GetToS())
 }
