@@ -131,8 +131,14 @@
 </ng-template>
 
 <ng-template #ipmacTemplate let-rowData="rowData" let-index="index">
-  <div>{{rowData.spec.interfaces[index]["mac-address"]}} -
+  <div *ngIf="rowData.spec.interfaces[index]['ip-addresses'] &&
+    rowData.spec.interfaces[index]['ip-addresses'].length > 0">
+    {{rowData.spec.interfaces[index]["mac-address"]}} -
     {{rowData.spec.interfaces[index]["ip-addresses"].join(', ')}}
+  </div>
+  <div *ngIf="!rowData.spec.interfaces[index]['ip-addresses'] ||
+  rowData.spec.interfaces[index]['ip-addresses'].length === 0">
+    {{rowData.spec.interfaces[index]["mac-address"]}}
   </div>
 </ng-template>
 

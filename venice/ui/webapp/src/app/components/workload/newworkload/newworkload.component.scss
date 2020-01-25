@@ -75,12 +75,16 @@ $dary-grey: #a9a9a9;
     }
 
     .new-workload-bold {
-      @include primary-font(16px, #383838, 500);
+      @include primary-font(16px, #383838, bold);
     }
 
     .new-workload-bold-subtext-ipmac {
-      @include primary-font(16px, #383838, 200);
-      // width: 40px;
+      @include primary-font(16px, $dary-grey, 500);
+      width: 110px;
+    }
+
+    .new-workload-rule-content {
+      @include primary-font(16px, #b2b3b4, normal);
     }
   }
 

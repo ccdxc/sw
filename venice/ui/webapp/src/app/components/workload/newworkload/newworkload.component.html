@@ -158,7 +158,7 @@
           <div *ngIf="getInputFieldValue(index,'mac-address')" fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="new-workload-bold-subtext-ipmac">MAC:</div>
             <div fxFlex="none" fxLayout="column">
-              <span class="new-export-policy-rule-content">
+              <span class="new-workload-rule-content">
                 {{getInputFieldValue(index,'mac-address')}}
               </span>
             </div>
@@ -167,7 +167,7 @@
           <div *ngIf="getInputFieldValue(index,'ip-addresses').length" fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="new-workload-bold-subtext-ipmac">IP:</div>
             <div fxFlex="none" fxLayout="column">
-              <span class="new-export-policy-rule-content"
+              <span class="new-workload-rule-content"
                     *ngFor="let ip of getInputFieldValue(index,'ip-addresses')">
                 {{ip}}
               </span>
@@ -177,10 +177,10 @@
 
         <div fxFlex="230px" fxLayout="column" fxLayouAlign="start start">
           <div fxFlex="none" class="new-workload-bold">Vlan</div>
-          <div *ngIf="getInputFieldValue(index,'external-vlan')" fxFlex="none" fxLayout="row">
+          <div fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="new-workload-bold-subtext-ipmac">External-vlan:</div>
             <div fxFlex="none" fxLayout="column">
-              <span class="new-export-policy-rule-content">
+              <span class="new-workload-rule-content">
                 {{ getInputFieldValue(index,'external-vlan') }}
               </span>
             </div>
@@ -188,7 +188,7 @@
           <div *ngIf="getInputFieldValue(index,'micro-seg-vlan')" fxFlex="none" fxLayout="row">
             <div fxFlex="none" class="new-workload-bold-subtext-ipmac">Micro-seg-vlan:</div>
             <div fxFlex="none" fxLayout="column">
-              <span class="new-export-policy-rule-content">
+              <span class="new-workload-rule-content">
                 {{ getInputFieldValue(index,'micro-seg-vlan') }}
               </span>
             </div>
