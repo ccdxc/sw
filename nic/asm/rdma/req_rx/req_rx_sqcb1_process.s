@@ -180,8 +180,8 @@ read:
     // remaining_payload_bytes != pmtu
     sll            r3, 1, d.log_pmtu
     sne            c1, r3, r2
-    IS_ANY_FLAG_SET(c3, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)
-    bcf            [c1 & c3], invalid_pyld_len
+    IS_ANY_FLAG_SET(c5, r1, REQ_RX_FLAG_MIDDLE|REQ_RX_FLAG_FIRST)
+    bcf            [c1 & c5], invalid_pyld_len
 
     // remaining_payload_bytes > pmtu
     slt            c1, r3, r2 // Branch Delay Slot
@@ -190,8 +190,8 @@ read:
 
     // remaining_payload_bytes < 1
     slt            c1, r2, 1 // Branch Delay Slot
-    ARE_ALL_FLAGS_SET(c5, r1, REQ_RX_FLAG_LAST)
-    bcf            [c1 & c5], invalid_pyld_len
+    ARE_ALL_FLAGS_SET(c3, r1, REQ_RX_FLAG_LAST)
+    bcf            [c1 & c3], invalid_pyld_len
     nop            // Branch Delay Slot
 
     bcf            [c4], rrq_empty
@@ -280,8 +280,11 @@ post_lsn_to_ack_timestamp:
 post_rexmit_psn_to_ack_timestamp:
     DMA_CMD_STATIC_BASE_GET(r6, REQ_RX_DMA_CMD_START_FLIT_ID, REQ_RX_DMA_CMD_LSN_OR_REXMIT_PSN)
     add            r4, r7, SQCB2_REXMIT_PSN_OFFSET
-    // if its rnr/nak/read_resp mid, update rexmit_psn and ack_timestamp
+    // if its rnr/nak update rexmit_psn and ack_timestamp
     DMA_HBM_PHV2MEM_SETUP(r6, rexmit_psn, ack_timestamp, r4)
+    // if its read first/mid, update rexmit_psn and ack_timestamp,
+    // and also reload retry counters, rnr_timeout
+    DMA_HBM_PHV2MEM_PHV_END_SETUP_C(r6, rnr_timeout, c5)
 
 set_arg:
     phvwr          p.err_retry_ctr, d.err_retry_count
