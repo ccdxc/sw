@@ -45,7 +45,8 @@
                      [bodyTemplate]="bodyTemplate"
                      [actionTemplate]="actionTemplate" [enableCheckbox]="true"
                      [tableLoading]="tableLoading"
-                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)">
+                     (rowExpandAnimationComplete)="rowExpandAnimationComplete($event)"
+                     (operationOnMultiRecordsComplete)="postDeleteRecord()">
   </app-tableviewedit>
 
 </app-pagebody>

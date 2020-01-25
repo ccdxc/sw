@@ -292,7 +292,7 @@ export class PolicyhealthComponent implements OnInit, OnChanges, AfterViewInit, 
       data.forEach(d => {
         sum += d.y;
       });
-      this.activeFlows.defaultValue = data.length > 1 ? sum / data.length : sum;
+      this.activeFlows.defaultValue = Math.round(data.length > 1 ? sum / data.length : sum);
       this.currActiveFlows = data[data.length - 1].y;
       this.activeFlows.data = data;
       if (data.length > 1) {

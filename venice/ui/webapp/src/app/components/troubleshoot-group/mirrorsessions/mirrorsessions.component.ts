@@ -96,7 +96,7 @@ export class MirrorsessionsComponent extends TablevieweditAbstract<IMonitoringMi
       response => {
         this.mirrorsessonsEventUtility.processEvents(response);
       },
-      this.controllerService.webSocketErrorHandler('Failed to get Tech Support Requests')
+      this.controllerService.webSocketErrorHandler('Failed to get Mirror Sessions')
     );
     this.subscriptions.push(sub);
   }

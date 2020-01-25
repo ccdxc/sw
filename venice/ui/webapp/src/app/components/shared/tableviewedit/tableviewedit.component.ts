@@ -97,6 +97,8 @@ export class TablevieweditHTMLComponent implements OnInit, AfterViewInit {
   @Output() rowSelectedEmitter: EventEmitter<any> = new EventEmitter();
   @Output() rowUnselectedEmitter: EventEmitter<any> = new EventEmitter();
 
+  @Output() operationOnMultiRecordsComplete: EventEmitter<any> = new EventEmitter();
+
   selectedcolumns: TableCol[];
 
   actionWidthPx: number = 50;
@@ -620,6 +622,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
     }
     const sub = forkJoin(observables).subscribe(
       (results) => {
+        this.tableContainer.operationOnMultiRecordsComplete.emit(results);
         const isAllOK = Utility.isForkjoinResultAllOK(results);
         if (isAllOK) {
           this._controllerService.invokeSuccessToaster(allSuccessSummary, msg);
@@ -637,6 +640,7 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
         }
       },
       (error) => {
+        this.tableContainer.operationOnMultiRecordsComplete.emit(error);
         this._controllerService.invokeRESTErrorToaster('Failure', error);
         if (errorCallback) {
           errorCallback(error);

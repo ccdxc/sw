@@ -245,7 +245,6 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   }
 
   deleteRecord(object: ObjstoreObject): Observable<{ body: ObjstoreObject | IApiStatus | Error, statusCode: number }> {
-    this.refresh();
     return this.objstoreService.DeleteObject(SnapshotsComponent.SNAPSHOT_NAMESPACES, object.meta.name);
   }
 
