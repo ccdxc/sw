@@ -17,7 +17,6 @@ service CPRouteSvc
   rpc CPStaticRouteSpecUpdate(CPStaticRouteRequest) returns (CPStaticRouteResponse) {}
   rpc CPStaticRouteSpecDelete (CPStaticRouteRequest) returns (CPStaticRouteResponse) {}
   rpc CPRouteSpecGet  (CPRouteSpecRequest) returns (CPRouteSpecResponse) {}
-  rpc CPRouteSpecGetAll  (CPRouteSpecRequest) returns (CPRouteSpecResponse) {}
 }
 
 enum RouteType {

@@ -118,16 +118,7 @@ class Client {
         pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
-        auto ent = req.add_request();
-        auto peeraddr = ent->mutable_peeraddr();
-        peeraddr->set_af(types::IP_AF_INET);
-        peeraddr->set_v4addr(0);
-        ent->set_id(std::to_string(1));
-        auto localaddr = ent->mutable_localaddr();
-        localaddr->set_af(types::IP_AF_INET);
-        localaddr->set_v4addr(0);
-        ent->set_ifid(0);
-        grpc::Status status = stub_->BGPPeerSpecGetAll(&context, req, &res);
+        grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "got peer status table with " << res.response_size() << " entry" << std::endl;
@@ -163,7 +154,7 @@ int main(int argc, char** argv) {
 
     client.peerGetAll();
     client.peerCreate();
-    client.peerGet();
+    //client.peerGet();
 //    sleep(25);
     client.peerGetAll();
 //    client.peerDelete();

@@ -36,14 +36,11 @@ service BGPSvc {
   rpc BGPPeerSpecUpdate (BGPPeerRequest) returns (BGPResponse) {}
   rpc BGPPeerSpecDelete (BGPPeerRequest) returns (BGPResponse) {}
   rpc BGPPeerSpecGet (BGPPeerRequest) returns (BGPPeerGetResponse) {}
-  rpc BGPPeerSpecGetAll (BGPPeerRequest) returns (BGPPeerGetResponse) {}
   rpc BGPPeerAfCreate (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfUpdate (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfDelete (BGPPeerAfRequest) returns (BGPResponse) {}
   rpc BGPPeerAfGet (BGPPeerAfRequest) returns (BGPPeerAfGetResponse) {}
-  rpc BGPPeerAfGetAll (BGPPeerAfRequest) returns (BGPPeerAfGetResponse) {}
   rpc BGPNLRIPrefixGet (BGPNLRIPrefixRequest) returns (BGPNLRIPrefixGetResponse) {}
-  rpc BGPNLRIPrefixGetAll (BGPNLRIPrefixRequest) returns (BGPNLRIPrefixGetResponse) {}
 }
 
 // BGP address family identifier

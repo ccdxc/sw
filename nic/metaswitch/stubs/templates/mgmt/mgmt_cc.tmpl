@@ -657,7 +657,7 @@
         NBB_TRC_EXIT();
     } /* pds_ms_getall_{{$struct | ToLower}}_oid */
 
-    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+    NBB_VOID pds_ms_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
         /***************************************************************************/
         /* Local Variables                                                         */
         /***************************************************************************/
@@ -691,7 +691,7 @@
         /* Invoke custom fill function registered by the user                      */
         /***************************************************************************/
         {{if not (eq $fillFn "")}}
-        //{{$fillFn}}(req, oid);
+        //{{$fillFn}}(oid);
         {{end}}
 
         /***************************************************************************/
@@ -721,6 +721,59 @@
         NBB_TRC_EXIT();
         return;
     } /* pds_ms_getall_{{$struct | ToLower}} */
+
+    pre_get_{{$struct | ToLower}}_func_type pre_get_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pds_ms_reg_pre_get_{{$struct | ToLower}}(pre_get_{{$struct | ToLower}}_func_type func) {
+        pre_get_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_get_{{$struct | ToLower}} */
+
+    NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+        if (pre_get_{{$struct | ToLower}}_func != NULL) {
+            pre_get_{{$struct | ToLower}}_func(req, resp);
+        }
+        return;
+    } /* pds_ms_pre_get_{{$struct | ToLower}} */
+
+    post_get_{{$struct | ToLower}}_func_type post_get_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pds_ms_reg_post_get_{{$struct | ToLower}}(post_get_{{$struct | ToLower}}_func_type func) {
+        post_get_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_post_get_{{$struct | ToLower}} */
+
+    NBB_VOID pds_ms_post_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp) {
+        if (post_get_{{$struct | ToLower}}_func != NULL) {
+            post_get_{{$struct | ToLower}}_func(req, resp);
+        }
+        return;
+    } /* pds_ms_post_get_{{$struct | ToLower}} */
+
+    pre_getall_{{$struct | ToLower}}_func_type pre_getall_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pds_ms_reg_pre_getall_{{$struct | ToLower}}(pre_getall_{{$struct | ToLower}}_func_type func) {
+        pre_getall_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_getall_{{$struct | ToLower}} */
+
+    NBB_VOID pds_ms_pre_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
+        if (pre_getall_{{$struct | ToLower}}_func != NULL) {
+            pre_getall_{{$struct | ToLower}}_func(resp);
+        }
+        return;
+    } /* pds_ms_pre_getall_{{$struct | ToLower}} */
+
+    post_getall_{{$struct | ToLower}}_func_type post_getall_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pds_ms_reg_post_getall_{{$struct | ToLower}}(post_getall_{{$struct | ToLower}}_func_type func) {
+        post_getall_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_post_getall_{{$struct | ToLower}} */
+
+    NBB_VOID pds_ms_post_getall_{{$struct | ToLower}}(pds::{{$rootMsg.GetName}}* resp) {
+        if (post_getall_{{$struct | ToLower}}_func != NULL) {
+            post_getall_{{$struct | ToLower}}_func(resp);
+        }
+        return;
+    } /* pds_ms_post_getall_{{$struct | ToLower}} */
+
     {{end}}
   {{end}}
 {{end}}

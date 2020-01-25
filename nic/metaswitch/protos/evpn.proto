@@ -17,24 +17,19 @@ service EvpnSvc
   rpc EvpnEviSpecUpdate (EvpnEviRequest) returns (EvpnResponse) {}
   rpc EvpnEviSpecDelete (EvpnEviRequest) returns (EvpnResponse) {}
   rpc EvpnEviSpecGet (EvpnEviRequest) returns (EvpnEviGetResponse) {}
-  rpc EvpnEviSpecGetAll (EvpnEviRequest) returns (EvpnEviGetResponse) {}
   rpc EvpnEviRtSpecCreate (EvpnEviRtRequest) returns (EvpnResponse) {}
   rpc EvpnEviRtSpecUpdate (EvpnEviRtRequest) returns (EvpnResponse) {}
   rpc EvpnEviRtSpecDelete (EvpnEviRtRequest) returns (EvpnResponse) {}
   rpc EvpnEviRtSpecGet (EvpnEviRtRequest) returns (EvpnEviRtGetResponse) {}
-  rpc EvpnEviRtSpecGetAll (EvpnEviRtRequest) returns (EvpnEviRtGetResponse) {}
   rpc EvpnIpVrfSpecCreate (EvpnIpVrfRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfSpecUpdate (EvpnIpVrfRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfSpecDelete (EvpnIpVrfRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfSpecGet (EvpnIpVrfRequest) returns (EvpnIpVrfGetResponse) {}
-  rpc EvpnIpvrfSpecGetAll (EvpnIpVrfRequest) returns (EvpnIpVrfGetResponse) {}
   rpc EvpnIpVrfRtSpecCreate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfRtSpecUpdate (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfRtSpecDelete (EvpnIpVrfRtRequest) returns (EvpnResponse) {}
   rpc EvpnIpVrfRtSpecGet (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtGetResponse) {}
-  rpc EvpnIpvrfRtSpecGetAll (EvpnIpVrfRtRequest) returns (EvpnIpVrfRtGetResponse) {}
   rpc EvpnMacIpSpecGet  (EvpnMacIpSpecRequest) returns (EvpnMacIpGetResponse) {}
-  rpc EvpnMacIpSpecGetAll  (EvpnMacIpSpecRequest) returns (EvpnMacIpGetResponse) {}
 }
 
 // EVPN Configured or Auto Values

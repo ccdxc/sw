@@ -483,10 +483,7 @@ static void get_peer_status_all() {
     ClientContext        context;
     Status               ret_status;
 
-    auto proto_spec = request.add_request();
-    proto_spec->set_id(msidx2pdsobjkey(1).id);
-
-    ret_status = g_bgp_stub_->BGPPeerSpecGetAll (&context, request, &response);
+    ret_status = g_bgp_stub_->BGPPeerSpecGet (&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of BGP Peer Status Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
@@ -527,9 +524,7 @@ static void get_evpn_mac_ip_all () {
     ClientContext           context;
     Status                  ret_status;
 
-    auto proto_spec = request.add_request();
-    proto_spec->set_eviid(1);
-    ret_status = g_evpn_stub_->EvpnMacIpSpecGetAll (&context, request, &response);
+    ret_status = g_evpn_stub_->EvpnMacIpSpecGet(&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of EVPN MAC IP Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
