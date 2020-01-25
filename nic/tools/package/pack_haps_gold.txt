@@ -7,11 +7,14 @@ nic/conf/bullseye/                                                  /nic/conf/bu
 nic/conf/iris/plugins.json                                          /nic/conf/iris/
 nic/conf/iris/classic-plugins.json                                  /nic/conf/iris/
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
+nic/conf/iris/hbm_mem_base.json                                     /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
+nic/conf/iris/operd-regions.json                                    /nic/conf/
+nic/conf/iris/operd-daemon.json                                     /nic/conf/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json
-nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-eth-dev-scale.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-FEATURE_PROFILE_BASE.json
+nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-eth-dev-scale.json
 nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-default.json
 nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-FEATURE_PROFILE_BASE.json
 nic/sysmgr/src/naples_gold.json                                     /nic/conf/sysmgr_gold.json
@@ -94,6 +97,7 @@ nic/build/aarch64/iris/lib/libmemhash.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libheartbeat.so                          /nic/lib/
 nic/build/aarch64/iris/lib/libht.so                                 /nic/lib/
 nic/build/aarch64/iris/lib/libindexer.so                            /nic/lib/
+nic/build/aarch64/iris/lib/librte_indexer.so                        /nic/lib/
 nic/build/aarch64/iris/lib/libisa.so                                /nic/lib/
 nic/build/aarch64/iris/lib/libisc_dhcp.so                           /nic/lib/
 nic/build/aarch64/iris/lib/liblist.so                               /nic/lib/
@@ -129,6 +133,7 @@ nic/build/aarch64/iris/lib/libtls_pse.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libtrace.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libevent_thread.so                       /nic/lib/
 nic/build/aarch64/iris/lib/libpenipc.so                             /nic/lib/
+nic/build/aarch64/iris/lib/libzmq.so                                /nic/lib/libzmq.so.3
 nic/build/aarch64/iris/lib/libtwheel.so                             /nic/lib/
 nic/build/aarch64/iris/lib/libutils.so                              /nic/lib/
 nic/build/aarch64/iris/lib/libsdkxcvrdriver.so                      /nic/lib/
@@ -161,6 +166,7 @@ nic/build/aarch64/iris/lib/libflowstatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/librulestatsproto.so                     /nic/lib/
 nic/build/aarch64/iris/lib/libhal_mem.so                            /nic/lib/
 nic/build/aarch64/iris/lib/libsdkring.so                            /nic/lib/
+nic/build/aarch64/iris/lib/libsdkftl.so                             /nic/lib/
 
 # linkmgr
 nic/build/aarch64/iris/bin/port_client                              /nic/bin
