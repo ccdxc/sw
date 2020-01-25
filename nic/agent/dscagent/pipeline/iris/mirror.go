@@ -165,7 +165,7 @@ func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	// Delete Flow Monitor rules
 	var flowMonitorDeleteReq halapi.FlowMonitorRuleDeleteRequestMsg
 	var mirrorSessionDeleteReq halapi.MirrorSessionDeleteRequestMsg
-	_, mgmtIP, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
+	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 
 	for _, flowMonitorKey := range mirrorSessionToFlowMonitorRuleMapping[mirror.GetKey()] {
 		req := &halapi.FlowMonitorRuleDeleteRequest{

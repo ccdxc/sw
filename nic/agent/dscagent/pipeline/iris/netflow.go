@@ -174,9 +174,10 @@ func deleteFlowExportPolicyHandler(infraAPI types.InfraAPI, telemetryClient hala
 	delete(netflowSessionToFlowMonitorRuleMapping, netflow.GetKey())
 
 	var collectorKeys []*halapi.CollectorKeyHandle
+	mgmtIP, _, _ := net.ParseCIDR(infraAPI.GetConfig().MgmtIP)
 	for _, c := range netflow.Spec.Exports {
 		dstIP := c.Destination
-		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, netflow.GetKey(), netflow.String(), dstIP, false); err != nil {
+		if err := DeleteLateralNetAgentObjects(infraAPI, intfClient, epClient, vrfID, netflow.GetKey(), mgmtIP.String(), dstIP, false); err != nil {
 			log.Error(errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err))
 			return errors.Wrapf(types.ErrNetflowDeleteLateralObjects, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), err)
 		}
