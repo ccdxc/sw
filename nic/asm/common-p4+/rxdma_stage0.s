@@ -37,7 +37,7 @@ struct phv_ p;
 .align
 rx_dummy:
     phvwr.e     p.p4_intr_global_drop, 1
-    nop
+    phvwri      p.{app_header_table0_valid...app_header_table3_valid}, 0
 
 //Do not change the order of this entry. 
 //Keep it the first one after dummy
