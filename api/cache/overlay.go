@@ -34,6 +34,7 @@ import (
 const maxConsistentUpdateRetries = 10
 const maxOverlayOps = 4096
 const maxErrorReport = 10
+const maxRestoreCommitRetries = 3
 
 type dryRunMarker struct {
 	verVer int64
@@ -1502,7 +1503,7 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 	}
 	maxRetries = maxConsistentUpdateRetries
 	if lb {
-		maxRetries = 1
+		maxRetries = maxRestoreCommitRetries
 	}
 	retry := false
 
@@ -1510,12 +1511,11 @@ func (c *overlay) commit(ctx context.Context, verVer int64, otxn kvstore.Txn) (k
 		resp, retry, pCount, sCount, err = c.commitDirect(ctx, retries, maxEntries, verVer, otxn, lb)
 		retries++
 		if err != nil {
-			if retry {
-				if retries > 0 {
-					// give it a random sleep between 0 - 10ms
-					jitter := rand.Intn(500000)
-					time.Sleep(time.Duration(int(time.Microsecond) * jitter))
-				}
+			// attempt a retry if it is a restore buffer or if retry is signalled due to consistent updates
+			if lb || retry {
+				// give it a random sleep between 0 - 500ms
+				jitter := rand.Intn(500000)
+				time.Sleep(time.Duration(int(time.Microsecond) * jitter))
 				log.Infof("[%v] commit failed, retrying, retry %d", c.id, retries)
 				continue
 			}

@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	doNotSaveKinds = []string{"Cluster", "Module", "SnapshotRestore", "Node", "NetworkInterface", "Version", "AuditEvent", "Alert"}
+	doNotSaveKinds = []string{"Alert", "AuditEvent", "Cluster", "Module", "Node", "NetworkInterface", "Rollout", "SnapshotRestore", "Version"}
 )
 
 type requirementSetMarker struct {

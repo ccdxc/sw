@@ -724,7 +724,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	rdr, err := oclnt.GetObject(ctx, obj.Spec.SnapshotPath)
 	if err != nil {
 		log.Errorf("Failed to retrieve sapshot, configuration unchanged (%s)", err)
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to retrieve snapshot, Configuration unchanged", &obj)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("failed to retrieve snapshot [%v], Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 		return rstat, false, &api.Status{
 			Result:      api.StatusResult{Str: "failed to retrieve snapshot, Configuration unchanged"},
 			Message:     []string{fmt.Sprintf("%v", err)},
@@ -799,7 +799,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		}
 		if e1 != nil {
 			log.Errorf("[config-restore] could not rollback to backup revision (%s)", e1)
-			recorder.Event(eventtypes.CONFIG_RESTORE_FAILED, "configuration restore operation failed. Configuration could not be rolled back", &obj)
+			recorder.Event(eventtypes.CONFIG_RESTORE_FAILED, fmt.Sprintf("configuration restore operation for [%v] failed. Configuration could not be rolled back", obj.Spec.SnapshotPath), &obj)
 			return &api.Status{
 				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration could not be rolled back"},
 				Message:     []string{fmt.Sprintf("%v", e1)},
@@ -815,7 +815,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	err = delFromCache(pctx, kvs)
 	if err != nil || failPrep {
 		log.Errorf("[config-restore] failed Prep for restore (%v)", err)
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed preparation for restore operation. Configuration unchanged", &obj)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("failed preparation for restore operation for [%v]. Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 		return rstat, false, &api.Status{
 			Result:      api.StatusResult{Str: "failed preparation for restore operation. Configuration unchanged"},
 			Message:     []string{fmt.Sprintf("%v", err)},
@@ -829,7 +829,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 	err = writer.Write(pctx, kvs)
 	if err != nil || failWrite {
 		log.Errorf("[config-restpore] applying snapshot failed (%s)", err)
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("configuration restore operation for [%v] failed . Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 		retErr := api.Status{
 			Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
 			Message:     []string{err.Error()},
@@ -852,7 +852,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		backupRev, err = cl.writeSnapshot(ctx, backupName, oclnt, meta)
 		if err != nil || failSetObj {
 			log.Errorf("[config-restore] failed to create backup snapshot (%s)", err)
-			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "failed to create backup snapshot, Configuration unchanged", &obj)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("failed to create backup snapshot for [%v], Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 			return rstat, false, &api.Status{
 				Result:      api.StatusResult{Str: "failed to create backup snapshot, Configuration unchanged"},
 				Message:     []string{fmt.Sprintf("%v", err)},
@@ -877,7 +877,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		err = kvs.Update(dctx, rkey, &rstat)
 		if err != nil {
 			log.Errorf("[config-restore] failed to update restore object before applying snapshot(%s)", err)
-			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, " failed to update restore object before applying snapshot, Configuration unchanged", &obj)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf(" failed to update restore object before applying snapshot [%v], Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 			return rstat, false, &api.Status{
 				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
 				Message:     []string{"failed to write restore object before applying snapshot"},
@@ -891,7 +891,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		err = kvs.Create(dctx, rkey, &rstat)
 		if err != nil {
 			log.Errorf("[config-restore] failed to create restore object before applying snapshot(%s)", err)
-			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, " failed to create restore object before applying snapshot, Configuration unchanged", &obj)
+			recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("failed to create restore object before applying snapshot [%v], Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 			return rstat, false, &api.Status{
 				Result:      api.StatusResult{Str: "configuration restore operation failed. Configuration unchanged"},
 				Message:     []string{"failed to write restore object before applying snapshot"},
@@ -915,7 +915,7 @@ func (cl *clusterHooks) performRestoreNow(ctx context.Context, kvs kvstore.Inter
 		if status != nil {
 			return rstat, false, status
 		}
-		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, "configuration restore operation failed. Configuration unchanged", &obj)
+		recorder.Event(eventtypes.CONFIG_RESTORE_ABORTED, fmt.Sprintf("configuration restore operation for [%v] failed. Configuration unchanged", obj.Spec.SnapshotPath), &obj)
 		return rstat, false, &api.Status{
 			Result:      api.StatusResult{Str: "configuration restore operation commit failed. Configuration was rolled back"},
 			Message:     []string{fmt.Sprintf("%v", err)},
@@ -978,6 +978,10 @@ func (cl *clusterHooks) performSnapshotNow(ctx context.Context, kvs kvstore.Inte
 		"RequestName": req.Name,
 	}
 	name := "snapshot-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
+	if req.Name != "" {
+		name = "snapshot-" + req.Name + "-" + strings.Replace(strings.Replace(time.Now().Format(time.UnixDate), ":", "-", -1), " ", "_", -1)
+	}
+
 	_, err = cl.writeSnapshot(ctx, name, oclnt, meta)
 
 	scfg.Status.LastSnapshot = &cluster.ConfigurationSnapshotStatus_ConfigSaveStatus{

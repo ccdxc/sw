@@ -21,7 +21,7 @@ ExecStart=/usr/pensando/bin/systemd-docker \
   --quota-backend-bytes 8589934592 \
   --snapshot-count 10000 \
   $INIT_CLUSTER $INIT_CLUSTER_STATE $INIT_CLUSTER_TOKEN $ADV_PEER_URLS \
-  $LIS_PEER_URLS --max-txn-ops 8192 \
+  $LIS_PEER_URLS --max-txn-ops 12288 \
   --peer-client-cert-auth --client-cert-auth  \
   $ETCD_CLIENT_CERT_FILE $ETCD_CLIENT_KEY_FILE $ETCD_CLIENT_TRUSTED_CA_FILE \
   $ETCD_PEER_CERT_FILE $ETCD_PEER_KEY_FILE $ETCD_PEER_TRUSTED_CA_FILE $ETCD_PEER_CERT_ALLOWED_CN

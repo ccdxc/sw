@@ -637,6 +637,7 @@ func (t *cacheTxn) commit(ctx context.Context) (kvstore.TxnResponse, error) {
 	versioner := runtime.NewObjectVersioner()
 	defer t.Unlock()
 	t.Lock()
+	t.parent.logger.Infof("calling commit on transaction with [%v] ops", len(t.ops))
 	resp, err := t.Txn.Commit(ctx)
 	if err != nil {
 		// txn cannot be reused now
