@@ -384,3 +384,14 @@ func (e *etcdQuorum) GetHealth(member *quorum.Member) (bool, error) {
 	}
 	return resp.Health == "true", nil
 }
+
+// RestartLocalEtcdInstance restarts an existing etcd instance using systemd. It does not change any configuration.
+// Implements a workaround for https://github.com/etcd-io/etcd/issues/10655, which was observed after an upgrade (VS-1172).
+func RestartLocalEtcdInstance(c *quorum.Config) error {
+	log.Infof("*** RESTARTING QUORUM INSTANCE %s ***", c.UnitFile)
+	s := systemd.New()
+	// Start etcd using systemd.
+	err := s.RestartTarget(c.UnitFile)
+	log.Infof("*** ERROR: %v ***", err)
+	return err
+}

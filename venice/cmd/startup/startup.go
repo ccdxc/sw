@@ -26,16 +26,18 @@ import (
 	kstore "github.com/pensando/sw/venice/utils/kvstore/store"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/quorum"
+	etcdquorum "github.com/pensando/sw/venice/utils/quorum/etcd"
 	"github.com/pensando/sw/venice/utils/quorum/store"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 const (
-	maxIters              = 50
-	sleepBetweenItersMsec = 100
-	masterLeaderKey       = "master"
-	apiServerWaitTime     = time.Second
+	maxIters                     = 50
+	sleepBetweenItersMsec        = 100
+	maxAllowedEtcdStartupTimeSec = 120
+	masterLeaderKey              = "master"
+	apiServerWaitTime            = time.Second
 )
 
 func waitForAPIAndStartServices(nodeID string) {
@@ -117,19 +119,26 @@ func StartQuorumServices(c utils.Cluster) {
 		log.Errorf("Failed to retrieve node: %v, error: %v", addrs[0], err)
 		return
 	}
+
+	// Without etcd, CMD cannot do pretty much anything, so perform inifinite retries
 	var quorumIntf quorum.Interface
-	ii := 0
-	for ; ii < maxIters; ii++ {
+	lastEtcdStartAttempt := time.Now()
+	for i := 0; ; i++ {
 		quorumIntf, err = store.Start(qConfig)
 		if err == nil {
 			break
 		}
-		time.Sleep(time.Second)
-	}
-
-	if err != nil {
 		log.Errorf("Failed to create quorum with error: %v", err)
-		return
+		time.Sleep(time.Second)
+
+		// Etcd startup may fail in such a way that the client times out or gets back
+		// an error immediately. Before attempting a restart we wait for maxIters tries
+		// (performed 1s apart) or maxAllowedEtcdStartupTime, whichever happens first.
+		if (i+1)%maxIters == 0 ||
+			time.Since(lastEtcdStartAttempt) > (maxAllowedEtcdStartupTimeSec*time.Second) {
+			// We might be hitting https://github.com/etcd-io/etcd/issues/10655, invoke workaround
+			etcdquorum.RestartLocalEtcdInstance(qConfig)
+		}
 	}
 
 	env.ClusterName = c.Name
@@ -141,7 +150,7 @@ func StartQuorumServices(c utils.Cluster) {
 		env.KVServers = append(env.KVServers, fmt.Sprintf("https://%s:%s", member, env.Options.KVStore.ClientPort))
 	}
 
-	ii = 0
+	ii := 0
 	for ; ii < maxIters; ii++ {
 		_, errL := env.Quorum.List()
 		if errL == nil {
