@@ -44,6 +44,12 @@ def Setup(tc):
         else:
             tc.ib_prefix.append('')
 
+    if getattr(tc.iterators, 'tcpdump', 'no') == 'yes':
+        for n in api.GetNaplesHostnames():
+            if api.GetNodeOs(n) not in [host.OS_TYPE_BSD]:
+                api.Logger.info("IGNORED: TCPDUMP tests on non-FreeBSD")
+                return api.types.status.IGNORED
+
     return api.types.status.SUCCESS
 
 def Trigger(tc):
@@ -121,6 +127,7 @@ def Trigger(tc):
     async_event_stats_opt = ''
     bw_opt        = ''
     port_flap     = False
+    tc.tcpdump       = False
 
     #==============================================================
     # update non-default cmd options
@@ -193,7 +200,11 @@ def Trigger(tc):
     if getattr(tc.iterators, 'port_flap', 'false') == 'true' and hasattr(tc.iterators, 'duration'):
         port_flap = True
         tc.client_bkg = True
-
+    
+    if getattr(tc.iterators, 'tcpdump', 'no') == 'yes' and hasattr(tc.iterators, 'duration') == False:
+        tc.tcpdump = True
+        iter_opt      = ' -n 5 '
+    
     #==============================================================
     # run the cmds
     #==============================================================
@@ -204,6 +215,45 @@ def Trigger(tc):
                     (w1.workload_name, w1.ip_address, w2.workload_name, w2.ip_address)
 
     api.Logger.info("Starting ib_send_bw multi_sge test from %s" % (tc.cmd_descr))
+
+    #Enable rdma sniffer and start tcpdump on Naples Hosts
+    if tc.tcpdump == True:
+        if w1.IsNaples():
+            tcpdump_intf = w1.interface.split('.')[0] #Get the parent interface
+            os = api.GetNodeOs(w1.node_name)
+            if os == host.OS_TYPE_BSD:
+                sniffer_cmd = 'sysctl dev.' + host.GetNaplesSysctl(w1.interface) + '.rdma_sniffer=1'
+            elif os == host.OS_TYPE_LINUX:
+                sniffer_cmd = 'sudo ethtool --set-priv-flags ' + tcpdump_intf + ' rdma-sniffer on'
+
+            api.Trigger_AddCommand(req, 
+                                   w1.node_name, 
+                                   w1.workload_name,
+                                   sniffer_cmd)
+            api.Trigger_AddCommand(req, 
+                                   w1.node_name, 
+                                   w1.workload_name,
+                                   "sudo tcpdump -l --immediate-mode -i {} -XXX udp dst port 4791 -w rdma_capture.pcap &".format(tcpdump_intf),
+                                   background = True)
+        elif w2.IsNaples():
+            tcpdump_intf = w2.interface.split('.')[0] #Get the parent interface
+            os = api.GetNodeOs(w2.node_name)
+            if os == host.OS_TYPE_BSD:
+                sniffer_cmd = 'sysctl dev.' + host.GetNaplesSysctl(w2.interface) + '.rdma_sniffer=1'
+            elif os == host.OS_TYPE_LINUX:
+                sniffer_cmd = 'sudo ethtool --set-priv-flags ' + tcpdump_intf + ' rdma-sniffer on'
+
+            api.Trigger_AddCommand(req, 
+                                   w2.node_name, 
+                                   w2.workload_name,
+                                   sniffer_cmd)
+            api.Trigger_AddCommand(req, 
+                                   w2.node_name, 
+                                   w2.workload_name,
+                                   "sudo tcpdump -l --immediate-mode -i {} -XXX udp dst port 4791 -w rdma_capture.pcap &".format(tcpdump_intf),
+                                   background = True)
+        else:
+            tc.tcpdump = False
 
     #==============================================================
     # cmd for server
@@ -324,6 +374,32 @@ def Trigger(tc):
                                w.workload_name,
                                cmd, timeout = (bkg_timeout+5))
 
+    if tc.tcpdump == True:
+        api.Trigger_AddCommand(req,
+                               w1.node_name,
+                               w1.workload_name,
+                               "sleep 5")
+        if w1.IsNaples():
+            api.Trigger_AddCommand(req,
+                                   w1.node_name,
+                                   w1.workload_name,
+                                   "sudo killall tcpdump")
+            api.Trigger_AddCommand(req,
+                                   w1.node_name,
+                                   w1.workload_name,
+                                   "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn", timeout = 60)
+        elif w2.IsNaples():
+            api.Trigger_AddCommand(req,
+                                   w2.node_name,
+                                   w2.workload_name,
+                                   "sudo killall tcpdump")
+            api.Trigger_AddCommand(req,
+                                   w2.node_name,
+                                   w2.workload_name,
+                                   "sudo tshark -r rdma_capture.pcap -T fields -e ip.addr -e infiniband.bth.opcode -e infiniband.aeth.msn", timeout = 60)
+
+    # TODO add code for linux
+
     #==============================================================
     # trigger the request
     #==============================================================
@@ -338,6 +414,9 @@ def Verify(tc):
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
+
+    w1            = tc.w[0]
+    w2            = tc.w[1]
 
     api.Logger.info("multi_sge results for %s" % (tc.cmd_descr))
     for cmd in tc.resp.commands:
@@ -359,6 +438,47 @@ def Verify(tc):
                     api.Logger.info("ERROR seen in stderr: {err}".format(err = line))
                     result = api.types.status.FAILURE
                     break
+
+        if "tshark" in cmd.command:
+            tshark_output_list = []
+            for e in cmd.stdout.split("\n"):
+                tshark_output_list.append(e.split())
+            w1w2_tuple = "{},{}".format(w1.ip_address, w2.ip_address)
+            w1w2_send_count = 0
+            w1w2_ack_first_msn = float('inf')
+            w1w2_ack_last_msn = float('-inf')
+            
+            w2w1_tuple = "{},{}".format(w2.ip_address, w1.ip_address)
+            w2w1_send_count = 0
+            w2w1_ack_first_msn = float('inf')
+            w2w1_ack_last_msn = float('-inf')
+            
+            for l in tshark_output_list:
+                if(l == None or len(l) == 0):
+                    continue
+                if(l[0] == w1w2_tuple):
+                    if(l[1] == '4'):
+                        w1w2_send_count += 1
+                    if(l[1] == '17'):
+                        msn = int(l[2])
+                        if(msn < w1w2_ack_first_msn):
+                            w1w2_ack_first_msn = msn
+                        elif(msn > w1w2_ack_last_msn):
+                            w1w2_ack_last_msn = msn
+                elif(l[0] == w2w1_tuple):
+                    if(l[1] == '4'):
+                        w2w1_send_count += 1
+                    if(l[1] == '17'):
+                        msn = int(l[2])
+                        if(msn < w2w1_ack_first_msn):
+                            w2w1_ack_first_msn = msn
+                        elif(msn > w2w1_ack_last_msn):
+                            w2w1_ack_last_msn = msn
+            api.Logger.info("w1w2_send_count {}, w1w2_ack_first_msn {}, w1w2_ack_last_msn {}, w2w1_send_count {}, w2w1_ack_first_msn {} w2w1_ack_last_msn {}".format(w1w2_send_count,w1w2_ack_first_msn,w1w2_ack_last_msn,w2w1_send_count,w2w1_ack_first_msn,w2w1_ack_last_msn))
+            if((w1w2_send_count != 5) or (w1w2_ack_last_msn-w1w2_ack_first_msn+1 != 5) or (w2w1_send_count != 5) or (w2w1_ack_last_msn-w2w1_ack_first_msn+1 != 5)):
+                api.Logger.info("ERROR: Mismatch in send or ack count.")
+                result = api.types.status.FAILURE
+                break
 
     return result
 
