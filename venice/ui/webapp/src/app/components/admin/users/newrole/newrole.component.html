@@ -1,7 +1,7 @@
 <div class="newrole" *ngIf="newAuthRole" [formGroup]="newAuthRole.$formGroup" fxLayout="row">
   <div fxLayout="row wrap" fxLayoutAlign="start" class="newrole-panel-rolegroup-header-add-row">
     <div fxLayout="column">
-      <div fxLayout="row" formGroupName="meta">
+      <div fxLayout="row" fxLayoutAlign="start center" formGroupName="meta">
         <div class="newrole-panel-rolegroup-header-add-property-label">Name:</div>
         <div class="newrole-panel-rolegroup-header-add-property-value">
           <input *ngIf="!isEditMode()" fxFlex="200px" formControlName="name"
@@ -46,11 +46,11 @@
 
 
               <div fxFlex="noshrink" fxLayout="row" fxLayoutGap="10px">
-                <div fxLayout="column" fxLayoutAlign="none" class="newrole-group">
+                <div fxLayout="column" fxLayoutAlign="none" fxLayoutGap="5px" class="newrole-group">
                   <div class="newrolw-fieldtitle">Configurations: </div>
 
                   <div fxFlex="auto" fxLayout="column">
-                    <div fxLayout="row">
+                    <div fxLayout="row" fxLayoutGap="5px">
                       <!-- Field Title -->
                       <div fxFlex="nogrow" fxLayout="column">
                         <!-- comment out permission.resource-tenant per VS-241 (GS-release) -->
@@ -127,7 +127,8 @@
                 <!-- Action column. Top do not add row below-->
                 <!-- Action heading and listbox will not render unless user selects group and kind-->
                 <div *ngIf="displayActions(permission)"
-                     fxLayout="column" fxLayoutAlign="start none" class="newrole-group">
+                     fxLayout="column" fxLayoutAlign="start none" fxLayoutGap="5px"
+                     class="newrole-group">
                   <div class="newrolw-fieldtitle">
                     Actions:
                   </div>

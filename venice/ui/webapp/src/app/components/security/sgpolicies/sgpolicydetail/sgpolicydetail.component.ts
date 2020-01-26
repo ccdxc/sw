@@ -130,7 +130,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
   policyIcon: Icon = {
     margin: {
-      top: '0px',
+      top: '-18px',
       left: '0px',
     },
     svgIcon: 'policy'
@@ -342,6 +342,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
       this.searchErrorMessage = '';
       this.updateRulesByPolicy();
       this.currentSearch = null;
+      this.searchPolicyInvoked = false;
       return;
     }
 
@@ -408,6 +409,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     }
     this.updateRulesByPolicy();
     this.currentSearch = null;
+    this.searchPolicyInvoked = false;
   }
 
   invokePolicySearch(sourceIP = null, destIP = null, port: string = null) {

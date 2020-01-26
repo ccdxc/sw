@@ -115,8 +115,9 @@
   <div fxFlex="none" fxLayout="row">
     <div fxFlex="none" fxLayout="column">
       <div fxFlex="none" fxLayout="row">
-        <app-tableheader fxFlex="none" title="Policy Rules" [total]="count" [icon]="policyIcon"
-                         [enableColumnSelect]="true"
+        <app-tableheader fxFlex="none"
+                         title="{{searchPolicyInvoked ? 'Matching Policy Rules' : 'Policy Rules'}}"
+                         [total]="count" [icon]="policyIcon" [enableColumnSelect]="true"
                          [icon]="tableIcon" [cols]="cols" [tableMenuItems]="tableMenuItems"
                          (columnSelectChange)="onColumnSelectChange($event)">
           <div class="sgpolicy-search-ip" fxFlex="fxFlex" fxLayoutAlign="start center">
