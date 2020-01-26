@@ -85,7 +85,7 @@ export class Utility {
 
   public static HERO_CARD_THIRDVALUE_LENGTH: number = 15;
 
-  public static UNSUPPORTED_CATEGORIES = ['Diagnostics'];
+  public static UNSUPPORTED_CATEGORIES = ['Diagnostics', 'Orchestration'];
   public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'ArchiveRequest', 'Network', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter', 'NetworkInterface', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
 
 

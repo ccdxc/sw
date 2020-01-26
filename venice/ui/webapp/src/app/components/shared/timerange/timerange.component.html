@@ -23,8 +23,6 @@
                       styleClass="timerange-calendar"
                       hourFormat="24"
                       inputStyleClass="timerange-calendar-input"
-                      [minDate]="minStartSelectDateValue"
-                      [maxDate]="maxStartSelectDateValue"
                       (onSelect)="calendarStartSelect($event)"></p-calendar>
         </div>
       </div>
@@ -43,8 +41,6 @@
                       styleClass="timerange-calendar"
                       hourFormat="24"
                       inputStyleClass="timerange-calendar-input"
-                      [minDate]="minEndSelectDateValue"
-                      [maxDate]="maxEndSelectDateValue"
                       (onSelect)="calendarEndSelect($event)"></p-calendar>
         </div>
       </div>

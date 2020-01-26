@@ -61,9 +61,9 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
 
   // min-max start and end date  // VS-1063
   @Input() minStartSelectDateValue: Date = null;
-  @Input() maxStartSelectDateValue: Date = null;
+  @Input() maxStartSelectDateValue: Date = new Date();
   @Input() minEndSelectDateValue: Date = null;
-  @Input() maxEndSelectDateValue: Date =  new Date();
+  @Input() maxEndSelectDateValue: Date = new Date();
 
 
 
@@ -266,13 +266,6 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
       this.lastSelectedTimeRange = timeRange;
       this.displayString = timeRange.toString();
 
-      // For VS-1163. If user wants to explicitly open calender overlay to enter date and time, we want to clear out the hour and minute values.
-      if (startTimeEntry.time.constructor.name !== 'MomentTimeInstance') {
-        this.startTimeCalendar = Utility.clearHourMinuteSecond(timeRange.getTime().startTime.toDate());
-      }
-      if (endTimeEntry.time.constructor.name !== 'MomentTimeInstance') {
-        this.endTimeCalendar = Utility.clearHourMinuteSecond(timeRange.getTime().endTime.toDate());
-      }
       return null;
 
     };

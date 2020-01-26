@@ -8,7 +8,7 @@ import * as moment from 'moment';
 export class GroupByTimeTransform extends MetricTransform<{}> {
 
   transformName = TransformNames.GroupByTime;
-  maxPoints: number = 500;
+  maxPoints: number = 20;
   minimumGroupByTime: string = '60s';
 
 
