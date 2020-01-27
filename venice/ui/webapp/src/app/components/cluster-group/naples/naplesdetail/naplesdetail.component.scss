@@ -6,7 +6,7 @@
 
 .naplesdetail-detailsTable-container {
   margin-right: 10px;
-  min-width: 300px;
+  min-width: 315px;
 }
 
 .naplesdetail-alertsevents-container {
@@ -58,6 +58,11 @@
   @include primary-font(16px, #676763, 500);
 }
 
+.naplesdetail-workloads-container,
+.naplesdetail-node-fieldtitle-labels {
+  margin-top: 4px;
+}
+
 .naplesdetail-node-value {
   @include primary-font(16px);
   margin-left: 5px;
@@ -86,10 +91,6 @@
   left: 50% !important;
   margin-top: -50px !important;
   margin-left: -100px !important;
-}
-
-.naplesdetail-panel-labels {
-  margin-top: 10px;
 }
 
 .naplesdetail-details-toggle-expand {

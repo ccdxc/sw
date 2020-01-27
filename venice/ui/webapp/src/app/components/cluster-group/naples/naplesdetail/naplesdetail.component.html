@@ -1,7 +1,7 @@
 <app-pagebody [icon]="bodyicon" [header]="selectedObj?.spec.id">
   <div fxFlex="none" fxLayout="column">
     <ng-container *ngTemplateOutlet="detailsTable"></ng-container>
-    <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
+    <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngFor="let cardData of heroCards">
         <app-herocard fxFlex="nogrow"
                       [title]="cardData.title"
@@ -18,7 +18,7 @@
         </app-herocard>
       </ng-container>
     </div>
-    <div fxFlex fxLayout="row wrap" class="naplesdetail-card-container">
+    <div fxFlex="none" fxLayout="row wrap" class="naplesdetail-card-container">
       <ng-container *ngFor="let item of graphConfigs">
         <app-telemetrychartview class="naplesdetail-chart-item"
                                 fxFlex="nogrow"
@@ -252,70 +252,55 @@
             </div>
             <div fxFlex="40px"></div>
             <!-- Values -->
-            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center">
-                <div class="naplesdetail-panel-auto-admit-nics naplesdetail-workloads-container"
-                     fxFlex="200px"
-                     *ngIf="selectedObj">
-                  <div *ngFor="let w of selectedObj['associatedWorkloads'] let i=index"
-                       class="naplesdetail-workloads-div">
-                    <ng-container *roleGuard="'workloadworkload_read'">
-                      <a routerLink="/workload" class="naplesdetail-panel-auto-admit-nics"
-                         [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
-                    </ng-container>
-                  </div>
-                </div>
+            <div class="naplesdetail-workloads-container" fxFlex="200px" *ngIf="selectedObj">
+              <div *ngFor="let w of selectedObj['associatedWorkloads'] let i=index"
+                   class="naplesdetail-workloads-div">
+                <ng-container *roleGuard="'workloadworkload_read'">
+                  <a routerLink="/workload" class="naplesdetail-panel-auto-admit-nics"
+                     [matTooltip]="'Jump to workloads page'">{{w?.meta.name}}</a>
+                </ng-container>
               </div>
             </div>
           </div>
         </div>
 
-        <div fxFlex fxFlex="none" fxLayout="column" class="naplesdetail-detailsTable-container">
-          <div fxFlex="none" fxLayout="row">
-            <!-- Field titles -->
-            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-              <div class="naplesdetail-node-fieldtitle" fxFlex="30px" fxLayout="row"
-                   fxLayoutAlign="start center">
-                <div>
-                  Labels:
-                  <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
-                            (click)="editLabels($event)"
-                            *roleGuard="'clusterdistributedservicecard_update'">edit
-                  </mat-icon>
-                </div>
-              </div>
+        <div fxFlex="none" fxLayout="row" fxLayoutAlign="start start"
+             class="naplesdetail-detailsTable-container">
+          <!-- Field titles -->
+          <div class="naplesdetail-node-fieldtitle naplesdetail-node-fieldtitle-labels">
+            <div>
+              Labels:
             </div>
-            <div fxFlex="40px"></div>
-            <!-- Values -->
-            <div fxFlex="none" fxLayout="column" fxLayoutAlign="start start">
-              <div fxFlex="" fxLayout="row" fxLayoutAlign="start center"
-                   class="naplesdetail-node-value">
-                <div class="naplesdetail-panel-labels" fxFlex="200px">
-                  <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
-                           [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
-                    <ng-template pTemplate="header">
-                      <tr>
-                        <th>Key</th>
-                        <th>Value</th>
-                      </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-key>
-                      <tr>
-                        <td style="word-break: break-all;">{{key}}</td>
-                        <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}
-                        </td>
-                      </tr>
-                    </ng-template>
-                  </p-table>
-                </div>
-                <app-labeleditor [objects]="[selectedObj]" [metadata]="labelEditorMetaData"
-                                 (saveEmitter)="handleEditSave($event)"
-                                 (cancelEmitter)="handleEditCancel($event)"
-                                 [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
-
-              </div>
-            </div>
+            <mat-icon matTooltip="Edit Label" class="global-table-action-icon"
+                      (click)="editLabels($event)"
+                      *roleGuard="'clusterdistributedservicecard_update'">edit
+            </mat-icon>
           </div>
+          <div fxFlex="40px"></div>
+          <!-- Values -->
+          <div class="naplesdetail-node-value" fxFlex="200px">
+            <p-table [value]="genKeys()" *ngIf="ifLabelExists()" [autoLayout]="true"
+                     [scrollable]="true" scrollHeight="150px" [resizableColumns]="true">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Key</th>
+                  <th>Value</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-key>
+                <tr>
+                  <td style="word-break: break-all;">{{key}}</td>
+                  <td style="word-break: break-all;">{{this.selectedObj.meta.labels[key]}}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <app-labeleditor [objects]="[selectedObj]" [metadata]="labelEditorMetaData"
+                           (saveEmitter)="handleEditSave($event)"
+                           (cancelEmitter)="handleEditCancel($event)"
+                           [inLabelEditMode]="inLabelEditMode"></app-labeleditor>
+
         </div>
       </div>
     </div>

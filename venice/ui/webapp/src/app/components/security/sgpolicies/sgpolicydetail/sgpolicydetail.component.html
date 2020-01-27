@@ -62,9 +62,7 @@
       </div>
     </div>
   </mat-expansion-panel>
-  <div fxFlex="auto">
-    <ng-container *ngTemplateOutlet="DataTable"></ng-container>
-  </div>
+  <ng-container *ngTemplateOutlet="DataTable"></ng-container>
   <!-- Deletion screen overlay displays when the policy we are viewing is deleted -->
   <!-- Missing screen overlay displays when the policy does not exist-->
   <div #overlay *ngIf="showDeletionScreen || showMissingScreen" fxLayout="row"
@@ -183,7 +181,7 @@
                   class="ui-inputgroup-addon sgpolicy-icon-addon-span">
             <mat-icon [matTooltip]="'Change Order'"
                       class="sgpolicy-icons-button" (click)="onReorder()"
-                      fxFlex="none">open_with</mat-icon>
+                      fxFlex="none">wrap_text</mat-icon>
           </button>
         </div>
       </div>
