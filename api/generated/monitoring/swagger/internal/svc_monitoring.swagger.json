@@ -15760,8 +15760,8 @@
       "properties": {
         "destination": {
           "type": "string",
-          "example": "10.1.1.1, ff02::5 ",
-          "description": "should be a valid v4 or v6 IP address",
+          "example": "10.1.1.1 ",
+          "description": "should be a valid IPv4 address",
           "title": "IP address of the collector/entity to which the data is to be exported"
         }
       }

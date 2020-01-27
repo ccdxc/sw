@@ -810,7 +810,7 @@ func init() {
 
 	validatorMapMirror["MirrorExportConfig"]["all"] = append(validatorMapMirror["MirrorExportConfig"]["all"], func(path string, i interface{}) error {
 		m := i.(*MirrorExportConfig)
-		if err := validators.IPAddr(m.Destination); err != nil {
+		if err := validators.IPv4(m.Destination); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"Destination", err.Error())
 		}
 		return nil

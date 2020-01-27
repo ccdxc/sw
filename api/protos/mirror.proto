@@ -59,7 +59,7 @@ enum PacketCollectorType {
 
 message MirrorExportConfig {
     // IP address of the collector/entity to which the data is to be exported
-    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "IPAddr()"];
+    string Destination = 1 [(gogoproto.jsontag) = "destination,omitempty", (venice.check) = "IPv4()"];
 }
 
 // Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)
