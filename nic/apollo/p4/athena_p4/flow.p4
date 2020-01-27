@@ -1,15 +1,17 @@
 /*****************************************************************************/
 /* Policy (unified for IPv4, IPv6 and L2)                                    */
 /*****************************************************************************/
-@pragma capi appdatafields session_index
+@pragma capi appdatafields index index_type
 @pragma capi hwfields_access_api
-action flow_hash(entry_valid, session_index, pad,
+action flow_hash(entry_valid, index, index_type,
                  hash1, hint1, hash2, hint2,
                  more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);
-        modify_field(p4i_to_p4e_header.session_index, session_index);
+        modify_field(p4i_to_p4e_header.index, index);
+        modify_field(control_metadata.index, index);
+        modify_field(p4i_to_p4e_header.index_type, index_type);
         modify_field(p4i_to_p4e_header.direction, control_metadata.direction);
 
         // if hardware register indicates miss, compare hashes with r1
@@ -39,16 +41,17 @@ action flow_hash(entry_valid, session_index, pad,
             modify_field(ingress_recirc_header.flow_ohash, scratch_metadata.flow_hint);
         } else {
             modify_field(ingress_recirc_header.flow_done, TRUE);
-            modify_field(p4i_to_p4e_header.session_index, 0);
+            modify_field(p4i_to_p4e_header.index, 0);
+            modify_field(control_metadata.index, 0);
         }
     } else {
         modify_field(ingress_recirc_header.flow_done, TRUE);
-        modify_field(p4i_to_p4e_header.session_index, 0);
+        modify_field(p4i_to_p4e_header.index, 0);
+        modify_field(control_metadata.index, 0);
         modify_field(control_metadata.flow_miss, TRUE);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
-    modify_field(scratch_metadata.flow_data_pad, pad);
     modify_field(scratch_metadata.flow_hash, hash1);
     modify_field(scratch_metadata.flow_hash, hash2);
 }
@@ -89,15 +92,15 @@ table flow_ohash {
 /*****************************************************************************/
 /* Policy (unified for IPv4, IPv6 and L2)                                    */
 /*****************************************************************************/
-@pragma capi appdatafields session_index
+@pragma capi appdatafields index index_type
 @pragma capi hwfields_access_api
-action ipv4_flow_hash(entry_valid, session_index, pad,
+action ipv4_flow_hash(entry_valid, index, index_type, pad,
                  hash1, hint1, hash2, hint2, hash3, hint3,
                  more_hashes, more_hints) {
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(ingress_recirc_header.flow_done, TRUE);
-        modify_field(p4i_to_p4e_header.session_index, session_index);
+        modify_field(p4i_to_p4e_header.index, index);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.flow_hash) and setup lookup in overflow table
@@ -131,11 +134,11 @@ action ipv4_flow_hash(entry_valid, session_index, pad,
             modify_field(ingress_recirc_header.flow_ohash, scratch_metadata.flow_hint);
         } else {
             modify_field(ingress_recirc_header.flow_done, TRUE);
-            modify_field(p4i_to_p4e_header.session_index, 0);
+            modify_field(p4i_to_p4e_header.index, 0);
         }
     } else {
         modify_field(ingress_recirc_header.flow_done, TRUE);
-        modify_field(p4i_to_p4e_header.session_index, 0);
+        modify_field(p4i_to_p4e_header.index, 0);
         modify_field(p4i_to_p4e_header.flow_miss, TRUE);
         modify_field(control_metadata.flow_miss, TRUE);
     }
@@ -147,7 +150,7 @@ action ipv4_flow_hash(entry_valid, session_index, pad,
     modify_field(scratch_metadata.flow_hash, hash3);
 }
 
-@pragma stage 3
+@pragma stage 4
 @pragma hbm_table
 table ipv4_flow {
     reads {
@@ -164,7 +167,7 @@ table ipv4_flow {
     size : IPV4_FLOW_TABLE_SIZE;
 }
 
-@pragma stage 4
+@pragma stage 5
 @pragma hbm_table
 @pragma overflow_table ipv4_flow
 table ipv4_flow_ohash {

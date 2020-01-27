@@ -24,6 +24,7 @@ pds_flow_session_info_create (pds_flow_session_spec_t *spec)
 {
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
+#if 0 /* Commenting out for now. To be refactored for new table definition */
     session_info_actiondata_t session_actiondata = { 0 };
     session_info_session_info_t *session_info;
     session_info_rewrite_actiondata_t rewrite_actiondata = { 0 };
@@ -144,6 +145,7 @@ pds_flow_session_info_create (pds_flow_session_spec_t *spec)
         PDS_TRACE_ERR("Unknown encap type");
         return SDK_RET_INVALID_ARG;
     }
+#endif
     return SDK_RET_OK;
 }
 
@@ -153,6 +155,7 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
 {
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
+#if 0 /* Commenting out for now. To be refactored for new table definition */
     session_info_actiondata_t session_actiondata = { 0 };
     session_info_session_info_t *session_info;
     session_info_rewrite_actiondata_t rewrite_actiondata = { 0 };
@@ -246,6 +249,7 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
         mplsogre_encap->mpls1_label = rewrite_info->mpls1_label;
         mplsogre_encap->mpls2_label = rewrite_info->mpls2_label;
    }
+#endif
    return SDK_RET_OK;
 }
 
@@ -260,6 +264,7 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
 {
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
+#if 0 /* Commenting out for now. To be refactored for new table definition */
     session_info_actiondata_t session_actiondata = { 0 };
     session_info_rewrite_actiondata_t rewrite_actiondata = { 0 };
 
@@ -290,6 +295,7 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
                       session_info_id);
         return SDK_RET_HW_PROGRAM_ERR;
     }
+#endif
     return SDK_RET_OK;
 }
 

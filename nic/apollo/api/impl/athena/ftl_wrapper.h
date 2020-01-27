@@ -20,7 +20,7 @@ extern "C" {
 static inline void
 ftlv6_set_session_index (flow_hash_entry_t *entry, uint32_t session)
 {
-    return entry->set_session_index(session);
+    //return entry->set_session_index(session);
 }
 
 static inline void
@@ -68,7 +68,8 @@ ftlv6_set_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
 static inline uint32_t
 ftlv6_get_session_id (flow_hash_entry_t *entry)
 {
-    return entry->get_session_index();
+    //return entry->get_session_index();
+    return 0;
 }
 
 #ifdef __cplusplus

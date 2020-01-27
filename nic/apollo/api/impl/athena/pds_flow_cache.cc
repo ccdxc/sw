@@ -53,7 +53,7 @@ pds_flow6_appdata2str (void *appdata)
 {
     static char str[512] = { 0 };
     flow_appdata_t *d = (flow_appdata_t *)appdata;
-    sprintf(str, "session_id:%u", d->session_index);
+    //sprintf(str, "session_id:%u", d->session_index);
     return str;
 }
 

@@ -1,6 +1,7 @@
 #include "egress.h"
 #include "EGRESS_p.h"
 #include "athena.h"
+#if 0
 #include "EGRESS_session_info_rewrite_k.h"
 
 struct session_info_rewrite_k_      k;
@@ -154,5 +155,8 @@ session_info_pkt_encap_done:
         seq             c1, k.p4i_to_p4e_header_direction, TX_FROM_HOST
         phvwr.c1        p.p4i_to_p4e_header_nacl_redir_oport, TM_PORT_UPLINK_1
         phvwr.!c1       p.p4i_to_p4e_header_nacl_redir_oport, TM_PORT_UPLINK_0
+#endif
+%%
+session_info_pkt_encap_done:
         nop.e
         nop

@@ -261,7 +261,8 @@ header_type ingress_recirc_header_t {
 
 header_type p4i_to_p4e_header_t {
     fields {
-        session_index           : 24;
+        index                   : 22;
+        index_type              : 1;
         counterset1             : 24;
         counterset2             : 24;
         histogram               : 24;

@@ -35,22 +35,48 @@ header_type control_metadata_t {
         direction                           : 1;
         parse_tcp_option_error              : 1;
         flow_miss                           : 1;
-        config1_idx_valid                   : 1;
-        config2_idx_valid                   : 1;
+        session_index_valid                 : 1;
+        conntrack_index_valid               : 1;
+        epoch1_id_valid                     : 1;
+        epoch2_id_valid                     : 1;
         throttle_pps_valid                  : 1;
         throttle_bw_valid                   : 1;
-        counterset1_valid                   : 1;
-        counterset2_valid                   : 1;
-        histogram_valid                     : 1;
+        statistics_id_valid                 : 1;
+        histogram_id_valid                  : 1;
         update_checksum                     : 1;
         launch_v4                           : 1; // Dummy - never set
+        strip_outer_encap_flag              : 1;
+        strip_l2_header_flag                : 1;
+        strip_vlan_tag_flag                 : 1;
+        add_vlan_tag_flag                   : 1;
+        nat_type                            : 2;
+        encap_type                          : 2;
+        nat_address                         : 128;
+        dmac                                : 48;
+        smac                                : 48;
+        vlan                                : 12;
+        ipv4_sa                             : 32;
+        ipv4_da                             : 32;
+        udp_sport                           : 16;
+        udp_dport                           : 16;
+        mpls_label1                         : 20;
+        mpls_label2                         : 20;
+        mpls_label3                         : 20;
+        egress_action                       : 3;
         p4plus_app_id                       : 8;
-        config1_epoch                       : 32;
-        config2_epoch                       : 32;
-        config1_idx                         : 16;
-        config2_idx                         : 16;
-        throttle_pps                        : 16;
-        throttle_bw                         : 16;
+        statistics_id                       : 9;
+        histogram_id                        : 9;
+        allowed_flow_state_bitmask          : 10;
+        statistics_mask                     : 16;
+        index                               : 22;
+        session_index                       : 22;
+        conntrack_index                     : 22;
+        epoch1_value                        : 16;
+        epoch2_value                        : 16;
+        epoch1_id                           : 20;
+        epoch2_id                           : 20;
+        throttle_pps                        : 13;
+        throttle_bw                         : 13;
         rx_packet_len                       : 14;
         tx_packet_len                       : 14;
         p4i_drop_reason                     : 32;
@@ -62,8 +88,8 @@ header_type scratch_metadata_t {
     fields {
         flag                : 1;
         ipv4_src            : 32;
-        flow_hash           : 11;
-        flow_hint           : 18;
+        flow_hash           : 10;
+        flow_hint           : 20;
         class_id            : 8;
         addr                : 32;
         local_vnic_tag      : 10;
@@ -83,6 +109,8 @@ header_type scratch_metadata_t {
         pad6                : 6;
         update_ip_chksum    : 1;
         update_l4_chksum    : 1;
+        index_type          : 1;
+        index               : 22;
 
 
         //common types
@@ -92,7 +120,7 @@ header_type scratch_metadata_t {
         flow_data_pad       : 4;
 
         // Session info
-        timestamp           : 20;
+        timestamp           : 16;
         config_epoch        : 32;
         config_substrate_src_ip : 32;
         pop_hdr_flag        : 1;

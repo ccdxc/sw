@@ -267,6 +267,7 @@ uint16_t    g_h2s_sport = 0x03e8;
 uint16_t    g_h2s_dport = 0x2710;
 
 
+#if 0
 sdk_ret_t
 create_h2s_v4_session_info(uint32_t session_index)
 {
@@ -365,6 +366,7 @@ create_h2s_v4_flow (uint8_t port, uint16_t vlan,
 
     return SDK_RET_OK;
 }
+#endif
 
 /*
  * Session into rewrite
@@ -386,6 +388,7 @@ flow_init_h2s ()
 {
     sdk_ret_t                   ret = SDK_RET_OK;
 
+#if 0
     ret = create_h2s_v4_session_info(g_session_index);
     if (ret != SDK_RET_OK) {
         printf("Failed to program session info @ %u\n", g_session_index);
@@ -405,6 +408,7 @@ flow_init_h2s ()
         printf("Failed to insert flow entry\n");
     }
     g_session_index++;
+#endif
 }
 
 /*
@@ -442,6 +446,7 @@ uint8_t     g_s2h_proto = 0x11;
 uint16_t    g_s2h_sport = 0x2710;
 uint16_t    g_s2h_dport = 0x03e8;
 
+#if 0
 sdk_ret_t
 create_s2h_v4_session_info(uint32_t session_index, uint32_t substrate_sip)
 {
@@ -530,6 +535,7 @@ create_s2h_v4_flow (uint8_t port, ipv4_addr_t v4_addr_sip,
 
     return SDK_RET_OK;
 }
+#endif
 
 /*
  * Session info rewrite
@@ -549,6 +555,7 @@ flow_init_s2h ()
 {
     sdk_ret_t                   ret = SDK_RET_OK;
 
+#if 0
     ret = create_s2h_v4_session_info(g_session_index, s2h_substrate_sip);
     if (ret != SDK_RET_OK) {
         printf("Failed to program session info @ %u\n", g_session_index);
@@ -565,6 +572,7 @@ flow_init_s2h ()
     if (ret != SDK_RET_OK) {
         printf("Failed to insert flow entry\n");
     }
+#endif
     g_session_index++;
 }
 

@@ -1,15 +1,16 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "athena.h"
-#include "INGRESS_session_info_k.h"
+#include "INGRESS_session_info_common_k.h"
 
-struct session_info_k_  k;
-struct session_info_d   d;
-struct phv_     p;
+struct session_info_common_k_   k;
+struct session_info_common_d    d;
+struct phv_                     p;
 
 %%
 
 session_info:
+#if 0
     /* Verify if the session info is valid */
     sne             c1, d.session_info_d.valid_flag, TRUE
     b.c1            session_info_done
@@ -79,6 +80,7 @@ session_info_done:
     nop.e
     nop
 
+#endif
 session_info_config_check_failed:
     phvwr.e         p.control_metadata_flow_miss, TRUE
     nop

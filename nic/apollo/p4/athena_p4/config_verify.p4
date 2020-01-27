@@ -1,13 +1,13 @@
 
 action config1_epoch_verify(epoch) {
-    if (control_metadata.config1_epoch != epoch) {
+    if (control_metadata.epoch1_value != epoch) {
         modify_field(control_metadata.flow_miss, TRUE);
     }
     modify_field(scratch_metadata.config_epoch, epoch);
 }
 
 action config2_epoch_verify(epoch) {
-    if (control_metadata.config2_epoch != epoch) {
+    if (control_metadata.epoch2_value != epoch) {
         modify_field(control_metadata.flow_miss, TRUE);
     }
     modify_field(scratch_metadata.config_epoch, epoch);
@@ -18,7 +18,7 @@ action config2_epoch_verify(epoch) {
 @pragma index_table
 table config1 {
     reads {
-        control_metadata.config1_idx    : exact;
+        control_metadata.epoch1_id  : exact;
     }
     actions {
         config1_epoch_verify;
@@ -31,7 +31,7 @@ table config1 {
 @pragma index_table
 table config2 {
     reads {
-        control_metadata.config2_idx    : exact;
+        control_metadata.epoch2_id  : exact;
     }
     actions {
         config2_epoch_verify;
@@ -41,10 +41,10 @@ table config2 {
 
 control config_verify {
     if (control_metadata.flow_miss == FALSE) {
-        if (control_metadata.config1_idx_valid == TRUE) {
+        if (control_metadata.epoch1_id_valid == TRUE) {
             apply(config1);
         }
-        if (control_metadata.config2_idx_valid == TRUE) {
+        if (control_metadata.epoch2_id_valid == TRUE) {
             apply(config2);
         }
     }

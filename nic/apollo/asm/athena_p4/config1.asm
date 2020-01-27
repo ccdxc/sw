@@ -10,5 +10,5 @@ struct phv_         p;
 
 %%
 config1_epoch_verify:
-    sne.e       c1, k.control_metadata_config1_epoch, d.config1_epoch_verify_d.epoch
+    sne.e       c1, k.control_metadata_epoch1_value, d.config1_epoch_verify_d.epoch
     phvwr.c1    p.control_metadata_flow_miss, TRUE

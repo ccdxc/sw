@@ -14,7 +14,7 @@
 #include "flow.p4"
 #include "nacl.p4"
 #include "session.p4"
-#include "statistics.p4"
+//#include "statistics.p4"
 #include "config_verify.p4"
 #include "inter_pipe.p4"
 #include "policers.p4"
@@ -45,7 +45,7 @@ control ingress {
 /* Egress pipeline                                                           */
 /*****************************************************************************/
 control egress {
-    session_info_encap_lookup();
+    //session_info_encap_lookup();
     //statistics();
     update_checksums();
     egress_inter_pipe();

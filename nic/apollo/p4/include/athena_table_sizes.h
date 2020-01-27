@@ -13,7 +13,7 @@
 
 #define VNIC_TABLE_SIZE                                     1024
 
-#define SESSION_TABLE_SIZE                                  2097152     // 2M
+#define SESSION_TABLE_SIZE                                  4194304 // 4M
 
 #define POLICER_PPS_SIZE                                    2048
 #define POLICER_BW_SIZE                                     2048
