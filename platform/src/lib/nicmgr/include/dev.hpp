@@ -18,6 +18,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/platform/evutils/include/evutils.h"
 #include "nic/sdk/platform/pciehdevices/include/pciehdevices.h"
 #include "nic/sdk/platform/pciemgr/include/pciehw_dev.h"
@@ -171,7 +172,9 @@ private:
     bool IsDataPathQuiesced();
     bool CheckAllDevsDisabled();
     int SendFWDownEvent();
-    static void HeartbeatEventHandler(void *obj);
+
+    timespec_t hb_last;
+    static void HeartbeatEventHandler(void* obj);
 };
 
 #endif /* __DEV_HPP__ */

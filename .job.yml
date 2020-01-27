@@ -317,7 +317,7 @@ dependencies:
       exclude_dirs: ["iris"]
   platform/drivers:
     - reference: iota/test/standalone/sanity/esx
-      exclude_dirs: ["freebsd","linux"]
+      exclude_dirs: ["freebsd"]
     - reference: iota/test/standalone/sanity/freebsd
       exclude_dirs: ["linux","esxi"]
     - reference: iota/test/standalone/sanity/linux

@@ -13,6 +13,7 @@
 
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/include/sdk/timestamp.hpp"
 #include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/sdk/platform/misc/include/maclib.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
@@ -33,6 +34,9 @@
 using namespace std;
 
 namespace pt = boost::property_tree;
+
+#define HEARTBEAT_PERIOD_S       1 // seconds
+#define HEARTBEAT_MAX_PERIOD_S   10 // seconds
 
 DeviceManager *DeviceManager::instance;
 pciemgr *pciemgr;
@@ -474,8 +478,9 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
     }
 
     NIC_LOG_INFO("Starting Heartbeat timer");
-    evutil_timer_start(EV_A_ & heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0,
-                       1);
+    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
+    clock_gettime(CLOCK_MONOTONIC, &hb_last);
+
     upg_state = DEVICES_ACTIVE_STATE;
 
     return 0;
@@ -568,6 +573,9 @@ DeviceManager::RestoreDevice(enum DeviceType type, void *dev_state)
     default:
         break;
     }
+
+    evutil_timer_start(EV_A_ &heartbeat_timer, DeviceManager::HeartbeatEventHandler, this, 0.0, HEARTBEAT_PERIOD_S);
+    clock_gettime(CLOCK_MONOTONIC, &hb_last);
 
     upg_state = DEVICES_ACTIVE_STATE;
 }
@@ -767,7 +775,15 @@ DeviceManager::HeartbeatEventHandler(void *obj)
         // call thread level heartbeat
         devmgr->Thread()->punch_heartbeat();
     }
+    timespec_t now, hb_delta;
 
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    hb_delta = sdk::timestamp_diff(&now, &devmgr->hb_last);
+    if (hb_delta.tv_sec >= HEARTBEAT_MAX_PERIOD_S) {
+        NIC_LOG_WARN("Missed heartbeat for {} seconds", hb_delta.tv_sec);
+    }
+
+    devmgr->hb_last = now;
     for (auto it = devmgr->devices.begin(); it != devmgr->devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
