@@ -1134,8 +1134,11 @@ func TestDataNodeKstoreClustering(t *testing.T) {
 					Keys:        kl,
 				}
 
-				_, err = dnclient.DelReq(context.Background(), &req)
-				AssertOk(t, err, "Error deleting the keys")
+				AssertEventually(t, func() (bool, interface{}) {
+					_, err = dnclient.DelReq(context.Background(), &req)
+					return err == nil, err
+				}, "Error deleting the keys", "1s", "30s")
+
 			}
 		}
 	}
