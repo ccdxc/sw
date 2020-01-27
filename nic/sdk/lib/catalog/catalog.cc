@@ -758,8 +758,6 @@ catalog::factory(std::string catalog_file_path, std::string catalog_file_name,
 
     std::string catalog_file = catalog_file_path + catalog_file_name;
 
-    SDK_TRACE_DEBUG("catalog file is %s", catalog_file.c_str());
-
     // make sure file exists
     if (access(catalog_file.c_str(), R_OK) < 0) {
         SDK_TRACE_ERR("config file %s has no read permissions",
