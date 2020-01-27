@@ -7,6 +7,7 @@
 #include "platform/capri/capri_quiesce.hpp"
 #include "asic/rw/asicrw.hpp"
 #include "lib/p4/p4_api.hpp"
+#include "lib/pal/pal.hpp"
 #include "include/sdk/mem.hpp"
 #include "platform/capri/capri_pxb_pcie.hpp"
 #include "platform/capri/capri_state.hpp"
@@ -71,11 +72,12 @@ capri_default_config_init (capri_cfg_t *cfg)
     return ret;
 }
 
-static sdk_ret_t
-capri_pgm_init (capri_cfg_t *cfg)
+sdk_ret_t
+capri_pgm_init (void)
 {
     sdk_ret_t      ret;
     std::string    full_path;
+    capri_cfg_t *cfg = g_capri_state_pd->cfg();
 
     for (uint8_t i = 0; i < cfg->num_pgm_cfgs; i++) {
         full_path =  std::string(cfg->cfg_path) + "/" + cfg->pgm_name +
@@ -165,7 +167,7 @@ capri_hbm_regions_init (capri_cfg_t *cfg)
         return ret;
     }
 
-    ret = capri_pgm_init(cfg);
+    ret = capri_pgm_init();
     if (ret != SDK_RET_OK) {
         return ret;
     }
@@ -460,6 +462,10 @@ capri_init (capri_cfg_t *cfg)
     SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                             "capri_state_pd_init failure, err : %d", ret);
 
+    ret = capri_table_rw_init(cfg);
+    SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
+                            "capri_tbl_rw_init failure, err : %d", ret);
+
     // soft/upgrade, need to initialize only asm and tm.
     if (!sdk::asic::is_hard_init()) {
         ret = capri_asm_init(cfg);
@@ -471,10 +477,6 @@ capri_init (capri_cfg_t *cfg)
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
                                 "Capri TM Slave init failure, err : %d", ret);
         goto end;
-    }
-
-    if (capri_table_rw_init(cfg) != CAPRI_OK) {
-        return SDK_RET_ERR;
     }
 
     ret = capri_hbm_regions_init(cfg);
@@ -551,7 +553,7 @@ __attribute__((constructor)) void asic_slave_init_(void) {
     char *value;
 
     if ((value = getenv("ASIC_SOFT_INIT"))) {
-        asic_init_type = (asic_init_type_t)atoi(value);
+        asic_init_type = ASIC_INIT_TYPE_SOFT;
     } else {
         asic_init_type = ASIC_INIT_TYPE_HARD;
     }
@@ -561,12 +563,6 @@ bool
 is_soft_init (void)
 {
     return asic_init_type == ASIC_INIT_TYPE_SOFT ? true : false;
-}
-
-bool
-is_upgrade_init (void)
-{
-    return asic_init_type == ASIC_INIT_TYPE_UPGRADE ? true : false;
 }
 
 bool

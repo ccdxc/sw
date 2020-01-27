@@ -191,6 +191,10 @@ capri_quiesce_start (void)
         ret = SDK_RET_ERR;
     }
 
+    // even if there an error, stop needs to be called.
+    // so no need to check the ret_val
+    sdk::asic::set_init_state(sdk::asic::asic_init_state_t::ASIC_INIT_STATE_QUIESCED);
+
    // SDK_TRACE_DEBUG(" %s End ret: %d", __FUNCTION__, ret_val);
     return ret;
 }
@@ -207,13 +211,16 @@ capri_quiesce_stop (void)
     cap_top_quiesce_pb_stop(chip_id);
     cap_top_quiesce_txs_stop(chip_id);
 
+    sdk::asic::set_init_state(sdk::asic::asic_init_state_t::ASIC_INIT_STATE_RUNNING);
+
     // SDK_TRACE_DEBUG(" %s End", __FUNCTION__);
     return ret;
 }
 
 
 sdk_ret_t
-capri_quiesce_init(void) {
+capri_quiesce_init (void)
+{
     sdk_ret_t           ret = SDK_RET_OK;
     cap_top_csr_t       &top_csr= g_capri_state_pd->cap_top();
 

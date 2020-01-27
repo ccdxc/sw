@@ -204,6 +204,8 @@ typedef void (*queue_credits_get_cb_t)(uint32_t port_num,
 
 sdk_ret_t
 queue_credits_get (queue_credits_get_cb_t cb, void *ctxt);
+uint64_t asicpd_table_asm_base_addr_get(uint32_t tableid);
+uint64_t asicpd_table_asm_err_offset_get(uint32_t tableid);
 
 }    // namespace pd
 }    // namespace asic

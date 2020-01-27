@@ -26,42 +26,18 @@ namespace capri {
 // Size of the entire LIF indirection table
 #define ETH_RSS_INDIR_TBL_SZ                (MAX_LIFS * ETH_RSS_LIF_INDIR_TBL_SZ)
 
-int
-capri_toeplitz_init (const char *handle, int stage, int stage_tableid)
+void
+capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
+                        uint64_t tbl_base, uint64_t pc)
 {
-    int tbl_id;
-    uint64_t pc;
-    uint64_t tbl_base;
     cap_top_csr_t & cap0 = sdk::platform::capri::g_capri_state_pd->cap_top();
-    cap_te_csr_t *te_csr = NULL;
+    cap_te_csr_t *te_csr;
+    int tbl_id = stage_tableid;
 
-    if (sdk::p4::p4_program_to_base_addr(handle,
-                                         (char *)ETH_RSS_INDIR_PROGRAM,
-                                         &pc) != 0) {
-        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
-                        handle, (char *) ETH_RSS_INDIR_PROGRAM);
-        return CAPRI_FAIL;
-    }
-    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%x",
-                    handle, (char *)ETH_RSS_INDIR_PROGRAM, pc);
+    SDK_TRACE_DEBUG("rss_indir_table stage %u stage-tableid %u table_base %x\n",
+                    stage, tbl_id, tbl_base);
 
-    // Program rss params table with the PC
     te_csr = &cap0.pcr.te[stage];
-
-    tbl_id = stage_tableid;
-
-#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
-    tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
-    SDK_ASSERT(tbl_base != INVALID_MEM_ADDRESS);
-#else
-    SDK_ASSERT(0);
-#endif
-    // Align the table address because while calculating the read address TE shifts the LIF
-    // value by LOG2 of size of the per lif indirection table.
-    tbl_base = (tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
-
-    SDK_TRACE_DEBUG("rss_indir_table id %u table_base %x\n", tbl_id, tbl_base);
-
     te_csr->cfg_table_property[tbl_id].read();
     te_csr->cfg_table_property[tbl_id].mpu_pc(pc >> 6);
     te_csr->cfg_table_property[tbl_id].mpu_pc_dyn(0);
@@ -85,7 +61,47 @@ capri_toeplitz_init (const char *handle, int stage, int stage_tableid)
     te_csr->cfg_table_property[tbl_id].lg2_entry_size((uint8_t)log2(ETH_RSS_LIF_INDIR_TBL_ENTRY_SZ));
     te_csr->cfg_table_property[tbl_id].write();
 
-    return CAPRI_OK;
+}
+
+sdk_ret_t
+capri_rss_table_base_pc_get (const char *handle, uint64_t *tbl_base, uint64_t *pc)
+{
+    if (sdk::p4::p4_program_to_base_addr(handle,
+                                         (char *)ETH_RSS_INDIR_PROGRAM,
+                                         pc) != 0) {
+        SDK_TRACE_DEBUG("Could not resolve handle %s program %s",
+                        handle, (char *) ETH_RSS_INDIR_PROGRAM);
+        return SDK_RET_ERR;
+    }
+    SDK_TRACE_DEBUG("Resolved handle %s program %s to PC 0x%x",
+                    handle, (char *)ETH_RSS_INDIR_PROGRAM, *pc);
+
+
+#ifdef MEM_REGION_RSS_INDIR_TABLE_NAME
+    *tbl_base = get_mem_addr(MEM_REGION_RSS_INDIR_TABLE_NAME);
+    SDK_ASSERT(*tbl_base != INVALID_MEM_ADDRESS);
+#else
+    SDK_ASSERT(0);
+#endif
+
+    // Align the table address because while calculating the read address TE shifts the LIF
+    // value by LOG2 of size of the per lif indirection table.
+    *tbl_base = (*tbl_base + ETH_RSS_INDIR_TBL_SZ) & ~(ETH_RSS_INDIR_TBL_SZ - 1);
+
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+capri_toeplitz_init (const char *handle, int stage, int stage_tableid)
+{
+    uint64_t pc, tbl_base;
+    sdk_ret_t rv;
+
+    rv = capri_rss_table_base_pc_get(handle, &tbl_base, &pc);
+    if (rv == SDK_RET_OK) {
+        capri_rss_table_config(stage, stage_tableid, tbl_base, pc);
+    }
+    return rv;
 }
 
 }    // namespace capri

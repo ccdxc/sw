@@ -18,17 +18,17 @@ public:
 
     // get APIs for TXS scheduler related state
     sdk::lib::BMAllocator *txs_scheduler_map_idxr(void) { return txs_scheduler_map_idxr_; }
-    std::string cfg_path(void) const { return cfg_path_; }
-    mpartition *mempartition(void) const { return mempartition_; }
+    std::string cfg_path(void) const { return cfg_.cfg_path; }
+    mpartition *mempartition(void) const { return cfg_.mempartition; }
     cap_top_csr_t& cap_top() { return *cap_top_; }
+    capri_cfg_t *cfg(void) { return &cfg_; }
 
 private:
     // TXS scheduler related state
     struct {
         sdk::lib::BMAllocator    *txs_scheduler_map_idxr_;
     } __PACK__;
-    std::string    cfg_path_;    // HAL config path
-    mpartition     *mempartition_;
+    capri_cfg_t cfg_; // config
     cap_top_csr_t *cap_top_;
 
 private:

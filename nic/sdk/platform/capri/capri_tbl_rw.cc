@@ -327,6 +327,23 @@ capri_program_p4plus_table_mpu_pc_args (int tbl_id, cap_te_csr_t *te_csr,
 #define CAPRI_P4PLUS_TXDMA_PROG		"txdma_stage0.bin"
 #define CAPRI_P4PLUS_TXDMA_EXT_PROG	"txdma_stage0_ext.bin"
 
+uint64_t
+capri_get_p4plus_table_mpu_pc (int tableid)
+{
+    uint32_t lcl_tableid;
+
+    if ((uint32_t)tableid >= p4pd_rxdma_tableid_min_get() &&
+        (uint32_t)tableid < p4pd_rxdma_tableid_max_get()) {
+        lcl_tableid = tableid - p4pd_rxdma_tableid_min_get();
+        return capri_table_rxdma_asm_base[lcl_tableid];
+    } else if ((uint32_t)tableid >= p4pd_txdma_tableid_min_get() &&
+               (uint32_t)tableid < p4pd_txdma_tableid_max_get()) {
+        lcl_tableid = tableid - p4pd_txdma_tableid_min_get();
+        return capri_table_txdma_asm_base[lcl_tableid];
+    }
+    return 0;
+}
+
 void
 capri_program_p4plus_table_mpu_pc (int tableid, int stage_tbl_id, int stage)
 {
@@ -411,7 +428,6 @@ capri_p4plus_table_init (p4plus_prog_t *prog,
 
     return CAPRI_OK ;
 }
-
 int
 capri_p4plus_table_init (platform_type_t platform_type,
                          int stage_apphdr, int stage_tableid_apphdr,
@@ -890,7 +906,7 @@ capri_table_csr_cache_inval_init(void)
                     (mem_addr_t)csr_cache_inval_rxdma_va);
 }
 
-int
+sdk_ret_t
 capri_table_rw_init (capri_cfg_t *capri_cfg)
 {
     int ret;
@@ -905,17 +921,17 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
 
     ret = capri_p4_shadow_init();
     if (ret != CAPRI_OK) {
-        return ret;
+        return SDK_RET_ERR;
     }
 
     ret = capri_p4plus_shadow_init();
     if (ret != CAPRI_OK) {
-        return ret;
+        return SDK_RET_ERR;
     }
 
     // Initailize the below for HARD initialization only
     if (!sdk::asic::is_hard_init()) {
-        return CAPRI_OK;
+        return SDK_RET_OK;
     }
 
     /* Initialize stage id registers for p4p */
@@ -929,7 +945,7 @@ capri_table_rw_init (capri_cfg_t *capri_cfg)
     /* Initialize sram memories */
     capri_sram_memory_init(capri_cfg);
 
-    return (CAPRI_OK);
+    return (SDK_RET_OK);
 }
 
 int
@@ -1858,100 +1874,6 @@ asic_csr_list_get (string path, int level)
     return block_name;
 }
 
-// Generated profile (PGM_BIN) always points to the first partition
-// of SRAM and TCAM
-// This needs to be called for configuring second partition
-//
-void
-capri_table_profile_update (void)
-{
-    cap_pics_csr_t *pics_csr;
-    cap_pict_csr_t *pict_csr;
-    cap_top_csr_t & cap0 = g_capri_state_pd->cap_top();
-    uint32_t  tableid, index;
-    p4pd_table_properties_t tbl;
-    uint32_t tcam_offset[2];
-    uint32_t sram_offset[2];
-    uint32_t tcam_hw_addr_offset = 8 * 8;
-    uint32_t sram_hw_addr_offset = 8 * 16;
-    uint32_t saddr, eaddr;
-    uint32_t sram_hw_addr, tcam_hw_addr;
-
-    sram_offset[0] = p4pd_sram_table_depth_get(P4_PIPELINE_INGRESS) / 2;
-    tcam_offset[0] = p4pd_tcam_table_depth_get(P4_PIPELINE_INGRESS) / 2;
-    sram_offset[1] = p4pd_sram_table_depth_get(P4_PIPELINE_EGRESS) / 2;
-    tcam_offset[1] = p4pd_tcam_table_depth_get(P4_PIPELINE_EGRESS) / 2;
-
-    for (tableid = p4pd_tableid_min_get(); tableid <= p4pd_tableid_max_get();
-          tableid++) {
-        if(p4pd_table_properties_get(tableid, &tbl) != P4PD_SUCCESS) {
-            continue;
-        }
-        // Ignore if table is not used
-        if (!tbl.tablename) {
-            continue;
-        }
-        // Skip now if there is an overflow table.
-        // Same table will be repeated again
-        if (tbl.has_oflow_table) {
-            continue;
-        }
-        if (tbl.gress == P4_GRESS_INGRESS) {
-            pics_csr = &cap0.ssi.pics;
-            pict_csr = &cap0.tsi.pict;
-            sram_hw_addr = sram_offset[0] * sram_hw_addr_offset;
-            tcam_hw_addr = tcam_offset[0] * tcam_hw_addr_offset;
-        } else {
-            pics_csr = &cap0.sse.pics;
-            pict_csr = &cap0.tse.pict;
-            sram_hw_addr = sram_offset[1] * sram_hw_addr_offset;
-            tcam_hw_addr = tcam_offset[1] * tcam_hw_addr_offset;
-        }
-        index = tbl.stage * 16 + tbl.stage_tableid;
-
-        // Sram
-        if (tbl.table_type == P4_TBL_TYPE_TCAM ||
-            tbl.table_type == P4_TBL_TYPE_INDEX ||
-            tbl.table_type == P4_TBL_TYPE_HASHTCAM) {
-            pics_csr->cfg_table_profile[index].read();
-            saddr = (uint32_t)pics_csr->cfg_table_profile[index].start_addr();
-            eaddr = (uint32_t)pics_csr->cfg_table_profile[index].end_addr();
-            SDK_TRACE_DEBUG("P4 profile update sram, tablename %s, index %u, "
-                          "startaddr 0x%x, endaddr 0x%x",
-                          tbl.tablename, index, saddr, eaddr);
-            pics_csr->cfg_table_profile[index].start_addr((saddr + sram_hw_addr));
-            pics_csr->cfg_table_profile[index].end_addr((eaddr + sram_hw_addr));
-            pics_csr->cfg_table_profile[index].write();
-        }
-
-        // Tcam
-        if (tbl.table_type == P4_TBL_TYPE_TCAM ||
-            tbl.table_type == P4_TBL_TYPE_HASHTCAM) {
-            pict_csr->cfg_tcam_table_profile[index].read();
-            saddr =
-              (uint32_t)pict_csr->cfg_tcam_table_profile[index].start_addr();
-            eaddr = (uint32_t)pict_csr->cfg_tcam_table_profile[index].end_addr();
-            SDK_TRACE_DEBUG("P4 profile update tcam, tablename %s, index %u, "
-                          "startaddr 0x%x, endaddr 0x%x",
-                          tbl.tablename, index, saddr, eaddr);
-            pict_csr->cfg_tcam_table_profile[index].start_addr((saddr + tcam_hw_addr));
-            pict_csr->cfg_tcam_table_profile[index].end_addr((eaddr + tcam_hw_addr));
-            pict_csr->cfg_tcam_table_profile[index].write();
-        }
-
-        for (tableid = p4pd_rxdma_tableid_min_get();
-             tableid <= p4pd_rxdma_tableid_max_get(); tableid++) {
-            pics_csr = &cap0.rpc.pics;
-            // TODO
-        }
-
-        for (tableid = p4pd_txdma_tableid_min_get();
-             tableid <= p4pd_txdma_tableid_max_get(); tableid++) {
-            pics_csr = &cap0.tpc.pics;
-            // TODO
-        }
-    }
-}
 
 } // namespace capri
 } // namespace platform

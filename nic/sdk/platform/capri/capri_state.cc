@@ -17,7 +17,6 @@ namespace capri {
 capri_state_pd::capri_state_pd()
 {
     txs_scheduler_map_idxr_ = NULL;
-    mempartition_ = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -39,8 +38,7 @@ capri_state_pd::init(capri_cfg_t *cfg)
         txs_scheduler_map_idxr_ = 
                         new sdk::lib::BMAllocator(CAPRI_TXS_SCHEDULER_MAP_MAX_ENTRIES);
         SDK_ASSERT_RETURN((txs_scheduler_map_idxr_ != NULL), false);
-        mempartition_ = cfg->mempartition;
-        cfg_path_ = cfg->cfg_path;
+        cfg_ = *cfg;
     }
 
     cap_top_ = &CAP_BLK_REG_MODEL_ACCESS(cap_top_csr_t, 0, 0);

@@ -43,7 +43,7 @@ typedef struct p4plus_prog_s {
     p4pd_pipeline_t pipe;
 } p4plus_prog_t;
 
-int capri_table_rw_init(capri_cfg_t *capri_cfg);
+sdk_ret_t capri_table_rw_init(capri_cfg_t *capri_cfg);
 int capri_p4plus_table_rw_init(void);
 void capri_mpu_icache_invalidate(void);
 
@@ -169,7 +169,8 @@ bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
                              p4plus_cache_action_t action);
 
 void capri_table_csr_cache_inval_init(void);
-void capri_table_profile_update (void);
+uint64_t capri_get_p4plus_table_mpu_pc(int tableid);
+sdk_ret_t capri_pgm_init(void);
 
 } // namespace capri
 } // namespace platform

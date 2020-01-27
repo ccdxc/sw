@@ -6,8 +6,10 @@
 namespace sdk {
 namespace platform {
 namespace capri {
-
-int capri_toeplitz_init(const char *handle, int stage, int stage_tableid);
+void capri_rss_table_config (uint32_t stage, uint32_t stage_tableid,
+                             uint64_t tbl_base, uint64_t pc);
+sdk_ret_t capri_toeplitz_init(const char *handle, int stage, int stage_tableid);
+sdk_ret_t capri_rss_table_base_pc_get(const char *handle, uint64_t *tbl_base, uint64_t *pc);
 
 }    // namespace capri
 }    // namespace platform

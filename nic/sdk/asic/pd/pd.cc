@@ -123,6 +123,7 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
     uint64_t capri_action_txdma_asm_base;
     uint64_t capri_table_rxdma_asm_base;
     uint64_t capri_table_txdma_asm_base;
+    p4pd_table_properties_t tbl_info;
 
     for (uint32_t i = p4pd_rxdma_tableid_min_get();
          i < p4pd_rxdma_tableid_max_get(); i++) {
@@ -173,21 +174,23 @@ asicpd_p4plus_table_mpu_base_init (p4pd_cfg_t *p4pd_cfg)
             capri_set_action_txdma_asm_base(i, j, capri_action_txdma_asm_base);
         }
     }
-    p4pd_table_properties_t tbl_info;
 
-    // P4+ MPU PC initialize
-    for (uint32_t i = p4pd_rxdma_tableid_min_get();
-         i < p4pd_rxdma_tableid_max_get(); i++) {
-        p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
-                                          tbl_info.stage);
-    }
+    // config only if it is  hard init
+    if (sdk::asic::is_hard_init()) {
+        // P4+ MPU PC initialize
+        for (uint32_t i = p4pd_rxdma_tableid_min_get();
+             i < p4pd_rxdma_tableid_max_get(); i++) {
+            p4pd_global_table_properties_get(i, &tbl_info);
+            capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
+                                              tbl_info.stage);
+        }
 
-    for (uint32_t i = p4pd_txdma_tableid_min_get();
-         i < p4pd_txdma_tableid_max_get(); i++) {
-        p4pd_global_table_properties_get(i, &tbl_info);
-        capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
-                                          tbl_info.stage);
+        for (uint32_t i = p4pd_txdma_tableid_min_get();
+             i < p4pd_txdma_tableid_max_get(); i++) {
+            p4pd_global_table_properties_get(i, &tbl_info);
+            capri_program_p4plus_table_mpu_pc(i, tbl_info.stage_tableid,
+                                              tbl_info.stage);
+        }
     }
     return SDK_RET_OK;
 }
@@ -742,12 +745,12 @@ asic_pd_unravel_hbm_intrs (bool *iscattrip, bool *iseccerr, bool logging)
 sdk_ret_t
 asicpd_toeplitz_init (const char *handle, uint32_t tableid)
 {
-     p4pd_table_properties_t tbl_ctx;
+    p4pd_table_properties_t tbl_ctx;
 
-     p4pd_global_table_properties_get(tableid, &tbl_ctx);
-     sdk::platform::capri::capri_toeplitz_init(handle, tbl_ctx.stage,
-                                               tbl_ctx.stage_tableid);
-     return SDK_RET_OK;
+    p4pd_global_table_properties_get(tableid, &tbl_ctx);
+    sdk::platform::capri::capri_toeplitz_init(handle, tbl_ctx.stage,
+                                              tbl_ctx.stage_tableid);
+    return SDK_RET_OK;
 }
 
 // asicpd_sw_phv_inject
@@ -770,6 +773,18 @@ sdk_ret_t
 queue_credits_get (queue_credits_get_cb_t cb, void *ctxt)
 {
     return sdk::platform::capri::capri_queue_credits_get(cb, ctxt);
+}
+
+uint64_t
+asicpd_table_asm_base_addr_get (uint32_t tableid)
+{
+    return capri_table_asm_base[tableid];
+}
+
+uint64_t
+asicpd_table_asm_err_offset_get (uint32_t tableid)
+{
+    return capri_table_asm_err_offset[tableid];
 }
 
 }    // namespace pd

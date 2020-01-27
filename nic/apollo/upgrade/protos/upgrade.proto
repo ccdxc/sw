@@ -1,0 +1,68 @@
+//
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//
+//----------------------------------------------------------------------------
+///
+/// \file
+/// protobuf specification for upgrade object
+/// upgrade manager recieves this and decide the actions
+///
+//----------------------------------------------------------------------------
+
+syntax = "proto3";
+package pds;
+
+import "gogo.proto";
+
+service UpgSvc {
+  rpc UpgradeRequest (UpgRequest) returns (UpgResponse) {}
+}
+
+enum UpgReqType {
+  UPG_REQ_NONE         = 0;
+  UPG_REQ_START        = 1;
+  UPG_REQ_COMPAT_CHECK = 2;
+}
+
+enum UpgMode {
+  UPG_MODE_NONE           = 0;
+  UPG_MODE_DISRUPTIVE     = 1;
+  UPG_MODE_NON_DISRUPTIVE = 2;
+}
+
+enum UpgOperHwTblMode {
+  UPG_OPER_HWTBL_MODE_NONE     = 0;
+  // copy the operational tables to new memory with translation
+  // memory should be reserved for duplicating the entries
+  UPG_OPER_HWTBL_MODE_COPY     = 1;
+  // flush all the existing operational tables
+  UPG_OPER_HWTBL_MODE_FLUSH    = 2;
+  // preserve the operational entries as it is
+  UPG_OPER_HWTBL_MODE_PRESERVE = 3;
+  // replace the existing operational tables.
+  // when there is no additional memory, build the new table in
+  // linux memory and DMA in the end.
+  UPG_OPER_HWTBL_MODE_REPLACE  = 4;
+}
+
+message UpgSpec {
+  UpgReqType       ReqType       = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgMode          Mode          = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  string           PkgName       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgOperHwTblMode OperHwTblMode = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+}
+
+enum UpgStatus {
+  UPG_STATUS_OK          = 0;
+  UPG_STATUS_INVALID_ARG = 1;
+  UPG_STATUS_ERR         = 2;
+}
+
+message UpgRequest {
+  UpgSpec Request = 1;
+}
+
+message UpgResponse {
+  UpgStatus Status      = 1;
+  string    RespFailStr = 2;
+}
