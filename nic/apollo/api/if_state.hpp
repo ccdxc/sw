@@ -58,7 +58,7 @@ public:
     /// \brief      lookup a interface in database given the key
     /// \param[in]  key  key for the interface object
     /// \return     pointer to the interface instance found or NULL
-    if_entry *find(pds_obj_key_t *key) const;
+    if_entry *find(const pds_obj_key_t *key) const;
 
     /// \brief      walk the interface database and invoke the callback per
     ///             interface

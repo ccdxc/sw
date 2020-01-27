@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -54,7 +55,7 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Subnet
 		req = &pds.SubnetGetRequest{
-			Id: [][]byte{[]byte(subnetID)},
+			Id: [][]byte{uuid.FromStringOrNil(subnetID).Bytes()},
 		}
 	} else {
 		// Get all Subnets
@@ -110,14 +111,14 @@ func printSubnet(subnet *pds.Subnet) {
 	if len(spec.GetHostIf()) > 0 {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
-	v4rtTblID := string(spec.GetV4RouteTableId())
-	rtTblID := fmt.Sprintf("%-36s", v4rtTblID)
-	ingSGID := fmt.Sprintf("%-36s", spec.GetIngV4SecurityPolicyId()[0])
-	egSGID := fmt.Sprintf("%-36s", spec.GetEgV4SecurityPolicyId()[0])
 	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3d\n",
-		string(spec.GetId()), string(spec.GetVPCId()), lifName,
+		uuid.FromBytesOrNil(spec.GetId()).String(),
+		uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),
 		utils.Uint32IPAddrtoStr(spec.GetIPv4VirtualRouterIP()),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
-		rtTblID, ingSGID, egSGID, spec.GetToS())
+		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
+		uuid.FromBytesOrNil(spec.GetIngV4SecurityPolicyId()[0]).String(),
+		uuid.FromBytesOrNil(spec.GetEgV4SecurityPolicyId()[0]).String(),
+		spec.GetToS())
 }

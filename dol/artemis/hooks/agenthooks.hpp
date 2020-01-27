@@ -491,7 +491,7 @@ public:
     }
 
     void add_local_ep(pds_local_mapping_spec_t *local_spec) {
-        uint32_t vpc_id = test::pdsobjkey2int(local_spec->key.vpc);
+        uint32_t vpc_id = test::objid_from_uuid(local_spec->key.vpc);
         ip_addr_t ip_addr = local_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -541,7 +541,7 @@ public:
     }
 
     void add_remote_ep(pds_remote_mapping_spec_t *remote_spec) {
-        uint32_t vpc_id = test::pdsobjkey2int(remote_spec->key.vpc);
+        uint32_t vpc_id = test::objid_from_uuid(remote_spec->key.vpc);
         ip_addr_t ip_addr = remote_spec->key.ip_addr;
 
         assert(vpc_id);
@@ -580,7 +580,7 @@ public:
 
     void add_route_table(pds_route_table_spec_t *route_spec) {
         uint32_t rt_dbid = route_spec->af == IP_AF_IPV4;
-        uint32_t route_table_id = test::pdsobjkey2int(route_spec->key);
+        uint32_t route_table_id = test::objid_from_uuid(route_spec->key);
         uint32_t tblid = 0;
 
         if (rt_dbid == 1) {
@@ -605,10 +605,10 @@ public:
     }
 
     void add_subnet(pds_subnet_spec_t *subnet_spec) {
-        uint32_t subnet_id = test::pdsobjkey2int(subnet_spec->key);
-        uint32_t vpc_id = test::pdsobjkey2int(subnet_spec->vpc);
-        uint32_t v4route_table_id = test::pdsobjkey2int(subnet_spec->v4_route_table);
-        uint32_t v6route_table_id = test::pdsobjkey2int(subnet_spec->v6_route_table);
+        uint32_t subnet_id = test::objid_from_uuid(subnet_spec->key);
+        uint32_t vpc_id = test::objid_from_uuid(subnet_spec->vpc);
+        uint32_t v4route_table_id = test::objid_from_uuid(subnet_spec->v4_route_table);
+        uint32_t v6route_table_id = test::objid_from_uuid(subnet_spec->v6_route_table);
 
         assert(subnet_id < DOL_MAX_SUBNET);
         assert(vpc_id < DOL_MAX_VPC);
@@ -631,7 +631,7 @@ public:
            (ip1.addr.v6_addr.addr64[1] == ip2.addr.v6_addr.addr64[1])))
 
     void add_svc_mapping(pds_svc_mapping_spec_t *svc_spec) {
-        uint32_t vpc = test::pdsobjkey2int(svc_spec->key.vpc);
+        uint32_t vpc = test::objid_from_uuid(svc_spec->key.vpc);
         uint32_t af = svc_spec->vip.af;
         uint32_t lid;
 
@@ -996,7 +996,7 @@ public:
                     }
                     // create V4 session
                     ret = create_session_info(
-                        vpc, test::pdsobjkey2int(local_gw_mapping[i].remotes[rc].route.nh),
+                        vpc, test::objid_from_uuid(local_gw_mapping[i].remotes[rc].route.nh),
                         VNET_TO_INTERNET_SLB);
                     if (ret != SDK_RET_OK) {
                         local_gw_mapping[i].remote_count = 0;

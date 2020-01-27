@@ -246,6 +246,18 @@ uuid_from_objid (uint32_t id)
     return key;
 }
 
+static inline uint32_t
+objid_from_uuid (const pds_obj_key_t& key) {
+    char *buf;
+    char id_buf[4][9];
+    static thread_local uint8_t next_buf = 0;
+
+    buf = id_buf[next_buf++ & 0x3];
+    memcpy(buf, key.id, 8);
+    buf[8] = '\0';
+    return *(uint32_t *)buf;
+}
+
 }    // namespace test
 
 #endif    // __TEST_BASE_UTILS_HPP__

@@ -256,27 +256,28 @@ enum PortFecType {
 }
 
 message PortSpec {
-  // port id (key for this object)
+  // unique port id
+  bytes            Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // NOTE: currently, port ids must be in the range of [1-2]
-  uint32           Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  uint32           PortNumber      = 2 [(gogoproto.moretags) = "meta:mandatory,range:1-2"];
   // port up|down adminstratively
-  PortAdminState   AdminState      = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  PortAdminState   AdminState      = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // port speed
-  PortSpeed        Speed           = 3;
+  PortSpeed        Speed           = 4;
   // FEC type
-  PortFecType      FECType         = 4;
+  PortFecType      FECType         = 5;
   // enable/disable auto negotiation feature
-  bool             AutoNegEn       = 5;
+  bool             AutoNegEn       = 6;
   // link debounce timeout in msec (default = 0 ms)
-  uint32           DeBounceTimeout = 6;
+  uint32           DeBounceTimeout = 7;
   // MTU size in bytes
-  uint32           Mtu             = 7;
+  uint32           Mtu             = 8;
   // Pause type (pfc or link level)
-  PortPauseType    PauseType       = 8;
+  PortPauseType    PauseType       = 9;
   // Port loopback mode - MAC/PHY
-  PortLoopBackMode LoopbackMode    = 9;
+  PortLoopBackMode LoopbackMode    = 10;
   // Number of lanes for port
-  uint32           NumLanes        = 10;
+  uint32           NumLanes        = 11;
 }
 
 message PortLinkStatus {
@@ -295,8 +296,9 @@ message PortXcvrStatus {
 }
 
 message PortStatus {
-  PortLinkStatus LinkStatus = 1; // operational link status
-  PortXcvrStatus XcvrStatus = 2; // transceiver status
+  uint32         IfIndex    = 1; // encoded interface index
+  PortLinkStatus LinkStatus = 2; // operational link status
+  PortXcvrStatus XcvrStatus = 3; // transceiver status
 }
 
 message Port {
@@ -306,7 +308,7 @@ message Port {
 }
 
 message PortGetRequest {
-  repeated uint32 Id = 1;
+  repeated bytes Id = 1;
 }
 
 message PortGetResponse {

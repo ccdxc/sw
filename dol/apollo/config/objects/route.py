@@ -77,6 +77,7 @@ class RouteTableObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV4'
             self.NEXTHOP = NexthopClient.GetV4Nexthop(node, parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
+        self.UUID = utils.PdsUuid(self.RouteTblId)
         self.routes = routes
         self.TUNNEL = tunobj
         self.NhGroup = None
@@ -101,8 +102,8 @@ class RouteTableObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RouteTableID:%d|VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s"\
-               %(self.RouteTblId, self.VPCId, self.AddrFamily,\
+        return "RouteTable: %s |VPCId:%d|AddrFamily:%s|NumRoutes:%d|RouteType:%s"\
+               % (self.UUID, self.VPCId, self.AddrFamily,\
                  len(self.routes), self.RouteType)
 
     def Show(self):
@@ -152,22 +153,22 @@ class RouteTableObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.RouteTblId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateNh(self, rtspec, route):
         if route.NextHopType == "vpcpeer":
-            rtspec.VPCId = str.encode(str(route.PeerVPCId))
+            rtspec.VPCId = utils.PdsUuid.GetUUIDfromId(route.PeerVPCId)
         elif route.NextHopType == "tep":
-            rtspec.TunnelId = str.encode(str(route.TunnelId))
+            rtspec.TunnelId = utils.PdsUuid.GetUUIDfromId(route.TunnelId)
         elif route.NextHopType == "nh":
-            rtspec.NexthopId = str.encode(str(route.NexthopId))
+            rtspec.NexthopId = utils.PdsUuid.GetUUIDfromId(route.NexthopId)
         elif route.NextHopType == "nhg":
-            rtspec.NexthopGroupId = str.encode(str(route.NexthopGroupId))
+            rtspec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(route.NexthopGroupId)
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.RouteTblId))
+        spec.Id = self.GetKey()
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for route in self.routes.values():
             rtspec = spec.Routes.add()
@@ -182,7 +183,7 @@ class RouteTableObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.RouteTblId:
+        if spec.Id != self.GetKey():
             return False
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
@@ -314,11 +315,6 @@ class RouteObjectClient(base.ConfigClientBase):
         self.__supported = __isObjSupported()
         self.__v6supported = __isIPv6RouteTableSupported()
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml:
-            return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for route table

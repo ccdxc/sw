@@ -99,27 +99,27 @@ xcvr_event_cb (xcvr_event_info_t *xcvr_event_info)
 
 /**
  * @brief        update a port with the given configuration information
- * @param[in]    ifindex               interface index
+ * @param[in]    key         key/uuid of the port
  * @param[in]    port_admin_state_t    port admin state
  * @return       SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-update_port (pds_ifindex_t ifindex, port_args_t *api_port_info)
+update_port (const pds_obj_key_t *key, port_args_t *api_port_info)
 {
     sdk_ret_t ret;
     if_entry *intf;
     port_args_t port_info;
 
-    intf = if_db()->find(&ifindex);
+    intf = if_db()->find(key);
     if (intf == NULL) {
-        PDS_TRACE_ERR("port 0x%x update failed", ifindex);
+        PDS_TRACE_ERR("port %s update failed", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     memset(&port_info, 0, sizeof(port_info));
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get port 0x%x info, err %u", ifindex, ret);
+        PDS_TRACE_ERR("Failed to get port %s info, err %u", key->str(), ret);
         return ret;
     }
     port_info.port_num = intf->ifindex();
@@ -265,13 +265,15 @@ typedef struct port_get_cb_ctxt_s {
 bool
 if_walk_port_get_cb (void *entry, void *ctxt)
 {
-    sdk_ret_t ret;
-    if_entry *intf = (if_entry *)entry;
-    port_get_cb_ctxt_t *cb_ctxt = (port_get_cb_ctxt_t *)ctxt;
-    uint64_t stats_data[MAX_MAC_STATS];
-    port_args_t port_info;
     int phy_port;
+    sdk_ret_t ret;
+    pds_obj_key_t key;
+    port_args_t port_info;
+    if_entry *intf = (if_entry *)entry;
+    uint64_t stats_data[MAX_MAC_STATS];
+    port_get_cb_ctxt_t *cb_ctxt = (port_get_cb_ctxt_t *)ctxt;
 
+    key = intf->key();
     memset(&port_info, 0, sizeof(port_info));
     port_info.stats_data = stats_data;
     ret = sdk::linkmgr::port_get(intf->port_info(), &port_info);
@@ -288,31 +290,41 @@ if_walk_port_get_cb (void *entry, void *ctxt)
                           phy_port, ret);
         }
     }
+    // TODO: @akoradha port_args is exposed all the way to the agent
+    //       with the current design, we should create port_spec_t,
+    //       port_status_t and port_stats_t like any other object or
+    //       better approach is to fold all the port stuff into if_entry
+    //       and CLIs etc. will naturally work with current db walks etc.
+    //       we have all eth ports in if db already. with port_args_t
+    //       going directly upto agent svc layer, there is no way to send uuid
+    //       now), so hijacking this pointer field
+    port_info.port_an_args = (port_an_args_t *)&key;
     cb_ctxt->port_get_cb(&port_info, cb_ctxt->ctxt);
     return false;
 }
 
 /**
  * @brief    get port information based on port number
- * @param[in]    ifindex     front panel port number or 0 for all ports
+ * @param[in]    key         key/uuid of the port or k_pds_obj_key_invalid for
+ *                           all ports
  * @param[in]    port_get_cb callback invoked per port
  * @param[in]    ctxt        opaque context passed back to the callback
  * @return    SDK_RET_OK on success, failure status code on error
  */
 sdk_ret_t
-port_get (uint32_t ifindex, port_get_cb_t port_get_cb, void *ctxt)
+port_get (const pds_obj_key_t *key, port_get_cb_t port_get_cb, void *ctxt)
 {
     if_entry *intf;
     port_get_cb_ctxt_t cb_ctxt;
 
     cb_ctxt.ctxt = ctxt;
     cb_ctxt.port_get_cb = port_get_cb;
-    if (ifindex == 0) {
+    if (*key == k_pds_obj_key_invalid) {
         if_db()->walk(IF_TYPE_ETH, if_walk_port_get_cb, &cb_ctxt);
     } else {
-        intf = if_db()->find(&ifindex);
+        intf = if_db()->find(key);
         if (intf == NULL)  {
-            PDS_TRACE_ERR("Port 0x%x not found", ifindex);
+            PDS_TRACE_ERR("Port %s not found", key->str());
             return SDK_RET_INVALID_OP;
         }
         if_walk_port_get_cb(intf, &cb_ctxt);

@@ -43,6 +43,7 @@ class SubnetObject(base.ConfigObjectBase):
         else:
             self.SubnetId = next(resmgr.SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
+        self.UUID = utils.PdsUuid(self.SubnetId)
         self.VPC = parent
         self.PfxSel = parent.PfxSel
         self.IPPrefix = {}
@@ -67,8 +68,12 @@ class SubnetObject(base.ConfigObjectBase):
             self.Vnid = spec.fabricencapvalue
         else:
             self.Vnid = next(resmgr.VxlanIdAllocator)
-        self.HostIfIdx = getattr(spec, 'hostifidx', None)
         self.HostIf = InterfaceClient.GetHostInterface(node)
+        if self.HostIf:
+            self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+        else:
+            self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
@@ -88,8 +93,8 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "SubnetID:%d|VPCId:%d|PfxSel:%d|MAC:%s" %\
-               (self.SubnetId, self.VPC.VPCId, self.PfxSel, self.VirtualRouterMACAddr.get())
+        return "Subnet: %s |VPC: %s |PfxSel:%d|MAC:%s" %\
+               (self.UUID, self.VPC.UUID, self.PfxSel, self.VirtualRouterMACAddr.get())
 
     def Show(self):
         logger.info("SUBNET object:", self)
@@ -101,6 +106,8 @@ class SubnetObject(base.ConfigObjectBase):
                     (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))
         if self.HostIf:
             logger.info("- HostInterface:", self.HostIf.Ifname)
+        if self.HostIfUuid:
+            logger.info("- HostIf:%s" % self.HostIfUuid)
         self.Status.Show()
         return
 
@@ -158,65 +165,67 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.SubnetId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.SubnetId))
-        spec.VPCId = str.encode(str(self.VPC.VPCId))
+        spec.Id = self.GetKey()
+        spec.VPCId = self.VPC.GetKey()
         utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
         utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
         spec.IPv4VirtualRouterIP = int(self.VirtualRouterIPAddr[1])
         spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
-        spec.V4RouteTableId = str.encode(str(self.V4RouteTableId))
-        spec.V6RouteTableId = str.encode(str(self.V6RouteTableId))
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
-            if self.HostIf:
-                spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.HostIf.lif.id))
-            elif self.HostIfIdx:
-                spec.HostIf = utils.GetUUID(self.HostIfIdx)
+            if self.HostIfUuid:
+                spec.HostIf = self.HostIfUuid.GetUuid()
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.SubnetId:
+        #TODO: Fix policy validation
+        logger.error("Subnet validation:")
+        logger.error(f"Spec {spec} ")
+        self.Show()
+        if spec.Id != self.GetKey():
             return False
-        if int(spec.VPCId) != self.VPC.VPCId:
+        if spec.VPCId != self.VPC.GetKey():
             return False
         if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
             return False
-        if int(spec.V4RouteTableId) != self.V4RouteTableId:
+        if spec.V4RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId):
             return False
-        if int(spec.V6RouteTableId) != self.V6RouteTableId:
+        if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId):
             return False
-        if int(spec.IngV4SecurityPolicyId[0]) != self.IngV4SecurityPolicyIds[0]:
-            return False
-        if int(spec.IngV6SecurityPolicyId[0]) != self.IngV6SecurityPolicyIds[0]:
-            return False
-        if int(spec.EgV4SecurityPolicyId[0]) !=  self.EgV4SecurityPolicyIds[0]:
-            return False
-        if int(spec.EgV6SecurityPolicyId[0]) != self.EgV6SecurityPolicyIds[0]:
-            return False
+        # if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0]):
+        #     return False
+        # if spec.IngV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV6SecurityPolicyIds[0]):
+        #     return False
+        # if spec.EgV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV4SecurityPolicyIds[0]):
+        #     return False
+        # if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0]):
+        #     return False
         if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
             return False
         if utils.IsPipelineApulu():
-            if self.HostIf:
-                if utils.GetIdfromUUID(spec.HostIf) != utils.LifId2LifIfIndex(self.HostIf.lif.id):
+            if self.HostIfUuid:
+                if spec.HostIf != self.HostIfUuid.GetUuid():
                     return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.SubnetId:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         return True
 
@@ -327,10 +336,6 @@ class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.SUBNET, resmgr.MAX_SUBNET)
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def GetSubnetObject(self, node, subnetid):
         return self.GetObjectByKey(node, subnetid)

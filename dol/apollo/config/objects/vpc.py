@@ -51,6 +51,7 @@ class VpcObject(base.ConfigObjectBase):
         else:
             self.VPCId = next(resmgr.VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
+        self.UUID = utils.PdsUuid(self.VPCId)
         self.IPPrefix = {}
         self.Nat46_pfx = None
         self.V4RouteTableId = 0
@@ -157,8 +158,8 @@ class VpcObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "VpcID:%d|Type:%d|PfxSel:%d" %\
-               (self.VPCId, self.Type, self.PfxSel)
+        return "Vpc: %s |Type:%d|PfxSel:%d" %\
+               (self.UUID, self.Type, self.PfxSel)
 
     def Show(self):
         logger.info("VPC Object:", self)
@@ -219,15 +220,15 @@ class VpcObject(base.ConfigObjectBase):
     #    self.VirtualRouterMACAddr = self.GetPrecedent().VirtualRouterMACAddr
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.VPCId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.VPCId))
+        spec.Id = self.GetKey()
         spec.Type = self.Type
-        spec.V4RouteTableId = str.encode(str(self.V4RouteTableId))
-        spec.V6RouteTableId = str.encode(str(self.V6RouteTableId))
+        spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
+        spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
@@ -235,7 +236,7 @@ class VpcObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.VPCId:
+        if spec.Id != self.GetKey():
             return False
         if spec.Type != self.Type:
             return False
@@ -247,7 +248,7 @@ class VpcObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.VPCId:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if spec['type'] != self.Type:
             return False
@@ -318,11 +319,6 @@ class VpcObjectClient(base.ConfigClientBase):
     # TODO: move to GetObjectByKey
     def GetVpcObject(self, node, vpcid):
         return self.GetObjectByKey(node, vpcid)
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml:
-            return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def __write_cfg(self, vpc_count):
         nh = NhClient.GetNumNextHopPerVPC()

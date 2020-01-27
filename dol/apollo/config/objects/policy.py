@@ -125,6 +125,7 @@ class PolicyObject(base.ConfigObjectBase):
             self.PolicyId = next(resmgr.V4SecurityPolicyIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
+        self.UUID = utils.PdsUuid(self.PolicyId)
         ################# PRIVATE ATTRIBUTES OF POLICY OBJECT #####################
         self.PolicyType = policytype
         self.Level = level
@@ -135,7 +136,7 @@ class PolicyObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "PolicyID:%d" % (self.PolicyId)
+        return "Policy: %s " % (self.UUID)
 
     def Show(self):
         logger.info("Policy Object:", self)
@@ -205,12 +206,12 @@ class PolicyObject(base.ConfigObjectBase):
                 specrule.Match.L4Match.Ports.DstPortRange.PortHigh = l4match.DportHigh
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.PolicyId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.PolicyId))
+        spec.Id = self.GetKey()
         spec.Direction = utils.GetRpcDirection(self.Direction)
         spec.AddrFamily = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.rules:
@@ -218,7 +219,7 @@ class PolicyObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.PolicyId:
+        if spec.Id != self.GetKey():
             return False
         if spec.Direction != utils.GetRpcDirection(self.Direction):
             return False
@@ -305,11 +306,6 @@ class PolicyObjectClient(base.ConfigClientBase):
         self.__supported = __isObjSupported()
         self.__v6supported = __isIPv6PolicySupported()
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml:
-            return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for policy

@@ -23,6 +23,7 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             self.Id = next(resmgr.TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
+        self.UUID = utils.PdsUuid(self.Id)
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
@@ -101,9 +102,9 @@ class TunnelObject(base.ConfigObjectBase):
         remote = ""
         if hasattr(self, "Remote") and self.Remote is True:
             remote = " Remote:%s"% (self.Remote)
-        return "Tunnel%d|LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s%s|" \
+        return "TEP: %s |LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s%s|" \
                "EncapValue:%d|Nat:%s|Mac:%s|NhType:%s" % \
-               (self.Id,self.LocalIPAddr, self.RemoteIPAddr,
+               (self.UUID, self.LocalIPAddr, self.RemoteIPAddr,
                utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
                self.Nat, self.MACAddr, self.__nhtype)
 
@@ -137,13 +138,13 @@ class TunnelObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.Id)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.Id))
-        spec.VPCId = str.encode(str(0)) # TODO: Create Underlay VPC
+        spec.Id = self.GetKey()
+        spec.VPCId = utils.PdsUuid.GetUUIDfromId(0) # TODO: Create Underlay VPC
         utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
         utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)
@@ -158,13 +159,13 @@ class TunnelObject(base.ConfigObjectBase):
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
                 utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
-            spec.NexthopId = str.encode(str(self.NexthopId))
+            spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId)
         elif self.IsUnderlayEcmp():
-            spec.NexthopGroupId = str.encode(str(self.NexthopGroupId))
+            spec.NexthopGroupId = utils.PdsUuid.GetUUIDfromId(self.NexthopGroupId)
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.Id:
+        if spec.Id != self.GetKey():
             return False
         if utils.ValidateTunnelEncap(self.EncapValue, spec.Encap) == False:
             return False
@@ -190,7 +191,7 @@ class TunnelObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'id') != self.Id:
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         return True
 
@@ -275,10 +276,6 @@ class TunnelObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.TUNNEL, resmgr.MAX_TUNNEL)
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def GetTunnelObject(self, node, tunnelid):
         return self.GetObjectByKey(node, tunnelid)

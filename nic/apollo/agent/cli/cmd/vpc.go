@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -55,7 +56,7 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific VPC
 		req = &pds.VPCGetRequest{
-			Id: [][]byte{[]byte(ID)},
+			Id: [][]byte{uuid.FromStringOrNil(ID).Bytes()},
 		}
 	} else {
 		// Get all VPCs
@@ -103,9 +104,9 @@ func printVPCHeader() {
 func printVPC(vpc *pds.VPC) {
 	spec := vpc.GetSpec()
 	fmt.Printf("%-36s%-10s%-36s%-20s%-14s\n",
-		string(spec.GetId()),
+		uuid.FromBytesOrNil(spec.GetId()).String(),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
-		string(spec.GetV4RouteTableId()),
+		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),
 		utils.MactoStr(spec.GetVirtualRouterMac()),
 		utils.EncapToString(spec.GetFabricEncap()))
 }

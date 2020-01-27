@@ -42,6 +42,7 @@ class TagObject(base.ConfigObjectBase):
             self.TagTblId = next(resmgr.V4TagIdAllocator)
             self.AddrFamily = 'IPV4'
             self.GID('IPv4TagTbl%d' %self.TagTblId)
+        self.UUID = utils.PdsUuid(self.TagTblId)
         self.Rules = rules
         ##########################################################################
         self.DeriveOperInfo()
@@ -49,8 +50,8 @@ class TagObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "TagTblID:%dAddrFamily:%s|NumRules:%d"\
-               %(self.TagTblId, self.AddrFamily, len(self.Rules))
+        return "TagTbl: %s |AddrFamily:%s|NumRules:%d"\
+               %(self.UUID, self.AddrFamily, len(self.Rules))
 
     def Show(self):
         logger.info("TagTbl object:", self)
@@ -60,12 +61,12 @@ class TagObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.TagTblId)
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.TagTblId))
+        spec.Id = self.GetKey()
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.Rules:
             tagrulespec = spec.Rules.add()
@@ -77,14 +78,14 @@ class TagObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.TagTblId:
+        if spec.Id != self.GetKey():
             return False
         if spec.Af != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False
         return True
 
     def ValidateYamlSpec(self, spec):
-        if utils.GetYamlSpecAttr(spec, 'id') != self.TagTblId:
+        if utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if spec['af'] != utils.GetRpcIPAddrFamily(self.AddrFamily):
             return False

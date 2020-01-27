@@ -87,6 +87,7 @@ class InterfaceObject(base.ConfigObjectBase):
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
+        self.UUID = utils.PdsUuid(self.InterfaceId)
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF INTERFACE OBJECT #####################
@@ -95,8 +96,8 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "InterfaceId:%d|Ifname:%s|Type:%d|AdminState:%s" % \
-                (self.InterfaceId, self.Ifname, self.Type, self.AdminState)
+        return "Interface: %s |Ifname:%s|Type:%d|AdminState:%s" % \
+                (self.UUID, self.Ifname, self.Type, self.AdminState)
 
     def Show(self):
         logger.info("InterfaceObject:")
@@ -119,23 +120,23 @@ class InterfaceObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.InterfaceId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.InterfaceId))
+        spec.Id = self.GetKey()
         spec.AdminStatus = interface_pb2.IF_STATUS_UP
         if self.Type == topo.InterfaceTypes.L3:
             spec.Type = interface_pb2.IF_TYPE_L3
             spec.L3IfSpec.EthIfIndex = self.IfInfo.ethifidx
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
-            spec.L3IfSpec.VpcId = str.encode(str(self.IfInfo.VpcId))
+            spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.InterfaceId:
+        if spec.Id != self.GetKey():
             return False
         if spec.AdminStatus != interface_pb2.IF_STATUS_UP:
             return False
@@ -164,11 +165,6 @@ class InterfaceObjectClient(base.ConfigClientBase):
         self.__hostifs = defaultdict(dict)
         self.__hostifs_iter = defaultdict(dict)
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml:
-            return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def GetInterfaceObject(self, node, infid):
         return self.GetObjectByKey(node, infid)

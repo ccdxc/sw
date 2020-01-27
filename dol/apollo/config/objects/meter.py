@@ -52,7 +52,7 @@ class MeterStatsHelper:
             return
         stats = self.PreStats if pre else self.PostStats
         for entry in resp.Response:
-            meterid = int(entry.Spec.Id)
+            meterid = utils.PdsUuid.GetIdfromUUID(entry.Spec.Id)
             assert meterid != 0
             stats[meterid].RxBytes = entry.Stats.RxBytes
             stats[meterid].TxBytes = entry.Stats.TxBytes
@@ -119,14 +119,15 @@ class MeterObject(base.ConfigObjectBase):
             self.MeterId = next(resmgr.V4MeterIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Meter%d'%self.MeterId)
+        self.UUID = utils.PdsUuid(self.MeterId)
         self.Rules = rules
         self.DeriveOperInfo()
         self.Show()
         return
 
     def __repr__(self):
-        return "MeterID:%d|Af:%s|VPCId:%d" %\
-               (self.MeterId, self.AddrFamily, self.VPCId)
+        return "Meter: %s|Af:%s|VPCId:%d" %\
+               (self.UUID, self.AddrFamily, self.VPCId)
 
     def Show(self):
         logger.info("Meter object:", self)
@@ -136,7 +137,7 @@ class MeterObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(self.MeterId)
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def FillMeterRulePrefixes(self, rulespec, rule):
@@ -153,7 +154,7 @@ class MeterObject(base.ConfigObjectBase):
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.MeterId))
+        spec.Id = self.GetKey()
         spec.Af = utils.GetRpcIPAddrFamily(self.AddrFamily)
         for rule in self.Rules:
             self.FillMeterRuleSpec(spec, rule)

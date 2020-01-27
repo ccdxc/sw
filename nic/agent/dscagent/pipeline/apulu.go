@@ -6,7 +6,6 @@ package pipeline
 
 import (
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 
@@ -703,6 +703,87 @@ func (a *ApuluAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Li
 	return ret
 }
 
+func createHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifStatus) error {
+	intfID := spec.GetId()
+	uid, err := uuid.FromBytes(intfID)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to parse lif uuid %v, err %v", spec.GetId(), err))
+		return err
+	}
+	// skip any internal lifs
+	if spec.GetType() != halapi.LifType_LIF_TYPE_HOST {
+		log.Infof("Skipping LIF_CREATE event for lif %v, type %v", uid.String(), spec.GetType().String())
+		return nil
+	}
+	// create host interface instance
+	i := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      fmt.Sprintf("%s%d", types.LifPrefix, status.GetIfIndex()),
+			UUID:      uid.String(),
+		},
+		Spec: netproto.InterfaceSpec{
+			Type: netproto.InterfaceSpec_HOST_PF.String(),
+		},
+		Status: netproto.InterfaceStatus{
+			Name:        "",
+			InterfaceID: uint64(status.GetIfIndex()),
+			IFHostStatus: netproto.InterfaceHostStatus{
+				HostIfName: status.GetName(),
+			},
+			OperStatus: status.GetStatus().String(),
+		},
+	}
+	b, _ := json.MarshalIndent(i, "", "   ")
+	fmt.Println(string(b))
+	dat, _ := i.Marshal()
+	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", i.GetKey(), err))
+		return err
+	}
+	return nil
+}
+
+func createUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.PortStatus) error {
+	intfID := spec.GetId()
+	uid, err := uuid.FromBytes(intfID)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to parse port uuid %v, err %v", spec.GetId(), err))
+		return err
+	}
+	i := netproto.Interface{
+		TypeMeta: api.TypeMeta{
+			Kind: "Interface",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      fmt.Sprintf("%s%d", types.UplinkPrefix, status.GetIfIndex()),
+			UUID:      uid.String(),
+		},
+		Spec: netproto.InterfaceSpec{
+			Type:    netproto.InterfaceSpec_UPLINK_ETH.String(),
+			VrfName: "default",
+		},
+		Status: netproto.InterfaceStatus{
+			InterfaceID: uint64(status.GetIfIndex()),
+			OperStatus:  status.GetLinkStatus().GetOperState().String(),
+			IFUplinkStatus: netproto.InterfaceUplinkStatus{
+				PortID: spec.GetPortNumber(),
+			},
+		},
+	}
+	dat, _ := i.Marshal()
+	if err := a.InfraAPI.Store(i.Kind, i.GetKey(), dat); err != nil {
+		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", i.GetKey(), err))
+	}
+	return nil
+}
+
 func (a *ApuluAPI) initEventStream() {
 
 	evtReqMsg := &halapi.EventRequest{
@@ -754,18 +835,11 @@ func (a *ApuluAPI) initEventStream() {
 
 	// get all the physical ports
 	portReqMsg := &halapi.PortGetRequest{
-		Id: []uint32{},
+		Id: [][]byte{},
 	}
 	ports, err := a.PortClient.PortGet(context.Background(), portReqMsg)
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelinePortGet, "Init: %v", err))
-	}
-
-	// get all the interfaces known at this time
-	intfReqMsg := &halapi.InterfaceGetRequest{}
-	intfs, err := a.InterfaceClient.InterfaceGet(context.Background(), intfReqMsg)
-	if err != nil {
-		log.Error(errors.Wrapf(types.ErrPipelineInterfaceGet, "Init: %v", err))
 	}
 
 	go func(stream halapi.EventSvc_EventSubscribeClient) {
@@ -787,114 +861,18 @@ func (a *ApuluAPI) initEventStream() {
 			switch resp.EventId {
 			case halapi.EventId_EVENT_ID_LIF_CREATE:
 				lif := resp.GetLifEventInfo()
-				intfID, _ := binary.Uvarint(lif.Spec.GetId())
-				l := netproto.Interface{
-					TypeMeta: api.TypeMeta{
-						Kind: "Interface",
-					},
-					ObjectMeta: api.ObjectMeta{
-						Tenant:    "default",
-						Namespace: "default",
-						Name:      fmt.Sprintf("%s%d", types.LifPrefix, lif.Spec.GetId()),
-					},
-					Spec: netproto.InterfaceSpec{
-						Type: "LIF",
-					},
-					Status: netproto.InterfaceStatus{
-						InterfaceID: intfID,
-						IFHostStatus: netproto.InterfaceHostStatus{
-							HostIfName: lif.Status.GetName(),
-						},
-						OperStatus: lif.Status.GetStatus().String(),
-					},
-				}
-				b, _ := json.MarshalIndent(l, "", "   ")
-				fmt.Println(string(b))
-				dat, _ := l.Marshal()
-				if err := a.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
-					log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
-				}
+				err = createHostInterface(a, lif.Spec, lif.Status)
 			}
 		}
 	}(eventStream)
 
 	// Store initial Lifs
 	for _, lif := range lifs.Response {
-		intfID, _ := binary.Uvarint(lif.Spec.GetId())
-		l := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("%s%d", types.LifPrefix, intfID),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type: "LIF",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: intfID,
-				IFHostStatus: netproto.InterfaceHostStatus{
-					HostIfName: lif.Status.GetName(),
-				},
-				OperStatus: lif.Status.GetStatus().String(),
-			},
-		}
-		dat, _ := l.Marshal()
-		if err := a.InfraAPI.Store(l.Kind, l.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Lif: %s | Lif: %v", l.GetKey(), err))
-		}
+		createHostInterface(a, lif.Spec, lif.Status)
 	}
 
 	// handle the ports
 	for _, port := range ports.Response {
-		portID := uint64(port.Spec.GetId())
-		p := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("%s%d", types.EthPrefix, portID),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type: "Eth",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: portID,
-				OperStatus:  port.Status.GetLinkStatus().GetOperState().String(),
-			},
-		}
-		dat, _ := p.Marshal()
-		if err := a.InfraAPI.Store(p.Kind, p.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Port: %s | Port: %v", p.GetKey(), err))
-		}
-	}
-
-	// handle the interfaces
-	for _, intf := range intfs.Response {
-		u := netproto.Interface{
-			TypeMeta: api.TypeMeta{
-				Kind: "Interface",
-			},
-			ObjectMeta: api.ObjectMeta{
-				Tenant:    "default",
-				Namespace: "default",
-				Name:      fmt.Sprintf("%s%d", types.UplinkPrefix, intf.Status.GetIfIndex()),
-			},
-			Spec: netproto.InterfaceSpec{
-				Type: "Uplink",
-			},
-			Status: netproto.InterfaceStatus{
-				InterfaceID: uint64(intf.Status.GetIfIndex()),
-				OperStatus:  intf.Status.GetOperStatus().String(),
-			},
-		}
-		dat, _ := u.Marshal()
-		if err := a.InfraAPI.Store(u.Kind, u.GetKey(), dat); err != nil {
-			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Uplink: %s | Uplink: %v", u.GetKey(), err))
-		}
+		createUplinkInterface(a, port.Spec, port.Status)
 	}
 }

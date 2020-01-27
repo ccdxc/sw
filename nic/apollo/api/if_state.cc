@@ -75,8 +75,8 @@ if_state::find(pds_ifindex_t *ifindex) const {
 }
 
 if_entry *
-if_state::find(pds_obj_key_t *key) const {
-    return (if_entry *)(if_ht_->lookup(key));
+if_state::find(const pds_obj_key_t *key) const {
+    return (if_entry *)(if_ht_->lookup((void *)key));
 }
 
 bool

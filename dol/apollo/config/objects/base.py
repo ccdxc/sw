@@ -28,6 +28,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def __init__(self, objtype, node):
         super().__init__()
         self.Origin = topo.OriginTypes.FIXED
+        self.UUID = None
         self.HwHabitant = True
         self.Singleton = False
         self.ObjType = objtype
@@ -210,6 +211,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
         assert(0)
         return
 
+    def GetKey(self):
+        return self.UUID.GetUuid()
+
     def PopulateKey(self, grpcmsg):
         logger.error("Method not implemented by class: %s" % self.__class__)
         assert(0)
@@ -259,8 +263,8 @@ class ConfigClientBase(base.ConfigClientBase):
         return True, ""
 
     def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return spec['id']
-        return spec.Id
+        uuid = spec['id'] if yaml else spec.Id
+        return utils.PdsUuid.GetIdfromUUID(uuid)
 
     def Objects(self, node):
         if self.Objs.get(node, None):

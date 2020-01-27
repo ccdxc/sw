@@ -25,6 +25,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         else:
             self.Id = next(resmgr.NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
+        self.UUID = utils.PdsUuid(self.Id)
         self.Nexthops = {}
         self.DualEcmp = utils.IsDualEcmp(spec)
         self.Type = None
@@ -49,8 +50,8 @@ class NexthopGroupObject(base.ConfigObjectBase):
         return nexthop_list
 
     def __repr__(self):
-        return "NexthopGroupID:%d|Num of nexthops:%d|Nexthop ID List:%s" %\
-                (self.Id, self.NumNexthops, self.get_nexthop_list())
+        return "NexthopGroup: %s |Num of nexthops:%d|Nexthop ID List:%s" %\
+                (self.UUID, self.NumNexthops, self.get_nexthop_list())
 
     def Show(self):
         logger.info("NexthopGroup object:", self)
@@ -75,12 +76,12 @@ class NexthopGroupObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.Id)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.Id))
+        spec.Id = self.GetKey()
         spec.Type = self.Type
         for i in range(self.NumNexthops):
             nhspec = spec.Members.add()
@@ -137,10 +138,6 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         self.__num_nhgs_per_vpc = []
         self.__supported = __isObjSupported()
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return utils.GetYamlSpecAttr(spec, 'id')
-        return int(spec.Id)
 
     def GetNexthopGroupObject(self, node, nexthopid):
         return self.Objs[node].get(nexthopid, None)

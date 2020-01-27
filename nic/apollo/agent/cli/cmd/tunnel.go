@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -54,7 +55,7 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Tunnel
 		req = &pds.TunnelGetRequest{
-            Id: [][]byte{[]byte(tunnelID)},
+			Id: [][]byte{uuid.FromStringOrNil(tunnelID).Bytes()},
 		}
 	} else {
 		// Get all Tunnels
@@ -103,7 +104,8 @@ func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
 	fmt.Printf("%-36s%-36s%-16s%-16s%-16s\n",
-		string(spec.GetId()), string(spec.GetVPCId()),
+		uuid.FromBytesOrNil(spec.GetId()).String(),
+		uuid.FromBytesOrNil(spec.GetVPCId()).String(),
 		encapStr, utils.IPAddrToStr(spec.GetLocalIP()),
 		utils.IPAddrToStr(spec.GetRemoteIP()))
 }

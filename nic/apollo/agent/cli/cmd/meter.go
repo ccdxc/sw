@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -141,7 +142,7 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Meter
 		req = &pds.MeterGetRequest{
-			Id: [][]byte{[]byte(meterID)},
+			Id: [][]byte{uuid.FromStringOrNil(meterID).Bytes()},
 		}
 	} else {
 		// Get all Meters

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -63,7 +64,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		req = &pds.InterfaceGetRequest{
-			Id: [][]byte{[]byte(ifID)},
+			Id: [][]byte{uuid.FromStringOrNil(ifID).Bytes()},
 		}
 	}
 
@@ -175,7 +176,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		req = &pds.LifGetRequest{
-			Id: [][]byte{[]byte(lifID)},
+			Id: [][]byte{uuid.FromStringOrNil(lifID).Bytes()},
 		}
 	}
 
@@ -214,7 +215,7 @@ func printLif(lif *pds.Lif) {
 	lifType = strings.Replace(lifType, "_", "-", -1)
 	state := strings.Replace(status.GetStatus().String(), "IF_STATUS_", "", -1)
 	fmt.Printf("%-36s%-10x%-15s%-20s%-36s%-25s%-5s\n",
-		string(spec.GetId()), status.GetIfIndex(), status.GetName(),
-		utils.MactoStr(spec.GetMacAddress()),
-		string(spec.GetPinnedInterface()), lifType, state)
+		uuid.FromBytesOrNil(spec.GetId()).String(), status.GetIfIndex(),
+		status.GetName(), utils.MactoStr(spec.GetMacAddress()),
+		uuid.FromBytesOrNil(spec.GetPinnedInterface()).String(), lifType, state)
 }

@@ -19,20 +19,22 @@ namespace api {
 typedef void (*port_get_cb_t)(sdk::linkmgr::port_args_t *port_info, void *ctxt);
 /**
   * @brief    get port information based on port number
-  * @param[in]    fp_port     front panel port number or 0 for all ports
+  * @param[in]    key         key/uuid of the port or k_pds_obj_key_invalid for
+  *                           all ports
   * @param[in]    port_get_cb callback invoked per port
   * @param[in]    ctxt        opaque context passed back to the callback
   * @return    SDK_RET_OK on success, failure status code on error
   */
-sdk_ret_t port_get(uint32_t fp_port, port_get_cb_t port_get_cb, void *ctxt);
+sdk_ret_t port_get(const pds_obj_key_t *key, port_get_cb_t port_get_cb,
+                   void *ctxt);
 
 /**
  * @brief        get port information based on port number
- * @param[in]    ifindex       interface index
+ * @param[in]    key         key/uuid of the port
  * @param[in]    admin_state   port admin state
  * @return       SDK_RET_OK on success, failure status code on error
  */
-sdk_ret_t update_port(pds_ifindex_t ifindex, port_args_t *api_port_info);
+sdk_ret_t update_port(const pds_obj_key_t *key, port_args_t *api_port_info);
 
 /**
  * @brief     create all ports based on the catalog information

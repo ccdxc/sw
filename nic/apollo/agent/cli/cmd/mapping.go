@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -74,7 +75,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		key = &pds.MappingKey{
 			Keyinfo: &pds.MappingKey_IPKey{
 				IPKey: &pds.L3MappingKey{
-					VPCId:  []byte(vpcID),
+					VPCId:  uuid.FromStringOrNil(vpcID).Bytes(),
 					IPAddr: utils.IPAddrStrToPDSIPAddr(mappingIP),
 				},
 			},

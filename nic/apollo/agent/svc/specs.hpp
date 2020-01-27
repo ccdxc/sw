@@ -528,7 +528,7 @@ static inline void
 pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
                           const pds_if_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds_if_type_to_proto_if_type(api_spec->type));
     proto_spec->set_adminstatus(
                 pds_admin_state_to_proto_admin_state(api_spec->admin_state));
@@ -778,14 +778,15 @@ pds_lif_api_spec_to_proto_spec (pds::LifSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return SDK_RET_INVALID_ARG;
     }
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->pinned_ifidx != IFINDEX_INVALID) {
         ret = pds_if_read(&api_spec->pinned_ifidx, &pinned_ifinfo);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to find if for {}, err {}",
                           api_spec->pinned_ifidx, ret);
         } else {
-            proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id);
+            proto_spec->set_pinnedinterface(pinned_ifinfo.spec.key.id,
+                                            PDS_MAX_KEY_LEN);
         }
     }
     proto_spec->set_type(pds_lif_type_to_proto_lif_type(api_spec->type));
@@ -880,7 +881,7 @@ pds_policer_api_spec_to_proto (pds::PolicerSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_direction(pds_policer_dir_api_spec_to_proto(api_spec->dir));
     switch (api_spec->type) {
     case sdk::POLICER_TYPE_PPS:
@@ -986,7 +987,7 @@ pds_meter_api_spec_to_proto (pds::MeterSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->af == IP_AF_IPV4) {
         proto_spec->set_af(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
@@ -1065,7 +1066,7 @@ static inline void
 pds_tag_api_spec_to_proto (pds::TagSpec *proto_spec,
                            const pds_tag_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_af(pds_af_api_spec_to_proto_spec(api_spec->af));
 #if 0 // We don't store rules in db for now
     for (uint32_t i = 0; i < api_spec->num_rules; i ++) {
@@ -1229,8 +1230,10 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
                                       proto_spec.egv6securitypolicyid(i));
     }
     pds_obj_key_proto_to_api_spec(&api_spec->host_if, proto_spec.hostif());
-    pds_obj_key_proto_to_api_spec(&api_spec->tx_policer, proto_spec.txpolicerid());
-    pds_obj_key_proto_to_api_spec(&api_spec->rx_policer, proto_spec.rxpolicerid());
+    pds_obj_key_proto_to_api_spec(&api_spec->tx_policer,
+                                  proto_spec.txpolicerid());
+    pds_obj_key_proto_to_api_spec(&api_spec->rx_policer,
+                                  proto_spec.rxpolicerid());
     api_spec->primary = proto_spec.primary();
     api_spec->max_sessions = proto_spec.maxsessions();
     api_spec->flow_learn_en = proto_spec.flowlearnen();
@@ -1246,9 +1249,9 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_vnicid(api_spec->key.id);
+    proto_spec->set_vnicid(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_hostname(api_spec->hostname);
-    proto_spec->set_subnetid(api_spec->subnet.id);
+    proto_spec->set_subnetid(api_spec->subnet.id, PDS_MAX_KEY_LEN);
     pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),
                              &api_spec->vnic_encap);
     proto_spec->set_macaddress(MAC_TO_UINT64(api_spec->mac_addr));
@@ -1257,8 +1260,8 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_sourceguardenable(api_spec->src_dst_check);
-    proto_spec->set_v4meterid(api_spec->v4_meter.id);
-    proto_spec->set_v6meterid(api_spec->v6_meter.id);
+    proto_spec->set_v4meterid(api_spec->v4_meter.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_v6meterid(api_spec->v6_meter.id, PDS_MAX_KEY_LEN);
     if (api_spec->tx_mirror_session_bmap) {
         for (uint8_t i = 0; i < 8; i++) {
             if (api_spec->tx_mirror_session_bmap & (1 << i)) {
@@ -1286,9 +1289,9 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
         proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
     }
-    proto_spec->set_hostif(api_spec->host_if.id);
-    proto_spec->set_txpolicerid(api_spec->tx_policer.id);
-    proto_spec->set_rxpolicerid(api_spec->rx_policer.id);
+    proto_spec->set_hostif(api_spec->host_if.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_txpolicerid(api_spec->tx_policer.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_rxpolicerid(api_spec->rx_policer.id, PDS_MAX_KEY_LEN);
     proto_spec->set_primary(api_spec->primary);
     proto_spec->set_maxsessions(api_spec->max_sessions);
     proto_spec->set_flowlearnen(api_spec->flow_learn_en);
@@ -1333,9 +1336,9 @@ pds_vpc_peer_api_spec_to_proto (pds::VPCPeerSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_vpc1(api_spec->vpc1.id);
-    proto_spec->set_vpc2(api_spec->vpc2.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpc1(api_spec->vpc1.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpc2(api_spec->vpc2.id, PDS_MAX_KEY_LEN);
 }
 
 // populate proto buf status from vpc API status
@@ -1388,7 +1391,7 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return SDK_RET_INVALID_ARG;
     }
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_remoteip(),
                                   &api_spec->remote_ip);
     if (api_spec->ip_addr.af != IP_AF_NIL) {
@@ -1400,7 +1403,7 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
                              &api_spec->encap);
     proto_spec->set_nat(api_spec->nat);
-    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_vpcid(api_spec->vpc.id, PDS_MAX_KEY_LEN);
     switch (api_spec->type) {
     case PDS_TEP_TYPE_WORKLOAD:
         proto_spec->set_type(pds::TUNNEL_TYPE_WORKLOAD);
@@ -1430,13 +1433,13 @@ pds_tep_api_spec_to_proto (pds::TunnelSpec *proto_spec,
     }
     switch (api_spec->nh_type) {
     case PDS_NH_TYPE_UNDERLAY:
-        proto_spec->set_nexthopid(api_spec->nh.id);
+        proto_spec->set_nexthopid(api_spec->nh.id, PDS_MAX_KEY_LEN);
         break;
     case PDS_NH_TYPE_UNDERLAY_ECMP:
-        proto_spec->set_nexthopid(api_spec->nh_group.id);
+        proto_spec->set_nexthopid(api_spec->nh_group.id, PDS_MAX_KEY_LEN);
         break;
     case PDS_NH_TYPE_OVERLAY:
-        proto_spec->set_tunnelid(api_spec->tep.id);
+        proto_spec->set_tunnelid(api_spec->tep.id, PDS_MAX_KEY_LEN);
         break;
     default:
         //PDS_TRACE_ERR("Unsupported nexthop type {} in TEP {} spec",
@@ -2032,7 +2035,7 @@ pds_policy_api_spec_to_proto (pds::SecurityPolicySpec *proto_spec,
         return;
     }
 
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->af == IP_AF_IPV4) {
         proto_spec->set_addrfamily(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
@@ -2171,7 +2174,7 @@ pds_security_profile_api_spec_to_proto (pds::SecurityProfileSpec *proto_spec,
         return;
     }
 
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_conntracken(api_spec->conn_track_en);
     proto_spec->set_defaultfwaction(
             pds_rule_action_to_proto_action((rule_action_data_t *)&api_spec->default_action));
@@ -2275,7 +2278,7 @@ static inline void
 pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
                           const pds_nexthop_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->type == PDS_NH_TYPE_IP) {
         auto ipnhinfo = proto_spec->mutable_ipnhinfo();
         ipnhinfo->set_vpcid(api_spec->vpc.id);
@@ -2283,7 +2286,7 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
     } else if (api_spec->type == PDS_NH_TYPE_OVERLAY) {
-        proto_spec->set_tunnelid(api_spec->tep.id);
+        proto_spec->set_tunnelid(api_spec->tep.id, PDS_MAX_KEY_LEN);
     } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
         auto underlayinfo = proto_spec->mutable_underlaynhinfo();
         underlayinfo->set_l3interface(api_spec->l3_if.id);
@@ -2357,7 +2360,7 @@ static inline sdk_ret_t
 pds_nh_group_api_spec_to_proto (pds::NhGroupSpec *proto_spec,
                                 const pds_nexthop_group_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     switch (api_spec->type) {
     case PDS_NHGROUP_TYPE_OVERLAY_ECMP:
         proto_spec->set_type(pds::NEXTHOP_GROUP_TYPE_OVERLAY_ECMP);
@@ -2423,8 +2426,8 @@ static inline sdk_ret_t
 pds_dhcp_relay_api_spec_to_proto (pds::DHCPRelaySpec *proto_spec,
                                   const pds_dhcp_relay_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid(api_spec->vpc.id, PDS_MAX_KEY_LEN);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_serverip(),
                                   &api_spec->server_ip);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_agentip(),
@@ -2490,7 +2493,7 @@ static inline sdk_ret_t
 pds_dhcp_policy_api_spec_to_proto (pds::DHCPPolicySpec *proto_spec,
                                   const pds_dhcp_policy_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     ipaddr_api_spec_to_proto_spec(proto_spec->mutable_serverip(),
                                   &api_spec->server_ip);
     proto_spec->set_mtu(api_spec->mtu);
@@ -2569,8 +2572,8 @@ static inline sdk_ret_t
 pds_nat_port_block_api_spec_to_proto (pds::NatPortBlockSpec *proto_spec,
                                       const pds_nat_port_block_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid(api_spec->vpc.id, PDS_MAX_KEY_LEN);
     proto_spec->set_protocol(api_spec->ip_proto);
     auto range_spec = proto_spec->mutable_nataddress()->mutable_range();
     iprange_api_spec_to_proto_spec(range_spec, &api_spec->nat_ip_range);
@@ -2732,7 +2735,7 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         return;
     }
 
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->af == IP_AF_IPV4) {
         proto_spec->set_af(types::IP_AF_INET);
     } else if (api_spec->af == IP_AF_IPV6) {
@@ -3331,8 +3334,8 @@ static inline void
 pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
                               const pds_subnet_spec_t *api_spec)
 {
-    proto_spec->set_id(api_spec->key.id);
-    proto_spec->set_vpcid(api_spec->vpc.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid(api_spec->vpc.id, PDS_MAX_KEY_LEN);
     ipv4pfx_api_spec_to_proto_spec(
                     proto_spec->mutable_v4prefix(), &api_spec->v4_prefix);
     ippfx_api_spec_to_ipv6pfx_proto_spec(
@@ -3341,8 +3344,10 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     proto_spec->set_ipv6virtualrouterip(&api_spec->v6_vr_ip.addr.v6_addr.addr8,
                                         IP6_ADDR8_LEN);
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
-    proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
-    proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
+    proto_spec->set_v4routetableid(api_spec->v4_route_table.id,
+                                   PDS_MAX_KEY_LEN);
+    proto_spec->set_v6routetableid(api_spec->v6_route_table.id,
+                                   PDS_MAX_KEY_LEN);
 
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
         proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id);
@@ -3358,8 +3363,8 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
     }
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
-    proto_spec->set_hostif(api_spec->host_if.id);
-    proto_spec->set_dhcppolicyid(api_spec->dhcp_policy.id);
+    proto_spec->set_hostif(api_spec->host_if.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_dhcppolicyid(api_spec->dhcp_policy.id, PDS_MAX_KEY_LEN);
     proto_spec->set_tos(api_spec->tos);
 }
 
@@ -3494,7 +3499,7 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_id(api_spec->key.id);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->type == PDS_VPC_TYPE_TENANT) {
         proto_spec->set_type(pds::VPC_TYPE_TENANT);
     } else if (api_spec->type == PDS_VPC_TYPE_UNDERLAY) {
@@ -3505,8 +3510,10 @@ pds_vpc_api_spec_to_proto (pds::VPCSpec *proto_spec,
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);
     proto_spec->set_virtualroutermac(MAC_TO_UINT64(api_spec->vr_mac));
-    proto_spec->set_v4routetableid(api_spec->v4_route_table.id);
-    proto_spec->set_v6routetableid(api_spec->v6_route_table.id);
+    proto_spec->set_v4routetableid(api_spec->v4_route_table.id,
+                                   PDS_MAX_KEY_LEN);
+    proto_spec->set_v6routetableid(api_spec->v6_route_table.id,
+                                   PDS_MAX_KEY_LEN);
     proto_spec->set_tos(api_spec->tos);
 }
 
@@ -3553,7 +3560,7 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
         {
             auto key = proto_spec->mutable_id()->mutable_mackey();
             key->set_macaddr(MAC_TO_UINT64(local_spec->key.mac_addr));
-            key->set_subnetid(local_spec->key.subnet.id);
+            key->set_subnetid(local_spec->key.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
@@ -3561,18 +3568,18 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
             auto key = proto_spec->mutable_id()->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
                                           &local_spec->key.ip_addr);
-            key->set_vpcid(local_spec->key.vpc.id);
+            key->set_vpcid(local_spec->key.vpc.id, PDS_MAX_KEY_LEN);
         }
         break;
     default:
         return;
     }
 
-    proto_spec->set_subnetid(local_spec->subnet.id);
+    proto_spec->set_subnetid(local_spec->subnet.id, PDS_MAX_KEY_LEN);
     proto_spec->set_macaddr(MAC_TO_UINT64(local_spec->vnic_mac));
     pds_encap_to_proto_encap(proto_spec->mutable_encap(),
                              &local_spec->fabric_encap);
-    proto_spec->set_vnicid(local_spec->vnic.id);
+    proto_spec->set_vnicid(local_spec->vnic.id, PDS_MAX_KEY_LEN);
     if (local_spec->public_ip_valid) {
         ipaddr_api_spec_to_proto_spec(proto_spec->mutable_publicip(),
                                       &local_spec->public_ip);
@@ -3676,17 +3683,19 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
     }
     switch (remote_spec->nh_type) {
     case PDS_NH_TYPE_OVERLAY:
-        proto_spec->set_tunnelid(remote_spec->tep.id);
+        proto_spec->set_tunnelid(remote_spec->tep.id, PDS_MAX_KEY_LEN);
         break;
     case PDS_NH_TYPE_OVERLAY_ECMP:
-        proto_spec->set_nexthopgroupid(remote_spec->nh_group.id);
+        proto_spec->set_nexthopgroupid(remote_spec->nh_group.id,
+                                       PDS_MAX_KEY_LEN);
         break;
     default:
         return;
     }
-    proto_spec->set_subnetid(remote_spec->subnet.id);
+    proto_spec->set_subnetid(remote_spec->subnet.id, PDS_MAX_KEY_LEN);
     proto_spec->set_macaddr(MAC_TO_UINT64(remote_spec->vnic_mac));
-    pds_encap_to_proto_encap(proto_spec->mutable_encap(), &remote_spec->fabric_encap);
+    pds_encap_to_proto_encap(proto_spec->mutable_encap(),
+                             &remote_spec->fabric_encap);
     if (remote_spec->provider_ip_valid) {
         ipaddr_api_spec_to_proto_spec(proto_spec->mutable_providerip(),
                                       &remote_spec->provider_ip);
@@ -3712,7 +3721,8 @@ pds_mapping_api_stats_to_proto (pds::MappingStats *proto_stats,
 
 // populate proto buf from local mapping API info
 static inline void
-pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info , void *ctxt)
+pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info,
+                                     void *ctxt)
 {
     pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
     auto mapping = proto_rsp->add_response();
@@ -3727,7 +3737,8 @@ pds_local_mapping_api_info_to_proto (const pds_local_mapping_info_t *api_info , 
 
 // populate proto buf from remote mapping API info
 static inline void
-pds_remote_mapping_api_info_to_proto (const pds_remote_mapping_info_t *api_info , void *ctxt)
+pds_remote_mapping_api_info_to_proto (const pds_remote_mapping_info_t *api_info,
+                                      void *ctxt)
 {
     pds::MappingGetResponse *proto_rsp = (pds::MappingGetResponse *)ctxt;
     auto mapping = proto_rsp->add_response();
@@ -3835,7 +3846,9 @@ static inline void
 pds_port_spec_to_proto (pds::PortSpec *spec,
                         sdk::linkmgr::port_args_t *port_info)
 {
-    spec->set_id(port_info->port_num);
+    // @akoradha please fix this
+    spec->set_id(port_info->port_an_args, PDS_MAX_KEY_LEN);
+    spec->set_portnumber(ETH_IFINDEX_TO_PARENT_PORT(port_info->port_num));
     switch(port_info->admin_state) {
     case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
         spec->set_adminstate(pds::PORT_ADMIN_STATE_DOWN);
@@ -3868,6 +3881,7 @@ pds_port_status_to_proto (pds::PortStatus *status,
     auto link_status = status->mutable_linkstatus();
     auto xcvr_status = status->mutable_xcvrstatus();
 
+    status->set_ifindex(port_info->port_num);
     switch (port_info->oper_status) {
     case port_oper_status_t::PORT_OPER_STATUS_UP:
         link_status->set_operstate(pds::PORT_OPER_STATUS_UP);

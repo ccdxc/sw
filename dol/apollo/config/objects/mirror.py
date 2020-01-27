@@ -19,7 +19,6 @@ class MirrorSessionObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.MIRROR, node)
         self.Id = next(resmgr.MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
-
         ################# PUBLIC ATTRIBUTES OF MIRROR OBJECT #####################
         self.SnapLen = snap_len
         self.SpanType = span_type
@@ -70,11 +69,11 @@ class MirrorSessionObject(base.ConfigObjectBase):
             spec.RspanSpec.Encap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.RspanSpec.Encap.value.VlanId = self.VlanId
         elif self.SpanType == 'ERSPAN':
-            spec.ErspanSpec.TunnelId = str.encode(str(self.TunnelId))
+            spec.ErspanSpec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId)
             utils.GetRpcIPAddr(self.SrcIP, spec.ErspanSpec.SrcIP)
             spec.ErspanSpec.Dscp = self.Dscp
             spec.ErspanSpec.SpanId = self.SpanID
-            spec.ErspanSpec.VPCId = str.encode(str(self.VPCId))
+            spec.ErspanSpec.VPCId = utils.PdsUuid.GetUUIDfromId(self.VPCId)
         else:
             assert(0)
         return
@@ -113,6 +112,9 @@ class MirrorSessionObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.MIRROR, resmgr.MAX_MIRROR)
         return
+
+    def GetKeyfromSpec(self, spec, yaml=False):
+        return spec['id'] if yaml else spec.Id
 
     def GetMirrorObject(self, node, mirrorid):
         return self.GetObjectByKey(node, mirrorid)

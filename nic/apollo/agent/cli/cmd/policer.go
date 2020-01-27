@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -16,7 +17,7 @@ import (
 )
 
 var (
-	policerID string 
+	policerID string
 )
 
 var policerShowCmd = &cobra.Command{
@@ -51,7 +52,7 @@ func policerShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific policer
 		req = &pds.PolicerGetRequest{
-            Id: [][]byte{[]byte(policerID)},
+			Id: [][]byte{uuid.FromStringOrNil(policerID).Bytes()},
 		}
 	} else {
 		// Get all Mirror sessions
@@ -104,7 +105,7 @@ func printPolicer(p *pds.Policer) {
 		burst = spec.GetBPSPolicer().GetBurst()
 	}
 	fmt.Printf("%-36s%-10s%-5s%-10d%-10d%-10d%-10d\n",
-		string(spec.GetId()),
+		uuid.FromBytesOrNil(spec.GetId()).String(),
 		strings.Replace(spec.GetDirection().String(), "POLICER_DIR_", "", -1),
 		typeStr, count, burst,
 		stats.GetAccept(), stats.GetDrop())

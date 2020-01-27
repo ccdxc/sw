@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -54,7 +55,7 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Vnic
 		req = &pds.VnicGetRequest{
-			VnicId: [][]byte{[]byte(vnicID)},
+			VnicId: [][]byte{uuid.FromStringOrNil(vnicID).Bytes()},
 		}
 	} else {
 		// Get all Vnics
@@ -120,7 +121,8 @@ func printVnic(vnic *pds.Vnic) {
 	}
 
 	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10s\n",
-		string(spec.GetVnicId()), string(spec.GetSubnetId()), vnicEncapStr,
+		uuid.FromBytesOrNil(spec.GetVnicId()).String(),
+		uuid.FromBytesOrNil(spec.GetSubnetId()).String(), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
 		fabricEncapStr, rxMirrorSessionStr, txMirrorSessionStr,
 		spec.GetSwitchVnic(), lifName)

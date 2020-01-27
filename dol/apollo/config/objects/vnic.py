@@ -47,6 +47,7 @@ class VnicObject(base.ConfigObjectBase):
         else:
             self.VnicId = next(resmgr.VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
+        self.UUID = utils.PdsUuid(self.VnicId)
         self.SUBNET = parent
         if hasattr(spec, 'vmac'):
             self.MACAddr =  spec.vmac
@@ -62,7 +63,11 @@ class VnicObject(base.ConfigObjectBase):
         else:
             self.Vnid = parent.Vnid
         self.SourceGuard = getattr(spec, 'srcguard', False)
-        self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
+        if self.SUBNET.HostIf:
+            self.HostIfIdx = utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id)
+        else:
+            self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
         self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
@@ -88,8 +93,8 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "VnicID:%d|SubnetID:%d|VPCId:%d|Origin:%s" %\
-               (self.VnicId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId, self.Origin)
+        return "Vnic: %s |Subnet: %s |VPC: %s |Origin:%s" %\
+               (self.UUID, self.SUBNET.UUID, self.SUBNET.VPC.UUID, self.Origin)
 
     def Show(self):
         logger.info("VNIC object:", self)
@@ -103,8 +108,10 @@ class VnicObject(base.ConfigObjectBase):
         if hostif:
             lif = hostif.lif
             lififindex = utils.LifId2LifIfIndex(lif.id)
-            logger.info("- HostInterface:%s|%s|%s|%s" %\
-                (hostif.Ifname, lif.GID(), lififindex, utils.GetUUID(lififindex)))
+            logger.info("- HostInterface:%s|%s|%s" %\
+                (hostif.Ifname, lif.GID(), lififindex))
+        if self.HostIfUuid:
+            logger.info("- HostIf:%s" % self.HostIfUuid)
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
@@ -125,13 +132,13 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.VnicId.append(str.encode(str(self.VnicId)))
+        grpcmsg.VnicId.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.VnicId = str.encode(str(self.VnicId))
-        spec.SubnetId = str.encode(str(self.SUBNET.SubnetId))
+        spec.VnicId = self.GetKey()
+        spec.SubnetId = self.SUBNET.GetKey()
         if self.dot1Qenabled:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
             spec.VnicEncap.value.VlanId = self.VlanId
@@ -144,25 +151,23 @@ class VnicObject(base.ConfigObjectBase):
             spec.RxMirrorSessionId.append(int(rxmirror))
         for txmirror in self.TxMirror:
             spec.TxMirrorSessionId.append(int(txmirror))
-        spec.V4MeterId = str.encode(str(self.V4MeterId))
-        spec.V6MeterId = str.encode(str(self.V6MeterId))
+        spec.V4MeterId = utils.PdsUuid.GetUUIDfromId(self.V4MeterId)
+        spec.V6MeterId = utils.PdsUuid.GetUUIDfromId(self.V6MeterId)
         for policyid in self.IngV4SecurityPolicyIds:
-            spec.IngV4SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.IngV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.IngV6SecurityPolicyIds:
-            spec.IngV6SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.IngV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.EgV4SecurityPolicyIds:
-            spec.EgV4SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.EgV6SecurityPolicyIds:
-            spec.EgV6SecurityPolicyId.append(str.encode(str(policyid)))
+            spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         if utils.IsPipelineApulu():
-            if self.SUBNET.HostIf:
-                spec.HostIf = utils.GetUUID(utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id))
-            elif self.HostIfIdx:
-                spec.HostIf = utils.GetUUID(self.HostIfIdx)
+            if self.HostIfUuid:
+                spec.HostIf = self.HostIfUuid.GetUuid()
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.VnicId) != self.VnicId:
+        if spec.VnicId != self.GetKey():
             return False
         # if int(spec.SubnetId) != self.SUBNET.SubnetId:
         #     return False
@@ -173,35 +178,34 @@ class VnicObject(base.ConfigObjectBase):
             if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
                 return False
         if utils.IsPipelineApulu():
-            if self.SUBNET.HostIf:
-                if utils.GetIdfromUUID(spec.HostIf) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
+            if self.HostIfUuid:
+                if spec.HostIf != self.HostIfUuid.GetUuid():
                     return False
         if spec.MACAddress != self.MACAddr.getnum():
             return False
         if spec.SourceGuardEnable != self.SourceGuard:
             return False
-        if int(spec.V4MeterId) != self.V4MeterId:
+        if spec.V4MeterId != utils.PdsUuid.GetUUIDfromId(self.V4MeterId):
             return False
-        if int(spec.V6MeterId) != self.V6MeterId:
+        if spec.V6MeterId != utils.PdsUuid.GetUUIDfromId(self.V6MeterId):
             return False
         # TODO: validate policyid, policer
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'vnicid') != self.VnicId:
+        if  utils.GetYamlSpecAttr(spec, 'vnicid') != self.GetKey():
             return False
         if utils.IsPipelineApulu():
-            if self.SUBNET.HostIf:
-                # last digit in hostif is signature, get rid of it for compare
-                if (utils.GetYamlSpecAttr(spec, 'hostif', True) >> 4) != utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id):
+            if self.HostIfUuid:
+                if (utils.GetYamlSpecAttr(spec, 'hostif')) != self.HostIfUuid.GetUuid():
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False
         if spec['sourceguardenable'] != self.SourceGuard:
             return False
-        if utils.GetYamlSpecAttr(spec, 'v4meterid') != self.V4MeterId:
+        if utils.GetYamlSpecAttr(spec, 'v4meterid') != utils.PdsUuid.GetUUIDfromId(self.V4MeterId):
             return False
-        if utils.GetYamlSpecAttr(spec, 'v6meterid') != self.V6MeterId:
+        if utils.GetYamlSpecAttr(spec, 'v6meterid') != utils.PdsUuid.GetUUIDfromId(self.V6MeterId):
             return False
         return True
 
@@ -370,8 +374,11 @@ class VnicObjectClient(base.ConfigClientBase):
         return self.GetObjectByKey(node, vnicid)
 
     def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return utils.GetYamlSpecAttr(spec, 'vnicid')
-        return int(spec.VnicId)
+        if yaml:
+            uuid = spec['vnicid']
+        else:
+            uuid = spec.VnicId
+        return utils.PdsUuid.GetIdfromUUID(uuid)
 
     def AssociateObjects(self, node):
         # generate security policies and associate with vnic

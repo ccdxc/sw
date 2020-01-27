@@ -64,14 +64,14 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "RemoteMappingID:%d|SubnetId:%d|VPCId:%d" %\
-               (self.MappingId, self.SUBNET.SubnetId, self.SUBNET.VPC.VPCId)
+        return "RemoteMappingID:%d|Subnet: %s |VPC: %s " %\
+               (self.MappingId, self.SUBNET.UUID, self.SUBNET.VPC.UUID)
 
     def Show(self):
         logger.info("RemoteMapping object:", self)
         logger.info("- %s" % repr(self))
-        logger.info("- IPAddr:%s|TunID:%u|TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
-                (str(self.IPAddr), self.TunID, str(self.TUNNEL.RemoteIPAddr), self.MACAddr,
+        logger.info("- IPAddr:%s|TEP: %s |TunIPAddr:%s|MAC:%s|Mpls:%d|Vxlan:%d|PIP:%s" %\
+                (str(self.IPAddr), self.TUNNEL.UUID, str(self.TUNNEL.RemoteIPAddr), self.MACAddr,
                 self.MplsSlot, self.Vnid, self.ProviderIPAddr))
         return
 
@@ -80,16 +80,16 @@ class RemoteMappingObject(base.ConfigObjectBase):
 
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
-        key.IPKey.VPCId = str.encode(str(self.SUBNET.VPC.VPCId))
+        key.IPKey.VPCId = self.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.IPKey.VPCId = str.encode(str(self.SUBNET.VPC.VPCId))
+        spec.Id.IPKey.VPCId = self.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
-        spec.SubnetId = str.encode(str(self.SUBNET.SubnetId))
-        spec.TunnelId = str.encode(str(self.TunID))
+        spec.SubnetId = self.SUBNET.GetKey()
+        spec.TunnelId = self.TUNNEL.GetKey()
         spec.MACAddr = self.MACAddr.getnum()
         utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
@@ -97,7 +97,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id.IPKey.VPCId) != self.SUBNET.VPC.VPCId:
+        if spec.Id.IPKey.VPCId != self.SUBNET.VPC.GetKey():
             return False
         if not utils.ValidateRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr):
             return False

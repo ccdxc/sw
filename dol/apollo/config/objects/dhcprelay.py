@@ -14,7 +14,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.DHCP_RELAY, node)
         self.Id = next(resmgr.DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
-
+        self.UUID = utils.PdsUuid(self.Id)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
         self.Vpc = vpc
         self.ServerIp = serverip
@@ -24,8 +24,8 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "DHCPRelayId%d|Vpc:%d|ServerIp:%s|AgentIp:%s" %\
-               (self.Id, self.Vpc, self.ServerIp, self.AgentIp)
+        return "DHCPRelay: %s |Vpc:%d|ServerIp:%s|AgentIp:%s" %\
+               (self.UUID, self.Vpc, self.ServerIp, self.AgentIp)
 
     def Show(self):
         logger.info("Dhcp Relay config Object: %s" % self)
@@ -33,21 +33,21 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.Id.append(str.encode(str(self.Id)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id = str.encode(str(self.Id))
-        spec.VPCId = str.encode(str([self.Vpc]))
+        spec.Id = self.GetKey()
+        spec.VPCId = utils.PdsUuid.GetUUIDfromId(self.Vpc)
         utils.GetRpcIPAddr(self.ServerIp, spec.ServerIP)
         utils.GetRpcIPAddr(self.AgentIp, spec.AgentIP)
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.Id:
+        if spec.Id != self.GetKey():
             return False
-        if int(spec.VPCId) != self.Vpc:
+        if spec.VPCId != utils.PdsUuid.GetUUIDfromId(self.Vpc):
             return False
         if spec.ServerIP != self.ServerIp:
             return False
@@ -56,7 +56,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if int(spec['id']) != self.Id:
+        if spec['id'] != self.GetKey():
             return False
         return True
 
@@ -64,10 +64,6 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
     def __init__(self):
         super().__init__(api.ObjectTypes.DHCP_RELAY, resmgr.MAX_DHCP_RELAY)
         return
-
-    def GetKeyfromSpec(self, spec, yaml=False):
-        if yaml: return int(spec['id'])
-        return int(spec.Id)
 
     def GetDhcpRelayObject(self, node):
         return self.GetObjectByKey(node, 1)

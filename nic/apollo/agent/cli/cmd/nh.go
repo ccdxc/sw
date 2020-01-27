@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -58,7 +59,7 @@ func nhShowCmdHandler(cmd *cobra.Command, args []string) {
 		// Get specific Nexthop
 		req = &pds.NexthopGetRequest{
 			Gettype: &pds.NexthopGetRequest_Id{
-				Id: []byte(nhID),
+				Id: uuid.FromStringOrNil(nhID).Bytes(),
 			},
 		}
 	} else if cmd.Flags().Changed("type") {
@@ -183,13 +184,14 @@ func printNexthop(nh *pds.Nexthop) {
 	case *pds.NexthopSpec_TunnelId:
 		{
 			fmt.Printf("%-36s%-36s\n",
-				string(spec.GetId()), string(spec.GetTunnelId()))
+				uuid.FromBytesOrNil(spec.GetId()).String(),
+				uuid.FromBytesOrNil(spec.GetTunnelId()).String())
 		}
 	case *pds.NexthopSpec_UnderlayNhInfo:
 		{
 			info := spec.GetUnderlayNhInfo()
 			fmt.Printf("%-36s%-10d%-20s\n",
-				string(spec.GetId()), info.GetL3Interface(),
+				uuid.FromBytesOrNil(spec.GetId()), info.GetL3Interface(),
 				utils.MactoStr(info.GetUnderlayMAC()))
 		}
 	}

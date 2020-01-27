@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 
 	"github.com/pensando/sw/nic/apollo/agent/cli/utils"
@@ -63,12 +64,12 @@ var portUpdateCmd = &cobra.Command{
 func init() {
 	showCmd.AddCommand(portShowCmd)
 	portShowCmd.AddCommand(portStatsShowCmd)
-	portStatsShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
+	portStatsShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portShowCmd.AddCommand(portStatusShowCmd)
-	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
+	portStatusShowCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 
 	debugCmd.AddCommand(portUpdateCmd)
-	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify Port ID. Ex: Eth1/2")
+	portUpdateCmd.Flags().StringVarP(&portID, "port", "p", "", "Specify port uuid")
 	portUpdateCmd.Flags().StringVarP(&portAdminState, "admin-state", "a", "up", "Set port admin state - up, down")
 	portUpdateCmd.Flags().StringVar(&portFecType, "fec-type", "none", "Specify fec-type - rs, fc, none")
 	portUpdateCmd.Flags().StringVar(&portAutoNeg, "auto-neg", "enable", "Enable or disable auto-neg using enable | disable")
@@ -146,17 +147,9 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewPortSvcClient(c)
 
-	ifIndex := portIDStrToIfIndex(portID)
-	if ifIndex == InvalidIfIndex {
-		fmt.Printf("Invalid port ID\n")
-		return
-	}
-
 	getReq := &pds.PortGetRequest{
-		Id: []uint32{ifIndex},
+		Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
 	}
-
-	// PDS call
 	getRespMsg, err := client.PortGet(context.Background(), getReq)
 	if err != nil {
 		fmt.Printf("Getting Port failed. %v\n", err)
@@ -192,7 +185,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	req = &pds.PortUpdateRequest{
 		Spec: &pds.PortSpec{
-			Id:              ifIndex,
+			Id:              uuid.FromStringOrNil(portID).Bytes(),
 			AdminState:      adminState,
 			Speed:           speed,
 			FECType:         fecType,
@@ -328,20 +321,13 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 
 	var req *pds.PortGetRequest
 	if cmd.Flags().Changed("port") {
-		// Get specific Port
-		ifIndex := portIDStrToIfIndex(portID)
-		if ifIndex == InvalidIfIndex {
-			fmt.Printf("Invalid port ID\n")
-			return
-		}
-
 		req = &pds.PortGetRequest{
-			Id: []uint32{ifIndex},
+			Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
 		}
 	} else {
 		// Get all Ports
 		req = &pds.PortGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -366,10 +352,10 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printPortStatusHeader() {
-	hdrLine := strings.Repeat("-", 60)
+	hdrLine := strings.Repeat("-", 89)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-10s%-14s%-12s%-10s%-14s\n",
-		"Port", "Interface Id", "AdminState", "OperState", "Transceiver")
+	fmt.Printf("%-37s%-10s%-12s%-12s%-10s%-14s\n",
+		"Id", "Name", "IfIndex", "AdminState", "OperState", "Transceiver")
 	fmt.Println(hdrLine)
 }
 
@@ -399,11 +385,10 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	fmt.Printf("%-10s0x%-12x%-12s%-10s%-14s\n",
-		ifIndexToPortIdStr(resp.GetSpec().GetId()),
-		resp.GetSpec().GetId(),
-		adminStateStr, operStatusStr,
-		xcvrStr)
+	fmt.Printf("%-37s%-10s0x%-12x%-12s%-10s%-14s\n",
+		uuid.FromBytesOrNil(resp.GetSpec().GetId()).String(),
+		ifIndexToPortIdStr(resp.GetStatus().GetIfIndex()),
+		resp.GetStatus().GetIfIndex(), adminStateStr, operStatusStr, xcvrStr)
 }
 
 func portShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -424,20 +409,13 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var req *pds.PortGetRequest
 	if cmd.Flags().Changed("port") {
-		// Get specific Port
-		ifIndex := portIDStrToIfIndex(portID)
-		if ifIndex == InvalidIfIndex {
-			fmt.Printf("Invalid port ID\n")
-			return
-		}
-
 		req = &pds.PortGetRequest{
-			Id: []uint32{ifIndex},
+			Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
 		}
 	} else {
 		// Get all Ports
 		req = &pds.PortGetRequest{
-			Id: []uint32{},
+			Id: [][]byte{},
 		}
 	}
 
@@ -539,7 +517,7 @@ func printPortStats(resp *pds.Port) {
 	macStats := resp.GetStats().GetMacStats()
 	mgmtMacStats := resp.GetStats().GetMgmtMacStats()
 
-	fmt.Printf("%-8s", ifIndexToPortIdStr(resp.GetSpec().GetId()))
+	fmt.Printf("%-8s", ifIndexToPortIdStr(resp.GetStatus().GetIfIndex()))
 	for _, s := range macStats {
 		if first == false {
 			fmt.Printf("%-8s", "")

@@ -30,6 +30,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         else:
             self.MappingId = next(resmgr.LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
+        self.UUID = utils.PdsUuid(self.MappingId)
         self.VNIC = parent
         self.PublicIPAddr = None
         self.SourceGuard = parent.SourceGuard
@@ -76,8 +77,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         return
 
     def __repr__(self):
-        return "LocalMappingID:%d|VnicId:%d|SubnetId:%d|VPCId:%d|Origin:%s" %\
-               (self.MappingId, self.VNIC.VnicId, self.VNIC.SUBNET.SubnetId, self.VNIC.SUBNET.VPC.VPCId, self.Origin)
+        return "LocalMappingID:%d|Vnic: %s |Subnet: %s |VPC: %s |Origin:%s" %\
+               (self.MappingId, self.VNIC.UUID, self.VNIC.SUBNET.UUID, self.VNIC.SUBNET.VPC.UUID, self.Origin)
 
     def Show(self):
         logger.info("LocalMapping Object:", self)
@@ -91,16 +92,16 @@ class LocalMappingObject(base.ConfigObjectBase):
 
     def PopulateKey(self, grpcmsg):
         key = grpcmsg.Id.add()
-        key.IPKey.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
+        key.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.IPKey.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
+        spec.Id.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
-        spec.SubnetId = str.encode(str(self.VNIC.SUBNET.SubnetId))
-        spec.VnicId = str.encode(str(self.VNIC.VnicId))
+        spec.SubnetId = self.VNIC.SUBNET.GetKey()
+        spec.VnicId = self.VNIC.GetKey()
         spec.MACAddr = self.VNIC.MACAddr.getnum()
         utils.GetRpcEncap(self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE
@@ -111,7 +112,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id.IPKey.VPCId) != self.VNIC.SUBNET.VPC.VPCId:
+        if spec.Id.IPKey.VPCId != self.VNIC.SUBNET.VPC.GetKey():
             return False
         if not utils.ValidateRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr):
             return False
@@ -121,7 +122,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         grpcmsg = service_pb2.SvcMappingRequest()
         grpcmsg.BatchCtxt.BatchCookie = cookie
         spec = grpcmsg.Request.add()
-        spec.Key.VPCId = str.encode(str(self.VNIC.SUBNET.VPC.VPCId))
+        spec.Key.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, spec.Key.BackendIP)
         spec.Key.BackendPort = self.LBPort
         utils.GetRpcIPAddr(self.SvcIPAddr, spec.IPAddr)
@@ -132,7 +133,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def GetGrpcSvcMappingReadMessage(self):
         grpcmsg = service_pb2.SvcMappingRequest()
         key = grpcmsg.Id.add()
-        key.VPCId = self.VNIC.SUBNET.VPC.VPCId
+        key.VPCId = self.VNIC.SUBNET.VPC.GetKey()
         utils.GetRpcIPAddr(self.IPAddr, key.BackendIP)
         key.Port = self.LBPort
         return grpcmsg

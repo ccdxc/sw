@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"reflect"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -58,7 +59,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Tag
 		req = &pds.TagGetRequest{
-			Id: [][]byte{[]byte(tagID)},
+			Id: [][]byte{uuid.FromStringOrNil(tagID).Bytes()},
 		}
 	} else {
 		// Get all Tags

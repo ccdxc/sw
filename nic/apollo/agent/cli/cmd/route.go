@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 
@@ -54,7 +55,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("id") {
 		// Get specific Route
 		req = &pds.RouteTableGetRequest{
-			Id: [][]byte{[]byte(routeID)},
+			Id: [][]byte{uuid.FromStringOrNil(routeID).Bytes()},
 		}
 	} else {
 		// Get all Routes
@@ -104,7 +105,7 @@ func printRoute(rt *pds.RouteTable) {
 	routes := spec.GetRoutes()
 	first := true
 
-	fmt.Printf("%-36s%-6s", string(spec.GetId()),
+	fmt.Printf("%-36s%-6s", uuid.FromBytesOrNil(spec.GetId()).String(),
 		strings.Replace(spec.GetAf().String(), "IP_AF_", "", -1))
 
 	for _, route := range routes {

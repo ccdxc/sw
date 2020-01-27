@@ -27,6 +27,7 @@ class NexthopObject(base.ConfigObjectBase):
         else:
             self.NexthopId = next(resmgr.NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
+        self.UUID = utils.PdsUuid(self.NexthopId)
         self.VPC = parent
         nh_type = getattr(spec, 'type', 'ip')
         self.DualEcmp = utils.IsDualEcmp(spec)
@@ -113,26 +114,26 @@ class NexthopObject(base.ConfigObjectBase):
         # TODO: NH read req has only filters
         grpcreq = api.client[self.Node].GetGRPCMsgReq(self.ObjType, api.ApiOps.GET)
         grpcmsg = grpcreq()
-        grpcmsg.Id = str.encode(str(self.NexthopId))
+        grpcmsg.Id = self.GetKey()
         return grpcmsg
 
     def PopulateKey(self, grpcmsg):
         # TODO FIX THIS nh read message can take only one id, whereas nhdelete can take a list
-        grpcmsg.Id.append(str.encode(str(self.NexthopId)))
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def FillSpec(self, spec):
-        spec.Id = str.encode(str(self.NexthopId))
+        spec.Id = self.GetKey()
         if self.__type == topo.NhType.IP:
-            spec.IPNhInfo.VPCId = str.encode(str(self.VPC.VPCId))
+            spec.IPNhInfo.VPCId = self.VPC.GetKey()
             spec.IPNhInfo.Mac = self.MACAddr.getnum()
             spec.IPNhInfo.Vlan = self.VlanId
             utils.GetRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP)
         elif self.__type == topo.NhType.UNDERLAY:
-            spec.UnderlayNhInfo.L3Interface = str.encode(str(self.L3InterfaceId))
+            spec.UnderlayNhInfo.L3Interface = utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId)
             spec.UnderlayNhInfo.UnderlayMAC = self.underlayMACAddr.getnum()
         elif self.__type == topo.NhType.OVERLAY:
-            spec.TunnelId = str.encode(str(self.TunnelId))
+            spec.TunnelId = utils.PdsUuid.GetUUIDfromId(self.TunnelId)
         return
 
     def PopulateSpec(self, grpcmsg):
@@ -141,24 +142,24 @@ class NexthopObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if int(spec.Id) != self.NexthopId:
+        if spec.Id != self.GetKey():
             return False
         if self.__type == topo.NhType.IP:
             if spec.IPNhInfo.Mac != self.MACAddr.getnum():
                 return False
             if spec.IPNhInfo.Vlan != self.VlanId:
                 return False
-            if int(spec.IPNhInfo.VPCId) != self.VPC.VPCId:
+            if spec.IPNhInfo.VPCId != self.VPC.GetKey():
                 return False
             if utils.ValidateRpcIPAddr(self.IPAddr[self.PfxSel], spec.IPNhInfo.IP) == False:
                 return False
         elif self.__type == topo.NhType.UNDERLAY:
-            if int(spec.UnderlayNhInfo.L3Interface) != self.L3InterfaceId:
+            if spec.UnderlayNhInfo.L3Interface != utils.PdsUuid.GetUUIDfromId(self.L3InterfaceId):
                 return False
             if spec.UnderlayNhInfo.UnderlayMAC != self.underlayMACAddr.getnum():
                 return False
         elif self.__type != topo.NhType.OVERLAY:
-            if int(spec.TunnelId) != self.TunnelId:
+            if spec.TunnelId != utils.PdsUuid.GetUUIDfromId(self.TunnelId):
                 return False
         return True
 
