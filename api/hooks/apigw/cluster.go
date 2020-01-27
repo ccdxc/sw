@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
@@ -105,6 +106,12 @@ func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	prof.AddPreAuthNHook(r.checkFFBootstrap)
 	prof, err = svc.GetCrudServiceProfile("License", apiintf.UpdateOper)
 	prof.AddPreAuthNHook(r.checkFFBootstrap)
+
+	prof, err = svc.GetServiceProfile("Save")
+	if err != nil {
+		panic("unknown service specified")
+	}
+	prof.SetAuditLevel(audit.Level_Response.String())
 
 	return r.registerSetAuthBootstrapFlagHook(svc)
 }
