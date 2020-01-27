@@ -16,7 +16,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
     case PDS_VPC_TYPE_UNDERLAY:
         if (agent_state::state()->underlay_vpc() != PDS_VPC_ID_INVALID) {
             PDS_TRACE_ERR("Failed to create vpc {}, only one underlay vpc "
-                          "allowed", spec->key.id);
+                          "allowed", spec->key.str());
             return SDK_RET_ENTRY_EXISTS;
         }
         break;
@@ -24,7 +24,7 @@ vpc_create_validate (pds_vpc_spec_t *spec)
         break;
     default:
         PDS_TRACE_ERR("Failed to create vpc {}, invalid type {}",
-                      spec->key.id, spec->type);
+                      spec->key.str(), spec->type);
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -37,28 +37,30 @@ vpc_create (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
 
     if (agent_state::state()->find_in_vpc_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create vpc {}, vpc exists already",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = vpc_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.str(), ret);
         return ret;
     }
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::vpc_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_create(spec, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to create vpc {}, err {}", spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to create vpc {}, err {}",
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_vpc_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add vpc {} to db, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to add vpc {} to db, err {}",
+                      spec->key.str(), ret);
         return ret;
     }
     if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
@@ -74,13 +76,13 @@ vpc_update_validate (pds_obj_key_t *key, pds_vpc_spec_t *spec)
 
     if ((existing_spec = agent_state::state()->find_in_vpc_db(key)) == NULL) {
         PDS_TRACE_ERR("Failed to update vpc {}, vpc doesn't exist",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     if (existing_spec->type != spec->type) {
         PDS_TRACE_ERR("Failed to update vpc {}, cannot modify type",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ERR;
     }
 
@@ -93,7 +95,7 @@ vpc_update (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
     sdk_ret_t ret;
 
     if ((ret = vpc_update_validate(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.str(), ret);
         return ret;
     }
 
@@ -101,22 +103,24 @@ vpc_update (pds_obj_key_t *key, pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         // call the metaswitch api
         if ((ret = pds_ms::vpc_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update vpc {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_update(spec, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to update vpc {}, err {}", spec->key.id, ret);
+            PDS_TRACE_ERR("Failed to update vpc {}, err {}",
+                          spec->key.str(), ret);
             return ret;
         }
     }
 
     if (agent_state::state()->del_from_vpc_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete vpc {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete vpc {} from db", key->str());
     }
 
     if ((ret = agent_state::state()->add_to_vpc_db(key, spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add vpc {} to db, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to add vpc {} to db, err {}",
+                      spec->key.str(), ret);
         return ret;
     }
 
@@ -135,19 +139,19 @@ vpc_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
     pds_vpc_spec_t *spec;
 
     if ((spec = agent_state::state()->find_in_vpc_db(key)) == NULL) {
-        PDS_TRACE_ERR("Failed to delete vpc {}, vpc not found", key->id);
+        PDS_TRACE_ERR("Failed to delete vpc {}, vpc not found", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::vpc_delete(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete vpc {}, err {}",
-                          key->id, ret);
+                          key->str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete vpc {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete vpc {}, err {}", key->str(), ret);
             return ret;
         }
     }
@@ -155,7 +159,7 @@ vpc_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
         agent_state::state()->reset_underlay_vpc();
     }
     if (agent_state::state()->del_from_vpc_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete vpc {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete vpc {} from db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -169,7 +173,7 @@ vpc_get (pds_obj_key_t *key, pds_vpc_info_t *info)
 
     spec = agent_state::state()->find_in_vpc_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find vpc {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find vpc {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
@@ -220,12 +224,12 @@ vpc_peer_create_validate (pds_vpc_peer_spec_t *spec)
 {
     if (agent_state::state()->find_in_vpc_db(&spec->vpc1) == NULL) {
         PDS_TRACE_ERR("Failed to create vpc_peer {}, vpc doesn't exist {}",
-                      spec->key.id, spec->vpc1.id);
+                      spec->key.str(), spec->vpc1.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (agent_state::state()->find_in_vpc_db(&spec->vpc2) == NULL) {
         PDS_TRACE_ERR("Failed to create vpc_peer {}, vpc doesn't exist {}",
-                      spec->key.id, spec->vpc2.id);
+                      spec->key.str(), spec->vpc2.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
@@ -239,25 +243,25 @@ vpc_peer_create (pds_obj_key_t *key, pds_vpc_peer_spec_t *spec,
 
     if (agent_state::state()->find_in_vpc_peer_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create vpc_peer {}, vpc_peer exists already",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = vpc_peer_create_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to create vpc_peer {}, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_peer_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create vpc_peer {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_vpc_peer_db(key, spec)) !=
             SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add vpc_peer {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -271,17 +275,17 @@ vpc_peer_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 
     if ((spec = agent_state::state()->find_in_vpc_peer_db(key)) == NULL) {
         PDS_TRACE_ERR("Failed to delete vpc_peer {}, vpc_peer not found",
-                      key->id);
+                      key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_vpc_peer_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete vpc_peer {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete vpc_peer {}, err {}", key->str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_vpc_peer_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete vpc_peer {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete vpc_peer {} from db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -295,7 +299,7 @@ vpc_peer_get (pds_obj_key_t *key, pds_vpc_peer_info_t *info)
 
     spec = agent_state::state()->find_in_vpc_peer_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find vpc_peer {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find vpc_peer {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

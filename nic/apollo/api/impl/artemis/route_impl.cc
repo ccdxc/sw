@@ -143,8 +143,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         case PDS_NH_TYPE_PEER_VPC:
             vpc = vpc_db()->find(&spec->routes[i].vpc);
             if (vpc == NULL) {
-                PDS_TRACE_ERR("vpc %u not found while processing route %s in "
-                              "route table %s", spec->routes[i].vpc.id,
+                PDS_TRACE_ERR("vpc %s not found while processing route %s in "
+                              "route table %s", spec->routes[i].vpc.str(),
                               ippfx2str(&spec->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -157,14 +157,14 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                             rtable->routes[i].nhid);
             break;
         case PDS_NH_TYPE_OVERLAY:
-            PDS_TRACE_DEBUG("Processing route %s -> TEP %u",
+            PDS_TRACE_DEBUG("Processing route %s -> TEP %s",
                             ippfx2str(&rtable->routes[i].prefix),
-                            spec->routes[i].tep.id);
+                            spec->routes[i].tep.str());
             tep_key = &spec->routes[i].tep;
             tep = tep_db()->find(tep_key);
             if (tep == NULL) {
-                PDS_TRACE_ERR("TEP %u not found while processing route %s in "
-                              "route table %s", tep_key->id,
+                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
+                              "route table %s", tep_key->str(),
                               ippfx2str(&spec->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -187,9 +187,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         case PDS_NH_TYPE_IP:
             nh  = nexthop_db()->find(&spec->routes[i].nh);
             rtable->routes[i].nhid = ((nexthop_impl *)nh->impl())->hw_id();
-            PDS_TRACE_DEBUG("Processing route %s -> nh %u, hw id %u",
+            PDS_TRACE_DEBUG("Processing route %s -> nh %s, hw id %u",
                             ippfx2str(&rtable->routes[i].prefix),
-                            nh->key(), rtable->routes[i].nhid);
+                            nh->key().str(), rtable->routes[i].nhid);
             break;
         default:
             PDS_TRACE_ERR("Unknown nh type %u while processing route %s in "

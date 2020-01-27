@@ -103,7 +103,7 @@ bool nh_spec_compare(pds_nexthop_spec_t spec1, pds_nexthop_spec_t spec2)
 
     switch (spec1.type) {
     case PDS_NH_TYPE_UNDERLAY:
-        if (spec1.l3_if.id != spec2.l3_if.id)
+        if (spec1.l3_if != spec2.l3_if)
             ; //return false;
         if (MAC_TO_UINT64(spec1.underlay_mac) !=
                                     MAC_TO_UINT64(spec2.underlay_mac))

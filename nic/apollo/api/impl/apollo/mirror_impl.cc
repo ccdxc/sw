@@ -149,8 +149,8 @@ mirror_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             mapping_key.ip_addr = spec->erspan_spec.dst_ip;
             mapping = mapping_entry::build(&mapping_key);
             if (mapping == NULL) {
-                PDS_TRACE_ERR("Failed to find mapping entry for (%u, %s)",
-                              mapping_key.vpc.id, ipaddr2str(&mapping_key.ip_addr));
+                PDS_TRACE_ERR("Failed to find mapping entry for (%s, %s)",
+                              mapping_key.vpc.str(), ipaddr2str(&mapping_key.ip_addr));
                 return SDK_RET_INVALID_ARG;
             }
 

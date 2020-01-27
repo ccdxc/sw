@@ -90,12 +90,12 @@ inline std::ostream&
 operator<<(std::ostream& os, const remote_mapping_feeder& obj) {
     os << "remote mapping feeder =>"
         << " vpc: " << obj.vpc.str()
-        << " subnet_id: " << obj.subnet.id
+        << " subnet: " << obj.subnet.str()
         << " vnic_ip: " << ipaddr2str(&obj.vnic_ip_pfx.addr)
         << " vnic_mac: " << mac2str(obj.vnic_mac_u64)
         << " fabric encap: " << pds_encap2str(&obj.fabric_encap)
-        << " next hop type" << obj.nh_type
-        << " next hop/tep id" << obj.nh_id;
+        << " nexthop type" << obj.nh_type
+        << " nexthop/tep:" << obj.nh_id;
     return os;
 }
 

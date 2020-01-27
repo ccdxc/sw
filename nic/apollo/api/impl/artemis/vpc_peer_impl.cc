@@ -94,8 +94,8 @@ vpc_peer_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     if (unlikely(vpc2 == NULL)) {
         return SDK_RET_INVALID_ARG;
     }
-    PDS_TRACE_DEBUG("Reserving resources for vpc peering of (vpc %u, vpc %u)",
-                    spec->vpc1.id, spec->vpc2.id);
+    PDS_TRACE_DEBUG("Reserving resources for vpc peering of (vpc %s, vpc %s)",
+                    spec->vpc1.str(), spec->vpc2.str());
 
 #if 0
     // reserve an entry in VPC_PEER table with (vpc1, vpc2) as key
@@ -190,8 +190,8 @@ vpc_peer_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         return SDK_RET_INVALID_ARG;
     }
 
-    PDS_TRACE_DEBUG("Programming vpc peering for (vpc %u, vpc %u)",
-                    vpc_peer_spec->vpc1.id, vpc_peer_spec->vpc2.id);
+    PDS_TRACE_DEBUG("Programming vpc peering for (vpc %s, vpc %s)",
+                    vpc_peer_spec->vpc1.str(), vpc_peer_spec->vpc2.str());
 
 #if 0
     // program (vpc1, vpc2) entry

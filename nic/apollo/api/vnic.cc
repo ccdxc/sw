@@ -191,12 +191,12 @@ sdk_ret_t
 vnic_entry::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_vnic_spec_t *spec = &obj_ctxt->api_params->vnic_spec;
 
-    PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, v4 meter id %u, "
-                    "v6 meter id %u, mac %s\nvnic encap %s, fabric encap %s, "
+    PDS_TRACE_DEBUG("Programming vnic %s, subnet %s, v4 meter %s, "
+                    "v6 meter %s, mac %s\nvnic encap %s, fabric encap %s, "
                     "rxmirror bitmap %x, tx mirror bitmap %x, switch vnic %u, "
                     "host if %s",
                     key_.str(), spec->subnet.str(),
-                    spec->v4_meter.id, spec->v6_meter.id,
+                    spec->v4_meter.str(), spec->v6_meter.str(),
                     macaddr2str(spec->mac_addr),
                     pds_encap2str(&spec->vnic_encap),
                     pds_encap2str(&spec->fabric_encap),

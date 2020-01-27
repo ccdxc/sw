@@ -22,25 +22,25 @@ nh_group_create (pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
 
     if (agent_state::state()->find_in_nh_group_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create nh_group {}, nh_group exists already",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = nh_group_create_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to create nh_group {}, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_group_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create nh_group {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_nh_group_db(key, spec))
                                                              != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add nh_group {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -52,7 +52,7 @@ nh_group_update_validate (pds_obj_key_t *key,
 {
     if ((spec = agent_state::state()->find_in_nh_group_db(key)) == NULL) {
         PDS_TRACE_ERR("Failed to find nh_group {}, nh_group not found",
-                      key->id);
+                      key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     return SDK_RET_OK;
@@ -66,23 +66,23 @@ nh_group_update (pds_obj_key_t *key, pds_nexthop_group_spec_t *spec,
 
     if ((ret = nh_group_update_validate(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to update nh_group {}, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_group_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update nh_group {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_nh_group_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete nh_group {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete nh_group {} from db", key->str());
     }
     if ((ret = agent_state::state()->add_to_nh_group_db(key, spec))
                                                          != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add nh_group {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -96,17 +96,18 @@ nh_group_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
 
     if ((spec = agent_state::state()->find_in_nh_group_db(key)) == NULL) {
         PDS_TRACE_ERR("Failed to delete nh_group {}, nh_group not found",
-                      key->id);
+                      key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_nexthop_group_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete nh_group {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete nh_group {}, err {}",
+                          key->str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_nh_group_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete nh_group {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete nh_group {} from db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -120,7 +121,7 @@ nh_group_get (pds_obj_key_t *key, pds_nexthop_group_info_t *info)
 
     spec = agent_state::state()->find_in_nh_group_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find nh_group {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find nh_group {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 

@@ -155,11 +155,11 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
 #if 0
     switch (spec->nh_type) {
     case PDS_NH_TYPE_UNDERLAY_ECMP:
-        if (this->spec.nh_group.id != spec->nh_group.id)
+        if (this->spec.nh_group != spec->nh_group)
             return false;
         break;
     case PDS_NH_TYPE_UNDERLAY:
-        if (this->spec.nh.id != spec->nh.id)
+        if (this->spec.nh != spec->nh)
             return false;
         break;
     default:

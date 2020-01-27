@@ -116,7 +116,7 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
         if (MAC_TO_UINT64(this->spec.underlay_mac) !=
                           MAC_TO_UINT64(spec->underlay_mac))
             return false;
-        if (this->spec.l3_if.id != spec->l3_if.id)
+        if (this->spec.l3_if != spec->l3_if)
             ; // TODO return false;
 
     } else if (this->spec.type == PDS_NH_TYPE_OVERLAY) {

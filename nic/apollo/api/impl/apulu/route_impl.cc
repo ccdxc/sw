@@ -270,8 +270,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             // non vpc peering case
             tep = tep_db()->find(&spec->routes[i].tep);
             if (tep == NULL) {
-                PDS_TRACE_ERR("TEP %u not found while processing route %s in "
-                              "route table %s", spec->routes[i].tep.id,
+                PDS_TRACE_ERR("TEP %s not found while processing route %s in "
+                              "route table %s", spec->routes[i].tep.str(),
                               ippfx2str(&spec->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -289,9 +289,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         case PDS_NH_TYPE_OVERLAY_ECMP:
             nh_group = nexthop_group_db()->find(&spec->routes[i].nh_group);
             if (nh_group == NULL) {
-                PDS_TRACE_ERR("nexthop group %u not found while processing "
+                PDS_TRACE_ERR("nexthop group %s not found while processing "
                               "route %s in route table %s",
-                              spec->routes[i].nh_group.id,
+                              spec->routes[i].nh_group.str(),
                               ippfx2str(&rtable->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -309,8 +309,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         case PDS_NH_TYPE_PEER_VPC:
             vpc = vpc_db()->find(&spec->routes[i].vpc);
             if (vpc == NULL) {
-                PDS_TRACE_ERR("vpc %u not found while processing route %s in "
-                              "route table %s", spec->routes[i].vpc.id,
+                PDS_TRACE_ERR("vpc %s not found while processing route %s in "
+                              "route table %s", spec->routes[i].vpc.str(),
                               ippfx2str(&spec->routes[i].prefix),
                               spec->key.str());
                 ret = SDK_RET_INVALID_ARG;
@@ -327,8 +327,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         case PDS_NH_TYPE_VNIC:
             vnic = vnic_db()->find(&spec->routes[i].vnic);
             if (vnic == NULL) {
-                 PDS_TRACE_ERR("vnic %u not found while processing route %s in "
-                               "route table %s", spec->routes[i].vnic.id,
+                 PDS_TRACE_ERR("vnic %s not found while processing route %s in "
+                               "route table %s", spec->routes[i].vnic.str(),
                                ippfx2str(&spec->routes[i].prefix),
                                spec->key.str());
                  break;

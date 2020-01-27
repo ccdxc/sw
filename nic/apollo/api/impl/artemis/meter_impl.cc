@@ -50,8 +50,8 @@ meter_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     // allocate free lpm slab for this meter table
     if (meter_impl_db()->lpm_idxr(spec->af)->alloc(&lpm_block_id) !=
             sdk::lib::indexer::SUCCESS) {
-        PDS_TRACE_ERR("Failed to allocate LPM block for meter %u",
-                      spec->key.id);
+        PDS_TRACE_ERR("Failed to allocate LPM block for meter %s",
+                      spec->key.str());
         return sdk::SDK_RET_NO_RESOURCE;
     }
     lpm_root_addr_ =
@@ -68,8 +68,8 @@ meter_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         if (meter_impl_db()->policer_idxr()->alloc_block(&policer_base_hw_idx_,
                                                          num_policers_) !=
                 sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate %u policers for meter %u",
-                          num_policers_, spec->key.id);
+            PDS_TRACE_ERR("Failed to allocate %u policers for meter %s",
+                          num_policers_, spec->key.str());
             return sdk::SDK_RET_NO_RESOURCE;
         }
     }
@@ -79,8 +79,8 @@ meter_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
         if (meter_impl_db()->stats_idxr()->alloc_block(&stats_base_hw_idx_,
                                                        num_stats_entries_) !=
                 sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate %u stats entries for meter %u",
-                          num_stats_entries_, spec->key.id);
+            PDS_TRACE_ERR("Failed to allocate %u stats entries for meter %s",
+                          num_stats_entries_, spec->key.str());
             return sdk::SDK_RET_NO_RESOURCE;
         }
     }
@@ -162,8 +162,8 @@ meter_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
             SDK_ASSERT(FALSE);
         }
         for (uint32_t j = 0; j < spec->rules[i].num_prefixes; j++) {
-            PDS_TRACE_DEBUG("Processing meter table %u, pfx %s prio %u",
-                            spec->key.id,
+            PDS_TRACE_DEBUG("Processing meter table %s, pfx %s prio %u",
+                            spec->key.str(),
                             ippfx2str(&spec->rules[i].prefixes[j]),
                             spec->rules[i].priority);
             rtable->routes[n].prefix = spec->rules[i].prefixes[j];
@@ -178,8 +178,8 @@ meter_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                           lpm_root_addr_,
                           meter_impl_db()->table_size(spec->af));
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to build LPM meter table %u, err : %u",
-                      spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to build LPM meter table %s, err : %u",
+                      spec->key.str(), ret);
     }
     SDK_FREE(PDS_MEM_ALLOC_ID_METER, rtable);
     return ret;

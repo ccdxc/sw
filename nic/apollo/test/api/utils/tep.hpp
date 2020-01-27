@@ -61,7 +61,7 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
     os << &spec->key
-       << " vpc: " << spec->vpc.id
+       << " vpc: " << spec->vpc.str()
        << " type: " << spec->type
        << " remote ip: " << spec->remote_ip
        << " DIPi: " << spec->ip_addr
@@ -74,10 +74,10 @@ operator<<(std::ostream& os, const pds_tep_spec_t *spec) {
        << " nh type: " << spec->nh_type;
     switch (spec->nh_type) {
     case PDS_NH_TYPE_UNDERLAY_ECMP:
-        os << " nh group id: " << spec->nh_group.id;
+        os << " nh group: " << spec->nh_group.str();
         break;
     case PDS_NH_TYPE_UNDERLAY:
-        os << " nh id: " << spec->nh.id;
+        os << " nh: " << spec->nh.str();
         break;
     default:
         break;

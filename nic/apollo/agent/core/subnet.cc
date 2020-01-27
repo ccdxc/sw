@@ -19,13 +19,13 @@ subnet_create_validate (pds_subnet_spec_t *spec)
     // verify VPC exists
     if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) == NULL) {
         PDS_TRACE_ERR("Failed to create subnet {}, vpc {} not found",
-                      spec->key.id, spec->vpc.id);
+                      spec->key.str(), spec->vpc.str());
         return SDK_RET_INVALID_ARG;
     }
     // IPv4 prefix for subnet must be within VPC prefix
     if (!ipv4_prefix_within_prefix(&spec->v4_prefix, &vpc_spec->v4_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv4 prefix invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
@@ -33,19 +33,19 @@ subnet_create_validate (pds_subnet_spec_t *spec)
         (vpc_spec->v6_prefix.addr.af == IP_AF_IPV6) &&
         !ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // validate VR IP
     if ((spec->v4_vr_ip == 0) && (ip_addr_is_zero(&spec->v6_vr_ip))) {
         PDS_TRACE_ERR("Failed to create subnet {}, virtual router IP invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // validate VR MAC
     if (memcmp(&spec->vr_mac, &zero_mac, sizeof(spec->vr_mac)) == 0) {
         PDS_TRACE_ERR("Failed to create subnet {}, VR MAC invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -59,11 +59,11 @@ subnet_create (pds_obj_key_t *key, pds_subnet_spec_t *spec,
 
     if (agent_state::state()->find_in_subnet_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create subnet {}, subnet already exists",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_EXISTS;
     }
     if ((ret = subnet_create_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to create subnet {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to create subnet {}, err {}", spec->key.str(), ret);
         return ret;
     }
 
@@ -71,20 +71,20 @@ subnet_create (pds_obj_key_t *key, pds_subnet_spec_t *spec,
         // call the metaswitch api
         if ((ret = pds_ms::subnet_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create subnet {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create subnet {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
     if ((ret = agent_state::state()->add_to_subnet_db(key, spec)) !=
             SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add subnet {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -99,31 +99,31 @@ subnet_update_validate (pds_subnet_spec_t *spec)
     // verify VPC exists
     if ((vpc_spec = agent_state::state()->find_in_vpc_db(&spec->vpc)) == NULL) {
         PDS_TRACE_ERR("Failed to update subnet {}, vpc {} not found",
-                      spec->key.id, spec->vpc.id);
+                      spec->key.str(), spec->vpc.str());
         return SDK_RET_INVALID_ARG;
     }
     // IPv4 prefix for subnet must be within VPC prefix
     if (!ipv4_prefix_within_prefix(&spec->v4_prefix, &vpc_spec->v4_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv4 prefix invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
     if (!ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
         PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // validate VR IP
     if ((spec->v4_vr_ip == 0) && (ip_addr_is_zero(&spec->v6_vr_ip))) {
         PDS_TRACE_ERR("Failed to update subnet {}, virtual router IP invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // validate VR MAC
     if (memcmp(&spec->vr_mac, &zero_mac, sizeof(spec->vr_mac)) == 0) {
         PDS_TRACE_ERR("Failed to update subnet {}, VR MAC invalid",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;
@@ -137,12 +137,12 @@ subnet_update (pds_obj_key_t *key, pds_subnet_spec_t *spec,
 
     if (agent_state::state()->find_in_subnet_db(key) == NULL) {
         PDS_TRACE_ERR("Failed to update subnet {}, subnet doesn't exist",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     if ((ret = subnet_update_validate(spec)) != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update subnet {}, err {}", spec->key.id, ret);
+        PDS_TRACE_ERR("Failed to update subnet {}, err {}", spec->key.str(), ret);
         return ret;
     }
 
@@ -150,25 +150,25 @@ subnet_update (pds_obj_key_t *key, pds_subnet_spec_t *spec,
         // call the metaswitch api
         if ((ret = pds_ms::subnet_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update subnet {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to update subnet {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
 
     if (agent_state::state()->del_from_subnet_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete subnet {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete subnet {} from db", key->str());
     }
 
     if ((ret = agent_state::state()->add_to_subnet_db(key, spec)) !=
             SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add subnet {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -181,24 +181,24 @@ subnet_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
     sdk_ret_t ret;
 
     if ((spec = agent_state::state()->find_in_subnet_db(key)) == NULL) {
-        PDS_TRACE_ERR("Failed to find subnet {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find subnet {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     if (agent_state::state()->device()->overlay_routing_en) {
         // call the metaswitch api
         if ((ret = pds_ms::subnet_delete(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to delete subnet {}, err {}",
-                          key->id, ret);
+                          key->str(), ret);
             return ret;
         }
     } else if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_subnet_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete subnet {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete subnet {}, err {}", key->str(), ret);
             return ret;
         }
     }
     if (agent_state::state()->del_from_subnet_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete subnet {} from db", key->id);
+        PDS_TRACE_ERR("Failed to delete subnet {} from db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;
@@ -212,7 +212,7 @@ subnet_get (pds_obj_key_t *key, pds_subnet_info_t *info)
 
     spec = agent_state::state()->find_in_subnet_db(key);
     if (spec == NULL) {
-        PDS_TRACE_ERR("Failed to find subnet {} in db", key->id);
+        PDS_TRACE_ERR("Failed to find subnet {} in db", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
     memcpy(&info->spec, spec, sizeof(pds_subnet_spec_t));

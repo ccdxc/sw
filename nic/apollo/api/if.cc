@@ -80,7 +80,7 @@ if_entry::clone(api_ctxt_t *api_ctxt) {
         new (cloned_if) if_entry();
         cloned_if->impl_ = impl_->clone();
         if (unlikely(cloned_if->impl_ == NULL)) {
-            PDS_TRACE_ERR("Failed to clone intf %u impl", key_.id);
+            PDS_TRACE_ERR("Failed to clone intf %s impl", key_.str());
             goto error;
         }
         cloned_if->init_config(api_ctxt);
@@ -193,8 +193,8 @@ if_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     obj_ctxt->upd_bmap = 0;
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" "
-                      "from type %u to %u on interface 0x%x",
-                      type_, spec->type, key_.id);
+                      "from type %u to %u on interface %s",
+                      type_, spec->type, key_.str());
         return SDK_RET_INVALID_ARG;
     }
 

@@ -377,7 +377,7 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                       NULL, NULL, &egress_vnic_data);
     if (p4pd_ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to read EGRESS_VNIC_INFO table for "
-                      "vnic %u at index %u", vnic->key().id, hw_id_);
+                      "vnic %s at index %u", vnic->key().str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
 
@@ -523,7 +523,7 @@ vnic_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
     ret = vnic_impl_db()->vnic_mapping_tbl()->get(&api_params);
     if (ret != SDK_RET_OK) {
         //PDS_TRACE_ERR("Failed to read VNIC_MAPPING table for "
-        //              "vnic %u, err %u", vnic->key().id, ret);
+        //              "vnic %s, err %u", vnic->key().str(), ret);
         return ret;
     }
 

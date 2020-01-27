@@ -66,7 +66,7 @@ operator<<(std::ostream& os, const pds_nexthop_spec_t *spec) {
            << " vpc: " << std::string(spec->vpc.str());
     } else if (spec->type == PDS_NH_TYPE_UNDERLAY) {
         os << " underlay mac:" << macaddr2str(spec->underlay_mac)
-           << " l3 if: " << std::hex << spec->l3_if.id;
+           << " l3 if: " << std::string(spec->l3_if.str());
     } else if (spec->type == PDS_NH_TYPE_OVERLAY) {
         os << " tep: " << std::string(spec->tep.str());
     }

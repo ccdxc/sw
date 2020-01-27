@@ -321,8 +321,8 @@ tep_impl::activate_delete_tunnel_table_(pds_epoch_t epoch, tep_entry *tep) {
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_TUNNEL, hw_id_,
                                        NULL, NULL, &tep_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to update TEP %u at idx %u",
-                      tep->key().id, hw_id_);
+        PDS_TRACE_ERR("Failed to update TEP %s at idx %u",
+                      tep->key().str(), hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -389,8 +389,8 @@ sdk_ret_t
 tep_impl::activate_delete_(pds_epoch_t epoch, tep_entry *tep) {
     sdk_ret_t ret;
 
-    PDS_TRACE_DEBUG("Activating TEP %u delete, hw id %u",
-                    tep->key().id, hw_id_);
+    PDS_TRACE_DEBUG("Activating TEP %s delete, hw id %u",
+                    tep->key().str(), hw_id_);
     if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // cleanup outer tunnel in double encap case
         ret = activate_delete_tunnel2_(epoch, tep);
@@ -419,8 +419,8 @@ tep_impl::activate_update_(pds_epoch_t epoch, tep_entry *tep,
     pds_tep_spec_t *spec;
 
     spec = &obj_ctxt->api_params->tep_spec;
-    PDS_TRACE_DEBUG("Activating TEP %u update, hw id %u",
-                    tep->key().id, hw_id_);
+    PDS_TRACE_DEBUG("Activating TEP %s update, hw id %u",
+                    tep->key().str(), hw_id_);
     if (tep->type() == PDS_TEP_TYPE_INTER_DC) {
         // update outer tunnel in double encap case
         ret = activate_update_tunnel2_(epoch, tep, spec);

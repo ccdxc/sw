@@ -275,8 +275,8 @@ vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
     vni_actiondata_t vni_data = { 0 };
     sdk_table_api_params_t tparams = { 0 };
 
-    PDS_TRACE_DEBUG("Activating vpc %u delete, type %u, fabric encap (%u, %u)",
-                    vpc->key().id, vpc->type(), vpc->fabric_encap().type,
+    PDS_TRACE_DEBUG("Activating vpc %s delete, type %u, fabric encap (%u, %u)",
+                    vpc->key().str(), vpc->type(), vpc->fabric_encap().type,
                     vpc->fabric_encap().val.vnid);
     // fill the key
     vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
@@ -289,8 +289,8 @@ vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
     // program the VNI table
     ret = vpc_impl_db()->vni_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Programming of VNI table failed for vpc %u, err %u",
-                      vpc->key().id, ret);
+        PDS_TRACE_ERR("Programming of VNI table failed for vpc %s, err %u",
+                      vpc->key().str(), ret);
     }
     return ret;
 }

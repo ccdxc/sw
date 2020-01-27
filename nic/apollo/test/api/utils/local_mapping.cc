@@ -106,7 +106,7 @@ local_mapping_feeder::key_compare(const pds_mapping_key_t *key) const {
                 IPADDR_EQ(&vnic_ip_pfx.addr, &key->ip_addr));
 
     // L2 key type
-    return ((subnet.id == key->subnet.id) &&
+    return ((subnet == key->subnet) &&
             (vnic_mac_u64 == MAC_TO_UINT64(key->mac_addr)));
 }
 

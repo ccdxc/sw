@@ -23,27 +23,27 @@ tag_create (pds_obj_key_t *key, pds_tag_spec_t *spec,
 
     if (agent_state::state()->find_in_tag_db(key) != NULL) {
         PDS_TRACE_ERR("Failed to create tag {}, tag exists already",
-                      spec->key.id);
+                      spec->key.str());
         return sdk::SDK_RET_ENTRY_EXISTS;
     }
 
     if ((ret = tag_create_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Tag {} validation failure, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_tag_create(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create tag {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
 
     if ((ret = agent_state::state()->add_to_tag_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add tag {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
     return SDK_RET_OK;
@@ -63,31 +63,31 @@ tag_update (pds_obj_key_t *key, pds_tag_spec_t *spec,
 
     if (agent_state::state()->find_in_tag_db(key) == NULL) {
         PDS_TRACE_ERR("Failed to update tag {}, tag doesn't exist",
-                      spec->key.id);
+                      spec->key.str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     if ((ret = tag_update_validate(spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Tag {} validation failure, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_tag_update(spec, bctxt)) != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to create tag {}, err {}",
-                          spec->key.id, ret);
+                          spec->key.str(), ret);
             return ret;
         }
     }
 
     if (agent_state::state()->del_from_tag_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete tag {} from tag db", key->id);
+        PDS_TRACE_ERR("Failed to delete tag {} from tag db", key->str());
     }
 
     if ((ret = agent_state::state()->add_to_tag_db(key, spec)) != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add tag {} to db, err {}",
-                      spec->key.id, ret);
+                      spec->key.str(), ret);
         return ret;
     }
 
@@ -100,19 +100,19 @@ tag_delete (pds_obj_key_t *key, pds_batch_ctxt_t bctxt)
     sdk_ret_t ret;
 
     if (agent_state::state()->find_in_tag_db(key) == NULL) {
-        PDS_TRACE_ERR("Failed to delete tag {}, tag not found", key->id);
+        PDS_TRACE_ERR("Failed to delete tag {}, tag not found", key->str());
         return SDK_RET_ENTRY_NOT_FOUND;
     }
 
     if (!agent_state::state()->pds_mock_mode()) {
         if ((ret = pds_tag_delete(key, bctxt)) != SDK_RET_OK) {
-            PDS_TRACE_ERR("Failed to delete tag {}, err {}", key->id, ret);
+            PDS_TRACE_ERR("Failed to delete tag {}, err {}", key->str(), ret);
             return ret;
         }
     }
 
     if (agent_state::state()->del_from_tag_db(key) == false) {
-        PDS_TRACE_ERR("Failed to delete tag {} from tag db", key->id);
+        PDS_TRACE_ERR("Failed to delete tag {} from tag db", key->str());
         return SDK_RET_ERR;
     }
     return SDK_RET_OK;

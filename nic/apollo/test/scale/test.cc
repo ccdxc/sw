@@ -89,8 +89,8 @@ create_v6_route_tables (uint32_t num_teps, uint32_t num_vpcs,
 
         rv = create_route_table(&v6route_table);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
-                                "create route table %u failed, ret %u",
-                                v6route_table.key.id, rv);
+                                "create route table %s failed, ret %u",
+                                v6route_table.key.str(), rv);
     }
     return rv;
 }
@@ -161,8 +161,8 @@ create_route_tables (uint32_t num_teps, uint32_t num_vpcs, uint32_t num_subnets,
         }
         rv = create_route_table(&route_table);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
-                                "create route table %u failed, ret %u",
-                                route_table.key.id, rv);
+                                "create route table %s failed, ret %u",
+                                route_table.key.str(), rv);
     }
 
     if (g_test_params.dual_stack && !apulu()) {
@@ -707,8 +707,8 @@ create_vpcs (uint32_t num_vpcs, ip_prefix_t *ipv4_prefix,
         MAC_UINT64_TO_ADDR(pds_subnet.vr_mac, underlay_vr_mac);
         rv = create_subnet(&pds_subnet);
         SDK_ASSERT_TRACE_RETURN((rv == SDK_RET_OK), rv,
-                                "create subnet %u failed, ret %u",
-                                pds_subnet.key.id, rv);
+                                "create subnet %s failed, ret %u",
+                                pds_subnet.key.str(), rv);
     }
 
     // push leftover vpc and subnet objects
@@ -912,8 +912,8 @@ create_tags (uint32_t num_tag_trees, uint32_t scale,
         }
         ret = create_tag(&pds_tag);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "create tag %u failed, ret %u",
-                                pds_tag.key.id, ret);
+                                "create tag %s failed, ret %u",
+                                pds_tag.key.str(), ret);
     }
     // push leftover objects
     ret = create_tag(NULL);
@@ -1062,8 +1062,8 @@ create_meter (uint32_t num_meter, uint32_t scale, pds_meter_type_t type,
         }
         ret = create_meter(&pds_meter);
         SDK_ASSERT_TRACE_RETURN((ret == SDK_RET_OK), ret,
-                                "create meter %u failed, ret %u",
-                                pds_meter.key.id, ret);
+                                "create meter %s failed, ret %u",
+                                pds_meter.key.str(), ret);
     }
     // push leftover objects
     ret = create_meter(NULL);

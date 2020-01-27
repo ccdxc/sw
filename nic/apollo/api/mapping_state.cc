@@ -49,17 +49,17 @@ mapping_state::alloc(void) {
 sdk_ret_t
 mapping_state::insert(mapping_entry *mapping) {
 #if 0
-    PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%u, %s) to db",
+    PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%s, %s) to db",
                       mapping->key().type,
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
-                          mapping->key().subnet.id : mapping->key().vpc.id,
+                          mapping->key().subnet.str() : mapping->key().vpc.str(),
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(mapping->key().mac_addr) :
                           ipaddr2str(&mapping->key().ip_addr));
 #endif
     if (mapping->key().type == PDS_MAPPING_TYPE_L2) {
-        PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%u, %s) to db",
-                          mapping->key().type, mapping->key().subnet.id,
+        PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%s, %s) to db",
+                          mapping->key().type, mapping->key().subnet.str(),
                           macaddr2str(mapping->key().mac_addr));
     } else if (mapping->key().type == PDS_MAPPING_TYPE_L3) {
         PDS_TRACE_VERBOSE("Inserting mapping - type %u, (%s, %s) to db",
@@ -74,17 +74,17 @@ mapping_state::insert(mapping_entry *mapping) {
 mapping_entry *
 mapping_state::remove(mapping_entry *mapping) {
 #if 0
-    PDS_TRACE_VERBOSE("Removing mapping - type %u, (%u, %s) to db",
+    PDS_TRACE_VERBOSE("Removing mapping - type %u, (%s, %s) to db",
                       mapping->key().type,
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
-                          mapping->key().subnet.id : mapping->key().vpc.id,
+                          mapping->key().subnet.str() : mapping->key().vpc.str(),
                       (mapping->key().type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(mapping->key().mac_addr) :
                           ipaddr2str(&mapping->key().ip_addr));
 #endif
     if (mapping->key().type == PDS_MAPPING_TYPE_L2) {
-        PDS_TRACE_VERBOSE("Removing mapping - type %u, (%u, %s) to db",
-                          mapping->key().type, mapping->key().subnet.id,
+        PDS_TRACE_VERBOSE("Removing mapping - type %u, (%s, %s) to db",
+                          mapping->key().type, mapping->key().subnet.str(),
                           macaddr2str(mapping->key().mac_addr));
     } else if (mapping->key().type == PDS_MAPPING_TYPE_L3) {
         PDS_TRACE_VERBOSE("Removing mapping - type %u, (%s, %s) to db",
@@ -103,17 +103,17 @@ mapping_state::free(mapping_entry *mapping) {
 mapping_entry *
 mapping_state::find(pds_mapping_key_t *key) const {
 #if 0
-    PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%u, %s) to db",
+    PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%s, %s) to db",
                       key->type,
                       (key->type == PDS_MAPPING_TYPE_L2) ?
-                          key->subnet.id : key->vpc.id,
+                          key->subnet.str() : key->vpc.str(),
                       (key->type == PDS_MAPPING_TYPE_L2) ?
                           macaddr2str(key->mac_addr) :
                           ipaddr2str(&key->ip_addr));
 #endif
     if (key->type == PDS_MAPPING_TYPE_L2) {
-        PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%u, %s) to db",
-                          key->type, key->subnet.id,
+        PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%s, %s) to db",
+                          key->type, key->subnet.str(),
                           macaddr2str(key->mac_addr));
     } else if (key->type == PDS_MAPPING_TYPE_L3) {
         PDS_TRACE_VERBOSE("Looking for mapping - type %u, (%s, %s) to db",

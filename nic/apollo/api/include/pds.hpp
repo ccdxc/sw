@@ -86,7 +86,6 @@ typedef uint32_t    pds_vnid_id_t;             ///< VxLAN id
 typedef uint32_t    pds_mpls_tag_t;            ///< MPLS tag value
 typedef uint16_t    pds_lif_id_t;              ///< (internal) lif identifier
 typedef uint32_t    pds_mirror_session_id_t;   ///< mirror session table index
-typedef uint32_t    pds_vpc_peer_id_t;         ///< vpc peer id
 typedef uint32_t    pds_ifindex_t;             ///< interface index
 
 ///< pds_ifindex_t is an internal encoded index used by forwarding and other

@@ -182,10 +182,10 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->svc_mapping_spec;
     dip_vpc = vpc_db()->find(&spec->key.vpc);
     PDS_TRACE_DEBUG("Programming svc mapping (vip %s, port %u, "
-                    "provider IP %s) -> (vpc %u, dip %s, port %u)",
+                    "provider IP %s) -> (vpc %s, dip %s, port %u)",
                     ipaddr2str(&spec->vip), spec->svc_port,
                     ipaddr2str(&spec->backend_provider_ip),
-                    spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                    spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
                     spec->key.backend_port);
 
     // add NAT entry with DIP in the data
@@ -193,11 +193,11 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_dip_nat_hdl_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add DIP NAT entry for mapping (vip %s,"
-                      " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
+                      " port %u, provider IP %s) -> (vpc %s, dip %s, port %u), "
                       "err %u", ipaddr2str(&spec->vip),
                       spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
                       spec->key.backend_port, ret);
         return ret;
     }
@@ -219,10 +219,10 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to add svc mapping (vip %s, port %u, "
-                      "provider IP %s) -> (vpc %u, dip %s, port %u), err %u",
+                      "provider IP %s) -> (vpc %s, dip %s, port %u), err %u",
                       ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
                       spec->key.backend_port, ret);
         return ret;
     }
@@ -231,11 +231,11 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_IMPL_FILL_NAT_DATA(&nat_data, &spec->vip);
     ret = artemis_impl_db()->nat_tbl()->insert_atid(&nat_data, to_vip_nat_hdl_);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add VIP NAT entry for mapping (vpc %u, vip %s,"
-                      " port %u, provider IP %s) -> (vpc %u, dip %s, port %u), "
+        PDS_TRACE_ERR("Failed to add VIP NAT entry for mapping (vip %s,"
+                      " port %u, provider IP %s) -> (vpc %s, dip %s, port %u), "
                       "err %u", ipaddr2str(&spec->vip), spec->svc_port,
                       ipaddr2str(&spec->backend_provider_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
                       spec->key.backend_port, ret);
         return ret;
     }
@@ -252,9 +252,9 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                                    dip_to_vip_handle_);
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->insert(&api_params);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to add svc mapping (vpc %u, backend-ip %s, "
+        PDS_TRACE_ERR("Failed to add svc mapping (vpc %s, backend-ip %s, "
                       "port %u) --> (vip %s, port %u), err %u",
-                      spec->key.vpc.id, ipaddr2str(&spec->key.backend_ip),
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.backend_ip),
                       spec->key.backend_port,
                       ipaddr2str(&spec->vip), spec->svc_port, ret);
         return ret;

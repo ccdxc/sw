@@ -56,7 +56,7 @@ public:
     ///           stateless objects to be operated on by framework during DELETE
     ///           or UPDATE operations)
     /// \param[in] key    key of object instance of interest
-    /// \return    NAT port block instance corresponding to the key
+    /// \return    security profile instance corresponding to the key
     static security_profile *build(pds_obj_key_t *key);
 
     /// \brief    free a stateless entry's temporary s/w only resources like

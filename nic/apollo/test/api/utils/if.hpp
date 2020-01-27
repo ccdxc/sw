@@ -49,7 +49,7 @@ public:
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_if_spec_t *spec) {
-    os << " key: " << spec->key.id
+    os << &spec->key
        << " type: " << spec->type;
 
     if (spec->type == PDS_IF_TYPE_L3) {

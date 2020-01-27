@@ -237,7 +237,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         ret = mapping_impl_db()->local_mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to remove entry in LOCAL_MAPPING"
-                          "table for vnic %u, err %u", vnic->key().id, ret);
+                          "table for vnic %s, err %u", vnic->key().str(), ret);
             // fall thru
         }
     }
@@ -254,7 +254,7 @@ vnic_impl::nuke_resources(api_base *api_obj) {
         ret = mapping_impl_db()->mapping_tbl()->remove(&tparams);
         if (ret != SDK_RET_OK) {
             PDS_TRACE_ERR("Failed to remote entry in MAPPING "
-                          "table for vnic %u, err %u", vnic->key().id, ret);
+                          "table for vnic %s, err %u", vnic->key().str(), ret);
             // fall thru
         }
     }

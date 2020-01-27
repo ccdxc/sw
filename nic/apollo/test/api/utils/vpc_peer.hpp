@@ -71,7 +71,7 @@ operator<<(std::ostream& os, const pds_vpc_peer_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_peer_feeder& obj) {
     os << "VPC Peer feeder =>"
-        << " id: " << obj.key.id
+        << " id: " << obj.key.str()
         << " vpc1 : " << obj.vpc1.str()
         << " vpc2 : " << obj.vpc2.str() << " ";
     return os;

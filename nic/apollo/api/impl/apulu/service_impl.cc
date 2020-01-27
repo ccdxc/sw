@@ -390,9 +390,9 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
                                    sdk::table::handle_t::null());
     ret = svc_mapping_impl_db()->svc_mapping_tbl()->get(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to get svc-(%u, %s:%u) "
+        PDS_TRACE_ERR("Failed to get svc-(%s, %s:%u) "
                       "xlation in SERVICE_MAPPING table, "
-                      "err %u", vpc->key().id, ipaddr2str(&key->backend_ip),
+                      "err %u", vpc->key().str(), ipaddr2str(&key->backend_ip),
                       key->backend_port, ret);
         return ret;
     }
@@ -409,8 +409,8 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
                                       &nat_data);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to read NAT table entry %u for "
-                      "svc-(%u, %s:%u) xlation",
-                      xlate_idx, vpc->key().id, ipaddr2str(&key->backend_ip),
+                      "svc-(%s, %s:%u) xlation",
+                      xlate_idx, vpc->key().str(), ipaddr2str(&key->backend_ip),
                       key->backend_port);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }

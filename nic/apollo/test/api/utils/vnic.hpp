@@ -65,15 +65,15 @@ public:
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vnic_spec_t *spec) {
     os << &spec->key
-       << " subnet id: " << std::string(spec->subnet.str())
+       << " subnet: " << std::string(spec->subnet.str())
        << " vnic encap: " << pds_encap2str(&spec->vnic_encap)
        << " fabric encap: " << pds_encap2str(&spec->fabric_encap)
        << " mac: " << macaddr2str(spec->mac_addr)
        << " src dst check: " << spec->src_dst_check
        << " tx_mirror_session_bmap: " << +spec->tx_mirror_session_bmap
        << " rx_mirror_session_bmap: " << +spec->rx_mirror_session_bmap
-       << " v4 meter id: " << spec->v4_meter.id
-       << " v6 meter id: " << spec->v6_meter.id
+       << " v4 meter: " << spec->v4_meter.str()
+       << " v6 meter: " << spec->v6_meter.str()
        << " switch vnic: " << spec->switch_vnic;
     return os;
 }

@@ -171,8 +171,8 @@ vnic_upd_walk_cb_ (void *api_obj, void *ctxt) {
     meter_update_ctxt_t *upd_ctxt = (meter_update_ctxt_t *)ctxt;
 
     vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
-    if ((vnic->meter(IP_AF_IPV4).id == upd_ctxt->meter->key().id) ||
-        (vnic->meter(IP_AF_IPV4).id == upd_ctxt->meter->key().id)) {
+    if ((vnic->meter(IP_AF_IPV4) == upd_ctxt->meter->key()) ||
+        (vnic->meter(IP_AF_IPV4) == upd_ctxt->meter->key())) {
         api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
                             (api_base *)api_obj, upd_ctxt->upd_bmap);
     }

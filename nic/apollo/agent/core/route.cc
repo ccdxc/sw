@@ -18,7 +18,7 @@ route_table_create_validate (pds_obj_key_t *key,
                     NULL) {
                 PDS_TRACE_ERR("Failed to create route table {}, nexthop {} "
                               "not found", spec->key.str(),
-                              spec->routes[i].nh.id);
+                              spec->routes[i].nh.str());
                 return SDK_RET_INVALID_ARG;
             }
         } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {
@@ -68,7 +68,7 @@ route_table_update_validate (pds_obj_key_t *key, pds_route_table_spec_t *spec)
                     NULL) {
                 PDS_TRACE_ERR("Failed to update route table {}, nexthop {} "
                               "not found", spec->key.str(),
-                              spec->routes[i].nh.id);
+                              spec->routes[i].nh.str());
                 return SDK_RET_INVALID_ARG;
             }
         } else if (spec->routes[i].nh_type == PDS_NH_TYPE_PEER_VPC) {

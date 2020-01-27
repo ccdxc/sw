@@ -214,9 +214,9 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
     if (unlikely(ret != SDK_RET_OK)) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
-                      "for mapping (vpc %u, ip %s), vnic %u, err %u",
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      "for mapping (vpc %s, ip %s), vnic %s, err %u",
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         return ret;
     }
     local_mapping_overlay_ip_hdl_ = tparams.handle;
@@ -229,9 +229,9 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for "
-                      "mapping (vpc %u, ip %s), vnic %u, err %u",
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      "mapping (vpc %s, ip %s), vnic %s, err %u",
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         goto error;
     }
     mapping_hdl_ = tparams.handle;
@@ -252,10 +252,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->local_mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in LOCAL_MAPPING table "
-                      "for public IP %s of mapping (vpc %u, ip %s), "
-                      "vnic %u, err %u", ipaddr2str(&spec->public_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      "for public IP %s of mapping (vpc %s, ip %s), "
+                      "vnic %s, err %u", ipaddr2str(&spec->public_ip),
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         goto error;
     }
     local_mapping_public_ip_hdl_ = tparams.handle;
@@ -268,10 +268,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = mapping_impl_db()->mapping_tbl()->reserve(&tparams);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry in MAPPING table for public IP "
-                      "%s of mapping (vpc %u, ip %s), vnic %u, err %u",
+                      "%s of mapping (vpc %s, ip %s), vnic %s, err %u",
                       ipaddr2str(&spec->public_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         goto error;
     }
     mapping_public_ip_hdl_ = tparams.handle;
@@ -284,10 +284,10 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = apulu_impl_db()->nat_idxr()->alloc(&to_public_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for public IP %s in NAT table "
-                      "for mapping (vpc %u, ip %s), vnic %u, err %u",
+                      "for mapping (vpc %s, ip %s), vnic %s, err %u",
                       ipaddr2str(&spec->public_ip),
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         goto error;
     }
 
@@ -295,9 +295,9 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     ret = apulu_impl_db()->nat_idxr()->alloc(&to_overlay_ip_nat_idx_);
     if (ret != SDK_RET_OK) {
         PDS_TRACE_ERR("Failed to reserve entry for overlay IP in NAT table for "
-                      "mapping (vpc %u, ip %s), vnic %u, err %u",
-                      spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                      vnic->key().id, ret);
+                      "mapping (vpc %s, ip %s), vnic %s, err %u",
+                      spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                      vnic->key().str(), ret);
         goto error;
     }
 
@@ -355,10 +355,10 @@ mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     if (spec->is_local) {
         PDS_TRACE_DEBUG("Reserving resources for mapping %s, local %u, "
-                        "subnet %u, vnic %u, pub_ip_valid %u, pub_ip %s",
+                        "subnet %s, vnic %s, pub_ip_valid %u, pub_ip %s",
                         mapping->key2str().c_str(), spec->is_local,
-                        spec->subnet.id,
-                        spec->vnic.id, spec->public_ip_valid,
+                        spec->subnet.str(),
+                        spec->vnic.str(), spec->public_ip_valid,
                         ipaddr2str(&spec->public_ip));
         // reserve all local IP mapping resources
         vpc = vpc_find(&spec->key.vpc);
@@ -366,9 +366,9 @@ mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
 
     // reserve all remote MAC or IP mapping resources
-    PDS_TRACE_DEBUG("Reserving resources for mapping %s local %u, subnet %u, "
+    PDS_TRACE_DEBUG("Reserving resources for mapping %s local %u, subnet %s, "
                     "nh type %s-%s", mapping->key2str().c_str(), spec->is_local,
-                    spec->subnet.id,
+                    spec->subnet.str(),
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ? "tep" : "nh group",
                     (spec->nh_type == PDS_NH_TYPE_OVERLAY) ?
                         spec->tep.str() : spec->nh_group.str());
@@ -710,13 +710,14 @@ mapping_impl::activate_create_(pds_epoch_t epoch, mapping_entry *mapping,
 
     vpc = vpc_find(&spec->key.vpc);
     subnet = subnet_find(&spec->subnet);
-    PDS_TRACE_DEBUG("Activating %s %s, subnet %u, tep %u, "
+    PDS_TRACE_DEBUG("Activating %s %s, subnet %s, tep %s, "
                     "overlay mac %s, fabric encap type %u "
-                    "fabric encap value %u, vnic %u",
+                    "fabric encap value %u, vnic %s",
                     spec->is_local ? "local" : "remote",
-                    mapping->key2str().c_str(), spec->subnet.id, spec->tep.id,
-                    macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
-                    spec->fabric_encap.val.value, spec->vnic.id);
+                    mapping->key2str().c_str(), spec->subnet.str(),
+                    spec->tep.str(), macaddr2str(spec->overlay_mac),
+                    spec->fabric_encap.type, spec->fabric_encap.val.value,
+                    spec->vnic.str());
     if (spec->is_local) {
         ret = add_local_mapping_entries_(vpc, spec);
         if (ret != SDK_RET_OK) {
@@ -751,8 +752,8 @@ mapping_impl::deactivate_l2_mapping_entry_(pds_obj_key_t subnet,
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to deactivate mapping (subnet %u, mac %s)",
-                      subnet.id, macaddr2str(mac_addr));
+        PDS_TRACE_ERR("Failed to deactivate mapping (subnet %s, mac %s)",
+                      subnet.str(), macaddr2str(mac_addr));
     }
     return ret;
 }
@@ -769,8 +770,8 @@ mapping_impl::deactivate_ip_mapping_entry_(pds_obj_key_t vpc, ip_addr_t *ip) {
                                    0, sdk::table::handle_t::null());
     ret = mapping_impl_db()->mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to deactivate mapping (vpc %u, ip %s)",
-                      vpc.id, ipaddr2str(ip));
+        PDS_TRACE_ERR("Failed to deactivate mapping (vpc %s, ip %s)",
+                      vpc.str(), ipaddr2str(ip));
     }
     return ret;
 }
@@ -796,8 +797,8 @@ mapping_impl::deactivate_ip_local_mapping_entry_(pds_obj_key_t vpc,
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->local_mapping_tbl()->update(&tparams);
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to update mapping (vpc %u, ip %s)",
-                      vpc.id, ipaddr2str(ip));
+        PDS_TRACE_ERR("Failed to update mapping (vpc %s, ip %s)",
+                      vpc.str(), ipaddr2str(ip));
     }
     return ret;
 }

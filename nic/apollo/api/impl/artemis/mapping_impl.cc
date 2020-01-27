@@ -279,12 +279,12 @@ mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
 
-    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
-                    "local %u, subnet %u, tep %u, vnic %u, "
+    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %s, ip %s), "
+                    "local %u, subnet %s, tep %s, vnic %s, "
                     "pub_ip_valid %u pub_ip %s",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, spec->tep.id,
-                    spec->vnic.id, spec->public_ip_valid,
+                    spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                    is_local_, spec->subnet.str(), spec->tep.str(),
+                    spec->vnic.str(), spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip));
 
     if (is_local_) {
@@ -622,11 +622,11 @@ mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     tep = tep_db()->find(&spec->tep);
     ip_addr = device_db()->find()->ip_addr();
     if (is_local_) {
-        PDS_TRACE_DEBUG("Programming local mapping (vpc %u, ip %s), vnic %u, "
-                        "subnet %u, tep %s, overlay mac %s, "
+        PDS_TRACE_DEBUG("Programming local mapping (vpc %s, ip %s), vnic %s, "
+                        "subnet %s, tep %s, overlay mac %s, "
                         "fabric encap (%u, %u), public IP %s, provider IP %s",
-                        spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                        spec->vnic.id, spec->subnet.id,
+                        spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                        spec->vnic.str(), spec->subnet.str(),
                         ipaddr2str(&ip_addr),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,
@@ -635,11 +635,11 @@ mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                         spec->provider_ip_valid ?
                             ipaddr2str(&spec->provider_ip) : "");
     } else {
-        PDS_TRACE_DEBUG("Programming remote mapping (vpc %u, ip %s), vnic %u, "
-                        "subnet %u, tep %s, overlay mac %s, "
+        PDS_TRACE_DEBUG("Programming remote mapping (vpc %s, ip %s), vnic %s, "
+                        "subnet %s, tep %s, overlay mac %s, "
                         "fabric encap (%u, %u), provider IP %s",
-                        spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                        spec->vnic.id, spec->subnet.id,
+                        spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                        spec->vnic.str(), spec->subnet.str(),
                         ipaddr2str(&tep->ip()),
                         macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
                         spec->fabric_encap.val.value,

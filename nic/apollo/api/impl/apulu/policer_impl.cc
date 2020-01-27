@@ -222,8 +222,8 @@ policer_impl::activate_delete_(pds_epoch_t epoch, policer_entry *policer) {
         ret = program_vnic_policer_tx_entry_(&pol, hw_id_, false);
     }
     if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to de-activate policer %u, hw id %u",
-                      policer->key().id, hw_id_);
+        PDS_TRACE_ERR("Failed to de-activate policer %s, hw id %u",
+                      policer->key().str(), hw_id_);
     }
     return ret;
 }

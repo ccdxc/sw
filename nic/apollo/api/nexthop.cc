@@ -119,10 +119,10 @@ sdk_ret_t
 nexthop::program_create(api_obj_ctxt_t *obj_ctxt) {
     pds_nexthop_spec_t *spec = &obj_ctxt->api_params->nexthop_spec;
 
-    PDS_TRACE_VERBOSE("Programming nexthop %u, type %u", key_, type_);
+    PDS_TRACE_VERBOSE("Programming nexthop %s, type %u", key_.str(), type_);
     if (type_ == PDS_NH_TYPE_IP) {
-        PDS_TRACE_DEBUG("nexthop vpc %u, ip %s, vlan %u, mac %s",
-                        spec->vpc.id, ipaddr2str(&spec->ip),
+        PDS_TRACE_DEBUG("nexthop vpc %s, ip %s, vlan %u, mac %s",
+                        spec->vpc.str(), ipaddr2str(&spec->ip),
                         spec->vlan, macaddr2str(spec->mac));
     }
     return impl_->program_hw(this, obj_ctxt);
@@ -151,7 +151,7 @@ nexthop::compute_update(api_obj_ctxt_t *obj_ctxt) {
 
     if (type_ != spec->type) {
         PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %s",
-                      " on nexthop %u", type_, spec->type, spec->key.str());
+                      " on nexthop %s", type_, spec->type, spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     return SDK_RET_OK;

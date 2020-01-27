@@ -450,13 +450,13 @@ mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
 
-    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %u, ip %s), "
-                    "local %u, subnet %u, tep %u, vnic %u, "
+    PDS_TRACE_DEBUG("Reserving resources for mapping (vpc %s, ip %s), "
+                    "local %u, subnet %s, tep %s, vnic %s, "
                     "pub_ip_valid %u, pub_ip %s, "
                     "prov_ip_valid %u, prov_ip %s",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr), is_local_,
-                    spec->subnet.id, spec->tep.id,
-                    spec->vnic.id, spec->public_ip_valid,
+                    spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                    is_local_, spec->subnet.str(), spec->tep.str(),
+                    spec->vnic.str(), spec->public_ip_valid,
                     ipaddr2str(&spec->public_ip),
                     spec->provider_ip_valid, ipaddr2str(&spec->provider_ip));
 
@@ -483,9 +483,9 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                            NULL, NULL, 0, sdk::table::handle_t::null());
             ret = mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table "
-                              "for mapping %s, err %u", api_obj->key2str().c_str(),
-                              ret);
+                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table"
+                              " for mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
                 goto err;
             }
         }
@@ -497,8 +497,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                            NULL, NULL, 0, sdk::table::handle_t::null());
             ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
-                              "table for mapping %s, err %u",
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX"
+                              " table for mapping %s, err %u",
                               api_obj->key2str().c_str(), ret);
                 goto err;
             }
@@ -511,9 +511,9 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                            NULL, NULL, 0, sdk::table::handle_t::null());
             ret = mapping_impl_db()->local_ip_mapping_tbl()->remove(&api_params);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table "
-                              "for mapping %s, err %u", api_obj->key2str().c_str(),
-                              ret);
+                PDS_TRACE_ERR("Failed to remove entry in LOCAL_IP_MAPPING table"
+                              " for mapping %s, err %u",
+                              api_obj->key2str().c_str(), ret);
                 goto err;
             }
         }
@@ -525,8 +525,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                            NULL, NULL, 0, sdk::table::handle_t::null());
             ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
-                              "table for mapping %s, err %u",
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX"
+                              " table for mapping %s, err %u",
                               api_obj->key2str().c_str(), ret);
                 goto err;
             }
@@ -552,8 +552,8 @@ mapping_impl::nuke_resources(api_base *api_obj) {
                                            NULL, NULL, 0, sdk::table::handle_t::null());
             ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->remove(&api_params);
             if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX "
-                              "table for mapping %s, err %u",
+                PDS_TRACE_ERR("Failed to remove entry in REMOTE_VNIC_MAPPING_TX"
+                              " table for mapping %s, err %u",
                               api_obj->key2str().c_str(), ret);
                 goto err;
             }
@@ -678,8 +678,8 @@ mapping_impl::add_remote_vnic_mapping_tx_entries_(vpc_entry *vpc,
     }
 
     PDS_TRACE_DEBUG("Programmed REMOTE_VNIC_MAPPING_TX table entry "
-                    "TEP %u, vpc hw id %u, encap type %u, encap val %u "
-                    "nh id %u", spec->tep.id,
+                    "TEP %s, vpc hw id %u, encap type %u, encap val %u "
+                    "nh id %u", spec->tep.str(),
                     vpc->hw_id(), spec->fabric_encap.type,
                     spec->fabric_encap.val.value, nh_id);
 
@@ -845,13 +845,13 @@ mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     spec = &obj_ctxt->api_params->mapping_spec;
     vpc = vpc_db()->find(&spec->key.vpc);
     subnet = subnet_db()->find(&spec->subnet);
-    PDS_TRACE_DEBUG("Programming mapping (vpc %u, ip %s), subnet %u, tep %u, "
+    PDS_TRACE_DEBUG("Programming mapping (vpc %s, ip %s), subnet %s, tep %s, "
                     "overlay mac %s, fabric encap type %u "
-                    "fabric encap value %u, vnic %u",
-                    spec->key.vpc.id, ipaddr2str(&spec->key.ip_addr),
-                    spec->subnet.id, spec->tep.id,
+                    "fabric encap value %u, vnic %s",
+                    spec->key.vpc.str(), ipaddr2str(&spec->key.ip_addr),
+                    spec->subnet.str(), spec->tep.str(),
                     macaddr2str(spec->overlay_mac), spec->fabric_encap.type,
-                    spec->fabric_encap.val.value, spec->vnic.id);
+                    spec->fabric_encap.val.value, spec->vnic.str());
     if (is_local_) {
         // allocate NAT table entries
         ret = add_nat_entries_(spec);
@@ -1111,9 +1111,9 @@ mapping_impl::tep_idx(pds_mapping_key_t *key) {
                                    sdk::table::handle_t::null());
     ret = mapping_impl_db()->remote_vnic_mapping_tx_tbl()->get(&api_params);
     if (unlikely(ret != SDK_RET_OK)) {
-        PDS_TRACE_ERR("Failed to find mapping (%u, %s) in "
+        PDS_TRACE_ERR("Failed to find mapping (%s, %s) in "
                       "REMOTE_VNIC_MAPPING_TX table, err %u",
-                      key->vpc.id, ipaddr2str(&key->ip_addr), ret);
+                      key->vpc.str(), ipaddr2str(&key->ip_addr), ret);
         return PDS_IMPL_TEP_INVALID_INDEX;
     }
     PDS_IMPL_FILL_TABLE_API_ACTION_PARAMS(
