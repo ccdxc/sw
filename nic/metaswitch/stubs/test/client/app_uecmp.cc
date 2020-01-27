@@ -280,7 +280,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     }
 }
 
-static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
+static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, bool def_origin=false) {
     BGPPeerAfRequest  request;
     BGPResponse     response;
     ClientContext   context;
@@ -316,13 +316,24 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
         proto_spec->set_afi(pds::BGP_AFI_IPV4);
         proto_spec->set_safi(pds::BGP_SAFI_UNICAST);
     } else {
+        if (def_origin) {
+        proto_spec->set_afi(pds::BGP_AFI_IPV4);
+        proto_spec->set_safi(pds::BGP_SAFI_UNICAST);
+        } else {
         // Disable EVPN
         proto_spec->set_afi(pds::BGP_AFI_L2VPN);
         proto_spec->set_safi(pds::BGP_SAFI_EVPN);
+        }
     }
-    proto_spec->set_disable(pds::BOOL_TRUE);
+    if (def_origin) {
+        printf ("Enabling default originate in BGP on C2 to DUT for IPv4 AF");
+        proto_spec->set_defaultorig(pds::BOOL_TRUE);
+        proto_spec->set_disable(pds::BOOL_FALSE);
+    } else {
+        proto_spec->set_disable(pds::BOOL_TRUE);
+        proto_spec->set_defaultorig(pds::BOOL_FALSE);
+    }
     proto_spec->set_nhself(pds::BOOL_FALSE);
-    proto_spec->set_defaultorig(pds::BOOL_FALSE);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
     ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
@@ -547,38 +558,6 @@ static void get_evpn_mac_ip_all () {
     }
 }
 
-static void create_route_proto_grpc (bool second=false) {
-    CPStaticRouteRequest  request;
-    CPStaticRouteResponse response;
-    ClientContext         context;
-    Status                ret_status;
-
-    auto proto_spec = request.add_request ();
-    proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
-    auto dest_addr  = proto_spec->mutable_destaddr();
-    dest_addr->set_af (types::IP_AF_INET);
-    dest_addr->set_v4addr (0);
-    proto_spec->set_prefixlen (0);
-    auto next_hop   = proto_spec->mutable_nexthopaddr();
-    next_hop->set_af (types::IP_AF_INET);
-    if (second) {
-        next_hop->set_v4addr (g_test_conf_.remote_ip_addr_2);
-    } else {
-        next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
-    }
-    proto_spec->set_adminstatus (ADMIN_UP);
-    proto_spec->set_override (BOOL_TRUE);
-    proto_spec->set_admindist (250);
-
-    printf ("Pushing Default (0/0) Static Route proto...\n");
-    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
-    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
-        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
-                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
-                response.apistatus());
-    }
-}
-
 int main(int argc, char** argv)
 {
     // parse json config file
@@ -586,12 +565,8 @@ int main(int argc, char** argv)
         cout << "Config file not found! Check CONFIG_PATH env var\n";
         exit(1);
     }
-    struct in_addr ip_addr;
-    ip_addr.s_addr = g_test_conf_.local_ip_addr;
-    std::string end_point = std::string(inet_ntoa(ip_addr))+":50054";
-    printf ("Endpoint: %s\n",end_point.c_str());
 
-    std::shared_ptr<Channel> channel = grpc::CreateChannel(end_point,
+    std::shared_ptr<Channel> channel = grpc::CreateChannel("localhost:50054",
             grpc::InsecureChannelCredentials());
     g_device_stub_  = DeviceSvc::NewStub (channel);
     g_if_stub_      = IfSvc::NewStub (channel);
@@ -606,17 +581,23 @@ int main(int argc, char** argv)
     {
         // Send protos to grpc server
         create_device_proto_grpc();
-        create_underlay_vpc_proto_grpc();
         if (g_node_id != 3) {
+            create_underlay_vpc_proto_grpc();
             create_intf_proto_grpc(true /*loopback*/);
+            if (g_node_id == 2) {
+                // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
+                // Instead BGP default originate is setup on C2 to simulate default route
+                // advertised from ToR to Naples
+                auto fp = popen ("python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py"
+                                 " set localhost rtmRedistTable rtmRedistFteIndex=1"
+                                 " rtmRedistEntryId=1 rtmRedistRowStatus=rowDestroy", "r");
+                if (!fp) {
+                    std::cout << "ERROR deleting RTM Redist rule for loopback on container 2" << std::endl;
+                }
+            }
             create_intf_proto_grpc(false, true /* second interface */);
         }
-
         create_intf_proto_grpc();
-        if (g_node_id ==1 ) {
-            create_route_proto_grpc();
-            create_route_proto_grpc(true);
-        }
         create_bgp_global_proto_grpc();
         if (g_node_id != 3) {
             /*no IPv4 BGP sessions for 3rd container*/
@@ -624,6 +605,13 @@ int main(int argc, char** argv)
             create_bgp_peer_af_proto_grpc();
             create_bgp_peer_proto_grpc(false, true /* second peer */);
             create_bgp_peer_af_proto_grpc(false, true);
+            if (g_node_id == 2) {
+                /* Originate default route in BGP on C2 */
+                create_bgp_peer_af_proto_grpc(false /* underlay */, false /* first */,
+                                              true /* def_orig */);
+                create_bgp_peer_af_proto_grpc(false /* underlay */, true /* second */,
+                                              true /* def_orig */);
+            }
             sleep(5);
         }
         create_bgp_peer_proto_grpc(true /* loopback */);

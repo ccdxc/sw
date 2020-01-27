@@ -1,5 +1,4 @@
 #! /bin/bash
-
 CUR_DIR=`pwd`
 SW_DIR=`dirname $CUR_DIR`
 SUBNET=Test_Subnet
@@ -21,6 +20,9 @@ done
 vconfig rem eno1.3006 > /dev/null
 vconfig add eno1 3006 >/dev/null
 ifconfig eno1.3006 up > /dev/null
+vconfig rem eno1.3007 > /dev/null
+vconfig add eno1 3007 >/dev/null
+ifconfig eno1.3007 up > /dev/null
 # delete all existing networks
 echo "Cleanup pre-existing test networks"
 ids=$(docker network ls --format {{.Name}} | grep $SUBNET)
@@ -52,13 +54,7 @@ do
 done
 echo ""
 
-echo "start pdsagent in "$CONTAINER"1 in PDS_MOCK_MODE (temp)"
-ret=0
-docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'PDS_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
-if [ $ret -ne 0 ]; then
-	echo "failed to start pdsagent in "$CONTAINER"1: $ret"
-fi
-for i in {2..3}
+for i in {1..3}
 do
 	echo "start pdsagent in "$CONTAINER"$i in PDS_MOCK_MODE"
 	ret=0
@@ -75,13 +71,21 @@ while [ $t_s -gt 0 ]; do
         : $((t_s--))
 done
 
+docker exec -it "$CONTAINER"3 python $MIB_PY set localhost evpnEntTable evpnEntEntityIndex=2 evpnEntLocalRouterAddressType=inetwkAddrTypeIpv4 evpnEntLocalRouterAddress='0x3 0x3 0x3 0x3'
+
 for i in {1..3}
 do
 	ret=0
 	echo "push "$DOL_CFG"$i/evpn.json config to "$CONTAINER"$i"
-	docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"1 sh -c '/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_grpc_test' || ret=$?
+	docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pds_ms_uecmp_grpc_test' || ret=$?
 	if [ $ret -ne 0 ]; then
 		echo "failed to push config to "$CONTAINER"$i: $ret"
 	fi
 done
-docker exec -it "$CONTAINER"2 python $MIB_PY set localhost rtmRedistTable rtmRedistFteIndex=1 rtmRedistEntryId=1 rtmRedistRowStatus=rowDestroy
+#docker exec -it "$CONTAINER"2 python $MIB_PY set localhost rtmRedistTable rtmRedistFteIndex=1 rtmRedistEntryId=1 rtmRedistRowStatus=rowDestroy
+for i in {2..3}
+do
+	echo "Originate EVPN Type 5 route from "$CONTAINER"$i"
+    docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c 'python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true'
+    docker exec -it -e CONFIG_PATH="$DOL_CFG"$i  "$CONTAINER"$i sh -c 'python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=250'
+done
