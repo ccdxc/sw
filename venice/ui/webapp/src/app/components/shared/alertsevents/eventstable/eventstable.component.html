@@ -16,6 +16,7 @@
     <div fxFlex="none" fxLayout="row">
       <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
         <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
+                         [max]="eventLimit"
                          [icon]="eventsIcon"
                          width="250px">
         </app-tableheader>

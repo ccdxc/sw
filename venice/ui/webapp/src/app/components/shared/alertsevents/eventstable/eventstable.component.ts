@@ -66,6 +66,10 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
 
   eventsPostBody: IApiListWatchOptions = { 'sort-order': ApiListWatchOptions_sort_order.none };
 
+  // we only fetch the past 1000 events, so we don't know if there are more in the
+  // system for our search criteria
+  eventLimit: number = 1000;
+
   // All columns are set as not sortable as it isn't currently supported
   // TODO: Support sorting columns
   cols: TableCol[] = [
@@ -315,6 +319,9 @@ export class EventstableComponent extends TablevieweditAbstract<IEventsEvent, Ev
     }
     if (this.eventsTimeConstraints.length) {
       fieldSelectorOptions.push(this.eventsTimeConstraints);
+    }
+    if (!this.showDebugEvents) {
+      fieldSelectorOptions.push('severity!=debug');
     }
 
     this.eventsPostBody = {
