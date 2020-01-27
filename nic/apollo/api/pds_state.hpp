@@ -206,6 +206,10 @@ public:
             event_cb_(event);
         }
     }
+    const mac_addr_t& system_mac(void) const { return system_mac_; }
+    void set_system_mac(mac_addr_t mac) {
+        memcpy(system_mac_, mac, sizeof(system_mac_));
+    }
 
 private:
     string                  cfg_path_;
@@ -223,6 +227,7 @@ private:
     uint16_t                num_data_cores_;
     state_base              *state_[PDS_STATE_MAX];
     pds_event_cb_t          event_cb_;
+    mac_addr_t              system_mac_;
 };
 extern pds_state g_pds_state;
 

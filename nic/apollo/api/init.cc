@@ -13,6 +13,7 @@
 #include "nic/sdk/lib/device/device.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/sdk/lib/pal/pal.hpp"
+#include "nic/sdk/platform/fru/fru.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/core/event.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
@@ -109,9 +110,10 @@ create_uplinks (void)
         spec.admin_state = PDS_IF_STATE_UP;
         spec.uplink_info.port_num =
             sdk::lib::catalog::ifindex_to_logical_port(eth_ifindex);
+        PDS_TRACE_DEBUG("Creating uplink %s", spec.key.str());
         ret = pds_if_create(&spec, PDS_BATCH_CTXT_INVALID);
         if (ret != SDK_RET_OK) {
-            SDK_TRACE_ERR("Uplink if 0x%x creation failed", ifindex);
+            PDS_TRACE_ERR("Uplink if 0x%x creation failed", ifindex);
             break;
         }
     }
@@ -186,6 +188,8 @@ pds_init (pds_init_params_t *params)
     sdk_ret_t     ret;
     asic_cfg_t    asic_cfg;
     std::string   mem_json;
+    std::string   mac_str;
+    mac_addr_t    mac_addr;
 
     // TODO read from device.conf
     sdk::lib::device_profile_t device_profile = { 0 };
@@ -214,11 +218,23 @@ pds_init (pds_init_params_t *params)
     ret = core::parse_global_config(params->pipeline, params->cfg_file,
                                     &api::g_pds_state);
     SDK_ASSERT(ret == SDK_RET_OK);
+    if (api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW) {
+        sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+        mac_str_to_addr((char *)mac_str.c_str(), mac_addr);
+        api::g_pds_state.set_system_mac(mac_addr);
+    } else {
+        // for non h/w platforms, set system MAC to default
+        MAC_UINT64_TO_ADDR(mac_addr, PENSANDO_NIC_MAC);
+        api::g_pds_state.set_system_mac(mac_addr);
+        PDS_TRACE_ERR("system mac 0x%06lx", MAC_TO_UINT64(api::g_pds_state.system_mac()));
+    }
 
     // instantiate the catalog
     api::g_pds_state.set_catalog(catalog::factory(
-        api::g_pds_state.cfg_path() + params->pipeline, "",
-        api::g_pds_state.platform_type()));
+        api::g_pds_state.platform_type() == platform_type_t::PLATFORM_TYPE_HW ?
+            api::g_pds_state.cfg_path() :
+            api::g_pds_state.cfg_path() + params->pipeline,
+        "", api::g_pds_state.platform_type()));
     PDS_TRACE_DEBUG("Memory capacity of the system %s",
                     api::g_pds_state.catalogue()->memory_capacity_str().c_str());
 

@@ -23,6 +23,8 @@ pds_state::pds_state() {
     catalog_ = NULL;
     mpartition_ = NULL;
     memset(state_, 0, sizeof(state_));
+    event_cb_ = nullptr;
+    memset(&system_mac_, 0, sizeof(system_mac_));
 }
 
 /**< @brief    destructor */
