@@ -754,7 +754,12 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
 
   computeVersionDescription(selectedVersion: string) {
     const rolloutImageLabel = this.getImageVersionData(selectedVersion);
-    this.versiondescription = rolloutImageLabel ? this.buildVersionDisplay(rolloutImageLabel) : 'No image available.';
+    if (this.rolloutImageOptions && this.rolloutImageOptions.length > 0) {
+      // If there are versions. If user picks "seletct version", show versiondescription to empty string
+      this.versiondescription = rolloutImageLabel ? this.buildVersionDisplay(rolloutImageLabel) : '';
+    } else {
+      this.versiondescription  = 'No image available.';
+    }
   }
 
   buildVersionDisplay(rolloutImageLabel: RolloutImageLabel): string {
