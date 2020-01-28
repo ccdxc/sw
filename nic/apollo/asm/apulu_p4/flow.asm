@@ -47,6 +47,7 @@ label_flow_miss:
 
 label_flow_hit:
     slt         c1, d.flow_hash_d.epoch, k.control_metadata_epoch
+    seq.!c1     c1, d.flow_hash_d.force_flow_miss, TRUE
     bcf         [c1], label_flow_miss
     phvwr       p.ingress_recirc_flow_done, TRUE
     smneb       c1, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0

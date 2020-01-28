@@ -5,13 +5,17 @@
 @pragma capi hwfields_access_api
 action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
                  hash1, hint1, hash2, hint2, hash3, hint3, hash4, hint4,
-                 more_hashes, more_hints, flow_role, nexthop_id, entry_valid) {
+                 more_hashes, more_hints, force_flow_miss, flow_role,
+                 nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.epoch, epoch);
-        if (scratch_metadata.epoch < control_metadata.epoch) {
-            // entry is old
+        modify_field(scratch_metadata.flag, force_flow_miss);
+        // entry is old or force_flow_miss is true
+        if ((scratch_metadata.epoch < control_metadata.epoch) or
+            (force_flow_miss == TRUE)) {
+            modify_field(control_metadata.flow_miss, TRUE);
             modify_field(ingress_recirc.flow_done, TRUE);
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
@@ -135,13 +139,16 @@ table flow_ohash {
 @pragma capi hwfields_access_api
 action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
                       hash1, hint1, hash2, hint2, more_hashes, more_hints,
-                      flow_role, nexthop_id, entry_valid) {
+                      force_flow_miss, flow_role, nexthop_id, entry_valid) {
     modify_field(p4i_i2e.entropy_hash, scratch_metadata.flow_hash);
     if (entry_valid == TRUE) {
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.epoch, epoch);
-        if (scratch_metadata.epoch < control_metadata.epoch) {
-            // entry is old
+        modify_field(scratch_metadata.flag, force_flow_miss);
+        // entry is old or force_flow_miss is true
+        if ((scratch_metadata.epoch < control_metadata.epoch) or
+            (force_flow_miss == TRUE)) {
+            modify_field(control_metadata.flow_miss, TRUE);
             modify_field(ingress_recirc.flow_done, TRUE);
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
