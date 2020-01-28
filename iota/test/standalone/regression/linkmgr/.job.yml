@@ -14,3 +14,11 @@ targets:
     build-dependencies:
      - build-iris-arm
 
+  linkmgr-25Gb-apulu:
+    commands: ["sh", "-c", "make linkmgr-25Gb-apulu"]
+    owners: ["email:allenbh@pensando.io","email:sakella@pensando.io"]
+    area:
+    sub-area:
+    feature:
+    build-dependencies:
+     - build-apulu-arm

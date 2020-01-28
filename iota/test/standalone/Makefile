@@ -38,6 +38,9 @@ regression-infra: extract-artifacts
 
 compatibility: extract-artifacts
 
+linkmgr-25Gb-apulu: NAPLES_FW_TAR=naples_fw_all_apulu.tgz
+linkmgr-25Gb-apulu: linkmgr-25Gb
+
 linkmgr-25Gb: extract-naples-fw
 	ls -lR /sw
 	sshpass -h
