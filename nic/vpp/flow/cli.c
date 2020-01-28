@@ -7,6 +7,7 @@
 #include <vnet/vnet.h>
 #include <vnet/plugin/plugin.h>
 #include "node.h"
+#include "cli_helper.h"
 
 // *INDENT-OFF*
 VLIB_PLUGIN_REGISTER () = {
@@ -379,29 +380,18 @@ clear_flow_entries_command_fn (vlib_main_t * vm,
                                unformat_input_t * input,
                                vlib_cli_command_t * cmd)
 {
-    pds_flow_main_t *fm = &pds_flow_main;
-    int ret1 = 0, ret2 = 0;
+    int ret = 0;
 
     while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
         vlib_cli_output(vm, "ERROR: Invalid command");
         goto done;
     }
 
-    vlib_worker_thread_barrier_sync(vm);
-    /* Clear all flows from tables */
-    ret1 = ftlv4_clear(fm->table4[0], true, false);
-    ret2 = ftlv6_clear(fm->table6[0], true, false);
-    pds_session_id_flush();
-    vlib_worker_thread_barrier_release(vm);
+    ret = clear_all_flow_entries();
 
-    if (ret1) {
-        vlib_cli_output(vm, "ERROR: Failed to clear all IPv4 flows");
-    }
-    if (ret2) {
-        vlib_cli_output(vm, "ERROR: Failed to clear all IPv6 flows");
-    }
-
-    if (!ret1 && !ret2) {
+    if (ret) {
+        vlib_cli_output(vm, "ERROR: Failed to clear all flows");
+    } else {
         vlib_cli_output(vm, "Successfully cleared all flows");
     }
 

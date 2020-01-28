@@ -74,7 +74,8 @@ public:
     sdk_ret_t stats_get(sdk_table_api_stats_t *api_stats,
                         sdk_table_stats_t *table_stats);
     sdk_ret_t iterate(sdk_table_api_params_t *params);
-    sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state);
+    sdk_ret_t clear(bool clear_global_state, bool clear_thread_local_state,
+                    sdk_table_api_params_t *params);
     sdk_ret_t clear_stats(void);
 
     virtual base_table_entry_t *get_entry(int index) = 0;

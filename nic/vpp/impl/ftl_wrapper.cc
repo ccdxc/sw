@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstring>
 
+
 #include <nic/sdk/include/sdk/table.hpp>
 #include <lib/table/ftl/ftl_base.hpp>
 #include <nic/sdk/lib/p4/p4_api.hpp>
@@ -260,7 +261,7 @@ ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
     return 0;
 }
 
-static int
+int
 ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
@@ -275,6 +276,7 @@ ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
     }
     params.entry = entry;
     params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+    
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
     }
@@ -285,8 +287,12 @@ int
 ftlv4_clear(ftlv4 *obj, bool clear_global_state,
             bool clear_thread_local_state)
 {
+    sdk_table_api_params_t params = {0};
+    params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+
     if (SDK_RET_OK != obj->clear(clear_global_state,
-                                 clear_thread_local_state)) {
+                                 clear_thread_local_state,
+                                 &params)) {
         return -1;
     }
     return 0;
@@ -298,7 +304,7 @@ ftlv4_delete(ftlv4 *obj)
     ftlv4::destroy(obj);
 }
 
-static void 
+void 
 ftlv4_set_key(ipv4_flow_hash_entry_t *entry,
               uint32_t sip,
               uint32_t dip,
@@ -636,7 +642,7 @@ ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
     return 0;
 }
 
-static int
+int
 ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
 {
     sdk_table_api_params_t params = {0};
@@ -661,8 +667,12 @@ int
 ftlv6_clear(ftlv6 *obj, bool clear_global_state,
             bool clear_thread_local_state)
 {
+    sdk_table_api_params_t params = {0};
+    params.entry_size = flow_hash_entry_t::entry_size();
+
     if (SDK_RET_OK != obj->clear(clear_global_state,
-                                 clear_thread_local_state)) {
+                                 clear_thread_local_state,
+                                 &params)) {
         return -1;
     }
     return 0;
@@ -674,15 +684,16 @@ ftlv6_delete(ftlv6 *obj)
     ftlv6::destroy(obj);
 }
 
-static
-void ftlv6_set_key(flow_hash_entry_t *entry,
-                   uint8_t *sip,
-                   uint8_t *dip,
-                   uint8_t ip_proto,
-                   uint16_t src_port,
-                   uint16_t dst_port,
-                   uint16_t lookup_id,
-                   uint8_t key_type)
+
+void 
+ftlv6_set_key(flow_hash_entry_t *entry,
+              uint8_t *sip,
+              uint8_t *dip,
+              uint8_t ip_proto,
+              uint16_t src_port,
+              uint16_t dst_port,
+              uint16_t lookup_id,
+              uint8_t key_type)
 {
     entry->set_key_metadata_dst(dip);
     entry->set_key_metadata_src(sip);

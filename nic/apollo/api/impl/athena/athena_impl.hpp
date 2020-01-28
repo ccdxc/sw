@@ -140,11 +140,6 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t session_clear(uint32_t idx) override;
 
-    /// \brief      API to clear flow
-    /// \param[in]  idx     Index for flow to be cleared
-    /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t flow_clear(uint32_t idx) override;
-
     /// \brief API to handle CLI calls
     /// \param[in]  ctxt    CLI command context
     /// \return #SDK_RET_OK on success, failure status code on error

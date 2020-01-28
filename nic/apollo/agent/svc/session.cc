@@ -44,9 +44,10 @@ SessionSvcImpl::FlowClear(ServerContext *context,
                           const pds::FlowClearRequest *req,
                           pds::FlowClearResponse *rsp) {
     sdk_ret_t ret;
-    uint32_t idx = 0;
+    pds_flow_key_t flow_key;
 
-    ret = debug::pds_flow_clear(idx);
+    ret = pds_flow_proto_to_flow_key(&flow_key, req->filter());
+    ret = debug::pds_flow_clear(flow_key);
     rsp->set_apistatus(sdk_ret_to_api_status(ret));
 
     return Status::OK;

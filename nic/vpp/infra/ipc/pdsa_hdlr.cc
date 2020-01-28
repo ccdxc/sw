@@ -7,6 +7,7 @@
 #include <nic/sdk/lib/ipc/ipc.hpp>
 #include <nic/vpp/infra/cfg/pdsa_db.hpp>
 #include "pdsa_vpp_hdlr.h"
+#include "pdsa_hdlr.hpp"
 
 // maps storing the callback functions and context associated with a file
 // descriptor. multiple file descriptors are provided to be monitored by the
@@ -17,6 +18,10 @@ static std::map<int, const void *> g_cb_ctx;
 
 // message rx counters for debugging
 static unsigned int g_type_count[PDS_MSG_TYPE_MAX] = {0};
+
+// List of callbacks registered for processing VPP commands received from PDS
+// agent
+static std::map<int, pds_cmd_cb> g_cmd_cbs;
 
 // called from VPP main poll loop, whenere data is available on the zmq
 // IPC file descriptor. Calls the SDK IPC library to read messages and
@@ -85,6 +90,20 @@ pds_ipc_invalid_type_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     sdk::ipc::respond(ipc_msg, (const void *)&ret, sizeof(sdk::sdk_ret_t));
 }
 
+// register callbacks from plugins for command messages
+int
+pds_ipc_register_cmd_callbacks (pds_msg_id_t msg_id, pds_cmd_cb cb_fn) 
+{
+    if (cb_fn == NULL) {
+        ipc_log_error("Registration request for msg id %d has invalid function"
+                      "pointer", msg_id);
+        return -1;
+    }
+
+    g_cmd_cbs[msg_id] = cb_fn;
+    return 0;
+}
+
 // handler for batch messages from HAL
 static void
 pds_ipc_msglist_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
@@ -136,6 +155,7 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     pds_msg_t *msg, response;
     sdk::sdk_ret_t retcode;
     auto config_data = vpp_config_data::get();
+    std::map<int, pds_cmd_cb>::iterator cb_fun_it;
 
     g_type_count[PDS_MSG_TYPE_CMD]++;
 
@@ -149,6 +169,15 @@ pds_ipc_cmd_msg_cb (sdk::ipc::ipc_msg_ptr ipc_msg, const void *ctx) {
     if (msg->id >= PDS_MSG_ID_MAX) {
         retcode = sdk::SDK_RET_INVALID_ARG;
         goto error;
+    }
+
+    cb_fun_it = g_cmd_cbs.find(msg->id);
+    if (cb_fun_it != g_cmd_cbs.end()) {
+        auto cb_fun = cb_fun_it->second;
+        retcode = cb_fun(&msg->cmd_msg);
+        sdk::ipc::respond(ipc_msg, (const void *)&retcode, 
+                          sizeof(sdk::sdk_ret_t));
+        return;
     }
 
     if (!config_data.exists(msg->cfg_msg)) {

@@ -186,28 +186,11 @@ func flowClearCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewSessionSvcClient(c)
 
-	if cmd.Flags().Changed("vpcid") == false {
-		flowVpcID = 0
-	}
-
-	if cmd.Flags().Changed("srcip") == false {
-		flowSrcIP = "0.0.0.0"
-	}
-
-	if cmd.Flags().Changed("dstip") == false {
-		flowDstIP = "0.0.0.0"
-	}
-
-	if cmd.Flags().Changed("srcport") == false {
-		flowSrcPort = 0
-	}
-
-	if cmd.Flags().Changed("dstport") == false {
-		flowDstPort = 0
-	}
-
-	if cmd.Flags().Changed("ipproto") == false {
-		flowIPProto = 0
+	if cmd.Flags().Changed("vpcid") != cmd.Flags().Changed("srcip") !=
+		cmd.Flags().Changed("dstip") != cmd.Flags().Changed("srcport") !=
+		cmd.Flags().Changed("dstport") != cmd.Flags().Changed("ipproto") {
+		fmt.Printf("Only specifying all filters or none is supported\n")
+		return
 	}
 
 	req := &pds.FlowClearRequest{
@@ -237,26 +220,33 @@ func flowClearCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func flowShowCmdHandler(cmd *cobra.Command, args []string) {
-	// Connect to PDS
-	c, err := utils.CreateNewGRPCClient()
-	if err != nil {
-		fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
-		return
-	}
-	defer c.Close()
-
 	if len(args) > 0 {
 		fmt.Printf("Invalid argument\n")
 		return
 	}
 
-	filter := cmd.Flags().Changed("vpcid") || cmd.Flags().Changed("srcip") ||
-		cmd.Flags().Changed("dstip") || cmd.Flags().Changed("srcport") ||
-		cmd.Flags().Changed("dstport") || cmd.Flags().Changed("ipproto")
+	if cmd.Flags().Changed("vpcid") != cmd.Flags().Changed("srcip") !=
+		cmd.Flags().Changed("dstip") != cmd.Flags().Changed("srcport") !=
+		cmd.Flags().Changed("dstport") != cmd.Flags().Changed("ipproto") {
+		fmt.Printf("Only specifying all filters or none is supported\n")
+		return
+	}
+
+	// If one of the filters is set, then all of them are set, so just checking
+	// for one
+	filter := cmd.Flags().Changed("srcip")
 
 	// If a filter is specified, use GRPC, otherwise use UDS to get the flow
 	// data
 	if filter {
+		// Connect to PDS
+		c, err := utils.CreateNewGRPCClient()
+		if err != nil {
+			fmt.Printf("Could not connect to the PDS. Is PDS Running?\n")
+			return
+		}
+		defer c.Close()
+
 		client := pds.NewSessionSvcClient(c)
 
 		var empty *pds.Empty
@@ -364,7 +354,7 @@ func flowPrintEntry(flow *pds.Flow) {
 		utils.IPAddrToStr(key.GetSrcIP()),
 		utils.IPAddrToStr(key.GetDstIP()),
 		key.GetL4Info().GetTcpUdpInfo().GetSrcPort(),
-        key.GetL4Info().GetTcpUdpInfo().GetDstPort(),
+		key.GetL4Info().GetTcpUdpInfo().GetDstPort(),
 		key.GetIPProtocol(), flow.GetFlowRole(),
 		flow.GetSessionIdx(), flow.GetEpoch())
 }

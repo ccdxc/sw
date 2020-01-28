@@ -236,13 +236,6 @@ public:
         return SDK_RET_ERR;
     }
 
-    /// \brief      API to clear flow
-    /// \param[in]  idx  Index for flow to be cleared
-    /// \return     SDK_RET_OK on success, failure status code on error
-    virtual sdk_ret_t flow_clear(uint32_t idx) {
-        return SDK_RET_ERR;
-    }
-
     /// \brief      API to walk impl state slab
     /// \param[in]  walk_cb     callback to be called on slab
     /// \param[in]  ctxt        opaque context to be passed to callback

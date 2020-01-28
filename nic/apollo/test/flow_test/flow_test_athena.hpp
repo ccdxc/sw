@@ -666,7 +666,8 @@ public:
     }
 
     sdk_ret_t clear_flows() {
-       v6table->clear(true, true);
+       params.entry_size = flow_hash_entry_t::entry_size();
+       v6table->clear(true, true, &params);
        return SDK_RET_OK;
     }
 };

@@ -8,6 +8,8 @@
 
 typedef struct ftl_base ftlv4;
 typedef struct ftl_base ftlv6;
+typedef struct ipv4_flow_hash_entry_t v4_flow_entry;
+typedef struct flow_hash_entry_t v6_flow_entry;
 
 #ifdef __cplusplus
 
@@ -142,6 +144,27 @@ void ftlv6_cache_set_epoch(uint8_t val);
 void ftlv6_cache_set_hash(uint32_t val);
 
 void ftlv6_cache_batch_flush(ftlv6 *obj, int *status);
+
+void ftlv4_set_key(v4_flow_entry *entry,
+                   uint32_t sip,
+                   uint32_t dip,
+                   uint8_t ip_proto,
+                   uint16_t src_port,
+                   uint16_t dst_port,
+                   uint16_t lookup_id);
+
+void ftlv6_set_key(v6_flow_entry *entry,
+                   uint8_t *sip,
+                   uint8_t *dip,
+                   uint8_t ip_proto,
+                   uint16_t src_port,
+                   uint16_t dst_port,
+                   uint16_t lookup_id,
+                   uint8_t key_type);
+
+int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
+
+int ftlv6_remove(ftlv6 *obj, v6_flow_entry *entry, uint32_t hash);
 
 #ifdef __cplusplus
 }

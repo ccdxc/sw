@@ -362,12 +362,13 @@ done:
 
 sdk_ret_t
 ftl_base::clear(bool clear_global_state,
-           bool clear_thread_local_state) {
+                bool clear_thread_local_state,
+                sdk_table_api_params_t *params) {
 __label__ done;
     sdk_ret_t ret = SDK_RET_OK;
     FTL_API_BEGIN_();
 
-    ret = ctxinit_(sdk::table::SDK_TABLE_API_CLEAR, NULL);
+    ret = ctxinit_(sdk::table::SDK_TABLE_API_CLEAR, params);
     FTL_RET_CHECK_AND_GOTO(ret, done, "ctxinit r:%d", ret);
 
     get_apictx(0)->clear_global_state = clear_global_state;

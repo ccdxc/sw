@@ -73,15 +73,21 @@ memwr(Apictx *ctx) {
 sdk_ret_t
 memclr(uint64_t memva, uint64_t mempa, uint32_t num_entries,
        uint32_t entry_size) {
-    memset((void*)memva, 0, entry_size * num_entries);
+    if (memva) {
+        memset((void*)memva, 0, entry_size * num_entries);
+    } else if (mempa) {
+        pal_mem_set(mempa, 0, entry_size * num_entries, 0);
+    }
 
     PAL_barrier();
 
+#ifndef SIM
     for (uint32_t i = 0; i < num_entries; i++) {
         capri_hbm_table_entry_cache_invalidate(P4_TBL_CACHE_INGRESS,
                                                (i * entry_size),
                                                1, mempa);
     }
+#endif
 
     return SDK_RET_OK;
 }

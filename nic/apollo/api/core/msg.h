@@ -19,6 +19,7 @@
 #include "nic/apollo/api/include/pds_subnet.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_policy.hpp"
+#include "nic/apollo/api/include/pds_flow.hpp"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,11 +102,24 @@ typedef struct pds_cfg_msg_s {
     };
 } pds_cfg_msg_t;
 
+typedef struct pds_flow_clear_cmd_msg_s {
+    pds_flow_key_t key;
+} pds_flow_clear_cmd_msg_t;
+
+/// command message sent or received
+typedef struct pds_cmd_msg_s {
+    /// msg contents
+    union {
+        pds_flow_clear_cmd_msg_t flow_clear;
+    };
+} pds_cmd_msg_t;
+
 /// top level PDS message structure for all types of messages
 typedef struct pds_msg_s {
     pds_msg_id_t   id;            ///< unique id of the msg
     union {
         pds_cfg_msg_t cfg_msg;    ///< cfg msg
+        pds_cmd_msg_t cmd_msg;    ///< cmd msg
     };
 } pds_msg_t;
 

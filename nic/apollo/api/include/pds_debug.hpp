@@ -12,6 +12,7 @@
 #define __INCLUDE_API_PDS_DEBUG_HPP__
 
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_flow.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
@@ -130,7 +131,7 @@ sdk_ret_t pds_session_stats_get(debug::session_stats_get_cb_t cb, uint32_t lowid
 sdk_ret_t pds_session_get(debug::session_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_flow_get(debug::flow_get_cb_t cb, void *ctxt);
 sdk_ret_t pds_session_clear(uint32_t idx);
-sdk_ret_t pds_flow_clear(uint32_t idx);
+sdk_ret_t pds_flow_clear(pds_flow_key_t key);
 sdk_ret_t pds_fte_api_stats_get(void);
 sdk_ret_t pds_fte_api_stats_clear(void);
 sdk_ret_t pds_fte_table_stats_get(void);

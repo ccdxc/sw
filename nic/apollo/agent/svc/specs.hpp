@@ -35,6 +35,7 @@
 #include "nic/apollo/api/include/pds_lif.hpp"
 #include "nic/apollo/api/include/pds_dhcp.hpp"
 #include "nic/apollo/api/include/pds_nat.hpp"
+#include "nic/apollo/api/include/pds_flow.hpp"
 #include "nic/apollo/agent/trace.hpp"
 #include "nic/apollo/agent/core/state.hpp"
 #include "nic/apollo/agent/core/meter.hpp"
@@ -3039,6 +3040,33 @@ pds_flow_to_proto (ftlite::internal::ipv4_entry_t *ipv4_entry,
             fget->count = 0;
         }
     }
+}
+
+static inline sdk_ret_t
+pds_flow_proto_to_flow_key (pds_flow_key_t *key,
+                            const pds::FlowFilter &flow_filter)
+{
+    key->lookup_id = flow_filter.vpc();
+    key->proto = flow_filter.ipproto();
+    key->sport = flow_filter.srcport();
+    key->dport = flow_filter.dstport();
+
+    if (flow_filter.srcaddr().af() == types::IPAF::IP_AF_INET) {
+        key->src_ip.af = IP_AF_IPV4;
+        key->src_ip.addr.v4_addr = flow_filter.srcaddr().v4addr();
+        key->dst_ip.af = IP_AF_IPV4;
+        key->dst_ip.addr.v4_addr = flow_filter.dstaddr().v4addr();
+    } else {
+        key->src_ip.af = IP_AF_IPV6;
+        memcpy(key->src_ip.addr.v6_addr.addr8, 
+               flow_filter.srcaddr().v6addr().c_str(),
+               IP6_ADDR8_LEN);
+        key->dst_ip.af = IP_AF_IPV6;
+        memcpy(key->dst_ip.addr.v6_addr.addr8,
+               flow_filter.dstaddr().v6addr().c_str(),
+               IP6_ADDR8_LEN);
+    }
+    return SDK_RET_OK;
 }
 
 static inline void

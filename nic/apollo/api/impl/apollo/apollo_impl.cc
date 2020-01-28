@@ -758,11 +758,6 @@ apollo_impl::session_clear(uint32_t idx) {
 }
 
 sdk_ret_t
-apollo_impl::flow_clear(uint32_t idx) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 apollo_impl::handle_cmd(cmd_ctxt_t *ctxt) {
     switch (ctxt->cmd) {
     case CLI_CMD_MAPPING_DUMP:

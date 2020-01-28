@@ -692,8 +692,12 @@ public:
     }
 
     sdk_ret_t clear_flows() {
-       v4table->clear(true, true);
-       v6table->clear(true, true);
+       sdk_table_api_params_t params = {0};
+       params.entry_size = ipv4_flow_hash_entry_t::entry_size();
+       v4table->clear(true, true, &params);
+
+       params.entry_size = flow_hash_entry_t::entry_size();
+       v6table->clear(true, true, &params);
        return SDK_RET_OK;
     }
 };
