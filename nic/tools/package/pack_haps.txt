@@ -10,7 +10,7 @@ nic/conf/iris/hbm_mem.json                                          /nic/conf/ir
 nic/conf/iris/hbm_mem_base.json                                     /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/conf/iris/operd-regions.json                                    /nic/conf/
-nic/conf/iris/operd-daemon.json                                     /nic/conf/
+nic/conf/iris/operd.json                                            /nic/conf/
 nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-FEATURE_PROFILE_BASE.json
@@ -39,7 +39,7 @@ nic/build/aarch64/iris/bin/nevtsproxy                               /nic/bin/
 nic/build/aarch64/iris/bin/nmd                                      /nic/bin/
 nic/build/aarch64/iris/bin/ntsa                                     /nic/bin/
 nic/build/aarch64/iris/bin/operdctl                                 /nic/bin/
-nic/build/aarch64/iris/bin/operd-daemon                             /nic/bin/
+nic/build/aarch64/iris/bin/operd                                    /nic/bin/
 nic/build/aarch64/iris/bin/penctl                                   /nic/bin/
 nic/build/aarch64/iris/bin/penlog                                   /nic/bin/
 nic/build/aarch64/iris/bin/shmdump                                  /nic/bin/

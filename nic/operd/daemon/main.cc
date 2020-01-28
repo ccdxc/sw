@@ -350,13 +350,18 @@ main (int argc, const char *argv[])
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <outputs.json> <decoders.json>\n", argv[0]);
+    if (argc < 2 || argc > 3) {
+        fprintf(stderr, "Usage: %s <outputs.json> [<decoders.json>]\n",
+                argv[0]);
         exit(-1);
     }
+    
     config = argv[1];
     inputs = load_config(config);
-    decoders = load_decoders(argv[2]);
+
+    if (argc == 3) {
+        decoders = load_decoders(argv[2]);
+    }
     
     while (true) {
         bool more = false;

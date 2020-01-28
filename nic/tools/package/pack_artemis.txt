@@ -4,7 +4,7 @@ nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIP
 nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
 nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
-nic/conf/$PIPELINE/operd-daemon.json                              /nic/conf/
+nic/conf/$PIPELINE/operd.json                                     /nic/conf/
 
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
 
@@ -158,7 +158,7 @@ nic/tools/bflog_sync.sh                                           /nic/tools/
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operdctl                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/operd-daemon                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/operd                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/

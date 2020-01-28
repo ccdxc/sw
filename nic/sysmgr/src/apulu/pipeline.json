@@ -12,5 +12,12 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0
+    },
+    {
+        "name": "operd",
+        "command": "/nic/bin/operd /nic/conf/operd.json",
+        "dependencies": [],
+        "flags": [],
+        "timeout": 0.0
     }
 ]

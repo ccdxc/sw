@@ -7,7 +7,7 @@ nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIP
 nic/conf/$PIPELINE/4g/hbm_mem_p1.json                             /nic/conf/$PIPELINE/4g/
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
-nic/conf/$PIPELINE/operd-daemon.json                              /nic/conf/
+nic/conf/$PIPELINE/operd.json                                     /nic/conf/
 
 # HW catalog files
 nic/conf/catalog_hw_68-0003.json                                  /nic/conf/
@@ -172,7 +172,7 @@ nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
 # platform modules
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operdctl                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/operd-daemon                        /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/operd                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/

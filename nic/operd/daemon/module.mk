@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = operd-daemon.bin
+MODULE_TARGET   = operd.bin
 MODULE_PIPELINE = iris apollo apulu artemis gft
 MODULE_SOLIBS   = operd
 MODULE_LDLIBS   = rt pthread dl

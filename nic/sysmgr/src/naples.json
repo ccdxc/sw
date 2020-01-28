@@ -212,8 +212,8 @@
         "timeout": 0.0
     },
     {
-        "name": "operd-daemon",
-        "command": "/nic/bin/operd-daemon /nic/conf/operd-daemon.json",
+        "name": "operd",
+        "command": "/nic/bin/operd /nic/conf/operd.json",
         "dependencies": [ ],
         "flags": [],
         "timeout": 0.0

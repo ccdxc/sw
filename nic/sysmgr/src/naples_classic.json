@@ -224,9 +224,9 @@
         "cpu-affinity": "0xF"
     },
     {
-        "name": "operd-daemon",
-        "command": "/nic/bin/operd-daemon /nic/conf/operd-daemon.json",
-        "dependencies": [ ],
+        "name": "operd",
+        "command": "/nic/bin/operd /nic/conf/operd.json",
+        "dependencies": [],
         "flags": [],
         "cpu-affinity": "0xF",
         "timeout": 0.0
