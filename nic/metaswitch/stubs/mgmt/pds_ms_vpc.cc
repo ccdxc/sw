@@ -123,20 +123,44 @@ process_vpc_update (ms_vrf_id_t    vrf_id,
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
     // Create new instance of RTM and initiate Joins
-    pds_ms_config_t   conf = {0};
     SDK_TRACE_INFO("%s VRF RTM instance %d",
                    (row_status==AMB_ROW_DESTROY) ? "Deleting" : "Creating",
                    rtm_index);
-    conf.correlator  = PDS_MS_CTM_GRPC_CORRELATOR;
-    conf.row_status  = row_status;
-    // TODO: For v6 use 64K + rtm_index since vrf_id / rtm_index is capped at 16 bits
-    pds_ms_rtm_create(&conf, rtm_index, false);
-    pds_ms_evpn_rtm_join(&conf, rtm_index);
 
+    if (row_status != AMB_ROW_DESTROY) {
+        pds_ms_config_t   conf = {0};
+        conf.correlator  = PDS_MS_CTM_GRPC_CORRELATOR;
+        conf.row_status  = row_status;
+
+        // TODO: For v6 use 64K + rtm_index since vrf_id / rtm_index is capped at 16 bits
+        pds_ms_rtm_create(&conf, rtm_index, false);
+        pds_ms_evpn_rtm_join(&conf, rtm_index);
+    }
     // LIM VRF Row Update
     pds::LimVrfSpec lim_vrf_spec;
     populate_lim_vrf_spec (vrf_id, lim_vrf_spec);
     pds_ms_set_amb_lim_vrf (lim_vrf_spec, row_status, PDS_MS_CTM_GRPC_CORRELATOR);
+
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    // blocking on response from MS
+    return pds_ms::mgmt_state_t::ms_response_wait();
+}
+
+static types::ApiStatus
+process_underlay_vpc_create ()
+{
+    pds_ms_config_t   conf = {0};
+    conf.correlator  = PDS_MS_CTM_GRPC_CORRELATOR;
+    conf.row_status  = AMB_ROW_ACTIVE;
+
+    // Create new instance of RTM and initiate Joins
+    SDK_TRACE_INFO("Underlay VRF creation request received");
+
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    pds_ms_ft_stub_create (&conf);    // FT stub
+    pds_ms_rtm_ft_stub_join (&conf, PDS_MS_RTM_DEF_ENT_INDEX);
 
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 
@@ -218,7 +242,14 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
         } else {
-            // Underlay VRF and RTM are created at start-up
+            ret_status = process_underlay_vpc_create();
+            if (ret_status != types::ApiStatus::API_STATUS_OK) {
+                SDK_TRACE_ERR ("Failed to process underlay VPC %s create (error=%d)",
+                               spec->key.str(), ret_status);
+                return pds_ms_api_to_sdk_ret (ret_status);
+            }
+            // TODO PDS Batch commit Underlay VPC create to HAL
+
             // Commit UUID mapping store
             auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->commit_pending_uuid();

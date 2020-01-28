@@ -37,7 +37,6 @@ void pds_ms_stubs_create ()
     pds_ms_nar_stub_create (&conf);   // NAR stub
     pds_ms_nrm_create (&conf);        // NR Mgr
     pds_ms_psm_create (&conf);        // PS Mgr
-    pds_ms_ft_stub_create (&conf);    // FT stub
     pds_ms_rtm_create (&conf, PDS_MS_RTM_DEF_ENT_INDEX,
                        true /* Default VRF */);  // RTM
     pds_ms_bgp_create (&conf);        // BGP component
@@ -53,4 +52,24 @@ void pds_ms_stubs_create ()
     NBS_EXIT_SHARED_CONTEXT();
 }
 
+void
+pds_ms_underlay_vpc_create ()
+{
+    // Underlay VRF and RTM are created at start-up.
+    // Here we just need to create FT Stub and join with DC-RTM
+    // to have Linux routes programmed.
+    SDK_TRACE_INFO ("Start CTM Transaction for Underlay VPC");
+    PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+
+    pds_ms_config_t   conf = {0};
+    conf.correlator  = PDS_MS_CTM_STUB_INIT_CORRELATOR;
+    conf.row_status  = AMB_ROW_ACTIVE;
+
+    pds_ms_ft_stub_create (&conf);    // FT stub
+    pds_ms_rtm_ft_stub_join (&conf, PDS_MS_RTM_DEF_ENT_INDEX);
+
+    PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+    SDK_TRACE_INFO ("End CTM Transaction for Underlay VPC");
 }
+
+} // End namespace

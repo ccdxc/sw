@@ -28,18 +28,17 @@
 #include <gen/proto/cp_test.grpc.pb.h>
 #include "nic/apollo/agent/svc/specs.hpp"
 
-/************************************************
+/*****************************************************
 
-       ----EVPN-------- CNTR 3 ----EVPN--------
-       |                 10.3                 |
-       |                                      |
-       |       10.1 -----IPv4----- 10.2       |
-   (1.1.1.1) CNTR 1               CNTR 2  (2.2.2.2)
-       |      11.1 ------IPv4----- 11.2       |
-       |                                      |
-       -----------------EVPN------------------
-       
-*************************************************/
+        --- EVPN -----  Pegasus  --- EVPN ------
+       |                 10.3                  |
+       |                                       |
+       |       10.1 -----IPv4----- 10.2        |
+    (1.1.1.1) PDSA 1              PDSA 2  (2.2.2.2)
+              11.1 ------IPv4----- 11.2
+
+
+*****************************************************/
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -58,6 +57,11 @@ static unique_ptr<pds::SubnetSvc::Stub> g_subnet_stub_;
 static unique_ptr<pds::VPCSvc::Stub>    g_vpc_stub_;
 static unique_ptr<pds::CPRouteSvc::Stub> g_route_stub_;
 static unique_ptr<pds::CPTestSvc::Stub>  g_cp_test_stub_;
+
+static unique_ptr<pds::DeviceSvc::Stub> g_rr_device_stub_;
+static unique_ptr<pds::IfSvc::Stub>     g_rr_if_stub_;
+static unique_ptr<pds::BGPSvc::Stub>    g_rr_bgp_stub_;
+static unique_ptr<pds::CPRouteSvc::Stub> g_rr_route_stub_;
 
 // Simulate random UUIDs
 static constexpr int k_underlay_vpc_id = 10;
@@ -86,7 +90,11 @@ static void create_device_proto_grpc () {
     pds_device_api_spec_to_proto (request.mutable_request(), &device_spec);
 
     printf ("Pushing Device Proto...\n");
-    ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_device_stub_->DeviceCreate(&context, request, &response);
+    } else {
+        ret_status = g_device_stub_->DeviceCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -109,7 +117,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         pds_if.type = PDS_IF_TYPE_LOOPBACK;
         pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
-        pds_if.loopback_if_info.ip_prefix.len = 32;
+        if (g_node_id != 3) {
+            pds_if.loopback_if_info.ip_prefix.len = 32;
+        } else {
+            pds_if.loopback_if_info.ip_prefix.len = 24;
+        }
     } else {
         if (second) {
             pds_if.key = msidx2pdsobjkey(k_l3_if_id_2);
@@ -130,7 +142,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);
 
     printf ("Pushing %sInterface Proto...\n", lo?"lo ":"");
-    ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_if_stub_->InterfaceCreate(&context, request, &response);
+    } else {
+        ret_status = g_if_stub_->InterfaceCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -151,7 +167,11 @@ static void create_bgp_global_proto_grpc () {
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
     printf ("Pushing BGP Global proto...\n");
-    ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -203,25 +223,21 @@ static void create_route_proto_grpc (bool second=false) {
     proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
-    if (second) {
-        dest_addr->set_v4addr (g_test_conf_.remote_lo_ip_addr_2);
-    } else {
-        dest_addr->set_v4addr (g_test_conf_.remote_lo_ip_addr);
-    }
-    proto_spec->set_prefixlen (32);
+    dest_addr->set_v4addr (0);
+    proto_spec->set_prefixlen (0);
     auto next_hop   = proto_spec->mutable_nexthopaddr();
     next_hop->set_af (types::IP_AF_INET);
-    if (second) {
-    next_hop->set_v4addr (g_test_conf_.remote_ip_addr_2);
-    } else {
-    next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
-    }
+    next_hop->set_v4addr (g_test_conf_.local_ip_addr_2);
     proto_spec->set_adminstatus (ADMIN_UP);
     proto_spec->set_override (BOOL_TRUE);
     proto_spec->set_admindist (250);
 
     printf ("Pushing Static Route proto...\n");
-    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    } else {
+        ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -305,6 +321,9 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     } else {
         localaddr->set_v4addr(0);
     }
+    if (lo && g_node_id == 3) {
+        proto_spec->set_rrclient(BGP_CLIENT);
+    }
     proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
     proto_spec->set_connectretry(5);
@@ -320,7 +339,11 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     }
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
-    ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -385,7 +408,11 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, boo
     proto_spec->set_nhself(pds::BOOL_FALSE);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
-    ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
+    if (g_node_id == 3) {
+        ret_status = g_rr_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
+    }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -626,30 +653,42 @@ int main(int argc, char** argv)
     g_route_stub_   = CPRouteSvc::NewStub (channel);
     g_cp_test_stub_   = CPTestSvc::NewStub (channel);
 
+    // TODO: Change channel port to 50057 when connecting to Pegasus
+    std::shared_ptr<Channel> rr_channel = grpc::CreateChannel("localhost:50054",
+            grpc::InsecureChannelCredentials());
+    g_rr_device_stub_  = DeviceSvc::NewStub (rr_channel);
+    g_rr_if_stub_      = IfSvc::NewStub (rr_channel);
+    g_rr_bgp_stub_     = BGPSvc::NewStub (rr_channel);
+    g_rr_route_stub_   = CPRouteSvc::NewStub (rr_channel);
+
     if (argc == 1)
     {
         // Send protos to grpc server
         create_device_proto_grpc();
-        create_underlay_vpc_proto_grpc();
         if (g_node_id != 3) {
-            create_intf_proto_grpc(true /*loopback*/);
-            if (g_node_id == 2) {
-                // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
-                // Instead BGP default originate is setup on C2 to simulate default route
-                // advertised from ToR to Naples
-                auto fp = popen ("python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py"
-                                 " set localhost rtmRedistTable rtmRedistFteIndex=1"
-                                 " rtmRedistEntryId=1 rtmRedistRowStatus=rowDestroy", "r");
-                if (!fp) {
-                    std::cout << "ERROR deleting RTM Redist rule for loopback on container 2" << std::endl;
-                }
+            create_underlay_vpc_proto_grpc();
+        }
+        // Create loopback intf for TEP IP on PDSA
+        // Create dummy interface in Pegasus as well to use as Nexthop for Static default route
+        create_intf_proto_grpc(true /*loopback*/);
+        if (g_node_id != 1) {
+            // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
+            // Instead BGP default originate is setup on C2 to simulate default route
+            // advertised from ToR to Naples
+            auto fp = popen ("python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py"
+                             " set localhost rtmRedistTable rtmRedistFteIndex=1"
+                             " rtmRedistEntryId=1 rtmRedistRowStatus=rowDestroy", "r");
+            if (!fp) {
+                std::cout << "ERROR deleting RTM Redist rule for loopback on container 2" << std::endl;
             }
+        }
+        if (g_node_id != 3) {
+            create_intf_proto_grpc();
             create_intf_proto_grpc(false, true /* second interface */);
         }
-        create_intf_proto_grpc();
         create_bgp_global_proto_grpc();
         if (g_node_id != 3) {
-            /*no IPv4 BGP sessions for 3rd container*/
+            /*no IPv4 BGP sessions for Pegasus */
             create_bgp_peer_proto_grpc();
             create_bgp_peer_af_proto_grpc();
             create_bgp_peer_proto_grpc(false, true /* second peer */);
@@ -665,12 +704,12 @@ int main(int argc, char** argv)
         }
         if (g_node_id == 3) {
             create_route_proto_grpc();
-            create_route_proto_grpc(true /* second */);
+            create_bgp_peer_proto_grpc(true /* loopback */);
+            create_bgp_peer_af_proto_grpc(true /* loopback */);
         }
-        create_bgp_peer_proto_grpc(true /* loopback */);
-        create_bgp_peer_af_proto_grpc(true /* loopback */);
         create_bgp_peer_proto_grpc(true, true);
         create_bgp_peer_af_proto_grpc(true, true );
+        if (g_node_id != 3) {
         create_vpc_proto_grpc();
         create_evpn_ip_vrf_proto_grpc();
         create_evpn_ip_vrf_rt_proto_grpc();
@@ -679,6 +718,7 @@ int main(int argc, char** argv)
         create_evpn_evi_proto_grpc();
         if (g_test_conf_.manual_rt) {
             create_evpn_evi_rt_proto_grpc();
+        }
         }
         if (g_node_id == 1) {
             sleep(5);

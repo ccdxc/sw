@@ -237,6 +237,7 @@ NBB_VOID pds_ms_lim_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_ftm_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_nrm_create (pds_ms_config_t *conf);
 NBB_VOID pds_ms_psm_create (pds_ms_config_t *conf);
+NBB_VOID pds_ms_rtm_ft_stub_join(pds_ms_config_t *conf, int entity_index);
 NBB_VOID pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index,
                             bool is_default);
 NBB_VOID pds_ms_bgp_create (pds_ms_config_t *conf);

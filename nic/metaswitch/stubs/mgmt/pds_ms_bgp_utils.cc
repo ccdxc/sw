@@ -426,6 +426,9 @@ pds_ms_fill_amb_bgp_rm_afi_safi (AMB_GEN_IPS *mib_msg, pds_ms_config_t *conf)
     data->state_kept = AMB_FALSE;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_AFI_STATE_KEPT);
 
+    data->afm_required = AMB_FALSE;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_AFI_AFM_REQUIRED);
+
     NBB_TRC_EXIT();
     return;
 }

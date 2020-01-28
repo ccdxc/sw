@@ -242,6 +242,17 @@ NBB_VOID pds_ms_rtm_redis_connected (pds_ms_config_t *conf)
 }
 
 NBB_VOID
+pds_ms_rtm_ft_stub_join (pds_ms_config_t *conf, int entity_index)
+{
+    // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
+    conf->entity_index          = entity_index;
+    conf->slave_entity_index    = PDS_MS_FT_ENT_INDEX;
+    conf->slave_type            = AMB_RTM_ARI_PARTNER_FT;
+    conf->admin_status          = AMB_ADMIN_STATUS_UP;
+    pds_ms_row_update_rtm_mj (conf);
+}
+
+NBB_VOID
 pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
 {
     NBB_TRC_ENTRY ("pds_ms_rtm_create");
@@ -258,12 +269,8 @@ pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
         conf->admin_status          = AMB_ADMIN_STATUS_UP;
         pds_ms_row_update_rtm_mj (conf);
 
-        // rtmMjTable -AMB_RTM_ARI_PARTNER_FT 
-        conf->slave_entity_index    = PDS_MS_FT_ENT_INDEX;
-        conf->slave_type            = AMB_RTM_ARI_PARTNER_FT;
-        conf->admin_status          = AMB_ADMIN_STATUS_UP;
-        pds_ms_row_update_rtm_mj (conf);
-
+        // FT Stub join will be based on presence of underlay VPC proto spec
+        
         // rtmMjTable -AMB_RTM_ARI_PARTNER_PSM 
         conf->slave_entity_index    = PDS_MS_PSM_ENT_INDEX;
         conf->slave_type            = AMB_RTM_ARI_PARTNER_PSM;
