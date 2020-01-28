@@ -28,10 +28,10 @@ const (
 )
 
 var (
-	esxHost, esxUsername, esxPassword        string
-	naplesIP, naplesUsername, naplesPassword string
-	ctrlVMUsername, ctrlVMPassword           string
-	esxOutFile                               string
+	esxHost, esxUsername, esxPassword       string
+	macHint, naplesUsername, naplesPassword string
+	ctrlVMUsername, ctrlVMPassword          string
+	esxOutFile                              string
 )
 
 // EsxSetup contains info about a setup
@@ -208,6 +208,18 @@ func getIotaAgentClient(ip, username, password string) (iota.IotaAgentApiClient,
 		return nil, fmt.Errorf("CopyTo node failed IPAddress: %v , Err: %v", ip, err)
 	}
 
+	//Copy Nic configuration
+	if err := copier.CopyTo(addr, constants.DstIotaAgentDir, []string{constants.NicFinderConf}); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to Nic conf file: %v, to  IPAddress: %v", constants.NicFinderConf, ip)
+		return nil, err
+	}
+
+	//Copy  NicFinderScript
+	if err := copier.CopyTo(addr, constants.DstIotaAgentDir, []string{constants.NicFinderScript}); err != nil {
+		log.Errorf("TOPO SVC | InitTestBed | Failed to  NicFinderScript file: %v, to  IPAddress: %v", constants.NicFinderScript, ip)
+		return nil, err
+	}
+
 	log.Infof("TOPO SVC | InitTestBed | Starting IOTA Agent on IPAddress: %v", ip)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
 
@@ -233,7 +245,8 @@ func getIotaAgentClient(ip, username, password string) (iota.IotaAgentApiClient,
 func provideNaplesEsxPersonality(client iota.IotaAgentApiClient) error {
 
 	req := &iota.Node{Name: "naples-esx-test", IpAddress: "",
-		NodeInfo:  &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesIpAddress: naplesIP, NicType: "pensando", NaplesUsername: naplesUsername, NaplesPassword: naplesPassword}}}},
+		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: &iota.NaplesConfigs{Configs: []*iota.NaplesConfig{&iota.NaplesConfig{NaplesIpAddress: "", NicHint: macHint,
+			Name: "naples", NicType: "pensando", NaplesUsername: naplesUsername, NaplesPassword: naplesPassword}}}},
 		EsxConfig: &iota.VmwareESXConfig{IpAddress: esxHost, Username: esxUsername, Password: esxPassword},
 		Entities: []*iota.Entity{&iota.Entity{Name: "host", Type: iota.EntityType_ENTITY_TYPE_HOST},
 			&iota.Entity{Name: "naples", Type: iota.EntityType_ENTITY_TYPE_NAPLES}},
@@ -313,7 +326,7 @@ func init() {
 	RootCmd.Flags().StringVarP(&esxUsername, "esx-username", "", "root", "Esx Username")
 	RootCmd.Flags().StringVarP(&esxPassword, "esx-password", "", "ubuntu123", "Esx Password")
 
-	RootCmd.Flags().StringVarP(&naplesIP, "naples-ip", "", "169.254.0.1", "Naples Mnic IP address")
+	RootCmd.Flags().StringVarP(&macHint, "mac-hint", "", "", "Mac hint")
 	RootCmd.Flags().StringVarP(&naplesUsername, "naples-username", "", "root", "Naples Username")
 	RootCmd.Flags().StringVarP(&naplesPassword, "naples-password", "", "pen123", "Naples Password")
 

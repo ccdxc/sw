@@ -280,6 +280,9 @@ class EntityManagement:
         self.SSHPassInit()
         return
 
+    def SetHost(self, host):
+        self.host = host
+
     def SSHPassInit(self):
         self.ssh_host = "%s@%s" % (self.username, self.ipaddr)
         self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
@@ -434,7 +437,7 @@ class EntityManagement:
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s %s" %\
-                       (GlobalOptions.password, GlobalOptions.mnic_ip, command)
+                       (GlobalOptions.password, self.host.naples.ipaddr, command)
         return self.RunSshCmd(full_command, ignore_failure)
 
 class NaplesManagement(EntityManagement):
@@ -610,24 +613,25 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
     def ReadGoldFwVersion(self):
-        global gold_fw_latest, gold_fw_old
+        global gold_fw_latest
         gold_fw_cmd = '''fwupdate -l | jq '.goldfw' | jq '.kernel_fit' | jq '.software_version' | tr -d '"\''''
-        output = self.RunCommandOnConsoleWithOutput(gold_fw_cmd)
-        gold_fw_latest = re.search(GlobalOptions.gold_fw_latest_ver, output)
-        gold_fw_old = re.search(GlobalOptions.gold_fw_old_ver, output)
-        if gold_fw_latest and not gold_fw_old:
+        try:
+            self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_latest_ver + '\r\n' + '#')
+            gold_fw_latest = True
             print ("Matched gold fw latest")
-        elif gold_fw_old and not gold_fw_latest:
-            print ("Matched gold fw old")
-        elif gold_fw_latest and gold_fw_old:
-            print ("Matched gold fw latest & old, coz they are same")
-        else:
-            msg = "Did not match any available gold fw, ver = %s" % output
-            print(msg)
-            if self.IsSSHUP():
-                print("SSH working, skipping gold fw version check")
-                return
-            raise Exception(msg)
+        except:
+            try:
+                self.SendlineExpect(gold_fw_cmd, GlobalOptions.gold_fw_old_ver)
+                gold_fw_latest = False
+                print ("Matched gold fw older")
+            except:
+                msg = "Did not match any available gold fw"
+                print(msg)
+                if self.IsSSHUP():
+                    print("SSH working, skipping gold fw version check")
+                    gold_fw_latest = False
+                    return
+                raise Exception(msg)
 
     @_exceptionWrapper(_errCodes.FAILED_TO_READ_FIRMWARE_TYPE, "Failed to read firmware type")
     def ReadRunningFirmwareType(self):
@@ -730,13 +734,14 @@ class HostManagement(EntityManagement):
 
     def SetNaples(self, naples):
         self.naples = naples
+        self.SetHost(self)
 
     def PciSensitive(self):
         #return self.server == "hpe"
         return True
 
     @_exceptionWrapper(_errCodes.HOST_INIT_FAILED, "Host Init Failed")
-    def Init(self, driver_pkg = None, cleanup = True):
+    def Init(self, driver_pkg = None, cleanup = True, gold_fw = False):
         self.WaitForSsh()
         os.system("date")
         nodeinit_args = " --own_ip " + GetPrimaryIntNicMgmtIpNext() + " --trg_ip " + GetPrimaryIntNicMgmtIp()
@@ -766,7 +771,7 @@ class HostManagement(EntityManagement):
 
             nodeinit_args = ""
             #Run with not mgmt first
-            if not GlobalOptions.no_mgmt:
+            if gold_fw or not GlobalOptions.no_mgmt:
                 self.RunSshCmd("sudo %s/nodeinit.sh --no-mgmt" % (HOST_NAPLES_DIR))
                 mgmtIPCmd = "sudo python3  %s/pen_nics.py --mac-hint %s --intf-type int-mnic --op mnic-ip --os %s" % (HOST_NAPLES_DIR, self.naples.mac_addr, GlobalOptions.os)
                 output, errout = self.RunSshCmdWithOutput(mgmtIPCmd)
@@ -786,7 +791,7 @@ class HostManagement(EntityManagement):
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
             ret = self.RunSshCmd("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
+                           (GlobalOptions.password, dest_filename, GlobalOptions.username, self.naples.ipaddr, naples_dest_filename))
             if ret:
                 raise Exception("Copy to Naples failed")
         return 0
@@ -818,7 +823,7 @@ class HostManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_FW_INSTALL_FROM_HOST_FAILED, "FW install Failed")
     def InstallMainFirmware(self, mount_data = True, copy_fw = True):
-        try: self.RunSshCmd("lspci -d 1dd8:")
+        try: self.RunSshCmd("sudo lspci -d 1dd8:")
         except:
             print('lspci failed to find nic. calling ipmi power cycle')
             self.IpmiResetAndWait()
@@ -863,7 +868,7 @@ class HostManagement(EntityManagement):
     def SetUpInitFiles(self):
         CreateConfigConsoleNoAuth()
         self.CopyIN(NAPLES_CONFIG_SPEC_LOCAL,
-                    entity_dir = "/sysconfig/config0")
+                    entity_dir = "/tmp", naples_dir = "/sysconfig/config0")
 
 
 class EsxHostManagement(HostManagement):
@@ -886,7 +891,7 @@ class EsxHostManagement(HostManagement):
         if naples_dir:
             naples_dest_filename = naples_dir + "/" + os.path.basename(src_filename)
             ret = self.ctrl_vm_run("sshpass -p %s scp -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s %s@%s:%s" %\
-                           (GlobalOptions.password, dest_filename, GlobalOptions.username, GlobalOptions.mnic_ip, naples_dest_filename))
+                           (GlobalOptions.password, dest_filename, GlobalOptions.username, self.naples.ipaddr, naples_dest_filename))
             if ret:
                 raise Exception("Cmd failed : " + cmd)
 
@@ -896,7 +901,7 @@ class EsxHostManagement(HostManagement):
     def RunNaplesCmd(self, command, ignore_failure = False):
         assert(ignore_failure == True or ignore_failure == False)
         full_command = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no %s@%s %s" %\
-                       (GlobalOptions.password, GlobalOptions.username, GlobalOptions.mnic_ip, command)
+                       (GlobalOptions.password, GlobalOptions.username, self.naples.ipaddr, command)
         return self.ctrl_vm_run(full_command, ignore_failure)
 
     @_exceptionWrapper(_errCodes.HOST_ESX_CTRL_VM_RUN_CMD_FAILED, "ESX ctrl vm run failed")
@@ -910,6 +915,13 @@ class EsxHostManagement(HostManagement):
         if retcode and not ignore_result:
             raise Exception("Cmd run failed "  + cmd)
         return retcode
+
+    @_exceptionWrapper(_errCodes.HOST_COPY_FAILED, "Host Init Failed")
+    def CopyIN(self, src_filename, entity_dir, naples_dir = None):
+        if naples_dir:
+            self.ctrl_vm_copyin(src_filename, entity_dir, naples_dir = naples_dir)
+        else:
+            super(HostManagement, self).CopyIN(src_filename, entity_dir)
 
     def __check_naples_deivce(self):
         try: self.RunSshCmd("lspci -d 1dd8:")
@@ -931,6 +943,7 @@ class EsxHostManagement(HostManagement):
         esx_startup_cmd.extend(["--esx-username", GlobalOptions.host_username])
         esx_startup_cmd.extend(["--esx-password", GlobalOptions.host_password])
         esx_startup_cmd.extend(["--esx-outfile", outFile])
+        esx_startup_cmd.extend(["--mac-hint", self.naples.mac_addr])
         proc_hdl = subprocess.Popen(esx_startup_cmd, stdout=sys.stdout.f, stderr=sys.stderr)
         while proc_hdl.poll() is None:
             time.sleep(5)
@@ -947,7 +960,7 @@ class EsxHostManagement(HostManagement):
         self.__ctr_vm_ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no " % self.__esx_ctrl_vm_password
 
     @_exceptionWrapper(_errCodes.HOST_ESX_INIT_FAILED, "Host init failed")
-    def Init(self, driver_pkg = None, cleanup = True):
+    def Init(self, driver_pkg = None, cleanup = True, gold_fw = False):
         self.WaitForSsh()
         os.system("date")
         self.__check_naples_deivce()
@@ -1214,10 +1227,11 @@ def Main():
         naples.Reboot()
     else:
         naples.InitForUpgrade(goldfw = True)
+        host.InitForUpgrade()
         host.Reboot()
         naples.Close()
         gold_pkg = GlobalOptions.gold_drv_latest_pkg if IsNaplesGoldFWLatest() else GlobalOptions.gold_drv_old_pkg
-        host.Init(driver_pkg =  gold_pkg, cleanup = False)
+        host.Init(driver_pkg =  gold_pkg, cleanup = False, gold_fw = True)
         if GlobalOptions.use_gold_firmware:
             if fwType != FIRMWARE_TYPE_GOLD:
                 naples.InstallGoldFirmware()
