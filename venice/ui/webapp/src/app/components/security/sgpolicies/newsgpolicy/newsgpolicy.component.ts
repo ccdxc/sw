@@ -417,6 +417,9 @@ export class NewsgpolicyComponent extends CreationForm<ISecurityNetworkSecurityP
   }
 
   isValidIP(ip: string) {
+    if (ip && ip.trim() === 'any') {
+      return true;
+    }
     return IPUtility.isValidIPWithOptionalMask(ip);
   }
 

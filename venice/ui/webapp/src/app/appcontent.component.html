@@ -113,7 +113,7 @@
           </ng-container>
         </mat-sidenav>
         <mat-sidenav #sidenav class="app-shell-left-sidenav" mode="side" opened="true"
-                     id="app-sidebar">
+                     [disableClose]="true" id="app-sidebar">
           <!-- Side Nav Items -->
           <div id="app-sidebar-container" class="panel-scroll" (scroll)="onScroll($event)">
             <ul class="list-unstyled components">
