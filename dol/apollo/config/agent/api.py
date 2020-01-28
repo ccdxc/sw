@@ -41,6 +41,7 @@ import nat_pb2 as nat_pb2
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
+MAX_GRPC_WAIT = 120
 MAX_BATCH_SIZE = 64
 
 class ApiOps(enum.IntEnum):
@@ -124,7 +125,7 @@ class ClientStub:
     def Rpc(self, op, objs):
         resps = []
         for obj in objs:
-            resps.append(self.__rpcs[op](obj))
+            resps.append(self.__rpcs[op](obj, timeout=MAX_GRPC_WAIT))
         return resps
 
 class ApolloAgentClientRequest:
