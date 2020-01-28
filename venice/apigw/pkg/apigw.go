@@ -13,6 +13,7 @@ import (
 	"net/textproto"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1058,7 +1059,7 @@ func (p *RProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		sw := netutils.NewStatusWriter(w)
 		p.proxy.ServeHTTP(sw, nr)
 		statusCode, err := sw.GetStatusCode()
-		if err != nil || !strings.HasPrefix(string(statusCode), "2") {
+		if err != nil || !strings.HasPrefix(strconv.Itoa(statusCode), "2") {
 			apierr := apierrors.ToGrpcError("Operation failed to complete", []string{fmt.Sprintf("status code: %d", statusCode)}, int32(codes.Aborted), "", nil)
 			p.apiGw.audit(auditEventID, user, r, nil, operations, auditLevel, auditapi.Stage_RequestProcessing, auditapi.Outcome_Failure, apierr, clientIPs, reqURI)
 			p.apiGw.logger.ErrorLog("method", "ServeHTTP", "msg", fmt.Sprintf("Operation failed to complete with status code: %d", statusCode), "error", err)
