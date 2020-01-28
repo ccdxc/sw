@@ -704,10 +704,19 @@ func (a *ApuluAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Li
 }
 
 func createHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifStatus) error {
+	// parse the uuid
 	intfID := spec.GetId()
 	uid, err := uuid.FromBytes(intfID)
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to parse lif uuid %v, err %v", spec.GetId(), err))
+		return err
+	}
+	// form the interface name
+	ifName, err := utils.GetIfName(uid.String()[24:], status.GetIfIndex(), spec.GetType().String())
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, ifindex %x, err %v",
+			spec.GetId(), status.GetIfIndex(), err))
 		return err
 	}
 	// skip any internal lifs
@@ -723,7 +732,7 @@ func createHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifSt
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      fmt.Sprintf("%s%d", types.LifPrefix, status.GetIfIndex()),
+			Name:      ifName,
 			UUID:      uid.String(),
 		},
 		Spec: netproto.InterfaceSpec{
@@ -749,10 +758,26 @@ func createHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifSt
 }
 
 func createUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.PortStatus) error {
+	var ifType string
+
+	// parse the uuid
 	intfID := spec.GetId()
 	uid, err := uuid.FromBytes(intfID)
 	if err != nil {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "Failed to parse port uuid %v, err %v", spec.GetId(), err))
+		return err
+	}
+	// form the interface name
+	ifName, err := utils.GetIfName(uid.String()[24:], status.GetIfIndex(), spec.GetType().String())
+	if spec.GetType().String() == "PORT_TYPE_ETH" {
+		ifType = netproto.InterfaceSpec_UPLINK_ETH.String()
+	} else if spec.GetType().String() == "PORT_TYPE_ETH_MGMT" {
+		ifType = netproto.InterfaceSpec_UPLINK_MGMT.String()
+	}
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest,
+			"Failed to form interface name, uuid %v, ifindex %x, err %v",
+			spec.GetId(), status.GetIfIndex(), err))
 		return err
 	}
 	i := netproto.Interface{
@@ -762,11 +787,11 @@ func createUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.Po
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    "default",
 			Namespace: "default",
-			Name:      fmt.Sprintf("%s%d", types.UplinkPrefix, status.GetIfIndex()),
+			Name:      ifName,
 			UUID:      uid.String(),
 		},
 		Spec: netproto.InterfaceSpec{
-			Type:    netproto.InterfaceSpec_UPLINK_ETH.String(),
+			Type:    ifType,
 			VrfName: "default",
 		},
 		Status: netproto.InterfaceStatus{

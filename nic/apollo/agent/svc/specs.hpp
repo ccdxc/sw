@@ -1771,8 +1771,19 @@ pds_port_sdk_loopback_mode_to_proto_loopback_mode (
 
 static inline void
 pds_port_proto_to_port_args (port_args_t *port_args,
-                              const pds::PortSpec &spec)
+                             const pds::PortSpec &spec)
 {
+    switch (spec.type()) {
+    case pds::PORT_TYPE_ETH:
+        port_args->port_type = port_type_t::PORT_TYPE_ETH;
+        break;
+    case pds::PORT_TYPE_ETH_MGMT:
+        port_args->port_type = port_type_t::PORT_TYPE_MGMT;
+        break;
+    default:
+        port_args->port_type = port_type_t::PORT_TYPE_NONE;
+        break;
+    }
     port_args->user_admin_state = port_args->admin_state =
                 pds_port_proto_admin_state_to_sdk_admin_state(spec.adminstate());
     port_args->port_speed = pds_port_proto_speed_to_sdk_speed(spec.speed());
@@ -3877,6 +3888,17 @@ pds_port_spec_to_proto (pds::PortSpec *spec,
     // @akoradha please fix this
     spec->set_id(port_info->port_an_args, PDS_MAX_KEY_LEN);
     spec->set_portnumber(ETH_IFINDEX_TO_PARENT_PORT(port_info->port_num));
+    switch (port_info->port_type) {
+    case port_type_t::PORT_TYPE_ETH:
+        spec->set_type(pds::PORT_TYPE_ETH);
+        break;
+    case port_type_t::PORT_TYPE_MGMT:
+        spec->set_type(pds::PORT_TYPE_ETH_MGMT);
+        break;
+    default:
+        spec->set_type(pds::PORT_TYPE_NONE);
+        break;
+    }
     switch(port_info->admin_state) {
     case port_admin_state_t::PORT_ADMIN_STATE_DOWN:
         spec->set_adminstate(pds::PORT_ADMIN_STATE_DOWN);

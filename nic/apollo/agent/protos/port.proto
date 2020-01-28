@@ -255,6 +255,12 @@ enum PortFecType {
   PORT_FEC_TYPE_RS   = 2; // ReedSolomon (RS) FEC
 }
 
+enum PortType {
+  PORT_TYPE_NONE     = 0;
+  PORT_TYPE_ETH      = 1;
+  PORT_TYPE_ETH_MGMT = 2;
+}
+
 message PortSpec {
   // unique port id
   bytes            Id              = 1 [(gogoproto.moretags) = "meta:mandatory"];
@@ -262,22 +268,24 @@ message PortSpec {
   uint32           PortNumber      = 2 [(gogoproto.moretags) = "meta:mandatory,range:1-2"];
   // port up|down adminstratively
   PortAdminState   AdminState      = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // type of the port
+  PortType         Type            = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // port speed
-  PortSpeed        Speed           = 4;
+  PortSpeed        Speed           = 5;
   // FEC type
-  PortFecType      FECType         = 5;
+  PortFecType      FECType         = 6;
   // enable/disable auto negotiation feature
-  bool             AutoNegEn       = 6;
+  bool             AutoNegEn       = 7;
   // link debounce timeout in msec (default = 0 ms)
-  uint32           DeBounceTimeout = 7;
+  uint32           DeBounceTimeout = 8;
   // MTU size in bytes
-  uint32           Mtu             = 8;
+  uint32           Mtu             = 9;
   // Pause type (pfc or link level)
-  PortPauseType    PauseType       = 9;
+  PortPauseType    PauseType       = 10;
   // Port loopback mode - MAC/PHY
-  PortLoopBackMode LoopbackMode    = 10;
+  PortLoopBackMode LoopbackMode    = 11;
   // Number of lanes for port
-  uint32           NumLanes        = 11;
+  uint32           NumLanes        = 12;
 }
 
 message PortLinkStatus {

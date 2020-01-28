@@ -6,6 +6,7 @@ import (
 	"math"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,6 +16,24 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/venice/utils/log"
+)
+
+const (
+	ifTypeEth         = 1
+	ifTypeEthPC       = 2
+	ifTypeTunnel      = 3
+	ifTypeL3          = 7
+	ifTypeLif         = 8
+	ifTypeLoopback    = 9
+	ifTypeShift       = 28
+	ifSlotShift       = 24
+	ifParentPortShift = 16
+	ifTypeMask        = 0xF
+	ifSlotMask        = 0xF
+	ifParentPortMask  = 0xFF
+	ifChildPortMask   = 0xFF
+	ifNameDelimiter   = "-"
+	invalidIfIndex    = 0xFFFFFFFF
 )
 
 // CreateNewGRPCClient creates a new RPC Client to the pipeline
@@ -246,4 +265,61 @@ func Ipv4Touint32(ip net.IP) uint32 {
 		return binary.BigEndian.Uint32(ip[12:16])
 	}
 	return binary.BigEndian.Uint32(ip)
+}
+
+func ifIndexToSlot(ifIndex uint32) uint32 {
+	return (ifIndex >> ifSlotShift) & ifSlotMask
+}
+
+func ifIndexToParentPort(ifIndex uint32) uint32 {
+	return (ifIndex >> ifParentPortShift) & ifParentPortMask
+}
+
+func ifIndexToChildPort(ifIndex uint32) uint32 {
+	return ifIndex & ifChildPortMask
+}
+
+func ifIndexToId(ifIndex uint32) uint32 {
+	return ifIndex &^ (ifTypeMask << ifTypeShift)
+}
+
+func getIfTypeStr(ifIndex uint32, subType string) (intfType string, err error) {
+	ifType := (ifIndex >> ifTypeShift) & ifTypeMask
+	switch ifType {
+	case ifTypeEth:
+		if subType == "PORT_TYPE_ETH_MGMT" {
+			return "mgmt", nil
+		}
+		return "uplink", nil
+	case ifTypeEthPC:
+		return "uplink-pc", nil
+	case ifTypeTunnel:
+		return "tunnel", nil
+	case ifTypeL3:
+		return "l3", nil
+	case ifTypeLif:
+		return "pf", nil
+	case ifTypeLoopback:
+		return "lo", nil
+	}
+	return "", errors.Wrapf(types.ErrInvalidInterfaceType,
+		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)
+}
+
+func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string, err error) {
+	ifTypeStr, err := getIfTypeStr(ifIndex, subType)
+	if err != nil {
+		return "", err
+	}
+	ifType := (ifIndex >> ifTypeShift) & ifTypeMask
+	switch ifType {
+	case ifTypeEth:
+		slotStr := strconv.FormatUint(uint64(ifIndexToSlot(ifIndex)), 10)
+		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
+		return systemMac + ifNameDelimiter + ifTypeStr + ifNameDelimiter + slotStr + ifNameDelimiter + parentPortStr, nil
+	case ifTypeEthPC, ifTypeTunnel, ifTypeL3, ifTypeLif, ifTypeLoopback:
+		return systemMac + ifNameDelimiter + ifTypeStr + ifNameDelimiter + strconv.FormatUint(uint64(ifIndexToId(ifIndex)), 10), nil
+	}
+	return "", errors.Wrapf(types.ErrInvalidInterfaceType,
+		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)
 }
