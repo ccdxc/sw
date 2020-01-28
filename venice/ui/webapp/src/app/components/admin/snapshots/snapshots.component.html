@@ -63,7 +63,7 @@
 </ng-template>
 
 <ng-template #actionButtonsTemplate>
-  <div fxFlex="none" fxLayoutAlign="start center">
+  <div fxFlex="none" fxLayoutAlign="start center" *roleGuard="'objstorebucket_delete'">
     <!-- TABLE FUNCTION ICONS HERE -->
     <mat-icon class="global-multi-records-delete-icon"
               *ngIf="hasSelectedRows()"

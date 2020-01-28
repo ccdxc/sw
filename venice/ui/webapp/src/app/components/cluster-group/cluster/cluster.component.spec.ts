@@ -35,6 +35,7 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { AuthService } from '@app/services/auth.service';
+import { AuthService as AuthServiceGen } from '@app/services/generated/auth.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
 
@@ -81,7 +82,8 @@ describe('ClusterComponent', () => {
         MessageService,
         MetricsqueryService,
         MessageService,
-        AuthService
+        AuthService,
+        AuthServiceGen
       ]
     });
       });

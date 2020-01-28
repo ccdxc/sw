@@ -33,7 +33,8 @@
 </ng-template>
 
 <ng-template #actionButtonsTemplate>
-  <div fxFlex="none" fxLayoutAlign="start center">
+  <div fxFlex="none" fxLayoutAlign="start center"
+       *roleGuard="'monitoringtechsupportrequest_delete'">
     <!-- TABLE FUNCTION ICONS HERE -->
     <mat-icon class="global-multi-records-delete-icon"
               *ngIf="hasSelectedRows()"

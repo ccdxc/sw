@@ -217,6 +217,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
             this.launch();
           } else {
             this.hasDSC = false;
+            this.tableLoading = false;
             this.controllerService.invokeInfoToaster('Information', 'There is no DSC record found in Venice');
             this.fetechAll();
           }
@@ -244,7 +245,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   }
 
   fetechAll() {
-    this.tableLoading = true;
+    this.tableLoading = (this.searchDSCsCount > 0 ) ? true : false;
     const observables: Observable<any>[] = [];
     observables.push(this.workloadService.ListWorkload()); // workloads
     const forkJoinSub = forkJoin(observables).subscribe((results: any[]) => {

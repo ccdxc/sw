@@ -13,10 +13,10 @@
 // const URL =  "10.8.100.11"  // QA admin/Pensando0$
 // const URL =  "10.30.2.173"  // QA Ambish's large scale setup  admin/Systest-1$
 // const URL =  "10.30.2.174"  
-// const URL = "10.30.1.175"  // Srividhya Swaminathan
+const URL = "10.30.1.175"  // Srividhya Swaminathan
 // const URL = "10.8.102.52"; // scale setup admin/Pensando0$
 // const URL = "10.8.102.157"; // scale setup admin/Pensando0$
-const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
+// const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
 
 const PROXY_CONFIG =
   {

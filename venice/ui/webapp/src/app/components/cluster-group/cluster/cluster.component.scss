@@ -114,3 +114,19 @@ $table-headerheight: 55px;
   padding: 0px 10px;
   width: 130px;
 }
+
+.cluster-chart-item {
+  max-width: calc(66% - 20px);
+  width: calc(66% - 20px);
+  min-width: 450px;
+  height: 100%;
+  margin-right: 20px;
+
+  div {
+    height: calc(100% - 10px);
+
+    .telemetrychartview-card {
+      width: 100%;
+    }
+  }
+}

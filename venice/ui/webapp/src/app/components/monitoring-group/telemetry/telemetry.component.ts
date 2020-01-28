@@ -89,6 +89,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
           this.userPref = JSON.parse(userPrefObj.spec.options);
         }
         this.telemetryPref = this.userPref.telemetry;
+        console.log(this.telemetryPref);
       },
     );
   }

@@ -42,7 +42,8 @@
                        [tableMenuItems]="tableMenuItems"
                        [icon]="naplesIcon" [enableColumnSelect]="true"
                        [cols]="cols" (columnSelectChange)="onColumnSelectChange($event)">
-        <div fxFlex="none" fxLayoutAlign="start center">
+        <div fxFlex="none" fxLayoutAlign="start center"
+             *roleGuard="'clusterdistributedservicecard_update'">
           <!-- LABEL EDITOR-->
           <mat-icon class="naples-add-label-button"
                     *ngIf="this.tableContainer.selectedDataObjects.length>0"

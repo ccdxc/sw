@@ -19,6 +19,8 @@ import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum'
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterupdateComponent } from './clusterupdate/clusterupdate.component';
 import { NodeConditionValues } from '@app/components/cluster-group/naples';
+import { TimeRange, KeyOperatorValueKeyword } from '@app/components/shared/timerange/utility';
+import { GraphConfig } from '@app/models/frontend/shared/userpreference.interface';
 
 @Component({
   selector: 'app-cluster',
@@ -35,6 +37,8 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     },
     url: '/assets/images/icons/cluster/ico-cluster-black.svg'
   };
+  selectedTimeRange: TimeRange;
+  graphConfig: GraphConfig;
   cluster: ClusterCluster = new ClusterCluster();
   // Used for processing the stream events
   clusterEventUtility: HttpEventUtility<ClusterCluster>;
@@ -97,6 +101,33 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     this._controllerService.setToolbarData({
       breadcrumb: [{ label: 'Cluster', url: Utility.getBaseUIUrl() + 'cluster/cluster' }]
     });
+    this.selectedTimeRange = new TimeRange(new KeyOperatorValueKeyword.instance('now', '-', 24, 'h'), new KeyOperatorValueKeyword.instance('now', '', 0, ''));
+    this.graphConfig = {
+      id: 'cluster info chart',
+      graphTransforms: {
+        transforms: { GraphTitle: { title: 'Cluster Info Chart' } }
+      },
+      dataTransforms: [{
+        transforms: {
+          ColorTransform: {
+            colors: {
+              'Cluster.AdmittedNICs': '#61b3a0',
+              'Cluster.DecommissionedNICs': '#b592e3',
+              'Cluster.HealthyNICs': '#ff9cee',
+              'Cluster.PendingNICs': '#ffb886',
+              'Cluster.RejectedNICs': '#ff7184',
+              'Cluster.UnhealthyNICs': '#e62e71'
+            }
+          },
+          FieldSelector: {
+            selectedValues: []
+          }
+        },
+        measurement: 'Cluster',
+        fields: ['AdmittedNICs', 'DisconnectedNICs', 'HealthyNICs',
+            'PendingNICs', 'RejectedNICs', 'UnhealthyNICs']
+      }]
+    };
   }
 
   getCluster() {
