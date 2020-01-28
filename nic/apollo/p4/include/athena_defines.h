@@ -73,4 +73,10 @@
 #define P4E_DROP_REASON_MIN             P4E_DROP_INVALID_NEXTHOP
 #define P4E_DROP_REASON_MAX             P4E_DROP_INVALID_NEXTHOP
 
+/*****************************************************************************/
+/* VNIC Type                                                                 */
+/*****************************************************************************/
+#define VNIC_TYPE_L3                            0
+#define VNIC_TYPE_L2                            1
+
 #endif /* _ATHENA_DEFINES_H_ */

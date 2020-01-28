@@ -11,7 +11,7 @@ header_type capri_deparser_len_t {
 header_type key_metadata_t {
     fields {
         ktype               : 2;
-        vnic_id             : 10;
+        vnic_id             : 9;
         src                 : 128;
         dst                 : 128;
         smac                : 48;
@@ -45,12 +45,14 @@ header_type control_metadata_t {
         histogram_id_valid                  : 1;
         update_checksum                     : 1;
         launch_v4                           : 1; // Dummy - never set
+        vnic_type                           : 1;
         strip_outer_encap_flag              : 1;
         strip_l2_header_flag                : 1;
         strip_vlan_tag_flag                 : 1;
         add_vlan_tag_flag                   : 1;
         nat_type                            : 2;
         encap_type                          : 2;
+        mpls_label                          : 20;
         nat_address                         : 128;
         dmac                                : 48;
         smac                                : 48;

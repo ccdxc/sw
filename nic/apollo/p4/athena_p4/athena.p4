@@ -9,6 +9,7 @@
 #include "parser.p4"
 #include "metadata.p4"
 
+#include "vnic.p4"
 #include "key.p4"
 #include "offloads.p4"
 #include "flow.p4"
@@ -31,6 +32,7 @@ action drop_packet() {
 /* Ingress pipeline                                                          */
 /*****************************************************************************/
 control ingress {
+    vnic();
     key_init();
     offloads();
     flow_lookup();

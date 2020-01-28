@@ -12,6 +12,8 @@
 #define CHECKSUM_TABLE_SIZE                                 32
 
 #define VNIC_TABLE_SIZE                                     1024
+#define VLAN_VNIC_MAP_TABLE_SIZE                            4096
+#define MPLS_LABEL_VNIC_MAP_TABLE_SIZE                      1048576
 
 #define SESSION_TABLE_SIZE                                  4194304 // 4M
 
