@@ -123,7 +123,7 @@ class PdsUuid:
         uuid = bytearray(PDS_UUID_LEN)
         # first 8 bytes ==> id
         uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END] = id.to_bytes(PDS_UUID_ID_LEN, PDS_UUID_BYTE_ORDER)
-        # next 2 bytes ==> magic byte (0x42)
+        # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)
         uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:] = PDS_UUID_SYSTEM_MAC

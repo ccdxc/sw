@@ -1279,16 +1279,20 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     }
     proto_spec->set_switchvnic(api_spec->switch_vnic);
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
-        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id);
+        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id,
+                                              PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
-        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id);
+        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id,
+                                              PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
-        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id);
+        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id,
+                                             PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
-        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
+        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id,
+                                             PDS_MAX_KEY_LEN);
     }
     proto_spec->set_hostif(api_spec->host_if.id, PDS_MAX_KEY_LEN);
     proto_spec->set_txpolicerid(api_spec->tx_policer.id, PDS_MAX_KEY_LEN);
@@ -3389,16 +3393,20 @@ pds_subnet_api_spec_to_proto (pds::SubnetSpec *proto_spec,
                                    PDS_MAX_KEY_LEN);
 
     for (uint8_t i = 0; i < api_spec->num_ing_v4_policy; i++) {
-        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id);
+        proto_spec->add_ingv4securitypolicyid(api_spec->ing_v4_policy[i].id,
+                                              PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_ing_v6_policy; i++) {
-        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id);
+        proto_spec->add_ingv6securitypolicyid(api_spec->ing_v6_policy[i].id,
+                                              PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v4_policy; i++) {
-        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id);
+        proto_spec->add_egv4securitypolicyid(api_spec->egr_v4_policy[i].id,
+                                             PDS_MAX_KEY_LEN);
     }
     for (uint8_t i = 0; i < api_spec->num_egr_v6_policy; i++) {
-        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id);
+        proto_spec->add_egv6securitypolicyid(api_spec->egr_v6_policy[i].id,
+                                             PDS_MAX_KEY_LEN);
     }
     pds_encap_to_proto_encap(proto_spec->mutable_fabricencap(),
                              &api_spec->fabric_encap);

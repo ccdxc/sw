@@ -194,10 +194,6 @@ class SubnetObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        #TODO: Fix policy validation
-        logger.error("Subnet validation:")
-        logger.error(f"Spec {spec} ")
-        self.Show()
         if spec.Id != self.GetKey():
             return False
         if spec.VPCId != self.VPC.GetKey():
@@ -208,14 +204,14 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.V6RouteTableId != utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId):
             return False
-        # if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0]):
-        #     return False
-        # if spec.IngV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV6SecurityPolicyIds[0]):
-        #     return False
-        # if spec.EgV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV4SecurityPolicyIds[0]):
-        #     return False
-        # if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0]):
-        #     return False
+        if spec.IngV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV4SecurityPolicyIds[0]):
+            return False
+        if spec.IngV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.IngV6SecurityPolicyIds[0]):
+            return False
+        if spec.EgV4SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV4SecurityPolicyIds[0]):
+            return False
+        if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0]):
+            return False
         if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
             return False
         if utils.IsPipelineApulu():
