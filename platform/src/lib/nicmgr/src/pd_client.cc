@@ -668,17 +668,23 @@ PdClient::program_qstate(struct queue_info* queue_info,
 }
 
 uint8_t
-PdClient::get_iq(uint8_t pcp_or_dscp)
+PdClient::get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num)
 {
 #ifdef IRIS
     typedef struct pd_qos_dscp_cos_map_s {
-        bool        is_dscp : 1 ;
-        uint8_t     no_drop : 1;
-        uint8_t     txdma_iq : 4;
-        uint8_t     rsvd: 2;
+        uint8_t     is_dscp : 1;
+        uint8_t     rsvd1: 7;
+        uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP. 
+        uint8_t     txdma_iq[32];
+        uint8_t     no_drop1_txdma_iq : 4;
+        uint8_t     no_drop2_txdma_iq : 4;
+        uint8_t     no_drop3_txdma_iq : 4;
+        uint8_t     rsvd2: 4;
+        uint8_t     rsvd3[13];
     } __PACK__ pd_qos_dscp_cos_map_t;
 
-    pd_qos_dscp_cos_map_t qos_map[64] = {0};
+    pd_qos_dscp_cos_map_t qos_map;
+    uint8_t     no_drop_index = 0, tx_iq = 0;
 
     if (pcp_or_dscp > 64) {
         NIC_LOG_ERR("Invalid pcp_or_dscp value {}", pcp_or_dscp);
@@ -686,8 +692,60 @@ PdClient::get_iq(uint8_t pcp_or_dscp)
     }
 
     uint64_t addr = mp_->start_addr(MEM_REGION_QOS_DSCP_COS_MAP);
-    sdk::asic::asic_mem_read(addr, (uint8_t *)qos_map, sizeof(qos_map));
-    return qos_map[pcp_or_dscp].txdma_iq;
+    sdk::asic::asic_mem_read(addr, (uint8_t *)&qos_map, sizeof(qos_map));
+
+    if ((pcp_or_dscp % 4) == 0) {
+        no_drop_index = qos_map.no_drop[pcp_or_dscp / 4] & 0xc0;
+        no_drop_index >>= 6;
+    } else if ((pcp_or_dscp % 4) == 1) {
+        no_drop_index = qos_map.no_drop[pcp_or_dscp / 4] & 0x30;
+        no_drop_index >>= 4;
+    } else if ((pcp_or_dscp % 4) == 2) {
+        no_drop_index = qos_map.no_drop[pcp_or_dscp / 4] & 0xc;
+        no_drop_index >>= 2;
+    } else {
+        no_drop_index = qos_map.no_drop[pcp_or_dscp / 4] & 0x3;
+    }
+
+    // No-Drop IQ. Also, IQ for uplink port 1 for Drop-TC
+    if ((pcp_or_dscp % 2) == 0) {
+        tx_iq = qos_map.txdma_iq[pcp_or_dscp / 2] & 0xf0;
+        tx_iq >>= 4;
+    } else {
+        tx_iq = qos_map.txdma_iq[pcp_or_dscp / 2] & 0x0f;
+    }
+
+   switch (no_drop_index) {
+       case 0:
+           // Drop TC. Return tx_iq
+           break;
+
+       case 1:
+           // No-drop TC
+           //  Is this a good check for second MAC?
+           if (pinned_uplink_port_num >= 5)
+               tx_iq = qos_map.no_drop1_txdma_iq;
+           break;
+
+       case 2:
+           // No-drop TC
+           if (pinned_uplink_port_num >= 5)
+               tx_iq = qos_map.no_drop2_txdma_iq;
+           break;
+
+       case 3:
+           // No-drop TC
+           if (pinned_uplink_port_num >= 5)
+               tx_iq = qos_map.no_drop3_txdma_iq;
+           break;
+
+       default:
+           break;
+   } 
+
+    NIC_LOG_DEBUG("Programming tx-iq {} for DCSP/PCP {} and uplink_port_num {}",        
+                   tx_iq, pcp_or_dscp, pinned_uplink_port_num);   
+    return tx_iq;
 #else
     return 0;
 #endif

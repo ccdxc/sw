@@ -1929,7 +1929,15 @@ struct aq_query_qp_rq_buf {
 };
 
 struct aq_dscp_cos_map {
-    dscp_pcp_tx_iq_map:512;
+    is_dscp             : 1;
+    rsvd1               : 7;
+    no_drop             : 128;
+    txdma_iq            : 256;
+    no_drop2_txdma_iq   : 4;
+    no_drop1_txdma_iq   : 4;
+    rsvd2               : 4;
+    no_drop3_txdma_iq   : 4;
+    rsvd3               : 104;
 };
 
 #define AQ_WQE_T_LOG_SIZE_BYTES 6

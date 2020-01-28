@@ -13,6 +13,7 @@ struct aq_tx_s0_t0_k k;
 #define TO_WQE_INFO_P t0_s2s_aqcb_to_wqe_info
 #define TO_S_FB_INFO_P to_s7_fb_stats_info
 #define TO_S6_INFO_P   to_s6_info
+#define TO_S3_INFO_P   to_s3_info
 %%
 
     .param      rdma_aq_tx_wqe_process
@@ -59,6 +60,8 @@ rdma_aq_tx_aqcb_process:
         CAPRI_SET_FIELD(r1, PHV_GLOBAL_COMMON_T, qid, CAPRI_TXDMA_INTRINSIC_QID)
 
         CAPRI_SET_FIELD2(TO_S6_INFO_P, cb_addr, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR)
+
+        CAPRI_SET_FIELD2(TO_S3_INFO_P, tx_psn_or_uplink_port, d.uplink_num)
 
         //set       dma_cmd_ptr in phv
         TXDMA_DMA_CMD_PTR_SET(AQ_TX_DMA_CMD_START_FLIT_ID, AQ_TX_DMA_CMD_START_FLIT_CMD_ID)     

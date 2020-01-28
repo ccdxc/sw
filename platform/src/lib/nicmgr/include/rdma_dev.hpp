@@ -462,24 +462,25 @@ typedef struct aqcb0_s {
 
     uint32_t error: 8;
     uint32_t cq_id: 24;
-    
+
     uint32_t aq_id: 24;
     uint32_t next_token_id: 8;
-    
+
     uint64_t phy_base_addr;
-    
+
     uint16_t rsvd2: 5;
     uint16_t ring_empty_sched_eval_done: 1;
     uint16_t log_num_wqes: 5;
     uint16_t log_wqe_size: 5;
 
     uint8_t  debug;
-    uint8_t  rsvd1[3];
-    
+    uint8_t  uplink_num;
+    uint8_t  rsvd1[2];
+
     uint8_t  token_id;
     uint8_t  first_pass;
     uint32_t map_count_completed;
-    
+
     qpcb_ring_t           rings[MAX_AQ_RINGS];
     qpcb_intrinsic_base_t ring_header;
 } aqcb0_t;

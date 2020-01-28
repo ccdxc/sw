@@ -236,7 +236,7 @@ tx_psn:
     nop
 
     add         r4, d.{mod_qp.sq_psn}.wx, r0
-    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn), r4[23:0] 
+    phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_or_uplink_port), r4[23:0] 
     phvwr       CAPRI_PHV_FIELD(TO_SQCB2_RQCB0_INFO_P, tx_psn_valid), 1
 
     phvwr       p.rdma_feedback.modify_qp.tx_psn, r4[23:0]

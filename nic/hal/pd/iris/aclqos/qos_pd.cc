@@ -16,7 +16,7 @@ namespace hal {
 namespace pd {
 
 //TODO: Move this to HAL slabs.
-pd_qos_dscp_cos_map_t dscp_cos_txdma_iq_map[64];
+pd_qos_dscp_cos_map_t dscp_cos_txdma_iq_map;
 
 typedef struct pd_qos_q_alloc_params_s {
     uint32_t         cnt_uplink_iq;
@@ -112,6 +112,51 @@ qos_class_pd_delink_pi_pd (pd_qos_class_t *pd_qos_class, qos_class_t *pi_qos_cla
     qos_class_set_pd_qos_class(pi_qos_class, NULL);
 }
 
+static void 
+qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_t dscp_or_pcp, bool is_no_drop) 
+{
+    uint32_t    i = dscp_or_pcp;
+    uint8_t     no_drop_index = 0;
+
+    if ((i % 2) == 1) {
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0xf0;
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] |= pd_qos_class->txdma[0].iq;
+    } else {
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0x0f;
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] |= (pd_qos_class->txdma[0].iq << 4);
+    }
+    if (is_no_drop) {
+         if (dscp_cos_txdma_iq_map.no_drop1_txdma_iq == 0) {
+             dscp_cos_txdma_iq_map.no_drop1_txdma_iq = pd_qos_class->txdma[1].iq;
+             no_drop_index = 1;
+         } else if (dscp_cos_txdma_iq_map.no_drop2_txdma_iq == 0) {
+             dscp_cos_txdma_iq_map.no_drop2_txdma_iq = pd_qos_class->txdma[1].iq;
+             no_drop_index = 2;
+         } else {
+             dscp_cos_txdma_iq_map.no_drop3_txdma_iq = pd_qos_class->txdma[1].iq;
+             no_drop_index = 3;
+         }
+
+         if ((i % 4) == 0) {
+             dscp_cos_txdma_iq_map.no_drop[i / 4] |= (no_drop_index << 6);
+         } else if ((i % 4) == 1) {
+             dscp_cos_txdma_iq_map.no_drop[i / 4] |= (no_drop_index << 4);
+         } else if ((i % 4) == 2) {
+             dscp_cos_txdma_iq_map.no_drop[i / 4] |= (no_drop_index << 2);
+         } else {
+             dscp_cos_txdma_iq_map.no_drop[i / 4] |= no_drop_index;
+         }
+    }
+
+    HAL_TRACE_DEBUG("Programming DSCP-PCP to TxDMA IQ mapping "
+                    "for is_dscp{}, dscp/pcp {}, no_drop {}, txdma-iq1 {}, txdma-iq2 {} "
+                    "txdma_iq_map.txdma_iq1 {}, no_drop_index {}, txdma_iq_map.no_drop {}",
+                     dscp_cos_txdma_iq_map.is_dscp, dscp_or_pcp, is_no_drop,
+                     pd_qos_class->txdma[0].iq, pd_qos_class->txdma[1].iq,
+                     dscp_cos_txdma_iq_map.txdma_iq[i / 2], no_drop_index, 
+                     dscp_cos_txdma_iq_map.no_drop[i / 4]);
+}
+
 static hal_ret_t
 qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
 {
@@ -190,20 +235,15 @@ qos_class_pd_alloc_queues (pd_qos_class_t *pd_qos_class)
        if (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) {
            for (i = 0; i < HAL_MAX_IP_DSCP_VALS; i++) {
                if (qos_class->cmap.ip_dscp[i]) {
-                   dscp_cos_txdma_iq_map[0].is_dscp = true; // use default-cos dscp as global dscp/pcp config
-                   dscp_cos_txdma_iq_map[i].is_dscp = true;
-                   dscp_cos_txdma_iq_map[i].txdma_iq = pd_qos_class->txdma[0].iq;
-                   dscp_cos_txdma_iq_map[i].no_drop  = qos_class->no_drop;
-
+                   dscp_cos_txdma_iq_map.is_dscp = true; 
+                   qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class, i, qos_class->no_drop);
                }
            }
        } else {
            for (i = 0; i < HAL_MAX_DOT1Q_PCP_VALS; i++) {
                if (i == qos_class->cmap.dot1q_pcp) {
-                   dscp_cos_txdma_iq_map[0].is_dscp = false;
-                   dscp_cos_txdma_iq_map[i].is_dscp = false;
-                   dscp_cos_txdma_iq_map[i].txdma_iq = pd_qos_class->txdma[0].iq; // use first queue for now.
-                   dscp_cos_txdma_iq_map[i].no_drop  = qos_class->no_drop;
+                   dscp_cos_txdma_iq_map.is_dscp = false;
+                   qos_class_populate_dscp_cos_txdma_iq_map(pd_qos_class, i, qos_class->no_drop);
                }
            }
        }
@@ -252,7 +292,7 @@ qos_class_pd_program_dscp_cos_map_table ()
     HAL_TRACE_DEBUG("Programming DSCP-PCP to TxDMA IQ mapping "
                     "dscp_cos_map_hbm_base_addr is {} and size of dscp-cos-map-table is {}", 
                         dscp_cos_map_hbm_base_addr, sizeof(dscp_cos_txdma_iq_map));
-    
+
     p4plus_hbm_write(dscp_cos_map_hbm_base_addr, (uint8_t *)&dscp_cos_txdma_iq_map, sizeof(dscp_cos_txdma_iq_map),
             P4PLUS_CACHE_INVALIDATE_BOTH);
 
@@ -279,6 +319,52 @@ qos_class_pd_alloc_res (pd_qos_class_t *pd_qos_class)
     return ret;
 }
 
+static void
+qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class_t *pd_qos_class, uint32_t dscp_or_pcp, bool is_no_drop)
+{
+    uint32_t    i = dscp_or_pcp;
+    uint8_t     no_drop_index = 0;
+    
+    if ((i % 2) == 1) {
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0xf0;
+    } else {
+         dscp_cos_txdma_iq_map.txdma_iq[i / 2] &= 0x0f;
+    }    
+    if (is_no_drop) {
+         if ((i % 4) == 0) {
+             no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0xc0);
+             no_drop_index >>= 6;
+             dscp_cos_txdma_iq_map.no_drop[i / 4] &= 0x3f;
+         } else if ((i % 4) == 1) {
+             no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0x30);
+             no_drop_index >>= 4;
+             dscp_cos_txdma_iq_map.no_drop[i / 4] &= 0xcf;
+         } else if ((i % 4) == 2) {
+             no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0xc);
+             no_drop_index >>= 2;
+             dscp_cos_txdma_iq_map.no_drop[i / 4] &= 0xf3;
+         } else {
+             no_drop_index = (dscp_cos_txdma_iq_map.no_drop[i / 4] & 0x3);
+             dscp_cos_txdma_iq_map.no_drop[i / 4] &= 0xfc;
+         } 
+         if (no_drop_index == 1) {
+             dscp_cos_txdma_iq_map.no_drop1_txdma_iq = 0;
+         } else if (no_drop_index == 2) {
+             dscp_cos_txdma_iq_map.no_drop2_txdma_iq = 0;
+         } else if (no_drop_index == 3) {
+             dscp_cos_txdma_iq_map.no_drop3_txdma_iq = 0;
+         } 
+    }    
+    
+    HAL_TRACE_DEBUG("De-Programming DSCP-PCP to TxDMA IQ mapping "
+                    "for is_dscp{}, dscp/pcp {}, no_drop {}, txdma-iq1 {}, txdma-iq2 {} "
+                    "txdma_iq_map.txdma_iq1 {}, no_drop_index {}, txdma_iq_map.no_drop {}",
+                     dscp_cos_txdma_iq_map.is_dscp, dscp_or_pcp, is_no_drop,
+                     pd_qos_class->txdma[0].iq, pd_qos_class->txdma[1].iq,
+                     dscp_cos_txdma_iq_map.txdma_iq[i / 2], no_drop_index,
+                     dscp_cos_txdma_iq_map.no_drop[i / 4]);
+}                    
+
 // ----------------------------------------------------------------------------
 // De-Allocate resources for PD Qos-class
 // ----------------------------------------------------------------------------
@@ -297,13 +383,13 @@ qos_class_pd_dealloc_res (pd_qos_class_t *pd_qos_class)
        if (qos_class->cmap.type == QOS_CMAP_TYPE_DSCP) {
            for (i = 0; i < HAL_MAX_IP_DSCP_VALS; i++) {
                if (qos_class->cmap.ip_dscp[i]) {
-                   memset(&dscp_cos_txdma_iq_map[i], 0, sizeof(pd_qos_dscp_cos_map_t));
+                   qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class, i, qos_class->no_drop);
                }
            }
        } else {
            for (i = 0; i < HAL_MAX_DOT1Q_PCP_VALS; i++) {
                if (i == qos_class->cmap.dot1q_pcp) {
-                   memset(&dscp_cos_txdma_iq_map[i], 0, sizeof(pd_qos_dscp_cos_map_t));
+                   qos_class_depopulate_dscp_cos_txdma_iq_map(pd_qos_class, i, qos_class->no_drop);
                }
            }
        }

@@ -1347,7 +1347,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.tx.q.intr.pc_offset = off;
     qstate.tx.q.intr.cosA = cosA;
-    qstate.tx.q.intr.cosB = pd->get_iq(cmd->cos);
+    qstate.tx.q.intr.cosB = pd->get_iq(cmd->cos, hal_lif_info_.pinned_uplink_port_num);
     qstate.tx.q.intr.host = (cmd->flags & IONIC_QINIT_F_EQ) ? 2 : 1;
     qstate.tx.q.intr.total = 3;
     qstate.tx.q.intr.pid = cmd->pid;
@@ -1516,7 +1516,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
 
     qstate.q.intr.pc_offset = off;
     qstate.q.intr.cosA = cosA;
-    qstate.q.intr.cosB = pd->get_iq(cmd->cos);
+    qstate.q.intr.cosB = pd->get_iq(cmd->cos, hal_lif_info_.pinned_uplink_port_num);
     qstate.q.intr.host = (cmd->flags & IONIC_QINIT_F_EQ) ? 2 : 1;
     qstate.q.intr.total = 3;
     qstate.q.intr.pid = cmd->pid;
@@ -2619,6 +2619,7 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 
     aqcb.aqcb0.log_wqe_size = cmd->stride_log2;
     aqcb.aqcb0.log_num_wqes = cmd->depth_log2;
+    aqcb.aqcb0.uplink_num = hal_lif_info_.pinned_uplink_port_num;
     aqcb.aqcb0.aq_id = cmd->qid_ver;
     aqcb.aqcb0.phy_base_addr = cmd->dma_addr | (1UL << 63) | (lif_id << 52);
     aqcb.aqcb0.cq_id = cmd->cid;

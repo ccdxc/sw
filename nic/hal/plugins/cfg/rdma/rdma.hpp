@@ -478,7 +478,8 @@ typedef struct aqcb0_s {
     uint16_t log_wqe_size: 5;
 
     uint8_t  debug;
-    uint8_t  rsvd1[3];
+    uint8_t  uplink_num;
+    uint8_t  rsvd1[2];
 
     uint8_t  token_id;
     uint8_t  first_pass;

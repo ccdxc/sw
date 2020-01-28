@@ -74,10 +74,15 @@ struct pd_qos_class_s {
 } __PACK__;
 
 typedef struct pd_qos_dscp_cos_map_s {
-    bool        is_dscp : 1 ;
-    uint8_t     no_drop : 1;
-    uint8_t     txdma_iq : 4;
-    uint8_t     rsvd: 2;
+    uint8_t     is_dscp : 1;
+    uint8_t     rsvd1: 7;
+    uint8_t     no_drop[16]; // 128-bits. 2 bits per DSCP/PCP. 
+    uint8_t     txdma_iq[32];
+    uint8_t     no_drop1_txdma_iq : 4;
+    uint8_t     no_drop2_txdma_iq : 4;
+    uint8_t     no_drop3_txdma_iq : 4;
+    uint8_t     rsvd2: 4;
+    uint8_t     rsvd3[13];
 } __PACK__ pd_qos_dscp_cos_map_t;
 
 

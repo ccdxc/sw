@@ -142,12 +142,13 @@ class RdmaAQCB0state(Packet):
         ByteField("first_pass", 0),
         ByteField("token_id", 0),
 
-        BitField("rsvd1", 0, 24),
+        BitField("rsvd1", 0, 16),
+        BitField("uplink_num", 0, 8),
         BitField("debug", 0, 8),
-        
+
         BitField("log_wqe_size", 0, 5),
         BitField("log_num_size", 0, 5),
-        BitField("ring_empty_sched_eval_done", 0, 1), 
+        BitField("ring_empty_sched_eval_done", 0, 1),
         BitField("rsvd2", 0 , 5),
 
         XLongField("phy_base_addr", 0),

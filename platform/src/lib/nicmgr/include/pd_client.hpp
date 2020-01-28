@@ -112,7 +112,7 @@ public:
                        lif_info_t *lif_info,
                        uint8_t coses);
 
-    uint8_t get_iq(uint8_t pcp_or_dscp);
+    uint8_t get_iq(uint8_t pcp_or_dscp, uint8_t pinned_uplink_port_num);
 
     void set_program_info();
     int32_t get_pc_offset(const char *prog_name, const char *label,

@@ -25,7 +25,8 @@ struct aqcb0_t {
     first_pass: 8;
     token_id: 8;
 
-    rsvd1: 24;
+    rsvd1: 16;
+    uplink_num: 8;
     debug: 8;
 
     log_wqe_size: 5;
