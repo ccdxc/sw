@@ -237,3 +237,202 @@ SecurityPolicySvcImpl::SecurityPolicyGet(ServerContext *context,
     return Status::OK;
 }
 
+Status
+SecurityPolicySvcImpl::SecurityProfileCreate(ServerContext *context,
+                                             const pds::SecurityProfileRequest *proto_req,
+                                             pds::SecurityProfileResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_security_profile_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->request_size() > 1) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile"
+                          "creation failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        ret = pds_security_profile_proto_to_api_spec(&api_spec,
+                                                     proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_security_profile_create(&api_spec, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityProfileUpdate(ServerContext *context,
+                                             const pds::SecurityProfileRequest *proto_req,
+                                             pds::SecurityProfileResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+    pds_security_profile_spec_t api_spec;
+
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->request_size() > 1) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile "
+                          "update failed");
+            proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_ERR);
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+        memset(&api_spec, 0, sizeof(api_spec));
+        ret = pds_security_profile_proto_to_api_spec(&api_spec,
+                                                     proto_req->request(i));
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        ret = pds_security_profile_update(&api_spec, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    return Status::CANCELLED;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityProfileDelete(ServerContext *context,
+                                             const pds::SecurityProfileDeleteRequest *proto_req,
+                                             pds::SecurityProfileDeleteResponse *proto_rsp) {
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+    pds_obj_key_t key = { 0 };
+    bool batched_internally = false;
+    pds_batch_params_t batch_params;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // only one global security profile is allowed (at this time)
+    if (proto_req->id_size() > 1) {
+        proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    // create an internal batch, if this is not part of an existing API batch
+    bctxt = proto_req->batchctxt().batchcookie();
+    if (bctxt == PDS_BATCH_CTXT_INVALID) {
+        batch_params.epoch = core::agent_state::state()->new_epoch();
+        batch_params.async = false;
+        bctxt = pds_batch_start(&batch_params);
+        if (bctxt == PDS_BATCH_CTXT_INVALID) {
+            PDS_TRACE_ERR("Failed to create a new batch, security profile "
+                          "delete failed");
+            return Status::CANCELLED;
+        }
+        batched_internally = true;
+    }
+
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        ret = pds_security_profile_delete(&key, bctxt);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+    }
+
+    if (batched_internally) {
+        // commit the internal batch
+        ret = pds_batch_commit(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+
+end:
+
+    if (batched_internally) {
+        // destroy the internal batch
+        pds_batch_destroy(bctxt);
+    }
+    proto_rsp->add_apistatus(sdk_ret_to_api_status(ret));
+    return Status::CANCELLED;
+}
+
+Status
+SecurityPolicySvcImpl::SecurityProfileGet(ServerContext *context,
+                                          const pds::SecurityProfileGetRequest *proto_req,
+                                          pds::SecurityProfileGetResponse *proto_rsp) {
+    // TODO: @rsrikanth please take care of this one
+    PDS_TRACE_ERR("SecurityProfile GET not implemented");
+    return Status::CANCELLED;
+}

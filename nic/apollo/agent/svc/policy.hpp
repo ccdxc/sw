@@ -30,6 +30,18 @@ public:
     Status SecurityPolicyDelete(ServerContext *context,
                                 const pds::SecurityPolicyDeleteRequest *req,
                                 pds::SecurityPolicyDeleteResponse *rsp) override;
+    Status SecurityProfileCreate(ServerContext *context,
+                                 const pds::SecurityProfileRequest *req,
+                                 pds::SecurityProfileResponse *rsp) override;
+    Status SecurityProfileUpdate(ServerContext *context,
+                                 const pds::SecurityProfileRequest *req,
+                                 pds::SecurityProfileResponse *rsp) override;
+    Status SecurityProfileGet(ServerContext *context,
+                              const pds::SecurityProfileGetRequest *req,
+                              pds::SecurityProfileGetResponse *rsp) override;
+    Status SecurityProfileDelete(ServerContext *context,
+                                 const pds::SecurityProfileDeleteRequest *req,
+                                 pds::SecurityProfileDeleteResponse *rsp) override;
 };
 
 #endif    // __AGENT_SVC_POLICY_HPP__
