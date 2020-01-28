@@ -288,13 +288,8 @@ class EntityManagement:
         self.scp_pfx = "sshpass -p %s scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
         self.ssh_pfx = "sshpass -p %s ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no " % self.password
 
-    def IpmiResetAndWait(self):
-        print('calling IpmiResetAndWait')
-        os.system("date")
-        IpmiReset()
-        print("sleeping 120 seconds after IpmiReset")
-        time.sleep(120)
-        print("finished 120 second sleep. Looking for prompt now...")
+
+    def NaplesWait(self):
         midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
                                hdl = self.hdl, timeout = 180)
         if midx == 0: return
@@ -302,6 +297,17 @@ class EntityManagement:
         self.SendlineExpect(GlobalOptions.username, "Password:")
         ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
         if ret == 1: self.SendlineExpect("", "#")
+
+    def IpmiResetAndWait(self):
+        print('calling IpmiResetAndWait')
+        os.system("date")
+        IpmiReset()
+        print("sleeping 120 seconds after IpmiReset")
+        time.sleep(120)
+        print("finished 120 second sleep. Looking for prompt now...")
+        self.NaplesWait()
+        print("Waiting for host ssh..")
+        self.host.WaitForSsh()
 
     def __syncLine(self, hdl):
         for i in range(3):
@@ -475,18 +481,21 @@ class NaplesManagement(EntityManagement):
 
     @_exceptionWrapper(_errCodes.NAPLES_LOGIN_FAILED, "Failed to login to naples")
     def __login(self):
-        try:
-            midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
-                                   hdl = self.hdl, timeout = 180)
-            if midx == 0: return
-            self.SendlineExpect(GlobalOptions.username, "")
-            # Got capri login prompt, send username/password.
-            self.SendlineExpect(GlobalOptions.username, "Password:")
-            ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
-            if ret == 1: self.SendlineExpect("", "#")
-        except pexpect.exceptions.TIMEOUT:
-            print("failed to find login prompt. calling ipmi power cycle")
-            self.IpmiResetAndWait()
+        for _ in range(4):
+            try:
+                midx = self.SendlineExpect("", ["#", "capri login:", "capri-gold login:"],
+                                    hdl = self.hdl, timeout = 180)
+                if midx == 0: return
+                # Got capri login prompt, send username/password.
+                self.SendlineExpect(GlobalOptions.username, "Password:")
+                ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
+                if ret == 1: self.SendlineExpect("", "#")
+                #login successful
+                return
+            except: 
+                print("failed to login, trying again")
+        #try ipmi reset as final option
+        self.IpmiResetAndWait()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_REBOOT_FAILED, "Failed to login to naples")
     def RebootGoldFw(self):
@@ -512,7 +521,7 @@ class NaplesManagement(EntityManagement):
             self.host.Reboot()
             self.host.WaitForSsh()
             self.hdl.expect_exact('Starting kernel',120)
-            self.hdl.expect_exact(["#", "capri login:", "capri-gold login:"],120)
+            time.sleep(5)
         self.__login()
 
     def InstallPrep(self):
