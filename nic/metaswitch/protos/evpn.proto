@@ -234,7 +234,7 @@ message EvpnMacIpSpec {
   uint32            EVIId           = 1 [(venice.pdsaFields) = {Field:"evi_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
   uint32            EthTagID        = 2 [(venice.pdsaFields) = {Field:"ethernet_tag_id", GetKeyOidIndex: "AMB_EVPN_MAC_IP_EVI_INDEX_INDEX"}];
   bytes             MACAddress      = 3 [(venice.pdsaFields) = {Field:"mac_address", GetKeyOidIndex: "AMB_EVPN_MAC_IP_MAC_ADDR_INDEX"}];
-  types.IPAddress   IPAddress       = 4 [(venice.pdsaFields) = {Field:"ip_address"}];
+  types.IPAddress   IPAddress       = 4 [(venice.pdsaFields) = {Field:"ip_address", SetKeyOidAddrIndex: "AMB_EVPN_MAC_IP_IP_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_EVPN_MAC_IP_ADDR_TYPE_INDEX"}];
   uint32            PathID          = 5 [(venice.pdsaFields) = {Field:"path_index", GetKeyOidIndex: "AMB_EVPN_MAC_IP_PATH_IX_INDEX"}];
   EvpnSource        Source          = 6 [(venice.pdsaFields) = {Field:"source"}];
   types.IPAddress   NHAddress       = 7 [(venice.pdsaFields) = {Field:"bgp_nh_addr"}];

@@ -88,7 +88,7 @@ message LimInterfaceAddrSpec {
 
   LimIntfType     IfType    = 1; // Interface Type should be converted to MS interface type/subtype, cannot be autogen.
   uint32          IfId      = 2; // Interface ID should be converted to MS interface Index, cannot be Autogen. Filling if_index as part of FillFn
-  types.IPAddress IPAddr    = 3 [(venice.pdsaFields) = {Field:"ipaddress"}];
+  types.IPAddress IPAddr    = 3 [(venice.pdsaFields) = {Field:"ipaddress", SetKeyOidAddrIndex: "AMB_LIM_L3_ADDR_IPADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_LIM_L3_ADDR_IPDDR_TYP_INDEX", AddrTypeFieldName: "ipaddr_type", AddrLenFieldName: "ipaddress_len"}];
   uint32          PrefixLen = 4 [(venice.pdsaFields) = {Field:"prefix_len"}];
 }
 

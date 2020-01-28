@@ -156,9 +156,9 @@ message BGPPeerSpec {
   // neighbor
   AdminSt         AdminEn      = 2 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
-  types.IPAddress PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr"}];
+  types.IPAddress PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_REMOTE_ADD_TYP_IX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr    = 4 [(venice.pdsaFields) = {Field: "local_addr"}];
+  types.IPAddress LocalAddr    = 4 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PER_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PER_LOCAL_ADD_TYP_INDEX"}];
   // IfId
   uint32          IfId         = 5 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
   // Remote 4-byte (32-bit) AS number
@@ -202,9 +202,9 @@ message BGPPeerStatus {
   // neighbor
   AdminSt         AdminEn      = 2 [(venice.pdsaFields) = {Field: "admin_status"}];
   // BGP Peer IP Address
-  types.IPAddress PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr"}];
+  types.IPAddress PeerAddr     = 3 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr    = 4 [(venice.pdsaFields) = {Field: "local_addr"}];
+  types.IPAddress LocalAddr    = 4 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
   // IfId
   uint32          IfId         = 5 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PER_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PRST_SCOPE_ID_INDEX"}];
   // Remote 4-byte (32-bit) AS number
@@ -268,9 +268,9 @@ message BGPPeerAfSpec {
   // unique key/identifier of peer AF config
   bytes           Id          = 1;
   // BGP Peer IP Address
-  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
+  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_REMOTE_ADD_TYP_IX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr   = 3 [(venice.pdsaFields) = {Field: "local_addr"}];
+  types.IPAddress LocalAddr   = 3 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAS_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAS_LOCAL_ADD_TYP_INDEX"}];
   // IfId
   uint32          IfId        = 4 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}];
   // BGP Address family
@@ -294,9 +294,9 @@ message BGPPeerAfStatus {
   // unique key/identifier of peer AF config
   bytes           Id          = 1;
   // BGP Peer IP Address
-  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr"}];
+  types.IPAddress PeerAddr    = 2 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PAST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAST_REMOTE_ADDR_TYP_IX"}];
   // BGP Local IP Address
-  types.IPAddress LocalAddr   = 3 [(venice.pdsaFields) = {Field: "local_addr"}];
+  types.IPAddress LocalAddr   = 3 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PAST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PAST_LOCAL_ADDR_TYP_IX"}];
   // IfId
   uint32          IfId        = 4 [(venice.pdsaFields) = {Field: "local_addr_scope_id",  SetKeyOidIndex: "AMB_BGP_PAS_SCOPE_ID_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SCOPE_ID_INDEX"}];
   // BGP Address family

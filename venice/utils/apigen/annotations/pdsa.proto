@@ -18,17 +18,21 @@ extend google.protobuf.MessageOptions {
 };
 
 message PdsaFields {
-  string Field             = 1;
-  string SetFieldFn        = 2;
-  string GetFieldFn        = 3;
-  string SetKeyOidIndex    = 4;
-  string GetKeyOidIndex    = 5;
-  string SetKeyOidFn       = 6;
-  string GetKeyOidFn       = 7;
-  string SetKeyOidLenIndex = 8;
-  string GetKeyOidLenIndex = 9;
-  bool   IgnoreIfEmpty     = 10;
-  bool   IsZeroIPValid     = 11;
+  string Field                  = 1;
+  string SetFieldFn             = 2;
+  string GetFieldFn             = 3;
+  string SetKeyOidIndex         = 4;
+  string GetKeyOidIndex         = 5;
+  string SetKeyOidFn            = 6;
+  string GetKeyOidFn            = 7;
+  string SetKeyOidLenIndex      = 8;
+  string GetKeyOidLenIndex      = 9;
+  bool   IgnoreIfEmpty          = 10;
+  bool   IsZeroIPValid          = 11;
+  string SetKeyOidAddrIndex     = 12;
+  string SetKeyOidAddrTypeIndex = 13;
+  string AddrTypeFieldName      = 14;
+  string AddrLenFieldName       = 15;
 }
 
 // PDSA Option extensions applicable to Fields

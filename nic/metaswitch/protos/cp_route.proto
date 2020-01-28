@@ -40,9 +40,9 @@ message CPRouteSpec {
   };
 
   uint32          RouteTableId  = 1 [(venice.pdsaFields) = {Field:"fte_index", GetKeyOidIndex: "AMB_QCR_RIB_FTE_INDEX_INDEX"}];
-  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest"}];
+  types.IPAddress DestAddr      = 2 [(venice.pdsaFields) = {Field:"dest", AddrTypeFieldName: "dest_addr_type", AddrLenFieldName:"dest_addr_len", SetKeyOidAddrIndex: "AMB_QCR_RIB_DEST_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_RIB_DEST_TYPE_INDEX"}];
   uint32          DestPrefixLen = 3 [(venice.pdsaFields) = {Field:"dest_len", GetKeyOidIndex: "AMB_QCR_RIB_DEST_LEN_INDEX"}];
-  types.IPAddress NHAddr        = 4 [(venice.pdsaFields) = {Field:"next_hop"}];
+  types.IPAddress NHAddr        = 4 [(venice.pdsaFields) = {Field:"next_hop", SetKeyOidAddrIndex: "AMB_QCR_RIB_NEXT_HOP_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_RIB_NEXT_HOP_TYPE_IX"}];
   uint32          IfIndex       = 5 [(venice.pdsaFields) = {Field:"if_index", GetKeyOidIndex: "AMB_QCR_RIB_IF_INDEX_INDEX"}];
   RouteType       Type          = 6 [(venice.pdsaFields) = {Field:"type"}];
   RouteProto      proto         = 7 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
@@ -73,11 +73,11 @@ message CPStaticRouteSpec {
   // virtual private cloud this route belongs to 
   bytes           RouteTableId = 1;
   // Destination Address 
-  types.IPAddress DestAddr     = 2 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True}];
+  types.IPAddress DestAddr     = 2 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True, SetKeyOidAddrIndex: "AMB_QCR_STRT_DEST_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_STRT_DEST_ADDR_TYPE_IX"}];
   // Destination Address Prefix Length
   uint32          PrefixLen    = 3 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
   // NextHop Address
-  types.IPAddress NextHopAddr  = 4 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True}];
+  types.IPAddress NextHopAddr  = 4 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True, SetKeyOidAddrIndex: "AMB_QCR_STRT_NEXT_HOP_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_STRT_NEXT_HOP_TYPE_IX"}];
   // Admin Status
   AdminSt         AdminStatus  = 5 [(venice.pdsaFields) = {Field: "admin_stat"}];
   // Override Admin Distance

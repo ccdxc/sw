@@ -60,7 +60,23 @@
         // MSFieldType: {{$fieldOpt.CppDataType}} ProtoFieldTypeName: {{.GetTypeName}}
                 {{if (eq $fieldOpt.SetKeyOidFn "")}}
                   {{if (eq .GetTypeName ".types.IPAddress")}}
-        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
+        NBB_LONG        ambAddrType_{{$fieldOpt.Name | ToLower}};
+        NBB_ULONG       ambAddrLen_{{$fieldOpt.Name | ToLower}};
+        NBB_BYTE        ambAddr_{{$fieldOpt.Name | ToLower}}[AMB_BGP_MAX_IP_PREFIX_LEN];
+        ip_addr_t       outAddr_{{$fieldOpt.Name | ToLower}};
+        NBB_ULONG       ii_{{$fieldOpt.Name | ToLower}} = 0;
+
+        ip_addr_spec_to_ip_addr(req.{{$fieldOpt.Name | ToLower}}(), &outAddr_{{$fieldOpt.Name | ToLower}});
+        pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Name | ToLower}}, &ambAddrType_{{$fieldOpt.Name | ToLower}},
+                                          &ambAddrLen_{{$fieldOpt.Name | ToLower}}, ambAddr_{{$fieldOpt.Name | ToLower}},
+                                          {{$fieldOpt.IsZeroIPValid}});
+        // Fill oid now
+        oid[{{$fieldOpt.SetKeyOidAddrTypeIndex}}]   = ambAddrType_{{$fieldOpt.Name | ToLower}};
+        oid[{{$fieldOpt.SetKeyOidAddrIndex}}]       = ambAddrLen_{{$fieldOpt.Name | ToLower}};
+        for (ii_{{$fieldOpt.Name | ToLower}} = 0; ii_{{$fieldOpt.Name | ToLower}} < ambAddrLen_{{$fieldOpt.Name | ToLower}}; ii_{{$fieldOpt.Name | ToLower}}++)
+        {
+            oid[{{$fieldOpt.SetKeyOidAddrIndex}} + 1 + ii_{{$fieldOpt.Name | ToLower}}] = (NBB_ULONG) ambAddr_{{$fieldOpt.Name | ToLower}}[ii_{{$fieldOpt.Name | ToLower}}];
+        }
                   {{else}}
                     {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                     {{if (eq $castFn "")}}
@@ -126,7 +142,23 @@
                   {{$castFn := getPdsaCastSetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                   {{if (eq $castFn "")}}
                     {{if (eq .GetTypeName ".types.IPAddress")}}
-                pds_ms_set_address_field(mib_msg, "{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}}, req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
+                ip_addr_t       outAddr_{{$fieldOpt.Field}};
+
+                ip_addr_spec_to_ip_addr(req.{{$fieldOpt.Name | ToLower}}(), &outAddr_{{$fieldOpt.Field}});
+                      {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
+                pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Field}},
+                                                      &(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type),
+                                                      &(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len),
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                      {{$fieldOpt.IsZeroIPValid}});
+                      {{else}}
+                pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Field}},
+                                                      &(v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}}),
+                                                      &(v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}}),
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                      {{$fieldOpt.IsZeroIPValid}});
+                      {{end}}
+                AMB_SET_FIELD_PRESENT (mib_msg, {{$fieldOpt.SetFieldIdx}}-1);
                     {{else}}
                 v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
@@ -368,9 +400,22 @@
                         {{if (eq $castFn "")}}
                           {{if (eq .GetTypeName ".types.IPAddress")}}
                 auto {{$fieldOpt.Name | ToLower}}_addr = ent->mutable_{{$fieldOpt.Name | ToLower}}();
-                //*{{$fieldOpt.Name | ToLower}}_addr = *pds_ms_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->v4addr();
-		{{$fieldOpt.Name | ToLower}}_addr->set_af(pds_ms_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->af());
-		{{$fieldOpt.Name | ToLower}}_addr->set_v4addr(pds_ms_get_address("{{$mib}}", "{{$fieldOpt.Field}}", (void*)v_{{$struct | ToLower}})->v4addr());
+                types::IPAddress   res_{{$fieldOpt.Field}};
+                ip_addr_t          pds_ms_ip_addr_{{$fieldOpt.Field}};
+                            {{if or (eq $fieldOpt.AddrTypeFieldName "") (eq $fieldOpt.AddrLenFieldName "")}}
+                pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_type,
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len,
+                                                      &pds_ms_ip_addr_{{$fieldOpt.Field}});
+                            {{else}}
+                pds_ms_convert_amb_ip_addr_to_ip_addr(v_{{$struct | ToLower}}->{{$fieldOpt.Field}},
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.AddrTypeFieldName}},
+                                                      v_{{$struct | ToLower}}->{{$fieldOpt.AddrLenFieldName}},
+                                                      &pds_ms_ip_addr_{{$fieldOpt.Field}});
+                            {{end}}
+                ip_addr_to_spec(&pds_ms_ip_addr_{{$fieldOpt.Field}}, &res_{{$fieldOpt.Field}});
+                {{$fieldOpt.Name | ToLower}}_addr->set_af(res_{{$fieldOpt.Field}}.af());
+                {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(res_{{$fieldOpt.Field}}.v4addr());
                           {{else}}
                             {{$typeCastFn := (getCppTypeFieldFromProto .Type .GetTypeName)}}
                             {{if (eq $typeCastFn "")}}
@@ -553,7 +598,23 @@
         // MSFieldType: {{$fieldOpt.CppDataType}} ProtoFieldTypeName: {{.GetTypeName}}
                 {{if (eq $fieldOpt.GetKeyOidFn "")}}
                   {{if (eq .GetTypeName ".types.IPAddress")}}
-        pds_ms_set_address_oid(oid, "{{$mib}}", "{{$fieldOpt.Field}}", req.{{$fieldOpt.Name | ToLower}}(), {{$fieldOpt.IsZeroIPValid}});
+        NBB_LONG        ambAddrType_{{$fieldOpt.Name | ToLower}};
+        NBB_ULONG       ambAddrLen_{{$fieldOpt.Name | ToLower}};
+        NBB_BYTE        ambAddr_{{$fieldOpt.Name | ToLower}}[AMB_BGP_MAX_IP_PREFIX_LEN];
+        ip_addr_t       outAddr_{{$fieldOpt.Name | ToLower}};
+        NBB_ULONG       ii_{{$fieldOpt.Name | ToLower}} = 0;
+
+        ip_addr_spec_to_ip_addr(req.{{$fieldOpt.Name | ToLower}}(), &outAddr_{{$fieldOpt.Name | ToLower}});
+        pds_ms_convert_ip_addr_to_amb_ip_addr(outAddr_{{$fieldOpt.Name | ToLower}}, &ambAddrType_{{$fieldOpt.Name | ToLower}},
+                                          &ambAddrLen_{{$fieldOpt.Name | ToLower}}, ambAddr_{{$fieldOpt.Name | ToLower}},
+                                          {{$fieldOpt.IsZeroIPValid}});
+        // Fill oid now
+        oid[{{$fieldOpt.SetKeyOidAddrTypeIndex}}]   = ambAddrType_{{$fieldOpt.Name | ToLower}};
+        oid[{{$fieldOpt.SetKeyOidAddrIndex}}]       = ambAddrLen_{{$fieldOpt.Name | ToLower}};
+        for (ii_{{$fieldOpt.Name | ToLower}} = 0; ii_{{$fieldOpt.Name | ToLower}} < ambAddrLen_{{$fieldOpt.Name | ToLower}}; ii_{{$fieldOpt.Name | ToLower}}++)
+        {
+            oid[{{$fieldOpt.SetKeyOidAddrIndex}} + 1 + ii_{{$fieldOpt.Name | ToLower}}] = (NBB_ULONG) ambAddr_{{$fieldOpt.Name | ToLower}}[ii_{{$fieldOpt.Name | ToLower}}];
+        }
                   {{else}}
                     {{$castFn := getPdsaCastGetFunc .Type $fieldOpt.CppDataType $fieldOpt}}
                     {{if (eq $castFn "")}}

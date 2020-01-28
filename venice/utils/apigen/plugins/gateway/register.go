@@ -566,25 +566,29 @@ type fileMetricOptions struct {
 }
 
 type pdsaFieldOpt struct {
-	Field             string
-	Name              string
-	IsKey             bool
-	IsReadOnly        bool
-	SetFieldIdx       string
-	GetFieldIdx       string
-	SetFieldFn        string
-	GetFieldFn        string
-	SetKeyOidFn       string
-	GetKeyOidFn       string
-	SetKeyOidIndex    string
-	GetKeyOidIndex    string
-	SetKeyOidLenIndex string
-	GetKeyOidLenIndex string
-	CppDataType       string
-	FieldLen          int
-	FieldHasLen       bool
-	IgnoreIfEmpty     bool
-	IsZeroIPValid     bool
+	Field                  string
+	Name                   string
+	IsKey                  bool
+	IsReadOnly             bool
+	SetFieldIdx            string
+	GetFieldIdx            string
+	SetFieldFn             string
+	GetFieldFn             string
+	SetKeyOidFn            string
+	GetKeyOidFn            string
+	SetKeyOidIndex         string
+	GetKeyOidIndex         string
+	SetKeyOidLenIndex      string
+	GetKeyOidLenIndex      string
+	CppDataType            string
+	FieldLen               int
+	FieldHasLen            bool
+	IgnoreIfEmpty          bool
+	IsZeroIPValid          bool
+	SetKeyOidAddrIndex     string
+	SetKeyOidAddrTypeIndex string
+	AddrTypeFieldName      string
+	AddrLenFieldName       string
 }
 
 type fieldMetricOptions struct {
@@ -786,6 +790,10 @@ func getPdsaFieldOpt(f *descriptor.Field, cam *CamInfo, table string) (pdsaField
 		ret.SetKeyOidLenIndex = o.SetKeyOidLenIndex
 		ret.GetKeyOidLenIndex = o.GetKeyOidLenIndex
 		ret.IgnoreIfEmpty = o.IgnoreIfEmpty
+		ret.SetKeyOidAddrIndex = o.SetKeyOidAddrIndex
+		ret.SetKeyOidAddrTypeIndex = o.SetKeyOidAddrTypeIndex
+		ret.AddrTypeFieldName = o.AddrTypeFieldName
+		ret.AddrLenFieldName = o.AddrLenFieldName
 		if o.IsZeroIPValid {
 			ret.IsZeroIPValid = o.IsZeroIPValid
 		} else {

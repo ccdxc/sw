@@ -68,8 +68,6 @@ types::ApiStatus pds_ms_sdk_ret_to_api_status(sdk_ret_t sdk_ret);
 
 void ip_addr_to_spec(const ip_addr_t *ip_addr,
                      types::IPAddress *ip_addr_spec);
-bool ip_addr_spec_to_ip_addr(const types::IPAddress& in_ipaddr,
-                             ip_addr_t *out_ipaddr);
 
 NBB_VOID pds_ms_convert_amb_ip_addr_to_ip_addr (NBB_BYTE      *amb_ip_addr,
                                                 NBB_LONG      type,
@@ -83,18 +81,6 @@ NBB_VOID  pds_ms_convert_ip_addr_to_amb_ip_addr (ip_addr_t     pds_ms_ip_addr,
 
 bool ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
                               ip_addr_t *out_ipaddr);
-NBB_VOID pds_ms_set_address_oid(NBB_ULONG *oid,
-                              const NBB_CHAR  *tableName,
-                              const NBB_CHAR  *fieldName,
-                              const types::IPAddress &addr,
-                              bool is_zero_ip_valid);
-
-NBB_VOID pds_ms_set_address_field(AMB_GEN_IPS *mib_msg,
-                                const NBB_CHAR  *tableName,
-                                const NBB_CHAR  *fieldName,
-                                NBB_VOID        *dest,
-                                const types::IPAddress &addr,
-                                bool is_zero_ip_valid);
 
 NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
 
@@ -140,9 +126,6 @@ pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid,
                                   string in_str,
                                   NBB_LONG getKeyOidIdx);
 
-types::IPAddress* pds_ms_get_address(const NBB_CHAR  *tableName,
-                                  const NBB_CHAR  *fieldName,
-                                  NBB_VOID    *src);
 namespace pds {
 NBB_VOID bgp_rm_ent_get_fill_func (pds::BGPGlobalSpec &req,
                                    NBB_ULONG*          oid);
