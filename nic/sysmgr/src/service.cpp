@@ -44,13 +44,22 @@ void Service::launch()
 
     ::launch(this->spec->name, this->spec->command, this->spec->cpu_affinity,
              this->spec->mem_limit, &new_process);
+
     this->pid = new_process.pid;
-    this->stdout_pipe = PipedIO::create(new_process.stdout,
-        get_logname_for_process(this->spec->name, this->pid, "out"));
-    this->stderr_pipe = PipedIO::create(new_process.stderr,
-        get_logname_for_process(this->spec->name, this->pid, "err"));
+
+    this->stdout_pipe = PipedIO::create(
+        new_process.stdout,
+        get_logname_for_process(this->spec->name, this->pid, "out"),
+        (this->spec->flags & CAP_STDOUT_STDERR) == CAP_STDOUT_STDERR);
+
+    this->stderr_pipe = PipedIO::create(
+        new_process.stderr,
+        get_logname_for_process(this->spec->name, this->pid, "err"),
+        (this->spec->flags & CAP_STDOUT_STDERR) == CAP_STDOUT_STDERR);
+    
     g_log->info("Launched %s(%i) using %s with affinity 0x%lx",
-                this->spec->name.c_str(), this->pid, this->spec->command.c_str(),
+                this->spec->name.c_str(), this->pid,
+                this->spec->command.c_str(),
                 this->spec->cpu_affinity);
     
     if (this->child_watcher != nullptr)
@@ -58,6 +67,7 @@ void Service::launch()
         this->child_watcher->stop();
         this->child_watcher = nullptr;
     }
+
     this->child_watcher = ChildWatcher::create(this->pid, shared_from_this());
     this->start_heartbeat();
     this->running_state = SERVICE_RUNNING_STATE_ON;

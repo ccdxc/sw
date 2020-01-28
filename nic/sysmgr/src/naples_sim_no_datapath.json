@@ -17,7 +17,7 @@
             "service-name": "fakehal"
         }
     ],
-    "flags": ["restartable", "save_stdout_on_crash"],
+    "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
     "timeout": 0.0
 }, {
     "name": "fakehal",

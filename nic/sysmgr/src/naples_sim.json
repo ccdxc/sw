@@ -28,7 +28,7 @@
             "service-name": "hal"
         }
     ],
-    "flags": ["restartable", "save_stdout_on_crash"],
+    "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
     "timeout": 30.0
 }, {
     "name": "nmd",

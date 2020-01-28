@@ -45,6 +45,8 @@ static int flags_from_obj(pt::ptree obj)
            flags |= COPY_STDOUT_ON_CRASH;
        } else if (boost::iequals(flag.second.data(), "critical")) {
            flags |= PANIC_ON_FAILURE;
+       } else if (boost::iequals(flag.second.data(), "cap_stdout_stderr")) {
+           flags |= CAP_STDOUT_STDERR;
        } else {
            throw std::runtime_error("Unknown flag: " + flag.second.data());
        }

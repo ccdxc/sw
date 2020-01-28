@@ -9,6 +9,7 @@
 #define RESTARTABLE          0x0001
 #define COPY_STDOUT_ON_CRASH 0x0002
 #define PANIC_ON_FAILURE     0x0004
+#define CAP_STDOUT_STDERR    0x0008
 
 enum service_spec_dep_kind {
     SERVICE_SPEC_DEP_SERVICE,

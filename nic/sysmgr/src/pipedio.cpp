@@ -12,9 +12,11 @@
 
 #define MAX_LOG_SIZE (128 * 1024)
 
-PipedIOPtr PipedIO::create(int fd, std::string filename)
+PipedIOPtr PipedIO::create(int fd, std::string filename, bool cap)
 {
     PipedIOPtr io = std::make_shared<PipedIO>();
+    io->cap = cap;
+    io->capped = false;
     io->in_fd = fd;
     io->filename = filename;
     io->out_fd = open(filename.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
@@ -55,6 +57,10 @@ void PipedIO::rotate()
 {
     if (this->size >= MAX_LOG_SIZE)
     {
+        if (this->cap) {
+            this->capped = true;
+            return;
+        }
         std::string old = this->filename + ".1";
         g_log->debug("Rotating %s", this->filename.c_str());
         // remove the old "old" if it exist
@@ -95,6 +101,12 @@ void PipedIO::on_io(int fd)
             this->stop();
             return;
         }
+
+        // We reached the maximum log size for this. Stop writing anymore.
+        if (this->capped) {
+            continue;
+        }
+        
         this->size += n;
         wn = write(this->out_fd, buf, n);
         if (wn != n) {

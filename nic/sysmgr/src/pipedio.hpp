@@ -12,6 +12,8 @@ class PipedIO: public std::enable_shared_from_this<PipedIO>,
                public IOReactor
 {
 private:
+    bool         cap;
+    bool         capped;
     int          in_fd;
     int          out_fd;
     int          size;
@@ -20,7 +22,8 @@ private:
     void         rotate();
     void         stop();
 public:
-    static std::shared_ptr<PipedIO> create(int fd, std::string filename);
+    static std::shared_ptr<PipedIO> create(int fd, std::string filename,
+                                           bool cap);
     ~PipedIO();
     virtual void on_io(int fd);
 };
