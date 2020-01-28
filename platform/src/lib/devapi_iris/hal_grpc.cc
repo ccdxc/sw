@@ -55,6 +55,7 @@ end:
 sdk_ret_t
 hal_grpc::connect_hal(void)
 {
+    grpc::ChannelArguments channel_args;
     std::string svc_url;
 
     if (getenv("HAL_SOCK_PATH")) {
@@ -65,7 +66,10 @@ hal_grpc::connect_hal(void)
         svc_url = std::string("localhost:50054");
     }
 
-    channel = grpc::CreateChannel(svc_url, grpc::InsecureChannelCredentials());
+    channel_args.SetInt(GRPC_ARG_INITIAL_RECONNECT_BACKOFF_MS, 100); // Time bet 1st & 2nd attempts
+    channel_args.SetInt(GRPC_ARG_MIN_RECONNECT_BACKOFF_MS, 100); // Min time bet subseq. attemps;
+    channel = grpc::CreateCustomChannel(svc_url, grpc::InsecureChannelCredentials(),
+                                        channel_args);
 
     NIC_LOG_DEBUG("Connecting to HAL at: {}", svc_url);
     auto state = channel->GetState(true);
