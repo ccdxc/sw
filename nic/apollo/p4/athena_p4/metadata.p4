@@ -161,6 +161,10 @@ header_type scratch_metadata_t {
         policer_rate        : 40;
         policer_tbkt        : 40;
         packet_len          : 16;
+
+        // Conntrack
+        flow_type           : 2;
+        flow_state          : 4;
     }
 }
 

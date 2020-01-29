@@ -21,6 +21,7 @@
 #include "inter_pipe.p4"
 #include "policers.p4"
 #include "checksum.p4"
+#include "conntrack.p4"
 
 action nop() {
 }
@@ -39,7 +40,6 @@ control ingress {
     offloads();
     flow_lookup();
     nacl();
-    session_info_lookup();
     config_verify();
     policers();
     ingress_inter_pipe();
@@ -51,6 +51,8 @@ control ingress {
 control egress {
     //session_info_encap_lookup();
     //statistics();
+    session_info_lookup();
     update_checksums();
     egress_inter_pipe();
+    conntrack_state_update();
 }

@@ -22,3 +22,5 @@
 
 #define POLICER_PPS_SIZE                                    2048
 #define POLICER_BW_SIZE                                     2048
+
+#define CONNTRACK_TABLE_SIZE                                4194304     // 4M: used 3.6M

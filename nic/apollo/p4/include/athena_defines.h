@@ -79,4 +79,29 @@
 #define VNIC_TYPE_L3                            0
 #define VNIC_TYPE_L2                            1
 
+
+/*****************************************************************************/
+/* Conntrack Flow types                                                      */
+/*****************************************************************************/
+#define CONNTRACK_FLOW_TYPE_TCP                 0
+#define CONNTRACK_FLOW_TYPE_UDP                 1
+#define CONNTRACK_FLOW_TYPE_ICMP                2
+#define CONNTRACK_FLOW_TYPE_OTHERS              3
+
+/*****************************************************************************/
+/* Conntrack Flow States                                                     */
+/*****************************************************************************/
+#define CONNTRACK_FLOW_STATE_UNESTABLISHED      0
+#define CONNTRACK_FLOW_STATE_SYN_SENT           1
+#define CONNTRACK_FLOW_STATE_SYN_RECV           2
+#define CONNTRACK_FLOW_STATE_SYNACK_SENT        3
+#define CONNTRACK_FLOW_STATE_SYNACK_RECV        4
+#define CONNTRACK_FLOW_STATE_ESTABLISHED        5
+#define CONNTRACK_FLOW_STATE_FIN_SENT           6
+#define CONNTRACK_FLOW_STATE_FIN_RECV           7
+#define CONNTRACK_FLOW_STATE_TIME_WAIT          8
+#define CONNTRACK_FLOW_STATE_RST_CLOSE          9
+#define CONNTRACK_FLOW_STATE_REMOVED            10
+
+
 #endif /* _ATHENA_DEFINES_H_ */

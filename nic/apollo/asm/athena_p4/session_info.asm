@@ -1,7 +1,7 @@
-#include "ingress.h"
-#include "INGRESS_p.h"
+#include "egress.h"
+#include "EGRESS_p.h"
 #include "athena.h"
-#include "INGRESS_session_info_common_k.h"
+#include "EGRESS_session_info_common_k.h"
 
 struct session_info_common_k_   k;
 struct session_info_common_d    d;
