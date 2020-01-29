@@ -5,6 +5,7 @@ import itertools
 import copy
 from infra.common.logging import logger
 
+from apollo.config.store import EzAccessStore
 import apollo.config.resmgr as resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -68,12 +69,21 @@ class SubnetObject(base.ConfigObjectBase):
             self.Vnid = spec.fabricencapvalue
         else:
             self.Vnid = next(resmgr.VxlanIdAllocator)
-        self.HostIf = InterfaceClient.GetHostInterface(node)
-        if self.HostIf:
-            self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+        if utils.IsDol():
+            self.HostIf = InterfaceClient.GetHostInterface(node)
+            if self.HostIf:
+                self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+            else:
+                self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
+            node_uuid = None
         else:
-            self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
-        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
+            self.HostIf = None
+            self.HostIfIdx = int(getattr(spec, 'hostifidx', None))
+            node_uuid = EzAccessStore.GetUuidMap()[node]
+            node_uuid = node_uuid.replace('.', '')
+            if node_uuid == '':
+                node_uuid = None
+        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
@@ -100,6 +110,8 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("SUBNET object:", self)
         logger.info("- %s" % repr(self))
         logger.info("- Prefix %s VNI %d" % (self.IPPrefix, self.Vnid))
+        logger.info('- HostIfIdx:%s' % (self.HostIfIdx))
+        logger.info('- HostIfUuid:%s' % (self.HostIfUuid))
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\

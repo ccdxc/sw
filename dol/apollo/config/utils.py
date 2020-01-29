@@ -79,11 +79,15 @@ PDS_UUID_SYSTEM_MAC = PENSANDO_NIC_MAC.to_bytes(PDS_UUID_SYSTEM_MAC_LEN, "big")
 
 class PdsUuid:
 
-    def __init__(self, value):
+    def __init__(self, value, node_uuid=None):
+
+        if node_uuid:
+            node_uuid = int(node_uuid, 16)
+            node_uuid = node_uuid.to_bytes(6, "big")
 
         if isinstance(value, int):
             self.Id = value
-            self.Uuid = PdsUuid.GetUUIDfromId(self.Id)
+            self.Uuid = PdsUuid.GetUUIDfromId(self.Id, node_uuid)
         elif isinstance(value, bytes):
             self.Uuid = value
             self.Id = PdsUuid.GetIdfromUUID(self.Uuid)
@@ -118,7 +122,9 @@ class PdsUuid:
         return int.from_bytes(uuid[PDS_UUID_ID_OFFSET_START:PDS_UUID_ID_OFFSET_END], PDS_UUID_BYTE_ORDER)
 
     @staticmethod
-    def GetUUIDfromId(id):
+    def GetUUIDfromId(id, node_uuid=None):
+        if not node_uuid:
+            node_uuid = PDS_UUID_SYSTEM_MAC
         # uuid is of 16 bytes
         uuid = bytearray(PDS_UUID_LEN)
         # first 8 bytes ==> id
@@ -126,7 +132,7 @@ class PdsUuid:
         # next 2 bytes ==> magic byte (0x4242)
         uuid[PDS_UUID_MAGIC_BYTE_OFFSET_START:PDS_UUID_MAGIC_BYTE_OFFSET_END] = PDS_UUID_MAGIC_BYTE
         # next 6 bytes ==> system mac (0x022222111111)
-        uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:] = PDS_UUID_SYSTEM_MAC
+        uuid[PDS_UUID_SYSTEM_MAC_OFFSET_START:] = node_uuid
         return bytes(uuid)
 
 def GetRandomObject(objList):

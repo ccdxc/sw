@@ -200,4 +200,10 @@ class ApolloConfigStore:
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
+    def GetUuidMap(self):
+        return self.uuid_map
+
+    def SetUuidMap(self, uuid_map):
+        self.uuid_map = uuid_map
+
 EzAccessStore = ApolloConfigStore()

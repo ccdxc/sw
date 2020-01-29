@@ -10,6 +10,7 @@ import infra.common.parser as parser
 import iota.harness.api as api
 from infra.common.logging import logger as logger
 import apollo.config.generator as generator
+from apollo.config.store import EzAccessStore
 
 def Main(args):
     node = args.node
@@ -19,6 +20,10 @@ def Main(args):
     if args.spec == 'dummy':
         return api.types.status.SUCCESS
     cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%args.spec)
+
+    naples_uuid_map = api.GetNaplesNodeUuidMap()
+    EzAccessStore.SetUuidMap(naples_uuid_map)
+
     generator.Main(node, cfgspec, api.GetNicMgmtIP(node))
 
     return api.types.status.SUCCESS

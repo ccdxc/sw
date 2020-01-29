@@ -63,11 +63,8 @@ class VnicObject(base.ConfigObjectBase):
         else:
             self.Vnid = parent.Vnid
         self.SourceGuard = getattr(spec, 'srcguard', False)
-        if self.SUBNET.HostIf:
-            self.HostIfIdx = utils.LifId2LifIfIndex(self.SUBNET.HostIf.lif.id)
-        else:
-            self.HostIfIdx = getattr(parent, 'HostIfIdx', None)
-        self.HostIfUuid = utils.PdsUuid(self.HostIfIdx) if self.HostIfIdx else None
+        self.HostIfIdx = self.SUBNET.HostIfIdx
+        self.HostIfUuid = self.SUBNET.HostIfUuid
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
         self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
