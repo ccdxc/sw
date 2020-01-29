@@ -13,7 +13,9 @@ import (
 
 	api "github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
+	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/objstore"
+	"github.com/pensando/sw/api/generated/rollout"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/elastic"
@@ -347,6 +349,21 @@ func (idr *Indexer) startWriter(id int) {
 					ometa.Name,
 					req.evType)
 				idr.updatePolicyCache(req.object, req.evType)
+			case "Rollout":
+				idr.logger.Info("dropping the reason from rollout object to avoid mapping conflict with alert.status.reason")
+				rolloutObj := req.object.(*rollout.Rollout)
+				rolloutObj.Status.Reason = ""
+				req.object = rolloutObj
+			case "TechSupportRequest":
+				idr.logger.Info("dropping the reason from techsupport object to avoid mapping conflict with alert.status.reason")
+				tsObj := req.object.(*monitoring.TechSupportRequest)
+				tsObj.Status.Reason = ""
+				req.object = tsObj
+			case "ArchiveRequest":
+				idr.logger.Info("dropping the reason from archive object to avoid mapping conflict with alert.status.reason")
+				arObj := req.object.(*monitoring.ArchiveRequest)
+				arObj.Status.Reason = ""
+				req.object = arObj
 			}
 
 			// TODO: Once the category is available in Kind attribute or a new Meta
