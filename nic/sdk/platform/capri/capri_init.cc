@@ -547,7 +547,7 @@ namespace sdk {
 namespace asic {
 
 static asic_init_type_t asic_init_type = ASIC_INIT_TYPE_HARD;
-static asic_init_state_t asic_init_state = ASIC_INIT_STATE_RUNNING;
+static asic_state_t asic_state = ASIC_STATE_RUNNING;
 
 __attribute__((constructor)) void asic_slave_init_(void) {
     char *value;
@@ -578,15 +578,15 @@ set_init_type (asic_init_type_t type)
 }
 
 void
-set_init_state (asic_init_state_t state)
+set_state (asic_state_t state)
 {
-    asic_init_state = state;
+    asic_state = state;
 }
 
 bool
 is_quiesced (void)
 {
-    return asic_init_state == ASIC_INIT_STATE_QUIESCED ? true : false;
+    return asic_state == ASIC_STATE_QUIESCED ? true : false;
 }
 
 //------------------------------------------------------------------------------

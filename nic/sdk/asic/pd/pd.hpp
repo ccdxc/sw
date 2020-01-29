@@ -124,6 +124,20 @@ typedef struct asicpd_sw_phv_state_ {
     uint32_t    drop_no_data_cntr;
 } asicpd_sw_phv_state_t;
 
+// this is mainly used during upgrade to modify the
+// table engine configuration to map to new hbm
+// and p4 program layouts.
+typedef struct p4_tbl_eng_cfg_s {
+    int tableid;
+    int stage;
+    int stage_tableid;
+    uint64_t asm_err_offset;
+    uint64_t asm_base;
+    uint64_t mem_offset; // only for hbm tables
+    uint32_t pc_offset;
+    bool     pc_dyn;
+} p4_tbl_eng_cfg_t;
+
 sdk_ret_t asicpd_program_table_constant(uint32_t tableid, uint64_t const_value);
 sdk_ret_t asicpd_p4plus_table_mpu_base_init(p4pd_cfg_t *p4pd_cfg);
 sdk_ret_t asicpd_program_table_mpu_pc(void);
@@ -207,6 +221,16 @@ queue_credits_get (queue_credits_get_cb_t cb, void *ctxt);
 uint64_t asicpd_table_asm_base_addr_get(uint32_t tableid);
 uint64_t asicpd_table_asm_err_offset_get(uint32_t tableid);
 
+uint32_t asicpd_tbl_eng_cfg_get(p4pd_pipeline_t pipeline,
+                                p4_tbl_eng_cfg_t *info,
+                                uint32_t ninfos);
+sdk_ret_t asicpd_tbl_eng_cfg_modify(p4pd_pipeline_t pipeline,
+                                    p4_tbl_eng_cfg_t *cfg,
+                                    uint32_t ncfgs);
+sdk_ret_t asicpd_rss_tbl_eng_cfg_get(const char *handle, uint32_t tableid,
+                                     p4_tbl_eng_cfg_t *rss);
+void asicpd_rss_tbl_eng_cfg_modify(p4_tbl_eng_cfg_t *rss);
+
 }    // namespace pd
 }    // namespace asic
 }    // namespace sdk
@@ -219,5 +243,6 @@ using sdk::asic::pd::lif_qstate_t;
 using sdk::asic::pd::lif_qtype_info_t;
 using sdk::asic::pd::kNumQTypes;
 using sdk::asic::pd::kAllocUnit;
+using sdk::asic::pd::p4_tbl_eng_cfg_t;
 
 #endif    // __SDK_ASIC_PD_HPP__

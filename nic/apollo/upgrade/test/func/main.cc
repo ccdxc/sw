@@ -8,7 +8,7 @@
 #include <gtest/gtest.h>
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/apollo/test/base/base.hpp"
-#include "nic/sdk/asic/pd/pd_upgrade.hpp"
+#include "nic/sdk/asic/pd/pd.hpp"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 
 using std::string;
@@ -39,8 +39,8 @@ protected:
 TEST_F(upg_func_gtest, table_property_get_set) {
     p4pd_pipeline_t pipe[] = { P4_PIPELINE_INGRESS, P4_PIPELINE_EGRESS,
         P4_PIPELINE_RXDMA, P4_PIPELINE_TXDMA };
-    p4_upg_table_property_t property[MAX_PIPELINES][MAX_TABLES_PER_PIPELINE];
-    uint32_t property_cnt[MAX_PIPELINES];
+    p4_tbl_eng_cfg_t cfg[MAX_PIPELINES][MAX_TABLES_PER_PIPELINE];
+    uint32_t cfg_cnt[MAX_PIPELINES];
     sdk_ret_t ret;
 
     // property get and set functions
@@ -49,24 +49,24 @@ TEST_F(upg_func_gtest, table_property_get_set) {
     // during switch the saved values will be applied on hw in P4 quiesce state.
     // this would save the quiesce time..
     for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {
-        property_cnt[i] = sdk::asic::pd::asicpd_upg_table_property_get(
-            pipe[i], &property[i][0], MAX_TABLES_PER_PIPELINE);
-        SDK_ASSERT(property_cnt[i]);
+        cfg_cnt[i] = sdk::asic::pd::asicpd_tbl_eng_cfg_get(
+            pipe[i], &cfg[i][0], MAX_TABLES_PER_PIPELINE);
+        SDK_ASSERT(cfg_cnt[i]);
     }
-    ret = sdk::asic::pd::asicpd_upg_rss_table_property_get(
+    ret = sdk::asic::pd::asicpd_rss_tbl_eng_cfg_get(
         "apulu_rxdma",
         P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR,
-        &property[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR]);
+        &cfg[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR]);
     SDK_ASSERT(ret == SDK_RET_OK);
 
     // property set function
     for (uint32_t i = 0; i < sizeof(pipe)/sizeof(uint32_t); i++) {
-        ret = sdk::asic::pd::asicpd_upg_table_property_set(
-            pipe[i], &property[i][0], property_cnt[i]);
+        ret = sdk::asic::pd::asicpd_tbl_eng_cfg_modify(
+            pipe[i], &cfg[i][0], cfg_cnt[i]);
         SDK_ASSERT(ret);
     }
-    sdk::asic::pd::asicpd_upg_rss_table_property_set(
-        &property[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR]);
+    sdk::asic::pd::asicpd_rss_tbl_eng_cfg_modify(
+        &cfg[P4_PIPELINE_RXDMA][P4_P4PLUS_RXDMA_TBL_ID_ETH_RX_RSS_INDIR]);
 
 }
 

@@ -30,26 +30,26 @@ enum UpgMode {
   UPG_MODE_NON_DISRUPTIVE = 2;
 }
 
-enum UpgOperHwTblMode {
-  UPG_OPER_HWTBL_MODE_NONE     = 0;
+enum UpgOperStateAction {
+  UPG_OPER_STATE_ACTION_NONE     = 0;
   // copy the operational tables to new memory with translation
   // memory should be reserved for duplicating the entries
-  UPG_OPER_HWTBL_MODE_COPY     = 1;
+  UPG_OPER_STATE_ACTION_COPY     = 1;
   // flush all the existing operational tables
-  UPG_OPER_HWTBL_MODE_FLUSH    = 2;
+  UPG_OPER_STATE_ACTION_FLUSH    = 2;
   // preserve the operational entries as it is
-  UPG_OPER_HWTBL_MODE_PRESERVE = 3;
+  UPG_OPER_STATE_ACTION_PRESERVE = 3;
   // replace the existing operational tables.
   // when there is no additional memory, build the new table in
   // linux memory and DMA in the end.
-  UPG_OPER_HWTBL_MODE_REPLACE  = 4;
+  UPG_OPER_STATE_ACTION_REPLACE  = 4;
 }
 
 message UpgSpec {
-  UpgReqType       ReqType       = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  UpgMode          Mode          = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  string           PkgName       = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
-  UpgOperHwTblMode OperHwTblMode = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgReqType         ReqType         = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgMode            Mode            = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  string             PkgName         = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  UpgOperStateAction OperStateAction = 4 [(gogoproto.moretags) = "meta:mandatory,immutable"];
 }
 
 enum UpgStatus {
@@ -63,6 +63,6 @@ message UpgRequest {
 }
 
 message UpgResponse {
-  UpgStatus Status      = 1;
-  string    RespFailStr = 2;
+  UpgStatus Status    = 1;
+  string    StatusMsg = 2;
 }

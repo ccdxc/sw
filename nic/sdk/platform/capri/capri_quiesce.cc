@@ -193,7 +193,7 @@ capri_quiesce_start (void)
 
     // even if there an error, stop needs to be called.
     // so no need to check the ret_val
-    sdk::asic::set_init_state(sdk::asic::asic_init_state_t::ASIC_INIT_STATE_QUIESCED);
+    sdk::asic::set_state(sdk::asic::asic_state_t::ASIC_STATE_QUIESCED);
 
    // SDK_TRACE_DEBUG(" %s End ret: %d", __FUNCTION__, ret_val);
     return ret;
@@ -211,7 +211,7 @@ capri_quiesce_stop (void)
     cap_top_quiesce_pb_stop(chip_id);
     cap_top_quiesce_txs_stop(chip_id);
 
-    sdk::asic::set_init_state(sdk::asic::asic_init_state_t::ASIC_INIT_STATE_RUNNING);
+    sdk::asic::set_state(sdk::asic::asic_state_t::ASIC_STATE_RUNNING);
 
     // SDK_TRACE_DEBUG(" %s End", __FUNCTION__);
     return ret;

@@ -106,15 +106,15 @@ typedef enum asic_init_type_e {
     ASIC_INIT_TYPE_UPGRADE = 2
 } asic_init_type_t;
 
-// Asic init states.
-// Running  : Default init state.
+// Asic states.
+// Running  : Default state.
 // Quiesced : HW has been quiesced to modify HW registers which are used in the P4 data path.
 //            Once the modification has been done, programmer should move back the state to
 //            running.
-typedef enum asic_init_state_e {
-    ASIC_INIT_STATE_RUNNING = 0,
-    ASIC_INIT_STATE_QUIESCED = 1
-} asic_init_state_t;
+typedef enum asic_state_e {
+    ASIC_STATE_RUNNING = 0,
+    ASIC_STATE_QUIESCED = 1
+} asic_state_t;
 
 // returns true if the init type is SOFT, false otherwise
 bool is_soft_init(void);
@@ -123,7 +123,7 @@ bool is_upgrade_init(void);
 // returns true if the init type is HARD, false otherwise(SOFT/UPGRADE)
 bool is_hard_init(void);
 void set_init_type(asic_init_type_t type);
-void set_init_state(asic_init_state_t state);
+void set_state(asic_state_t state);
 bool is_quiesced(void);
 
 }    // namespace asic

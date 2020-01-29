@@ -171,6 +171,9 @@ bool p4plus_invalidate_cache(uint64_t addr, uint32_t size_in_bytes,
 void capri_table_csr_cache_inval_init(void);
 uint64_t capri_get_p4plus_table_mpu_pc(int tableid);
 sdk_ret_t capri_pgm_init(void);
+sdk_ret_t capri_tbl_eng_cfg_modify(p4pd_pipeline_t pipeline,
+                                   p4_tbl_eng_cfg_t *cfg,
+                                   uint32_t ncfgs);
 
 } // namespace capri
 } // namespace platform
