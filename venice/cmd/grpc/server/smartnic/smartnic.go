@@ -733,6 +733,7 @@ func (s *RPCServer) MonitorHealth() {
 			// if the leader transitioned in past 60s, then wait for the cache to be warmed up
 			if time.Since(env.LeaderService.LastTransitionTime()) <= StateMgrWarmupInterval {
 				time.Sleep(StateMgrWarmupInterval)
+				s.stateMgr.MarkAllSmartNICsDirty()
 				continue
 			}
 
@@ -772,8 +773,8 @@ func (s *RPCServer) MonitorHealth() {
 							// the deadInterval, update the Health status to unknown
 							if err == nil && time.Since(t) > s.DeadIntvl {
 								// update the nic health status to unknown
-								log.Infof("Updating NIC health to unknown, nic: %s DeadIntvl:%d", nic.Name, s.DeadIntvl)
 								lastUpdateTime := nic.Status.Conditions[i].LastTransitionTime
+								log.Infof("Updating NIC health to unknown, nic: %+v", nic)
 								nic.Status.Conditions[i].Status = cluster.ConditionStatus_UNKNOWN.String()
 								nic.Status.Conditions[i].LastTransitionTime = time.Now().UTC().Format(time.RFC3339)
 								nic.Status.Conditions[i].Reason = fmt.Sprintf("NIC health update not received since %s", lastUpdateTime)

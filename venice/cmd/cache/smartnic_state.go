@@ -249,3 +249,16 @@ func (sm *Statemgr) GetSmartNICByID(hostname string) *cluster.DistributedService
 	defer sm.hostnameToSmartNICMapLock.RUnlock()
 	return sm.hostnameToSmartNICMap[hostname]
 }
+
+// MarkAllSmartNICsDirty sets the dirty flag on all SmartNICs, so that next update
+// gets forcefully pushed to ApiServer
+func (sm *Statemgr) MarkAllSmartNICsDirty() {
+	objs := sm.memDB.ListObjects("DistributedServiceCard", nil)
+	log.Infof("StateMgr: marking %v SmartNICs objects as dirty", len(objs))
+	for _, obj := range objs {
+		sg, _ := SmartNICStateFromObj(obj)
+		sg.Lock()
+		sg.dirty = true
+		sg.Unlock()
+	}
+}
