@@ -475,7 +475,8 @@ cpld_verify_idcode(void)
         for (int i = 0; i < ARRAY_SIZE(idcode); i++) {
             idcode[i] = cpld_reg_rd(CPLD_CONF_FLASH_READ_BYTE + ARRAY_SIZE(idcode) - (i + 1));
         }
-        if (idcode[3] == 0x43 && idcode[2] == 0xb0) {
+        if (idcode[3] == 0x43 &&
+            (idcode[2] == 0xb0 || idcode[2] == 0xc0)) {
             pal_mem_trace("Id verified\n");
             close(fd);
             return true;

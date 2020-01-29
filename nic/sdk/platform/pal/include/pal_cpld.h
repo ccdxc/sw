@@ -5,9 +5,13 @@
 #include "pal_types.h"
 
 #define CPLD_REGISTER_REVISION                0x00
+#define CPLD_REGISTER_CTRL                    0x01
 #define CPLD_REGISTER_QSFP_CTRL               0x02
+#define CPLD_REGISTER_INTERRUPT_ENABLE        0x03
+#define CPLD_REGISTER_INTERRUPT_STATUS        0x04
 #define CPLD_REGISTER_QSFP_LED                0x05
 #define CPLD_REGISTER_QSFP_LED_FREQUENCY      0x0F
+#define CPLD_REGISTER_CTRL2                   0x12
 #define CPLD_REGISTER_SYSTEM_LED              0x15
 #define CPLD_REGISTER_CORE_TEMP               0x16
 #define CPLD_REGISTER_HBM_TEMP                0x17
@@ -17,6 +21,8 @@
 #define CPLD_REGISTER_HBM_WARNING_TEMP        0x1b
 #define CPLD_REGISTER_HBM_CRITICAL_TEMP       0x1c
 #define CPLD_REGISTER_HBM_FATAL_TEMP          0x1d
+#define CPLD_REGISTER_EXT_INTERRUPT_ENABLE    0x1e
+#define CPLD_REGISTER_EXT_INTERRUPT_STATUS    0x1f
 #define CPLD_PERSISTENT_REG                   0x20
 #define CPLD_REGISTER_QSFP_PORT1_ALARM_TEMP   0x34
 #define CPLD_REGISTER_QSFP_PORT1_WARNING_TEMP 0x35
@@ -31,6 +37,8 @@
 #define CPLD_NAPLES_25_ID     0x13
 #define CPLD_NAPLES_FORIO_ID  0x14
 #define CPLD_NAPLES_VOMERO_ID 0x15
+#define CPLD_ID_NAPLES25_SWM  0x17
+#define CPLD_ID_NAPLES25_OCP  0x19
 #define CPLD_REV_0            0x0
 #define CPLD_REV_8            0x8
 

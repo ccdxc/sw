@@ -230,5 +230,22 @@
         "flags": [],
         "cpu-affinity": "0xF",
         "timeout": 0.0
-    }
+    },
+    {
+         "name": "cpldmon",
+         "command": "/platform/bin/cpldmon",
+         "dependencies": [
+             {
+                 "kind": "service",
+                 "service-name": "delphi"
+             },
+             {
+                 "kind": "service",
+                 "service-name": "hal"
+             }
+         ],
+         "flags": ["restartable", "save_stdout_on_crash"],
+         "timeout": 0.0,
+         "cpu-affinity": "0xF"
+     }
 ]

@@ -26,6 +26,7 @@ nic/build/aarch64/iris/bin/sysmond                                              
 nic/build/aarch64/iris/bin/fructl                                               /platform/bin/
 nic/build/aarch64/iris/bin/powerctl                                             /platform/bin/
 nic/build/aarch64/iris/bin/ncsid                                                /platform/bin/
+nic/build/aarch64/iris/bin/cpldmon                                              /platform/bin/
 
 # Libraries
 nic/build/aarch64/iris/lib/libpciehw.so                                         /platform/lib/

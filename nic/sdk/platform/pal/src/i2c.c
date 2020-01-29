@@ -16,17 +16,27 @@
 
 #define I2C_NODE "/dev/i2c-"
 
+#define ADDR_LEN_8BIT    8
+#define ADDR_LEN_16BIT   16
+
 static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
                         uint32_t offset, uint32_t nretry,
-                        uint32_t bus, uint32_t slaveaddr)
+                        uint32_t bus, uint32_t slaveaddr,
+                        uint8_t address_length)
 {
     int i;
     int fd;
     char filename[64];
-    uint8_t wbuf = offset;
+    uint8_t wbuf[2];
+    int n = 0;
 
     struct i2c_msg msgs[2];
     struct i2c_rdwr_ioctl_data msgset[1];
+
+    if (address_length == ADDR_LEN_16BIT) {
+        wbuf[n++] = offset >> 8;
+    }
+    wbuf[n++] = offset;
 
     snprintf(filename, 64, "%s%d", I2C_NODE, bus);
     if ((fd = open(filename, O_RDWR)) < 0) {
@@ -41,7 +51,7 @@ static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
         }
         msgs[0].addr = slaveaddr;
         msgs[0].flags = 0;
-        msgs[0].len = 1;
+        msgs[0].len = n;
         msgs[0].buf = &wbuf;
 
         msgs[1].addr = slaveaddr;
@@ -112,11 +122,19 @@ static int pal_i2c_write(const uint8_t *buffer, uint32_t size,
 
 int pal_fru_read(const uint8_t *buffer, uint32_t size, uint32_t nretry)
 {
+    int id;
+
     if (size != FRU_SIZE) {
         pal_mem_trace("Buffer is not of the right size \n");
         return -1;
     }
-    return pal_i2c_read(buffer, FRU_SIZE, 0, nretry, I2C_BUS, FRU_SLAVE_ADDRESS);
+    id = pal_get_cpld_id();
+    if (id == CPLD_ID_NAPLES25_SWM || id == CPLD_ID_NAPLES25_OCP)
+        return pal_i2c_read(buffer, FRU_SIZE, 0, nretry, I2C_BUS, FRU_SLAVE_ADDRESS,
+                            ADDR_LEN_16BIT);
+     else
+        return pal_i2c_read(buffer, FRU_SIZE, 0, nretry, I2C_BUS, FRU_SLAVE_ADDRESS,
+                            ADDR_LEN_8BIT);
 }
 
 int pal_qsfp_read(const uint8_t *buffer, uint32_t size,
@@ -124,10 +142,10 @@ int pal_qsfp_read(const uint8_t *buffer, uint32_t size,
 {
     if (port == QSFP_PORT_1)
         return pal_i2c_read(buffer, size, offset, nretry,
-                                   QSFP_1_I2C_BUS, QSFP_1_SLAVE_ADDRESS);
+                            QSFP_1_I2C_BUS, QSFP_1_SLAVE_ADDRESS, ADDR_LEN_8BIT);
     else if (port == QSFP_PORT_2)
         return pal_i2c_read(buffer, size, offset, nretry,
-                                   QSFP_2_I2C_BUS, QSFP_2_SLAVE_ADDRESS);
+                            QSFP_2_I2C_BUS, QSFP_2_SLAVE_ADDRESS, ADDR_LEN_8BIT);
     return -1;
 }
 
@@ -156,5 +174,5 @@ int smbus_read(const uint8_t *buffer, uint32_t size,
                 uint32_t bus, uint32_t slaveaddr)
 {
     return pal_i2c_read(buffer, size, offset,
-                         nretry, bus, slaveaddr);
+                        nretry, bus, slaveaddr, ADDR_LEN_8BIT);
 }

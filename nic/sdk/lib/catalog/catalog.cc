@@ -593,6 +593,8 @@ catalog::catalog_board_type_to_sdk_card_id(std::string board_type)
         return CARD_ID_NAPLES100;
     } else if (board_type.compare("Naples25") == 0) {
         return CARD_ID_NAPLES25;
+    } else if (board_type.compare("Naples25 SWM") == 0) {
+        return CARD_ID_NAPLES25;
     } else {
         return CARD_ID_NAPLES100;
     }
