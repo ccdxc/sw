@@ -59,7 +59,6 @@
                   </div>
                   <app-sorticon [isSortable]="col.sortable" [field]="col.field">{{col.header}}
                   </app-sorticon>
-                  <div fxFlex></div>
                   <div *ngIf="!last" class="tableviewedit-resizer"
                        (mousedown)="onMouseDown($event, index)" (click)="$event.stopPropagation()">
                   </div>
@@ -84,9 +83,9 @@
           <!-- below "col.width + '% !important'" , 'important' key work is needed for VS-981. please test column selection if you change it -->
           <td *ngFor="let col of selectedcolumns; let last = last" [ngSwitch]="col.field"
               [class]="col.class ? col.class : ''"
-              [style.min-width]="col.width + '% !important' | safeStyle"
+              [style.width]="col.width + '%'"
               [colSpan]="last && actionTemplate != null ? 2 : 1"
-              [fxFlex]="last && actionTemplate != null ? col.width - actionWidth : col.width">
+              [fxFlex]="col.width">
             <ng-container
                           *ngTemplateOutlet="bodyTemplate; context: {col: col, hovered: hoveredRowID === getRowID(rowData), $implicit: rowData, rowIndex: rowIndex}">
             </ng-container>

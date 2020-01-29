@@ -229,6 +229,13 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
     }
     this.resizeTimeout = setTimeout(() => {
       const $ = Utility.getJQuery();
+
+      // set header width, account for scrollbar in table body, to align column widths with body widths
+      const bodyWidth = parseInt($('.lazyrender-container .ui-table-scrollable-body').css('width'), 10);
+      const bodyTableWidth = parseInt($('.lazyrender-container .ui-table-scrollable-body-table.ui-table-virtual-table').css('width'), 10);
+      const scrollWidth = bodyWidth - bodyTableWidth;
+      $('.lazyrender-container .ui-table-scrollable-header-box').css('margin-right', `${scrollWidth}px`);
+
       const containerHeight = $('.lazyrender-container').outerHeight();
       let headerHeight = $('.lazyrender-container .ui-table-caption').outerHeight();
       const tableBodyHeader = $('.lazyrender-container .ui-table-scrollable-header').outerHeight();
@@ -237,12 +244,17 @@ export class LazyrenderComponent implements OnInit, AfterContentInit, OnChanges,
         headerHeight = 0;
       }
       const newHeight = containerHeight - headerHeight - tableBodyHeader;
-      // ui-table-scrollable-header-box was set to have margin-right:15px misteriously. I reset "right margin" so that table follows it. It makes scroll bar looks better.
-      $('.lazyrender-container .ui-table-scrollable-header-box').css('margin-right', '0px');
       $('.lazyrender-container .ui-table-scrollable-body').css('max-height', newHeight + 'px');
       // Setting height as well since sometimes the auto calculation is off by 1 px
       $('.lazyrender-container .ui-table-scrollable-body').css('height', newHeight + 'px');
       $('.lazyrender-container .ui-table-scrollable-body').css('visibility', ''); // VS-757.  Parent html dom has "visibility: hidden". We want this node now to have "visibility: visible"
+
+      // reset top value to 0 if bounce scrolls sets to invalid negative number
+      const virtualTop = parseInt($('.lazyrender-container .ui-table-scrollable-body-table.ui-table-virtual-table').css('top'), 10);
+      if (virtualTop < 0) {
+        $('.lazyrender-container .ui-table-virtual-table').css('top', '0');
+      }
+
     }, delay);
   }
 
