@@ -545,24 +545,4 @@ export class NewroleComponent extends UsersComponent implements OnInit, OnDestro
     }
     return false;
   }
-
-  /**
-   * VS-1052  dropdown overlay is appendTo body. When overlay is shown, if user scrolls window, the overlay will  not follow the target dropdown.
-   * So when overlay is on show, we block overlay scroll.
-   * @param $event
-   */
-  onOverlayShow($event) {
-    const $ = Utility.getJQuery();
-    $('app-users .pagebody-content').css('overflow', 'hidden');
-  }
-
-   /**
-   * VS-1052  dropdown overlay is appendTo body. When overlay is shown, if user scrolls window, the overlay will  not follow the target dropdown.
-   * So when overlay is on hide, we block restore scroll.
-   * @param $event
-   */
-  onOverlayHide($event) {
-    const $ = Utility.getJQuery();
-    $('app-users .pagebody-content').css('overflow', 'auto');
-  }
 }

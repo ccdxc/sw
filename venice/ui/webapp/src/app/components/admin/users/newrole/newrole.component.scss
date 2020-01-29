@@ -54,8 +54,13 @@ $vertical-gutter: 5px;
   padding: 3px 0px 0px 0px;
 }
 
-.newrole .newrolw-permission {
-  margin: 5px;
+.newrole .newrole-permissions {
+  padding-bottom: 5px;
+  padding-left: 5px;
+}
+
+.newrole .newrole-permission {
+  margin-bottom: 10px;
   padding: 5px;
   border: 1px solid #f0f0f0;
   height: 225px;
@@ -68,13 +73,7 @@ $vertical-gutter: 5px;
 }
 
 .newrole-value {
-  margin: 0px 0px 2px 0px;
-}
-
-
-.newrole .newrole-permissions-div {
-  height: auto;
-  display: inline-flex;
+  margin-bottom: 2px;
 }
 
 .newrole .newrole-permission-button {

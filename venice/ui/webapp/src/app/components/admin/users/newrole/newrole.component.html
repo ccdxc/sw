@@ -1,4 +1,4 @@
-<div class="newrole" *ngIf="newAuthRole" [formGroup]="newAuthRole.$formGroup" fxLayout="row">
+<div class="newrole" *ngIf="newAuthRole" [formGroup]="newAuthRole.$formGroup">
   <div fxLayout="row wrap" fxLayoutAlign="start" class="newrole-panel-rolegroup-header-add-row">
     <div fxLayout="column">
       <div fxLayout="row" fxLayoutAlign="start center" formGroupName="meta">
@@ -14,12 +14,10 @@
       </div>
       <div fxLayout="row" class="newrole-panel-rolegroup-header-add-property-label">Permissions:
       </div>
-      <div fxFlex="grow" fxLayout="row wrap" class="newrole-permissions-div">
-        <ng-container *ngTemplateOutlet="permissons"></ng-container>
-      </div>
+      <ng-container *ngTemplateOutlet="permissons"></ng-container>
     </div>
   </div>
-  <div fxFlex="nogrow" fxLayout="row" fxLayoutAlign="end end">
+  <div fxLayout="row" fxLayoutAlign="end end">
     <div fxFlex="nogrow">
       <button (click)="onCancelAddRole($event)" tabindex="0"
               (keydown)="($event.which ==13)? onCancelAddRole($event) : ''"
@@ -39,8 +37,8 @@
     <ng-container formArrayName="spec">
       <ng-container formArrayName="permissions">
         <div class="newrole-permissions" fxFlex="grow" fxLayout="row wrap">
-          <div fxLayout="row wrap">
-            <div class="newrolw-permission" [@slideInOut]
+          <div fxLayout="row wrap" fxLayoutGap="10px">
+            <div class="newrole-permission" [@slideInOut]
                  *ngFor="let permission of controlAsFormArray(newAuthRole.$formGroup.get(['spec','permissions'])).controls; let index = index; let first = first"
                  [formGroupName]="index" fxFlex="noshrink" fxLayout="column">
 
@@ -78,40 +76,36 @@
 
                       </div>
                       <!-- Field Values -->
-                      <div fxFlex fxLayout="column">
-                        <ng-container>
-                          <!-- comment out permission.resource-tenant per VS-241 (GS-release) -->
-                          <!-- 
+                      <div>
+                        <!-- comment out permission.resource-tenant per VS-241 (GS-release) -->
+                        <!-- 
                           <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <input fxFlex="nogrow" formControlName="resource-tenant"
                                    class="newrole-host" spellcheck="false"
                                    type="text" pInputText placeholder="tenant...">
                           </div> 
                            -->
-                          <div fxFlex="30px" fxLayout="row" class="newrole-value">
-                            <p-dropdown class="newrole-severity" fxFlex="170px"
-                                        formControlName="resource-group" styleClass="newrole-font"
-                                        appendTo="body" (onShow)="onOverlayShow($event)"
-                                        (onHide)="onOverlayHide($event)"
-                                        [options]="groupOptions" placeholder="group..."
-                                        (onChange)="onGroupChange($event, permission, index)">
-                            </p-dropdown>
-                          </div>
-                          <div fxFlex="30px" fxLayout="row" class="newrole-value">
-                            <p-dropdown class="newrole-severity" fxFlex="170px"
-                                        formControlName="resource-kind" styleClass="newrole-font"
-                                        appendTo="body" (onShow)="onOverlayShow($event)"
-                                        (onHide)="onOverlayHide($event)"
-                                        (onChange)="onKindChange($event, permission, index)"
-                                        [options]="permission.kindOptions" placeholder="kind...">
-                            </p-dropdown>
-                          </div>
-                          <!-- TODO: 2019-01-10 comment it out per back-end request for now
+                        <div class="newrole-value">
+                          <p-dropdown class="newrole-severity" fxFlex="170px"
+                                      formControlName="resource-group" styleClass="newrole-font"
+                                      [options]="groupOptions" placeholder="group..."
+                                      (onChange)="onGroupChange($event, permission, index)"
+                                      scrollHeight="160px">
+                          </p-dropdown>
+                        </div>
+                        <div class="newrole-value">
+                          <p-dropdown class="newrole-severity" fxFlex="170px"
+                                      formControlName="resource-kind" styleClass="newrole-font"
+                                      (onChange)="onKindChange($event, permission, index)"
+                                      [options]="permission.kindOptions" placeholder="kind..."
+                                      scrollHeight="130px">
+                          </p-dropdown>
+                        </div>
+                        <!-- TODO: 2019-01-10 comment it out per back-end request for now
                            <div fxFlex="30px" fxLayout="row" class="newrole-value">
                             <input fxFlex="nogrow" formControlName="resource-namespace" class="newrole-port" spellcheck="false"
                               type="text" pInputText placeholder="namespace...">
                           </div> -->
-                        </ng-container>
                       </div>
                     </div>
                     <!--  TODO: 2019-01-17 comment it out per back-end request for now

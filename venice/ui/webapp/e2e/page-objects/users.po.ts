@@ -99,16 +99,16 @@ export class UsersPage {
         // set role permission
         for (let i = 0; i < authRole.spec.permissions.length; i ++ ) {
                 const permission = authRole.spec.permissions[i];
-                const tenantCSS = '.newrole-permissions-div .newrolw-permission .newrole-host.ui-inputtext';
+                const tenantCSS = '.newrole-permission .newrole-host.ui-inputtext';
                 await E2EuiTools.setInputBoxValue(tenantCSS, permission['resource-tenant']);
-                const groupDropdownArrowCSS = '.newrole-permissions-div .newrolw-permission p-dropdown[formcontrolname="resource-group"] .ui-dropdown-trigger.ui-corner-right .ui-dropdown-trigger-icon.ui-clickable';
+                const groupDropdownArrowCSS = '.newrole-permission p-dropdown[formcontrolname="resource-group"] .ui-dropdown-trigger.ui-corner-right .ui-dropdown-trigger-icon.ui-clickable';
                 await E2EuiTools.setDropdownValue(permission['resource-group'], i, groupDropdownArrowCSS );
-                const kindDropdownArrowCSS = '.newrole-permissions-div .newrolw-permission p-dropdown[formcontrolname="resource-kind"] .ui-dropdown-trigger.ui-corner-right .ui-dropdown-trigger-icon.ui-clickable';
+                const kindDropdownArrowCSS = '.newrole-permission p-dropdown[formcontrolname="resource-kind"] .ui-dropdown-trigger.ui-corner-right .ui-dropdown-trigger-icon.ui-clickable';
                 await browser.sleep(1000);  // wait for group change code finish.
                 await E2EuiTools.setDropdownValue(permission['resource-kind'], i, kindDropdownArrowCSS );
                 await browser.sleep(1000);
                 // set permit action
-                const actionListCSS = '.newrole-permissions-div .newrolw-permission:nth-child('  + (i + 1 ) + ')  p-listbox .ui-listbox-list-wrapper .ui-listbox-item > span';
+                const actionListCSS = '.newrole-permission:nth-child('  + (i + 1 ) + ')  p-listbox .ui-listbox-list-wrapper .ui-listbox-item > span';
                 await browser.sleep(1000);
                 await E2EuiTools.setListBoxValue(permission.actions, actionListCSS );
         }
