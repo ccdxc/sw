@@ -57,7 +57,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     nat_hw_index_t xlate_idx, xlate_idx_rflow;
     nat_type_t nat_address_type = NAT_TYPE_INTERNET;
 
-    vpc_id = vnet_buffer (p0)->pds_data.vpc_id;
+    vpc_id = vnet_buffer2(p0)->pds_nat_data.vpc_id;
     ip40 = vlib_buffer_get_current(p0);
     pvt_ip.as_u32 = ip40->src_address.as_u32;
     dip.as_u32 = ip40->dst_address.as_u32;
@@ -84,7 +84,7 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
         goto error;
     }
 
-    if (vnet_buffer(p0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
+    if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_SVC_VALID) {
         nat_address_type = NAT_TYPE_INFRA;
     }
     if (nat_flow_alloc(vpc_id, dip, dport, protocol, pvt_ip, pvt_port,
@@ -93,10 +93,10 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
                        NAT_ERR_OK) {
         goto error;
     }
-    vnet_buffer2(p0)->pds_data.xlate_idx = xlate_idx;
-    vnet_buffer2(p0)->pds_data.xlate_idx_rflow = xlate_idx_rflow;
-    vnet_buffer(p0)->pds_data.xlate_addr = sip.as_u32;
-    vnet_buffer(p0)->pds_data.xlate_port = sport;
+    vnet_buffer2(p0)->pds_nat_data.xlate_idx = xlate_idx;
+    vnet_buffer2(p0)->pds_nat_data.xlate_idx_rflow = xlate_idx_rflow;
+    vnet_buffer2(p0)->pds_nat_data.xlate_addr = sip.as_u32;
+    vnet_buffer2(p0)->pds_nat_data.xlate_port = sport;
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
@@ -155,7 +155,7 @@ nat (vlib_main_t * vm,
 static u8 *
 nat_trace (u8 * s, va_list * args)
 {
-    return format(0, "Not Implemented");
+    return format(s, "Not Implemented");
 }
 
 static char * nat_error_strings[] = {

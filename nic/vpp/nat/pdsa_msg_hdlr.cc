@@ -3,7 +3,6 @@
 //
 
 #include "nic/vpp/infra/cfg/pdsa_db.hpp"
-#include "nic/vpp/impl/impl_db.h"
 #include "nat_api.h"
 
 extern "C" {
@@ -19,14 +18,30 @@ map_pds_address_type(address_type_t address_type)
     SDK_ASSERT(1 == 0);
 }
 
+static sdk::sdk_ret_t
+pds_vpc_cfg_hw_id_get(const pds_obj_key_t *vpc, uint16_t *vpc_hw_id) {
+    pds_cfg_msg_t vpc_msg;
+    vpp_config_data &config = vpp_config_data::get();
+
+    vpc_msg.obj_id = OBJ_ID_VPC;
+    vpc_msg.vpc.key = *vpc;
+
+    if (!config.get(vpc_msg)) {
+        return sdk::SDK_RET_ERR;
+    }
+    *vpc_hw_id = vpc_msg.vpc.status.hw_id;
+    return sdk::SDK_RET_OK;
+}
+
 // callback function to process configuration message. C/U/D
 static sdk::sdk_ret_t
 pds_nat_cfg_set(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret = NAT_ERR_OK;
-    uint32_t vpc_hw_id;
+    uint16_t vpc_hw_id;
     ipv4_addr_t addr;
+    sdk::sdk_ret_t vpc_ret;
 
     nat_msg = &cfg_msg->nat_port_block;
 
@@ -34,7 +49,10 @@ pds_nat_cfg_set(const pds_cfg_msg_t *cfg_msg) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
+    vpc_ret = pds_vpc_cfg_hw_id_get(&nat_msg->spec.vpc, &vpc_hw_id);
+    if (sdk::SDK_RET_OK != vpc_ret) {
+        return vpc_ret;
+    }
 
     if (cfg_msg->op == API_OP_CREATE) {
         for (addr = nat_msg->spec.nat_ip_range.ip_lo.v4_addr;
@@ -75,15 +93,18 @@ pds_nat_cfg_del(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret = NAT_ERR_OK;
-    uint32_t vpc_hw_id;
+    uint16_t vpc_hw_id;
     ipv4_addr_t addr;
+    sdk::sdk_ret_t vpc_ret;
 
     nat_msg = &cfg_msg->nat_port_block;
 
     SDK_ASSERT(nat_msg->spec.nat_ip_range.af == IP_AF_IPV4);
 
-    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
-
+    vpc_ret = pds_vpc_cfg_hw_id_get(&nat_msg->spec.vpc, &vpc_hw_id);
+    if (sdk::SDK_RET_OK != vpc_ret) {
+        return vpc_ret;
+    }
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
     for (addr = nat_msg->spec.nat_ip_range.ip_lo.v4_addr;
@@ -110,8 +131,9 @@ pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
     const pds_nat_port_block_cfg_msg_t *nat_msg;
     nat_type_t nat_type;
     nat_err_t ret = NAT_ERR_OK;
-    uint32_t vpc_hw_id;
+    uint16_t vpc_hw_id;
     ipv4_addr_t addr;
+    sdk::sdk_ret_t vpc_ret;
 
     nat_msg = &cfg_msg->nat_port_block;
 
@@ -119,7 +141,10 @@ pds_nat_cfg_act(const pds_cfg_msg_t *cfg_msg) {
 
     nat_type = map_pds_address_type(nat_msg->spec.address_type);
 
-    vpc_hw_id = pds_impl_db_vpc_get((const uint8_t *)nat_msg->spec.vpc.id);
+    vpc_ret = pds_vpc_cfg_hw_id_get(&nat_msg->spec.vpc, &vpc_hw_id);
+    if (sdk::SDK_RET_OK != vpc_ret) {
+        return vpc_ret;
+    }
 
     for (addr = nat_msg->spec.nat_ip_range.ip_lo.v4_addr;
          addr <= nat_msg->spec.nat_ip_range.ip_hi.v4_addr; addr++) {

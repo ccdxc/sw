@@ -6,35 +6,6 @@
 #include "pdsa_impl_db_hdlr.h"
 
 static sdk::sdk_ret_t
-pds_cfg_db_vpc_set_cb (const pds_cfg_msg_t *msg)
-{
-    int rc;
-
-    rc = pds_impl_db_vpc_set((const uint8_t *)msg->vpc.spec.key.id,
-                             msg->vpc.status.hw_id);
-
-    if (rc == 0) {
-        return sdk::SDK_RET_OK;
-    } else {
-        return sdk::SDK_RET_ERR;
-    }
-}
-
-static sdk::sdk_ret_t
-pds_cfg_db_vpc_del_cb (const pds_cfg_msg_t *msg)
-{
-    int rc;
-
-    rc = pds_impl_db_vpc_del((const uint8_t *)msg->vpc.spec.key.id);
-
-    if (rc == 0) {
-        return sdk::SDK_RET_OK;
-    } else {
-        return sdk::SDK_RET_ERR;
-    }
-}
-
-static sdk::sdk_ret_t
 pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
@@ -71,6 +42,8 @@ pds_cfg_db_vnic_set_cb (const pds_cfg_msg_t *msg)
     int rc;
     uint16_t subnet_hw_id = 0xffff;
     pds_cfg_msg_t subnet_msg;
+    uint8_t dot1q = 0,
+            dot1ad = 0;
 
     vpp_config_data &config = vpp_config_data::get();
 
@@ -86,10 +59,18 @@ pds_cfg_db_vnic_set_cb (const pds_cfg_msg_t *msg)
     }
     subnet_hw_id = subnet_msg.subnet.status.hw_id;
 
+    if (msg->vnic.spec.vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
+        dot1q = 1;
+    } else if (msg->vnic.spec.vnic_encap.type == PDS_ENCAP_TYPE_QINQ) {
+        dot1ad = 1;
+    }
     rc = pds_impl_db_vnic_set((uint8_t *)msg->vnic.spec.mac_addr,
                               msg->vnic.spec.max_sessions,
                               msg->vnic.status.hw_id,
-                              subnet_hw_id);
+                              subnet_hw_id,
+                              msg->vnic.spec.flow_learn_en,
+                              dot1q, dot1ad,
+                              msg->vnic.spec.vnic_encap.val.vlan_tag);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;
@@ -121,7 +102,6 @@ pds_impl_db_cb_register (void)
                                pds_cfg_db_##_obj##_del_cb,  \
                                NULL);
 
-    _(VPC, vpc)
     _(VNIC, vnic)
     _(SUBNET, subnet)
 #undef _

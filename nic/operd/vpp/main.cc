@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "operd-vpp.h"
+#include "flow_decoder.h"
 #include "lib/operd/decoder.h"
 
 static size_t
@@ -16,16 +16,24 @@ vpp_decoder (uint8_t encoder, const char *data, size_t data_length,
 
     assert(sizeof(*flow) == data_length);
 
-    if (flow->version == 6) {
-        len = snprintf(output, output_size, "IPv6 flow");
-    } else {
+    switch (flow->type) {
+    case OPERD_FLOW_TYPE_IP4:
         len = snprintf(output, output_size, "IPv4 0x%x 0%x %hu %hu",
                        flow->v4.src, flow->v4.dst, flow->v4.sport,
                        flow->v4.dport);
+        break;
+    case OPERD_FLOW_TYPE_IP6:
+        len = snprintf(output, output_size, "IPv6 flow");
+        break;
+    case OPERD_FLOW_TYPE_L2:
+        len = snprintf(output, output_size, "L2 flow");
+        break;
+    default:
+        len = 0;
+        break;
     }
 
     return len;
-    
 }
 
 extern "C" void

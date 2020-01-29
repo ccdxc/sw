@@ -29,14 +29,14 @@ clear_flow_entry (pds_flow_key_t *key)
         ftlv4_set_key(&v4entry, key->src_ip.addr.v4_addr, 
                       key->dst_ip.addr.v4_addr, key->proto, 
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv4_remove(table4, &v4entry, 0);
+        ret = ftlv4_remove(table4, &v4entry, 0, 0);
         
         // For the reverse flow, just swap src and dst addr and port
         v4entry.clear();
         ftlv4_set_key(&v4entry, key->dst_ip.addr.v4_addr,
                       key->src_ip.addr.v4_addr, key->proto,
                       key->sport, key->dport, key->lookup_id);
-        ret = ftlv4_remove(table4, &v4entry, 0);
+        ret = ftlv4_remove(table4, &v4entry, 0, 0);
     } else {
         // Clear both ingress and egress flows
         ftlv6 *table6 = (ftlv6 *)pds_flow_get_table6();
@@ -44,14 +44,14 @@ clear_flow_entry (pds_flow_key_t *key)
         ftlv6_set_key(&entry, key->src_ip.addr.v6_addr.addr8, 
                       key->dst_ip.addr.v6_addr.addr8, key->proto, 
                       key->sport, key->dport, key->lookup_id, 0);
-        ret = ftlv6_remove(table6, &entry, 0);
+        ret = ftlv6_remove(table6, &entry, 0, 0);
 
         // For the reverse flow, just swap src and dst addr and ports
         entry.clear();
         ftlv6_set_key(&entry, key->dst_ip.addr.v6_addr.addr8,
                       key->src_ip.addr.v6_addr.addr8, key->proto,
                       key->sport, key->dport, key->lookup_id, 0);
-        ret = ftlv6_remove(table6, &entry, 0);
+        ret = ftlv6_remove(table6, &entry, 0, 0);
     }
     return ret;
 }

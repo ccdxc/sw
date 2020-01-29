@@ -85,7 +85,7 @@ uint32_t ftlv4_cache_get_session_index(int id);
 
 void ftlv4_cache_set_epoch(uint8_t val);
 
-void ftlv4_cache_set_hash(uint32_t val);
+void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
 
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
@@ -141,7 +141,7 @@ uint32_t ftlv6_cache_get_session_index(int id);
 
 void ftlv6_cache_set_epoch(uint8_t val);
 
-void ftlv6_cache_set_hash(uint32_t val);
+void ftlv6_cache_set_hash_log(uint32_t val, uint8_t log);
 
 void ftlv6_cache_batch_flush(ftlv6 *obj, int *status);
 
@@ -162,9 +162,9 @@ void ftlv6_set_key(v6_flow_entry *entry,
                    uint16_t lookup_id,
                    uint8_t key_type);
 
-int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash);
+int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash, uint8_t log);
 
-int ftlv6_remove(ftlv6 *obj, v6_flow_entry *entry, uint32_t hash);
+int ftlv6_remove(ftlv6 *obj, v6_flow_entry *entry, uint32_t hash, uint8_t log);
 
 #ifdef __cplusplus
 }

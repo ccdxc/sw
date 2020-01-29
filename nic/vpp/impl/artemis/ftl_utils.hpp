@@ -37,4 +37,16 @@ ftlv6_set_lookup_id(flow_hash_entry_t *entry,
     entry->set_vnic_metadata_vpc_id(lookup_id);
 }
 
+uint16_t
+ftlv4_get_lookup_id(ipv4_flow_hash_entry_t *entry)
+{
+    return entry->get_vnic_metadata_vpc_id();
+}
+
+uint16_t
+ftlv6_get_lookup_id(flow_hash_entry_t *entry)
+{
+    return entry->get_vnic_metadata_vpc_id();
+}
+
 #endif  // __VPP_IMPL_ARTEMIS_FTL_UTILS_H__

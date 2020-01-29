@@ -252,6 +252,7 @@ nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_impl.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_api.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_ipc.so                    /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_cfg.so                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsvpp_operd.so                  /nic/lib/
 nic/sdk/third-party/vpp-pkg/$ARCH/lib/*.so.*                      /nic/lib/
 nic/sdk/third-party/vpp-pkg/$ARCH/bin/vpp                         /nic/bin/
 nic/sdk/third-party/vpp-pkg/$ARCH/bin/vppctl                      /nic/bin/

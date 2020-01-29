@@ -62,7 +62,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (self.__type == topo.InterfaceTypes.L3):
             res = str("VPC:%d|ip:%s|ethifidx:%d|encap:%s|mac:%s"% \
                     (self.VpcId, self.ip_prefix, self.ethifidx, self.encap, \
-                    self.macaddr))
+                    self.macaddr.getnum()))
         else:
             return
         logger.info("- %s" % res)

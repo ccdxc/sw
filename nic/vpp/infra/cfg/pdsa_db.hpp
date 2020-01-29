@@ -42,14 +42,14 @@ typedef struct {
 // this is the authoritative copy, and plugins are notified (through
 // registered callbacks) when this config changes
 class vpp_config_data {
-    // containers are ordered map, instance to spec
-    std::unordered_map<pds_obj_key_t, pds_vpc_spec_t, pds_obj_key_hash> vpc;
-    std::unordered_map<pds_obj_key_t, pds_vnic_spec_t, pds_obj_key_hash> vnic;
-    std::unordered_map<pds_obj_key_t, pds_subnet_spec_t, pds_obj_key_hash> subnet;
-    std::unordered_map<pds_obj_key_t, pds_dhcp_relay_spec_t, pds_obj_key_hash> dhcp_relay;
-    std::unordered_map<pds_obj_key_t, pds_dhcp_policy_spec_t, pds_obj_key_hash> dhcp_policy;
-    std::unordered_map<pds_obj_key_t, pds_nat_port_block_spec_t, pds_obj_key_hash> nat_port_block;
-    std::unordered_map<pds_obj_key_t, pds_security_profile_spec_t, pds_obj_key_hash> security_profile;
+    // containers are ordered map, instance to cfg msg
+    std::unordered_map<pds_obj_key_t, pds_vpc_cfg_msg_t, pds_obj_key_hash> vpc;
+    std::unordered_map<pds_obj_key_t, pds_vnic_cfg_msg_t, pds_obj_key_hash> vnic;
+    std::unordered_map<pds_obj_key_t, pds_subnet_cfg_msg_t, pds_obj_key_hash> subnet;
+    std::unordered_map<pds_obj_key_t, pds_dhcp_relay_cfg_msg_t, pds_obj_key_hash> dhcp_relay;
+    std::unordered_map<pds_obj_key_t, pds_dhcp_policy_cfg_msg_t, pds_obj_key_hash> dhcp_policy;
+    std::unordered_map<pds_obj_key_t, pds_nat_port_block_cfg_msg_t, pds_obj_key_hash> nat_port_block;
+    std::unordered_map<pds_obj_key_t, pds_security_profile_cfg_msg_t, pds_obj_key_hash> security_profile;
     static vpp_config_data singleton;
 
 public:

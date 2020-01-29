@@ -239,7 +239,7 @@ pds_session_prog_trace_add (vlib_main_t *vm,
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
-                t0->session_id = vnet_buffer(b0)->pds_data.ses_id;
+                t0->session_id = vnet_buffer(b0)->pds_flow_data.ses_id;
                 clib_memcpy(t0->data,
                             (vlib_buffer_get_current(b0) -
                              pds_session_get_advance_offset()),
@@ -248,7 +248,7 @@ pds_session_prog_trace_add (vlib_main_t *vm,
 
             if (b1->flags & VLIB_BUFFER_IS_TRACED) {
                 t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
-                t1->session_id = vnet_buffer(b1)->pds_data.ses_id;
+                t1->session_id = vnet_buffer(b1)->pds_flow_data.ses_id;
                 clib_memcpy(t1->data,
                             (vlib_buffer_get_current(b1) -
                              pds_session_get_advance_offset()),
@@ -265,7 +265,7 @@ pds_session_prog_trace_add (vlib_main_t *vm,
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
-                t0->session_id = vnet_buffer(b0)->pds_data.ses_id;
+                t0->session_id = vnet_buffer(b0)->pds_flow_data.ses_id;
                 clib_memcpy(t0->data,
                             (vlib_buffer_get_current(b0) -
                              pds_session_get_advance_offset()),
@@ -290,8 +290,8 @@ pds_session_prog (vlib_main_t * vm,
             b0 = PDS_PACKET_BUFFER(0);
             b1 = PDS_PACKET_BUFFER(1);
 
-            session_id0 = vnet_buffer(b0)->pds_data.ses_id;
-            session_id1 = vnet_buffer(b1)->pds_data.ses_id;
+            session_id0 = vnet_buffer(b0)->pds_flow_data.ses_id;
+            session_id1 = vnet_buffer(b1)->pds_flow_data.ses_id;
             pds_session_prog_x2(b0, b1,
                                 session_id0, session_id1,
                                 PDS_PACKET_NEXT_NODE_PTR(0),
@@ -305,7 +305,7 @@ pds_session_prog (vlib_main_t * vm,
 
             b = PDS_PACKET_BUFFER(0);
 
-            session_id0 = vnet_buffer(b)->pds_data.ses_id;
+            session_id0 = vnet_buffer(b)->pds_flow_data.ses_id;
             pds_session_prog_x1(b, session_id0,
                                 PDS_PACKET_NEXT_NODE_PTR(0),
                                 counter);
@@ -469,7 +469,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
     udp_header_t        *udp0;
     icmp46_header_t     *icmp0;
 
-    vnet_buffer(p0)->pds_data.ses_id = session_id;
+    vnet_buffer(p0)->pds_flow_data.ses_id = session_id;
 
     if (is_ip4) {
         ip4_header_t *ip40;
@@ -515,22 +515,23 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch( 0xff);
         pds_flow_extract_nexthop_info(p0, 1);
-        ftlv4_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
+        ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
+                                 pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
         // TODO : Handle rx from uplink, service mapping
-        if (vnet_buffer(p0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+        if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
             // NAPT - both port and ip are changed
-            dst_ip = vnet_buffer(p0)->pds_data.xlate_addr;
-            r_dport = vnet_buffer(p0)->pds_data.xlate_port;
-        } else if (vnet_buffer2(p0)->pds_data.xlate_idx) {
+            dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
+        } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
             // static NAT
-            dst_ip = vnet_buffer(p0)->pds_data.xlate_addr;
+            dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
         }
         ftlv4_cache_set_key(dst_ip, src_ip,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch(0xff);
-        ftlv4_cache_set_hash(0);
+        ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
     } else {
         ip6_header_t *ip60;
@@ -575,12 +576,13 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
         pds_flow_extract_nexthop_info(p0, 0);
-        ftlv6_cache_set_hash(vnet_buffer(p0)->pds_data.flow_hash);
+        ftlv6_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
+                                 pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
         ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
-        ftlv6_cache_set_hash(0);
+        ftlv6_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
     }
     return;
@@ -867,8 +869,8 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
-                t0->flow_hash = vnet_buffer(b0)->pds_data.flow_hash;
-                flag0 = vnet_buffer(b0)->pds_data.flags;
+                t0->flow_hash = vnet_buffer(b0)->pds_flow_data.flow_hash;
+                flag0 = vnet_buffer(b0)->pds_flow_data.flags;
                 t0->flags = flag0;
                 t0->l2_offset = vnet_buffer(b0)->l2_hdr_offset;
                 t0->l3_offset = vnet_buffer(b0)->l3_hdr_offset;
@@ -877,8 +879,8 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
             }
             if (b1->flags & VLIB_BUFFER_IS_TRACED) {
                 t1 = vlib_add_trace(vm, node, b1, sizeof(t1[0]));
-                t1->flow_hash = vnet_buffer(b1)->pds_data.flow_hash;
-                flag1 = vnet_buffer(b1)->pds_data.flags;
+                t1->flow_hash = vnet_buffer(b1)->pds_flow_data.flow_hash;
+                flag1 = vnet_buffer(b1)->pds_flow_data.flags;
                 t1->flags = flag1;
                 t1->l2_offset = vnet_buffer(b1)->l2_hdr_offset;
                 t1->l3_offset = vnet_buffer(b1)->l3_hdr_offset;
@@ -896,8 +898,8 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
 
             if (b0->flags & VLIB_BUFFER_IS_TRACED) {
                 t0 = vlib_add_trace(vm, node, b0, sizeof(t0[0]));
-                t0->flow_hash = vnet_buffer(b0)->pds_data.flow_hash;
-                flag0 = vnet_buffer(b0)->pds_data.flags;
+                t0->flow_hash = vnet_buffer(b0)->pds_flow_data.flow_hash;
+                flag0 = vnet_buffer(b0)->pds_flow_data.flags;
                 t0->flags = flag0;
                 t0->l2_offset = vnet_buffer(b0)->l2_hdr_offset;
                 t0->l3_offset = vnet_buffer(b0)->l3_hdr_offset;

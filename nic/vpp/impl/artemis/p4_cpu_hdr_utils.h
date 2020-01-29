@@ -8,6 +8,7 @@
 
 #include <nic/apollo/p4/include/artemis_defines.h>
 #include <nic/apollo/packet/artemis/p4_cpu_hdr.h>
+#include <vlib/vlib.h>
 #include <vppinfra/format.h>
 
 // Flags passed from p4 pipeline (1st byte filled from p4)
@@ -26,6 +27,11 @@
 #define VPP_ARM_TO_P4_HDR_SZ               ARTEMIS_PREDICATE_HDR_SZ
 #define VPP_P4_TO_ARM_HDR_SZ               ARTEMIS_P4_TO_ARM_HDR_SZ
 
+always_inline u8
+pds_get_flow_log_en (vlib_buffer_t *p0)
+{
+    return 0;
+}
 
 u8 *
 format_pds_p4_rx_cpu_hdr (u8 * s, va_list * args)

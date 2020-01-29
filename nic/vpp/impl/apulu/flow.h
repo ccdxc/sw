@@ -7,6 +7,7 @@
 
 #include <gen/p4gen/apulu/include/p4pd.h>
 #include <api.h>
+#include <impl_db.h>
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
 #include <nic/vpp/impl/nat.h>
 
@@ -39,7 +40,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     u16 rx_rewrite_flags0 = 0, rx_rewrite_flags1 = 0;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
-    if (vnet_buffer(b0)->pds_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+    if (vnet_buffer(b0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
         // NAPT - rewrite both ip and port
         tx_rewrite_flags0 =
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
@@ -48,10 +49,10 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
              (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b0)->pds_data.xlate_idx;
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b0)->pds_data.xlate_idx_rflow;
-    } else if (vnet_buffer2(b0)->pds_data.xlate_idx) {
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx_rflow;
+    } else if (vnet_buffer2(b0)->pds_nat_data.xlate_idx) {
         // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
         tx_rewrite_flags0 =
@@ -59,13 +60,13 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         rx_rewrite_flags0 =
             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b0)->pds_data.xlate_idx;
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b0)->pds_data.xlate_idx + 1;
+            vnet_buffer2(b0)->pds_nat_data.xlate_idx + 1;
     }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
         tx_rewrite_flags0 |
-        vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_data.nexthop) >> 16);
+        vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
         rx_rewrite_flags0;
 
@@ -73,13 +74,10 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         *next0 = SESSION_PROG_NEXT_DROP;
     } else {
         *next0 = SESSION_PROG_NEXT_FWD_FLOW;
-        /* Reuse flowhash field to store lif id for packet tx
-         * as we have limited packet metadata fields
-         */
-        vnet_buffer(b0)->pds_data.flow_hash = ses_info0->lif;
+        vnet_buffer(b0)->pds_flow_data.lif = ses_info0->lif;
     }
     clib_memset(&actiondata, 0, sizeof(actiondata));
-    if (vnet_buffer(b1)->pds_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+    if (vnet_buffer(b1)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
         // NAPT - rewrite both ip and port
         tx_rewrite_flags1 =
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
@@ -88,10 +86,10 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
              (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b1)->pds_data.xlate_idx;
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b1)->pds_data.xlate_idx_rflow;
-    } else if (vnet_buffer2(b1)->pds_data.xlate_idx) {
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx_rflow;
+    } else if (vnet_buffer2(b1)->pds_nat_data.xlate_idx) {
         // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
         tx_rewrite_flags1 =
@@ -99,23 +97,20 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         rx_rewrite_flags1 =
             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b1)->pds_data.xlate_idx;
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b1)->pds_data.xlate_idx + 1;
+            vnet_buffer2(b1)->pds_nat_data.xlate_idx + 1;
     }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
         tx_rewrite_flags1 |
-        vec_elt(fm->nh_flags, (vnet_buffer(b1)->pds_data.nexthop) >> 16);
+        vec_elt(fm->nh_flags, (vnet_buffer(b1)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
         rx_rewrite_flags1;
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         *next1 = SESSION_PROG_NEXT_DROP;
     } else {
         *next1 = SESSION_PROG_NEXT_FWD_FLOW;
-        /* Reuse flowhash field to store lif id for packet tx
-         * as we have limited packet metadata fields
-         */
-        vnet_buffer(b1)->pds_data.flow_hash = ses_info1->lif;
+        vnet_buffer(b1)->pds_flow_data.lif = ses_info1->lif;
     }
 
     vlib_buffer_advance(b0, pds_session_get_advance_offset());
@@ -133,7 +128,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
     u16 rx_rewrite_flags = 0;
 
     actiondata.action_id = SESSION_SESSION_INFO_ID;
-    if (vnet_buffer(b)->pds_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
+    if (vnet_buffer(b)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
         // NAPT - rewrite both ip and port
         tx_rewrite_flags =
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
@@ -142,10 +137,10 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
              (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b)->pds_data.xlate_idx;
+            vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b)->pds_data.xlate_idx_rflow;
-    } else if (vnet_buffer2(b)->pds_data.xlate_idx) {
+            vnet_buffer2(b)->pds_nat_data.xlate_idx_rflow;
+    } else if (vnet_buffer2(b)->pds_nat_data.xlate_idx) {
         // static NAT - rewrite only ip
         // TODO: service mapping, flow miss from uplink
         tx_rewrite_flags =
@@ -153,13 +148,13 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         rx_rewrite_flags =
             (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
-            vnet_buffer2(b)->pds_data.xlate_idx;
+            vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
-            vnet_buffer2(b)->pds_data.xlate_idx + 1;
+            vnet_buffer2(b)->pds_nat_data.xlate_idx + 1;
     }
     actiondata.action_u.session_session_info.tx_rewrite_flags =
         tx_rewrite_flags |
-        vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_data.nexthop) >> 16);
+        vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
         rx_rewrite_flags;
 
@@ -167,10 +162,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         next[0] = SESSION_PROG_NEXT_DROP;
     } else {
         next[0] = SESSION_PROG_NEXT_FWD_FLOW;
-        /* Reuse flowhash field to store lif id for packet tx
-         * as we have limited packet metadata fields
-         */
-        vnet_buffer(b)->pds_data.flow_hash = ses_info0->lif;
+        vnet_buffer(b)->pds_flow_data.lif = ses_info0->lif;
     }
     vlib_buffer_advance(b, pds_session_get_advance_offset());
 }
@@ -200,10 +192,10 @@ pds_flow_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1)
     tx1->pad = 0;
     tx0->nexthop_valid = 0;
     tx1->nexthop_valid = 0;
-    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_data.flow_hash & 0xff;
-    tx1->lif_sbit0_ebit7 = vnet_buffer(b1)->pds_data.flow_hash & 0xff;
-    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_data.flow_hash >> 0x8;
-    tx1->lif_sbit8_ebit10 = vnet_buffer(b1)->pds_data.flow_hash >> 0x8;
+    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_flow_data.lif & 0xff;
+    tx1->lif_sbit0_ebit7 = vnet_buffer(b1)->pds_flow_data.lif & 0xff;
+    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_flow_data.lif >> 0x8;
+    tx1->lif_sbit8_ebit10 = vnet_buffer(b1)->pds_flow_data.lif >> 0x8;
 
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = clib_host_to_net_u16(tx1->lif_flags);
@@ -218,8 +210,8 @@ pds_flow_add_tx_hdrs_x1 (vlib_buffer_t *b0)
     tx0 = vlib_buffer_get_current(b0);
     tx0->pad = 0;
     tx0->nexthop_valid = 0;
-    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_data.flow_hash & 0xff;
-    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_data.flow_hash >> 0x8;
+    tx0->lif_sbit0_ebit7 = vnet_buffer(b0)->pds_flow_data.lif & 0xff;
+    tx0->lif_sbit8_ebit10 = vnet_buffer(b0)->pds_flow_data.lif >> 0x8;
 
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     //Dont care about nexthoptype/id as we don't set nexthop_valid.
@@ -273,7 +265,7 @@ always_inline void
 pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
                               u8 is_ip4)
 {
-    u32 nexthop = vnet_buffer(p0)->pds_data.nexthop;
+    u32 nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
 
     //TODO: Rflow nexthop
     if (is_ip4) {
@@ -326,10 +318,10 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
     u32 nexthop;
     u16 xlate_id0, xlate_id1;
     u8 next_determined = 0;
+    pds_impl_db_vnic_entry_t *vnic0, *vnic1;
 
     flag_orig0 = hdr0->flags;
     flag_orig1 = hdr1->flags;
-    //flag_orig0 = flag_orig1 = VPP_CPU_FLAGS_IPV4_1_VALID;
 
     u8 flags0 = flag_orig0 &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
@@ -338,46 +330,68 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
-    vnet_buffer (p0)->pds_data.flow_hash = hdr0->flow_hash;
-    vnet_buffer (p0)->pds_data.flags = flag_orig0 |
-        (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS);
+    vnic0 = pds_impl_db_vnic_get(hdr0->vnic_id);
+    vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
+    vnet_buffer(p0)->pds_flow_data.flags = flag_orig0 |
+        (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+        (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
+
     nexthop = hdr0->nexthop_id;
     if (!hdr0->mapping_hit && !hdr0->drop) {
-        vnet_buffer(p0)->pds_data.nexthop = nexthop |
-                                            (hdr0->nexthop_type << 16);
+        vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
+                                                 (hdr0->nexthop_type << 16);
     } else {
-        vnet_buffer(p0)->pds_data.nexthop = hdr0->drop << 18;
+        vnet_buffer(p0)->pds_flow_data.nexthop = hdr0->drop << 18;
     }
-    vnet_buffer (p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer (p0)->l3_hdr_offset =
+    vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
+    vnet_buffer(p0)->l3_hdr_offset =
             hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-    vnet_buffer (p0)->l4_hdr_offset =
+    vnet_buffer(p0)->l4_hdr_offset =
             hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-    vnet_buffer (p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
-    vnet_buffer (p0)->pds_data.vpc_id = hdr0->vpc_id;
+    vnet_buffer(p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
+    vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
+    if (PREDICT_FALSE(vnic0->max_sessions &&
+            (vnic0->active_session_count >= vnic0->max_sessions))) {
+        *next0 = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+        next_determined |= 0x1;
+    } else {
+        vnic0->active_session_count++;
+    }
 
-    vnet_buffer (p1)->pds_data.flow_hash = hdr1->flow_hash;
-    vnet_buffer (p1)->pds_data.flags = flag_orig1 |
-        (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS);
+    vnic1 = pds_impl_db_vnic_get(hdr1->vnic_id);
+    vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
+    vnet_buffer(p1)->pds_flow_data.flags = flag_orig1 |
+        (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+        (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr1->nexthop_id;
     if (!hdr1->mapping_hit && !hdr1->drop) {
-        vnet_buffer(p1)->pds_data.nexthop = nexthop |
+        vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
                                             (hdr1->nexthop_type << 16);
     } else {
-        vnet_buffer(p1)->pds_data.nexthop = hdr1->drop << 18;
+        vnet_buffer(p1)->pds_flow_data.nexthop = hdr1->drop << 18;
     }
-    vnet_buffer (p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer (p1)->l3_hdr_offset =
+    vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
+    vnet_buffer(p1)->l3_hdr_offset =
             hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-    vnet_buffer (p1)->l4_hdr_offset =
+    vnet_buffer(p1)->l4_hdr_offset =
             hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-    vnet_buffer (p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
-    vnet_buffer (p1)->pds_data.vpc_id = hdr1->vpc_id;
+    vnet_buffer(p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
+    vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
+    if (PREDICT_FALSE(vnic1->max_sessions &&
+        (vnic1->active_session_count >= vnic1->max_sessions))) {
+        *next1 = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+        next_determined |= 0x2;
+    } else {
+        vnic1->active_session_count++;
+    }
 
     vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
     vlib_buffer_advance(p1, pds_flow_classify_get_advance_offset(p1));
 
-    if (hdr0->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
+    if (((next_determined & 0x1) == 0) &&
+        (hdr0->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE)) {
         if (!hdr0->rx_packet) {
             /* only from host supported for now */
             /* Try static NAT first */
@@ -386,14 +400,14 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 u16 port;
                 xlate_id0 = hdr0->mapping_xlate_id;
                 pds_snat_tbl_read_ip4(xlate_id0, &ip, &port);
-                vnet_buffer2(p0)->pds_data.xlate_idx = xlate_id0;
-                vnet_buffer(p0)->pds_data.xlate_addr = ip;
+                vnet_buffer2(p0)->pds_nat_data.xlate_idx = xlate_id0;
+                vnet_buffer2(p0)->pds_nat_data.xlate_addr = ip;
             } else {
                 /* nat44 */
                 if (flags0 & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer (p0)->pds_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
+                    vnet_buffer(p0)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
                     if (hdr0->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer (p0)->pds_data.flags |=
+                        vnet_buffer(p0)->pds_flow_data.flags |=
                             VPP_CPU_FLAGS_NAPT_SVC_VALID;
                     }
                     *next0 = FLOW_CLASSIFY_NEXT_IP4_NAT;
@@ -401,6 +415,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 } else {
                     *next0 = FLOW_CLASSIFY_NEXT_DROP;
                     counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                    vnic0->active_session_count--;
                 }
                 next_determined |= 0x1;
             }
@@ -410,9 +425,11 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
             next_determined |= 0x1;
+            vnic0->active_session_count--;
         }
     }
-    if (hdr1->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
+    if (((next_determined & 0x2) == 0) &&
+        (hdr1->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE)) {
         if (!hdr1->rx_packet) {
             /* only from host supported for now */
             /* Try static NAT first */
@@ -421,14 +438,14 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 u16 port;
                 xlate_id1 = hdr1->mapping_xlate_id;
                 pds_snat_tbl_read_ip4(xlate_id1, &ip, &port);
-                vnet_buffer2(p1)->pds_data.xlate_idx = xlate_id1;
-                vnet_buffer(p1)->pds_data.xlate_addr = ip;
+                vnet_buffer2(p1)->pds_nat_data.xlate_idx = xlate_id1;
+                vnet_buffer2(p1)->pds_nat_data.xlate_addr = ip;
             } else {
                 /* nat44 */
                 if (flags1 & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer (p1)->pds_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
+                    vnet_buffer(p1)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
                     if (hdr1->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer (p1)->pds_data.flags |=
+                        vnet_buffer(p1)->pds_flow_data.flags |=
                             VPP_CPU_FLAGS_NAPT_SVC_VALID;
                     }
                     *next1 = FLOW_CLASSIFY_NEXT_IP4_NAT;
@@ -436,6 +453,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
                 } else {
                     *next1 = FLOW_CLASSIFY_NEXT_DROP;
                     counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+                    vnic1->active_session_count--;
                 }
                 next_determined |= 0x2;
             }
@@ -445,10 +463,10 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
             next_determined |= 0x2;
+            vnic1->active_session_count--;
         }
     }
 
-    /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags0 == flags1) && !next_determined) {
         if ((flags0 == VPP_CPU_FLAGS_IPV4_1_VALID)) {
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
@@ -465,6 +483,8 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next0 = *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 2;
+            vnic0->active_session_count--;
+            vnic1->active_session_count--;
         }
         return;
     }
@@ -485,6 +505,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next0 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+            vnic0->active_session_count--;
         }
     }
 
@@ -504,6 +525,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         } else {
             *next1 = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+            vnic1->active_session_count--;
         }
     }
 }
@@ -515,33 +537,42 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     u8 flag_orig;
     u32 nexthop;
     u16 xlate_id;
+    pds_impl_db_vnic_entry_t *vnic;
 
     flag_orig = hdr->flags;
-    //flag_orig = VPP_CPU_FLAGS_IPV4_1_VALID;
     u8 flags = flag_orig &
         (VPP_CPU_FLAGS_IPV4_1_VALID | VPP_CPU_FLAGS_IPV6_1_VALID |
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
-    vnet_buffer (p)->pds_data.flow_hash = hdr->flow_hash;
-    vnet_buffer (p)->pds_data.flags = flag_orig |
-        (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS);
+    vnic = pds_impl_db_vnic_get(hdr->vnic_id);
+    vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
+    vnet_buffer(p)->pds_flow_data.flags = flag_orig |
+        (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
+        (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr->nexthop_id;
     if (!hdr->mapping_hit && !hdr->drop) {
-        vnet_buffer(p)->pds_data.nexthop = nexthop |
-                                            (hdr->nexthop_type << 16);
+        vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
+                                                (hdr->nexthop_type << 16);
     } else {
-        vnet_buffer(p)->pds_data.nexthop = hdr->drop << 18;
+        vnet_buffer(p)->pds_flow_data.nexthop = hdr->drop << 18;
     }
-    vnet_buffer (p)->l2_hdr_offset = hdr->l2_offset;
-    vnet_buffer (p)->l3_hdr_offset =
+    vnet_buffer(p)->l2_hdr_offset = hdr->l2_offset;
+    vnet_buffer(p)->l3_hdr_offset =
             hdr->l3_inner_offset ? hdr->l3_inner_offset : hdr->l3_offset;
-    vnet_buffer (p)->l4_hdr_offset =
+    vnet_buffer(p)->l4_hdr_offset =
             hdr->l4_inner_offset ? hdr->l4_inner_offset : hdr->l4_offset;
 
-    vnet_buffer (p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
-    vnet_buffer (p)->pds_data.vpc_id = hdr->vpc_id;
+    vnet_buffer(p)->sw_if_index[VLIB_TX] = hdr->ingress_bd_id;
+    vnet_buffer2(p)->pds_nat_data.vpc_id = hdr->vpc_id;
 
     vlib_buffer_advance(p, pds_flow_classify_get_advance_offset(p));
+    if (PREDICT_FALSE(vnic->max_sessions &&
+        (vnic->active_session_count >= vnic->max_sessions))) {
+        *next = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+        return;
+    }
+    vnic->active_session_count++;
 
     if (hdr->snat_type != ROUTE_RESULT_SNAT_TYPE_NONE) {
         if (!hdr->rx_packet) {
@@ -552,14 +583,14 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
                 u16 port;
                 xlate_id = hdr->mapping_xlate_id;
                 pds_snat_tbl_read_ip4(xlate_id, &ip, &port);
-                vnet_buffer2(p)->pds_data.xlate_idx = xlate_id;
-                vnet_buffer(p)->pds_data.xlate_addr = ip;
+                vnet_buffer2(p)->pds_nat_data.xlate_idx = xlate_id;
+                vnet_buffer2(p)->pds_nat_data.xlate_addr = ip;
             } else {
                 /* nat44 */
                 if (flags & VPP_CPU_FLAGS_IPV4_1_VALID) {
-                    vnet_buffer (p)->pds_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
+                    vnet_buffer(p)->pds_flow_data.flags |= VPP_CPU_FLAGS_NAPT_VALID;
                     if (hdr->snat_type == ROUTE_RESULT_SNAT_TYPE_NAPT_SVC) {
-                        vnet_buffer (p)->pds_data.flags |=
+                        vnet_buffer(p)->pds_flow_data.flags |=
                             VPP_CPU_FLAGS_NAPT_SVC_VALID;
                     }
                     *next = FLOW_CLASSIFY_NEXT_IP4_NAT;
@@ -568,7 +599,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
                 } else {
                     *next = FLOW_CLASSIFY_NEXT_DROP;
                     counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-                    return;
+                    goto err;
                 }
             }
         } else {
@@ -576,11 +607,10 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
             /* TODO : From network pkt */
             *next = FLOW_CLASSIFY_NEXT_DROP;
             counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
-            return;
+            goto err;
         }
     }
 
-    /* As of now only flow miss packets are punted to VPP for flow programming */
     if ((flags == VPP_CPU_FLAGS_IPV4_1_VALID)) {
         *next = FLOW_CLASSIFY_NEXT_IP4_FLOW_PROG;
         counter[FLOW_CLASSIFY_COUNTER_IP4_FLOW] += 1;
@@ -596,7 +626,13 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
     } else {
         *next = FLOW_CLASSIFY_NEXT_DROP;
         counter[FLOW_CLASSIFY_COUNTER_UNKOWN] += 1;
+        goto err;
     }
+
+    return;
+err:
+    vnic->active_session_count--;
+    return;
 }
 
 always_inline void

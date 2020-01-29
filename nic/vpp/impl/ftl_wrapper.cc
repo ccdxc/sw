@@ -13,6 +13,7 @@
 #include <nic/sdk/platform/capri/capri_tbl_rw.hpp>
 #include <nic/sdk/lib/p4/p4_utils.hpp>
 #include "gen/p4gen/p4/include/ftl_table.hpp"
+#include "nic/vpp/infra/operd/flow_export.h"
 #include <pd_utils.h>
 #include <ftl_wrapper.h>
 #include <ftl_utils.hpp>
@@ -34,12 +35,14 @@ extern "C" {
 typedef struct ftlv4_cache_s {
     ipv4_flow_hash_entry_t ip4_flow[MAX_FLOW_ENTRIES_PER_BATCH];
     uint32_t ip4_hash[MAX_FLOW_ENTRIES_PER_BATCH];
+    uint8_t log;
     uint16_t count;
 } ftlv4_cache_t;
 
 typedef struct ftlv6_cache_s {
     flow_hash_entry_t ip6_flow[MAX_FLOW_ENTRIES_PER_BATCH]; 
     uint32_t ip6_hash[MAX_FLOW_ENTRIES_PER_BATCH];
+    uint8_t log;
     uint16_t count;
 } ftlv6_cache_t;
 
@@ -241,7 +244,8 @@ ftlv4_create(void *key2str,
 }
 
 static int
-ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
+ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
+             uint8_t log)
 {
     sdk_table_api_params_t params = {0};
 
@@ -258,11 +262,20 @@ ftlv4_insert(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
+    if (log) {
+        pds_operd_export_flow_ip4(entry->get_key_metadata_ipv4_src(),
+                                  entry->get_key_metadata_ipv4_dst(),
+                                  entry->get_key_metadata_proto(),
+                                  entry->get_key_metadata_dport(),
+                                  entry->get_key_metadata_sport(),
+                                  ftlv4_get_lookup_id(entry), 1, 1);
+    }
     return 0;
 }
 
 int
-ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
+ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash,
+             uint8_t log)
 {
     sdk_table_api_params_t params = {0};
 
@@ -279,6 +292,14 @@ ftlv4_remove(ftlv4 *obj, ipv4_flow_hash_entry_t *entry, uint32_t hash)
     
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
+    }
+    if (log) {
+        pds_operd_export_flow_ip4(entry->get_key_metadata_ipv4_src(),
+                                  entry->get_key_metadata_ipv4_dst(),
+                                  entry->get_key_metadata_proto(),
+                                  entry->get_key_metadata_dport(),
+                                  entry->get_key_metadata_sport(),
+                                  ftlv4_get_lookup_id(entry), 0, 1);
     }
     return 0;
 }
@@ -511,9 +532,10 @@ ftlv4_set_epoch(ipv4_flow_hash_entry_t *entry, uint8_t val)
 }
 
 void
-ftlv4_cache_set_hash(uint32_t val)
+ftlv4_cache_set_hash_log(uint32_t val, uint8_t log)
 {
     g_ip4_flow_cache.ip4_hash[g_ip4_flow_cache.count] = val;
+    g_ip4_flow_cache.log = log;
 }
 
 static uint32_t
@@ -567,14 +589,16 @@ int
 ftlv4_cache_program_index(ftlv4 *obj, uint16_t id)
 {
     return ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + id,
-                        g_ip4_flow_cache.ip4_hash[id]);
+                        g_ip4_flow_cache.ip4_hash[id],
+                        g_ip4_flow_cache.log);
 }
 
 int
 ftlv4_cache_delete_index(ftlv4 *obj, uint16_t id)
 {
     return ftlv4_remove(obj, g_ip4_flow_cache.ip4_flow + id,
-                        g_ip4_flow_cache.ip4_hash[id]);
+                        g_ip4_flow_cache.ip4_hash[id],
+                        g_ip4_flow_cache.log);
 }
 
 void
@@ -602,7 +626,7 @@ ftlv4_cache_batch_flush(ftlv4 *obj, int *status)
 
     for (i = 0; i < g_ip4_flow_cache.count; i++) {
        status[i] = ftlv4_insert(obj, g_ip4_flow_cache.ip4_flow + i,
-                                g_ip4_flow_cache.ip4_hash[i]);
+                                g_ip4_flow_cache.ip4_hash[i], 0);
     }
 }
 
@@ -622,7 +646,7 @@ ftlv6_create(void *key2str,
 }
 
 static int
-ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
+ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, uint8_t log)
 {
     sdk_table_api_params_t params = {0};
 
@@ -639,11 +663,23 @@ ftlv6_insert(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
     if (SDK_RET_OK != obj->insert(&params)) {
         return -1;
     }
+
+    if (log) {
+        // TODO: avoid memcpy, instead get pointer
+        uint8_t src[16], dst[16];
+        entry->get_key_metadata_src(src);
+        entry->get_key_metadata_dst(dst);
+        pds_operd_export_flow_ip6(src, dst,
+                                  entry->get_key_metadata_proto(),
+                                  entry->get_key_metadata_dport(),
+                                  entry->get_key_metadata_sport(),
+                                  ftlv6_get_lookup_id(entry), 1, 1);
+    }
     return 0;
 }
 
 int
-ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
+ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash, uint8_t log)
 {
     sdk_table_api_params_t params = {0};
 
@@ -659,6 +695,17 @@ ftlv6_remove(ftlv6 *obj, flow_hash_entry_t *entry, uint32_t hash)
     params.entry_size = flow_hash_entry_t::entry_size();
     if (SDK_RET_OK != obj->remove(&params)) {
         return -1;
+    }
+    if (log) {
+        // TODO: avoid memcpy, instead get pointer
+        uint8_t src[16], dst[16];
+        entry->get_key_metadata_src(src);
+        entry->get_key_metadata_dst(dst);
+        pds_operd_export_flow_ip6(src, dst,
+                                  entry->get_key_metadata_proto(),
+                                  entry->get_key_metadata_dport(),
+                                  entry->get_key_metadata_sport(),
+                                  ftlv6_get_lookup_id(entry), 0, 1);
     }
     return 0;
 }
@@ -940,14 +987,16 @@ int
 ftlv6_cache_program_index(ftlv6 *obj, uint16_t id)
 {
     return ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + id,
-                        g_ip6_flow_cache.ip6_hash[id]);
+                        g_ip6_flow_cache.ip6_hash[id],
+                        g_ip6_flow_cache.log);
 }
 
 int
 ftlv6_cache_delete_index(ftlv6 *obj, uint16_t id)
 {
     return ftlv6_remove(obj, g_ip6_flow_cache.ip6_flow + id,
-                        g_ip6_flow_cache.ip6_hash[id]);
+                        g_ip6_flow_cache.ip6_hash[id],
+                        g_ip6_flow_cache.log);
 }
 
 void
@@ -969,9 +1018,10 @@ ftlv6_cache_set_epoch(uint8_t val)
 }
 
 void
-ftlv6_cache_set_hash(uint32_t val)
+ftlv6_cache_set_hash_log(uint32_t val, uint8_t log)
 {
     g_ip6_flow_cache.ip6_hash[g_ip6_flow_cache.count] = val;
+    g_ip6_flow_cache.log = log;
 }
 
 void
@@ -981,7 +1031,7 @@ ftlv6_cache_batch_flush(ftlv6 *obj, int *status)
 
     for (i = 0; i < g_ip6_flow_cache.count; i++) {
        status[i] = ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + i,
-                                g_ip6_flow_cache.ip6_hash[i]);
+                                g_ip6_flow_cache.ip6_hash[i], 0);
     }
 }
 

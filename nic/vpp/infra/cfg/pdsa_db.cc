@@ -11,21 +11,25 @@ vpp_config_data vpp_config_data::singleton;
 vpp_config_batch vpp_config_batch::singleton;
 std::list<commit_cbs_t> vpp_config_batch::commit_cbs;
 
+#define foreach_config_data_element                 \
+        _(VPC, vpc)                                 \
+        _(VNIC, vnic)                               \
+        _(SUBNET, subnet)                           \
+        _(DHCP_RELAY, dhcp_relay)                   \
+        _(DHCP_POLICY, dhcp_policy)                 \
+        _(NAT_PORT_BLOCK, nat_port_block)           \
+        _(SECURITY_PROFILE, security_profile)
+
 // vpp_config_data member functions
 
 // returns the currently configured number of instances of a specific obj id
 int
 vpp_config_data::size (obj_id_t obj_id) const {
     switch(obj_id) {
-#define _(c,s) case OBJ_ID_##c:  return s.size();
+#define _(obj, data) case OBJ_ID_##obj:  return data.size();
 
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+    foreach_config_data_element
+
 #undef _
     default:
         assert(false);
@@ -41,19 +45,13 @@ vpp_config_data::exists (pds_cfg_msg_t const& cfg_msg) const {
     // since key and spec are a union, and the first element in the spec is
     // the key, we don't verify whether a key or spec is passed here
     switch(cfg_msg.obj_id) {
-#define _(c,s)                                     \
-    case OBJ_ID_##c:                               \
-        if (s.find(cfg_msg.s.key) != s.end()) { \
-            return true;                           \
-        }                                          \
+#define _(obj, data)                                     \
+    case OBJ_ID_##obj:                                  \
+        if (data.find(cfg_msg.data.key) != data.end()) {   \
+            return true;                                \
+        }                                               \
         break;
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -77,23 +75,17 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
     auto security_profile_it = security_profile.end();
 
     switch(cfg_msg.obj_id) {
-#define _(c,s)                             \
-    case OBJ_ID_##c:                       \
-        s##_it = s.find(cfg_msg.s.key); \
-        if (s##_it == s.end()) {           \
-            cfg_msg.obj_id = OBJ_ID_NONE;  \
-            return false;                  \
-        }                                  \
-        cfg_msg.s.spec = s##_it->second;   \
+#define _(obj, data)                                \
+    case OBJ_ID_##obj:                              \
+        data##_it = data.find(cfg_msg.data.key);    \
+        if (data##_it == data.end()) {              \
+            cfg_msg.obj_id = OBJ_ID_NONE;           \
+            return false;                           \
+        }                                           \
+        cfg_msg.data = data##_it->second;           \
         break;
 
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -108,18 +100,12 @@ vpp_config_data::get (pds_cfg_msg_t &cfg_msg) const {
 void
 vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
     switch(cfg_msg.obj_id) {
-#define _(c,s)                                     \
-    case OBJ_ID_##c:                               \
-        s[cfg_msg.s.spec.key] = cfg_msg.s.spec; \
+#define _(obj, data)                                  \
+    case OBJ_ID_##obj:                                \
+        data[cfg_msg.data.spec.key] = cfg_msg.data;   \
         break;
 
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -131,18 +117,12 @@ vpp_config_data::set (pds_cfg_msg_t const& cfg_msg) {
 void
 vpp_config_data::unset (obj_id_t obj_id, pds_cfg_msg_t const& cfg_msg) {
     switch(obj_id) {
-#define _(c,s)                     \
-    case OBJ_ID_##c:               \
-        s.erase(cfg_msg.s.key); \
+#define _(obj, data)                        \
+    case OBJ_ID_##obj:                      \
+        data.erase(cfg_msg.data.key);       \
         break;
 
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -156,22 +136,16 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
     assert(left.obj_id == right.obj_id);
 
     switch(left.obj_id) {
-#define _(c,s)                                                  \
-    case OBJ_ID_##c:                                            \
-        if (right.op != API_OP_DELETE) {                        \
-            return (left.s.spec.key.id == right.s.spec.key.id); \
-        } else {                                                \
-            return (left.s.spec.key.id == right.s.key.id);      \
-        }                                                       \
+#define _(obj, data)                                                    \
+    case OBJ_ID_##obj:                                                  \
+        if (right.op != API_OP_DELETE) {                                \
+            return (left.data.spec.key.id == right.data.spec.key.id);   \
+        } else {                                                        \
+            return (left.data.spec.key.id == right.data.key.id);        \
+        }                                                               \
         break;
 
-        _(VPC, vpc)
-        _(VNIC, vnic)
-        _(SUBNET, subnet)
-        _(DHCP_RELAY, dhcp_relay)
-        _(DHCP_POLICY, dhcp_policy)
-        _(NAT_PORT_BLOCK, nat_port_block)
-        _(SECURITY_PROFILE, security_profile)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -187,17 +161,11 @@ cfg_msg_key_equal (pds_cfg_msg_t const& left, pds_cfg_msg_t const& right) {
 size_t
 vpp_config_batch::maxsize (obj_id_t obj_id) {
     switch(obj_id) {
-#define _(c)                \
-    case OBJ_ID_##c:        \
-        return PDS_MAX_##c;
+#define _(obj, data)                    \
+    case OBJ_ID_##obj:                  \
+        return PDS_MAX_##obj;
 
-        _(VPC)
-        _(VNIC)
-        _(SUBNET)
-        _(DHCP_RELAY)
-        _(DHCP_POLICY)
-        _(NAT_PORT_BLOCK)
-        _(SECURITY_PROFILE)
+        foreach_config_data_element
 #undef _
 
     default:
@@ -211,16 +179,10 @@ void
 vpp_config_batch::init (void) {
     vpp_config_data &vpp_config = vpp_config_data::get();
 
-#define _(c) \
-    pool_sz[OBJ_ID_##c] = vpp_config.size(OBJ_ID_##c);
+#define _(obj, data)                                        \
+    pool_sz[OBJ_ID_##obj] = vpp_config.size(OBJ_ID_##obj);
 
-        _(VPC)
-        _(VNIC)
-        _(SUBNET)
-        _(DHCP_RELAY)
-        _(DHCP_POLICY)
-        _(NAT_PORT_BLOCK)
-        _(SECURITY_PROFILE)
+    foreach_config_data_element
 #undef _
 }
 

@@ -33,8 +33,8 @@ packets:
         encaps      : callback://networking/packets/GetPacketEncapFromMapping
         headers     :
             outereth:
-                dst     : ref://testcase/config/devicecfg/MACAddr
-                src     : 00:02:0b:0a:0d:0e
+                src     : callback://networking/packets/GetUnderlayRemoteMac
+                dst     : callback://networking/packets/GetUplinkPortMac
             outeripv4:
                 dst     : ref://testcase/config/devicecfg/IP
                 src     : 5.0.0.5
