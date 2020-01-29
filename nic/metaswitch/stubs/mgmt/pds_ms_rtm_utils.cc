@@ -2,7 +2,9 @@
 // Purpose: Helper APIs for metaswitch RTM component
 
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "qc0rtmib.h"
 
 namespace pds {
@@ -20,10 +22,37 @@ rtm_strt_fill_func (CPStaticRouteSpec&      req,
     oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDS_MS_RTM_DEF_ENT_INDEX;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_FTE_INDEX);
 
-    // Let the DC-RTM decide the outgoing interface of this route 
-    data->if_index                    = 0;
-    oid[AMB_QCR_STRT_IF_INDEX_INDEX]  = 0;
-    AMB_SET_FIELD_PRESENT (mib_msg,AMB_OID_QCR_STRT_IF_INDEX);
+    data->action                   = ATG_QC_ROUTE_ACTION_FORWARD;
+    AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_ACTION);
+}
+
+NBB_VOID
+cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status, NBB_ULONG correlator)
+{
+    pds_obj_key_t uuid = {0};
+    pds_ms_get_uuid(&uuid, req.interfaceid());
+    if (pds_ms::is_pds_obj_key_invalid(uuid)) {
+        req.set_ifindex(0);
+        return;
+    }
+
+    auto mgmt_ctxt = pds_ms::mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+    if (uuid_obj == nullptr) {
+        throw pds_ms::Error(std::string("Invalid interface ")
+                            .append(uuid.str()).append(" in CP Route proto"));
+    }
+    if (uuid_obj->obj_type() != pds_ms::uuid_obj_type_t::INTERFACE) {
+        throw pds_ms::Error(std::string("Invalid UUID ")
+                            .append(uuid.str()).append(" of type ")
+                            .append(uuid_obj_type_str(uuid_obj->obj_type()))
+                            .append(" for interface in CP Route proto"));
+    }
+    auto ifindex = ((pds_ms::interface_uuid_obj_t *) uuid_obj)->ms_id().ms_ifindex;
+    req.set_ifindex(ifindex);
+    SDK_TRACE_DEBUG("Setting CP Route Interface index 0x%x from UUID %s",
+                    ifindex, uuid.str());
 }
 } // End of namespace pds
 
@@ -288,4 +317,5 @@ pds_ms_rtm_create (pds_ms_config_t *conf, int entity_index, bool is_default)
     NBB_TRC_EXIT();
     return;
 }
+
 }

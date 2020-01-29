@@ -84,6 +84,10 @@ message CPStaticRouteSpec {
   AMBBool         Override     = 6 [(venice.pdsaFields) = {Field: "override"}];
   // Admin Distance
   uint32          AdminDist    = 7 [(venice.pdsaFields) = {Field: "admin_dist"}];
+
+  // Internal only
+  bytes           InterfaceId  = 1000; // Outgoing Interface UUID needed on Pegasus
+  uint32          IfIndex      = 1001 [(venice.pdsaFields) = {Field: "if_index", SetKeyOidIndex: "AMB_QCR_STRT_IF_INDEX_INDEX"}];
 }
 
 // CRUD request message

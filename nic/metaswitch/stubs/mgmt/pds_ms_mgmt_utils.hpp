@@ -222,6 +222,8 @@ types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,
 NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,
                                 NBB_ULONG correlator);
+NBB_VOID cp_route_pre_set(pds::CPStaticRouteSpec &req, NBB_LONG row_status,
+                          NBB_ULONG correlator);
 } // namespace pds
 
 namespace pds_ms {

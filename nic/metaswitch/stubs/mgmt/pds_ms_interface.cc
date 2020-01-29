@@ -52,6 +52,7 @@ process_interface_update (pds_if_spec_t *if_spec,
 {
     pds::LimInterfaceAddrSpec lim_addr_spec;
     PDS_MS_START_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
+    bool has_ip_addr = false;
 
     if (if_spec->type == PDS_IF_TYPE_L3) {
         // Create L3 interfaces
@@ -59,9 +60,12 @@ process_interface_update (pds_if_spec_t *if_spec,
         populate_lim_l3_intf_cfg_spec (lim_if_spec, ms_ifindex);
         pds_ms_set_amb_lim_if_cfg (lim_if_spec, row_status, 
                                    PDS_MS_CTM_GRPC_CORRELATOR);
-        populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec, 
-                                pds::LIM_IF_TYPE_ETH, 
-                                if_spec->l3_if_info.eth_ifindex);
+        if (!ip_addr_is_zero(&if_spec->l3_if_info.ip_prefix.addr)) {
+            has_ip_addr = true;
+            populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec, 
+                                    pds::LIM_IF_TYPE_ETH, 
+                                    if_spec->l3_if_info.eth_ifindex);
+        }
     } else if (if_spec->type == PDS_IF_TYPE_LOOPBACK){
         // Otherwise, its always singleton loopback
         pds::LimInterfaceSpec lim_swif_spec;
@@ -69,16 +73,22 @@ process_interface_update (pds_if_spec_t *if_spec,
         lim_swif_spec.set_iftype(pds::LIM_IF_TYPE_LOOPBACK);
         pds_ms_set_amb_lim_software_if (lim_swif_spec, row_status,
                                         PDS_MS_CTM_GRPC_CORRELATOR);
-        populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
-                                lim_addr_spec, pds::LIM_IF_TYPE_LOOPBACK,
-                                LOOPBACK_IF_ID);
-        pds::lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
-                               PDS_MS_CTM_GRPC_CORRELATOR);
+        if (!ip_addr_is_zero(&if_spec->loopback_if_info.ip_prefix.addr)) {
+            has_ip_addr = true;
+            populate_lim_addr_spec (&if_spec->loopback_if_info.ip_prefix, 
+                                    lim_addr_spec, pds::LIM_IF_TYPE_LOOPBACK,
+                                    LOOPBACK_IF_ID);
+            pds::lim_l3_if_addr_pre_set(lim_addr_spec, row_status,
+                                        PDS_MS_CTM_GRPC_CORRELATOR);
+        }
     }
 
-    // Configure IP Address
-    pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status,
-                                   PDS_MS_CTM_GRPC_CORRELATOR);
+    if (has_ip_addr) {
+        SDK_TRACE_INFO("Setting IP address for interface");
+        // Configure IP Address
+        pds_ms_set_amb_lim_l3_if_addr (lim_addr_spec, row_status,
+                                       PDS_MS_CTM_GRPC_CORRELATOR);
+    }
 
     PDS_MS_END_TXN(PDS_MS_CTM_GRPC_CORRELATOR);
 

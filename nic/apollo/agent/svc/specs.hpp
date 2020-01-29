@@ -560,8 +560,11 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
     case PDS_IF_TYPE_LOOPBACK:
         {
             auto proto_loopback = proto_spec->mutable_loopbackifspec();
-            ippfx_api_spec_to_proto_spec(proto_loopback->mutable_prefix(),
-                &api_spec->loopback_if_info.ip_prefix);
+            auto af = api_spec->loopback_if_info.ip_prefix.addr.af;
+            if (af == IP_AF_IPV4 || af == IP_AF_IPV6) {
+                ippfx_api_spec_to_proto_spec(proto_loopback->mutable_prefix(),
+                                             &api_spec->loopback_if_info.ip_prefix);
+            }
         }
         break;
     default:

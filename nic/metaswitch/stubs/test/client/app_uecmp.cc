@@ -203,12 +203,16 @@ static void create_route_proto_grpc (bool second=false) {
     proto_spec->set_routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id);
     auto dest_addr  = proto_spec->mutable_destaddr();
     dest_addr->set_af (types::IP_AF_INET);
-    if (second) {
+    if (g_node_id != 3) {
+        dest_addr->set_v4addr (0);
+        proto_spec->set_prefixlen (0);
+    } else if (second) {
         dest_addr->set_v4addr (g_test_conf_.remote_lo_ip_addr_2);
+        proto_spec->set_prefixlen (32);
     } else {
         dest_addr->set_v4addr (g_test_conf_.remote_lo_ip_addr);
+        proto_spec->set_prefixlen (32);
     }
-    proto_spec->set_prefixlen (32);
     auto next_hop   = proto_spec->mutable_nexthopaddr();
     next_hop->set_af (types::IP_AF_INET);
     if (second) {
@@ -663,7 +667,9 @@ int main(int argc, char** argv)
             }
             sleep(5);
         }
-        if (g_node_id == 3) {
+        if (g_node_id == 1 || g_node_id == 3) {
+            // Simulate the static route installed by NMD
+            // with higher Admin Distance
             create_route_proto_grpc();
             create_route_proto_grpc(true /* second */);
         }

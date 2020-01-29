@@ -115,12 +115,10 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
     if (lo) {
         pds_if.key = msidx2pdsobjkey(k_lo_if_id);
         pds_if.type = PDS_IF_TYPE_LOOPBACK;
-        pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
-        pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
-        if (g_node_id != 3) {
+        if (g_node_id !=3) {
+            pds_if.loopback_if_info.ip_prefix.addr.af = IP_AF_IPV4;
+            pds_if.loopback_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_lo_ip_addr;
             pds_if.loopback_if_info.ip_prefix.len = 32;
-        } else {
-            pds_if.loopback_if_info.ip_prefix.len = 24;
         }
     } else {
         if (second) {
@@ -227,7 +225,13 @@ static void create_route_proto_grpc (bool second=false) {
     proto_spec->set_prefixlen (0);
     auto next_hop   = proto_spec->mutable_nexthopaddr();
     next_hop->set_af (types::IP_AF_INET);
-    next_hop->set_v4addr (g_test_conf_.local_ip_addr_2);
+    if (g_node_id == 3) {
+        proto_spec->set_interfaceid (msidx2pdsobjkey(k_lo_if_id).id, PDS_MAX_KEY_LEN);
+    } else if (second) {
+        next_hop->set_v4addr (g_test_conf_.remote_ip_addr_2);
+    } else {
+        next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
+    }
     proto_spec->set_adminstatus (ADMIN_UP);
     proto_spec->set_override (BOOL_TRUE);
     proto_spec->set_admindist (250);
@@ -671,7 +675,7 @@ int main(int argc, char** argv)
         // Create loopback intf for TEP IP on PDSA
         // Create dummy interface in Pegasus as well to use as Nexthop for Static default route
         create_intf_proto_grpc(true /*loopback*/);
-        if (g_node_id != 1) {
+        if (g_node_id == 2) {
             // On C2, Delete the RTM redistribute rule to advertise specific TEP IP to DUT
             // Instead BGP default originate is setup on C2 to simulate default route
             // advertised from ToR to Naples
@@ -702,8 +706,15 @@ int main(int argc, char** argv)
             }
             sleep(5);
         }
+        if (g_node_id == 1) {
+            // Simulate the static route installed by NMD
+            // with higher Admin Distance
+            create_route_proto_grpc();
+            create_route_proto_grpc(true);
+        }
         if (g_node_id == 3) {
             create_route_proto_grpc();
+            // No direct Overlay BGP session between DUT1 and C2
             create_bgp_peer_proto_grpc(true /* loopback */);
             create_bgp_peer_af_proto_grpc(true /* loopback */);
         }

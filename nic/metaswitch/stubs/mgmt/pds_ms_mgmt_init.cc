@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/cp_test_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/mgmt/pds_ms_cp_route_utils_gen.hpp"
 #include <nbase.h>
 #include <nbbstub.h>
 extern "C" {
@@ -112,6 +113,7 @@ nbase_init ()
     pds_ms_reg_pre_set_amb_evpn_ip_vrf_rt(pds::evpn_ip_vrf_rt_pre_set);
     pds_ms_reg_pre_set_amb_bgp_peer_afi_safi(pds::bgp_peer_afi_safi_pre_set);
     pds_ms_reg_pre_set_amb_lim_l3_if_addr(pds::lim_l3_if_addr_pre_set);
+    pds_ms_reg_pre_set_amb_cipr_rtm_static_rt(pds::cp_route_pre_set);
 
     /***************************************************************************/
     /* Initialize the System Manager create parms.                             */
