@@ -285,6 +285,8 @@ class _Testbed:
                 cmd.extend(["--console-port", instance.NicConsolePort])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                if hasattr(instance, "NodeCimcUsername"):
+                    cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 nics = getattr(instance, "Nics", None)
                 if nics != None and len(nics) != 0:
                     for nic in nics:
@@ -338,6 +340,8 @@ class _Testbed:
                 cmd.extend([ "%s/iota/scripts/reboot_node.py" % GlobalOptions.topdir ])
                 cmd.extend(["--host-ip", instance.NodeMgmtIP])
                 cmd.extend(["--cimc-ip", instance.NodeCimcIP])
+                if hasattr(instance, "NodeCimcUsername"):
+                    cmd.extend(["--cimc-username", instance.NodeCimcUsername])
                 cmd.extend(["--os", "%s" % instance.NodeOs])
             if instance.NodeOs == "esx":
                 cmd.extend(["--host-username", self.__tbspec.Provision.Vars.EsxUsername])
