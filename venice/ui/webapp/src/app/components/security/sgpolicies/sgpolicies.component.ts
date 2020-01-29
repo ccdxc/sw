@@ -20,7 +20,7 @@ import { SearchSearchRequest } from '@sdk/v1/models/generated/search';
 })
 export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkSecurityPolicy, SecurityNetworkSecurityPolicy> implements OnInit, OnDestroy {
   isTabComponent: boolean = false;
-  disableTableWhenRowExpanded: boolean  = true;
+  disableTableWhenRowExpanded: boolean = true;
   dataObjects: ReadonlyArray<SecurityNetworkSecurityPolicy> = [];
   exportFilename: string = 'Venice-sgpolicies';
   exportMap: CustomExportMap = {};
@@ -70,12 +70,13 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
 
   setDefaultToolbar() {
     let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)  ) {
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.securitynetworksecuritypolicy_create)) {
       buttons = [{
         cssClass: 'global-button-primary global-button-padding',
         text: 'ADD POLICY',
         computeClass: () => this.shouldEnableButtons ? '' : 'global-button-disabled',
-        callback: () => { this.createNewObject(); }
+        callback: () => { this.createNewObject(); },
+        genTooltip: () => this.getTooltip(),
       }];
     }
     this._controllerService.setToolbarData({
@@ -84,10 +85,14 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
     });
   }
 
+  getTooltip(): string {
+    return this.dataObjects.length > 0 ? 'System allows one network security policy' : 'Add network security policy';
+  }
+
   getSecurityPolicies() {
-    this.securityService.ListNetworkSecurityPolicy().subscribe (
+    this.securityService.ListNetworkSecurityPolicy().subscribe(
       (response) => {
-        if (response && response.body ) {
+        if (response && response.body) {
           const body: ISecurityNetworkSecurityPolicyList = response.body as ISecurityNetworkSecurityPolicyList;
           if (!body.items || (body.items && body.items.length < this.MAX_POLICY_NUM)) {
             this.shouldEnableButtons = true;
@@ -103,6 +108,9 @@ export class SgpoliciesComponent extends TablevieweditAbstract<ISecurityNetworkS
     const subscription = this.securityService.WatchNetworkSecurityPolicy().subscribe(
       response => {
         this.sgPoliciesEventUtility.processEvents(response);
+        // user may delete the only one sg-policy. If so, UI should enable the [Add POLICY] toolbar button
+        this.shouldEnableButtons = (this.dataObjects.length === 0);
+
         this.setDefaultToolbar();
       },
       this._controllerService.webSocketErrorHandler('Failed to get security policies')

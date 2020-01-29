@@ -1,28 +1,28 @@
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, IterableDiffer, OnChanges, OnDestroy, OnInit, Output, Renderer2, SimpleChanges, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
-import { FormArray, ValidatorFn, FormGroup, AbstractControl } from '@angular/forms';
-import { BaseComponent } from '@components/base/base.component';
-import { RolloutService } from '@app/services/generated/rollout.service';
-import { ControllerService } from '@app/services/controller.service';
-import { ObjstoreService } from '@app/services/generated/objstore.service';
-import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
-import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec } from '@sdk/v1/models/generated/rollout';
-import { IObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
-import { RepeaterData, ValueType, RepeaterItem } from 'web-app-framework';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AbstractControl, FormArray, FormGroup, ValidatorFn } from '@angular/forms';
 import { Animations } from '@app/animations';
+import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { SearchExpression } from '@app/components/search/index.ts';
+import { SearchUtil } from '@app/components/search/SearchUtil';
+import { ToolbarData } from '@app/models/frontend/shared/toolbar.interface';
+import { ControllerService } from '@app/services/controller.service';
+import { ClusterService } from '@app/services/generated/cluster.service';
+import { ObjstoreService } from '@app/services/generated/objstore.service';
+import { RolloutService } from '@app/services/generated/rollout.service';
+import { SearchService } from '@app/services/generated/search.service';
+import { Utility } from '@common/Utility';
+import { BaseComponent } from '@components/base/base.component';
+import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
+import { IObjstoreObjectList } from '@sdk/v1/models/generated/objstore';
+import { IApiStatus, IRolloutRollout, RolloutRollout, RolloutRolloutSpec } from '@sdk/v1/models/generated/rollout';
+import { LabelsSelector } from '@sdk/v1/models/generated/security';
+import { required } from '@sdk/v1/utils/validators';
+import { Checkbox } from 'primeng/checkbox';
 import { SelectItem } from 'primeng/primeng';
 import { Observable } from 'rxjs';
-import { required } from '@sdk/v1/utils/validators';
-import { Utility } from '@common/Utility';
-import { Checkbox } from 'primeng/checkbox';
-import { RolloutImageLabel, EnumRolloutOptions, RolloutImageOption } from '../index';
+import { RepeaterData, RepeaterItem, ValueType } from 'web-app-framework';
+import { EnumRolloutOptions, RolloutImageLabel, RolloutImageOption } from '../index';
 import { RolloutUtil } from '../RolloutUtil';
-import { SearchExpression } from '@app/components/search/index.ts';
-import { LabelsSelector } from '@sdk/v1/models/generated/security';
-import { SearchUtil } from '@app/components/search/SearchUtil';
-import { SearchService } from '@app/services/generated/search.service';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
-import { ClusterDistributedServiceCard } from '@sdk/v1/models/generated/cluster';
-import { ClusterService } from '@app/services/generated/cluster.service';
 
 export class RolloutOrder {
   id: string;
@@ -240,14 +240,13 @@ export class NewrolloutComponent extends BaseComponent implements OnInit, OnDest
       this.rolloutNowcheck = false;
       this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).enable();
     }
-    // set validators. TODO: 2019-05-15 wait for server set validator in rollout.proto
-    if (this.newRollout.$formGroup.validator) {
-      this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts), this.newRollout.$formGroup.validator]);
-    } else {
-      this.newRollout.$formGroup.get(['meta', 'name']).setValidators([required, this.isRolloutNameValid(this.existingRollouts)]);
-      this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).setValidators([required, this.isRolloutScheduleTimeValid()]);
-      this.newRollout.$formGroup.get(['spec', 'version']).setValidators([required]);
-    }
+    // set validators.
+    this.newRollout.$formGroup.get(['meta', 'name']).setValidators([
+                              this.newRollout.$formGroup.get(['meta', 'name']).validator,
+                              this.isRolloutNameValid(this.existingRollouts)]);
+    this.newRollout.$formGroup.get(['spec', 'scheduled-start-time']).setValidators([required, this.isRolloutScheduleTimeValid()]);
+    this.newRollout.$formGroup.get(['spec', 'version']).setValidators([required]);
+
     if (!this.isInline) {
       // If it is not inline, we change the toolbar buttons, and save the old one
       // so that we can set it back when we are done
