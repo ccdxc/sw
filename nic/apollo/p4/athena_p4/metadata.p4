@@ -31,7 +31,9 @@ header_type control_metadata_t {
         forward_to_uplink                   : 1;
         redir_to_rxdma                      : 1;
         skip_flow_lkp                       : 1;
+        skip_dnat_lkp                       : 1;
         flow_ohash_lkp                      : 1;
+        dnat_ohash_lkp                      : 1;
         direction                           : 1;
         parse_tcp_option_error              : 1;
         flow_miss                           : 1;
@@ -108,6 +110,7 @@ header_type scratch_metadata_t {
         cpu_flags           : 16;
         nexthop_index       : 12;
         num_nexthops        : 4;
+        pad31               : 31;
         pad6                : 6;
         update_ip_chksum    : 1;
         update_l4_chksum    : 1;

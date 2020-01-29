@@ -252,10 +252,12 @@ header_type mpls_t {
 header_type ingress_recirc_header_t {
     fields {
         flow_ohash              : 32;
+        dnat_ohash              : 32;
 
-        pad1                    : 6;
+        pad1                    : 5;
         direction               : 1;
         flow_done               : 1;
+        dnat_done               : 1;
     }
 }
 

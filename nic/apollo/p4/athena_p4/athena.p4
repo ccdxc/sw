@@ -11,6 +11,7 @@
 
 #include "vnic.p4"
 #include "key.p4"
+#include "dnat.p4"
 #include "offloads.p4"
 #include "flow.p4"
 #include "nacl.p4"
@@ -34,6 +35,7 @@ action drop_packet() {
 control ingress {
     vnic();
     key_init();
+    dnat_lookup();
     offloads();
     flow_lookup();
     nacl();
