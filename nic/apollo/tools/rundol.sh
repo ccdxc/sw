@@ -8,6 +8,9 @@ export PERSISTENT_LOG_DIR=$NICDIR
 DRYRUN=0
 START_VPP=0
 
+# set file size limit to 30GB so that model logs will not exceed that.
+ulimit -f $((30*1024*1024))
+
 argc=$#
 argv=($@)
 for (( j=0; j<argc; j++ )); do
