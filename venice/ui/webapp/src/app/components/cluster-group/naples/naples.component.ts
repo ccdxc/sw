@@ -365,8 +365,6 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
       this.dataObjects.map(naple => {
         naple[NaplesComponent.NAPLES_FIELD_WORKLOADS] = this.getDSCWorkloads(naple);
       });
-      // backup dataObjects
-      this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
     }
   }
 
@@ -461,6 +459,8 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         }
         this.searchObject['status.conditions'] = this.conditionNaplesMap;
         this.tryGenCharts();
+        // backup dataObjects
+        this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects);
       },
       (error) => {
         this.tableLoading = false;

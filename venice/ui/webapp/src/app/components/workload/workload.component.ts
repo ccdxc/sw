@@ -143,6 +143,8 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   searchWorkloadCount: number = 0;
   starttimeWatchWorkload: number;
 
+  dataMappingTimer: NodeJS.Timer;
+
   /**
    * This API is to assist searchWorkloadInterfaces().  We use public static function is to avoid "this" keyword confusion
    * @param requirement
@@ -425,7 +427,6 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
   watchWorkloads() {
     this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
     this.dataObjects = this.workloadEventUtility.array;
-    const debounceDeley = (this.searchWorkloadCount > 100) ? 300 : 1; // if there are too many workloads in Venice, take longer time in  debounce(.. , xx). Table has time to render.
     const subscription = this.workloadService.WatchWorkload().subscribe(
       (response) => {
         this.workloadEventUtility.processEvents(response);
@@ -436,10 +437,14 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
         if (timeOut || (this.dataObjects && this.dataObjects.length > 0.9 * this.searchWorkloadCount)) {
           this.tableLoading = false;
         }
-        _.debounce(() => {
-          this.buildObjectsMap();
-          this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
-        }, debounceDeley);
+
+        // if there are too many workloads in Venice, take longer time so table has time to render.
+        if (this.searchWorkloadCount > 300) {
+          clearTimeout(this.dataMappingTimer);
+          this.dataMappingTimer = setTimeout(this.mapData, 300);
+        } else {
+          this.mapData();
+        }
 
         // once we have get more workload objects than searchWorkloadCount, we reset this.searchWorkloadCount. It is need in DestroyHook()
         if (this.dataObjects.length >= this.searchWorkloadCount) {
@@ -452,6 +457,11 @@ export class WorkloadComponent extends TablevieweditAbstract<IWorkloadWorkload, 
       }
     );
     this.subscriptions.push(subscription);
+  }
+
+  mapData() {
+    this.buildObjectsMap();
+    this.dataObjectsBackUp = Utility.getLodash().cloneDeepWith(this.dataObjects); // make a copy of server provided data
   }
 
   public buildObjectsMap() {
