@@ -62,21 +62,21 @@
           "Name": "Pin",
           "DisplayName": "Input Power",
           "Description": "Input power to the system",
-          "Units": "MWatts",
+          "Units": "MilliWatts",
           "BaseType": "Counter"
         },
         {
           "Name": "Pout1",
           "DisplayName": "Core Output Power",
           "Description": "Core output power",
-          "Units": "MWatts",
+          "Units": "MilliWatts",
           "BaseType": "Counter"
         },
         {
           "Name": "Pout2",
           "DisplayName": "ARM Output Power",
           "Description": "ARM output power",
-          "Units": "MWatts",
+          "Units": "MilliWatts",
           "BaseType": "Counter"
         }
       ],

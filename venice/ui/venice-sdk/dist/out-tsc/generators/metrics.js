@@ -36,7 +36,7 @@ function generateMetricMetadata(inputBaseFolder, outputFolder) {
         Celsius: 'number',
         KB: 'number',
         MHz: 'number',
-        MWatts: 'number',
+        MilliWatts: 'number',
         string: 'string',
     };
     var files = utils_1.walk(inputBaseFolder, function (x) { return x.endsWith('.json'); });

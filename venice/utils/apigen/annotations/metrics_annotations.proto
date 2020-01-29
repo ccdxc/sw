@@ -13,7 +13,7 @@ enum MetricUnitType {
     Bitmap      = 5;
     Celsius     = 6;
     KB          = 7;
-    MWatts      = 8;
+    MilliWatts  = 8;
     MHz         = 9;
 }
 

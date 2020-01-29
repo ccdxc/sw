@@ -74,9 +74,9 @@ message AsicPowerMetrics {
 
     fixed64 Key = 1;
 
-    delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system", Units: MWatts }];
-    delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power", Units: MWatts }];
-    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "ARM Output Power" Description: "ARM output power", Units: MWatts }];
+    delphi.Counter pin           = 2 [(venice.metricsField) = {DisplayName: "Input Power" Description: "Input power to the system", Units: MilliWatts }];
+    delphi.Counter pout1         = 3 [(venice.metricsField) = {DisplayName: "Core Output Power" Description: "Core output power", Units: MilliWatts }];
+    delphi.Counter pout2         = 4 [(venice.metricsField) = {DisplayName: "ARM Output Power" Description: "ARM output power", Units: MilliWatts }];
 }
 
 message AsicFrequencyMetrics {

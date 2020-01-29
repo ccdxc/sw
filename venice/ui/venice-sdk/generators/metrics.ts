@@ -36,7 +36,7 @@ export function generateMetricMetadata(inputBaseFolder, outputFolder) {
     Celsius: 'number',
     KB: 'number',
     MHz: 'number',
-    MWatts: 'number',
+    MilliWatts: 'number',
 
     string: 'string',
   }

@@ -3092,7 +3092,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pin",
       "displayName": "Input Power",
       "description": "Input power to the system",
-      "units": "MWatts",
+      "units": "MilliWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3103,7 +3103,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pout1",
       "displayName": "Core Output Power",
       "description": "Core output power",
-      "units": "MWatts",
+      "units": "MilliWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"
@@ -3114,7 +3114,7 @@ export const MetricsMetadata: { [key: string]: MetricMeasurement } = {
       "name": "Pout2",
       "displayName": "ARM Output Power",
       "description": "ARM output power",
-      "units": "MWatts",
+      "units": "MilliWatts",
       "baseType": "Counter",
       "tags": [
         "Level4"
