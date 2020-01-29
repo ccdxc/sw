@@ -8,7 +8,7 @@ LIBDIRS = \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
-          session_age \
+          ftl_dev/scanner_session \
           p4pt \
           eth \
           ipfix \
@@ -27,7 +27,7 @@ IRIS_SUBDIRS = \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
-          session_age \
+          ftl_dev/scanner_session \
           p4pt \
           eth \
           ipfix \
@@ -44,7 +44,7 @@ MSFT_GFT_SUBDIRS= \
           cpu-p4plus \
           gc \
           app-redir-p4+ \
-          session_age \
+          ftl_dev/scanner_session \
           p4pt \
           eth \
           adminq \

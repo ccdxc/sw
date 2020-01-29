@@ -56,7 +56,9 @@ static inline uint64_t READ_REG64(uint64_t addr)
 
 #define WRITE_DB64      sdk::lib::pal_ring_db64
 
+#ifndef PAL_barrier
 #define PAL_barrier()           do {} while (0)
+#endif
 
 #define MEM_CLR(pa, va, sz, skip) { \
     if (!skip) { \

@@ -306,30 +306,17 @@ public:
                              const accel_rgroup_rmisc_rsp_t& misc);
     friend void AccelLifUtils::HwMonitor::ErrPoll(void *obj);
 
-    accel_lif_event_t accel_lif_null_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_eagain_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_reject_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_create_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_destroy_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_hal_up_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_ring_info_get_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_init_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_setattr_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_getattr_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_identify_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_reset_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_quiesce_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_rgroup_quiesce_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_rgroup_reset_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_adminq_init_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_notifyq_init_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_queue_init_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_queue_control_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_queue_batch_init_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_queue_batch_control_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_seq_queue_init_cpl_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_crypto_key_update_action(accel_lif_event_t event);
-    accel_lif_event_t accel_lif_hang_notify_action(accel_lif_event_t event);
+    static accel_lif_state_event_t lif_initial_ev_table[];
+    static accel_lif_state_event_t lif_wait_hal_ev_table[];
+    static accel_lif_state_event_t lif_pre_init_ev_table[];
+    static accel_lif_state_event_t lif_post_init_ev_table[];
+    static accel_lif_state_event_t lif_seq_reset_ev_table[];
+    static accel_lif_state_event_t lif_rgroup_quiesce_ev_table[];
+    static accel_lif_state_event_t lif_rgroup_reset_ev_table[];
+    static accel_lif_state_event_t lif_seq_pre_init_ev_table[];
+    static accel_lif_state_event_t lif_post_init_post_reset_ev_table[];
+    static accel_lif_state_event_t lif_seq_init_ev_table[];
+    static accel_lif_state_event_t lif_idle_ev_table[];
 
 private:
     std::string                 lif_name;
@@ -446,6 +433,30 @@ private:
                               uint64_t qstate_addr,
                               const storage_seq_qstate_t& qstate);
     void accel_lif_state_machine(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_null_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_eagain_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_reject_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_create_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_destroy_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_hal_up_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_ring_info_get_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_setattr_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_getattr_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_identify_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_reset_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_quiesce_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_rgroup_quiesce_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_rgroup_reset_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_adminq_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_notifyq_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_control_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_batch_init_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_batch_control_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_seq_queue_init_cpl_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_crypto_key_update_action(accel_lif_event_t event);
+    accel_lif_event_t accel_lif_hang_notify_action(accel_lif_event_t event);
 };
 
 /**

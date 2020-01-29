@@ -124,6 +124,11 @@ nicmgrapi::xcvr_event_handler_(sdk::ipc::ipc_msg_ptr msg, const void *ctxt) {
     g_devmgr->LinkEventHandler(&st);
 }
 
+DeviceManager *
+nicmgrapi::devmgr_if(void) {
+    return g_devmgr;
+}
+
 }    // namespace nicmgr
 
 /// \@}

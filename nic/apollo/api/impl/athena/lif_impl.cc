@@ -357,6 +357,8 @@ lif_impl::create(pds_lif_spec_t *spec) {
     case sdk::platform::LIF_TYPE_MNIC_INTERNAL_MGMT:
         ret = create_internal_mgmt_mnic_(spec);
         break;
+    case sdk::platform::LIF_TYPE_SERVICE:
+        break;
     default:
         return SDK_RET_INVALID_ARG;
     }

@@ -115,7 +115,7 @@ static const char              *lif_event_str_table[] = {
     ACCEL_LIF_EVENT_STR_TABLE
 };
 
-static accel_lif_state_event_t  lif_initial_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_initial_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -136,7 +136,7 @@ static accel_lif_state_event_t  lif_initial_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_wait_hal_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_wait_hal_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_eagain_action,
@@ -162,7 +162,7 @@ static accel_lif_state_event_t  lif_wait_hal_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_pre_init_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_pre_init_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -203,7 +203,7 @@ static accel_lif_state_event_t  lif_pre_init_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_post_init_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_post_init_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -249,7 +249,7 @@ static accel_lif_state_event_t  lif_post_init_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_seq_reset_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_seq_reset_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -300,7 +300,7 @@ static accel_lif_state_event_t  lif_seq_reset_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_rgroup_quiesce_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_rgroup_quiesce_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -336,7 +336,7 @@ static accel_lif_state_event_t  lif_rgroup_quiesce_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_rgroup_reset_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_rgroup_reset_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -377,7 +377,7 @@ static accel_lif_state_event_t  lif_rgroup_reset_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_seq_pre_init_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_seq_pre_init_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -448,7 +448,7 @@ static accel_lif_state_event_t  lif_seq_pre_init_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_post_init_post_reset_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_post_init_post_reset_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -484,7 +484,7 @@ static accel_lif_state_event_t  lif_post_init_post_reset_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_seq_init_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -570,7 +570,7 @@ static accel_lif_state_event_t  lif_seq_init_ev_table[] = {
     },
 };
 
-static accel_lif_state_event_t  lif_idle_ev_table[] = {
+accel_lif_state_event_t        AccelLif::lif_idle_ev_table[] = {
     {
         ACCEL_LIF_EV_ANY,
         &AccelLif::accel_lif_reject_action,
@@ -637,17 +637,17 @@ static accel_lif_state_event_t  lif_idle_ev_table[] = {
 };
 
 static accel_lif_state_event_t  *lif_fsm_table[ACCEL_LIF_ST_MAX] = {
-    [ACCEL_LIF_ST_INITIAL]              = lif_initial_ev_table,
-    [ACCEL_LIF_ST_WAIT_HAL]             = lif_wait_hal_ev_table,
-    [ACCEL_LIF_ST_PRE_INIT]             = lif_pre_init_ev_table,
-    [ACCEL_LIF_ST_POST_INIT]            = lif_post_init_ev_table,
-    [ACCEL_LIF_ST_SEQ_QUEUE_RESET]      = lif_seq_reset_ev_table,
-    [ACCEL_LIF_ST_RGROUP_QUIESCE]       = lif_rgroup_quiesce_ev_table,
-    [ACCEL_LIF_ST_RGROUP_RESET]         = lif_rgroup_reset_ev_table,
-    [ACCEL_LIF_ST_POST_INIT_POST_RESET] = lif_post_init_post_reset_ev_table,
-    [ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT]   = lif_seq_pre_init_ev_table,
-    [ACCEL_LIF_ST_SEQ_QUEUE_INIT]       = lif_seq_init_ev_table,
-    [ACCEL_LIF_ST_IDLE]                 = lif_idle_ev_table,
+    [ACCEL_LIF_ST_INITIAL]              = AccelLif::lif_initial_ev_table,
+    [ACCEL_LIF_ST_WAIT_HAL]             = AccelLif::lif_wait_hal_ev_table,
+    [ACCEL_LIF_ST_PRE_INIT]             = AccelLif::lif_pre_init_ev_table,
+    [ACCEL_LIF_ST_POST_INIT]            = AccelLif::lif_post_init_ev_table,
+    [ACCEL_LIF_ST_SEQ_QUEUE_RESET]      = AccelLif::lif_seq_reset_ev_table,
+    [ACCEL_LIF_ST_RGROUP_QUIESCE]       = AccelLif::lif_rgroup_quiesce_ev_table,
+    [ACCEL_LIF_ST_RGROUP_RESET]         = AccelLif::lif_rgroup_reset_ev_table,
+    [ACCEL_LIF_ST_POST_INIT_POST_RESET] = AccelLif::lif_post_init_post_reset_ev_table,
+    [ACCEL_LIF_ST_SEQ_QUEUE_PRE_INIT]   = AccelLif::lif_seq_pre_init_ev_table,
+    [ACCEL_LIF_ST_SEQ_QUEUE_INIT]       = AccelLif::lif_seq_init_ev_table,
+    [ACCEL_LIF_ST_IDLE]                 = AccelLif::lif_idle_ev_table,
 };
 
 static accel_lif_ordered_event_t lif_ordered_ev_table[ACCEL_LIF_ST_MAX][ACCEL_LIF_EV_MAX];

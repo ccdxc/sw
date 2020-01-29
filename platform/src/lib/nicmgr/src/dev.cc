@@ -27,6 +27,9 @@
 #include "nvme_dev.hpp"
 #include "virtio_dev.hpp"
 #endif  // IRIS
+#ifdef ATHENA
+#include "ftl_dev.hpp"
+#endif
 #include "nicmgr_init.hpp"
 #include "nicmgr_utils.hpp"
 #include "pd_client.hpp"
@@ -472,6 +475,19 @@ DeviceManager::LoadProfile(string device_json_file, bool init_pci)
     }
 #endif // IRIS
 
+#ifdef ATHENA
+    NIC_HEADER_TRACE("Loading FTL devices");
+    if (spec.get_child_optional("ftl_dev")) {
+        struct ftl_devspec *ftl_spec;
+
+        for (const auto &node : spec.get_child("ftl_dev")) {
+
+            ftl_spec = FtlDev::ParseConfig(node);
+            AddDevice(FTL, (void *)ftl_spec);
+        }
+    }
+#endif
+
     if (platform_is_hw(platform) && pciemgr && init_pci) {
         NIC_LOG_INFO("Finalizing PCI configuration");
         pciemgr->finalize();
@@ -545,6 +561,14 @@ DeviceManager::AddDevice(enum DeviceType type, void *dev_spec)
         }
     }
 #endif // IRIS
+#ifdef ATHENA
+    case FTL: {
+        FtlDev *ftl_dev = new FtlDev(dev_api, dev_spec, pd, EV_A);
+        ftl_dev->SetType(type);
+        devices[ftl_dev->GetName()] = ftl_dev;
+        break;
+    }
+#endif
     default:
         break;
     }
@@ -625,6 +649,12 @@ DeviceManager::SetHalClient(devapi *dev_api)
             virtio_dev->SetHalClient(dev_api);
         }
 #endif // IRIS
+#ifdef ATHENA
+        if (dev->GetType() == FTL) {
+            FtlDev *ftl_dev = (FtlDev *)dev;
+            ftl_dev->SetHalClient(dev_api);
+        }
+#endif
     }
 }
 
@@ -700,6 +730,12 @@ DeviceManager::HalEventHandler(bool status)
             virtio_dev->HalEventHandler(status);
         }
 #endif // IRIS
+#ifdef ATHENA
+        if (dev->GetType() == FTL) {
+            FtlDev *ftl_dev = (FtlDev *)dev;
+            ftl_dev->HalEventHandler(status);
+        }
+#endif
     }
 }
 

@@ -26,7 +26,7 @@ struct phv_ p;
     .param      edma_fetch_desc
     .param      nicmgr_fetch_desc
     .param      nicmgr_drop
-    .param      session_age_start
+    .param      scanner_session_start
 
 //Keep offset 0 for none to avoid invoking unrelated program when
 //qstate's pc_offset is not initialized
@@ -75,6 +75,11 @@ nicmgr_resp_stage0:
     nop
 
 .align
-session_age_stage0:
-    j   session_age_start
+scanner_session_stage0:
+    j   scanner_session_start
+    nop
+
+.align
+scanner_conntrack_stage0:
+    nop.e       // placeholder
     nop

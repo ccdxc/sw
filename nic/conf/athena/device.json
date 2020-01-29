@@ -134,5 +134,20 @@
                 "num_vfs" : 0
             }
         }
+    ],
+
+    "ftl_dev" : [
+        {
+            "name" : "ftl",
+            "session_hw_scanners" : 4096,
+            "session_burst_size" : 4096,
+            "session_burst_resched_time_us" : 10,
+            "conntrack_hw_scanners" : 0,
+            "conntrack_burst_size" : 4096,
+            "conntrack_burst_resched_time_us" : 10,
+            "sw_pollers" : 4,
+            "sw_poller_qdepth" : 1024,
+            "qos_group" : "DEFAULT"
+        }
     ]
 }

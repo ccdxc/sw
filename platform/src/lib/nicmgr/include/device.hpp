@@ -25,6 +25,9 @@ enum DeviceType
     NVME,
     VIRTIO,
     PCIESTRESS,
+#ifdef ATHENA
+    FTL,
+#endif
 };
 
 /**

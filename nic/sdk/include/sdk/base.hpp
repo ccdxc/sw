@@ -250,6 +250,11 @@ using sdk::SDK_RET_OOM;
 using sdk::SDK_RET_OOB;
 using sdk::SDK_RET_NO_RESOURCE;
 using sdk::SDK_RET_OBJ_CLONE_ERR;
+using sdk::SDK_RET_RETRY;
+using sdk::SDK_RET_HW_PROGRAM_ERR;
+using sdk::SDK_RET_HW_SW_OO_SYNC;
+using sdk::SDK_RET_IN_PROGRESS;
+using sdk::SDK_RET_NOOP;
 using sdk::sdk_status_t;
 
 #endif    // __SDK_BASE_HPP__

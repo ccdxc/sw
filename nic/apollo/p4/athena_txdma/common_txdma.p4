@@ -1055,36 +1055,42 @@ parser start {
 
 control ingress {
     common_tx_p4plus_stage0();
+    if (app_header.table0_valid == 1) {
+        apply(tx_table_s1_t0);
+        apply(tx_table_s2_t0);
+        apply(tx_table_s3_t0);
+        apply(tx_table_s4_t0);
+        apply(tx_table_s5_t0);
+        apply(tx_table_s6_t0);
+        apply(tx_table_s7_t0);
+    }
+    if (app_header.table1_valid == 1) {
+        apply(tx_table_s0_t1);
+        apply(tx_table_s1_t1);
+        apply(tx_table_s2_t1);
+        apply(tx_table_s3_t1);
+        apply(tx_table_s4_t1);
+        apply(tx_table_s5_t1);
+        apply(tx_table_s6_t1);
+        apply(tx_table_s7_t1);
+    }
+    if (app_header.table2_valid == 1) {
+        apply(tx_table_s1_t2);
+        apply(tx_table_s2_t2);
+        apply(tx_table_s3_t2);
+        apply(tx_table_s4_t2);
+        apply(tx_table_s5_t2);
+        apply(tx_table_s6_t2);
+        apply(tx_table_s7_t2);
+    }
     if (app_header.table3_valid == 1) {
-    } else {
-        if (app_header.table0_valid == 1) {
-            apply(tx_table_s1_t0);
-            apply(tx_table_s2_t0);
-            apply(tx_table_s3_t0);
-            apply(tx_table_s4_t0);
-            apply(tx_table_s5_t0);
-            apply(tx_table_s6_t0);
-            apply(tx_table_s7_t0);
-        }
-        if (app_header.table1_valid == 1) {
-            apply(tx_table_s0_t1);
-            apply(tx_table_s1_t1);
-            apply(tx_table_s2_t1);
-            apply(tx_table_s3_t1);
-            apply(tx_table_s4_t1);
-            apply(tx_table_s5_t1);
-            apply(tx_table_s6_t1);
-            apply(tx_table_s7_t1);
-        }
-        if (app_header.table2_valid == 1) {
-            apply(tx_table_s1_t2);
-            apply(tx_table_s2_t2);
-            apply(tx_table_s3_t2);
-            apply(tx_table_s4_t2);
-            apply(tx_table_s5_t2);
-            apply(tx_table_s6_t2);
-            apply(tx_table_s7_t2);
-        }
+        apply(tx_table_s1_t3);
+        apply(tx_table_s2_t3);
+        apply(tx_table_s3_t3);
+        apply(tx_table_s4_t3);
+        apply(tx_table_s5_t3);
+        apply(tx_table_s6_t3);
+        apply(tx_table_s7_t3);
     }
     apply(tx_table_s5_t4_lif_rate_limiter_table);
 }

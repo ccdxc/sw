@@ -16,6 +16,8 @@
 /// \defgroup PDS_NICMGR
 /// @{
 
+class DeviceManager;
+
 namespace nicmgr {
 
 // TODO: why are we using class here ?
@@ -41,6 +43,9 @@ public:
     /// \param[in]    msg  event message pointer
     /// \param[in]    ctxt callback context
     static void nicmgr_event_handler(void *msg, void *ctxt);
+
+    /// \brief    DeviceManager interface
+    static DeviceManager *devmgr_if(void);
 
 private:
     /// \brief    constructor

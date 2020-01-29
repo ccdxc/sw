@@ -253,6 +253,14 @@
             "size": "64K"
         },
         {
+            "name": "ftl_dev_poller_rings",
+            "size": "1M"
+        },
+        {
+            "name": "ftl_dev_age_tmo",
+            "size": "1K"
+        },
+        {
             "name": "tls_proxy_pad_table",
             "size": "1K"
         },
