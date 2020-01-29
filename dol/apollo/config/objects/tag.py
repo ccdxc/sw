@@ -5,7 +5,9 @@ from collections import defaultdict
 
 from infra.common.logging import logger
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -35,11 +37,11 @@ class TagObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.TAG, node)
         ################# PUBLIC ATTRIBUTES OF TAG TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
-            self.TagTblId = next(resmgr.V6TagIdAllocator)
+            self.TagTblId = next(ResmgrClient[node].V6TagIdAllocator)
             self.AddrFamily = 'IPV6'
             self.GID('IPv6TagTbl%d' %self.TagTblId)
         else:
-            self.TagTblId = next(resmgr.V4TagIdAllocator)
+            self.TagTblId = next(ResmgrClient[node].V4TagIdAllocator)
             self.AddrFamily = 'IPV4'
             self.GID('IPv4TagTbl%d' %self.TagTblId)
         self.UUID = utils.PdsUuid(self.TagTblId)
@@ -93,7 +95,7 @@ class TagObject(base.ConfigObjectBase):
 
 class TagObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.TAG, resmgr.MAX_TAG)
+        super().__init__(api.ObjectTypes.TAG, Resmgr.MAX_TAG)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)

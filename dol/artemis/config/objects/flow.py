@@ -3,7 +3,7 @@ import pdb
 import copy
 
 import infra.config.base as base
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.rmapping as rmapping
 import apollo.config.objects.route as routetable
@@ -18,8 +18,9 @@ from apollo.config.store import EzAccessStore
 class FlowMapObject(base.ConfigObjectBase):
     def __init__(self, lobj, robj, fwdmode, routeobj):
         super().__init__()
+        self.Node = EzAccessStore.GetDUTNode()
         self.Clone(EzAccessStore.templates.Get('FLOW'))
-        self.FlowMapId = next(resmgr.FlowIdAllocator)
+        self.FlowMapId = next(ResmgrClient[self.Node].FlowIdAllocator)
         self.GID('FlowMap%d'%self.FlowMapId)
         self.FwdMode = fwdmode
         self.__lobj = lobj

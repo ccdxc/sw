@@ -5,7 +5,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.utils as utils
@@ -28,7 +30,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.MappingId = spec.id
         else:
-            self.MappingId = next(resmgr.LocalMappingIdAllocator)
+            self.MappingId = next(ResmgrClient[node].LocalMappingIdAllocator)
         self.GID('LocalMapping%d'%self.MappingId)
         self.UUID = utils.PdsUuid(self.MappingId)
         self.VNIC = parent
@@ -39,7 +41,7 @@ class LocalMappingObject(base.ConfigObjectBase):
             self.AddrFamily = 'IPV6'
             self.IPAddr = parent.SUBNET.AllocIPv6Address();
             if self.__is_public:
-                self.PublicIPAddr = next(resmgr.PublicIpv6AddressAllocator)
+                self.PublicIPAddr = next(ResmgrClient[node].PublicIpv6AddressAllocator)
             if parent.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_6)
@@ -52,7 +54,7 @@ class LocalMappingObject(base.ConfigObjectBase):
                 self.IPAddr = parent.SUBNET.AllocIPv4Address()
                 logger.info("LocalMapping Object generated IP address:%s" %(str(self.IPAddr)))
             if self.__is_public:
-                self.PublicIPAddr = next(resmgr.PublicIpAddressAllocator)
+                self.PublicIPAddr = next(ResmgrClient[node].PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
             self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_4)
@@ -67,8 +69,8 @@ class LocalMappingObject(base.ConfigObjectBase):
         self.SvcIP = str(self.SvcIPAddr) # for testspec
         # We will differentiate the traffic by port (vnet vs internet) and
         # different rules will be applied
-        self.AppPort = resmgr.TransportSrcPort
-        self.LBPort = resmgr.TransportSrcLBPort
+        self.AppPort = ResmgrClient[node].TransportSrcPort
+        self.LBPort = ResmgrClient[node].TransportSrcLBPort
         self.UnderlayVPCId = EzAccessStore.GetUnderlayVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################

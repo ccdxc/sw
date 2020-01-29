@@ -9,7 +9,9 @@ import infra.common.objects as objects
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -48,7 +50,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             if (hasattr(ifspec, 'ipprefix')):
                 self.ip_prefix = ipaddress.ip_network(ifspec.ipprefix.replace('\\', '/'), False)
             else:
-                self.ip_prefix = next(resmgr.L3InterfaceIPv4PfxPool)
+                self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
@@ -74,7 +76,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if (hasattr(ifspec, 'iid')):
             self.InterfaceId = ifspec.iid
         else:
-            self.InterfaceId = next(resmgr.InterfaceIdAllocator)
+            self.InterfaceId = next(ResmgrClient[node].InterfaceIdAllocator)
         self.Ifname = spec.id
         self.Type = topo.MODE2INTF_TBL.get(spec.mode)
         self.AdminState = spec.status
@@ -112,7 +114,7 @@ class InterfaceObject(base.ConfigObjectBase):
         return clone
 
     def UpdateAttributes(self):
-        self.IfInfo.macaddr = resmgr.DeviceMacAllocator.get()
+        self.IfInfo.macaddr = ResmgrClient[node].DeviceMacAllocator.get()
         return
 
     def RollbackAttributes(self):
@@ -188,7 +190,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         spec.status = 'UP'
         spec.mode = 'host'
         spec.lifspec = ifspec.lif.Get(EzAccessStore)
-        for obj in resmgr.HostIfs.values():
+        for obj in ResmgrClient[node].HostIfs.values():
             spec.id = obj.IfName
             spec.ifinfo = obj
             lifstart = obj.LifBase
@@ -221,7 +223,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
                     if (hasattr(ifspec, 'macaddress')):
                         spec.MACAddr = ifspec.macaddress
                     else:
-                        spec.MACAddr = resmgr.DeviceMacAllocator.get()
+                        spec.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
                     spec.vpcid = parent.VPCId
                     ifobj = InterfaceObject(spec, ifspec, node=node)
                     self.Objs[node].update({ifobj.InterfaceId: ifobj})

@@ -2,7 +2,7 @@
 import enum
 import pdb
 import infra.config.base as base
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
 import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import batch_pb2 as batch_pb2
@@ -14,10 +14,11 @@ from apollo.config.store import EzAccessStore
 INVALID_BATCH_COOKIE = 0
 
 class BatchObject(base.ConfigObjectBase):
-    def __init__(self):
+    def __init__(self, node):
         super().__init__()
+        self.Node = node
         self.GID('Batch')
-        self.epoch = next(resmgr.EpochAllocator)
+        self.epoch = next(ResmgrClient[node].EpochAllocator)
         self.cookie = INVALID_BATCH_COOKIE
         return
 
@@ -72,7 +73,7 @@ class BatchObjectClient:
         return self.__objs.values()
 
     def GenerateObjects(self, node, topospec):
-        obj = BatchObject()
+        obj = BatchObject(node)
         obj.Show()
         self.__objs.update({node: obj})
         return

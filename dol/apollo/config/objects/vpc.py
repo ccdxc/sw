@@ -5,7 +5,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.policy as policy
@@ -49,7 +51,7 @@ class VpcObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.VPCId = spec.id
         else:
-            self.VPCId = next(resmgr.VpcIdAllocator)
+            self.VPCId = next(ResmgrClient[node].VpcIdAllocator)
         self.GID('Vpc%d'%self.VPCId)
         self.UUID = utils.PdsUuid(self.VPCId)
         self.IPPrefix = {}
@@ -58,20 +60,20 @@ class VpcObject(base.ConfigObjectBase):
         self.V6RouteTableId = 0
         if spec.type == 'underlay':
             self.Type = vpc_pb2.VPC_TYPE_UNDERLAY
-            self.IPPrefix[0] = resmgr.ProviderIpV6Network
-            self.IPPrefix[1] = resmgr.ProviderIpV4Network
+            self.IPPrefix[0] = ResmgrClient[node].ProviderIpV6Network
+            self.IPPrefix[1] = ResmgrClient[node].ProviderIpV4Network
             # Reserve one SVC port
             # Right now it does not support multiple backends for a frontend
-            self.SvcPort = resmgr.TransportSvcPort
+            self.SvcPort = ResmgrClient[node].TransportSvcPort
             self.__max_svc_mapping_shared_count = 1
             self.__svc_mapping_shared_count = 0
             self.SvcMappingIPAddr  = {}
         else:
             self.Type = vpc_pb2.VPC_TYPE_TENANT
-            self.IPPrefix[0] = resmgr.GetVpcIPv6Prefix(self.VPCId)
-            self.IPPrefix[1] = resmgr.GetVpcIPv4Prefix(self.VPCId)
+            self.IPPrefix[0] = ResmgrClient[node].GetVpcIPv6Prefix(self.VPCId)
+            self.IPPrefix[1] = ResmgrClient[node].GetVpcIPv4Prefix(self.VPCId)
         if (hasattr(spec, 'nat46')) and spec.nat46 is True:
-            self.Nat46_pfx = resmgr.Nat46Address
+            self.Nat46_pfx = ResmgrClient[node].Nat46Address
         self.Stack = spec.stack
         # As currently vpc can have only type IPV4 or IPV6, we will alternate
         # the configuration
@@ -81,8 +83,8 @@ class VpcObject(base.ConfigObjectBase):
             self.PfxSel = 1
         else:
             self.PfxSel = 0
-        self.Vnid = next(resmgr.VpcVxlanIdAllocator)
-        self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+        self.Vnid = next(ResmgrClient[node].VpcVxlanIdAllocator)
+        self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
         self.Status = VpcStatus()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
@@ -146,13 +148,13 @@ class VpcObject(base.ConfigObjectBase):
             self.NatPrefix = {}
             self.__nat_pool = {}
             self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC] = \
-                resmgr.GetVpcInternetNatPoolPfx(self.VPCId)
+                Resmgr.GetVpcInternetNatPoolPfx(self.VPCId)
             self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE] = \
-                resmgr.GetVpcInfraNatPoolPfx(self.VPCId)
+                Resmgr.GetVpcInfraNatPoolPfx(self.VPCId)
             self.__nat_pool[utils.NAT_ADDR_TYPE_PUBLIC] = \
-                resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC])
+                Resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_PUBLIC])
             self.__nat_pool[utils.NAT_ADDR_TYPE_SERVICE] = \
-                resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
+                Resmgr.CreateIpv4AddrPool(self.NatPrefix[utils.NAT_ADDR_TYPE_SERVICE])
             nat_pb.client.GenerateObjects(node, self, spec)
 
         return
@@ -171,8 +173,8 @@ class VpcObject(base.ConfigObjectBase):
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
-        self.__ip_subnet_prefix_pool[0][poolid] =  resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
-        self.__ip_subnet_prefix_pool[1][poolid] =  resmgr.CreateIPv4SubnetPool(self.IPPrefix[1], v4pfxlen, poolid)
+        self.__ip_subnet_prefix_pool[0][poolid] =  Resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
+        self.__ip_subnet_prefix_pool[1][poolid] =  Resmgr.CreateIPv4SubnetPool(self.IPPrefix[1], v4pfxlen, poolid)
 
     def AllocIPv6SubnetPrefix(self, poolid):
         return next(self.__ip_subnet_prefix_pool[0][poolid])
@@ -190,16 +192,16 @@ class VpcObject(base.ConfigObjectBase):
         else:
             paf = utils.IP_VERSION_6 if self.Stack == 'ipv6' else utils.IP_VERSION_4
         if paf == utils.IP_VERSION_6:
-            return next(resmgr.ProviderIpV6AddressAllocator), 'IPV6'
+            return next(ResmgrClient[self.Node].ProviderIpV6AddressAllocator), 'IPV6'
         else:
-            return next(resmgr.ProviderIpV4AddressAllocator), 'IPV4'
+            return next(ResmgrClient[self.Node].ProviderIpV4AddressAllocator), 'IPV4'
 
     def GetSvcMapping(self, ipversion):
         assert self.Type == vpc_pb2.VPC_TYPE_UNDERLAY
 
         def __alloc():
-            self.SvcMappingIPAddr[0] = next(resmgr.SvcMappingPublicIpV6AddressAllocator)
-            self.SvcMappingIPAddr[1] = next(resmgr.SvcMappingPublicIpV4AddressAllocator)
+            self.SvcMappingIPAddr[0] = next(ResmgrClient[self.Node].SvcMappingPublicIpV6AddressAllocator)
+            self.SvcMappingIPAddr[1] = next(ResmgrClient[self.Node].SvcMappingPublicIpV4AddressAllocator)
 
         def __get():
             if ipversion ==  utils.IP_VERSION_6:
@@ -214,7 +216,7 @@ class VpcObject(base.ConfigObjectBase):
 
     #TODO - no scenario currently in DOL which uses vpc vrmac
     #def UpdateAttributes(self):
-    #    self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+    #    self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
 
     #def RollbackAttributes(self):
     #    self.VirtualRouterMACAddr = self.GetPrecedent().VirtualRouterMACAddr
@@ -313,7 +315,7 @@ class VpcObject(base.ConfigObjectBase):
 
 class VpcObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.VPC, resmgr.MAX_VPC)
+        super().__init__(api.ObjectTypes.VPC, Resmgr.MAX_VPC)
         return
 
     # TODO: move to GetObjectByKey

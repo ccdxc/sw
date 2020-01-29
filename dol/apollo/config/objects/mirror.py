@@ -4,7 +4,9 @@ import ipaddress
 
 from infra.common.logging import logger
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
@@ -17,7 +19,7 @@ import types_pb2 as types_pb2
 class MirrorSessionObject(base.ConfigObjectBase):
     def __init__(self, node, span_type, snap_len, interface, vlan_id, vpcid, dscp, srcip, dstip, tunnel_id):
         super().__init__(api.ObjectTypes.MIRROR, node)
-        self.Id = next(resmgr.MirrorSessionIdAllocator)
+        self.Id = next(ResmgrClient[node].MirrorSessionIdAllocator)
         self.GID("MirrorSession%d"%self.Id)
         ################# PUBLIC ATTRIBUTES OF MIRROR OBJECT #####################
         self.SnapLen = snap_len
@@ -110,7 +112,7 @@ class MirrorSessionObject(base.ConfigObjectBase):
 
 class MirrorSessionObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.MIRROR, resmgr.MAX_MIRROR)
+        super().__init__(api.ObjectTypes.MIRROR, Resmgr.MAX_MIRROR)
         return
 
     def GetKeyfromSpec(self, spec, yaml=False):

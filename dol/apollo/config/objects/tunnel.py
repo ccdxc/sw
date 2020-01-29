@@ -5,7 +5,8 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 import apollo.config.agent.api as api
@@ -21,7 +22,7 @@ class TunnelObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.Id = spec.id
         else:
-            self.Id = next(resmgr.TunnelIdAllocator)
+            self.Id = next(ResmgrClient[node].TunnelIdAllocator)
         self.GID("Tunnel%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
@@ -48,32 +49,32 @@ class TunnelObject(base.ConfigObjectBase):
         else:
             self.Type = utils.GetTunnelType(spec.type)
             if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
-                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
-                self.RemoteVnicMplsSlotIdAllocator = resmgr.CreateRemoteVnicMplsSlotAllocator()
-                self.RemoteVnicVxlanIdAllocator = resmgr.CreateRemoteVnicVxlanIdAllocator()
+                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+                self.RemoteVnicMplsSlotIdAllocator = ResmgrClient[node].CreateRemoteVnicMplsSlotAllocator()
+                self.RemoteVnicVxlanIdAllocator = ResmgrClient[node].CreateRemoteVnicVxlanIdAllocator()
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
-                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
                 if self.DEVICE.IsEncapTypeMPLS():
-                    self.EncapValue = next(resmgr.IGWMplsSlotIdAllocator)
+                    self.EncapValue = next(ResmgrClient[node].IGWMplsSlotIdAllocator)
                 else:
-                    self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+                    self.EncapValue = next(ResmgrClient[node].IGWVxlanIdAllocator)
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_SERVICE:
-                self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
                 if hasattr(spec, "remote") and spec.remote is True:
                     self.Remote = True
-                    self.RemoteServicePublicIP = next(resmgr.RemoteSvcTunIPv4Addr)
-                    self.RemoteServiceEncap = next(resmgr.IGWVxlanIdAllocator)
+                    self.RemoteServicePublicIP = next(ResmgrClient[node].RemoteSvcTunIPv4Addr)
+                    self.RemoteServiceEncap = next(ResmgrClient[node].IGWVxlanIdAllocator)
                 else:
                     self.Remote = False
-                self.EncapValue = next(resmgr.IGWVxlanIdAllocator)
+                self.EncapValue = next(ResmgrClient[node].IGWVxlanIdAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.Stack):
                     if getattr(spec, 'dstaddr', None) != None:
                         self.RemoteIPAddr = ipaddress.IPv4Address(spec.dstaddr)
                     else:
-                        self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                        self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
                 else:
-                    self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                    self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
                 # nexthop / nh_group association happens later
                 if spec.type == 'underlay':
                     self.__nhtype = topo.NhType.UNDERLAY
@@ -90,7 +91,7 @@ class TunnelObject(base.ConfigObjectBase):
         if getattr(spec, 'macaddress', None) != None:
             self.MACAddr = spec.macaddress
         else:
-            self.MACAddr = resmgr.TepMacAllocator.get()
+            self.MACAddr = ResmgrClient[node].TepMacAllocator.get()
         self.Mutable = utils.IsUpdateSupported()
 
         ################# PRIVATE ATTRIBUTES OF TUNNEL OBJECT #####################
@@ -116,20 +117,20 @@ class TunnelObject(base.ConfigObjectBase):
     def UpdateAttributes(self):
         if self.LocalIPAddr != self.RemoteIPAddr:
             if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
-                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
-                self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.Stack):
-                    self.RemoteIPAddr = next(resmgr.TepIpAddressAllocator)
+                    self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
                 else:
-                    self.RemoteIPAddr = next(resmgr.TepIpv6AddressAllocator)
+                    self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
             if self.IsUnderlay():
-                self.NEXTHOP = resmgr.UnderlayNHAllocator.rrnext()
+                self.NEXTHOP = ResmgrClient[node].UnderlayNHAllocator.rrnext()
             elif self.IsUnderlayEcmp():
-                self.NEXTHOPGROUP = resmgr.UnderlayNhGroupAllocator.rrnext()
+                self.NEXTHOPGROUP = ResmgrClient[node].UnderlayNhGroupAllocator.rrnext()
         self.RemoteIP = str(self.RemoteIPAddr) # for testspec
-        self.MACAddr = resmgr.TepMacAllocator.get()
+        self.MACAddr = ResmgrClient[node].TepMacAllocator.get()
         return
 
     def RollbackAttributes(self):
@@ -274,7 +275,7 @@ class TunnelObject(base.ConfigObjectBase):
 
 class TunnelObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.TUNNEL, resmgr.MAX_TUNNEL)
+        super().__init__(api.ObjectTypes.TUNNEL, Resmgr.MAX_TUNNEL)
         return
 
     def GetTunnelObject(self, node, tunnelid):
@@ -285,7 +286,7 @@ class TunnelObjectClient(base.ConfigClientBase):
         for tun in self.Objects(node):
             if tun.IsUnderlay():
                 if tun.NexthopId == None:
-                    nhObj = resmgr.UnderlayNHAllocator.rrnext()
+                    nhObj = ResmgrClient[node].UnderlayNHAllocator.rrnext()
                     tun.NEXTHOP = nhObj
                     tun.NexthopId = nhObj.NexthopId
                     logger.info("Linking %s - %s" % (tun, nhObj))
@@ -299,7 +300,7 @@ class TunnelObjectClient(base.ConfigClientBase):
         logger.info("Filling nexthop groups")
         for tun in self.Objects(node):
             if tun.IsUnderlayEcmp():
-                nhGroupObj = resmgr.UnderlayNhGroupAllocator.rrnext()
+                nhGroupObj = ResmgrClient[node].UnderlayNhGroupAllocator.rrnext()
                 tun.NEXTHOPGROUP = nhGroupObj
                 tun.NexthopGroupId = nhGroupObj.Id
                 logger.info("Linking %s - %s" % (tun, nhGroupObj))
@@ -327,10 +328,10 @@ class TunnelObjectClient(base.ConfigClientBase):
                 obj = TunnelObject(node, parent, t, False)
                 self.Objs[node].update({obj.Id: obj})
         EzAccessStore.SetTunnels(self.Objects(node))
-        resmgr.CreateInternetTunnels()
-        resmgr.CreateVnicTunnels()
-        resmgr.CollectSvcTunnels()
-        resmgr.CreateUnderlayTunnels()
+        ResmgrClient[node].CreateInternetTunnels()
+        ResmgrClient[node].CreateVnicTunnels()
+        ResmgrClient[node].CollectSvcTunnels()
+        ResmgrClient[node].CreateUnderlayTunnels()
         return
 
 client = TunnelObjectClient()

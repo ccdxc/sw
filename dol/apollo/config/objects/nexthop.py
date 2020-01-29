@@ -6,7 +6,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -25,7 +27,7 @@ class NexthopObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.NexthopId = spec.id
         else:
-            self.NexthopId = next(resmgr.NexthopIdAllocator)
+            self.NexthopId = next(ResmgrClient[node].NexthopIdAllocator)
         self.GID('Nexthop%d'%self.NexthopId)
         self.UUID = utils.PdsUuid(self.NexthopId)
         self.VPC = parent
@@ -35,13 +37,13 @@ class NexthopObject(base.ConfigObjectBase):
             self.__type = topo.NhType.IP
             self.PfxSel = parent.PfxSel
             self.IPAddr = {}
-            self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
-            self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
-            self.VlanId = next(resmgr.NexthopVlanIdAllocator)
+            self.IPAddr[0] = next(ResmgrClient[node].NexthopIpV4AddressAllocator)
+            self.IPAddr[1] = next(ResmgrClient[node].NexthopIpV6AddressAllocator)
+            self.VlanId = next(ResmgrClient[node].NexthopVlanIdAllocator)
             if (hasattr(spec, 'macaddress')):
                 self.MACAddr = spec.macaddress
             else:
-                self.MACAddr = resmgr.NexthopMacAllocator.get()
+                self.MACAddr = ResmgrClient[node].NexthopMacAllocator.get()
         elif nh_type == 'underlay':
             self.__type = topo.NhType.UNDERLAY
             self.L3Interface = InterfaceClient.GetL3UplinkInterface(node)
@@ -49,15 +51,15 @@ class NexthopObject(base.ConfigObjectBase):
             if (hasattr(spec, 'macaddress')):
                 self.underlayMACAddr = spec.macaddress
             else:
-                self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
+                self.underlayMACAddr = ResmgrClient[node].NexthopMacAllocator.get()
         elif nh_type == 'overlay':
             self.__type = topo.NhType.OVERLAY
             if self.DualEcmp:
-                self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[node].UnderlayECMPTunAllocator.rrnext().Id
             if (hasattr(spec, 'tunnelid')):
                 self.TunnelId = spec.tunnelid
             else:
-                self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[node].UnderlayTunAllocator.rrnext().Id
         else:
             self.__type = topo.NhType.NONE
         self.Mutable = utils.IsUpdateSupported()
@@ -90,19 +92,19 @@ class NexthopObject(base.ConfigObjectBase):
 
     def UpdateAttributes(self):
         if self.__type == topo.NhType.IP:
-            self.IPAddr[0] = next(resmgr.NexthopIpV4AddressAllocator)
-            self.IPAddr[1] = next(resmgr.NexthopIpV6AddressAllocator)
-            self.VlanId = next(resmgr.NexthopVlanIdAllocator)
-            self.MACAddr = resmgr.NexthopMacAllocator.get()
+            self.IPAddr[0] = next(ResmgrClient[node].NexthopIpV4AddressAllocator)
+            self.IPAddr[1] = next(ResmgrClient[node].NexthopIpV6AddressAllocator)
+            self.VlanId = next(ResmgrClient[node].NexthopVlanIdAllocator)
+            self.MACAddr = ResmgrClient[node].NexthopMacAllocator.get()
         elif self.__type == topo.NhType.UNDERLAY:
             self.L3Interface = InterfaceClient.GetL3UplinkInterface()
             self.L3InterfaceId = self.L3Interface.InterfaceId
-            self.underlayMACAddr = resmgr.NexthopMacAllocator.get()
+            self.underlayMACAddr = ResmgrClient[node].NexthopMacAllocator.get()
         elif self.__type == topo.NhType.OVERLAY:
             if self.DualEcmp:
-                self.TunnelId = resmgr.UnderlayECMPTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[node].UnderlayECMPTunAllocator.rrnext().Id
             else:
-                self.TunnelId = resmgr.UnderlayTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[node].UnderlayTunAllocator.rrnext().Id
         return
 
     def RollbackAttributes(self):
@@ -239,7 +241,7 @@ class NexthopObjectClient(base.ConfigClientBase):
                 return True
             return False
 
-        super().__init__(api.ObjectTypes.NEXTHOP, resmgr.MAX_NEXTHOP)
+        super().__init__(api.ObjectTypes.NEXTHOP, Resmgr.MAX_NEXTHOP)
         self.__underlay_objs = defaultdict(dict)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
@@ -271,9 +273,9 @@ class NexthopObjectClient(base.ConfigClientBase):
 
     def AssociateObjects(self, node):
         EzAccessStore.SetNexthops(self.Objects(node))
-        resmgr.CreateUnderlayNHAllocator()
-        resmgr.CreateOverlayNHAllocator()
-        resmgr.CreateDualEcmpNhAllocator()
+        ResmgrClient[node].CreateUnderlayNHAllocator()
+        ResmgrClient[node].CreateOverlayNHAllocator()
+        ResmgrClient[node].CreateDualEcmpNhAllocator()
         TunnelClient.AssociateObjects(node)
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):

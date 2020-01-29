@@ -6,7 +6,9 @@ import copy
 from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 from apollo.config.objects.interface import client as InterfaceClient
@@ -42,7 +44,7 @@ class SubnetObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.SubnetId = spec.id
         else:
-            self.SubnetId = next(resmgr.SubnetIdAllocator)
+            self.SubnetId = next(ResmgrClient[node].SubnetIdAllocator)
         self.GID('Subnet%d'%self.SubnetId)
         self.UUID = utils.PdsUuid(self.SubnetId)
         self.VPC = parent
@@ -68,7 +70,7 @@ class SubnetObject(base.ConfigObjectBase):
         if getattr(spec, 'fabricencapvalue', None) != None:
             self.Vnid = spec.fabricencapvalue
         else:
-            self.Vnid = next(resmgr.VxlanIdAllocator)
+            self.Vnid = next(ResmgrClient[node].VxlanIdAllocator)
         if utils.IsDol():
             self.HostIf = InterfaceClient.GetHostInterface(node)
             if self.HostIf:
@@ -87,8 +89,8 @@ class SubnetObject(base.ConfigObjectBase):
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
-        self.__ip_address_pool[0] = resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
-        self.__ip_address_pool[1] = resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
+        self.__ip_address_pool[0] = Resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
+        self.__ip_address_pool[1] = Resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
         self.__fill_default_rules_in_policy(node)
@@ -155,7 +157,7 @@ class SubnetObject(base.ConfigObjectBase):
         # 1st IP address of the subnet becomes the vrouter.
         self.VirtualRouterIPAddr[0] = next(self.__ip_address_pool[0])
         self.VirtualRouterIPAddr[1] = next(self.__ip_address_pool[1])
-        self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+        self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         return
 
     def AllocIPv6Address(self):
@@ -165,7 +167,7 @@ class SubnetObject(base.ConfigObjectBase):
         return next(self.__ip_address_pool[1])
 
     def UpdateAttributes(self):
-        self.VirtualRouterMACAddr = resmgr.VirtualRouterMacAllocator.get()
+        self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
         hostIf = InterfaceClient.GetHostInterface()
         if hostIf != None:
             self.HostIf = hostIf
@@ -342,7 +344,7 @@ class SubnetObject(base.ConfigObjectBase):
 
 class SubnetObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.SUBNET, resmgr.MAX_SUBNET)
+        super().__init__(api.ObjectTypes.SUBNET, Resmgr.MAX_SUBNET)
         return
 
     def GetSubnetObject(self, node, subnetid):

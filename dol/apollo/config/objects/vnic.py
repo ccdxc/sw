@@ -5,7 +5,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
@@ -45,21 +47,21 @@ class VnicObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.VnicId = spec.id
         else:
-            self.VnicId = next(resmgr.VnicIdAllocator)
+            self.VnicId = next(ResmgrClient[node].VnicIdAllocator)
         self.GID('Vnic%d'%self.VnicId)
         self.UUID = utils.PdsUuid(self.VnicId)
         self.SUBNET = parent
         if hasattr(spec, 'vmac'):
             self.MACAddr =  spec.vmac
         else:
-            self.MACAddr =  resmgr.VnicMacAllocator.get()
+            self.MACAddr =  ResmgrClient[node].VnicMacAllocator.get()
         if utils.IsDol():
-            self.VlanId = next(resmgr.VnicVlanIdAllocator)
+            self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         else:
             self.VlanId = 0
-        self.MplsSlot = next(resmgr.VnicMplsSlotIdAllocator)
+        self.MplsSlot = next(ResmgrClient[node].VnicMplsSlotIdAllocator)
         if utils.IsDol():
-            self.Vnid = next(resmgr.VxlanIdAllocator)
+            self.Vnid = next(ResmgrClient[node].VxlanIdAllocator)
         else:
             self.Vnid = parent.Vnid
         self.SourceGuard = getattr(spec, 'srcguard', False)
@@ -77,7 +79,7 @@ class VnicObject(base.ConfigObjectBase):
         ################# PRIVATE ATTRIBUTES OF VNIC OBJECT #####################
         self.__attachpolicy = getattr(spec, 'policy', False) and utils.IsVnicPolicySupported()
         # get num of policies [0-5] in rrob order if needed
-        self.__numpolicy = resmgr.NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
+        self.__numpolicy = ResmgrClient[node].NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
@@ -120,7 +122,7 @@ class VnicObject(base.ConfigObjectBase):
 
     def UpdateAttributes(self):
         if self.dot1Qenabled:
-            self.VlanId = next(resmgr.VnicVlanIdAllocator)
+            self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
         return
 
     def RollbackAttributes(self):
@@ -364,7 +366,7 @@ class VnicObject(base.ConfigObjectBase):
 
 class VnicObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.VNIC, resmgr.MAX_VNIC)
+        super().__init__(api.ObjectTypes.VNIC, Resmgr.MAX_VNIC)
         return
 
     def GetVnicObject(self, node, vnicid):

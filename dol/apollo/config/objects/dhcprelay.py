@@ -4,7 +4,9 @@ import ipaddress
 
 from infra.common.logging import logger
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.objects.base as base
@@ -12,7 +14,7 @@ import apollo.config.objects.base as base
 class DhcpRelayObject(base.ConfigObjectBase):
     def __init__(self, node, vpc, serverip, agentip):
         super().__init__(api.ObjectTypes.DHCP_RELAY, node)
-        self.Id = next(resmgr.DhcpIdAllocator)
+        self.Id = next(ResmgrClient[node].DhcpIdAllocator)
         self.GID("Dhcp%d"%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
         ########## PUBLIC ATTRIBUTES OF DHCPRELAY CONFIG OBJECT ##############
@@ -62,7 +64,7 @@ class DhcpRelayObject(base.ConfigObjectBase):
 
 class DhcpRelayObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.DHCP_RELAY, resmgr.MAX_DHCP_RELAY)
+        super().__init__(api.ObjectTypes.DHCP_RELAY, Resmgr.MAX_DHCP_RELAY)
         return
 
     def GetDhcpRelayObject(self, node):

@@ -5,7 +5,9 @@ from collections import defaultdict
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -23,7 +25,7 @@ class NexthopGroupObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.Id = spec.id
         else:
-            self.Id = next(resmgr.NexthopGroupIdAllocator)
+            self.Id = next(ResmgrClient[node].NexthopGroupIdAllocator)
         self.GID('NexthopGroup%d'%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
         self.Nexthops = {}
@@ -31,10 +33,10 @@ class NexthopGroupObject(base.ConfigObjectBase):
         self.Type = None
         if spec.type == 'overlay':
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP
-            self.NumNexthops = resmgr.OverlayNumNexthopsAllocator.rrnext()
+            self.NumNexthops = ResmgrClient[node].OverlayNumNexthopsAllocator.rrnext()
         elif spec.type == 'underlay':
             self.Type = nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP
-            self.NumNexthops = resmgr.UnderlayNumNexthopsAllocator.rrnext()
+            self.NumNexthops = ResmgrClient[node].UnderlayNumNexthopsAllocator.rrnext()
         self.Mutable = utils.IsUpdateSupported()
         self.DeriveOperInfo()
         self.Show()
@@ -130,7 +132,7 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
                 return True
             return False
 
-        super().__init__(api.ObjectTypes.NEXTHOPGROUP, resmgr.MAX_NEXTHOPGROUP)
+        super().__init__(api.ObjectTypes.NEXTHOPGROUP, Resmgr.MAX_NEXTHOPGROUP)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)
@@ -150,9 +152,9 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         if not nh_groups:
             return
         EzAccessStore.SetNexthopgroups(nh_groups)
-        resmgr.CreateUnderlayNhGroupAllocator()
-        resmgr.CreateOverlayNhGroupAllocator()
-        resmgr.CreateDualEcmpNhGroupAllocator()
+        ResmgrClient[node].CreateUnderlayNhGroupAllocator()
+        ResmgrClient[node].CreateOverlayNhGroupAllocator()
+        ResmgrClient[node].CreateDualEcmpNhGroupAllocator()
 
     def AssociateObjects(self, node):
         logger.info("Filling nexthops")
@@ -161,12 +163,12 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
             logger.info("NexthopGroup%d - %d nexthops" % (nhg.Id, nhg.NumNexthops))
             for i in range(nhg.NumNexthops):
                 if nhg.Type == nh_pb2.NEXTHOP_GROUP_TYPE_UNDERLAY_ECMP:
-                    nhg.Nexthops[i] = resmgr.UnderlayNHAllocator.rrnext()
+                    nhg.Nexthops[i] = ResmgrClient[node].UnderlayNHAllocator.rrnext()
                 elif nhg.Type == nh_pb2.NEXTHOP_GROUP_TYPE_OVERLAY_ECMP:
                     if nhg.DualEcmp is True:
-                        nhg.Nexthops[i] = resmgr.DualEcmpNhAllocator.rrnext()
+                        nhg.Nexthops[i] = ResmgrClient[node].DualEcmpNhAllocator.rrnext()
                     else:
-                        nhg.Nexthops[i] = resmgr.OverlayNHAllocator.rrnext()
+                        nhg.Nexthops[i] = ResmgrClient[node].OverlayNHAllocator.rrnext()
                 logger.info("   Nexthop%d" % (nhg.Nexthops[i].NexthopId))
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):

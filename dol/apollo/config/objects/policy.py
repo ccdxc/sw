@@ -11,7 +11,9 @@ from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
 
 import apollo.config.agent.api as api
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.objects.base as base
 import apollo.config.objects.lmapping as lmapping
 import apollo.config.objects.tag as tag
@@ -119,10 +121,10 @@ class PolicyObject(base.ConfigObjectBase):
         self.VPCId = vpcid
         self.Direction = direction
         if af == utils.IP_VERSION_6:
-            self.PolicyId = next(resmgr.V6SecurityPolicyIdAllocator)
+            self.PolicyId = next(ResmgrClient[node].V6SecurityPolicyIdAllocator)
             self.AddrFamily = 'IPV6'
         else:
-            self.PolicyId = next(resmgr.V4SecurityPolicyIdAllocator)
+            self.PolicyId = next(ResmgrClient[node].V4SecurityPolicyIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Policy%d'%self.PolicyId)
         self.UUID = utils.PdsUuid(self.PolicyId)
@@ -294,7 +296,7 @@ class PolicyObjectClient(base.ConfigClientBase):
             if utils.IsPipelineApulu():
                 return False
             return True
-        super().__init__(api.ObjectTypes.POLICY, resmgr.MAX_POLICY)
+        super().__init__(api.ObjectTypes.POLICY, Resmgr.MAX_POLICY)
         self.__v4ingressobjs = defaultdict(dict)
         self.__v6ingressobjs = defaultdict(dict)
         self.__v4egressobjs = defaultdict(dict)

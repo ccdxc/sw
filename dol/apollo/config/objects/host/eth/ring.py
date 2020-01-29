@@ -4,7 +4,8 @@ from infra.common.defs               import status
 from infra.common.logging            import logger
 from infra.common.glopts             import GlobalOptions
 
-import apollo.config.resmgr          as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.store import EzAccessStore
 import apollo.config.objects.host.ring    as ring
 from factory.objects.eth.descriptor  import *
 
@@ -19,6 +20,7 @@ class EthRingObject(ring.RingObject):
         self.ci = 0     # Local CI
         self.alt_pi = 0 # Alternative PI
         self.exp_color = 1  # Expect this color until ring wrap, then toggle
+        self.Node = EzAccessStore.GetDUTNode()
 
     def Init(self, queue, spec):
         super().Init(queue, spec)
@@ -47,10 +49,10 @@ class EthRingObject(ring.RingObject):
             return
 
         #Make sure ring_size is a power of 2
-        self._mem = resmgr.HostMemoryAllocator.get(self.size * self.desc_size)
-        resmgr.HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
+        self._mem = ResmgrClient[self.Node].HostMemoryAllocator.get(self.size * self.desc_size)
+        ResmgrClient[self.Node].HostMemoryAllocator.zero(self._mem, self.size * self.desc_size)
         if self.queue.queue_type.purpose in ["LIF_QUEUE_PURPOSE_TX", "LIF_QUEUE_PURPOSE_RX"]:
-            self._sgmem = resmgr.HostMemoryAllocator.get(self.size * self.sg_desc_size)
+            self._sgmem = ResmgrClient[self.Node].HostMemoryAllocator.get(self.size * self.sg_desc_size)
 
         logger.info("Creating Ring %s" % self)
 
@@ -78,7 +80,7 @@ class EthRingObject(ring.RingObject):
             for i in range(0, len(descriptor._sgelems)):
                 sg_elem = descriptor._sgelems[i]
                 logger.info("Writing EthSGElem @ %s mem %s" % (i, self._sgmem + offset))
-                resmgr.HostMemoryAllocator.write(self._sgmem + offset, bytes(sg_elem))
+                ResmgrClient[self.Node].HostMemoryAllocator.write(self._sgmem + offset, bytes(sg_elem))
                 logger.info(ctypes_pformat(sg_elem))
                 offset += self.sg_elem_size
 

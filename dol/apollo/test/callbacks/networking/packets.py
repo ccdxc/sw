@@ -6,7 +6,7 @@ from scapy.all import *
 
 from infra.common.logging import logger
 import infra.api.api as infra_api
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import Resmgr
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 
@@ -449,10 +449,10 @@ def GetExpectedCPSPacket(testcase, args):
     return testcase.packets.Get(args.epkt_pass)
 
 def GetInvalidMPLSTag(testcase, packet, args=None):
-    return next(resmgr.InvalidMplsSlotIdAllocator)
+    return next(Resmgr.InvalidMplsSlotIdAllocator)
 
 def GetInvalidVnid(testcase, packet, args=None):
-    return next(resmgr.InvalidVxlanIdAllocator)
+    return next(Resmgr.InvalidVxlanIdAllocator)
 
 def __get_packet_encap_type_impl(obj, args):
     if obj.IsWorkload():

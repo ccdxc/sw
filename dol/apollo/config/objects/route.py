@@ -8,7 +8,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -23,11 +25,11 @@ MIN_ROUTE_PRIORITY = 65535
 MAX_ROUTE_PRIORITY = 1
 
 class RouteObject():
-    def __init__(self, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
+    def __init__(self, node, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
         super().__init__()
         if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
-        self.Id = next(resmgr.RouteIdAllocator)
+        self.Id = next(ResmgrClient[node].RouteIdAllocator)
         self.ipaddr = ipaddress
         self.Priority = priority
         self.NextHopType = nh_type
@@ -69,11 +71,11 @@ class RouteTableObject(base.ConfigObjectBase):
         super().__init__(api.ObjectTypes.ROUTE, node)
         ################# PUBLIC ATTRIBUTES OF ROUTE TABLE OBJECT #####################
         if af == utils.IP_VERSION_6:
-            self.RouteTblId = next(resmgr.V6RouteTableIdAllocator)
+            self.RouteTblId = next(ResmgrClient[node].V6RouteTableIdAllocator)
             self.AddrFamily = 'IPV6'
             self.NEXTHOP = NexthopClient.GetV6Nexthop(node, parent.VPCId)
         else:
-            self.RouteTblId = next(resmgr.V4RouteTableIdAllocator)
+            self.RouteTblId = next(ResmgrClient[node].V4RouteTableIdAllocator)
             self.AddrFamily = 'IPV4'
             self.NEXTHOP = NexthopClient.GetV4Nexthop(node, parent.VPCId)
         self.GID('RouteTable%d' %self.RouteTblId)
@@ -94,7 +96,7 @@ class RouteTableObject(base.ConfigObjectBase):
         self.Label = 'NETWORKING'
         self.RouteType = routetype # used for lpm route cases
         self.PeerVPCId = vpcpeerid
-        self.AppPort = resmgr.TransportDstPort
+        self.AppPort = ResmgrClient[node].TransportDstPort
         self.Mutable = utils.IsUpdateSupported()
         ##########################################################################
         self.DeriveOperInfo(spec)
@@ -307,7 +309,7 @@ class RouteObjectClient(base.ConfigClientBase):
             if utils.IsPipelineApulu():
                 return False
             return True
-        super().__init__(api.ObjectTypes.ROUTE, resmgr.MAX_ROUTE_TABLE)
+        super().__init__(api.ObjectTypes.ROUTE, Resmgr.MAX_ROUTE_TABLE)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)
@@ -319,24 +321,6 @@ class RouteObjectClient(base.ConfigClientBase):
     def PdsctlRead(self, node):
         # pdsctl show not supported for route table
         return
-
-    def __internet_tunnel_get(self, nat, teptype=None):
-        if teptype is not None:
-            if "service" in teptype:
-                if "remoteservice" == teptype:
-                    return resmgr.RemoteSvcTunAllocator.rrnext()
-                return resmgr.SvcTunAllocator.rrnext()
-            if "underlay" in teptype:
-                if "underlay-ecmp" == teptype:
-                    return resmgr.UnderlayECMPTunAllocator.rrnext()
-                return resmgr.UnderlayTunAllocator.rrnext()
-            if "overlay-ecmp" in teptype:
-                # Fill NhGroup later
-                return None
-        if nat is False:
-            return resmgr.RemoteInternetNonNatTunAllocator.rrnext()
-        else:
-            return resmgr.RemoteInternetNatTunAllocator.rrnext()
 
     def GetRouteTableObject(self, node, routetableid):
         return self.GetObjectByKey(node, routetableid)
@@ -386,9 +370,9 @@ class RouteObjectClient(base.ConfigClientBase):
         for robj in client.Objects(node):
             if "overlay-ecmp" in robj.TepType:
                 if robj.DualEcmp is True:
-                    robj.NhGroup = resmgr.DualEcmpNhGroupAllocator.rrnext()
+                    robj.NhGroup = ResmgrClient[node].DualEcmpNhGroupAllocator.rrnext()
                 else:
-                    robj.NhGroup = resmgr.OverlayNhGroupAllocator.rrnext()
+                    robj.NhGroup = ResmgrClient[node].OverlayNhGroupAllocator.rrnext()
                 robj.NexthopGroupId = robj.NhGroup.Id
                 logger.info("Filling NexthopGroup%d in RouteTable%d" % \
                     (robj.NhGroup.Id, robj.RouteTblId))
@@ -408,8 +392,8 @@ class RouteObjectClient(base.ConfigClientBase):
         self.__v6iter[node][vpcid] = None
 
         if utils.IsNatSupported():
-            if resmgr.RemoteInternetNonNatTunAllocator == None and \
-                resmgr.RemoteInternetNatTunAllocator == None:
+            if ResmgrClient[node].RemoteInternetNonNatTunAllocator == None and \
+                ResmgrClient[node].RemoteInternetNatTunAllocator == None:
                 logger.info("Skipping route creation as there are no Internet tunnels")
                 return
 
@@ -423,7 +407,7 @@ class RouteObjectClient(base.ConfigClientBase):
             if priorityType:
                 priority = __get_priority(priorityType, True)
             nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec, af)
-            obj = RouteObject(ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
+            obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
             routes.update({obj.Id: obj})
             c = 1
             while c < count:
@@ -431,7 +415,7 @@ class RouteObjectClient(base.ConfigClientBase):
                 if priorityType:
                     priority = __get_priority(priorityType, False, priority)
                 nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec, af)
-                obj = RouteObject(ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
+                obj = RouteObject(node, ipaddr, priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
                 routes.update({obj.Id: obj})
                 c += 1
             return routes
@@ -474,10 +458,28 @@ class RouteObjectClient(base.ConfigClientBase):
             else:
                 return "tep"
 
+        def __internet_tunnel_get(nat, teptype=None):
+            if teptype is not None:
+                if "service" in teptype:
+                    if "remoteservice" == teptype:
+                        return ResmgrClient[node].RemoteSvcTunAllocator.rrnext()
+                    return ResmgrClient[node].SvcTunAllocator.rrnext()
+                if "underlay" in teptype:
+                    if "underlay-ecmp" == teptype:
+                        return ResmgrClient[node].UnderlayECMPTunAllocator.rrnext()
+                    return ResmgrClient[node].UnderlayTunAllocator.rrnext()
+                if "overlay-ecmp" in teptype:
+                    # Fill NhGroup later
+                    return None
+            if nat is False:
+                return ResmgrClient[node].RemoteInternetNonNatTunAllocator.rrnext()
+            else:
+                return ResmgrClient[node].RemoteInternetNatTunAllocator.rrnext()
+
         def __get_tunnel(spec):
             routetype = spec.routetype
             nat, teptype = __get_nat_teptype_from_spec(spec)
-            tunobj = self.__internet_tunnel_get(nat, teptype)
+            tunobj = __internet_tunnel_get(nat, teptype)
             return tunobj
 
         def __get_nexthop(af):
@@ -544,7 +546,7 @@ class RouteObjectClient(base.ConfigClientBase):
                     if priorityType:
                         priority = __get_priority(spec.priority, False, priority)
                     nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type = __get_route_attribs(spec)
-                    obj = RouteObject(ipaddress.ip_network(route.replace('\\', '/')),\
+                    obj = RouteObject(node, ipaddress.ip_network(route.replace('\\', '/')),\
                                           priority, nh_type, nh_id, nhgid, vpcid, tunnelid, nat_type)
                     routes.update({obj.Id: obj})
             return routes
@@ -557,8 +559,8 @@ class RouteObjectClient(base.ConfigClientBase):
                 __add_v6routetable(__get_user_specified_routes(spec.v6routes), spec)
 
         def __get_valid_route_count_per_route_table(count):
-            if count > resmgr.MAX_ROUTES_PER_ROUTE_TBL:
-                return resmgr.MAX_ROUTES_PER_ROUTE_TBL
+            if count > Resmgr.MAX_ROUTES_PER_ROUTE_TBL:
+                return Resmgr.MAX_ROUTES_PER_ROUTE_TBL
             return count
 
         def __get_nat_teptype_from_spec(routetbl_spec_obj):
@@ -575,7 +577,7 @@ class RouteObjectClient(base.ConfigClientBase):
             routetbltype = routetbl_spec_obj.type
             routetype = routetbl_spec_obj.routetype
             nat, teptype = __get_nat_teptype_from_spec(routetbl_spec_obj)
-            tunobj = self.__internet_tunnel_get(nat, teptype)
+            tunobj = __internet_tunnel_get(nat, teptype)
             if routetbltype == "specific":
                 __add_user_specified_routetable(routetbl_spec_obj)
                 continue

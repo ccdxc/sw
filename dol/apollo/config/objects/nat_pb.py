@@ -5,7 +5,9 @@ import pdb
 from infra.common.logging import logger
 
 import apollo.config.objects.base as base
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -17,7 +19,7 @@ import nat_pb2 as nat_pb2
 class NatPbObject(base.ConfigObjectBase):
     def __init__(self, node, parent, addr, port_lo, port_hi, proto, addr_type):
         super().__init__(api.ObjectTypes.NAT_PB, node)
-        self.Id = next(resmgr.NatPoolIdAllocator)
+        self.Id = next(ResmgrClient[node].NatPoolIdAllocator)
         self.GID('NatPortBlock%d'%self.Id)
         self.UUID = utils.PdsUuid(self.Id)
         self.VPC = parent
@@ -60,7 +62,7 @@ class NatPbObject(base.ConfigObjectBase):
 
 class NatPbObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.NAT_PB, resmgr.MAX_NAT_PB)
+        super().__init__(api.ObjectTypes.NAT_PB, Resmgr.MAX_NAT_PB)
 
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         nat_spec = vpc_spec_obj.nat
@@ -78,7 +80,7 @@ class NatPbObjectClient(base.ConfigClientBase):
                 addr_internet = NULL
                 addr_infra = NULL
             protos = nat_spec.protocol.split(',')
-            port_lo, port_hi = resmgr.GetNatPoolPortRange()
+            port_lo, port_hi = ResmgrClient[node].GetNatPoolPortRange()
             for proto in protos:
                 if addr_internet:
                     obj = NatPbObject(node, parent, addr_internet, port_lo, \

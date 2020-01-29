@@ -699,6 +699,17 @@ def DumpTestcaseConfig(obj):
     logger.info("========== Testcase config end ==========")
     return
 
+WS_PATH = os.environ['WS_TOP']
+def GetDeviceJsonPath():
+    rel_path = "nic/conf/%s/device.json" % (GetPipelineName())
+    abs_path = os.path.join(WS_PATH, rel_path)
+    return abs_path
+
+def GetNicmgrLogPath():
+    rel_path = "nic/nicmgr.log"
+    abs_path = os.path.join(WS_PATH, rel_path)
+    return abs_path
+
 class rrobiniter:
     def __init__(self, objs):
         assert len(objs) != 0

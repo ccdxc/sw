@@ -6,7 +6,8 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -18,9 +19,10 @@ class UplinkPorts(enum.IntEnum):
     UplinkPort1 = 2
 
 class PortObject(base.ConfigObjectBase):
-    def __init__(self, port, mode, state='UP'):
+    def __init__(self, node, port, mode, state='UP'):
         ################# PUBLIC ATTRIBUTES OF PORT OBJECT #####################
-        self.PortId = next(resmgr.PortIdAllocator)
+        self.Node = node
+        self.PortId = next(ResmgrClient[node].PortIdAllocator)
         self.GID("Port ID:%s"%self.PortId)
         self.Port = port
         self.Mode = mode
@@ -74,7 +76,7 @@ class PortObjectClient:
             entryspec = spec.entry
             port = getattr(entryspec, 'port')
             mode = __get_port_mode(port, getattr(entryspec, 'mode', 'auto'))
-            obj = PortObject(port, mode)
+            obj = PortObject(node, port, mode)
             self.__objs.update({obj.PortId: obj})
             if obj.IsHostPort():
                 EzAccessStore.SetHostPort(obj.Port)

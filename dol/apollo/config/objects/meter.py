@@ -5,7 +5,9 @@ from collections import defaultdict
 
 from infra.common.logging import logger
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
@@ -25,7 +27,7 @@ class MeterStatsHelper:
     def __init__(self, meterid = None):
         self.MeterId = meterid
         self.__sid = 1
-        self.__mid =  2 * resmgr.MAX_METER + 1
+        self.__mid =  2 * Resmgr.MAX_METER + 1
         self.PreStats = {}
         self.PostStats = {}
 
@@ -113,10 +115,10 @@ class MeterObject(base.ConfigObjectBase):
         ################# PUBLIC ATTRIBUTES OF METER OBJECT #####################
         self.VPCId = parent.VPCId
         if af == utils.IP_VERSION_6:
-            self.MeterId = next(resmgr.V6MeterIdAllocator)
+            self.MeterId = next(ResmgrClient[node].V6MeterIdAllocator)
             self.AddrFamily = 'IPV6'
         else:
-            self.MeterId = next(resmgr.V4MeterIdAllocator)
+            self.MeterId = next(ResmgrClient[node].V4MeterIdAllocator)
             self.AddrFamily = 'IPV4'
         self.GID('Meter%d'%self.MeterId)
         self.UUID = utils.PdsUuid(self.MeterId)
@@ -163,7 +165,7 @@ class MeterObject(base.ConfigObjectBase):
 
 class MeterObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.METER, resmgr.MAX_METER)
+        super().__init__(api.ObjectTypes.METER, Resmgr.MAX_METER)
         self.__v4objs = defaultdict(dict)
         self.__v6objs = defaultdict(dict)
         self.__v4iter = defaultdict(dict)

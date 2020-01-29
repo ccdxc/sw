@@ -5,7 +5,9 @@ from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
+
 import apollo.config.utils as utils
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
@@ -21,13 +23,13 @@ class RemoteMappingObject(base.ConfigObjectBase):
         if (hasattr(spec, 'id')):
             self.MappingId = spec.id
         else:
-            self.MappingId = next(resmgr.RemoteMappingIdAllocator)
+            self.MappingId = next(ResmgrClient[node].RemoteMappingIdAllocator)
         self.GID('RemoteMapping%d'%self.MappingId)
         self.SUBNET = parent
         if (hasattr(spec, 'rmacaddr')):
             self.MACAddr = spec.rmacaddr
         else:
-            self.MACAddr = resmgr.RemoteMappingMacAllocator.get()
+            self.MACAddr = ResmgrClient[node].RemoteMappingMacAllocator.get()
         self.TunID = tunobj.Id
         self.HasDefaultRoute = False
         if tunobj.IsWorkload():
@@ -56,7 +58,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # For testspec
-        self.AppPort = resmgr.TransportDstPort
+        self.AppPort = ResmgrClient[node].TransportDstPort
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.DeriveOperInfo()
@@ -159,9 +161,9 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
         isV4Stack = utils.IsV4Stack(parent.VPC.Stack)
         isV6Stack = utils.IsV6Stack(parent.VPC.Stack)
         if utils.IsPipelineApulu():
-            tunnelAllocator = resmgr.UnderlayTunAllocator
+            tunnelAllocator = ResmgrClient[node].UnderlayTunAllocator
         else:
-            tunnelAllocator = resmgr.RemoteMplsVnicTunAllocator
+            tunnelAllocator = ResmgrClient[node].RemoteMplsVnicTunAllocator
 
         for rmap_spec_obj in subnet_spec_obj.rmap:
             c = 0

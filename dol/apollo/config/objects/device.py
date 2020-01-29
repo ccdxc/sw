@@ -7,7 +7,8 @@ from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 
-import apollo.config.resmgr as resmgr
+from apollo.config.resmgr import client as ResmgrClient
+from apollo.config.resmgr import Resmgr
 import apollo.config.agent.api as api
 import apollo.config.objects.base as base
 import apollo.config.objects.tunnel as tunnel
@@ -35,15 +36,15 @@ class DeviceObject(base.ConfigObjectBase):
         if getattr(spec, 'ipaddress', None) != None:
             self.IPAddr = ipaddress.IPv4Address(spec.ipaddress)
         else:
-            self.IPAddr = next(resmgr.TepIpAddressAllocator)
+            self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
         if getattr(spec, 'gateway', None) != None:
             self.GatewayAddr = ipaddress.IPv4Address(spec.gateway)
         else:
-            self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+            self.GatewayAddr = next(ResmgrClient[node].TepIpAddressAllocator)
         if (hasattr(spec, 'macaddress')):
             self.MACAddr = spec.macaddress
         else:
-            self.MACAddr = resmgr.DeviceMacAllocator.get()
+            self.MACAddr = ResmgrClient[node].DeviceMacAllocator.get()
         self.IP = str(self.IPAddr) # For testspec
         self.EncapType = utils.GetEncapType(spec.encap)
         self.Mutable = utils.IsUpdateSupported()
@@ -58,8 +59,8 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def UpdateAttributes(self):
-        self.IPAddr = next(resmgr.TepIpAddressAllocator)
-        self.GatewayAddr = next(resmgr.TepIpAddressAllocator)
+        self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+        self.GatewayAddr = next(ResmgrClient[node].TepIpAddressAllocator)
         self.IP = str(self.IPAddr)
         return
 
@@ -187,7 +188,7 @@ class DeviceObject(base.ConfigObjectBase):
 
 class DeviceObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.DEVICE, resmgr.MAX_DEVICE)
+        super().__init__(api.ObjectTypes.DEVICE, Resmgr.MAX_DEVICE)
         return
 
     def GenerateObjects(self, node, topospec):
