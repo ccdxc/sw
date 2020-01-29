@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
+    "github.com/pensando/sw/api"
+    "github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/iota/test/venice/iotakit"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -113,6 +114,14 @@ func shutdownVeniceApiServerNode() error {
     return err
 }
 
+func doVeniceOnlySnapshotRestore() error {
+    err := setupModel.Action().VeniceNodeCreateSnapshotConfig(setupModel.VeniceNodes())
+    ss,err := setupModel.Action().VeniceNodeTakeSnapshot(setupModel.VeniceNodes())
+    name := string(ss[strings.LastIndex(ss, "/")+1:])
+    setupModel.Action().VeniceNodeRestoreConfig(setupModel.VeniceNodes(), name)
+    return err
+}
+
 func cleanUpVeniceNodes() {
 
 	vnc := setupModel.VeniceNodes()
@@ -214,3 +223,31 @@ func veniceServicesAction(cmd *cobra.Command, args []string) {
 
 	fmt.Printf("Cluster services: Leader[%v] \n%v\n", cl.Status.Leader, status)
 }
+
+func doTechSupport(percent int) error {
+   var names []string
+    naples := setupModel.Naples().Names()
+    var nc = len(naples) * (percent / 100)
+    for n := 0; n < nc; n++ {
+        names = append(names, naples[n])
+    }
+    nodes := setupModel.VeniceNodes()
+    for _,ip := range nodes.GenVeniceIPs() {
+        names = append(names,ip)
+    }
+    techsupport := &monitoring.TechSupportRequest{
+        TypeMeta: api.TypeMeta{Kind: "TechSupportRequest",},
+        ObjectMeta: api.ObjectMeta{Name:"techsupport-test",},
+        Spec: monitoring.TechSupportRequestSpec{
+            Verbosity: 1,
+            NodeSelector: &monitoring.TechSupportRequestSpec_NodeSelectorSpec{
+                Names: names,
+            },
+        },
+    }
+    setupModel.Action().PerformTechsupport(techsupport)
+    // verify techsupport is successful
+    setupModel.Action().VerifyTechsupportStatus(techsupport.Name)
+    return nil
+}
+

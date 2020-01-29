@@ -11,6 +11,8 @@ const (
     veniceShutdownLeader = "VeniceShutdownLeader"
     veniceShutdownNpmNode = "VeniceShutdownNpmNode"
     veniceShutdownApiServerNode = "VeniceShutdownApiServerNode"
+    veniceOnlySnapshotRestore = "VeniceOnlySnapshotRestore"
+    techSupport = "TechSupport"
 	flapDataPorts      = "FlapDataPorts"
 	naplesRemoveAdd    = "NaplesRemoveAdd"
 	naplesMgmtLinkFlap = "NaplesMgmtLinkFlap"
@@ -37,6 +39,14 @@ type hostRebootTrigger struct {
 
 type veniceRebootTrigger struct {
 	triggerBase
+}
+
+type techSupportTrigger struct {
+  triggerBase
+}
+
+type veniceOnlySnapshotRestoreTrigger struct {
+    triggerBase
 }
 
 type veniceShutdownLeaderTrigger struct {
@@ -155,6 +165,26 @@ func (h *naplesUpgradeTrigger) Run() error {
 	return doNaplesUpgrade(percent)
 }
 
+func (h *techSupportTrigger) Run() error {
+        percent, err := h.triggerBase.getPercent()
+        if err != nil {
+                return err
+        }
+        return doTechSupport(percent)
+}
+
+func (h *veniceOnlySnapshotRestoreTrigger) Run() error {
+        return doVeniceOnlySnapshotRestore()
+}
+
+func newTechSupportTrigger(name string, percent string) trigger {
+    return &techSupportTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+}
+
+func newVeniceOnlySnapshotRestoreTrigger(name string, percent string) trigger {
+    return &veniceOnlySnapshotRestoreTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
+}
+
 func newHostRebootTrigger(name string, percent string) trigger {
 	return &hostRebootTrigger{triggerBase: triggerBase{TriggerName: name, Percent: percent}}
 }
@@ -206,6 +236,8 @@ var triggers = map[string]func(string, string) trigger{
     veniceShutdownLeader: newVeniceShutdownLeaderTrigger,
     veniceShutdownNpmNode: newVeniceShutdownNpmNodeTrigger,
     veniceShutdownApiServerNode: newVeniceShutdownApiServerNodeTrigger,
+    veniceOnlySnapshotRestore: newVeniceOnlySnapshotRestoreTrigger,
+    techSupport: newTechSupportTrigger,
 }
 
 func newTrigger(name string, percent string) trigger {
