@@ -50,7 +50,7 @@ parser.add_argument('--dry-run', dest='dry_run',
 
 # pipeline
 parser.add_argument('--pipeline', dest='pipeline', default='iris',
-                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'phoebus', 'gft16', 'athena'],
+                     action='store', choices=['apollo', 'gft', 'iris', 'artemis', 'apulu', 'apulu-venice', 'phoebus', 'gft16', 'athena'],
                      help='Pipeline')
 
 # feature type
@@ -83,7 +83,12 @@ if args.target == 'sim':
     elif args.pipeline == 'artemis':
         files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'apulu':
-        files.append('nic/tools/package/pack_apulu.txt')
+        files.append('nic/tools/package/pack_apulu_base.txt')
+    elif args.pipeline == 'apulu-venice':
+        files.append('nic/tools/package/pack_apulu_base.txt')
+        files.append('nic/tools/package/pack_apulu_venice.txt')
+        tar_name = 'nic_venice'
+        args.pipeline = 'apulu'
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
     elif args.pipeline == 'gft16':
@@ -151,7 +156,12 @@ else:
     elif args.pipeline == 'artemis':
         files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'apulu':
-        files.append('nic/tools/package/pack_apulu.txt')
+        files.append('nic/tools/package/pack_apulu_base.txt')
+    elif args.pipeline == 'apulu-venice':
+        files.append('nic/tools/package/pack_apulu_base.txt')
+        files.append('nic/tools/package/pack_apulu_venice.txt')
+        tar_name = 'nic_venice'
+        args.pipeline = 'apulu'
     elif args.pipeline == 'gft':
         files.append('nic/tools/package/pack_gft.txt')
     elif args.pipeline == 'athena':

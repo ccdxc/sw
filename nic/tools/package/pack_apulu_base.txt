@@ -5,7 +5,6 @@ nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIP
 nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
 nic/conf/$PIPELINE/operd.json                                     /nic/conf/
-
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
 
 # HW catalog files
@@ -99,7 +98,6 @@ nic/build/$ARCH/$PIPELINE/lib/libsltcam.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsapi_capri_impl.so             /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libslhash.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsldirectmap.so                   /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libflowtestagenthooks.so            /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
@@ -115,7 +113,7 @@ nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_rxdma/                /nic/conf/$PIP
 nic/build/$ARCH/$PIPELINE/bin/p4pasm_rxdma/                       /nic/conf/$PIPELINE/rxdma_asm/
 nic/build/$ARCH/$PIPELINE/pgm_bin/$PIPELINE_p4/                   /nic/conf/$PIPELINE/p4_bin/
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/p4_asm/
-nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json         /nic/conf/$PIPELINE/capri_p4_table_map.json
+nic/build/$ARCH/$PIPELINE/gen/p4gen/$PIPELINE/p4pd/capri_p4_table_map.json      /nic/conf/$PIPELINE/capri_p4_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_rxdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_rxdma_table_map.json
 nic/build/$ARCH/$PIPELINE/gen/p4gen/p4plus_txdma/p4pd/capri_p4_table_map.json   /nic/conf/$PIPELINE/capri_txdma_table_map.json
 
@@ -126,25 +124,6 @@ nic/sdk/third-party/avago/fw/serdes.0x1087_244D.rom               /nic/conf/fw/
 
 # python table debug cli specific
 nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
-
-# test binaries and libraries
-nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/apollo_scale_test                   /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
-nic/apollo/test/scale/$PIPELINE/scale_cfg.json                    /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_bitw.json               /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc.json               /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l.json                /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_stateful.json           /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc_stateful.json      /nic/conf/
-nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l_stateful.json       /nic/conf/
-nic/apollo/test/scale/$PIPELINE/run_scale_test_hw.sh              /nic/tools/
-nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
-nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
-nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /nic/lib/
-nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /nic/lib/
-nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/
 
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
@@ -170,11 +149,13 @@ nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin             /boot0/
 nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
 
 # platform modules
+nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operdctl                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operd                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/capview                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/captrace                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/eth_dbgtool_$PIPELINE               /nic/bin/eth_dbgtool
@@ -209,11 +190,6 @@ nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/
 #nic/build/$ARCH/$PIPELINE/bin/ionic.efirom                       /nic/oprom/
 
-nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/
-
-# platform config files
-nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
-
 # captrace config json files
 nic/conf/captrace/txdma-all.json                                  /nic/conf/captrace/
 nic/conf/captrace/rxdma-all.json                                  /nic/conf/captrace/
@@ -224,7 +200,7 @@ nic/conf/captrace/p4-all.json                                     /nic/conf/capt
 nic/conf/captrace/pipeline-all.json                               /nic/conf/captrace/
 nic/conf/captrace/sample-conf.json                                /nic/conf/captrace/
 
-# agent specific files
+# PDS agent specific files
 nic/apollo/tools/$PIPELINE/start-agent.sh                         /nic/tools/
 nic/apollo/tools/store_agent_log.sh                               /nic/tools/
 nic/build/$ARCH/$PIPELINE/lib/libsvc.so                           /nic/lib/
@@ -235,8 +211,7 @@ nic/build/$ARCH/$PIPELINE/lib/libtrace.so                         /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libagentclient.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdsfte.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/bin/pdsagent                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/netagent                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pdsctl                              /nic/bin/
 
 # Drivers
 platform/drivers/linux/eth/ionic/ionic_mnic.ko                    /nic/bin/
@@ -264,7 +239,7 @@ nic/vpp/conf/vpp_2_workers.conf                                   /nic/conf/vpp/
 nic/build/$ARCH/$PIPELINE/lib/libnuma.so.1                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk.so                          /nic/lib/
 
-# Metaswitch
+# metaswitch
 nic/third-party/metaswitch/output/$ARCH/debug/libsi.so            /nic/lib/
 nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
 nic/third-party/libxml2/$ARCH/lib/libxml2.so.2                    /nic/lib/
@@ -281,3 +256,24 @@ nic/metaswitch/config/nbase.ini                                   /nic/conf/
 # cronjobs
 nic/conf/$PIPELINE/crontabs/root                                  /nic/conf/$PIPELINE/crontabs/
 nic/apollo/tools/run_cron.sh                                      /nic/tools/
+
+# test binaries and libraries
+# TODO: these need to be cleanedup
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_test                      /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/apollo_scale_test                   /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/ftl_test                            /nic/bin/
+nic/apollo/test/scale/$PIPELINE/scale_cfg.json                    /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_bitw.json               /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc.json               /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l.json                /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_stateful.json           /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_1vpc_stateful.json      /nic/conf/
+nic/apollo/test/scale/$PIPELINE/scale_cfg_l2l_stateful.json       /nic/conf/
+nic/apollo/test/scale/$PIPELINE/run_scale_test_hw.sh              /nic/tools/
+nic/build/$ARCH/$PIPELINE/bin/$PIPELINE_flow_test                 /nic/bin/
+nic/build/$ARCH/$PIPELINE/lib/libpdstestutils.so                  /nic/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest.so              /nic/lib/
+nic/sdk/third-party/googletest-release-1.8.0/googletest/make/$ARCH/libgtest_without_main.so /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libflowtestagenthooks.so            /nic/lib/
+nic/build/$ARCH/$PIPELINE/bin/testapp                             /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/pciemgrd-gold                       /nic/bin/

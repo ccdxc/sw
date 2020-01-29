@@ -23,9 +23,9 @@ else
 	    $(eval STRIP := --no-strip)
     endif
 	cd $(NICDIR)/../ && python2 $(NICDIR)/tools/package/package.py \
-		--pipeline $(PIPELINE) $(PKG_ARGS) $(STRIP)
+		--pipeline $(PIPELINE)$(FLAVOR) $(PKG_ARGS) $(STRIP)
 	cd $(NICDIR) && $(NICDIR)/sdk/platform/mputrace/captrace.py gen_syms \
-		--pipeline $(PIPELINE) 
+		--pipeline $(PIPELINE)
 endif
 else
 	ARCH=${ARCH} ${TOPDIR}/nic/tools/upgrade_version.sh
