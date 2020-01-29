@@ -18,6 +18,7 @@
 #include "nacl.p4"
 #include "mirror.p4"
 #include "session.p4"
+#include "session_track.p4"
 #include "nat.p4"
 #include "nexthops.p4"
 #include "checksum.p4"

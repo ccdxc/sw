@@ -284,9 +284,16 @@
         {
             "name": "session",
             "kind": "opertbl",
-            "size": "128M",
+            "size": "64M",
             "cache": "p4eg",
-            "_comment": "2M * 64B"
+            "_comment": "2M * 32B"
+        },
+        {
+            "name": "session_track",
+            "kind": "opertbl",
+            "size": "64M",
+            "cache": "p4eg",
+            "_comment": "2M * 32B"
         },
         {
             "name": "session_stats",

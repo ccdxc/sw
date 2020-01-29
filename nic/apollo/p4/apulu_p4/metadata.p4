@@ -70,6 +70,7 @@ header_type control_metadata_t {
         lif_type                : 3;
         binding_check_enabled   : 1;
         mapping_done            : 1;
+        session_tracking_en     : 1;
     }
 }
 

@@ -1,12 +1,9 @@
 /*****************************************************************************/
 /* Session                                                                   */
 /*****************************************************************************/
-action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
-                    iflow_tcp_win_sz, iflow_tcp_win_scale, rflow_tcp_state,
-                    rflow_tcp_seq_num, rflow_tcp_ack_num, rflow_tcp_win_sz,
-                    rflow_tcp_win_scale, tx_policer_id, tx_rewrite_flags,
-                    tx_xlate_id, tx_xlate_id2, rx_policer_id, rx_rewrite_flags,
-                    rx_xlate_id, rx_xlate_id2, meter_id, timestamp, drop) {
+action session_info(tx_policer_id, tx_rewrite_flags, tx_xlate_id, tx_xlate_id2,
+                    rx_policer_id, rx_rewrite_flags, rx_xlate_id, rx_xlate_id2,
+                    meter_id, timestamp, session_tracking_en, drop) {
     subtract(capri_p4_intrinsic.packet_len, capri_p4_intrinsic.frame_size,
              offset_metadata.l2_1);
     modify_field(control_metadata.rx_packet, p4e_i2e.rx_packet);
@@ -31,23 +28,6 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                      (p4e_i2e.session_id * 8 * 4));
         modify_field(scratch_metadata.in_bytes, capri_p4_intrinsic.packet_len);
 
-        if (tcp.valid == TRUE) {
-            modify_field(scratch_metadata.tcp_flags, tcp.flags);
-            if (p4e_i2e.flow_role == TCP_FLOW_INITIATOR) {
-                modify_field(scratch_metadata.tcp_state, iflow_tcp_state);
-                modify_field(scratch_metadata.tcp_seq_num, iflow_tcp_seq_num);
-                modify_field(scratch_metadata.tcp_ack_num, iflow_tcp_ack_num);
-                modify_field(scratch_metadata.tcp_win_sz, iflow_tcp_win_sz);
-                modify_field(scratch_metadata.tcp_win_scale, iflow_tcp_win_scale);
-            } else {
-                modify_field(scratch_metadata.tcp_state, rflow_tcp_state);
-                modify_field(scratch_metadata.tcp_seq_num, rflow_tcp_seq_num);
-                modify_field(scratch_metadata.tcp_ack_num, rflow_tcp_ack_num);
-                modify_field(scratch_metadata.tcp_win_sz, rflow_tcp_win_sz);
-                modify_field(scratch_metadata.tcp_win_scale, rflow_tcp_win_scale);
-            }
-        }
-
         if ((meter_id != 0) and (p4e_i2e.meter_enabled == TRUE)) {
             modify_field(meter_metadata.meter_enabled, TRUE);
             modify_field(scratch_metadata.meter_id, meter_id);
@@ -62,6 +42,7 @@ action session_info(iflow_tcp_state, iflow_tcp_seq_num, iflow_tcp_ack_num,
                          capri_p4_intrinsic.packet_len);
         }
 
+        modify_field(control_metadata.session_tracking_en, session_tracking_en);
         modify_field(scratch_metadata.timestamp, timestamp);
     }
 
@@ -116,4 +97,7 @@ table session {
 
 control session_lookup {
     apply(session);
+    if (control_metadata.session_tracking_en == 1) {
+        apply(session_track);
+    }
 }
