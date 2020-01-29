@@ -279,7 +279,7 @@ func ifIndexToChildPort(ifIndex uint32) uint32 {
 	return ifIndex & ifChildPortMask
 }
 
-func ifIndexToId(ifIndex uint32) uint32 {
+func ifIndexToID(ifIndex uint32) uint32 {
 	return ifIndex &^ (ifTypeMask << ifTypeShift)
 }
 
@@ -306,6 +306,7 @@ func getIfTypeStr(ifIndex uint32, subType string) (intfType string, err error) {
 		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)
 }
 
+// given encoded interface index and its type, form interface name that consists of system MAC
 func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string, err error) {
 	ifTypeStr, err := getIfTypeStr(ifIndex, subType)
 	if err != nil {
@@ -318,7 +319,7 @@ func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string,
 		parentPortStr := strconv.FormatUint(uint64(ifIndexToParentPort(ifIndex)), 10)
 		return systemMac + ifNameDelimiter + ifTypeStr + ifNameDelimiter + slotStr + ifNameDelimiter + parentPortStr, nil
 	case ifTypeEthPC, ifTypeTunnel, ifTypeL3, ifTypeLif, ifTypeLoopback:
-		return systemMac + ifNameDelimiter + ifTypeStr + ifNameDelimiter + strconv.FormatUint(uint64(ifIndexToId(ifIndex)), 10), nil
+		return systemMac + ifNameDelimiter + ifTypeStr + ifNameDelimiter + strconv.FormatUint(uint64(ifIndexToID(ifIndex)), 10), nil
 	}
 	return "", errors.Wrapf(types.ErrInvalidInterfaceType,
 		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)

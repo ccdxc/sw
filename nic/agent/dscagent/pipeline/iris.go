@@ -991,6 +991,12 @@ func (i *IrisAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto
 	return
 }
 
+// ValidateSecurityProfile validates the contents of SecurityProfile objects
+func (a *IrisAPI) ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
+	vrf, err = validator.ValidateVrf(i, profile.Tenant, profile.Namespace, types.DefaultVrf)
+	return
+}
+
 // HandleSecurityProfile handles CRUD Methods for SecurityProfile Object
 func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.SecurityProfile) (profiles []netproto.SecurityProfile, err error) {
 	i.Lock()
@@ -1089,7 +1095,7 @@ func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.S
 	defer log.Infof("SecurityProfile: %v | Op: %s | %s", profile, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	vrf, err := validator.ValidateSecurityProfile(i.InfraAPI, profile)
+	vrf, err := i.ValidateSecurityProfile(i.InfraAPI, profile)
 	if err != nil {
 		log.Error(err)
 		return nil, err

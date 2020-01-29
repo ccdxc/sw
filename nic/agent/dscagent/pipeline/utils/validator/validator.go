@@ -296,12 +296,6 @@ func ValidateVrf(i types.InfraAPI, tenant, namespace, name string) (vrf netproto
 	return
 }
 
-// ValidateSecurityProfile validates SecurityProfile object and returns the attachment vrf
-func ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
-	vrf, err = ValidateVrf(i, profile.Tenant, profile.Namespace, types.DefaultVrf)
-	return
-}
-
 // ValidateProfile validates Profile object
 func ValidateProfile(profile netproto.Profile) error {
 	if _, ok := netproto.ProfileSpec_Fwd_Mode_value[strings.ToUpper(profile.Spec.FwdMode)]; !ok {

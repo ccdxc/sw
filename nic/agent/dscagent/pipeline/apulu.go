@@ -78,12 +78,22 @@ func (a *ApuluAPI) PipelineInit() error {
 		return err
 	}
 	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoDeviceCreate)
-	//	profile := netproto.SecurityProfile{}
-	//	if _, err := a.HandleSecurityProfile(types.Create, profile); err != nil {
-	//		log.Error(err)
-	//		return err
-	//	}
-	//	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoSecurityProfileCreate)
+	profile := netproto.SecurityProfile{
+		TypeMeta: api.TypeMeta{
+			Kind: "SecurityProfile",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+			UUID:      uuid.NewV4().String(),
+		},
+	}
+	if _, err := a.HandleSecurityProfile(types.Create, profile); err != nil {
+		log.Error(err)
+		return err
+	}
+	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoSecurityProfileCreate)
 
 	// initialize stream for Lif events
 	a.initEventStream()
@@ -453,6 +463,11 @@ func (a *ApuluAPI) HandleProfile(oper types.Operation, profile netproto.Profile)
 	return nil, errors.Wrapf(types.ErrNotImplemented, "Profile %s is not implemented by Apulu Pipeline", oper)
 }
 
+// ValidateSecurityProfile validates the contents of SecurityProfile objects
+func (a *ApuluAPI) ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
+	return vrf, nil
+}
+
 // HandleSecurityProfile handles CRUD methods for SecurityProfile objects
 func (a *ApuluAPI) HandleSecurityProfile(oper types.Operation, profile netproto.SecurityProfile) (profiles []netproto.SecurityProfile, err error) {
 	a.Lock()
@@ -551,7 +566,7 @@ func (a *ApuluAPI) HandleSecurityProfile(oper types.Operation, profile netproto.
 
 	// Perform object validations
 	// Currently security profile is singleton and not associated with any VPC
-	_, err = validator.ValidateSecurityProfile(a.InfraAPI, profile)
+	_, err = a.ValidateSecurityProfile(a.InfraAPI, profile)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -788,7 +803,6 @@ func createUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.Po
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      ifName,
-			UUID:      uid.String(),
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:    ifType,

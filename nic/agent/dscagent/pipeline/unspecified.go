@@ -949,6 +949,11 @@ func (i *FakeAgentAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp net
 	return
 }
 
+// ValidateSecurityProfile validates the contents of SecurityProfile objects
+func (a *FakeAgentAPI) ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
+	return vrf, nil
+}
+
 // HandleSecurityProfile handles CRUD Methods for SecurityProfile Object
 func (i *FakeAgentAPI) HandleSecurityProfile(oper types.Operation, profile netproto.SecurityProfile) (profiles []netproto.SecurityProfile, err error) {
 	i.Lock()
