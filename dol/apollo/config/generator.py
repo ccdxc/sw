@@ -144,8 +144,7 @@ def Main(node, topospec, ip=None):
 
     agentapi.Init(node, ip)
 
-    if utils.IsDol():
-        resmgr.Init(node)
+    resmgr.Init(node)
 
     __generate(node, topospec)
 

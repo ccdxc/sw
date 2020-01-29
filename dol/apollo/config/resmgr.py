@@ -230,6 +230,7 @@ class Resmgr(base.ConfigObjectBase):
         assert self.HostMemoryAllocator is not None
 
     def InitializeHostInterfaces(self):
+        if not utils.IsDol(): return
         with open(utils.GetDeviceJsonPath(), 'r') as fp:
             obj = json.load(fp)
         lifbase = Resmgr.NICMGR_HOST_LIF_BASE
