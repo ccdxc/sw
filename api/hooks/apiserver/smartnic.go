@@ -145,7 +145,7 @@ func (cl *clusterHooks) smartNICPreCommitHook(ctx context.Context, kvs kvstore.I
 			}
 			errs := cl.checkNonUserModifiableSmartNICFields(&updNIC, curNIC)
 			if len(errs) > 0 {
-				return i, true, fmt.Errorf("Modification of SmartNIC object fields %s is not allowed", strings.Join(errs, ", "))
+				return i, true, fmt.Errorf("Modification of DistributedServiceCard object fields %s is not allowed", strings.Join(errs, ", "))
 			}
 		}
 	}
