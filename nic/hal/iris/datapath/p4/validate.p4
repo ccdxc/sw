@@ -91,7 +91,7 @@ action validate_flow_key() {
 }
 
 action validate_native_packet() {
-    if ((ethernet.srcAddr == 0) or
+    if ((capri_intrinsic.tm_iport != TM_PORT_NCSI and ethernet.srcAddr == 0) or
         (ethernet.dstAddr == 0) or
         (ethernet.srcAddr == ethernet.dstAddr) or
         ((ethernet.srcAddr & 0x010000000000) == 0x010000000000) or

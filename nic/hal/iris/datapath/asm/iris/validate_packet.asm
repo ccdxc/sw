@@ -16,7 +16,8 @@ validate_packet:
   bcf         [c1], validate_tunneled_packet
 
 validate_native_packet:
-  seq         c1, k.ethernet_srcAddr, r0
+  sne         c1, k.capri_intrinsic_tm_iport, TM_PORT_NCSI
+  seq.c1      c1, k.ethernet_srcAddr, r0
   seq.!c1     c1, k.ethernet_dstAddr, r0
   seq.!c1     c1, k.ethernet_srcAddr, k.ethernet_dstAddr
   seq.!c1     c1, k.ethernet_srcAddr[40], 1
