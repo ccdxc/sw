@@ -50,7 +50,7 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
   };
 
   cols: TableCol[] = [
-    { field: 'meta.name', header: 'Targets', class: 'fwlogpolicies-column-name', sortable: false, width: 30 },
+    { field: 'meta.name', header: 'Name', class: 'fwlogpolicies-column-name', sortable: false, width: 30 },
     { field: 'spec.filter', header: 'Exports', class: 'fwlogpolicies-column-filter', sortable: false, width: 35 },
     { field: 'spec.targets', header: 'Targets', class: 'fwlogpolicies-column-targets', sortable: false, width: 35 },
   ];
@@ -58,7 +58,11 @@ export class FwlogpoliciesComponent extends TablevieweditAbstract<IMonitoringFwl
 
 
   exportFilename: string = 'Venice-fwlog-policies';
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'meta.name': (opts): string => {
+      return opts.data.meta.name;
+   }
+  };
 
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,

@@ -97,7 +97,21 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     { field: 'meta.mod-time', header: 'Modification Time', class: '', sortable: true, width: '160px' },
     { field: 'meta.creation-time', header: 'Creation Time', class: '', sortable: true, width: '180px' },
   ];
-  exportMap: CustomExportMap = {};
+  exportMap: CustomExportMap = {
+    'workloads': (opts): string => {
+      let workloadName: string = '';
+      for (const key in opts.data.associatedWorkloads) {
+        if (key) {
+          if (Number(key) >= opts.data.associatedWorkloads.length - 1 && opts.data.associatedWorkloads.length > 1) {
+            workloadName += ',' + opts.data.associatedWorkloads[key].meta.name;
+          } else {
+            workloadName = opts.data.associatedWorkloads[key].meta.name;
+          }
+        }
+      }
+      return workloadName;
+    }
+  };
 
   advSearchCols: TableCol[] = [];
 
