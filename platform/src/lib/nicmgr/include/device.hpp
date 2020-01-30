@@ -7,7 +7,9 @@
 
 #include <string>
 
+#ifndef __FTE_FTL_DEV_HPP__
 #include "pal_compat.hpp"
+#endif
 #include "logger.hpp"
 #include "nicmgr_utils.hpp"
 

@@ -13,7 +13,9 @@
 
 #include "nic/include/globals.hpp"
 
+#ifndef __FTE_FTL_DEV_HPP__
 #include "pal_compat.hpp"
+#endif
 
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
