@@ -14,7 +14,7 @@ action mpls_label_to_vnic(vnic_type, vnic_id) {
 @pragma index_table
 table mpls_label_to_vnic {
     reads {
-        control_metadata.mpls_label : exact;
+        mpls_dst.label : exact;
     }
     actions {
         mpls_label_to_vnic;

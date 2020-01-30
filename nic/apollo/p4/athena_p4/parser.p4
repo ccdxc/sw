@@ -41,8 +41,8 @@ header ipv6_t ipv6_1;
 @pragma pa_header_union xgress udp_1 gre_1
 header udp_t udp_1;
 header gre_t gre_1;
-header mpls_t mpls_label1_1;
-header mpls_t mpls_label2_1;
+header mpls_t mpls_src;
+header mpls_t mpls_dst;
 header mpls_t mpls_label3_1;
 
 // layer 2
@@ -439,7 +439,7 @@ parser parse_udp_1 {
     set_metadata(offset_metadata.l4_1, current + 0);
     set_metadata(ohi.l4_1_len, udp_1.len + 0);
     return select(latest.dstPort) {
-        UDP_PORT_MPLS : parse_mpls_label1_1;
+        UDP_PORT_MPLS : parse_mpls;
         default: ingress;
     }
 }
@@ -451,26 +451,42 @@ parser parse_gre_1 {
 #endif
     return select(latest.C, latest.R, latest.K, latest.S, latest.s,
                   latest.recurse, latest.flags, latest.ver, latest.proto) {
-        ETHERTYPE_MPLS_UNICAST : parse_mpls_label1_1;
+        ETHERTYPE_MPLS_UNICAST : parse_mpls;
         /* FIXME: Handling of unsupported protocols */
     }
 }
 
-
-parser parse_mpls_label1_1 {
-    extract(mpls_label1_1);
-    return select(latest.bos) {
-        0 : parse_mpls_label2_1;
-        1 : parse_mpls_payload;
+parser parse_mpls {
+    return select(current(23, 1)) {
+        0 : parse_mpls_src;
+        default : parse_mpls_dst;
     }
 }
 
-parser parse_mpls_label2_1 {
-    extract(mpls_label2_1);
-    return select(latest.bos) {
-        //0 : parse_mpls_label3_1; /* error */
-        1 : parse_mpls_payload;
+parser parse_mpls_src {
+    extract(mpls_src);
+    return parse_mpls_dst;
+}
+
+parser parse_mpls_dst {
+    extract(mpls_dst);
+    return select(mpls_dst.bos) {
+        0: parse_mpls_label3_1;
+        default: parse_mpls_payload;
     }
+}
+
+parser parse_mpls_label3_1 {
+    extract(mpls_label3_1);
+    return select(latest.bos) {
+        1: parse_mpls_payload;
+        default: parse_encap_error;
+    }
+}
+
+parser parse_encap_error {
+    set_metadata(control_metadata.parser_encap_error, TRUE);
+    return ingress;
 }
 
 /*

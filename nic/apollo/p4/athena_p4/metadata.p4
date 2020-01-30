@@ -28,6 +28,7 @@ header_type key_metadata_t {
 
 header_type control_metadata_t {
     fields {
+        parser_encap_error                  : 1;
         forward_to_uplink                   : 1;
         redir_to_rxdma                      : 1;
         skip_flow_lkp                       : 1;
