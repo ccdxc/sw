@@ -11,8 +11,8 @@ class Prof1():
     def __init__(self):
         self.loop =  10
         self.no_temp_types = 2
-        self.udp_port = 201
-        self.http_port = 80
+        self.udp_port = 68
+        self.http_port = 79
 
     def crunch_number(self, max_active_flow, no_pairs, cps):
         no_temp = self.no_temp_types * no_pairs
@@ -40,7 +40,7 @@ class Prof1():
         return self.http_port
 
     def create_udp_template(self, ip_gen, delay, loop, cps):
-        keepalive_time = int((loop * delay) / 1000) #UDP keepalive time in msec
+        keepalive_time = int((loop * delay) / (1000*2)) #UDP keepalive time in msec
         port = self.get_udp_port()
 
         # client commands
