@@ -289,6 +289,8 @@ dependencies:
       exclude_dirs: ["arm_compiler","asic_sw_combined_sanity","client","gcov","hal","jenkins","ncc","package","server", "valgrind"]
   nic/tools/ncc:
     - reference: nic/apollo
+  nic/tools/package:
+    - reference: nic/apollo/tools/apulu/customer-docker
   nic/upgrade_manager:
     - reference: iota/test/standalone/sanity/esx
   nic/utils:

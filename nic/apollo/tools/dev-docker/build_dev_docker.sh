@@ -41,7 +41,7 @@ copy_files() {
     apollod='nic/apollo '
     
     if [ "$pipeline" == "apulu" ];then
-        pkgf+='nic/tools/package/pack_apulu.txt '
+        pkgf+='nic/tools/package/pack_apulu_base.txt '
         apollod+='nic/conf/apulu '
     elif [ "$pipeline" == "apollo" ];then
         pkgf+='nic/tools/package/pack_apollo.txt '
