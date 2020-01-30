@@ -4306,6 +4306,7 @@ ionic_lif_register(struct ionic_lif *lif)
 
 	/* Initializes ifnet, ifmedia */
 	ionic_lif_ifnet_init(lif);
+	ionic_setup_sysctls(lif);
 
 	lif->stay_registered = true;
 	ether_ifattach(ifp, lif->dev_addr);
@@ -4313,7 +4314,6 @@ ionic_lif_register(struct ionic_lif *lif)
 	ionic_lif_set_netdev_info(lif);
 	lif->registered = true;
 
-	ionic_setup_sysctls(lif);
 	IONIC_LIF_UNLOCK(lif);
 
 	return (0);
@@ -4361,9 +4361,9 @@ ionic_lifs_unregister(struct ionic *ionic)
 		IONIC_LIF_UNLOCK(lif);
 
 		/* NB: This must be done outside of the LIF lock! */
-		ionic_lif_sysctl_free(lif);
 		ifmedia_removeall(&lif->media);
 		ether_ifdetach(lif->netdev);
+		ionic_lif_sysctl_free(lif);
 	}
 }
 

@@ -217,9 +217,9 @@
                                         "Command" : "/nic/bin/delphictl metrics get LifMetrics"
                                 },
                                 {
-                                        "Name" : "PenCtl Version",
+                                        "Name" : "RDMA Queue State",
                                         "Method" : 0,
-                                        "Command" : "/nic/bin/penctl --version"
+                                        "Command" : "/nic/tools/rdma_qstate.sh"
                                 },
                                 {       "Name" : "DscAgent State",
                                         "Method": 0,
@@ -231,4 +231,4 @@
 			],
 
 	"RetentionPolicy" : 0
-}				
+}

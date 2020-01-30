@@ -69,6 +69,7 @@ uint64_t RDMAManager::HbmAlloc(uint32_t size) {
 // we are trying to make HAL run on another P4 program and this file seems
 // be beyond repair at this point, the only way to proceed is to hack further!!
 //------------------------------------------------------------------------------
+#ifdef __x86_64__
 static uint8_t *
 memrev (uint8_t *block, size_t elnum)
 {
@@ -81,6 +82,7 @@ memrev (uint8_t *block, size_t elnum)
     }
      return block;
 }
+#endif
 
 uint32_t
 roundup_to_pow_2(uint32_t x)
@@ -765,13 +767,13 @@ rdma_cq_create (RdmaCqSpec& spec, RdmaCqResponse *rsp)
 #define INTR_ASSERT_BASE        (INTR_BASE + INTR_ASSERT_OFFSET)
 #define INTR_ASSERT_STRIDE      0x4
 
+#ifdef __x86_64__
 static u_int64_t
 intr_assert_addr(const int intr)
 {
     return INTR_ASSERT_BASE + (intr * INTR_ASSERT_STRIDE);
 }
 
-#ifdef __x86_64__
 hal_ret_t
 rdma_eq_create (RdmaEqSpec& spec, RdmaEqResponse *rsp)
 {

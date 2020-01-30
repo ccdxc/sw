@@ -718,6 +718,10 @@ ionic_fw_hb_work(struct work_struct *work)
 	    idev->fw_hb_state == IONIC_FW_HB_UNSUPPORTED)
 		return;
 
+	/*
+	 * Firmware is useful only if fw_status has the running bit set and
+	 * is not 0xff (dead PCI)
+	 */
 	fw_status = ioread8(&idev->dev_info_regs->fw_status);
 	if (ionic_wdog_error_trigger == IONIC_WDOG_TRIG_FWSTAT) {
 		/* Persistent, don't reset trigger to 0 */
@@ -725,6 +729,15 @@ ionic_fw_hb_work(struct work_struct *work)
 		IONIC_DEV_WARN(ionic->dev, "injecting fw_status 0\n");
 		fw_status = 0;
 	}
+
+	if (fw_status == 0xff) {
+		IONIC_DEV_ERROR(ionic->dev,
+				"fw status unreadable (%#x)\n", fw_status);
+		goto disable;
+	}
+
+	fw_status &= IONIC_FW_STS_F_RUNNING;  /* use only the run bit */
+
 	/* If FW is ready, check fw_heartbeat; otherwise reschedule */
 	if (fw_status != 0) {
 		fw_heartbeat = ioread32(&idev->dev_info_regs->fw_heartbeat);
@@ -760,14 +773,7 @@ ionic_fw_hb_work(struct work_struct *work)
 			} else if (idev->fw_hb_state == IONIC_FW_HB_STALE) {
 				IONIC_DEV_ERROR(ionic->dev,
 				    "fw heartbeat stuck (%u)\n", fw_heartbeat);
-				IONIC_DEV_LOCK(ionic);
-				ionic_dev_cmd_disable(idev);
-				IONIC_DEV_UNLOCK(ionic);
-
-				/* Disable the heartbeat */
-				idev->fw_hb_state = IONIC_FW_HB_DISABLED;
-				idev->fw_hb_interval = 0;
-				return;
+				goto disable;
 			}
 		} else {
 			/* Update stored value; go RUNNING */
@@ -783,6 +789,16 @@ ionic_fw_hb_work(struct work_struct *work)
 		queue_delayed_work(idev->wdog_wq, &idev->fw_hb_work,
 		    idev->fw_hb_interval);
 	IONIC_WDOG_UNLOCK(idev);
+	return;
+
+disable:
+	IONIC_DEV_LOCK(ionic);
+	ionic_dev_cmd_disable(idev);
+	IONIC_DEV_UNLOCK(ionic);
+
+	/* Disable the heartbeat */
+	idev->fw_hb_state = IONIC_FW_HB_DISABLED;
+	idev->fw_hb_interval = 0;
 }
 
 void
