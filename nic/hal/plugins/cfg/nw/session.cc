@@ -3956,70 +3956,148 @@ typedef struct tcpfin_args_ {
     dllist_ctxt_t       dllist_ctxt;
 } __PACK__ tcpfin_args_t;
 
+typedef struct tcpfin_list_args_ {
+    uint8_t          count;
+    tcpfin_args_t    *sess_list[HAL_MAX_SESSION_PER_ENQ];
+} __PACK__ tcpfin_list_args_t;
+
 /*
  * Send out FIN on IFLOW and/or RFLOW if SEP or DEP is local
  */
 void
 session_send_tcp_fin (void *data) {
-    tcpfin_args_t               *tcpfin = (tcpfin_args_t *)data;
-    bool                        local_src = tcpfin->local_src;
-    bool                        local_dst = tcpfin->local_dst;
-    pd::cpu_to_p4plus_header_t  cpu_header;
-    pd::p4plus_to_p4_header_t   p4plus_header;
-    uint8_t                     flags = BUILD_TCP_SEND_FIN;
-    session_state_t             session_state = tcpfin->session_state;
-    uint8_t                     pkt[TCP_IPV4_DOT1Q_PKT_SZ];
-    uint32_t                    sz = 0;
-    session_t                  *session = NULL;
+    tcpfin_list_args_t       *tcpfin = (tcpfin_list_args_t *)data;
 
-    session = hal::find_session_by_handle(tcpfin->session_handle);
-    if (session == NULL) {
-        HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing",
-                      tcpfin->session_handle);
-        return;
-    }
+    for (uint8_t idx = 0; idx < tcpfin->count; idx++) {
+         tcpfin_args_t              *finargs = tcpfin->sess_list[idx];
+         bool                        local_src = finargs->local_src;
+         bool                        local_dst = finargs->local_dst;
+         pd::cpu_to_p4plus_header_t  cpu_header;
+         pd::p4plus_to_p4_header_t   p4plus_header;
+         uint8_t                     flags = BUILD_TCP_SEND_FIN;
+         session_state_t             session_state = finargs->session_state;
+         uint8_t                     pkt[TCP_IPV4_DOT1Q_PKT_SZ];
+         uint32_t                    sz = 0;
+         session_t                  *session = NULL;
 
-    HAL_TRACE_DEBUG("Sending TCP FIN on: {}", session->hal_handle);
-    // Set the timestamp option if needed
-    if (session_state.tcp_ts_option)
-        flags |= BUILD_TCP_SEND_TIMESTAMP;
+         session = hal::find_session_by_handle(finargs->session_handle);
+         if (session == NULL) {
+             HAL_TRACE_VERBOSE("Cant find the session for handle {} -- bailing",
+                      finargs->session_handle);
+             return;
+         }
 
-    if (local_dst &&
-        session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
-        sz = build_tcp_packet(session->iflow, session,
+         HAL_TRACE_DEBUG("Sending TCP FIN on: {}", session->hal_handle);
+         // Set the timestamp option if needed
+         if (session_state.tcp_ts_option)
+             flags |= BUILD_TCP_SEND_TIMESTAMP;
+
+         if (local_dst &&
+             session_state.iflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
+             sz = build_tcp_packet(session->iflow, session,
                               session_state.iflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        if (sz)
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
-    }
+             if (sz)
+                 fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+          }
 
-    if (local_src &&
-        session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
-        sz = build_tcp_packet(session->rflow, session,
+          if (local_src &&
+              session_state.rflow_state.state == session::FLOW_TCP_STATE_ESTABLISHED) {
+              sz = build_tcp_packet(session->rflow, session,
                               session_state.rflow_state, &cpu_header, &p4plus_header,
                               pkt, flags);
-        if (sz)
-            fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+              if (sz)
+                  fte::fte_asq_send(&cpu_header, &p4plus_header, pkt, sz);
+          }
+       
+          HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, finargs);
     }
 
-    HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN, tcpfin);
+    HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN_LIST, tcpfin);
 }
 
 hal_ret_t
-session_send_fin_list(dllist_ctxt_t *fin_list, bool async) 
+session_send_fin_list(dllist_ctxt_t *tcp_fin_list, bool async) 
 {
     hal_ret_t ret = HAL_RET_OK;
     dllist_ctxt_t *curr = NULL, *next = NULL;
-    dllist_for_each_safe(curr, next, fin_list) {
+    uint32_t count = 0;
+    tcpfin_list_args_t *fin_list = NULL;
+
+    fin_list =  (tcpfin_list_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN_LIST,
+                                   sizeof(tcpfin_list_args_t));
+    SDK_ASSERT(fin_list != NULL);
+
+    dllist_for_each_safe(curr, next, tcp_fin_list) {
         tcpfin_args_t *finargs = dllist_entry(curr, tcpfin_args_t, dllist_ctxt);
-        ret = fte::fte_softq_enqueue(finargs->fte_id,
+        fin_list->sess_list[count++] = finargs;
+        if (count == HAL_MAX_SESSION_PER_ENQ) {
+            fin_list->count = count;
+            ret = fte::fte_softq_enqueue(0, // Assume one FTE
                                      session_send_tcp_fin,
-                                     (void *)finargs);
-        if (ret == HAL_RET_OK) {
-            HAL_TRACE_DEBUG("Successfully enqueued TCP FIN for {}",
-                                    finargs->session_handle);
+                                     (void *)fin_list);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to enqueue TCP FIN");
+            }
+            count = 0;
+            fin_list =  (tcpfin_list_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN_LIST,
+                                   sizeof(tcpfin_list_args_t));
+            SDK_ASSERT(fin_list != NULL);    
         }
     }
+    if (count) {
+        fin_list->count = count;
+        ret = fte::fte_softq_enqueue(0, // Assume one FTE
+                                     session_send_tcp_fin,
+                                     (void *)fin_list);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to enqueue TCP FIN");
+        }
+    } else {
+        HAL_FREE(HAL_MEM_ALLOC_SESS_UPGRADE_TCP_FIN_LIST, fin_list);
+    }
+
+    return ret;
+}
+
+hal_ret_t
+session_send_delete_list(dllist_ctxt_t *del_list)
+{
+    hal_ret_t ret = HAL_RET_OK;
+    dllist_ctxt_t *curr = NULL, *next = NULL;
+    uint32_t count = 0;
+    hal_handle_t *sess_list = NULL;
+
+    sess_list = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
+                                   sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+    SDK_ASSERT(sess_list != NULL);
+
+    dllist_for_each_safe(curr, next, del_list) {
+        hal_handle_id_list_entry_t  *entry =
+                     dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+        sess_list[count++] = entry->handle_id;
+        if (count == HAL_MAX_SESSION_PER_ENQ) {
+            ret = fte::fte_softq_enqueue(0, // Assume one FTE
+                                     process_hal_periodic_sess_delete,
+                                     (void *)sess_list);
+            if (ret != HAL_RET_OK) {
+                HAL_TRACE_ERR("Failed to enqueue session delete");
+            }
+            count = 0;
+            sess_list = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_HANDLE_LIST_PER_FTE,
+                                   sizeof(hal_handle_t)*HAL_MAX_SESSION_PER_ENQ);
+            SDK_ASSERT(sess_list != NULL);
+        }
+    }
+    if (count) {
+        ret = fte::fte_softq_enqueue(0, // Assume one FTE
+                                     process_hal_periodic_sess_delete,
+                                     (void *)sess_list);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to enqueue session delete");
+        }
+    }
+
     return ret;
 }
 
@@ -4029,6 +4107,7 @@ session_send_fin_list(dllist_ctxt_t *fin_list, bool async)
 hal_ret_t
 session_handle_upgrade (void)
 {
+    sdk::lib::thread *curr_thread = hal::hal_get_current_thread();
     
     struct session_upgrade_data_t {
         dllist_ctxt_t session_list;
@@ -4100,8 +4179,10 @@ session_handle_upgrade (void)
 
     HAL_TRACE_DEBUG("calling walk func");
     g_hal_state->session_hal_handle_ht()->walk_safe(walk_func, &ctxt);
+    curr_thread->punch_heartbeat();
     session_send_fin_list(&ctxt.fin_list, true);
-    session_delete_list(&ctxt.session_list);
+    curr_thread->punch_heartbeat();
+    session_send_delete_list(&ctxt.session_list);
     
 
     return HAL_RET_OK;

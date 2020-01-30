@@ -34,7 +34,10 @@ Status EventServiceImpl::EventListen(ServerContext* context, const EventRequest*
             hal::g_hal_state->event_mgr()->unsubscribe_listener(stream);
             break;
         }
-        pthread_yield();
+        // This tight loop is taking 100% CPU with lots of sys calls of sched_yield.
+        // Commenting this out to reduce CPU utilization from HAL
+        usleep(1000000);
+        // pthread_yield();
     } while (true);
 
     return Status::OK;

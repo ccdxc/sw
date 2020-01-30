@@ -366,9 +366,7 @@ sfw_exec(ctx_t& ctx)
         if (ret == HAL_RET_OK) {
             if (match_rslt.valid) {
                 flowupd.action  = match_rslt.action;
-                sfw_info->alg_proto = match_rslt.alg;
                 sfw_info->idle_timeout = match_rslt.idle_timeout;
-                memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                 sfw_info->sfw_done = true;
                 HAL_TRACE_VERBOSE("Match result: {}", match_rslt);
                 if (match_rslt.sfw_action == nwsec::SECURITY_RULE_ACTION_REJECT &&
@@ -381,6 +379,8 @@ sfw_exec(ctx_t& ctx)
                     ctx.set_ipc_logging_disable(false);
                     ctx.set_drop();
                 } else {
+                    sfw_info->alg_proto = match_rslt.alg;
+                    memcpy(&sfw_info->alg_opts, &match_rslt.alg_opts, sizeof(alg_opts));
                     flow_update_t flowupd = {type: FLOWUPD_AGING_INFO};
                     flowupd.aging_info.idle_timeout = match_rslt.idle_timeout;
                     ret = ctx.update_flow(flowupd);

@@ -21,9 +21,12 @@ bool mpscq_t::enqueue(void *op, void *data)
     } while(!SDK_ATOMIC_COMPARE_EXCHANGE_WEAK(&pi_, &pi, 
                                               (pi+1)%nslots_));
 
-    slots_[pi].op = op;
-    slots_[pi].data = data;
+    SDK_ATOMIC_STORE_UINT64(&slots_[pi].op, &op);
+    SDK_ATOMIC_STORE_UINT64(&slots_[pi].data, &data); 
     SDK_ATOMIC_STORE_BOOL(&slots_[pi].full, true);
+    // Temporary instrumentation 
+    HAL_TRACE_DEBUG("pi_ {} ci_ {} data {:p} op {:p}", 
+                 pi, ci_, (void *)slots_[pi].data, (void *)slots_[pi].op);
 
     return true;
 }
@@ -34,7 +37,7 @@ bool mpscq_t::enqueue(void *op, void *data)
 //-----------------------------------------------------------------------------
 bool mpscq_t::dequeue(void **op, void **data)
 {
-    if (!slots_[ci_].full) {
+    if (!SDK_ATOMIC_LOAD_BOOL(&slots_[ci_].full)) {
          return false;
     }
 
@@ -47,6 +50,9 @@ bool mpscq_t::dequeue(void **op, void **data)
     }
 
     SDK_ATOMIC_STORE_BOOL(&slots_[ci_].full, false);
+    // Temporary instrumentation
+    HAL_TRACE_DEBUG("pi_ {} ci_ {} data {:p} op {:p} dataptr {:p}", 
+              pi_, ci_, (void *)slots_[ci_].data, (void *)slots_[ci_].op, (void *)data);
 
     ci_ = (ci_+1) % nslots_;
     return true;

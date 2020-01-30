@@ -7,7 +7,7 @@ import pdb
 
 TCP_TICKLE_GAP = 15
 NUM_TICKLES = 4 
-GRACE_TIME = 50 
+GRACE_TIME = 70 
 
 def Setup(tc):
     return api.types.status.SUCCESS

@@ -65,7 +65,7 @@
             }],
         "flags": [],
         "memory-limit": 800.0,
-        "timeout": 30.0,
+        "timeout": 60.0,
         "cpu-affinity": "0xD"
     },
     {

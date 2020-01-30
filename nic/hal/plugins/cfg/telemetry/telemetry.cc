@@ -473,6 +473,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     mac_addr_t *mac = NULL;
     mac_addr_t smac;
     uint32_t id;
+    encap_t  encap;
+    if_t     *dest_if = NULL, *ndest_if = NULL;
 
     collector_spec_dump(spec);
     // Get free collector id
@@ -501,19 +503,21 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
         HAL_TRACE_ERR("PI-Collector: Unknown endpoint {} : {}",
             spec.vrf_key_handle().vrf_id(), ipaddr2str(&cfg.dst_ip));
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
     }
-    auto dest_if = find_if_by_handle(ep->if_handle);
+    dest_if = find_if_by_handle(ep->if_handle);
     if (dest_if == NULL) {
         HAL_TRACE_ERR("Could not find if IPFIX dest if");
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
     }
     HAL_TRACE_DEBUG("Collector EP Dest IF type {}, op_status {}, id {}",
                      dest_if->if_type, dest_if->if_op_status,
                      dest_if->if_id);
     if (!dest_if->is_oob_management &&
         endpoint_is_remote(ep)) {
-        auto ndest_if = telemetry_get_active_bond_uplink();
+        ndest_if = telemetry_get_active_bond_uplink();
         if (ndest_if) {
             HAL_TRACE_DEBUG("New Dest IF type {}, op_status {}, id {}",
                              ndest_if->if_type, ndest_if->if_op_status,
@@ -543,11 +547,13 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
             HAL_TRACE_ERR("PI-Collector: Netflow-v9 format type is not supported {}",
                            spec.format());
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
+            ret = HAL_RET_INVALID_ARG;
+            goto cleanup;
         default:
             HAL_TRACE_ERR("PI-Collector: Unknown format type {}", spec.format());
             rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-            return HAL_RET_INVALID_ARG;
+            ret = HAL_RET_INVALID_ARG;
+            goto cleanup;
     }
     cfg.protocol = spec.protocol();
     cfg.dport = spec.dest_port();
@@ -555,7 +561,8 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     if (cfg.l2seg == NULL) {
         HAL_TRACE_ERR("PI-Collector: Could not retrieve L2 segment");
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
     }
     /* MAC SA. Use mac from device.conf only if it is set. Else derive the smac via ep l2seg */
     if (g_mgmt_if_mac == 0) {
@@ -567,14 +574,15 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     }
 
     /* Encap comes from the l2seg */
-    auto encap = l2seg_get_wire_encap(cfg.l2seg);
+    encap = l2seg_get_wire_encap(cfg.l2seg);
     if (encap.type == types::ENCAP_TYPE_DOT1Q) {
         cfg.vlan = encap.val;
         HAL_TRACE_DEBUG("PI-Collector: Encap vlan {}", cfg.vlan);
     } else {
         HAL_TRACE_ERR("PI-Collector: Unsupport Encap {}", encap.type);
         rsp->set_api_status(types::API_STATUS_INVALID_ARG);
-        return HAL_RET_INVALID_ARG;
+        ret = HAL_RET_INVALID_ARG;
+        goto cleanup;
     }
 
     args.cfg = &cfg;
@@ -583,7 +591,7 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     if (ret != HAL_RET_OK) {
         rsp->set_api_status(types::API_STATUS_OK);
         HAL_TRACE_ERR("PI-Collector: PD API failed {}", ret);
-        return ret;
+        goto cleanup;
     }
     HAL_TRACE_DEBUG("SUCCESS: CollectorID {}, dest {}, source {},  port {}",
             cfg.collector_id, ipaddr2str(&cfg.dst_ip),
@@ -592,6 +600,10 @@ collector_create (CollectorSpec &spec, CollectorResponse *rsp)
     rsp->mutable_status()->set_handle(spec.key_or_handle().collector_id());
 
     return HAL_RET_OK;
+
+cleanup:
+    telemetry_collector_id_db[id] = -1;
+    return ret;
 }
 
 hal_ret_t

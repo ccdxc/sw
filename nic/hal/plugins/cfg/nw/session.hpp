@@ -557,7 +557,7 @@ typedef struct session_get_stream_filter_ {
 } session_get_stream_filter_t;
 
 // max. number of session supported  (TODO: we can take this from cfg file)
-#define HAL_CFG_MAX_SESSIONS               131072
+#define HAL_CFG_MAX_SESSIONS               65535
 
 #define SESSION_AGE_DEBUG                  0
 

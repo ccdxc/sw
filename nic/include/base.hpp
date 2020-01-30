@@ -273,6 +273,7 @@ do {                                                       \
     ENTRY(HAL_RET_FTE_SRC_LIF_MISMATCH,                         102,"src lif mismatch detected in fte")             \
     ENTRY(HAL_RET_POLICY_EXIST,                                 103, "security policy exists")                      \
     ENTRY(HAL_RET_CONN_CLOSED,                                  104, "connection closed")                           \
+    ENTRY(HAL_RET_BOND0_NOT_RESOLVED,                           105, "Bond0 not resoloved for Netflow collector")   \
     ENTRY(HAL_RET_ERR,                                          255, "catch all generic error")
 
 DEFINE_ENUM(hal_ret_t, HAL_RET_ENTRIES)
