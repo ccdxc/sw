@@ -13,6 +13,7 @@ export const UrlMap: { [url: string]: string } = {
   '/monitoring/auditevents' : 'auditevents',
   '/monitoring/fwlogs': 'fwlogs',
   '/monitoring/fwlogs/fwlogpolicies': 'fwlogs',
+  '/monitoring/fwlogpolicies': 'fwlogs',
   '/monitoring/metrics': 'metrics',  
   '/security/securityapps': 'apps',
   '/security/sgpolicies': 'policies',

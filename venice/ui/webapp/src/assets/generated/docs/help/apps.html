@@ -7,7 +7,7 @@
 <li>sunrpc (Sun Remote Procedure Call)</li>
 <li>msrpc (Microsoft Remote Procedure Call)</li>
 </ul>
-<p>Building "apps" can be based upon these two (2) options and security rules can be applied towards this app.  The "App" is based upon the following attributes.</p>
+<p>Building "apps" can be based upon these two (2) options and security rules can be applied towards this app.</p>
 <table>
 <thead>
 <tr>
@@ -20,10 +20,6 @@
 <td>name</td>
 <td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
 </tr>
-<tr>
-<td>Name: Unique name for the App</td>
-<td></td>
-</tr>
 </tbody>
 </table>
 <p>There are three (3) options to choose from to base the App on through the radio button</p>
@@ -32,14 +28,36 @@
 - Both 
 </code></pre>
 <h3 id="algonly">ALG Only</h3>
-<pre><code>| ALG Type | Fields |
-| ------ | ------ |
-| icmp | Type: &lt;br&gt; Code: |
-| dns | Drop multi-question packets: (off/on) &lt;br&gt; Drop large domain name packets: (off/on) &lt;br&gt; Drop long label packets: (off/on) &lt;br&gt;  Max Message Length: Integer value &lt;br&gt; Max question response timeout: |
-| ftp | Allow Mismatched IP Address: (off/on) |
-| sunrpc |  Additional Program ID and Timeout values can be added by clicking on "+Add &lt;br&gt; Program ID: &lt;br&gt; Timeout: Integer value |
-| msrpc |  Additional Program UUID and Timeout values can be added by clicking on "+Add &lt;br&gt; Program UUID: &lt;br&gt; Timeout:  Integer value |
-</code></pre>
+<table>
+<thead>
+<tr>
+<th>ALG Type</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>icmp</td>
+<td>Type: <br> Code:</td>
+</tr>
+<tr>
+<td>dns</td>
+<td>Drop multi-question packets: (off/on) <br> Drop large domain name packets: (off/on) <br> Drop long label packets: (off/on) <br>  Max Message Length: Integer value <br> Max question response timeout:</td>
+</tr>
+<tr>
+<td>ftp</td>
+<td>Allow Mismatched IP Address: (off/on)</td>
+</tr>
+<tr>
+<td>sunrpc</td>
+<td>Additional Program ID and Timeout values can be added by clicking on "+Add <br> Program ID: <br> Timeout: Integer value</td>
+</tr>
+<tr>
+<td>msrpc</td>
+<td>Additional Program UUID and Timeout values can be added by clicking on "+Add <br> Program UUID: <br> Timeout:  Integer value</td>
+</tr>
+</tbody>
+</table>
 <h3 id="protocolsandportsonly">Protocols and Ports Only</h3>
 <p>Additional Protocols and Ports can be added by clicking on "+Add"</p>
 <table>
@@ -60,11 +78,5 @@
 </tr>
 </tbody>
 </table>
-<ul>
-<li>Protocols and Ports Only<ul>
-<li>Protocols: valid entries is tcp, upd, icmp</li>
-<li>Ports: valid port numbers are 0-65535</li></ul></li>
-</ul>
 <h3 id="both">Both</h3>
-<pre><code>Combination of ALG and Protocols/Ports is allowed
-</code></pre>
+<p>Combination of ALG and Protocols/Ports is allowed</p>

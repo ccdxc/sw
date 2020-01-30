@@ -12,7 +12,7 @@ A firewall log policy can be created to send all of the logs or specific logs to
 <load-table group:monitoring obj:ApiObjectMeta
             include:name >
 <load-table group:monitoring obj:MonitoringFwlogPolicySpec
-            include:filter omitHeader:true >
+            include:filter rename:filter|export omitHeader:true >
 
 ###### Syslog Export Configuration
 
