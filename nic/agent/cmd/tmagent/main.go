@@ -109,6 +109,11 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCar
 			log.Fatalf("failed to init tsdb, err: %v", err)
 		}
 
+		// Init ObjectStore(MinIO)
+		if err := s.tmagent.tpState.ObjStoreInit(s.tmagent.nodeUUID, s.tmagent.resolverClient, time.Duration(30)*time.Second, nil); err != nil {
+			log.Fatalf("failed to init minio, err: %v", err)
+		}
+
 		s.tmagent.tpClient, err = ctrlerif.NewTpClient(s.tmagent.nodeUUID, s.tmagent.tpState, globals.Tpm, s.tmagent.resolverClient)
 		if err != nil {
 			log.Fatalf("failed to init tmagent controller client, err: %v", err)

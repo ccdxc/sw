@@ -7,13 +7,12 @@ import (
 
 	"github.com/pensando/sw/venice/utils/netutils"
 
-	"github.com/pensando/sw/venice/globals"
-	"github.com/pensando/sw/venice/utils/resolver"
-	"github.com/pensando/sw/venice/utils/tsdb"
-
 	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/ipc"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/resolver"
+	"github.com/pensando/sw/venice/utils/tsdb"
 )
 
 // FwlogIpcShm is the path to fw logs in shared memory
@@ -85,8 +84,7 @@ func (s *PolicyState) FwlogInit(path string) error {
 	return nil
 }
 
-// ProcessFWEvent process fwlog event received from ipc
-func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
+func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
 	dPort := fmt.Sprintf("%v", ev.GetDport())
@@ -145,4 +143,10 @@ func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
 		}
 		return true
 	})
+}
+
+// ProcessFWEvent process fwlog event received from ipc
+func (s *PolicyState) ProcessFWEvent(ev *halproto.FWEvent, ts time.Time) {
+	s.handleTsDB(ev, ts)
+	s.handleObjStore(ev, ts)
 }

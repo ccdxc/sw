@@ -24,6 +24,7 @@ import (
 	"github.com/pensando/sw/venice/utils/emstore"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/netutils"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 	"github.com/pensando/sw/venice/utils/syslog"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -39,11 +40,13 @@ type PolicyState struct {
 	netAgentURL     string
 	fwLogCollectors sync.Map
 	fwTable         tsdb.Obj
+	objStoreClients map[string]objstore.Client // map[bucketName]Client
 	hostname        string
 	appName         string
 	shm             *ipc.SharedMem
 	ipc             []*ipc.IPC
 	wg              sync.WaitGroup
+	logsChannel     chan map[string]interface{}
 }
 
 type fwlogCollector struct {
@@ -86,6 +89,9 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		fwLogCollectors: sync.Map{},
 		hostname:        utils.GetHostname(),
 		appName:         globals.Tmagent,
+		objStoreClients: map[string]objstore.Client{},
+		// This channel is used for transmitting logs from the collector to the transmitter routine
+		logsChannel: make(chan map[string]interface{}, 10000),
 	}
 
 	state.connectSyslog()
