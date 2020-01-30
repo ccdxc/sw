@@ -1,0 +1,24 @@
+meta:
+    name    : reboot
+    os      : [ linux, freebsd, esx ]
+    nics    : [ pensando, mellanox, intel, broadcom ]
+
+testcases:
+    -   name    : RebootOS
+        testcase: testcases.reboot.reboot
+        args    :
+            reboot_count: 2
+            restart_mode: 'reboot'
+
+    -   name    : ResetIPMI
+        testcase: testcases.reboot.reboot
+        args    :
+            reboot_count: 2
+            restart_mode: 'ipmi'
+
+    -   name    : ReinitTestbed
+        disable : True # enable when iota firmware upgrade works consistently
+        testcase: testcases.reboot.reboot
+        args    :
+            reboot_count: 2
+            restart_mode: 'reinit'

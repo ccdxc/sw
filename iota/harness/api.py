@@ -832,6 +832,9 @@ def CopyFromWorkload(node_name, workload_name, files, dest_dir):
 def RestartNodes(nodes, restartMode=''):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes,restartMode)
 
+def ReinitForTestsuite():
+    return store.GetTestbed().InitForTestsuite()
+
 def GetCoverageFiles(src_cov_file, dst_dir):
     for node in GetNaplesHostnames():
         resp = CopyFromNaples(node, [src_cov_file], dst_dir)

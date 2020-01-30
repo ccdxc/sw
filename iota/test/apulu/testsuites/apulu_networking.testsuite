@@ -49,6 +49,7 @@ testbundles:
         - mtu/mtu.testbundle
         - vlanoffload/vlanoffload.testbundle
         - classic/driver-features-sanity.testbundle
+        - reboot/reboot.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/

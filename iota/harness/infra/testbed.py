@@ -446,10 +446,10 @@ class _Testbed:
 
         return types.status.SUCCESS
 
-    def InitForTestsuite(self, ts):
-        self.prev_ts = self.curr_ts
-        self.curr_ts = ts
-
+    def InitForTestsuite(self, ts=None):
+        if ts is not None:
+            self.prev_ts = self.curr_ts
+            self.curr_ts = ts
 
         store.Cleanup()
         status = self.__init_testbed()
