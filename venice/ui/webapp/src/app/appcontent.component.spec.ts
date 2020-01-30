@@ -64,6 +64,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { Utility } from './common/Utility';
 import { ISearchSearchResponse } from '@sdk/v1/models/generated/search';
+import { WorkloadService } from './services/generated/workload.service';
 
 describe('AppcontentComponent', () => {
   let component: AppcontentComponent;
@@ -115,6 +116,7 @@ describe('AppcontentComponent', () => {
         MessageService,
         ClusterService,
         RolloutService,
+        WorkloadService
       ],
     });
 
@@ -279,6 +281,7 @@ describe('UIBlock during rollout progress', () => {
       MessageService,
       ClusterService,
       RolloutService,
+      WorkloadService,
       {provide: Router, useValue: mockRouter}
     ],
   });

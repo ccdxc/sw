@@ -147,28 +147,9 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getWorkloads() {
-    // We perform a get as well as a watch so that we can know to set the card state
-    // in case the number of workloads is 0
-    this.workloadService.ListWorkload().subscribe(
-      (resp) => {
-        const body: IWorkloadWorkloadList = resp.body as any;
-        if (body.items == null || body.items.length === 0) {
-          // Watch won't have any events
-          this.firstStat.value = '0';
-          this.cardState = CardStates.READY;
-          this.computeAvg();
-        }
-      },
-      error => {
-        this.getWorkloadsFailed = true;
-        this.checkFailureState();
-      }
-    );
-    this.workloadEventUtility = new HttpEventUtility<WorkloadWorkload>(WorkloadWorkload);
-    this.workloads = this.workloadEventUtility.array;
-    const subscription = this.workloadService.WatchWorkload().subscribe(
+    const subscription = this.workloadService.ListWorkloadCache().subscribe(
       (response) => {
-        this.workloadEventUtility.processEvents(response);
+        this.workloads = response;
         this.firstStat.value = this.workloads.length.toString();
         this.cardState = CardStates.READY;
         this.computeAvg();
@@ -182,28 +163,9 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   getHosts() {
-    // We perform a get as well as a watch so that we can know to set the card state
-    // in case the number of workloads is 0
-    this.clusterService.ListHost().subscribe(
-      (resp) => {
-        const body: IClusterHostList = resp.body as any;
-        if (body.items == null || body.items.length === 0) {
-          // Watch won't have any events
-          this.secondStat.value = '0';
-          this.cardState = CardStates.READY;
-          this.computeAvg();
-        }
-      },
-      error => {
-        this.getHostsFailed = true;
-        this.checkFailureState();
-      }
-    );
-    this.hostsEventUtility = new HttpEventUtility<ClusterHost>(ClusterHost, true);
-    this.hosts = this.hostsEventUtility.array as ReadonlyArray<ClusterHost>;
-    const subscription = this.clusterService.WatchHost().subscribe(
+    const subscription = this.clusterService.ListHostCache().subscribe(
       response => {
-        this.hostsEventUtility.processEvents(response);
+        this.hosts = response;
         this.secondStat.value = this.hosts.length.toString();
         this.cardState = CardStates.READY;
         this.computeAvg();
@@ -223,9 +185,9 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   computeAvg() {
-    if (this.hosts.length === 0) {
+    if (this.hosts && this.hosts.length === 0) {
       this.avgWorkloadPerHost = 0;
-    } else {
+    } else if (this.workloads && this.hosts) {
       this.avgWorkloadPerHost = Math.round(this.workloads.length / this.hosts.length);
     }
   }

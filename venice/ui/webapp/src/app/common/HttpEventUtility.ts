@@ -83,6 +83,9 @@ export class HttpEventUtility<T> {
         let index;
         switch (event.type) {
           case EventTypes.create:
+            if (this.hasItem(objName)) {
+              break;
+            }
             this.addItem(obj, objName);
             this._updateRecordsMap[EventTypes.create].push(obj);
             break;

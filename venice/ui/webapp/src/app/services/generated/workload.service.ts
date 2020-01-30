@@ -11,6 +11,7 @@ import { GenServiceUtility } from './GenUtility';
 import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
+import { WorkloadWorkload } from '@sdk/v1/models/generated/workload';
 
 @Injectable()
 export class WorkloadService extends Workloadv1Service {
@@ -30,6 +31,7 @@ export class WorkloadService extends Workloadv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
+      this.serviceUtility.createDataCache<WorkloadWorkload>(WorkloadWorkload, 'workloads', () => this.ListWorkload(), (body: any) => this.WatchWorkload(body));
   }
 
   /**
@@ -37,6 +39,10 @@ export class WorkloadService extends Workloadv1Service {
    */
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  public ListWorkloadCache() {
+    return this.serviceUtility.handleListFromCache('workloads');
   }
 
   protected publishAJAXStart(eventPayload: any) {

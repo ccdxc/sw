@@ -12,6 +12,7 @@ import { UIConfigsService } from '../uiconfigs.service';
 import { NEVER } from 'rxjs';
 import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { ClusterDistributedServiceCard, ClusterHost } from '@sdk/v1/models/generated/cluster';
 
 @Injectable()
 export class ClusterService extends Clusterv1Service {
@@ -31,6 +32,8 @@ export class ClusterService extends Clusterv1Service {
         (payload) => { this.publishAJAXEnd(payload); }
       );
       this.serviceUtility.setId(this.getClassName());
+      this.serviceUtility.createDataCache<ClusterDistributedServiceCard>(ClusterDistributedServiceCard, 'DSCs', () => this.ListDistributedServiceCard(), (body: any) => this.WatchDistributedServiceCard(body));
+      this.serviceUtility.createDataCache<ClusterHost>(ClusterHost, 'Hosts', () => this.ListHost(), (body: any) => this.WatchHost(body));
   }
 
   /**
@@ -38,6 +41,14 @@ export class ClusterService extends Clusterv1Service {
    */
   getClassName(): string {
     return this.constructor.name;
+  }
+
+  public ListDistributedServiceCardCache() {
+    return this.serviceUtility.handleListFromCache('DSCs');
+  }
+
+  public ListHostCache() {
+    return this.serviceUtility.handleListFromCache('Hosts');
   }
 
   protected publishAJAXStart(eventPayload: any) {

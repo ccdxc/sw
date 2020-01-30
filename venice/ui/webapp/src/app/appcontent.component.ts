@@ -35,6 +35,7 @@ import { ConfirmDialog } from 'primeng/primeng';
 import { SearchService } from './services/generated/search.service';
 import { ISearchSearchRequest, SearchSearchRequest_mode, SearchSearchRequest, FieldsRequirement_operator, ISearchSearchResponse } from '@sdk/v1/models/generated/search';
 import { HelpoverlayComponent } from './widgets/helpcontent/helpoverlay.component';
+import { WorkloadService } from './services/generated/workload.service';
 
 export interface GetUserObjRequest {
   success: (resp: { body: IAuthUser | IApiStatus | Error; statusCode: number; }) => void;
@@ -133,6 +134,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
     protected monitoringService: MonitoringService,
     protected searchService: SearchService,
     protected clusterService: ClusterService,
+    protected workloadService: WorkloadService,
     protected authService: AuthService,
     protected rolloutService: RolloutService,
     protected router: Router,
