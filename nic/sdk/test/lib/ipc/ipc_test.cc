@@ -2,14 +2,17 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //------------------------------------------------------------------------------
 
+#include <ev.h>
 #include <gtest/gtest.h>
 #include <poll.h>
 #include <pthread.h> 
 #include <unistd.h>
 
 #include "lib/ipc/ipc.hpp"
+#include "lib/ipc/ipc_ev.hpp"
 
 #define T_CLIENT_1 1
+#define T_CLIENT_2 2
 
 using namespace sdk::ipc;
 
@@ -109,6 +112,41 @@ void *async_thread_run (void *arg)
     return NULL;
 }
 
+void req_1_callback_ev (ipc_msg_ptr msg, const void *ctx)
+{
+    const char rsp[] = "pong";
+
+    printf("Got message: %s\n", (char *)msg->data());
+    respond(msg, rsp, sizeof(rsp));
+}
+
+void req_99_callback_ev (ipc_msg_ptr msg, const void *ctx)
+{
+    printf("Got request 99. Will exit now\n");
+    respond(msg, NULL, 0);
+
+    ev_break(EV_DEFAULT, EVBREAK_ALL);
+}
+
+void sub_2_callback_ev (ipc_msg_ptr msg, const void *ctx)
+{
+    printf("Got notification 2: %s\n", (char *)msg->data());
+}
+
+void *ev_thread_run (void *arg)
+{
+    ipc_init_ev_default(T_CLIENT_2);
+
+    reg_request_handler(1, req_1_callback_ev, NULL);
+    reg_request_handler(99, req_99_callback_ev, NULL);
+
+    subscribe(2, sub_2_callback_ev, NULL);
+
+    ev_run(EV_DEFAULT, 0);
+ 
+    return 0;
+}
+
 void
 rsp_1_callback (ipc_msg_ptr msg, const void *cookie, const void *ctx)
 {
@@ -125,10 +163,11 @@ rsp_99_callback (ipc_msg_ptr msg, const void *cookie, const void *ctx)
 void *
 sync_thread1_run (void *arg)
 {
+    uint32_t *client = (uint32_t *)arg;
     const char msg[] = "ping1";
     
     reg_response_handler(1, rsp_1_callback, NULL);    
-    request(T_CLIENT_1, 1, msg, sizeof(msg), NULL);
+    request(*client, 1, msg, sizeof(msg), NULL);
 
     return NULL;
 }
@@ -136,10 +175,11 @@ sync_thread1_run (void *arg)
 void *
 sync_thread2_run (void *arg)
 {
+    uint32_t *client = (uint32_t *)arg;
     const char msg[] = "ping2";
     
     reg_response_handler(1, rsp_1_callback, NULL);    
-    request(T_CLIENT_1, 1, msg, sizeof(msg), NULL);
+    request(*client, 1, msg, sizeof(msg), NULL);
 
     return NULL;
 }
@@ -147,6 +187,7 @@ sync_thread2_run (void *arg)
 void *
 sync_thread3_run (void *arg)
 {
+    uint32_t *client = (uint32_t *)arg;
     const char msg[] = "process the last message";
 
     sleep(2);
@@ -158,7 +199,7 @@ sync_thread3_run (void *arg)
     broadcast(2, msg, sizeof(msg));
     
     reg_response_handler(99, rsp_99_callback, NULL);    
-    request(T_CLIENT_1, 99, NULL, 0, NULL);
+    request(*client, 99, NULL, 0, NULL);
     
     return NULL;
 }
@@ -168,16 +209,35 @@ TEST_F (ipc_test, ping) {
     pthread_t sync_thread1_id;
     pthread_t sync_thread2_id;
     pthread_t sync_thread3_id;
+    uint32_t client = T_CLIENT_1;
     
     pthread_create(&async_thread_id, NULL, async_thread_run, NULL);
-    pthread_create(&sync_thread1_id, NULL, sync_thread1_run, NULL);
-    pthread_create(&sync_thread2_id, NULL, sync_thread2_run, NULL);
-    pthread_create(&sync_thread3_id, NULL, sync_thread3_run, NULL);
+    pthread_create(&sync_thread1_id, NULL, sync_thread1_run, &client);
+    pthread_create(&sync_thread2_id, NULL, sync_thread2_run, &client);
+    pthread_create(&sync_thread3_id, NULL, sync_thread3_run, &client);
 
     pthread_join(sync_thread1_id, NULL);
     pthread_join(sync_thread2_id, NULL);
     pthread_join(sync_thread3_id, NULL);
     pthread_join(async_thread_id, NULL);
+}
+
+TEST_F (ipc_test, vanilla_ev) {
+    pthread_t ev_thread_id;
+    pthread_t sync_thread1_id;
+    pthread_t sync_thread2_id;
+    pthread_t sync_thread3_id;
+    uint32_t client = T_CLIENT_2;
+    
+    pthread_create(&ev_thread_id, NULL, ev_thread_run, NULL);
+    pthread_create(&sync_thread1_id, NULL, sync_thread1_run, &client);
+    pthread_create(&sync_thread2_id, NULL, sync_thread2_run, &client);
+    pthread_create(&sync_thread3_id, NULL, sync_thread3_run, &client);
+
+    pthread_join(sync_thread1_id, NULL);
+    pthread_join(sync_thread2_id, NULL);
+    pthread_join(sync_thread3_id, NULL);
+    pthread_join(ev_thread_id, NULL);
 }
 
 int main (int argc, char **argv) {

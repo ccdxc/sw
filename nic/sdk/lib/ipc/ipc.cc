@@ -564,6 +564,5 @@ respond (ipc_msg_ptr msg, const void *data, size_t data_length)
     t_ipc_service->respond(msg, data, data_length);
 }
 
-
 } // namespace ipc
 } // namespace sdk

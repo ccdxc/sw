@@ -1,11 +1,10 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET = libpenipc.so
+MODULE_TARGET = libpenipc_ev.so
 MODULE_SOLIBS =
-MODULE_LDLIBS = zmq
+MODULE_LDLIBS = ev zmq
 MODULE_FLAGS  = -Werror
 ALL_CC_FILES  = $(wildcard ${MODULE_SRC_DIR}/*.cc)
-EV_CC_FILES   = $(wildcard ${MODULE_SRC_DIR}/*_ev.cc)
-MODULE_SRCS   = $(filter-out $(EV_CC_FILES), $(ALL_CC_FILES))
+MODULE_SRCS   = $(ALL_CC_FILES)
 include ${MKDEFS}/post.mk
