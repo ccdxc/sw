@@ -2301,6 +2301,9 @@ static int ionic_set_vf_mac(struct net_device *netdev, int vf, u8 *mac)
 	return ret;
 }
 
+#if (RHEL_RELEASE_CODE == 0 || \
+     defined(HAVE_RHEL7_NETDEV_OPS_EXT_NDO_SET_VF_VLAN) || \
+     RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8,0))
 static int ionic_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan,
 			     u8 qos, __be16 proto)
 {
@@ -2335,6 +2338,7 @@ static int ionic_set_vf_vlan(struct net_device *netdev, int vf, u16 vlan,
 	up_read(&ionic->vf_op_lock);
 	return ret;
 }
+#endif
 
 static int ionic_set_vf_rate(struct net_device *netdev, int vf,
 			     int tx_min, int tx_max)
@@ -2390,6 +2394,9 @@ static int ionic_set_vf_spoofchk(struct net_device *netdev, int vf, bool set)
 	return ret;
 }
 
+#if (RHEL_RELEASE_CODE == 0 || \
+     defined(HAVE_RHEL7_NETDEV_OPS_EXT_NDO_SET_VF_TRUST) || \
+     RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(8,0))
 static int ionic_set_vf_trust(struct net_device *netdev, int vf, bool set)
 {
 	struct ionic_lif *lif = netdev_priv(netdev);
@@ -2414,6 +2421,7 @@ static int ionic_set_vf_trust(struct net_device *netdev, int vf, bool set)
 	up_read(&ionic->vf_op_lock);
 	return ret;
 }
+#endif
 
 static int ionic_set_vf_link_state(struct net_device *netdev, int vf, int set)
 {

@@ -224,7 +224,7 @@ void ionic_debugfs_add_qcq(struct ionic_lif *lif, struct ionic_qcq *qcq)
 	debugfs_create_x32("total_size", 0400, qcq_dentry, &qcq->total_size);
 	debugfs_create_x64("base_pa", 0400, qcq_dentry, &qcq->base_pa);
 
-#if (RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE == RHEL_RELEASE_VERSION(7,6)))
+#if (RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(7,0)))
 	debugfs_create_u8("armed", 0400, qcq_dentry, (u8 *)&qcq->armed);
 #else
 	debugfs_create_bool("armed", 0400, qcq_dentry, &qcq->armed);
@@ -327,7 +327,7 @@ void ionic_debugfs_add_qcq(struct ionic_lif *lif, struct ionic_qcq *qcq)
 	debugfs_create_u32("num_descs", 0400, cq_dentry, &cq->num_descs);
 	debugfs_create_u32("desc_size", 0400, cq_dentry, &cq->desc_size);
 
-#if (RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE == RHEL_RELEASE_VERSION(7,6)))
+#if (RHEL_RELEASE_CODE && (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(7,0)))
 	debugfs_create_u8("done_color", 0400, cq_dentry, (u8 *)&cq->done_color);
 #else
 	debugfs_create_bool("done_color", 0400, cq_dentry, &cq->done_color);

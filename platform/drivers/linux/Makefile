@@ -87,8 +87,7 @@ endif
 endif
 endif
 
-# TODO: Turn on -Werror for eth, too
-RDMA_KOPT += KCFLAGS="$(KCFLAGS)"
+KOPT += KCFLAGS="$(KCFLAGS)"
 
 all: $(ALL)
 
