@@ -111,6 +111,56 @@
                                         "Method" : 0,
                                         "Command" : "/nic/bin/halctl show nwsec policy | grep \"Rule Id\" | wc -l"
                                 },
+                                {
+                                        "Name" : "Drop Statistics",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show system statistics drop"
+                                },
+                                {
+                                        "Name" : "System Statistics",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show system statistics"
+                                },
+                                {
+                                        "Name" : "Port Statistics",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show port statistics"
+                                },
+                                {
+                                        "Name" : "System Statistics intf",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl system statistics intf"
+                                },
+                                {
+                                        "Name" : "Interrupts",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show interrupts"
+                                },
+                                {
+                                        "Name" : "Table Statistics",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl system statistics table"
+                                },
+                                {
+                                        "Name" : "Mirror",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show mirror"
+                                },
+                                {
+                                        "Name" : "Collector",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show collector"
+                                },
+                                {
+                                        "Name" : "Flow-Monitor",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show flow-monitor"
+                                },
+                                {
+                                        "Name" : "Session",
+                                        "Method" : 0,
+                                        "Command" : "/nic/bin/halctl show session"
+                                },
 				{
                                         "Name" : "NaplesStatus Delphi Object",
                                         "Method" : 0,
