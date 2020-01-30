@@ -311,7 +311,7 @@ export const eventTypes: { [name: string]: EventType } = {
   },
   'NAPLES_OVER_TEMP_EXIT' : {
       "Name": "NAPLES_OVER_TEMP_EXIT",
-      "Severity": EventsEvent_severity.warn,
+      "Severity": EventsEvent_severity.info,
       "Desc": "System temperature is below threshold.",
   },
   'NAPLES_PANIC_EVENT' : {

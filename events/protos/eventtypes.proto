@@ -267,7 +267,7 @@ enum EventTypes {
                                            (desc)        = "System temperature is above threshold."];
 
     NAPLES_OVER_TEMP_EXIT           = 511 [(category)    = System,
-                                           (severity)    = WARN,
+                                           (severity)    = INFO,
                                            (desc)        = "System temperature is below threshold."];
 
     NAPLES_PANIC_EVENT              = 512 [(category)    = System,

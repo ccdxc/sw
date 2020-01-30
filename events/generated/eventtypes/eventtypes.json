@@ -242,7 +242,7 @@
   },
   {
    "Name": "NAPLES_OVER_TEMP_EXIT",
-   "Severity": "warn",
+   "Severity": "info",
    "Desc": "System temperature is below threshold."
   },
   {

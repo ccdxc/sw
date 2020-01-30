@@ -372,7 +372,7 @@ func init() {
 
 	eventTypes[NAPLES_OVER_TEMP_EXIT] = &EventTypeAttributes{
 		EType:      NAPLES_OVER_TEMP_EXIT.String(),
-		Severity:   "warn",
+		Severity:   "info",
 		Category:   "system",
 		Desc:       "System temperature is below threshold.",
 		SuppressMM: false}
