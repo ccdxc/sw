@@ -128,7 +128,7 @@ pds_flow_appdata2str (void *appdata)
 }
 
 always_inline void
-pds_flow_extract_nexthop_info(vlib_buffer_t *p0, u8 is_ip4)
+pds_flow_extract_nexthop_info(vlib_buffer_t *p0, u8 is_ip4, u8 iflow)
 {
     return;
 }

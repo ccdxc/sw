@@ -514,7 +514,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, sport, dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch( 0xff);
-        pds_flow_extract_nexthop_info(p0, 1);
+        pds_flow_extract_nexthop_info(p0, 1, 1);
         ftlv4_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
@@ -531,6 +531,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch(0xff);
+        pds_flow_extract_nexthop_info(p0, 1, 0);
         ftlv4_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv4_cache_advance_count(1);
     } else {
@@ -575,13 +576,14 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_key(src_ip, dst_ip, protocol, sport, dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
-        pds_flow_extract_nexthop_info(p0, 0);
+        pds_flow_extract_nexthop_info(p0, 0, 1);
         ftlv6_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
         ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
+        pds_flow_extract_nexthop_info(p0, 0, 0);
         ftlv6_cache_set_hash_log(0, pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
     }

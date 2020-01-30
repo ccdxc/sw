@@ -10,6 +10,7 @@
 #include <impl_db.h>
 #include <nic/apollo/api/impl/apulu/nacl_data.h>
 #include <nic/vpp/impl/nat.h>
+#include "p4_cpu_hdr_utils.h"
 
 always_inline u32
 pds_session_get_max (void)
@@ -263,11 +264,22 @@ pds_flow_appdata2str (void *appdata)
 
 always_inline void
 pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
-                              u8 is_ip4)
+                              u8 is_ip4, u8 iflow)
 {
-    u32 nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
+    u32 nexthop = 0;
+    u8 rx_pak = (vnet_buffer(p0)->pds_flow_data.flags &
+                VPP_CPU_FLAGS_RX_PKT_VALID) ? 1 : 0;
 
-    //TODO: Rflow nexthop
+    if (iflow) {
+        // nexthop is for iflow if tx packet
+        if (!rx_pak) {
+            nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
+        }
+    } else if (rx_pak) {
+        // nexthop is for rflow if rx packet
+        nexthop = vnet_buffer(p0)->pds_flow_data.nexthop;
+    }
+
     if (is_ip4) {
         if (nexthop) {
             ftlv4_cache_set_nexthop(nexthop & 0xff, ((nexthop >> 16) & 0x3), 1);
