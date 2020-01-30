@@ -94,7 +94,8 @@ mapping_hit:
                         d.mapping_info_d.nexthop_type
     phvwr.!c7.f     p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
     phvwr           p.p4e_to_arm_nexthop_id, d.{mapping_info_d.nexthop_id}.hx
-    phvwr.e         p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr           p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr.e         p.p4e_to_arm_is_local, d.mapping_info_d.is_local
     phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 
 mapping_hash_hit:

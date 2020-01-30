@@ -63,8 +63,11 @@ header_type apulu_p4_to_arm_header_t {
         vpc_id              : 16;
         vnic_id             : 16;
         dnat_id             : 16;
-        pad                 : 4;
+        pad                 : 1;
         rx_packet           : 1;
+        flow_hit            : 1;
+        flow_role           : 1;
+        is_local            : 1;
         snat_type           : 2;
         dnat_en             : 1;
         mapping_hit         : 1;
@@ -89,7 +92,7 @@ header_type apulu_ingress_recirc_header_t {
     fields {
         flow_ohash          : 32;
         local_mapping_ohash : 32;
-        pad1                : 6;
+        pad                 : 6;
         flow_done           : 1;
         local_mapping_done  : 1;
     }
@@ -98,7 +101,7 @@ header_type apulu_ingress_recirc_header_t {
 header_type apulu_egress_recirc_header_t {
     fields {
         mapping_ohash   : 32;
-        pad1            : 6;
+        pad             : 6;
         p4_to_arm_valid : 1;
         mapping_done    : 1;
     }

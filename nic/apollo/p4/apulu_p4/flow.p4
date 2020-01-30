@@ -17,6 +17,10 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
             modify_field(ingress_recirc.flow_done, TRUE);
+            if (force_flow_miss == TRUE) {
+                modify_field(p4i_to_arm.flow_hit, TRUE);
+                modify_field(p4i_to_arm.flow_role, flow_role);
+            }
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
@@ -24,6 +28,8 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
+                modify_field(p4i_to_arm.flow_hit, TRUE);
+                modify_field(p4i_to_arm.flow_role, flow_role);
                 modify_field(p4i_to_arm.session_id,
                              scratch_metadata.session_id);
                 if (nexthop_valid == TRUE) {
@@ -150,6 +156,10 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
             modify_field(ingress_recirc.flow_done, TRUE);
+            if (force_flow_miss == TRUE) {
+                modify_field(p4i_to_arm.flow_hit, TRUE);
+                modify_field(p4i_to_arm.flow_role, flow_role);
+            }
         } else {
             modify_field(ingress_recirc.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
@@ -157,6 +167,8 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
+                modify_field(p4i_to_arm.flow_hit, TRUE);
+                modify_field(p4i_to_arm.flow_role, flow_role);
                 modify_field(p4i_to_arm.session_id,
                              scratch_metadata.session_id);
                 if (nexthop_valid == TRUE) {

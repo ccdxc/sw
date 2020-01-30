@@ -213,9 +213,8 @@ control local_mapping {
 /******************************************************************************/
 @pragma capi appdatafields nexthop_valid nexthop_type nexthop_id egress_bd_id dmaci
 @pragma capi hwfields_access_api
-action mapping_info(entry_valid,
-                    pad12, nexthop_valid, nexthop_type, nexthop_id,
-                    egress_bd_id, dmaci,
+action mapping_info(entry_valid, is_local, pad11, nexthop_valid,
+                    nexthop_type, nexthop_id, egress_bd_id, dmaci,
                     hash1, hint1, hash2, hint2, hash3, hint3,
                     hash4, hint4, hash5, hint5, hash6, hint6,
                     hash7, hint7, hash8, hint8, more_hashes, more_hints) {
@@ -248,6 +247,7 @@ action mapping_info(entry_valid,
                 modify_field(p4e_to_arm.nexthop_type, nexthop_type);
                 modify_field(p4e_to_arm.nexthop_id, nexthop_id);
                 modify_field(p4e_to_arm.mapping_hit, TRUE);
+                modify_field(p4e_to_arm.is_local, is_local);
             } else {
                 modify_field(rewrite_metadata.nexthop_type, nexthop_type);
                 modify_field(p4e_i2e.nexthop_id, nexthop_id);
@@ -328,7 +328,7 @@ action mapping_info(entry_valid,
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
-    modify_field(scratch_metadata.pad12, pad12);
+    modify_field(scratch_metadata.pad11, pad11);
     modify_field(scratch_metadata.mapping_hash, hash1);
     modify_field(scratch_metadata.mapping_hash, hash2);
     modify_field(scratch_metadata.mapping_hash, hash3);

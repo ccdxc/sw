@@ -122,7 +122,7 @@ header_type scratch_metadata_t {
         drop_stats_pad      : 88;
         drop_stats_pkts     : 40;
         mac                 : 48;
-        pad12               : 12;
+        pad11               : 11;
         tcp_state           : 4;
         tcp_seq_num         : 32;
         tcp_ack_num         : 32;

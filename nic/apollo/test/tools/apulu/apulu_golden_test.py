@@ -36,8 +36,11 @@ class P4ToARM(Packet):
             ShortField("vpc_id", 0),
             ShortField("vnic_id", 0),
             ShortField("dnat_id", 0),
-            BitField("pad", 0, 4),
+            BitField("pad", 0, 1),
             BitField("rx_packet", 0, 1),
+            BitField("flow_hit", 0, 1),
+            BitField("flow_role", 0, 1),
+            BitField("is_local", 0, 1),
             BitField("snat_type", 0, 2),
             BitField("dnat_en", 0, 1),
             BitField("mapping_hit", 0, 1),
@@ -142,7 +145,7 @@ ipkt = Ether(dst='00:01:02:03:04:05', src='00:C1:C2:C3:C4:C5') / \
         Dot1Q(vlan=100) / \
         IP(dst='10.10.1.1', src='11.11.1.1') / \
         TCP(sport=0x1234, dport=0x5678, flags='F') / payload
-opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', \
+opkt = P4ToARM(packet_len=ntohs(0x6e), flags='VLAN+IPv4', flow_hit=1, \
         ingress_bd_id=ntohs(0x02ed), flow_hash=ntohl(0x9e185097), \
         l2_1_offset=0x11, l3_1_offset=0x23, l4_2_offset=0x37, \
         payload_offset=0x4b, lif=ntohs(0x1), session_id=ntohl(0x55e51), \
