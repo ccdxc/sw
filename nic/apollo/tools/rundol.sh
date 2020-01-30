@@ -60,7 +60,9 @@ function collect_logs () {
 }
 
 function finish () {
-    stop_process
+    if [ $DRYRUN == 0 ]; then
+        stop_process
+    fi
     collect_logs
     remove_stale_files
 }
