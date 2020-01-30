@@ -56,6 +56,8 @@ do
 	    fi
         fi
 
+        sysctl -w net.ipv4.conf.int_mnic0.arp_ignore=1
+
         irq_number=`find /proc/irq  -name *int_mnic0* | awk -F/ '{ print $4 }'`
         if [[ ! -z $irq_number ]]; then
             log "int_mnic0 is up!"
@@ -68,6 +70,7 @@ do
         if [ $oob_mnic0_admin_up -eq 0 ]; then
             log "bringing up oob_mnic0"
             ifconfig oob_mnic0 up && oob_mnic0_admin_up=1
+            sysctl -w net.ipv4.conf.oob_mnic0.arp_ignore=1
         fi
 
         irq_number=`find /proc/irq  -name *oob_mnic0* | awk -F/ '{ print $4 }'`
