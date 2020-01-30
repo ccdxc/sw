@@ -42,6 +42,7 @@ type RolloutState struct {
 	numFailuresSeen       uint32
 	numSkipped            uint32
 	completionDelta       float32
+	completionSum         float32
 	numRetries            uint32
 }
 

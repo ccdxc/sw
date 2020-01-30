@@ -195,11 +195,13 @@ func (snicState *DSCRolloutState) UpdateDSCRolloutStatus(newStatus *protos.DSCRo
 			case protos.DSCOp_DSCUpgOnNextHostReboot:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = roproto.RolloutPhase_COMPLETE
-				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
+				snicState.ros.completionSum += snicState.ros.completionDelta
+				snicState.ros.Status.CompletionPercentage = uint32(snicState.ros.completionSum)
 			case protos.DSCOp_DSCDisruptiveUpgrade:
 				evt = fsmEvOneSmartNICUpgSuccess
 				phase = roproto.RolloutPhase_COMPLETE
-				snicState.ros.Status.CompletionPercentage += uint32(snicState.ros.completionDelta)
+				snicState.ros.completionSum += snicState.ros.completionDelta
+				snicState.ros.Status.CompletionPercentage = uint32(snicState.ros.completionSum)
 			default:
 				log.Errorf("Success for unknown Op %d from %s ", s.Op, snicState.DSCRollout.Name)
 				return

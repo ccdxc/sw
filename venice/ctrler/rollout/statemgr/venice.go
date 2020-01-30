@@ -151,11 +151,13 @@ func (vros *VeniceRolloutState) UpdateVeniceRolloutStatus(newStatus *protos.Veni
 			case protos.VeniceOp_VenicePreCheck:
 				evt = fsmEvOneVenicePreUpgSuccess
 				phase = rollout.RolloutPhase_WAITING_FOR_TURN
-				vros.ros.Status.CompletionPercentage += uint32(vros.ros.completionDelta)
+				vros.ros.completionSum += vros.ros.completionDelta
+				vros.ros.Status.CompletionPercentage = uint32(vros.ros.completionSum)
 			case protos.VeniceOp_VeniceRunVersion:
 				evt = fsmEvOneVeniceUpgSuccess
 				phase = rollout.RolloutPhase_COMPLETE
-				vros.ros.Status.CompletionPercentage += uint32(vros.ros.completionDelta)
+				vros.ros.completionSum += vros.ros.completionDelta
+				vros.ros.Status.CompletionPercentage = uint32(vros.ros.completionSum)
 
 			}
 		} else {
