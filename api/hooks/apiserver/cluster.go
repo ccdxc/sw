@@ -103,14 +103,8 @@ func (cl *clusterHooks) deleteDefaultTelemetryPolicies(ctx context.Context, kv k
 		cl.logger.Errorf("API server hook to create default roles called for invalid object type [%#v]", i)
 		return i, false, errors.New("invalid input type")
 	}
-	statpol := monitoring.StatsPolicy{ObjectMeta: api.ObjectMeta{Name: r.Name, Tenant: r.Name}}
-	statkey := statpol.MakeKey("monitoring")
 	fwlogpol := monitoring.FwlogPolicy{ObjectMeta: api.ObjectMeta{Name: r.Name, Tenant: r.Name}}
 	fwlogkey := fwlogpol.MakeKey("monitoring")
-	if err := txn.Delete(statkey); err != nil {
-		cl.logger.Errorf("txn delete got error (%v)\n", err)
-		return i, false, err
-	}
 	if err := txn.Delete(fwlogkey); err != nil {
 		cl.logger.Errorf("txn delete got error (%v)\n", err)
 		return i, false, err

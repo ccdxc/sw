@@ -1,7 +1,7 @@
 // {C} Copyright 2017 Pensando Systems Inc. All rights reserved.
 
 syntax = "proto3";
-// Configure and manage Event, Stats, Logging, Alerts, Mirror Sessions
+// Configure and manage Event,  Logging, Alerts, Mirror Sessions
 // and other monitoring policies.
 package monitoring;
 
@@ -27,7 +27,6 @@ service MonitoringV1 {
     option (venice.apiVersion) = "v1";
 
     option (venice.apiGrpcCrudService) = "EventPolicy";
-    option (venice.apiGrpcCrudService) = "StatsPolicy";
     option (venice.apiGrpcCrudService) = "FwlogPolicy";
     option (venice.apiGrpcCrudService) = "FlowExportPolicy";
     option (venice.apiGrpcCrudService) = "Alert";
@@ -41,11 +40,6 @@ service MonitoringV1 {
     option (venice.apiRestService) = {
         Object: "EventPolicy"
         Method: ["get", "put", "delete", "post", "list", "watch"]
-    };
-
-    option (venice.apiRestService) = {
-        Object: "StatsPolicy"
-        Method: ["get", "put", "list", "watch"]
     };
 
     option (venice.apiRestService) = {

@@ -6,23 +6,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pensando/sw/nic/agent/protos/netproto"
+	"context"
+	"reflect"
 
 	"github.com/pensando/sw/api/generated/monitoring"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	tpmProtos "github.com/pensando/sw/nic/agent/protos/tpmprotos"
 	vLog "github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	tu "github.com/pensando/sw/venice/utils/testutils"
 
-	"context"
-	"reflect"
-
 	"github.com/pensando/sw/api"
 )
 
 const listenURL = "127.0.0.1:"
-const defaultCollectInterval = "30s"
 
 func TestMain(m *testing.M) {
 	rpcLog = vLog.WithContext("pkg", "TEST-"+pkgName)
@@ -31,152 +29,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewRPCServer(t *testing.T) {
-	_, err := NewRPCServer("", nil, defaultCollectInterval, nil)
+	_, err := NewRPCServer("", nil, nil)
 	tu.Assert(t, err != nil, "didn't fail for invalid URL")
 
-	f, err := NewRPCServer(listenURL, nil, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, nil, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
-}
-
-func TestSetCollectionInterval(t *testing.T) {
-	policyDb := memdb.NewMemdb()
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
-	tu.AssertOk(t, err, "failed to create rpc server")
-	defer f.Stop()
-
-	interval := "300s"
-	err = f.SetCollectionInterval(interval)
-	tu.AssertOk(t, err, "failed to set collection interval")
-	tu.Assert(t, f.statsPolicyRPCServer.collectionInterval.Load().(string) == interval,
-		fmt.Sprintf("invalid collection interval %v",
-			f.statsPolicyRPCServer.collectionInterval.Load()))
-}
-
-func TestWatchStatsPolicyError(t *testing.T) {
-
-	policyDb := memdb.NewMemdb()
-	f, err := NewRPCServer(listenURL, policyDb, "100s", nil)
-	tu.AssertOk(t, err, "failed to create rpc server")
-	defer f.Stop()
-
-	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
-	tu.AssertOk(t, err, "failed to create rpc client")
-
-	statsClient := tpmProtos.NewStatsPolicyApiClient(grpc.ClientConn)
-	evWatch, err := statsClient.WatchStatsPolicy(context.Background(), &api.ObjectMeta{Name: "client-1"})
-	tu.AssertOk(t, err, "failed to watch stats policy")
-	f.Stop()
-	policy, err := evWatch.Recv()
-	tu.Assert(t, err != nil, fmt.Sprintf("failed to stop rpc server, %+v", policy))
-}
-
-func TestWatchStatsError(t *testing.T) {
-	sp := map[string]*monitoring.FwlogPolicy{
-		"fwlog-1": {
-			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
-			ObjectMeta: api.ObjectMeta{Name: "fwlog-1"},
-		},
-		"fwlog-2": {
-			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
-			ObjectMeta: api.ObjectMeta{Name: "fwlog-2"},
-		},
-	}
-	policyDb := memdb.NewMemdb()
-
-	for _, p := range sp {
-		err := policyDb.AddObject(p)
-		tu.AssertOk(t, err, fmt.Sprintf("failed to add stats object %+v", p))
-	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
-	tu.AssertOk(t, err, "failed to create rpc server")
-	defer f.Stop()
-
-	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
-		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
-			defaultCollectInterval))
-
-	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
-	tu.AssertOk(t, err, "failed to create rpc client")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	statsClient := tpmProtos.NewStatsPolicyApiClient(grpc.ClientConn)
-	evWatch, err := statsClient.WatchStatsPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
-	tu.AssertOk(t, err, "failed to watch stats policy")
-	_, err = evWatch.Recv()
-	tu.Assert(t, err != nil, "failed to test invalid policy")
-
-}
-
-func TestWatchStatsPolicy(t *testing.T) {
-
-	sp := map[string]*monitoring.StatsPolicy{
-		"stats-1": {
-			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
-			ObjectMeta: api.ObjectMeta{Name: "stats-1"},
-		},
-		"stats-2": {
-			TypeMeta:   api.TypeMeta{Kind: "StatsPolicy"},
-			ObjectMeta: api.ObjectMeta{Name: "stats-2"},
-		},
-	}
-
-	policyDb := memdb.NewMemdb()
-
-	for _, p := range sp {
-		err := policyDb.AddObject(p)
-		tu.AssertOk(t, err, fmt.Sprintf("failed to add stats object %+v", p))
-	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
-	tu.AssertOk(t, err, "failed to create rpc server")
-	defer f.Stop()
-
-	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
-		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
-			defaultCollectInterval))
-
-	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
-	tu.AssertOk(t, err, "failed to create rpc client")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	statsClient := tpmProtos.NewStatsPolicyApiClient(grpc.ClientConn)
-	evWatch, err := statsClient.WatchStatsPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
-	tu.AssertOk(t, err, "failed to watch stats policy")
-	for i := 0; i < len(sp); i++ {
-		ev, err := evWatch.Recv()
-		tu.AssertOk(t, err, "failed to receive stats policy")
-		tu.Assert(t, ev.EventType == api.EventType_CreateEvent, fmt.Sprintf("invalid stats event type %+v", ev))
-		evPolicy := ev.Policy
-		cfgPolicy := sp[evPolicy.GetName()]
-		tu.Assert(t, evPolicy.GetName() == cfgPolicy.GetName(),
-			fmt.Sprintf("policy [%v] didn't match in policy, {%+v} ", evPolicy, sp))
-		tu.Assert(t, evPolicy.TypeMeta == cfgPolicy.TypeMeta,
-			fmt.Sprintf("policy [%v] didn't match in policy, {%+v} ", evPolicy, sp))
-		tu.Assert(t, evPolicy.Spec.Interval == f.collectionInterval.Load().(string),
-			fmt.Sprintf("interval [%v] didn't match in policy, [%+v] ", evPolicy, f))
-	}
-
-	// Check debug
-	clients := f.Debug()
-	tu.Assert(t, len(clients["StatsPolicy"]) > 0, "debug for fwlog policy was empty")
-	for _, v := range clients["StatsPolicy"] {
-		entryTime, err := time.Parse(time.RFC3339, v)
-		tu.AssertOk(t, err, "Failed to parse time")
-		elapsedTime := time.Since(entryTime).Seconds()
-		tu.Assert(t, elapsedTime < 5 && elapsedTime >= 0, "reported timestamp was in the expected time range")
-	}
-
-	// update object
-	policyDb.UpdateObject(sp["stats-1"])
-	updObj, err := evWatch.Recv()
-	tu.AssertOk(t, err, "failed to receive stats policy update")
-	tu.Assert(t, updObj.EventType == api.EventType_UpdateEvent, fmt.Sprintf("got event: %+v, expected: %v",
-		updObj, api.EventType_UpdateEvent))
-
-	// client cancel
-	cancel()
 }
 
 func TestListFwlogPolicy(t *testing.T) {
@@ -197,7 +56,7 @@ func TestListFwlogPolicy(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog policy object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -207,7 +66,7 @@ func TestListFwlogPolicy(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fwlogClient := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+	fwlogClient := tpmProtos.NewFwlogPolicyApiV1Client(grpc.ClientConn)
 	evList, err := fwlogClient.ListFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 	tu.AssertOk(t, err, "failed to list fwlog policy")
 	tu.Assert(t, len(evList.EventList) == len(fp), fmt.Sprintf("got %d, expected %d", len(evList.EventList), len(fp)))
@@ -260,7 +119,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -268,7 +127,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 	tu.AssertOk(t, err, "failed to create rpc client")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	fwlogClient := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+	fwlogClient := tpmProtos.NewFwlogPolicyApiV1Client(grpc.ClientConn)
 	evWatch, err := fwlogClient.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 	tu.AssertOk(t, err, "failed to watch fwlog policy")
 	for i := 0; i < len(fp); i++ {
@@ -315,7 +174,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 }
 
 func TestFwlogError(t *testing.T) {
-	sp := map[string]*monitoring.StatsPolicy{
+	sp := map[string]*monitoring.FlowExportPolicy{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FwlogPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "stats-1"},
@@ -331,20 +190,16 @@ func TestFwlogError(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
-
-	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
-		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
-			defaultCollectInterval))
 
 	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
 	tu.AssertOk(t, err, "failed to create rpc client")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+	client := tpmProtos.NewFwlogPolicyApiV1Client(grpc.ClientConn)
 	evWatch, err := client.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 	tu.AssertOk(t, err, "failed to watch fwlog policy")
 	_, err = evWatch.Recv()
@@ -375,7 +230,7 @@ func TestListFlowExportPolicy(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog policy object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -451,7 +306,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add flow export object %+v", p))
 	}
 
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -499,7 +354,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 }
 
 func TestRpcError(t *testing.T) {
-	sp := map[string]*monitoring.StatsPolicy{
+	sp := map[string]*netproto.Tenant{
 		"fwlog-1": {
 			TypeMeta:   api.TypeMeta{Kind: "FlowExportPolicy"},
 			ObjectMeta: api.ObjectMeta{Name: "exp-1"},
@@ -515,16 +370,12 @@ func TestRpcError(t *testing.T) {
 		err := policyDb.AddObject(p)
 		tu.AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
-	f, err := NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := NewRPCServer(listenURL, policyDb, nil)
 	tu.AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
 	u := f.GetListenURL()
 	tu.Assert(t, u != "", "invalid server URL", u)
-
-	tu.Assert(t, defaultCollectInterval == f.collectionInterval.Load().(string),
-		fmt.Sprintf("interval [%v] didn't match in policy, {%s} ", f.collectionInterval.Load(),
-			defaultCollectInterval))
 
 	grpc, err := rpckit.NewRPCClient("test-client", f.server.GetListenURL(), rpckit.WithLoggerEnabled(true))
 	tu.AssertOk(t, err, "failed to create rpc client")
@@ -542,7 +393,7 @@ func TestRpcError(t *testing.T) {
 	}
 
 	if true {
-		client := tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+		client := tpmProtos.NewFwlogPolicyApiV1Client(grpc.ClientConn)
 		evWatch, err := client.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 		tu.AssertOk(t, err, "failed to watch fwlog policy")
 		_, err = evWatch.Recv()
@@ -561,11 +412,65 @@ func TestRpcError(t *testing.T) {
 			}
 		}()
 
-		client = tpmProtos.NewFwlogPolicyApiClient(grpc.ClientConn)
+		client = tpmProtos.NewFwlogPolicyApiV1Client(grpc.ClientConn)
 		evWatch, err = client.WatchFwlogPolicy(ctx, &api.ObjectMeta{Name: "client-1"})
 		tu.AssertOk(t, err, "failed to watch fwlog policy")
 		_, err = evWatch.Recv()
 		tu.Assert(t, err != nil, "failed to test invalid policy")
 	}
 
+}
+
+func TestConvertFlowExportPolicySpec(t *testing.T) {
+	mspec := &monitoring.FlowExportPolicySpec{
+		Interval: "10s",
+		MatchRules: []*monitoring.MatchRule{
+			{
+				Dst: &monitoring.MatchSelector{
+					IPAddresses: []string{"5.5.5.5", "6.6.6.6"},
+				},
+				Src: &monitoring.MatchSelector{
+					IPAddresses: []string{"4.4.4.4", "3.3.3.3"},
+				},
+				AppProtoSel: &monitoring.AppProtoSelector{
+					ProtoPorts: []string{"tcp/4444", "udp/3333"},
+				},
+			},
+		},
+		Exports: []monitoring.ExportConfig{
+			{
+				Destination: "1.2.3.4",
+				Transport:   "tcp/5555",
+			},
+		},
+	}
+
+	tspec := convertFlowExportPolicySpec(mspec)
+
+	tu.Assert(t, len(tspec.Exports) == len(mspec.Exports), "got %+v, expected %+v", len(tspec.Exports),
+		len(mspec.Exports))
+
+	for i, e := range mspec.Exports {
+		tu.Assert(t, e.Destination == tspec.Exports[i].Destination, "got %+v, expected %+v", tspec.Exports[i].Destination,
+			e.Destination)
+
+		tu.Assert(t, e.Transport == fmt.Sprintf("%v/%v", tspec.Exports[i].Transport.Protocol, tspec.Exports[i].Transport.Port),
+			"got %+v, expected %+v", tspec.Exports[i].Transport, e.Transport)
+	}
+
+	tu.Assert(t, len(tspec.MatchRules) == len(mspec.MatchRules), "invalid match-rule got %d, expected %d",
+		len(tspec.MatchRules), len(mspec.MatchRules))
+	for i, mr := range mspec.MatchRules {
+		tr := tspec.MatchRules[i]
+
+		tu.Assert(t, reflect.DeepEqual(mr.Src.IPAddresses, tr.Src.Addresses), "invalid src, got %v, expected %v", tr.Src, mr.Src)
+		tu.Assert(t, reflect.DeepEqual(mr.Dst.IPAddresses, tr.Dst.Addresses), "invalid dst, got %v, expected %+v",
+			tr.Dst.Addresses, mr.Dst.IPAddresses)
+		tu.Assert(t, len(mr.AppProtoSel.ProtoPorts) == len(tr.Dst.ProtoPorts), "invalid proto ports got %v, expected %v",
+			len(tr.Dst.ProtoPorts), len(mr.AppProtoSel.ProtoPorts))
+		for j, p := range mr.AppProtoSel.ProtoPorts {
+			tu.Assert(t, p == fmt.Sprintf("%v/%v", tr.Dst.ProtoPorts[j].Protocol, tr.Dst.ProtoPorts[j].Port),
+				"got %v, expected %v", tr.Dst.ProtoPorts[j], p)
+		}
+	}
 }

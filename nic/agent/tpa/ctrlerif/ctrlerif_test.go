@@ -24,7 +24,6 @@ import (
 )
 
 const listenURL = "127.0.0.1:"
-const defaultCollectInterval = "30s"
 
 func TestListFwlogPolicy(t *testing.T) {
 	fp := map[string]*monitoring.FwlogPolicy{
@@ -44,7 +43,7 @@ func TestListFwlogPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add policy object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -140,7 +139,7 @@ func TestWatchFwlogPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -232,7 +231,7 @@ func TestListFlowExportPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -301,7 +300,7 @@ func TestWatchFlowExportPolicy(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 
@@ -412,7 +411,7 @@ func TestRpcServer(t *testing.T) {
 		AssertOk(t, err, fmt.Sprintf("failed to add fwlog object %+v", p))
 	}
 
-	f, err := rpcserver.NewRPCServer(listenURL, policyDb, defaultCollectInterval, nil)
+	f, err := rpcserver.NewRPCServer(listenURL, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	serverAddr := f.GetListenURL()
 	f.Stop()
@@ -436,7 +435,7 @@ func TestRpcServer(t *testing.T) {
 	defer invalidURLClient.Stop()
 
 	// start rpc server
-	f, err = rpcserver.NewRPCServer(serverAddr, policyDb, defaultCollectInterval, nil)
+	f, err = rpcserver.NewRPCServer(serverAddr, policyDb, nil)
 	AssertOk(t, err, "failed to create rpc server")
 	defer f.Stop()
 

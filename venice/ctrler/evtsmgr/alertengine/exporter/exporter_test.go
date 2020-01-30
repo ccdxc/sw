@@ -204,9 +204,6 @@ type mockMonitoringV1 struct {
 	mAlertDestination monitoring.MonitoringV1AlertDestinationInterface
 }
 
-func (m *mockMonitoringV1) StatsPolicy() monitoring.MonitoringV1StatsPolicyInterface {
-	return nil
-}
 func (m *mockMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {
 	return nil
 }

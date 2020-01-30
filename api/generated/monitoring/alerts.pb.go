@@ -69,14 +69,12 @@
 		AutoMsgFlowExportPolicyWatchHelper
 		AutoMsgFwlogPolicyWatchHelper
 		AutoMsgMirrorSessionWatchHelper
-		AutoMsgStatsPolicyWatchHelper
 		AutoMsgTechSupportRequestWatchHelper
 		AutoMsgTroubleshootingSessionWatchHelper
 		EventPolicyList
 		FlowExportPolicyList
 		FwlogPolicyList
 		MirrorSessionList
-		StatsPolicyList
 		TechSupportRequestList
 		TroubleshootingSessionList
 		TechSupportNodeResult
@@ -89,9 +87,6 @@
 		FwlogPolicy
 		FwlogPolicySpec
 		FwlogPolicyStatus
-		StatsPolicy
-		StatsPolicySpec
-		StatsPolicyStatus
 		PingPktStats
 		PingStats
 		TimeWindow

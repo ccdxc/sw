@@ -14,7 +14,6 @@ import { ClusterSnapshotRestore } from './cluster';
 import { ClusterLicense } from './cluster';
 import { DiagnosticsModule } from './diagnostics';
 import { MonitoringEventPolicy } from './monitoring';
-import { MonitoringStatsPolicy } from './monitoring';
 import { MonitoringFwlogPolicy } from './monitoring';
 import { MonitoringFlowExportPolicy } from './monitoring';
 import { MonitoringAlert } from './monitoring';
@@ -143,11 +142,6 @@ export const CategoryMapping: CatMap  = {
   "Monitoring" : {
     "EventPolicy" : {
       instance: new MonitoringEventPolicy(),
-      scopes: [ 'tenant', ] ,
-      actions:  [] ,
-    },
-    "StatsPolicy" : {
-      instance: new MonitoringStatsPolicy(),
       scopes: [ 'tenant', ] ,
       actions:  [] ,
     },

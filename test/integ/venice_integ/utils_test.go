@@ -104,22 +104,6 @@ func (it *veniceIntegSuite) deleteNetwork(tenant, net string) (*network.Network,
 	return it.apisrvClient.NetworkV1().Network().Delete(ctx, &ometa)
 }
 
-// getStatsPolicy gets a stats policy
-func (it *veniceIntegSuite) getStatsPolicy(tenantName string) (*monitoring.StatsPolicy, error) {
-	// build meta object
-	ometa := api.ObjectMeta{
-		Name:   tenantName,
-		Tenant: tenantName,
-	}
-
-	ctx, err := it.loggedInCtx()
-	if err != nil {
-		return nil, err
-	}
-
-	return it.restClient.MonitoringV1().StatsPolicy().Get(ctx, &ometa)
-}
-
 // getFwlogPolicy gets a fwlog policy
 func (it *veniceIntegSuite) getFwlogPolicy(tenantName string) (*monitoring.FwlogPolicy, error) {
 	// build meta object

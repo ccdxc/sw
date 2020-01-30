@@ -14,43 +14,6 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 import "github.com/pensando/sw/api/protos/telemetry.proto";
 
-//================================ statsPolicy ==========================================================
-
-// stats policy watch events to agent
-message statsPolicyEvent {
-    // event type create/update/delete
-    api.EventType EventType = 1 [(gogoproto.jsontag) = "event-type,omitempty"];
-    // stats policy
-    StatsPolicy Policy = 2 [(gogoproto.jsontag) = "policy,omitempty"];
-}
-
-message StatsPolicySpec {
-    // collection interval
-    string Interval = 1 [(gogoproto.jsontag) = "interval,omitempty"];
-}
-
-message StatsPolicyStatus {
-
-}
-
-// StatsPolicy stats Policy object
-message StatsPolicy {
-    api.TypeMeta        TypeMeta    = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta      ObjectMeta  = 2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-    StatsPolicySpec     Spec        = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-    StatsPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-// StatsPolicyApi REST interface for agent
-service StatsPolicyApi {
-    // options for auto generating rest endpoints
-    option(venice.naplesRestService) = {
-        Object: "StatsPolicy",
-        Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
-    };
-
-    rpc WatchStatsPolicy (api.ObjectMeta) returns (stream statsPolicyEvent) {};
-}
 //================================ FwlogPolicy ==========================================================
 
 message FwlogPolicyEvent {
@@ -72,8 +35,8 @@ message FwlogPolicy {
     monitoring.FwlogPolicyStatus   Status      = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
 }
 
-// FwlogPolicyApi REST interface for agent
-service FwlogPolicyApi {
+// FwlogPolicyApiV1 REST interface for agent
+service FwlogPolicyApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "FwlogPolicy",

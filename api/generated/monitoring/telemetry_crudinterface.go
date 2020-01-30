@@ -16,4 +16,3 @@ var _ kvstore.Interface
 
 const KindFlowExportPolicy ObjKind = "FlowExportPolicy"
 const KindFwlogPolicy ObjKind = "FwlogPolicy"
-const KindStatsPolicy ObjKind = "StatsPolicy"

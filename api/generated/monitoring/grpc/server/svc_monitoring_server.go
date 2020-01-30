@@ -58,7 +58,6 @@ type eMonitoringV1Endpoints struct {
 	fnAutoAddFlowExportPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddFwlogPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddMirrorSession             func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoAddStatsPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddTechSupportRequest        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddTroubleshootingSession    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteAlert                  func(ctx context.Context, t interface{}) (interface{}, error)
@@ -69,7 +68,6 @@ type eMonitoringV1Endpoints struct {
 	fnAutoDeleteFlowExportPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteFwlogPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteMirrorSession          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoDeleteStatsPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTechSupportRequest     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteTroubleshootingSession func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetAlert                     func(ctx context.Context, t interface{}) (interface{}, error)
@@ -80,7 +78,6 @@ type eMonitoringV1Endpoints struct {
 	fnAutoGetFlowExportPolicy          func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetFwlogPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetMirrorSession             func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoGetStatsPolicy               func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTechSupportRequest        func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoGetTroubleshootingSession    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListAlert                    func(ctx context.Context, t interface{}) (interface{}, error)
@@ -91,7 +88,6 @@ type eMonitoringV1Endpoints struct {
 	fnAutoListFlowExportPolicy         func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListFwlogPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListMirrorSession            func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoListStatsPolicy              func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListTechSupportRequest       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoListTroubleshootingSession   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateAlert                  func(ctx context.Context, t interface{}) (interface{}, error)
@@ -102,13 +98,11 @@ type eMonitoringV1Endpoints struct {
 	fnAutoUpdateFlowExportPolicy       func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateFwlogPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateMirrorSession          func(ctx context.Context, t interface{}) (interface{}, error)
-	fnAutoUpdateStatsPolicy            func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateTechSupportRequest     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateTroubleshootingSession func(ctx context.Context, t interface{}) (interface{}, error)
 	fnCancel                           func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchEventPolicy            func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
-	fnAutoWatchStatsPolicy            func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchFwlogPolicy            func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchFlowExportPolicy       func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchAlert                  func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -260,7 +254,6 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 		"monitoring.AutoMsgFlowExportPolicyWatchHelper":       apisrvpkg.NewMessage("monitoring.AutoMsgFlowExportPolicyWatchHelper"),
 		"monitoring.AutoMsgFwlogPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgFwlogPolicyWatchHelper"),
 		"monitoring.AutoMsgMirrorSessionWatchHelper":          apisrvpkg.NewMessage("monitoring.AutoMsgMirrorSessionWatchHelper"),
-		"monitoring.AutoMsgStatsPolicyWatchHelper":            apisrvpkg.NewMessage("monitoring.AutoMsgStatsPolicyWatchHelper"),
 		"monitoring.AutoMsgTechSupportRequestWatchHelper":     apisrvpkg.NewMessage("monitoring.AutoMsgTechSupportRequestWatchHelper"),
 		"monitoring.AutoMsgTroubleshootingSessionWatchHelper": apisrvpkg.NewMessage("monitoring.AutoMsgTroubleshootingSessionWatchHelper"),
 		"monitoring.EventPolicyList": apisrvpkg.NewMessage("monitoring.EventPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -389,38 +382,6 @@ func (s *smonitoringSvc_monitoringBackend) regMsgsFunc(l log.Logger, scheme *run
 			return r, nil
 		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
 			r := i.(monitoring.MirrorSessionList)
-			return &r
-		}),
-		"monitoring.StatsPolicyList": apisrvpkg.NewMessage("monitoring.StatsPolicyList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
-
-			into := monitoring.StatsPolicyList{}
-			into.Kind = "StatsPolicyList"
-			r := monitoring.StatsPolicy{}
-			r.ObjectMeta = options.ObjectMeta
-			key := r.MakeKey(prefix)
-
-			if options.Tenant == "" {
-				if strings.HasSuffix(key, "//") {
-					key = key[:len(key)-1]
-				}
-			}
-
-			ctx = apiutils.SetVar(ctx, "ObjKind", "monitoring.StatsPolicy")
-			err := kvs.ListFiltered(ctx, key, &into, *options)
-			if err != nil {
-				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
-				return nil, err
-			}
-			return into, nil
-		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
-			r := i.(monitoring.StatsPolicyList)
-			r.APIVersion = ver
-			for i := range r.Items {
-				r.Items[i].SelfLink = r.Items[i].MakeURI("configs", ver, prefix)
-			}
-			return r, nil
-		}).WithGetRuntimeObject(func(i interface{}) runtime.Object {
-			r := i.(monitoring.StatsPolicyList)
 			return &r
 		}),
 		"monitoring.TechSupportRequestList": apisrvpkg.NewMessage("monitoring.TechSupportRequestList").WithKvListFunc(func(ctx context.Context, kvs kvstore.Interface, options *api.ListWatchOptions, prefix string) (interface{}, error) {
@@ -569,11 +530,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsMonitoringV1.fnAutoAddStatsPolicy = srv.AddMethod("AutoAddStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoAddStatsPolicy")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
-		}).HandleInvocation
-
 		s.endpointsMonitoringV1.fnAutoAddTechSupportRequest = srv.AddMethod("AutoAddTechSupportRequest",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoAddTechSupportRequest")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TechSupportRequest)
@@ -658,11 +614,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 				return "", fmt.Errorf("wrong type")
 			}
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
-		}).HandleInvocation
-
-		s.endpointsMonitoringV1.fnAutoDeleteStatsPolicy = srv.AddMethod("AutoDeleteStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoDeleteStatsPolicy")).WithOper(apiintf.DeleteOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			return "", fmt.Errorf("not rest endpoint")
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoDeleteTechSupportRequest = srv.AddMethod("AutoDeleteTechSupportRequest",
@@ -755,15 +706,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsMonitoringV1.fnAutoGetStatsPolicy = srv.AddMethod("AutoGetStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoGetStatsPolicy")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(monitoring.StatsPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
-		}).HandleInvocation
-
 		s.endpointsMonitoringV1.fnAutoGetTechSupportRequest = srv.AddMethod("AutoGetTechSupportRequest",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoGetTechSupportRequest")).WithOper(apiintf.GetOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(monitoring.TechSupportRequest)
@@ -854,15 +796,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsMonitoringV1.fnAutoListStatsPolicy = srv.AddMethod("AutoListStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.StatsPolicyList"], "monitoring", "AutoListStatsPolicy")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(api.ListWatchOptions)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
-		}).HandleInvocation
-
 		s.endpointsMonitoringV1.fnAutoListTechSupportRequest = srv.AddMethod("AutoListTechSupportRequest",
 			apisrvpkg.NewMethod(srv, pkgMessages["api.ListWatchOptions"], pkgMessages["monitoring.TechSupportRequestList"], "monitoring", "AutoListTechSupportRequest")).WithOper(apiintf.ListOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(api.ListWatchOptions)
@@ -949,15 +882,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/MirrorSession/", in.Name), nil
 		}).HandleInvocation
 
-		s.endpointsMonitoringV1.fnAutoUpdateStatsPolicy = srv.AddMethod("AutoUpdateStatsPolicy",
-			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.StatsPolicy"], pkgMessages["monitoring.StatsPolicy"], "monitoring", "AutoUpdateStatsPolicy")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
-			in, ok := i.(monitoring.StatsPolicy)
-			if !ok {
-				return "", fmt.Errorf("wrong type")
-			}
-			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "monitoring/v1/tenant/", in.Tenant, "/statsPolicy/", in.Name), nil
-		}).HandleInvocation
-
 		s.endpointsMonitoringV1.fnAutoUpdateTechSupportRequest = srv.AddMethod("AutoUpdateTechSupportRequest",
 			apisrvpkg.NewMethod(srv, pkgMessages["monitoring.TechSupportRequest"], pkgMessages["monitoring.TechSupportRequest"], "monitoring", "AutoUpdateTechSupportRequest")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -982,8 +906,6 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		}).HandleInvocation
 
 		s.endpointsMonitoringV1.fnAutoWatchEventPolicy = pkgMessages["monitoring.EventPolicy"].WatchFromKv
-
-		s.endpointsMonitoringV1.fnAutoWatchStatsPolicy = pkgMessages["monitoring.StatsPolicy"].WatchFromKv
 
 		s.endpointsMonitoringV1.fnAutoWatchFwlogPolicy = pkgMessages["monitoring.FwlogPolicy"].WatchFromKv
 
@@ -1010,7 +932,7 @@ func (s *smonitoringSvc_monitoringBackend) regSvcsFunc(ctx context.Context, logg
 		endpoints := monitoring.MakeMonitoringV1ServerEndpoints(s.endpointsMonitoringV1, logger)
 		server := monitoring.MakeGRPCServerMonitoringV1(ctx, endpoints, logger)
 		monitoring.RegisterMonitoringV1Server(grpcserver.GrpcServer, server)
-		svcObjs := []string{"EventPolicy", "StatsPolicy", "FwlogPolicy", "FlowExportPolicy", "Alert", "AlertPolicy", "AlertDestination", "MirrorSession", "TroubleshootingSession", "TechSupportRequest", "ArchiveRequest"}
+		svcObjs := []string{"EventPolicy", "FwlogPolicy", "FlowExportPolicy", "Alert", "AlertPolicy", "AlertDestination", "MirrorSession", "TroubleshootingSession", "TechSupportRequest", "ArchiveRequest"}
 		fieldhooks.RegisterImmutableFieldsServiceHooks("monitoring", "MonitoringV1", svcObjs)
 	}
 }
@@ -1132,106 +1054,6 @@ func (s *smonitoringSvc_monitoringBackend) regWatchersFunc(ctx context.Context, 
 					}
 				case <-nctx.Done():
 					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "monitoring.EventPolicy")
-					return wstream.Context().Err()
-				}
-			}
-		})
-
-		pkgMessages["monitoring.StatsPolicy"].WithKvWatchFunc(func(l log.Logger, options *api.ListWatchOptions, kvs kvstore.Interface, stream interface{}, txfn func(from, to string, i interface{}) (interface{}, error), version, svcprefix string) error {
-			o := monitoring.StatsPolicy{}
-			key := o.MakeKey(svcprefix)
-			if strings.HasSuffix(key, "//") {
-				key = strings.TrimSuffix(key, "/")
-			}
-			wstream := stream.(monitoring.MonitoringV1_AutoWatchStatsPolicyServer)
-			nctx, cancel := context.WithCancel(wstream.Context())
-			defer cancel()
-			id := fmt.Sprintf("%s-%x", ctxutils.GetPeerID(nctx), &key)
-
-			nctx = ctxutils.SetContextID(nctx, id)
-			if kvs == nil {
-				return fmt.Errorf("Nil KVS")
-			}
-			nctx = apiutils.SetVar(nctx, "ObjKind", "monitoring.StatsPolicy")
-			l.InfoLog("msg", "KVWatcher starting watch", "WatcherID", id, "object", "monitoring.StatsPolicy")
-			watcher, err := kvs.WatchFiltered(nctx, key, *options)
-			if err != nil {
-				l.ErrorLog("msg", "error starting Watch on KV", "err", err, "WatcherID", id, "bbject", "monitoring.StatsPolicy")
-				return err
-			}
-			timer := time.NewTimer(apiserver.DefaultWatchHoldInterval)
-			if !timer.Stop() {
-				<-timer.C
-			}
-			running := false
-			events := &monitoring.AutoMsgStatsPolicyWatchHelper{}
-			sendToStream := func() error {
-				l.DebugLog("msg", "writing to stream", "len", len(events.Events))
-				if err := wstream.Send(events); err != nil {
-					l.ErrorLog("msg", "Stream send error'ed for Order", "err", err, "WatcherID", id, "bbject", "monitoring.StatsPolicy")
-					return err
-				}
-				events = &monitoring.AutoMsgStatsPolicyWatchHelper{}
-				return nil
-			}
-			defer l.InfoLog("msg", "exiting watcher", "service", "monitoring.StatsPolicy")
-			for {
-				select {
-				case ev, ok := <-watcher.EventChan():
-					if !ok {
-						l.ErrorLog("msg", "Channel closed for Watcher", "WatcherID", id, "bbject", "monitoring.StatsPolicy")
-						return nil
-					}
-					evin, ok := ev.Object.(*monitoring.StatsPolicy)
-					if !ok {
-						status, ok := ev.Object.(*api.Status)
-						if !ok {
-							return errors.New("unknown error")
-						}
-						return fmt.Errorf("%v:(%s) %s", status.Code, status.Result, status.Message)
-					}
-					// XXX-TODO(sanjayt): Avoid a copy and update selflink at enqueue.
-					cin, err := evin.Clone(nil)
-					if err != nil {
-						return fmt.Errorf("unable to clone object (%s)", err)
-					}
-					in := cin.(*monitoring.StatsPolicy)
-					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "monitoring")
-
-					strEvent := &monitoring.AutoMsgStatsPolicyWatchHelper_WatchEvent{
-						Type:   string(ev.Type),
-						Object: in,
-					}
-					l.DebugLog("msg", "received StatsPolicy watch event from KV", "type", ev.Type)
-					if version != in.APIVersion {
-						i, err := txfn(in.APIVersion, version, in)
-						if err != nil {
-							l.ErrorLog("msg", "Failed to transform message", "type", "StatsPolicy", "fromver", in.APIVersion, "tover", version, "WatcherID", id, "bbject", "monitoring.StatsPolicy")
-							break
-						}
-						strEvent.Object = i.(*monitoring.StatsPolicy)
-					}
-					events.Events = append(events.Events, strEvent)
-					if !running {
-						running = true
-						timer.Reset(apiserver.DefaultWatchHoldInterval)
-					}
-					if len(events.Events) >= apiserver.DefaultWatchBatchSize {
-						if err = sendToStream(); err != nil {
-							return err
-						}
-						if !timer.Stop() {
-							<-timer.C
-						}
-						timer.Reset(apiserver.DefaultWatchHoldInterval)
-					}
-				case <-timer.C:
-					running = false
-					if err = sendToStream(); err != nil {
-						return err
-					}
-				case <-nctx.Done():
-					l.DebugLog("msg", "Context cancelled for Watcher", "WatcherID", id, "bbject", "monitoring.StatsPolicy")
 					return wstream.Context().Err()
 				}
 			}
@@ -2220,14 +2042,6 @@ func (e *eMonitoringV1Endpoints) AutoAddMirrorSession(ctx context.Context, t mon
 	return monitoring.MirrorSession{}, err
 
 }
-func (e *eMonitoringV1Endpoints) AutoAddStatsPolicy(ctx context.Context, t monitoring.StatsPolicy) (monitoring.StatsPolicy, error) {
-	r, err := e.fnAutoAddStatsPolicy(ctx, t)
-	if err == nil {
-		return r.(monitoring.StatsPolicy), err
-	}
-	return monitoring.StatsPolicy{}, err
-
-}
 func (e *eMonitoringV1Endpoints) AutoAddTechSupportRequest(ctx context.Context, t monitoring.TechSupportRequest) (monitoring.TechSupportRequest, error) {
 	r, err := e.fnAutoAddTechSupportRequest(ctx, t)
 	if err == nil {
@@ -2306,14 +2120,6 @@ func (e *eMonitoringV1Endpoints) AutoDeleteMirrorSession(ctx context.Context, t 
 		return r.(monitoring.MirrorSession), err
 	}
 	return monitoring.MirrorSession{}, err
-
-}
-func (e *eMonitoringV1Endpoints) AutoDeleteStatsPolicy(ctx context.Context, t monitoring.StatsPolicy) (monitoring.StatsPolicy, error) {
-	r, err := e.fnAutoDeleteStatsPolicy(ctx, t)
-	if err == nil {
-		return r.(monitoring.StatsPolicy), err
-	}
-	return monitoring.StatsPolicy{}, err
 
 }
 func (e *eMonitoringV1Endpoints) AutoDeleteTechSupportRequest(ctx context.Context, t monitoring.TechSupportRequest) (monitoring.TechSupportRequest, error) {
@@ -2396,14 +2202,6 @@ func (e *eMonitoringV1Endpoints) AutoGetMirrorSession(ctx context.Context, t mon
 	return monitoring.MirrorSession{}, err
 
 }
-func (e *eMonitoringV1Endpoints) AutoGetStatsPolicy(ctx context.Context, t monitoring.StatsPolicy) (monitoring.StatsPolicy, error) {
-	r, err := e.fnAutoGetStatsPolicy(ctx, t)
-	if err == nil {
-		return r.(monitoring.StatsPolicy), err
-	}
-	return monitoring.StatsPolicy{}, err
-
-}
 func (e *eMonitoringV1Endpoints) AutoGetTechSupportRequest(ctx context.Context, t monitoring.TechSupportRequest) (monitoring.TechSupportRequest, error) {
 	r, err := e.fnAutoGetTechSupportRequest(ctx, t)
 	if err == nil {
@@ -2482,14 +2280,6 @@ func (e *eMonitoringV1Endpoints) AutoListMirrorSession(ctx context.Context, t ap
 		return r.(monitoring.MirrorSessionList), err
 	}
 	return monitoring.MirrorSessionList{}, err
-
-}
-func (e *eMonitoringV1Endpoints) AutoListStatsPolicy(ctx context.Context, t api.ListWatchOptions) (monitoring.StatsPolicyList, error) {
-	r, err := e.fnAutoListStatsPolicy(ctx, t)
-	if err == nil {
-		return r.(monitoring.StatsPolicyList), err
-	}
-	return monitoring.StatsPolicyList{}, err
 
 }
 func (e *eMonitoringV1Endpoints) AutoListTechSupportRequest(ctx context.Context, t api.ListWatchOptions) (monitoring.TechSupportRequestList, error) {
@@ -2572,14 +2362,6 @@ func (e *eMonitoringV1Endpoints) AutoUpdateMirrorSession(ctx context.Context, t 
 	return monitoring.MirrorSession{}, err
 
 }
-func (e *eMonitoringV1Endpoints) AutoUpdateStatsPolicy(ctx context.Context, t monitoring.StatsPolicy) (monitoring.StatsPolicy, error) {
-	r, err := e.fnAutoUpdateStatsPolicy(ctx, t)
-	if err == nil {
-		return r.(monitoring.StatsPolicy), err
-	}
-	return monitoring.StatsPolicy{}, err
-
-}
 func (e *eMonitoringV1Endpoints) AutoUpdateTechSupportRequest(ctx context.Context, t monitoring.TechSupportRequest) (monitoring.TechSupportRequest, error) {
 	r, err := e.fnAutoUpdateTechSupportRequest(ctx, t)
 	if err == nil {
@@ -2607,9 +2389,6 @@ func (e *eMonitoringV1Endpoints) Cancel(ctx context.Context, t monitoring.Cancel
 
 func (e *eMonitoringV1Endpoints) AutoWatchEventPolicy(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchEventPolicyServer) error {
 	return e.fnAutoWatchEventPolicy(in, stream, "monitoring")
-}
-func (e *eMonitoringV1Endpoints) AutoWatchStatsPolicy(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchStatsPolicyServer) error {
-	return e.fnAutoWatchStatsPolicy(in, stream, "monitoring")
 }
 func (e *eMonitoringV1Endpoints) AutoWatchFwlogPolicy(in *api.ListWatchOptions, stream monitoring.MonitoringV1_AutoWatchFwlogPolicyServer) error {
 	return e.fnAutoWatchFwlogPolicy(in, stream, "monitoring")

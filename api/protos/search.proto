@@ -54,7 +54,6 @@ import "sgpolicy.proto";
 //        AlertPolicy
 //        Event
 //        EventPolicy
-//        StatsPolicy
 //        FlowExportPolicy
 //        FwlogPolicy
 //        MirrorSession

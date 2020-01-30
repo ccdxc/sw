@@ -17,10 +17,6 @@ import "mirror.proto";
 //-------------------------------------------------------------------------------
 // policy name         |  intended for        |     description                 |
 //-------------------------------------------------------------------------------
-// stats               |  sys admins          |    for all stats other than     |
-//                     |                      |    fwlog/netflow.               |
-//                     |                      |    includes retention,compaction|
-//-------------------------------------------------------------------------------
 // fwlog               |  security admins     |    firewall log policy          |
 //                     |                      |    includes retention,          |
 //                     |                      |    export parameters            |
@@ -31,40 +27,6 @@ import "mirror.proto";
 //                     |                      |    export parameters            |
 //-------------------------------------------------------------------------------
 //
-
-//  stats policy
-message StatsPolicyStatus {
-
-}
-
-// compaction method will be selected by Venice based on the mesaurement/table
-// collection interval will be selected by Venice based on workloads
-message StatsPolicySpec {
-     // RetentionTime defines for how long to keep the stats data before it is deleted
-     // The value is specified as a string format to be hours, days, or months etc.
-     // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
-     // Default is 48h.
-     string RetentionTime = 1 [(gogoproto.jsontag) = "retention-time,omitempty", (venice.check)="Duration(0,0)", (venice.default)="48h"];
-
-     // DownSampleRetentionTime defines for how long to keep the down sampled data before it is deleted
-     // The value is specified as a string format to be hours, days, or months etc.
-     // e.g. '24hrs', '72hours', '4days', '6d', '2months', '4mo', '1yr'
-     // Default is 168h
-     string DownSampleRetentionTime = 2 [(gogoproto.jsontag) = "downsample-retention-time,omitempty", (venice.check)="Duration(0,0)", (venice.default)="168h"];
-}
-
-message StatsPolicy {
-    option (venice.objectPrefix) = {Collection: "statsPolicy", Path: "/{O.Tenant}"};
-    api.TypeMeta T =1 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = ",inline"];
-    api.ObjectMeta O =2 [(gogoproto.embed) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "meta,omitempty"];
-
-    StatsPolicySpec Spec = 3 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "spec,omitempty"];
-
-    // Status contains the current state of the policy.
-    StatsPolicyStatus Status = 4 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "status,omitempty"];
-}
-
-
 
 //=========================================================================================
 //  firewall log policy

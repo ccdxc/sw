@@ -123,8 +123,3 @@ func (s *RestServer) FwlogPolicyPutHandler(r *http.Request) (interface{}, error)
 	return &res, err
 
 }
-
-// AddStatsPolicyAPIRoutes adds StatsPolicy
-func (srv *RestServer) AddStatsPolicyAPIRoutes(r *mux.Router) {
-
-}

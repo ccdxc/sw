@@ -105,16 +105,6 @@ func (m *MirrorSessionList) MakeURI(ver, prefix string) string {
 }
 
 // MakeKey generates a KV store key for the object
-func (m *StatsPolicyList) MakeKey(prefix string) string {
-	obj := StatsPolicy{}
-	return obj.MakeKey(prefix)
-}
-
-func (m *StatsPolicyList) MakeURI(ver, prefix string) string {
-	return fmt.Sprint("/", globals.ConfigURIPrefix, "/", prefix, "/", ver)
-}
-
-// MakeKey generates a KV store key for the object
 func (m *TechSupportRequestList) MakeKey(prefix string) string {
 	obj := TechSupportRequest{}
 	return obj.MakeKey(prefix)
@@ -179,12 +169,6 @@ func (m *AutoMsgFwlogPolicyWatchHelper) MakeKey(prefix string) string {
 // MakeKey generates a KV store key for the object
 func (m *AutoMsgMirrorSessionWatchHelper) MakeKey(prefix string) string {
 	obj := MirrorSession{}
-	return obj.MakeKey(prefix)
-}
-
-// MakeKey generates a KV store key for the object
-func (m *AutoMsgStatsPolicyWatchHelper) MakeKey(prefix string) string {
-	obj := StatsPolicy{}
 	return obj.MakeKey(prefix)
 }
 
@@ -621,48 +605,6 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Defaults(ver string) bool {
 }
 
 // Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgStatsPolicyWatchHelper) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgStatsPolicyWatchHelper
-	var ok bool
-	if into == nil {
-		out = &AutoMsgStatsPolicyWatchHelper{}
-	} else {
-		out, ok = into.(*AutoMsgStatsPolicyWatchHelper)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*AutoMsgStatsPolicyWatchHelper))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgStatsPolicyWatchHelper) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Clone(into interface{}) (interface{}, error) {
-	var out *AutoMsgStatsPolicyWatchHelper_WatchEvent
-	var ok bool
-	if into == nil {
-		out = &AutoMsgStatsPolicyWatchHelper_WatchEvent{}
-	} else {
-		out, ok = into.(*AutoMsgStatsPolicyWatchHelper_WatchEvent)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*AutoMsgStatsPolicyWatchHelper_WatchEvent))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
 func (m *AutoMsgTechSupportRequestWatchHelper) Clone(into interface{}) (interface{}, error) {
 	var out *AutoMsgTechSupportRequestWatchHelper
 	var ok bool
@@ -827,27 +769,6 @@ func (m *MirrorSessionList) Clone(into interface{}) (interface{}, error) {
 
 // Default sets up the defaults for the object
 func (m *MirrorSessionList) Defaults(ver string) bool {
-	return false
-}
-
-// Clone clones the object into into or creates one of into is nil
-func (m *StatsPolicyList) Clone(into interface{}) (interface{}, error) {
-	var out *StatsPolicyList
-	var ok bool
-	if into == nil {
-		out = &StatsPolicyList{}
-	} else {
-		out, ok = into.(*StatsPolicyList)
-		if !ok {
-			return nil, fmt.Errorf("mismatched object types")
-		}
-	}
-	*out = *(ref.DeepCopy(m).(*StatsPolicyList))
-	return out, nil
-}
-
-// Default sets up the defaults for the object
-func (m *StatsPolicyList) Defaults(ver string) bool {
 	return false
 }
 
@@ -1533,66 +1454,6 @@ func (m *AutoMsgMirrorSessionWatchHelper_WatchEvent) Normalize() {
 
 }
 
-func (m *AutoMsgStatsPolicyWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *AutoMsgStatsPolicyWatchHelper) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	for k, v := range m.Events {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sEvents[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
-func (m *AutoMsgStatsPolicyWatchHelper) Normalize() {
-
-	for k, v := range m.Events {
-		if v != nil {
-			v.Normalize()
-			m.Events[k] = v
-		}
-	}
-
-}
-
-func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-
-	if m.Object != nil {
-		{
-			dlmtr := "."
-			if path == "" {
-				dlmtr = ""
-			}
-			npath := path + dlmtr + "Object"
-			if errs := m.Object.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-				ret = append(ret, errs...)
-			}
-		}
-	}
-	return ret
-}
-
-func (m *AutoMsgStatsPolicyWatchHelper_WatchEvent) Normalize() {
-
-	if m.Object != nil {
-		m.Object.Normalize()
-	}
-
-}
-
 func (m *AutoMsgTechSupportRequestWatchHelper) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
 
 }
@@ -1823,36 +1684,6 @@ func (m *MirrorSessionList) Validate(ver, path string, ignoreStatus bool, ignore
 }
 
 func (m *MirrorSessionList) Normalize() {
-
-	for k, v := range m.Items {
-		if v != nil {
-			v.Normalize()
-			m.Items[k] = v
-		}
-	}
-
-}
-
-func (m *StatsPolicyList) References(tenant string, path string, resp map[string]apiintf.ReferenceObj) {
-
-}
-
-func (m *StatsPolicyList) Validate(ver, path string, ignoreStatus bool, ignoreSpec bool) []error {
-	var ret []error
-	for k, v := range m.Items {
-		dlmtr := "."
-		if path == "" {
-			dlmtr = ""
-		}
-		npath := fmt.Sprintf("%s%sItems[%v]", path, dlmtr, k)
-		if errs := v.Validate(ver, npath, ignoreStatus, ignoreSpec); errs != nil {
-			ret = append(ret, errs...)
-		}
-	}
-	return ret
-}
-
-func (m *StatsPolicyList) Normalize() {
 
 	for k, v := range m.Items {
 		if v != nil {

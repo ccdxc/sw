@@ -2786,133 +2786,6 @@ func request_MonitoringV1_AutoGetMirrorSession_1(ctx context.Context, marshaler 
 }
 
 var (
-	filter_MonitoringV1_AutoGetStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1, "Name": 2}, Base: []int{1, 1, 1, 2, 0, 0}, Check: []int{0, 1, 2, 2, 3, 4}}
-)
-
-func request_MonitoringV1_AutoGetStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &StatsPolicy{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetStatsPolicy_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoGetStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
-	filter_MonitoringV1_AutoGetStatsPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_MonitoringV1_AutoGetStatsPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &StatsPolicy{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoGetStatsPolicy_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoGetStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_MonitoringV1_AutoGetTechSupportRequest_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Name": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
 )
 
@@ -3858,101 +3731,6 @@ func request_MonitoringV1_AutoListMirrorSession_1(ctx context.Context, marshaler
 }
 
 var (
-	filter_MonitoringV1_AutoListStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_MonitoringV1_AutoListStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListStatsPolicy_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoListStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
-	filter_MonitoringV1_AutoListStatsPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_MonitoringV1_AutoListStatsPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoListStatsPolicy_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.AutoListStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-var (
 	filter_MonitoringV1_AutoListTechSupportRequest_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
@@ -4857,117 +4635,6 @@ func request_MonitoringV1_AutoUpdateMirrorSession_1(ctx context.Context, marshal
 	ctx = runtime.PopulateContextKV(ctx, kvMap)
 
 	msg, err := client.AutoUpdateMirrorSession(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-func request_MonitoringV1_AutoUpdateStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &StatsPolicy{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	msg, err := client.AutoUpdateStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
-	return msg, smetadata, err
-
-}
-
-func request_MonitoringV1_AutoUpdateStatsPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	protoReq := &StatsPolicy{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Name"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Name")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Name", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	msg, err := client.AutoUpdateStatsPolicy(ctx, protoReq, grpc.Header(&smetadata.HeaderMD), grpc.Trailer(&smetadata.TrailerMD))
 	return msg, smetadata, err
 
 }
@@ -5959,117 +5626,6 @@ func request_MonitoringV1_AutoWatchMirrorSession_1(ctx context.Context, marshale
 	}
 
 	stream, err := client.AutoWatchMirrorSession(ctx, protoReq)
-	if err != nil {
-		return nil, smetadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, smetadata, err
-	}
-	smetadata.HeaderMD = header
-	return stream, smetadata, nil
-
-}
-
-var (
-	filter_MonitoringV1_AutoWatchStatsPolicy_0 = &utilities.DoubleArray{Encoding: map[string]int{"O": 0, "Tenant": 1}, Base: []int{1, 1, 1, 0}, Check: []int{0, 1, 2, 3}}
-)
-
-func request_MonitoringV1_AutoWatchStatsPolicy_0(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchStatsPolicyClient, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	var (
-		val   string
-		ok    bool
-		err   error
-		_                       = err
-		kvMap map[string]string = make(map[string]string)
-	)
-
-	val, ok = pathParams["O.Tenant"]
-	if !ok {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "missing parameter %s", "O.Tenant")
-	}
-
-	err = runtime.PopulateFieldFromPath(protoReq, "O.Tenant", val)
-
-	if err != nil {
-		return nil, smetadata, err
-	}
-
-	ctx = runtime.PopulateContextKV(ctx, kvMap)
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchStatsPolicy_0); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.AutoWatchStatsPolicy(ctx, protoReq)
-	if err != nil {
-		return nil, smetadata, err
-	}
-	header, err := stream.Header()
-	if err != nil {
-		return nil, smetadata, err
-	}
-	smetadata.HeaderMD = header
-	return stream, smetadata, nil
-
-}
-
-var (
-	filter_MonitoringV1_AutoWatchStatsPolicy_1 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
-func request_MonitoringV1_AutoWatchStatsPolicy_1(ctx context.Context, marshaler runtime.Marshaler, client MonitoringV1Client, req *http.Request, pathParams map[string]string) (MonitoringV1_AutoWatchStatsPolicyClient, runtime.ServerMetadata, error) {
-	protoReq := &api.ListWatchOptions{}
-	var smetadata runtime.ServerMetadata
-
-	ver := req.Header.Get("Grpc-Metadata-Req-Version")
-	if ver == "" {
-		ver = "all"
-	}
-	if req.ContentLength != 0 {
-		var buf bytes.Buffer
-		tee := io.TeeReader(req.Body, &buf)
-		if err := marshaler.NewDecoder(tee).Decode(protoReq); err != nil {
-			return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-		}
-		changed := protoReq.Defaults(ver)
-		if changed {
-			if err := marshaler.NewDecoder(&buf).Decode(protoReq); err != nil {
-				return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-			}
-		}
-	} else {
-		protoReq.Defaults(ver)
-	}
-
-	if err := runtime.PopulateQueryParameters(protoReq, req.URL.Query(), filter_MonitoringV1_AutoWatchStatsPolicy_1); err != nil {
-		return nil, smetadata, grpc.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	stream, err := client.AutoWatchStatsPolicy(ctx, protoReq)
 	if err != nil {
 		return nil, smetadata, err
 	}
@@ -7674,62 +7230,6 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
-	mux.Handle("GET", pattern_MonitoringV1_AutoGetStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoGetStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoGetStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_MonitoringV1_AutoGetStatsPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoGetStatsPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoGetStatsPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("GET", pattern_MonitoringV1_AutoGetTechSupportRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -8262,62 +7762,6 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
-	mux.Handle("GET", pattern_MonitoringV1_AutoListStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoListStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoListStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("GET", pattern_MonitoringV1_AutoListStatsPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoListStatsPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoListStatsPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
 	mux.Handle("GET", pattern_MonitoringV1_AutoListTechSupportRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -8791,62 +8235,6 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 		}
 
 		forward_MonitoringV1_AutoUpdateMirrorSession_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("PUT", pattern_MonitoringV1_AutoUpdateStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoUpdateStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoUpdateStatsPolicy_0(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
-
-	})
-
-	mux.Handle("PUT", pattern_MonitoringV1_AutoUpdateStatsPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		resp, md, err := request_MonitoringV1_AutoUpdateStatsPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		forward_MonitoringV1_AutoUpdateStatsPolicy_1(ctx, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -9786,116 +9174,6 @@ func RegisterMonitoringV1HandlerWithClient(ctx context.Context, mux *runtime.Ser
 
 	})
 
-	mux.Handle("GET", pattern_MonitoringV1_AutoWatchStatsPolicy_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		ws := false
-		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
-		if websocket.IsWebSocketUpgrade(req) {
-			ws = true
-			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
-		}
-		resp, md, err := request_MonitoringV1_AutoWatchStatsPolicy_0(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		if ws {
-			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
-				return
-			}
-			conn := ic.(*websocket.Conn)
-			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-		} else {
-			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
-				return
-			}
-			if bs.(bool) {
-				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			} else {
-				forward_MonitoringV1_AutoWatchStatsPolicy_0(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			}
-		}
-
-	})
-
-	mux.Handle("GET", pattern_MonitoringV1_AutoWatchStatsPolicy_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, req)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-		}
-		ws := false
-		rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq, false)
-		if websocket.IsWebSocketUpgrade(req) {
-			ws = true
-			rctx = apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPReq, req)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwHTTPWriter, w)
-			apiutils.SetVar(rctx, apiutils.CtxKeyAPIGwWebSocketWatch, true)
-		}
-		resp, md, err := request_MonitoringV1_AutoWatchStatsPolicy_1(rctx, inboundMarshaler, client, req, pathParams)
-		ctx = runtime.NewServerMetadataContext(ctx, md)
-		if err != nil {
-			runtime.HTTPError(ctx, outboundMarshaler, w, req, err)
-			return
-		}
-
-		if ws {
-			ic, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwWebSocketConn)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering we socket"))
-				return
-			}
-			conn := ic.(*websocket.Conn)
-			runtime.FowardResponseStreamToWebSocket(ctx, outboundMarshaler, w, req, conn, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-		} else {
-			bs, ok := apiutils.GetVar(rctx, apiutils.CtxKeyAPIGwBinStreamReq)
-			if !ok {
-				runtime.HTTPError(ctx, outboundMarshaler, w, req, errors.New("error recovering binary stream information"))
-				return
-			}
-			if bs.(bool) {
-				runtime.ForwardBinaryResponseStream(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			} else {
-				forward_MonitoringV1_AutoWatchStatsPolicy_1(ctx, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
-			}
-		}
-
-	})
-
 	mux.Handle("GET", pattern_MonitoringV1_AutoWatchTechSupportRequest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -10111,10 +9389,6 @@ var (
 
 	pattern_MonitoringV1_AutoGetMirrorSession_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"MirrorSession", "O.Name"}, ""))
 
-	pattern_MonitoringV1_AutoGetStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "statsPolicy", "O.Name"}, ""))
-
-	pattern_MonitoringV1_AutoGetStatsPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"statsPolicy", "O.Name"}, ""))
-
 	pattern_MonitoringV1_AutoGetTechSupportRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"techsupport", "O.Name"}, ""))
 
 	pattern_MonitoringV1_AutoGetTroubleshootingSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "TroubleshootingSession", "O.Name"}, ""))
@@ -10153,10 +9427,6 @@ var (
 
 	pattern_MonitoringV1_AutoListMirrorSession_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"MirrorSession"}, ""))
 
-	pattern_MonitoringV1_AutoListStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "statsPolicy"}, ""))
-
-	pattern_MonitoringV1_AutoListStatsPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"statsPolicy"}, ""))
-
 	pattern_MonitoringV1_AutoListTechSupportRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"techsupport"}, ""))
 
 	pattern_MonitoringV1_AutoListTroubleshootingSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2}, []string{"tenant", "O.Tenant", "TroubleshootingSession"}, ""))
@@ -10190,10 +9460,6 @@ var (
 	pattern_MonitoringV1_AutoUpdateMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "MirrorSession", "O.Name"}, ""))
 
 	pattern_MonitoringV1_AutoUpdateMirrorSession_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"MirrorSession", "O.Name"}, ""))
-
-	pattern_MonitoringV1_AutoUpdateStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "statsPolicy", "O.Name"}, ""))
-
-	pattern_MonitoringV1_AutoUpdateStatsPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"statsPolicy", "O.Name"}, ""))
 
 	pattern_MonitoringV1_AutoUpdateTroubleshootingSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"tenant", "O.Tenant", "TroubleshootingSession", "O.Name"}, ""))
 
@@ -10230,10 +9496,6 @@ var (
 	pattern_MonitoringV1_AutoWatchMirrorSession_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "MirrorSession"}, ""))
 
 	pattern_MonitoringV1_AutoWatchMirrorSession_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "MirrorSession"}, ""))
-
-	pattern_MonitoringV1_AutoWatchStatsPolicy_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"watch", "tenant", "O.Tenant", "statsPolicy"}, ""))
-
-	pattern_MonitoringV1_AutoWatchStatsPolicy_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "statsPolicy"}, ""))
 
 	pattern_MonitoringV1_AutoWatchTechSupportRequest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"watch", "techsupport"}, ""))
 
@@ -10343,10 +9605,6 @@ var (
 
 	forward_MonitoringV1_AutoGetMirrorSession_1 = runtime.ForwardResponseMessage
 
-	forward_MonitoringV1_AutoGetStatsPolicy_0 = runtime.ForwardResponseMessage
-
-	forward_MonitoringV1_AutoGetStatsPolicy_1 = runtime.ForwardResponseMessage
-
 	forward_MonitoringV1_AutoGetTechSupportRequest_0 = runtime.ForwardResponseMessage
 
 	forward_MonitoringV1_AutoGetTroubleshootingSession_0 = runtime.ForwardResponseMessage
@@ -10385,10 +9643,6 @@ var (
 
 	forward_MonitoringV1_AutoListMirrorSession_1 = runtime.ForwardResponseMessage
 
-	forward_MonitoringV1_AutoListStatsPolicy_0 = runtime.ForwardResponseMessage
-
-	forward_MonitoringV1_AutoListStatsPolicy_1 = runtime.ForwardResponseMessage
-
 	forward_MonitoringV1_AutoListTechSupportRequest_0 = runtime.ForwardResponseMessage
 
 	forward_MonitoringV1_AutoListTroubleshootingSession_0 = runtime.ForwardResponseMessage
@@ -10422,10 +9676,6 @@ var (
 	forward_MonitoringV1_AutoUpdateMirrorSession_0 = runtime.ForwardResponseMessage
 
 	forward_MonitoringV1_AutoUpdateMirrorSession_1 = runtime.ForwardResponseMessage
-
-	forward_MonitoringV1_AutoUpdateStatsPolicy_0 = runtime.ForwardResponseMessage
-
-	forward_MonitoringV1_AutoUpdateStatsPolicy_1 = runtime.ForwardResponseMessage
 
 	forward_MonitoringV1_AutoUpdateTroubleshootingSession_0 = runtime.ForwardResponseMessage
 
@@ -10462,10 +9712,6 @@ var (
 	forward_MonitoringV1_AutoWatchMirrorSession_0 = runtime.ForwardResponseStream
 
 	forward_MonitoringV1_AutoWatchMirrorSession_1 = runtime.ForwardResponseStream
-
-	forward_MonitoringV1_AutoWatchStatsPolicy_0 = runtime.ForwardResponseStream
-
-	forward_MonitoringV1_AutoWatchStatsPolicy_1 = runtime.ForwardResponseStream
 
 	forward_MonitoringV1_AutoWatchTechSupportRequest_0 = runtime.ForwardResponseStream
 

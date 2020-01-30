@@ -364,7 +364,6 @@
         "Version": "v1",
         "Messages": [
           "EventPolicy",
-          "StatsPolicy",
           "FwlogPolicy",
           "FlowExportPolicy",
           "Alert",
@@ -487,18 +486,6 @@
               "watch"
             ],
             "URI": "/configs/monitoring/v1/MirrorSession"
-          },
-          "StatsPolicy": {
-            "Scopes": [
-              "tenant"
-            ],
-            "RestMethods": [
-              "get",
-              "put",
-              "list",
-              "watch"
-            ],
-            "URI": "/configs/monitoring/v1/statsPolicy"
           },
           "TechSupportRequest": {
             "Scopes": [

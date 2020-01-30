@@ -91,35 +91,6 @@ func removeFwlogPolicyOper(obj interface{}) error {
 	return nil
 }
 
-// CreateStatsPolicyFlags specifies flags for StatsPolicy create operation
-var CreateStatsPolicyFlags = []gen.CliFlag{
-	{
-		ID:     "downsample-retention-time",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-	{
-		ID:     "retention-time",
-		Type:   "String",
-		Help:   "",
-		Skip:   false,
-		Insert: "",
-	},
-}
-
-func removeStatsPolicyOper(obj interface{}) error {
-	if v, ok := obj.(*monitoring.StatsPolicy); ok {
-		v.UUID = ""
-		v.ResourceVersion = ""
-		v.CreationTime = api.Timestamp{}
-		v.ModTime = api.Timestamp{}
-		v.Status = monitoring.StatsPolicyStatus{}
-	}
-	return nil
-}
-
 func init() {
 	cl := gen.GetInfo()
 
@@ -128,8 +99,5 @@ func init() {
 
 	cl.AddCliInfo("monitoring.FwlogPolicy", "create", CreateFwlogPolicyFlags)
 	cl.AddRemoveObjOperFunc("monitoring.FwlogPolicy", removeFwlogPolicyOper)
-
-	cl.AddCliInfo("monitoring.StatsPolicy", "create", CreateStatsPolicyFlags)
-	cl.AddRemoveObjOperFunc("monitoring.StatsPolicy", removeStatsPolicyOper)
 
 }

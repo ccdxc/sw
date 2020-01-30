@@ -76,9 +76,6 @@ func WithModuleWatcher(moduleWatcher module.Watcher) Option {
 const pkgName = "tpm"
 const maxRetry = 15
 
-// stats collection interval
-const statsCollectionInterval = "30s"
-
 var pmLog vLog.Logger
 
 // NewPolicyManager creates a policy manager instance
@@ -94,7 +91,7 @@ func NewPolicyManager(listenURL string, nsClient resolver.Interface, restURL str
 	}
 
 	go pm.HandleEvents()
-	server, err := rpcserver.NewRPCServer(listenURL, pm.policyDb, statsCollectionInterval, pm.diagSvc)
+	server, err := rpcserver.NewRPCServer(listenURL, pm.policyDb, pm.diagSvc)
 	if err != nil {
 		pmLog.Fatalf("failed to create rpc server, %s", err)
 	}
@@ -215,20 +212,8 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 	opts := api.ListWatchOptions{FieldChangeSelector: []string{"Spec"}}
 	selCases := []reflect.SelectCase{}
 
-	// stats
-	watcher, err := pm.apiClient.MonitoringV1().StatsPolicy().Watch(ctx, &opts)
-	if err != nil {
-		pmLog.Errorf("failed to watch stats policy, error: {%s}", err)
-		return err
-	}
-
-	watchList[len(selCases)] = "stats"
-	selCases = append(selCases, reflect.SelectCase{
-		Dir:  reflect.SelectRecv,
-		Chan: reflect.ValueOf(watcher.EventChan())})
-
 	// fwlog
-	watcher, err = pm.apiClient.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
+	watcher, err := pm.apiClient.MonitoringV1().FwlogPolicy().Watch(ctx, &opts)
 	if err != nil {
 		pmLog.Errorf("failed to watch fwlog policy, error: {%s}", err)
 		return err
@@ -284,9 +269,6 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 		pmLog.Infof("received event %#v", event)
 
 		switch polObj := event.Object.(type) {
-		case *telemetry.StatsPolicy:
-			pm.processStatsPolicy(event.Type, polObj)
-
 		case *telemetry.FlowExportPolicy:
 			if err := pm.processExportPolicy(event.Type, polObj); err != nil {
 				pmLog.Errorf("failed to process flow export policy, %v", err)
@@ -306,26 +288,6 @@ func (pm *PolicyManager) processEvents(parentCtx context.Context) error {
 			pmLog.Errorf("invalid event type received from {%s}, %+v", watchList[id], event)
 			return fmt.Errorf("invalid event type")
 		}
-	}
-}
-
-// process stats policy
-func (pm *PolicyManager) processStatsPolicy(eventType kvstore.WatchEventType, policy *telemetry.StatsPolicy) error {
-	pmLog.Infof("process stats policy event:{%s} {%#v} ", eventType, policy)
-
-	switch eventType {
-	case kvstore.Created:
-		return pm.policyDb.AddObject(policy)
-
-	case kvstore.Updated:
-		return pm.policyDb.UpdateObject(policy)
-
-	case kvstore.Deleted:
-		return pm.policyDb.DeleteObject(policy)
-
-	default:
-		pmLog.Errorf("invalid stats event, type %s policy %+v", eventType, policy)
-		return fmt.Errorf("invalid event")
 	}
 }
 
@@ -395,24 +357,9 @@ func (pm *PolicyManager) processTenants(ctx context.Context, eventType kvstore.W
 	return nil
 }
 
-// create/update database in Citadel
-func (pm *PolicyManager) updateDatabase(tenantName string, dbName string,
-	retentionTime string, downSampleRetention string) error {
-	pmLog.Infof("update db tenant: %s, db: %s, retention: %s, dretention: %s",
-		tenantName, dbName, retentionTime, downSampleRetention)
-	return nil
-}
-
-// delete database in Citadel
-func (pm *PolicyManager) deleteDatabase(tenantName string, dbName string) error {
-	pmLog.Infof("delete db tenant: %s, db: %s, retention: %s, dretention: %s",
-		tenantName, dbName)
-	return nil
-}
-
 // Debug function dumps all policy cache for debug
 func (pm *PolicyManager) Debug(r *http.Request) (interface{}, error) {
-	kind := []string{"StatsPolicy", "FwlogPolicy", "FlowExportPolicy"}
+	kind := []string{"FwlogPolicy", "FlowExportPolicy"}
 	dbgInfo := struct {
 		Policy  map[string]map[string]memdb.Object
 		Clients map[string]map[string]string

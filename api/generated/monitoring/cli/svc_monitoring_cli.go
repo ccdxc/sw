@@ -106,63 +106,6 @@ func restPutEventPolicy(hostname, token string, obj interface{}) error {
 
 }
 
-func restGetStatsPolicy(hostname, tenant, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*monitoring.StatsPolicy); ok {
-		nv, err := restcl.MonitoringV1().StatsPolicy().Get(loginCtx, &v.ObjectMeta)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-
-	if v, ok := obj.(*monitoring.StatsPolicyList); ok {
-		opts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: tenant}}
-		nv, err := restcl.MonitoringV1().StatsPolicy().List(loginCtx, &opts)
-		if err != nil {
-			return err
-		}
-		v.Items = nv
-	}
-	return nil
-
-}
-
-func restDeleteStatsPolicy(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("delete operation not supported for StatsPolicy object")
-}
-
-func restPostStatsPolicy(hostname, token string, obj interface{}) error {
-	return fmt.Errorf("create operation not supported for StatsPolicy object")
-}
-
-func restPutStatsPolicy(hostname, token string, obj interface{}) error {
-
-	restcl, err := apiclient.NewRestAPIClient(hostname)
-	if err != nil {
-		return fmt.Errorf("cannot create REST client")
-	}
-	defer restcl.Close()
-	loginCtx := loginctx.NewContextWithAuthzHeader(context.Background(), "Bearer "+token)
-
-	if v, ok := obj.(*monitoring.StatsPolicy); ok {
-		nv, err := restcl.MonitoringV1().StatsPolicy().Update(loginCtx, v)
-		if err != nil {
-			return err
-		}
-		*v = *nv
-	}
-	return nil
-
-}
-
 func restGetFwlogPolicy(hostname, tenant, token string, obj interface{}) error {
 
 	restcl, err := apiclient.NewRestAPIClient(hostname)
@@ -910,9 +853,6 @@ func init() {
 	cl.AddRestDeleteFunc("monitoring.EventPolicy", "v1", restDeleteEventPolicy)
 	cl.AddRestPutFunc("monitoring.EventPolicy", "v1", restPutEventPolicy)
 	cl.AddRestGetFunc("monitoring.EventPolicy", "v1", restGetEventPolicy)
-
-	cl.AddRestPutFunc("monitoring.StatsPolicy", "v1", restPutStatsPolicy)
-	cl.AddRestGetFunc("monitoring.StatsPolicy", "v1", restGetStatsPolicy)
 
 	cl.AddRestPostFunc("monitoring.FwlogPolicy", "v1", restPostFwlogPolicy)
 	cl.AddRestDeleteFunc("monitoring.FwlogPolicy", "v1", restDeleteFwlogPolicy)

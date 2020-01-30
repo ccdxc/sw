@@ -17,7 +17,7 @@ type lifMetricsXlate struct{}
 const maxRetry = 5
 
 // Agenturl exports the rest endpoint for netagent
-var Agenturl string = globals.Localhost + ":" + globals.AgentRESTPort
+var Agenturl = globals.Localhost + ":" + globals.AgentRESTPort
 
 // GetLifName converts lifId to lifname over rest call to netagent
 func GetLifName(lifID uint64) string {

@@ -27,18 +27,6 @@ type MonitoringV1EventPolicyInterface interface {
 	Allowed(oper apiintf.APIOperType) bool
 }
 
-// MonitoringV1StatsPolicyInterface exposes the CRUD methods for StatsPolicy
-type MonitoringV1StatsPolicyInterface interface {
-	Create(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
-	Update(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
-	UpdateStatus(ctx context.Context, in *StatsPolicy) (*StatsPolicy, error)
-	Get(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
-	Delete(ctx context.Context, objMeta *api.ObjectMeta) (*StatsPolicy, error)
-	List(ctx context.Context, options *api.ListWatchOptions) ([]*StatsPolicy, error)
-	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
-	Allowed(oper apiintf.APIOperType) bool
-}
-
 // MonitoringV1FwlogPolicyInterface exposes the CRUD methods for FwlogPolicy
 type MonitoringV1FwlogPolicyInterface interface {
 	Create(ctx context.Context, in *FwlogPolicy) (*FwlogPolicy, error)
@@ -151,7 +139,6 @@ type MonitoringV1ArchiveRequestInterface interface {
 // MonitoringV1Interface exposes objects with CRUD operations allowed by the service
 type MonitoringV1Interface interface {
 	EventPolicy() MonitoringV1EventPolicyInterface
-	StatsPolicy() MonitoringV1StatsPolicyInterface
 	FwlogPolicy() MonitoringV1FwlogPolicyInterface
 	FlowExportPolicy() MonitoringV1FlowExportPolicyInterface
 	Alert() MonitoringV1AlertInterface

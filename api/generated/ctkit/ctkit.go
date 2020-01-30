@@ -170,7 +170,6 @@ type Controller interface {
 	License() LicenseAPI                                 // return License API interface
 	Module() ModuleAPI                                   // return Module API interface
 	EventPolicy() EventPolicyAPI                         // return EventPolicy API interface
-	StatsPolicy() StatsPolicyAPI                         // return StatsPolicy API interface
 	FwlogPolicy() FwlogPolicyAPI                         // return FwlogPolicy API interface
 	FlowExportPolicy() FlowExportPolicyAPI               // return FlowExportPolicy API interface
 	Alert() AlertAPI                                     // return Alert API interface
@@ -474,9 +473,6 @@ func (ct *ctrlerCtx) FindObject(kind string, ometa *api.ObjectMeta) (runtime.Obj
 	case "EventPolicy":
 		obj := eventpolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
-	case "StatsPolicy":
-		obj := statspolicyAPI{}
-		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "FwlogPolicy":
 		obj := fwlogpolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
@@ -648,9 +644,6 @@ func (ct *ctrlerCtx) IsPending(kind string, ometa *api.ObjectMeta) (bool, error)
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "EventPolicy":
 		obj := eventpolicyAPI{}
-		key = obj.getFullKey(ometa.Tenant, ometa.Name)
-	case "StatsPolicy":
-		obj := statspolicyAPI{}
 		key = obj.getFullKey(ometa.Tenant, ometa.Name)
 	case "FwlogPolicy":
 		obj := fwlogpolicyAPI{}

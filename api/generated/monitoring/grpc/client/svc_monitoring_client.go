@@ -142,20 +142,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoAddMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddMirrorSession")(lAutoAddMirrorSessionEndpoint)
 	}
-	var lAutoAddStatsPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoAddStatsPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoAddStatsPolicy",
-			monitoring.EncodeGrpcReqStatsPolicy,
-			monitoring.DecodeGrpcRespStatsPolicy,
-			&monitoring.StatsPolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoAddStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoAddStatsPolicy")(lAutoAddStatsPolicyEndpoint)
-	}
 	var lAutoAddTechSupportRequestEndpoint endpoint.Endpoint
 	{
 		lAutoAddTechSupportRequestEndpoint = grpctransport.NewClient(
@@ -295,20 +281,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoDeleteMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteMirrorSession")(lAutoDeleteMirrorSessionEndpoint)
-	}
-	var lAutoDeleteStatsPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoDeleteStatsPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoDeleteStatsPolicy",
-			monitoring.EncodeGrpcReqStatsPolicy,
-			monitoring.DecodeGrpcRespStatsPolicy,
-			&monitoring.StatsPolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoDeleteStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoDeleteStatsPolicy")(lAutoDeleteStatsPolicyEndpoint)
 	}
 	var lAutoDeleteTechSupportRequestEndpoint endpoint.Endpoint
 	{
@@ -450,20 +422,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoGetMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetMirrorSession")(lAutoGetMirrorSessionEndpoint)
 	}
-	var lAutoGetStatsPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoGetStatsPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoGetStatsPolicy",
-			monitoring.EncodeGrpcReqStatsPolicy,
-			monitoring.DecodeGrpcRespStatsPolicy,
-			&monitoring.StatsPolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoGetStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoGetStatsPolicy")(lAutoGetStatsPolicyEndpoint)
-	}
 	var lAutoGetTechSupportRequestEndpoint endpoint.Endpoint
 	{
 		lAutoGetTechSupportRequestEndpoint = grpctransport.NewClient(
@@ -603,20 +561,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 			grpctransport.ClientBefore(dummyBefore),
 		).Endpoint()
 		lAutoListMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListMirrorSession")(lAutoListMirrorSessionEndpoint)
-	}
-	var lAutoListStatsPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoListStatsPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoListStatsPolicy",
-			monitoring.EncodeGrpcReqListWatchOptions,
-			monitoring.DecodeGrpcRespStatsPolicyList,
-			&monitoring.StatsPolicyList{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoListStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoListStatsPolicy")(lAutoListStatsPolicyEndpoint)
 	}
 	var lAutoListTechSupportRequestEndpoint endpoint.Endpoint
 	{
@@ -758,20 +702,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		).Endpoint()
 		lAutoUpdateMirrorSessionEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateMirrorSession")(lAutoUpdateMirrorSessionEndpoint)
 	}
-	var lAutoUpdateStatsPolicyEndpoint endpoint.Endpoint
-	{
-		lAutoUpdateStatsPolicyEndpoint = grpctransport.NewClient(
-			conn,
-			"monitoring.MonitoringV1",
-			"AutoUpdateStatsPolicy",
-			monitoring.EncodeGrpcReqStatsPolicy,
-			monitoring.DecodeGrpcRespStatsPolicy,
-			&monitoring.StatsPolicy{},
-			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
-			grpctransport.ClientBefore(dummyBefore),
-		).Endpoint()
-		lAutoUpdateStatsPolicyEndpoint = trace.ClientEndPoint("MonitoringV1:AutoUpdateStatsPolicy")(lAutoUpdateStatsPolicyEndpoint)
-	}
 	var lAutoUpdateTechSupportRequestEndpoint endpoint.Endpoint
 	{
 		lAutoUpdateTechSupportRequestEndpoint = grpctransport.NewClient(
@@ -825,7 +755,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoAddFlowExportPolicyEndpoint:          lAutoAddFlowExportPolicyEndpoint,
 		AutoAddFwlogPolicyEndpoint:               lAutoAddFwlogPolicyEndpoint,
 		AutoAddMirrorSessionEndpoint:             lAutoAddMirrorSessionEndpoint,
-		AutoAddStatsPolicyEndpoint:               lAutoAddStatsPolicyEndpoint,
 		AutoAddTechSupportRequestEndpoint:        lAutoAddTechSupportRequestEndpoint,
 		AutoAddTroubleshootingSessionEndpoint:    lAutoAddTroubleshootingSessionEndpoint,
 		AutoDeleteAlertEndpoint:                  lAutoDeleteAlertEndpoint,
@@ -836,7 +765,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoDeleteFlowExportPolicyEndpoint:       lAutoDeleteFlowExportPolicyEndpoint,
 		AutoDeleteFwlogPolicyEndpoint:            lAutoDeleteFwlogPolicyEndpoint,
 		AutoDeleteMirrorSessionEndpoint:          lAutoDeleteMirrorSessionEndpoint,
-		AutoDeleteStatsPolicyEndpoint:            lAutoDeleteStatsPolicyEndpoint,
 		AutoDeleteTechSupportRequestEndpoint:     lAutoDeleteTechSupportRequestEndpoint,
 		AutoDeleteTroubleshootingSessionEndpoint: lAutoDeleteTroubleshootingSessionEndpoint,
 		AutoGetAlertEndpoint:                     lAutoGetAlertEndpoint,
@@ -847,7 +775,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoGetFlowExportPolicyEndpoint:          lAutoGetFlowExportPolicyEndpoint,
 		AutoGetFwlogPolicyEndpoint:               lAutoGetFwlogPolicyEndpoint,
 		AutoGetMirrorSessionEndpoint:             lAutoGetMirrorSessionEndpoint,
-		AutoGetStatsPolicyEndpoint:               lAutoGetStatsPolicyEndpoint,
 		AutoGetTechSupportRequestEndpoint:        lAutoGetTechSupportRequestEndpoint,
 		AutoGetTroubleshootingSessionEndpoint:    lAutoGetTroubleshootingSessionEndpoint,
 		AutoListAlertEndpoint:                    lAutoListAlertEndpoint,
@@ -858,7 +785,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoListFlowExportPolicyEndpoint:         lAutoListFlowExportPolicyEndpoint,
 		AutoListFwlogPolicyEndpoint:              lAutoListFwlogPolicyEndpoint,
 		AutoListMirrorSessionEndpoint:            lAutoListMirrorSessionEndpoint,
-		AutoListStatsPolicyEndpoint:              lAutoListStatsPolicyEndpoint,
 		AutoListTechSupportRequestEndpoint:       lAutoListTechSupportRequestEndpoint,
 		AutoListTroubleshootingSessionEndpoint:   lAutoListTroubleshootingSessionEndpoint,
 		AutoUpdateAlertEndpoint:                  lAutoUpdateAlertEndpoint,
@@ -869,7 +795,6 @@ func NewMonitoringV1(conn *grpc.ClientConn, logger log.Logger) monitoring.Servic
 		AutoUpdateFlowExportPolicyEndpoint:       lAutoUpdateFlowExportPolicyEndpoint,
 		AutoUpdateFwlogPolicyEndpoint:            lAutoUpdateFwlogPolicyEndpoint,
 		AutoUpdateMirrorSessionEndpoint:          lAutoUpdateMirrorSessionEndpoint,
-		AutoUpdateStatsPolicyEndpoint:            lAutoUpdateStatsPolicyEndpoint,
 		AutoUpdateTechSupportRequestEndpoint:     lAutoUpdateTechSupportRequestEndpoint,
 		AutoUpdateTroubleshootingSessionEndpoint: lAutoUpdateTroubleshootingSessionEndpoint,
 		CancelEndpoint:                           lCancelEndpoint,
@@ -1066,198 +991,6 @@ func (a *restObjMonitoringV1EventPolicy) Allowed(oper apiintf.APIOperType) bool 
 		return true
 	case apiintf.DeleteOper:
 		return true
-	case apiintf.ListOper:
-		return true
-	case apiintf.WatchOper:
-		return true
-	default:
-		return false
-	}
-}
-
-type grpcObjMonitoringV1StatsPolicy struct {
-	logger log.Logger
-	client monitoring.ServiceMonitoringV1Client
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Create(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "create")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoAddStatsPolicy(nctx, in)
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Update(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoUpdateStatsPolicy(nctx, in)
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) UpdateStatus(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "update")
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	nctx = addStatusUpd(nctx)
-	return a.client.AutoUpdateStatsPolicy(nctx, in)
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "get")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.StatsPolicy{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoGetStatsPolicy(nctx, &in)
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "delete")
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.StatsPolicy{}
-	in.ObjectMeta = *objMeta
-	nctx := addVersion(ctx, "v1")
-	return a.client.AutoDeleteStatsPolicy(nctx, &in)
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.StatsPolicy, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "list")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	nctx := addVersion(ctx, "v1")
-	r, err := a.client.AutoListStatsPolicy(nctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	a.logger.DebugLog("msg", "received call", "object", "StatsPolicy", "oper", "WatchOper")
-	nctx := addVersion(ctx, "v1")
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	stream, err := a.client.AutoWatchStatsPolicy(nctx, options)
-	if err != nil {
-		return nil, err
-	}
-	wstream := stream.(monitoring.MonitoringV1_AutoWatchStatsPolicyClient)
-	bridgefn := func(lw *listerwatcher.WatcherClient) {
-		for {
-			r, err := wstream.Recv()
-			if err != nil {
-				a.logger.ErrorLog("msg", "error on receive", "err", err)
-				close(lw.OutCh)
-				return
-			}
-			for _, e := range r.Events {
-				ev := kvstore.WatchEvent{
-					Type:   kvstore.WatchEventType(e.Type),
-					Object: e.Object,
-				}
-				select {
-				case lw.OutCh <- &ev:
-				case <-wstream.Context().Done():
-					close(lw.OutCh)
-					return
-				}
-			}
-		}
-	}
-	lw := listerwatcher.NewWatcherClient(wstream, bridgefn)
-	lw.Run()
-	return lw, nil
-}
-
-func (a *grpcObjMonitoringV1StatsPolicy) Allowed(oper apiintf.APIOperType) bool {
-	return true
-}
-
-type restObjMonitoringV1StatsPolicy struct {
-	endpoints monitoring.EndpointsMonitoringV1RestClient
-	instance  string
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Create(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoAddStatsPolicy(ctx, in)
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Update(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	if in == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoUpdateStatsPolicy(ctx, in)
-}
-
-func (a *restObjMonitoringV1StatsPolicy) UpdateStatus(ctx context.Context, in *monitoring.StatsPolicy) (*monitoring.StatsPolicy, error) {
-	return nil, errors.New("not supported for REST")
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Get(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsPolicy, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.StatsPolicy{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoGetStatsPolicy(ctx, &in)
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Delete(ctx context.Context, objMeta *api.ObjectMeta) (*monitoring.StatsPolicy, error) {
-	if objMeta == nil {
-		return nil, errors.New("invalid input")
-	}
-	in := monitoring.StatsPolicy{}
-	in.ObjectMeta = *objMeta
-	return a.endpoints.AutoDeleteStatsPolicy(ctx, &in)
-}
-
-func (a *restObjMonitoringV1StatsPolicy) List(ctx context.Context, options *api.ListWatchOptions) ([]*monitoring.StatsPolicy, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-
-	if options.Tenant == "" {
-		options.Tenant = globals.DefaultTenant
-	}
-	r, err := a.endpoints.AutoListStatsPolicy(ctx, options)
-	if err == nil {
-		return r.Items, nil
-	}
-	return nil, err
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error) {
-	if options == nil {
-		return nil, errors.New("invalid input")
-	}
-	return a.endpoints.AutoWatchStatsPolicy(ctx, options)
-}
-
-func (a *restObjMonitoringV1StatsPolicy) Allowed(oper apiintf.APIOperType) bool {
-	switch oper {
-	case apiintf.CreateOper:
-		return false
-	case apiintf.UpdateOper:
-		return true
-	case apiintf.GetOper:
-		return true
-	case apiintf.DeleteOper:
-		return false
 	case apiintf.ListOper:
 		return true
 	case apiintf.WatchOper:
@@ -3013,7 +2746,6 @@ type crudClientMonitoringV1 struct {
 	client monitoring.ServiceMonitoringV1Client
 
 	grpcEventPolicy            monitoring.MonitoringV1EventPolicyInterface
-	grpcStatsPolicy            monitoring.MonitoringV1StatsPolicyInterface
 	grpcFwlogPolicy            monitoring.MonitoringV1FwlogPolicyInterface
 	grpcFlowExportPolicy       monitoring.MonitoringV1FlowExportPolicyInterface
 	grpcAlert                  monitoring.MonitoringV1AlertInterface
@@ -3033,7 +2765,6 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 		client: client,
 
 		grpcEventPolicy:            &grpcObjMonitoringV1EventPolicy{client: client, logger: logger},
-		grpcStatsPolicy:            &grpcObjMonitoringV1StatsPolicy{client: client, logger: logger},
 		grpcFwlogPolicy:            &grpcObjMonitoringV1FwlogPolicy{client: client, logger: logger},
 		grpcFlowExportPolicy:       &grpcObjMonitoringV1FlowExportPolicy{client: client, logger: logger},
 		grpcAlert:                  &grpcObjMonitoringV1Alert{client: client, logger: logger},
@@ -3048,10 +2779,6 @@ func NewGrpcCrudClientMonitoringV1(conn *grpc.ClientConn, logger log.Logger) mon
 
 func (a *crudClientMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {
 	return a.grpcEventPolicy
-}
-
-func (a *crudClientMonitoringV1) StatsPolicy() monitoring.MonitoringV1StatsPolicyInterface {
-	return a.grpcStatsPolicy
 }
 
 func (a *crudClientMonitoringV1) FwlogPolicy() monitoring.MonitoringV1FwlogPolicyInterface {
@@ -3134,7 +2861,6 @@ func (a *crudClientMonitoringV1) Watch(ctx context.Context, options *api.ListWat
 
 type crudRestClientMonitoringV1 struct {
 	restEventPolicy            monitoring.MonitoringV1EventPolicyInterface
-	restStatsPolicy            monitoring.MonitoringV1StatsPolicyInterface
 	restFwlogPolicy            monitoring.MonitoringV1FwlogPolicyInterface
 	restFlowExportPolicy       monitoring.MonitoringV1FlowExportPolicyInterface
 	restAlert                  monitoring.MonitoringV1AlertInterface
@@ -3155,7 +2881,6 @@ func NewRestCrudClientMonitoringV1(url string, httpClient *http.Client) monitori
 	return &crudRestClientMonitoringV1{
 
 		restEventPolicy:            &restObjMonitoringV1EventPolicy{endpoints: endpoints, instance: url},
-		restStatsPolicy:            &restObjMonitoringV1StatsPolicy{endpoints: endpoints, instance: url},
 		restFwlogPolicy:            &restObjMonitoringV1FwlogPolicy{endpoints: endpoints, instance: url},
 		restFlowExportPolicy:       &restObjMonitoringV1FlowExportPolicy{endpoints: endpoints, instance: url},
 		restAlert:                  &restObjMonitoringV1Alert{endpoints: endpoints, instance: url},
@@ -3177,7 +2902,6 @@ func NewStagedRestCrudClientMonitoringV1(url string, id string, httpClient *http
 	return &crudRestClientMonitoringV1{
 
 		restEventPolicy:            &restObjMonitoringV1EventPolicy{endpoints: endpoints, instance: url},
-		restStatsPolicy:            &restObjMonitoringV1StatsPolicy{endpoints: endpoints, instance: url},
 		restFwlogPolicy:            &restObjMonitoringV1FwlogPolicy{endpoints: endpoints, instance: url},
 		restFlowExportPolicy:       &restObjMonitoringV1FlowExportPolicy{endpoints: endpoints, instance: url},
 		restAlert:                  &restObjMonitoringV1Alert{endpoints: endpoints, instance: url},
@@ -3192,10 +2916,6 @@ func NewStagedRestCrudClientMonitoringV1(url string, id string, httpClient *http
 
 func (a *crudRestClientMonitoringV1) EventPolicy() monitoring.MonitoringV1EventPolicyInterface {
 	return a.restEventPolicy
-}
-
-func (a *crudRestClientMonitoringV1) StatsPolicy() monitoring.MonitoringV1StatsPolicyInterface {
-	return a.restStatsPolicy
 }
 
 func (a *crudRestClientMonitoringV1) FwlogPolicy() monitoring.MonitoringV1FwlogPolicyInterface {
