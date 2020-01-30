@@ -292,8 +292,32 @@ EthLif::EthLif(Eth *dev, devapi *dev_api, void *dev_spec, PdClient *pd_client, e
         throw;
     };
 
-    state = LIF_STATE_CREATED;
     active_q_ref_cnt = 0;
+
+    if (dev_api != NULL) {
+        Create();
+    }
+}
+
+void
+EthLif::Create()
+{
+    sdk_ret_t rs;
+
+    if (state != LIF_STATE_CREATING) {
+        return;
+    }
+
+    hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state);
+    rs = dev_api->lif_create(&hal_lif_info_);
+    if (rs != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
+        return;
+    }
+
+    NIC_LOG_INFO("{}: Created", hal_lif_info_.name);
+
+    state = LIF_STATE_CREATED;
 }
 
 status_code_t
@@ -302,29 +326,35 @@ EthLif::Init(void *req, void *req_data, void *resp, void *resp_data)
     sdk_ret_t rs = SDK_RET_OK;
     uint64_t addr;
     struct lif_init_cmd *cmd = (struct lif_init_cmd *)req;
+    enum eth_lif_state pre_state;
 
     NIC_LOG_DEBUG("{}: LIF_INIT", hal_lif_info_.name);
 
-    if (state == LIF_STATE_INIT) {
+    if (state == LIF_STATE_CREATING) {
         NIC_LOG_WARN("{}: {} + INIT => {}", hal_lif_info_.name, lif_state_to_str(state),
                      lif_state_to_str(state));
-        return (IONIC_RC_SUCCESS);
+        return (IONIC_RC_EAGAIN);
+    }
+
+    if (IsLifInitialized()) {
+        NIC_LOG_WARN("{}: {} + INIT => {}", hal_lif_info_.name, lif_state_to_str(state),
+                     lif_state_to_str(state));
+        return (IONIC_RC_EBUSY);
     }
 
     DEVAPI_CHECK
 
-    if (state == LIF_STATE_CREATED) {
+    pre_state = state;
+    state = LIF_STATE_INITING;
 
-        state = LIF_STATE_INITING;
-
+    // first time, program txdma scheduler
+    if (pre_state == LIF_STATE_CREATED) {
         hal_lif_info_.lif_state = ConvertEthLifStateToLifState(state);
-        rs = dev_api->lif_create(&hal_lif_info_);
+        rs = dev_api->lif_init(&hal_lif_info_);
         if (rs != SDK_RET_OK) {
-            NIC_LOG_ERR("{}: Failed to create LIF", hal_lif_info_.name);
+            NIC_LOG_ERR("{}: Failed to init LIF", hal_lif_info_.name);
             return (IONIC_RC_ERROR);
         }
-
-        NIC_LOG_INFO("{}: created", hal_lif_info_.name);
 
         cosA = 0;
         cosB = 0;
@@ -508,7 +538,7 @@ EthLif::Reset()
 
     NIC_LOG_DEBUG("{}: LIF_RESET", hal_lif_info_.name);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_RESET) {
+    if (!IsLifInitialized()) {
         NIC_LOG_WARN("{}: {} + RESET => {}", hal_lif_info_.name, lif_state_to_str(state),
                      lif_state_to_str(state));
         return (IONIC_RC_SUCCESS);
@@ -913,7 +943,7 @@ EthLif::_CmdHangNotify(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: CMD_OPCODE_HANG_NOTIFY", hal_lif_info_.name);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1167,7 +1197,7 @@ EthLif::EQInit(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->intr_index, (cmd->flags & IONIC_QINIT_F_IRQ) ? 'I' : '-',
                   (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1258,7 +1288,7 @@ EthLif::TxQInit(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->flags & IONIC_QINIT_F_CMB) ? 'C' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1432,7 +1462,7 @@ EthLif::RxQInit(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->flags & IONIC_QINIT_F_CMB) ? 'C' : '-',
         (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1590,7 +1620,7 @@ EthLif::NotifyQInit(void *req, void *req_data, void *resp, void *resp_data)
                  (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
                  (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1693,7 +1723,7 @@ EthLif::AdminQInit(void *req, void *req_data, void *resp, void *resp_data)
                   (cmd->flags & IONIC_QINIT_F_DEBUG) ? 'D' : '-',
                   (cmd->flags & IONIC_QINIT_F_ENA) ? 'E' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1805,7 +1835,7 @@ EthLif::SetFeatures(void *req, void *req_data, void *resp, void *resp_data)
         (cmd->features & ETH_HW_TX_CSUM) ? 1 : 0, (cmd->features & ETH_HW_RX_HASH) ? 1 : 0,
         (cmd->features & ETH_HW_TX_SG) ? 1 : 0, (cmd->features & ETH_HW_RX_SG) ? 1 : 0);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1843,7 +1873,7 @@ EthLif::_CmdGetAttr(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str((cmd_opcode_t)cmd->opcode),
                   cmd->attr);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1884,7 +1914,7 @@ EthLif::_CmdSetAttr(void *req, void *req_data, void *resp, void *resp_data)
 
     NIC_LOG_DEBUG("{}: {}: attr {}", hal_lif_info_.name, opcode_to_str(cmd->opcode), cmd->attr);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -1990,7 +2020,7 @@ EthLif::_CmdQControl(void *req, void *req_data, void *resp, void *resp_data)
     NIC_LOG_DEBUG("{}: {}: type {} index {} oper {}", hal_lif_info_.name,
                   opcode_to_str((cmd_opcode_t)cmd->opcode), cmd->type, cmd->index, cmd->oper);
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -2155,7 +2185,7 @@ EthLif::_CmdRxSetMode(void *req, void *req_data, void *resp, void *resp_data)
                   cmd->rx_mode & RX_MODE_F_ALLMULTI ? 'a' : '-',
                   cmd->rx_mode & RX_MODE_F_RDMA_SNIFFER ? 'r' : '-');
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -2195,7 +2225,7 @@ EthLif::_CmdRxFilterAdd(void *req, void *req_data, void *resp, void *resp_data)
     struct rx_filter_add_comp *comp = (struct rx_filter_add_comp *)resp;
     sdk_ret_t ret = SDK_RET_OK;
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -2287,7 +2317,7 @@ EthLif::_CmdRxFilterDel(void *req, void *req_data, void *resp, void *resp_data)
     // struct rx_filter_del_comp *comp = (struct rx_filter_del_comp *)resp;
     indexer::status rs;
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -2337,7 +2367,7 @@ EthLif::RssConfig(void *req, void *req_data, void *resp, void *resp_data)
     // struct lif_setattr_comp *comp = (struct lif_setattr_comp *)resp;z
     bool posted;
 
-    if (state == LIF_STATE_CREATED || state == LIF_STATE_INITING) {
+    if (!IsLifInitialized()) {
         NIC_LOG_ERR("{}: Lif is not initialized", hal_lif_info_.name);
         return (IONIC_RC_ERROR);
     }
@@ -2668,7 +2698,9 @@ EthLif::_CmdRDMACreateAdminQ(void *req, void *req_data, void *resp, void *resp_d
 void
 EthLif::HalEventHandler(bool status)
 {
-    if (!status) {
+    if (status) {
+        Create();
+    } else {
         dev_api = NULL;
     }
 }
@@ -2697,7 +2729,7 @@ EthLif::LinkEventHandler(port_status_t *evd)
     }
 
     // drop the event if the lif is not initialized
-    if (state != LIF_STATE_INIT && state != LIF_STATE_UP && state != LIF_STATE_DOWN) {
+    if (!IsLifInitialized()) {
         NIC_LOG_INFO("{}: {} + {} => {}", hal_lif_info_.name, lif_state_to_str(state),
                      (evd->status == PORT_OPER_STATUS_UP) ? "LINK_UP" : "LINK_DN",
                      lif_state_to_str(state));
@@ -2810,8 +2842,8 @@ EthLif::XcvrEventHandler(port_status_t *evd)
 void
 EthLif::SendFWDownEvent()
 {
-    if (state == LIF_STATE_RESET) {
-        NIC_LOG_WARN("{}: state: {} Cannot send RESET event when lif is in RESET state!",
+    if (!IsLifInitialized()) {
+        NIC_LOG_WARN("{}: state: {} Cannot send RESET event when lif is not initialized!",
                      hal_lif_info_.name, lif_state_to_str(state));
         return;
     }
@@ -2951,4 +2983,10 @@ EthLif::IsLifTypeCpu()
     default:
         return false;
     }
+}
+
+bool
+EthLif::IsLifInitialized()
+{
+    return state >= LIF_STATE_INIT;
 }

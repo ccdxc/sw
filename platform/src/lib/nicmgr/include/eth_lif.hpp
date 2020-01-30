@@ -240,6 +240,9 @@ class EthLif
     void FreeUpVlanFilters();
     void FreeUpMacVlanFilters();
     bool IsLifTypeCpu(void);
+    bool IsLifInitialized();
+
+    void Create();
 
     static const char *lif_state_to_str(enum eth_lif_state state);
     static lif_state_t ConvertEthLifStateToLifState(enum eth_lif_state lif_state);

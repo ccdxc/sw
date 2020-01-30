@@ -488,6 +488,10 @@ VirtIOLif::virtio_lif_init_action(virtio_lif_event_t event)
         NIC_LOG_ERR("{}: Failed to create LIF", LifNameGet());
         fsm_ctx.devcmd.status = VIRTIO_RC_ERROR;
     }
+    if (dev_api->lif_init(&hal_lif_info_) != SDK_RET_OK) {
+        NIC_LOG_ERR("{}: Failed to init LIF", LifNameGet());
+        fsm_ctx.devcmd.status = VIRTIO_RC_ERROR;
+    }
 
     // program the queue state
     pd->program_qstate((struct queue_info*)hal_lif_info_.queue_info,

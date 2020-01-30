@@ -52,39 +52,68 @@ devapi_impl::destroy(devapi *impl) {
     SDK_FREE(SDK_MEM_ALLOC_DEVAPI_IMPL, impl);
 }
 
-sdk_ret_t
-devapi_impl::lif_create(lif_info_t *info) {
-    sdk_ret_t ret;
-    lif_impl *lif;
-    pds_lif_spec_t spec = { 0 };
-
-    // program tx scheduler
-    lif_program_tx_scheduler(info);
-
+static void lif_spec_from_info(pds_lif_spec_t &spec, lif_info_t *info)
+{
     spec.key = uuid_from_objid(LIF_IFINDEX(info->lif_id));
     spec.id = info->lif_id;
     spec.pinned_ifidx = info->pinned_uplink_port_num;
     spec.type = info->type;
     spec.vlan_strip_en = info->vlan_strip_en;
     MAC_ADDR_COPY(spec.mac, info->mac);
+}
+
+sdk_ret_t
+devapi_impl::lif_create(lif_info_t *info) {
+    pds_lif_spec_t spec = { 0 };
+    lif_impl *lif;
+
+    lif_spec_from_info(spec, info);
+
     lif = lif_impl::factory(&spec);
     if (unlikely(lif == NULL)) {
         return sdk::SDK_RET_OOM;
     }
-    ret = lif->create(&spec);
-    if (ret == SDK_RET_OK) {
-        PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",
-                        spec.key.str(), info->lif_id, info->name, info->type,
-                        macaddr2str(info->mac));
-        lif_impl_db()->insert(lif);
-    }
-    return ret;
+
+    lif_impl_db()->insert(lif);
+
+    PDS_TRACE_DEBUG("Inserted lif %u %s %u %s",
+                    info->lif_id, info->name, info->type,
+                    macaddr2str(info->mac));
+
+    return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_destroy(uint32_t lif_id) {
     PDS_TRACE_WARN("Not implemented");
     return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_impl::lif_init(lif_info_t *info) {
+    pds_lif_spec_t spec = { 0 };
+    lif_impl *lif;
+    sdk_ret_t ret;
+
+    lif = lif_impl_db()->find((pds_lif_id_t *)&info->lif_id);
+    if (unlikely(lif == NULL)) {
+        PDS_TRACE_ERR("Lif %u not found", info->lif_id);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
+    lif_spec_from_info(spec, info);
+
+    // program tx scheduler
+    lif_program_tx_scheduler(info);
+
+    ret = lif->create(&spec);
+    if (ret == SDK_RET_OK) {
+        PDS_TRACE_DEBUG("Created lif %s, id %u %s %u %s",
+                        spec.key.str(), info->lif_id, info->name, info->type,
+                        macaddr2str(info->mac));
+    }
+
+    return ret;
 }
 
 sdk_ret_t
@@ -95,37 +124,37 @@ devapi_impl::lif_reset(uint32_t lif_id) {
 
 sdk_ret_t
 devapi_impl::lif_add_mac(uint32_t lif_id, mac_t mac) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_mac(uint32_t lif_id, mac_t mac) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_add_vlan(uint32_t lif_id, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_vlan(uint32_t lif_id, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_add_macvlan(uint32_t lif_id, mac_t mac, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_del_macvlan(uint32_t lif_id, mac_t mac, vlan_t vlan) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
@@ -140,25 +169,25 @@ devapi_impl::lif_upd_vlan_offload(uint32_t lif_id, bool vlan_strip,
 sdk_ret_t
 devapi_impl::lif_upd_rx_mode(uint32_t lif_id, bool broadcast,
                              bool all_multicast, bool promiscuous) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_rx_bmode(uint32_t lif_id, bool broadcast) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_rx_mmode(uint32_t lif_id, bool all_multicast) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_rx_pmode(uint32_t lif_id, bool promiscuous) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
@@ -167,6 +196,11 @@ devapi_impl::lif_upd_name(uint32_t lif_id, string name) {
     lif_impl *lif;
 
     lif = lif_impl_db()->find((pds_lif_id_t *)&lif_id);
+    if (unlikely(lif == NULL)) {
+        PDS_TRACE_ERR("Lif %u not found", lif_id);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
     lif->set_name(name.c_str());
     return SDK_RET_OK;
 }
@@ -178,6 +212,11 @@ devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
 
     // lookup lif and update the state
     lif = lif_impl_db()->find((pds_lif_id_t *)&lif_id);
+    if (unlikely(lif == NULL)) {
+        PDS_TRACE_ERR("Lif %u not found", lif_id);
+        return sdk::SDK_RET_ENTRY_NOT_FOUND;
+    }
+
     lif->set_state(state);
 
     // notify rest of the system
@@ -192,27 +231,27 @@ devapi_impl::lif_upd_state(uint32_t lif_id, lif_state_t state) {
 
 sdk_ret_t
 devapi_impl::lif_upd_rdma_sniff(uint32_t lif_id, bool rdma_sniff) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_bcast_filter(uint32_t lif_id,
                                   lif_bcast_filter_t bcast_filter) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::lif_upd_mcast_filter(uint32_t lif_id,
                                   lif_mcast_filter_t mcast_filter) {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t 
 devapi_impl::lif_upd_rx_en(uint32_t lif_id, bool rx_en){
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
@@ -338,119 +377,119 @@ devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
 sdk_ret_t
 devapi_impl::swm_enable()
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_disable()
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_create_channel (uint32_t channel, uint32_t port_num)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_get_channels_info(std::set<channel_info_t *>* channels_info)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_add_mac(mac_t mac, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_del_mac(mac_t mac, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_add_vlan(vlan_t vlan, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_del_vlan(vlan_t vlan, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_upd_rx_bmode(bool broadcast, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_upd_rx_mmode(bool all_multicast, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_upd_rx_pmode(bool promiscuous, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_upd_bcast_filter(lif_bcast_filter_t bcast_filter, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 devapi_impl::swm_upd_mcast_filter(lif_mcast_filter_t mcast_filter, uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 
 sdk_ret_t 
 devapi_impl::swm_enable_tx (uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
     
 sdk_ret_t 
 devapi_impl::swm_disable_tx(uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
     
 sdk_ret_t 
 devapi_impl::swm_enable_rx(uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
     
 sdk_ret_t 
 devapi_impl::swm_disable_rx(uint32_t channel)
 {
-    PDS_TRACE_WARN("Not implemented");
+    PDS_TRACE_DEBUG("Not provided");
     return SDK_RET_OK;
 }
 

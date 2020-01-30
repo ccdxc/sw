@@ -21,6 +21,7 @@ public:
     // Lif APIs
     sdk_ret_t lif_create(lif_info_t *info);
     sdk_ret_t lif_destroy(uint32_t lif_id);
+    sdk_ret_t lif_init(lif_info_t *info);
     sdk_ret_t lif_reset(uint32_t lif_id);
     sdk_ret_t lif_add_mac(uint32_t lif_id, mac_t mac);
     sdk_ret_t lif_del_mac(uint32_t lif_id, mac_t mac);

@@ -63,6 +63,13 @@ devapi_iris::destroy(devapi *dapi)
 sdk_ret_t
 devapi_iris::lif_create(lif_info_t *info)
 {
+    // XXX IRIS does not create the lif until lif_init.
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+devapi_iris::lif_init(lif_info_t *info)
+{
     sdk_ret_t ret = SDK_RET_OK;
     devapi_lif *lif = NULL;
     lif = devapi_lif::factory(info);
@@ -83,6 +90,12 @@ devapi_iris::lif_destroy(uint32_t lif_id)
     if (lif) {
         devapi_lif::destroy(lif);
     } else {
+        // XXX IRIS will not find a lif that was not initialized.
+        //
+        // We can't determine with the lif_id alone whether the lif has been
+        // initialized.  Therefore, it will be normal to see the following
+        // error logged for iris, if the lif was not initialized.
+        //
         NIC_LOG_ERR("Failed to destroy lif. id: {}. Not found",
                     lif_id);
         ret = SDK_RET_ERR;
