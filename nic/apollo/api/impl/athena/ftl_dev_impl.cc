@@ -8,12 +8,12 @@
 ///
 //----------------------------------------------------------------------------
 
-#include "fte_ftl_dev.hpp"
+#include "ftl_dev_impl.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/athena/include/p4pd.h"
 #include "nic/apollo/core/event.hpp"
 
-namespace fte_ftl_dev {
+namespace ftl_dev_impl {
 
 static rte_atomic16_t       module_inited = RTE_ATOMIC16_INIT(0);
 static rte_atomic16_t       lif_init_initiated = RTE_ATOMIC16_INIT(0);
@@ -405,7 +405,7 @@ lif_queues_ctl_t::lif_queues_ctl_t(enum ftl_qtype qtype,
     qcount(qcount),
     qdepth(qdepth)
 {
-    spinlocks = (rte_spinlock_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTE_FTL_DEV_LOCKS,
+    spinlocks = (rte_spinlock_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTL_DEV_IMPL_LOCKS,
                                              sizeof(rte_spinlock_t) * qcount);
     SDK_ASSERT_RETURN_VOID(spinlocks);
 
@@ -416,7 +416,7 @@ lif_queues_ctl_t::lif_queues_ctl_t(enum ftl_qtype qtype,
 
 lif_queues_ctl_t::~lif_queues_ctl_t()
 {
-    SDK_FREE(SDK_MEM_ALLOC_FTE_FTL_DEV_LOCKS, spinlocks);
+    SDK_FREE(SDK_MEM_ALLOC_FTL_DEV_IMPL_LOCKS, spinlocks);
 }
 
 sdk_ret_t
@@ -849,7 +849,7 @@ devcmd_t::submit_with_retry(void *req_data,
     ftl_timestamp_t     ts;
     sdk_ret_t           ret;
 
-    time_expiry_set(ts, FTE_FTL_DEVCMD_RETRY_TMO_US);
+    time_expiry_set(ts, FTL_DEVCMD_RETRY_TMO_US);
 
     /*
      * Take lock only if not already pre-locked by owener.
@@ -1028,5 +1028,5 @@ ftl_status_2_sdk_ret(ftl_status_code_t ftl_status)
     }
 }
 
-} // namespace fte_ftl_dev
+} // namespace ftl_dev_impl
 

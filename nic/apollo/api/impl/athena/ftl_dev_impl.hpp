@@ -4,12 +4,12 @@
 ///----------------------------------------------------------------------------
 ///
 /// \file
-/// FTE Flow Table Library device handling
+/// Flow Table Library device handling
 ///
 ///----------------------------------------------------------------------------
 
-#ifndef __FTE_FTL_DEV_HPP__
-#define __FTE_FTL_DEV_HPP__
+#ifndef __FTL_DEV_IMPL__
+#define __FTL_DEV_IMPL__
 
 #include <cstdio>
 #include <iostream>
@@ -35,9 +35,9 @@
 /*
  * Max devcmd retry timeout
  */
-#define FTE_FTL_DEVCMD_RETRY_TMO_US         (60 * USEC_PER_SEC)
+#define FTL_DEVCMD_RETRY_TMO_US             (60 * USEC_PER_SEC)
 
-namespace fte_ftl_dev {
+namespace ftl_dev_impl {
 
 sdk_ret_t init(unsigned int lcore_id);
 sdk_ret_t scanners_start(void);
@@ -145,6 +145,6 @@ private:
                           void *rsp_data);
 };
 
-} // namespace fte_ftl_dev
+} // namespace ftl_dev_impl
 
-#endif // __FTE_FTL_DEV_HPP__
+#endif // __FTL_DEV_IMPL__
