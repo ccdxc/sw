@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/workload"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/runtime"
 )
@@ -239,6 +241,21 @@ func (p *PCache) writeStateMgr(in interface{}) error {
 		var writeErr error
 		meta := obj.GetObjectMeta()
 		if currObj, err := ctrler.Workload().Find(meta); err == nil {
+			// Merge user labels
+			labels := map[string]string{}
+			for k, v := range currObj.Labels {
+				if !strings.HasPrefix(k, globals.SystemLabelPrefix) {
+					// Only take user labels from existing object
+					labels[k] = v
+				}
+			}
+			for k, v := range obj.Labels {
+				if strings.HasPrefix(k, globals.SystemLabelPrefix) {
+					// Only take system labels from new object
+					labels[k] = v
+				}
+			}
+			obj.Labels = labels
 			// Object exists and is changed
 			if !reflect.DeepEqual(&currObj.Workload, obj) {
 				p.Log.Debugf("%s %s statemgr update called", "Workload", meta.GetKey())
@@ -273,6 +290,25 @@ func (p *PCache) deleteStatemgr(in interface{}) error {
 	// Unsupported object, we only write it to cache
 	p.Log.Errorf("deleteStatemgr called on unsupported object %+v", in)
 	return nil
+}
+
+// RevalidateKind re-runs the validator for all objects in the cache of the given kind
+func (p *PCache) RevalidateKind(kind string) {
+	p.RLock()
+	kindMap, ok := p.kinds[kind]
+	validateFn := p.validators[kind]
+	p.RUnlock()
+	if !ok {
+		return
+	}
+	kindMap.Lock()
+	for _, in := range kindMap.entries {
+		err := p.validateAndPush(kindMap, in, validateFn)
+		if err != nil {
+			p.Log.Errorf("Validate and Push of object failed. Err : %v", err)
+		}
+	}
+	kindMap.Unlock()
 }
 
 // Run runs loop to periodically push pending objects to apiserver

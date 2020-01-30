@@ -136,6 +136,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	if existingHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
 		v.StateMgr.Controller().Host().Create(hostObj)
+		v.pCache.RevalidateKind(workloadKind)
 	}
 
 	// TODO the host name is not correct here.. fix it
@@ -150,6 +151,9 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	if existingHost != nil {
 		v.Log.Infof("Updating host %s", hostObj.Name)
 		v.StateMgr.Controller().Host().Update(hostObj)
+		// Revalidate kind call is not needed here.
+		// Only thing that can be updated in a host is the labels
+		// once it is written
 	}
 }
 

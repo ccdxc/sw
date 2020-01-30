@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+
+	"github.com/pensando/sw/venice/globals"
 )
 
 const (
@@ -11,7 +13,7 @@ const (
 
 var (
 	// OrchNameKey is the key used to label the orchestrator being used
-	OrchNameKey = "orch-name"
+	OrchNameKey = fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "orch-name")
 )
 
 // CreateGlobalKey creates a global key

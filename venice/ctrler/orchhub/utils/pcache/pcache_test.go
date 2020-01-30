@@ -12,6 +12,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/ref"
 	. "github.com/pensando/sw/venice/utils/testutils"
 	"github.com/pensando/sw/venice/utils/tsdb"
 )
@@ -70,21 +71,28 @@ func TestPcache(t *testing.T) {
 	_, err = stateMgr.Controller().Workload().Find(expMeta)
 	AssertOk(t, err, "Failed to find workload in statemgr")
 
+	testKey := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "test")
+	validNoPushKey := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "valid_no_push")
+
 	// Set validator
 	pCache.SetValidator("Workload", func(in interface{}) (bool, bool) {
 		w := in.(*workload.Workload)
-		if w.Labels != nil && len(w.Labels["test"]) != 0 {
+		if w.Labels != nil && len(w.Labels[testKey]) != 0 {
 			return true, true
 		}
-		if w.Labels != nil && len(w.Labels["valid_no_push"]) != 0 {
+		if w.Labels != nil && len(w.Labels[validNoPushKey]) != 0 {
 			return true, false
 		}
 		return false, false
 	})
 
 	// Update should sit in cache
+	key1 := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "key1")
+	key2 := fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "key2")
+	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
+	userKey := "userKey"
 	expWorkload.Labels = map[string]string{
-		"key1": "val1",
+		key1: "val1",
 	}
 	err = pCache.Set("Workload", expWorkload)
 	AssertOk(t, err, "Failed to write workload")
@@ -96,10 +104,11 @@ func TestPcache(t *testing.T) {
 	Assert(t, entry != nil, "Workload not in pcache")
 	entryWorkload := pCache.GetWorkload(expMeta)
 	AssertEquals(t, entryWorkload, entry, "Get from pcache returned different values")
-	AssertEquals(t, "val1", entryWorkload.Labels["key1"], "Workload not in pcache")
+	AssertEquals(t, "val1", entryWorkload.Labels[key1], "Workload not in pcache")
 
 	// Test isValid
-	expWorkload.Labels["valid_no_push"] = "test"
+	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
+	expWorkload.Labels[validNoPushKey] = "test"
 	err = pCache.Set("Workload", expWorkload)
 	AssertOk(t, err, "Failed to write workload")
 	// Should be in cache
@@ -107,11 +116,11 @@ func TestPcache(t *testing.T) {
 	Assert(t, entry != nil, "Workload not in pcache")
 	Assert(t, pCache.IsValid("Workload", expMeta), "expected object to be valid")
 
-	// Update with correct value, pcache should call statemgr update
-	expWorkload.Labels["test"] = "test"
+	// Update with correct value
+	// Modifying object that lives in the cache
+	expWorkload.Labels[testKey] = "test"
+	pCache.RevalidateKind("Workload")
 
-	// Add delay to ensure the pcache goroutine has enough time to pick up the updated workload and send to statemgr
-	time.Sleep(3 * time.Second)
 	// Should no longer be in cache
 	entry = pCache.kinds["Workload"].entries[expMeta.GetKey()]
 	Assert(t, entry == nil, "Workload still in pcache")
@@ -119,18 +128,39 @@ func TestPcache(t *testing.T) {
 	// Should be in stateMgr
 	stateMgrEntry, err := stateMgr.Controller().Workload().Find(expMeta)
 	AssertOk(t, err, "Failed to find workload in statemgr")
-	fmt.Printf("----\n %v\n", stateMgrEntry.Workload)
-	AssertEquals(t, "test", stateMgrEntry.Workload.Labels["test"], "stateMgr did not have correct version of workload")
+	AssertEquals(t, "val1", stateMgrEntry.Workload.Labels[key1], "stateMgr did not have correct version of workload")
 
 	// Update statemgr directly
-	expWorkload.Labels["key1"] = "val2"
+	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
+	expWorkload.Labels[key1] = "val2"
 	err = stateMgr.Controller().Workload().Update(expWorkload)
 	AssertOk(t, err, "Failed to update statemgr")
 
 	// Get should return value in stateMgr
-	entry = pCache.GetWorkload(expMeta)
-	Assert(t, entry != nil, "Workload not in statemgr")
-	AssertEquals(t, "val2", entryWorkload.Labels["key1"], "Workload not in statemgr")
+	expWorkload = pCache.GetWorkload(expMeta)
+	Assert(t, expWorkload != nil, "Workload not in statemgr")
+	AssertEquals(t, "val2", expWorkload.Labels[key1], "Workload not in statemgr")
+
+	// Update from statemgr should merge labels
+	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
+	expWorkload.Labels[userKey] = "val1"
+	err = stateMgr.Controller().Workload().Update(expWorkload)
+	AssertOk(t, err, "Failed to update statemgr")
+
+	expWorkload = pCache.GetWorkload(expMeta)
+	Assert(t, expWorkload != nil, "Workload not in statemgr")
+
+	expWorkload = ref.DeepCopy(expWorkload).(*workload.Workload)
+	expWorkload.Labels[userKey] = "oldVal"
+	expWorkload.Labels[key2] = "val1"
+	err = pCache.Set("Workload", expWorkload)
+
+	// Statemgr should have userKey: val1, and the system labels key1 and key2
+	stateMgrEntry, err = stateMgr.Controller().Workload().Find(expMeta)
+	AssertOk(t, err, "Failed to find workload in statemgr")
+	AssertEquals(t, "val2", stateMgrEntry.Workload.Labels[key1], "stateMgr did not have correct version of workload")
+	AssertEquals(t, "val1", stateMgrEntry.Workload.Labels[key2], "stateMgr did not have correct version of workload")
+	AssertEquals(t, "val1", stateMgrEntry.Workload.Labels[userKey], "stateMgr did not have correct version of workload")
 
 	// Delete
 	err = pCache.Delete("Workload", expWorkload)

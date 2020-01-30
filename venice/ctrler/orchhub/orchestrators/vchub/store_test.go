@@ -1,6 +1,7 @@
 package vchub
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"testing"
@@ -18,6 +19,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/pcache"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -1060,8 +1062,8 @@ func TestStore(t *testing.T) {
 					ObjectMeta: api.ObjectMeta{
 						Name: "127.0.0.1:8990-DC1-virtualmachine-40",
 						Labels: map[string]string{
-							"vcenter.vm-name": "test-vm",
-							"orch-name":       "127.0.0.1:8990",
+							VMNameKey:         "test-vm",
+							utils.OrchNameKey: "127.0.0.1:8990",
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -1373,10 +1375,10 @@ func TestStore(t *testing.T) {
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 					Labels: map[string]string{
-						"vcenter.cat1":    "tag1:tag2",
-						"vcenter.cat2":    "tag1",
-						"vcenter.vm-name": "test-vm",
-						"orch-name":       "127.0.0.1:8990",
+						fmt.Sprintf("%s%s", VcLabelPrefix, "cat1"): "tag1:tag2",
+						fmt.Sprintf("%s%s", VcLabelPrefix, "cat2"): "tag1",
+						VMNameKey:         "test-vm",
+						utils.OrchNameKey: "127.0.0.1:8990",
 					},
 				}
 				expWorkload := &workload.Workload{

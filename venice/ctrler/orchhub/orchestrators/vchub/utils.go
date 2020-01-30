@@ -4,20 +4,24 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/vmware/govmomi/vim25/types"
+
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/netutils"
 	conv "github.com/pensando/sw/venice/utils/strconv"
-
-	"github.com/vmware/govmomi/vim25/types"
 )
 
 var (
-	vmNameKey = createLabelKey("vm-name")
+	// VcLabelPrefix is the prefix applied to tags picked up from vcenter
+	VcLabelPrefix = fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "vcenter.")
+	// VMNameKey is the display name of the vm in vcenter
+	VMNameKey = createLabelKey("vm-name")
 )
 
 func createLabelKey(tag string) string {
-	return fmt.Sprintf("vcenter.%s", tag)
+	return fmt.Sprintf("%s%s", VcLabelPrefix, tag)
 }
 
 func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg) map[string]string {
@@ -35,8 +39,8 @@ func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg
 	// TODO: vm-name and orch-name could technically conflict
 	// with cateory names. Is this ok?
 	// In case of conflict, we overwrite with vm/orch name
-	if v, ok := existingLabels[vmNameKey]; ok {
-		labels[vmNameKey] = v
+	if v, ok := existingLabels[VMNameKey]; ok {
+		labels[VMNameKey] = v
 	}
 
 	if v, ok := existingLabels[utils.OrchNameKey]; ok {
@@ -46,7 +50,7 @@ func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg
 }
 
 func addVMNameLabel(labels map[string]string, name string) {
-	labels[vmNameKey] = name
+	labels[VMNameKey] = name
 }
 
 func createPGName(networkName string) string {

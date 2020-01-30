@@ -26,8 +26,6 @@ func (v *VCHub) setupPCache() {
 	pCache.SetValidator(workloadKind, v.validateWorkload)
 	pCache.SetValidator(workloadVnicKind, validateWorkloadVnics)
 	v.pCache = pCache
-	v.Wg.Add(1)
-	go pCache.Run(v.Ctx, v.Wg)
 }
 
 func validateWorkloadVnics(in interface{}) (bool, bool) {
