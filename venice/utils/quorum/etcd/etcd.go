@@ -37,6 +37,7 @@ const (
 	defaultDataDir  = globals.EtcdDataDir
 	defaultUnitFile = globals.EtcdServiceFile
 	timeout         = time.Second * 15
+	retries         = 3
 	defragTimeout   = time.Minute * 2
 
 	// Fixed parameters
@@ -256,7 +257,17 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 		DialTimeout: timeout,
 		TLS:         tlsConfig,
 	}
-	client, err := clientv3.New(v3Config)
+	// If the etcd instance is joining an existing cluster it will take some time to synchronize
+	// and start accepting client requests, so we should perform few retries
+	var client *clientv3.Client
+	for i := 0; i < retries; i++ {
+		client, err = clientv3.New(v3Config)
+		if err == nil {
+			break
+		}
+		log.Errorf("Failed to connect to quorum with config %+v, error: %v", v3Config, err)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -265,6 +276,7 @@ func quorumHelper(existing bool, c *quorum.Config) (quorum.Interface, error) {
 		client: client,
 		config: c,
 	}, nil
+
 }
 
 // List returns the current quorum members.

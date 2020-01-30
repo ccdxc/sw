@@ -115,6 +115,8 @@ func (c *clusterRPCHandler) PreJoin(ctx context.Context, req *grpc.ClusterPreJoi
 // Join handles the join request for a cluster. If part of quorum, it will
 // start the K/V store process with the provided configuration.
 func (c *clusterRPCHandler) Join(ctx context.Context, req *grpc.ClusterJoinReq) (*grpc.ClusterJoinResp, error) {
+	log.Infof("Received Join request: %+v", req)
+
 	// Check again if not in cluster.
 	if cluster, err := utils.GetCluster(); err != nil {
 		return nil, err
