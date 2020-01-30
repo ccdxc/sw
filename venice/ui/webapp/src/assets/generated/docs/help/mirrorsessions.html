@@ -10,7 +10,7 @@
 <tbody>
 <tr>
 <td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
 </tr>
 <tr>
 <td>Schedule</td>
@@ -18,7 +18,7 @@
 </tr>
 <tr>
 <td>packet-size</td>
-<td>PacketSize: Max size of a mirrored packet. PacketSize &#x3D; 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B</td>
+<td>PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B.</td>
 </tr>
 <tr>
 <td>Packet Filters</td>
@@ -37,11 +37,11 @@
 <tbody>
 <tr>
 <td>type</td>
-<td>Type of Collector <br> Valid options include:<br> - ERSPAN</td>
+<td>Type of Collector. <br> Valid options include:<br> - ERSPAN</td>
 </tr>
 <tr>
 <td>destination</td>
-<td>IP address of the collector/entity to which the data is to be exportedshould be a valid IPv4 address</td>
+<td>IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address.</td>
 </tr>
 </tbody>
 </table>
@@ -56,7 +56,7 @@
 <tbody>
 <tr>
 <td>interface-selector</td>
-<td>If specified, will pick up interface matching the selector</td>
+<td>If specified, will pick up interface matching the selector.</td>
 </tr>
 </tbody>
 </table>
@@ -72,15 +72,15 @@
 <tbody>
 <tr>
 <td>source</td>
-<td>Either Src or Dst or both must be specified, both cannot be *. Src &#x3D; * when not specified. When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored</td>
+<td>Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored.</td>
 </tr>
 <tr>
 <td>destination</td>
-<td>Dst &#x3D; * when not specified. When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored</td>
+<td>Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored.</td>
 </tr>
 <tr>
 <td>app-protocol-selectors</td>
-<td>App &#x3D; * when not specified</td>
+<td>App = * when not specified.</td>
 </tr>
 </tbody>
 </table>

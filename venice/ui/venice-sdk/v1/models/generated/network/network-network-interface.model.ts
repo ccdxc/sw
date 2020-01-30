@@ -23,7 +23,7 @@ export interface INetworkNetworkInterface {
 export class NetworkNetworkInterface extends BaseModel implements INetworkNetworkInterface {
     'kind': string = null;
     'api-version': string = null;
-    /** Object name is Serial-Number of the SmartNIC */
+    /** Object name is Serial-Number of the SmartNIC. */
     'meta': ApiObjectMeta = null;
     /** NetworkInterfaceSpec contains the configuration of the network adapter. */
     'spec': NetworkNetworkInterfaceSpec = null;
@@ -39,7 +39,7 @@ export class NetworkNetworkInterface extends BaseModel implements INetworkNetwor
             type: 'string'
         },
         'meta': {
-            description:  `Object name is Serial-Number of the SmartNIC`,
+            description:  `Object name is Serial-Number of the SmartNIC.`,
             required: false,
             type: 'object'
         },

@@ -22,7 +22,7 @@ export class ClusterVersionList extends BaseModel implements IClusterVersionList
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Version objects */
+    /** List of Version objects. */
     'items': Array<ClusterVersion> = null;
     public static propInfo: { [prop in keyof IClusterVersionList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class ClusterVersionList extends BaseModel implements IClusterVersionList
             type: 'object'
         },
         'items': {
-            description:  `List of Version objects`,
+            description:  `List of Version objects.`,
             required: false,
             type: 'object'
         },

@@ -17,19 +17,19 @@ export interface ITelemetry_queryMetricsQueryResponse {
 
 
 export class Telemetry_queryMetricsQueryResponse extends BaseModel implements ITelemetry_queryMetricsQueryResponse {
-    /** Tenant for the request */
+    /** Tenant for the request. */
     'tenant': string = null;
-    /** Namespace for the request */
+    /** Namespace for the request. */
     'namespace': string = null;
     'results': Array<Telemetry_queryMetricsQueryResult> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryMetricsQueryResponse]: PropInfoItem } = {
         'tenant': {
-            description:  `Tenant for the request`,
+            description:  `Tenant for the request.`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  `Namespace for the request`,
+            description:  `Namespace for the request.`,
             required: false,
             type: 'string'
         },

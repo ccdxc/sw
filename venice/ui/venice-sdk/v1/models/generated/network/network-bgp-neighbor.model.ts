@@ -21,11 +21,11 @@ export interface INetworkBGPNeighbor {
 export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor {
     /** Shutdown this neighbor session. */
     'shutdown': boolean = null;
-    /** Neighbor IP Address. */
+    /** Neighbor IP Address. Should be a valid v4 or v6 IP address. */
     'ip-address': string = null;
     /** ASN the neighbor belongs to. */
     'remote-as': number = null;
-    /** BGP Multihop configuration, 0 disables multihop. */
+    /** BGP Multihop configuration, 0 disables multihop. Value should be between 0 and 256. */
     'multi-hop': number = null;
     /** Address families to enable on the neighbor. */
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
@@ -36,7 +36,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             type: 'boolean'
         },
         'ip-address': {
-            description:  `Neighbor IP Address.`,
+            description:  `Neighbor IP Address. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'
@@ -47,7 +47,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             type: 'number'
         },
         'multi-hop': {
-            description:  `BGP Multihop configuration, 0 disables multihop.`,
+            description:  `BGP Multihop configuration, 0 disables multihop. Value should be between 0 and 256.`,
             required: true,
             type: 'number'
         },

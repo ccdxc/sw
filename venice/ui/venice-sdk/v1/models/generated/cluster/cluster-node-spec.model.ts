@@ -14,11 +14,11 @@ export interface IClusterNodeSpec {
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
-    /** RoutingConfig the routing configuration */
+    /** RoutingConfig the routing configuration. */
     'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterNodeSpec]: PropInfoItem } = {
         'routing-config': {
-            description:  `RoutingConfig the routing configuration`,
+            description:  `RoutingConfig the routing configuration.`,
             required: false,
             type: 'string'
         },

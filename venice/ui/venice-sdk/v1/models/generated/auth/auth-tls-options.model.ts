@@ -17,11 +17,9 @@ export interface IAuthTLSOptions {
 
 
 export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
-    /** StartTLS determines if ldap connection uses TLS */
+    /** StartTLS determines if ldap connection uses TLS. */
     'start-tls': boolean = null;
-    /** SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name.
-If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate.
-In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
+    /** SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name. If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
     'skip-server-cert-verification': boolean = null;
     /** ServerName is used to verify the hostname on the returned certificates unless SkipServerCertVerification is true. */
     'server-name': string = null;
@@ -29,7 +27,7 @@ In this mode, TLS is susceptible to man-in-the-middle attacks. This should be us
     'trusted-certs': string = null;
     public static propInfo: { [prop in keyof IAuthTLSOptions]: PropInfoItem } = {
         'start-tls': {
-            description:  `StartTLS determines if ldap connection uses TLS`,
+            description:  `StartTLS determines if ldap connection uses TLS.`,
             required: false,
             type: 'boolean'
         },

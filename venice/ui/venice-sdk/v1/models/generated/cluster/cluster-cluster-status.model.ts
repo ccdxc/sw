@@ -22,13 +22,13 @@ export interface IClusterClusterStatus {
 export class ClusterClusterStatus extends BaseModel implements IClusterClusterStatus {
     /** Leader contains the node name of the cluster leader. */
     'leader': string = null;
-    /** LastLeaderTransitionTime is when the leadership changed last time */
+    /** LastLeaderTransitionTime is when the leadership changed last time. */
     'last-leader-transition-time': Date = null;
-    /** AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth */
+    /** AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth. */
     'auth-bootstrapped': boolean = null;
-    /** List of current cluster conditions */
+    /** List of current cluster conditions. */
     'conditions': Array<ClusterClusterCondition> = null;
-    /** Quorum represents the current state of the quorum, including registered members and health */
+    /** Quorum represents the current state of the quorum, including registered members and health. */
     'quorum-status': ClusterQuorumStatus = null;
     public static propInfo: { [prop in keyof IClusterClusterStatus]: PropInfoItem } = {
         'leader': {
@@ -37,22 +37,22 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
             type: 'string'
         },
         'last-leader-transition-time': {
-            description:  `LastLeaderTransitionTime is when the leadership changed last time`,
+            description:  `LastLeaderTransitionTime is when the leadership changed last time.`,
             required: false,
             type: 'Date'
         },
         'auth-bootstrapped': {
-            description:  `AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth`,
+            description:  `AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth.`,
             required: false,
             type: 'boolean'
         },
         'conditions': {
-            description:  `List of current cluster conditions`,
+            description:  `List of current cluster conditions.`,
             required: false,
             type: 'object'
         },
         'quorum-status': {
-            description:  `Quorum represents the current state of the quorum, including registered members and health`,
+            description:  `Quorum represents the current state of the quorum, including registered members and health.`,
             required: false,
             type: 'object'
         },

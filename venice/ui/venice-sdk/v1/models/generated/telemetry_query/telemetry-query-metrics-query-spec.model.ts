@@ -31,26 +31,24 @@ export interface ITelemetry_queryMetricsQuerySpec {
 export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelemetry_queryMetricsQuerySpec {
     'kind': string = null;
     'api-version': string = null;
-    /** Name is the name of the API object. */
+    /** Name is the name of the API object. Must start and end with alpha numeric and can have alphanumeric, -, _, . */
     'name': string = null;
     'selector': FieldsSelector = null;
-    /** Fields select the metric fields to be included in the result
-Empty will include all fields, must contain at least one non-tag fieldmust start and end with alpha numeric and can have alphanumeric, -, _, . */
+    /** Fields select the metric fields to be included in the result Empty will include all fields, must contain at least one non-tag field. Must start and end with alpha numeric and can have alphanumeric, -, _, . */
     'fields': Array<string> = null;
-    /** Functions specify an operation function to be applied, example mean()/max() */
+    /** Functions specify an operation function to be applied, example mean()/max(). */
     'function': Telemetry_queryMetricsQuerySpec_function = null;
-    /** StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z */
+    /** StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z. */
     'start-time': Date = null;
-    /** EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z */
+    /** EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z. */
     'end-time': Date = null;
-    /** GroupbyTime groups series based on the interval specifiedshould be a valid time duration
- */
+    /** GroupbyTime groups series based on the interval specified. Should be a valid time duration. */
     'group-by-time': string = null;
-    /** GroupbyField groups series based on the field specifiedmust start and end with alpha numeric and can have alphanumeric, -, _, . */
+    /** GroupbyField groups series based on the field specified. Must start and end with alpha numeric and can have alphanumeric, -, _, . */
     'group-by-field': string = null;
-    /** PaginationSpec specifies the number of series to include */
+    /** PaginationSpec specifies the number of series to include. */
     'pagination': Telemetry_queryPaginationSpec = null;
-    /** SortOrder specifies time ordering of results */
+    /** SortOrder specifies time ordering of results. */
     'sort-order': Telemetry_queryMetricsQuerySpec_sort_order = null;
     public static propInfo: { [prop in keyof ITelemetry_queryMetricsQuerySpec]: PropInfoItem } = {
         'kind': {
@@ -62,7 +60,7 @@ Empty will include all fields, must contain at least one non-tag fieldmust start
             type: 'string'
         },
         'name': {
-            description:  `Name is the name of the API object.`,
+            description:  `Name is the name of the API object. Must start and end with alpha numeric and can have alphanumeric, -, _, .`,
             required: false,
             type: 'string'
         },
@@ -71,47 +69,47 @@ Empty will include all fields, must contain at least one non-tag fieldmust start
             type: 'object'
         },
         'fields': {
-            description:  `Fields select the metric fields to be included in the result Empty will include all fields, must contain at least one non-tag fieldmust start and end with alpha numeric and can have alphanumeric, -, _, .`,
+            description:  `Fields select the metric fields to be included in the result Empty will include all fields, must contain at least one non-tag field. Must start and end with alpha numeric and can have alphanumeric, -, _, .`,
             required: false,
             type: 'Array<string>'
         },
         'function': {
             enum: Telemetry_queryMetricsQuerySpec_function,
             default: 'none',
-            description:  `Functions specify an operation function to be applied, example mean()/max()`,
+            description:  `Functions specify an operation function to be applied, example mean()/max().`,
             required: true,
             type: 'string'
         },
         'start-time': {
-            description:  `StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z`,
+            description:  `StartTime selects all metrics with timestamp greater than the StartTime, example 2018-10-18T00:12:00Z.`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  `EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z`,
+            description:  `EndTime selects all metrics with timestamp less than the EndTime, example 2018-09-18T00:12:00Z.`,
             required: false,
             type: 'Date'
         },
         'group-by-time': {
-            description:  `GroupbyTime groups series based on the interval specifiedshould be a valid time duration `,
+            description:  `GroupbyTime groups series based on the interval specified. Should be a valid time duration.`,
             hint:  '2h',
             required: false,
             type: 'string'
         },
         'group-by-field': {
-            description:  `GroupbyField groups series based on the field specifiedmust start and end with alpha numeric and can have alphanumeric, -, _, .`,
+            description:  `GroupbyField groups series based on the field specified. Must start and end with alpha numeric and can have alphanumeric, -, _, .`,
             required: false,
             type: 'string'
         },
         'pagination': {
-            description:  `PaginationSpec specifies the number of series to include`,
+            description:  `PaginationSpec specifies the number of series to include.`,
             required: false,
             type: 'object'
         },
         'sort-order': {
             enum: Telemetry_queryMetricsQuerySpec_sort_order,
             default: 'ascending',
-            description:  `SortOrder specifies time ordering of results`,
+            description:  `SortOrder specifies time ordering of results.`,
             required: true,
             type: 'string'
         },
@@ -240,14 +238,14 @@ Empty will include all fields, must contain at least one non-tag fieldmust start
             this._formGroup = new FormGroup({
                 'kind': CustomFormControl(new FormControl(this['kind']), Telemetry_queryMetricsQuerySpec.propInfo['kind']),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), Telemetry_queryMetricsQuerySpec.propInfo['api-version']),
-                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'Name is the name of the API object.'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name']),
+                'name': CustomFormControl(new FormControl(this['name'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'Name is the name of the API object. Must start and end with alpha numeric and can have alphanumeric, -, _, .'), ]), Telemetry_queryMetricsQuerySpec.propInfo['name']),
                 'selector': CustomFormGroup(this['selector'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['selector'].required),
                 'fields': CustomFormControl(new FormControl(this['fields']), Telemetry_queryMetricsQuerySpec.propInfo['fields']),
                 'function': CustomFormControl(new FormControl(this['function'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_function), ]), Telemetry_queryMetricsQuerySpec.propInfo['function']),
                 'start-time': CustomFormControl(new FormControl(this['start-time']), Telemetry_queryMetricsQuerySpec.propInfo['start-time']),
                 'end-time': CustomFormControl(new FormControl(this['end-time']), Telemetry_queryMetricsQuerySpec.propInfo['end-time']),
                 'group-by-time': CustomFormControl(new FormControl(this['group-by-time']), Telemetry_queryMetricsQuerySpec.propInfo['group-by-time']),
-                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
+                'group-by-field': CustomFormControl(new FormControl(this['group-by-field'], [patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'GroupbyField groups series based on the field specified. Must start and end with alpha numeric and can have alphanumeric, -, _, .'), ]), Telemetry_queryMetricsQuerySpec.propInfo['group-by-field']),
                 'pagination': CustomFormGroup(this['pagination'].$formGroup, Telemetry_queryMetricsQuerySpec.propInfo['pagination'].required),
                 'sort-order': CustomFormControl(new FormControl(this['sort-order'], [required, enumValidator(Telemetry_queryMetricsQuerySpec_sort_order), ]), Telemetry_queryMetricsQuerySpec.propInfo['sort-order']),
             });

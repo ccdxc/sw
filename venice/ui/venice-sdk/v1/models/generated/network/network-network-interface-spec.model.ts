@@ -28,15 +28,15 @@ export interface INetworkNetworkInterfaceSpec {
 
 
 export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNetworkInterfaceSpec {
-    /** desired Admin state of the port */
+    /** Desired Admin state of the port. */
     'admin-status': NetworkNetworkInterfaceSpec_admin_status = null;
-    /** Intefaae speed */
+    /** Intefaae speed. */
     'speed': string = null;
-    /** Mtu of the interface */
+    /** Mtu of the interface. */
     'mtu': number = null;
-    /** Pause Spec */
+    /** Pause Spec. */
     'pause': NetworkPauseSpec = null;
-    /** Type specifies the type of interface */
+    /** Type specifies the type of interface. */
     'type': NetworkNetworkInterfaceSpec_type = null;
     'attach-tenant': string = null;
     /** AttachNetwork associates the interface with a Network. This is only valid for HOST_PF type. */
@@ -44,35 +44,35 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
     'ip-alloc-type': NetworkNetworkInterfaceSpec_ip_alloc_type = null;
     /** Interface IP Configuration if any. */
     'ip-config': ClusterIPConfig = null;
-    /** Override system allocated MAC addressshould be a valid MAC address */
+    /** Override system allocated MAC address. Should be a valid MAC address. */
     'mac-address': string = null;
     public static propInfo: { [prop in keyof INetworkNetworkInterfaceSpec]: PropInfoItem } = {
         'admin-status': {
             enum: NetworkNetworkInterfaceSpec_admin_status,
             default: 'up',
-            description:  `Desired Admin state of the port`,
+            description:  `Desired Admin state of the port.`,
             required: true,
             type: 'string'
         },
         'speed': {
-            description:  `Intefaae speed`,
+            description:  `Intefaae speed.`,
             required: false,
             type: 'string'
         },
         'mtu': {
-            description:  `Mtu of the interface`,
+            description:  `Mtu of the interface.`,
             required: false,
             type: 'number'
         },
         'pause': {
-            description:  `Pause Spec`,
+            description:  `Pause Spec.`,
             required: false,
             type: 'object'
         },
         'type': {
             enum: NetworkNetworkInterfaceSpec_type,
             default: 'none',
-            description:  `Type specifies the type of interface`,
+            description:  `Type specifies the type of interface.`,
             required: true,
             type: 'string'
         },
@@ -97,7 +97,7 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
             type: 'object'
         },
         'mac-address': {
-            description:  `Override system allocated MAC addressshould be a valid MAC address`,
+            description:  `Override system allocated MAC address. Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'

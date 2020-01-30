@@ -46,7 +46,7 @@ export class AuditAuditEvent extends BaseModel implements IAuditAuditEvent {
     'resource': ApiObjectRef = null;
     'action': string = null;
     'outcome': AuditAuditEvent_outcome = null;
-    /** should be a valid URI */
+    /** Should be a valid URI. */
     'request-uri': string = null;
     'request-object': string = null;
     'response-object': string = null;
@@ -103,7 +103,7 @@ export class AuditAuditEvent extends BaseModel implements IAuditAuditEvent {
             type: 'string'
         },
         'request-uri': {
-            description:  `Should be a valid URI`,
+            description:  `Should be a valid URI.`,
             hint:  'https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x',
             required: false,
             type: 'string'

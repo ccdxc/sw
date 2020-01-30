@@ -22,7 +22,7 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Endpoint objects */
+    /** List of Endpoint objects. */
     'items': Array<WorkloadEndpoint> = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class WorkloadEndpointList extends BaseModel implements IWorkloadEndpoint
             type: 'object'
         },
         'items': {
-            description:  `List of Endpoint objects`,
+            description:  `List of Endpoint objects.`,
             required: false,
             type: 'object'
         },

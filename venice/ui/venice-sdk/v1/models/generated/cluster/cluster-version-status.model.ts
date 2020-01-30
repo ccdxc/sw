@@ -17,32 +17,32 @@ export interface IClusterVersionStatus {
 
 
 export class ClusterVersionStatus extends BaseModel implements IClusterVersionStatus {
-    /** Human friendly build version */
+    /** Human friendly build version. */
     'build-version': string = null;
-    /** Representation of ommit in version control system - e.g: hash in git */
+    /** Representation of ommit in version control system - e.g: hash in git. */
     'vcs-commit': string = null;
-    /** Date and Time at which the source code was built */
+    /** Date and Time at which the source code was built. */
     'build-date': string = null;
-    /** RolloutBuildVersion shows in progress rollout version */
+    /** RolloutBuildVersion shows in progress rollout version. */
     'rollout-build-version': string = null;
     public static propInfo: { [prop in keyof IClusterVersionStatus]: PropInfoItem } = {
         'build-version': {
-            description:  `Human friendly build version`,
+            description:  `Human friendly build version.`,
             required: false,
             type: 'string'
         },
         'vcs-commit': {
-            description:  `Representation of ommit in version control system - e.g: hash in git`,
+            description:  `Representation of ommit in version control system - e.g: hash in git.`,
             required: false,
             type: 'string'
         },
         'build-date': {
-            description:  `Date and Time at which the source code was built`,
+            description:  `Date and Time at which the source code was built.`,
             required: false,
             type: 'string'
         },
         'rollout-build-version': {
-            description:  `RolloutBuildVersion shows in progress rollout version`,
+            description:  `RolloutBuildVersion shows in progress rollout version.`,
             required: false,
             type: 'string'
         },

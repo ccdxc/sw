@@ -28,7 +28,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
     'dsc': string = null;
     'type': NetworkNetworkInterfaceStatus_type = null;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status = null;
-    /** should be a valid MAC address */
+    /** Should be a valid MAC address. */
     'primary-mac': string = null;
     'if-host-status': NetworkNetworkInterfaceHostStatus = null;
     'if-uplink-status': NetworkNetworkInterfaceUplinkStatus = null;
@@ -53,7 +53,7 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
             type: 'string'
         },
         'primary-mac': {
-            description:  `Should be a valid MAC address`,
+            description:  `Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'

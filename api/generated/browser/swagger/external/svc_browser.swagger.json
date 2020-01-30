@@ -44,49 +44,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -94,7 +94,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -102,14 +102,14 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "B.uri",
-            "description": "URI is the root node from where to query. length of string should be between 2 and 512",
+            "description": "URI is the root node from where to query. Length of string should be between 2 and 512.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -123,7 +123,7 @@
           },
           {
             "name": "B.max-depth",
-            "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth.",
+            "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations 0 means to maximum depth.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -171,49 +171,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -221,7 +221,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -229,14 +229,14 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "B.uri",
-            "description": "URI is the root node from where to query. length of string should be between 2 and 512",
+            "description": "URI is the root node from where to query. Length of string should be between 2 and 512.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -250,7 +250,7 @@
           },
           {
             "name": "B.max-depth",
-            "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth.",
+            "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations 0 means to maximum depth.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -298,49 +298,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -348,7 +348,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -356,7 +356,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -427,21 +427,21 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48"
+          "description": "Must be alpha-numerics. Length of string should be between 1 and 48."
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string"
@@ -475,7 +475,7 @@
         },
         "field-selector": {
           "type": "string",
-          "title": "FieldSelector to select on field values in list or watch results"
+          "description": "FieldSelector to select on field values in list or watch results."
         },
         "field-change-selector": {
           "type": "array",
@@ -487,7 +487,7 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
         },
         "max-results": {
           "type": "integer",
@@ -534,57 +534,62 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+          "title": "Name of the object, unique within a Namespace for scoped objects"
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48",
-          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
+          "description": "This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+          "title": "Tenant to which the object belongs to"
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
+          "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string",
-          "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user."
+          "description": "This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+          "title": "GenerationID is the generation Id for the object"
         },
         "resource-version": {
           "type": "string",
-          "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user."
+          "description": "This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+          "title": "Resource version in the object store"
         },
         "uuid": {
           "type": "string",
-          "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user."
+          "description": "This is generated on creation of the object. System generated, not updatable by user.",
+          "title": "UUID is the unique identifier for the object"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         },
         "creation-time": {
           "type": "string",
           "format": "date-time",
-          "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "CreationTime is the creation time of the object"
         },
         "mod-time": {
           "type": "string",
           "format": "date-time",
-          "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "ModTime is the Last Modification time of the object"
         },
         "self-link": {
           "type": "string",
-          "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user."
+          "description": "When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+          "title": "SelfLink is a link for accessing this object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -600,7 +605,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -694,7 +699,7 @@
         },
         "api-version": {
           "type": "string",
-          "title": "APIVersion defines the version of the API object. This can only be set by the server"
+          "description": "APIVersion defines the version of the API object. This can only be set by the server."
         }
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
@@ -737,7 +742,7 @@
           "type": "string",
           "minLength": 2,
           "maxLength": 512,
-          "description": "length of string should be between 2 and 512"
+          "description": "Length of string should be between 2 and 512."
         },
         "query-type": {
           "type": "string",
@@ -757,7 +762,7 @@
           "format": "boolean"
         }
       },
-      "title": "BrowseRequest is the query request for the dependency tree"
+      "description": "BrowseRequest is the query request for the dependency tree."
     },
     "browserBrowseRequestList": {
       "type": "object",
@@ -778,7 +783,7 @@
           }
         }
       },
-      "title": "BrowseRequest is the query request for the dependency tree"
+      "description": "BrowseRequest is the query request for the dependency tree."
     },
     "browserBrowseRequestListCreate": {
       "type": "object",
@@ -799,7 +804,7 @@
           }
         }
       },
-      "title": "BrowseRequest is the query request for the dependency tree"
+      "description": "BrowseRequest is the query request for the dependency tree."
     },
     "browserBrowseRequestObject": {
       "type": "object",
@@ -812,8 +817,7 @@
           "type": "string",
           "minLength": 2,
           "maxLength": 512,
-          "description": "length of string should be between 2 and 512",
-          "title": "URI is the root node from where to query"
+          "description": "URI is the root node from where to query. Length of string should be between 2 and 512."
         },
         "query-type": {
           "type": "string",
@@ -822,13 +826,13 @@
             "depended-by"
           ],
           "default": "dependencies",
-          "title": "QueryType is the direction of the query"
+          "description": "QueryType is the direction of the query."
         },
         "max-depth": {
           "type": "integer",
           "format": "int64",
           "default": "1",
-          "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations\n 0 means to maximum depth."
+          "description": "Max-Depth specifies how deep the query should explore. By default depth is set to 1 which means immediate relations 0 means to maximum depth."
         },
         "count-only": {
           "type": "boolean",
@@ -890,28 +894,28 @@
           }
         }
       },
-      "title": "BrowseResponseList is the response to a querylist request"
+      "description": "BrowseResponseList is the response to a querylist request."
     },
     "browserBrowseResponseObject": {
       "type": "object",
       "properties": {
         "root-uri": {
           "type": "string",
-          "title": "RootURI is the root node for the response"
+          "description": "RootURI is the root node for the response."
         },
         "query-type": {
           "type": "string",
-          "title": "QueryType is the direction of the query"
+          "description": "QueryType is the direction of the query."
         },
         "max-depth": {
           "type": "integer",
           "format": "int64",
-          "title": "MaxDepth that the response explored. Reflects the value specified in the query"
+          "description": "MaxDepth that the response explored. Reflects the value specified in the query."
         },
         "total-count": {
           "type": "integer",
           "format": "int64",
-          "title": "TotalCount of objects in the response"
+          "description": "TotalCount of objects in the response."
         },
         "objects": {
           "type": "object",
@@ -921,7 +925,7 @@
           "description": "map of results. Key to the map is the URI of the  Object."
         }
       },
-      "title": "BrowseResponse is the response to a query request"
+      "description": "BrowseResponse is the response to a query request."
     },
     "browserObject": {
       "type": "object",
@@ -940,11 +944,11 @@
         },
         "uri": {
           "type": "string",
-          "title": "URI is the Browser URI for this object"
+          "description": "URI is the Browser URI for this object."
         },
         "reverse": {
           "type": "string",
-          "title": "Reverse is the view from the object looking back in the reverse direction of the dependency tree"
+          "description": "Reverse is the view from the object looking back in the reverse direction of the dependency tree."
         },
         "query-type": {
           "type": "string",
@@ -953,24 +957,24 @@
             "depended-by"
           ],
           "default": "dependencies",
-          "title": "QueryType specifies the direction of the relations in Links"
+          "description": "QueryType specifies the direction of the relations in Links."
         },
         "links": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/ObjectURIs"
           },
-          "description": "Links points to the relations of the object. The key for the map is the path to the filed which\n  is causing the relation."
+          "description": "Links points to the relations of the object. The key for the map is the path to the filed which is causing the relation."
         }
       },
-      "title": "Object is a node in the dependency tree representing a config object with links to related\n objects"
+      "description": "Object is a node in the dependency tree representing a config object with links to related objects."
     },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -978,7 +982,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message. Protobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type. Example 1: Pack and unpack a message in C++. Foo foo = ...; Any any; any.PackFrom(foo); ... if (any.UnpackTo(\u0026foo)) { ... } Example 2: Pack and unpack a message in Java. Foo foo = ...; Any any = Any.pack(foo); ... if (any.is(Foo.class)) { foo = any.unpack(Foo.class); } Example 3: Pack and unpack a message in Python. foo = Foo(...) any = Any() any.Pack(foo) ... if any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ... Example 4: Pack and unpack a message in Go foo := \u0026pb.Foo{...} any, err := ptypes.MarshalAny(foo) ... foo := \u0026pb.Foo{} if err := ptypes.UnmarshalAny(any, foo); err != nil { ... } The pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example \"foo.bar.com/x/y.z\" will yield type name \"y.z\". JSON ==== The JSON representation of an `Any` value uses the regular representation of the deserialized, embedded message, with an additional field `@type` which contains the type URL. Example: package google.profile; message Person { string first_name = 1; string last_name = 2; } { \"@type\": \"type.googleapis.com/google.profile.Person\", \"firstName\": \u003cstring\u003e, \"lastName\": \u003cstring\u003e } If the embedded message type is well-known and has a custom JSON representation, that representation will be embedded adding a field `value` which holds the custom JSON in addition to the `@type` field. Example (for message [google.protobuf.Duration][]): { \"@type\": \"type.googleapis.com/google.protobuf.Duration\", \"value\": \"1.212s\" }."
     }
   }
 }

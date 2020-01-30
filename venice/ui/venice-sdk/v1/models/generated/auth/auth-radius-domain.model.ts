@@ -17,14 +17,14 @@ export interface IAuthRadiusDomain {
 
 
 export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
-    /** NasID is a string identifying the NAS(API Gw) originating the Access-Request */
+    /** NasID is a string identifying the NAS(API Gw) originating the Access-Request. */
     'nas-id': string = null;
     'servers': Array<AuthRadiusServer> = null;
-    /** Tag to group domains for authentication */
+    /** Tag to group domains for authentication. */
     'tag': string = null;
     public static propInfo: { [prop in keyof IAuthRadiusDomain]: PropInfoItem } = {
         'nas-id': {
-            description:  `NasID is a string identifying the NAS(API Gw) originating the Access-Request`,
+            description:  `NasID is a string identifying the NAS(API Gw) originating the Access-Request.`,
             required: false,
             type: 'string'
         },
@@ -33,7 +33,7 @@ export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
             type: 'object'
         },
         'tag': {
-            description:  `Tag to group domains for authentication`,
+            description:  `Tag to group domains for authentication.`,
             required: false,
             type: 'string'
         },

@@ -31,21 +31,21 @@
         "parameters": [
           {
             "name": "tenant",
-            "description": "Tenant Name, to perform query within a Tenant's scope.\nThe default tenant is \"default\". In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook\nbased on user login context.",
+            "description": "Tenant Name, to perform query within a Tenant's scope. The default tenant is \"default\". In the backend this field gets auto-filled \u0026 validated by apigw-hook based on user login context.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "namespace",
-            "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace.",
+            "description": "Namespace is optional. If provided policy-search will be limited to the specified namespace.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "sg-policy",
-            "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name.",
+            "description": "NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -73,14 +73,14 @@
           },
           {
             "name": "from-ip-address",
-            "description": "Inbound ip-address, use any to refer to all ipaddresses\neg: 10.1.1.1, any.",
+            "description": "Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "to-ip-address",
-            "description": "Outbound ip-address, use any to refer to all ipaddresses\neg: 20.1.1.1, any.",
+            "description": "Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -145,14 +145,14 @@
         "parameters": [
           {
             "name": "query-string",
-            "description": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes. length of string should be between 0 and 256",
+            "description": "Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "from",
-            "description": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023. value should be between 0 and 1023",
+            "description": "From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -160,7 +160,7 @@
           },
           {
             "name": "max-results",
-            "description": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 50 and valid range is 0..8192. value should be between 0 and 8192",
+            "description": "MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192. Value should be between 0 and 8192.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -168,14 +168,14 @@
           },
           {
             "name": "sort-by",
-            "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter.",
+            "description": "SortyBy is an optional parameter and contains the field name to be sorted by, For eg: \"meta.name\" This can be specified as URI parameter. Length of string should be between 0 and 256.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "sort-order",
-            "description": "SortOrder is an optional parameter and contains whether to sort ascending\nor descending\nThis can be specified as URI parameter.",
+            "description": "SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -189,7 +189,7 @@
           },
           {
             "name": "query.categories",
-            "description": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes. length of string should be between 0 and 64",
+            "description": "OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 bytes. Length of string should be between 0 and 64.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -199,7 +199,7 @@
           },
           {
             "name": "query.kinds",
-            "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type. should be a valid object Kind",
+            "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type. Should be a valid object Kind.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -209,7 +209,7 @@
           },
           {
             "name": "tenants",
-            "description": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant\nof the logged in user.",
+            "description": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -282,21 +282,21 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48"
+          "description": "Must be alpha-numerics. Length of string should be between 1 and 48."
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string"
@@ -330,7 +330,7 @@
         },
         "field-selector": {
           "type": "string",
-          "title": "FieldSelector to select on field values in list or watch results"
+          "description": "FieldSelector to select on field values in list or watch results."
         },
         "field-change-selector": {
           "type": "array",
@@ -342,7 +342,7 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
         },
         "max-results": {
           "type": "integer",
@@ -389,57 +389,62 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+          "title": "Name of the object, unique within a Namespace for scoped objects"
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48",
-          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
+          "description": "This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+          "title": "Tenant to which the object belongs to"
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
+          "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string",
-          "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user."
+          "description": "This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+          "title": "GenerationID is the generation Id for the object"
         },
         "resource-version": {
           "type": "string",
-          "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user."
+          "description": "This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+          "title": "Resource version in the object store"
         },
         "uuid": {
           "type": "string",
-          "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user."
+          "description": "This is generated on creation of the object. System generated, not updatable by user.",
+          "title": "UUID is the unique identifier for the object"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         },
         "creation-time": {
           "type": "string",
           "format": "date-time",
-          "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "CreationTime is the creation time of the object"
         },
         "mod-time": {
           "type": "string",
           "format": "date-time",
-          "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "ModTime is the Last Modification time of the object"
         },
         "self-link": {
           "type": "string",
-          "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user."
+          "description": "When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+          "title": "SelfLink is a link for accessing this object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -455,7 +460,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -600,7 +605,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and \"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have one or more values."
         }
       },
       "description": "Requirement defines a single matching condition for a selector."
@@ -616,14 +621,14 @@
           "description": "Requirements are ANDed."
         }
       },
-      "description": "Selector is used to select objects by fields. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+      "description": "Selector is used to select objects by fields. Requirements in the selector are ANDed. A selector with no Requirements does not select anything."
     },
     "googleprotobufAny": {
       "type": "object",
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -631,7 +636,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message. Protobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type. Example 1: Pack and unpack a message in C++. Foo foo = ...; Any any; any.PackFrom(foo); ... if (any.UnpackTo(\u0026foo)) { ... } Example 2: Pack and unpack a message in Java. Foo foo = ...; Any any = Any.pack(foo); ... if (any.is(Foo.class)) { foo = any.unpack(Foo.class); } Example 3: Pack and unpack a message in Python. foo = Foo(...) any = Any() any.Pack(foo) ... if any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ... Example 4: Pack and unpack a message in Go foo := \u0026pb.Foo{...} any, err := ptypes.MarshalAny(foo) ... foo := \u0026pb.Foo{} if err := ptypes.UnmarshalAny(any, foo); err != nil { ... } The pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example \"foo.bar.com/x/y.z\" will yield type name \"y.z\". JSON ==== The JSON representation of an `Any` value uses the regular representation of the deserialized, embedded message, with an additional field `@type` which contains the type URL. Example: package google.profile; message Person { string first_name = 1; string last_name = 2; } { \"@type\": \"type.googleapis.com/google.profile.Person\", \"firstName\": \u003cstring\u003e, \"lastName\": \u003cstring\u003e } If the embedded message type is well-known and has a custom JSON representation, that representation will be embedded adding a field `value` which holds the custom JSON in addition to the `@type` field. Example (for message [google.protobuf.Duration][]): { \"@type\": \"type.googleapis.com/google.protobuf.Duration\", \"value\": \"1.212s\" }."
     },
     "labelsRequirement": {
       "type": "object",
@@ -663,7 +668,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Values contains one or more values corresponding to the label key. \"equals\" and\n\"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have\none or more values."
+          "description": "Values contains one or more values corresponding to the label key. \"equals\" and \"notEquals\" operators need a single Value. \"in\" and \"notIn\" operators can have one or more values."
         }
       },
       "description": "Requirement defines a single matching condition for a selector."
@@ -679,7 +684,7 @@
           "description": "Requirements are ANDed."
         }
       },
-      "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed.\nA selector with no Requirements does not select anything."
+      "description": "Selector is used to select objects by labels. Requirements in the selector are ANDed. A selector with no Requirements does not select anything."
     },
     "searchCategoryAggregation": {
       "type": "object",
@@ -691,7 +696,7 @@
           }
         }
       },
-      "description": "CategoryAggregation contains map of search result entries\ngrouped by two levels: first by Category and then by Kind."
+      "description": "CategoryAggregation contains map of search result entries grouped by two levels: first by Category and then by Kind."
     },
     "searchCategoryPreview": {
       "type": "object",
@@ -703,17 +708,17 @@
           }
         }
       },
-      "description": "CategoryPreview contains map of search summary (#hits)\ngrouped by two levels: first by Category and then by Kind."
+      "description": "CategoryPreview contains map of search summary (#hits) grouped by two levels: first by Category and then by Kind."
     },
     "searchEntry": {
       "type": "object",
       "properties": {
         "object": {
           "$ref": "#/definitions/apiAny",
-          "description": "TODO: Right now our api codegen does not support\nnested inline and hence this attribute cannot be \nbe made embedded/inline. api.Any is already had\nembededed attribute Any. Once infra supports nested\ninline or an alternative, this attribute should be \nembedded and made inline to make json response user\nfriendly for search."
+          "description": "TODO: Right now our api codegen does not support nested inline and hence this attribute cannot be be made embedded/inline. api.Any is already had embededed attribute Any. Once infra supports nested inline or an alternative, this attribute should be embedded and made inline to make json response user friendly for search."
         }
       },
-      "description": "Entry represent a single search result entry and contents\nof this entity vary based on Kind.\nFor Events and Alerts Kind, the result will be entire\nobject respectively.\nFor rest of the configs objects, the result will be ConfigEntry\nwith only the type \u0026 object meta data fields."
+      "description": "Entry represent a single search result entry and contents of this entity vary based on Kind. For Events and Alerts Kind, the result will be entire object respectively. For rest of the configs objects, the result will be ConfigEntry with only the type \u0026 object meta data fields."
     },
     "searchEntryList": {
       "type": "object",
@@ -725,21 +730,21 @@
           }
         }
       },
-      "title": "EntryList is list of search result entries"
+      "description": "EntryList is list of search result entries."
     },
     "searchError": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "title": "Type of error"
+          "description": "Type of error."
         },
         "reason": {
           "type": "string",
-          "title": "Reason or description of the failure"
+          "description": "Reason or description of the failure."
         }
       },
-      "title": "Error contains the error code, description and\nassociated details"
+      "description": "Error contains the error code, description and associated details."
     },
     "searchKindAggregation": {
       "type": "object",
@@ -751,7 +756,7 @@
           }
         }
       },
-      "description": "KindAggregation contains map of search result\nentries grouped by Kind."
+      "description": "KindAggregation contains map of search result entries grouped by Kind."
     },
     "searchKindPreview": {
       "type": "object",
@@ -776,22 +781,22 @@
           }
         }
       },
-      "title": "PolicyMatchEntries multiple PolicyMatchEntry in entries"
+      "description": "PolicyMatchEntries multiple PolicyMatchEntry in entries."
     },
     "searchPolicyMatchEntry": {
       "type": "object",
       "properties": {
         "rule": {
           "$ref": "#/definitions/securitySGRule",
-          "title": "Matching SGRule"
+          "description": "Matching SGRule."
         },
         "index": {
           "type": "integer",
           "format": "int64",
-          "title": "Index of the matching SG rule"
+          "description": "Index of the matching SG rule."
         }
       },
-      "description": "PolicyMatchEntry contains the matching SGrule and Index\nwithin the NetworkSecurityPolicy ruleset."
+      "description": "PolicyMatchEntry contains the matching SGrule and Index within the NetworkSecurityPolicy ruleset."
     },
     "searchPolicySearchRequest": {
       "type": "object",
@@ -799,47 +804,47 @@
         "tenant": {
           "type": "string",
           "default": "default",
-          "description": "Tenant Name, to perform query within a Tenant's scope.\nThe default tenant is \"default\". In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook\nbased on user login context."
+          "description": "Tenant Name, to perform query within a Tenant's scope. The default tenant is \"default\". In the backend this field gets auto-filled \u0026 validated by apigw-hook based on user login context."
         },
         "namespace": {
           "type": "string",
           "default": "default",
-          "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace."
+          "description": "Namespace is optional. If provided policy-search will be limited to the specified namespace."
         },
         "sg-policy": {
           "type": "string",
-          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
+          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name."
         },
         "app": {
           "type": "string",
-          "title": "App specification,  predefined apps and alg config"
+          "description": "App specification,  predefined apps and alg config."
         },
         "protocol": {
           "type": "string",
-          "title": "Protocol eg: tcp, udp, icmp"
+          "description": "Protocol eg: tcp, udp, icmp."
         },
         "port": {
           "type": "string",
-          "title": "TCP or UDP Port number"
+          "description": "TCP or UDP Port number."
         },
         "from-ip-address": {
           "type": "string",
-          "title": "Inbound ip-address, use any to refer to all ipaddresses\neg: 10.1.1.1, any"
+          "description": "Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any."
         },
         "to-ip-address": {
           "type": "string",
-          "title": "Outbound ip-address, use any to refer to all ipaddresses\neg: 20.1.1.1, any"
+          "description": "Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any."
         },
         "from-security-group": {
           "type": "string",
-          "title": "Inbound security group"
+          "description": "Inbound security group."
         },
         "to-security-group": {
           "type": "string",
-          "title": "Outbound security group"
+          "description": "Outbound security group."
         }
       },
-      "title": "PolicySearchRequest is input to the security/firewall policy search request"
+      "description": "PolicySearchRequest is input to the security/firewall policy search request."
     },
     "searchPolicySearchRequestCreate": {
       "type": "object",
@@ -847,47 +852,47 @@
         "tenant": {
           "type": "string",
           "default": "default",
-          "description": "Tenant Name, to perform query within a Tenant's scope.\nThe default tenant is \"default\". In the backend\nthis field gets auto-filled \u0026 validated by apigw-hook\nbased on user login context."
+          "description": "Tenant Name, to perform query within a Tenant's scope. The default tenant is \"default\". In the backend this field gets auto-filled \u0026 validated by apigw-hook based on user login context."
         },
         "namespace": {
           "type": "string",
           "default": "default",
-          "description": "Namespace is optional. If provided policy-search will\nbe limited to the specified namespace."
+          "description": "Namespace is optional. If provided policy-search will be limited to the specified namespace."
         },
         "sg-policy": {
           "type": "string",
-          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will\nbe limited to the specified SGpolicy object name."
+          "description": "NetworkSecurityPolicy name is optional. If provided policy-search will be limited to the specified SGpolicy object name."
         },
         "app": {
           "type": "string",
-          "title": "App specification,  predefined apps and alg config"
+          "description": "App specification,  predefined apps and alg config."
         },
         "protocol": {
           "type": "string",
-          "title": "Protocol eg: tcp, udp, icmp"
+          "description": "Protocol eg: tcp, udp, icmp."
         },
         "port": {
           "type": "string",
-          "title": "TCP or UDP Port number"
+          "description": "TCP or UDP Port number."
         },
         "from-ip-address": {
           "type": "string",
-          "title": "Inbound ip-address, use any to refer to all ipaddresses\neg: 10.1.1.1, any"
+          "description": "Inbound ip-address, use any to refer to all ipaddresses eg: 10.1.1.1, any."
         },
         "to-ip-address": {
           "type": "string",
-          "title": "Outbound ip-address, use any to refer to all ipaddresses\neg: 20.1.1.1, any"
+          "description": "Outbound ip-address, use any to refer to all ipaddresses eg: 20.1.1.1, any."
         },
         "from-security-group": {
           "type": "string",
-          "title": "Inbound security group"
+          "description": "Inbound security group."
         },
         "to-security-group": {
           "type": "string",
-          "title": "Outbound security group"
+          "description": "Outbound security group."
         }
       },
-      "title": "PolicySearchRequest is input to the security/firewall policy search request"
+      "description": "PolicySearchRequest is input to the security/firewall policy search request."
     },
     "searchPolicySearchResponse": {
       "type": "object",
@@ -902,7 +907,7 @@
             "miss"
           ],
           "default": "match",
-          "title": "Status of firewall policy search"
+          "description": "Status of firewall policy search."
         },
         "results": {
           "type": "object",
@@ -912,7 +917,7 @@
           "description": "Result is Map of \u003cNetworkSecurityPolicy object name, PolicyMatch Entry\u003e."
         }
       },
-      "title": "PolicySearchResponse is response to the security/firewall policy search request"
+      "description": "PolicySearchResponse is response to the security/firewall policy search request."
     },
     "searchSearchQuery": {
       "type": "object",
@@ -922,7 +927,7 @@
           "items": {
             "$ref": "#/definitions/searchTextRequirement"
           },
-          "title": "OR of Text-requirements to be matched, Exclude is not supported for Text search"
+          "description": "OR of Text-requirements to be matched, Exclude is not supported for Text search."
         },
         "categories": {
           "type": "array",
@@ -930,8 +935,7 @@
             "type": "string"
           },
           "maxLength": 64,
-          "description": "length of string should be between 0 and 64",
-          "title": "OR of Categories to be matched, AND and Exclude are not supported for this type\nThe max category string length is 64 bytes"
+          "description": "OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 bytes. Length of string should be between 0 and 64."
         },
         "kinds": {
           "type": "array",
@@ -939,16 +943,15 @@
             "type": "string"
           },
           "example": "Network",
-          "description": "should be a valid object Kind",
-          "title": "OR of Kinds to be matched, AND and Exclude are not supported for this type"
+          "description": "OR of Kinds to be matched, AND and Exclude are not supported for this type. Should be a valid object Kind."
         },
         "fields": {
           "$ref": "#/definitions/fieldsSelector",
-          "title": "Field Selector is AND of field.Requirements"
+          "description": "Field Selector is AND of field.Requirements."
         },
         "labels": {
           "$ref": "#/definitions/labelsSelector",
-          "title": "Label Selector is AND of label.Requirememts"
+          "description": "Label Selector is AND of label.Requirememts."
         }
       }
     },
@@ -964,28 +967,25 @@
         "query-string": {
           "type": "string",
           "maxLength": 256,
-          "description": "length of string should be between 0 and 256",
-          "title": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes"
+          "description": "Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256."
         },
         "from": {
           "type": "integer",
           "format": "int32",
           "maximum": 1023,
-          "description": "value should be between 0 and 1023",
-          "title": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023"
+          "description": "From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023."
         },
         "max-results": {
           "type": "integer",
           "format": "int32",
           "default": "50",
           "maximum": 8192,
-          "description": "value should be between 0 and 8192",
-          "title": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 50 and valid range is 0..8192"
+          "description": "MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192. Value should be between 0 and 8192."
         },
         "sort-by": {
           "type": "string",
           "maxLength": 256,
-          "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter."
+          "description": "SortyBy is an optional parameter and contains the field name to be sorted by, For eg: \"meta.name\" This can be specified as URI parameter. Length of string should be between 0 and 256."
         },
         "sort-order": {
           "type": "string",
@@ -994,7 +994,7 @@
             "descending"
           ],
           "default": "ascending",
-          "description": "SortOrder is an optional parameter and contains whether to sort ascending\nor descending\nThis can be specified as URI parameter."
+          "description": "SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter."
         },
         "mode": {
           "type": "string",
@@ -1003,28 +1003,27 @@
             "preview"
           ],
           "default": "full",
-          "title": "Query Mode"
+          "description": "Query Mode."
         },
         "query": {
           "$ref": "#/definitions/searchSearchQuery",
-          "description": "Search query contains the search requirements\nThis is intended for advanced query use cases involving\nboolean query, structured term query and supports various\ncombinations of text, phrase strings and search modifiers\nfor specific categories, kinds, fields and labels.\nThis cannot be specified as URI parameter."
+          "description": "Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter."
         },
         "tenants": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant\nof the logged in user"
+          "description": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user."
         },
         "aggregate": {
           "type": "boolean",
           "format": "boolean",
           "default": "true",
-          "title": "Indicates whether to perform aggregation on the search results or not"
+          "description": "Indicates whether to perform aggregation on the search results or not."
         }
       },
-      "description": "Simple queries can be specified as URI param using \"QueryString\".\nFor advanced queries, it is recommended to use the \"SearchQuery\" structure\nand specify them in BODY of the GET/POST method.\n\nExamples of search query in query-string format:\n\n 1. Find all occurrences matching text “Network”\n    Network\n 2. Find all occurrences matching phrase “link down”\n    “link down”\n 3. Find all occurrences matching text production OR \"staging\"\n    production staging\n 4. Find all occurrences matching text “Network” AND \"link down\"\n    Network,\"link down\"\n    Network AND \"link down\"\n 5. Find all config objects with label1=foo\n    category:config label:label1=foo\n 6. Find all objects created on or after certain date+time\n    category:config field:meta.created-time\u003e=”date-time-string”\n 7. Find all Network objects with type=vlan\n    kind:Network field:spec.type=vlan\n 8. Find all Naples nodes with admission-phase = pending or rejected\n    kind:DistributedServiceCard field:spec.phase in (pending, rejected)\n 9. Find all events with text matching “disconnected”\n    category:events disconnected\n10. Find all Critical events for Network objects\n    category:events kind:Network field:severity=CRITICAL\n11. Find all Alerts generated from Naples MAC1\n    category:alerts field:status.source.node=MAC1\n    category:alerts MAC1\n12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90\n    category:metrics kind:DistributedServiceCard field:metric.mem\u003e90,metric.cpu\u003e90\n13. Find all Endpoints with label Tier=Web with counter1\u003e=100\n    category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100\n14. Find all Endpoints objects with label target=prod with crc-error-count != 0\n    category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0\n15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match\n    production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web",
-      "title": "SearchRequest is the input to the search API"
+      "description": "SearchRequest is the input to the search API Simple queries can be specified as URI param using \"QueryString\". For advanced queries, it is recommended to use the \"SearchQuery\" structure and specify them in BODY of the GET/POST method. Examples of search query in query-string format: 1. Find all occurrences matching text “Network” Network 2. Find all occurrences matching phrase “link down” “link down” 3. Find all occurrences matching text production OR \"staging\" production staging 4. Find all occurrences matching text “Network” AND \"link down\" Network,\"link down\" Network AND \"link down\" 5. Find all config objects with label1=foo category:config label:label1=foo 6. Find all objects created on or after certain date+time category:config field:meta.created-time\u003e=”date-time-string” 7. Find all Network objects with type=vlan kind:Network field:spec.type=vlan 8. Find all Naples nodes with admission-phase = pending or rejected kind:DistributedServiceCard field:spec.phase in (pending, rejected) 9. Find all events with text matching “disconnected” category:events disconnected 10. Find all Critical events for Network objects category:events kind:Network field:severity=CRITICAL 11. Find all Alerts generated from Naples MAC1 category:alerts field:status.source.node=MAC1 category:alerts MAC1 12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90 category:metrics kind:DistributedServiceCard field:metric.mem\u003e90,metric.cpu\u003e90 13. Find all Endpoints with label Tier=Web with counter1\u003e=100 category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100 14. Find all Endpoints objects with label target=prod with crc-error-count != 0 category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0 15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web."
     },
     "searchSearchRequestCreate": {
       "type": "object",
@@ -1038,28 +1037,25 @@
         "query-string": {
           "type": "string",
           "maxLength": 256,
-          "description": "length of string should be between 0 and 256",
-          "title": "Simple query string\nThis can be specified as URI parameter.\nFor advanced query cases, Users should use specify SearchQuery\nand pass the SearchRequest in a GET/POST Body\nThe max query-string length is 256 bytes"
+          "description": "Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256."
         },
         "from": {
           "type": "integer",
           "format": "int32",
           "maximum": 1023,
-          "description": "value should be between 0 and 1023",
-          "title": "From represents the start offset (zero based), used in paginated search requests\nThe results returned would be in the range [From ... From+MaxResults-1]\nThis can be specified as URI parameter. \nDefault value is 0 and valid range is 0..1023"
+          "description": "From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023."
         },
         "max-results": {
           "type": "integer",
           "format": "int32",
           "default": "50",
           "maximum": 8192,
-          "description": "value should be between 0 and 8192",
-          "title": "MaxResults is the max-count of search results\nThis can be specified as URI parameter.\nDefault value is 50 and valid range is 0..8192"
+          "description": "MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192. Value should be between 0 and 8192."
         },
         "sort-by": {
           "type": "string",
           "maxLength": 256,
-          "description": "SortyBy is an optional parameter and contains the field name \nto be sorted by, For eg: \"meta.name\"\nThis can be specified as URI parameter."
+          "description": "SortyBy is an optional parameter and contains the field name to be sorted by, For eg: \"meta.name\" This can be specified as URI parameter. Length of string should be between 0 and 256."
         },
         "sort-order": {
           "type": "string",
@@ -1068,7 +1064,7 @@
             "descending"
           ],
           "default": "ascending",
-          "description": "SortOrder is an optional parameter and contains whether to sort ascending\nor descending\nThis can be specified as URI parameter."
+          "description": "SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter."
         },
         "mode": {
           "type": "string",
@@ -1077,28 +1073,27 @@
             "preview"
           ],
           "default": "full",
-          "title": "Query Mode"
+          "description": "Query Mode."
         },
         "query": {
           "$ref": "#/definitions/searchSearchQuery",
-          "description": "Search query contains the search requirements\nThis is intended for advanced query use cases involving\nboolean query, structured term query and supports various\ncombinations of text, phrase strings and search modifiers\nfor specific categories, kinds, fields and labels.\nThis cannot be specified as URI parameter."
+          "description": "Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter."
         },
         "tenants": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant\nof the logged in user"
+          "description": "OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user."
         },
         "aggregate": {
           "type": "boolean",
           "format": "boolean",
           "default": "true",
-          "title": "Indicates whether to perform aggregation on the search results or not"
+          "description": "Indicates whether to perform aggregation on the search results or not."
         }
       },
-      "description": "Simple queries can be specified as URI param using \"QueryString\".\nFor advanced queries, it is recommended to use the \"SearchQuery\" structure\nand specify them in BODY of the GET/POST method.\n\nExamples of search query in query-string format:\n\n 1. Find all occurrences matching text “Network”\n    Network\n 2. Find all occurrences matching phrase “link down”\n    “link down”\n 3. Find all occurrences matching text production OR \"staging\"\n    production staging\n 4. Find all occurrences matching text “Network” AND \"link down\"\n    Network,\"link down\"\n    Network AND \"link down\"\n 5. Find all config objects with label1=foo\n    category:config label:label1=foo\n 6. Find all objects created on or after certain date+time\n    category:config field:meta.created-time\u003e=”date-time-string”\n 7. Find all Network objects with type=vlan\n    kind:Network field:spec.type=vlan\n 8. Find all Naples nodes with admission-phase = pending or rejected\n    kind:DistributedServiceCard field:spec.phase in (pending, rejected)\n 9. Find all events with text matching “disconnected”\n    category:events disconnected\n10. Find all Critical events for Network objects\n    category:events kind:Network field:severity=CRITICAL\n11. Find all Alerts generated from Naples MAC1\n    category:alerts field:status.source.node=MAC1\n    category:alerts MAC1\n12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90\n    category:metrics kind:DistributedServiceCard field:metric.mem\u003e90,metric.cpu\u003e90\n13. Find all Endpoints with label Tier=Web with counter1\u003e=100\n    category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100\n14. Find all Endpoints objects with label target=prod with crc-error-count != 0\n    category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0\n15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match\n    production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web",
-      "title": "SearchRequest is the input to the search API"
+      "description": "SearchRequest is the input to the search API Simple queries can be specified as URI param using \"QueryString\". For advanced queries, it is recommended to use the \"SearchQuery\" structure and specify them in BODY of the GET/POST method. Examples of search query in query-string format: 1. Find all occurrences matching text “Network” Network 2. Find all occurrences matching phrase “link down” “link down” 3. Find all occurrences matching text production OR \"staging\" production staging 4. Find all occurrences matching text “Network” AND \"link down\" Network,\"link down\" Network AND \"link down\" 5. Find all config objects with label1=foo category:config label:label1=foo 6. Find all objects created on or after certain date+time category:config field:meta.created-time\u003e=”date-time-string” 7. Find all Network objects with type=vlan kind:Network field:spec.type=vlan 8. Find all Naples nodes with admission-phase = pending or rejected kind:DistributedServiceCard field:spec.phase in (pending, rejected) 9. Find all events with text matching “disconnected” category:events disconnected 10. Find all Critical events for Network objects category:events kind:Network field:severity=CRITICAL 11. Find all Alerts generated from Naples MAC1 category:alerts field:status.source.node=MAC1 category:alerts MAC1 12. Find all Naples nodes with metric filter : mem\u003e90 \u0026\u0026 cpu\u003e90 category:metrics kind:DistributedServiceCard field:metric.mem\u003e90,metric.cpu\u003e90 13. Find all Endpoints with label Tier=Web with counter1\u003e=100 category:metrics kind:Endpoint label:Tier=Web field:metric.counter1 \u003e 100 14. Find all Endpoints objects with label target=prod with crc-error-count != 0 category:metrics kind:Endpoint label:target=prod field:status.crc-error-count!=0 15. Find all occurences matching the words and phrase in a certain category \u0026 kinds with certain field and label match production \"status down\" category:Network kind:Network,Service field:spec.service-type=external label:tier=web."
     },
     "searchSearchResponse": {
       "type": "object",
@@ -1106,39 +1101,39 @@
         "total-hits": {
           "type": "string",
           "format": "int64",
-          "title": "TotalHits indicates total number of hits matched"
+          "description": "TotalHits indicates total number of hits matched."
         },
         "actual-hits": {
           "type": "string",
           "format": "int64",
-          "title": "ActualHits indicates the actual hits returned in this response"
+          "description": "ActualHits indicates the actual hits returned in this response."
         },
         "time-taken-msecs": {
           "type": "string",
           "format": "int64",
-          "title": "TimeTakenMsecs is the time taken for search response in millisecs"
+          "description": "TimeTakenMsecs is the time taken for search response in millisecs."
         },
         "error": {
           "$ref": "#/definitions/searchError",
-          "title": "Error status for failures"
+          "description": "Error status for failures."
         },
         "entries": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/searchEntry"
           },
-          "title": "EntryList is list of all search results with no grouping.\nThis attribute is populated and valid only in Full request-mode"
+          "description": "EntryList is list of all search results with no grouping. This attribute is populated and valid only in Full request-mode."
         },
         "preview-entries": {
           "$ref": "#/definitions/searchTenantPreview",
-          "title": "PreviewEntries is a three level grouping of search summary (#hits),\ngrouped by tenant, category and kind in that order. This attribute\nis populated and valid only in Preview request-mode"
+          "description": "PreviewEntries is a three level grouping of search summary (#hits), grouped by tenant, category and kind in that order. This attribute is populated and valid only in Preview request-mode."
         },
         "aggregated-entries": {
           "$ref": "#/definitions/searchTenantAggregation",
-          "title": "AggregatedEntries is a three level grouping of full search results,\nGrouped by tenant, category and kind in that order. This attribute\nis populated and valid only in Full request-mode"
+          "description": "AggregatedEntries is a three level grouping of full search results, Grouped by tenant, category and kind in that order. This attribute is populated and valid only in Full request-mode."
         }
       },
-      "description": "SearchResponse is the output provided by the search API\nBased on the search request, search results would be part\nof one of the entities : Entries or NestedAggregation.\nIn case of failures, Error would indicate the error status and\ndescription."
+      "description": "SearchResponse is the output provided by the search API Based on the search request, search results would be part of one of the entities : Entries or NestedAggregation. In case of failures, Error would indicate the error status and description."
     },
     "searchTenantAggregation": {
       "type": "object",
@@ -1150,7 +1145,7 @@
           }
         }
       },
-      "description": "TenantAggregation contains map of search result entries\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
+      "description": "TenantAggregation contains map of search result entries grouped by three levels: first by Tenant, second by Category and finally by Kind."
     },
     "searchTenantPreview": {
       "type": "object",
@@ -1162,7 +1157,7 @@
           }
         }
       },
-      "description": "TenantPreview contains map of search summary (#hits)\ngrouped by three levels: first by Tenant, second by Category \nand finally by Kind."
+      "description": "TenantPreview contains map of search summary (#hits) grouped by three levels: first by Tenant, second by Category and finally by Kind."
     },
     "searchTextRequirement": {
       "type": "object",
@@ -1173,11 +1168,10 @@
             "type": "string"
           },
           "maxLength": 256,
-          "description": "length of string should be between 0 and 256",
-          "title": "AND of words or phrases to be matched\nThe max text-string length is 256 bytes"
+          "description": "AND of words or phrases to be matched The max text-string length is 256 bytes. Length of string should be between 0 and 256."
         }
       },
-      "description": "TextRequirement is AND of text-strings in the list\nIt is comprised of words or phrases for text search support.\nIf a text-string has space separated multi-word, it will be\ninterpreted as a phrase.\n\nIn the example below :\n- \"link down\" will be a phrase query\n- network, production, staging will be a word query\n\nFor eg:\n   network                      (match network)\n   link down                    (match \"link down\" phrase)\n   network,production           (match network AND production)\n   network,link down,staging    (match network AND \"link down\" AND staging)"
+      "description": "TextRequirement is AND of text-strings in the list It is comprised of words or phrases for text search support. If a text-string has space separated multi-word, it will be interpreted as a phrase. In the example below : - \"link down\" will be a phrase query - network, production, staging will be a word query For eg: network                      (match network) link down                    (match \"link down\" phrase) network,production           (match network AND production) network,link down,staging    (match network AND \"link down\" AND staging)."
     },
     "securityProtoPort": {
       "type": "object",
@@ -1188,7 +1182,7 @@
         },
         "ports": {
           "type": "string",
-          "title": "TCP or UDP port number(s): comma separate port numbers, or dash separate port range"
+          "description": "TCP or UDP port number(s): comma separate port numbers, or dash separate port range."
         }
       }
     },
@@ -1203,14 +1197,14 @@
           "items": {
             "type": "string"
           },
-          "title": "list of apps objects to which the rule applies to"
+          "description": "list of apps objects to which the rule applies to."
         },
         "proto-ports": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/securityProtoPort"
           },
-          "title": "list of (protocol, ports) pairs to which the rule applies to, in addition to apps"
+          "description": "list of (protocol, ports) pairs to which the rule applies to, in addition to apps."
         },
         "action": {
           "type": "string",
@@ -1225,35 +1219,35 @@
             "permit": "Permit",
             "reject": "Reject"
           },
-          "title": "SGRule action, either PERMIT, DENY or REJECT"
+          "description": "SGRule action, either PERMIT, DENY or REJECT."
         },
         "from-ip-addresses": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses\ncli-tags: id=from-ip"
+          "description": "inbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id=from-ip."
         },
         "to-ip-addresses": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses\ncli-tags: id=to-ip"
+          "description": "outbound rule from a given ip-address/ip-mask/ip-range. Use any to refer to all ipaddresses cli-tags: id=to-ip."
         },
         "from-security-groups": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "inbound rule from a given security group"
+          "description": "inbound rule from a given security group."
         },
         "to-security-groups": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "outbound rule from a given security group"
+          "description": "outbound rule from a given security group."
         }
       }
     }

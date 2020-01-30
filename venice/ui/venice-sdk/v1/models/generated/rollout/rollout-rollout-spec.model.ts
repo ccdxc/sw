@@ -32,26 +32,16 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
     'version': string = null;
     /** Time, if specified, at which the rollout is supposed to start. (example:"2002-10-02T15:00:00.05Z"). */
     'scheduled-start-time': Date = null;
-    /** ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time
-Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:00.05Z"). */
+    /** ScheduledEndTime, if specified, after which the rollout is supposed to stop, if not completed by that time Typically represents the end of Maintenance window. (example:"2002-10-02T15:00:00.05Z"). */
     'scheduled-end-time': Date = null;
     'strategy': RolloutRolloutSpec_strategy = null;
-    /** MaxParallel is the maximum number of nodes getting updated at any time
-This setting is applicable only to DistributedServiceCards.
-Controller nodes are always upgraded one after another. */
+    /** MaxParallel is the maximum number of nodes getting updated at any time This setting is applicable only to DistributedServiceCards. Controller nodes are always upgraded one after another. */
     'max-parallel': number = null;
-    /** After these many failures are observed during DSC upgrade, the rollout process stops
-This setting applies to DSCs only.
-The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards. */
+    /** After these many failures are observed during DSC upgrade, the rollout process stops This setting applies to DSCs only. The controller nodes are rollout first and any failure there stops the rollout of DistributedServiceCards. */
     'max-nic-failures-before-abort': number = null;
-    /** If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels.
-if a DistributedServiceCard matches multiple constraints, the first one is used.
- Any DistributedServiceCard which does not match the constraints is upgraded at the end.
-This order is mainly for the DSCs on Hosts
-Controller nodes are always rollout one after other. */
+    /** If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used. Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the DSCs on Hosts Controller nodes are always rollout one after other. */
     'order-constraints': Array<LabelsSelector> = null;
-    /** When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue
- rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one. */
+    /** When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one. */
     'suspend': boolean = null;
     /** Dont upgrade Controller but only upgrade DistributedServiceCards. */
     'dscs-only': boolean = null;
@@ -94,12 +84,12 @@ Controller nodes are always rollout one after other. */
             type: 'number'
         },
         'order-constraints': {
-            description:  `If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used.  Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the DSCs on Hosts Controller nodes are always rollout one after other.`,
+            description:  `If specified, this is the sequence in which the DistributedServiceCards are upgraded based on their labels. if a DistributedServiceCard matches multiple constraints, the first one is used. Any DistributedServiceCard which does not match the constraints is upgraded at the end. This order is mainly for the DSCs on Hosts Controller nodes are always rollout one after other.`,
             required: false,
             type: 'object'
         },
         'suspend': {
-            description:  `When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue  rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.`,
+            description:  `When Set to true, the current rollout is suspended. Existing Nodes/Services/DistributedServiceCards in the middle of rollout continue rollout execution but any Nodes/Services/DistributedServiceCards which has not started Rollout will not be scheduled one.`,
             required: false,
             type: 'boolean'
         },

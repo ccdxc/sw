@@ -18,25 +18,17 @@ export interface ISecurityCertificateSpec {
 
 
 export class SecurityCertificateSpec extends BaseModel implements ISecurityCertificateSpec {
-    /** Description of the purpose of this certificate */
+    /** Description of the purpose of this certificate. */
     'description': string = null;
-    /** Usage can be "client", "server" or "trust-root" in any combination.
-A "server" certificate is used by a server to authenticate itself to the client
-A "client" certificate is used by a client to authenticate itself to a server
-A "trust-root" certificate is self-signed and is only used to validate
-certificates presented by peers.
-"client" and "server" certificates are always accompanied by a private key,
-whereas "trust-root"-only certificates are not. */
+    /** Usage can be "client", "server" or "trust-root" in any combination. A "server" certificate is used by a server to authenticate itself to the client A "client" certificate is used by a client to authenticate itself to a server A "trust-root" certificate is self-signed and is only used to validate certificates presented by peers. "client" and "server" certificates are always accompanied by a private key, whereas "trust-root"-only certificates are not. */
     'usages': Array<SecurityCertificateSpec_usages> = null;
-    /** Body of the certificate in PEM encoding */
+    /** Body of the certificate in PEM encoding. */
     'body': string = null;
-    /** Trust chain of the certificate in PEM encoding.
-These certificates are treated opaquely. We do not process them in any way
-other than decoding them for informational purposes. */
+    /** Trust chain of the certificate in PEM encoding. These certificates are treated opaquely. We do not process them in any way other than decoding them for informational purposes. */
     'trust-chain': string = null;
     public static propInfo: { [prop in keyof ISecurityCertificateSpec]: PropInfoItem } = {
         'description': {
-            description:  `Description of the purpose of this certificate`,
+            description:  `Description of the purpose of this certificate.`,
             required: false,
             type: 'string'
         },
@@ -48,7 +40,7 @@ other than decoding them for informational purposes. */
             type: 'Array<string>'
         },
         'body': {
-            description:  `Body of the certificate in PEM encoding`,
+            description:  `Body of the certificate in PEM encoding.`,
             required: false,
             type: 'string'
         },

@@ -14,11 +14,11 @@ export interface IClusterTenantSpec {
 
 
 export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
-    /** Tenant admin user */
+    /** Tenant admin user. */
     'admin-user': string = null;
     public static propInfo: { [prop in keyof IClusterTenantSpec]: PropInfoItem } = {
         'admin-user': {
-            description:  `Tenant admin user`,
+            description:  `Tenant admin user.`,
             required: false,
             type: 'string'
         },

@@ -21,48 +21,46 @@ export interface INetworkServiceSpec {
 
 
 export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec {
-    /** FIXME: maps are not working. change this after its fixed
-map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"];
-workload selector for the service (list of labels to match) */
+    /** FIXME: maps are not working. change this after its fixed map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"]; workload selector for the service (list of labels to match). */
     'workload-labels': Array<string> = null;
-    /** Virtual IP of the load balancer */
+    /** Virtual IP of the load balancer. */
     'virtual-ip': string = null;
-    /** load balancer port */
+    /** Load balancer port. */
     'ports': string = null;
-    /** load balancing policy (reference to LbPolicy object) */
+    /** Load balancing policy (reference to LbPolicy object). */
     'lb-policy': string = null;
-    /** TLS configuration for inbound connections */
+    /** TLS configuration for inbound connections. */
     'tls-server-policy': NetworkTLSServerPolicySpec = null;
-    /** TLS configuration for outbound connections */
+    /** TLS configuration for outbound connections. */
     'tls-client-policy': NetworkTLSClientPolicySpec = null;
     public static propInfo: { [prop in keyof INetworkServiceSpec]: PropInfoItem } = {
         'workload-labels': {
-            description:  `FIXME: maps are not working. change this after its fixed map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"]; workload selector for the service (list of labels to match)`,
+            description:  `FIXME: maps are not working. change this after its fixed map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"]; workload selector for the service (list of labels to match).`,
             required: false,
             type: 'Array<string>'
         },
         'virtual-ip': {
-            description:  `Virtual IP of the load balancer`,
+            description:  `Virtual IP of the load balancer.`,
             required: false,
             type: 'string'
         },
         'ports': {
-            description:  `Load balancer port`,
+            description:  `Load balancer port.`,
             required: false,
             type: 'string'
         },
         'lb-policy': {
-            description:  `Load balancing policy (reference to LbPolicy object)`,
+            description:  `Load balancing policy (reference to LbPolicy object).`,
             required: false,
             type: 'string'
         },
         'tls-server-policy': {
-            description:  `TLS configuration for inbound connections`,
+            description:  `TLS configuration for inbound connections.`,
             required: false,
             type: 'object'
         },
         'tls-client-policy': {
-            description:  `TLS configuration for outbound connections`,
+            description:  `TLS configuration for outbound connections.`,
             required: false,
             type: 'object'
         },

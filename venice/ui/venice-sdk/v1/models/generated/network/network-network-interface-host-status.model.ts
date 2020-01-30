@@ -15,7 +15,7 @@ export interface INetworkNetworkInterfaceHostStatus {
 
 
 export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INetworkNetworkInterfaceHostStatus {
-    /** interface name seen by the host driver. */
+    /** Interface name seen by the host driver. */
     'host-ifname': string = null;
     /** PCIE Device ID. */
     'device-id': string = null;

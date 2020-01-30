@@ -24,57 +24,57 @@ export interface IEventsEventAttributes {
 
 
 export class EventsEventAttributes extends BaseModel implements IEventsEventAttributes {
-    /** Severity represents the criticality level of an event */
+    /** Severity represents the criticality level of an event. */
     'severity': EventsEventAttributes_severity = null;
-    /** Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined */
+    /** Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined. */
     'type': string = null;
-    /** Message represents the human readable description of an event */
+    /** Message represents the human readable description of an event. */
     'message': string = null;
-    /** Category represents the category of an event. e.g. Cluster/Network/Datapath */
+    /** Category represents the category of an event. e.g. Cluster/Network/Datapath. */
     'category': EventsEventAttributes_category = null;
-    /** ObjectRef is the reference to the object associated with an event */
+    /** ObjectRef is the reference to the object associated with an event. */
     'object-ref': ApiObjectRef = null;
-    /** Source is the component and host/node which generated an event */
+    /** Source is the component and host/node which generated an event. */
     'source': EventsEventSource = null;
-    /** Number of occurrence of this event in the active interval */
+    /** Number of occurrence of this event in the active interval. */
     'count': number = null;
     public static propInfo: { [prop in keyof IEventsEventAttributes]: PropInfoItem } = {
         'severity': {
             enum: EventsEventAttributes_severity,
             default: 'info',
-            description:  `Severity represents the criticality level of an event`,
+            description:  `Severity represents the criticality level of an event.`,
             required: true,
             type: 'string'
         },
         'type': {
-            description:  `Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined`,
+            description:  `Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined.`,
             required: false,
             type: 'string'
         },
         'message': {
-            description:  `Message represents the human readable description of an event`,
+            description:  `Message represents the human readable description of an event.`,
             required: false,
             type: 'string'
         },
         'category': {
             enum: EventsEventAttributes_category,
             default: 'cluster',
-            description:  `Category represents the category of an event. e.g. Cluster/Network/Datapath`,
+            description:  `Category represents the category of an event. e.g. Cluster/Network/Datapath.`,
             required: true,
             type: 'string'
         },
         'object-ref': {
-            description:  `ObjectRef is the reference to the object associated with an event`,
+            description:  `ObjectRef is the reference to the object associated with an event.`,
             required: false,
             type: 'object'
         },
         'source': {
-            description:  `Source is the component and host/node which generated an event`,
+            description:  `Source is the component and host/node which generated an event.`,
             required: false,
             type: 'object'
         },
         'count': {
-            description:  `Number of occurrence of this event in the active interval`,
+            description:  `Number of occurrence of this event in the active interval.`,
             required: false,
             type: 'number'
         },

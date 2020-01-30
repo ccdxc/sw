@@ -14,11 +14,11 @@ export interface IClusterHostStatus {
 
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
-    /** AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host */
+    /** AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host. */
     'admitted-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterHostStatus]: PropInfoItem } = {
         'admitted-dscs': {
-            description:  `AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host`,
+            description:  `AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host.`,
             required: false,
             type: 'Array<string>'
         },

@@ -16,27 +16,27 @@ export interface INetworkRoute {
 
 
 export class NetworkRoute extends BaseModel implements INetworkRoute {
-    /** Route Prefix for the route. */
+    /** Route Prefix for the route. Should be a valid v4 or v6 CIDR block. */
     'prefix': string = null;
-    /** NextHop for the route. */
+    /** NextHop for the route. Should be a valid v4 or v6 CIDR block. */
     'next-hop': string = null;
-    /** Target VirtualRouter instance */
+    /** Target VirtualRouter instance. */
     'target-virtual-router': string = null;
     public static propInfo: { [prop in keyof INetworkRoute]: PropInfoItem } = {
         'prefix': {
-            description:  `Route Prefix for the route.`,
+            description:  `Route Prefix for the route. Should be a valid v4 or v6 CIDR block.`,
             hint:  '10.1.1.1/24, ff02::5/32 ',
             required: true,
             type: 'string'
         },
         'next-hop': {
-            description:  `NextHop for the route.`,
+            description:  `NextHop for the route. Should be a valid v4 or v6 CIDR block.`,
             hint:  '10.1.1.1/24, ff02::5/32 ',
             required: true,
             type: 'string'
         },
         'target-virtual-router': {
-            description:  `Target VirtualRouter instance`,
+            description:  `Target VirtualRouter instance.`,
             required: false,
             type: 'string'
         },

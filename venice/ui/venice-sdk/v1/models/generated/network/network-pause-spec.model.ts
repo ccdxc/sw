@@ -17,27 +17,27 @@ export interface INetworkPauseSpec {
 
 
 export class NetworkPauseSpec extends BaseModel implements INetworkPauseSpec {
-    /** Pause type */
+    /** Pause type. */
     'type': NetworkPauseSpec_type = null;
-    /** TX Pause enabled */
+    /** TX Pause enabled. */
     'tx-pause-enabled': boolean = null;
-    /** RX Pause enabled */
+    /** RX Pause enabled. */
     'rx-pause-enabled': boolean = null;
     public static propInfo: { [prop in keyof INetworkPauseSpec]: PropInfoItem } = {
         'type': {
             enum: NetworkPauseSpec_type,
             default: 'disable',
-            description:  `Pause type`,
+            description:  `Pause type.`,
             required: true,
             type: 'string'
         },
         'tx-pause-enabled': {
-            description:  `TX Pause enabled`,
+            description:  `TX Pause enabled.`,
             required: false,
             type: 'boolean'
         },
         'rx-pause-enabled': {
-            description:  `RX Pause enabled`,
+            description:  `RX Pause enabled.`,
             required: false,
             type: 'boolean'
         },

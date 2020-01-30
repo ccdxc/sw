@@ -134,7 +134,7 @@ noverify = ["github.com/docker/docker"]
   branch = "master"
 
 [[constraint]]
-  revision = "5bf8a55338e2920afd3783b145a23cb750124ffb"
+  revision = "c851e5e1525d93917e37121f3aa6fcef28bff52f"
   name = "github.com/pensando/grpc-gateway"
 
 [[constraint]]

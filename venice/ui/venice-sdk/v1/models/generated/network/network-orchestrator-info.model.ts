@@ -15,18 +15,18 @@ export interface INetworkOrchestratorInfo {
 
 
 export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrchestratorInfo {
-    /** Name of Orchestrator object to which this network should be applied tolength of string should be at least 1 */
+    /** Name of Orchestrator object to which this network should be applied to. Length of string should be at least 1. */
     'orchestrator-name': string = null;
-    /** Namespace in the orchestrator in which this network should be created in. */
+    /** Namespace in the orchestrator in which this network should be created in. Length of string should be at least 1. */
     'namespace': string = null;
     public static propInfo: { [prop in keyof INetworkOrchestratorInfo]: PropInfoItem } = {
         'orchestrator-name': {
-            description:  `Name of Orchestrator object to which this network should be applied tolength of string should be at least 1`,
+            description:  `Name of Orchestrator object to which this network should be applied to. Length of string should be at least 1.`,
             required: true,
             type: 'string'
         },
         'namespace': {
-            description:  `Namespace in the orchestrator in which this network should be created in.`,
+            description:  `Namespace in the orchestrator in which this network should be created in. Length of string should be at least 1.`,
             required: true,
             type: 'string'
         },

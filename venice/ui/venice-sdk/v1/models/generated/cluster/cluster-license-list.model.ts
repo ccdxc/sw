@@ -22,7 +22,7 @@ export class ClusterLicenseList extends BaseModel implements IClusterLicenseList
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of License objects */
+    /** List of License objects. */
     'items': Array<ClusterLicense> = null;
     public static propInfo: { [prop in keyof IClusterLicenseList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class ClusterLicenseList extends BaseModel implements IClusterLicenseList
             type: 'object'
         },
         'items': {
-            description:  `List of License objects`,
+            description:  `List of License objects.`,
             required: false,
             type: 'object'
         },

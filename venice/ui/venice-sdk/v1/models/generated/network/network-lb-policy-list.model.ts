@@ -22,7 +22,7 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of LbPolicy objects */
+    /** List of LbPolicy objects. */
     'items': Array<NetworkLbPolicy> = null;
     public static propInfo: { [prop in keyof INetworkLbPolicyList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class NetworkLbPolicyList extends BaseModel implements INetworkLbPolicyLi
             type: 'object'
         },
         'items': {
-            description:  `List of LbPolicy objects`,
+            description:  `List of LbPolicy objects.`,
             required: false,
             type: 'object'
         },

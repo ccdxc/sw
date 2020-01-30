@@ -18,10 +18,9 @@ export interface IAuthAuthenticationPolicySpec {
 
 export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuthenticationPolicySpec {
     'authenticators': AuthAuthenticators = null;
-    /** Secret used to sign JWT token */
+    /** Secret used to sign JWT token. */
     'secret': string = null;
-    /** TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m".
-Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". */
+    /** TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". Should be a valid time duration. */
     'token-expiry': string = null;
     public static propInfo: { [prop in keyof IAuthAuthenticationPolicySpec]: PropInfoItem } = {
         'authenticators': {
@@ -29,13 +28,13 @@ Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". */
             type: 'object'
         },
         'secret': {
-            description:  `Secret used to sign JWT token`,
+            description:  `Secret used to sign JWT token.`,
             required: false,
             type: 'string'
         },
         'token-expiry': {
             default: '144h',
-            description:  `TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`,
+            description:  `TokenExpiry is time duration after which JWT token expires. Default is 6 days. A duration string is a sequence of decimal number and a unit suffix, such as "300ms" or "2h45m". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". Should be a valid time duration.`,
             hint:  '2h',
             required: true,
             type: 'string'

@@ -22,13 +22,13 @@ export interface IAuthLdapAttributeMapping {
 export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttributeMapping {
     /** The name that the server uses for the UserID Attribute. */
     'user': string = null;
-    /** UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search */
+    /** UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search. */
     'user-object-class': string = null;
     /** The tenant the server will use for authentication. */
     'tenant': string = null;
     /** The name that the server uses for the Group Member Attribute. By default, the attribute is set to member for standard schema, and sgMember for updated schema. */
     'group': string = null;
-    /** GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search */
+    /** GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search. */
     'group-object-class': string = null;
     /** The name of the attribute for storing the users’ e-mail address. This attribute is primarily used for linked Authentication Server Users. It can also be used to identify users by their e-mail address in certificate authentication. */
     'email': string = null;
@@ -41,7 +41,7 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
             type: 'string'
         },
         'user-object-class': {
-            description:  `UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search`,
+            description:  `UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search.`,
             required: false,
             type: 'string'
         },
@@ -56,7 +56,7 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
             type: 'string'
         },
         'group-object-class': {
-            description:  `GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search`,
+            description:  `GroupObjectClass is the STRUCTURAL object class for group entry in LDAP. It is used as a filter for group search.`,
             required: false,
             type: 'string'
         },

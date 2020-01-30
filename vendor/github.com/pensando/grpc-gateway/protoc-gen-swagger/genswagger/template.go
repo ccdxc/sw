@@ -690,15 +690,8 @@ func applyTemplate(p param) (string, error) {
 // updateSwaggerDataFromComments updates a Swagger object based on a comment
 // from the proto file.
 //
-// First paragraph of a comment is used for summary. Remaining paragraphs of a
-// comment are used for description. If 'Summary' field is not present on the
-// passed SwaggerObject, the summary and description are joined by \n\n.
-//
-// If there is a field named 'Info', its 'Summary' and 'Description' fields
-// will be updated instead.
-//
-// If there is no 'Summary', the same behavior will be attempted on 'Title',
-// but only if the last character is not a period.
+// If a line begins with "title:", it will be put into the title field.
+// Otherwise the rest of the lines of the comment will be put into the description field
 func updateSwaggerDataFromComments(SwaggerObject interface{}, comment string) error {
 	if len(comment) == 0 {
 		return nil
@@ -722,31 +715,80 @@ func updateSwaggerDataFromComments(SwaggerObject interface{}, comment string) er
 		usingTitle = true
 	}
 
-	// If there is a summary (or summary-equivalent), use the first
-	// paragraph as summary, and the rest as description.
-	if summaryValue.CanSet() {
-		paragraphs := strings.Split(comment, "\n\n")
+	// Parse out prefixes
+	// title: will set the title field explicitly.
+	// cli-help: will be filtered out
+	prefixesToFilter := map[string]bool{
+		"cli-help:": true,
+	}
 
-		summary := strings.TrimSpace(paragraphs[0])
-		description := strings.TrimSpace(strings.Join(paragraphs[1:], "\n\n"))
-		if !usingTitle || summary == "" || summary[len(summary)-1] != '.' {
-			if len(summary) > 0 {
-				summaryValue.Set(reflect.ValueOf(summary))
+	lines := strings.Split(comment, "\n")
+	title := ""
+	desc := ""
+	for i := range lines {
+		temp := strings.TrimSpace(lines[i])
+		if len(temp) == 0 {
+			continue
+		}
+		skipLine := false
+		for prefix := range prefixesToFilter {
+			if strings.HasPrefix(temp, prefix) {
+				skipLine = true
 			}
-			if len(description) > 0 {
-				if !descriptionValue.CanSet() {
-					return fmt.Errorf("Encountered object type with a summary, but no description")
-				}
-				descriptionValue.Set(reflect.ValueOf(description))
+		}
+		if skipLine {
+			continue
+		}
+
+		isTitle := false
+		if strings.HasPrefix(temp, "title:") {
+			temp = strings.TrimPrefix(temp, "title:")
+			temp = strings.TrimSpace(temp)
+			if strings.HasSuffix(temp, ".") {
+				// Remove period from the title, as in generating description field for query param, a period will be added when concatenating for the description.
+				temp = temp[:len(temp)-1]
 			}
+			isTitle = true
+		}
+		if isTitle {
+			title = temp
+		} else {
+			desc += temp + " "
+		}
+	}
+
+	// If we have a title value, we set it
+	titleSet := false
+	if summaryValue.CanSet() {
+		if usingTitle && len(title) > 0 {
+			summaryValue.Set(reflect.ValueOf(title))
+			titleSet = true
+		} else if !usingTitle {
+			// Set summary field to be comment content
+			desc = strings.TrimSpace(desc)
+			summaryValue.Set(reflect.ValueOf(desc))
 			return nil
 		}
 	}
 
-	// There was no summary field on the SwaggerObject. Try to apply the
-	// whole comment into description.
-	if descriptionValue.CanSet() {
-		descriptionValue.Set(reflect.ValueOf(comment))
+	// Set the rest of the description
+	if descriptionValue.CanSet() && len(desc) > 0 {
+		desc = strings.TrimSpace(desc)
+		if !strings.HasSuffix(desc, ".") {
+			// Add a period
+			desc += "."
+		}
+		currDesc := descriptionValue.String()
+		if len(currDesc) != 0 {
+			// Add a space before joining the generated description
+			desc += fmt.Sprintf(" %s", currDesc)
+		}
+		strings.TrimSpace(desc)
+		descriptionValue.Set(reflect.ValueOf(desc))
+		return nil
+	}
+
+	if titleSet {
 		return nil
 	}
 

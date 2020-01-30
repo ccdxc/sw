@@ -599,8 +599,21 @@ func fieldFinalizer(obj *genswagger.SwaggerSchemaObject, field *descriptor.Field
 		if val, ok := profile.Default["all"]; ok {
 			obj.Default = val
 		}
-		if val, ok := profile.DocString["all"]; ok {
-			obj.Description = obj.Description + val
+		if val, ok := profile.DocStrings["all"]; ok {
+			description := ""
+			for _, s := range val {
+				temp := strings.TrimSpace(s)
+				if len(temp) == 0 {
+					continue
+				}
+				temp = strings.ToUpper(string(temp[0])) + temp[1:]
+				if !strings.HasSuffix(temp, ".") {
+					temp = temp + "."
+				}
+				description += temp + " "
+			}
+			description = strings.TrimSpace(description)
+			obj.Description += description
 		}
 		if val, ok := profile.Pattern["all"]; ok {
 			obj.Pattern = val

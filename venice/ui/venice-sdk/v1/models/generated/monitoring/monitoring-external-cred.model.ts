@@ -21,22 +21,17 @@ export interface IMonitoringExternalCred {
 
 
 export class MonitoringExternalCred extends BaseModel implements IMonitoringExternalCred {
-    /** AuthType is the authentication type used in this config */
+    /** AuthType is the authentication type used in this config. */
     'auth-type': MonitoringExternalCred_auth_type = null;
-    /** UserName is the login id to be used towards the external entity */
+    /** UserName is the login id to be used towards the external entity. */
     'username': string = null;
-    /** Password is one time specified, not visibile on read operations
-Only valid when UserName is defined
-TBD: need to add (venice.secret) = "true" support for this */
+    /** Password is one time specified, not visibile on read operations Only valid when UserName is defined TBD: need to add (venice.secret) = "true" support for this. */
     'password': string = null;
-    /** External entity supports bearer tokens for authentication and authorization
-Token refresh is not supported using OAuth2
-TBD: need to add (venice.secret) = "true" support for this */
+    /** External entity supports bearer tokens for authentication and authorization Token refresh is not supported using OAuth2 TBD: need to add (venice.secret) = "true" support for this. */
     'bearer-token': string = null;
     /** CertData holds PEM-encoded bytes (typically read from a client certificate file). */
     'cert-data': string = null;
-    /** KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
-TBD: need to add (venice.secret) = "true" support for this */
+    /** KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = "true" support for this. */
     'key-data': string = null;
     /** CaData holds PEM-encoded bytes (typically read from a root certificates bundle). */
     'ca-data': string = null;
@@ -44,22 +39,22 @@ TBD: need to add (venice.secret) = "true" support for this */
         'auth-type': {
             enum: MonitoringExternalCred_auth_type_uihint,
             default: 'none',
-            description:  `AuthType is the authentication type used in this config`,
+            description:  `AuthType is the authentication type used in this config.`,
             required: true,
             type: 'string'
         },
         'username': {
-            description:  `UserName is the login id to be used towards the external entity`,
+            description:  `UserName is the login id to be used towards the external entity.`,
             required: false,
             type: 'string'
         },
         'password': {
-            description:  `Password is one time specified, not visibile on read operations Only valid when UserName is defined TBD: need to add (venice.secret) = "true" support for this`,
+            description:  `Password is one time specified, not visibile on read operations Only valid when UserName is defined TBD: need to add (venice.secret) = "true" support for this.`,
             required: false,
             type: 'string'
         },
         'bearer-token': {
-            description:  `External entity supports bearer tokens for authentication and authorization Token refresh is not supported using OAuth2 TBD: need to add (venice.secret) = "true" support for this`,
+            description:  `External entity supports bearer tokens for authentication and authorization Token refresh is not supported using OAuth2 TBD: need to add (venice.secret) = "true" support for this.`,
             required: false,
             type: 'string'
         },
@@ -69,7 +64,7 @@ TBD: need to add (venice.secret) = "true" support for this */
             type: 'string'
         },
         'key-data': {
-            description:  `KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = "true" support for this`,
+            description:  `KeyData holds PEM-encoded bytes (typically read from a client certificate key file). TBD: need to add (venice.secret) = "true" support for this.`,
             required: false,
             type: 'string'
         },

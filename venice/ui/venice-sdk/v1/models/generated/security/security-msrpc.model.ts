@@ -15,19 +15,18 @@ export interface ISecurityMsrpc {
 
 
 export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
-    /** MSRPC Program identifier */
+    /** MSRPC Program identifier. */
     'program-uuid': string = null;
-    /** Timeout for this program idshould be a valid time duration
- */
+    /** Timeout for this program id. Should be a valid time duration. */
     'timeout': string = null;
     public static propInfo: { [prop in keyof ISecurityMsrpc]: PropInfoItem } = {
         'program-uuid': {
-            description:  `MSRPC Program identifier`,
+            description:  `MSRPC Program identifier.`,
             required: false,
             type: 'string'
         },
         'timeout': {
-            description:  `Timeout for this program idshould be a valid time duration `,
+            description:  `Timeout for this program id. Should be a valid time duration.`,
             hint:  '2h',
             required: true,
             type: 'string'

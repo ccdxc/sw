@@ -22,7 +22,7 @@ export class NetworkRoutingConfigList extends BaseModel implements INetworkRouti
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of RoutingConfig objects */
+    /** List of RoutingConfig objects. */
     'items': Array<NetworkRoutingConfig> = null;
     public static propInfo: { [prop in keyof INetworkRoutingConfigList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class NetworkRoutingConfigList extends BaseModel implements INetworkRouti
             type: 'object'
         },
         'items': {
-            description:  `List of RoutingConfig objects`,
+            description:  `List of RoutingConfig objects.`,
             required: false,
             type: 'object'
         },

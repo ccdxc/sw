@@ -15,9 +15,9 @@ export interface ISecurityProtoPort {
 
 
 export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
-    /** protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc. */
+    /** Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc. */
     'protocol': string = null;
-    /** TCP or UDP port number(s): comma separate port numbers, or dash separate port range */
+    /** TCP or UDP port number(s): comma separate port numbers, or dash separate port range. */
     'ports': string = null;
     public static propInfo: { [prop in keyof ISecurityProtoPort]: PropInfoItem } = {
         'protocol': {
@@ -26,7 +26,7 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
             type: 'string'
         },
         'ports': {
-            description:  `TCP or UDP port number(s): comma separate port numbers, or dash separate port range`,
+            description:  `TCP or UDP port number(s): comma separate port numbers, or dash separate port range.`,
             required: false,
             type: 'string'
         },

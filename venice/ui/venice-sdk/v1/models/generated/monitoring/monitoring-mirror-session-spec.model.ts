@@ -24,37 +24,35 @@ export interface IMonitoringMirrorSessionSpec {
 
 
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
-    /** PacketSize: Max size of a mirrored packet.
-PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice.
-For packets mirrored to Venice, max mirror packet size allowed is 256 B */
+    /** PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B. */
     'packet-size': number = null;
-    /** StartConditions */
+    /** StartConditions. */
     'start-condition': MonitoringMirrorStartConditions = null;
-    /** Mirrored packet collectors */
+    /** Mirrored packet collectors. */
     'collectors': Array<MonitoringMirrorCollector> = null;
-    /** Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions */
+    /** Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions. */
     'match-rules': Array<MonitoringMatchRule> = null;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters> = null;
-    /** If specified, will pick up interface matching the selector */
+    /** If specified, will pick up interface matching the selector. */
     'interface-selector': LabelsSelector = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionSpec]: PropInfoItem } = {
         'packet-size': {
-            description:  `PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B`,
+            description:  `PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B.`,
             required: false,
             type: 'number'
         },
         'start-condition': {
-            description:  `StartConditions`,
+            description:  `StartConditions.`,
             required: false,
             type: 'object'
         },
         'collectors': {
-            description:  `Mirrored packet collectors`,
+            description:  `Mirrored packet collectors.`,
             required: false,
             type: 'object'
         },
         'match-rules': {
-            description:  `Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions`,
+            description:  `Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions.`,
             required: false,
             type: 'object'
         },
@@ -65,7 +63,7 @@ For packets mirrored to Venice, max mirror packet size allowed is 256 B */
             type: 'Array<string>'
         },
         'interface-selector': {
-            description:  `If specified, will pick up interface matching the selector`,
+            description:  `If specified, will pick up interface matching the selector.`,
             required: false,
             type: 'object'
         },

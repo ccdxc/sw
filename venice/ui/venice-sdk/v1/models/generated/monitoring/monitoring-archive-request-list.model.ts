@@ -22,7 +22,7 @@ export class MonitoringArchiveRequestList extends BaseModel implements IMonitori
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of ArchiveRequest objects */
+    /** List of ArchiveRequest objects. */
     'items': Array<MonitoringArchiveRequest> = null;
     public static propInfo: { [prop in keyof IMonitoringArchiveRequestList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class MonitoringArchiveRequestList extends BaseModel implements IMonitori
             type: 'object'
         },
         'items': {
-            description:  `List of ArchiveRequest objects`,
+            description:  `List of ArchiveRequest objects.`,
             required: false,
             type: 'object'
         },

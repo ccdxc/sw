@@ -842,89 +842,89 @@ func TestFieldProfiles(t *testing.T) {
 			Required: map[string]bool{"all": true},
 		},
 		"str_field1": FieldProfile{
-			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
-			MaxLen:    map[string]int64{"all": int64(30), "v1": int64(31)},
-			DocString: map[string]string{"all": "length of string should be between 4 and 30", "v1": "length of string should be between 5 and 31"},
-			Required:  map[string]bool{"all": true},
+			MinLen:     map[string]int64{"all": int64(4), "v1": int64(5)},
+			MaxLen:     map[string]int64{"all": int64(30), "v1": int64(31)},
+			DocStrings: map[string][]string{"all": []string{"length of string should be between 4 and 30"}, "v1": []string{"length of string should be between 5 and 31"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field2": FieldProfile{
-			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
-			MaxLen:    map[string]int64{"all": int64(30), "v1": int64(31)},
-			DocString: map[string]string{"all": "length of string should be between 4 and 30", "v1": "length of string should be between 5 and 31"},
-			Required:  map[string]bool{"all": false},
+			MinLen:     map[string]int64{"all": int64(4), "v1": int64(5)},
+			MaxLen:     map[string]int64{"all": int64(30), "v1": int64(31)},
+			DocStrings: map[string][]string{"all": []string{"length of string should be between 4 and 30"}, "v1": []string{"length of string should be between 5 and 31"}},
+			Required:   map[string]bool{"all": false},
 		},
 		"str_field3": FieldProfile{
-			MinLen:    map[string]int64{"all": int64(4), "v1": int64(5)},
-			MaxLen:    map[string]int64{"v1": int64(31)},
-			DocString: map[string]string{"all": "length of string should be at least 4", "v1": "length of string should be between 5 and 31"},
-			Required:  map[string]bool{"all": true},
+			MinLen:     map[string]int64{"all": int64(4), "v1": int64(5)},
+			MaxLen:     map[string]int64{"v1": int64(31)},
+			DocStrings: map[string][]string{"all": []string{"length of string should be at least 4"}, "v1": []string{"length of string should be between 5 and 31"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field4": FieldProfile{
-			DocString: map[string]string{"all": "IP address"},
-			Example:   map[string]string{"all": "10.1.1.1"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"IP address"}},
+			Example:    map[string]string{"all": "10.1.1.1"},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field5": FieldProfile{
-			DocString: map[string]string{"all": "IP address or hostname"},
-			Example:   map[string]string{"all": "10.1.1.1"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"IP address or hostname"}},
+			Example:    map[string]string{"all": "10.1.1.1"},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field6": FieldProfile{
-			DocString: map[string]string{"all": "MAC address"},
-			Example:   map[string]string{"all": "0000"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"MAC address"}},
+			Example:    map[string]string{"all": "0000"},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field7": FieldProfile{
-			DocString: map[string]string{"all": "valid URI"},
-			Example:   map[string]string{"all": "https://"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"valid URI"}},
+			Example:    map[string]string{"all": "https://"},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field8": FieldProfile{
-			DocString: map[string]string{"all": "valid UUID"},
-			Example:   map[string]string{"all": "49943a2c-9d76-11e7-abc4-cec278b6b50a"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"valid UUID"}},
+			Example:    map[string]string{"all": "49943a2c-9d76-11e7-abc4-cec278b6b50a"},
+			Required:   map[string]bool{"all": true},
 		},
 		"str_field9": FieldProfile{
-			DocString: map[string]string{"all": "IPv4 address"},
-			Example:   map[string]string{"all": "10.1.1.1"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"IPv4 address"}},
+			Example:    map[string]string{"all": "10.1.1.1"},
+			Required:   map[string]bool{"all": true},
 		},
 		"int_field1": FieldProfile{
-			MinInt:    map[string]int64{"all": int64(3)},
-			MaxInt:    map[string]int64{"all": int64(1000)},
-			DocString: map[string]string{"all": "value should be between 3 and 1000"},
-			Required:  map[string]bool{"all": true},
+			MinInt:     map[string]int64{"all": int64(3)},
+			MaxInt:     map[string]int64{"all": int64(1000)},
+			DocStrings: map[string][]string{"all": []string{"value should be between 3 and 1000"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"int_field2": FieldProfile{
-			MinInt:    map[string]int64{"all": int64(5)},
-			DocString: map[string]string{"all": "value should be at least 5"},
-			Required:  map[string]bool{"all": true},
+			MinInt:     map[string]int64{"all": int64(5)},
+			DocStrings: map[string][]string{"all": []string{"value should be at least 5"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"regexp_field1": FieldProfile{
-			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ."},
-			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"must start and end with alpha numeric and can have alphanumeric, -, _, ."}},
+			Pattern:    map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
+			Required:   map[string]bool{"all": true},
 		},
 		"regexp_field2": FieldProfile{
-			DocString: map[string]string{"all": "must start and end with alpha numeric and can have alphanumeric, -, _, ."},
-			Pattern:   map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
-			Required:  map[string]bool{"all": false},
+			DocStrings: map[string][]string{"all": []string{"must start and end with alpha numeric and can have alphanumeric, -, _, ."}},
+			Pattern:    map[string]string{"all": `^[a-zA-Z0-9][\w\-\.]*[a-zA-Z0-9]$`},
+			Required:   map[string]bool{"all": false},
 		},
 		"duration1": FieldProfile{
-			DocString: map[string]string{"all": "should be a valid time duration"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"should be a valid time duration"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"duration2": FieldProfile{
-			DocString: map[string]string{"all": "should be a valid time duration of at least 4m0s"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"should be a valid time duration of at least 4m0s"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"duration3": FieldProfile{
-			DocString: map[string]string{"all": "should be a valid time duration of at most 30m0s"},
-			Required:  map[string]bool{"all": true},
+			DocStrings: map[string][]string{"all": []string{"should be a valid time duration of at most 30m0s"}},
+			Required:   map[string]bool{"all": true},
 		},
 		"duration4": FieldProfile{
-			DocString: map[string]string{"all": "should be a valid time duration between 4m0s and 30m0s"},
-			Required:  map[string]bool{"all": false},
+			DocStrings: map[string][]string{"all": []string{"should be a valid time duration between 4m0s and 30m0s"}},
+			Required:   map[string]bool{"all": false},
 		},
 	}
 	msg, err := r.LookupMsg("", ".example.TestMsg")
@@ -990,10 +990,12 @@ func TestFieldProfiles(t *testing.T) {
 						t.Fatalf("MaxLen profiles mismatch for [%v], exp[%v] got[%v]", *fld.Name, c.MaxLen, profile.MaxLen)
 					}
 				}
-				if len(c.DocString) > 0 {
-					for k, v := range c.DocString {
-						if !strings.Contains(profile.DocString[k], v) {
-							t.Fatalf("docstring does not match for [%v] got [%v] should contain [%v]", *fld.Name, profile.DocString[k], v)
+				if len(c.DocStrings) > 0 {
+					for k, v := range c.DocStrings {
+						expDocStrings := strings.Join(v, ". ")
+						docStrings := strings.Join(profile.DocStrings[k], ". ")
+						if !strings.Contains(docStrings, expDocStrings) {
+							t.Fatalf("docstring does not match for [%v] got [%v] should contain [%v]", *fld.Name, docStrings, expDocStrings)
 						}
 					}
 				}

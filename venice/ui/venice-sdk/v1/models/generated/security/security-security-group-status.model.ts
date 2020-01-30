@@ -15,18 +15,18 @@ export interface ISecuritySecurityGroupStatus {
 
 
 export class SecuritySecurityGroupStatus extends BaseModel implements ISecuritySecurityGroupStatus {
-    /** list of workloads that are part of this security group */
+    /** List of workloads that are part of this security group. */
     'workloads': Array<string> = null;
-    /** list of all policies attached to this security group */
+    /** List of all policies attached to this security group. */
     'Policies': Array<string> = null;
     public static propInfo: { [prop in keyof ISecuritySecurityGroupStatus]: PropInfoItem } = {
         'workloads': {
-            description:  `List of workloads that are part of this security group`,
+            description:  `List of workloads that are part of this security group.`,
             required: false,
             type: 'Array<string>'
         },
         'Policies': {
-            description:  `List of all policies attached to this security group`,
+            description:  `List of all policies attached to this security group.`,
             required: false,
             type: 'Array<string>'
         },

@@ -16,9 +16,8 @@ import "cluster.proto";
 import "sgpolicy.proto";
 
 // ----------------------------- Workload Object -----------------------------
-//
+
 // Workload represents a VM, container/pod or Baremetal.
-//
 message Workload {
     option (venice.objectPrefix) = { Collection: "workloads", Path: "/{O.Tenant}"};
     api.TypeMeta T          = 1 [(gogoproto.embed) = true,

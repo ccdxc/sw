@@ -22,7 +22,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
     'flow-selector': MonitoringMatchRule = null;
     'time-window': MonitoringTimeWindow = null;
     'repeat-every': string = null;
-    /** If packet capture is enabled, a mirror-session will be internally created */
+    /** If packet capture is enabled, a mirror-session will be internally created. */
     'enable-mirroring': boolean = null;
     public static propInfo: { [prop in keyof IMonitoringTroubleshootingSessionSpec]: PropInfoItem } = {
         'flow-selector': {
@@ -38,7 +38,7 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
             type: 'string'
         },
         'enable-mirroring': {
-            description:  `If packet capture is enabled, a mirror-session will be internally created`,
+            description:  `If packet capture is enabled, a mirror-session will be internally created.`,
             required: false,
             type: 'boolean'
         },

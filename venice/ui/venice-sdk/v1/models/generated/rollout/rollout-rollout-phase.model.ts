@@ -21,16 +21,15 @@ export interface IRolloutRolloutPhase {
 
 
 export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPhase {
-    /** Name of the Node, Service or DistributedServiceCard */
+    /** Name of the Node, Service or DistributedServiceCard. */
     'name': string = null;
-    /** Phase indicates a certain rollout phase/condition */
+    /** Phase indicates a certain rollout phase/condition. */
     'phase': RolloutRolloutPhase_phase = null;
-    /** The time of starting the rollout for this node/service. 
-This does not include the pre-check which can happen way before the actual rollout. */
+    /** The time of starting the rollout for this node/service. This does not include the pre-check which can happen way before the actual rollout. */
     'start-time': Date = null;
-    /** Time at which rollout completed for this node/service */
+    /** Time at which rollout completed for this node/service. */
     'end-time': Date = null;
-    /** The reason for the Phase last transition, if any */
+    /** The reason for the Phase last transition, if any. */
     'reason': string = null;
     /** A detailed message indicating details about the transition. */
     'message': string = null;
@@ -38,29 +37,29 @@ This does not include the pre-check which can happen way before the actual rollo
     'num-retries': number = null;
     public static propInfo: { [prop in keyof IRolloutRolloutPhase]: PropInfoItem } = {
         'name': {
-            description:  `Name of the Node, Service or DistributedServiceCard`,
+            description:  `Name of the Node, Service or DistributedServiceCard.`,
             required: false,
             type: 'string'
         },
         'phase': {
             enum: RolloutRolloutPhase_phase_uihint,
             default: 'pre-check',
-            description:  `Phase indicates a certain rollout phase/condition`,
+            description:  `Phase indicates a certain rollout phase/condition.`,
             required: true,
             type: 'string'
         },
         'start-time': {
-            description:  `The time of starting the rollout for this node/service.  This does not include the pre-check which can happen way before the actual rollout.`,
+            description:  `The time of starting the rollout for this node/service. This does not include the pre-check which can happen way before the actual rollout.`,
             required: false,
             type: 'Date'
         },
         'end-time': {
-            description:  `Time at which rollout completed for this node/service`,
+            description:  `Time at which rollout completed for this node/service.`,
             required: false,
             type: 'Date'
         },
         'reason': {
-            description:  `The reason for the Phase last transition, if any`,
+            description:  `The reason for the Phase last transition, if any.`,
             required: false,
             type: 'string'
         },

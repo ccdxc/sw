@@ -252,7 +252,6 @@ func (m *AuthConfig) GetPassword() string {
 	return ""
 }
 
-// ----------------------------- Export Config -----------------------------
 // Export Config specifies server address and user credentials
 type ExportConfig struct {
 	// IP address or URL of the collector/entity to which the data is to be exported
@@ -290,7 +289,6 @@ func (m *ExportConfig) GetCredentials() *ExternalCred {
 	return nil
 }
 
-// ------------------------ ExternalCred Object ----------------------------
 // ExternalCred defines credentials required to access an external entity, such as
 // a stats collector, compute orchestration entity, or a syslog server.
 // External entity may support a variety of methods, like username/password,

@@ -14,11 +14,11 @@ export interface IMonitoringAlertDestinationStatus {
 
 
 export class MonitoringAlertDestinationStatus extends BaseModel implements IMonitoringAlertDestinationStatus {
-    /** total number of notifications sent using this notification mechanism */
+    /** Total number of notifications sent using this notification mechanism. */
     'total-notifications-sent': number = null;
     public static propInfo: { [prop in keyof IMonitoringAlertDestinationStatus]: PropInfoItem } = {
         'total-notifications-sent': {
-            description:  `Total number of notifications sent using this notification mechanism`,
+            description:  `Total number of notifications sent using this notification mechanism.`,
             required: false,
             type: 'number'
         },

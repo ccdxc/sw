@@ -17,25 +17,25 @@ export interface IAuthOperationStatus {
 
 
 export class AuthOperationStatus extends BaseModel implements IAuthOperationStatus {
-    /** Operation for which authorization decision is resported */
+    /** Operation for which authorization decision is resported. */
     'operation': AuthOperation = null;
-    /** Allowed indicates if Operation is authorized */
+    /** Allowed indicates if Operation is authorized. */
     'allowed': boolean = null;
-    /** Message reports error validating Operation */
+    /** Message reports error validating Operation. */
     'message': string = null;
     public static propInfo: { [prop in keyof IAuthOperationStatus]: PropInfoItem } = {
         'operation': {
-            description:  `Operation for which authorization decision is resported`,
+            description:  `Operation for which authorization decision is resported.`,
             required: false,
             type: 'object'
         },
         'allowed': {
-            description:  `Allowed indicates if Operation is authorized`,
+            description:  `Allowed indicates if Operation is authorized.`,
             required: false,
             type: 'boolean'
         },
         'message': {
-            description:  `Message reports error validating Operation`,
+            description:  `Message reports error validating Operation.`,
             required: false,
             type: 'string'
         },

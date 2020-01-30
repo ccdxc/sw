@@ -27,11 +27,11 @@ export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
     'bind-dn': string = null;
     /** The password for the LDAP database account specified in the Root DN field. */
     'bind-password': string = null;
-    /** Defines how attributes in the LDAP directory are mapped to user properties */
+    /** Defines how attributes in the LDAP directory are mapped to user properties. */
     'attribute-mapping': AuthLdapAttributeMapping = null;
-    /** Servers is a list that lets you configure multiple LDAP servers for high availability */
+    /** Servers is a list that lets you configure multiple LDAP servers for high availability. */
     'servers': Array<AuthLdapServer> = null;
-    /** Tag to group domains for authentication */
+    /** Tag to group domains for authentication. */
     'tag': string = null;
     public static propInfo: { [prop in keyof IAuthLdapDomain]: PropInfoItem } = {
         'base-dn': {
@@ -50,17 +50,17 @@ export class AuthLdapDomain extends BaseModel implements IAuthLdapDomain {
             type: 'string'
         },
         'attribute-mapping': {
-            description:  `Defines how attributes in the LDAP directory are mapped to user properties`,
+            description:  `Defines how attributes in the LDAP directory are mapped to user properties.`,
             required: false,
             type: 'object'
         },
         'servers': {
-            description:  `Servers is a list that lets you configure multiple LDAP servers for high availability`,
+            description:  `Servers is a list that lets you configure multiple LDAP servers for high availability.`,
             required: false,
             type: 'object'
         },
         'tag': {
-            description:  `Tag to group domains for authentication`,
+            description:  `Tag to group domains for authentication.`,
             required: false,
             type: 'string'
         },

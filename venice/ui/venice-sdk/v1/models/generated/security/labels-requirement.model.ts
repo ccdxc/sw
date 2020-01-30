@@ -21,9 +21,7 @@ export class LabelsRequirement extends BaseModel implements ILabelsRequirement {
     'key': string = null;
     /** Condition checked for the key. */
     'operator': LabelsRequirement_operator = null;
-    /** Values contains one or more values corresponding to the label key. "equals" and
-"notEquals" operators need a single Value. "in" and "notIn" operators can have
-one or more values. */
+    /** Values contains one or more values corresponding to the label key. "equals" and "notEquals" operators need a single Value. "in" and "notIn" operators can have one or more values. */
     'values': Array<string> = null;
     public static propInfo: { [prop in keyof ILabelsRequirement]: PropInfoItem } = {
         'key': {

@@ -16,25 +16,25 @@ export interface ITokenauthNodeTokenRequest {
 
 
 export class TokenauthNodeTokenRequest extends BaseModel implements ITokenauthNodeTokenRequest {
-    /** Audience represents a list of nodes the token is valid for. "*" indicates all nodes */
+    /** Audience represents a list of nodes the token is valid for. "*" indicates all nodes. */
     'audience': Array<string> = null;
-    /** ValidityStart indicates the time at which the token becomes valid */
+    /** ValidityStart indicates the time at which the token becomes valid. */
     'validity-start': Date = null;
-    /** ValidityEnd indicates the time at which the token becomes invalid */
+    /** ValidityEnd indicates the time at which the token becomes invalid. */
     'validity-end': Date = null;
     public static propInfo: { [prop in keyof ITokenauthNodeTokenRequest]: PropInfoItem } = {
         'audience': {
-            description:  `Audience represents a list of nodes the token is valid for. "*" indicates all nodes`,
+            description:  `Audience represents a list of nodes the token is valid for. "*" indicates all nodes.`,
             required: false,
             type: 'Array<string>'
         },
         'validity-start': {
-            description:  `ValidityStart indicates the time at which the token becomes valid`,
+            description:  `ValidityStart indicates the time at which the token becomes valid.`,
             required: false,
             type: 'Date'
         },
         'validity-end': {
-            description:  `ValidityEnd indicates the time at which the token becomes invalid`,
+            description:  `ValidityEnd indicates the time at which the token becomes invalid.`,
             required: false,
             type: 'Date'
         },

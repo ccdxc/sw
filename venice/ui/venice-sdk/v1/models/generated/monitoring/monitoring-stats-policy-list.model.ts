@@ -22,7 +22,7 @@ export class MonitoringStatsPolicyList extends BaseModel implements IMonitoringS
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of StatsPolicy objects */
+    /** List of StatsPolicy objects. */
     'items': Array<MonitoringStatsPolicy> = null;
     public static propInfo: { [prop in keyof IMonitoringStatsPolicyList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class MonitoringStatsPolicyList extends BaseModel implements IMonitoringS
             type: 'object'
         },
         'items': {
-            description:  `List of StatsPolicy objects`,
+            description:  `List of StatsPolicy objects.`,
             required: false,
             type: 'object'
         },

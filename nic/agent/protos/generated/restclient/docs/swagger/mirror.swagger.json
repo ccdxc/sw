@@ -118,7 +118,7 @@
         "DeleteEvent"
       ],
       "default": "CreateEvent",
-      "title": "Watch event types"
+      "description": "Watch event types."
     },
     "apiListWatchOptions": {
       "type": "object",
@@ -131,21 +131,21 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48"
+          "description": "Must be alpha-numerics. Length of string should be between 1 and 48."
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string"
@@ -179,7 +179,7 @@
         },
         "field-selector": {
           "type": "string",
-          "title": "FieldSelector to select on field values in list or watch results"
+          "description": "FieldSelector to select on field values in list or watch results."
         },
         "field-change-selector": {
           "type": "array",
@@ -191,7 +191,7 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
         },
         "max-results": {
           "type": "integer",
@@ -238,57 +238,62 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+          "title": "Name of the object, unique within a Namespace for scoped objects"
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48",
-          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
+          "description": "This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+          "title": "Tenant to which the object belongs to"
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
+          "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string",
-          "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user."
+          "description": "This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+          "title": "GenerationID is the generation Id for the object"
         },
         "resource-version": {
           "type": "string",
-          "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user."
+          "description": "This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+          "title": "Resource version in the object store"
         },
         "uuid": {
           "type": "string",
-          "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user."
+          "description": "This is generated on creation of the object. System generated, not updatable by user.",
+          "title": "UUID is the unique identifier for the object"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         },
         "creation-time": {
           "type": "string",
           "format": "date-time",
-          "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "CreationTime is the creation time of the object"
         },
         "mod-time": {
           "type": "string",
           "format": "date-time",
-          "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "ModTime is the Last Modification time of the object"
         },
         "self-link": {
           "type": "string",
-          "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user."
+          "description": "When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+          "title": "SelfLink is a link for accessing this object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -382,7 +387,7 @@
         },
         "api-version": {
           "type": "string",
-          "title": "APIVersion defines the version of the API object. This can only be set by the server"
+          "description": "APIVersion defines the version of the API object. This can only be set by the server."
         }
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
@@ -414,7 +419,7 @@
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -422,7 +427,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message. Protobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type. Example 1: Pack and unpack a message in C++. Foo foo = ...; Any any; any.PackFrom(foo); ... if (any.UnpackTo(\u0026foo)) { ... } Example 2: Pack and unpack a message in Java. Foo foo = ...; Any any = Any.pack(foo); ... if (any.is(Foo.class)) { foo = any.unpack(Foo.class); } Example 3: Pack and unpack a message in Python. foo = Foo(...) any = Any() any.Pack(foo) ... if any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ... Example 4: Pack and unpack a message in Go foo := \u0026pb.Foo{...} any, err := ptypes.MarshalAny(foo) ... foo := \u0026pb.Foo{} if err := ptypes.UnmarshalAny(any, foo); err != nil { ... } The pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example \"foo.bar.com/x/y.z\" will yield type name \"y.z\". JSON ==== The JSON representation of an `Any` value uses the regular representation of the deserialized, embedded message, with an additional field `@type` which contains the type URL. Example: package google.profile; message Person { string first_name = 1; string last_name = 2; } { \"@type\": \"type.googleapis.com/google.profile.Person\", \"firstName\": \u003cstring\u003e, \"lastName\": \u003cstring\u003e } If the embedded message type is well-known and has a custom JSON representation, that representation will be embedded adding a field `value` which holds the custom JSON in addition to the `@type` field. Example (for message [google.protobuf.Duration][]): { \"@type\": \"type.googleapis.com/google.protobuf.Duration\", \"value\": \"1.212s\" }."
     },
     "netprotoApiResponse": {
       "type": "object",
@@ -446,14 +451,14 @@
       "properties": {
         "source": {
           "$ref": "#/definitions/netprotoMatchSelector",
-          "title": "Either Src or Dst or both must be specified, both cannot be *\nSrc = * when not specified\nWhen Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored"
+          "description": "Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored."
         },
         "destination": {
           "$ref": "#/definitions/netprotoMatchSelector",
-          "title": "Dst = * when not specified\nWhen Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored"
+          "description": "Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored."
         }
       },
-      "title": "MatchRule : This is used to select packets that need to be monitored (mirrored)"
+      "description": "MatchRule : This is used to select packets that need to be monitored (mirrored)."
     },
     "netprotoMatchSelector": {
       "type": "object",
@@ -463,14 +468,14 @@
           "items": {
             "type": "string"
           },
-          "title": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range"
+          "description": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range."
         },
         "proto-ports": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoProtoPort"
           },
-          "title": "Match on the App info"
+          "description": "Match on the App info."
         }
       },
       "description": "Common MatchSelector."
@@ -480,13 +485,13 @@
       "properties": {
         "export-config": {
           "$ref": "#/definitions/netprotoMirrorExportConfig",
-          "title": "Collector export information for ERSPAN. Not required for VENICE collector"
+          "description": "Collector export information for ERSPAN. Not required for VENICE collector."
         },
         "pcap-dir-name": {
           "type": "string"
         }
       },
-      "title": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)"
+      "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."
     },
     "netprotoMirrorDir": {
       "type": "string",
@@ -507,8 +512,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 2048,
-          "description": "length of string should be between 1 and 2048",
-          "title": "IP address or URL of the collector/entity to which the data is to be exported"
+          "description": "IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048."
         }
       }
     },
@@ -542,7 +546,7 @@
           "$ref": "#/definitions/netprotoMirrorSession"
         }
       },
-      "title": "mirror watch event"
+      "description": "mirror watch event."
     },
     "netprotoMirrorSessionEventList": {
       "type": "object",
@@ -554,7 +558,7 @@
           }
         }
       },
-      "title": "mirror watch events batched"
+      "description": "mirror watch events batched."
     },
     "netprotoMirrorSessionSpec": {
       "type": "object",
@@ -570,14 +574,14 @@
           "items": {
             "$ref": "#/definitions/netprotoMirrorCollector"
           },
-          "title": "Mirrored packet collectors"
+          "description": "Mirrored packet collectors."
         },
         "match-rules": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/netprotoMatchRule"
           },
-          "title": "Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions"
+          "description": "Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions."
         },
         "packet-size": {
           "type": "integer",
@@ -602,7 +606,7 @@
           "format": "uint64"
         }
       },
-      "title": "MirrorSessionStatus captures the sg policy status"
+      "description": "MirrorSessionStatus captures the sg policy status."
     },
     "netprotoProtoPort": {
       "type": "object",
@@ -613,10 +617,10 @@
         },
         "port": {
           "type": "string",
-          "title": "Port for the app"
+          "description": "Port for the app."
         }
       },
-      "title": "ProtoPort captures protocol and port"
+      "description": "ProtoPort captures protocol and port."
     }
   }
 }

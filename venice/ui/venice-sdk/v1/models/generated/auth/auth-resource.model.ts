@@ -18,39 +18,39 @@ export interface IAuthResource {
 
 
 export class AuthResource extends BaseModel implements IAuthResource {
-    /** Tenant to which the resource belongs */
+    /** Tenant to which the resource belongs. */
     'tenant': string = null;
-    /** Group of resource to which access is desired */
+    /** Group of resource to which access is desired. */
     'group': string = null;
-    /** Kind of resource to which access is desired */
+    /** Kind of resource to which access is desired. */
     'kind': string = null;
-    /** Namespace of resource within which access to a resource is desired */
+    /** Namespace of resource within which access to a resource is desired. */
     'namespace': string = null;
-    /** Name of a specific resource to which access is desired */
+    /** Name of a specific resource to which access is desired. */
     'name': string = null;
     public static propInfo: { [prop in keyof IAuthResource]: PropInfoItem } = {
         'tenant': {
-            description:  `Tenant to which the resource belongs`,
+            description:  `Tenant to which the resource belongs.`,
             required: false,
             type: 'string'
         },
         'group': {
-            description:  `Group of resource to which access is desired`,
+            description:  `Group of resource to which access is desired.`,
             required: false,
             type: 'string'
         },
         'kind': {
-            description:  `Kind of resource to which access is desired`,
+            description:  `Kind of resource to which access is desired.`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  `Namespace of resource within which access to a resource is desired`,
+            description:  `Namespace of resource within which access to a resource is desired.`,
             required: false,
             type: 'string'
         },
         'name': {
-            description:  `Name of a specific resource to which access is desired`,
+            description:  `Name of a specific resource to which access is desired.`,
             required: false,
             type: 'string'
         },

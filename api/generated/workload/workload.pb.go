@@ -21,10 +21,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// ----------------------------- Workload Object -----------------------------
-//
 // Workload represents a VM, container/pod or Baremetal.
-//
 type Workload struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`

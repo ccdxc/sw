@@ -18,41 +18,40 @@ export interface ISecurityDns {
 
 
 export class SecurityDns extends BaseModel implements ISecurityDns {
-    /** Drop packet if number of questions is more than one */
+    /** Drop packet if number of questions is more than one. */
     'drop-multi-question-packets': boolean = null;
-    /** Drop if domain name size is > 255 bytes */
+    /** Drop if domain name size is > 255 bytes. */
     'drop-large-domain-name-packets': boolean = null;
-    /** Drop if label length is 64 bytes or higher */
+    /** Drop if label length is 64 bytes or higher. */
     'drop-long-label-packets': boolean = null;
-    /** Maximum message length, default value is 512, maximum specified user value is 8129 */
+    /** Maximum message length, default value is 512, maximum specified user value is 8129. */
     'max-message-length': number = null;
-    /** Timeout for DNS Query, default 60sshould be a valid time duration
- */
+    /** Timeout for DNS Query, default 60s. Should be a valid time duration. */
     'query-response-timeout': string = null;
     public static propInfo: { [prop in keyof ISecurityDns]: PropInfoItem } = {
         'drop-multi-question-packets': {
-            description:  `Drop packet if number of questions is more than one`,
+            description:  `Drop packet if number of questions is more than one.`,
             required: false,
             type: 'boolean'
         },
         'drop-large-domain-name-packets': {
-            description:  `Drop if domain name size is > 255 bytes`,
+            description:  `Drop if domain name size is > 255 bytes.`,
             required: false,
             type: 'boolean'
         },
         'drop-long-label-packets': {
-            description:  `Drop if label length is 64 bytes or higher`,
+            description:  `Drop if label length is 64 bytes or higher.`,
             required: false,
             type: 'boolean'
         },
         'max-message-length': {
-            description:  `Maximum message length, default value is 512, maximum specified user value is 8129`,
+            description:  `Maximum message length, default value is 512, maximum specified user value is 8129.`,
             required: false,
             type: 'number'
         },
         'query-response-timeout': {
             default: '60s',
-            description:  `Timeout for DNS Query, default 60sshould be a valid time duration `,
+            description:  `Timeout for DNS Query, default 60s. Should be a valid time duration.`,
             hint:  '2h',
             required: true,
             type: 'string'

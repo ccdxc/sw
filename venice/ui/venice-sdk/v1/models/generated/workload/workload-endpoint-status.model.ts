@@ -29,110 +29,110 @@ export interface IWorkloadEndpointStatus {
 
 
 export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpointStatus {
-    /** VM or container name */
+    /** VM or container name. */
     'workload-name': string = null;
-    /** network this endpoint belogs to */
+    /** Network this endpoint belogs to. */
     'network': string = null;
-    /** host address of the host where this endpoint exists */
+    /** Host address of the host where this endpoint exists. */
     'homing-host-addr': string = null;
-    /** host name of the host where this endpoint exists */
+    /** Host name of the host where this endpoint exists. */
     'homing-host-name': string = null;
-    /** IPv4 address of the endpoint */
+    /** IPv4 address of the endpoint. */
     'ipv4-address': string = null;
-    /** IPv4 gateway for the endpoint */
+    /** IPv4 gateway for the endpoint. */
     'ipv4-gateway': string = null;
-    /** IPv6 address for the endpoint */
+    /** IPv6 address for the endpoint. */
     'ipv6-address': string = null;
-    /** IPv6 gateway */
+    /** IPv6 gateway. */
     'ipv6-gateway': string = null;
-    /** Mac address of the endpointshould be a valid MAC address */
+    /** Mac address of the endpoint. Should be a valid MAC address. */
     'mac-address': string = null;
-    /** homing host's UUID */
+    /** Homing host's UUID. */
     'node-uuid': string = null;
-    /** endpoint FSM state */
+    /** Endpoint FSM state. */
     'EndpointState': string = null;
-    /** security groups */
+    /** Security groups. */
     'SecurityGroups': Array<string> = null;
-    /** micro-segment VLAN */
+    /** Micro-segment VLAN. */
     'micro-segment-vlan': number = null;
-    /** VM or container attribute/labels */
+    /** VM or container attribute/labels. */
     'workload-attributes': object = null;
-    /** Used to store state if the endpoint is migrating */
+    /** Used to store state if the endpoint is migrating. */
     'migration': WorkloadEndpointMigrationStatus = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointStatus]: PropInfoItem } = {
         'workload-name': {
-            description:  `VM or container name`,
+            description:  `VM or container name.`,
             required: false,
             type: 'string'
         },
         'network': {
-            description:  `Network this endpoint belogs to`,
+            description:  `Network this endpoint belogs to.`,
             required: false,
             type: 'string'
         },
         'homing-host-addr': {
-            description:  `Host address of the host where this endpoint exists`,
+            description:  `Host address of the host where this endpoint exists.`,
             required: false,
             type: 'string'
         },
         'homing-host-name': {
-            description:  `Host name of the host where this endpoint exists`,
+            description:  `Host name of the host where this endpoint exists.`,
             required: false,
             type: 'string'
         },
         'ipv4-address': {
-            description:  `IPv4 address of the endpoint`,
+            description:  `IPv4 address of the endpoint.`,
             required: false,
             type: 'string'
         },
         'ipv4-gateway': {
-            description:  `IPv4 gateway for the endpoint`,
+            description:  `IPv4 gateway for the endpoint.`,
             required: false,
             type: 'string'
         },
         'ipv6-address': {
-            description:  `IPv6 address for the endpoint`,
+            description:  `IPv6 address for the endpoint.`,
             required: false,
             type: 'string'
         },
         'ipv6-gateway': {
-            description:  `IPv6 gateway`,
+            description:  `IPv6 gateway.`,
             required: false,
             type: 'string'
         },
         'mac-address': {
-            description:  `Mac address of the endpointshould be a valid MAC address`,
+            description:  `Mac address of the endpoint. Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },
         'node-uuid': {
-            description:  `Homing host's UUID`,
+            description:  `Homing host's UUID.`,
             required: false,
             type: 'string'
         },
         'EndpointState': {
-            description:  `Endpoint FSM state`,
+            description:  `Endpoint FSM state.`,
             required: false,
             type: 'string'
         },
         'SecurityGroups': {
-            description:  `Security groups`,
+            description:  `Security groups.`,
             required: false,
             type: 'Array<string>'
         },
         'micro-segment-vlan': {
-            description:  `Micro-segment VLAN`,
+            description:  `Micro-segment VLAN.`,
             required: false,
             type: 'number'
         },
         'workload-attributes': {
-            description:  `VM or container attribute/labels`,
+            description:  `VM or container attribute/labels.`,
             required: false,
             type: 'object'
         },
         'migration': {
-            description:  `Used to store state if the endpoint is migrating`,
+            description:  `Used to store state if the endpoint is migrating.`,
             required: false,
             type: 'object'
         },

@@ -22,7 +22,7 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Workload objects */
+    /** List of Workload objects. */
     'items': Array<WorkloadWorkload> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class WorkloadWorkloadList extends BaseModel implements IWorkloadWorkload
             type: 'object'
         },
         'items': {
-            description:  `List of Workload objects`,
+            description:  `List of Workload objects.`,
             required: false,
             type: 'object'
         },

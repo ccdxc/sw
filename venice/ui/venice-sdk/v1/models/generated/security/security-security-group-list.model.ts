@@ -22,7 +22,7 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of SecurityGroup objects */
+    /** List of SecurityGroup objects. */
     'items': Array<SecuritySecurityGroup> = null;
     public static propInfo: { [prop in keyof ISecuritySecurityGroupList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class SecuritySecurityGroupList extends BaseModel implements ISecuritySec
             type: 'object'
         },
         'items': {
-            description:  `List of SecurityGroup objects`,
+            description:  `List of SecurityGroup objects.`,
             required: false,
             type: 'object'
         },

@@ -15,11 +15,11 @@ export interface IAuthRoleSpec {
 
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
-    /** Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint */
+    /** Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint. */
     'permissions': Array<AuthPermission> = null;
     public static propInfo: { [prop in keyof IAuthRoleSpec]: PropInfoItem } = {
         'permissions': {
-            description:  `Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint`,
+            description:  `Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint.`,
             required: false,
             type: 'object'
         },

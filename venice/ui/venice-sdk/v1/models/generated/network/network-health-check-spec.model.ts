@@ -18,39 +18,39 @@ export interface INetworkHealthCheckSpec {
 
 
 export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthCheckSpec {
-    /** Health check interval */
+    /** Health check interval. */
     'interval': number = null;
-    /** # of probes per interval */
+    /** # of probes per interval. */
     'probes-per-interval': number = null;
-    /** probe URL */
+    /** Probe URL. */
     'probe-port-or-url': string = null;
-    /** timeout for declaring backend down */
+    /** Timeout for declaring backend down. */
     'max-timeouts': number = null;
-    /** # of successful probes before we declare the backend back up */
+    /** # of successful probes before we declare the backend back up. */
     'declare-healthy-count': number = null;
     public static propInfo: { [prop in keyof INetworkHealthCheckSpec]: PropInfoItem } = {
         'interval': {
-            description:  `Health check interval`,
+            description:  `Health check interval.`,
             required: false,
             type: 'number'
         },
         'probes-per-interval': {
-            description:  `# of probes per interval`,
+            description:  `# of probes per interval.`,
             required: false,
             type: 'number'
         },
         'probe-port-or-url': {
-            description:  `Probe URL`,
+            description:  `Probe URL.`,
             required: false,
             type: 'string'
         },
         'max-timeouts': {
-            description:  `Timeout for declaring backend down`,
+            description:  `Timeout for declaring backend down.`,
             required: false,
             type: 'number'
         },
         'declare-healthy-count': {
-            description:  `# of successful probes before we declare the backend back up`,
+            description:  `# of successful probes before we declare the backend back up.`,
             required: false,
             type: 'number'
         },

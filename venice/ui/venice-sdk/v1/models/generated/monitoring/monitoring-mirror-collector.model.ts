@@ -17,20 +17,20 @@ export interface IMonitoringMirrorCollector {
 
 
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
-    /** Type of Collector */
+    /** Type of Collector. */
     'type': MonitoringMirrorCollector_type = null;
-    /** When collector type is Venice, collector export information is not required */
+    /** When collector type is Venice, collector export information is not required. */
     'export-config': MonitoringMirrorExportConfig = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorCollector]: PropInfoItem } = {
         'type': {
             enum: MonitoringMirrorCollector_type_uihint,
             default: 'erspan',
-            description:  `Type of Collector`,
+            description:  `Type of Collector.`,
             required: true,
             type: 'string'
         },
         'export-config': {
-            description:  `When collector type is Venice, collector export information is not required`,
+            description:  `When collector type is Venice, collector export information is not required.`,
             required: false,
             type: 'object'
         },

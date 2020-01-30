@@ -206,17 +206,17 @@ var ValidatorArgMap = map[string][]CheckArgs{
 // FieldProfile defines a profile for a field, including validators, defaults,
 //   documentation helpers and examples.
 type FieldProfile struct {
-	MinInt    map[string]int64
-	MaxInt    map[string]int64
-	MinLen    map[string]int64
-	MaxLen    map[string]int64
-	Default   map[string]string
-	Enum      map[string][]string
-	EnumHints map[string]map[string]string
-	Example   map[string]string
-	DocString map[string]string
-	Required  map[string]bool
-	Pattern   map[string]string
+	MinInt     map[string]int64
+	MaxInt     map[string]int64
+	MinLen     map[string]int64
+	MaxLen     map[string]int64
+	Default    map[string]string
+	Enum       map[string][]string
+	EnumHints  map[string]map[string]string
+	Example    map[string]string
+	DocStrings map[string][]string
+	Required   map[string]bool
+	Pattern    map[string]string
 }
 
 // Init is a helper routine to initialize a FieldProfile object
@@ -228,7 +228,7 @@ func (f *FieldProfile) Init() {
 	f.Default = make(map[string]string)
 	f.Enum = make(map[string][]string)
 	f.EnumHints = make(map[string]map[string]string)
-	f.DocString = make(map[string]string)
+	f.DocStrings = make(map[string][]string)
 	f.Example = make(map[string]string)
 	f.Required = make(map[string]bool)
 	f.Pattern = make(map[string]string)
@@ -370,10 +370,10 @@ func strLenProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 		return errInvalidOption
 	}
 	if max < 0 {
-		prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("length of string should be at least %v", min)
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("length of string should be at least %v", min))
 	} else {
 		prof.MaxLen[ver] = max
-		prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("length of string should be between %v and %v", min, max)
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("length of string should be between %v and %v", min, max))
 	}
 	prof.Required[ver] = true
 	prof.MinLen[ver] = min
@@ -397,7 +397,7 @@ func intRangeProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 	}
 	prof.MinInt[ver] = min
 	prof.MaxInt[ver] = max
-	prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("value should be between %v and %v", min, max)
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("value should be between %v and %v", min, max))
 	prof.Required[ver] = true
 	return nil
 }
@@ -408,7 +408,7 @@ func intMinProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 		return errInvalidOption
 	}
 	prof.MinInt[ver] = min
-	prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("value should be at least %v", min)
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("value should be at least %v", min))
 	prof.Required[ver] = true
 	return nil
 }
@@ -416,7 +416,7 @@ func intMinProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 func cidrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "10.1.1.1/24, ff02::5/32 "
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid v4 or v6 CIDR block"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid v4 or v6 CIDR block")
 	prof.Required[ver] = true
 	return nil
 }
@@ -424,7 +424,7 @@ func cidrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, 
 func ipAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "10.1.1.1, ff02::5 "
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid v4 or v6 IP address"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid v4 or v6 IP address")
 	prof.Required[ver] = true
 	return nil
 }
@@ -432,14 +432,14 @@ func ipAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string
 func ipv4Profile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "10.1.1.1 "
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid IPv4 address"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid IPv4 address")
 	prof.Required[ver] = true
 	return nil
 }
 
 func hostAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "10.1.1.1, ff02::5, localhost, example.domain.com "
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid host address, IP address or hostname"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid host address, IP address or hostname")
 	prof.Example[ver] = prof.Example[ver] + str
 	prof.Required[ver] = true
 	return nil
@@ -448,7 +448,7 @@ func hostAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 func macAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid MAC address"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid MAC address")
 	prof.Required[ver] = true
 	return nil
 }
@@ -456,7 +456,7 @@ func macAddrProfile(field *descriptor.Field, reg *descriptor.Registry, ver strin
 func uriProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "https://10.1.1.1, ldap://10.1.1.1:800, /path/to/x"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid URI"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid URI")
 	prof.Required[ver] = true
 	return nil
 }
@@ -464,7 +464,7 @@ func uriProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, a
 func uuidProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "49943a2c-9d76-11e7-abc4-cec278b6b50a"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid UUID"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid UUID")
 	prof.Required[ver] = true
 	return nil
 }
@@ -482,16 +482,16 @@ func durationProfile(field *descriptor.Field, reg *descriptor.Registry, ver stri
 	}
 
 	if min == 0 && max == 0 {
-		prof.DocString[ver] = prof.DocString[ver] + "should be a valid time duration\n"
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid time duration\n")
 	} else if max == 0 {
-		prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("should be a valid time duration of at least %s", min)
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("should be a valid time duration of at least %s", min))
 	} else if min == 0 {
-		prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("should be a valid time duration of at most %s", max)
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("should be a valid time duration of at most %s", max))
 	} else {
 		if min.Nanoseconds() >= max.Nanoseconds() {
 			return errInvalidOption
 		}
-		prof.DocString[ver] = prof.DocString[ver] + fmt.Sprintf("should be a valid time duration between %s and %s", min, max)
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], fmt.Sprintf("should be a valid time duration between %s and %s", min, max))
 	}
 	prof.Required[ver] = true
 	return nil
@@ -506,7 +506,7 @@ func emptyOrDurationProfile(field *descriptor.Field, reg *descriptor.Registry, v
 func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "tcp/1234, arp"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid layer 3 or layer 4 protocol and port/type"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid layer 3 or layer 4 protocol and port/type")
 	prof.Required[ver] = true
 	return nil
 }
@@ -514,7 +514,7 @@ func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 func validGroupProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "auth"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid API Group"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid API Group")
 	prof.Required[ver] = true
 	return nil
 }
@@ -522,7 +522,7 @@ func validGroupProfile(field *descriptor.Field, reg *descriptor.Registry, ver st
 func validKindProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "Network"
 	prof.Example[ver] = prof.Example[ver] + str
-	prof.DocString[ver] = prof.DocString[ver] + "should be a valid object Kind"
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid object Kind")
 	prof.Required[ver] = true
 	return nil
 }
@@ -530,7 +530,7 @@ func validKindProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 func regexpProfile(_ *descriptor.Field, _ *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	if regEntry, ok := validators.RegexpList[args[0]]; ok {
 		prof.Pattern[ver] = regEntry.Str
-		prof.DocString[ver] = regEntry.HelpStr
+		prof.DocStrings[ver] = append(prof.DocStrings[ver], regEntry.HelpStr)
 		prof.Required[ver] = true
 		return nil
 	}

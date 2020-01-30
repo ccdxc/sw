@@ -470,38 +470,36 @@ func (m *ListWatchOptions) GetSortOrder() string {
 
 // ObjectMeta contains metadata that all objects stored in kvstore must have.
 type ObjectMeta struct {
-	// Name of the object, unique within a Namespace for scoped objects.
-	// Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
-	// minimum length is 2 and maximum length is 64 characters
+	// title: Name of the object, unique within a Namespace for scoped objects.
 	Name string `protobuf:"bytes,1,opt,name=Name,json=name,proto3" json:"name"`
-	// Tenant to which the object belongs to. This can be automatically filled in many cases based on
+	// title: Tenant to which the object belongs to.
+	// This can be automatically filled in many cases based on
 	// the tenant the user, who created the object, belongs to.
-	// Should start and end in an alphanumeric character and can contain only alphanumerics.
-	// Minimum length is 1 and maximum length is 48 characters
 	Tenant string `protobuf:"bytes,2,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
 	// Namespace of the object, for scoped objects.
-	// Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters
-	// maximum length is 64 characters
 	Namespace string `protobuf:"bytes,3,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`
-	// GenerationID is the generation Id for the object. This is incremented anytime there
-	//  is an update to the user intent, including Spec update and any update to ObjectMeta.
-	//  System generated and updated, not updatable by user.
+	// title: GenerationID is the generation Id for the object.
+	// This is incremented anytime there is an update to the user intent, including Spec update
+	// and any update to ObjectMeta. System generated and updated, not updatable by user.
 	GenerationID string `protobuf:"bytes,4,opt,name=GenerationID,json=generation-id,proto3" json:"generation-id"`
-	// Resource version in the object store. This is updated anytime there is any change to the object.
-	//  System generated and updated, not updatable by user.
+	// title: Resource version in the object store.
+	// This is updated anytime there is any change to the object.
+	// System generated and updated, not updatable by user.
 	ResourceVersion string `protobuf:"bytes,5,opt,name=ResourceVersion,json=resource-version,omitempty,proto3" json:"resource-version,omitempty"`
-	// UUID is the unique identifier for the object. This is generated on creation of the object.
+	// title: UUID is the unique identifier for the object.
+	// This is generated on creation of the object.
 	// System generated, not updatable by user.
 	UUID string `protobuf:"bytes,6,opt,name=UUID,json=uuid,omitempty,proto3" json:"uuid,omitempty"`
-	// Labels are arbitrary (key,value) pairs associated with any object.
+	// title: Labels are arbitrary (key,value) pairs associated with any object.
 	Labels map[string]string `protobuf:"bytes,7,rep,name=Labels,json=labels,omitempty" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// CreationTime is the creation time of the object
+	// title: CreationTime is the creation time of the object
 	//  System generated and updated, not updatable by user.
 	CreationTime Timestamp `protobuf:"bytes,8,opt,name=CreationTime,json=creation-time,omitempty" json:"creation-time,omitempty"`
-	// ModTime is the Last Modification time of the object
+	// title: ModTime is the Last Modification time of the object
 	//  System generated and updated, not updatable by user.
 	ModTime Timestamp `protobuf:"bytes,9,opt,name=ModTime,json=mod-time,omitempty" json:"mod-time,omitempty"`
-	// SelfLink is a link for accessing this object. When the object is served from the API-GW it is the
+	// title: SelfLink is a link for accessing this object.
+	// When the object is served from the API-GW it is the
 	//  URI path. Example:
 	//    - "/v1/tenants/tenants/tenant2"
 	//  System generated and updated, not updatable by user.

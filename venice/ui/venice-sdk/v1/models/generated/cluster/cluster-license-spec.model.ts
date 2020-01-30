@@ -15,11 +15,11 @@ export interface IClusterLicenseSpec {
 
 
 export class ClusterLicenseSpec extends BaseModel implements IClusterLicenseSpec {
-    /** List of Feature licences applied */
+    /** List of Feature licences applied. */
     'features': Array<ClusterFeature> = null;
     public static propInfo: { [prop in keyof IClusterLicenseSpec]: PropInfoItem } = {
         'features': {
-            description:  `List of Feature licences applied`,
+            description:  `List of Feature licences applied.`,
             required: false,
             type: 'object'
         },

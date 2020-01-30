@@ -27,23 +27,23 @@ export interface INetworkNetworkSpec {
 
 
 export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec {
-    /** type of network. (vlan/vxlan/routed etc) */
+    /** Type of network. (vlan/vxlan/routed etc). */
     'type': NetworkNetworkSpec_type = null;
-    /** IPv4 subnet CIDR */
+    /** IPv4 subnet CIDR. */
     'ipv4-subnet': string = null;
-    /** IPv4 gateway for this subnet */
+    /** IPv4 gateway for this subnet. */
     'ipv4-gateway': string = null;
-    /** IPv6 subnet CIDR */
+    /** IPv6 subnet CIDR. */
     'ipv6-subnet': string = null;
-    /** IPv6 gateway */
+    /** IPv6 gateway. */
     'ipv6-gateway': string = null;
-    /** Vlan ID for the network */
+    /** Vlan ID for the network. */
     'vlan-id': number = null;
-    /** Vxlan VNI for the network */
+    /** Vxlan VNI for the network. */
     'vxlan-vni': number = null;
-    /** VirtualRouter specifies the VRF this network belongs to */
+    /** VirtualRouter specifies the VRF this network belongs to. */
     'virtual-router': string = null;
-    /** Relay Configuration if any */
+    /** Relay Configuration if any. */
     'ipam-policy': string = null;
     /** RouteImportExport specifies what routes will be imported to this Router and how routes are tagged when exported. */
     'route-imoport-export': NetworkRDSpec = null;
@@ -53,47 +53,47 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
         'type': {
             enum: NetworkNetworkSpec_type,
             default: 'bridged',
-            description:  `Type of network. (vlan/vxlan/routed etc)`,
+            description:  `Type of network. (vlan/vxlan/routed etc).`,
             required: true,
             type: 'string'
         },
         'ipv4-subnet': {
-            description:  `IPv4 subnet CIDR`,
+            description:  `IPv4 subnet CIDR.`,
             required: false,
             type: 'string'
         },
         'ipv4-gateway': {
-            description:  `IPv4 gateway for this subnet`,
+            description:  `IPv4 gateway for this subnet.`,
             required: false,
             type: 'string'
         },
         'ipv6-subnet': {
-            description:  `IPv6 subnet CIDR`,
+            description:  `IPv6 subnet CIDR.`,
             required: false,
             type: 'string'
         },
         'ipv6-gateway': {
-            description:  `IPv6 gateway`,
+            description:  `IPv6 gateway.`,
             required: false,
             type: 'string'
         },
         'vlan-id': {
-            description:  `Vlan ID for the network`,
+            description:  `Vlan ID for the network.`,
             required: false,
             type: 'number'
         },
         'vxlan-vni': {
-            description:  `Vxlan VNI for the network`,
+            description:  `Vxlan VNI for the network.`,
             required: false,
             type: 'number'
         },
         'virtual-router': {
-            description:  `VirtualRouter specifies the VRF this network belongs to`,
+            description:  `VirtualRouter specifies the VRF this network belongs to.`,
             required: false,
             type: 'string'
         },
         'ipam-policy': {
-            description:  `Relay Configuration if any`,
+            description:  `Relay Configuration if any.`,
             required: false,
             type: 'string'
         },

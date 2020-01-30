@@ -14,11 +14,11 @@ export interface IMonitoringMirrorExportConfig {
 
 
 export class MonitoringMirrorExportConfig extends BaseModel implements IMonitoringMirrorExportConfig {
-    /** IP address of the collector/entity to which the data is to be exportedshould be a valid IPv4 address */
+    /** IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address. */
     'destination': string = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorExportConfig]: PropInfoItem } = {
         'destination': {
-            description:  `IP address of the collector/entity to which the data is to be exportedshould be a valid IPv4 address`,
+            description:  `IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address.`,
             hint:  '10.1.1.1 ',
             required: true,
             type: 'string'

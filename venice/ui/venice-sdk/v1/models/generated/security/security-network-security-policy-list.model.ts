@@ -22,7 +22,7 @@ export class SecurityNetworkSecurityPolicyList extends BaseModel implements ISec
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of NetworkSecurityPolicy objects */
+    /** List of NetworkSecurityPolicy objects. */
     'items': Array<SecurityNetworkSecurityPolicy> = null;
     public static propInfo: { [prop in keyof ISecurityNetworkSecurityPolicyList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class SecurityNetworkSecurityPolicyList extends BaseModel implements ISec
             type: 'object'
         },
         'items': {
-            description:  `List of NetworkSecurityPolicy objects`,
+            description:  `List of NetworkSecurityPolicy objects.`,
             required: false,
             type: 'object'
         },

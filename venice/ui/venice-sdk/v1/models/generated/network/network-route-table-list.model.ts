@@ -22,7 +22,7 @@ export class NetworkRouteTableList extends BaseModel implements INetworkRouteTab
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of RouteTable objects */
+    /** List of RouteTable objects. */
     'items': Array<NetworkRouteTable> = null;
     public static propInfo: { [prop in keyof INetworkRouteTableList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class NetworkRouteTableList extends BaseModel implements INetworkRouteTab
             type: 'object'
         },
         'items': {
-            description:  `List of RouteTable objects`,
+            description:  `List of RouteTable objects.`,
             required: false,
             type: 'object'
         },

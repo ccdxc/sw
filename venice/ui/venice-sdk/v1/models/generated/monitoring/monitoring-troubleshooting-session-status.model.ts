@@ -18,7 +18,7 @@ export interface IMonitoringTroubleshootingSessionStatus {
 
 export class MonitoringTroubleshootingSessionStatus extends BaseModel implements IMonitoringTroubleshootingSessionStatus {
     'state': MonitoringTroubleshootingSessionStatus_state = null;
-    /** report is generated each time troubleshooting session is activated i.e time-window */
+    /** Report is generated each time troubleshooting session is activated i.e time-window. */
     'troubleshooting-results': Array<MonitoringTsResult> = null;
     public static propInfo: { [prop in keyof IMonitoringTroubleshootingSessionStatus]: PropInfoItem } = {
         'state': {
@@ -28,7 +28,7 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
             type: 'string'
         },
         'troubleshooting-results': {
-            description:  `Report is generated each time troubleshooting session is activated i.e time-window`,
+            description:  `Report is generated each time troubleshooting session is activated i.e time-window.`,
             required: false,
             type: 'object'
         },

@@ -297,24 +297,7 @@ func (m *CPUInfo) GetNumThreads() int32 {
 	return 0
 }
 
-// --------------------------------- CLUSTER ---------------------------------------------
-//
 // Cluster represents a full cluster venice and workload nodes
-//
-// Entity responsible & scenarios involved in managing this object:
-//
-//      Create:
-//          o NetOps-admin
-//              - initial cluster creation
-//      Modify:
-//          o NetOps-admin
-//              - update spec attributes
-//          o CMD
-//              - update status attributes
-//      Delete:
-//          o NetOps-admin
-//              - TBD
-//
 type Cluster struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -581,10 +564,7 @@ func (m *DockerInfo) GetDockerVersion() string {
 	return ""
 }
 
-// ---------------------------------- HOST ------------------------------------
-//
 // Host represents a Baremetal or Hypervisor server.
-//
 type Host struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`
@@ -759,10 +739,7 @@ func (m *NetworkInfo) GetInterfaces() []InterfaceInfo {
 	return nil
 }
 
-// ---------------------------------- NODE -------------------------------------------
-//
 // Node is representation of a single Venice node in the system.
-//
 type Node struct {
 	//
 	api.TypeMeta `protobuf:"bytes,1,opt,name=T,json=,inline,embedded=T" json:",inline"`

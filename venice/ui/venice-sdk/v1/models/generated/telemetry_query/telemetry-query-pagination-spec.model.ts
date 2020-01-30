@@ -15,19 +15,19 @@ export interface ITelemetry_queryPaginationSpec {
 
 
 export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemetry_queryPaginationSpec {
-    /** Offset specifies the starting point when using Countvalue should be at least 0 */
+    /** Offset specifies the starting point when using Count. Value should be at least 0. */
     'offset': number = null;
-    /** Count specifies the number of points to includevalue should be at least 1 */
+    /** Count specifies the number of points to include. Value should be at least 1. */
     'count': number = null;
     public static propInfo: { [prop in keyof ITelemetry_queryPaginationSpec]: PropInfoItem } = {
         'offset': {
             default: parseInt('0'),
-            description:  `Offset specifies the starting point when using Countvalue should be at least 0`,
+            description:  `Offset specifies the starting point when using Count. Value should be at least 0.`,
             required: true,
             type: 'number'
         },
         'count': {
-            description:  `Count specifies the number of points to includevalue should be at least 1`,
+            description:  `Count specifies the number of points to include. Value should be at least 1.`,
             required: true,
             type: 'number'
         },

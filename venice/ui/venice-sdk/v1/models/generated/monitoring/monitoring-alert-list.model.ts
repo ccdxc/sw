@@ -22,7 +22,7 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Alert objects */
+    /** List of Alert objects. */
     'items': Array<MonitoringAlert> = null;
     public static propInfo: { [prop in keyof IMonitoringAlertList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class MonitoringAlertList extends BaseModel implements IMonitoringAlertLi
             type: 'object'
         },
         'items': {
-            description:  `List of Alert objects`,
+            description:  `List of Alert objects.`,
             required: false,
             type: 'object'
         },

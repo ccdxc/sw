@@ -22,7 +22,7 @@ export class DiagnosticsModuleList extends BaseModel implements IDiagnosticsModu
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Module objects */
+    /** List of Module objects. */
     'items': Array<DiagnosticsModule> = null;
     public static propInfo: { [prop in keyof IDiagnosticsModuleList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class DiagnosticsModuleList extends BaseModel implements IDiagnosticsModu
             type: 'object'
         },
         'items': {
-            description:  `List of Module objects`,
+            description:  `List of Module objects.`,
             required: false,
             type: 'object'
         },

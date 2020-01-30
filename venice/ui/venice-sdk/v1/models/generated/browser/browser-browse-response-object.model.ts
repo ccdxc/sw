@@ -18,34 +18,34 @@ export interface IBrowserBrowseResponseObject {
 
 
 export class BrowserBrowseResponseObject extends BaseModel implements IBrowserBrowseResponseObject {
-    /** RootURI is the root node for the response */
+    /** RootURI is the root node for the response. */
     'root-uri': string = null;
-    /** QueryType is the direction of the query */
+    /** QueryType is the direction of the query. */
     'query-type': string = null;
-    /** MaxDepth that the response explored. Reflects the value specified in the query */
+    /** MaxDepth that the response explored. Reflects the value specified in the query. */
     'max-depth': number = null;
-    /** TotalCount of objects in the response */
+    /** TotalCount of objects in the response. */
     'total-count': number = null;
-    /** map of results. Key to the map is the URI of the  Object. */
+    /** Map of results. Key to the map is the URI of the  Object. */
     'objects': object = null;
     public static propInfo: { [prop in keyof IBrowserBrowseResponseObject]: PropInfoItem } = {
         'root-uri': {
-            description:  `RootURI is the root node for the response`,
+            description:  `RootURI is the root node for the response.`,
             required: false,
             type: 'string'
         },
         'query-type': {
-            description:  `QueryType is the direction of the query`,
+            description:  `QueryType is the direction of the query.`,
             required: false,
             type: 'string'
         },
         'max-depth': {
-            description:  `MaxDepth that the response explored. Reflects the value specified in the query`,
+            description:  `MaxDepth that the response explored. Reflects the value specified in the query.`,
             required: false,
             type: 'number'
         },
         'total-count': {
-            description:  `TotalCount of objects in the response`,
+            description:  `TotalCount of objects in the response.`,
             required: false,
             type: 'number'
         },

@@ -31,8 +31,7 @@ export interface IEventsEvent {
 export class EventsEvent extends BaseModel implements IEventsEvent {
     'kind': string = null;
     'api-version': string = null;
-    /** ObjectMeta.Name will be the UUID for an event object.
-TODO: Should there be a predefined list of labels or keep it free form ? */
+    /** ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?. */
     'meta': ApiObjectMeta = null;
     'severity': EventsEvent_severity = null;
     'type': EventsEvent_type = null;
@@ -51,7 +50,7 @@ TODO: Should there be a predefined list of labels or keep it free form ? */
             type: 'string'
         },
         'meta': {
-            description:  `ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?`,
+            description:  `ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?.`,
             required: false,
             type: 'object'
         },

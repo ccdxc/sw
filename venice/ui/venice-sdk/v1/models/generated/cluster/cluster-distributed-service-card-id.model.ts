@@ -15,18 +15,18 @@ export interface IClusterDistributedServiceCardID {
 
 
 export class ClusterDistributedServiceCardID extends BaseModel implements IClusterDistributedServiceCardID {
-    /** Name contains the name of the DistributedServiceCard on a host */
+    /** Name contains the name of the DistributedServiceCard on a host. */
     'id': string = null;
-    /** MACAddress contains the primary MAC address of a DistributedServiceCardshould be a valid MAC address */
+    /** MACAddress contains the primary MAC address of a DistributedServiceCard. Should be a valid MAC address. */
     'mac-address': string = null;
     public static propInfo: { [prop in keyof IClusterDistributedServiceCardID]: PropInfoItem } = {
         'id': {
-            description:  `Name contains the name of the DistributedServiceCard on a host`,
+            description:  `Name contains the name of the DistributedServiceCard on a host.`,
             required: false,
             type: 'string'
         },
         'mac-address': {
-            description:  `MACAddress contains the primary MAC address of a DistributedServiceCardshould be a valid MAC address`,
+            description:  `MACAddress contains the primary MAC address of a DistributedServiceCard. Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'

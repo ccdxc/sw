@@ -30,11 +30,11 @@ export interface IApiListWatchOptions {
 
 
 export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptions {
-    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
+    /** Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64. */
     'name': string = null;
-    /** must be alpha-numericslength of string should be between 1 and 48 */
+    /** Must be alpha-numerics. Length of string should be between 1 and 48. */
     'tenant': string = null;
-    /** must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64 */
+    /** Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64. */
     'namespace': string = null;
     'generation-id': string = null;
     'resource-version': string = null;
@@ -45,30 +45,29 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'self-link': string = null;
     /** LabelSelector to select on labels in list or watch results. */
     'label-selector': string = null;
-    /** FieldSelector to select on field values in list or watch results */
+    /** FieldSelector to select on field values in list or watch results. */
     'field-selector': string = null;
     /** FieldChangeSelector specifies to generate a watch notification on change in field(s) specified. */
     'field-change-selector': Array<string> = null;
-    /** from represents the start offset (zero based), used for pagination.
-results returned would be in the range [from ... from+max-results-1] */
+    /** From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]. */
     'from': number = null;
-    /** max. number of events to be fetched for the request. */
+    /** Max. number of events to be fetched for the request. */
     'max-results': number = null;
-    /** order to sort List results in. */
+    /** Order to sort List results in. */
     'sort-order': ApiListWatchOptions_sort_order = null;
     public static propInfo: { [prop in keyof IApiListWatchOptions]: PropInfoItem } = {
         'name': {
-            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64`,
+            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.`,
             required: false,
             type: 'string'
         },
         'tenant': {
-            description:  `Must be alpha-numericslength of string should be between 1 and 48`,
+            description:  `Must be alpha-numerics. Length of string should be between 1 and 48.`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64`,
+            description:  `Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.`,
             required: false,
             type: 'string'
         },
@@ -106,7 +105,7 @@ results returned would be in the range [from ... from+max-results-1] */
             type: 'string'
         },
         'field-selector': {
-            description:  `FieldSelector to select on field values in list or watch results`,
+            description:  `FieldSelector to select on field values in list or watch results.`,
             required: false,
             type: 'string'
         },
@@ -116,7 +115,7 @@ results returned would be in the range [from ... from+max-results-1] */
             type: 'Array<string>'
         },
         'from': {
-            description:  `From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]`,
+            description:  `From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].`,
             required: false,
             type: 'number'
         },
@@ -285,9 +284,9 @@ results returned would be in the range [from ... from+max-results-1] */
     protected getFormGroup(): FormGroup {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
-                'name': CustomFormControl(new FormControl(this['name'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiListWatchOptions.propInfo['name']),
-                'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'must be alpha-numericslength of string should be between 1 and 48'), ]), ApiListWatchOptions.propInfo['tenant']),
-                'namespace': CustomFormControl(new FormControl(this['namespace'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64'), ]), ApiListWatchOptions.propInfo['namespace']),
+                'name': CustomFormControl(new FormControl(this['name'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.'), ]), ApiListWatchOptions.propInfo['name']),
+                'tenant': CustomFormControl(new FormControl(this['tenant'], [minLengthValidator(1), maxLengthValidator(48), patternValidator('^[a-zA-Z0-9]+$', 'Must be alpha-numerics. Length of string should be between 1 and 48.'), ]), ApiListWatchOptions.propInfo['tenant']),
+                'namespace': CustomFormControl(new FormControl(this['namespace'], [minLengthValidator(2), maxLengthValidator(64), patternValidator('^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$', 'Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.'), ]), ApiListWatchOptions.propInfo['namespace']),
                 'generation-id': CustomFormControl(new FormControl(this['generation-id']), ApiListWatchOptions.propInfo['generation-id']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListWatchOptions.propInfo['resource-version']),
                 'uuid': CustomFormControl(new FormControl(this['uuid']), ApiListWatchOptions.propInfo['uuid']),

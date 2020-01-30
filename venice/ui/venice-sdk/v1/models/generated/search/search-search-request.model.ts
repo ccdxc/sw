@@ -25,62 +25,43 @@ export interface ISearchSearchRequest {
 
 
 export class SearchSearchRequest extends BaseModel implements ISearchSearchRequest {
-    /** Simple query string
-This can be specified as URI parameter.
-For advanced query cases, Users should use specify SearchQuery
-and pass the SearchRequest in a GET/POST Body
-The max query-string length is 256 byteslength of string should be between 0 and 256 */
+    /** Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256. */
     'query-string': string = null;
-    /** From represents the start offset (zero based), used in paginated search requests
-The results returned would be in the range [From ... From+MaxResults-1]
-This can be specified as URI parameter. 
-Default value is 0 and valid range is 0..1023value should be between 0 and 1023 */
+    /** From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023. */
     'from': number = null;
-    /** MaxResults is the max-count of search results
-This can be specified as URI parameter.
-Default value is 50 and valid range is 0..8192value should be between 0 and 8192 */
+    /** MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192. Value should be between 0 and 8192. */
     'max-results': number = null;
-    /** SortyBy is an optional parameter and contains the field name 
-to be sorted by, For eg: "meta.name"
-This can be specified as URI parameter. */
+    /** SortyBy is an optional parameter and contains the field name to be sorted by, For eg: "meta.name" This can be specified as URI parameter. Length of string should be between 0 and 256. */
     'sort-by': string = null;
-    /** SortOrder is an optional parameter and contains whether to sort ascending
-or descending
-This can be specified as URI parameter. */
+    /** SortOrder is an optional parameter and contains whether to sort ascending or descending This can be specified as URI parameter. */
     'sort-order': SearchSearchRequest_sort_order = null;
-    /** Query Mode */
+    /** Query Mode. */
     'mode': SearchSearchRequest_mode = null;
-    /** Search query contains the search requirements
-This is intended for advanced query use cases involving
-boolean query, structured term query and supports various
-combinations of text, phrase strings and search modifiers
-for specific categories, kinds, fields and labels.
-This cannot be specified as URI parameter. */
+    /** Search query contains the search requirements This is intended for advanced query use cases involving boolean query, structured term query and supports various combinations of text, phrase strings and search modifiers for specific categories, kinds, fields and labels. This cannot be specified as URI parameter. */
     'query': SearchSearchQuery = null;
-    /** OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant
-of the logged in user */
+    /** OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user. */
     'tenants': Array<string> = null;
-    /** Indicates whether to perform aggregation on the search results or not */
+    /** Indicates whether to perform aggregation on the search results or not. */
     'aggregate': boolean = null;
     public static propInfo: { [prop in keyof ISearchSearchRequest]: PropInfoItem } = {
         'query-string': {
-            description:  `Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 byteslength of string should be between 0 and 256`,
+            description:  `Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256.`,
             required: false,
             type: 'string'
         },
         'from': {
-            description:  `From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter.  Default value is 0 and valid range is 0..1023value should be between 0 and 1023`,
+            description:  `From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023.`,
             required: true,
             type: 'number'
         },
         'max-results': {
             default: parseInt('50'),
-            description:  `MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192value should be between 0 and 8192`,
+            description:  `MaxResults is the max-count of search results This can be specified as URI parameter. Default value is 50 and valid range is 0..8192. Value should be between 0 and 8192.`,
             required: true,
             type: 'number'
         },
         'sort-by': {
-            description:  `SortyBy is an optional parameter and contains the field name  to be sorted by, For eg: "meta.name" This can be specified as URI parameter.`,
+            description:  `SortyBy is an optional parameter and contains the field name to be sorted by, For eg: "meta.name" This can be specified as URI parameter. Length of string should be between 0 and 256.`,
             required: false,
             type: 'string'
         },
@@ -94,7 +75,7 @@ of the logged in user */
         'mode': {
             enum: SearchSearchRequest_mode,
             default: 'full',
-            description:  `Query Mode`,
+            description:  `Query Mode.`,
             required: true,
             type: 'string'
         },
@@ -104,13 +85,13 @@ of the logged in user */
             type: 'object'
         },
         'tenants': {
-            description:  `OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user`,
+            description:  `OR of tenants within the scope of which search needs to be performed. If not specified, it will be set to tenant of the logged in user.`,
             required: false,
             type: 'Array<string>'
         },
         'aggregate': {
             default: 'true',
-            description:  `Indicates whether to perform aggregation on the search results or not`,
+            description:  `Indicates whether to perform aggregation on the search results or not.`,
             required: false,
             type: 'boolean'
         },

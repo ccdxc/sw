@@ -16,18 +16,18 @@ export interface ISearchPolicyMatchEntry {
 
 
 export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMatchEntry {
-    /** Matching SGRule */
+    /** Matching SGRule. */
     'rule': SecuritySGRule = null;
-    /** Index of the matching SG rule */
+    /** Index of the matching SG rule. */
     'index': number = null;
     public static propInfo: { [prop in keyof ISearchPolicyMatchEntry]: PropInfoItem } = {
         'rule': {
-            description:  `Matching SGRule`,
+            description:  `Matching SGRule.`,
             required: false,
             type: 'object'
         },
         'index': {
-            description:  `Index of the matching SG rule`,
+            description:  `Index of the matching SG rule.`,
             required: false,
             type: 'number'
         },

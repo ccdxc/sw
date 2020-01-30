@@ -17,36 +17,33 @@ export interface IWorkloadWorkloadIntfSpec {
 
 
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
-    /** MACAddress contains the MAC address of the interface as seen by the workload
-cli-help: MAC address of the interface as seen by the workloadshould be a valid MAC address */
+    /** MACAddress contains the MAC address of the interface as seen by the workload. Should be a valid MAC address. */
     'mac-address': string = null;
-    /** Micro-segmentation vlan assigned for this interface
-cli-help: Vlan identifying host unique vlan idvalue should be between 1 and 4095 */
+    /** Micro-segmentation vlan assigned for this interface. Value should be between 1 and 4095. */
     'micro-seg-vlan': number = null;
-    /** External vlan assigned for this interface
-cli-help: External vlan associated with the workloadvalue should be between 0 and 4095 */
+    /** External vlan assigned for this interface. Value should be between 0 and 4095. */
     'external-vlan': number = null;
-    /** List of all IP addresses configured on a Workload Interface */
+    /** List of all IP addresses configured on a Workload Interface. */
     'ip-addresses': Array<string> = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadIntfSpec]: PropInfoItem } = {
         'mac-address': {
-            description:  `MACAddress contains the MAC address of the interface as seen by the workload cli-help: MAC address of the interface as seen by the workloadshould be a valid MAC address`,
+            description:  `MACAddress contains the MAC address of the interface as seen by the workload. Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'string'
         },
         'micro-seg-vlan': {
-            description:  `Micro-segmentation vlan assigned for this interface cli-help: Vlan identifying host unique vlan idvalue should be between 1 and 4095`,
+            description:  `Micro-segmentation vlan assigned for this interface. Value should be between 1 and 4095.`,
             required: true,
             type: 'number'
         },
         'external-vlan': {
-            description:  `External vlan assigned for this interface cli-help: External vlan associated with the workloadvalue should be between 0 and 4095`,
+            description:  `External vlan assigned for this interface. Value should be between 0 and 4095.`,
             required: true,
             type: 'number'
         },
         'ip-addresses': {
-            description:  `List of all IP addresses configured on a Workload Interface`,
+            description:  `List of all IP addresses configured on a Workload Interface.`,
             required: false,
             type: 'Array<string>'
         },

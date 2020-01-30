@@ -15,13 +15,13 @@ export interface INetworkDHCPServer {
 
 
 export class NetworkDHCPServer extends BaseModel implements INetworkDHCPServer {
-    /** IP Address of the server. */
+    /** IP Address of the server. Should be a valid v4 or v6 IP address. */
     'ip-address': string = null;
     /** Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached. */
     'virtual-router': string = null;
     public static propInfo: { [prop in keyof INetworkDHCPServer]: PropInfoItem } = {
         'ip-address': {
-            description:  `IP Address of the server.`,
+            description:  `IP Address of the server. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'

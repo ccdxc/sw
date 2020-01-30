@@ -22,7 +22,7 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of RoleBinding objects */
+    /** List of RoleBinding objects. */
     'items': Array<AuthRoleBinding> = null;
     public static propInfo: { [prop in keyof IAuthRoleBindingList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class AuthRoleBindingList extends BaseModel implements IAuthRoleBindingLi
             type: 'object'
         },
         'items': {
-            description:  `List of RoleBinding objects`,
+            description:  `List of RoleBinding objects.`,
             required: false,
             type: 'object'
         },

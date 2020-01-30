@@ -21,7 +21,7 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
     'log-level': DiagnosticsModuleSpec_log_level = null;
     /** EnableTrace enables traces for a module. Default is false. */
     'enable-trace': boolean = null;
-    /** Args are command line arguments passed to the module */
+    /** Args are command line arguments passed to the module. */
     'args': Array<string> = null;
     public static propInfo: { [prop in keyof IDiagnosticsModuleSpec]: PropInfoItem } = {
         'log-level': {
@@ -37,7 +37,7 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
             type: 'boolean'
         },
         'args': {
-            description:  `Args are command line arguments passed to the module`,
+            description:  `Args are command line arguments passed to the module.`,
             required: false,
             type: 'Array<string>'
         },

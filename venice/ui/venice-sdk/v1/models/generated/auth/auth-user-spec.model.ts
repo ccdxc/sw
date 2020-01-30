@@ -19,9 +19,9 @@ export interface IAuthUserSpec {
 
 export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
     'fullname': string = null;
-    /** must be a valid email */
+    /** Must be a valid email. */
     'email': string = null;
-    /** Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./" */
+    /** Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+`-={}|[]\\:\"<>?,./". */
     'password': string = null;
     'type': AuthUserSpec_type = null;
     public static propInfo: { [prop in keyof IAuthUserSpec]: PropInfoItem } = {
@@ -30,12 +30,12 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
             type: 'string'
         },
         'email': {
-            description:  `Must be a valid email`,
+            description:  `Must be a valid email.`,
             required: false,
             type: 'string'
         },
         'password': {
-            description:  `Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+'-={}|[]\\:\"<>?,./"`,
+            description:  `Password should be atleast 9 characters containing atleast 1 digit, 1 uppercase letter and 1 special character from "~!@#$%^&*()_+'-={}|[]\\:\"<>?,./".`,
             required: false,
             type: 'string'
         },
@@ -114,7 +114,7 @@ export class AuthUserSpec extends BaseModel implements IAuthUserSpec {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'fullname': CustomFormControl(new FormControl(this['fullname']), AuthUserSpec.propInfo['fullname']),
-                'email': CustomFormControl(new FormControl(this['email'], [patternValidator('^[a-zA-Z0-9_\\+\\-\\.]+@([a-zA-Z0-9\\-]+\\.)+[a-zA-Z]{2,4}$', 'must be a valid email'), ]), AuthUserSpec.propInfo['email']),
+                'email': CustomFormControl(new FormControl(this['email'], [patternValidator('^[a-zA-Z0-9_\\+\\-\\.]+@([a-zA-Z0-9\\-]+\\.)+[a-zA-Z]{2,4}$', 'Must be a valid email.'), ]), AuthUserSpec.propInfo['email']),
                 'password': CustomFormControl(new FormControl(this['password']), AuthUserSpec.propInfo['password']),
                 'type': CustomFormControl(new FormControl(this['type'], [required, enumValidator(AuthUserSpec_type), ]), AuthUserSpec.propInfo['type']),
             });

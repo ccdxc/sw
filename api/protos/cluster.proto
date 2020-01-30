@@ -27,6 +27,8 @@ import "github.com/pensando/sw/api/meta.proto";
 //          o NetOps-admin
 //              - TBD
 //
+
+// Cluster represents a full cluster venice and workload nodes
 message Cluster {
 
     option (venice.objectPrefix) = {Singleton: "cluster"};
@@ -231,9 +233,8 @@ message UpdateTLSConfigRequest {
 }
 
 //---------------------------------- NODE -------------------------------------------
-//
+
 // Node is representation of a single Venice node in the system.
-//
 message Node {
 
     option (venice.objectPrefix) = {Collection: "nodes"};
@@ -472,9 +473,8 @@ message InterfaceInfo {
 }
 
 //---------------------------------- HOST ------------------------------------
-//
+
 // Host represents a Baremetal or Hypervisor server.
-//
 message Host {
 
     option (venice.objectPrefix) = {Collection: "hosts"};

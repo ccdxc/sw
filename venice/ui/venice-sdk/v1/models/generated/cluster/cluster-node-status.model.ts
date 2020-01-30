@@ -22,7 +22,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
     'phase': ClusterNodeStatus_phase = null;
     /** Quorum node or not. */
     'quorum': boolean = null;
-    /** List of current node conditions */
+    /** List of current node conditions. */
     'conditions': Array<ClusterNodeCondition> = null;
     public static propInfo: { [prop in keyof IClusterNodeStatus]: PropInfoItem } = {
         'phase': {
@@ -38,7 +38,7 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
             type: 'boolean'
         },
         'conditions': {
-            description:  `List of current node conditions`,
+            description:  `List of current node conditions.`,
             required: false,
             type: 'object'
         },

@@ -22,7 +22,7 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of Tenant objects */
+    /** List of Tenant objects. */
     'items': Array<ClusterTenant> = null;
     public static propInfo: { [prop in keyof IClusterTenantList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class ClusterTenantList extends BaseModel implements IClusterTenantList {
             type: 'object'
         },
         'items': {
-            description:  `List of Tenant objects`,
+            description:  `List of Tenant objects.`,
             required: false,
             type: 'object'
         },

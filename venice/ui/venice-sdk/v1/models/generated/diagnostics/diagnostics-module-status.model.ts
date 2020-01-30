@@ -24,69 +24,69 @@ export interface IDiagnosticsModuleStatus {
 
 
 export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsModuleStatus {
-    /** Node on which this process is running */
+    /** Node on which this process is running. */
     'node': string = null;
-    /** Module is the name of the process/container */
+    /** Module is the name of the process/container. */
     'module': string = null;
-    /** Category specifies whether process is part of Venice(controller) or Naples(io) subsystem */
+    /** Category specifies whether process is part of Venice(controller) or Naples(io) subsystem. */
     'category': DiagnosticsModuleStatus_category = null;
-    /** Last start time */
+    /** Last start time. */
     'last-start': Date = null;
-    /** Number of times process got restarted. zero if never restarted */
+    /** Number of times process got restarted. zero if never restarted. */
     'restart-count': number = null;
-    /** Arbitrary string, json, backtrace, etc. offering clues for restart */
+    /** Arbitrary string, json, backtrace, etc. offering clues for restart. */
     'last-restart-reason': string = null;
-    /** Service is the name of the service/pod this process is part of */
+    /** Service is the name of the service/pod this process is part of. */
     'service': string = null;
-    /** Ports on which this process is listening */
+    /** Ports on which this process is listening. */
     'service-ports': Array<DiagnosticsServicePort> = null;
-    /** MACAddress of the smart nic on which this module runs */
+    /** MACAddress of the smart nic on which this module runs. */
     'mac-address': string = null;
     public static propInfo: { [prop in keyof IDiagnosticsModuleStatus]: PropInfoItem } = {
         'node': {
-            description:  `Node on which this process is running`,
+            description:  `Node on which this process is running.`,
             required: false,
             type: 'string'
         },
         'module': {
-            description:  `Module is the name of the process/container`,
+            description:  `Module is the name of the process/container.`,
             required: false,
             type: 'string'
         },
         'category': {
             enum: DiagnosticsModuleStatus_category,
             default: 'venice',
-            description:  `Category specifies whether process is part of Venice(controller) or Naples(io) subsystem`,
+            description:  `Category specifies whether process is part of Venice(controller) or Naples(io) subsystem.`,
             required: true,
             type: 'string'
         },
         'last-start': {
-            description:  `Last start time`,
+            description:  `Last start time.`,
             required: false,
             type: 'Date'
         },
         'restart-count': {
-            description:  `Number of times process got restarted. zero if never restarted`,
+            description:  `Number of times process got restarted. zero if never restarted.`,
             required: false,
             type: 'number'
         },
         'last-restart-reason': {
-            description:  `Arbitrary string, json, backtrace, etc. offering clues for restart`,
+            description:  `Arbitrary string, json, backtrace, etc. offering clues for restart.`,
             required: false,
             type: 'string'
         },
         'service': {
-            description:  `Service is the name of the service/pod this process is part of`,
+            description:  `Service is the name of the service/pod this process is part of.`,
             required: false,
             type: 'string'
         },
         'service-ports': {
-            description:  `Ports on which this process is listening`,
+            description:  `Ports on which this process is listening.`,
             required: false,
             type: 'object'
         },
         'mac-address': {
-            description:  `MACAddress of the smart nic on which this module runs`,
+            description:  `MACAddress of the smart nic on which this module runs.`,
             required: false,
             type: 'string'
         },

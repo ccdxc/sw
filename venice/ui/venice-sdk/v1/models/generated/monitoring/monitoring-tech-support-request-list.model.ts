@@ -22,7 +22,7 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of TechSupportRequest objects */
+    /** List of TechSupportRequest objects. */
     'items': Array<MonitoringTechSupportRequest> = null;
     public static propInfo: { [prop in keyof IMonitoringTechSupportRequestList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class MonitoringTechSupportRequestList extends BaseModel implements IMoni
             type: 'object'
         },
         'items': {
-            description:  `List of TechSupportRequest objects`,
+            description:  `List of TechSupportRequest objects.`,
             required: false,
             type: 'object'
         },

@@ -24,42 +24,34 @@ export interface IMonitoringAlertPolicySpec {
 
 
 export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringAlertPolicySpec {
-    /** Resource type - target resource to run this policy.
-e.g. Network, Endpoint - object based alert policy
-     Event - event based alert policy
-     EndpointMetrics - metric based alert policy
-based on the resource type, the policy gets interpreted. */
+    /** Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy Event - event based alert policy EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted. */
     'resource': string = null;
-    /** Severity to be set for an alert that gets triggered from this rule */
+    /** Severity to be set for an alert that gets triggered from this rule. */
     'severity': MonitoringAlertPolicySpec_severity = null;
-    /** Message to be used while generating the alert
-XXX: Event based alerts should not carry a message. It will be derived from the event. */
+    /** Message to be used while generating the alert XXX: Event based alerts should not carry a message. It will be derived from the event. */
     'message': string = null;
-    /** List of requirements that needs to be met to trigger an alert */
+    /** List of requirements that needs to be met to trigger an alert. */
     'requirements': Array<FieldsRequirement> = null;
-    /** Met rule (requirements) needs to sustain for the given duration to qualify to be an alert */
+    /** Met rule (requirements) needs to sustain for the given duration to qualify to be an alert. */
     'persistence-duration': string = null;
-    /** Met rule (requirements) needs to be cleared for the given duration to resolve an alert */
+    /** Met rule (requirements) needs to be cleared for the given duration to resolve an alert. */
     'clear-duration': string = null;
-    /** User can disable the policy by setting this field.
-Disabled policies will not generate any more alerts but the outstanding ones will remain as is. */
+    /** User can disable the policy by setting this field. Disabled policies will not generate any more alerts but the outstanding ones will remain as is. */
     'enable': boolean = null;
-    /** If set, the underlying alert will be auto-resolved if the rule that
-triggered the alert is cleared */
+    /** If set, the underlying alert will be auto-resolved if the rule that triggered the alert is cleared. */
     'auto-resolve': boolean = null;
-    /** name of the alert destinations to be used to send out notification when an alert
-gets generated. */
+    /** Name of the alert destinations to be used to send out notification when an alert gets generated. */
     'destinations': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringAlertPolicySpec]: PropInfoItem } = {
         'resource': {
-            description:  `Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy      Event - event based alert policy      EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.`,
+            description:  `Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy Event - event based alert policy EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted.`,
             required: false,
             type: 'string'
         },
         'severity': {
             enum: MonitoringAlertPolicySpec_severity,
             default: 'info',
-            description:  `Severity to be set for an alert that gets triggered from this rule`,
+            description:  `Severity to be set for an alert that gets triggered from this rule.`,
             required: true,
             type: 'string'
         },
@@ -69,17 +61,17 @@ gets generated. */
             type: 'string'
         },
         'requirements': {
-            description:  `List of requirements that needs to be met to trigger an alert`,
+            description:  `List of requirements that needs to be met to trigger an alert.`,
             required: false,
             type: 'object'
         },
         'persistence-duration': {
-            description:  `Met rule (requirements) needs to sustain for the given duration to qualify to be an alert`,
+            description:  `Met rule (requirements) needs to sustain for the given duration to qualify to be an alert.`,
             required: false,
             type: 'string'
         },
         'clear-duration': {
-            description:  `Met rule (requirements) needs to be cleared for the given duration to resolve an alert`,
+            description:  `Met rule (requirements) needs to be cleared for the given duration to resolve an alert.`,
             required: false,
             type: 'string'
         },
@@ -90,7 +82,7 @@ gets generated. */
             type: 'boolean'
         },
         'auto-resolve': {
-            description:  `If set, the underlying alert will be auto-resolved if the rule that triggered the alert is cleared`,
+            description:  `If set, the underlying alert will be auto-resolved if the rule that triggered the alert is cleared.`,
             required: false,
             type: 'boolean'
         },

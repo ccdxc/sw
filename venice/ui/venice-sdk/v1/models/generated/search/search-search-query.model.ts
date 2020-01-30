@@ -21,41 +21,40 @@ export interface ISearchSearchQuery {
 
 
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
-    /** OR of Text-requirements to be matched, Exclude is not supported for Text search */
+    /** OR of Text-requirements to be matched, Exclude is not supported for Text search. */
     'texts': Array<SearchTextRequirement> = null;
-    /** OR of Categories to be matched, AND and Exclude are not supported for this type
-The max category string length is 64 byteslength of string should be between 0 and 64 */
+    /** OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 bytes. Length of string should be between 0 and 64. */
     'categories': Array<string> = null;
-    /** OR of Kinds to be matched, AND and Exclude are not supported for this typeshould be a valid object Kind */
+    /** OR of Kinds to be matched, AND and Exclude are not supported for this type. Should be a valid object Kind. */
     'kinds': Array<string> = null;
-    /** Field Selector is AND of field.Requirements */
+    /** Field Selector is AND of field.Requirements. */
     'fields': FieldsSelector = null;
-    /** Label Selector is AND of label.Requirememts */
+    /** Label Selector is AND of label.Requirememts. */
     'labels': LabelsSelector = null;
     public static propInfo: { [prop in keyof ISearchSearchQuery]: PropInfoItem } = {
         'texts': {
-            description:  `OR of Text-requirements to be matched, Exclude is not supported for Text search`,
+            description:  `OR of Text-requirements to be matched, Exclude is not supported for Text search.`,
             required: false,
             type: 'object'
         },
         'categories': {
-            description:  `OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 byteslength of string should be between 0 and 64`,
+            description:  `OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 bytes. Length of string should be between 0 and 64.`,
             required: false,
             type: 'Array<string>'
         },
         'kinds': {
-            description:  `OR of Kinds to be matched, AND and Exclude are not supported for this typeshould be a valid object Kind`,
+            description:  `OR of Kinds to be matched, AND and Exclude are not supported for this type. Should be a valid object Kind.`,
             hint:  'Network',
             required: false,
             type: 'Array<string>'
         },
         'fields': {
-            description:  `Field Selector is AND of field.Requirements`,
+            description:  `Field Selector is AND of field.Requirements.`,
             required: false,
             type: 'object'
         },
         'labels': {
-            description:  `Label Selector is AND of label.Requirememts`,
+            description:  `Label Selector is AND of label.Requirememts.`,
             required: false,
             type: 'object'
         },

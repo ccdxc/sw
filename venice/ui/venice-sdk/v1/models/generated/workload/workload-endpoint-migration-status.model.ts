@@ -15,13 +15,13 @@ export interface IWorkloadEndpointMigrationStatus {
 
 
 export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkloadEndpointMigrationStatus {
-    /** Status of migration */
+    /** Status of migration. */
     'status': WorkloadEndpointMigrationStatus_status = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointMigrationStatus]: PropInfoItem } = {
         'status': {
             enum: WorkloadEndpointMigrationStatus_status_uihint,
             default: 'none',
-            description:  `Status of migration`,
+            description:  `Status of migration.`,
             required: true,
             type: 'string'
         },

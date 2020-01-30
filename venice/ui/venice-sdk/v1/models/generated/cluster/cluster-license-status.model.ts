@@ -16,13 +16,13 @@ export interface IClusterLicenseStatus {
 
 
 export class ClusterLicenseStatus extends BaseModel implements IClusterLicenseStatus {
-    /** Status of current Licenced features */
+    /** Status of current Licenced features. */
     'features': Array<ClusterFeatureStatus> = null;
     /** Licenses that are not understood by the current running version of software. */
     'unknown': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterLicenseStatus]: PropInfoItem } = {
         'features': {
-            description:  `Status of current Licenced features`,
+            description:  `Status of current Licenced features.`,
             required: false,
             type: 'object'
         },

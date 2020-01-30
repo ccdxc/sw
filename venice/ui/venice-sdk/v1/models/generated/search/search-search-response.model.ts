@@ -24,58 +24,53 @@ export interface ISearchSearchResponse {
 
 
 export class SearchSearchResponse extends BaseModel implements ISearchSearchResponse {
-    /** TotalHits indicates total number of hits matched */
+    /** TotalHits indicates total number of hits matched. */
     'total-hits': string = null;
-    /** ActualHits indicates the actual hits returned in this response */
+    /** ActualHits indicates the actual hits returned in this response. */
     'actual-hits': string = null;
-    /** TimeTakenMsecs is the time taken for search response in millisecs */
+    /** TimeTakenMsecs is the time taken for search response in millisecs. */
     'time-taken-msecs': string = null;
-    /** Error status for failures */
+    /** Error status for failures. */
     'error': SearchError = null;
-    /** EntryList is list of all search results with no grouping.
-This attribute is populated and valid only in Full request-mode */
+    /** EntryList is list of all search results with no grouping. This attribute is populated and valid only in Full request-mode. */
     'entries': Array<SearchEntry> = null;
-    /** PreviewEntries is a three level grouping of search summary (#hits),
-grouped by tenant, category and kind in that order. This attribute
-is populated and valid only in Preview request-mode */
+    /** PreviewEntries is a three level grouping of search summary (#hits), grouped by tenant, category and kind in that order. This attribute is populated and valid only in Preview request-mode. */
     'preview-entries': SearchTenantPreview = null;
-    /** AggregatedEntries is a three level grouping of full search results,
-Grouped by tenant, category and kind in that order. This attribute
-is populated and valid only in Full request-mode */
+    /** AggregatedEntries is a three level grouping of full search results, Grouped by tenant, category and kind in that order. This attribute is populated and valid only in Full request-mode. */
     'aggregated-entries': SearchTenantAggregation = null;
     public static propInfo: { [prop in keyof ISearchSearchResponse]: PropInfoItem } = {
         'total-hits': {
-            description:  `TotalHits indicates total number of hits matched`,
+            description:  `TotalHits indicates total number of hits matched.`,
             required: false,
             type: 'string'
         },
         'actual-hits': {
-            description:  `ActualHits indicates the actual hits returned in this response`,
+            description:  `ActualHits indicates the actual hits returned in this response.`,
             required: false,
             type: 'string'
         },
         'time-taken-msecs': {
-            description:  `TimeTakenMsecs is the time taken for search response in millisecs`,
+            description:  `TimeTakenMsecs is the time taken for search response in millisecs.`,
             required: false,
             type: 'string'
         },
         'error': {
-            description:  `Error status for failures`,
+            description:  `Error status for failures.`,
             required: false,
             type: 'object'
         },
         'entries': {
-            description:  `EntryList is list of all search results with no grouping. This attribute is populated and valid only in Full request-mode`,
+            description:  `EntryList is list of all search results with no grouping. This attribute is populated and valid only in Full request-mode.`,
             required: false,
             type: 'object'
         },
         'preview-entries': {
-            description:  `PreviewEntries is a three level grouping of search summary (#hits), grouped by tenant, category and kind in that order. This attribute is populated and valid only in Preview request-mode`,
+            description:  `PreviewEntries is a three level grouping of search summary (#hits), grouped by tenant, category and kind in that order. This attribute is populated and valid only in Preview request-mode.`,
             required: false,
             type: 'object'
         },
         'aggregated-entries': {
-            description:  `AggregatedEntries is a three level grouping of full search results, Grouped by tenant, category and kind in that order. This attribute is populated and valid only in Full request-mode`,
+            description:  `AggregatedEntries is a three level grouping of full search results, Grouped by tenant, category and kind in that order. This attribute is populated and valid only in Full request-mode.`,
             required: false,
             type: 'object'
         },

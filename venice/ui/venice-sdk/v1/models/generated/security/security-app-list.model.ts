@@ -22,7 +22,7 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of App objects */
+    /** List of App objects. */
     'items': Array<SecurityApp> = null;
     public static propInfo: { [prop in keyof ISecurityAppList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class SecurityAppList extends BaseModel implements ISecurityAppList {
             type: 'object'
         },
         'items': {
-            description:  `List of App objects`,
+            description:  `List of App objects.`,
             required: false,
             type: 'object'
         },

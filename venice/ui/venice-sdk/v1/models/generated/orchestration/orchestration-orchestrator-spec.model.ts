@@ -19,28 +19,28 @@ export interface IOrchestrationOrchestratorSpec {
 
 
 export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchestrationOrchestratorSpec {
-    /** Type of orchestrator */
+    /** Type of orchestrator. */
     'type': OrchestrationOrchestratorSpec_type = null;
-    /** URI of the orchestratorlength of string should be at least 1 */
+    /** URI of the orchestrator. Length of string should be at least 1. */
     'uri': string = null;
-    /** Credentials for the orchestrator */
+    /** Credentials for the orchestrator. */
     'credentials': MonitoringExternalCred = null;
     'login-data': object = null;
     public static propInfo: { [prop in keyof IOrchestrationOrchestratorSpec]: PropInfoItem } = {
         'type': {
             enum: OrchestrationOrchestratorSpec_type_uihint,
             default: 'vcenter',
-            description:  `Type of orchestrator`,
+            description:  `Type of orchestrator.`,
             required: true,
             type: 'string'
         },
         'uri': {
-            description:  `URI of the orchestratorlength of string should be at least 1`,
+            description:  `URI of the orchestrator. Length of string should be at least 1.`,
             required: true,
             type: 'string'
         },
         'credentials': {
-            description:  `Credentials for the orchestrator`,
+            description:  `Credentials for the orchestrator.`,
             required: false,
             type: 'object'
         },

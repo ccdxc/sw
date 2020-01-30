@@ -19,27 +19,27 @@ export interface IMonitoringSyslogExport {
 
 
 export class MonitoringSyslogExport extends BaseModel implements IMonitoringSyslogExport {
-    /** event export format, SYSLOG_BSD default */
+    /** Event export format, SYSLOG_BSD default. */
     'format': MonitoringSyslogExport_format = null;
-    /** export target ip/port/protocol */
+    /** Export target ip/port/protocol. */
     'targets': Array<MonitoringExportConfig> = null;
-    /** syslog specific configuration; one of the supported configs */
+    /** Syslog specific configuration; one of the supported configs. */
     'config': MonitoringSyslogExportConfig = null;
     public static propInfo: { [prop in keyof IMonitoringSyslogExport]: PropInfoItem } = {
         'format': {
             enum: MonitoringSyslogExport_format_uihint,
             default: 'syslog-bsd',
-            description:  `Event export format, SYSLOG_BSD default`,
+            description:  `Event export format, SYSLOG_BSD default.`,
             required: true,
             type: 'string'
         },
         'targets': {
-            description:  `Export target ip/port/protocol`,
+            description:  `Export target ip/port/protocol.`,
             required: false,
             type: 'object'
         },
         'config': {
-            description:  `Syslog specific configuration; one of the supported configs`,
+            description:  `Syslog specific configuration; one of the supported configs.`,
             required: false,
             type: 'object'
         },

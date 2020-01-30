@@ -22,7 +22,7 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of FlowExportPolicy objects */
+    /** List of FlowExportPolicy objects. */
     'items': Array<MonitoringFlowExportPolicy> = null;
     public static propInfo: { [prop in keyof IMonitoringFlowExportPolicyList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class MonitoringFlowExportPolicyList extends BaseModel implements IMonito
             type: 'object'
         },
         'items': {
-            description:  `List of FlowExportPolicy objects`,
+            description:  `List of FlowExportPolicy objects.`,
             required: false,
             type: 'object'
         },

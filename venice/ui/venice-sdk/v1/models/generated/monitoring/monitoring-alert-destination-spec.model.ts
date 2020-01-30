@@ -21,26 +21,26 @@ export interface IMonitoringAlertDestinationSpec {
 
 
 export class MonitoringAlertDestinationSpec extends BaseModel implements IMonitoringAlertDestinationSpec {
-    /** export alerts matched by the selector */
+    /** Export alerts matched by the selector. */
     'selector': FieldsSelector = null;
-    /** Email notification */
+    /** Email notification. */
     'email-export': MonitoringEmailExport = null;
-    /** SNMP trap destination(s) */
+    /** SNMP trap destination(s). */
     'snmp-export': MonitoringSNMPExport = null;
     'syslog-export': MonitoringSyslogExport = null;
     public static propInfo: { [prop in keyof IMonitoringAlertDestinationSpec]: PropInfoItem } = {
         'selector': {
-            description:  `Export alerts matched by the selector`,
+            description:  `Export alerts matched by the selector.`,
             required: false,
             type: 'object'
         },
         'email-export': {
-            description:  `Email notification`,
+            description:  `Email notification.`,
             required: false,
             type: 'object'
         },
         'snmp-export': {
-            description:  `SNMP trap destination(s)`,
+            description:  `SNMP trap destination(s).`,
             required: false,
             type: 'object'
         },

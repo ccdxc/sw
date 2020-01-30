@@ -14,12 +14,11 @@ export interface IObjstoreObjectSpec {
 
 
 export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec {
-    /** Content-Type for the stored object. Can either be specified when uploading.
- or the backend guesses one if possible. */
+    /** Content-Type for the stored object. Can either be specified when uploading. or the backend guesses one if possible. */
     'content-type': string = null;
     public static propInfo: { [prop in keyof IObjstoreObjectSpec]: PropInfoItem } = {
         'content-type': {
-            description:  `Content-Type for the stored object. Can either be specified when uploading.  or the backend guesses one if possible.`,
+            description:  `Content-Type for the stored object. Can either be specified when uploading. or the backend guesses one if possible.`,
             required: false,
             type: 'string'
         },

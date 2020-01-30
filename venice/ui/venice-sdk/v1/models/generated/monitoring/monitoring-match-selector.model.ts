@@ -15,18 +15,18 @@ export interface IMonitoringMatchSelector {
 
 
 export class MonitoringMatchSelector extends BaseModel implements IMonitoringMatchSelector {
-    /** Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16) */
+    /** Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16). */
     'ip-addresses': Array<string> = null;
-    /** List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405"should be a valid MAC address */
+    /** List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405". Should be a valid MAC address. */
     'mac-addresses': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringMatchSelector]: PropInfoItem } = {
         'ip-addresses': {
-            description:  `Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16)`,
+            description:  `Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16).`,
             required: false,
             type: 'Array<string>'
         },
         'mac-addresses': {
-            description:  `List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405"should be a valid MAC address`,
+            description:  `List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405". Should be a valid MAC address.`,
             hint:  'aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000',
             required: false,
             type: 'Array<string>'

@@ -22,7 +22,7 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
-    /** List of User objects */
+    /** List of User objects. */
     'items': Array<AuthUser> = null;
     public static propInfo: { [prop in keyof IAuthUserList]: PropInfoItem } = {
         'kind': {
@@ -38,7 +38,7 @@ export class AuthUserList extends BaseModel implements IAuthUserList {
             type: 'object'
         },
         'items': {
-            description:  `List of User objects`,
+            description:  `List of User objects.`,
             required: false,
             type: 'object'
         },

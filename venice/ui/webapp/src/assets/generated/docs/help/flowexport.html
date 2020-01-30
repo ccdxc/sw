@@ -10,15 +10,15 @@
 <tbody>
 <tr>
 <td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Should start and end in an alphanumeric character and can contain alphanumeric or ._- characters. minimum length is 2 and maximum length is 64 charactersmust start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
 </tr>
 <tr>
 <td>interval</td>
-<td>Interval defines how often to push the records to an external collector. The value is specified as a string format, &#x27;10s&#x27;, &#x27;20m&#x27;should be a valid time duration between 1s and 24h0m0s</td>
+<td>Interval defines how often to push the records to an external collector The value is specified as a string format, '10s', '20m'. Should be a valid time duration between 1s and 24h0m0s.</td>
 </tr>
 <tr>
 <td>template-interval</td>
-<td>TemplateInterval defines how often to send ipfix templates to an external collector. The value is specified as a string format, &#x27;1m&#x27;, &#x27;10m&#x27;should be a valid time duration between 1m0s and 30m0s</td>
+<td>TemplateInterval defines how often to send ipfix templates to an external collector The value is specified as a string format, '1m', '10m'. Should be a valid time duration between 1m0s and 30m0s.</td>
 </tr>
 </tbody>
 </table>
@@ -34,15 +34,15 @@
 <tbody>
 <tr>
 <td>source</td>
-<td>Either Src or Dst or both must be specified, both cannot be *. Src &#x3D; * when not specified. When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored</td>
+<td>Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored.</td>
 </tr>
 <tr>
 <td>destination</td>
-<td>Dst &#x3D; * when not specified. When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored</td>
+<td>Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored.</td>
 </tr>
 <tr>
 <td>app-protocol-selectors</td>
-<td>App &#x3D; * when not specified</td>
+<td>App = * when not specified.</td>
 </tr>
 </tbody>
 </table>
@@ -61,11 +61,11 @@
 </tr>
 <tr>
 <td>facility-override</td>
-<td>override default facility with this in exported logs <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
+<td>Override default facility with this in exported logs. <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
 </tr>
 <tr>
 <td>prefix</td>
-<td>add prefix in exported logs</td>
+<td>Add prefix in exported logs.</td>
 </tr>
 </tbody>
 </table>
@@ -81,11 +81,11 @@
 <tbody>
 <tr>
 <td>destination</td>
-<td>IP address or URL of the collector/entity to which the data is to be exportedlength of string should be between 1 and 2048</td>
+<td>IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048.</td>
 </tr>
 <tr>
 <td>transport</td>
-<td>protocol and Port number where an external collector is gathering the data. example &quot;UDP/2055&quot;should be a valid layer 3 or layer 4 protocol and port/type</td>
+<td>Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type.</td>
 </tr>
 </tbody>
 </table>

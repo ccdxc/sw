@@ -17,25 +17,25 @@ export interface ITelemetry_queryMetricsQueryList {
 
 
 export class Telemetry_queryMetricsQueryList extends BaseModel implements ITelemetry_queryMetricsQueryList {
-    /** Tenant for the request */
+    /** Tenant for the request. */
     'tenant': string = null;
-    /** Namespace for the request */
+    /** Namespace for the request. */
     'namespace': string = null;
-    /** List of queries to execute */
+    /** List of queries to execute. */
     'queries': Array<Telemetry_queryMetricsQuerySpec> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryMetricsQueryList]: PropInfoItem } = {
         'tenant': {
-            description:  `Tenant for the request`,
+            description:  `Tenant for the request.`,
             required: false,
             type: 'string'
         },
         'namespace': {
-            description:  `Namespace for the request`,
+            description:  `Namespace for the request.`,
             required: false,
             type: 'string'
         },
         'queries': {
-            description:  `List of queries to execute`,
+            description:  `List of queries to execute.`,
             required: false,
             type: 'object'
         },

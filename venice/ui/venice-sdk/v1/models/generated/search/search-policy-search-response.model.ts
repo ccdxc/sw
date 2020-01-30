@@ -16,7 +16,7 @@ export interface ISearchPolicySearchResponse {
 
 
 export class SearchPolicySearchResponse extends BaseModel implements ISearchPolicySearchResponse {
-    /** Status of firewall policy search */
+    /** Status of firewall policy search. */
     'status': SearchPolicySearchResponse_status = null;
     /** Result is Map of <NetworkSecurityPolicy object name, PolicyMatch Entry>. */
     'results': object = null;
@@ -24,7 +24,7 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
         'status': {
             enum: SearchPolicySearchResponse_status,
             default: 'match',
-            description:  `Status of firewall policy search`,
+            description:  `Status of firewall policy search.`,
             required: true,
             type: 'string'
         },

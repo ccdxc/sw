@@ -18,32 +18,32 @@ export interface INetworkLbPolicySpec {
 
 
 export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySpec {
-    /** load balancing type */
+    /** Load balancing type. */
     'type': string = null;
-    /** load balancing algorithm */
+    /** Load balancing algorithm. */
     'algorithm': string = null;
-    /** session affinity */
+    /** Session affinity. */
     'session-affinity': string = null;
-    /** health check policy */
+    /** Health check policy. */
     'health-check': NetworkHealthCheckSpec = null;
     public static propInfo: { [prop in keyof INetworkLbPolicySpec]: PropInfoItem } = {
         'type': {
-            description:  `Load balancing type`,
+            description:  `Load balancing type.`,
             required: false,
             type: 'string'
         },
         'algorithm': {
-            description:  `Load balancing algorithm`,
+            description:  `Load balancing algorithm.`,
             required: false,
             type: 'string'
         },
         'session-affinity': {
-            description:  `Session affinity`,
+            description:  `Session affinity.`,
             required: false,
             type: 'string'
         },
         'health-check': {
-            description:  `Health check policy`,
+            description:  `Health check policy.`,
             required: false,
             type: 'object'
         },

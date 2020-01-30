@@ -17,7 +17,7 @@ export interface INetworkBGPConfig {
 
 
 export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
-    /** Router ID for the BGP Instance. */
+    /** Router ID for the BGP Instance. Should be a valid v4 or v6 IP address. */
     'router-id': string = null;
     /** Local ASN for the BGP Instance. */
     'as-number': number = null;
@@ -25,7 +25,7 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
     'neighbors': Array<NetworkBGPNeighbor> = null;
     public static propInfo: { [prop in keyof INetworkBGPConfig]: PropInfoItem } = {
         'router-id': {
-            description:  `Router ID for the BGP Instance.`,
+            description:  `Router ID for the BGP Instance. Should be a valid v4 or v6 IP address.`,
             hint:  '10.1.1.1, ff02::5 ',
             required: true,
             type: 'string'

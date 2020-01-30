@@ -81,49 +81,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -131,7 +131,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -139,14 +139,14 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "spec.quorum-nodes",
-            "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster.",
+            "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -156,7 +156,7 @@
           },
           {
             "name": "spec.virtual-ip",
-            "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes.",
+            "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -173,7 +173,7 @@
           },
           {
             "name": "spec.auto-admit-dscs",
-            "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated\ninto Venice Cluster. When it is disabled, DSCs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster.",
+            "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated into Venice Cluster. When it is disabled, DSCs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster.",
             "in": "query",
             "required": false,
             "type": "boolean",
@@ -474,49 +474,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -524,7 +524,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -532,7 +532,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -703,49 +703,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -753,7 +753,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -761,7 +761,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1077,49 +1077,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1127,7 +1127,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1135,7 +1135,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1166,7 +1166,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1264,42 +1264,42 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1307,7 +1307,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1315,7 +1315,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1375,7 +1375,7 @@
           },
           {
             "name": "spec.mgmt-vlan",
-            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management. value should be between 0 and 4095",
+            "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0 means we use untagged-vlan for doing inband management. Value should be between 0 and 4095.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1400,7 +1400,7 @@
           },
           {
             "name": "status.admission-phase",
-            "description": "Current admission phase of the DistributedServiceCard.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet.",
+            "description": "Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1414,7 +1414,7 @@
           },
           {
             "name": "status.primary-mac",
-            "description": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard. should be a valid MAC address",
+            "description": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard. Should be a valid MAC address.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1473,28 +1473,28 @@
           },
           {
             "name": "os-info.type",
-            "description": "OS Name\nEg: GNU/Linux.",
+            "description": "OS Name Eg: GNU/Linux.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "os-info.kernel-release",
-            "description": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64.",
+            "description": "Kernel release Eg: 3.10.0-514.10.2.el7.x86_64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "os-info.kernel-version",
-            "description": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017.",
+            "description": "Kernel version Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "os-info.processor",
-            "description": "Processor Info\nEg: x86_64.",
+            "description": "Processor Info Eg: x86_64.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1765,49 +1765,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1815,7 +1815,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -1823,7 +1823,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1854,7 +1854,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -2013,42 +2013,42 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2056,7 +2056,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2064,7 +2064,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2276,49 +2276,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2326,7 +2326,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2334,7 +2334,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2528,49 +2528,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2578,7 +2578,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2586,7 +2586,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2617,7 +2617,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -2776,42 +2776,42 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2819,7 +2819,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -2827,7 +2827,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3037,49 +3037,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3087,7 +3087,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3095,7 +3095,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3126,7 +3126,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3285,42 +3285,42 @@
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3328,7 +3328,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3336,7 +3336,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3545,49 +3545,49 @@
           },
           {
             "name": "meta.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meta.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3595,7 +3595,7 @@
           },
           {
             "name": "meta.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3603,7 +3603,7 @@
           },
           {
             "name": "meta.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3693,49 +3693,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3743,7 +3743,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3751,7 +3751,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3782,7 +3782,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3860,49 +3860,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3910,7 +3910,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -3918,7 +3918,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -3949,7 +3949,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4027,49 +4027,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4077,7 +4077,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4085,7 +4085,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4116,7 +4116,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4194,49 +4194,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4244,7 +4244,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4252,7 +4252,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4283,7 +4283,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4361,49 +4361,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4411,7 +4411,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4419,7 +4419,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4450,7 +4450,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4528,49 +4528,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4578,7 +4578,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4586,7 +4586,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4617,7 +4617,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4695,49 +4695,49 @@
         "parameters": [
           {
             "name": "O.name",
-            "description": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.tenant",
-            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters. must be alpha-numericslength of string should be between 1 and 48",
+            "description": "Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.namespace",
-            "description": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters. must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
+            "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.generation-id",
-            "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user.",
+            "description": "GenerationID is the generation Id for the object. This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.resource-version",
-            "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user.",
+            "description": "Resource version in the object store. This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.uuid",
-            "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user.",
+            "description": "UUID is the unique identifier for the object. This is generated on creation of the object. System generated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "O.creation-time",
-            "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user.",
+            "description": "CreationTime is the creation time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4745,7 +4745,7 @@
           },
           {
             "name": "O.mod-time",
-            "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user.",
+            "description": "ModTime is the Last Modification time of the object. System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string",
@@ -4753,7 +4753,7 @@
           },
           {
             "name": "O.self-link",
-            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user.",
+            "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -4784,7 +4784,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1].",
+            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4852,21 +4852,21 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48"
+          "description": "Must be alpha-numerics. Length of string should be between 1 and 48."
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string"
@@ -4900,7 +4900,7 @@
         },
         "field-selector": {
           "type": "string",
-          "title": "FieldSelector to select on field values in list or watch results"
+          "description": "FieldSelector to select on field values in list or watch results."
         },
         "field-change-selector": {
           "type": "array",
@@ -4912,7 +4912,7 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "title": "from represents the start offset (zero based), used for pagination.\nresults returned would be in the range [from ... from+max-results-1]"
+          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
         },
         "max-results": {
           "type": "integer",
@@ -4959,57 +4959,62 @@
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Name of the object, unique within a Namespace for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nminimum length is 2 and maximum length is 64 characters"
+          "description": "Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.",
+          "title": "Name of the object, unique within a Namespace for scoped objects"
         },
         "tenant": {
           "type": "string",
           "minLength": 1,
           "maxLength": 48,
           "pattern": "^[a-zA-Z0-9]+$",
-          "description": "must be alpha-numericslength of string should be between 1 and 48",
-          "title": "Tenant to which the object belongs to. This can be automatically filled in many cases based on\nthe tenant the user, who created the object, belongs to.\nShould start and end in an alphanumeric character and can contain only alphanumerics.\nMinimum length is 1 and maximum length is 48 characters"
+          "description": "This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48.",
+          "title": "Tenant to which the object belongs to"
         },
         "namespace": {
           "type": "string",
           "minLength": 2,
           "maxLength": 64,
           "pattern": "^[a-zA-Z0-9][\\w\\-\\.]*[a-zA-Z0-9]$",
-          "description": "must start and end with alpha numeric and can have alphanumeric, -, _, .length of string should be between 2 and 64",
-          "title": "Namespace of the object, for scoped objects.\nShould start and end in an alphanumeric character and can contain alphanumeric or ._- characters\nmaximum length is 64 characters"
+          "description": "Namespace of the object, for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64."
         },
         "generation-id": {
           "type": "string",
-          "description": "GenerationID is the generation Id for the object. This is incremented anytime there\n is an update to the user intent, including Spec update and any update to ObjectMeta.\n System generated and updated, not updatable by user."
+          "description": "This is incremented anytime there is an update to the user intent, including Spec update and any update to ObjectMeta. System generated and updated, not updatable by user.",
+          "title": "GenerationID is the generation Id for the object"
         },
         "resource-version": {
           "type": "string",
-          "description": "Resource version in the object store. This is updated anytime there is any change to the object.\n System generated and updated, not updatable by user."
+          "description": "This is updated anytime there is any change to the object. System generated and updated, not updatable by user.",
+          "title": "Resource version in the object store"
         },
         "uuid": {
           "type": "string",
-          "description": "UUID is the unique identifier for the object. This is generated on creation of the object.\nSystem generated, not updatable by user."
+          "description": "This is generated on creation of the object. System generated, not updatable by user.",
+          "title": "UUID is the unique identifier for the object"
         },
         "labels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         },
         "creation-time": {
           "type": "string",
           "format": "date-time",
-          "description": "CreationTime is the creation time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "CreationTime is the creation time of the object"
         },
         "mod-time": {
           "type": "string",
           "format": "date-time",
-          "description": "ModTime is the Last Modification time of the object\n System generated and updated, not updatable by user."
+          "description": "System generated and updated, not updatable by user.",
+          "title": "ModTime is the Last Modification time of the object"
         },
         "self-link": {
           "type": "string",
-          "description": "SelfLink is a link for accessing this object. When the object is served from the API-GW it is the\n URI path. Example:\n   - \"/v1/tenants/tenants/tenant2\" \n System generated and updated, not updatable by user."
+          "description": "When the object is served from the API-GW it is the URI path. Example: - \"/v1/tenants/tenants/tenant2\" System generated and updated, not updatable by user.",
+          "title": "SelfLink is a link for accessing this object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -5025,7 +5030,7 @@
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels are arbitrary (key,value) pairs associated with any object."
+          "title": "Labels are arbitrary (key,value) pairs associated with any object"
         }
       },
       "description": "ObjectMeta contains metadata that all objects stored in kvstore must have."
@@ -5119,7 +5124,7 @@
         },
         "api-version": {
           "type": "string",
-          "title": "APIVersion defines the version of the API object. This can only be set by the server"
+          "description": "APIVersion defines the version of the API object. This can only be set by the server."
         }
       },
       "description": "TypeMeta contains the metadata about kind and version for all API objects."
@@ -5156,7 +5161,7 @@
           }
         }
       },
-      "title": "AutoMsgClusterWatchHelper is a wrapper object for watch events for Cluster objects"
+      "description": "AutoMsgClusterWatchHelper is a wrapper object for watch events for Cluster objects."
     },
     "clusterAutoMsgClusterWatchHelperWatchEvent": {
       "type": "object",
@@ -5179,7 +5184,7 @@
           }
         }
       },
-      "title": "AutoMsgConfigurationSnapshotWatchHelper is a wrapper object for watch events for ConfigurationSnapshot objects"
+      "description": "AutoMsgConfigurationSnapshotWatchHelper is a wrapper object for watch events for ConfigurationSnapshot objects."
     },
     "clusterAutoMsgConfigurationSnapshotWatchHelperWatchEvent": {
       "type": "object",
@@ -5202,7 +5207,7 @@
           }
         }
       },
-      "title": "AutoMsgDistributedServiceCardWatchHelper is a wrapper object for watch events for DistributedServiceCard objects"
+      "description": "AutoMsgDistributedServiceCardWatchHelper is a wrapper object for watch events for DistributedServiceCard objects."
     },
     "clusterAutoMsgDistributedServiceCardWatchHelperWatchEvent": {
       "type": "object",
@@ -5225,7 +5230,7 @@
           }
         }
       },
-      "title": "AutoMsgHostWatchHelper is a wrapper object for watch events for Host objects"
+      "description": "AutoMsgHostWatchHelper is a wrapper object for watch events for Host objects."
     },
     "clusterAutoMsgHostWatchHelperWatchEvent": {
       "type": "object",
@@ -5248,7 +5253,7 @@
           }
         }
       },
-      "title": "AutoMsgLicenseWatchHelper is a wrapper object for watch events for License objects"
+      "description": "AutoMsgLicenseWatchHelper is a wrapper object for watch events for License objects."
     },
     "clusterAutoMsgLicenseWatchHelperWatchEvent": {
       "type": "object",
@@ -5271,7 +5276,7 @@
           }
         }
       },
-      "title": "AutoMsgNodeWatchHelper is a wrapper object for watch events for Node objects"
+      "description": "AutoMsgNodeWatchHelper is a wrapper object for watch events for Node objects."
     },
     "clusterAutoMsgNodeWatchHelperWatchEvent": {
       "type": "object",
@@ -5294,7 +5299,7 @@
           }
         }
       },
-      "title": "AutoMsgSnapshotRestoreWatchHelper is a wrapper object for watch events for SnapshotRestore objects"
+      "description": "AutoMsgSnapshotRestoreWatchHelper is a wrapper object for watch events for SnapshotRestore objects."
     },
     "clusterAutoMsgSnapshotRestoreWatchHelperWatchEvent": {
       "type": "object",
@@ -5317,7 +5322,7 @@
           }
         }
       },
-      "title": "AutoMsgTenantWatchHelper is a wrapper object for watch events for Tenant objects"
+      "description": "AutoMsgTenantWatchHelper is a wrapper object for watch events for Tenant objects."
     },
     "clusterAutoMsgTenantWatchHelperWatchEvent": {
       "type": "object",
@@ -5340,7 +5345,7 @@
           }
         }
       },
-      "title": "AutoMsgVersionWatchHelper is a wrapper object for watch events for Version objects"
+      "description": "AutoMsgVersionWatchHelper is a wrapper object for watch events for Version objects."
     },
     "clusterAutoMsgVersionWatchHelperWatchEvent": {
       "type": "object",
@@ -5358,47 +5363,47 @@
       "properties": {
         "vendor": {
           "type": "string",
-          "title": "Vendor name"
+          "description": "Vendor name."
         },
         "version": {
           "type": "string",
-          "title": "BIOS version"
+          "description": "BIOS version."
         },
         "fw-major-ver": {
           "type": "string",
-          "title": "Firmware major release info"
+          "description": "Firmware major release info."
         },
         "fw-minor-ver": {
           "type": "string",
-          "title": "Firmware minor release info"
+          "description": "Firmware minor release info."
         }
       },
-      "title": "BIOS information"
+      "description": "BIOS information."
     },
     "clusterCPUInfo": {
       "type": "object",
       "properties": {
         "speed": {
           "type": "string",
-          "title": "CPU speed per core, eg: 2099998101"
+          "description": "CPU speed per core, eg: 2099998101."
         },
         "num-sockets": {
           "type": "integer",
           "format": "int32",
-          "title": "Number of CPU sockets, eg: 2, 4"
+          "description": "Number of CPU sockets, eg: 2, 4."
         },
         "num-cores": {
           "type": "integer",
           "format": "int32",
-          "title": "Number of physical CPU cores per socket, eg: 36"
+          "description": "Number of physical CPU cores per socket, eg: 36."
         },
         "num-threads": {
           "type": "integer",
           "format": "int32",
-          "title": "Number of threads per core, eg: 2"
+          "description": "Number of threads per core, eg: 2."
         }
       },
-      "title": "CPU information"
+      "description": "CPU information."
     },
     "clusterCluster": {
       "type": "object",
@@ -5421,8 +5426,7 @@
           "description": "Status contains the current state of the cluster."
         }
       },
-      "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
-      "title": "--------------------------------- CLUSTER ---------------------------------------------"
+      "description": "Cluster represents a full cluster venice and workload nodes."
     },
     "clusterClusterAuthBootstrapRequest": {
       "type": "object",
@@ -5437,7 +5441,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         }
       },
-      "title": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster"
+      "description": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster."
     },
     "clusterClusterAuthBootstrapRequestCreate": {
       "type": "object",
@@ -5452,7 +5456,7 @@
           "$ref": "#/definitions/apiObjectMeta"
         }
       },
-      "title": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster"
+      "description": "ClusterAuthBootstrapRequest is to set auth bootstrap flag in cluster."
     },
     "clusterClusterCondition": {
       "type": "object",
@@ -5470,7 +5474,7 @@
           "x-ui-hints": {
             "healthy": "Healthy"
           },
-          "title": "Type indicates a certain DSC condition"
+          "description": "Type indicates a certain DSC condition."
         },
         "status": {
           "type": "string",
@@ -5485,15 +5489,15 @@
             "true": "True",
             "unknown": "Unknown"
           },
-          "title": "Condition Status"
+          "description": "Condition Status."
         },
         "last-transition-time": {
           "type": "string",
-          "title": "The last time the condition transitioned"
+          "description": "The last time the condition transitioned."
         },
         "reason": {
           "type": "string",
-          "title": "The reason for the condition's last transition"
+          "description": "The reason for the condition's last transition."
         },
         "message": {
           "type": "string",
@@ -5519,10 +5523,10 @@
           "items": {
             "$ref": "#/definitions/clusterCluster"
           },
-          "title": "List of Cluster objects"
+          "description": "List of Cluster objects."
         }
       },
-      "title": "ClusterList is a container object for list of Cluster objects"
+      "description": "ClusterList is a container object for list of Cluster objects."
     },
     "clusterClusterSpec": {
       "type": "object",
@@ -5532,11 +5536,11 @@
           "items": {
             "type": "string"
           },
-          "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum\nnodes in the cluster."
+          "description": "QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster."
         },
         "virtual-ip": {
           "type": "string",
-          "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by\nthe winner of election between quorum nodes."
+          "description": "VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes."
         },
         "ntp-servers": {
           "type": "array",
@@ -5548,15 +5552,15 @@
         "auto-admit-dscs": {
           "type": "boolean",
           "format": "boolean",
-          "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated\ninto Venice Cluster. When it is disabled, DSCs validated by CMD are\nset to Pending state and it requires Manual approval to be admitted\ninto the cluster."
+          "description": "AutoAdmitDSCs when enabled auto-admits DSCs that are validated into Venice Cluster. When it is disabled, DSCs validated by CMD are set to Pending state and it requires Manual approval to be admitted into the cluster."
         },
         "certs": {
           "type": "string",
-          "title": "Certs is the pem encoded certificate bundle used for API Gateway TLS"
+          "description": "Certs is the pem encoded certificate bundle used for API Gateway TLS."
         },
         "key": {
           "type": "string",
-          "title": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA"
+          "description": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA."
         }
       },
       "description": "ClusterSpec contains the configuration of the cluster."
@@ -5571,23 +5575,23 @@
         "last-leader-transition-time": {
           "type": "string",
           "format": "date-time",
-          "title": "LastLeaderTransitionTime is when the leadership changed last time"
+          "description": "LastLeaderTransitionTime is when the leadership changed last time."
         },
         "auth-bootstrapped": {
           "type": "boolean",
           "format": "boolean",
-          "title": "AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth"
+          "description": "AuthBootstrapped indicates whether the Cluster has Completed BootStrap of Auth."
         },
         "conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterClusterCondition"
           },
-          "title": "List of current cluster conditions"
+          "description": "List of current cluster conditions."
         },
         "quorum-status": {
           "$ref": "#/definitions/clusterQuorumStatus",
-          "title": "Quorum represents the current state of the quorum, including registered members and health"
+          "description": "Quorum represents the current state of the quorum, including registered members and health."
         }
       },
       "description": "ClusterStatus contains the current state of the Cluster."
@@ -5609,8 +5613,7 @@
           "description": "Spec contains the configuration of the cluster."
         }
       },
-      "description": "Cluster represents a full cluster venice and workload nodes\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o NetOps-admin\n             - initial cluster creation\n     Modify:\n         o NetOps-admin\n             - update spec attributes\n         o CMD\n             - update status attributes\n     Delete:\n         o NetOps-admin\n             - TBD",
-      "title": "--------------------------------- CLUSTER ---------------------------------------------"
+      "description": "Cluster represents a full cluster venice and workload nodes."
     },
     "clusterConfigurationSnapshot": {
       "type": "object",
@@ -5666,10 +5669,10 @@
           "items": {
             "$ref": "#/definitions/clusterConfigurationSnapshot"
           },
-          "title": "List of ConfigurationSnapshot objects"
+          "description": "List of ConfigurationSnapshot objects."
         }
       },
-      "title": "ConfigurationSnapshotList is a container object for list of ConfigurationSnapshot objects"
+      "description": "ConfigurationSnapshotList is a container object for list of ConfigurationSnapshot objects."
     },
     "clusterConfigurationSnapshotRequest": {
       "type": "object",
@@ -5752,7 +5755,7 @@
             "nic_health_unknown": "Not Reachable",
             "reboot_needed": "Reboot needed"
           },
-          "title": "Type indicates a certain NIC condition"
+          "description": "Type indicates a certain NIC condition."
         },
         "status": {
           "type": "string",
@@ -5767,15 +5770,15 @@
             "true": "True",
             "unknown": "Unknown"
           },
-          "title": "Condition Status"
+          "description": "Condition Status."
         },
         "last-transition-time": {
           "type": "string",
-          "title": "The last time the condition transitioned"
+          "description": "The last time the condition transitioned."
         },
         "reason": {
           "type": "string",
-          "title": "The reason for the condition's last transition"
+          "description": "The reason for the condition's last transition."
         },
         "message": {
           "type": "string",
@@ -5789,26 +5792,26 @@
       "properties": {
         "bios-info": {
           "$ref": "#/definitions/clusterBiosInfo",
-          "title": "BIOS details"
+          "description": "BIOS details."
         },
         "os-info": {
           "$ref": "#/definitions/clusterOsInfo",
-          "title": "OS details"
+          "description": "OS details."
         },
         "cpu-info": {
           "$ref": "#/definitions/clusterCPUInfo",
-          "title": "CPU details"
+          "description": "CPU details."
         },
         "memory-info": {
           "$ref": "#/definitions/clusterMemInfo",
-          "title": "RAM/Memory details"
+          "description": "RAM/Memory details."
         },
         "storage-info": {
           "$ref": "#/definitions/clusterStorageInfo",
-          "title": "Storage details"
+          "description": "Storage details."
         }
       },
-      "title": "Distributed service card (DSC) subsystem information"
+      "description": "Distributed service card (DSC) subsystem information."
     },
     "clusterDistributedServiceCard": {
       "type": "object",
@@ -5821,7 +5824,7 @@
         },
         "meta": {
           "$ref": "#/definitions/apiObjectMeta",
-          "title": "Object name is Serial-Number of the DistributedServiceCard"
+          "description": "Object name is Serial-Number of the DistributedServiceCard."
         },
         "spec": {
           "$ref": "#/definitions/clusterDistributedServiceCardSpec",
@@ -5832,24 +5835,22 @@
           "description": "DistributedServiceCardStatus contains the current state of the network adapter."
         }
       },
-      "description": "DistributedServiceCard represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
-      "title": "------------------------------------ Distributed Service Card  -------------------------------------------"
+      "description": "------------------------------------ Distributed Service Card  ------------------------------------------- DistributedServiceCard represents the Naples I/O subsystem Entity responsible \u0026 scenarios involved in managing this object: Create: o CMD - created as part of NIC registration, Admittance Modify: o CMD - update spec attributes - update status attributes Delete: o CMD - aging out stale or rejected NICs (TBD) o NetOps, SecOps - Decomission a NIC (TBD)."
     },
     "clusterDistributedServiceCardID": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "title": "Name contains the name of the DistributedServiceCard on a host"
+          "description": "Name contains the name of the DistributedServiceCard on a host."
         },
         "mac-address": {
           "type": "string",
           "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
-          "description": "should be a valid MAC address",
-          "title": "MACAddress contains the primary MAC address of a DistributedServiceCard"
+          "description": "MACAddress contains the primary MAC address of a DistributedServiceCard. Should be a valid MAC address."
         }
       },
-      "title": "DistributedServiceCardID contains the identifying information of a DistributedServiceCard"
+      "description": "DistributedServiceCardID contains the identifying information of a DistributedServiceCard."
     },
     "clusterDistributedServiceCardList": {
       "type": "object",
@@ -5868,10 +5869,10 @@
           "items": {
             "$ref": "#/definitions/clusterDistributedServiceCard"
           },
-          "title": "List of DistributedServiceCard objects"
+          "description": "List of DistributedServiceCard objects."
         }
       },
-      "title": "DistributedServiceCardList is a container object for list of DistributedServiceCard objects"
+      "description": "DistributedServiceCardList is a container object for list of DistributedServiceCard objects."
     },
     "clusterDistributedServiceCardSpec": {
       "type": "object",
@@ -5884,15 +5885,15 @@
         "admit": {
           "type": "boolean",
           "format": "boolean",
-          "title": "Admit allows a DistributedServiceCard to join the cluster"
+          "description": "Admit allows a DistributedServiceCard to join the cluster."
         },
         "id": {
           "type": "string",
-          "title": "ID is used as a user friendly identifier in logs/events"
+          "description": "ID is used as a user friendly identifier in logs/events."
         },
         "ip-config": {
           "$ref": "#/definitions/clusterIPConfig",
-          "title": "IPConfig defines the static IP configuration. If not specified, DHCP will be attempted"
+          "description": "IPConfig defines the static IP configuration. If not specified, DHCP will be attempted."
         },
         "mgmt-mode": {
           "type": "string",
@@ -5905,7 +5906,7 @@
             "host": "Host",
             "network": "Network"
           },
-          "title": "MgmtMode defines the management mode of the DistributedServiceCard"
+          "description": "MgmtMode defines the management mode of the DistributedServiceCard."
         },
         "network-mode": {
           "type": "string",
@@ -5918,28 +5919,27 @@
             "inband": "Inband",
             "oob": "Out of Band"
           },
-          "title": "MgmtMode defines the management mode of the DistributedServiceCard"
+          "description": "MgmtMode defines the management mode of the DistributedServiceCard."
         },
         "mgmt-vlan": {
           "type": "integer",
           "format": "int64",
           "maximum": 4095,
-          "description": "value should be between 0 and 4095",
-          "title": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0\nmeans we use untagged-vlan for doing inband management"
+          "description": "MgmtVlan defines the vlan to be used in network managed mode. The default of 0 means we use untagged-vlan for doing inband management. Value should be between 0 and 4095."
         },
         "controllers": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Controllers contains the list of remote controllers IP addresses or hostnames"
+          "description": "Controllers contains the list of remote controllers IP addresses or hostnames."
         },
         "routing-config": {
           "type": "string",
           "description": "RoutingConfig is the routing configuration for the underlay routed network that this DSC participates in."
         }
       },
-      "title": "DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)"
+      "description": "DistributedServiceCardSpec contains configuration of the DistributedServiceCard (Naples I/O subsystem)."
     },
     "clusterDistributedServiceCardStatus": {
       "type": "object",
@@ -5966,58 +5966,57 @@
             "rejected": "Rejected",
             "unknown": "Unknown"
           },
-          "description": "Current admission phase of the DistributedServiceCard.\nWhen auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED\nby CMD for validated NICs.\nWhen auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING\nby CMD for validated NICs since it requires manual approval.\nTo admit the NIC as a part of manual admission, user is expected to\nset Spec.Admit to true for the NICs that are in NIC_PENDING\nstate. Note : Whitelist mode is not supported yet."
+          "description": "Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet."
         },
         "conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterDSCCondition"
           },
-          "title": "List of current NIC conditions"
+          "description": "List of current NIC conditions."
         },
         "serial-num": {
           "type": "string",
-          "title": "Serial number"
+          "description": "Serial number."
         },
         "primary-mac": {
           "type": "string",
           "example": "aabb.ccdd.0000, aabb.ccdd.0000, aabb.ccdd.0000",
-          "description": "should be a valid MAC address",
-          "title": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard"
+          "description": "PrimaryMAC is the MAC address of the primary PF exposed by DistributedServiceCard. Should be a valid MAC address."
         },
         "ip-config": {
           "$ref": "#/definitions/clusterIPConfig",
-          "title": "IPConfig is the ip address related configuration obtained from DHCP"
+          "description": "IPConfig is the ip address related configuration obtained from DHCP."
         },
         "system-info": {
           "$ref": "#/definitions/clusterDSCInfo",
-          "title": "Distributed service card system info"
+          "description": "Distributed service card system info."
         },
         "interfaces": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "Network Interfaces"
+          "description": "Network Interfaces."
         },
         "DSCVersion": {
           "type": "string",
-          "title": "DSC Version"
+          "description": "DSC Version."
         },
         "DSCSku": {
           "type": "string",
-          "title": "DSC SKU"
+          "description": "DSC SKU."
         },
         "host": {
           "type": "string",
-          "title": "The name of the host this DistributedServiceCard is plugged into"
+          "description": "The name of the host this DistributedServiceCard is plugged into."
         },
         "adm-phase-reason": {
           "type": "string",
-          "title": "The reason why the DistributedServiceCard is not in ADMITTED state"
+          "description": "The reason why the DistributedServiceCard is not in ADMITTED state."
         }
       },
-      "title": "DistributedServiceCardStatus contains current status of a DistributedServiceCard"
+      "description": "DistributedServiceCardStatus contains current status of a DistributedServiceCard."
     },
     "clusterDistributedServiceCardUpdate": {
       "type": "object",
@@ -6036,8 +6035,7 @@
           "description": "DistributedServiceCardSpec contains the configuration of the network adapter."
         }
       },
-      "description": "DistributedServiceCard represents the Naples I/O subsystem\n\nEntity responsible \u0026 scenarios involved in managing this object:\n\n     Create:\n         o CMD\n             - created as part of NIC registration, Admittance\n     Modify:\n         o CMD\n             - update spec attributes\n             - update status attributes\n     Delete:\n         o CMD\n             - aging out stale or rejected NICs (TBD)\n         o NetOps, SecOps\n             - Decomission a NIC (TBD)",
-      "title": "------------------------------------ Distributed Service Card  -------------------------------------------"
+      "description": "------------------------------------ Distributed Service Card  ------------------------------------------- DistributedServiceCard represents the Naples I/O subsystem Entity responsible \u0026 scenarios involved in managing this object: Create: o CMD - created as part of NIC registration, Admittance Modify: o CMD - update spec attributes - update status attributes Delete: o CMD - aging out stale or rejected NICs (TBD) o NetOps, SecOps - Decomission a NIC (TBD)."
     },
     "clusterFeature": {
       "type": "object",
@@ -6064,7 +6062,7 @@
           "type": "string"
         }
       },
-      "title": "FeatureStatus is the current operational status of a feature"
+      "description": "FeatureStatus is the current operational status of a feature."
     },
     "clusterHost": {
       "type": "object",
@@ -6087,8 +6085,7 @@
           "description": "Status contains the current state of the host."
         }
       },
-      "description": "Host represents a Baremetal or Hypervisor server.",
-      "title": "---------------------------------- HOST ------------------------------------"
+      "description": "Host represents a Baremetal or Hypervisor server."
     },
     "clusterHostCreate": {
       "type": "object",
@@ -6107,8 +6104,7 @@
           "description": "Spec contains the configuration of the host."
         }
       },
-      "description": "Host represents a Baremetal or Hypervisor server.",
-      "title": "---------------------------------- HOST ------------------------------------"
+      "description": "Host represents a Baremetal or Hypervisor server."
     },
     "clusterHostList": {
       "type": "object",
@@ -6127,10 +6123,10 @@
           "items": {
             "$ref": "#/definitions/clusterHost"
           },
-          "title": "List of Host objects"
+          "description": "List of Host objects."
         }
       },
-      "title": "HostList is a container object for list of Host objects"
+      "description": "HostList is a container object for list of Host objects."
     },
     "clusterHostSpec": {
       "type": "object",
@@ -6140,7 +6136,7 @@
           "items": {
             "$ref": "#/definitions/clusterDistributedServiceCardID"
           },
-          "title": "DSCs contains the information about all DistributedServiceCards on a host"
+          "description": "DSCs contains the information about all DistributedServiceCards on a host."
         }
       },
       "description": "HostSpec contains the configuration of the Host."
@@ -6153,7 +6149,7 @@
           "items": {
             "type": "string"
           },
-          "title": "AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host"
+          "description": "AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host."
         }
       },
       "description": "HostStatus contains the current state of the Host."
@@ -6175,29 +6171,28 @@
           "description": "Spec contains the configuration of the host."
         }
       },
-      "description": "Host represents a Baremetal or Hypervisor server.",
-      "title": "---------------------------------- HOST ------------------------------------"
+      "description": "Host represents a Baremetal or Hypervisor server."
     },
     "clusterIPConfig": {
       "type": "object",
       "properties": {
         "ip-address": {
           "type": "string",
-          "title": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format"
+          "description": "IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format."
         },
         "default-gw": {
           "type": "string",
-          "title": "DefaultGW contains the default gateway's IP address"
+          "description": "DefaultGW contains the default gateway's IP address."
         },
         "dns-servers": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "title": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard"
+          "description": "DNSServers contains a list of DNS Servers that can be used on DistributedServiceCard."
         }
       },
-      "title": "IPConfig defines the static IP configuration for a DistributedServiceCard"
+      "description": "IPConfig defines the static IP configuration for a DistributedServiceCard."
     },
     "clusterLicense": {
       "type": "object",
@@ -6253,10 +6248,10 @@
           "items": {
             "$ref": "#/definitions/clusterLicense"
           },
-          "title": "List of License objects"
+          "description": "List of License objects."
         }
       },
-      "title": "LicenseList is a container object for list of License objects"
+      "description": "LicenseList is a container object for list of License objects."
     },
     "clusterLicenseSpec": {
       "type": "object",
@@ -6266,7 +6261,7 @@
           "items": {
             "$ref": "#/definitions/clusterFeature"
           },
-          "title": "List of Feature licences applied"
+          "description": "List of Feature licences applied."
         }
       }
     },
@@ -6278,7 +6273,7 @@
           "items": {
             "$ref": "#/definitions/clusterFeatureStatus"
           },
-          "title": "Status of current Licenced features"
+          "description": "Status of current Licenced features."
         },
         "unknown": {
           "type": "array",
@@ -6320,14 +6315,14 @@
             "ddr"
           ],
           "default": "unknown",
-          "title": "Type"
+          "description": "Type."
         },
         "size": {
           "type": "string",
-          "title": "Memory size in bytes, eg: 274760318976"
+          "description": "Memory size in bytes, eg: 274760318976."
         }
       },
-      "title": "Memory/RAM information"
+      "description": "Memory/RAM information."
     },
     "clusterNode": {
       "type": "object",
@@ -6350,8 +6345,7 @@
           "description": "Status contains the current state of the node."
         }
       },
-      "description": "Node is representation of a single Venice node in the system.",
-      "title": "---------------------------------- NODE -------------------------------------------"
+      "description": "Node is representation of a single Venice node in the system."
     },
     "clusterNodeCondition": {
       "type": "object",
@@ -6371,7 +6365,7 @@
             "healthy": "Healthy",
             "leader": "Leader"
           },
-          "title": "Type indicates a certain node condition"
+          "description": "Type indicates a certain node condition."
         },
         "status": {
           "type": "string",
@@ -6386,15 +6380,15 @@
             "true": "True",
             "unknown": "Unknown"
           },
-          "title": "Condition Status"
+          "description": "Condition Status."
         },
         "last-transition-time": {
           "type": "string",
-          "title": "The last time the condition transitioned"
+          "description": "The last time the condition transitioned."
         },
         "reason": {
           "type": "string",
-          "title": "The reason for the condition's last transition"
+          "description": "The reason for the condition's last transition."
         },
         "message": {
           "type": "string",
@@ -6420,8 +6414,7 @@
           "description": "Spec contains the configuration of the node."
         }
       },
-      "description": "Node is representation of a single Venice node in the system.",
-      "title": "---------------------------------- NODE -------------------------------------------"
+      "description": "Node is representation of a single Venice node in the system."
     },
     "clusterNodeList": {
       "type": "object",
@@ -6440,17 +6433,17 @@
           "items": {
             "$ref": "#/definitions/clusterNode"
           },
-          "title": "List of Node objects"
+          "description": "List of Node objects."
         }
       },
-      "title": "NodeList is a container object for list of Node objects"
+      "description": "NodeList is a container object for list of Node objects."
     },
     "clusterNodeSpec": {
       "type": "object",
       "properties": {
         "routing-config": {
           "type": "string",
-          "title": "RoutingConfig the routing configuration"
+          "description": "RoutingConfig the routing configuration."
         }
       },
       "description": "NodeSpec contains the configuration of the node."
@@ -6488,7 +6481,7 @@
           "items": {
             "$ref": "#/definitions/clusterNodeCondition"
           },
-          "title": "List of current node conditions"
+          "description": "List of current node conditions."
         }
       },
       "description": "NodeStatus contains the current state of the node."
@@ -6510,30 +6503,29 @@
           "description": "Spec contains the configuration of the node."
         }
       },
-      "description": "Node is representation of a single Venice node in the system.",
-      "title": "---------------------------------- NODE -------------------------------------------"
+      "description": "Node is representation of a single Venice node in the system."
     },
     "clusterOsInfo": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "title": "OS Name\nEg: GNU/Linux"
+          "description": "OS Name Eg: GNU/Linux."
         },
         "kernel-release": {
           "type": "string",
-          "title": "Kernel release\nEg: 3.10.0-514.10.2.el7.x86_64"
+          "description": "Kernel release Eg: 3.10.0-514.10.2.el7.x86_64."
         },
         "kernel-version": {
           "type": "string",
-          "title": "Kernel version\nEg: #1 SMP Fri Mar 3 00:04:05 UTC 2017"
+          "description": "Kernel version Eg: #1 SMP Fri Mar 3 00:04:05 UTC 2017."
         },
         "processor": {
           "type": "string",
-          "title": "Processor Info\nEg: x86_64"
+          "description": "Processor Info Eg: x86_64."
         }
       },
-      "title": "OS information"
+      "description": "OS information."
     },
     "clusterQuorumMemberCondition": {
       "type": "object",
@@ -6551,7 +6543,7 @@
           "x-ui-hints": {
             "healthy": "Healthy"
           },
-          "title": "Type indicates a certain node condition"
+          "description": "Type indicates a certain node condition."
         },
         "status": {
           "type": "string",
@@ -6566,44 +6558,44 @@
             "true": "True",
             "unknown": "Unknown"
           },
-          "title": "Condition Status"
+          "description": "Condition Status."
         },
         "last-transition-time": {
           "type": "string",
           "format": "date-time",
-          "title": "The last time the condition transitioned"
+          "description": "The last time the condition transitioned."
         }
       },
-      "title": "QuorumMemberCondition represents conditions that can affect quorum members"
+      "description": "QuorumMemberCondition represents conditions that can affect quorum members."
     },
     "clusterQuorumMemberStatus": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "title": "A unique identifier for this quorum member"
+          "description": "A unique identifier for this quorum member."
         },
         "name": {
           "type": "string",
-          "title": "The name of the quorum member, matching the node name"
+          "description": "The name of the quorum member, matching the node name."
         },
         "status": {
           "type": "string",
-          "title": "\"Started\" if the member succesfully joined the quorum, \"Unstarted\" otherwise"
+          "description": "\"Started\" if the member succesfully joined the quorum, \"Unstarted\" otherwise."
         },
         "term": {
           "type": "string",
-          "title": "The last election term this member has participated in"
+          "description": "The last election term this member has participated in."
         },
         "conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clusterQuorumMemberCondition"
           },
-          "title": "Conditions reported by the quorum member"
+          "description": "Conditions reported by the quorum member."
         }
       },
-      "title": "QuorumMemberStatus represents the overall status of a quorum member"
+      "description": "QuorumMemberStatus represents the overall status of a quorum member."
     },
     "clusterQuorumStatus": {
       "type": "object",
@@ -6615,7 +6607,7 @@
           }
         }
       },
-      "title": "QuorumStatus contains the current state of the quorum, including registered members and health"
+      "description": "QuorumStatus contains the current state of the quorum, including registered members and health."
     },
     "clusterSnapshotDestination": {
       "type": "object",
@@ -6687,10 +6679,10 @@
           "items": {
             "$ref": "#/definitions/clusterSnapshotRestore"
           },
-          "title": "List of SnapshotRestore objects"
+          "description": "List of SnapshotRestore objects."
         }
       },
-      "title": "SnapshotRestoreList is a container object for list of SnapshotRestore objects"
+      "description": "SnapshotRestoreList is a container object for list of SnapshotRestore objects."
     },
     "clusterSnapshotRestoreSpec": {
       "type": "object",
@@ -6734,31 +6726,31 @@
       "properties": {
         "serial-num": {
           "type": "string",
-          "title": "Serial Number"
+          "description": "Serial Number."
         },
         "type": {
           "type": "string",
-          "title": "Storage Type (TBD for Naples)\nEg: SATA, SCSI, NVMe  or HDD, SSD, NVMe"
+          "description": "Storage Type (TBD for Naples) Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe."
         },
         "vendor": {
           "type": "string",
-          "title": "Vendor info"
+          "description": "Vendor info."
         },
         "capacity": {
           "type": "string",
-          "title": "Capacity in bytes"
+          "description": "Capacity in bytes."
         },
         "percent-life-used-A": {
           "type": "integer",
           "format": "int32",
-          "title": "Used life in percentage"
+          "description": "Used life in percentage."
         },
         "percent-life-used-B": {
           "type": "integer",
           "format": "int32"
         }
       },
-      "title": "Storage device information"
+      "description": "Storage device information."
     },
     "clusterStorageInfo": {
       "type": "object",
@@ -6768,10 +6760,10 @@
           "items": {
             "$ref": "#/definitions/clusterStorageDeviceInfo"
           },
-          "title": "List of storage devices"
+          "description": "List of storage devices."
         }
       },
-      "title": "Storage information"
+      "description": "Storage information."
     },
     "clusterTenant": {
       "type": "object",
@@ -6794,7 +6786,7 @@
           "description": "Status contains the current state of the tenant."
         }
       },
-      "title": "Tenant represents an org or a tenant"
+      "description": "Tenant represents an org or a tenant."
     },
     "clusterTenantCreate": {
       "type": "object",
@@ -6813,7 +6805,7 @@
           "description": "Spec contains the configuration of the tenant."
         }
       },
-      "title": "Tenant represents an org or a tenant"
+      "description": "Tenant represents an org or a tenant."
     },
     "clusterTenantList": {
       "type": "object",
@@ -6832,24 +6824,24 @@
           "items": {
             "$ref": "#/definitions/clusterTenant"
           },
-          "title": "List of Tenant objects"
+          "description": "List of Tenant objects."
         }
       },
-      "title": "TenantList is a container object for list of Tenant objects"
+      "description": "TenantList is a container object for list of Tenant objects."
     },
     "clusterTenantSpec": {
       "type": "object",
       "properties": {
         "admin-user": {
           "type": "string",
-          "title": "Tenant admin user"
+          "description": "Tenant admin user."
         }
       },
-      "title": "spec part of tenant object"
+      "description": "spec part of tenant object."
     },
     "clusterTenantStatus": {
       "type": "object",
-      "title": "status part of tenant object"
+      "description": "status part of tenant object."
     },
     "clusterTenantUpdate": {
       "type": "object",
@@ -6868,7 +6860,7 @@
           "description": "Spec contains the configuration of the tenant."
         }
       },
-      "title": "Tenant represents an org or a tenant"
+      "description": "Tenant represents an org or a tenant."
     },
     "clusterUpdateTLSConfigRequest": {
       "type": "object",
@@ -6884,14 +6876,14 @@
         },
         "certs": {
           "type": "string",
-          "title": "Certs is the pem encoded certificate bundle used for API Gateway TLS"
+          "description": "Certs is the pem encoded certificate bundle used for API Gateway TLS."
         },
         "key": {
           "type": "string",
-          "title": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA"
+          "description": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA."
         }
       },
-      "title": "UpdateTLSConfigRequest is to update certs and key for API Gateway TLS"
+      "description": "UpdateTLSConfigRequest is to update certs and key for API Gateway TLS."
     },
     "clusterUpdateTLSConfigRequestCreate": {
       "type": "object",
@@ -6907,14 +6899,14 @@
         },
         "certs": {
           "type": "string",
-          "title": "Certs is the pem encoded certificate bundle used for API Gateway TLS"
+          "description": "Certs is the pem encoded certificate bundle used for API Gateway TLS."
         },
         "key": {
           "type": "string",
-          "title": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA"
+          "description": "Key is the pem encoded private key used for API Gateway TLS. We support RSA or ECDSA."
         }
       },
-      "title": "UpdateTLSConfigRequest is to update certs and key for API Gateway TLS"
+      "description": "UpdateTLSConfigRequest is to update certs and key for API Gateway TLS."
     },
     "clusterVersion": {
       "type": "object",
@@ -6956,10 +6948,10 @@
           "items": {
             "$ref": "#/definitions/clusterVersion"
           },
-          "title": "List of Version objects"
+          "description": "List of Version objects."
         }
       },
-      "title": "VersionList is a container object for list of Version objects"
+      "description": "VersionList is a container object for list of Version objects."
     },
     "clusterVersionSpec": {
       "type": "object",
@@ -6970,19 +6962,19 @@
       "properties": {
         "build-version": {
           "type": "string",
-          "title": "Human friendly build version"
+          "description": "Human friendly build version."
         },
         "vcs-commit": {
           "type": "string",
-          "title": "Representation of ommit in version control system - e.g: hash in git"
+          "description": "Representation of ommit in version control system - e.g: hash in git."
         },
         "build-date": {
           "type": "string",
-          "title": "Date and Time at which the source code was built"
+          "description": "Date and Time at which the source code was built."
         },
         "rollout-build-version": {
           "type": "string",
-          "title": "RolloutBuildVersion shows in progress rollout version"
+          "description": "RolloutBuildVersion shows in progress rollout version."
         }
       },
       "description": "VersionStatus contains the current state of the Version."
@@ -6992,7 +6984,7 @@
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -7000,7 +6992,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message. Protobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type. Example 1: Pack and unpack a message in C++. Foo foo = ...; Any any; any.PackFrom(foo); ... if (any.UnpackTo(\u0026foo)) { ... } Example 2: Pack and unpack a message in Java. Foo foo = ...; Any any = Any.pack(foo); ... if (any.is(Foo.class)) { foo = any.unpack(Foo.class); } Example 3: Pack and unpack a message in Python. foo = Foo(...) any = Any() any.Pack(foo) ... if any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ... Example 4: Pack and unpack a message in Go foo := \u0026pb.Foo{...} any, err := ptypes.MarshalAny(foo) ... foo := \u0026pb.Foo{} if err := ptypes.UnmarshalAny(any, foo); err != nil { ... } The pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example \"foo.bar.com/x/y.z\" will yield type name \"y.z\". JSON ==== The JSON representation of an `Any` value uses the regular representation of the deserialized, embedded message, with an additional field `@type` which contains the type URL. Example: package google.profile; message Person { string first_name = 1; string last_name = 2; } { \"@type\": \"type.googleapis.com/google.profile.Person\", \"firstName\": \u003cstring\u003e, \"lastName\": \u003cstring\u003e } If the embedded message type is well-known and has a custom JSON representation, that representation will be embedded adding a field `value` which holds the custom JSON in addition to the `@type` field. Example (for message [google.protobuf.Duration][]): { \"@type\": \"type.googleapis.com/google.protobuf.Duration\", \"value\": \"1.212s\" }."
     }
   }
 }

@@ -15,11 +15,11 @@ export interface IClusterHostSpec {
 
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
-    /** DSCs contains the information about all DistributedServiceCards on a host */
+    /** DSCs contains the information about all DistributedServiceCards on a host. */
     'dscs': Array<ClusterDistributedServiceCardID> = null;
     public static propInfo: { [prop in keyof IClusterHostSpec]: PropInfoItem } = {
         'dscs': {
-            description:  `DSCs contains the information about all DistributedServiceCards on a host`,
+            description:  `DSCs contains the information about all DistributedServiceCards on a host.`,
             required: false,
             type: 'object'
         },
