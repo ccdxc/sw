@@ -140,6 +140,8 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/linkmgr:
     labels: ["daily"]
+  iota/test/standalone/compat/server:
+    labels: ["compat"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
@@ -196,11 +198,11 @@ dependencies:
     - reference: iota/test/venice
       exclude_dirs: ["harness", "test/iris", "test/apollo"]
     - reference: iota/test/standalone/sanity/freebsd
-      exclude_dirs: ["test/venice", "test/apollo"]
+      exclude_dirs: ["test/venice", "test/apollo","test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/esx
-      exclude_dirs: ["test/venice", "test/apollo"]
+      exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/linux
-      exclude_dirs: ["test/venice", "test/apollo"]
+      exclude_dirs: ["test/venice", "test/apollo", "test/iris/testcases/server"]
     - reference: iota/test/standalone/sanity/apulu-networking
       exclude_dirs: ["test/venice", "test/iris"]
   metrics:
@@ -391,3 +393,5 @@ dependencies:
   penctl:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/linux
+  iota/test/iris/testcases/server:
+    - reference: iota/test/standalone/compat/server

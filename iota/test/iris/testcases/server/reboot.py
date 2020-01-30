@@ -35,14 +35,15 @@ def Trigger (tc):
 
     for reboot in range(tc.args.reboots): 
         api.Logger.info (f"Starting Reboot Loop # {reboot}")
-        # RestartNodes (reboot, ipmi, apc)
-        # api.RestartNodes(node, tc.iterators.reboot)
-        api.RestartNodes(naples_nodes)
+        # Reboot Node.  
+        # Reboot method (APC, IPMI, OS Reboot) is passed as a testcase parameter
+        api.RestartNodes([node], tc.iterators.reboot_method)
 
         for node in naples_nodes:   
             api.Logger.info (f"Verifying PCI on [{node}]")
             if verify_pci.verify_errors_lspci (node) != api.types.status.SUCCESS:
                api.Logger.error (f"PCIe Failure detected on {node}")
+               return api.types.status.FAILURE
 
     return api.types.status.SUCCESS
 

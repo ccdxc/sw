@@ -395,6 +395,7 @@ func writeGob(filePath string, object interface{}) error {
 		encoder := gob.NewEncoder(file)
 		encoder.Encode(object)
 	}
+	file.Sync()
 	file.Close()
 	return err
 }

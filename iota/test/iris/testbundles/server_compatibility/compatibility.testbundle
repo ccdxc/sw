@@ -1,46 +1,47 @@
 meta:
-    name    : server_compatibility
+    name    : server
     os      : [ linux ]
     nics    : [ pensando ]
-    targetcount : 1 
+    targetcount : 1
 
 testcases:
-    -   name    : IPMI-Reboot
-        testcase: testcases.server.reboot
-        disable : False
-        ignore  : True
-        stress  : True
-        iterators : 
-            type            : nested
-            reboot_method   : [ 'ipmi']
-        args    :
-            timeout: 21600
-            type: host
-            reboots: 25 
 
     -   name    : APC-Reboot
         testcase: testcases.server.reboot
         disable : False
         ignore  : True
         stress  : True
-        iterators : 
+        iterators :
             type            : nested
             reboot_method   : ['apc']
         args    :
-            timeout: 21600
+            timeout: 42200
             type: host
-            reboots: 25
+            reboots: 55
+
+    -   name    : IPMI-Reboot
+        testcase: testcases.server.reboot
+        disable : False
+        ignore  : True
+        stress  : True
+        iterators :
+            type            : nested
+            reboot_method   : [ 'ipmi']
+        args    :
+            timeout: 27900
+            type: host
+            reboots: 35
 
     -   name    : OS-Reboot
         testcase: testcases.server.reboot
         disable : False
         ignore  : True
         stress  : True
-        iterators : 
+        iterators :
             type            : nested
             reboot_method   : [ 'reboot']
         args    :
-            timeout: 21600
+            timeout: 13500
             type: host
-            reboots: 25
+            reboots: 15
 
