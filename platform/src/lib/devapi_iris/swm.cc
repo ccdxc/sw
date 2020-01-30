@@ -879,6 +879,7 @@ devapi_swm::enable_tx(uint32_t channel)
     for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
         ret = swm_->config_oob_uplink_vlan_(*it, cinfo);
     }
+    ret = swm_->config_oob_uplink_vlan_(NATIVE_VLAN_ID, cinfo);
 
     tx_channel_ = channel;
     cinfo->tx_en = true;
@@ -909,6 +910,7 @@ devapi_swm::disable_tx(uint32_t channel)
     for (auto it = cinfo->vlan_table.cbegin(); it != cinfo->vlan_table.cend(); it++) {
         ret = swm_->unconfig_oob_uplink_vlan_(*it, cinfo);
     }
+    ret = swm_->unconfig_oob_uplink_vlan_(NATIVE_VLAN_ID, cinfo);
 
     tx_channel_ = -1;
     cinfo->tx_en = false;

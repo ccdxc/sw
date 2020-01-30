@@ -23,7 +23,38 @@ var (
 	channelID   uint32
 	mFchannelID uint32
 	bFchannelID uint32
+	vlanID      uint32
+	macAddr     uint64
+	rxCh        string
+	txCh        string
 )
+
+var ncsiDebugCmd = &cobra.Command{
+	Use:   "ncsi",
+	Short: "debug ncsi information",
+	Long:  "debug ncsi object information",
+}
+
+var ncsiVlanDebugCmd = &cobra.Command{
+	Use:   "vlan",
+	Short: "Add/Delete ncsi vlan information",
+	Long:  "Add/Delete ncsi vlan object information",
+	Run:   ncsiVlanDebugCmdHandler,
+}
+
+var ncsiMacDebugCmd = &cobra.Command{
+	Use:   "mac",
+	Short: "Add/Delete ncsi mac information",
+	Long:  "Add/Delete ncsi mac object information",
+	Run:   ncsiMacDebugCmdHandler,
+}
+
+var ncsiChannelDebugCmd = &cobra.Command{
+	Use:   "channel",
+	Short: "Add/Delete ncsi channel information",
+	Long:  "Add/Delete ncsi channel object information",
+	Run:   ncsiChannelDebugCmdHandler,
+}
 
 var ncsiShowCmd = &cobra.Command{
 	Use:   "ncsi",
@@ -74,11 +105,237 @@ func init() {
 	ncsiShowCmd.AddCommand(ncsiMcastShowCmd)
 	ncsiShowCmd.AddCommand(ncsiChannelShowCmd)
 
-	// Mcast filter command
+	// filter commands
 	ncsiMcastShowCmd.Flags().Uint32Var(&mFchannelID, "id", 0xFF, "Specify channelid")
 	ncsiBcastShowCmd.Flags().Uint32Var(&bFchannelID, "id", 0xFF, "Specify channelid")
 	// Channel command
 	ncsiChannelShowCmd.Flags().Uint32Var(&channelID, "id", 0xFF, "Specify channelid")
+
+	// Debug commands
+	debugCmd.AddCommand(ncsiDebugCmd)
+	// Vlan
+	ncsiDebugCmd.AddCommand(ncsiVlanDebugCmd)
+	ncsiVlanDebugCmd.Flags().Uint32Var(&vlanID, "add", 0, "Specify vlan id")
+	ncsiVlanDebugCmd.Flags().Uint32Var(&vlanID, "del", 0, "Specify vlan id")
+	ncsiVlanDebugCmd.Flags().Uint32Var(&channelID, "ch", 0, "Specify channel id")
+	// Mac
+	ncsiDebugCmd.AddCommand(ncsiMacDebugCmd)
+	ncsiMacDebugCmd.Flags().Uint64Var(&macAddr, "add", 0, "Specify mac address")
+	ncsiMacDebugCmd.Flags().Uint64Var(&macAddr, "del", 0, "Specify mac address")
+	ncsiMacDebugCmd.Flags().Uint32Var(&channelID, "ch", 0, "Specify channel id")
+	// Channel
+	ncsiDebugCmd.AddCommand(ncsiChannelDebugCmd)
+	ncsiChannelDebugCmd.Flags().StringVar(&rxCh, "rx", "enable", "Enable channel RX enable | disable")
+	ncsiChannelDebugCmd.Flags().StringVar(&txCh, "tx", "enable", "Enable channel TX enable | disable")
+	ncsiChannelDebugCmd.Flags().Uint32Var(&channelID, "ch", 0, "Specify channel id")
+}
+
+func ncsiVlanDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewNcsiClient(c)
+
+	if cmd.Flags().Changed("add") == false && cmd.Flags().Changed("del") == false {
+		fmt.Printf("Either you have to add or del the vlan. Reger help\n")
+		return
+	}
+
+	if cmd.Flags().Changed("add") == true && cmd.Flags().Changed("del") == true {
+		fmt.Printf("You can't add and del in the same command. Reger help\n")
+		return
+	}
+
+	isAdd := false
+	if cmd.Flags().Changed("add") == true {
+		isAdd = true
+	}
+
+	var vlanFilter *halproto.VlanFilterRequest
+	vlanFilter = &halproto.VlanFilterRequest{
+		VlanId:  vlanID,
+		Channel: channelID,
+	}
+
+	VlanFilterRequestMsg := &halproto.VlanFilterRequestMsg{
+		Request: []*halproto.VlanFilterRequest{vlanFilter},
+	}
+
+	if isAdd {
+		rspMsg, err := client.VlanFilterCreate(context.Background(), VlanFilterRequestMsg)
+		if err != nil {
+			fmt.Printf("Vlan filter create fialed. %v\n", err)
+			return
+		}
+
+		for _, updateResp := range rspMsg.Response {
+			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
+				return
+			}
+		}
+	} else {
+		rspMsg, err := client.VlanFilterDelete(context.Background(), VlanFilterRequestMsg)
+		if err != nil {
+			fmt.Printf("Vlan filter create fialed. %v\n", err)
+			return
+		}
+		for _, updateResp := range rspMsg.Response {
+			if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+				fmt.Printf("Operation failed with %v error\n", updateResp.ApiStatus)
+				return
+			}
+		}
+	}
+
+	fmt.Printf("Vlan update success\n")
+}
+
+func ncsiMacDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewNcsiClient(c)
+
+	if cmd.Flags().Changed("add") == false && cmd.Flags().Changed("del") == false {
+		fmt.Printf("Either you have to add or del the mac. Reger help\n")
+		return
+	}
+
+	if cmd.Flags().Changed("add") == true && cmd.Flags().Changed("del") == true {
+		fmt.Printf("You can't add and del in the same command. Reger help\n")
+		return
+	}
+
+	isAdd := false
+	if cmd.Flags().Changed("add") == true {
+		isAdd = true
+	}
+
+	var macFilter *halproto.MacFilterRequest
+	macFilter = &halproto.MacFilterRequest{
+		MacAddr: macAddr,
+		Channel: channelID,
+	}
+
+	MacFilterRequestMsg := &halproto.MacFilterRequestMsg{
+		Request: []*halproto.MacFilterRequest{macFilter},
+	}
+
+	if isAdd {
+		_, err := client.MacFilterCreate(context.Background(), MacFilterRequestMsg)
+		if err != nil {
+			fmt.Printf("Mac filter create fialed. %v\n", err)
+			return
+		}
+	} else {
+		_, err := client.MacFilterDelete(context.Background(), MacFilterRequestMsg)
+		if err != nil {
+			fmt.Printf("Mac filter create fialed. %v\n", err)
+			return
+		}
+	}
+
+	fmt.Printf("Mac update success\n")
+}
+
+func ncsiChannelDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	client := halproto.NewNcsiClient(c)
+
+	rxChEnable := true
+	if cmd.Flags().Changed("rx") == true {
+		if strings.Compare(rxCh, "disable") == 0 {
+			rxChEnable = false
+		} else if strings.Compare(rxCh, "enable") == 0 {
+			rxChEnable = true
+		} else {
+			fmt.Printf("Wrong args. Refer help.\n")
+			return
+		}
+	}
+
+	txChEnable := true
+	if cmd.Flags().Changed("tx") == true {
+		if strings.Compare(txCh, "disable") == 0 {
+			txChEnable = false
+		} else if strings.Compare(txCh, "enable") == 0 {
+			txChEnable = true
+		} else {
+			fmt.Printf("Wrong args. Refer help.\n")
+			return
+		}
+	}
+
+	// Getting channel info
+	var req *halproto.ChannelGetRequest
+	req = &halproto.ChannelGetRequest{
+		Channel: channelID,
+	}
+	channelGetRequestMsg := &halproto.ChannelGetRequestMsg{
+		Request: []*halproto.ChannelGetRequest{req},
+	}
+
+	// HAL call
+	respMsg, err := client.ChannelGet(context.Background(), channelGetRequestMsg)
+	if err != nil {
+		fmt.Printf("Getting channels failed. %v\n", err)
+		return
+	}
+
+	resp := respMsg.Response[0]
+
+	if cmd.Flags().Changed("rx") == false {
+		rxChEnable = resp.GetRequest().GetRxEnable()
+	}
+	if cmd.Flags().Changed("tx") == false {
+		txChEnable = resp.GetRequest().GetTxEnable()
+	}
+
+	var chReq *halproto.ChannelRequest
+	chReq = &halproto.ChannelRequest{
+		Channel:  channelID,
+		TxEnable: txChEnable,
+		RxEnable: rxChEnable,
+	}
+
+	channelRequestMsg := &halproto.ChannelRequestMsg{
+		Request: []*halproto.ChannelRequest{chReq},
+	}
+
+	updateRespMsg, err := client.ChannelUpdate(context.Background(), channelRequestMsg)
+	if err != nil {
+		fmt.Printf("Channel update failed. %v\n", err)
+		return
+	}
+	for _, updateResp := range updateRespMsg.Response {
+		if updateResp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+			fmt.Printf("Update Operation failed with %v error\n", updateResp.ApiStatus)
+			return
+		}
+	}
+
+	fmt.Printf("Channel update success\n")
 }
 
 func ncsiVlanShowCmdHandler(cmd *cobra.Command, args []string) {
