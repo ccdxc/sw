@@ -1897,7 +1897,7 @@ export class Utility {
 
 
   public static isNICConditionNotAdmitted(naples: Readonly<ClusterDistributedServiceCard>): boolean { // If this DSC is not admitted, condition in table is left blank
-    return this.getNaplesCondition(naples) === NaplesConditionValues.NOTADMITTED;
+    return this.getNaplesCondition(naples).toUpperCase() === NaplesConditionValues.NOTADMITTED.toUpperCase();
   }
 
   public static formatDateWithinString(cond: ClusterDSCCondition): string {

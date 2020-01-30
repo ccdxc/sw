@@ -174,13 +174,13 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
 
 
   deleteRecord(object: ClusterDistributedServiceCard): Observable<{ body: IClusterDistributedServiceCard | IApiStatus | Error; statusCode: number; }> {
-    throw new Error('Method not implemented.');
+    return this.clusterService.DeleteDistributedServiceCard(object.meta.name);
   }
   generateDeleteConfirmMsg(object: ClusterDistributedServiceCard): string {
-    throw new Error('Method not implemented.');
+    return 'Are you sure you want to delete DSC ' + object.meta.name;
   }
   generateDeleteSuccessMsg(object: ClusterDistributedServiceCard): string {
-    throw new Error('Method not implemented.');
+    return 'Deleted DSC ' + object.meta.name;
   }
   setDefaultToolbar(): void {
   }
@@ -926,7 +926,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
         const updatedObject: ClusterDistributedServiceCard = new ClusterDistributedServiceCard(object);
         updatedObject.spec['mgmt-mode'] = ClusterDistributedServiceCardSpec_mgmt_mode.host;
         this.invokeUpdateCard(updatedObject, object,
-          'Successfully decommissioned ' + object.meta.name, 'Decommision Service');
+          'Decommissioning DSC ' + object.meta.name + ' request has been submitted.', 'Decommision Service');
       }
     });
   }
@@ -977,6 +977,11 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   showDecommissionButton(rowData: ClusterDistributedServiceCard): boolean {
     return rowData.spec.admit && rowData.status['admission-phase'] ===
       ClusterDistributedServiceCardStatus_admission_phase.admitted;
+  }
+
+  showDeleteButton(rowData: ClusterDistributedServiceCard): boolean {
+    return rowData.spec.admit && rowData.status['admission-phase'] ===
+      ClusterDistributedServiceCardStatus_admission_phase.decommissioned;
   }
 
   onSearchDSCs(field = this.tableContainer.sortField, order = this.tableContainer.sortOrder) {

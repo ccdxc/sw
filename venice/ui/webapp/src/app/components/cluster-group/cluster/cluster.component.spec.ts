@@ -145,7 +145,7 @@ describe('ClusterComponent', () => {
       ))
       .toBeTruthy();
     expect(clusterHe.querySelector('div.cluster-details-panel-cluster-name').textContent).toContain('testCluster');
-    expect(clusterHe.querySelector('div.cluster-details-panel-ntp-servers').textContent).toContain('1.pool.ntp.org, 2.pool.ntp.org');
+    expect(clusterHe.querySelector('div.cluster-details-panel-ntp-servers').textContent).toContain('1.pool.ntp.org2.pool.ntp.org');
     // expect(clusterHe.querySelector('div.cluster-details-panel-virtual-ip').textContent).toContain('192.168.30.10');
     expect(clusterHe.querySelector('div.cluster-details-panel-auto-admit-nics').textContent).toContain('yes');
   });

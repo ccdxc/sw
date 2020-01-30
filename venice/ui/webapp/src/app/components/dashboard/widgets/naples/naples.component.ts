@@ -446,16 +446,15 @@ export class NaplesComponent implements OnInit, OnChanges, AfterViewInit, OnDest
     this.unhealthyNaples = [];
     const admittedNics = [];
     this.naples.forEach((naple) => {
-      if (Utility.isNaplesNICHealthy(naple)) {
-        this.healthyNaplesCount += 1;
-      } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
-        this.unknownNaplesCount += 1;
-      } else {
-        const dsclabel  = (naple.spec.id) ? naple.spec.id : naple.meta.name;
-        this.unhealthyNaples.push(dsclabel);
-      }
-
       if (!Utility.isNICConditionNotAdmitted(naple)) {
+        if (Utility.isNaplesNICHealthy(naple)) {
+          this.healthyNaplesCount += 1;
+        } else if (Utility.getNaplesCondition(naple) === NaplesConditionValues.UNKNOWN) {
+          this.unknownNaplesCount += 1;
+        } else {
+          const dsclabel  = (naple.spec.id) ? naple.spec.id : naple.meta.name;
+          this.unhealthyNaples.push(dsclabel);
+        }
         admittedNics.push(naple);
       }
       switch (naple.status['admission-phase']) {

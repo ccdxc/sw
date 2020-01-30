@@ -107,8 +107,8 @@
                fxLayoutAlign="start center">
             <div>Name:</div>
           </div>
-          <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
-               fxLayoutAlign="start center">
+          <div class="cluster-node-fieldtitle" fxFlex="45px" fxLayout="row"
+               fxLayoutAlign="start start">
             <div>NTP Servers:</div>
           </div>
           <div class="cluster-node-fieldtitle" fxFlex="30px" fxLayout="row"
@@ -130,9 +130,9 @@
             <div class="cluster-details-panel-cluster-name">
               {{ cluster?.meta.name }}</div>
           </div>
-          <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
-            <div class="cluster-details-panel-ntp-servers">
-              {{ cluster?.spec['ntp-servers'].join(', ') }}</div>
+          <div fxFlex="45px" fxLayout="row" fxLayoutAlign="start start" class="cluster-node-value">
+            <div class="cluster-details-panel-ntp-servers"
+                 [innerHTML]="cluster?.spec['ntp-servers'].join('<br>')"></div>
           </div>
           <div fxFlex="30px" fxLayout="row" fxLayoutAlign="start center" class="cluster-node-value">
             <div class="cluster-details-panel-last-leader-transition-time">

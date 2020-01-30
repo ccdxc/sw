@@ -159,5 +159,12 @@
                 (click)="onDecommissionCard($event, rowData)">
       </mat-icon>
     </button>
+    <button mat-icon-button *ngIf="showDeleteButton(rowData)">
+      <mat-icon matTooltip="Delete Card" *roleGuard="'clusterdistributedservicecard_delete'"
+                class="global-table-action-icon"
+                (click)="onDeleteRecord($event, rowData)">delete
+      </mat-icon>
+
+    </button>
   </div>
 </ng-template>

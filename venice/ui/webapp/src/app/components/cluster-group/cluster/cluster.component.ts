@@ -103,9 +103,9 @@ export class ClusterComponent extends BaseComponent implements OnInit, OnDestroy
     });
     this.selectedTimeRange = new TimeRange(new KeyOperatorValueKeyword.instance('now', '-', 24, 'h'), new KeyOperatorValueKeyword.instance('now', '', 0, ''));
     this.graphConfig = {
-      id: 'cluster info chart',
+      id: 'Distributed Service Cards Status',
       graphTransforms: {
-        transforms: { GraphTitle: { title: 'Cluster Info Chart' } }
+        transforms: { GraphTitle: { title: 'Distributed Service Cards Status' } }
       },
       dataTransforms: [{
         transforms: {
