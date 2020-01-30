@@ -27,6 +27,7 @@
 		VmwareESXConfig
 		NaplesSimInfo
 		Node
+		ApcInfo
 		NaplesMultiSimConfig
 		NaplesConfig
 		NaplesConfigs

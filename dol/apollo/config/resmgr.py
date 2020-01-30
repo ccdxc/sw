@@ -369,7 +369,7 @@ class Resmgr(base.ConfigObjectBase):
 
     @staticmethod
     def GetVpcInternetNatPoolPfx(vpcid):
-        pfxstr = '%d.5.20.0/24'%(vpcid)
+        pfxstr = '50.5.%d.0/24'%(vpcid)
         return ipaddress.IPv4Network(pfxstr)
 
     @staticmethod

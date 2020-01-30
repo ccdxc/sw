@@ -134,6 +134,8 @@ class Node(object):
             self.__host_intfs = host_intfs
 
         def AllocateHostInterface(self, device = None):
+           if GlobalOptions.dryrun:
+               return None
            host_if = self.__host_intfs[self.__host_if_alloc_idx]
            self.__host_if_alloc_idx = (self.__host_if_alloc_idx + 1) % len(self.__host_intfs)
            return host_if

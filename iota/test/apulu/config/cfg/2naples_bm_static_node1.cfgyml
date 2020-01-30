@@ -114,10 +114,24 @@ vpc:
                teptype : underlay
                v4routes:
                    - '10.10.0.0\16'
+
+             - type: specific
+               routetype: disjoint
+               v4routes:
+                   - '64.0.0.2\32'
+               teptype : underlay
+               nat:
+                 level : route
+                 type : static
+
       policy:
               - type : specific
                 policytype : default
                 direction : bidir
+      nat:
+        count : 2
+        addrtype : PUBLIC_AND_SERVICE
+        protocol : tcp,udp,icmp
 
 # ECMP:
 # Object types and order of creation of objects for different kinds of ECMP.

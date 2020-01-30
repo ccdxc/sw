@@ -87,7 +87,7 @@ class NatPbObjectClient(base.ConfigClientBase):
                         port_hi, proto, utils.NAT_ADDR_TYPE_PUBLIC)
                     self.Objs[node].update({obj.Id : obj})
                 if addr_infra:
-                    obj = NatPbObject(node, parent, addr_internet, port_lo, \
+                    obj = NatPbObject(node, parent, addr_infra, port_lo, \
                         port_hi, proto, utils.NAT_ADDR_TYPE_SERVICE)
                     self.Objs[node].update({obj.Id : obj})
 

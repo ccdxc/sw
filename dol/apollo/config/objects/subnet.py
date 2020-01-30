@@ -81,10 +81,7 @@ class SubnetObject(base.ConfigObjectBase):
         else:
             self.HostIf = None
             self.HostIfIdx = int(getattr(spec, 'hostifidx', None))
-            node_uuid = EzAccessStore.GetUuidMap()[node]
-            node_uuid = node_uuid.replace('.', '')
-            if node_uuid == '':
-                node_uuid = None
+            node_uuid = EzAccessStore.GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################

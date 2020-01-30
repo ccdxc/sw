@@ -28,7 +28,8 @@ def __add_workloads():
         #wl_msg.interface_type = topo_svc.INTERFACE_TYPE_VSS
         wl_msg.interface_type = topo_svc.INTERFACE_TYPE_NONE
         wl_msg.encap_vlan = ep.vlan
-        wl_msg.interface = api.AllocateHostInterfaceForNode(wl_msg.node_name)
+        interface = api.AllocateHostInterfaceForNode(wl_msg.node_name)
+        if interface != None: wl_msg.interface = interface
         wl_msg.parent_interface = wl_msg.interface
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)

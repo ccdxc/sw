@@ -200,8 +200,17 @@ class ApolloConfigStore:
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
-    def GetUuidMap(self):
+    def GetUuidMap(self, node):
         return self.uuid_map
+
+    def GetNodeUuid(self, node):
+        if node in self.uuid_map:
+            node_uuid = self.uuid_map[node]
+            node_uuid = node_uuid.replace('.', '')
+            if node_uuid == '':
+                return None
+            return node_uuid
+        return None
 
     def SetUuidMap(self, uuid_map):
         self.uuid_map = uuid_map

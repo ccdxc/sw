@@ -95,6 +95,32 @@ vpc:
               srcguard: false         # true or false (default false)
               public  : false
               tagged  : false         # true or false (default true)
+        # For node1 this is an igw route, for node2 a local vnic
+        - id               : 2
+          count            : 1
+          v4prefixlen      : 24
+          v6prefixlen      : 64
+          v4prefix         : '64.0.0.0\24'
+          hostifidx        : 0x80000049
+          fabricencap      : vxlan # vxlan or mplsodup
+          fabricencapvalue : 50001
+          v4routerip       : '64.0.0.1'
+          vroutermac       : macaddr/0055.0100.0002
+          vnic:
+            - id        : 2
+              count     : 1             # 1 untagged VNIC
+              vmac      : macaddr/00ae.cd00.000b
+              hostifidx : 0x80000049
+              ipcount : 1             # Local IP mapping per vnic
+              lmap    :
+                - id       : 2
+                  count    : 1
+                  keytype  : l3
+                  lmacaddr : macaddr/00ae.cd00.000b
+                  lipaddr  : '64.0.0.2'
+              srcguard: false         # true or false (default false)
+              public  : false
+              tagged  : false         # true or false (default true)
           rmap:                       # Remote IP mappings per subnet
             - id       : 2
               count    : 1
@@ -114,6 +140,12 @@ vpc:
                teptype : underlay
                v4routes:
                    - '10.10.0.0\16'
+
+             - type: specific
+               routetype: disjoint
+               v4routes:
+                   - '50.5.0.0\16'
+               teptype : underlay
       policy:
               - type : specific
                 policytype : default
