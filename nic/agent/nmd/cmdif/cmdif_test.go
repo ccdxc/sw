@@ -146,6 +146,10 @@ func (ag *mockAgent) PersistState(update bool) error {
 	return nil
 }
 
+func (ag *mockAgent) SyncDHCPState() {
+	return
+}
+
 type mockRPCServer struct {
 	grpcServer *rpckit.RPCServer
 	nicdb      map[string]*cmd.DistributedServiceCard

@@ -1719,6 +1719,11 @@ func (i *IrisAPI) initLifStream() {
 
 }
 
+// HandleCPRoutingConfig unimplemented
+func (i *IrisAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
+	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+}
+
 // TODO Remove PortCreates once the linkmgr changes are stable
 func (i *IrisAPI) createPortsAndUplinks() error {
 	portReqMsg := &halapi.PortInfoGetRequestMsg{

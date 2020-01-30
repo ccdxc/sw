@@ -35,6 +35,7 @@ func HandleVPC(infraAPI types.InfraAPI, client halapi.VPCSvcClient, oper types.O
 func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, vrf netproto.Vrf) error {
 	vpcReq := convertVrfToVPC(vrf)
 	resp, err := client.VPCCreate(context.Background(), vpcReq)
+	log.Infof("createVPCHandler Response: %v. Err: %v", resp, err)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", vrf.GetKind(), vrf.GetKey())); err != nil {
 			return err

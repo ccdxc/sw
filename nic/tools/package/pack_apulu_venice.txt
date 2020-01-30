@@ -1,1 +1,3 @@
 nic/build/$ARCH/$PIPELINE/bin/netagent                            /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/nmd                                 /nic/bin/
+nic/apollo/tools/$PIPELINE/start-nmd.sh				  /nic/tools/

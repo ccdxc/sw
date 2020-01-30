@@ -22,6 +22,8 @@ type IPClientIf interface {
 	GetIPClientIntf() string
 	GetDHCPState() string
 	StopDHCPConfig()
+	GetInterfaceIPs() []InterfaceIP
+	GetStaticRoutes() []StaticRoute
 }
 
 // IPClient helps to set the IP address of the management interfaces
@@ -49,10 +51,13 @@ func (s dhcpState) String() string {
 type DHCPState struct {
 	sync.Mutex
 	nmd           api.NmdAPI
+	pipeline      string
 	Client        *dhcp.Client
 	IPNet         net.IPNet
 	GwIP          net.IP
 	VeniceIPs     map[string]bool
+	InterfaceIPs  []InterfaceIP
+	StaticRoutes  []StaticRoute
 	LeaseDuration time.Duration
 	AckPacket     dhcp4.Packet
 	CurState      string
@@ -60,4 +65,19 @@ type DHCPState struct {
 	DhcpCancel    context.CancelFunc
 	RenewCtx      context.Context
 	RenewCancel   context.CancelFunc
+}
+
+// InterfaceIP captures the ip address info for the uplink interfaces supplied by the dhcp server
+type InterfaceIP struct {
+	IfID      int8
+	PrefixLen int8
+	IPAddress net.IP
+	GwIP      net.IP
+}
+
+// StaticRoute captures the static route info for the Distributed Service Card
+type StaticRoute struct {
+	DestAddr      net.IP
+	DestPrefixLen uint32
+	NextHopAddr   net.IP
 }

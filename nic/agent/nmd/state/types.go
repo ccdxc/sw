@@ -14,6 +14,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
@@ -45,10 +46,12 @@ type NMD struct {
 	Upgmgr         nmdapi.UpgMgrAPI      // Upgrade Manager API
 	resolverClient resolver.Interface    // Resolver client instance
 
-	config       nmd.DistributedServiceCard  // Naples config received via REST
-	nic          *cmd.DistributedServiceCard // DistributedServiceCard object
-	DelphiClient clientAPI.Client
-	IPClient     *ipif.IPClient
+	config          nmd.DistributedServiceCard  // Naples config received via REST
+	nic             *cmd.DistributedServiceCard // DistributedServiceCard object
+	DSCStaticRoutes []agentTypes.DSCStaticRoute
+	DSCInterfaceIPs []agentTypes.DSCInterfaceIP
+	DelphiClient    clientAPI.Client
+	IPClient        *ipif.IPClient
 
 	stopNICReg         chan bool     // channel to stop NIC registration
 	nicRegInitInterval time.Duration // the initial time interval between nic registration in seconds

@@ -114,3 +114,16 @@ func MacStrtoUint64(macStr string) uint64 {
 
 	return mac
 }
+
+// ConvertIPAddress converts IP Address string to hal ip address. TODO v6
+func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
+	addr := net.ParseIP(address)
+	v4Addr := &halapi.IPAddress{
+		Af: halapi.IPAF_IP_AF_INET,
+		V4OrV6: &halapi.IPAddress_V4Addr{
+			V4Addr: utils.Ipv4Touint32(addr),
+		},
+	}
+	ipAddress = v4Addr
+	return
+}

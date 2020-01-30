@@ -11,6 +11,7 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 // HandleDevice handles CRUD operations on device
@@ -30,17 +31,21 @@ func HandleDevice(oper types.Operation, client halapi.DeviceSvcClient) error {
 func createDeviceHandler(client halapi.DeviceSvcClient) error {
 	deviceRequest := &halapi.DeviceRequest{
 		Request: &halapi.DeviceSpec{
-			DevOperMode:     halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
-			Profile:         halapi.DeviceProfile_DEVICE_PROFILE_DEFAULT,
-			BridgingEn:      true,
-			LearningEn:      true,
-			LearnAgeTimeout: 300,
+			DevOperMode:      halapi.DeviceOperMode_DEVICE_OPER_MODE_HOST,
+			Profile:          halapi.DeviceProfile_DEVICE_PROFILE_DEFAULT,
+			BridgingEn:       true,
+			LearningEn:       true,
+			LearnAgeTimeout:  300,
+			OverlayRoutingEn: true,
 		},
 	}
 	resp, err := client.DeviceCreate(context.Background(), deviceRequest)
-	if resp != nil {
-		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create failed for Device")); err != nil {
-			return err
+	log.Infof("createDeviceHandler Response: %v. Err : %v", resp, err)
+	if err == nil {
+		if resp != nil {
+			if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create failed for Device")); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

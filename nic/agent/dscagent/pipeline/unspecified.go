@@ -1433,6 +1433,11 @@ func (i *FakeAgentAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IP
 	return nil, err
 }
 
+// HandleCPRoutingConfig handles creation of control plane route objects
+func (i *FakeAgentAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
+	return nil
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (i *FakeAgentAPI) ReplayConfigs() error {
 	return nil

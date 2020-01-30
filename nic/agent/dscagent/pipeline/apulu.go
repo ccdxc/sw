@@ -10,18 +10,22 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu"
+	apuluutils "github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
+	msapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto/metaswitch"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -38,6 +42,7 @@ type ApuluAPI struct {
 	InterfaceClient         halapi.IfSvcClient
 	EventClient             halapi.EventSvcClient
 	PortClient              halapi.PortSvcClient
+	CPRouteSvcClient        msapi.CPRouteSvcClient
 }
 
 // NewPipelineAPI returns the implemetor of PipelineAPI
@@ -58,6 +63,7 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		InterfaceClient:         halapi.NewIfSvcClient(conn),
 		PortClient:              halapi.NewPortSvcClient(conn),
 		EventClient:             halapi.NewEventSvcClient(conn),
+		CPRouteSvcClient:        msapi.NewCPRouteSvcClient(conn),
 	}
 
 	if err := a.PipelineInit(); err != nil {
@@ -94,6 +100,32 @@ func (a *ApuluAPI) PipelineInit() error {
 		return err
 	}
 	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoSecurityProfileCreate)
+
+	c, _ := protoTypes.TimestampProto(time.Now())
+	defaultVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "default",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "CUSTOMER",
+		},
+		Status: netproto.VrfStatus{
+			VrfID: 65,
+		},
+	}
+	if _, err := a.HandleVrf(types.Create, defaultVrf); err != nil {
+		log.Error(err)
+		return err
+	}
 
 	// initialize stream for Lif events
 	a.initEventStream()
@@ -914,4 +946,31 @@ func (a *ApuluAPI) initEventStream() {
 	for _, port := range ports.Response {
 		createUplinkInterface(a, port.Spec, port.Status)
 	}
+}
+
+// HandleCPRoutingConfig handles creation of control plane route objects
+func (a *ApuluAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
+	a.Lock()
+	defer a.Unlock()
+
+	staticRouteSpec := &msapi.CPStaticRouteSpec{
+		DestAddr:    apuluutils.ConvertIPAddress(obj.DestAddr),
+		PrefixLen:   obj.DestPrefixLen,
+		NextHopAddr: apuluutils.ConvertIPAddress(obj.NextHop),
+		AdminStatus: 1,
+		AdminDist:   250,
+		Override:    1}
+
+	staticRouteRequest := &msapi.CPStaticRouteRequest{
+		Request: []*msapi.CPStaticRouteSpec{staticRouteSpec}}
+
+	resp, err := a.CPRouteSvcClient.CPStaticRouteSpecCreate(context.Background(), staticRouteRequest)
+	log.Infof("CPStaticRoute Response: %v. Err: %v", resp, err)
+	if resp != nil {
+		if err := apuluutils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create failed for static route")); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

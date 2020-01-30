@@ -609,6 +609,10 @@ func (c *API) postConfigHandler(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	c.handleDSCInterfaceInfo(o)
+	c.handleDSCRoutingInfo(o)
+
 	var resp restapi.Response
 	err = c.HandleVeniceCoordinates(o)
 	if err != nil {
@@ -651,4 +655,35 @@ func (c *API) getMappingHandler(r *http.Request) (interface{}, error) {
 	resp.StatusCode = http.StatusNotFound
 	resp.Error = fmt.Sprintf("Interface: %d not found", intfID)
 	return resp, err
+}
+
+func (c *API) handleDSCRoutingInfo(obj types.DistributedServiceCardStatus) {
+	//Handle DSC Routing Info
+	c.Lock()
+	defer c.Unlock()
+
+	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
+		log.Infof("Controller API: handleDSCRoutingInfo | Obj: %v", obj)
+
+		if len(obj.DSCStaticRoutes) != 0 {
+			for _, route := range obj.DSCStaticRoutes {
+				if err := c.PipelineAPI.HandleCPRoutingConfig(route); err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}
+}
+
+func (c *API) handleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
+	//Handle DSC Interface Info
+	c.Lock()
+	defer c.Unlock()
+	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
+		log.Infof("Controller API: handleDSCInterfaceInfo | Obj: %v", obj)
+
+		/*if err := c.PipelineAPI.HandleInterface(types.Create, ); err != nil {
+			log.Error(err)
+		}*/
+	}
 }

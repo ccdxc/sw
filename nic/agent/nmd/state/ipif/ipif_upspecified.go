@@ -9,7 +9,7 @@ import (
 )
 
 // NewIPClient returns the instance of IPClient for non-linux platforms
-func NewIPClient(nmd api.NmdAPI, intf string) (*IPClient, error) {
+func NewIPClient(nmd api.NmdAPI, intf string, pipeline string) (*IPClient, error) {
 	var dhcpState DHCPState
 	mgmtIntf, _ := netlink.LinkByName(intf)
 	ipClient := IPClient{
@@ -49,4 +49,14 @@ func (c *IPClient) GetDHCPState() string {
 
 // StopDHCPConfig cancels any active DHCP goroutines
 func (c *IPClient) StopDHCPConfig() {
+}
+
+// GetStaticRoutes returns the set of static routes received via dhcp
+func (c *IPClient) GetStaticRoutes() []StaticRoute {
+	return []StaticRoute{}
+}
+
+// GetInterfaceIPs returns the set of interface IP information received via DHCP
+func (c *IPClient) GetInterfaceIPs() []InterfaceIP {
+	return []InterfaceIP{}
 }

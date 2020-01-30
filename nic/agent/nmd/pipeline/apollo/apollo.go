@@ -1,13 +1,9 @@
 package apollo
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"net"
 
-	delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
+	//delphiProto "github.com/pensando/sw/nic/agent/nmd/protos/delphi"
 	"github.com/pensando/sw/nic/agent/nmd/state"
-	"github.com/pensando/sw/nic/agent/protos/nmd"
 	clientAPI "github.com/pensando/sw/nic/delphi/gosdk/client_api"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
@@ -73,7 +69,7 @@ func (p *Pipeline) GetPipelineType() string {
 
 // WriteDelphiObjects ...
 func (p *Pipeline) WriteDelphiObjects() (err error) {
-	var mgmtIP string
+	/*var mgmtIP string
 
 	var transitionPhase delphiProto.DistributedServiceCardStatus_Transition
 	naplesConfig := p.Agent.Nmd.GetNaplesConfig()
@@ -164,6 +160,7 @@ func (p *Pipeline) WriteDelphiObjects() (err error) {
 	file = append(file, s...)
 	_ = ioutil.WriteFile("/sysconfig/config0/naplesStatus.json", file, 0644)
 	_ = ioutil.WriteFile("/sysconfig/config1/naplesStatus.json", file, 0644)
+	*/
 
 	return nil
 }

@@ -101,4 +101,7 @@ type PipelineAPI interface {
 
 	// GetWatchOptions returns aggregate watch options on per kind. Currently this is used to get only local EPs
 	GetWatchOptions(ctx context.Context, kind string) api.ListWatchOptions
+
+	// HandleCPRoutingConfig handles creation of control plane route objects
+	HandleCPRoutingConfig(obj DSCStaticRoute) error
 }

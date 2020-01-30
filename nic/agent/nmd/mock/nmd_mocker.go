@@ -287,3 +287,8 @@ func (ag *NMD) GenChallengeResponse(nic *cmd.DistributedServiceCard, challenge [
 func (ag *NMD) PersistState(updateDelphi bool) error {
 	return nil
 }
+
+// SyncDHCPState syncs the DHCP information received with NMD
+func (ag *NMD) SyncDHCPState() {
+
+}

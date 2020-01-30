@@ -59,6 +59,7 @@ type NmdAPI interface {
 	SetVeniceIPs(veniceIPs []string)
 	GetVeniceIPs() []string
 	PersistState(updateDelphi bool) error
+	SyncDHCPState()
 }
 
 // PlatformAPI is the API provided by PlatformAgent to NMD

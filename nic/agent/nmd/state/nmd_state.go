@@ -26,6 +26,8 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+
+	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/httputils"
 	nmdapi "github.com/pensando/sw/nic/agent/nmd/api"
 	"github.com/pensando/sw/nic/agent/nmd/cmdif"
@@ -935,6 +937,7 @@ func initAllowedCommands() {
 	allowedCommands["penverifyfirmware"] = 42
 	allowedCommands["halctlshowsystemstatisticspbdetail"] = 43
 	allowedCommands["halctlshowqosclassqueues"] = 44
+	allowedCommands["showifconfig"] = 45 // Just a temporary command to expose the ifconfig
 }
 
 func isCmdAllowed(cmd string) bool {
@@ -1111,6 +1114,9 @@ func naplesExecCmd(req *nmd.DistributedServiceCardCmdExecute) (string, error) {
 	} else if req.Executable == "rmpentechsupportdir" {
 		req.Executable = "rm"
 		req.Opts = "-rf /data/techsupport/PenctlTechSupportRequest-penctl-techsupport/"
+	} else if req.Executable == "showifconfig" {
+		req.Executable = "/sbin/ifconfig"
+		req.Opts = "-a"
 	}
 	return executeCmd(req, strings.Fields(req.Opts))
 }
@@ -1342,13 +1348,18 @@ func (n *NMD) CreateIPClient() {
 		return
 	}
 
+	pipeline := ""
+	if n.Pipeline != nil {
+		pipeline = n.Pipeline.GetPipelineType()
+	}
+
 	if n.config.Spec.NetworkMode == nmd.NetworkMode_INBAND.String() {
-		ipClient, err = ipif.NewIPClient(n, ipif.NaplesInbandInterface)
+		ipClient, err = ipif.NewIPClient(n, ipif.NaplesInbandInterface, pipeline)
 		if err != nil {
 			log.Errorf("Failed to instantiate ipclient on inband interface. Err: %v", err)
 		}
 	} else {
-		ipClient, err = ipif.NewIPClient(n, ipif.NaplesOOBInterface)
+		ipClient, err = ipif.NewIPClient(n, ipif.NaplesOOBInterface, pipeline)
 		if err != nil {
 			log.Errorf("Failed to instantiate ipclient on oob interface. Err: %v", err)
 		}
@@ -1360,7 +1371,7 @@ func (n *NMD) CreateIPClient() {
 func (n *NMD) CreateMockIPClient() {
 	n.Lock()
 	defer n.Unlock()
-	ipClient, err := ipif.NewIPClient(n, ipif.NaplesMockInterface)
+	ipClient, err := ipif.NewIPClient(n, ipif.NaplesMockInterface, "")
 	if err != nil {
 		log.Errorf("Failed to instantiate ipclient on mock interface. Err: %v", err)
 	}
@@ -1535,6 +1546,17 @@ func (n *NMD) GetVeniceIPs() []string {
 // SetVeniceIPs sets the venice co-ordinates
 func (n *NMD) SetVeniceIPs(veniceIPs []string) {
 	n.config.Status.Controllers = veniceIPs
+}
+
+// SyncDHCPState syncs the DHCP information received with NMD
+func (n *NMD) SyncDHCPState() {
+	for _, intf := range n.IPClient.GetInterfaceIPs() {
+		n.DSCInterfaceIPs = append(n.DSCInterfaceIPs, agentTypes.DSCInterfaceIP{IfID: intf.IfID, DestPrefixLen: intf.PrefixLen, IPAddress: intf.IPAddress.String(), GatewayIP: intf.GwIP.String()})
+	}
+
+	for _, route := range n.IPClient.GetStaticRoutes() {
+		n.DSCStaticRoutes = append(n.DSCStaticRoutes, agentTypes.DSCStaticRoute{DestAddr: route.DestAddr.String(), DestPrefixLen: route.DestPrefixLen, NextHop: route.NextHopAddr.String()})
+	}
 }
 
 func runCmd(cmdStr string) error {

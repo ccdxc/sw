@@ -296,11 +296,19 @@ func (n *NMD) PersistState(updateDelphi bool) (err error) {
 	}
 
 	statusObj := agentTypes.DistributedServiceCardStatus{
-		DSCMode:     n.config.Status.Mode,
-		DSCName:     n.config.Status.DSCName,
-		MgmtIP:      n.config.Status.IPConfig.IPAddress,
+		DSCMode: n.config.Status.Mode,
+		DSCName: n.config.Status.DSCName,
+		//MgmtIP:      n.config.Status.IPConfig.IPAddress,
 		MgmtIntf:    mgmtIntf,
 		Controllers: controllers,
+	}
+
+	if len(n.DSCInterfaceIPs) != 0 {
+		statusObj.DSCInterfaceIPs = n.DSCInterfaceIPs
+	}
+
+	if len(n.DSCStaticRoutes) != 0 {
+		statusObj.DSCStaticRoutes = n.DSCStaticRoutes
 	}
 
 	var resp Response
@@ -501,7 +509,12 @@ func (n *NMD) reconcileIPClient() error {
 
 	// Check if we need to reconcile
 	if n.IPClient == nil || n.IPClient.GetIPClientIntf() != mgmtIntf {
-		ipClient, err := ipif.NewIPClient(n, mgmtIntf)
+		pipeline := ""
+		if n.Pipeline != nil {
+			pipeline = n.Pipeline.GetPipelineType()
+		}
+
+		ipClient, err := ipif.NewIPClient(n, mgmtIntf, pipeline)
 		if err != nil {
 			log.Errorf("Failed to reconcile IPClient. Err: %v", err)
 			return fmt.Errorf("failed to reconcile IPClient. Err: %v", err)

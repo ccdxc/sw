@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -36,6 +37,12 @@ const (
 	configureMalformedVendorAttrsMismatchOption43And60
 	configureValidVendorAttrs241
 	configureValidVendorAttrs241Multiple
+	configureValidVendorAttrs241and242
+	configureMalformedVendorAttrsDSCInterfaceIPs
+	configureInvalidInfoVendorAttrsDSCInterfaceIPs
+	configureValidClasslessStaticRoutes
+	configureMalformedClasslessStaticRoutes
+	configureInvalidClasslessStaticRoutes
 )
 
 var (
@@ -43,10 +50,12 @@ var (
 		IPAddress:  "172.16.10.10/28",
 		DNSServers: []string{"172.16.10.1", "172.16.10.2"},
 	}
-	_, allocSubnet, _          = net.ParseCIDR(testSubnet)
-	veniceIPs                  = "42.42.42.42,84.84.84.84"
-	option241VeniceIPs         = "1.1.1.1"
-	option241VeniceIPsMultiple = "2.2.2.2,3.3.3.3"
+	_, allocSubnet, _           = net.ParseCIDR(testSubnet)
+	veniceIPs                   = "42.42.42.42,84.84.84.84"
+	option241VeniceIPs          = "1.1.1.1"
+	option241VeniceIPsMultiple  = "2.2.2.2,3.3.3.3"
+	option242InterfaceIPs       = "0 28 20.20.20.4 20.20.20.1,1 28 20.20.20.5 20.20.20.2"
+	optionClasslessStaticRoutes = "28 20.20.20.4 20.20.20.1,28 20.20.20.5 20.20.20.2"
 )
 
 type dhcpSrv struct {
@@ -80,7 +89,7 @@ func TestIPClient_DoStaticConfig(t *testing.T) {
 	AssertOk(t, err, "Setup Failed")
 	defer d.tearDown()
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Set the IP Config
 	mockNMD.SetIPConfig(&staticIPConfig)
@@ -96,7 +105,7 @@ func TestDHCPSpecControllers(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
 	time.Sleep(2 * time.Second)
@@ -134,7 +143,7 @@ func TestDHCPValidVendorAttributes241Code(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 
 	// Clear spec controllers
@@ -176,7 +185,7 @@ func TestDHCPValidVendorAttributes241CodeMultiple(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 
 	// Clear spec controllers
@@ -211,6 +220,177 @@ func TestDHCPValidVendorAttributes241CodeMultiple(t *testing.T) {
 	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
 }
 
+func TestDHCPValidVendorAttributes241and242Code(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureValidVendorAttrs241and242)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	//Create a mock interfaces for testing the interface IP config
+	interfaceIds := []int8{0, 1}
+	for _, interfaceID := range interfaceIds {
+		mockInterface := &netlink.Dummy{
+			LinkAttrs: netlink.LinkAttrs{
+				Name:   DSCIfIDToInterfaceName[interfaceID],
+				TxQLen: 1000,
+			},
+		}
+
+		// Create the mock interface
+		if err := netlink.LinkAdd(mockInterface); err != nil {
+			if !strings.Contains(err.Error(), "file exists") {
+				log.Info("File exists")
+			}
+			log.Info("Interface already present. Continuing...")
+		}
+
+		netlink.LinkSetUp(mockInterface)
+	}
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP: %v", err)
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected Venice IPs
+	veniceIPs := strings.Split(option241VeniceIPsMultiple, ",")
+	for _, v := range veniceIPs {
+		AssertEquals(t, true, ipClient.dhcpState.VeniceIPs[v], "Failed to find a Venice IP. %v", v)
+	}
+
+	// Ensure that there are expected interface IPs
+	interfaceIPs := strings.Split(option242InterfaceIPs, ",")
+	for _, i := range interfaceIPs {
+		ipInfo := strings.Split(i, " ")
+
+		var found bool
+		var interfaceIPInfo InterfaceIP
+		for _, ip := range ipClient.dhcpState.InterfaceIPs {
+			if ipInfo[0] == strconv.Itoa(int(ip.IfID)) {
+				found = true
+				interfaceIPInfo = ip
+				break
+			}
+		}
+
+		AssertEquals(t, true, found, "Failed to find a Interface IP. %v", i)
+
+		AssertEquals(t, strconv.Itoa(int(interfaceIPInfo.PrefixLen)), ipInfo[1], "Failed to find a Interface IP. %v", i)
+		AssertEquals(t, interfaceIPInfo.IPAddress.String(), ipInfo[2], "Failed to find a Interface IP. %v", i)
+		AssertEquals(t, interfaceIPInfo.GwIP.String(), ipInfo[3], "Failed to find a Interface IP. %v", i)
+
+		//Check if the ip address assigned on DSC interface is correct
+		ifid, _ := strconv.Atoi(ipInfo[0])
+		mockInterface, err := netlink.LinkByName(DSCIfIDToInterfaceName[int8(ifid)])
+		AssertOk(t, err, "Failed to find link: %v. Err: %v", DSCIfIDToInterfaceName[int8(ifid)], err)
+		if err != nil {
+			continue
+		}
+
+		ipAddresses, err := netlink.AddrList(mockInterface, netlink.FAMILY_V4)
+
+		var ok bool
+		for _, a := range ipAddresses {
+			if a.IP.Equal(interfaceIPInfo.IPAddress) {
+				ok = true
+				break
+			}
+		}
+
+		AssertEquals(t, true, ok, "The interface IP Address should match vendor specified IP address")
+	}
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+
+	//Tear Down the mock interfaces created
+	for _, interfaceID := range interfaceIds {
+		mockIntf, err := netlink.LinkByName(DSCIfIDToInterfaceName[interfaceID])
+		if err != nil {
+			log.Errorf("TearDown Failed to look up the interfaces. Err: %v", err)
+			continue
+		}
+
+		if err := netlink.LinkDel(mockIntf); err != nil {
+			log.Errorf("TearDown Failed to delete the interfaces. Err: %v", err)
+		}
+	}
+}
+func TestDHCPValidClasslessStaticRoutesOption(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureValidClasslessStaticRoutes)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP")
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected static routes
+	staticRoutes := strings.Split(optionClasslessStaticRoutes, ",")
+	for _, r := range staticRoutes {
+		routeInfo := strings.Split(r, " ")
+
+		var found bool
+		var dscRouteInfo StaticRoute
+		for _, route := range ipClient.dhcpState.StaticRoutes {
+			if routeInfo[0] == strconv.Itoa(int(route.DestPrefixLen)) && routeInfo[1] == route.DestAddr.String() {
+				found = true
+				dscRouteInfo = route
+				break
+			}
+		}
+
+		AssertEquals(t, true, found, "Failed to find a static route for destination. %v", r)
+		AssertEquals(t, dscRouteInfo.NextHopAddr.String(), routeInfo[2], "Failed to find a static route for destination. %v", r)
+	}
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
 //++++++++++++++++++++++++++++ Corner Test Cases ++++++++++++++++++++++++++++++++++++++++
 
 func TestDHCPValidVendorAttributes(t *testing.T) {
@@ -220,7 +400,7 @@ func TestDHCPValidVendorAttributes(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 
 	// Clear spec controllers
@@ -262,7 +442,7 @@ func TestDHCPRenewal(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
@@ -309,7 +489,7 @@ func TestDHCPEmptyVendorAttributes(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 
 	// Clear spec controllers
@@ -348,7 +528,7 @@ func TestDHCPMalformedVendorAttributesOption43And60(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
@@ -386,7 +566,7 @@ func TestDHCPMalformedVendorAttributes(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
@@ -417,6 +597,172 @@ func TestDHCPMalformedVendorAttributes(t *testing.T) {
 	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
 }
 
+func TestDHCPMalformedVendorAttributesDSCInterfaceIPs(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureMalformedVendorAttrsDSCInterfaceIPs)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP: %v", err)
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected Venice IPs
+	veniceIPs := strings.Split(option241VeniceIPsMultiple, ",")
+	for _, v := range veniceIPs {
+		AssertEquals(t, true, ipClient.dhcpState.VeniceIPs[v], "Failed to find a Venice IP. %v", v)
+	}
+
+	// Ensure that no interface IPs are recorded
+	AssertEquals(t, 0, len(ipClient.dhcpState.InterfaceIPs), "On incomplete Option 242 in vendor attributes, Interface IPs in dhcp state should be empty")
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
+func TestDHCPInvalidVendorAttributesDSCInterfaceIPs(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureInvalidInfoVendorAttrsDSCInterfaceIPs)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP: %v", err)
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that there are expected Venice IPs
+	veniceIPs := strings.Split(option241VeniceIPsMultiple, ",")
+	for _, v := range veniceIPs {
+		AssertEquals(t, true, ipClient.dhcpState.VeniceIPs[v], "Failed to find a Venice IP. %v", v)
+	}
+
+	// Ensure that no interface IPs are recorded
+	AssertEquals(t, 0, len(ipClient.dhcpState.InterfaceIPs), "On invalid info in Option 242 vendor attributes, Interface IPs in dhcp state should be empty")
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
+func TestDHCPMalformedClasslessStaticRoutesOption(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureMalformedClasslessStaticRoutes)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP")
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that no static routes are recorded
+	AssertEquals(t, 0, len(ipClient.dhcpState.StaticRoutes), "On malformed info in option ClasslessRouteFormat, static routes in dhcp state should be empty")
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
+func TestDHCPInvalidClasslessStaticRoutesOption(t *testing.T) {
+	var d dhcpSrv
+	err := d.setup(configureInvalidClasslessStaticRoutes)
+	AssertOk(t, err, "Setup Failed")
+	defer d.tearDown()
+	AssertOk(t, err, "Failed to start DHCP Server for testing")
+	mockNMD := mock.CreateMockNMD(t.Name())
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
+	AssertOk(t, err, "IPClient creates must succeed")
+
+	// Clear spec controllers
+	mockNMD.Naples.Spec.Controllers = []string{}
+	err = ipClient.DoDHCPConfig()
+	time.Sleep(2 * time.Second)
+	// Check DHCP Config should succeed
+	AssertOk(t, err, "Failed to perform DHCP")
+
+	// Ensure obtained IP Addr is in the allocated subnet
+	AssertEquals(t, true, allocSubnet.Contains(ipClient.dhcpState.IPNet.IP), "Obtained a YIADDR is not in the expected subnet")
+
+	// Ensure dhcp state is missing vendor attributes
+	AssertEquals(t, dhcpDone.String(), ipClient.dhcpState.CurState, "DHCP State must reflect DHCP Done")
+
+	// Ensure that no static routes are recorded
+	AssertEquals(t, 0, len(ipClient.dhcpState.StaticRoutes), "On invalid info in option ClasslessRouteFormat, static routes in dhcp state should be empty")
+
+	// Ensure the IP Assigned on the interface is indeed the YIADDR
+	ipAddr, err := netlink.AddrList(ipClient.intf, netlink.FAMILY_V4)
+	AssertOk(t, err, "Must be able to look up IP Address for mock interface")
+	var found bool
+	for _, a := range ipAddr {
+		if a.IP.Equal(ipClient.dhcpState.IPNet.IP) {
+			found = true
+			break
+		}
+	}
+	AssertEquals(t, true, found, "The interface IP Address should match YIADDR")
+}
+
 func TestDHCPTimedout(t *testing.T) {
 	var d dhcpSrv
 	err := d.setup(noDHCP)
@@ -424,7 +770,7 @@ func TestDHCPTimedout(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
 	time.Sleep(15 * time.Second)
@@ -436,7 +782,7 @@ func TestDHCPRetries(t *testing.T) {
 	mockNMD := mock.CreateMockNMD(t.Name())
 	err := d.setup(noDHCP)
 	AssertOk(t, err, "Setup Failed")
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	err = ipClient.DoDHCPConfig()
 	time.Sleep(2 * time.Minute)
@@ -451,7 +797,7 @@ func TestDHCPRetries(t *testing.T) {
 
 func TestInvalidInterface(t *testing.T) {
 	mockNMD := mock.CreateMockNMD(t.Name())
-	_, err := NewIPClient(mockNMD, "Some Invalid Interface")
+	_, err := NewIPClient(mockNMD, "Some Invalid Interface", "")
 	Assert(t, err != nil, "IPClient creates on non existent interfaces must fail")
 }
 
@@ -461,7 +807,7 @@ func TestInvalidStaticIPAssignment(t *testing.T) {
 	AssertOk(t, err, "Setup Failed")
 	defer d.tearDown()
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	// override mock nmd with bad ip config
 	badIPConfig := &cluster.IPConfig{
 		IPAddress: "0.0.0.256/33",
@@ -481,7 +827,7 @@ func TestRenewalLoopPanics(t *testing.T) {
 	defer d.tearDown()
 	AssertOk(t, err, "Failed to start DHCP Server for testing")
 	mockNMD := mock.CreateMockNMD(t.Name())
-	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface)
+	ipClient, err := NewIPClient(mockNMD, NaplesMockInterface, "")
 	AssertOk(t, err, "IPClient creates must succeed")
 	// Clear spec controllers
 	mockNMD.Naples.Spec.Controllers = []string{}
@@ -723,6 +1069,57 @@ func (d *dhcpSrv) startDHCPServer(configureVendorAttrs int) error {
 			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
 			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
 			dhcp.OptionVendorSpecificInformation: []byte{241, 8, 2, 2, 2, 2, 3, 3, 3, 3},
+		}
+	case configureValidVendorAttrs241and242:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 8, 2, 2, 2, 2, 3, 3, 3, 3, 242, 20, 0, 28, 20, 20, 20, 4, 20, 20, 20, 1, 1, 28, 20, 20, 20, 5, 20, 20, 20, 2},
+		}
+	case configureMalformedVendorAttrsDSCInterfaceIPs:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 8, 2, 2, 2, 2, 3, 3, 3, 3, 242, 20, 0, 28, 20, 20, 20, 4},
+		}
+	case configureInvalidInfoVendorAttrsDSCInterfaceIPs:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 8, 2, 2, 2, 2, 3, 3, 3, 3, 242, 20, 12, 28, 20, 20, 20, 4, 20, 20, 20, 1, 1, 33, 20, 20, 20, 5, 20, 20, 20, 2},
+		}
+	case configureValidClasslessStaticRoutes:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 4, 1, 1, 1, 1},
+			dhcp.OptionClasslessRouteFormat:      []byte{28, 20, 20, 20, 4, 20, 20, 20, 1, 28, 20, 20, 20, 5, 20, 20, 20, 2},
+		}
+	case configureMalformedClasslessStaticRoutes:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 4, 1, 1, 1, 1},
+			dhcp.OptionClasslessRouteFormat:      []byte{28, 20, 20, 20, 4, 20},
+		}
+	case configureInvalidClasslessStaticRoutes:
+		opts = dhcp.Options{
+			dhcp.OptionSubnetMask:                []byte{255, 255, 255, 240},
+			dhcp.OptionRouter:                    []byte(serverIP), // Presuming Server is also your router
+			dhcp.OptionDomainNameServer:          []byte(serverIP), // Presuming Server is also your DNS server
+			dhcp.OptionVendorClassIdentifier:     PensandoDHCPRequestOption.Value,
+			dhcp.OptionVendorSpecificInformation: []byte{241, 4, 1, 1, 1, 1},
+			dhcp.OptionClasslessRouteFormat:      []byte{34, 20, 20, 20, 4, 20, 20, 20, 1},
 		}
 	}
 

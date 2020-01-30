@@ -13,8 +13,17 @@ const (
 	// NaplesINB1Interface is inband interface 1
 	NaplesINB1Interface = "inb_mnic1"
 
+	// NaplesINBPrefix is the inband interface prefix
+	NaplesINBPrefix = "inb_mnic"
+
 	// NaplesMockInterface is a dummy interface used for tests
 	NaplesMockInterface = "mock"
+
+	// ApuluINB0Interface is inband interface 0 for apulu pipeline
+	ApuluINB0Interface = "dsc0"
+
+	// ApuluINB1Interface is inband interface 1 for apulu pipeline
+	ApuluINB1Interface = "dsc1"
 
 	// PensandoIdentifier identifies Pensando vendor options
 	PensandoIdentifier = "Pensando"
@@ -41,4 +50,25 @@ var (
 		Code:  dhcp4.OptionVendorClassIdentifier,
 		Value: []byte(PensandoIdentifier),
 	}
+
+	// DSCIfIDToInterfaceName maps the ifid to interface name
+	DSCIfIDToInterfaceName = map[int8]string{
+		0: NaplesINB0Interface,
+		1: NaplesINB1Interface,
+	}
+
+	// ApuluDSCIfIDToInterfaceName maps the ifid to interface name
+	ApuluDSCIfIDToInterfaceName = map[int8]string{
+		0: ApuluINB0Interface,
+		1: ApuluINB1Interface,
+	}
+)
+
+//DHCP Vendor specific suboption codes
+const (
+	// Venice controller coordinates
+	VeniceCoordinatesSubOptID = 241
+
+	// DSC Interface IP addresses
+	DSCInterfaceIPsSubOptID = 242
 )
