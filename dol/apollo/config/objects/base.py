@@ -10,8 +10,6 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 
-import apollo.test.utils.pdsctl as pdsctl
-
 import types_pb2 as types_pb2
 
 class StatusObjectBase(base.StatusObjectBase):
@@ -359,14 +357,19 @@ class ConfigClientBase(base.ConfigClientBase):
 
     def PdsctlRead(self, node):
         # read all via pdsctl
-        ret, op = pdsctl.GetObjects(self.ObjType)
+        # TODO: unify pdsctl code & get rid of this import
+        if utils.IsDol():
+            import apollo.test.utils.pdsctl as pdsctl
+        else:
+            import iota.test.apulu.utils.pdsctl as pdsctl
+        ret, op = pdsctl.GetObjects(node, self.ObjType)
         if not self.ValidatePdsctlRead(node, ret, op):
             logger.critical("Object validation failed for ", self.ObjType, ret, op)
             assert(0)
         return
 
     def ReadObjects(self, node):
-        logger.info("Reading %s Objects" % (self.ObjType.name))
+        logger.info(f"Reading {self.ObjType.name} Objects from {node}")
         self.GrpcRead(node)
         self.PdsctlRead(node)
         return
@@ -383,11 +386,11 @@ class ConfigClientBase(base.ConfigClientBase):
 
         # return if there is no fixed object
         if len(fixed) == 0:
-            logger.info(f"Skip Creating {self.ObjType.name} Objects in agent")
+            logger.info(f"Skip Creating {self.ObjType.name} Objects in {node}")
             return
 
         self.ShowObjects(node)
-        logger.info(f"Creating {self.ObjType.name} Objects in agent")
+        logger.info(f"Creating {self.ObjType.name} Objects in {node}")
         cookie = utils.GetBatchCookie(node)
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
         api.client[node].Create(self.ObjType, msgs)

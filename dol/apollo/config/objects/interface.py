@@ -274,8 +274,8 @@ class InterfaceObjectClient(base.ConfigClientBase):
                 logger.error("INTERFACE get request failed for ", obj)
                 return False
             for resp in obj.Response:
-                spec = resp.Spec
-                inf = self.GetInterfaceObject(node, spec.Id)
+                key = self.GetKeyfromSpec(resp.Spec)
+                inf = self.GetInterfaceObject(node, key)
                 if inf is not None:
                     if not utils.ValidateObject(inf, resp):
                         logger.error("INTERFACE validation failed for ", resp.Spec)

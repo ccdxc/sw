@@ -76,9 +76,8 @@ def __generate(node, topospec):
     # Generate VPC configuration
     vpc.client.GenerateObjects(node, topospec)
 
-    if utils.IsDol():
-        # Generate DHCP configuration
-        dhcp_relay.client.GenerateObjects(node, topospec)
+    # Generate DHCP configuration
+    dhcp_relay.client.GenerateObjects(node, topospec)
 
     # Validate configuration
     __validate(node)
@@ -132,8 +131,7 @@ def __read(node):
     tag.client.ReadObjects(node)
     route.client.ReadObjects(node)
     # dhcp_relay.client.ReadObjects(node)
-    if utils.IsDol():
-        nat_pb.client.ReadObjects(node)
+    nat_pb.client.ReadObjects(node)
     # lmapping.client.ReadObjects(node)
     # rmapping.client.ReadObjects(node)
     return
@@ -152,8 +150,9 @@ def Main(node, topospec, ip=None):
     __create(node)
     timeprofiler.ConfigTimeProfiler.Stop()
 
+    __read(node)
+
     if utils.IsDol():
-        __read(node)
         from infra.asic.model import ModelConnector
         ModelConnector.ConfigDone()
     return

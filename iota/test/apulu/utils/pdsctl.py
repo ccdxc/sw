@@ -17,11 +17,11 @@ __CMDTYPE_CLEAR = 'clear'
 __CMDFLAG_YAML = '--yaml'
 __CMDFLAG_ID   = '--id'
 
-def __execute_pdsctl(host, cmd):
+def __execute_pdsctl(node, cmd):
     retval = True
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
-    api.Trigger_AddNaplesCommand(req, host, cmd)
+    api.Trigger_AddNaplesCommand(req, node, cmd)
 
     resp = api.Trigger(req)
     resp_cmd = resp.commands[0]
@@ -30,27 +30,20 @@ def __execute_pdsctl(host, cmd):
 
     return resp_cmd.exit_code == 0, resp_cmd.stdout
 
-def ExecutePdsctlCommand(host, cmd, args=None, yaml=True):
+def ExecutePdsctlCommand(node, cmd, args=None, yaml=True):
     cmd = __CMDBASE + __CMDSEP + cmd
     if args is not None:
         cmd = cmd + __CMDSEP + args
     if yaml:
         cmd = cmd + __CMDSEP + __CMDFLAG_YAML
-    return __execute_pdsctl(host, cmd)
+    return __execute_pdsctl(node, cmd)
 
-def ExecutePdsctlShowCommand(host, cmd, args=None, yaml=True):
+def ExecutePdsctlShowCommand(node, cmd, args=None, yaml=True):
     cmd = __CMDTYPE_SHOW + __CMDSEP + cmd
-    return ExecutePdsctlCommand(host, cmd, args, yaml)
+    return ExecutePdsctlCommand(node, cmd, args, yaml)
 
-def GetObjects(objtype):
+def GetObjects(node, objtype):
     # get object name
     objName = objtype.name.lower()
-    # XXX for each host?
-    return ExecutePdsctlShowCommand(None, objName)
+    return ExecutePdsctlShowCommand(node, objName)
 
-def GetObject(objtype, keyid):
-    # get object name
-    objName = objtype.name.lower()
-    args = __CMDFLAG_ID + __CMDSEP + keyid
-    # XXX for each host?
-    return ExecutePdsctlShowCommand(None, objName, args)

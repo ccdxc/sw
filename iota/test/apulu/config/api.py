@@ -84,7 +84,6 @@ def __getWorkloadPairsBy(wl_pair_type):
         vnics.extend(vnic.client.Objects(node))
 
     for vnic1 in vnics:
-        api.Logger.error(" vnic1 ", vnic1)
         for vnic2 in vnics:
             if vnic1 == vnic2:
                 continue

@@ -78,10 +78,11 @@ class DhcpRelayObjectClient(base.ConfigClientBase):
             obj = DhcpRelayObject(node, vpcid, serverip, agentip)
             self.Objs[node].update({obj.Id: obj})
 
-        if not hasattr(dhcpspec, 'dhcprelay'):
+        dhcprelaySpec = getattr(dhcpspec, 'dhcprelay', None)
+        if not dhcprelaySpec:
             return
 
-        for dhcp_relay_spec_obj in dhcpspec.dhcprelay:
+        for dhcp_relay_spec_obj in dhcprelaySpec:
             __add_dhcp_relay_config(dhcp_relay_spec_obj)
         return
 

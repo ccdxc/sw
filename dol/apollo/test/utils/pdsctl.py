@@ -50,13 +50,9 @@ def ExecutePdsctlShowCommand(cmd, args=None, yaml=True):
     cmd = __CMDTYPE_SHOW + cmd
     return ExecutePdsctlCommand(cmd, args, yaml)
 
-def GetObjects(objtype):
+def GetObjects(node, objtype):
+    # TODO: as part of container support, need to make sure this runs on appropriate node
     # get object name
     objName = objtype.name.lower()
     return ExecutePdsctlShowCommand(objName)
 
-def GetObject(objtype, keyid):
-    # get object name
-    objName = objtype.name.lower()
-    args = __CMDFLAG_ID + keyid
-    return ExecutePdsctlShowCommand(objName, args)

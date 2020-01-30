@@ -16,7 +16,7 @@ def Main(args):
     node = args.node
     defs.DOL_PATH = "/iota/"
     defs.TEST_TYPE = "IOTA"
-    logger.info("Generating Configuration for Spec  = %s" % args.spec)
+    api.Logger.info(f"Generating Configuration for Spec {args.spec}")
     if args.spec == 'dummy':
         return api.types.status.SUCCESS
     cfgspec = parser.ParseFile('test/apulu/config/cfg/', '%s'%args.spec)
