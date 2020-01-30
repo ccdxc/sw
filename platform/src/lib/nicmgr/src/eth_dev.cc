@@ -842,7 +842,9 @@ Eth::CreateHostDevice()
         vfres->is_vf = 1;
         if (pfres->lifc) {
             vfres->lifb = pfres->lifb + pfres->lifc;
-            vfres->lifc = pfres->lifc;
+            // XXX this matches what the resource allocator does for VFs,
+            // but we should get this information from vf_spec.
+            vfres->lifc = 1;
         }
         if (pfres->intrc) {
             vfres->intrb = pfres->intrb + pfres->intrc;
