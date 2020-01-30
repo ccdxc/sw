@@ -161,7 +161,7 @@ void print_usage(char* name)
                     "\t -h help \n"
                     "\t -r rate per second \n"
                     "\t -t total events \n"
-                    "\t -c percentage of critical events (default: 1%) \n"
+                    "\t -c percentage of critical events (default: 1%%) \n"
                     "\t -s substring to be included in all the event messages\n",
         name);
 }
