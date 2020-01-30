@@ -2,13 +2,13 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdsfte.so
-ifneq ($(PIPELINE),athena)
+#ifneq ($(PIPELINE),athena)
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
                   $(wildcard ${MODULE_SRC_DIR}/impl/stub/*.cc)
-else
-MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
-                  $(wildcard ${MODULE_SRC_DIR}/impl/${PIPELINE}/*.cc)
-endif
+#else
+#MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc) \
+#                  $(wildcard ${MODULE_SRC_DIR}/impl/${PIPELINE}/*.cc)
+#endif
 MODULE_PIPELINE = apollo artemis athena apulu
 MODULE_INCS     = ${SDKDIR}/dpdk/build/include/
 MODULE_SOLIBS   = ${NIC_FTL_LIBS} pdsapi_impl

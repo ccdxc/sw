@@ -21,26 +21,41 @@ extern "C" {
 /// \defgroup PDS_FLOW_CACHE 
 /// @{
 
-/// \brief Flow direction
-typedef enum pds_flow_direction_e {
-    PDS_FLOW_DIR_INVALID = 0,       ///< Invalid direction
-    PDS_FLOW_DIR_HOST_TO_SWITCH,    ///< Host to switch direction
-    PDS_FLOW_DIR_SWITCH_TO_HOST     ///< Switch to host direction
-} pds_flow_direction_t;
+/// \brief TCP/UDP key fields
+typedef struct pds_flow_key_tcp_udp_s {
+    uint16_t    sport;    ///< Src port
+    uint16_t    dport;    ///< Dest port
+} pds_flow_key_tcp_udp_t;
 
-/// \brief Generic flow key 
+/// \brief ICMP key fields
+typedef struct pds_flow_key_icmp_s {
+    uint8_t    type;          ///< Type
+    uint8_t    code;          ///< Code
+    uint8_t    identifier;    ///< Identifier
+} pds_flow_key_icmp_t;
+
+/// \brief L4 specific key fields
+typedef union pds_flow_key_l4_s {
+    pds_flow_key_tcp_udp_t    tcp_udp;    ///< TCP/UDP key fields
+    pds_flow_key_icmp_t       icmp;       ///< ICMP key fields
+} pds_flow_key_l4_t;
+
+/// \brief Generic flow key
 typedef struct pds_flow_key_s {
-    uint8_t     ip_addr_family;                ///< IP addr family
-    uint8_t     ip_saddr[INET6_ADDRSTRLEN];    ///< IP src addr
-    uint8_t     ip_daddr[INET6_ADDRSTRLEN];    ///< IP dest addr
-    uint8_t     ip_proto;                      ///< IP protocol
-    uint16_t    l4_sport;                      ///< L4 src port
-    uint16_t    l4_dport;                      ///< L4 dest port
+    uint16_t             vnic_id;                    ///< VNIC id
+    uint64_t             smac;                       ///< Src MAC addr
+    uint64_t             dmac;                       ///< Dest MAC addr
+    uint8_t              ip_addr_family;             ///< IP addr family
+    uint8_t              ip_saddr[IP6_ADDR8_LEN];    ///< IP src addr
+    uint8_t              ip_daddr[IP6_ADDR8_LEN];    ///< IP dest addr
+    uint8_t              ip_proto;                   ///< IP protocol
+    pds_flow_key_l4_t    l4;                         ///< L4 key fields
 } __PACK__ pds_flow_key_t;
 
 /// \brief Flow data
 typedef struct pds_flow_data_s {
-    uint32_t    session_info_id;    ///< session info index
+    uint32_t    index;         ///< session index
+    uint8_t     index_type;    ///< index type
 } __PACK__ pds_flow_data_t;
 
 /// \brief Flow spec

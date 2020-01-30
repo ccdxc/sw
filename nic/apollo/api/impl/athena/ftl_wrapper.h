@@ -18,13 +18,19 @@ extern "C" {
 #endif
 
 static inline void
-ftlv6_set_session_index (flow_hash_entry_t *entry, uint32_t session)
+ftlv6_set_index (flow_hash_entry_t *entry, uint32_t index)
 {
-    //return entry->set_session_index(session);
+    return entry->set_index(index);
 }
 
 static inline void
-ftlv6_set_vnic_id (flow_hash_entry_t *entry, uint16_t vnic_id)
+ftlv6_set_index_type (flow_hash_entry_t *entry, uint8_t index_type)
+{
+    return entry->set_index_type(index_type);
+}
+
+static inline void
+ftlv6_set_key_vnic_id (flow_hash_entry_t *entry, uint16_t vnic_id)
 {
     return entry->set_key_metadata_vnic_id(vnic_id);
 }
@@ -65,11 +71,28 @@ ftlv6_set_key_dst_ip (flow_hash_entry_t *entry, uint8_t *dst)
     return entry->set_key_metadata_dst(dst);
 }
 
-static inline uint32_t
-ftlv6_get_session_id (flow_hash_entry_t *entry)
+static inline void
+ftlv6_set_key_src_mac (flow_hash_entry_t *entry, uint64_t smac)
 {
-    //return entry->get_session_index();
-    return 0;
+    return entry->set_key_metadata_smac(smac);
+}
+
+static inline void
+ftlv6_set_key_dest_mac (flow_hash_entry_t *entry, uint64_t dmac)
+{
+    return entry->set_key_metadata_dmac(dmac);
+}
+
+static inline uint32_t
+ftlv6_get_index (flow_hash_entry_t *entry)
+{
+    return entry->get_index();
+}
+
+static inline uint8_t
+ftlv6_get_index_type (flow_hash_entry_t *entry)
+{
+    return entry->get_index_type();
 }
 
 #ifdef __cplusplus
