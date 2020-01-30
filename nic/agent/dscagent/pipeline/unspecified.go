@@ -950,7 +950,7 @@ func (i *FakeAgentAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp net
 }
 
 // ValidateSecurityProfile validates the contents of SecurityProfile objects
-func (a *FakeAgentAPI) ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
+func (i *FakeAgentAPI) ValidateSecurityProfile(profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
 	return vrf, nil
 }
 

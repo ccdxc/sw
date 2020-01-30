@@ -306,7 +306,7 @@ func getIfTypeStr(ifIndex uint32, subType string) (intfType string, err error) {
 		"Unsupported interface type in ifindex %x | Err: %v", ifIndex, types.ErrInvalidInterfaceType)
 }
 
-// given encoded interface index and its type, form interface name that consists of system MAC
+// GetIfName given encoded interface index and its type, form interface name that consists of system MAC
 func GetIfName(systemMac string, ifIndex uint32, subType string) (ifName string, err error) {
 	ifTypeStr, err := getIfTypeStr(ifIndex, subType)
 	if err != nil {

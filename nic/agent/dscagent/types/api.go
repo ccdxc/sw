@@ -76,7 +76,7 @@ type PipelineAPI interface {
 	HandleNetworkSecurityPolicy(oper Operation, obj netproto.NetworkSecurityPolicy) ([]netproto.NetworkSecurityPolicy, error)
 
 	// ValidateSecurityProfile validates SecurityProfile object and returns the attachment vrf
-	ValidateSecurityProfile(i InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error)
+	ValidateSecurityProfile(profile netproto.SecurityProfile) (vrf netproto.Vrf, err error)
 
 	// HandleSecurityProfile handles CRUDs for SecurityProfile object
 	HandleSecurityProfile(oper Operation, obj netproto.SecurityProfile) ([]netproto.SecurityProfile, error)

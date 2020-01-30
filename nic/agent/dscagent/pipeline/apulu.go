@@ -464,7 +464,7 @@ func (a *ApuluAPI) HandleProfile(oper types.Operation, profile netproto.Profile)
 }
 
 // ValidateSecurityProfile validates the contents of SecurityProfile objects
-func (a *ApuluAPI) ValidateSecurityProfile(i types.InfraAPI, profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
+func (a *ApuluAPI) ValidateSecurityProfile(profile netproto.SecurityProfile) (vrf netproto.Vrf, err error) {
 	return vrf, nil
 }
 
@@ -566,7 +566,7 @@ func (a *ApuluAPI) HandleSecurityProfile(oper types.Operation, profile netproto.
 
 	// Perform object validations
 	// Currently security profile is singleton and not associated with any VPC
-	_, err = a.ValidateSecurityProfile(a.InfraAPI, profile)
+	_, err = a.ValidateSecurityProfile(profile)
 	if err != nil {
 		log.Error(err)
 		return nil, err
