@@ -340,7 +340,6 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
                               subnet_entry *subnet) {
     uint32_t i;
     sdk_ret_t ret;
-    mem_addr_t addr;
     policy *sec_policy;
     route_table *rtable;
     p4pd_error_t p4pd_ret;
@@ -349,12 +348,30 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     policy *egr_v4_policy, *egr_v6_policy;
     pds_obj_key_t route_table_key;
     vnic_info_rxdma_actiondata_t vnic_info_data;
+    mem_addr_t addr, v4_lpm_addr = { 0 }, v6_lpm_addr = { 0 };
 
     // program IPv4 ingress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
+    // populate IPv4 route table root address in Tx direction entry
+    route_table_key = subnet->v4_route_table();
+    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
+        // try the vpc route table
+        route_table_key = vpc->v4_route_table();
+    }
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
+        rtable = route_table_find(&route_table_key);
+        if (rtable) {
+            v4_lpm_addr =
+                ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+            PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", v4_lpm_addr);
+            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v4_lpm_addr);
+        }
+    }
+
     // if subnet has ingress IPv4 policy, that should be evaluated first in the
     // Rx direction
+    // populate egress IPv4 policy roots in the Tx direction entry
     i = 1; // policy roots start at index 1
     policy_key = subnet->ing_v4_policy(0);
     sec_policy = policy_find(&policy_key);
@@ -391,6 +408,22 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     // program IPv6 ingress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
+    // populate IPv6 route table root address in Tx direction entry
+    route_table_key = subnet->v6_route_table();
+    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
+        // try the vpc route table
+        route_table_key = vpc->v6_route_table();
+    }
+    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
+        rtable = route_table_find(&route_table_key);
+        if (rtable) {
+            v6_lpm_addr =
+                ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
+            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", v6_lpm_addr);
+            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v6_lpm_addr);
+        }
+    }
+
     // if subnet has ingress IPv6 policy, that should be evaluated first in the
     // Rx direction
     i = 1; // policy roots start at index 1
@@ -411,9 +444,10 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
         populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i, addr);
     }
 
-    // program v6 VNIC_INFO_RXDMA entry for Rx direction at index = (hw_id_*2) + 1
+    // program v6 VNIC_INFO_RXDMA entry for Rx direction at
+    // index = (hw_id_ * 2) + 1
     // NOTE: In the Rx direction, we are not doing route lookups yet, not
-    // populating them
+    //       populating them
     p4pd_ret = p4pd_global_entry_write(P4_P4PLUS_RXDMA_TBL_ID_VNIC_INFO_RXDMA,
                                        (hw_id_ * 2) + 1, NULL, NULL,
                                        &vnic_info_data);
@@ -430,21 +464,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv4 route table root address in Tx direction entry
-    i = 0; // route root is always at index 0
-    route_table_key = subnet->v4_route_table();
-    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
-        // try the vpc route table
-        route_table_key = vpc->v4_route_table();
-    }
-    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
-        rtable = route_table_find(&route_table_key);
-        if (rtable) {
-            addr =
-                ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-            PDS_TRACE_DEBUG("IPv4 lpm root addr 0x%llx", addr);
-            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
-        }
-    }
+    populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v4_lpm_addr);
 
     i = 1; // policy roots start at index 1
     // populate egress IPv4 policy roots in the Tx direction entry
@@ -483,20 +503,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
     // populate IPv6 route table root address in Tx direction entry
-    i = 0; // route root is at index 0
-    route_table_key = subnet->v6_route_table();
-    if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
-        // try the vpc route table
-        route_table_key = vpc->v6_route_table();
-    }
-    if (route_table_key != PDS_ROUTE_TABLE_ID_INVALID) {
-        rtable = route_table_find(&route_table_key);
-        if (rtable) {
-            addr = ((impl::route_table_impl *)(rtable->impl()))->lpm_root_addr();
-            PDS_TRACE_DEBUG("IPv6 lpm root addr 0x%llx", addr);
-            populate_rxdma_vnic_info_policy_root_(&vnic_info_data, i++, addr);
-        }
-    }
+    populate_rxdma_vnic_info_policy_root_(&vnic_info_data, 0, v6_lpm_addr);
 
     i = 1; // policy roots start at index 1
     // populate egress IPv6 policy roots in the Tx direction entry
