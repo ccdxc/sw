@@ -216,6 +216,8 @@ dependencies:
   #  - reference: iota/test/standalone/sanity/freebsd
   #  - reference: iota/test/standalone/sanity/linux
      - reference: iota/test/standalone/sanity/apulu-networking
+  nic/apollo/tools/dev-docker:
+    - reference: nic/apollo/tools/apulu/customer-docker
   nic/agent:
     - reference: iota/test/venice
     - reference: iota/test/standalone/sanity/esx

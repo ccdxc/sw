@@ -39,10 +39,13 @@ copy_files() {
     pkgf+='nic/tools/package/pack_test_utils.txt nic/tools/hal/mem_parser.py nic/hal/module_memrgns.mk '
 
     apollod='nic/apollo '
-    
+
     if [ "$pipeline" == "apulu" ];then
         pkgf+='nic/tools/package/pack_apulu_base.txt '
         apollod+='nic/conf/apulu '
+        if [ $agent == 1 ];then
+            pkgf+='nic/tools/package/pack_apulu_venice.txt '
+        fi
     elif [ "$pipeline" == "apollo" ];then
         pkgf+='nic/tools/package/pack_apollo.txt '
         apollod+='nic/conf/apollo '
