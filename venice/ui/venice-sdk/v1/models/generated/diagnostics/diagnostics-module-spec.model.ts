@@ -13,10 +13,13 @@ export interface IDiagnosticsModuleSpec {
     'log-level': DiagnosticsModuleSpec_log_level;
     'enable-trace'?: boolean;
     'args'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModuleSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** LogLevel is the logging level of this module. Default is Info. */
     'log-level': DiagnosticsModuleSpec_log_level = null;
     /** EnableTrace enables traces for a module. Default is false. */
@@ -75,6 +78,9 @@ export class DiagnosticsModuleSpec extends BaseModel implements IDiagnosticsModu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['log-level'] != null) {
             this['log-level'] = values['log-level'];
         } else if (fillDefaults && DiagnosticsModuleSpec.hasDefaultValue('log-level')) {

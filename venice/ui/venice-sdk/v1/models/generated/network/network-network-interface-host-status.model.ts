@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface INetworkNetworkInterfaceHostStatus {
     'host-ifname'?: string;
     'device-id'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INetworkNetworkInterfaceHostStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Interface name seen by the host driver. */
     'host-ifname': string = null;
     /** PCIE Device ID. */
@@ -63,6 +66,9 @@ export class NetworkNetworkInterfaceHostStatus extends BaseModel implements INet
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['host-ifname'] != null) {
             this['host-ifname'] = values['host-ifname'];
         } else if (fillDefaults && NetworkNetworkInterfaceHostStatus.hasDefaultValue('host-ifname')) {

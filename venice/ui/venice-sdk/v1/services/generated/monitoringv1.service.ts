@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IMonitoringMirrorSessionList,MonitoringMirrorSessionList,IApiStatus,ApiStatus,IMonitoringMirrorSession,MonitoringMirrorSession,IMonitoringTroubleshootingSessionList,MonitoringTroubleshootingSessionList,IMonitoringTroubleshootingSession,MonitoringTroubleshootingSession,IMonitoringAlertDestinationList,MonitoringAlertDestinationList,IMonitoringAlertDestination,MonitoringAlertDestination,IMonitoringAlertPolicyList,MonitoringAlertPolicyList,IMonitoringAlertPolicy,MonitoringAlertPolicy,IMonitoringAlertList,MonitoringAlertList,IMonitoringAlert,MonitoringAlert,IMonitoringArchiveRequestList,MonitoringArchiveRequestList,IMonitoringArchiveRequest,MonitoringArchiveRequest,MonitoringCancelArchiveRequest,IMonitoringCancelArchiveRequest,IMonitoringEventPolicyList,MonitoringEventPolicyList,IMonitoringEventPolicy,MonitoringEventPolicy,IMonitoringFlowExportPolicyList,MonitoringFlowExportPolicyList,IMonitoringFlowExportPolicy,MonitoringFlowExportPolicy,IMonitoringFwlogPolicyList,MonitoringFwlogPolicyList,IMonitoringFwlogPolicy,MonitoringFwlogPolicy,IMonitoringTechSupportRequestList,MonitoringTechSupportRequestList,IMonitoringTechSupportRequest,MonitoringTechSupportRequest,IMonitoringAutoMsgMirrorSessionWatchHelper,MonitoringAutoMsgMirrorSessionWatchHelper,IMonitoringAutoMsgAlertDestinationWatchHelper,MonitoringAutoMsgAlertDestinationWatchHelper,IMonitoringAutoMsgAlertPolicyWatchHelper,MonitoringAutoMsgAlertPolicyWatchHelper,IMonitoringAutoMsgAlertWatchHelper,MonitoringAutoMsgAlertWatchHelper,IMonitoringAutoMsgArchiveRequestWatchHelper,MonitoringAutoMsgArchiveRequestWatchHelper,IMonitoringAutoMsgEventPolicyWatchHelper,MonitoringAutoMsgEventPolicyWatchHelper,IMonitoringAutoMsgFlowExportPolicyWatchHelper,MonitoringAutoMsgFlowExportPolicyWatchHelper,IMonitoringAutoMsgFwlogPolicyWatchHelper,MonitoringAutoMsgFwlogPolicyWatchHelper,IMonitoringAutoMsgTechSupportRequestWatchHelper,MonitoringAutoMsgTechSupportRequestWatchHelper } from '../../models/generated/monitoring';
 
@@ -47,6 +47,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), null, trimDefaults)
     }
@@ -98,6 +99,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal, trimDefaults)
     }
@@ -131,6 +133,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), null, trimDefaults)
     }
@@ -182,6 +185,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal, trimDefaults)
     }
@@ -215,6 +219,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), null, trimDefaults)
     }
@@ -266,6 +271,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal, trimDefaults)
     }
@@ -299,6 +305,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), null, trimDefaults)
     }
@@ -350,6 +357,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal, trimDefaults)
     }
@@ -400,6 +408,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal, trimDefaults)
     }
@@ -433,6 +442,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body), null, trimDefaults)
     }
@@ -483,6 +493,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body), null, trimDefaults)
     }
@@ -516,6 +527,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), null, trimDefaults)
     }
@@ -567,6 +579,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal, trimDefaults)
     }
@@ -600,6 +613,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), null, trimDefaults)
     }
@@ -651,6 +665,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal, trimDefaults)
     }
@@ -684,6 +699,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), null, trimDefaults)
     }
@@ -735,6 +751,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal, trimDefaults)
     }
@@ -768,6 +785,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringTechSupportRequest(body), null, trimDefaults)
     }
@@ -835,6 +853,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), null, trimDefaults)
     }
@@ -889,6 +908,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringMirrorSession(body), previousVal, trimDefaults)
     }
@@ -924,6 +944,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), null, trimDefaults)
     }
@@ -978,6 +999,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringTroubleshootingSession(body), previousVal, trimDefaults)
     }
@@ -1013,6 +1035,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), null, trimDefaults)
     }
@@ -1067,6 +1090,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertDestination(body), previousVal, trimDefaults)
     }
@@ -1102,6 +1126,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), null, trimDefaults)
     }
@@ -1156,6 +1181,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlertPolicy(body), previousVal, trimDefaults)
     }
@@ -1209,6 +1235,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringAlert(body), previousVal, trimDefaults)
     }
@@ -1244,6 +1271,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringArchiveRequest(body), null, trimDefaults)
     }
@@ -1297,6 +1325,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringCancelArchiveRequest(body), null, trimDefaults)
     }
@@ -1332,6 +1361,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), null, trimDefaults)
     }
@@ -1386,6 +1416,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringEventPolicy(body), previousVal, trimDefaults)
     }
@@ -1421,6 +1452,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), null, trimDefaults)
     }
@@ -1475,6 +1507,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFlowExportPolicy(body), previousVal, trimDefaults)
     }
@@ -1510,6 +1543,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), null, trimDefaults)
     }
@@ -1564,6 +1598,7 @@ export class Monitoringv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new MonitoringFwlogPolicy(body), previousVal, trimDefaults)
     }

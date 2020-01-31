@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecurityIcmp {
     'type'?: string;
     'code'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** ICMP Type. */
     'type': string = null;
     /** ICMP Code is sub-command for a given ICMP Type. */
@@ -63,6 +66,9 @@ export class SecurityIcmp extends BaseModel implements ISecurityIcmp {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityIcmp.hasDefaultValue('type')) {

@@ -16,10 +16,13 @@ export interface IClusterClusterStatus {
     'auth-bootstrapped'?: boolean;
     'conditions'?: Array<IClusterClusterCondition>;
     'quorum-status'?: IClusterQuorumStatus;
+    '_ui'?: any;
 }
 
 
 export class ClusterClusterStatus extends BaseModel implements IClusterClusterStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Leader contains the node name of the cluster leader. */
     'leader': string = null;
     /** LastLeaderTransitionTime is when the leadership changed last time. */
@@ -91,6 +94,9 @@ export class ClusterClusterStatus extends BaseModel implements IClusterClusterSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['leader'] != null) {
             this['leader'] = values['leader'];
         } else if (fillDefaults && ClusterClusterStatus.hasDefaultValue('leader')) {

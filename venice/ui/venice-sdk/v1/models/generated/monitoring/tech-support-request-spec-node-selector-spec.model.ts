@@ -12,10 +12,13 @@ import { LabelsSelector, ILabelsSelector } from './labels-selector.model';
 export interface ITechSupportRequestSpecNodeSelectorSpec {
     'names'?: Array<string>;
     'labels'?: ILabelsSelector;
+    '_ui'?: any;
 }
 
 
 export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements ITechSupportRequestSpecNodeSelectorSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'names': Array<string> = null;
     'labels': LabelsSelector = null;
     public static propInfo: { [prop in keyof ITechSupportRequestSpecNodeSelectorSpec]: PropInfoItem } = {
@@ -62,6 +65,9 @@ export class TechSupportRequestSpecNodeSelectorSpec extends BaseModel implements
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['names'] != null) {
             this['names'] = values['names'];
         } else if (fillDefaults && TechSupportRequestSpecNodeSelectorSpec.hasDefaultValue('names')) {

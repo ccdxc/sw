@@ -11,10 +11,13 @@ import { MonitoringSNMPTrapServer, IMonitoringSNMPTrapServer } from './monitorin
 
 export interface IMonitoringSNMPExport {
     'snmp-trap-servers'?: Array<IMonitoringSNMPTrapServer>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPExport {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** TODO:  format, config SNMP trap destination(s). */
     'snmp-trap-servers': Array<MonitoringSNMPTrapServer> = null;
     public static propInfo: { [prop in keyof IMonitoringSNMPExport]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class MonitoringSNMPExport extends BaseModel implements IMonitoringSNMPEx
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<MonitoringSNMPTrapServer>(this, 'snmp-trap-servers', values['snmp-trap-servers'], MonitoringSNMPTrapServer);
         } else {

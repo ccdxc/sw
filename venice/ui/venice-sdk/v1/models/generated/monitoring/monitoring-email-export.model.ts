@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IMonitoringEmailExport {
     'email-list'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringEmailExport extends BaseModel implements IMonitoringEmailExport {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** TODO:  format, config, SMTP config. */
     'email-list': Array<string> = null;
     public static propInfo: { [prop in keyof IMonitoringEmailExport]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class MonitoringEmailExport extends BaseModel implements IMonitoringEmail
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['email-list'] != null) {
             this['email-list'] = values['email-list'];
         } else if (fillDefaults && MonitoringEmailExport.hasDefaultValue('email-list')) {

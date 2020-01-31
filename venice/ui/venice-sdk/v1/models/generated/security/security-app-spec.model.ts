@@ -14,10 +14,13 @@ export interface ISecurityAppSpec {
     'proto-ports'?: Array<ISecurityProtoPort>;
     'timeout'?: string;
     'alg'?: ISecurityALG;
+    '_ui'?: any;
 }
 
 
 export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of (protocol, ports) pairs. */
     'proto-ports': Array<SecurityProtoPort> = null;
     /** Timeout specifies for how long the connection be kept before removing the flow entry, specified in string as '200s', '5m', etc. Should be a valid time duration. */
@@ -76,6 +79,9 @@ export class SecurityAppSpec extends BaseModel implements ISecurityAppSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityProtoPort>(this, 'proto-ports', values['proto-ports'], SecurityProtoPort);
         } else {

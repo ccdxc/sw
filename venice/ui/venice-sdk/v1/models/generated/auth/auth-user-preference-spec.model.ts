@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IAuthUserPreferenceSpec {
     'options'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthUserPreferenceSpec extends BaseModel implements IAuthUserPreferenceSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'options': string = null;
     public static propInfo: { [prop in keyof IAuthUserPreferenceSpec]: PropInfoItem } = {
         'options': {
@@ -53,6 +56,9 @@ export class AuthUserPreferenceSpec extends BaseModel implements IAuthUserPrefer
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['options'] != null) {
             this['options'] = values['options'];
         } else if (fillDefaults && AuthUserPreferenceSpec.hasDefaultValue('options')) {

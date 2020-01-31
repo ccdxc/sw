@@ -17,10 +17,13 @@ export interface IAuthRoleBinding {
     'meta'?: IApiObjectMeta;
     'spec'?: IAuthRoleBindingSpec;
     'status'?: IAuthRoleBindingStatus;
+    '_ui'?: any;
 }
 
 
 export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -87,6 +90,9 @@ export class AuthRoleBinding extends BaseModel implements IAuthRoleBinding {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuthRoleBinding.hasDefaultValue('kind')) {

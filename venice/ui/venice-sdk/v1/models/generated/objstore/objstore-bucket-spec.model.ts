@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IObjstoreBucketSpec {
     'description'?: string;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'description': string = null;
     public static propInfo: { [prop in keyof IObjstoreBucketSpec]: PropInfoItem } = {
         'description': {
@@ -53,6 +56,9 @@ export class ObjstoreBucketSpec extends BaseModel implements IObjstoreBucketSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['description'] != null) {
             this['description'] = values['description'];
         } else if (fillDefaults && ObjstoreBucketSpec.hasDefaultValue('description')) {

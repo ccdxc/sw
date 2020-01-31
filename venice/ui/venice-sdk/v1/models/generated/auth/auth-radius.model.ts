@@ -11,10 +11,13 @@ import { AuthRadiusDomain, IAuthRadiusDomain } from './auth-radius-domain.model'
 
 export interface IAuthRadius {
     'domains'?: Array<IAuthRadiusDomain>;
+    '_ui'?: any;
 }
 
 
 export class AuthRadius extends BaseModel implements IAuthRadius {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'domains': Array<AuthRadiusDomain> = null;
     public static propInfo: { [prop in keyof IAuthRadius]: PropInfoItem } = {
         'domains': {
@@ -55,6 +58,9 @@ export class AuthRadius extends BaseModel implements IAuthRadius {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthRadiusDomain>(this, 'domains', values['domains'], AuthRadiusDomain);
         } else {

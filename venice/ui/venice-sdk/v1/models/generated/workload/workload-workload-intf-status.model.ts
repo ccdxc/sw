@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IWorkloadWorkloadIntfStatus {
     'ip-addresses'?: Array<string>;
     'endpoint'?: string;
+    '_ui'?: any;
 }
 
 
 export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWorkloadIntfStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of all IP addresses configured and discovered on a Workload Interface. */
     'ip-addresses': Array<string> = null;
     /** Endpoint associated with this Workload interface. */
@@ -64,6 +67,9 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('ip-addresses')) {

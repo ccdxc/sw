@@ -12,10 +12,13 @@ import { MonitoringArchiveRequest, IMonitoringArchiveRequest } from './monitorin
 export interface IMonitoringAutoMsgArchiveRequestWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IMonitoringArchiveRequest;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgArchiveRequestWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgArchiveRequestWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': MonitoringArchiveRequest = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgArchiveRequestWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class MonitoringAutoMsgArchiveRequestWatchHelperWatchEvent extends BaseMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgArchiveRequestWatchHelperWatchEvent.hasDefaultValue('type')) {

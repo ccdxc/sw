@@ -17,10 +17,13 @@ export interface IMonitoringArchiveQuery {
     'labels'?: ILabelsSelector;
     'start-time'?: Date;
     'end-time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArchiveQuery {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** OR of Text-requirements to be matched, Exclude is not supported for Text search. */
     'texts': Array<SearchTextRequirement> = null;
     /** Field Selector is AND of field.Requirements. */
@@ -93,6 +96,9 @@ export class MonitoringArchiveQuery extends BaseModel implements IMonitoringArch
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
         } else {

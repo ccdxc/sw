@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecuritySecurityGroupStatus {
     'workloads'?: Array<string>;
     'Policies'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecuritySecurityGroupStatus extends BaseModel implements ISecuritySecurityGroupStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of workloads that are part of this security group. */
     'workloads': Array<string> = null;
     /** List of all policies attached to this security group. */
@@ -65,6 +68,9 @@ export class SecuritySecurityGroupStatus extends BaseModel implements ISecurityS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && SecuritySecurityGroupStatus.hasDefaultValue('workloads')) {

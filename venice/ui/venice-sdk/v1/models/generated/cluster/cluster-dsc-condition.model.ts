@@ -16,10 +16,13 @@ export interface IClusterDSCCondition {
     'last-transition-time'?: string;
     'reason'?: string;
     'message'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterDSCCondition extends BaseModel implements IClusterDSCCondition {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type indicates a certain NIC condition. */
     'type': ClusterDSCCondition_type = null;
     /** Condition Status. */
@@ -93,6 +96,9 @@ export class ClusterDSCCondition extends BaseModel implements IClusterDSCConditi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterDSCCondition.hasDefaultValue('type')) {

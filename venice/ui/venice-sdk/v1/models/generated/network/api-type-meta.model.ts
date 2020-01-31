@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IApiTypeMeta {
     'kind'?: string;
     'api-version'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Kind represents the type of the API object. */
     'kind': string = null;
     /** APIVersion defines the version of the API object. This can only be set by the server. */
@@ -63,6 +66,9 @@ export class ApiTypeMeta extends BaseModel implements IApiTypeMeta {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ApiTypeMeta.hasDefaultValue('kind')) {

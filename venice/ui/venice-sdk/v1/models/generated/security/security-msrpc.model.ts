@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecurityMsrpc {
     'program-uuid'?: string;
     'timeout': string;
+    '_ui'?: any;
 }
 
 
 export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** MSRPC Program identifier. */
     'program-uuid': string = null;
     /** Timeout for this program id. Should be a valid time duration. */
@@ -64,6 +67,9 @@ export class SecurityMsrpc extends BaseModel implements ISecurityMsrpc {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['program-uuid'] != null) {
             this['program-uuid'] = values['program-uuid'];
         } else if (fillDefaults && SecurityMsrpc.hasDefaultValue('program-uuid')) {

@@ -16,10 +16,13 @@ export interface INetworkBGPNeighbor {
     'multi-hop': number;
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
     'password'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Shutdown this neighbor session. */
     'shutdown': boolean = null;
     /** Neighbor IP Address. Should be a valid v4 or v6 IP address. */
@@ -100,6 +103,9 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['shutdown'] != null) {
             this['shutdown'] = values['shutdown'];
         } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('shutdown')) {

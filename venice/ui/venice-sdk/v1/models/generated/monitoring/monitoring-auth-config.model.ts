@@ -12,10 +12,13 @@ import { MonitoringAuthConfig_algo,  } from './enums';
 export interface IMonitoringAuthConfig {
     'algo': MonitoringAuthConfig_algo;
     'password'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'algo': MonitoringAuthConfig_algo = null;
     /** Password contains the authentication password. */
     'password': string = null;
@@ -64,6 +67,9 @@ export class MonitoringAuthConfig extends BaseModel implements IMonitoringAuthCo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['algo'] != null) {
             this['algo'] = values['algo'];
         } else if (fillDefaults && MonitoringAuthConfig.hasDefaultValue('algo')) {

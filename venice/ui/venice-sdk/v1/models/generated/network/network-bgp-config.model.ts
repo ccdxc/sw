@@ -13,10 +13,13 @@ export interface INetworkBGPConfig {
     'router-id': string;
     'as-number'?: number;
     'neighbors'?: Array<INetworkBGPNeighbor>;
+    '_ui'?: any;
 }
 
 
 export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Router ID for the BGP Instance. Should be a valid v4 or v6 IP address. */
     'router-id': string = null;
     /** Local ASN for the BGP Instance. */
@@ -74,6 +77,9 @@ export class NetworkBGPConfig extends BaseModel implements INetworkBGPConfig {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['router-id'] != null) {
             this['router-id'] = values['router-id'];
         } else if (fillDefaults && NetworkBGPConfig.hasDefaultValue('router-id')) {

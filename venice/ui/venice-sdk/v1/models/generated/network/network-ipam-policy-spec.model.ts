@@ -13,10 +13,13 @@ import { NetworkDHCPRelayPolicy, INetworkDHCPRelayPolicy } from './network-dhcp-
 export interface INetworkIPAMPolicySpec {
     'type': NetworkIPAMPolicySpec_type;
     'dhcp-relay'?: INetworkDHCPRelayPolicy;
+    '_ui'?: any;
 }
 
 
 export class NetworkIPAMPolicySpec extends BaseModel implements INetworkIPAMPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': NetworkIPAMPolicySpec_type = null;
     'dhcp-relay': NetworkDHCPRelayPolicy = null;
     public static propInfo: { [prop in keyof INetworkIPAMPolicySpec]: PropInfoItem } = {
@@ -64,6 +67,9 @@ export class NetworkIPAMPolicySpec extends BaseModel implements INetworkIPAMPoli
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkIPAMPolicySpec.hasDefaultValue('type')) {

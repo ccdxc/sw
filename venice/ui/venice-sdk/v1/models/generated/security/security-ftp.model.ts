@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISecurityFtp {
     'allow-mismatch-ip-address'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class SecurityFtp extends BaseModel implements ISecurityFtp {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Allow Mismatch IP Address in the payload compared to what is present in the IP header. */
     'allow-mismatch-ip-address': boolean = null;
     public static propInfo: { [prop in keyof ISecurityFtp]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class SecurityFtp extends BaseModel implements ISecurityFtp {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['allow-mismatch-ip-address'] != null) {
             this['allow-mismatch-ip-address'] = values['allow-mismatch-ip-address'];
         } else if (fillDefaults && SecurityFtp.hasDefaultValue('allow-mismatch-ip-address')) {

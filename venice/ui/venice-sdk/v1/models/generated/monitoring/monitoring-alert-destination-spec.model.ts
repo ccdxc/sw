@@ -17,10 +17,13 @@ export interface IMonitoringAlertDestinationSpec {
     'email-export'?: IMonitoringEmailExport;
     'snmp-export'?: IMonitoringSNMPExport;
     'syslog-export'?: IMonitoringSyslogExport;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertDestinationSpec extends BaseModel implements IMonitoringAlertDestinationSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Export alerts matched by the selector. */
     'selector': FieldsSelector = null;
     /** Email notification. */
@@ -85,6 +88,9 @@ export class MonitoringAlertDestinationSpec extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['selector'].setValues(values['selector'], fillDefaults);
         } else {

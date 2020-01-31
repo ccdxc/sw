@@ -12,10 +12,13 @@ import { MonitoringMirrorSessionStatus_schedule_state,  MonitoringMirrorSessionS
 export interface IMonitoringMirrorSessionStatus {
     'schedule-state': MonitoringMirrorSessionStatus_schedule_state;
     'started-at'?: Date;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitoringMirrorSessionStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'schedule-state': MonitoringMirrorSessionStatus_schedule_state = null;
     'started-at': Date = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorSessionStatus]: PropInfoItem } = {
@@ -62,6 +65,9 @@ export class MonitoringMirrorSessionStatus extends BaseModel implements IMonitor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['schedule-state'] != null) {
             this['schedule-state'] = values['schedule-state'];
         } else if (fillDefaults && MonitoringMirrorSessionStatus.hasDefaultValue('schedule-state')) {

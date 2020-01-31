@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IStagingBufferList,StagingBufferList,IApiStatus,ApiStatus,IStagingBuffer,StagingBuffer,IStagingClearAction,StagingClearAction,IStagingCommitAction,StagingCommitAction } from '../../models/generated/staging';
 
@@ -47,6 +47,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body), null, trimDefaults)
     }
@@ -98,6 +99,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body), null, trimDefaults)
     }
@@ -117,6 +119,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body), null, trimDefaults)
     }
@@ -152,6 +155,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingBuffer(body), null, trimDefaults)
     }
@@ -206,6 +210,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingClearAction(body), null, trimDefaults)
     }
@@ -226,6 +231,7 @@ export class Stagingv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new StagingCommitAction(body), null, trimDefaults)
     }

@@ -31,10 +31,13 @@ export interface IAuditAuditEvent {
     'gateway-ip'?: string;
     'service-name'?: string;
     'data'?: object;
+    '_ui'?: any;
 }
 
 
 export class AuditAuditEvent extends BaseModel implements IAuditAuditEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     /** ObjectMeta.Name will be the UUID for an audit log object. */
@@ -169,6 +172,9 @@ export class AuditAuditEvent extends BaseModel implements IAuditAuditEvent {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuditAuditEvent.hasDefaultValue('kind')) {

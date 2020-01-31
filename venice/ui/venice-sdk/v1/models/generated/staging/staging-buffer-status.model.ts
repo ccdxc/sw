@@ -15,10 +15,13 @@ export interface IStagingBufferStatus {
     'validation-result': StagingBufferStatus_validation_result;
     'errors'?: Array<IStagingValidationError>;
     'items'?: Array<IStagingItem>;
+    '_ui'?: any;
 }
 
 
 export class StagingBufferStatus extends BaseModel implements IStagingBufferStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'validation-result': StagingBufferStatus_validation_result = null;
     'errors': Array<StagingValidationError> = null;
     'items': Array<StagingItem> = null;
@@ -72,6 +75,9 @@ export class StagingBufferStatus extends BaseModel implements IStagingBufferStat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['validation-result'] != null) {
             this['validation-result'] = values['validation-result'];
         } else if (fillDefaults && StagingBufferStatus.hasDefaultValue('validation-result')) {

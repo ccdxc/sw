@@ -11,10 +11,13 @@ import { AuthLdapDomain, IAuthLdapDomain } from './auth-ldap-domain.model';
 
 export interface IAuthLdap {
     'domains'?: Array<IAuthLdapDomain>;
+    '_ui'?: any;
 }
 
 
 export class AuthLdap extends BaseModel implements IAuthLdap {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'domains': Array<AuthLdapDomain> = null;
     public static propInfo: { [prop in keyof IAuthLdap]: PropInfoItem } = {
         'domains': {
@@ -55,6 +58,9 @@ export class AuthLdap extends BaseModel implements IAuthLdap {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthLdapDomain>(this, 'domains', values['domains'], AuthLdapDomain);
         } else {

@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISecuritySGRuleStatus {
     'rule-hash'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecuritySGRuleStatus extends BaseModel implements ISecuritySGRuleStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'rule-hash': string = null;
     public static propInfo: { [prop in keyof ISecuritySGRuleStatus]: PropInfoItem } = {
         'rule-hash': {
@@ -53,6 +56,9 @@ export class SecuritySGRuleStatus extends BaseModel implements ISecuritySGRuleSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['rule-hash'] != null) {
             this['rule-hash'] = values['rule-hash'];
         } else if (fillDefaults && SecuritySGRuleStatus.hasDefaultValue('rule-hash')) {

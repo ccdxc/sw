@@ -11,10 +11,13 @@ import { SecurityAutoMsgFirewallProfileWatchHelperWatchEvent, ISecurityAutoMsgFi
 
 export interface ISecurityAutoMsgFirewallProfileWatchHelper {
     'events'?: Array<ISecurityAutoMsgFirewallProfileWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel implements ISecurityAutoMsgFirewallProfileWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgFirewallProfileWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class SecurityAutoMsgFirewallProfileWatchHelper extends BaseModel impleme
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityAutoMsgFirewallProfileWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgFirewallProfileWatchHelperWatchEvent);
         } else {

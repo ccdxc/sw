@@ -11,10 +11,13 @@ import { ClusterStorageDeviceInfo, IClusterStorageDeviceInfo } from './cluster-s
 
 export interface IClusterStorageInfo {
     'devices'?: Array<IClusterStorageDeviceInfo>;
+    '_ui'?: any;
 }
 
 
 export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of storage devices. */
     'devices': Array<ClusterStorageDeviceInfo> = null;
     public static propInfo: { [prop in keyof IClusterStorageInfo]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class ClusterStorageInfo extends BaseModel implements IClusterStorageInfo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterStorageDeviceInfo>(this, 'devices', values['devices'], ClusterStorageDeviceInfo);
         } else {

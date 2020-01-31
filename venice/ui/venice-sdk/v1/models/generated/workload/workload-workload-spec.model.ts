@@ -12,10 +12,13 @@ import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-
 export interface IWorkloadWorkloadSpec {
     'host-name': string;
     'interfaces'?: Array<IWorkloadWorkloadIntfSpec>;
+    '_ui'?: any;
 }
 
 
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname. */
     'host-name': string = null;
     /** Spec of all interfaces in the Workload identified by Primary MAC. */
@@ -66,6 +69,9 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['host-name'] != null) {
             this['host-name'] = values['host-name'];
         } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('host-name')) {

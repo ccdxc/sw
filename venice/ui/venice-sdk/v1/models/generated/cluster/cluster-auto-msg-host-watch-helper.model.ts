@@ -11,10 +11,13 @@ import { ClusterAutoMsgHostWatchHelperWatchEvent, IClusterAutoMsgHostWatchHelper
 
 export interface IClusterAutoMsgHostWatchHelper {
     'events'?: Array<IClusterAutoMsgHostWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgHostWatchHelper extends BaseModel implements IClusterAutoMsgHostWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<ClusterAutoMsgHostWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgHostWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class ClusterAutoMsgHostWatchHelper extends BaseModel implements ICluster
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterAutoMsgHostWatchHelperWatchEvent>(this, 'events', values['events'], ClusterAutoMsgHostWatchHelperWatchEvent);
         } else {

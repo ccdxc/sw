@@ -18,10 +18,13 @@ export interface IMonitoringSNMPTrapServer {
     'community-or-user'?: string;
     'auth-config'?: IMonitoringAuthConfig;
     'privacy-config'?: IMonitoringPrivacyConfig;
+    '_ui'?: any;
 }
 
 
 export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSNMPTrapServer {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Host where the trap needs to be sent. */
     'host': string = null;
     /** Port on the Host where the trap needs to be sent, default is 162. */
@@ -101,6 +104,9 @@ export class MonitoringSNMPTrapServer extends BaseModel implements IMonitoringSN
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['host'] != null) {
             this['host'] = values['host'];
         } else if (fillDefaults && MonitoringSNMPTrapServer.hasDefaultValue('host')) {

@@ -25,10 +25,13 @@ export interface ITelemetry_queryFwlog {
     'policy-name'?: string;
     'reporter-id'?: string;
     'time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryFwlog {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant. */
     'tenant': string = null;
     /** Source IP,. */
@@ -165,6 +168,9 @@ export class Telemetry_queryFwlog extends BaseModel implements ITelemetry_queryF
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && Telemetry_queryFwlog.hasDefaultValue('tenant')) {

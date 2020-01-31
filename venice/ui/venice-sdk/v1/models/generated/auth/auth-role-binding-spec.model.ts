@@ -12,10 +12,13 @@ export interface IAuthRoleBindingSpec {
     'users'?: Array<string>;
     'user-groups'?: Array<string>;
     'role'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'users': Array<string> = null;
     'user-groups': Array<string> = null;
     'role': string = null;
@@ -67,6 +70,9 @@ export class AuthRoleBindingSpec extends BaseModel implements IAuthRoleBindingSp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['users'] != null) {
             this['users'] = values['users'];
         } else if (fillDefaults && AuthRoleBindingSpec.hasDefaultValue('users')) {

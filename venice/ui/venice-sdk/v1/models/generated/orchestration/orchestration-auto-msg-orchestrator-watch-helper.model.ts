@@ -11,10 +11,13 @@ import { OrchestrationAutoMsgOrchestratorWatchHelperWatchEvent, IOrchestrationAu
 
 export interface IOrchestrationAutoMsgOrchestratorWatchHelper {
     'events'?: Array<IOrchestrationAutoMsgOrchestratorWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class OrchestrationAutoMsgOrchestratorWatchHelper extends BaseModel implements IOrchestrationAutoMsgOrchestratorWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<OrchestrationAutoMsgOrchestratorWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IOrchestrationAutoMsgOrchestratorWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class OrchestrationAutoMsgOrchestratorWatchHelper extends BaseModel imple
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<OrchestrationAutoMsgOrchestratorWatchHelperWatchEvent>(this, 'events', values['events'], OrchestrationAutoMsgOrchestratorWatchHelperWatchEvent);
         } else {

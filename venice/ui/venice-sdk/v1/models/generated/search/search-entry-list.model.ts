@@ -11,10 +11,13 @@ import { SearchEntry, ISearchEntry } from './search-entry.model';
 
 export interface ISearchEntryList {
     'entries'?: Array<ISearchEntry>;
+    '_ui'?: any;
 }
 
 
 export class SearchEntryList extends BaseModel implements ISearchEntryList {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'entries': Array<SearchEntry> = null;
     public static propInfo: { [prop in keyof ISearchEntryList]: PropInfoItem } = {
         'entries': {
@@ -55,6 +58,9 @@ export class SearchEntryList extends BaseModel implements ISearchEntryList {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SearchEntry>(this, 'entries', values['entries'], SearchEntry);
         } else {

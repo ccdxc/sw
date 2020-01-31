@@ -13,10 +13,13 @@ import { MonitoringMirrorExportConfig, IMonitoringMirrorExportConfig } from './m
 export interface IMonitoringMirrorCollector {
     'type': MonitoringMirrorCollector_type;
     'export-config'?: IMonitoringMirrorExportConfig;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorCollector extends BaseModel implements IMonitoringMirrorCollector {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type of Collector. */
     'type': MonitoringMirrorCollector_type = null;
     /** When collector type is Venice, collector export information is not required. */
@@ -68,6 +71,9 @@ export class MonitoringMirrorCollector extends BaseModel implements IMonitoringM
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringMirrorCollector.hasDefaultValue('type')) {

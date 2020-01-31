@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IEventsEventSource {
     'component'?: string;
     'node-name'?: string;
+    '_ui'?: any;
 }
 
 
 export class EventsEventSource extends BaseModel implements IEventsEventSource {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Component from which the event is generated. */
     'component': string = null;
     /** Name of the venice or workload node which is generating the event. */
@@ -63,6 +66,9 @@ export class EventsEventSource extends BaseModel implements IEventsEventSource {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['component'] != null) {
             this['component'] = values['component'];
         } else if (fillDefaults && EventsEventSource.hasDefaultValue('component')) {

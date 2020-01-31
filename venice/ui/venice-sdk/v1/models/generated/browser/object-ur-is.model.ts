@@ -13,10 +13,13 @@ import { ApiObjectRef, IApiObjectRef } from './api-object-ref.model';
 export interface IObjectURIs {
     'ref-type': ObjectURIs_ref_type;
     'uri'?: Array<IApiObjectRef>;
+    '_ui'?: any;
 }
 
 
 export class ObjectURIs extends BaseModel implements IObjectURIs {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'ref-type': ObjectURIs_ref_type = null;
     'uri': Array<ApiObjectRef> = null;
     public static propInfo: { [prop in keyof IObjectURIs]: PropInfoItem } = {
@@ -64,6 +67,9 @@ export class ObjectURIs extends BaseModel implements IObjectURIs {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['ref-type'] != null) {
             this['ref-type'] = values['ref-type'];
         } else if (fillDefaults && ObjectURIs.hasDefaultValue('ref-type')) {

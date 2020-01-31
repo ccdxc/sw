@@ -15,10 +15,13 @@ export interface IMonitoringSyslogExport {
     'format': MonitoringSyslogExport_format;
     'targets'?: Array<IMonitoringExportConfig>;
     'config'?: IMonitoringSyslogExportConfig;
+    '_ui'?: any;
 }
 
 
 export class MonitoringSyslogExport extends BaseModel implements IMonitoringSyslogExport {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Event export format, SYSLOG_BSD default. */
     'format': MonitoringSyslogExport_format = null;
     /** Export target ip/port/protocol. */
@@ -78,6 +81,9 @@ export class MonitoringSyslogExport extends BaseModel implements IMonitoringSysl
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringSyslogExport.hasDefaultValue('format')) {

@@ -11,10 +11,13 @@ import { ClusterSnapshotDestination, IClusterSnapshotDestination } from './clust
 
 export interface IClusterConfigurationSnapshotSpec {
     'destination'?: IClusterSnapshotDestination;
+    '_ui'?: any;
 }
 
 
 export class ClusterConfigurationSnapshotSpec extends BaseModel implements IClusterConfigurationSnapshotSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'destination': ClusterSnapshotDestination = null;
     public static propInfo: { [prop in keyof IClusterConfigurationSnapshotSpec]: PropInfoItem } = {
         'destination': {
@@ -55,6 +58,9 @@ export class ClusterConfigurationSnapshotSpec extends BaseModel implements IClus
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['destination'].setValues(values['destination'], fillDefaults);
         } else {

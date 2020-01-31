@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IAuditAuditEventRequest {
     'uuid'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuditAuditEventRequest extends BaseModel implements IAuditAuditEventRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'uuid': string = null;
     public static propInfo: { [prop in keyof IAuditAuditEventRequest]: PropInfoItem } = {
         'uuid': {
@@ -53,6 +56,9 @@ export class AuditAuditEventRequest extends BaseModel implements IAuditAuditEven
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && AuditAuditEventRequest.hasDefaultValue('uuid')) {

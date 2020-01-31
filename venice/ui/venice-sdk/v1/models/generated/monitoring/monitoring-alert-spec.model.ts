@@ -11,10 +11,13 @@ import { MonitoringAlertSpec_state,  MonitoringAlertSpec_state_uihint  } from '.
 
 export interface IMonitoringAlertSpec {
     'state': MonitoringAlertSpec_state;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'state': MonitoringAlertSpec_state = null;
     public static propInfo: { [prop in keyof IMonitoringAlertSpec]: PropInfoItem } = {
         'state': {
@@ -56,6 +59,9 @@ export class MonitoringAlertSpec extends BaseModel implements IMonitoringAlertSp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
         } else if (fillDefaults && MonitoringAlertSpec.hasDefaultValue('state')) {

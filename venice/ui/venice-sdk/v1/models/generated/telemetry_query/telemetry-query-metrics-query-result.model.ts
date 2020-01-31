@@ -12,10 +12,13 @@ import { Telemetry_queryResultSeries, ITelemetry_queryResultSeries } from './tel
 export interface ITelemetry_queryMetricsQueryResult {
     'statement_id'?: number;
     'series'?: Array<ITelemetry_queryResultSeries>;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITelemetry_queryMetricsQueryResult {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'statement_id': number = null;
     'series': Array<Telemetry_queryResultSeries> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryMetricsQueryResult]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class Telemetry_queryMetricsQueryResult extends BaseModel implements ITel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['statement_id'] != null) {
             this['statement_id'] = values['statement_id'];
         } else if (fillDefaults && Telemetry_queryMetricsQueryResult.hasDefaultValue('statement_id')) {

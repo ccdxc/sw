@@ -12,10 +12,13 @@ import { ClusterMemInfo_type,  } from './enums';
 export interface IClusterMemInfo {
     'type': ClusterMemInfo_type;
     'size'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type. */
     'type': ClusterMemInfo_type = null;
     /** Memory size in bytes, eg: 274760318976. */
@@ -66,6 +69,9 @@ export class ClusterMemInfo extends BaseModel implements IClusterMemInfo {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterMemInfo.hasDefaultValue('type')) {

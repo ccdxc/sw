@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecurityIPsecProtocolSpec {
     'encryption-transform'?: string;
     'integrity-transform'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPsecProtocolSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** ESP encryption algorithm. Default is "aes-256-gcm-128" (See RFC4106). */
     'encryption-transform': string = null;
     /** ESP integrity algorithm. Default is "NULL" (must be "NULL" if AES-GCM is used for encryption). */
@@ -63,6 +66,9 @@ export class SecurityIPsecProtocolSpec extends BaseModel implements ISecurityIPs
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['encryption-transform'] != null) {
             this['encryption-transform'] = values['encryption-transform'];
         } else if (fillDefaults && SecurityIPsecProtocolSpec.hasDefaultValue('encryption-transform')) {

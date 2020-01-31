@@ -12,10 +12,13 @@ import { NetworkTransceiverStatus, INetworkTransceiverStatus } from './network-t
 export interface INetworkNetworkInterfaceUplinkStatus {
     'link-speed'?: string;
     'transceiver-status'?: INetworkTransceiverStatus;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkInterfaceUplinkStatus extends BaseModel implements INetworkNetworkInterfaceUplinkStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** LinkSpeed auto-negotiated. */
     'link-speed': string = null;
     'transceiver-status': NetworkTransceiverStatus = null;
@@ -63,6 +66,9 @@ export class NetworkNetworkInterfaceUplinkStatus extends BaseModel implements IN
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['link-speed'] != null) {
             this['link-speed'] = values['link-speed'];
         } else if (fillDefaults && NetworkNetworkInterfaceUplinkStatus.hasDefaultValue('link-speed')) {

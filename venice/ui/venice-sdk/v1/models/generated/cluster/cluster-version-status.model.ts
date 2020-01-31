@@ -13,10 +13,13 @@ export interface IClusterVersionStatus {
     'vcs-commit'?: string;
     'build-date'?: string;
     'rollout-build-version'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterVersionStatus extends BaseModel implements IClusterVersionStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Human friendly build version. */
     'build-version': string = null;
     /** Representation of ommit in version control system - e.g: hash in git. */
@@ -79,6 +82,9 @@ export class ClusterVersionStatus extends BaseModel implements IClusterVersionSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['build-version'] != null) {
             this['build-version'] = values['build-version'];
         } else if (fillDefaults && ClusterVersionStatus.hasDefaultValue('build-version')) {

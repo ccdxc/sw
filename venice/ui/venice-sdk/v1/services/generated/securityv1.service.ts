@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { ISecurityAppList,SecurityAppList,IApiStatus,ApiStatus,ISecurityApp,SecurityApp,ISecurityFirewallProfileList,SecurityFirewallProfileList,ISecurityFirewallProfile,SecurityFirewallProfile,ISecurityNetworkSecurityPolicyList,SecurityNetworkSecurityPolicyList,ISecurityNetworkSecurityPolicy,SecurityNetworkSecurityPolicy,ISecuritySecurityGroupList,SecuritySecurityGroupList,ISecuritySecurityGroup,SecuritySecurityGroup,ISecurityAutoMsgAppWatchHelper,SecurityAutoMsgAppWatchHelper,ISecurityAutoMsgFirewallProfileWatchHelper,SecurityAutoMsgFirewallProfileWatchHelper,ISecurityAutoMsgNetworkSecurityPolicyWatchHelper,SecurityAutoMsgNetworkSecurityPolicyWatchHelper,ISecurityAutoMsgSecurityGroupWatchHelper,SecurityAutoMsgSecurityGroupWatchHelper } from '../../models/generated/security';
 
@@ -47,6 +47,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), null, trimDefaults)
     }
@@ -98,6 +99,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal, trimDefaults)
     }
@@ -148,6 +150,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
@@ -181,6 +184,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), null, trimDefaults)
     }
@@ -232,6 +236,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal, trimDefaults)
     }
@@ -265,6 +270,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), null, trimDefaults)
     }
@@ -316,6 +322,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }
@@ -351,6 +358,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), null, trimDefaults)
     }
@@ -405,6 +413,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityApp(body), previousVal, trimDefaults)
     }
@@ -458,6 +467,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityFirewallProfile(body), previousVal, trimDefaults)
     }
@@ -493,6 +503,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), null, trimDefaults)
     }
@@ -547,6 +558,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecurityNetworkSecurityPolicy(body), previousVal, trimDefaults)
     }
@@ -582,6 +594,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), null, trimDefaults)
     }
@@ -636,6 +649,7 @@ export class Securityv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SecuritySecurityGroup(body), previousVal, trimDefaults)
     }

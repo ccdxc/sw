@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IApiAny {
     'type_url'?: string;
     'value'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiAny extends BaseModel implements IApiAny {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type_url': string = null;
     'value': string = null;
     public static propInfo: { [prop in keyof IApiAny]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class ApiAny extends BaseModel implements IApiAny {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type_url'] != null) {
             this['type_url'] = values['type_url'];
         } else if (fillDefaults && ApiAny.hasDefaultValue('type_url')) {

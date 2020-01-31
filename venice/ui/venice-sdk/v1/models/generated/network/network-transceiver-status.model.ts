@@ -15,10 +15,13 @@ export interface INetworkTransceiverStatus {
     'state': NetworkTransceiverStatus_state;
     'cable-type': NetworkTransceiverStatus_cable_type;
     'pid': NetworkTransceiverStatus_pid;
+    '_ui'?: any;
 }
 
 
 export class NetworkTransceiverStatus extends BaseModel implements INetworkTransceiverStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'state': NetworkTransceiverStatus_state = null;
     'cable-type': NetworkTransceiverStatus_cable_type = null;
     'pid': NetworkTransceiverStatus_pid = null;
@@ -74,6 +77,9 @@ export class NetworkTransceiverStatus extends BaseModel implements INetworkTrans
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
         } else if (fillDefaults && NetworkTransceiverStatus.hasDefaultValue('state')) {

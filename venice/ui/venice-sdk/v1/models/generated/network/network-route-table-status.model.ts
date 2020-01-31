@@ -11,10 +11,13 @@ import { NetworkRoute, INetworkRoute } from './network-route.model';
 
 export interface INetworkRouteTableStatus {
     'routes'?: Array<INetworkRoute>;
+    '_ui'?: any;
 }
 
 
 export class NetworkRouteTableStatus extends BaseModel implements INetworkRouteTableStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'routes': Array<NetworkRoute> = null;
     public static propInfo: { [prop in keyof INetworkRouteTableStatus]: PropInfoItem } = {
         'routes': {
@@ -55,6 +58,9 @@ export class NetworkRouteTableStatus extends BaseModel implements INetworkRouteT
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<NetworkRoute>(this, 'routes', values['routes'], NetworkRoute);
         } else {

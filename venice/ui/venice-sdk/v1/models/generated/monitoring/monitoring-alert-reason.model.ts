@@ -12,10 +12,13 @@ import { MonitoringMatchedRequirement, IMonitoringMatchedRequirement } from './m
 export interface IMonitoringAlertReason {
     'matched-requirements'?: Array<IMonitoringMatchedRequirement>;
     'alert-policy-id'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertReason extends BaseModel implements IMonitoringAlertReason {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of requirements from the alert policy with it's matched value. */
     'matched-requirements': Array<MonitoringMatchedRequirement> = null;
     /** Alert Policy ID that matched. */
@@ -65,6 +68,9 @@ export class MonitoringAlertReason extends BaseModel implements IMonitoringAlert
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<MonitoringMatchedRequirement>(this, 'matched-requirements', values['matched-requirements'], MonitoringMatchedRequirement);
         } else {

@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IApiTimestamp {
     'seconds'?: string;
     'nanos'?: number;
+    '_ui'?: any;
 }
 
 
 export class ApiTimestamp extends BaseModel implements IApiTimestamp {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'seconds': string = null;
     'nanos': number = null;
     public static propInfo: { [prop in keyof IApiTimestamp]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class ApiTimestamp extends BaseModel implements IApiTimestamp {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['seconds'] != null) {
             this['seconds'] = values['seconds'];
         } else if (fillDefaults && ApiTimestamp.hasDefaultValue('seconds')) {

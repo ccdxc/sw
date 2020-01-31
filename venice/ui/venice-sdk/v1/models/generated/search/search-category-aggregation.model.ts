@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISearchCategoryAggregation {
     'categories'?: object;
+    '_ui'?: any;
 }
 
 
 export class SearchCategoryAggregation extends BaseModel implements ISearchCategoryAggregation {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'categories': object = null;
     public static propInfo: { [prop in keyof ISearchCategoryAggregation]: PropInfoItem } = {
         'categories': {
@@ -53,6 +56,9 @@ export class SearchCategoryAggregation extends BaseModel implements ISearchCateg
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['categories'] != null) {
             this['categories'] = values['categories'];
         } else if (fillDefaults && SearchCategoryAggregation.hasDefaultValue('categories')) {

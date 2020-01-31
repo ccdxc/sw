@@ -17,10 +17,13 @@ export interface ISearchSearchQuery {
     'kinds'?: Array<string>;
     'fields'?: IFieldsSelector;
     'labels'?: ILabelsSelector;
+    '_ui'?: any;
 }
 
 
 export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** OR of Text-requirements to be matched, Exclude is not supported for Text search. */
     'texts': Array<SearchTextRequirement> = null;
     /** OR of Categories to be matched, AND and Exclude are not supported for this type The max category string length is 64 bytes. Length of string should be between 0 and 64. */
@@ -96,6 +99,9 @@ export class SearchSearchQuery extends BaseModel implements ISearchSearchQuery {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SearchTextRequirement>(this, 'texts', values['texts'], SearchTextRequirement);
         } else {

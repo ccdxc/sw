@@ -13,10 +13,13 @@ export interface IMonitoringExportConfig {
     'destination': string;
     'transport'?: string;
     'credentials'?: IMonitoringExternalCred;
+    '_ui'?: any;
 }
 
 
 export class MonitoringExportConfig extends BaseModel implements IMonitoringExportConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048. */
     'destination': string = null;
     /** Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type. */
@@ -74,6 +77,9 @@ export class MonitoringExportConfig extends BaseModel implements IMonitoringExpo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
         } else if (fillDefaults && MonitoringExportConfig.hasDefaultValue('destination')) {

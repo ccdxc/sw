@@ -9,10 +9,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface INetworkRoutingConfigStatus {
+    '_ui'?: any;
 }
 
 
 export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRoutingConfigStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     public static propInfo: { [prop in keyof INetworkRoutingConfigStatus]: PropInfoItem } = {
     }
 
@@ -47,6 +50,9 @@ export class NetworkRoutingConfigStatus extends BaseModel implements INetworkRou
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 

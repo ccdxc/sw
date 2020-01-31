@@ -25,10 +25,13 @@ export interface IWorkloadEndpointStatus {
     'micro-segment-vlan'?: number;
     'workload-attributes'?: object;
     'migration'?: IWorkloadEndpointMigrationStatus;
+    '_ui'?: any;
 }
 
 
 export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpointStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** VM or container name. */
     'workload-name': string = null;
     /** Network this endpoint belogs to. */
@@ -171,6 +174,9 @@ export class WorkloadEndpointStatus extends BaseModel implements IWorkloadEndpoi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['workload-name'] != null) {
             this['workload-name'] = values['workload-name'];
         } else if (fillDefaults && WorkloadEndpointStatus.hasDefaultValue('workload-name')) {

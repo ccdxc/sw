@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IGoogleprotobufAny {
     'type_url'?: string;
     'value'?: string;
+    '_ui'?: any;
 }
 
 
 export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** A URL/resource name whose content describes the type of the serialized protocol buffer message. For URLs which use the scheme `http`, `https`, or no scheme, the following restrictions and interpretations apply: * If no scheme is provided, `https` is assumed. * The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading "." is not accepted). * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.) Schemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics. */
     'type_url': string = null;
     /** Must be a valid serialized protocol buffer of the above specified type. */
@@ -63,6 +66,9 @@ export class GoogleprotobufAny extends BaseModel implements IGoogleprotobufAny {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type_url'] != null) {
             this['type_url'] = values['type_url'];
         } else if (fillDefaults && GoogleprotobufAny.hasDefaultValue('type_url')) {

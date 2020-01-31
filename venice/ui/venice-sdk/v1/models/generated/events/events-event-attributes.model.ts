@@ -20,10 +20,13 @@ export interface IEventsEventAttributes {
     'object-ref'?: IApiObjectRef;
     'source'?: IEventsEventSource;
     'count'?: number;
+    '_ui'?: any;
 }
 
 
 export class EventsEventAttributes extends BaseModel implements IEventsEventAttributes {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Severity represents the criticality level of an event. */
     'severity': EventsEventAttributes_severity = null;
     /** Type represents the type of an event. e.g. NICAdmittedEvent, NodeJoined. */
@@ -113,6 +116,9 @@ export class EventsEventAttributes extends BaseModel implements IEventsEventAttr
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['severity'] != null) {
             this['severity'] = values['severity'];
         } else if (fillDefaults && EventsEventAttributes.hasDefaultValue('severity')) {

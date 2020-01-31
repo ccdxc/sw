@@ -11,10 +11,13 @@ import { ClusterSnapshotDestination_Type,  } from './enums';
 
 export interface IClusterSnapshotDestination {
     'Type'?: ClusterSnapshotDestination_Type;
+    '_ui'?: any;
 }
 
 
 export class ClusterSnapshotDestination extends BaseModel implements IClusterSnapshotDestination {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Type': ClusterSnapshotDestination_Type = null;
     public static propInfo: { [prop in keyof IClusterSnapshotDestination]: PropInfoItem } = {
         'Type': {
@@ -56,6 +59,9 @@ export class ClusterSnapshotDestination extends BaseModel implements IClusterSna
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Type'] != null) {
             this['Type'] = values['Type'];
         } else if (fillDefaults && ClusterSnapshotDestination.hasDefaultValue('Type')) {

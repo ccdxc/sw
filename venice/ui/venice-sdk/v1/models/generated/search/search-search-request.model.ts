@@ -21,10 +21,13 @@ export interface ISearchSearchRequest {
     'query'?: ISearchSearchQuery;
     'tenants'?: Array<string>;
     'aggregate'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class SearchSearchRequest extends BaseModel implements ISearchSearchRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Simple query string This can be specified as URI parameter. For advanced query cases, Users should use specify SearchQuery and pass the SearchRequest in a GET/POST Body The max query-string length is 256 bytes. Length of string should be between 0 and 256. */
     'query-string': string = null;
     /** From represents the start offset (zero based), used in paginated search requests The results returned would be in the range [From ... From+MaxResults-1] This can be specified as URI parameter. Default value is 0 and valid range is 0..1023. Value should be between 0 and 1023. */
@@ -130,6 +133,9 @@ export class SearchSearchRequest extends BaseModel implements ISearchSearchReque
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['query-string'] != null) {
             this['query-string'] = values['query-string'];
         } else if (fillDefaults && SearchSearchRequest.hasDefaultValue('query-string')) {

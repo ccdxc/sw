@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IWorkloadEndpointList,WorkloadEndpointList,IApiStatus,ApiStatus,IWorkloadEndpoint,WorkloadEndpoint,IWorkloadWorkloadList,WorkloadWorkloadList,IWorkloadWorkload,WorkloadWorkload,IWorkloadAutoMsgEndpointWatchHelper,WorkloadAutoMsgEndpointWatchHelper,IWorkloadAutoMsgWorkloadWatchHelper,WorkloadAutoMsgWorkloadWatchHelper } from '../../models/generated/workload';
 
@@ -113,6 +113,7 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
     }
@@ -167,6 +168,7 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal, trimDefaults)
     }
@@ -262,6 +264,7 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), null, trimDefaults)
     }
@@ -313,6 +316,7 @@ export class Workloadv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new WorkloadWorkload(body), previousVal, trimDefaults)
     }

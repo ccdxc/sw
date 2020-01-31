@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IClusterDistributedServiceCardID {
     'id'?: string;
     'mac-address'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterDistributedServiceCardID extends BaseModel implements IClusterDistributedServiceCardID {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name contains the name of the DistributedServiceCard on a host. */
     'id': string = null;
     /** MACAddress contains the primary MAC address of a DistributedServiceCard. Should be a valid MAC address. */
@@ -64,6 +67,9 @@ export class ClusterDistributedServiceCardID extends BaseModel implements IClust
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['id'] != null) {
             this['id'] = values['id'];
         } else if (fillDefaults && ClusterDistributedServiceCardID.hasDefaultValue('id')) {

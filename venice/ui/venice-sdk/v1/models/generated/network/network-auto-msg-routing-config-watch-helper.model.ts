@@ -11,10 +11,13 @@ import { NetworkAutoMsgRoutingConfigWatchHelperWatchEvent, INetworkAutoMsgRoutin
 
 export interface INetworkAutoMsgRoutingConfigWatchHelper {
     'events'?: Array<INetworkAutoMsgRoutingConfigWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgRoutingConfigWatchHelper extends BaseModel implements INetworkAutoMsgRoutingConfigWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<NetworkAutoMsgRoutingConfigWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgRoutingConfigWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class NetworkAutoMsgRoutingConfigWatchHelper extends BaseModel implements
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<NetworkAutoMsgRoutingConfigWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgRoutingConfigWatchHelperWatchEvent);
         } else {

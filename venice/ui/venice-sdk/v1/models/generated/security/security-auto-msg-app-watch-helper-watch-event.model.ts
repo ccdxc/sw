@@ -12,10 +12,13 @@ import { SecurityApp, ISecurityApp } from './security-app.model';
 export interface ISecurityAutoMsgAppWatchHelperWatchEvent {
     'type'?: string;
     'object'?: ISecurityApp;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgAppWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgAppWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': SecurityApp = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgAppWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class SecurityAutoMsgAppWatchHelperWatchEvent extends BaseModel implement
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgAppWatchHelperWatchEvent.hasDefaultValue('type')) {

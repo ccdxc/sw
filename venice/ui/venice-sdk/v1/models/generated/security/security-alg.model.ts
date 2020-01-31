@@ -21,10 +21,13 @@ export interface ISecurityALG {
     'ftp'?: ISecurityFtp;
     'sunrpc'?: Array<ISecuritySunrpc>;
     'msrpc'?: Array<ISecurityMsrpc>;
+    '_ui'?: any;
 }
 
 
 export class SecurityALG extends BaseModel implements ISecurityALG {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': SecurityALG_type = null;
     'icmp': SecurityIcmp = null;
     'dns': SecurityDns = null;
@@ -96,6 +99,9 @@ export class SecurityALG extends BaseModel implements ISecurityALG {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityALG.hasDefaultValue('type')) {

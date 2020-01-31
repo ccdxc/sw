@@ -25,10 +25,13 @@ export interface IEventsEvent {
     'object-ref'?: IApiObjectRef;
     'source'?: IEventsEventSource;
     'count'?: number;
+    '_ui'?: any;
 }
 
 
 export class EventsEvent extends BaseModel implements IEventsEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     /** ObjectMeta.Name will be the UUID for an event object. TODO: Should there be a predefined list of labels or keep it free form ?. */
@@ -123,6 +126,9 @@ export class EventsEvent extends BaseModel implements IEventsEvent {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && EventsEvent.hasDefaultValue('kind')) {

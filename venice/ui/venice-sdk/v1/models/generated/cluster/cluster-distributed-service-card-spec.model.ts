@@ -20,10 +20,13 @@ export interface IClusterDistributedServiceCardSpec {
     'mgmt-vlan': number;
     'controllers'?: Array<string>;
     'routing-config'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterDistributedServiceCardSpec extends BaseModel implements IClusterDistributedServiceCardSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Admit allows a DistributedServiceCard to join the cluster. */
     'admit': boolean = null;
     /** ID is used as a user friendly identifier in logs/events. */
@@ -120,6 +123,9 @@ export class ClusterDistributedServiceCardSpec extends BaseModel implements IClu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['admit'] != null) {
             this['admit'] = values['admit'];
         } else if (fillDefaults && ClusterDistributedServiceCardSpec.hasDefaultValue('admit')) {

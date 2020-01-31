@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IEventsGetEventRequest {
     'uuid'?: string;
+    '_ui'?: any;
 }
 
 
 export class EventsGetEventRequest extends BaseModel implements IEventsGetEventRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'uuid': string = null;
     public static propInfo: { [prop in keyof IEventsGetEventRequest]: PropInfoItem } = {
         'uuid': {
@@ -53,6 +56,9 @@ export class EventsGetEventRequest extends BaseModel implements IEventsGetEventR
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['uuid'] != null) {
             this['uuid'] = values['uuid'];
         } else if (fillDefaults && EventsGetEventRequest.hasDefaultValue('uuid')) {

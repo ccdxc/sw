@@ -15,10 +15,13 @@ export interface IRolloutRolloutActionStatus {
     'start-time'?: Date;
     'end-time'?: Date;
     'prev-version'?: string;
+    '_ui'?: any;
 }
 
 
 export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRolloutActionStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'state': RolloutRolloutActionStatus_state = null;
     /** Heuristic value of percentage completion of the rollout. */
     'completion-percent': number = null;
@@ -88,6 +91,9 @@ export class RolloutRolloutActionStatus extends BaseModel implements IRolloutRol
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
         } else if (fillDefaults && RolloutRolloutActionStatus.hasDefaultValue('state')) {

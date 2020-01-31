@@ -12,10 +12,13 @@ import { NetworkRoutingConfig, INetworkRoutingConfig } from './network-routing-c
 export interface INetworkAutoMsgRoutingConfigWatchHelperWatchEvent {
     'type'?: string;
     'object'?: INetworkRoutingConfig;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgRoutingConfigWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgRoutingConfigWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': NetworkRoutingConfig = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgRoutingConfigWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class NetworkAutoMsgRoutingConfigWatchHelperWatchEvent extends BaseModel 
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgRoutingConfigWatchHelperWatchEvent.hasDefaultValue('type')) {

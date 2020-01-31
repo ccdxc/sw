@@ -16,10 +16,13 @@ export interface IAuthPermission {
     'resource-namespace'?: string;
     'resource-names'?: Array<string>;
     'actions': Array<AuthPermission_actions>;
+    '_ui'?: any;
 }
 
 
 export class AuthPermission extends BaseModel implements IAuthPermission {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** ResourceTenant is the tenant to which resource belongs. It will be automatically set to the tenant to which role object belongs. Exception are roles in "default" tenant. Role in "default" tenant can include permissions for resources in other tenants. Specifying "_All_" will match all tenants. */
     'resource-tenant': string = null;
     /** ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying "_All_" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum. */
@@ -101,6 +104,9 @@ export class AuthPermission extends BaseModel implements IAuthPermission {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['resource-tenant'] != null) {
             this['resource-tenant'] = values['resource-tenant'];
         } else if (fillDefaults && AuthPermission.hasDefaultValue('resource-tenant')) {

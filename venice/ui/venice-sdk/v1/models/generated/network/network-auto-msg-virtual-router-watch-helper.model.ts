@@ -11,10 +11,13 @@ import { NetworkAutoMsgVirtualRouterWatchHelperWatchEvent, INetworkAutoMsgVirtua
 
 export interface INetworkAutoMsgVirtualRouterWatchHelper {
     'events'?: Array<INetworkAutoMsgVirtualRouterWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgVirtualRouterWatchHelper extends BaseModel implements INetworkAutoMsgVirtualRouterWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<NetworkAutoMsgVirtualRouterWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgVirtualRouterWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class NetworkAutoMsgVirtualRouterWatchHelper extends BaseModel implements
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<NetworkAutoMsgVirtualRouterWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgVirtualRouterWatchHelperWatchEvent);
         } else {

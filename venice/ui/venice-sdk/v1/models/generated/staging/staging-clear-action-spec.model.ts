@@ -11,10 +11,13 @@ import { StagingItemId, IStagingItemId } from './staging-item-id.model';
 
 export interface IStagingClearActionSpec {
     'items'?: Array<IStagingItemId>;
+    '_ui'?: any;
 }
 
 
 export class StagingClearActionSpec extends BaseModel implements IStagingClearActionSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Empty Items indicates everyting in the buffer. */
     'items': Array<StagingItemId> = null;
     public static propInfo: { [prop in keyof IStagingClearActionSpec]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class StagingClearActionSpec extends BaseModel implements IStagingClearAc
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<StagingItemId>(this, 'items', values['items'], StagingItemId);
         } else {

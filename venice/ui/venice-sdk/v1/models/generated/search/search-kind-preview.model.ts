@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISearchKindPreview {
     'kinds'?: object;
+    '_ui'?: any;
 }
 
 
 export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kinds': object = null;
     public static propInfo: { [prop in keyof ISearchKindPreview]: PropInfoItem } = {
         'kinds': {
@@ -53,6 +56,9 @@ export class SearchKindPreview extends BaseModel implements ISearchKindPreview {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
         } else if (fillDefaults && SearchKindPreview.hasDefaultValue('kinds')) {

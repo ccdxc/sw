@@ -13,10 +13,13 @@ import { WorkloadWorkloadIntfStatus, IWorkloadWorkloadIntfStatus } from './workl
 export interface IWorkloadWorkloadStatus {
     'propagation-status'?: ISecurityPropagationStatus;
     'interfaces'?: Array<IWorkloadWorkloadIntfStatus>;
+    '_ui'?: any;
 }
 
 
 export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorkloadStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The status of the configuration propagation to the Naples. */
     'propagation-status': SecurityPropagationStatus = null;
     /** Status of all interfaces in the Workload identified by Primary MAC. */
@@ -67,6 +70,9 @@ export class WorkloadWorkloadStatus extends BaseModel implements IWorkloadWorklo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
         } else {

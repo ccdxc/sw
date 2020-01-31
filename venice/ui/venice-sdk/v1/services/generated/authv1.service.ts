@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IAuthAuthenticationPolicy,AuthAuthenticationPolicy,IApiStatus,ApiStatus,AuthTokenSecretRequest,IAuthTokenSecretRequest,IAuthRoleBindingList,AuthRoleBindingList,IAuthRoleBinding,AuthRoleBinding,IAuthRoleList,AuthRoleList,IAuthRole,AuthRole,IAuthUserPreference,AuthUserPreference,IAuthUserList,AuthUserList,IAuthUser,AuthUser,AuthSubjectAccessReviewRequest,IAuthSubjectAccessReviewRequest,AuthPasswordChangeRequest,IAuthPasswordChangeRequest,AuthPasswordResetRequest,IAuthPasswordResetRequest,IAuthAutoMsgAuthenticationPolicyWatchHelper,AuthAutoMsgAuthenticationPolicyWatchHelper,IAuthAutoMsgRoleBindingWatchHelper,AuthAutoMsgRoleBindingWatchHelper,IAuthAutoMsgRoleWatchHelper,AuthAutoMsgRoleWatchHelper,IAuthAutoMsgUserPreferenceWatchHelper,AuthAutoMsgUserPreferenceWatchHelper,IAuthAutoMsgUserWatchHelper,AuthAutoMsgUserWatchHelper } from '../../models/generated/auth';
 
@@ -47,6 +47,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
@@ -65,6 +66,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), previousVal, trimDefaults)
     }
@@ -83,6 +85,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
@@ -101,6 +104,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthAuthenticationPolicy(body), null, trimDefaults)
     }
@@ -119,6 +123,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthTokenSecretRequest(body), null, trimDefaults)
     }
@@ -152,6 +157,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), null, trimDefaults)
     }
@@ -203,6 +209,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal, trimDefaults)
     }
@@ -236,6 +243,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), null, trimDefaults)
     }
@@ -287,6 +295,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal, trimDefaults)
     }
@@ -322,6 +331,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), null, trimDefaults)
     }
@@ -376,6 +386,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRoleBinding(body), previousVal, trimDefaults)
     }
@@ -411,6 +422,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), null, trimDefaults)
     }
@@ -465,6 +477,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthRole(body), previousVal, trimDefaults)
     }
@@ -502,6 +515,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
@@ -537,6 +551,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), null, trimDefaults)
     }
@@ -591,6 +606,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal, trimDefaults)
     }
@@ -611,6 +627,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body), null, trimDefaults)
     }
@@ -631,6 +648,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body), null, trimDefaults)
     }
@@ -651,6 +669,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body), null, trimDefaults)
     }
@@ -686,6 +705,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUserPreference(body), previousVal, trimDefaults)
     }
@@ -719,6 +739,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), null, trimDefaults)
     }
@@ -770,6 +791,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthUser(body), previousVal, trimDefaults)
     }
@@ -789,6 +811,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthSubjectAccessReviewRequest(body), null, trimDefaults)
     }
@@ -808,6 +831,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordChangeRequest(body), null, trimDefaults)
     }
@@ -827,6 +851,7 @@ export class Authv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new AuthPasswordResetRequest(body), null, trimDefaults)
     }

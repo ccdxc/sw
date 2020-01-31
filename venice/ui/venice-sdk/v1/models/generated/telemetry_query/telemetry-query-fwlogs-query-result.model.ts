@@ -12,10 +12,13 @@ import { Telemetry_queryFwlog, ITelemetry_queryFwlog } from './telemetry-query-f
 export interface ITelemetry_queryFwlogsQueryResult {
     'statement_id'?: number;
     'logs'?: Array<ITelemetry_queryFwlog>;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITelemetry_queryFwlogsQueryResult {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'statement_id': number = null;
     'logs': Array<Telemetry_queryFwlog> = null;
     public static propInfo: { [prop in keyof ITelemetry_queryFwlogsQueryResult]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class Telemetry_queryFwlogsQueryResult extends BaseModel implements ITele
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['statement_id'] != null) {
             this['statement_id'] = values['statement_id'];
         } else if (fillDefaults && Telemetry_queryFwlogsQueryResult.hasDefaultValue('statement_id')) {

@@ -14,10 +14,13 @@ export interface INetworkTLSServerPolicySpec {
     'client-authentication': NetworkTLSServerPolicySpec_client_authentication;
     'tls-server-trust-roots'?: Array<string>;
     'tls-server-allowed-peer-id'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLSServerPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of names of certificates to present to clients. The certificates "usage" field must contain "server". If multiple certificates names are provided, system tries to choose the correct one using SNI, otherwise it picks the first one in the list. */
     'tls-server-certificates': Array<string> = null;
     /** Client authentication "None" means that server does not request and will not validate a client certificate. "Mandatory" means that server requests and validates client certificate. "Optional" means that server requests client certificate but proceeds even if client does not present it. Default is "Mandatory". */
@@ -85,6 +88,9 @@ export class NetworkTLSServerPolicySpec extends BaseModel implements INetworkTLS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tls-server-certificates'] != null) {
             this['tls-server-certificates'] = values['tls-server-certificates'];
         } else if (fillDefaults && NetworkTLSServerPolicySpec.hasDefaultValue('tls-server-certificates')) {

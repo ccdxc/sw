@@ -14,10 +14,13 @@ export interface ISecurityCertificateSpec {
     'usages': Array<SecurityCertificateSpec_usages>;
     'body'?: string;
     'trust-chain'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecurityCertificateSpec extends BaseModel implements ISecurityCertificateSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Description of the purpose of this certificate. */
     'description': string = null;
     /** Usage can be "client", "server" or "trust-root" in any combination. A "server" certificate is used by a server to authenticate itself to the client A "client" certificate is used by a client to authenticate itself to a server A "trust-root" certificate is self-signed and is only used to validate certificates presented by peers. "client" and "server" certificates are always accompanied by a private key, whereas "trust-root"-only certificates are not. */
@@ -83,6 +86,9 @@ export class SecurityCertificateSpec extends BaseModel implements ISecurityCerti
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['description'] != null) {
             this['description'] = values['description'];
         } else if (fillDefaults && SecurityCertificateSpec.hasDefaultValue('description')) {

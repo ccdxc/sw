@@ -27,10 +27,13 @@ export interface ITelemetry_queryFwlogsQuerySpec {
     'end-time'?: Date;
     'pagination'?: ITelemetry_queryPaginationSpec;
     'sort-order': Telemetry_queryFwlogsQuerySpec_sort_order;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITelemetry_queryFwlogsQuerySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** OR of sources IPs to be matched. Should be a valid v4 or v6 IP address. */
     'source-ips': Array<string> = null;
     /** OR of dest IPs to be matched. Should be a valid v4 or v6 IP address. */
@@ -182,6 +185,9 @@ export class Telemetry_queryFwlogsQuerySpec extends BaseModel implements ITeleme
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['source-ips'] != null) {
             this['source-ips'] = values['source-ips'];
         } else if (fillDefaults && Telemetry_queryFwlogsQuerySpec.hasDefaultValue('source-ips')) {

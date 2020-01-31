@@ -12,10 +12,13 @@ import { ClusterSnapshotRestore, IClusterSnapshotRestore } from './cluster-snaps
 export interface IClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IClusterSnapshotRestore;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': ClusterSnapshotRestore = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent extends BaseMode
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgSnapshotRestoreWatchHelperWatchEvent.hasDefaultValue('type')) {

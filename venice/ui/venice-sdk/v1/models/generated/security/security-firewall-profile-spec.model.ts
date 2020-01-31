@@ -20,10 +20,13 @@ export interface ISecurityFirewallProfileSpec {
     'tcp-timeout': string;
     'udp-timeout': string;
     'icmp-timeout': string;
+    '_ui'?: any;
 }
 
 
 export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityFirewallProfileSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Session idle timeout removes/deletes the session/flow if there is inactivity; this value is superceded by any value specified in App object. Should be a valid time duration. */
     'session-idle-timeout': string = null;
     /** TCP Connection Setup Timeout is the period TCP session is kept to see the response of a SYN. Should be a valid time duration. */
@@ -157,6 +160,9 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['session-idle-timeout'] != null) {
             this['session-idle-timeout'] = values['session-idle-timeout'];
         } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('session-idle-timeout')) {

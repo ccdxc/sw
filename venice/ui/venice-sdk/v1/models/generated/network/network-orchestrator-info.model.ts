@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface INetworkOrchestratorInfo {
     'orchestrator-name': string;
     'namespace': string;
+    '_ui'?: any;
 }
 
 
 export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrchestratorInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name of Orchestrator object to which this network should be applied to. Length of string should be at least 1. */
     'orchestrator-name': string = null;
     /** Namespace in the orchestrator in which this network should be created in. Length of string should be at least 1. */
@@ -63,6 +66,9 @@ export class NetworkOrchestratorInfo extends BaseModel implements INetworkOrches
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['orchestrator-name'] != null) {
             this['orchestrator-name'] = values['orchestrator-name'];
         } else if (fillDefaults && NetworkOrchestratorInfo.hasDefaultValue('orchestrator-name')) {

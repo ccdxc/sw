@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IClusterCluster,ClusterCluster,IApiStatus,ApiStatus,ClusterClusterAuthBootstrapRequest,IClusterClusterAuthBootstrapRequest,ClusterUpdateTLSConfigRequest,IClusterUpdateTLSConfigRequest,IClusterSnapshotRestore,ClusterSnapshotRestore,IClusterConfigurationSnapshot,ClusterConfigurationSnapshot,ClusterConfigurationSnapshotRequest,IClusterConfigurationSnapshotRequest,IClusterDistributedServiceCardList,ClusterDistributedServiceCardList,IClusterDistributedServiceCard,ClusterDistributedServiceCard,IClusterHostList,ClusterHostList,IClusterHost,ClusterHost,IClusterLicense,ClusterLicense,IClusterNodeList,ClusterNodeList,IClusterNode,ClusterNode,IClusterTenantList,ClusterTenantList,IClusterTenant,ClusterTenant,IClusterVersion,ClusterVersion,IClusterAutoMsgClusterWatchHelper,ClusterAutoMsgClusterWatchHelper,IClusterAutoMsgConfigurationSnapshotWatchHelper,ClusterAutoMsgConfigurationSnapshotWatchHelper,IClusterAutoMsgDistributedServiceCardWatchHelper,ClusterAutoMsgDistributedServiceCardWatchHelper,IClusterAutoMsgHostWatchHelper,ClusterAutoMsgHostWatchHelper,IClusterAutoMsgNodeWatchHelper,ClusterAutoMsgNodeWatchHelper,IClusterAutoMsgTenantWatchHelper,ClusterAutoMsgTenantWatchHelper,IClusterAutoMsgVersionWatchHelper,ClusterAutoMsgVersionWatchHelper } from '../../models/generated/cluster';
 
@@ -47,6 +47,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterCluster(body), previousVal, trimDefaults)
     }
@@ -65,6 +66,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterClusterAuthBootstrapRequest(body), null, trimDefaults)
     }
@@ -83,6 +85,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterUpdateTLSConfigRequest(body), null, trimDefaults)
     }
@@ -116,6 +119,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterSnapshotRestore(body), null, trimDefaults)
     }
@@ -164,6 +168,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshot(body), null, trimDefaults)
     }
@@ -182,6 +187,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshot(body), previousVal, trimDefaults)
     }
@@ -200,6 +206,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterConfigurationSnapshotRequest(body), null, trimDefaults)
     }
@@ -266,6 +273,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterDistributedServiceCard(body), previousVal, trimDefaults)
     }
@@ -299,6 +307,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterHost(body), null, trimDefaults)
     }
@@ -350,6 +359,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterHost(body), previousVal, trimDefaults)
     }
@@ -383,6 +393,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterLicense(body), null, trimDefaults)
     }
@@ -401,6 +412,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterLicense(body), previousVal, trimDefaults)
     }
@@ -434,6 +446,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterNode(body), null, trimDefaults)
     }
@@ -485,6 +498,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterNode(body), previousVal, trimDefaults)
     }
@@ -518,6 +532,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterTenant(body), null, trimDefaults)
     }
@@ -569,6 +584,7 @@ export class Clusterv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ClusterTenant(body), previousVal, trimDefaults)
     }

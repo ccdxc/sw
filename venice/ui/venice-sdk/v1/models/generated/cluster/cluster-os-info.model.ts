@@ -13,10 +13,13 @@ export interface IClusterOsInfo {
     'kernel-release'?: string;
     'kernel-version'?: string;
     'processor'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** OS Name Eg: GNU/Linux. */
     'type': string = null;
     /** Kernel release Eg: 3.10.0-514.10.2.el7.x86_64. */
@@ -79,6 +82,9 @@ export class ClusterOsInfo extends BaseModel implements IClusterOsInfo {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterOsInfo.hasDefaultValue('type')) {

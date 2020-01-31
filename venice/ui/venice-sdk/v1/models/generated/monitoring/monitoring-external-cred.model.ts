@@ -17,10 +17,13 @@ export interface IMonitoringExternalCred {
     'cert-data'?: string;
     'key-data'?: string;
     'ca-data'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringExternalCred extends BaseModel implements IMonitoringExternalCred {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** AuthType is the authentication type used in this config. */
     'auth-type': MonitoringExternalCred_auth_type = null;
     /** UserName is the login id to be used towards the external entity. */
@@ -106,6 +109,9 @@ export class MonitoringExternalCred extends BaseModel implements IMonitoringExte
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['auth-type'] != null) {
             this['auth-type'] = values['auth-type'];
         } else if (fillDefaults && MonitoringExternalCred.hasDefaultValue('auth-type')) {

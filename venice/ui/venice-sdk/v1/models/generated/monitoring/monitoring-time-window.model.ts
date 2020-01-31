@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IMonitoringTimeWindow {
     'start-time'?: Date;
     'stop-time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWindow {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Start/Stop Time - when start time is not specified, it implies start NOW. */
     'start-time': Date = null;
     /** Stop time - when not specified, default will be used. */
@@ -63,6 +66,9 @@ export class MonitoringTimeWindow extends BaseModel implements IMonitoringTimeWi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && MonitoringTimeWindow.hasDefaultValue('start-time')) {

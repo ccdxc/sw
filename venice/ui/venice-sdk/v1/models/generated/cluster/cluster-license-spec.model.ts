@@ -11,10 +11,13 @@ import { ClusterFeature, IClusterFeature } from './cluster-feature.model';
 
 export interface IClusterLicenseSpec {
     'features'?: Array<IClusterFeature>;
+    '_ui'?: any;
 }
 
 
 export class ClusterLicenseSpec extends BaseModel implements IClusterLicenseSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of Feature licences applied. */
     'features': Array<ClusterFeature> = null;
     public static propInfo: { [prop in keyof IClusterLicenseSpec]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class ClusterLicenseSpec extends BaseModel implements IClusterLicenseSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterFeature>(this, 'features', values['features'], ClusterFeature);
         } else {

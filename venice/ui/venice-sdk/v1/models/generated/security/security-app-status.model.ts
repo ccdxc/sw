@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISecurityAppStatus {
     'attached-policies'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of security group policies attached to the app. */
     'attached-policies': Array<string> = null;
     public static propInfo: { [prop in keyof ISecurityAppStatus]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class SecurityAppStatus extends BaseModel implements ISecurityAppStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['attached-policies'] != null) {
             this['attached-policies'] = values['attached-policies'];
         } else if (fillDefaults && SecurityAppStatus.hasDefaultValue('attached-policies')) {

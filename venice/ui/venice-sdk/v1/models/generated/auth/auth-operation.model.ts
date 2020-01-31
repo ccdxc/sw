@@ -13,10 +13,13 @@ import { AuthOperation_action,  AuthOperation_action_uihint  } from './enums';
 export interface IAuthOperation {
     'resource'?: IAuthResource;
     'action': AuthOperation_action;
+    '_ui'?: any;
 }
 
 
 export class AuthOperation extends BaseModel implements IAuthOperation {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'resource': AuthResource = null;
     'action': AuthOperation_action = null;
     public static propInfo: { [prop in keyof IAuthOperation]: PropInfoItem } = {
@@ -64,6 +67,9 @@ export class AuthOperation extends BaseModel implements IAuthOperation {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['resource'].setValues(values['resource'], fillDefaults);
         } else {

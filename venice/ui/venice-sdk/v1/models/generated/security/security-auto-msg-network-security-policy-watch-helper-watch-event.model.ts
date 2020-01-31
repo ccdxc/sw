@@ -12,10 +12,13 @@ import { SecurityNetworkSecurityPolicy, ISecurityNetworkSecurityPolicy } from '.
 export interface ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: ISecurityNetworkSecurityPolicy;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': SecurityNetworkSecurityPolicy = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent extends B
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

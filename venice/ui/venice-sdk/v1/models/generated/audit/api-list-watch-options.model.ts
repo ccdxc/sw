@@ -26,10 +26,13 @@ export interface IApiListWatchOptions {
     'from'?: number;
     'max-results'?: number;
     'sort-order': ApiListWatchOptions_sort_order;
+    '_ui'?: any;
 }
 
 
 export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptions {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64. */
     'name': string = null;
     /** Must be alpha-numerics. Length of string should be between 1 and 48. */
@@ -165,6 +168,9 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && ApiListWatchOptions.hasDefaultValue('name')) {

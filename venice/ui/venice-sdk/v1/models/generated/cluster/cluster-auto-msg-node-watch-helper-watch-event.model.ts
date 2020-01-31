@@ -12,10 +12,13 @@ import { ClusterNode, IClusterNode } from './cluster-node.model';
 export interface IClusterAutoMsgNodeWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IClusterNode;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgNodeWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgNodeWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': ClusterNode = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgNodeWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ClusterAutoMsgNodeWatchHelperWatchEvent extends BaseModel implement
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgNodeWatchHelperWatchEvent.hasDefaultValue('type')) {

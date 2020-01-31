@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IMonitoringMatchSelector {
     'ip-addresses'?: Array<string>;
     'mac-addresses'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMatchSelector extends BaseModel implements IMonitoringMatchSelector {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Each IPAddress can be single address(10.1.1.1)/range(10.1.1.10-20)/subnet(10.1.0.0/16). */
     'ip-addresses': Array<string> = null;
     /** List of MacAddresses - "aabb.ccdd.eeff", "0001.0203.0405". Should be a valid MAC address. */
@@ -66,6 +69,9 @@ export class MonitoringMatchSelector extends BaseModel implements IMonitoringMat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['ip-addresses'] != null) {
             this['ip-addresses'] = values['ip-addresses'];
         } else if (fillDefaults && MonitoringMatchSelector.hasDefaultValue('ip-addresses')) {

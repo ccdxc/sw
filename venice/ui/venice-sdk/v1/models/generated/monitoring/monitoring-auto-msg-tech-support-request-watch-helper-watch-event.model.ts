@@ -12,10 +12,13 @@ import { MonitoringTechSupportRequest, IMonitoringTechSupportRequest } from './m
 export interface IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IMonitoringTechSupportRequest;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': MonitoringTechSupportRequest = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent extends Ba
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent.hasDefaultValue('type')) {

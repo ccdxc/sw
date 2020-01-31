@@ -11,10 +11,13 @@ import { ApiWatchEvent, IApiWatchEvent } from './api-watch-event.model';
 
 export interface IApiWatchEventList {
     'events'?: Array<IApiWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<ApiWatchEvent> = null;
     public static propInfo: { [prop in keyof IApiWatchEventList]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class ApiWatchEventList extends BaseModel implements IApiWatchEventList {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ApiWatchEvent>(this, 'events', values['events'], ApiWatchEvent);
         } else {

@@ -21,6 +21,7 @@ import { AuthService } from '@app/services/auth.service';
 import { IMonitoringFwlogPolicy, MonitoringEventPolicySpec_format, MonitoringFwlogPolicySpec_filter, MonitoringFwlogPolicySpec_format, MonitoringSyslogExportConfig_facility_override, MonitoringFwlogPolicy } from '@sdk/v1/models/generated/monitoring';
 import { TestingUtility } from '@app/common/TestingUtility';
 import * as _ from 'lodash';
+import { TrimUIFields } from '@sdk/v1/utils/utility';
 
 
 describe('NewfwlogpolicyComponent', () => {
@@ -92,7 +93,7 @@ describe('NewfwlogpolicyComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[0];
-    const expVal = new MonitoringFwlogPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringFwlogPolicy(policy).getModelValues());
     expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + recVal + ' , expected: ' + expVal);
   });
 
@@ -128,7 +129,7 @@ describe('NewfwlogpolicyComponent', () => {
     tu.sendClick(tu.getElemByCss('.global-button-primary.newfwlogpolicy-save'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
-    const expVal = new MonitoringFwlogPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringFwlogPolicy(policy).getModelValues());
     expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 });

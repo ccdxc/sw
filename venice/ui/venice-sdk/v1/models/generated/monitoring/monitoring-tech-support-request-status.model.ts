@@ -15,10 +15,13 @@ export interface IMonitoringTechSupportRequestStatus {
     'ctrlr-node-results'?: object;
     'dsc-results'?: object;
     'reason'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTechSupportRequestStatus extends BaseModel implements IMonitoringTechSupportRequestStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'instance-id': string = null;
     'status': MonitoringTechSupportRequestStatus_status = null;
     'ctrlr-node-results': object = null;
@@ -80,6 +83,9 @@ export class MonitoringTechSupportRequestStatus extends BaseModel implements IMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['instance-id'] != null) {
             this['instance-id'] = values['instance-id'];
         } else if (fillDefaults && MonitoringTechSupportRequestStatus.hasDefaultValue('instance-id')) {

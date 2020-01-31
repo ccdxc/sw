@@ -12,10 +12,13 @@ import { NetworkRouteTable, INetworkRouteTable } from './network-route-table.mod
 export interface INetworkAutoMsgRouteTableWatchHelperWatchEvent {
     'type'?: string;
     'object'?: INetworkRouteTable;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgRouteTableWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgRouteTableWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': NetworkRouteTable = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgRouteTableWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class NetworkAutoMsgRouteTableWatchHelperWatchEvent extends BaseModel imp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgRouteTableWatchHelperWatchEvent.hasDefaultValue('type')) {

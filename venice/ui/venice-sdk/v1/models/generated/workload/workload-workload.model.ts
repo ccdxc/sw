@@ -17,10 +17,13 @@ export interface IWorkloadWorkload {
     'meta'?: IApiObjectMeta;
     'spec'?: IWorkloadWorkloadSpec;
     'status'?: IWorkloadWorkloadStatus;
+    '_ui'?: any;
 }
 
 
 export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -87,6 +90,9 @@ export class WorkloadWorkload extends BaseModel implements IWorkloadWorkload {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && WorkloadWorkload.hasDefaultValue('kind')) {

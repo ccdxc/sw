@@ -17,10 +17,13 @@ export interface INetworkServiceSpec {
     'lb-policy'?: string;
     'tls-server-policy'?: INetworkTLSServerPolicySpec;
     'tls-client-policy'?: INetworkTLSClientPolicySpec;
+    '_ui'?: any;
 }
 
 
 export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** FIXME: maps are not working. change this after its fixed map<string, string> WorkloadSelector  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "workload-labels,omitempty"]; workload selector for the service (list of labels to match). */
     'workload-labels': Array<string> = null;
     /** Virtual IP of the load balancer. */
@@ -100,6 +103,9 @@ export class NetworkServiceSpec extends BaseModel implements INetworkServiceSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['workload-labels'] != null) {
             this['workload-labels'] = values['workload-labels'];
         } else if (fillDefaults && NetworkServiceSpec.hasDefaultValue('workload-labels')) {

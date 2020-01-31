@@ -11,10 +11,13 @@ import { AuthPermission, IAuthPermission } from './auth-permission.model';
 
 export interface IAuthRoleSpec {
     'permissions'?: Array<IAuthPermission>;
+    '_ui'?: any;
 }
 
 
 export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Permissions define actions allowed on resources. A resource can be an API Server object or an arbitrary API endpoint. */
     'permissions': Array<AuthPermission> = null;
     public static propInfo: { [prop in keyof IAuthRoleSpec]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class AuthRoleSpec extends BaseModel implements IAuthRoleSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthPermission>(this, 'permissions', values['permissions'], AuthPermission);
         } else {

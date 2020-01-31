@@ -15,10 +15,13 @@ export interface IObjstoreObjectList {
     'api-version'?: string;
     'list-meta'?: IApiListMeta;
     'items'?: Array<IObjstoreObject>;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
@@ -77,6 +80,9 @@ export class ObjstoreObjectList extends BaseModel implements IObjstoreObjectList
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ObjstoreObjectList.hasDefaultValue('kind')) {

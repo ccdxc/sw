@@ -16,10 +16,13 @@ export interface INetworkRDSpec {
     'rd'?: INetworkRouteDistinguisher;
     'rd-export'?: Array<INetworkRouteDistinguisher>;
     'rd-import'?: Array<INetworkRouteDistinguisher>;
+    '_ui'?: any;
 }
 
 
 export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Address family where this config applies. */
     'address-family': NetworkRDSpec_address_family = null;
     /** True indicates the system will generate the RD automatically. */
@@ -94,6 +97,9 @@ export class NetworkRDSpec extends BaseModel implements INetworkRDSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['address-family'] != null) {
             this['address-family'] = values['address-family'];
         } else if (fillDefaults && NetworkRDSpec.hasDefaultValue('address-family')) {

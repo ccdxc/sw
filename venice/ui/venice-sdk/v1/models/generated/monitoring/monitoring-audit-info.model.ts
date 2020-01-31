@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IMonitoringAuditInfo {
     'user'?: string;
     'time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name of the user performed some action. */
     'user': string = null;
     /** Time at which the action was performed. */
@@ -63,6 +66,9 @@ export class MonitoringAuditInfo extends BaseModel implements IMonitoringAuditIn
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['user'] != null) {
             this['user'] = values['user'];
         } else if (fillDefaults && MonitoringAuditInfo.hasDefaultValue('user')) {

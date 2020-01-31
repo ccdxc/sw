@@ -11,10 +11,13 @@ import { FieldsRequirement, IFieldsRequirement } from './fields-requirement.mode
 
 export interface IFieldsSelector {
     'requirements'?: Array<IFieldsRequirement>;
+    '_ui'?: any;
 }
 
 
 export class FieldsSelector extends BaseModel implements IFieldsSelector {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Requirements are ANDed. */
     'requirements': Array<FieldsRequirement> = null;
     public static propInfo: { [prop in keyof IFieldsSelector]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class FieldsSelector extends BaseModel implements IFieldsSelector {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<FieldsRequirement>(this, 'requirements', values['requirements'], FieldsRequirement);
         } else {

@@ -11,10 +11,13 @@ import { ClusterQuorumMemberStatus, IClusterQuorumMemberStatus } from './cluster
 
 export interface IClusterQuorumStatus {
     'members'?: Array<IClusterQuorumMemberStatus>;
+    '_ui'?: any;
 }
 
 
 export class ClusterQuorumStatus extends BaseModel implements IClusterQuorumStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'members': Array<ClusterQuorumMemberStatus> = null;
     public static propInfo: { [prop in keyof IClusterQuorumStatus]: PropInfoItem } = {
         'members': {
@@ -55,6 +58,9 @@ export class ClusterQuorumStatus extends BaseModel implements IClusterQuorumStat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterQuorumMemberStatus>(this, 'members', values['members'], ClusterQuorumMemberStatus);
         } else {

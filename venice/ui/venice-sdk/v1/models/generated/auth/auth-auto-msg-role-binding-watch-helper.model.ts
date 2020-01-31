@@ -11,10 +11,13 @@ import { AuthAutoMsgRoleBindingWatchHelperWatchEvent, IAuthAutoMsgRoleBindingWat
 
 export interface IAuthAutoMsgRoleBindingWatchHelper {
     'events'?: Array<IAuthAutoMsgRoleBindingWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAuthAutoMsgRoleBindingWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<AuthAutoMsgRoleBindingWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IAuthAutoMsgRoleBindingWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class AuthAutoMsgRoleBindingWatchHelper extends BaseModel implements IAut
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthAutoMsgRoleBindingWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgRoleBindingWatchHelperWatchEvent);
         } else {

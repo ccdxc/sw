@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IDiagnosticsModuleList,DiagnosticsModuleList,IApiStatus,ApiStatus,IDiagnosticsModule,DiagnosticsModule,IDiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsResponse,DiagnosticsDiagnosticsRequest,IDiagnosticsDiagnosticsRequest,IDiagnosticsAutoMsgModuleWatchHelper,DiagnosticsAutoMsgModuleWatchHelper } from '../../models/generated/diagnostics';
 
@@ -64,6 +64,7 @@ export class Diagnosticsv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new DiagnosticsModule(body), previousVal, trimDefaults)
     }
@@ -83,6 +84,7 @@ export class Diagnosticsv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new DiagnosticsDiagnosticsRequest(body), null, trimDefaults)
     }

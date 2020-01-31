@@ -12,10 +12,13 @@ import { NetworkService, INetworkService } from './network-service.model';
 export interface INetworkAutoMsgServiceWatchHelperWatchEvent {
     'type'?: string;
     'object'?: INetworkService;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgServiceWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgServiceWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': NetworkService = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgServiceWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class NetworkAutoMsgServiceWatchHelperWatchEvent extends BaseModel implem
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgServiceWatchHelperWatchEvent.hasDefaultValue('type')) {

@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { INetworkIPAMPolicyList,NetworkIPAMPolicyList,IApiStatus,ApiStatus,INetworkIPAMPolicy,NetworkIPAMPolicy,INetworkNetworkInterfaceList,NetworkNetworkInterfaceList,INetworkNetworkInterface,NetworkNetworkInterface,INetworkNetworkList,NetworkNetworkList,INetworkNetwork,NetworkNetwork,INetworkRouteTableList,NetworkRouteTableList,INetworkRouteTable,NetworkRouteTable,INetworkRoutingConfigList,NetworkRoutingConfigList,INetworkRoutingConfig,NetworkRoutingConfig,INetworkVirtualRouterList,NetworkVirtualRouterList,INetworkVirtualRouter,NetworkVirtualRouter,INetworkAutoMsgIPAMPolicyWatchHelper,NetworkAutoMsgIPAMPolicyWatchHelper,INetworkAutoMsgNetworkInterfaceWatchHelper,NetworkAutoMsgNetworkInterfaceWatchHelper,INetworkAutoMsgNetworkWatchHelper,NetworkAutoMsgNetworkWatchHelper,INetworkAutoMsgRouteTableWatchHelper,NetworkAutoMsgRouteTableWatchHelper,INetworkAutoMsgRoutingConfigWatchHelper,NetworkAutoMsgRoutingConfigWatchHelper,INetworkAutoMsgVirtualRouterWatchHelper,NetworkAutoMsgVirtualRouterWatchHelper } from '../../models/generated/network';
 
@@ -47,6 +47,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), null, trimDefaults)
     }
@@ -98,6 +99,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal, trimDefaults)
     }
@@ -131,6 +133,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), null, trimDefaults)
     }
@@ -166,6 +169,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetworkInterface(body), previousVal, trimDefaults)
     }
@@ -199,6 +203,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), null, trimDefaults)
     }
@@ -250,6 +255,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
@@ -314,6 +320,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body), null, trimDefaults)
     }
@@ -365,6 +372,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkRoutingConfig(body), previousVal, trimDefaults)
     }
@@ -400,6 +408,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), null, trimDefaults)
     }
@@ -454,6 +463,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkIPAMPolicy(body), previousVal, trimDefaults)
     }
@@ -489,6 +499,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), null, trimDefaults)
     }
@@ -543,6 +554,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkNetwork(body), previousVal, trimDefaults)
     }
@@ -611,6 +623,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), null, trimDefaults)
     }
@@ -665,6 +678,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal, trimDefaults)
     }
@@ -698,6 +712,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), null, trimDefaults)
     }
@@ -749,6 +764,7 @@ export class Networkv1Service extends AbstractService {
       url = url.replace('configs', 'staging/' + stagingID);
       opts.isStaging = true;
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new NetworkVirtualRouter(body), previousVal, trimDefaults)
     }

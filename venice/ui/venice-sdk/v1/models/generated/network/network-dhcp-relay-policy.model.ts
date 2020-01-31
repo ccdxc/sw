@@ -11,10 +11,13 @@ import { NetworkDHCPServer, INetworkDHCPServer } from './network-dhcp-server.mod
 
 export interface INetworkDHCPRelayPolicy {
     'relay-servers'?: Array<INetworkDHCPServer>;
+    '_ui'?: any;
 }
 
 
 export class NetworkDHCPRelayPolicy extends BaseModel implements INetworkDHCPRelayPolicy {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'relay-servers': Array<NetworkDHCPServer> = null;
     public static propInfo: { [prop in keyof INetworkDHCPRelayPolicy]: PropInfoItem } = {
         'relay-servers': {
@@ -55,6 +58,9 @@ export class NetworkDHCPRelayPolicy extends BaseModel implements INetworkDHCPRel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<NetworkDHCPServer>(this, 'relay-servers', values['relay-servers'], NetworkDHCPServer);
         } else {

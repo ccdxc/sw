@@ -14,10 +14,13 @@ export interface IBrowserBrowseResponseObject {
     'max-depth'?: number;
     'total-count'?: number;
     'objects'?: object;
+    '_ui'?: any;
 }
 
 
 export class BrowserBrowseResponseObject extends BaseModel implements IBrowserBrowseResponseObject {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** RootURI is the root node for the response. */
     'root-uri': string = null;
     /** QueryType is the direction of the query. */
@@ -87,6 +90,9 @@ export class BrowserBrowseResponseObject extends BaseModel implements IBrowserBr
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['root-uri'] != null) {
             this['root-uri'] = values['root-uri'];
         } else if (fillDefaults && BrowserBrowseResponseObject.hasDefaultValue('root-uri')) {

@@ -13,10 +13,13 @@ import { NetworkEVPNConfig, INetworkEVPNConfig } from './network-evpn-config.mod
 export interface INetworkRoutingConfigSpec {
     'bgp-config'?: INetworkBGPConfig;
     'evpn-config'?: INetworkEVPNConfig;
+    '_ui'?: any;
 }
 
 
 export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRoutingConfigSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Configuration for the BGP instance. */
     'bgp-config': NetworkBGPConfig = null;
     /** EVPN related configuration. */
@@ -67,6 +70,9 @@ export class NetworkRoutingConfigSpec extends BaseModel implements INetworkRouti
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['bgp-config'].setValues(values['bgp-config'], fillDefaults);
         } else {

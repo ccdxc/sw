@@ -14,10 +14,13 @@ export interface IMonitoringMatchedRequirement {
     'operator'?: MonitoringMatchedRequirement_operator;
     'values'?: Array<string>;
     'observed-value'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMatchedRequirement extends BaseModel implements IMonitoringMatchedRequirement {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'key': string = null;
     'operator': MonitoringMatchedRequirement_operator = null;
     'values': Array<string> = null;
@@ -77,6 +80,9 @@ export class MonitoringMatchedRequirement extends BaseModel implements IMonitori
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['key'] != null) {
             this['key'] = values['key'];
         } else if (fillDefaults && MonitoringMatchedRequirement.hasDefaultValue('key')) {

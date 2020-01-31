@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecuritySunrpc {
     'program-id'?: string;
     'timeout': string;
+    '_ui'?: any;
 }
 
 
 export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** RPC Program identifier. */
     'program-id': string = null;
     /** Timeout for this program id. Should be a valid time duration. */
@@ -64,6 +67,9 @@ export class SecuritySunrpc extends BaseModel implements ISecuritySunrpc {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['program-id'] != null) {
             this['program-id'] = values['program-id'];
         } else if (fillDefaults && SecuritySunrpc.hasDefaultValue('program-id')) {

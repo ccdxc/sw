@@ -18,10 +18,13 @@ export interface ISecuritySGRule {
     'to-ip-addresses'?: Array<string>;
     'from-security-groups'?: Array<string>;
     'to-security-groups'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of apps objects to which the rule applies to. */
     'apps': Array<string> = null;
     /** List of (protocol, ports) pairs to which the rule applies to, in addition to apps. */
@@ -113,6 +116,9 @@ export class SecuritySGRule extends BaseModel implements ISecuritySGRule {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['apps'] != null) {
             this['apps'] = values['apps'];
         } else if (fillDefaults && SecuritySGRule.hasDefaultValue('apps')) {

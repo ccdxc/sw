@@ -24,10 +24,13 @@ export interface INetworkNetworkInterfaceSpec {
     'ip-alloc-type': NetworkNetworkInterfaceSpec_ip_alloc_type;
     'ip-config'?: IClusterIPConfig;
     'mac-address'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNetworkInterfaceSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Desired Admin state of the port. */
     'admin-status': NetworkNetworkInterfaceSpec_admin_status = null;
     /** Intefaae speed. */
@@ -137,6 +140,9 @@ export class NetworkNetworkInterfaceSpec extends BaseModel implements INetworkNe
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['admin-status'] != null) {
             this['admin-status'] = values['admin-status'];
         } else if (fillDefaults && NetworkNetworkInterfaceSpec.hasDefaultValue('admin-status')) {

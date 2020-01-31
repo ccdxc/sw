@@ -14,10 +14,13 @@ export interface INetworkLbPolicySpec {
     'algorithm'?: string;
     'session-affinity'?: string;
     'health-check'?: INetworkHealthCheckSpec;
+    '_ui'?: any;
 }
 
 
 export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Load balancing type. */
     'type': string = null;
     /** Load balancing algorithm. */
@@ -81,6 +84,9 @@ export class NetworkLbPolicySpec extends BaseModel implements INetworkLbPolicySp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkLbPolicySpec.hasDefaultValue('type')) {

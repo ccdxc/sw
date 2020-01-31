@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IObjstoreStreamChunk {
     'Content'?: string;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreStreamChunk extends BaseModel implements IObjstoreStreamChunk {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Content': string = null;
     public static propInfo: { [prop in keyof IObjstoreStreamChunk]: PropInfoItem } = {
         'Content': {
@@ -53,6 +56,9 @@ export class ObjstoreStreamChunk extends BaseModel implements IObjstoreStreamChu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Content'] != null) {
             this['Content'] = values['Content'];
         } else if (fillDefaults && ObjstoreStreamChunk.hasDefaultValue('Content')) {

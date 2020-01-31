@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IApiStatusResult {
     'Str'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiStatusResult extends BaseModel implements IApiStatusResult {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Str': string = null;
     public static propInfo: { [prop in keyof IApiStatusResult]: PropInfoItem } = {
         'Str': {
@@ -53,6 +56,9 @@ export class ApiStatusResult extends BaseModel implements IApiStatusResult {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Str'] != null) {
             this['Str'] = values['Str'];
         } else if (fillDefaults && ApiStatusResult.hasDefaultValue('Str')) {

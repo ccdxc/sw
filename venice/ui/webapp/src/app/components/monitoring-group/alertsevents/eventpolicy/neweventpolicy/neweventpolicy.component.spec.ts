@@ -20,6 +20,7 @@ import { AuthService } from '@app/services/auth.service';
 import { TestingUtility } from '@app/common/TestingUtility';
 import * as _ from 'lodash';
 import { IMonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertPolicySpec_severity, IMonitoringEventPolicy, MonitoringEventPolicySpec_format, MonitoringSyslogExportConfig_facility_override, MonitoringEventPolicy } from '@sdk/v1/models/generated/monitoring';
+import { TrimUIFields } from '@sdk/v1/utils/utility';
 
 describe('NeweventpolicyComponent', () => {
   let component: NeweventpolicyComponent;
@@ -88,7 +89,7 @@ describe('NeweventpolicyComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[0];
-    const expVal = new MonitoringEventPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringEventPolicy(policy).getModelValues());
     expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + recVal + ' , expected: ' + expVal);
   });
 
@@ -123,7 +124,7 @@ describe('NeweventpolicyComponent', () => {
     tu.sendClick(tu.getElemByCss('.global-button-primary.neweventpolicy-save'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
-    const expVal = new MonitoringEventPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringEventPolicy(policy).getModelValues());
     expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 });

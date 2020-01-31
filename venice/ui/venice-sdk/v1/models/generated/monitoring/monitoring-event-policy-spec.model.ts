@@ -17,10 +17,13 @@ export interface IMonitoringEventPolicySpec {
     'selector'?: IFieldsSelector;
     'targets'?: Array<IMonitoringExportConfig>;
     'config'?: IMonitoringSyslogExportConfig;
+    '_ui'?: any;
 }
 
 
 export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringEventPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Event export format, SYSLOG_BSD default. */
     'format': MonitoringEventPolicySpec_format = null;
     /** Export events matched by the selector. */
@@ -88,6 +91,9 @@ export class MonitoringEventPolicySpec extends BaseModel implements IMonitoringE
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['format'] != null) {
             this['format'] = values['format'];
         } else if (fillDefaults && MonitoringEventPolicySpec.hasDefaultValue('format')) {

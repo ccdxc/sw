@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { ITelemetry_queryFwlogsQueryResponse,Telemetry_queryFwlogsQueryResponse,Telemetry_queryFwlogsQueryList,ITelemetry_queryFwlogsQueryList,ITelemetry_queryMetricsQueryResponse,Telemetry_queryMetricsQueryResponse,Telemetry_queryMetricsQueryList,ITelemetry_queryMetricsQueryList } from '../../models/generated/telemetry_query';
 
@@ -39,6 +39,7 @@ export class Telemetry_queryv1Service extends AbstractService {
       objType: 'Telemetry_queryFwlogsQueryResponse',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryFwlogsQueryList(body), null, trimDefaults)
     }
@@ -64,6 +65,7 @@ export class Telemetry_queryv1Service extends AbstractService {
       objType: 'Telemetry_queryMetricsQueryResponse',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new Telemetry_queryMetricsQueryList(body), null, trimDefaults)
     }

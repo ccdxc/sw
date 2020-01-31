@@ -14,10 +14,13 @@ export interface IClusterQuorumMemberCondition {
     'type': ClusterQuorumMemberCondition_type;
     'status': ClusterQuorumMemberCondition_status;
     'last-transition-time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQuorumMemberCondition {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type indicates a certain node condition. */
     'type': ClusterQuorumMemberCondition_type = null;
     /** Condition Status. */
@@ -77,6 +80,9 @@ export class ClusterQuorumMemberCondition extends BaseModel implements IClusterQ
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterQuorumMemberCondition.hasDefaultValue('type')) {

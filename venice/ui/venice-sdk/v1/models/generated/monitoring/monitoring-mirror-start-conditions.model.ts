@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IMonitoringMirrorStartConditions {
     'schedule-time'?: Date;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorStartConditions extends BaseModel implements IMonitoringMirrorStartConditions {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'schedule-time': Date = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorStartConditions]: PropInfoItem } = {
         'schedule-time': {
@@ -53,6 +56,9 @@ export class MonitoringMirrorStartConditions extends BaseModel implements IMonit
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['schedule-time'] != null) {
             this['schedule-time'] = values['schedule-time'];
         } else if (fillDefaults && MonitoringMirrorStartConditions.hasDefaultValue('schedule-time')) {

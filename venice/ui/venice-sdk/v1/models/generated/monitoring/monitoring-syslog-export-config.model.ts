@@ -12,10 +12,13 @@ import { MonitoringSyslogExportConfig_facility_override,  MonitoringSyslogExport
 export interface IMonitoringSyslogExportConfig {
     'facility-override': MonitoringSyslogExportConfig_facility_override;
     'prefix'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringSyslogExportConfig extends BaseModel implements IMonitoringSyslogExportConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Override default facility with this in exported logs. */
     'facility-override': MonitoringSyslogExportConfig_facility_override = null;
     /** Add prefix in exported logs. */
@@ -66,6 +69,9 @@ export class MonitoringSyslogExportConfig extends BaseModel implements IMonitori
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['facility-override'] != null) {
             this['facility-override'] = values['facility-override'];
         } else if (fillDefaults && MonitoringSyslogExportConfig.hasDefaultValue('facility-override')) {

@@ -13,10 +13,13 @@ export interface IFieldsRequirement {
     'key'?: string;
     'operator': FieldsRequirement_operator;
     'values'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The label key that the condition applies to. */
     'key': string = null;
     /** Condition checked for the key. */
@@ -75,6 +78,9 @@ export class FieldsRequirement extends BaseModel implements IFieldsRequirement {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['key'] != null) {
             this['key'] = values['key'];
         } else if (fillDefaults && FieldsRequirement.hasDefaultValue('key')) {

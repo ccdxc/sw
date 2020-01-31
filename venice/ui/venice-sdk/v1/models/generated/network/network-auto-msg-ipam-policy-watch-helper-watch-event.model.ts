@@ -12,10 +12,13 @@ import { NetworkIPAMPolicy, INetworkIPAMPolicy } from './network-ipam-policy.mod
 export interface INetworkAutoMsgIPAMPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: INetworkIPAMPolicy;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgIPAMPolicyWatchHelperWatchEvent extends BaseModel implements INetworkAutoMsgIPAMPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': NetworkIPAMPolicy = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgIPAMPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class NetworkAutoMsgIPAMPolicyWatchHelperWatchEvent extends BaseModel imp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkAutoMsgIPAMPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

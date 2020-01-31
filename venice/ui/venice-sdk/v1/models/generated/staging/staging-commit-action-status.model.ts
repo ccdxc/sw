@@ -12,10 +12,13 @@ import { StagingCommitActionStatus_status,  } from './enums';
 export interface IStagingCommitActionStatus {
     'status': StagingCommitActionStatus_status;
     'reason'?: string;
+    '_ui'?: any;
 }
 
 
 export class StagingCommitActionStatus extends BaseModel implements IStagingCommitActionStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'status': StagingCommitActionStatus_status = null;
     'reason': string = null;
     public static propInfo: { [prop in keyof IStagingCommitActionStatus]: PropInfoItem } = {
@@ -62,6 +65,9 @@ export class StagingCommitActionStatus extends BaseModel implements IStagingComm
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && StagingCommitActionStatus.hasDefaultValue('status')) {

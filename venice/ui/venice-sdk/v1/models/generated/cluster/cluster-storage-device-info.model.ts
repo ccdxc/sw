@@ -15,10 +15,13 @@ export interface IClusterStorageDeviceInfo {
     'capacity'?: string;
     'percent-life-used-A'?: number;
     'percent-life-used-B'?: number;
+    '_ui'?: any;
 }
 
 
 export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStorageDeviceInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Serial Number. */
     'serial-num': string = null;
     /** Storage Type (TBD for Naples) Eg: SATA, SCSI, NVMe  or HDD, SSD, NVMe. */
@@ -93,6 +96,9 @@ export class ClusterStorageDeviceInfo extends BaseModel implements IClusterStora
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['serial-num'] != null) {
             this['serial-num'] = values['serial-num'];
         } else if (fillDefaults && ClusterStorageDeviceInfo.hasDefaultValue('serial-num')) {

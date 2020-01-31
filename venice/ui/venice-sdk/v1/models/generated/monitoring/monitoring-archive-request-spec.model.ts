@@ -13,10 +13,13 @@ import { MonitoringArchiveQuery, IMonitoringArchiveQuery } from './monitoring-ar
 export interface IMonitoringArchiveRequestSpec {
     'type': MonitoringArchiveRequestSpec_type;
     'query'?: IMonitoringArchiveQuery;
+    '_ui'?: any;
 }
 
 
 export class MonitoringArchiveRequestSpec extends BaseModel implements IMonitoringArchiveRequestSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': MonitoringArchiveRequestSpec_type = null;
     'query': MonitoringArchiveQuery = null;
     public static propInfo: { [prop in keyof IMonitoringArchiveRequestSpec]: PropInfoItem } = {
@@ -64,6 +67,9 @@ export class MonitoringArchiveRequestSpec extends BaseModel implements IMonitori
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringArchiveRequestSpec.hasDefaultValue('type')) {

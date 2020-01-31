@@ -14,10 +14,13 @@ export interface INetworkHealthCheckSpec {
     'probe-port-or-url'?: string;
     'max-timeouts'?: number;
     'declare-healthy-count'?: number;
+    '_ui'?: any;
 }
 
 
 export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthCheckSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Health check interval. */
     'interval': number = null;
     /** # of probes per interval. */
@@ -87,6 +90,9 @@ export class NetworkHealthCheckSpec extends BaseModel implements INetworkHealthC
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['interval'] != null) {
             this['interval'] = values['interval'];
         } else if (fillDefaults && NetworkHealthCheckSpec.hasDefaultValue('interval')) {

@@ -12,10 +12,13 @@ import { SearchPolicySearchResponse_status,  } from './enums';
 export interface ISearchPolicySearchResponse {
     'status': SearchPolicySearchResponse_status;
     'results'?: object;
+    '_ui'?: any;
 }
 
 
 export class SearchPolicySearchResponse extends BaseModel implements ISearchPolicySearchResponse {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Status of firewall policy search. */
     'status': SearchPolicySearchResponse_status = null;
     /** Result is Map of <NetworkSecurityPolicy object name, PolicyMatch Entry>. */
@@ -66,6 +69,9 @@ export class SearchPolicySearchResponse extends BaseModel implements ISearchPoli
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && SearchPolicySearchResponse.hasDefaultValue('status')) {

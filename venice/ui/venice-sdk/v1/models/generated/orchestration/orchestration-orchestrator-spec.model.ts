@@ -15,10 +15,13 @@ export interface IOrchestrationOrchestratorSpec {
     'uri': string;
     'credentials'?: IMonitoringExternalCred;
     'login-data'?: object;
+    '_ui'?: any;
 }
 
 
 export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchestrationOrchestratorSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type of orchestrator. */
     'type': OrchestrationOrchestratorSpec_type = null;
     /** URI of the orchestrator. Length of string should be at least 1. */
@@ -82,6 +85,9 @@ export class OrchestrationOrchestratorSpec extends BaseModel implements IOrchest
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && OrchestrationOrchestratorSpec.hasDefaultValue('type')) {

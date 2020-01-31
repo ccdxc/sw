@@ -12,10 +12,13 @@ import { SecurityTrafficEncryptionPolicy, ISecurityTrafficEncryptionPolicy } fro
 export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: ISecurityTrafficEncryptionPolicy;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': SecurityTrafficEncryptionPolicy = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent extends
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

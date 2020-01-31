@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IMonitoringAlertDestinationStatus {
     'total-notifications-sent'?: number;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertDestinationStatus extends BaseModel implements IMonitoringAlertDestinationStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Total number of notifications sent using this notification mechanism. */
     'total-notifications-sent': number = null;
     public static propInfo: { [prop in keyof IMonitoringAlertDestinationStatus]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class MonitoringAlertDestinationStatus extends BaseModel implements IMoni
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['total-notifications-sent'] != null) {
             this['total-notifications-sent'] = values['total-notifications-sent'];
         } else if (fillDefaults && MonitoringAlertDestinationStatus.hasDefaultValue('total-notifications-sent')) {

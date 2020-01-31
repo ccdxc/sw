@@ -12,10 +12,13 @@ export interface INetworkNetworkStatus {
     'workloads'?: Array<string>;
     'allocated-ipv4-addrs'?: string;
     'id'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of all workloads in this network. */
     'workloads': Array<string> = null;
     /** Allocated IPv4 addresses (bitmap). */
@@ -72,6 +75,9 @@ export class NetworkNetworkStatus extends BaseModel implements INetworkNetworkSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && NetworkNetworkStatus.hasDefaultValue('workloads')) {

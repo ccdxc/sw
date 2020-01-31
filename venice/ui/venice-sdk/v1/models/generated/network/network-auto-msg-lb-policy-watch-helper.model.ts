@@ -11,10 +11,13 @@ import { NetworkAutoMsgLbPolicyWatchHelperWatchEvent, INetworkAutoMsgLbPolicyWat
 
 export interface INetworkAutoMsgLbPolicyWatchHelper {
     'events'?: Array<INetworkAutoMsgLbPolicyWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INetworkAutoMsgLbPolicyWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<NetworkAutoMsgLbPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof INetworkAutoMsgLbPolicyWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class NetworkAutoMsgLbPolicyWatchHelper extends BaseModel implements INet
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<NetworkAutoMsgLbPolicyWatchHelperWatchEvent>(this, 'events', values['events'], NetworkAutoMsgLbPolicyWatchHelperWatchEvent);
         } else {

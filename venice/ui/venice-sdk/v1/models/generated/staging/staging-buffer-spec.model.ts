@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IStagingBufferSpec {
     'Contact'?: string;
+    '_ui'?: any;
 }
 
 
 export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Contact': string = null;
     public static propInfo: { [prop in keyof IStagingBufferSpec]: PropInfoItem } = {
         'Contact': {
@@ -53,6 +56,9 @@ export class StagingBufferSpec extends BaseModel implements IStagingBufferSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Contact'] != null) {
             this['Contact'] = values['Contact'];
         } else if (fillDefaults && StagingBufferSpec.hasDefaultValue('Contact')) {

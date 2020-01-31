@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ITelemetry_queryPaginationSpec {
     'offset': number;
     'count': number;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemetry_queryPaginationSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Offset specifies the starting point when using Count. Value should be at least 0. */
     'offset': number = null;
     /** Count specifies the number of points to include. Value should be at least 1. */
@@ -64,6 +67,9 @@ export class Telemetry_queryPaginationSpec extends BaseModel implements ITelemet
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['offset'] != null) {
             this['offset'] = values['offset'];
         } else if (fillDefaults && Telemetry_queryPaginationSpec.hasDefaultValue('offset')) {

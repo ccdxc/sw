@@ -14,10 +14,13 @@ export interface IOrchestrationOrchestratorStatus {
     'last-connected'?: Date;
     'last-sync'?: Date;
     'session-id'?: string;
+    '_ui'?: any;
 }
 
 
 export class OrchestrationOrchestratorStatus extends BaseModel implements IOrchestrationOrchestratorStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'connection-status': OrchestrationOrchestratorStatus_connection_status = null;
     'last-connected': Date = null;
     'last-sync': Date = null;
@@ -74,6 +77,9 @@ export class OrchestrationOrchestratorStatus extends BaseModel implements IOrche
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['connection-status'] != null) {
             this['connection-status'] = values['connection-status'];
         } else if (fillDefaults && OrchestrationOrchestratorStatus.hasDefaultValue('connection-status')) {

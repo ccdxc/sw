@@ -11,10 +11,13 @@ import { SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent, ISecurityA
 
 export interface ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
     'events'?: Array<ISecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgTrafficEncryptionPolicyWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class SecurityAutoMsgTrafficEncryptionPolicyWatchHelper extends BaseModel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgTrafficEncryptionPolicyWatchHelperWatchEvent);
         } else {

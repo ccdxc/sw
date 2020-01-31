@@ -59,18 +59,6 @@ describe('LocalComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should display toggle based on input', () => {
-    component.localData = { enabled: true };
-    fixture.detectChanges();
-    let toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
-    expect(toggle.length).toBe(0);
-
-    component.localData = { enabled: false };
-    fixture.detectChanges();
-    toggle = fixture.debugElement.queryAll(By.css('.mat-checked'));
-    expect(toggle.length).toBe(0);
-  });
-
   describe('RBAC', () => {
 
     it('should display arrows and rank', () => {

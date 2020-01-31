@@ -12,10 +12,13 @@ export interface IMonitoringAlertPolicyStatus {
     'total-hits'?: number;
     'open-alerts'?: number;
     'acknowledged-alerts'?: number;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitoringAlertPolicyStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Total hits on this policy. */
     'total-hits': number = null;
     /** Open alerts based on this policy. */
@@ -71,6 +74,9 @@ export class MonitoringAlertPolicyStatus extends BaseModel implements IMonitorin
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
         } else if (fillDefaults && MonitoringAlertPolicyStatus.hasDefaultValue('total-hits')) {

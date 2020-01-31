@@ -13,10 +13,13 @@ export interface INetworkPauseSpec {
     'type': NetworkPauseSpec_type;
     'tx-pause-enabled'?: boolean;
     'rx-pause-enabled'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class NetworkPauseSpec extends BaseModel implements INetworkPauseSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Pause type. */
     'type': NetworkPauseSpec_type = null;
     /** TX Pause enabled. */
@@ -74,6 +77,9 @@ export class NetworkPauseSpec extends BaseModel implements INetworkPauseSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkPauseSpec.hasDefaultValue('type')) {

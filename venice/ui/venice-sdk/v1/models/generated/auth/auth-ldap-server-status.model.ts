@@ -17,10 +17,13 @@ export interface IAuthLdapServerStatus {
     'base-dn'?: string;
     'bind-dn'?: string;
     'bind-password'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Result indicates if ldap check was successful. */
     'result': AuthLdapServerStatus_result = null;
     /** Message contains error message in case of failed check or a success message. */
@@ -100,6 +103,9 @@ export class AuthLdapServerStatus extends BaseModel implements IAuthLdapServerSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['result'] != null) {
             this['result'] = values['result'];
         } else if (fillDefaults && AuthLdapServerStatus.hasDefaultValue('result')) {

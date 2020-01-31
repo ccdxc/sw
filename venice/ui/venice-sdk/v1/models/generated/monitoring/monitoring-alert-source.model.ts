@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IMonitoringAlertSource {
     'component'?: string;
     'node-name'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertSource extends BaseModel implements IMonitoringAlertSource {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'component': string = null;
     'node-name': string = null;
     public static propInfo: { [prop in keyof IMonitoringAlertSource]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class MonitoringAlertSource extends BaseModel implements IMonitoringAlert
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['component'] != null) {
             this['component'] = values['component'];
         } else if (fillDefaults && MonitoringAlertSource.hasDefaultValue('component')) {

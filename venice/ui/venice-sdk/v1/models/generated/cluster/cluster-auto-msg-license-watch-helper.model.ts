@@ -11,10 +11,13 @@ import { ClusterAutoMsgLicenseWatchHelperWatchEvent, IClusterAutoMsgLicenseWatch
 
 export interface IClusterAutoMsgLicenseWatchHelper {
     'events'?: Array<IClusterAutoMsgLicenseWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgLicenseWatchHelper extends BaseModel implements IClusterAutoMsgLicenseWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<ClusterAutoMsgLicenseWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgLicenseWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class ClusterAutoMsgLicenseWatchHelper extends BaseModel implements IClus
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterAutoMsgLicenseWatchHelperWatchEvent>(this, 'events', values['events'], ClusterAutoMsgLicenseWatchHelperWatchEvent);
         } else {

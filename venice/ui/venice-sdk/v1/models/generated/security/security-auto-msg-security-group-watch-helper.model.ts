@@ -11,10 +11,13 @@ import { SecurityAutoMsgSecurityGroupWatchHelperWatchEvent, ISecurityAutoMsgSecu
 
 export interface ISecurityAutoMsgSecurityGroupWatchHelper {
     'events'?: Array<ISecurityAutoMsgSecurityGroupWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implements ISecurityAutoMsgSecurityGroupWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgSecurityGroupWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class SecurityAutoMsgSecurityGroupWatchHelper extends BaseModel implement
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityAutoMsgSecurityGroupWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgSecurityGroupWatchHelperWatchEvent);
         } else {

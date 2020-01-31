@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface INetworkServiceStatus {
     'workloads'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class NetworkServiceStatus extends BaseModel implements INetworkServiceStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of workloads that are backends of this service. */
     'workloads': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkServiceStatus]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class NetworkServiceStatus extends BaseModel implements INetworkServiceSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['workloads'] != null) {
             this['workloads'] = values['workloads'];
         } else if (fillDefaults && NetworkServiceStatus.hasDefaultValue('workloads')) {

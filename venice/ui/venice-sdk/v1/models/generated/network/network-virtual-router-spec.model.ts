@@ -17,10 +17,13 @@ export interface INetworkVirtualRouterSpec {
     'vxlan-vni'?: number;
     'route-import-export'?: INetworkRDSpec;
     'default-ipam-policy'?: INetworkIPAMPolicy;
+    '_ui'?: any;
 }
 
 
 export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtualRouterSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': NetworkVirtualRouterSpec_type = null;
     /** Default Router MAC Address to use for this Virtual Router. */
     'router-mac-address': string = null;
@@ -92,6 +95,9 @@ export class NetworkVirtualRouterSpec extends BaseModel implements INetworkVirtu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkVirtualRouterSpec.hasDefaultValue('type')) {

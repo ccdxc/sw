@@ -13,10 +13,13 @@ export interface IAuthOperationStatus {
     'operation'?: IAuthOperation;
     'allowed'?: boolean;
     'message'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthOperationStatus extends BaseModel implements IAuthOperationStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Operation for which authorization decision is resported. */
     'operation': AuthOperation = null;
     /** Allowed indicates if Operation is authorized. */
@@ -73,6 +76,9 @@ export class AuthOperationStatus extends BaseModel implements IAuthOperationStat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['operation'].setValues(values['operation'], fillDefaults);
         } else {

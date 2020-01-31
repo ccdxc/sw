@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface INetworkLbPolicyStatus {
     'type'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicyStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of service objects referring this lb-policy. */
     'type': Array<string> = null;
     public static propInfo: { [prop in keyof INetworkLbPolicyStatus]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class NetworkLbPolicyStatus extends BaseModel implements INetworkLbPolicy
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkLbPolicyStatus.hasDefaultValue('type')) {

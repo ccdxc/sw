@@ -19,10 +19,13 @@ export interface IClusterDSCInfo {
     'cpu-info'?: IClusterCPUInfo;
     'memory-info'?: IClusterMemInfo;
     'storage-info'?: IClusterStorageInfo;
+    '_ui'?: any;
 }
 
 
 export class ClusterDSCInfo extends BaseModel implements IClusterDSCInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** BIOS details. */
     'bios-info': ClusterBiosInfo = null;
     /** OS details. */
@@ -97,6 +100,9 @@ export class ClusterDSCInfo extends BaseModel implements IClusterDSCInfo {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['bios-info'].setValues(values['bios-info'], fillDefaults);
         } else {

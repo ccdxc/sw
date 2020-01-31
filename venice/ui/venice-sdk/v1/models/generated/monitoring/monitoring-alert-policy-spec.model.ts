@@ -20,10 +20,13 @@ export interface IMonitoringAlertPolicySpec {
     'enable'?: boolean;
     'auto-resolve'?: boolean;
     'destinations'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringAlertPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Resource type - target resource to run this policy. e.g. Network, Endpoint - object based alert policy Event - event based alert policy EndpointMetrics - metric based alert policy based on the resource type, the policy gets interpreted. */
     'resource': string = null;
     /** Severity to be set for an alert that gets triggered from this rule. */
@@ -126,6 +129,9 @@ export class MonitoringAlertPolicySpec extends BaseModel implements IMonitoringA
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['resource'] != null) {
             this['resource'] = values['resource'];
         } else if (fillDefaults && MonitoringAlertPolicySpec.hasDefaultValue('resource')) {

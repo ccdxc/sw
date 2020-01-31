@@ -14,10 +14,13 @@ export interface IClusterNodeStatus {
     'phase': ClusterNodeStatus_phase;
     'quorum'?: boolean;
     'conditions'?: Array<IClusterNodeCondition>;
+    '_ui'?: any;
 }
 
 
 export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Current lifecycle phase of the node. */
     'phase': ClusterNodeStatus_phase = null;
     /** Quorum node or not. */
@@ -76,6 +79,9 @@ export class ClusterNodeStatus extends BaseModel implements IClusterNodeStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['phase'] != null) {
             this['phase'] = values['phase'];
         } else if (fillDefaults && ClusterNodeStatus.hasDefaultValue('phase')) {

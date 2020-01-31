@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISearchTenantPreview {
     'tenants'?: object;
+    '_ui'?: any;
 }
 
 
 export class SearchTenantPreview extends BaseModel implements ISearchTenantPreview {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'tenants': object = null;
     public static propInfo: { [prop in keyof ISearchTenantPreview]: PropInfoItem } = {
         'tenants': {
@@ -53,6 +56,9 @@ export class SearchTenantPreview extends BaseModel implements ISearchTenantPrevi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenants'] != null) {
             this['tenants'] = values['tenants'];
         } else if (fillDefaults && SearchTenantPreview.hasDefaultValue('tenants')) {

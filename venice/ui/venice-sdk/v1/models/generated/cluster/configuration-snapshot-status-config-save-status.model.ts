@@ -12,10 +12,13 @@ import { ConfigurationSnapshotStatusConfigSaveStatus_dest_type,  } from './enums
 export interface IConfigurationSnapshotStatusConfigSaveStatus {
     'dest-type': ConfigurationSnapshotStatusConfigSaveStatus_dest_type;
     'uri'?: string;
+    '_ui'?: any;
 }
 
 
 export class ConfigurationSnapshotStatusConfigSaveStatus extends BaseModel implements IConfigurationSnapshotStatusConfigSaveStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'dest-type': ConfigurationSnapshotStatusConfigSaveStatus_dest_type = null;
     'uri': string = null;
     public static propInfo: { [prop in keyof IConfigurationSnapshotStatusConfigSaveStatus]: PropInfoItem } = {
@@ -62,6 +65,9 @@ export class ConfigurationSnapshotStatusConfigSaveStatus extends BaseModel imple
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['dest-type'] != null) {
             this['dest-type'] = values['dest-type'];
         } else if (fillDefaults && ConfigurationSnapshotStatusConfigSaveStatus.hasDefaultValue('dest-type')) {

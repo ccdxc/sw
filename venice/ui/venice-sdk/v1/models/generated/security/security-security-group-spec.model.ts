@@ -13,10 +13,13 @@ export interface ISecuritySecurityGroupSpec {
     'workload-selector'?: ILabelsSelector;
     'service-labels'?: Array<string>;
     'match-prefixes'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySecurityGroupSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Workload selector (list of labels). */
     'workload-selector': LabelsSelector = null;
     /** Service object selector. */
@@ -75,6 +78,9 @@ export class SecuritySecurityGroupSpec extends BaseModel implements ISecuritySec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['workload-selector'].setValues(values['workload-selector'], fillDefaults);
         } else {

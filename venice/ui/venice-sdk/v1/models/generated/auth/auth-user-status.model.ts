@@ -17,10 +17,13 @@ export interface IAuthUserStatus {
     'authenticators': Array<AuthUserStatus_authenticators>;
     'last-password-change'?: Date;
     'access-review'?: Array<IAuthOperationStatus>;
+    '_ui'?: any;
 }
 
 
 export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Roles assigned to user. */
     'roles': Array<string> = null;
     /** Groups that external user belongs to. */
@@ -103,6 +106,9 @@ export class AuthUserStatus extends BaseModel implements IAuthUserStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['roles'] != null) {
             this['roles'] = values['roles'];
         } else if (fillDefaults && AuthUserStatus.hasDefaultValue('roles')) {

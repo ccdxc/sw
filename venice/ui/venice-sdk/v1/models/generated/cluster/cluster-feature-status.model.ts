@@ -12,10 +12,13 @@ export interface IClusterFeatureStatus {
     'feature-key'?: string;
     'value'?: string;
     'expiry'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterFeatureStatus extends BaseModel implements IClusterFeatureStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'feature-key': string = null;
     'value': string = null;
     'expiry': string = null;
@@ -65,6 +68,9 @@ export class ClusterFeatureStatus extends BaseModel implements IClusterFeatureSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['feature-key'] != null) {
             this['feature-key'] = values['feature-key'];
         } else if (fillDefaults && ClusterFeatureStatus.hasDefaultValue('feature-key')) {

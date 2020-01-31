@@ -12,10 +12,13 @@ import { AuthTLSOptions, IAuthTLSOptions } from './auth-tls-options.model';
 export interface IAuthLdapServer {
     'url'?: string;
     'tls-options'?: IAuthTLSOptions;
+    '_ui'?: any;
 }
 
 
 export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'url': string = null;
     'tls-options': AuthTLSOptions = null;
     public static propInfo: { [prop in keyof IAuthLdapServer]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class AuthLdapServer extends BaseModel implements IAuthLdapServer {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['url'] != null) {
             this['url'] = values['url'];
         } else if (fillDefaults && AuthLdapServer.hasDefaultValue('url')) {

@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IMonitoringAppProtoSelector {
     'proto-ports'?: Array<string>;
     'applications'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAppProtoSelector extends BaseModel implements IMonitoringAppProtoSelector {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Ports - Includes protocol name and port Eg ["tcp/1234", "udp"]. Should be a valid layer 3 or layer 4 protocol and port/type. */
     'proto-ports': Array<string> = null;
     /** Apps - E.g. ["Redis"]. */
@@ -66,6 +69,9 @@ export class MonitoringAppProtoSelector extends BaseModel implements IMonitoring
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['proto-ports'] != null) {
             this['proto-ports'] = values['proto-ports'];
         } else if (fillDefaults && MonitoringAppProtoSelector.hasDefaultValue('proto-ports')) {

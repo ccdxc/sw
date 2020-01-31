@@ -14,10 +14,13 @@ export interface IBrowserBrowseRequestObject {
     'query-type': BrowserBrowseRequestObject_query_type;
     'max-depth'?: number;
     'count-only'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class BrowserBrowseRequestObject extends BaseModel implements IBrowserBrowseRequestObject {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** URI is the root node from where to query. Length of string should be between 2 and 512. */
     'uri': string = null;
     /** QueryType is the direction of the query. */
@@ -83,6 +86,9 @@ export class BrowserBrowseRequestObject extends BaseModel implements IBrowserBro
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && BrowserBrowseRequestObject.hasDefaultValue('uri')) {

@@ -13,10 +13,13 @@ export interface IAuthRadiusDomain {
     'nas-id'?: string;
     'servers'?: Array<IAuthRadiusServer>;
     'tag'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** NasID is a string identifying the NAS(API Gw) originating the Access-Request. */
     'nas-id': string = null;
     'servers': Array<AuthRadiusServer> = null;
@@ -71,6 +74,9 @@ export class AuthRadiusDomain extends BaseModel implements IAuthRadiusDomain {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['nas-id'] != null) {
             this['nas-id'] = values['nas-id'];
         } else if (fillDefaults && AuthRadiusDomain.hasDefaultValue('nas-id')) {

@@ -14,10 +14,13 @@ export interface ISecurityDns {
     'drop-long-label-packets'?: boolean;
     'max-message-length'?: number;
     'query-response-timeout': string;
+    '_ui'?: any;
 }
 
 
 export class SecurityDns extends BaseModel implements ISecurityDns {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Drop packet if number of questions is more than one. */
     'drop-multi-question-packets': boolean = null;
     /** Drop if domain name size is > 255 bytes. */
@@ -89,6 +92,9 @@ export class SecurityDns extends BaseModel implements ISecurityDns {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['drop-multi-question-packets'] != null) {
             this['drop-multi-question-packets'] = values['drop-multi-question-packets'];
         } else if (fillDefaults && SecurityDns.hasDefaultValue('drop-multi-question-packets')) {

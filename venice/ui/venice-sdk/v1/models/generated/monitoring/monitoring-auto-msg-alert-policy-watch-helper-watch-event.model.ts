@@ -12,10 +12,13 @@ import { MonitoringAlertPolicy, IMonitoringAlertPolicy } from './monitoring-aler
 export interface IMonitoringAutoMsgAlertPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IMonitoringAlertPolicy;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgAlertPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgAlertPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': MonitoringAlertPolicy = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgAlertPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class MonitoringAutoMsgAlertPolicyWatchHelperWatchEvent extends BaseModel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgAlertPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

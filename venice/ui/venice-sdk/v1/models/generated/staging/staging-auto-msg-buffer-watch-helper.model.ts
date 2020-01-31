@@ -11,10 +11,13 @@ import { StagingAutoMsgBufferWatchHelperWatchEvent, IStagingAutoMsgBufferWatchHe
 
 export interface IStagingAutoMsgBufferWatchHelper {
     'events'?: Array<IStagingAutoMsgBufferWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagingAutoMsgBufferWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<StagingAutoMsgBufferWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IStagingAutoMsgBufferWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class StagingAutoMsgBufferWatchHelper extends BaseModel implements IStagi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<StagingAutoMsgBufferWatchHelperWatchEvent>(this, 'events', values['events'], StagingAutoMsgBufferWatchHelperWatchEvent);
         } else {

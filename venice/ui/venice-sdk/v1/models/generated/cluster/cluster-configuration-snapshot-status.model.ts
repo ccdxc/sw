@@ -11,10 +11,13 @@ import { ConfigurationSnapshotStatusConfigSaveStatus, IConfigurationSnapshotStat
 
 export interface IClusterConfigurationSnapshotStatus {
     'last-snapshot'?: IConfigurationSnapshotStatusConfigSaveStatus;
+    '_ui'?: any;
 }
 
 
 export class ClusterConfigurationSnapshotStatus extends BaseModel implements IClusterConfigurationSnapshotStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'last-snapshot': ConfigurationSnapshotStatusConfigSaveStatus = null;
     public static propInfo: { [prop in keyof IClusterConfigurationSnapshotStatus]: PropInfoItem } = {
         'last-snapshot': {
@@ -55,6 +58,9 @@ export class ClusterConfigurationSnapshotStatus extends BaseModel implements ICl
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['last-snapshot'].setValues(values['last-snapshot'], fillDefaults);
         } else {

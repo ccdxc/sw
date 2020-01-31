@@ -24,10 +24,13 @@ export interface IClusterDistributedServiceCardStatus {
     'DSCSku'?: string;
     'host'?: string;
     'adm-phase-reason'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterDistributedServiceCardStatus extends BaseModel implements IClusterDistributedServiceCardStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Current admission phase of the DistributedServiceCard. When auto-admission is enabled, AdmissionPhase will be set to NIC_ADMITTED by CMD for validated NICs. When auto-admission is not enabled, AdmissionPhase will be set to NIC_PENDING by CMD for validated NICs since it requires manual approval. To admit the NIC as a part of manual admission, user is expected to set Spec.Admit to true for the NICs that are in NIC_PENDING state. Note : Whitelist mode is not supported yet. */
     'admission-phase': ClusterDistributedServiceCardStatus_admission_phase = null;
     /** List of current NIC conditions. */
@@ -146,6 +149,9 @@ export class ClusterDistributedServiceCardStatus extends BaseModel implements IC
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['admission-phase'] != null) {
             this['admission-phase'] = values['admission-phase'];
         } else if (fillDefaults && ClusterDistributedServiceCardStatus.hasDefaultValue('admission-phase')) {

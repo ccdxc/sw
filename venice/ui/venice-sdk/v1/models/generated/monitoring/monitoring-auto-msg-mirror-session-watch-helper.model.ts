@@ -11,10 +11,13 @@ import { MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent, IMonitoringAutoMsg
 
 export interface IMonitoringAutoMsgMirrorSessionWatchHelper {
     'events'?: Array<IMonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel implements IMonitoringAutoMsgMirrorSessionWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgMirrorSessionWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class MonitoringAutoMsgMirrorSessionWatchHelper extends BaseModel impleme
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgMirrorSessionWatchHelperWatchEvent);
         } else {

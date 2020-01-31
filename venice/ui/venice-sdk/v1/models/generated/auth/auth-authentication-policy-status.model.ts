@@ -13,10 +13,13 @@ import { AuthRadiusServerStatus, IAuthRadiusServerStatus } from './auth-radius-s
 export interface IAuthAuthenticationPolicyStatus {
     'ldap-servers'?: Array<IAuthLdapServerStatus>;
     'radius-servers'?: Array<IAuthRadiusServerStatus>;
+    '_ui'?: any;
 }
 
 
 export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAuthenticationPolicyStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'ldap-servers': Array<AuthLdapServerStatus> = null;
     'radius-servers': Array<AuthRadiusServerStatus> = null;
     public static propInfo: { [prop in keyof IAuthAuthenticationPolicyStatus]: PropInfoItem } = {
@@ -63,6 +66,9 @@ export class AuthAuthenticationPolicyStatus extends BaseModel implements IAuthAu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthLdapServerStatus>(this, 'ldap-servers', values['ldap-servers'], AuthLdapServerStatus);
         } else {

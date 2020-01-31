@@ -20,10 +20,13 @@ export interface IRolloutRolloutStatus {
     'end-time'?: Date;
     'prev-version'?: string;
     'reason'?: string;
+    '_ui'?: any;
 }
 
 
 export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Rollout status of Controller Node. */
     'controller-nodes-status': Array<RolloutRolloutPhase> = null;
     /** Rollout status of Various Controller Services. */
@@ -124,6 +127,9 @@ export class RolloutRolloutStatus extends BaseModel implements IRolloutRolloutSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<RolloutRolloutPhase>(this, 'controller-nodes-status', values['controller-nodes-status'], RolloutRolloutPhase);
         } else {

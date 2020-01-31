@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IObjstoreBucketStatus {
     'num-objects'?: number;
     'total-size'?: number;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'num-objects': number = null;
     'total-size': number = null;
     public static propInfo: { [prop in keyof IObjstoreBucketStatus]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class ObjstoreBucketStatus extends BaseModel implements IObjstoreBucketSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['num-objects'] != null) {
             this['num-objects'] = values['num-objects'];
         } else if (fillDefaults && ObjstoreBucketStatus.hasDefaultValue('num-objects')) {

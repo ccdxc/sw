@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface INetworkDHCPServer {
     'ip-address': string;
     'virtual-router'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkDHCPServer extends BaseModel implements INetworkDHCPServer {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** IP Address of the server. Should be a valid v4 or v6 IP address. */
     'ip-address': string = null;
     /** Destination VRF where the server is connected. An empty value specifies that the server is reachable in the same vrf as the one where the policy is attached. */
@@ -64,6 +67,9 @@ export class NetworkDHCPServer extends BaseModel implements INetworkDHCPServer {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['ip-address'] != null) {
             this['ip-address'] = values['ip-address'];
         } else if (fillDefaults && NetworkDHCPServer.hasDefaultValue('ip-address')) {

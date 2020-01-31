@@ -16,10 +16,13 @@ export interface IAuthLdapAttributeMapping {
     'group-object-class'?: string;
     'email'?: string;
     'fullname'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttributeMapping {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The name that the server uses for the UserID Attribute. */
     'user': string = null;
     /** UserObjectClass is the STRUCTURAL object class for user entry in LDAP. It is used as a filter for user search. */
@@ -103,6 +106,9 @@ export class AuthLdapAttributeMapping extends BaseModel implements IAuthLdapAttr
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['user'] != null) {
             this['user'] = values['user'];
         } else if (fillDefaults && AuthLdapAttributeMapping.hasDefaultValue('user')) {

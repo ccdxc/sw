@@ -12,10 +12,13 @@ import { ClusterDistributedServiceCard, IClusterDistributedServiceCard } from '.
 export interface IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IClusterDistributedServiceCard;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': ClusterDistributedServiceCard = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent extends B
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgDistributedServiceCardWatchHelperWatchEvent.hasDefaultValue('type')) {

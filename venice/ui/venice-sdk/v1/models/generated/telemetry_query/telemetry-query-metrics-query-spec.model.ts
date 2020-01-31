@@ -25,10 +25,13 @@ export interface ITelemetry_queryMetricsQuerySpec {
     'group-by-field'?: string;
     'pagination'?: ITelemetry_queryPaginationSpec;
     'sort-order': Telemetry_queryMetricsQuerySpec_sort_order;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelemetry_queryMetricsQuerySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     /** Name is the name of the API object. Must start and end with alpha numeric and can have alphanumeric, -, _, . */
@@ -149,6 +152,9 @@ export class Telemetry_queryMetricsQuerySpec extends BaseModel implements ITelem
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && Telemetry_queryMetricsQuerySpec.hasDefaultValue('kind')) {

@@ -14,10 +14,13 @@ export interface IMonitoringMatchRule {
     'source'?: IMonitoringMatchSelector;
     'destination'?: IMonitoringMatchSelector;
     'app-protocol-selectors'?: IMonitoringAppProtoSelector;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRule {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored. */
     'source': MonitoringMatchSelector = null;
     /** Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored. */
@@ -76,6 +79,9 @@ export class MonitoringMatchRule extends BaseModel implements IMonitoringMatchRu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['source'].setValues(values['source'], fillDefaults);
         } else {

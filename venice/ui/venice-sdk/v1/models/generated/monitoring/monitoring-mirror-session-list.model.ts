@@ -15,10 +15,13 @@ export interface IMonitoringMirrorSessionList {
     'api-version'?: string;
     'list-meta'?: IApiListMeta;
     'items'?: Array<IMonitoringMirrorSession>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorSessionList extends BaseModel implements IMonitoringMirrorSessionList {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'list-meta': ApiListMeta = null;
@@ -77,6 +80,9 @@ export class MonitoringMirrorSessionList extends BaseModel implements IMonitorin
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringMirrorSessionList.hasDefaultValue('kind')) {

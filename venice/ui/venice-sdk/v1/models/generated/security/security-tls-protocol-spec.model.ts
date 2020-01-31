@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecurityTLSProtocolSpec {
     'version'?: string;
     'cipher-suite'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSProtocolSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** TLS version: only supported value at present is 1.2. */
     'version': string = null;
     /** The name of the cipher suite in IANA format default is TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384. */
@@ -63,6 +66,9 @@ export class SecurityTLSProtocolSpec extends BaseModel implements ISecurityTLSPr
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
         } else if (fillDefaults && SecurityTLSProtocolSpec.hasDefaultValue('version')) {

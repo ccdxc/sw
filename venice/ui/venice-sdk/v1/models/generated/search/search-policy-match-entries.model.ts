@@ -11,10 +11,13 @@ import { SearchPolicyMatchEntry, ISearchPolicyMatchEntry } from './search-policy
 
 export interface ISearchPolicyMatchEntries {
     'entries'?: Array<ISearchPolicyMatchEntry>;
+    '_ui'?: any;
 }
 
 
 export class SearchPolicyMatchEntries extends BaseModel implements ISearchPolicyMatchEntries {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'entries': Array<SearchPolicyMatchEntry> = null;
     public static propInfo: { [prop in keyof ISearchPolicyMatchEntries]: PropInfoItem } = {
         'entries': {
@@ -55,6 +58,9 @@ export class SearchPolicyMatchEntries extends BaseModel implements ISearchPolicy
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SearchPolicyMatchEntry>(this, 'entries', values['entries'], SearchPolicyMatchEntry);
         } else {

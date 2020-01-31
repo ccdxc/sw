@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IClusterFeature {
     'feature-key'?: string;
     'licence'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterFeature extends BaseModel implements IClusterFeature {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'feature-key': string = null;
     'licence': string = null;
     public static propInfo: { [prop in keyof IClusterFeature]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class ClusterFeature extends BaseModel implements IClusterFeature {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['feature-key'] != null) {
             this['feature-key'] = values['feature-key'];
         } else if (fillDefaults && ClusterFeature.hasDefaultValue('feature-key')) {

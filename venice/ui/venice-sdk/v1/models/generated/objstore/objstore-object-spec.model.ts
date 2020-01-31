@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IObjstoreObjectSpec {
     'content-type'?: string;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Content-Type for the stored object. Can either be specified when uploading. or the backend guesses one if possible. */
     'content-type': string = null;
     public static propInfo: { [prop in keyof IObjstoreObjectSpec]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class ObjstoreObjectSpec extends BaseModel implements IObjstoreObjectSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['content-type'] != null) {
             this['content-type'] = values['content-type'];
         } else if (fillDefaults && ObjstoreObjectSpec.hasDefaultValue('content-type')) {

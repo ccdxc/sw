@@ -18,10 +18,13 @@ export interface IMonitoringFlowExportPolicySpec {
     'format': MonitoringFlowExportPolicySpec_format;
     'match-rules'?: Array<IMonitoringMatchRule>;
     'exports'?: Array<IMonitoringExportConfig>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonitoringFlowExportPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** VrfName specifies the name of the VRF that the current flow export Policy belongs to. */
     'vrf-name': string = null;
     /** Interval defines how often to push the records to an external collector The value is specified as a string format, '10s', '20m'. Should be a valid time duration between 1s and 24h0m0s. */
@@ -102,6 +105,9 @@ export class MonitoringFlowExportPolicySpec extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['vrf-name'] != null) {
             this['vrf-name'] = values['vrf-name'];
         } else if (fillDefaults && MonitoringFlowExportPolicySpec.hasDefaultValue('vrf-name')) {

@@ -17,10 +17,13 @@ export interface INetworkRoutingConfig {
     'meta'?: IApiObjectMeta;
     'spec'?: INetworkRoutingConfigSpec;
     'status'?: INetworkRoutingConfigStatus;
+    '_ui'?: any;
 }
 
 
 export class NetworkRoutingConfig extends BaseModel implements INetworkRoutingConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -87,6 +90,9 @@ export class NetworkRoutingConfig extends BaseModel implements INetworkRoutingCo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && NetworkRoutingConfig.hasDefaultValue('kind')) {

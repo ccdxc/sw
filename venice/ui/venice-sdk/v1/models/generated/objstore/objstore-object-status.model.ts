@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IObjstoreObjectStatus {
     'size'?: string;
     'digest'?: string;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Size is the total size of the object. */
     'size': string = null;
     /** Digest is a hash digest of the object content. */
@@ -63,6 +66,9 @@ export class ObjstoreObjectStatus extends BaseModel implements IObjstoreObjectSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['size'] != null) {
             this['size'] = values['size'];
         } else if (fillDefaults && ObjstoreObjectStatus.hasDefaultValue('size')) {

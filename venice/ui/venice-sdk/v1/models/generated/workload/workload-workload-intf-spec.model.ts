@@ -13,10 +13,13 @@ export interface IWorkloadWorkloadIntfSpec {
     'micro-seg-vlan': number;
     'external-vlan': number;
     'ip-addresses'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWorkloadIntfSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** MACAddress contains the MAC address of the interface as seen by the workload. Should be a valid MAC address. */
     'mac-address': string = null;
     /** Micro-segmentation vlan assigned for this interface. Value should be between 1 and 4095. */
@@ -81,6 +84,9 @@ export class WorkloadWorkloadIntfSpec extends BaseModel implements IWorkloadWork
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['mac-address'] != null) {
             this['mac-address'] = values['mac-address'];
         } else if (fillDefaults && WorkloadWorkloadIntfSpec.hasDefaultValue('mac-address')) {

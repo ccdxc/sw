@@ -23,10 +23,13 @@ export interface INetworkNetworkSpec {
     'ipam-policy'?: string;
     'route-imoport-export'?: INetworkRDSpec;
     'orchestrators'?: Array<INetworkOrchestratorInfo>;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type of network. (vlan/vxlan/routed etc). */
     'type': NetworkNetworkSpec_type = null;
     /** IPv4 subnet CIDR. */
@@ -142,6 +145,9 @@ export class NetworkNetworkSpec extends BaseModel implements INetworkNetworkSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkNetworkSpec.hasDefaultValue('type')) {

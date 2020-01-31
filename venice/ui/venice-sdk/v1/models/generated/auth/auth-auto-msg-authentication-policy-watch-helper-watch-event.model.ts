@@ -12,10 +12,13 @@ import { AuthAuthenticationPolicy, IAuthAuthenticationPolicy } from './auth-auth
 export interface IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IAuthAuthenticationPolicy;
+    '_ui'?: any;
 }
 
 
 export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': AuthAuthenticationPolicy = null;
     public static propInfo: { [prop in keyof IAuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent extends BaseMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && AuthAutoMsgAuthenticationPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

@@ -14,10 +14,13 @@ export interface IAuthResource {
     'kind'?: string;
     'namespace'?: string;
     'name'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthResource extends BaseModel implements IAuthResource {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant to which the resource belongs. */
     'tenant': string = null;
     /** Group of resource to which access is desired. */
@@ -87,6 +90,9 @@ export class AuthResource extends BaseModel implements IAuthResource {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && AuthResource.hasDefaultValue('tenant')) {

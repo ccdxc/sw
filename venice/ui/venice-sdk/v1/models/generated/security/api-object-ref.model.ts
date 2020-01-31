@@ -14,10 +14,13 @@ export interface IApiObjectRef {
     'kind'?: string;
     'name'?: string;
     'uri'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiObjectRef extends BaseModel implements IApiObjectRef {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant of the object. */
     'tenant': string = null;
     /** Namespace of the object, for scoped objects. */
@@ -87,6 +90,9 @@ export class ApiObjectRef extends BaseModel implements IApiObjectRef {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && ApiObjectRef.hasDefaultValue('tenant')) {

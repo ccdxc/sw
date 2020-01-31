@@ -11,10 +11,13 @@ import { MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent, IMonitoringAu
 
 export interface IMonitoringAutoMsgTechSupportRequestWatchHelper {
     'events'?: Array<IMonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel implements IMonitoringAutoMsgTechSupportRequestWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgTechSupportRequestWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class MonitoringAutoMsgTechSupportRequestWatchHelper extends BaseModel im
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent>(this, 'events', values['events'], MonitoringAutoMsgTechSupportRequestWatchHelperWatchEvent);
         } else {

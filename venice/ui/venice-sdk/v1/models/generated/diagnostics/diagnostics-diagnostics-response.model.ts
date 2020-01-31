@@ -11,10 +11,13 @@ import { ApiAny, IApiAny } from './api-any.model';
 
 export interface IDiagnosticsDiagnosticsResponse {
     'diagnostics'?: IApiAny;
+    '_ui'?: any;
 }
 
 
 export class DiagnosticsDiagnosticsResponse extends BaseModel implements IDiagnosticsDiagnosticsResponse {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'diagnostics': ApiAny = null;
     public static propInfo: { [prop in keyof IDiagnosticsDiagnosticsResponse]: PropInfoItem } = {
         'diagnostics': {
@@ -55,6 +58,9 @@ export class DiagnosticsDiagnosticsResponse extends BaseModel implements IDiagno
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['diagnostics'].setValues(values['diagnostics'], fillDefaults);
         } else {

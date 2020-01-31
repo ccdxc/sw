@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISecurityProtoPort {
     'protocol'?: string;
     'ports'?: string;
+    '_ui'?: any;
 }
 
 
 export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Protocol is ip (v4/v6) protocol name/number; names can be: tcp, udp, igmp, icmp, gre, esp, etc. */
     'protocol': string = null;
     /** TCP or UDP port number(s): comma separate port numbers, or dash separate port range. */
@@ -63,6 +66,9 @@ export class SecurityProtoPort extends BaseModel implements ISecurityProtoPort {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['protocol'] != null) {
             this['protocol'] = values['protocol'];
         } else if (fillDefaults && SecurityProtoPort.hasDefaultValue('protocol')) {

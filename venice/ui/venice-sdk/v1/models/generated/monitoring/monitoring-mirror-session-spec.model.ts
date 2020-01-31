@@ -20,10 +20,13 @@ export interface IMonitoringMirrorSessionSpec {
     'match-rules'?: Array<IMonitoringMatchRule>;
     'packet-filters': Array<MonitoringMirrorSessionSpec_packet_filters>;
     'interface-selector'?: ILabelsSelector;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitoringMirrorSessionSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** PacketSize: Max size of a mirrored packet. PacketSize = 0 indicates complete packet is mirrored, except when mirrored packets are sent to Venice. For packets mirrored to Venice, max mirror packet size allowed is 256 B. */
     'packet-size': number = null;
     /** StartConditions. */
@@ -105,6 +108,9 @@ export class MonitoringMirrorSessionSpec extends BaseModel implements IMonitorin
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['packet-size'] != null) {
             this['packet-size'] = values['packet-size'];
         } else if (fillDefaults && MonitoringMirrorSessionSpec.hasDefaultValue('packet-size')) {

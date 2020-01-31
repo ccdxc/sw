@@ -13,10 +13,13 @@ import { MonitoringTsResult, IMonitoringTsResult } from './monitoring-ts-result.
 export interface IMonitoringTroubleshootingSessionStatus {
     'state': MonitoringTroubleshootingSessionStatus_state;
     'troubleshooting-results'?: Array<IMonitoringTsResult>;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTroubleshootingSessionStatus extends BaseModel implements IMonitoringTroubleshootingSessionStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'state': MonitoringTroubleshootingSessionStatus_state = null;
     /** Report is generated each time troubleshooting session is activated i.e time-window. */
     'troubleshooting-results': Array<MonitoringTsResult> = null;
@@ -66,6 +69,9 @@ export class MonitoringTroubleshootingSessionStatus extends BaseModel implements
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['state'] != null) {
             this['state'] = values['state'];
         } else if (fillDefaults && MonitoringTroubleshootingSessionStatus.hasDefaultValue('state')) {

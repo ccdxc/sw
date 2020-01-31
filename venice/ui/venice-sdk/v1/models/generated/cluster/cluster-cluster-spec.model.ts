@@ -15,10 +15,13 @@ export interface IClusterClusterSpec {
     'auto-admit-dscs'?: boolean;
     'certs'?: string;
     'key'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** QuorumNodes contains the list of hostnames for nodes configured to be quorum nodes in the cluster. */
     'quorum-nodes': Array<string> = null;
     /** VirtualIP is the IP address for managing the cluster. It will be hosted by the winner of election between quorum nodes. */
@@ -97,6 +100,9 @@ export class ClusterClusterSpec extends BaseModel implements IClusterClusterSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['quorum-nodes'] != null) {
             this['quorum-nodes'] = values['quorum-nodes'];
         } else if (fillDefaults && ClusterClusterSpec.hasDefaultValue('quorum-nodes')) {

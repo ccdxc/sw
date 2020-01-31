@@ -21,10 +21,13 @@ export interface INetworkNetworkInterfaceStatus {
     'if-uplink-status'?: INetworkNetworkInterfaceUplinkStatus;
     'mirror-enabled'?: boolean;
     'cluster-node'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkNetworkInterfaceStatus extends BaseModel implements INetworkNetworkInterfaceStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'dsc': string = null;
     'type': NetworkNetworkInterfaceStatus_type = null;
     'oper-status': NetworkNetworkInterfaceStatus_oper_status = null;
@@ -110,6 +113,9 @@ export class NetworkNetworkInterfaceStatus extends BaseModel implements INetwork
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['dsc'] != null) {
             this['dsc'] = values['dsc'];
         } else if (fillDefaults && NetworkNetworkInterfaceStatus.hasDefaultValue('dsc')) {

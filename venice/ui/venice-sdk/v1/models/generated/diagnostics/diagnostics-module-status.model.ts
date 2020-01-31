@@ -20,10 +20,13 @@ export interface IDiagnosticsModuleStatus {
     'service'?: string;
     'service-ports'?: Array<IDiagnosticsServicePort>;
     'mac-address'?: string;
+    '_ui'?: any;
 }
 
 
 export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsModuleStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Node on which this process is running. */
     'node': string = null;
     /** Module is the name of the process/container. */
@@ -124,6 +127,9 @@ export class DiagnosticsModuleStatus extends BaseModel implements IDiagnosticsMo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['node'] != null) {
             this['node'] = values['node'];
         } else if (fillDefaults && DiagnosticsModuleStatus.hasDefaultValue('node')) {

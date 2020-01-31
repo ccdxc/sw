@@ -11,10 +11,13 @@ import { LabelsRequirement, ILabelsRequirement } from './labels-requirement.mode
 
 export interface ILabelsSelector {
     'requirements'?: Array<ILabelsRequirement>;
+    '_ui'?: any;
 }
 
 
 export class LabelsSelector extends BaseModel implements ILabelsSelector {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Requirements are ANDed. */
     'requirements': Array<LabelsRequirement> = null;
     public static propInfo: { [prop in keyof ILabelsSelector]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class LabelsSelector extends BaseModel implements ILabelsSelector {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<LabelsRequirement>(this, 'requirements', values['requirements'], LabelsRequirement);
         } else {

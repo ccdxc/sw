@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ITokenauthNodeTokenResponse {
     'Token'?: string;
+    '_ui'?: any;
 }
 
 
 export class TokenauthNodeTokenResponse extends BaseModel implements ITokenauthNodeTokenResponse {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Token': string = null;
     public static propInfo: { [prop in keyof ITokenauthNodeTokenResponse]: PropInfoItem } = {
         'Token': {
@@ -53,6 +56,9 @@ export class TokenauthNodeTokenResponse extends BaseModel implements ITokenauthN
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Token'] != null) {
             this['Token'] = values['Token'];
         } else if (fillDefaults && TokenauthNodeTokenResponse.hasDefaultValue('Token')) {

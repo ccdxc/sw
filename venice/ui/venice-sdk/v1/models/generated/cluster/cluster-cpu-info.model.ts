@@ -13,10 +13,13 @@ export interface IClusterCPUInfo {
     'num-sockets'?: number;
     'num-cores'?: number;
     'num-threads'?: number;
+    '_ui'?: any;
 }
 
 
 export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** CPU speed per core, eg: 2099998101. */
     'speed': string = null;
     /** Number of CPU sockets, eg: 2, 4. */
@@ -79,6 +82,9 @@ export class ClusterCPUInfo extends BaseModel implements IClusterCPUInfo {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['speed'] != null) {
             this['speed'] = values['speed'];
         } else if (fillDefaults && ClusterCPUInfo.hasDefaultValue('speed')) {

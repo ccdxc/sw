@@ -19,10 +19,13 @@ export interface IApiObjectMeta {
     'creation-time'?: Date;
     'mod-time'?: Date;
     'self-link'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64. */
     'name': string = null;
     /** Tenant to which the object belongs to. This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to. Must be alpha-numerics. Length of string should be between 1 and 48. */
@@ -127,6 +130,9 @@ export class ApiObjectMeta extends BaseModel implements IApiObjectMeta {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && ApiObjectMeta.hasDefaultValue('name')) {

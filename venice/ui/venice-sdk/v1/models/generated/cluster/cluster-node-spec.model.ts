@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IClusterNodeSpec {
     'routing-config'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** RoutingConfig the routing configuration. */
     'routing-config': string = null;
     public static propInfo: { [prop in keyof IClusterNodeSpec]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class ClusterNodeSpec extends BaseModel implements IClusterNodeSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['routing-config'] != null) {
             this['routing-config'] = values['routing-config'];
         } else if (fillDefaults && ClusterNodeSpec.hasDefaultValue('routing-config')) {

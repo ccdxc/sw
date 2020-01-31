@@ -12,10 +12,13 @@ import { GoogleprotobufAny, IGoogleprotobufAny } from './googleprotobuf-any.mode
 export interface IApiWatchEvent {
     'type'?: string;
     'object'?: IGoogleprotobufAny;
+    '_ui'?: any;
 }
 
 
 export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': GoogleprotobufAny = null;
     public static propInfo: { [prop in keyof IApiWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ApiWatchEvent extends BaseModel implements IApiWatchEvent {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ApiWatchEvent.hasDefaultValue('type')) {

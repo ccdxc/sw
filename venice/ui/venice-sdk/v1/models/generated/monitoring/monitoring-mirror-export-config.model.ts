@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IMonitoringMirrorExportConfig {
     'destination': string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringMirrorExportConfig extends BaseModel implements IMonitoringMirrorExportConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** IP address of the collector/entity to which the data is to be exported. Should be a valid IPv4 address. */
     'destination': string = null;
     public static propInfo: { [prop in keyof IMonitoringMirrorExportConfig]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class MonitoringMirrorExportConfig extends BaseModel implements IMonitori
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['destination'] != null) {
             this['destination'] = values['destination'];
         } else if (fillDefaults && MonitoringMirrorExportConfig.hasDefaultValue('destination')) {

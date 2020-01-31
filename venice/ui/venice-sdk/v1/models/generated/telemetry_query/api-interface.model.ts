@@ -15,10 +15,13 @@ export interface IApiInterface {
     'Bool'?: boolean;
     'Float'?: number;
     'Interfaces'?: IApiInterfaceSlice;
+    '_ui'?: any;
 }
 
 
 export class ApiInterface extends BaseModel implements IApiInterface {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Str': string = null;
     'Int64': string = null;
     'Bool': boolean = null;
@@ -79,6 +82,9 @@ export class ApiInterface extends BaseModel implements IApiInterface {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['Str'] != null) {
             this['Str'] = values['Str'];
         } else if (fillDefaults && ApiInterface.hasDefaultValue('Str')) {

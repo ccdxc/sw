@@ -13,10 +13,13 @@ export interface IMonitoringArchiveRequestStatus {
     'status': MonitoringArchiveRequestStatus_status;
     'reason'?: string;
     'uri'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringArchiveRequestStatus extends BaseModel implements IMonitoringArchiveRequestStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'status': MonitoringArchiveRequestStatus_status = null;
     'reason': string = null;
     'uri': string = null;
@@ -68,6 +71,9 @@ export class MonitoringArchiveRequestStatus extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && MonitoringArchiveRequestStatus.hasDefaultValue('status')) {

@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IClusterTenantSpec {
     'admin-user'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant admin user. */
     'admin-user': string = null;
     public static propInfo: { [prop in keyof IClusterTenantSpec]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class ClusterTenantSpec extends BaseModel implements IClusterTenantSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['admin-user'] != null) {
             this['admin-user'] = values['admin-user'];
         } else if (fillDefaults && ClusterTenantSpec.hasDefaultValue('admin-user')) {

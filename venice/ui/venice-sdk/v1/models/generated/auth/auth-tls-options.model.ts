@@ -13,10 +13,13 @@ export interface IAuthTLSOptions {
     'skip-server-cert-verification'?: boolean;
     'server-name'?: string;
     'trusted-certs'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** StartTLS determines if ldap connection uses TLS. */
     'start-tls': boolean = null;
     /** SkipServerCertVerification controls whether a client verifies the server's certificate chain and host name. If SkipServerCertVerification is true, TLS accepts any certificate presented by the server and any host name in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing. */
@@ -79,6 +82,9 @@ export class AuthTLSOptions extends BaseModel implements IAuthTLSOptions {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['start-tls'] != null) {
             this['start-tls'] = values['start-tls'];
         } else if (fillDefaults && AuthTLSOptions.hasDefaultValue('start-tls')) {

@@ -14,10 +14,13 @@ export interface IMonitoringTechSupportRequestSpec {
     'collection-selector'?: ILabelsSelector;
     'node-selector'?: ITechSupportRequestSpecNodeSelectorSpec;
     'verbosity'?: number;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTechSupportRequestSpec extends BaseModel implements IMonitoringTechSupportRequestSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** CollectionSelector is a Label selector for modules to collect. */
     'collection-selector': LabelsSelector = null;
     /** NodeSelector is a label selector that selects nodes to collect tech support from. */
@@ -75,6 +78,9 @@ export class MonitoringTechSupportRequestSpec extends BaseModel implements IMoni
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['collection-selector'].setValues(values['collection-selector'], fillDefaults);
         } else {

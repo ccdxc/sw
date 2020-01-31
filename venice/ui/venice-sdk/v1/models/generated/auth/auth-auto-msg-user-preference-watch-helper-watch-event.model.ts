@@ -12,10 +12,13 @@ import { AuthUserPreference, IAuthUserPreference } from './auth-user-preference.
 export interface IAuthAutoMsgUserPreferenceWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IAuthUserPreference;
+    '_ui'?: any;
 }
 
 
 export class AuthAutoMsgUserPreferenceWatchHelperWatchEvent extends BaseModel implements IAuthAutoMsgUserPreferenceWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': AuthUserPreference = null;
     public static propInfo: { [prop in keyof IAuthAutoMsgUserPreferenceWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class AuthAutoMsgUserPreferenceWatchHelperWatchEvent extends BaseModel im
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && AuthAutoMsgUserPreferenceWatchHelperWatchEvent.hasDefaultValue('type')) {

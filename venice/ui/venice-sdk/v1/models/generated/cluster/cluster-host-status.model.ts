@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IClusterHostStatus {
     'admitted-dscs'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** AdmittedDSCs contains a list of admitted DistributedServiceCards that are on this host. */
     'admitted-dscs': Array<string> = null;
     public static propInfo: { [prop in keyof IClusterHostStatus]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class ClusterHostStatus extends BaseModel implements IClusterHostStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['admitted-dscs'] != null) {
             this['admitted-dscs'] = values['admitted-dscs'];
         } else if (fillDefaults && ClusterHostStatus.hasDefaultValue('admitted-dscs')) {

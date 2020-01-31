@@ -15,10 +15,13 @@ export interface IAuthRadiusServerStatus {
     'message'?: string;
     'server'?: IAuthRadiusServer;
     'nas-id'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServerStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Result indicates if radius check was successful. */
     'result': AuthRadiusServerStatus_result = null;
     /** Message contains error message in case of failed check or a success message. */
@@ -84,6 +87,9 @@ export class AuthRadiusServerStatus extends BaseModel implements IAuthRadiusServ
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['result'] != null) {
             this['result'] = values['result'];
         } else if (fillDefaults && AuthRadiusServerStatus.hasDefaultValue('result')) {

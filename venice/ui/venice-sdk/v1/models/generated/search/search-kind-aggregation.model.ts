@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISearchKindAggregation {
     'kinds'?: object;
+    '_ui'?: any;
 }
 
 
 export class SearchKindAggregation extends BaseModel implements ISearchKindAggregation {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kinds': object = null;
     public static propInfo: { [prop in keyof ISearchKindAggregation]: PropInfoItem } = {
         'kinds': {
@@ -53,6 +56,9 @@ export class SearchKindAggregation extends BaseModel implements ISearchKindAggre
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kinds'] != null) {
             this['kinds'] = values['kinds'];
         } else if (fillDefaults && SearchKindAggregation.hasDefaultValue('kinds')) {

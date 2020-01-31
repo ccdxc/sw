@@ -13,10 +13,13 @@ export interface INetworkVirtualRouterStatus {
     'id'?: string;
     'route-table'?: string;
     'rd'?: INetworkRouteDistinguisher;
+    '_ui'?: any;
 }
 
 
 export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVirtualRouterStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Handle allocated in the system. */
     'id': string = null;
     'route-table': string = null;
@@ -69,6 +72,9 @@ export class NetworkVirtualRouterStatus extends BaseModel implements INetworkVir
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['id'] != null) {
             this['id'] = values['id'];
         } else if (fillDefaults && NetworkVirtualRouterStatus.hasDefaultValue('id')) {

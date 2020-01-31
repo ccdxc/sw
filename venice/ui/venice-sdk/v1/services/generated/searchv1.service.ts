@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { ISearchPolicySearchResponse,SearchPolicySearchResponse,SearchPolicySearchRequest,ISearchPolicySearchRequest,ISearchSearchResponse,SearchSearchResponse,SearchSearchRequest,ISearchSearchRequest } from '../../models/generated/search';
 
@@ -39,6 +39,7 @@ export class Searchv1Service extends AbstractService {
       objType: 'SearchPolicySearchResponse',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SearchPolicySearchRequest(body), null, trimDefaults)
     }
@@ -64,6 +65,7 @@ export class Searchv1Service extends AbstractService {
       objType: 'SearchSearchResponse',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new SearchSearchRequest(body), null, trimDefaults)
     }

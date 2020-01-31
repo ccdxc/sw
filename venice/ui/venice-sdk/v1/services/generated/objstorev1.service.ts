@@ -2,7 +2,7 @@ import { AbstractService } from './abstract.service';
 import { HttpClient } from '../../../../webapp/node_modules/@angular/common/http';
 import { Observable } from '../../../../webapp/node_modules/rxjs';
 import { Injectable } from '../../../../webapp/node_modules/@angular/core';
-import { TrimDefaultsAndEmptyFields } from '../../../v1/utils/utility';
+import { TrimDefaultsAndEmptyFields, TrimUIFields } from '../../../v1/utils/utility';
 
 import { IObjstoreStreamChunk,ObjstoreStreamChunk,IObjstoreObjectList,ObjstoreObjectList,IApiStatus,ApiStatus,IObjstoreObject,ObjstoreObject,IObjstoreAutoMsgObjectWatchHelper,ObjstoreAutoMsgObjectWatchHelper } from '../../models/generated/objstore';
 
@@ -84,6 +84,7 @@ export class Objstorev1Service extends AbstractService {
       objType: 'ObjstoreObject',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body), null, trimDefaults)
     }
@@ -198,6 +199,7 @@ export class Objstorev1Service extends AbstractService {
       objType: 'ObjstoreObject',
       isStaging: false,
     }
+    body = TrimUIFields(body)
     if (trimObject) {
       body = TrimDefaultsAndEmptyFields(body, new ObjstoreObject(body), null, trimDefaults)
     }

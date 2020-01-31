@@ -11,10 +11,13 @@ import { RolloutAutoMsgRolloutWatchHelperWatchEvent, IRolloutAutoMsgRolloutWatch
 
 export interface IRolloutAutoMsgRolloutWatchHelper {
     'events'?: Array<IRolloutAutoMsgRolloutWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRolloutAutoMsgRolloutWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<RolloutAutoMsgRolloutWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IRolloutAutoMsgRolloutWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class RolloutAutoMsgRolloutWatchHelper extends BaseModel implements IRoll
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<RolloutAutoMsgRolloutWatchHelperWatchEvent>(this, 'events', values['events'], RolloutAutoMsgRolloutWatchHelperWatchEvent);
         } else {

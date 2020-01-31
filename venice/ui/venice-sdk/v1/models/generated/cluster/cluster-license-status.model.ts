@@ -12,10 +12,13 @@ import { ClusterFeatureStatus, IClusterFeatureStatus } from './cluster-feature-s
 export interface IClusterLicenseStatus {
     'features'?: Array<IClusterFeatureStatus>;
     'unknown'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class ClusterLicenseStatus extends BaseModel implements IClusterLicenseStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Status of current Licenced features. */
     'features': Array<ClusterFeatureStatus> = null;
     /** Licenses that are not understood by the current running version of software. */
@@ -66,6 +69,9 @@ export class ClusterLicenseStatus extends BaseModel implements IClusterLicenseSt
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterFeatureStatus>(this, 'features', values['features'], ClusterFeatureStatus);
         } else {

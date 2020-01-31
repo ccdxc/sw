@@ -15,10 +15,13 @@ export interface ISecurityTrafficEncryptionPolicySpec {
     'tls'?: ISecurityTLSProtocolSpec;
     'ipsec'?: ISecurityIPsecProtocolSpec;
     'key-rotation-interval-secs'?: number;
+    '_ui'?: any;
 }
 
 
 export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements ISecurityTrafficEncryptionPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Possible values: TLS, IPsec. */
     'mode': string = null;
     /** TLS Parameters for workload-to-workload connections. */
@@ -83,6 +86,9 @@ export class SecurityTrafficEncryptionPolicySpec extends BaseModel implements IS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['mode'] != null) {
             this['mode'] = values['mode'];
         } else if (fillDefaults && SecurityTrafficEncryptionPolicySpec.hasDefaultValue('mode')) {

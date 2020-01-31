@@ -17,10 +17,13 @@ export interface ISecurityFirewallProfile {
     'meta'?: IApiObjectMeta;
     'spec'?: ISecurityFirewallProfileSpec;
     'status'?: ISecurityFirewallProfileStatus;
+    '_ui'?: any;
 }
 
 
 export class SecurityFirewallProfile extends BaseModel implements ISecurityFirewallProfile {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -83,6 +86,9 @@ export class SecurityFirewallProfile extends BaseModel implements ISecurityFirew
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && SecurityFirewallProfile.hasDefaultValue('kind')) {

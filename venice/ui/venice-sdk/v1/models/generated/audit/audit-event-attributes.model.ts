@@ -27,10 +27,13 @@ export interface IAuditEventAttributes {
     'gateway-ip'?: string;
     'service-name'?: string;
     'data'?: object;
+    '_ui'?: any;
 }
 
 
 export class AuditEventAttributes extends BaseModel implements IAuditEventAttributes {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Request handling stage at which audit log was generated. */
     'stage': AuditEventAttributes_stage = null;
     /** Level to control amount of audit information logged. */
@@ -173,6 +176,9 @@ export class AuditEventAttributes extends BaseModel implements IAuditEventAttrib
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['stage'] != null) {
             this['stage'] = values['stage'];
         } else if (fillDefaults && AuditEventAttributes.hasDefaultValue('stage')) {

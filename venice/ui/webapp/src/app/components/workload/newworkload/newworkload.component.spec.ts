@@ -22,6 +22,7 @@ import { configureTestSuite } from 'ng-bullet';
 import { ConfirmationService } from 'primeng/primeng';
 import { NewworkloadComponent } from './newworkload.component';
 import { MaterialdesignModule } from '@app/lib/materialdesign.module';
+import { TrimUIFields } from '@sdk/v1/utils/utility';
 
 
 describe('NewworkloadComponent', () => {
@@ -121,7 +122,7 @@ describe('NewworkloadComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[0];
-    const expVal = new WorkloadWorkload(workload).getModelValues();
+    const expVal = TrimUIFields(new WorkloadWorkload(workload).getModelValues());
     expect(_.isEqual(recVal, expVal)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 
@@ -154,7 +155,7 @@ describe('NewworkloadComponent', () => {
     tu.sendClick(tu.getElemByCss('.new-workload-save'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
-    const expVal = new WorkloadWorkload(workload).getModelValues();
+    const expVal = TrimUIFields(new WorkloadWorkload(workload).getModelValues());
     expect(_.isEqual(recVal.meta, expVal.meta)).toBeTruthy('Received: ' + JSON.stringify(recVal.meta) + ' , expected: ' + JSON.stringify(expVal.meta));
   });
 });

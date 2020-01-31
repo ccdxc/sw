@@ -15,10 +15,13 @@ export interface IAuthSubjectAccessReviewRequest {
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
     'operations'?: Array<IAuthOperation>;
+    '_ui'?: any;
 }
 
 
 export class AuthSubjectAccessReviewRequest extends BaseModel implements IAuthSubjectAccessReviewRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -75,6 +78,9 @@ export class AuthSubjectAccessReviewRequest extends BaseModel implements IAuthSu
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && AuthSubjectAccessReviewRequest.hasDefaultValue('kind')) {

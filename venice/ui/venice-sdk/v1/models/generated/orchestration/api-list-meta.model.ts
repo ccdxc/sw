@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IApiListMeta {
     'resource-version'?: string;
+    '_ui'?: any;
 }
 
 
 export class ApiListMeta extends BaseModel implements IApiListMeta {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Resource version of object store at the time of list generation. */
     'resource-version': string = null;
     public static propInfo: { [prop in keyof IApiListMeta]: PropInfoItem } = {
@@ -55,6 +58,9 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['resource-version'] != null) {
             this['resource-version'] = values['resource-version'];
         } else if (fillDefaults && ApiListMeta.hasDefaultValue('resource-version')) {

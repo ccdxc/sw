@@ -13,10 +13,13 @@ export interface IMonitoringCancelArchiveRequest {
     'kind'?: string;
     'api-version'?: string;
     'meta'?: IApiObjectMeta;
+    '_ui'?: any;
 }
 
 
 export class MonitoringCancelArchiveRequest extends BaseModel implements IMonitoringCancelArchiveRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     'meta': ApiObjectMeta = null;
@@ -67,6 +70,9 @@ export class MonitoringCancelArchiveRequest extends BaseModel implements IMonito
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && MonitoringCancelArchiveRequest.hasDefaultValue('kind')) {

@@ -11,10 +11,13 @@ import { SecurityAutoMsgCertificateWatchHelperWatchEvent, ISecurityAutoMsgCertif
 
 export interface ISecurityAutoMsgCertificateWatchHelper {
     'events'?: Array<ISecurityAutoMsgCertificateWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements ISecurityAutoMsgCertificateWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<SecurityAutoMsgCertificateWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgCertificateWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class SecurityAutoMsgCertificateWatchHelper extends BaseModel implements 
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityAutoMsgCertificateWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgCertificateWatchHelperWatchEvent);
         } else {

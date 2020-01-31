@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IDiagnosticsServicePort {
     'name'?: string;
     'port'?: number;
+    '_ui'?: any;
 }
 
 
 export class DiagnosticsServicePort extends BaseModel implements IDiagnosticsServicePort {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name is the name of the port. */
     'name': string = null;
     /** Port is port number. */
@@ -63,6 +66,9 @@ export class DiagnosticsServicePort extends BaseModel implements IDiagnosticsSer
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && DiagnosticsServicePort.hasDefaultValue('name')) {

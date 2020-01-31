@@ -13,10 +13,13 @@ export interface IAuthAuthenticationPolicySpec {
     'authenticators'?: IAuthAuthenticators;
     'secret'?: string;
     'token-expiry': string;
+    '_ui'?: any;
 }
 
 
 export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuthenticationPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'authenticators': AuthAuthenticators = null;
     /** Secret used to sign JWT token. */
     'secret': string = null;
@@ -73,6 +76,9 @@ export class AuthAuthenticationPolicySpec extends BaseModel implements IAuthAuth
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['authenticators'].setValues(values['authenticators'], fillDefaults);
         } else {

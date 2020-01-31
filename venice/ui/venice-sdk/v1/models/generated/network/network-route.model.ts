@@ -12,10 +12,13 @@ export interface INetworkRoute {
     'prefix': string;
     'next-hop': string;
     'target-virtual-router'?: string;
+    '_ui'?: any;
 }
 
 
 export class NetworkRoute extends BaseModel implements INetworkRoute {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Route Prefix for the route. Should be a valid v4 or v6 CIDR block. */
     'prefix': string = null;
     /** NextHop for the route. Should be a valid v4 or v6 CIDR block. */
@@ -73,6 +76,9 @@ export class NetworkRoute extends BaseModel implements INetworkRoute {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['prefix'] != null) {
             this['prefix'] = values['prefix'];
         } else if (fillDefaults && NetworkRoute.hasDefaultValue('prefix')) {

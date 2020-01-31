@@ -12,10 +12,13 @@ export interface ITokenauthNodeTokenRequest {
     'audience'?: Array<string>;
     'validity-start'?: Date;
     'validity-end'?: Date;
+    '_ui'?: any;
 }
 
 
 export class TokenauthNodeTokenRequest extends BaseModel implements ITokenauthNodeTokenRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Audience represents a list of nodes the token is valid for. "*" indicates all nodes. */
     'audience': Array<string> = null;
     /** ValidityStart indicates the time at which the token becomes valid. */
@@ -72,6 +75,9 @@ export class TokenauthNodeTokenRequest extends BaseModel implements ITokenauthNo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['audience'] != null) {
             this['audience'] = values['audience'];
         } else if (fillDefaults && TokenauthNodeTokenRequest.hasDefaultValue('audience')) {

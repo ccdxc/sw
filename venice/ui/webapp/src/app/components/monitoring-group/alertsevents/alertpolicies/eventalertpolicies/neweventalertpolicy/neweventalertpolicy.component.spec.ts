@@ -22,6 +22,7 @@ import { IMonitoringAlertPolicy, FieldsRequirement_operator, MonitoringAlertPoli
 import { TestingUtility } from '@app/common/TestingUtility';
 import * as _ from 'lodash';
 import { WidgetsModule } from 'web-app-framework';
+import { TrimUIFields } from '@sdk/v1/utils/utility';
 
 describe('NeweventalertpolicyComponent', () => {
   let component: NeweventalertpolicyComponent;
@@ -90,7 +91,7 @@ describe('NeweventalertpolicyComponent', () => {
     fixture.detectChanges();
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[0];
-    const expVal = new MonitoringAlertPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringAlertPolicy(policy).getModelValues());
     expect(_.isEqual(recVal.meta, expVal.meta)).toBeTruthy('Received: ' + JSON.stringify(recVal) + ' , expected: ' + JSON.stringify(expVal));
   });
 
@@ -124,7 +125,7 @@ describe('NeweventalertpolicyComponent', () => {
     tu.sendClick(tu.getElemByCss('.neweventalertpolicy-save'));
     expect(spy).toHaveBeenCalled();
     const recVal = spy.calls.mostRecent().args[1];
-    const expVal = new MonitoringAlertPolicy(policy).getModelValues();
+    const expVal = TrimUIFields(new MonitoringAlertPolicy(policy).getModelValues());
     expect(_.isEqual(recVal.meta, expVal.meta)).toBeTruthy('Received: ' + JSON.stringify(recVal.meta) + ' , expected: ' + JSON.stringify(expVal.meta));
     expect(_.isEqual(recVal.status, expVal.status)).toBeTruthy('Received: ' + JSON.stringify(recVal.status) + ' , expected: ' + JSON.stringify(expVal.status));
     expect(_.isEqual(recVal.spec.requirements, expVal.spec.requirements)).toBeTruthy('Received: ' + JSON.stringify(recVal.spec.requirements) + ' , expected: ' + JSON.stringify(expVal.spec.requirements));

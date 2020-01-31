@@ -20,10 +20,13 @@ export interface ISearchSearchResponse {
     'entries'?: Array<ISearchEntry>;
     'preview-entries'?: ISearchTenantPreview;
     'aggregated-entries'?: ISearchTenantAggregation;
+    '_ui'?: any;
 }
 
 
 export class SearchSearchResponse extends BaseModel implements ISearchSearchResponse {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** TotalHits indicates total number of hits matched. */
     'total-hits': string = null;
     /** ActualHits indicates the actual hits returned in this response. */
@@ -111,6 +114,9 @@ export class SearchSearchResponse extends BaseModel implements ISearchSearchResp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['total-hits'] != null) {
             this['total-hits'] = values['total-hits'];
         } else if (fillDefaults && SearchSearchResponse.hasDefaultValue('total-hits')) {

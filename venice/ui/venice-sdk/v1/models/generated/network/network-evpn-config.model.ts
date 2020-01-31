@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface INetworkEVPNConfig {
     'shutdown'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class NetworkEVPNConfig extends BaseModel implements INetworkEVPNConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'shutdown': boolean = null;
     public static propInfo: { [prop in keyof INetworkEVPNConfig]: PropInfoItem } = {
         'shutdown': {
@@ -53,6 +56,9 @@ export class NetworkEVPNConfig extends BaseModel implements INetworkEVPNConfig {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['shutdown'] != null) {
             this['shutdown'] = values['shutdown'];
         } else if (fillDefaults && NetworkEVPNConfig.hasDefaultValue('shutdown')) {

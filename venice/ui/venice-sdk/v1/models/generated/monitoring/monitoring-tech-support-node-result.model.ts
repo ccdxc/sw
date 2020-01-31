@@ -15,10 +15,13 @@ export interface IMonitoringTechSupportNodeResult {
     'status': MonitoringTechSupportNodeResult_status;
     'reason'?: string;
     'uri'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTechSupportNodeResult extends BaseModel implements IMonitoringTechSupportNodeResult {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'start-time': Date = null;
     'end-time': Date = null;
     'status': MonitoringTechSupportNodeResult_status = null;
@@ -80,6 +83,9 @@ export class MonitoringTechSupportNodeResult extends BaseModel implements IMonit
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['start-time'] != null) {
             this['start-time'] = values['start-time'];
         } else if (fillDefaults && MonitoringTechSupportNodeResult.hasDefaultValue('start-time')) {

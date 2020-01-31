@@ -14,10 +14,13 @@ export interface IAuthRadiusServer {
     'secret'?: string;
     'auth-method': AuthRadiusServer_auth_method;
     'trusted-certs'?: string;
+    '_ui'?: any;
 }
 
 
 export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** <IP address>:<Port> of the RADIUS server. */
     'url': string = null;
     /** Secret is the shared secret between API Gw and RADIUS server. */
@@ -82,6 +85,9 @@ export class AuthRadiusServer extends BaseModel implements IAuthRadiusServer {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['url'] != null) {
             this['url'] = values['url'];
         } else if (fillDefaults && AuthRadiusServer.hasDefaultValue('url')) {

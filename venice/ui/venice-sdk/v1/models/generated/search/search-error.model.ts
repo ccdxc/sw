@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface ISearchError {
     'type'?: string;
     'reason'?: string;
+    '_ui'?: any;
 }
 
 
 export class SearchError extends BaseModel implements ISearchError {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Type of error. */
     'type': string = null;
     /** Reason or description of the failure. */
@@ -63,6 +66,9 @@ export class SearchError extends BaseModel implements ISearchError {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && SearchError.hasDefaultValue('type')) {

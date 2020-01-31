@@ -11,10 +11,13 @@ import { AuthAutoMsgUserWatchHelperWatchEvent, IAuthAutoMsgUserWatchHelperWatchE
 
 export interface IAuthAutoMsgUserWatchHelper {
     'events'?: Array<IAuthAutoMsgUserWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMsgUserWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<AuthAutoMsgUserWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IAuthAutoMsgUserWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class AuthAutoMsgUserWatchHelper extends BaseModel implements IAuthAutoMs
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<AuthAutoMsgUserWatchHelperWatchEvent>(this, 'events', values['events'], AuthAutoMsgUserWatchHelperWatchEvent);
         } else {

@@ -11,10 +11,13 @@ import { ApiInterface, IApiInterface } from './api-interface.model';
 
 export interface IApiInterfaceSlice {
     'Values'?: Array<IApiInterface>;
+    '_ui'?: any;
 }
 
 
 export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'Values': Array<ApiInterface> = null;
     public static propInfo: { [prop in keyof IApiInterfaceSlice]: PropInfoItem } = {
         'Values': {
@@ -55,6 +58,9 @@ export class ApiInterfaceSlice extends BaseModel implements IApiInterfaceSlice {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ApiInterface>(this, 'Values', values['Values'], ApiInterface);
         } else {

@@ -12,10 +12,13 @@ import { MonitoringPrivacyConfig_algo,  } from './enums';
 export interface IMonitoringPrivacyConfig {
     'algo': MonitoringPrivacyConfig_algo;
     'password'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPrivacyConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'algo': MonitoringPrivacyConfig_algo = null;
     /** Password contains the privacy password. */
     'password': string = null;
@@ -64,6 +67,9 @@ export class MonitoringPrivacyConfig extends BaseModel implements IMonitoringPri
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['algo'] != null) {
             this['algo'] = values['algo'];
         } else if (fillDefaults && MonitoringPrivacyConfig.hasDefaultValue('algo')) {

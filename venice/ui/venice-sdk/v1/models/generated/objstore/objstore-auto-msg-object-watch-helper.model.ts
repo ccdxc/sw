@@ -11,10 +11,13 @@ import { ObjstoreAutoMsgObjectWatchHelperWatchEvent, IObjstoreAutoMsgObjectWatch
 
 export interface IObjstoreAutoMsgObjectWatchHelper {
     'events'?: Array<IObjstoreAutoMsgObjectWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class ObjstoreAutoMsgObjectWatchHelper extends BaseModel implements IObjstoreAutoMsgObjectWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<ObjstoreAutoMsgObjectWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IObjstoreAutoMsgObjectWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class ObjstoreAutoMsgObjectWatchHelper extends BaseModel implements IObjs
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ObjstoreAutoMsgObjectWatchHelperWatchEvent>(this, 'events', values['events'], ObjstoreAutoMsgObjectWatchHelperWatchEvent);
         } else {

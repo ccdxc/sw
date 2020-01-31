@@ -56,3 +56,19 @@ import * as _ from 'lodash';
     helperFunc(request, model, previousVal);
     return request;
   }
+
+  export const TrimUIFields = (request: any) => {
+    request = _.cloneDeep(request);
+    if (request == null) {
+      return
+    }
+    if (request.hasOwnProperty('_ui')) {
+      delete request['_ui']
+    }
+    for (const key in request) {
+      if (request.hasOwnProperty(key) && _.isObjectLike(request[key])) {
+        request[key] = TrimUIFields(request[key])
+      }
+    }
+    return request
+  }

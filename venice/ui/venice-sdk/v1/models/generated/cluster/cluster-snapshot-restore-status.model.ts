@@ -14,10 +14,13 @@ export interface IClusterSnapshotRestoreStatus {
     'start-time'?: Date;
     'end-time'?: Date;
     'backup-snapshot-path'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterSnapshotRestoreStatus extends BaseModel implements IClusterSnapshotRestoreStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'status': ClusterSnapshotRestoreStatus_status = null;
     'start-time': Date = null;
     'end-time': Date = null;
@@ -74,6 +77,9 @@ export class ClusterSnapshotRestoreStatus extends BaseModel implements IClusterS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && ClusterSnapshotRestoreStatus.hasDefaultValue('status')) {

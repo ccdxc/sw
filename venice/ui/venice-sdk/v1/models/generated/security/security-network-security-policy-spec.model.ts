@@ -13,10 +13,13 @@ export interface ISecurityNetworkSecurityPolicySpec {
     'attach-groups'?: Array<string>;
     'attach-tenant'?: boolean;
     'rules'?: Array<ISecuritySGRule>;
+    '_ui'?: any;
 }
 
 
 export class SecurityNetworkSecurityPolicySpec extends BaseModel implements ISecurityNetworkSecurityPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** List of security groups this policy is attached to. */
     'attach-groups': Array<string> = null;
     /** Specifies if the set of rules need to be attached globally to a tenant. */
@@ -74,6 +77,9 @@ export class SecurityNetworkSecurityPolicySpec extends BaseModel implements ISec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['attach-groups'] != null) {
             this['attach-groups'] = values['attach-groups'];
         } else if (fillDefaults && SecurityNetworkSecurityPolicySpec.hasDefaultValue('attach-groups')) {

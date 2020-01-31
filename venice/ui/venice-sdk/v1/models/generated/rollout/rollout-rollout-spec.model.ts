@@ -24,10 +24,13 @@ export interface IRolloutRolloutSpec {
     'dsc-must-match-constraint'?: boolean;
     'upgrade-type': RolloutRolloutSpec_upgrade_type;
     'retry'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** New Version of the image to rollout to. */
     'version': string = null;
     /** Time, if specified, at which the rollout is supposed to start. (example:"2002-10-02T15:00:00.05Z"). */
@@ -148,6 +151,9 @@ export class RolloutRolloutSpec extends BaseModel implements IRolloutRolloutSpec
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['version'] != null) {
             this['version'] = values['version'];
         } else if (fillDefaults && RolloutRolloutSpec.hasDefaultValue('version')) {

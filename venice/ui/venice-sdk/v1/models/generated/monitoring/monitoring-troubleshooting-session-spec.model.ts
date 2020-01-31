@@ -15,10 +15,13 @@ export interface IMonitoringTroubleshootingSessionSpec {
     'time-window'?: IMonitoringTimeWindow;
     'repeat-every'?: string;
     'enable-mirroring'?: boolean;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTroubleshootingSessionSpec extends BaseModel implements IMonitoringTroubleshootingSessionSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'flow-selector': MonitoringMatchRule = null;
     'time-window': MonitoringTimeWindow = null;
     'repeat-every': string = null;
@@ -77,6 +80,9 @@ export class MonitoringTroubleshootingSessionSpec extends BaseModel implements I
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['flow-selector'].setValues(values['flow-selector'], fillDefaults);
         } else {

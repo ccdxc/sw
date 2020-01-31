@@ -13,10 +13,13 @@ export interface IClusterBiosInfo {
     'version'?: string;
     'fw-major-ver'?: string;
     'fw-minor-ver'?: string;
+    '_ui'?: any;
 }
 
 
 export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Vendor name. */
     'vendor': string = null;
     /** BIOS version. */
@@ -79,6 +82,9 @@ export class ClusterBiosInfo extends BaseModel implements IClusterBiosInfo {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['vendor'] != null) {
             this['vendor'] = values['vendor'];
         } else if (fillDefaults && ClusterBiosInfo.hasDefaultValue('vendor')) {

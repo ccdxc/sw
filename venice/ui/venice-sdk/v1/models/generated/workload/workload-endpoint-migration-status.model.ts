@@ -11,10 +11,13 @@ import { WorkloadEndpointMigrationStatus_status,  WorkloadEndpointMigrationStatu
 
 export interface IWorkloadEndpointMigrationStatus {
     'status': WorkloadEndpointMigrationStatus_status;
+    '_ui'?: any;
 }
 
 
 export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkloadEndpointMigrationStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Status of migration. */
     'status': WorkloadEndpointMigrationStatus_status = null;
     public static propInfo: { [prop in keyof IWorkloadEndpointMigrationStatus]: PropInfoItem } = {
@@ -58,6 +61,9 @@ export class WorkloadEndpointMigrationStatus extends BaseModel implements IWorkl
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['status'] != null) {
             this['status'] = values['status'];
         } else if (fillDefaults && WorkloadEndpointMigrationStatus.hasDefaultValue('status')) {

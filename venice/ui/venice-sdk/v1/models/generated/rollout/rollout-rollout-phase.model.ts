@@ -17,10 +17,13 @@ export interface IRolloutRolloutPhase {
     'reason'?: string;
     'message'?: string;
     'num-retries'?: number;
+    '_ui'?: any;
 }
 
 
 export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPhase {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name of the Node, Service or DistributedServiceCard. */
     'name': string = null;
     /** Phase indicates a certain rollout phase/condition. */
@@ -107,6 +110,9 @@ export class RolloutRolloutPhase extends BaseModel implements IRolloutRolloutPha
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && RolloutRolloutPhase.hasDefaultValue('name')) {

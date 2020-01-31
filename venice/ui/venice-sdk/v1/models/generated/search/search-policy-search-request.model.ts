@@ -19,10 +19,13 @@ export interface ISearchPolicySearchRequest {
     'to-ip-address'?: string;
     'from-security-group'?: string;
     'to-security-group'?: string;
+    '_ui'?: any;
 }
 
 
 export class SearchPolicySearchRequest extends BaseModel implements ISearchPolicySearchRequest {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant Name, to perform query within a Tenant's scope. The default tenant is "default". In the backend this field gets auto-filled & validated by apigw-hook based on user login context. */
     'tenant': string = null;
     /** Namespace is optional. If provided policy-search will be limited to the specified namespace. */
@@ -129,6 +132,9 @@ export class SearchPolicySearchRequest extends BaseModel implements ISearchPolic
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && SearchPolicySearchRequest.hasDefaultValue('tenant')) {

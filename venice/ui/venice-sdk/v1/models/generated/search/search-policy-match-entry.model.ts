@@ -12,10 +12,13 @@ import { SecuritySGRule, ISecuritySGRule } from './security-sg-rule.model';
 export interface ISearchPolicyMatchEntry {
     'rule'?: ISecuritySGRule;
     'index'?: number;
+    '_ui'?: any;
 }
 
 
 export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMatchEntry {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Matching SGRule. */
     'rule': SecuritySGRule = null;
     /** Index of the matching SG rule. */
@@ -65,6 +68,9 @@ export class SearchPolicyMatchEntry extends BaseModel implements ISearchPolicyMa
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['rule'].setValues(values['rule'], fillDefaults);
         } else {

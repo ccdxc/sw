@@ -11,10 +11,13 @@ import { ClusterDistributedServiceCardID, IClusterDistributedServiceCardID } fro
 
 export interface IClusterHostSpec {
     'dscs'?: Array<IClusterDistributedServiceCardID>;
+    '_ui'?: any;
 }
 
 
 export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** DSCs contains the information about all DistributedServiceCards on a host. */
     'dscs': Array<ClusterDistributedServiceCardID> = null;
     public static propInfo: { [prop in keyof IClusterHostSpec]: PropInfoItem } = {
@@ -57,6 +60,9 @@ export class ClusterHostSpec extends BaseModel implements IClusterHostSpec {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<ClusterDistributedServiceCardID>(this, 'dscs', values['dscs'], ClusterDistributedServiceCardID);
         } else {

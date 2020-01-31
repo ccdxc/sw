@@ -17,10 +17,13 @@ export interface IAuthAuthenticators {
     'ldap'?: IAuthLdap;
     'local'?: IAuthLocal;
     'radius'?: IAuthRadius;
+    '_ui'?: any;
 }
 
 
 export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Order in which authenticators are applied. If an authenticator returns success, others are skipped. */
     'authenticator-order': Array<AuthAuthenticators_authenticator_order> = null;
     'ldap': AuthLdap = null;
@@ -83,6 +86,9 @@ export class AuthAuthenticators extends BaseModel implements IAuthAuthenticators
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['authenticator-order'] != null) {
             this['authenticator-order'] = values['authenticator-order'];
         } else if (fillDefaults && AuthAuthenticators.hasDefaultValue('authenticator-order')) {

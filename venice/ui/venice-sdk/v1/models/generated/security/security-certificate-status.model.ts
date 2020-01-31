@@ -12,10 +12,13 @@ import { SecurityCertificateStatus_validity,  } from './enums';
 export interface ISecurityCertificateStatus {
     'validity': SecurityCertificateStatus_validity;
     'workloads'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecurityCertificateStatus extends BaseModel implements ISecurityCertificateStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Status of the certificate: "valid", "invalid", "expired" "invalid" means that the signature of the certificate does not match or there are inconsistencies in the trust chain. */
     'validity': SecurityCertificateStatus_validity = null;
     /** The workloads where this certificate has been deployed. */
@@ -67,6 +70,9 @@ export class SecurityCertificateStatus extends BaseModel implements ISecurityCer
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['validity'] != null) {
             this['validity'] = values['validity'];
         } else if (fillDefaults && SecurityCertificateStatus.hasDefaultValue('validity')) {

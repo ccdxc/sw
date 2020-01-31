@@ -18,10 +18,13 @@ export interface IMonitoringFwlogPolicySpec {
     'format': MonitoringFwlogPolicySpec_format;
     'filter': Array<MonitoringFwlogPolicySpec_filter>;
     'config'?: IMonitoringSyslogExportConfig;
+    '_ui'?: any;
 }
 
 
 export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringFwlogPolicySpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** VrfName specifies the name of the VRF that the current Firewall Log Policy belongs to. */
     'vrf-name': string = null;
     /** Target contains ip/port/protocol. */
@@ -98,6 +101,9 @@ export class MonitoringFwlogPolicySpec extends BaseModel implements IMonitoringF
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['vrf-name'] != null) {
             this['vrf-name'] = values['vrf-name'];
         } else if (fillDefaults && MonitoringFwlogPolicySpec.hasDefaultValue('vrf-name')) {

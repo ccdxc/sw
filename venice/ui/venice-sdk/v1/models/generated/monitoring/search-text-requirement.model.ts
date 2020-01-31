@@ -10,10 +10,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface ISearchTextRequirement {
     'text'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SearchTextRequirement extends BaseModel implements ISearchTextRequirement {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** AND of words or phrases to be matched The max text-string length is 256 bytes. Length of string should be between 0 and 256. */
     'text': Array<string> = null;
     public static propInfo: { [prop in keyof ISearchTextRequirement]: PropInfoItem } = {
@@ -56,6 +59,9 @@ export class SearchTextRequirement extends BaseModel implements ISearchTextRequi
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['text'] != null) {
             this['text'] = values['text'];
         } else if (fillDefaults && SearchTextRequirement.hasDefaultValue('text')) {

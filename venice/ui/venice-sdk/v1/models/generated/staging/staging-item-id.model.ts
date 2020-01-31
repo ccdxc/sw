@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IStagingItemId {
     'uri'?: string;
     'method'?: string;
+    '_ui'?: any;
 }
 
 
 export class StagingItemId extends BaseModel implements IStagingItemId {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'uri': string = null;
     'method': string = null;
     public static propInfo: { [prop in keyof IStagingItemId]: PropInfoItem } = {
@@ -59,6 +62,9 @@ export class StagingItemId extends BaseModel implements IStagingItemId {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && StagingItemId.hasDefaultValue('uri')) {

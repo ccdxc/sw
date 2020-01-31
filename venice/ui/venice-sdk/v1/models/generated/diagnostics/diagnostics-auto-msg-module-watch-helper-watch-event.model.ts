@@ -12,10 +12,13 @@ import { DiagnosticsModule, IDiagnosticsModule } from './diagnostics-module.mode
 export interface IDiagnosticsAutoMsgModuleWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IDiagnosticsModule;
+    '_ui'?: any;
 }
 
 
 export class DiagnosticsAutoMsgModuleWatchHelperWatchEvent extends BaseModel implements IDiagnosticsAutoMsgModuleWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': DiagnosticsModule = null;
     public static propInfo: { [prop in keyof IDiagnosticsAutoMsgModuleWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class DiagnosticsAutoMsgModuleWatchHelperWatchEvent extends BaseModel imp
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && DiagnosticsAutoMsgModuleWatchHelperWatchEvent.hasDefaultValue('type')) {

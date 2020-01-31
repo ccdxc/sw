@@ -11,10 +11,13 @@ import { WorkloadAutoMsgWorkloadWatchHelperWatchEvent, IWorkloadAutoMsgWorkloadW
 
 export interface IWorkloadAutoMsgWorkloadWatchHelper {
     'events'?: Array<IWorkloadAutoMsgWorkloadWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWorkloadAutoMsgWorkloadWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<WorkloadAutoMsgWorkloadWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof IWorkloadAutoMsgWorkloadWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class WorkloadAutoMsgWorkloadWatchHelper extends BaseModel implements IWo
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<WorkloadAutoMsgWorkloadWatchHelperWatchEvent>(this, 'events', values['events'], WorkloadAutoMsgWorkloadWatchHelperWatchEvent);
         } else {

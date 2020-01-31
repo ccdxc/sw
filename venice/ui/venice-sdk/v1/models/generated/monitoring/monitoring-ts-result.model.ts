@@ -12,10 +12,13 @@ import { MonitoringTimeWindow, IMonitoringTimeWindow } from './monitoring-time-w
 export interface IMonitoringTsResult {
     'time-window'?: IMonitoringTimeWindow;
     'report-url'?: string;
+    '_ui'?: any;
 }
 
 
 export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Time window for which the information was collected. */
     'time-window': MonitoringTimeWindow = null;
     'report-url': string = null;
@@ -63,6 +66,9 @@ export class MonitoringTsResult extends BaseModel implements IMonitoringTsResult
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['time-window'].setValues(values['time-window'], fillDefaults);
         } else {

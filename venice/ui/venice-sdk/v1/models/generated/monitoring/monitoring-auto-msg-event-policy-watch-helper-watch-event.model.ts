@@ -12,10 +12,13 @@ import { MonitoringEventPolicy, IMonitoringEventPolicy } from './monitoring-even
 export interface IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IMonitoringEventPolicy;
+    '_ui'?: any;
 }
 
 
 export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel implements IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': MonitoringEventPolicy = null;
     public static propInfo: { [prop in keyof IMonitoringAutoMsgEventPolicyWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class MonitoringAutoMsgEventPolicyWatchHelperWatchEvent extends BaseModel
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && MonitoringAutoMsgEventPolicyWatchHelperWatchEvent.hasDefaultValue('type')) {

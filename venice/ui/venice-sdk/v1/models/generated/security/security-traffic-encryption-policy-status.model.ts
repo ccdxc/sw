@@ -9,10 +9,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 
 export interface ISecurityTrafficEncryptionPolicyStatus {
+    '_ui'?: any;
 }
 
 
 export class SecurityTrafficEncryptionPolicyStatus extends BaseModel implements ISecurityTrafficEncryptionPolicyStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     public static propInfo: { [prop in keyof ISecurityTrafficEncryptionPolicyStatus]: PropInfoItem } = {
     }
 
@@ -47,6 +50,9 @@ export class SecurityTrafficEncryptionPolicyStatus extends BaseModel implements 
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 

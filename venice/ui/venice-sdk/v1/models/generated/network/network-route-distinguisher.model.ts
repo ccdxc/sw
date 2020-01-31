@@ -13,10 +13,13 @@ export interface INetworkRouteDistinguisher {
     'type': NetworkRouteDistinguisher_type;
     'admin-value'?: number;
     'assigned-value'?: number;
+    '_ui'?: any;
 }
 
 
 export class NetworkRouteDistinguisher extends BaseModel implements INetworkRouteDistinguisher {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** RD Type as in rfc4364. */
     'type': NetworkRouteDistinguisher_type = null;
     /** Administrator subfield of Value. Length depends on Type. */
@@ -74,6 +77,9 @@ export class NetworkRouteDistinguisher extends BaseModel implements INetworkRout
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && NetworkRouteDistinguisher.hasDefaultValue('type')) {

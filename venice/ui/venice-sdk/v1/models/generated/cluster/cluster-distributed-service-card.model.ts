@@ -17,10 +17,13 @@ export interface IClusterDistributedServiceCard {
     'meta'?: IApiObjectMeta;
     'spec'?: IClusterDistributedServiceCardSpec;
     'status'?: IClusterDistributedServiceCardStatus;
+    '_ui'?: any;
 }
 
 
 export class ClusterDistributedServiceCard extends BaseModel implements IClusterDistributedServiceCard {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     /** Object name is Serial-Number of the DistributedServiceCard. */
@@ -89,6 +92,9 @@ export class ClusterDistributedServiceCard extends BaseModel implements ICluster
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ClusterDistributedServiceCard.hasDefaultValue('kind')) {

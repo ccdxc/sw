@@ -12,10 +12,13 @@ export interface IStagingValidationError {
     'uri'?: string;
     'method'?: string;
     'error'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class StagingValidationError extends BaseModel implements IStagingValidationError {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'uri': string = null;
     'method': string = null;
     'error': Array<string> = null;
@@ -66,6 +69,9 @@ export class StagingValidationError extends BaseModel implements IStagingValidat
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['uri'] != null) {
             this['uri'] = values['uri'];
         } else if (fillDefaults && StagingValidationError.hasDefaultValue('uri')) {

@@ -12,10 +12,13 @@ export interface IClusterIPConfig {
     'ip-address'?: string;
     'default-gw'?: string;
     'dns-servers'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** IPAddress contains the Management IP address of the DistributedServiceCard in CIDR format. */
     'ip-address': string = null;
     /** DefaultGW contains the default gateway's IP address. */
@@ -72,6 +75,9 @@ export class ClusterIPConfig extends BaseModel implements IClusterIPConfig {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['ip-address'] != null) {
             this['ip-address'] = values['ip-address'];
         } else if (fillDefaults && ClusterIPConfig.hasDefaultValue('ip-address')) {

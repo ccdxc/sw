@@ -11,10 +11,13 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IWorkloadEndpointSpec {
     'node-uuid'?: string;
     'homing-host-addr'?: string;
+    '_ui'?: any;
 }
 
 
 export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpointSpec {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The DSC Name or MAC where the endpoint should reside. */
     'node-uuid': string = null;
     /** IP of the DSC where this endpoint exists. */
@@ -63,6 +66,9 @@ export class WorkloadEndpointSpec extends BaseModel implements IWorkloadEndpoint
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['node-uuid'] != null) {
             this['node-uuid'] = values['node-uuid'];
         } else if (fillDefaults && WorkloadEndpointSpec.hasDefaultValue('node-uuid')) {

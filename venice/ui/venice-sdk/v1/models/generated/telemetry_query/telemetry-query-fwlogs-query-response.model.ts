@@ -13,10 +13,13 @@ export interface ITelemetry_queryFwlogsQueryResponse {
     'tenant'?: string;
     'namespace'?: string;
     'results'?: Array<ITelemetry_queryFwlogsQueryResult>;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITelemetry_queryFwlogsQueryResponse {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Tenant for the request. */
     'tenant': string = null;
     /** Namespace for the request. */
@@ -71,6 +74,9 @@ export class Telemetry_queryFwlogsQueryResponse extends BaseModel implements ITe
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['tenant'] != null) {
             this['tenant'] = values['tenant'];
         } else if (fillDefaults && Telemetry_queryFwlogsQueryResponse.hasDefaultValue('tenant')) {

@@ -14,10 +14,13 @@ export interface ITelemetry_queryResultSeries {
     'tags'?: object;
     'columns'?: Array<string>;
     'values'?: Array<IApiInterfaceSlice>;
+    '_ui'?: any;
 }
 
 
 export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry_queryResultSeries {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** Name of the series. */
     'name': string = null;
     /** Tags are the TSDB tags in the query response. */
@@ -82,6 +85,9 @@ export class Telemetry_queryResultSeries extends BaseModel implements ITelemetry
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['name'] != null) {
             this['name'] = values['name'];
         } else if (fillDefaults && Telemetry_queryResultSeries.hasDefaultValue('name')) {

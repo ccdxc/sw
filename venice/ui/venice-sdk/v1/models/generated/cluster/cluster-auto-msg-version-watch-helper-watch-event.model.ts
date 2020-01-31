@@ -12,10 +12,13 @@ import { ClusterVersion, IClusterVersion } from './cluster-version.model';
 export interface IClusterAutoMsgVersionWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IClusterVersion;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgVersionWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgVersionWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': ClusterVersion = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgVersionWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ClusterAutoMsgVersionWatchHelperWatchEvent extends BaseModel implem
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgVersionWatchHelperWatchEvent.hasDefaultValue('type')) {

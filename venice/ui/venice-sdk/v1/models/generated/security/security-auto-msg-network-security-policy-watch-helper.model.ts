@@ -11,10 +11,13 @@ import { SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent, ISecurityAut
 
 export interface ISecurityAutoMsgNetworkSecurityPolicyWatchHelper {
     'events'?: Array<ISecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>;
+    '_ui'?: any;
 }
 
 
 export class SecurityAutoMsgNetworkSecurityPolicyWatchHelper extends BaseModel implements ISecurityAutoMsgNetworkSecurityPolicyWatchHelper {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'events': Array<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent> = null;
     public static propInfo: { [prop in keyof ISecurityAutoMsgNetworkSecurityPolicyWatchHelper]: PropInfoItem } = {
         'events': {
@@ -55,6 +58,9 @@ export class SecurityAutoMsgNetworkSecurityPolicyWatchHelper extends BaseModel i
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this.fillModelArray<SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent>(this, 'events', values['events'], SecurityAutoMsgNetworkSecurityPolicyWatchHelperWatchEvent);
         } else {

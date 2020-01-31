@@ -12,10 +12,13 @@ import { ClusterTenant, IClusterTenant } from './cluster-tenant.model';
 export interface IClusterAutoMsgTenantWatchHelperWatchEvent {
     'type'?: string;
     'object'?: IClusterTenant;
+    '_ui'?: any;
 }
 
 
 export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel implements IClusterAutoMsgTenantWatchHelperWatchEvent {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'type': string = null;
     'object': ClusterTenant = null;
     public static propInfo: { [prop in keyof IClusterAutoMsgTenantWatchHelperWatchEvent]: PropInfoItem } = {
@@ -61,6 +64,9 @@ export class ClusterAutoMsgTenantWatchHelperWatchEvent extends BaseModel impleme
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['type'] != null) {
             this['type'] = values['type'];
         } else if (fillDefaults && ClusterAutoMsgTenantWatchHelperWatchEvent.hasDefaultValue('type')) {

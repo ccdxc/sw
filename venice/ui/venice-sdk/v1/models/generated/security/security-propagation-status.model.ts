@@ -15,10 +15,13 @@ export interface ISecurityPropagationStatus {
     'min-version'?: string;
     'status'?: string;
     'pending-dscs'?: Array<string>;
+    '_ui'?: any;
 }
 
 
 export class SecurityPropagationStatus extends BaseModel implements ISecurityPropagationStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The Generation ID this status is for. */
     'generation-id': string = null;
     /** The number of Naples that this version has already been pushed to. */
@@ -96,6 +99,9 @@ export class SecurityPropagationStatus extends BaseModel implements ISecurityPro
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['generation-id'] != null) {
             this['generation-id'] = values['generation-id'];
         } else if (fillDefaults && SecurityPropagationStatus.hasDefaultValue('generation-id')) {

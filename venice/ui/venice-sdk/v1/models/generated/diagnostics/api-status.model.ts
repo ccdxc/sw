@@ -17,10 +17,13 @@ export interface IApiStatus {
     'message'?: Array<string>;
     'code'?: number;
     'object-ref'?: IApiObjectRef;
+    '_ui'?: any;
 }
 
 
 export class ApiStatus extends BaseModel implements IApiStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     'kind': string = null;
     'api-version': string = null;
     /** Result contains the status of the operation, success or failure. */
@@ -96,6 +99,9 @@ export class ApiStatus extends BaseModel implements IApiStatus {
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['kind'] != null) {
             this['kind'] = values['kind'];
         } else if (fillDefaults && ApiStatus.hasDefaultValue('kind')) {

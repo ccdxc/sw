@@ -15,10 +15,13 @@ export interface IClusterQuorumMemberStatus {
     'status'?: string;
     'term'?: string;
     'conditions'?: Array<IClusterQuorumMemberCondition>;
+    '_ui'?: any;
 }
 
 
 export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuorumMemberStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** A unique identifier for this quorum member. */
     'id': string = null;
     /** The name of the quorum member, matching the node name. */
@@ -89,6 +92,9 @@ export class ClusterQuorumMemberStatus extends BaseModel implements IClusterQuor
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values && values['id'] != null) {
             this['id'] = values['id'];
         } else if (fillDefaults && ClusterQuorumMemberStatus.hasDefaultValue('id')) {

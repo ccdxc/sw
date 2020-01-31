@@ -13,10 +13,13 @@ import { SecuritySGRuleStatus, ISecuritySGRuleStatus } from './security-sg-rule-
 export interface ISecurityNetworkSecurityPolicyStatus {
     'propagation-status'?: ISecurityPropagationStatus;
     'rule-status'?: Array<ISecuritySGRuleStatus>;
+    '_ui'?: any;
 }
 
 
 export class SecurityNetworkSecurityPolicyStatus extends BaseModel implements ISecurityNetworkSecurityPolicyStatus {
+    /** Field for holding arbitrary ui state */
+    '_ui': any = {};
     /** The status of the configuration propagation to the Naples. */
     'propagation-status': SecurityPropagationStatus = null;
     'rule-status': Array<SecuritySGRuleStatus> = null;
@@ -65,6 +68,9 @@ export class SecurityNetworkSecurityPolicyStatus extends BaseModel implements IS
      * @param values Can be used to set a webapi response to this newly constructed model
     */
     setValues(values: any, fillDefaults = true): void {
+        if (values && values['_ui']) {
+            this['_ui'] = values['_ui']
+        }
         if (values) {
             this['propagation-status'].setValues(values['propagation-status'], fillDefaults);
         } else {
