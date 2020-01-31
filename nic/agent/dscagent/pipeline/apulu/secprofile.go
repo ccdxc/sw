@@ -12,8 +12,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 

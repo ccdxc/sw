@@ -56,6 +56,7 @@ func Validate(in []cluster.Feature) (cluster.LicenseStatus, []error) {
 			if _, ok := fmap[v.FeatureKey]; ok {
 				reterrs = append(reterrs, fmt.Errorf("duplicate feature in request [%v]", v.FeatureKey))
 			} else {
+				log.Infof("enabling feature [%+v]", v)
 				ret.Features = append(ret.Features, cluster.FeatureStatus{FeatureKey: v.FeatureKey, Value: "enabled", Expiry: "never"})
 				fmap[v.FeatureKey] = true
 			}

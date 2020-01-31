@@ -74,8 +74,9 @@ type k8sService struct {
 
 // K8sServiceConfig gives ability to tweak k8s service behavior
 type K8sServiceConfig struct {
-	OverriddenModules map[string]protos.Module // if specified, defaults of the modules are overwritten with this.
-	DisabledModules   []string                 // If specified, list of modules to be disabled.
+	OverriddenModules  map[string]protos.Module // if specified, defaults of the modules are overwritten with this.
+	DisabledModules    []string                 // If specified, list of modules to be disabled.
+	ConditionalModules []string                 // If specified, list of modules to be enabled conditionally based on features enabled.
 }
 
 // newK8sService creates a new kubernetes service.
@@ -114,6 +115,7 @@ func (k *k8sService) Start(client, strClient k8sclient.Interface, isLeader bool)
 	k.modCh = make(chan protos.Module, maxModules)
 	k.running = true
 	log.Infof("Starting k8s service")
+	log.Infof("Config for starting services is [%+v]", k.config)
 	k.client = client
 	k.strClient = strClient
 	k.isLeader = isLeader
@@ -125,6 +127,12 @@ func (k *k8sService) Start(client, strClient k8sclient.Interface, isLeader bool)
 	}
 	for _, k := range k.config.DisabledModules {
 		delete(k8sModules, k)
+	}
+	for _, k := range k.config.ConditionalModules {
+		if v, ok := k8sModules[k]; ok {
+			v.Spec.Disabled = true
+			k8sModules[k] = v
+		}
 	}
 
 	// TODO: When CMD gets upgraded, the following API will return latest info. We should use the latest info after service upgrade.
@@ -149,6 +157,9 @@ func (k *k8sService) Start(client, strClient k8sclient.Interface, isLeader bool)
 
 	if k.isLeader {
 		for _, mod := range k8sModules {
+			if mod.Spec.Disabled {
+				continue
+			}
 			k.modCh <- mod
 		}
 	}
@@ -249,6 +260,9 @@ func (k *k8sService) runUntilCancel() {
 				}
 				modulesToDeploy := make(map[string]protos.Module)
 				for name, module := range k8sModules {
+					if module.Spec.Disabled {
+						continue
+					}
 					if _, ok := foundModules[name]; !ok {
 						modulesToDeploy[name] = module
 					} else {
@@ -570,6 +584,7 @@ func createDeploymentObject(module *protos.Module) *clientTypes.Deployment {
 // createDeployment creates a Deployment object.
 func createDeployment(client k8sclient.Interface, module *protos.Module) error {
 	dConfig := createDeploymentObject(module)
+	log.Infof("Creating deployment with config [%+v]", dConfig)
 	d, err := client.ExtensionsV1beta1().Deployments(defaultNS).Create(dConfig)
 	if err == nil {
 		log.Infof("Created Deployment %+v", d)
@@ -633,6 +648,23 @@ func (k *k8sService) deleteDeployment(name string) error {
 		log.Errorf("Failed to delete Deployment %v with error: %v", name, err)
 	}
 	return err
+}
+
+// StartServices starts a particular set of services
+func (k *k8sService) StartServices(svcs []string) error {
+	log.Infof("got call to start services %v", svcs)
+	for _, m := range svcs {
+		module, ok := k8sModules[m]
+		if !ok {
+			log.Errorf("cant find module for service %s to start", m)
+			return fmt.Errorf("cant find module for service %s to start", m)
+		}
+		module.Spec.Disabled = false
+		k8sModules[m] = module
+		k.modCh <- module
+		log.Infof("sent service %s to start", m)
+	}
+	return nil
 }
 
 // Stop stops the kubernetes service.
@@ -709,6 +741,9 @@ func (k *k8sService) UpgradeServices(services []string) error {
 		module, ok := k8sModules[srv]
 		if !ok {
 			log.Infof("cant find module for service %s to upgrade", srv)
+			continue
+		}
+		if module.Spec.Disabled {
 			continue
 		}
 		switch module.Spec.Type {

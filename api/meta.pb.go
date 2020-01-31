@@ -473,8 +473,7 @@ type ObjectMeta struct {
 	// title: Name of the object, unique within a Namespace for scoped objects.
 	Name string `protobuf:"bytes,1,opt,name=Name,json=name,proto3" json:"name"`
 	// title: Tenant to which the object belongs to.
-	// This can be automatically filled in many cases based on
-	// the tenant the user, who created the object, belongs to.
+	// This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to.
 	Tenant string `protobuf:"bytes,2,opt,name=Tenant,json=tenant,omitempty,proto3" json:"tenant,omitempty"`
 	// Namespace of the object, for scoped objects.
 	Namespace string `protobuf:"bytes,3,opt,name=Namespace,json=namespace,omitempty,proto3" json:"namespace,omitempty"`

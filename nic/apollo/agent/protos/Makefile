@@ -10,13 +10,13 @@ default: create-gen-dir meta-proto pds-proto doc-gen
 	echo 'goimports -w -l *.go'
 
 pds-proto: clean-proto
-	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/nic/hal/third-party/google/x86_64/bin/protoc --proto_path=${CURDIR} -I${CURDIR} \
+	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc --proto_path=${CURDIR} -I${CURDIR} \
                                 -I${TOP_DIR} -I$(TOP_DIR)/vendor/github.com/gogo/protobuf/gogoproto \
                                 -I$(TOP_DIR)/nic/hal/third-party/google/include -I${CURDIR}/meta \
 				--gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mmeta/meta.proto=github.com/pensando/sw/nic/apollo/agent/gen/pds/meta/pds,plugins=grpc:${GEN_DIR} types.proto ${HAL_PROTO_FILES}
 
 meta-proto:
-	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/nic/hal/third-party/google/x86_64/bin/protoc --proto_path=${CURDIR} -I${CURDIR} \
+	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc --proto_path=${CURDIR} -I${CURDIR} \
                                 -I${TOP_DIR} -I$(TOP_DIR)/vendor/github.com/gogo/protobuf/gogoproto \
                                 -I$(TOP_DIR)/nic/hal/third-party/google/include -I${CURDIR}/meta \
                                 --gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,plugins=grpc:${GEN_DIR} meta.proto
@@ -32,15 +32,18 @@ doc-gen-clean:
 clean-proto:
 	rm -f ${GEN_DIR}/*.go
 
+gen-clean:
+	rm -f ${GEN_DIR}/*.go
+	
 doc-gen: doc-gen-clean doc-gen-html doc-gen-md
 
 doc-gen-html:
-	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/nic/hal/third-party/google/x86_64/bin/protoc --proto_path=${CURDIR} -I${CURDIR} \
+	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc --proto_path=${CURDIR} -I${CURDIR} \
                                 -I${TOP_DIR} -I$(TOP_DIR)/vendor/github.com/gogo/protobuf/gogoproto \
                                 -I$(TOP_DIR)/nic/hal/third-party/google/include -I${CURDIR}/meta \
                                 --doc_out=docs --doc_opt=html,docs.html types.proto ${HAL_PROTO_FILES}
 doc-gen-md:
-	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/nic/hal/third-party/google/x86_64/bin/protoc --proto_path=${CURDIR} -I${CURDIR} \
+	LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc --proto_path=${CURDIR} -I${CURDIR} \
                                 -I${TOP_DIR} -I$(TOP_DIR)/vendor/github.com/gogo/protobuf/gogoproto \
                                 -I$(TOP_DIR)/nic/hal/third-party/google/include -I${CURDIR}/meta \
                                 --doc_out=docs --doc_opt=markdown,docs.md types.proto ${HAL_PROTO_FILES}

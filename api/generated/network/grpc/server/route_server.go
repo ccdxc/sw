@@ -620,7 +620,7 @@ func (s *snetworkRouteBackend) regMsgsFunc(l log.Logger, scheme *runtime.Scheme)
 				}
 				return nil, errors.New("invalid object")
 			}
-		}),
+		}).WithStorageTransformer(&network.StorageRoutingConfigTransformer),
 
 		"network.RoutingConfigSpec":   apisrvpkg.NewMessage("network.RoutingConfigSpec"),
 		"network.RoutingConfigStatus": apisrvpkg.NewMessage("network.RoutingConfigStatus"),

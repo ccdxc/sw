@@ -279,6 +279,12 @@ func (c *API) Start(ctx context.Context) error {
 		}()
 
 		go func() {
+			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Interface"}, c.PipelineAPI); err != nil {
+				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
+			}
+		}()
+
+		go func() {
 			if err := nimbusClient.WatchAggregate(c.WatchCtx, []string{"Profile"}, c.PipelineAPI); err != nil {
 				log.Error(errors.Wrapf(types.ErrAggregateWatch, "Controller API: %s", err))
 			}

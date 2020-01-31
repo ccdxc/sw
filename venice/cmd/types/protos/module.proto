@@ -133,6 +133,9 @@ message ModuleSpec {
 
     // RestrictNodes specifies the nodes to constrain the module to
     string RestrictNodes = 5;
+
+    // Disabled is set to true if the module is disabled due to licences
+    bool Disabled = 6;
 }
 
 message ModuleStatus {

@@ -57,6 +57,13 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "password",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "remote-as",
 		Type:   "StringSlice",
 		Help:   "",

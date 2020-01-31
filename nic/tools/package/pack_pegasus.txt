@@ -1,0 +1,40 @@
+# Metaswitch
+nic/third-party/metaswitch/output/$ARCH/debug/libsi.so            /nic/lib/
+nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
+
+# pdsa
+nic/build/$ARCH/$PIPELINE/lib/libprotobuf.so.14                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmsmgmtsvc.so                  /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmsmgmt.so                     /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmshals_mock.so                /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsmscommon.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsgenproto.so                   /nic/lib/
+nic/third-party/metaswitch/output/$ARCH/debug/libdcsmi.a          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libutils.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libthread.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libssl.so.1.1                       /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libslab.so                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsknobs.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libshmmgr.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libsdkcapri_csrint.so               /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/librte_indexer.so                   /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libpdsproto.so                      /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libmpuobj.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblogger.so                        /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/liblfq.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libisa.so                           /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libev.so.4                          /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcrypto.so.1.1                    /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libcapisa.so                        /nic/lib/
+
+#common
+nic/build/$ARCH/$PIPELINE/lib/libzmq.so                           /nic/lib/libzmq.so.3
+/usr/lib64/libedit.so.0                                           /nic/lib/
+/usr/lib64/libJudy.so.1                                           /nic/lib/
+/usr/lib64/libncurses.so.5                                        /nic/lib/
+/usr/lib64/libtinfo.so.5                                          /nic/lib/
+/usr/lib64/libtinfo.so.5                                          /nic/lib/
+
+#binaries
+nic/build/$ARCH/$PIPELINE/bin/pegasus                             /nic/bin/

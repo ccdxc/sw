@@ -522,6 +522,9 @@ func (c *ClusterHealthMonitor) checkK8sServicesHealth() (bool, []string) {
 
 	// check if all the k8s k8sServices are populated
 	for svc := range k8sModules {
+		if k8sModules[svc].Spec.Disabled {
+			continue
+		}
 		if _, ok := c.servicesHealth.services[svc]; !ok {
 			return false, []string{"waiting for service updates from k8s"}
 		}

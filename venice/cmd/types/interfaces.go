@@ -229,6 +229,9 @@ type K8sService interface {
 	// Start the k8s service.
 	Start(client, strClient k8sclient.Interface, isLeader bool)
 
+	// StartServices starts a particular set of services
+	StartServices([]string) error
+
 	// Delete a node from k8s cluster
 	DeleteNode(name string) error
 
@@ -316,6 +319,9 @@ type SmartNICEventHandler func(et kvstore.WatchEventType, nic *cluster.Distribut
 // HostEventHandler handles watch events for Host object
 type HostEventHandler func(et kvstore.WatchEventType, nic *cluster.Host)
 
+// LicenseEventHandler handles watch events for License object
+type LicenseEventHandler func(et kvstore.WatchEventType, nic *cluster.License)
+
 // CfgWatcherService watches for changes to config from API Server
 type CfgWatcherService interface {
 	// Start the service
@@ -337,6 +343,9 @@ type CfgWatcherService interface {
 
 	// SetHostventHandler sets the handler to handle events related to Host object
 	SetHostEventHandler(HostEventHandler)
+
+	// SetLicenseEventHandler sets the handler to handle events related to Host object
+	SetLicenseEventHandler(LicenseEventHandler)
 
 	// SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
 	SetNodeService(NodeService)

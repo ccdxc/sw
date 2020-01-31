@@ -80,6 +80,10 @@ dynamic_images = [
     "cmd", "apiserver", "apigw",  "npm",  "tpm", "spyglass", "evtsmgr", "tsm", "evtsproxy", "vos", "citadel", "rollout", "vtsa", "orchhub"
 ]
 
+# check if the control plane components need to be bundled
+if os.path.exists("nic/pegasus.tgz"):
+    dynamic_images.extend(["pegasus", "perseus"])
+
 # dictionary of module name(specified in venice/globals/modules.go )  to containerImage
 imageMap = {}
 # dictionary of image version to cmd version

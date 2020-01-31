@@ -12,10 +12,11 @@ import (
 )
 
 type customConfig struct {
-	OverriddenModules map[string]protos.Module `json:",omitempty"` // if specified, defaults of the modules are overwritten with this.
-	DisabledModules   []string                 `json:",omitempty"` // If specified, list of modules to be disabled.
-	Properties        map[string]string        `json:",omitempty"` // If specified, any random property in text format
-	Retention         *retention               `json:",omitempty"` // retention policies to be applied on the elastic data
+	OverriddenModules  map[string]protos.Module `json:",omitempty"` // if specified, defaults of the modules are overwritten with this.
+	DisabledModules    []string                 `json:",omitempty"` // If specified, list of modules to be disabled.
+	ConditionalModules []string                 `json:",omitempty"` // If specified, list of modules to be started conditionally.
+	Properties         map[string]string        `json:",omitempty"` // If specified, any random property in text format
+	Retention          *retention               `json:",omitempty"` // retention policies to be applied on the elastic data
 }
 
 type retention struct {
@@ -65,6 +66,12 @@ func GetDisabledModules(confFile string) []string {
 func GetOverriddenModules(confFile string) map[string]protos.Module {
 	m := readCustomConfigFile(confFile)
 	return m.OverriddenModules
+}
+
+// GetConditionalModules returns list of conditional modules
+func GetConditionalModules(confFile string) []string {
+	m := readCustomConfigFile(confFile)
+	return m.ConditionalModules
 }
 
 // GetLogRetention returns the log retention period in days

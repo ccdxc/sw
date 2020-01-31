@@ -53,6 +53,7 @@ type CfgWatcherService struct {
 	nodeWatcher     kvstore.Watcher // Node endpoint watcher
 	smartNICWatcher kvstore.Watcher // SmartNIC object watcher
 	hostWatcher     kvstore.Watcher // Host object watcher
+	fflagsWatcher   kvstore.Watcher // License object watcher
 
 	// Event handlers
 	nodeEventHandler     types.NodeEventHandler
@@ -60,6 +61,7 @@ type CfgWatcherService struct {
 	ntpEventHandler      types.ClusterEventHandler
 	smartNICEventHandler types.SmartNICEventHandler
 	hostEventHandler     types.HostEventHandler
+	fflagsEventHandler   types.LicenseEventHandler
 }
 
 // SetNodeEventHandler sets handler for Node events
@@ -85,6 +87,11 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 // SetHostEventHandler sets handler for Host events
 func (k *CfgWatcherService) SetHostEventHandler(hostHandler types.HostEventHandler) {
 	k.hostEventHandler = hostHandler
+}
+
+// SetLicenseEventHandler sets handler for License events
+func (k *CfgWatcherService) SetLicenseEventHandler(ffHandler types.LicenseEventHandler) {
+	k.fflagsEventHandler = ffHandler
 }
 
 // SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
@@ -249,6 +256,7 @@ func (k *CfgWatcherService) stopWatchers() {
 	k.nodeWatcher.Stop()
 	k.smartNICWatcher.Stop()
 	k.hostWatcher.Stop()
+	k.fflagsWatcher.Stop()
 }
 
 // updateClusterNodes updates the cluster nodes list and elastic discovery file
@@ -360,6 +368,25 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 	k.logger.Infof("Host config watcher established, client: %p", k.svcsClient)
 
+	// Init License watcher
+	k.fflagsWatcher, err = k.svcsClient.ClusterV1().License().Watch(k.ctx, &opts)
+	ii = 0
+	for err != nil {
+		select {
+		case <-time.After(time.Second):
+			k.fflagsWatcher, err = k.svcsClient.ClusterV1().License().Watch(k.ctx, &opts)
+			ii++
+			if ii%10 == 0 {
+				k.logger.Errorf("Waiting for License watch to succeed for %v seconds", ii)
+			}
+
+		case <-k.ctx.Done():
+			k.stopWatchers()
+			return
+		}
+	}
+	k.logger.Infof("FeatureFlags config watcher established, client: %p", k.svcsClient)
+
 	// Handle config watcher events
 	for {
 		select {
@@ -440,6 +467,24 @@ func (k *CfgWatcherService) runUntilCancel() {
 			}
 			if k.hostEventHandler != nil {
 				k.hostEventHandler(event.Type, host)
+			}
+
+		case event, ok := <-k.fflagsWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				log.Errorf("Error receiving from License watch channel, restarting all watchers")
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("cfgWatcher Received %+v", event)
+			fflags, ok := event.Object.(*cmd.License)
+			if !ok {
+				k.logger.Infof("License Watcher failed to get License Object")
+				break
+			}
+			if k.fflagsEventHandler != nil {
+				k.fflagsEventHandler(event.Type, fflags)
 			}
 
 		case <-k.ctx.Done():

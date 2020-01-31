@@ -68,9 +68,10 @@ ${NimbusDir}/%_mserver.go : %.proto
 	--grpc-gateway_out=templates=${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/templates/nimbus/nimbus.yml,log_dir=${NimbusDir}/tmp,logtostderr=false,v=7:${NimbusDir} $^
 	cd ${NimbusDir} && goimports -local "github.com/pensando/sw" -l -w $*_mserver.go
 
+# Include paths lists netproto before the delphi path to workaround protoc duplicate checks for included files.
 delphi-gen: ${DELPHI_SRC}
-	protoc --delphigo_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,Mgogo.proto=github.com/gogo/protobuf/gogoproto:../generated/delphi/netproto/ ${DELPHI_SRC} \
-              -I ${GOPATH}/src -I ${GOPATH}/src/github.com/pensando/sw -I . -I../ \
+	protoc --delphigo_out=Mdelphi.proto=github.com/pensando/sw/nic/delphi/proto/delphi,Mgogo.proto=github.com/gogo/protobuf/gogoproto,Mroute.proto=github.com/pensando/sw/nic/agent/protos/netproto,Mvrf.proto=github.com/pensando/sw/nic/agent/protos/netproto:../generated/delphi/netproto/ ${DELPHI_SRC} \
+              -I ${GOPATH}/src -I ${GOPATH}/src/github.com/pensando/sw  -I../ -I .\
             	-I ../../../../vendor -I ../../../../vendor/github.com/gogo/protobuf/gogoproto/ \
 				-I ../../../../vendor/github.com/pensando/grpc-gateway/third_party/googleapis \
                 -I ../../../delphi/proto/delphi

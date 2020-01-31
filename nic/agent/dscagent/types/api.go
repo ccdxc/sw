@@ -90,6 +90,9 @@ type PipelineAPI interface {
 	//HandleFlowExportPolicy handles CRUDs for NetworkSecurityPolicy object
 	HandleFlowExportPolicy(oper Operation, obj netproto.FlowExportPolicy) ([]netproto.FlowExportPolicy, error)
 
+	// HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
+	HandleRoutingConfig(oper Operation, obj netproto.RoutingConfig) ([]netproto.RoutingConfig, error)
+
 	//HandleProfile handles CRUDs for Profile object
 	HandleProfile(oper Operation, obj netproto.Profile) ([]netproto.Profile, error)
 

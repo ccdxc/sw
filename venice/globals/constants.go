@@ -231,6 +231,11 @@ const (
 	NaplesTechSupportRestPort = "9017"
 	NaplesDiagnosticsRestPort = "9024"
 
+	// Pegasus/Perseus
+	PegasusBGPPort  = "179"
+	PegasusGRPCPort = "50057"
+	PegasusCXMPort  = "8001"
+
 	// DefaultClusterVersionName
 	DefaultVersionName = "clusterVersion"
 

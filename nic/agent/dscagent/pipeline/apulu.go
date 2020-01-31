@@ -10,23 +10,20 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"time"
 
 	"github.com/gogo/protobuf/proto"
-	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu"
 	apuluutils "github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils/validator"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
-	msapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto/metaswitch"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
+	msapi "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -37,6 +34,8 @@ type ApuluAPI struct {
 	VPCClient               halapi.VPCSvcClient
 	SubnetClient            halapi.SubnetSvcClient
 	DeviceSvcClient         halapi.DeviceSvcClient
+	RoutingClient           msapi.BGPSvcClient
+	EvpnClient              msapi.EvpnSvcClient
 	SecurityPolicySvcClient halapi.SecurityPolicySvcClient
 	DHCPRelayClient         halapi.DHCPSvcClient
 	InterfaceClient         halapi.IfSvcClient
@@ -59,11 +58,14 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		SubnetClient:            halapi.NewSubnetSvcClient(conn),
 		DeviceSvcClient:         halapi.NewDeviceSvcClient(conn),
 		SecurityPolicySvcClient: halapi.NewSecurityPolicySvcClient(conn),
-		DHCPRelayClient:         halapi.NewDHCPSvcClient(conn),
-		InterfaceClient:         halapi.NewIfSvcClient(conn),
-		PortClient:              halapi.NewPortSvcClient(conn),
-		EventClient:             halapi.NewEventSvcClient(conn),
-		CPRouteSvcClient:        msapi.NewCPRouteSvcClient(conn),
+
+		DHCPRelayClient:  halapi.NewDHCPSvcClient(conn),
+		InterfaceClient:  halapi.NewIfSvcClient(conn),
+		PortClient:       halapi.NewPortSvcClient(conn),
+		EventClient:      halapi.NewEventSvcClient(conn),
+		CPRouteSvcClient: msapi.NewCPRouteSvcClient(conn),
+		RoutingClient:    msapi.NewBGPSvcClient(conn),
+		EvpnClient:       msapi.NewEvpnSvcClient(conn),
 	}
 
 	if err := a.PipelineInit(); err != nil {
@@ -100,32 +102,6 @@ func (a *ApuluAPI) PipelineInit() error {
 		return err
 	}
 	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoSecurityProfileCreate)
-
-	c, _ := protoTypes.TimestampProto(time.Now())
-	defaultVrf := netproto.Vrf{
-		TypeMeta: api.TypeMeta{Kind: "Vrf"},
-		ObjectMeta: api.ObjectMeta{
-			Tenant:    "default",
-			Namespace: "default",
-			Name:      "default",
-			CreationTime: api.Timestamp{
-				Timestamp: *c,
-			},
-			ModTime: api.Timestamp{
-				Timestamp: *c,
-			},
-		},
-		Spec: netproto.VrfSpec{
-			VrfType: "CUSTOMER",
-		},
-		Status: netproto.VrfStatus{
-			VrfID: 65,
-		},
-	}
-	if _, err := a.HandleVrf(types.Create, defaultVrf); err != nil {
-		log.Error(err)
-		return err
-	}
 
 	// initialize stream for Lif events
 	a.initEventStream()
@@ -238,7 +214,7 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 	defer log.Infof("Vrf: %v | Op: %s | %s", vrf, oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, oper, vrf)
+	err = apulu.HandleVPC(a.InfraAPI, a.VPCClient, a.EvpnClient, oper, vrf) // TODO Change this to VPC Client
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -351,7 +327,7 @@ func (a *ApuluAPI) HandleNetwork(oper types.Operation, network netproto.Network)
 	defer log.Infof("Network: %v | Op: %s | %s", network, oper, types.InfoHandleObjEnd)
 
 	// Take a lock to ensure a single HAL API is active at any given point
-	err = apulu.HandleSubnet(a.InfraAPI, a.SubnetClient, oper, network, vrf.Status.VrfID, uplinkIDs)
+	err = apulu.HandleSubnet(a.InfraAPI, a.SubnetClient, a.EvpnClient, oper, network, vrf.Status.VrfID, uplinkIDs)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -731,6 +707,89 @@ func (a *ApuluAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto
 //	return nil, errors.Wrapf(types.ErrNotImplemented, "Telemetry %s is not implemented by Apulu Pipeline",  oper)
 //}
 
+// HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
+func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.RoutingConfig) (rtcfgs []netproto.RoutingConfig, err error) {
+	a.Lock()
+	defer a.Unlock()
+
+	err = utils.ValidateMeta(oper, rtcfg.Kind, rtcfg.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var obj netproto.RoutingConfig
+
+		err = a.retrieveObject(rtcfg.Kind, rtcfg.GetKey(), obj.Unmarshal)
+		if err == nil {
+			rtcfgs = append(rtcfgs, obj)
+		}
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = a.InfraAPI.List(rtcfg.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "RoutingConfig: %s | Err: %v", rtcfg.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "RoutingConfig: %s | Err: %v", rtcfg.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var obj netproto.RoutingConfig
+			err := proto.Unmarshal(o, &obj)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "RoutingConfig: %s | Err: %v", obj.GetKey(), err))
+				continue
+			}
+			rtcfgs = append(rtcfgs, obj)
+		}
+
+		return
+	case types.Create:
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingRtcfg netproto.RoutingConfig
+		err = a.retrieveObject(rtcfg.Kind, rtcfg.GetKey(), existingRtcfg.Unmarshal)
+		if err != nil {
+			return
+		}
+
+		// Check for idempotency
+		if proto.Equal(&rtcfg.Spec, &existingRtcfg.Spec) {
+			return nil, nil
+		}
+	case types.Delete:
+		var existingRtcfg netproto.RoutingConfig
+		err = a.retrieveObject(rtcfg.Kind, rtcfg.GetKey(), existingRtcfg.Unmarshal)
+		if err != nil {
+			return
+		}
+		rtcfg = existingRtcfg
+	}
+	log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg, oper, types.InfoHandleObjBegin)
+	defer log.Infof("RoutingConfig: %v | Op: %s | %s", rtcfg, oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	err = validator.ValidateRoutingConfig(a.InfraAPI, rtcfg)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	err = apulu.HandleRouteConfig(a.InfraAPI, a.RoutingClient, oper, rtcfg)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
+}
+
 // ReplayConfigs unimplemented
 func (a *ApuluAPI) ReplayConfigs() error {
 	return errors.Wrapf(types.ErrNotImplemented, "Config Replays not implemented by Apulu Pipeline")
@@ -748,6 +807,21 @@ func (a *ApuluAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.Li
 		ret.Name = a.InfraAPI.GetDscName()
 	}
 	return ret
+}
+
+func (a *ApuluAPI) retrieveObject(kind, key string, umToFunc func([]byte) error) error {
+	var dat []byte
+	dat, err := a.InfraAPI.Read(kind, key)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "%v: %s | Err: %v", kind, key, types.ErrObjNotFound))
+		return errors.Wrapf(types.ErrBadRequest, "%v: %s | Err: %v", kind, key, types.ErrObjNotFound)
+	}
+	err = umToFunc(dat)
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrUnmarshal, "%v: %s | Err: %v", kind, key, err))
+		return errors.Wrapf(types.ErrUnmarshal, "%v: %s | Err: %v", kind, key, err)
+	}
+	return nil
 }
 
 func createHostInterface(a *ApuluAPI, spec *halapi.LifSpec, status *halapi.LifStatus) error {

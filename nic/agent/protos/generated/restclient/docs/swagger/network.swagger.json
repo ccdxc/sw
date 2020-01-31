@@ -629,6 +629,10 @@
             "format": "int64"
           },
           "description": "Egress v6 Security Policies applied to this network."
+        },
+        "route-import-export": {
+          "$ref": "#/definitions/netprotoRDSpec",
+          "description": "RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the network."
         }
       },
       "description": "network spec."
@@ -642,6 +646,66 @@
         }
       },
       "description": "network status."
+    },
+    "netprotoRDSpec": {
+      "type": "object",
+      "required": [
+        "address-family"
+      ],
+      "properties": {
+        "address-family": {
+          "type": "string",
+          "enum": [
+            "ipv4-unicast",
+            "evpn"
+          ],
+          "default": "ipv4-unicast"
+        },
+        "rd-auto": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "rd": {
+          "$ref": "#/definitions/netprotoRouteDistinguisher"
+        },
+        "rt-export": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRouteDistinguisher"
+          }
+        },
+        "rt-import": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoRouteDistinguisher"
+          }
+        }
+      }
+    },
+    "netprotoRouteDistinguisher": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "type0",
+            "type1",
+            "type2"
+          ],
+          "default": "type0"
+        },
+        "admin-value": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "assigned-value": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
     }
   }
 }

@@ -34,7 +34,9 @@ venice/utils/objstore/client/mock \
 venice/citadel/broker/mock \
 venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock \
 venice/utils/diagnostics/protos \
-metrics
+metrics \
+nic/metaswitch/protos \
+nic/apollo/agent/protos
 
 PARALLEL := $(shell command -v parallel 2> /dev/null)
 
@@ -62,7 +64,7 @@ TO_INSTALL := ./vendor/github.com/pensando/grpc-gateway/protoc-gen-grpc-gateway 
 							./vendor/github.com/mgechev/revive
 
 # Lists the binaries to be containerized
-TO_DOCKERIZE := apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa orchhub vcsim
+TO_DOCKERIZE ?= apigw apiserver npm cmd tpm netagent spyglass evtsmgr tsm evtsproxy vos citadel rollout vtsa orchhub vcsim pegasus perseus
 
 GOIMPORTS_CMD := goimports -local "github.com/pensando/sw" -l
 SHELL := /bin/bash
@@ -78,6 +80,7 @@ BUILD_CMD ?= bash -c  "make ${TARGETS}"
 UPGRADE_TARGETS ?= ws-tools pull-assets-venice gen upgrade-build
 UPGRADE_BUILD_CMD ?= bash -c  "make ${UPGRADE_TARGETS}"
 E2E_CONFIG ?= test/e2e/cluster/tb_config_dev.json
+E2E_CP_CONFIG ?= test/e2e/cluster/tb_config_cp.json
 E2E_CUSTOM_CONFIG ?= test/e2e/cluster/venice-conf.json
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD --abbrev-commit)
 GIT_VERSION ?= $(shell git describe --tags --dirty --always)
@@ -514,6 +517,8 @@ fixtures:
 		cp -r api/docs tools/docker-files/apigw; \
 		cp -r docs/examples tools/docker-files/apigw/docs; \
 	fi
+	rm -rf tools/docker-files/pegasus/nic; mkdir -p tools/docker-files/pegasus/nic
+	if [ -a nic/pegasus.tgz ]; then tar -xvf nic/pegasus.tgz -C tools/docker-files/pegasus/ ;  fi
 
 shell:
 	@mkdir -p ${PWD}/bin/cbin
@@ -612,6 +617,10 @@ e2e:
 	$(MAKE) e2e-test
 	# enable auto delete after e2e tests pass consistently. For now - keep the cluster running so that we can debug failures
 	#./test/e2e/dind/do.py -delete
+
+e2e-cp:
+	$(MAKE) -C nic docker/pegasus
+	E2E_CONFIG=${E2E_CP_CONFIG} $(MAKE) e2e
 
 # this assumes that venice is already compiled and starts with cluster creation
 e2e-ci:

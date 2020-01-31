@@ -12,8 +12,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
+	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -41,7 +41,11 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 	}
 
 	dat, _ := intf.Marshal()
-
+	if intf.Spec.Type == netproto.InterfaceSpec_LOOPBACK.String() {
+		cfg := infraAPI.GetConfig()
+		cfg.LoopbackIP = intf.Spec.IPAddress
+		infraAPI.StoreConfig(cfg)
+	}
 	if err := infraAPI.Store(intf.Kind, intf.GetKey(), dat); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "Interface: %s | Err: %v", intf.GetKey(), err))
 		return errors.Wrapf(types.ErrBoltDBStoreCreate, "Interface: %s | Err: %v", intf.GetKey(), err)

@@ -35,4 +35,5 @@ const (
 	Rollout               = "pen-rollout"
 	CitadelQuery          = "pen-citadel-query"
 	Perseus               = "pen-perseus"
+	Pegasus               = "pen-pegasus"
 )

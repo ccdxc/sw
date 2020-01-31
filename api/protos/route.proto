@@ -93,16 +93,24 @@ message BGPNeighbor {
     bool Shutdown                           = 1 [(gogoproto.jsontag) = "shutdown,omitempty"];
 
     // Neighbor IP Address.
-    string IPAddress                        = 2 [(gogoproto.jsontag) = "ip-address,omitempty", (venice.check) = "IPAddr()"];
+    string IPAddress                        = 2 [(gogoproto.jsontag) = "ip-address,omitempty",
+                                                (venice.check) = "IPAddr()"];
 
     // ASN the neighbor belongs to.
     uint32 RemoteAS                         = 3 [(gogoproto.jsontag) = "remote-as,omitempty"];
 
     // BGP Multihop configuration, 0 disables multihop.
-    uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty", (venice.check) = "IntRange(0, 256)"];
+    uint32 MultiHop                         = 4 [(gogoproto.jsontag) = "multi-hop,omitempty",
+                                                (venice.check) = "IntRange(0, 256)"];
 
     // Address families to enable on the neighbor.
-    repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty", (venice.check) = "StrEnum(BGPAddressFamily)"];
+    repeated string EnableAddressFamilies   = 5 [(gogoproto.jsontag) = "enable-address-families,omitempty",
+                                                (venice.check) = "StrEnum(BGPAddressFamily)"];
+
+    // Enable Password authentication. Disabled if the string is empty.
+    string Password                         = 6 [(venice.storageTransformer) = "Secret()",
+                                                (gogoproto.jsontag) = "password,omitempty",
+                                                (venice.check) = "EmptyOr(StrLen(1, 128))"];
 }
 
 message BGPConfig {

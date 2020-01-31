@@ -7,6 +7,7 @@ Input file: svc_network.proto
 package network
 
 import (
+	"context"
 	fmt "fmt"
 
 	listerwatcher "github.com/pensando/sw/api/listerwatcher"
@@ -1569,6 +1570,63 @@ func (m *VirtualRouterList) Normalize() {
 }
 
 // Transformers
+
+func (m *AutoMsgRoutingConfigWatchHelper) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Events {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Events[i] = &c
+	}
+	return nil
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper) EraseSecrets() {
+	for _, v := range m.Events {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+
+	if m.Object == nil {
+		return nil
+	}
+	if err := m.Object.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *AutoMsgRoutingConfigWatchHelper_WatchEvent) EraseSecrets() {
+
+	if m.Object == nil {
+		return
+	}
+	m.Object.EraseSecrets()
+
+	return
+}
+
+func (m *RoutingConfigList) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Items {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Items[i] = &c
+	}
+	return nil
+}
+
+func (m *RoutingConfigList) EraseSecrets() {
+	for _, v := range m.Items {
+		v.EraseSecrets()
+	}
+	return
+}
 
 func init() {
 	scheme := runtime.GetDefaultScheme()

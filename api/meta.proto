@@ -38,8 +38,7 @@ message ObjectMeta {
   // title: Name of the object, unique within a Namespace for scoped objects.
   string Name                 = 1 [(gogoproto.jsontag) = "name", (venice.check) = "RegExp(name)", (venice.check) = "StrLen(2,64)"];
   // title: Tenant to which the object belongs to. 
-  // This can be automatically filled in many cases based on
-  // the tenant the user, who created the object, belongs to.
+  // This can be automatically filled in many cases based on the tenant the user, who created the object, belongs to.
   string Tenant               = 2 [(gogoproto.jsontag) = "tenant,omitempty", (venice.check) = "EmptyOr(RegExp(alphanum))", (venice.check) = "EmptyOr(StrLen(1,48))"];
   // Namespace of the object, for scoped objects.
   string Namespace            = 3 [(gogoproto.jsontag) = "namespace,omitempty", (venice.check) = "EmptyOrRegExp(name)", (venice.check) = "EmptyOrStrLen(2,64)"];

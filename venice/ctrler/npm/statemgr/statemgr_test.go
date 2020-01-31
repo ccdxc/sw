@@ -13,6 +13,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/ctkit"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/generated/workload"
@@ -2420,6 +2421,31 @@ func TestNetworkInterfaceConvert(t *testing.T) {
 	if cNetif.Status.DSC != "testNode" {
 		t.Fatalf("smartnic not set correctly %+v", cNetif)
 	}
+	Assert(t, convertAgentIFToAPIProto(agentNetif.Spec.Type) == cNetif.Status.Type, " Types did not match [%v][%v]", convertAgentIFToAPIProto(agentNetif.Spec.Type), cNetif.Spec.Type)
+	netifState, err := NewNetworkInterfaceState(&ctkit.NetworkInterface{NetworkInterface: *cNetif}, nil)
+	AssertOk(t, err, "failed to netif state")
+	nif := convertNetworkInterfaceObject(netifState)
+	Assert(t, nif != nil, "convert failed")
+	Assert(t, nif.Name == agentNetif.Name, "name did not match")
+	Assert(t, nif.Namespace == agentNetif.Namespace, "namespace did not match")
+	Assert(t, nif.Tenant == agentNetif.Tenant, "Tenant did not match")
+	Assert(t, cNetif.Status.Type == convertAgentIFToAPIProto(agentNetif.Spec.Type), "Type did not match [%v/%v]", nif.Spec.Type, convertAgentIFToAPIProto(agentNetif.Spec.Type))
+
+	tests := []struct {
+		agent string
+		api   string
+	}{
+		{netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_NONE)], network.IFType_NONE.String()},
+		{netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_HOST_PF)], network.IFType_HOST_PF.String()},
+		{netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_ETH)], network.IFType_UPLINK_ETH.String()},
+		{netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_UPLINK_MGMT)], network.IFType_UPLINK_MGMT.String()},
+		{netproto.InterfaceSpec_IFType_name[int32(netproto.InterfaceSpec_LOOPBACK)], network.IFType_LOOPBACK_TEP.String()},
+	}
+
+	for _, v := range tests {
+		Assert(t, convertIFTypeToAgentProto(v.api) == v.agent, "convert form api to netproto failed [%v][%v]", convertIFTypeToAgentProto(v.api), v.agent)
+		Assert(t, convertAgentIFToAPIProto(v.agent) == v.api, "convert form netproto to api failed [%v][%v]", convertAgentIFToAPIProto(v.agent), v.api)
+	}
 }
 
 // Test CRUD operations on NetworkInterface object; there is no backend
@@ -2760,6 +2786,26 @@ func TestRoutingConfigCreateDelete(t *testing.T) {
 		fmt.Printf("Routingconfig still found after deleting %v\n", err)
 		return false, nil
 	}, "routingconfig still foud", "1ms", "1s")
+}
+
+func TestModuleObject(t *testing.T) {
+	// create network state manager
+	smgr, err := newStatemgr()
+	if err != nil {
+		t.Fatalf("Could not create network manager. Err: %v", err)
+		return
+	}
+
+	oldObj := &ctkit.Module{}
+	newObj := &diagapi.Module{}
+	err = smgr.OnModuleCreate(oldObj)
+	AssertOk(t, err, "failed to create Module")
+
+	err = smgr.OnModuleUpdate(oldObj, newObj)
+	AssertOk(t, err, "failed to update Module")
+
+	err = smgr.OnModuleDelete(oldObj)
+	AssertOk(t, err, "failed to Delete Module")
 }
 
 func TestMain(m *testing.M) {

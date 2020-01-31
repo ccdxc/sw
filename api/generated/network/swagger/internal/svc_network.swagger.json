@@ -7575,6 +7575,12 @@
           ],
           "default": "ipv4-unicast",
           "description": "Address families to enable on the neighbor."
+        },
+        "password": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128."
         }
       }
     },

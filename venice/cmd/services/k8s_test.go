@@ -25,6 +25,9 @@ func checkForServices(t *testing.T, client *k8sclient.Clientset, stopCh, doneCh 
 				t.Fatalf("Failed to get modules, error: %v", err)
 			}
 			for name := range k8sModules {
+				if k8sModules[name].Spec.Disabled {
+					continue
+				}
 				if _, ok := foundModules[name]; !ok {
 					done = false
 					break

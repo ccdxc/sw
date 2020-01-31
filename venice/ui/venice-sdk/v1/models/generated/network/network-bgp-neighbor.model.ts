@@ -15,6 +15,7 @@ export interface INetworkBGPNeighbor {
     'remote-as'?: number;
     'multi-hop': number;
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families>;
+    'password'?: string;
 }
 
 
@@ -29,6 +30,8 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
     'multi-hop': number = null;
     /** Address families to enable on the neighbor. */
     'enable-address-families': Array<NetworkBGPNeighbor_enable_address_families> = null;
+    /** Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128. */
+    'password': string = null;
     public static propInfo: { [prop in keyof INetworkBGPNeighbor]: PropInfoItem } = {
         'shutdown': {
             description:  `Shutdown this neighbor session.`,
@@ -57,6 +60,11 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             description:  `Address families to enable on the neighbor.`,
             required: true,
             type: 'Array<string>'
+        },
+        'password': {
+            description:  `Enable Password authentication. Disabled if the string is empty. Length of string should be between 1 and 128.`,
+            required: false,
+            type: 'string'
         },
     }
 
@@ -127,6 +135,13 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
         } else {
             this['enable-address-families'] = [];
         }
+        if (values && values['password'] != null) {
+            this['password'] = values['password'];
+        } else if (fillDefaults && NetworkBGPNeighbor.hasDefaultValue('password')) {
+            this['password'] = NetworkBGPNeighbor.propInfo['password'].default;
+        } else {
+            this['password'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -139,6 +154,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
                 'remote-as': CustomFormControl(new FormControl(this['remote-as']), NetworkBGPNeighbor.propInfo['remote-as']),
                 'multi-hop': CustomFormControl(new FormControl(this['multi-hop'], [required, maxValueValidator(256), ]), NetworkBGPNeighbor.propInfo['multi-hop']),
                 'enable-address-families': CustomFormControl(new FormControl(this['enable-address-families']), NetworkBGPNeighbor.propInfo['enable-address-families']),
+                'password': CustomFormControl(new FormControl(this['password'], [minLengthValidator(1), maxLengthValidator(128), ]), NetworkBGPNeighbor.propInfo['password']),
             });
         }
         return this._formGroup;
@@ -155,6 +171,7 @@ export class NetworkBGPNeighbor extends BaseModel implements INetworkBGPNeighbor
             this._formGroup.controls['remote-as'].setValue(this['remote-as']);
             this._formGroup.controls['multi-hop'].setValue(this['multi-hop']);
             this._formGroup.controls['enable-address-families'].setValue(this['enable-address-families']);
+            this._formGroup.controls['password'].setValue(this['password']);
         }
     }
 }

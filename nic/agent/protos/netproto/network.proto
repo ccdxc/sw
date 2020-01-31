@@ -13,6 +13,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
 import "types.proto";
+import "route.proto";
 
 // ---------------------------- Network API ----------------------------
 // network controller api
@@ -97,6 +98,9 @@ message NetworkSpec {
 
     // Egress v6 Security Policies applied to this network
     repeated uint32 EgV6SecurityPolicyID    = 14 [(gogoproto.jsontag) = "eg-v6-sec-pol-id,omitempty"];
+
+    // RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the network
+    RDSpec RouteImportExport                = 15 [(gogoproto.jsontag) = "route-import-export,omitempty"];
 }
 
 // network status

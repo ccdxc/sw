@@ -7,7 +7,7 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
-import meta "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto/meta/pds"
+import meta "github.com/pensando/sw/nic/apollo/agent/gen/pds/meta/pds"
 
 import (
 	context "golang.org/x/net/context"

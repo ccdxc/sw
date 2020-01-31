@@ -514,6 +514,14 @@
         "pause": {
           "$ref": "#/definitions/netprotoPauseSpec",
           "description": "Pause Spec."
+        },
+        "ip-address": {
+          "type": "string",
+          "description": "IPConfig has the IP address for the interface if specified."
+        },
+        "network": {
+          "type": "string",
+          "description": "Network that the interface is attached to, if any."
         }
       },
       "description": "InterfaceSpec captures all the interface level configuration."
@@ -556,6 +564,9 @@
         "mirror-enabled": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "if-uuid": {
+          "type": "string"
         }
       },
       "description": "InterfaceStatus."

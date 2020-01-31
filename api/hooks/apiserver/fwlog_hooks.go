@@ -9,8 +9,8 @@ import (
 	"github.com/pensando/sw/venice/ctrler/tpm"
 
 	"github.com/pensando/sw/api/generated/monitoring"
+	hooksutils "github.com/pensando/sw/api/hooks/apiserver/utils"
 	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/nic/agent/tmagent/state"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
@@ -27,7 +27,7 @@ func (r *fwlogHooks) validateFwlogPolicy(ctx context.Context, kv kvstore.Interfa
 		return i, false, fmt.Errorf("invalid object %T instead of FwlogPolicy", i)
 	}
 
-	if err := state.ValidateFwLogPolicy(&policy.Spec); err != nil {
+	if err := hooksutils.ValidateFwLogPolicy(&policy.Spec); err != nil {
 		return i, false, err
 	}
 

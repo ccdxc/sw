@@ -375,6 +375,20 @@ func CreateTenant(apicl apiclient.Services, name string) (*cluster.Tenant, error
 	return createdTenant, err
 }
 
+// CreateLicense creates a licence object
+func CreateLicense(apicl apiclient.Services, features []cluster.Feature) (*cluster.License, error) {
+	lic := cluster.License{
+		ObjectMeta: api.ObjectMeta{
+			Name: "E2ELicence",
+		},
+		Spec: cluster.LicenseSpec{
+			Features: features,
+		},
+	}
+
+	return apicl.ClusterV1().License().Create(context.TODO(), &lic)
+}
+
 // MustCreateTenant creates a tenant and panics if fails
 func MustCreateTenant(apicl apiclient.Services, name string) *cluster.Tenant {
 	tenant, err := CreateTenant(apicl, name)

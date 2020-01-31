@@ -75,7 +75,7 @@ message EvpnEviSpec {
   EvpnEncaps  Encap    = 7 [(venice.pdsaFields) = {Field:"encapsulation"}];
 
   // Internal only
-  uint32      EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}, (gogoproto.moretags) = "venice:msinternal=true"];
+  uint32      EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_INDEX_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // EVPN IP VRF configuration
@@ -98,7 +98,7 @@ message EvpnIpVrfSpec {
   bytes   RD     = 5 [(venice.pdsaFields) = {Field:"route_distinguisher"}];
 
   // Internal only
-  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX"}, (gogoproto.moretags) = "venice:msinternal=true"];
+  string VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_NAME_LEN_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // EVPN EVI RT Configuration
@@ -120,7 +120,7 @@ message EvpnEviRtSpec {
   EvpnRtType RTType   = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only
-  uint32     EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}, (gogoproto.moretags) = "venice:msinternal=true"];
+  uint32     EVIId    = 1000 [(venice.pdsaFields) = {Field:"index", SetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX", GetKeyOidIndex: "AMB_EVPN_EVI_RT_EVI_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // EVPN IP VRF RT Configuration
@@ -142,7 +142,7 @@ message EvpnIpVrfRtSpec {
   EvpnRtType RTType = 4 [(venice.pdsaFields) = {Field:"type"}];
 
   // Internal only
-  string    VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX"}, (gogoproto.moretags) = "venice:msinternal=true"];
+  string    VRFName = 1000 [(venice.pdsaFields) = {Field:"vrf_name", SetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", SetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX", GetKeyOidIndex: "AMB_EVPN_IP_VRF_RT_NAME_INDEX", GetKeyOidLenIndex: "AMB_EVPN_IP_VRF_RT_NM_LEN_INDEX"}, (gogoproto.moretags) = "msinternal:\"true\""];
 }
 
 // EvpnEvi create and update request

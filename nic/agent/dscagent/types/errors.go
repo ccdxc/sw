@@ -110,6 +110,7 @@ const (
 	ErrMirrorDeleteLateralObjects         = Error("ErrMirrorDeleteLateralObjects")
 	ErrNetflowDeleteLateralObjects        = Error("ErrNetflowDeleteLateralObjects")
 	ErrMaxMirrorSessionsConfigured        = Error("ErrMaxMirrorSessionsConfigured")
+	ErrControlPlaneHanlding               = Error("ErrControlPlaneConfiguration")
 	ErrPipelineInterfaceGet               = Error("ErrInterfaceGet")
 	ErrInvalidProfileFwdMode              = Error("ErrInvalidProfileFwdMode")
 	ErrInvalidProfilePolicyMode           = Error("ErrInvalidProfilePolicyMode")

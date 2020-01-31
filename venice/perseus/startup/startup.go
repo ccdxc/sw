@@ -2,12 +2,17 @@ package startup
 
 import (
 	"context"
+
 	"time"
 
 	"github.com/pensando/sw/api"
+	diagapi "github.com/pensando/sw/api/generated/diagnostics"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/perseus/apiclient"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/services"
+	diagsvc "github.com/pensando/sw/venice/utils/diagnostics/service"
+	"github.com/pensando/sw/venice/utils/k8s"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/resolver"
 )
@@ -44,11 +49,22 @@ func waitForAPIAndStartServices() {
 	}
 }
 
+func registerDebugHandlers(handler *services.ServiceHandlers) {
+	diagSvc := diagsvc.GetDiagnosticsService(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, log.GetDefaultInstance())
+	if err := diagSvc.RegisterHandler("Debug", diagapi.DiagnosticsRequest_Stats.String(), diagsvc.NewExpVarHandler(globals.APIServer, k8s.GetNodeName(), diagapi.ModuleStatus_Venice, log.GetDefaultInstance())); err != nil {
+		log.ErrorLog("method", "GetDiagnosticsServiceWithDefaults", "msg", "failed to register expvar handler", "err", err)
+	}
+	diagSvc.RegisterCustomAction("list-watchers", func(action string, params map[string]string) (interface{}, error) {
+		return handler.HandleDebugAction(action, params)
+	})
+}
+
 // OnStart restore state and start services as applicable
 func OnStart(resolverURLs []string) {
 	env.ResolverClient = resolver.New(&resolver.Config{Name: "2", Servers: resolverURLs})
-	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, resolverURLs[0])
+	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer)
 	ServiceHandlers := services.NewServiceHandlers()
+	registerDebugHandlers(ServiceHandlers)
 	log.Infof("ServiceHandlers registered %v", ServiceHandlers)
 	env.CfgWatcherService.Start()
 	go waitForAPIAndStartServices()

@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--target', dest='target',
                     default='haps',
-                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm, gold')
+                    help='Package for sim, haps, arm-dev, zebu, debug, debug-arm, gold, pegasus')
 
 # Do not strip the target shared libs and binaries
 parser.add_argument('--no-strip', dest='no_strip',
@@ -148,6 +148,16 @@ elif args.target == 'debug' or args.target == 'debug-arm':
     tar_name    = 'debug_' + arch + '_' +  args.pipeline
     files = []
     files.append('nic/tools/package/pack_debug.txt')
+elif args.target == 'pegasus':
+    print ("Packaging for pegasus")
+    arm_pkg     = 0
+    objcopy_bin = 'objcopy'
+    strip_bin   = 'strip'
+    output_dir  = pwd + '/fake_root_target/x86_64'
+    arch = 'x86_64'
+    tar_name    = 'pegasus'
+    files = []
+    files.append('nic/tools/package/pack_pegasus.txt')
 else:
     print ("Packaging for haps")
 

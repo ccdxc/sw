@@ -11,7 +11,7 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/venice/utils/featureflags"
+	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -26,9 +26,9 @@ type SmRoute struct {
 
 // CompleteRegistration is the callback function statemgr calls after init is done
 func (sma *SmRoute) CompleteRegistration() {
-	if featureflags.IsOVerlayRoutingEnabled() == false {
-		return
-	}
+	// if featureflags.IsOVerlayRoutingEnabled() == false {
+	// 	return
+	// }
 
 	sma.sm.SetRoutingConfigReactor(smgrRoute)
 }
@@ -68,11 +68,12 @@ func RoutingConfigStateFromObj(obj runtime.Object) (*RoutingConfigState, error) 
 func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 	neighbor := &netproto.BGPNeighbor{}
 	meta := api.ObjectMeta{
-		Tenant:          rtcfg.RoutingConfig.Tenant,
-		Namespace:       rtcfg.RoutingConfig.Namespace,
+		Tenant:          globals.DefaultTenant,
+		Namespace:       globals.DefaultNamespace,
 		Name:            rtcfg.RoutingConfig.Name,
 		GenerationID:    rtcfg.RoutingConfig.GenerationID,
 		ResourceVersion: rtcfg.RoutingConfig.ResourceVersion,
+		UUID:            rtcfg.RoutingConfig.UUID,
 	}
 
 	obj := &netproto.RoutingConfig{
@@ -99,6 +100,7 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 			neighbor.IPAddress = nbr.IPAddress
 			neighbor.RemoteAS = nbr.RemoteAS
 			neighbor.MultiHop = nbr.MultiHop
+			neighbor.Password = nbr.Password
 			for _, addr := range nbr.EnableAddressFamilies {
 				neighbor.EnableAddressFamilies = append(neighbor.EnableAddressFamilies, addr)
 			}
@@ -106,6 +108,7 @@ func convertRoutingConfig(rtcfg *RoutingConfigState) *netproto.RoutingConfig {
 			obj.Spec.BGPConfig.Neighbors = append(obj.Spec.BGPConfig.Neighbors, neighbor)
 		}
 	}
+	log.Infof("Converted Routing Config [%+v]", obj)
 	return obj
 }
 

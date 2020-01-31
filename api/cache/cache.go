@@ -36,6 +36,7 @@ import (
 
 var (
 	errorNotFound          = errors.New("object not found")
+	errorExists            = errors.New("object already exists")
 	errorSnapshotNotFound  = errors.New("object snapshot not found")
 	errorNotCorrectRev     = errors.New("object revision mismatch")
 	errorRevBackpedals     = errors.New("revision backpedals")

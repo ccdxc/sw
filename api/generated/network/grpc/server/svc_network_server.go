@@ -281,6 +281,10 @@ func (s *snetworkSvc_networkBackend) regMsgsFunc(l log.Logger, scheme *runtime.S
 				l.ErrorLog("msg", "Object ListFiltered failed", "key", key, "err", err)
 				return nil, err
 			}
+			err = into.ApplyStorageTransformer(ctx, false)
+			if err != nil {
+				return nil, err
+			}
 			return into, nil
 		}).WithSelfLinkWriter(func(path, ver, prefix string, i interface{}) (interface{}, error) {
 			r := i.(network.RoutingConfigList)
@@ -1391,7 +1395,14 @@ func (s *snetworkSvc_networkBackend) regWatchersFunc(ctx context.Context, logger
 					}
 					in := cin.(*network.RoutingConfig)
 					in.SelfLink = in.MakeURI(globals.ConfigURIPrefix, "v1", "network")
-
+					{
+						txin, err := network.StorageRoutingConfigTransformer.TransformFromStorage(nctx, *in)
+						if err != nil {
+							return errors.Wrap(err, "Failed to apply storage transformer to RoutingConfig")
+						}
+						obj := txin.(network.RoutingConfig)
+						in = &obj
+					}
 					strEvent := &network.AutoMsgRoutingConfigWatchHelper_WatchEvent{
 						Type:   string(ev.Type),
 						Object: in,

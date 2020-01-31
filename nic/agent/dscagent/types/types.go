@@ -12,11 +12,12 @@ type DistributedServiceCardStatus struct {
 	IsConnectedToVenice bool             `json:"is-connected-to-venice"`
 	DSCInterfaceIPs     []DSCInterfaceIP `json:"dsc-interfaces,omitempty"`
 	DSCStaticRoutes     []DSCStaticRoute `json:"dsc-static-routes,omitempty"`
+	LoopbackIP          string           `json:"loopback-ip"`
 }
 
 //DSCInterfaceIP captures the IP interface info of DSC interfaces
 type DSCInterfaceIP struct {
-	IfID          int8
+	IfId          int8
 	DestPrefixLen int8
 	IPAddress     string
 	GatewayIP     string

@@ -47,6 +47,9 @@ curl -k --header "Content-Type: application/json"   --request POST   --data ' { 
 # create Rolebinding
 curl -k --header "Content-Type: application/json"   --request PUT --data ' { "kind": "RoleBinding", "api-version": "v1", "meta": { "name": "AdminRoleBinding", "tenant": "default" }, "spec": { "users": ["admin"], "role": "AdminRole" } } ' https://$IPADDR/configs/auth/v1/tenant/default/role-bindings/AdminRoleBinding
 
+# create License
+#curl -k --header "Content-Type: application/json"   --request PUT --data ' { "kind": "License", "api-version": "v1", "meta": { "name": "def-license" }, "spec": { "features": [ {"feature-key": "OverlayRouting" } ] } } ' https://$IPADDR/configs/cluster/v1/licenses
+
 
 #bootstrap complete - After this step, GUI works..
 curl -k --header "Content-Type: application/json"   --request POST   --data '{ } '   https://$IPADDR/configs/cluster/v1/cluster/AuthBootstrapComplete

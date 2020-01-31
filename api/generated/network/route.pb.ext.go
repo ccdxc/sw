@@ -7,6 +7,7 @@ Input file: route.proto
 package network
 
 import (
+	"context"
 	"errors"
 	fmt "fmt"
 	"strings"
@@ -16,11 +17,11 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/ref"
 
-	validators "github.com/pensando/sw/venice/utils/apigen/validators"
-
 	"github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/globals"
+	validators "github.com/pensando/sw/venice/utils/apigen/validators"
 	"github.com/pensando/sw/venice/utils/runtime"
+	"github.com/pensando/sw/venice/utils/transformers/storage"
 )
 
 // Dummy definitions to suppress nonused warnings
@@ -73,6 +74,9 @@ func (x BGPAddressFamily) String() string {
 
 var _ validators.DummyVar
 var validatorMapRoute = make(map[string]map[string][]func(string, interface{}) error)
+
+var storageTransformersMapRoute = make(map[string][]func(ctx context.Context, i interface{}, toStorage bool) error)
+var eraseSecretsMapRoute = make(map[string]func(i interface{}))
 
 // MakeKey generates a KV store key for the object
 func (m *RouteTable) MakeKey(prefix string) string {
@@ -894,6 +898,85 @@ func (m *RoutingConfigStatus) Normalize() {
 
 // Transformers
 
+func (m *BGPConfig) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	for i, v := range m.Neighbors {
+		c := *v
+		if err := c.ApplyStorageTransformer(ctx, toStorage); err != nil {
+			return err
+		}
+		m.Neighbors[i] = &c
+	}
+	return nil
+}
+
+func (m *BGPConfig) EraseSecrets() {
+	for _, v := range m.Neighbors {
+		v.EraseSecrets()
+	}
+	return
+}
+
+func (m *BGPNeighbor) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if vs, ok := storageTransformersMapRoute["BGPNeighbor"]; ok {
+		for _, v := range vs {
+			if err := v(ctx, m, toStorage); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (m *BGPNeighbor) EraseSecrets() {
+	if v, ok := eraseSecretsMapRoute["BGPNeighbor"]; ok {
+		v(m)
+	}
+	return
+}
+
+func (m *RoutingConfig) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	if err := m.Spec.ApplyStorageTransformer(ctx, toStorage); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *RoutingConfig) EraseSecrets() {
+	m.Spec.EraseSecrets()
+
+	return
+}
+
+type storageRoutingConfigTransformer struct{}
+
+var StorageRoutingConfigTransformer storageRoutingConfigTransformer
+
+func (st *storageRoutingConfigTransformer) TransformFromStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(RoutingConfig)
+	err := r.ApplyStorageTransformer(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (st *storageRoutingConfigTransformer) TransformToStorage(ctx context.Context, i interface{}) (interface{}, error) {
+	r := i.(RoutingConfig)
+	err := r.ApplyStorageTransformer(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (m *RoutingConfigSpec) ApplyStorageTransformer(ctx context.Context, toStorage bool) error {
+	return nil
+}
+
+func (m *RoutingConfigSpec) EraseSecrets() {
+	return
+}
+
 func init() {
 	scheme := runtime.GetDefaultScheme()
 	scheme.AddKnownTypes(
@@ -949,6 +1032,18 @@ func init() {
 		return nil
 	})
 
+	validatorMapRoute["BGPNeighbor"]["all"] = append(validatorMapRoute["BGPNeighbor"]["all"], func(path string, i interface{}) error {
+		m := i.(*BGPNeighbor)
+		args := make([]string, 0)
+		args = append(args, "1")
+		args = append(args, "128")
+
+		if err := validators.EmptyOr(validators.StrLen, m.Password, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"Password", err.Error())
+		}
+		return nil
+	})
+
 	validatorMapRoute["RDSpec"] = make(map[string][]func(string, interface{}) error)
 	validatorMapRoute["RDSpec"]["all"] = append(validatorMapRoute["RDSpec"]["all"], func(path string, i interface{}) error {
 		m := i.(*RDSpec)
@@ -994,5 +1089,37 @@ func init() {
 		}
 		return nil
 	})
+
+	{
+		BGPNeighborPasswordTx, err := storage.NewSecretValueTransformer()
+		if err != nil {
+			log.Fatalf("Error instantiating SecretStorageTransformer: %v", err)
+		}
+		storageTransformersMapRoute["BGPNeighbor"] = append(storageTransformersMapRoute["BGPNeighbor"],
+			func(ctx context.Context, i interface{}, toStorage bool) error {
+				var data []byte
+				var err error
+				m := i.(*BGPNeighbor)
+
+				if toStorage {
+					data, err = BGPNeighborPasswordTx.TransformToStorage(ctx, []byte(m.Password))
+				} else {
+					data, err = BGPNeighborPasswordTx.TransformFromStorage(ctx, []byte(m.Password))
+				}
+				m.Password = string(data)
+
+				return err
+			})
+
+		eraseSecretsMapRoute["BGPNeighbor"] = func(i interface{}) {
+			m := i.(*BGPNeighbor)
+
+			var data []byte
+			m.Password = string(data)
+
+			return
+		}
+
+	}
 
 }

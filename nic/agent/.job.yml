@@ -1,7 +1,7 @@
 version: 2.0
 targets:
   venice:
-    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && VENICE_DEV=1 go test -timeout 30m -p 1 ./venice/... && VENICE_DEV=1 go test -timeout 1h -p 1 ./test/..." ]
+    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make -C nic/agent/dscagent/types/apuluproto && make -C nic/apollo/agent/protos && VENICE_DEV=1 go test -timeout 30m -p 1 ./venice/... && VENICE_DEV=1 go test -timeout 1h -p 1 ./test/..." ]
     owners: ["email:abhi@pensando.io"]
     area:
     sub-area:
@@ -13,7 +13,7 @@ targets:
     sub-area:
     feature:
   agent-apulu:
-    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && go build -o /tmp/netagent -tags apulu github.com/pensando/sw/nic/agent/cmd/netagent && rm -f /tmp/netagent" ]
+    commands: [ "sh", "-c", "cd $GOPATH/src/github.com/pensando/sw && make ws-tools && make pull-assets && make -C nic/agent/dscagent/types/apuluproto && make -C nic/apollo/agent/protos && go build -o /tmp/netagent -tags apulu github.com/pensando/sw/nic/agent/cmd/netagent && rm -f /tmp/netagent" ]
     owners: ["email:abhi@pensando.io"]
     area:
     sub-area:

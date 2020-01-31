@@ -682,4 +682,45 @@ var k8sModules = map[string]protos.Module{
 			},
 		},
 	},
+	globals.Pegasus: {
+		TypeMeta: api.TypeMeta{
+			Kind: "Module",
+		},
+		ObjectMeta: api.ObjectMeta{
+			Name: globals.Pegasus,
+		},
+		Spec: protos.ModuleSpec{
+			Type:      protos.ModuleSpec_Deployment,
+			NumCopies: 2,
+			Submodules: []protos.ModuleSpec_Submodule{
+				{
+					Name:       globals.Pegasus,
+					Image:      globals.Pegasus,
+					Privileged: true,
+					EnvVars:    map[string]string{},
+					Services: []protos.ModuleSpec_Submodule_Service{
+						{
+							Name: globals.Pegasus,
+							Port: runtime.MustUint32(globals.PegasusBGPPort),
+						},
+						{
+							Name: "pen-pegasus-cxm",
+							Port: 8001,
+						},
+					},
+				},
+				{
+					Name:    globals.Perseus,
+					Image:   globals.Perseus,
+					EnvVars: map[string]string{},
+					Args:    []string{"-resolver-urls", "$RESOLVER_URLS"},
+				},
+			},
+			Volumes: []protos.ModuleSpec_Volume{
+				logVolume,
+				eventsVolume,
+			},
+			Disabled: true,
+		},
+	},
 }

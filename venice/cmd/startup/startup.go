@@ -215,8 +215,9 @@ func StartQuorumServices(c utils.Cluster) {
 	env.VipService = services.NewVIPService()
 
 	k8sConfig := services.K8sServiceConfig{
-		OverriddenModules: utils.GetOverriddenModules(""),
-		DisabledModules:   utils.GetDisabledModules(""),
+		OverriddenModules:  utils.GetOverriddenModules(""),
+		DisabledModules:    utils.GetDisabledModules(""),
+		ConditionalModules: utils.GetConditionalModules(""),
 	}
 	env.K8sService = services.NewK8sService(&k8sConfig)
 	env.ResolverService = services.NewResolverService(env.K8sService)

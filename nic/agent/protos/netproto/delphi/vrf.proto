@@ -5,7 +5,7 @@ syntax = "proto3";
 package dnetproto;
 
 // Mandatory imports.
-import "github.com/pensando/sw/nic/agent/protos/netproto/vrf.proto";
+import "vrf.proto";
 import "delphi.proto";
 
 // app object

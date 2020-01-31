@@ -37,6 +37,8 @@ var typesMapRoute = map[string]*api.Struct{
 			"MultiHop": api.Field{Name: "MultiHop", CLITag: api.CLIInfo{ID: "multi-hop", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "multi-hop", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 
 			"EnableAddressFamilies": api.Field{Name: "EnableAddressFamilies", CLITag: api.CLIInfo{ID: "enable-address-families", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "enable-address-families", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"Password": api.Field{Name: "Password", CLITag: api.CLIInfo{ID: "password", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "password", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"network.EVPNConfig": &api.Struct{
@@ -188,6 +190,7 @@ var typesMapRoute = map[string]*api.Struct{
 			"multi-hop":               api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].MultiHop", Skip: false, Insert: "", Help: ""},
 			"name":                    api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":               api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"password":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Password", Skip: false, Insert: "", Help: ""},
 			"remote-as":               api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].RemoteAS", Skip: false, Insert: "", Help: ""},
 			"resource-version":        api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},

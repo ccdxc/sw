@@ -1338,6 +1338,11 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 	return
 }
 
+// HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
+func (i *IrisAPI) HandleRoutingConfig(oper types.Operation, obj netproto.RoutingConfig) ([]netproto.RoutingConfig, error) {
+	return nil, errors.Wrapf(types.ErrNotImplemented, "Routing Config not implemented by Iris Pipeline")
+}
+
 // HandleProfile handles CRUD Methods for Profile Object
 func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) (profiles []netproto.Profile, err error) {
 	i.Lock()

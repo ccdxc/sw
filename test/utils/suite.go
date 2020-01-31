@@ -59,6 +59,7 @@ type TestBedConfig struct {
 	Password       string                 `json:",omitempty"`
 	AuthMethod     string                 `json:",omitempty"`
 	Radius         testutils.RadiusConfig `json:",omitempty"`
+	EnableCP       bool                   `json:",omitempty"`
 }
 
 var defaultTestBedConfig = TestBedConfig{
@@ -334,6 +335,18 @@ func (tu *TestUtils) SetupAuth() {
 			ginkgo.Fail(fmt.Sprintf("UpdateRoleBinding failed with err: %v", err))
 		}
 	}
+
+	// Setup the Overlay routing Licence if CP is enabled
+	if tu.TestBedConfig.EnableCP {
+		features := []cluster.Feature{{FeatureKey: "OverlayRouting"}}
+		_, err := testutils.CreateLicense(apicl, features)
+		if err != nil {
+			if !strings.HasPrefix(err.Error(), "Status:(409)") && !strings.HasPrefix(err.Error(), "Status:(401)") {
+				ginkgo.Fail(fmt.Sprintf("Create Licence failed with err: %v", err))
+			}
+		}
+	}
+
 	// set bootstrap flag
 	_, err = testutils.SetAuthBootstrapFlag(apicl)
 	if err != nil {

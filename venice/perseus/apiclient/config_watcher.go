@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/k8s"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/pensando/sw/api"
@@ -45,10 +47,14 @@ type CfgWatcherService struct {
 	// Object watchers
 	smartNICWatcher         kvstore.Watcher // SmartNIC object watcher
 	networkInterfaceWatcher kvstore.Watcher // Network Interface object watcher
+	routingConfigWatcher    kvstore.Watcher // RoutingConfig object watcher
+	nodeConfigWatcher       kvstore.Watcher // Node object watcher
 
 	// Event handlers
 	smartNICEventHandler    types.SmartNICEventHandler
 	networkInterfaceHandler types.NetworkInterfaceEventHandler
+	routingConfigHandler    types.RoutingConfigEventHandler
+	nodeConfigHandler       types.NodeConfigEventHandler
 }
 
 // SetSmartNICEventHandler sets handler for SmartNIC events
@@ -59,6 +65,16 @@ func (k *CfgWatcherService) SetSmartNICEventHandler(snicHandler types.SmartNICEv
 // SetNetworkInterfaceEventHandler sets handler for Network Interface events
 func (k *CfgWatcherService) SetNetworkInterfaceEventHandler(nwIntfHandler types.NetworkInterfaceEventHandler) {
 	k.networkInterfaceHandler = nwIntfHandler
+}
+
+// SetRoutingConfigEventHandler sets handler for Network Interface events
+func (k *CfgWatcherService) SetRoutingConfigEventHandler(rtCfgfHandler types.RoutingConfigEventHandler) {
+	k.routingConfigHandler = rtCfgfHandler
+}
+
+// SetNodeConfigEventHandler sets handler for Network Interface events
+func (k *CfgWatcherService) SetNodeConfigEventHandler(nodeCfgfHandler types.NodeConfigEventHandler) {
+	k.nodeConfigHandler = nodeCfgfHandler
 }
 
 // apiClient creates a client to API server
@@ -231,6 +247,26 @@ func (k *CfgWatcherService) runUntilCancel() {
 	}
 	k.logger.Infof("NetworkInterface config watcher established, client: %p", k.svcsClient)
 
+	nodeopts := api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Name: k8s.GetNodeName()}}
+	k.nodeConfigWatcher, err = k.svcsClient.ClusterV1().Node().Watch(k.ctx, &nodeopts)
+	ii = 0
+	for err != nil {
+		select {
+		case <-time.After(time.Second):
+
+			k.logger.Infof("Starting Node watch with options [%+v]", nodeopts)
+			k.nodeConfigWatcher, err = k.svcsClient.ClusterV1().Node().Watch(k.ctx, &nodeopts)
+			ii++
+			if ii%10 == 0 {
+				k.logger.Errorf("Waiting for Node object watch to succeed for %v seconds", ii)
+			}
+		case <-k.ctx.Done():
+			k.stopWatchers()
+			return
+		}
+	}
+	k.logger.Infof("node config watcher established, client: %p", k.svcsClient)
+
 	// Handle config watcher events
 	for {
 		select {
@@ -268,6 +304,24 @@ func (k *CfgWatcherService) runUntilCancel() {
 			}
 			if k.networkInterfaceHandler != nil {
 				k.networkInterfaceHandler(event.Type, intf)
+			}
+
+		case event, ok := <-k.nodeConfigWatcher.EventChan():
+			if !ok {
+				// restart this routine.
+				log.Errorf("Error receiving from nodeWatcher watch channel, restarting all watchers")
+				k.stopWatchers()
+				go k.runUntilCancel()
+				return
+			}
+			k.logger.Debugf("nodeWatcher Received %+v", event)
+			node, ok := event.Object.(*cmd.Node)
+			if !ok {
+				k.logger.Infof("node Watcher failed to get Node Object")
+				break
+			}
+			if k.nodeConfigHandler != nil {
+				k.nodeConfigHandler(event.Type, node)
 			}
 
 		case <-k.ctx.Done():

@@ -13,6 +13,8 @@ import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.p
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
 
+import "route.proto";
+
 // ---------------------------- Vrf API ----------------------------
 
 // Vrf controller api
@@ -68,7 +70,7 @@ message VrfSpec {
     string IPAMPolicy           = 6 [(gogoproto.jsontag) = "ipam-policy,omitempty"];
 
     // RouteImportExport is used as the Route Distinguisher and to control Import Export of routes for the VRF
-//     RDSpec RouteImportExport   = 8 [(gogoproto.jsontag) = "route-import-export,omitempty"];
+     RDSpec RouteImportExport   = 7 [(gogoproto.jsontag) = "route-import-export,omitempty"];
 }
 
 // Vrf Status

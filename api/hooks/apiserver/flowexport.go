@@ -12,10 +12,9 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/monitoring"
+	hooksutils "github.com/pensando/sw/api/hooks/apiserver/utils"
 	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
-	"github.com/pensando/sw/nic/agent/troubleshooting/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/ctrler/tpm"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -88,7 +87,7 @@ func flowexportPolicyValidator(p *monitoring.FlowExportPolicy) error {
 			return fmt.Errorf("failed to unmarshal, %v", err)
 		}
 
-		if err := utils.ValidateMatchRules(p.ObjectMeta, matchrules,
+		if err := hooksutils.ValidateMatchRules(p.ObjectMeta, matchrules,
 			func(meta api.ObjectMeta) (*netproto.Endpoint, error) { return nil, nil }); err != nil {
 			return fmt.Errorf("error in match-rule, %v", err)
 		}
@@ -132,7 +131,7 @@ func flowexportPolicyValidator(p *monitoring.FlowExportPolicy) error {
 			}
 		}
 
-		if _, _, err := parsePortProto(export.Transport); err != nil {
+		if _, err := parsePortProto(export.Transport); err != nil {
 			return err
 		}
 	}
@@ -177,38 +176,29 @@ func validateTemplateInterval(s string) (time.Duration, error) {
 }
 
 func validateFlowExportFormat(s string) error {
-	if halproto.ExportFormat_name[int32(halproto.ExportFormat_IPFIX)] != strings.ToUpper(s) {
+	if strings.ToUpper(s) != "IPFIX" {
 		return fmt.Errorf("invalid format %s", s)
 	}
 	return nil
 }
 
-func parsePortProto(src string) (halproto.IPProtocol, uint32, error) {
+func parsePortProto(src string) (uint32, error) {
 	s := strings.Split(src, "/")
 	if len(s) != 2 {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("transport should be in protocol/port format")
+		return 0, fmt.Errorf("transport should be in protocol/port format")
 	}
 
-	p, ok := halproto.IPProtocol_value["IPPROTO_"+strings.ToUpper(s[0])]
-	if !ok {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s", src)
-	}
-	proto := halproto.IPProtocol(p)
-
-	switch proto {
-	case halproto.IPProtocol_IPPROTO_UDP:
-
-	default:
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid protocol in %s\n Only UDP is accepted", src)
+	if strings.ToUpper(s[0]) != "UDP" {
+		return 0, fmt.Errorf("invalid protocol in %s", src)
 	}
 
 	port, err := strconv.Atoi(s[1])
 	if err != nil {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
+		return 0, fmt.Errorf("invalid port in %s", src)
 	}
 	if uint(port) > uint(^uint16(0)) {
-		return halproto.IPProtocol_IPPROTO_NONE, 0, fmt.Errorf("invalid port in %s", src)
+		return 0, fmt.Errorf("invalid port in %s", src)
 	}
 
-	return proto, uint32(port), nil
+	return uint32(port), nil
 }

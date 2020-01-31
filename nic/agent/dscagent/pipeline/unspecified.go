@@ -1438,6 +1438,11 @@ func (i *FakeAgentAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	return nil
 }
 
+// HandleRoutingConfig handles CRUDs for NetworkSecurityPolicy object
+func (i *FakeAgentAPI) HandleRoutingConfig(oper types.Operation, obj netproto.RoutingConfig) (rtCfg []netproto.RoutingConfig, err error) {
+	return nil, err
+}
+
 // ReplayConfigs replays last known configs from boltDB
 func (i *FakeAgentAPI) ReplayConfigs() error {
 	return nil

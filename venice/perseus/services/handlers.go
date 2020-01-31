@@ -3,8 +3,12 @@ package services
 import (
 	"sync"
 
+	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/venice/globals"
+
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/api/generated/network"
+	pegasusClient "github.com/pensando/sw/nic/metaswitch/gen/agent"
 	"github.com/pensando/sw/venice/perseus/env"
 	"github.com/pensando/sw/venice/perseus/types"
 	"github.com/pensando/sw/venice/utils/kvstore"
@@ -20,7 +24,11 @@ type snic struct {
 // ServiceHandlers holds all the servies to be supported
 type ServiceHandlers struct {
 	sync.Mutex
+	updated       bool
+	pegasusURL    string
 	cfgWatcherSvc types.CfgWatcherService
+	pegasusClient pegasusClient.BGPSvcClient
+	apiclient     apiclient.Services
 	snicMap       map[string]snic
 }
 
@@ -31,7 +39,11 @@ func NewServiceHandlers() *ServiceHandlers {
 	}
 	m.cfgWatcherSvc.SetSmartNICEventHandler(m.HandleSmartNICEvent)
 	m.cfgWatcherSvc.SetNetworkInterfaceEventHandler(m.HandleNetworkInterfaceEvent)
+	m.cfgWatcherSvc.SetRoutingConfigEventHandler(m.HandleRoutingConfigEvent)
+	m.cfgWatcherSvc.SetNodeConfigEventHandler(m.HandleNodeConfigEvent)
 	m.snicMap = make(map[string]snic)
+	m.pegasusURL = globals.Localhost + ":" + globals.PegasusGRPCPort
+	m.connectToPegasus()
 	return &m
 }
 

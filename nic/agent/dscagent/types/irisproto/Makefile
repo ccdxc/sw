@@ -7,7 +7,7 @@ $(info ${HAL_PB_GO_FILES})
 
 default: clean-proto
 	# Compile proto definitions
-	 LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) $(TOP_DIR)/hal/third-party/google/x86_64/bin/protoc \
+	 LC_ALL=C LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) protoc \
     --proto_path=../../../../../ -I../../../../../nic/proto \
 	-I../../../../../nic/proto/hal \
 	-I../../../../../nic/delphi/proto/delphi \

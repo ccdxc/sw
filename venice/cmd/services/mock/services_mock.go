@@ -367,6 +367,11 @@ func (m *K8sService) UpgradeServices(order []string) error {
 func (m *K8sService) Start(client, strClient k8sclient.Interface, isLeader bool) {
 }
 
+// StartServices is a mock implementation to start a particular set of services
+func (m *K8sService) StartServices([]string) error {
+	return nil
+}
+
 // Stop is a mock implementation of stopping kubernetes service.
 func (m *K8sService) Stop() {
 }
@@ -850,6 +855,9 @@ func (c *CfgWatcherService) SetSmartNICEventHandler(types.SmartNICEventHandler) 
 
 // SetHostEventHandler sets the handler to handle events related to Host object
 func (c *CfgWatcherService) SetHostEventHandler(types.HostEventHandler) {}
+
+// SetLicenseEventHandler sets the handler to handle events related to License object
+func (c *CfgWatcherService) SetLicenseEventHandler(types.LicenseEventHandler) {}
 
 // SetNodeService sets the node service to update 3rd party services (e.g. elastic) on node updates
 func (c *CfgWatcherService) SetNodeService(types.NodeService) {}

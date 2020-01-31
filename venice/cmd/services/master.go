@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pensando/sw/venice/utils/featureflags"
+
 	gogotypes "github.com/gogo/protobuf/types"
 	k8sclient "k8s.io/client-go/kubernetes"
 	k8srest "k8s.io/client-go/rest"
@@ -271,6 +273,7 @@ func NewMasterService(nodeID string, options ...MasterOption) types.MasterServic
 	m.cfgWatcherSvc.SetNtpEventHandler(m.handleNtpEvent)
 	m.cfgWatcherSvc.SetSmartNICEventHandler(m.handleSmartNICEvent)
 	m.cfgWatcherSvc.SetHostEventHandler(m.handleHostEvent)
+	m.cfgWatcherSvc.SetLicenseEventHandler(m.handleLicenseEvent)
 	// ntp service listens for leadership changes
 	if m.ntpSvc != nil {
 		m.leaderSvc.Register(m.ntpSvc)
@@ -621,6 +624,16 @@ func isQuorumNode(nodeName string) bool {
 	return false
 }
 
+// reevalMasterServices re-evaluates Master servers on a licence event
+func (m *masterService) reevalMasterServices(ff *cmd.License) {
+	//  XXX-TODO(sanjayt): Currently Handle only the overlay routing feature getting turned on, handle feature getting turned off
+	log.Infof("re-evaluating Services on License event")
+	if featureflags.IsOVerlayRoutingEnabled() {
+		log.Infof("Feature Overlay Routing is enabled, starting pegasus")
+		m.k8sSvc.StartServices([]string{globals.Pegasus})
+	}
+}
+
 // handleNodeEvent handles Node update
 func (m *masterService) handleNodeEvent(et kvstore.WatchEventType, node *cmd.Node) {
 	// update local cache
@@ -953,5 +966,71 @@ func (m *masterService) handleHostEvent(et kvstore.WatchEventType, evtHost *cmd.
 		if err != nil {
 			log.Errorf("Error updating NIC-Host pairing, op: %v, Host: %v, err: %v", kvstore.Deleted, evtHost, err)
 		}
+	}
+}
+
+// handleLicenseEvent handles Host updates
+func (m *masterService) handleLicenseEvent(et kvstore.WatchEventType, evtFF *cmd.License) {
+
+	isLeader := env.LeaderService != nil && env.LeaderService.IsLeader()
+	log.Infof("License update: isLeader: %v, evtLicense: %+v event: %v", isLeader, *evtFF, et)
+
+	if !isLeader {
+		// Only update the local cache, overriding existing content.
+		// Updates are atomic, so the kind-level lock implemented by
+		// memdb is enough to protect against concurrent access.
+		var err error
+		switch et {
+		case kvstore.Created:
+			_, err = env.StateMgr.CreateLicense(evtFF)
+		case kvstore.Updated:
+			err = env.StateMgr.UpdateLicense(evtFF, false)
+		case kvstore.Deleted:
+			err = env.StateMgr.DeleteLicense(evtFF)
+		}
+		if err != nil {
+			log.Errorf("Error updating local state, Op: %v, object: %+v", et, evtFF)
+		}
+		return
+	}
+
+	// We are the leader CMD instance.
+	// The high-level sequence of operations that need to happen is:
+	// 1- Update local cache
+	// 2- Re-evaluate Master services based on features enabled.
+
+	switch et {
+	case kvstore.Created:
+		ffState, err := env.StateMgr.CreateLicense(evtFF)
+		if err != nil {
+			log.Errorf("Error creating License {%+v}. Err: %v", evtFF, err)
+		}
+		ffState.Lock()
+		defer ffState.Unlock()
+
+		ff := ffState.License
+		// Check and restart master service as per feature flags enabled.
+		m.reevalMasterServices(ff)
+
+	case kvstore.Updated:
+		ffState, err := env.StateMgr.FindLicense(evtFF.Name)
+		if err != nil {
+			// this really should not happen... stop here if it does
+			log.Errorf("Error processing update for License {%+v}: %v", evtFF, err)
+			return
+		}
+		ffState.Lock()
+		defer ffState.Unlock()
+
+		ff := ffState.License
+		m.reevalMasterServices(ff)
+
+		err = env.StateMgr.UpdateLicense(ff, false)
+		if err != nil {
+			log.Errorf("Error updating License {%+v}. Err: %v", evtFF, err)
+		}
+
+	case kvstore.Deleted:
+		// Delete of the Feature flags is not currently handled.
 	}
 }

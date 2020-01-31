@@ -95,6 +95,12 @@ message InterfaceSpec {
 
     //Pause Spec
     PauseSpec Pause          = 6 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "pause,omitempty"];
+
+    // IPConfig has the IP address for the interface if specified.
+    string IPAddress         = 7   [(gogoproto.jsontag) = "ip-address,omitempty"];
+
+    // Network that the interface is attached to, if any.
+    string Network           = 8  [(gogoproto.jsontag) = "network,omitemtpy"];
 }
 
 // InterfaceHostStatus is populated for PF and VF
@@ -195,6 +201,8 @@ message InterfaceStatus {
                                                      (gogoproto.jsontag) = "if-uplink-status,omitempty"];
 
     bool MirrorEnabled                          = 8 [(gogoproto.jsontag) = "mirror-enabled,omitempty"];
+
+    string InterfaceUUID                        = 9 [(gogoproto.jsontag) = "if-uuid,omitempty"];
 }
 
 

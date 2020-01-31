@@ -8,7 +8,7 @@ syntax = "proto3";
 package dnetproto;
 
 // Mandatory imports.
-import "github.com/pensando/sw/nic/agent/protos/netproto/route.proto";
+import "route.proto";
 import "delphi.proto";
 
 

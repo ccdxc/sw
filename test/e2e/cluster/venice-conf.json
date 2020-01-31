@@ -7,6 +7,9 @@
     },
     "DisabledModules": [
         "pen-ntp"
+    ],
+    "ConditionalModules": [
+        "pen-pegasus"
     ]
 }
 

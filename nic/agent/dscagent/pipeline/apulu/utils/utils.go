@@ -15,7 +15,8 @@ import (
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	halapi "github.com/pensando/sw/nic/agent/dscagent/types/apuluproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
+	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -126,4 +127,24 @@ func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
 	}
 	ipAddress = v4Addr
 	return
+}
+
+// RDToBytes converts the RouteDistinguisher to bytes
+func RDToBytes(r *netproto.RouteDistinguisher) []byte {
+	var ret = make([]byte, 8)
+	switch r.Type {
+	case netproto.RouteDistinguisher_Type0.String():
+		binary.BigEndian.PutUint16(ret[0:2], uint16(0))
+		binary.BigEndian.PutUint16(ret[2:4], uint16(r.AdminValue))
+		binary.BigEndian.PutUint32(ret[4:8], uint32(r.AssignedValue))
+	case netproto.RouteDistinguisher_Type1.String():
+		binary.BigEndian.PutUint16(ret[0:2], uint16(1))
+		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
+		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))
+	case netproto.RouteDistinguisher_Type2.String():
+		binary.BigEndian.PutUint16(ret[0:2], uint16(2))
+		binary.BigEndian.PutUint32(ret[2:6], uint32(r.AdminValue))
+		binary.BigEndian.PutUint16(ret[6:8], uint16(r.AssignedValue))
+	}
+	return ret
 }
