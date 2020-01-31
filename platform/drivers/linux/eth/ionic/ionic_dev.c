@@ -155,8 +155,12 @@ int ionic_heartbeat_check(struct ionic *ionic)
 	if (time_before(hb_time, (idev->last_hb_time + ionic->watchdog_period)))
 		return 0;
 
-	/* firmware is useful only if fw_status is not zero and not 0xff */
+	/* firmware is useful only if fw_status has the running bit set and
+	 * is not 0xff (dead PCI)
+	 */
 	fw_status = ioread8(&idev->dev_info_regs->fw_status);
+	if (fw_status != 0xff)
+		fw_status &= IONIC_FW_STS_F_RUNNING;  /* use only the run bit */
 
 	/* is this a transition? */
 	if (fw_status != idev->last_fw_status &&
@@ -186,7 +190,8 @@ int ionic_heartbeat_check(struct ionic *ionic)
 				dev_err(ionic->dev, "%s OOM\n", __func__);
 			} else {
 				work->type = IONIC_DW_TYPE_LIF_RESET;
-				work->fw_status = fw_status == 1 ? 1 : 0;
+				if (fw_status & IONIC_FW_STS_F_RUNNING)
+					work->fw_status = 1;
 				ionic_lif_deferred_enqueue(&lif->deferred, work);
 			}
 		}
