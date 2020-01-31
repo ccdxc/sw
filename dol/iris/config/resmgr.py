@@ -47,7 +47,7 @@ CryptoKeyIdAllocator    = objects.TemplateFieldObject("range/1/32768")
 CryptoCertIdAllocator   = objects.TemplateFieldObject("range/1/32768")
 CryptoAsymKeyIdAllocator   = objects.TemplateFieldObject("range/1/32768")
 IpsecCbIdAllocator      = objects.TemplateFieldObject("range/0/32768")
-SecProfIdAllocator      = objects.TemplateFieldObject("range/2/256")
+SecProfIdAllocator      = objects.TemplateFieldObject("range/10/256")
 
 RouterMacAllocator      = objects.TemplateFieldObject("macstep/00CC.0000.0001/0000.0000.0001")
 LifMacAllocator         = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")

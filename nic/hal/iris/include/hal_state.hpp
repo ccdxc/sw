@@ -24,6 +24,7 @@
 #include "nic/hal/src/debug/snake.hpp"
 #include "nic/hal/plugins/cfg/lif/lif.hpp"
 #include "nic/hal/vmotion/vmotion.hpp"
+#include "gen/proto/system.pb.h"
 
 #ifdef SHM
 #define slab_ptr_t        offset_ptr<slab>
@@ -49,6 +50,8 @@ using sdk::lib::dllist_ctxt_t;
 using acl::acl_ctx_t;
 using acl::acl_config_t;
 using acl::ref_t;
+using sys::ForwardMode;
+using sys::PolicyMode;
 
 enum {
     HAL_TIMER_ID_CLOCK_SYNC               = HAL_TIMER_ID_INFRA_MAX + 1,
@@ -380,6 +383,12 @@ public:
 
     std::map<std::string, uint32_t> *lif_name_id_map() { return &lif_name_id_map_; }
 
+    void set_fwd_mode(ForwardMode fwd_mode) { fwd_mode_ = fwd_mode; }
+    ForwardMode fwd_mode(void) { return fwd_mode_; }
+
+    void set_policy_mode(PolicyMode policy_mode) { policy_mode_ = policy_mode; }
+    PolicyMode policy_mode(void) { return policy_mode_; }
+
 private:
     // following can come from shared memory or non-linux HBM memory
     // NOTE: strictly shmnot required as we can rebuild this from slab elements,
@@ -480,6 +489,10 @@ private:
 
     // vmotion object
     vmotion *vmotion_;
+
+    // Unified Modes
+    ForwardMode   fwd_mode_;
+    PolicyMode    policy_mode_;
 
 private:
     bool init_pss(hal_cfg_t *hal_cfg, shmmgr *mmgr);
@@ -843,6 +856,12 @@ public:
             return LIF_ID_INVALID;
         }
     }
+
+    void set_fwd_mode(ForwardMode fwd_mode) { oper_db_->set_fwd_mode(fwd_mode); }
+    ForwardMode fwd_mode(void) { return oper_db_->fwd_mode(); }
+
+    void set_policy_mode(PolicyMode policy_mode) { oper_db_->set_policy_mode(policy_mode); }
+    PolicyMode policy_mode(void) { return oper_db_->policy_mode(); }
 
 private:
     // following come from shared memory or non-linux HBM memory

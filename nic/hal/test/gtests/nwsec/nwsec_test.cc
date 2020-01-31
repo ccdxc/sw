@@ -87,7 +87,7 @@ TEST_F(nwsec_test, test1)
     pre = hal_test_utils_collect_slab_stats();
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(4);
     sp_spec.set_ipsg_en(true);
     sp_spec.set_ip_normalization_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -106,7 +106,7 @@ TEST_F(nwsec_test, test1)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Update nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(4);
     sp_spec.set_ipsg_en(true);
     sp_spec.set_ip_normalization_en(false);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -125,7 +125,7 @@ TEST_F(nwsec_test, test1)
 
 
     // Delete nwsec
-    del_req.mutable_key_or_handle()->set_profile_id(2);
+    del_req.mutable_key_or_handle()->set_profile_id(4);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -159,7 +159,7 @@ TEST_F(nwsec_test, test4)
     ASSERT_TRUE(ret == HAL_RET_INVALID_ARG);
 
     // Create nwsec with no profile id but with handle
-    sp_spec.mutable_key_or_handle()->set_profile_handle(2);
+    sp_spec.mutable_key_or_handle()->set_profile_handle(4);
     sp_spec.set_ipsg_en(true);
     sp_spec.set_ip_normalization_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -169,7 +169,7 @@ TEST_F(nwsec_test, test4)
 
 
     // Create 255 nwsecs
-    for (int i = 2; i < 257; i++) {
+    for (int i = 4; i < 257; i++) {
         sp_spec.mutable_key_or_handle()->set_profile_id(i);
         sp_spec.set_ipsg_en(true);
         sp_spec.set_ip_normalization_en(true);
@@ -210,7 +210,7 @@ TEST_F(nwsec_test, test4)
 #endif
 
 
-    for ( int i = 2; i < 257; i++) {
+    for ( int i = 4; i < 257; i++) {
         // Delete nwsec
         del_req.mutable_key_or_handle()->set_profile_id(i);
         hal::hal_cfg_db_open(hal::CFG_OP_WRITE);

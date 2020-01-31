@@ -96,7 +96,7 @@ TEST_F(enicif_test, test1)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(4);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);
@@ -543,7 +543,7 @@ TEST_F(enicif_test, test3)
     ASSERT_TRUE(ret == HAL_RET_OK);
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(4);
+    sp_spec.mutable_key_or_handle()->set_profile_id(5);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);
@@ -675,7 +675,7 @@ TEST_F(enicif_test, test4)
     hal::g_hal_state->set_forwarding_mode(hal::HAL_FORWARDING_MODE_CLASSIC);
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(5);
+    sp_spec.mutable_key_or_handle()->set_profile_id(6);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);

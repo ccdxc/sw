@@ -36,8 +36,8 @@ service System {
   // Nicmgr -> HAL micro seg status
   rpc MicroSegStatusUpdate(MicroSegRequestMsg) returns (MicroSegResponseMsg) {}
 
-  rpc SysSpecCreate(SysSpec) returns (SysSpecResponse) {}
   rpc SysSpecUpdate(SysSpec) returns (SysSpecResponse) {}
+  rpc SysSpecGet(types.Empty) returns (SysSpecGetResponse) {}
 }
 
 enum ApiCounter {
@@ -463,7 +463,7 @@ message MicroSegSpec {
 
 // MicroSeg Message Nicmgr -> HAL
 message MicroSegRequestMsg {
-    repeated MicroSegSpec request = 1;
+  repeated MicroSegSpec request = 1;
 }
 
 message MicroSegResponse {
@@ -471,7 +471,7 @@ message MicroSegResponse {
   MicroSegStatus status       = 2;
 }
 message MicroSegResponseMsg {
-    repeated MicroSegResponse response = 1;
+  repeated MicroSegResponse response = 1;
 }
 
 message MicroSegUpdateRequest {
@@ -492,23 +492,23 @@ message MicroSegUpdateResponseMsg {
 
 // Forwarding Mode
 enum ForwardMode {
-    FWD_MODE_NONE           = 0;
-    FWD_MODE_TRANSPARENT    = 1;
-    FWD_MODE_MICROSEG       = 2;
+  FWD_MODE_NONE           = 0;
+  FWD_MODE_TRANSPARENT    = 1;
+  FWD_MODE_MICROSEG       = 2;
 }
 
 // Policy Mode
 enum PolicyMode {
-    POLICY_MODE_NONE        = 0;
-    POLICY_MODE_BASE_NET    = 1;
-    POLICY_MODE_FLOW_AWARE  = 2;
-    POLICY_MODE_ENFORCE     = 3;
+  POLICY_MODE_NONE        = 0;
+  POLICY_MODE_BASE_NET    = 1;
+  POLICY_MODE_FLOW_AWARE  = 2;
+  POLICY_MODE_ENFORCE     = 3;
 }
 
 // System Spec
 message SysSpec {
-    ForwardMode fwd_mode    = 1;
-    PolicyMode  policy_mode = 2;
+  ForwardMode fwd_mode    = 1;
+  PolicyMode  policy_mode = 2;
 }
 
 // System Spec Response Status
@@ -519,4 +519,10 @@ message SysSpecStatus {
 message SysSpecResponse {
   types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
   SysSpecStatus    status     = 2;
+}
+
+// System spec get response
+message SysSpecGetResponse {
+  types.ApiStatus  api_status = 1 [(gogoproto.moretags) = "venice:api_status"];
+  SysSpec          spec       = 2;
 }

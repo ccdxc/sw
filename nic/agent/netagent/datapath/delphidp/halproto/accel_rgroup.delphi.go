@@ -1326,6 +1326,7 @@ It has these top-level messages:
 	SysSpec
 	SysSpecStatus
 	SysSpecResponse
+	SysSpecGetResponse
 	TableIndexMetadata
 	TableTcamMetadata
 	TableHashMetadata

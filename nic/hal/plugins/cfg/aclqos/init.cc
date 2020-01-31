@@ -121,7 +121,7 @@ end:
 //------------------------------------------------------------------------------
 // install smart-nic mode specific ACLs
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 hal_smart_nic_acl_config_init (void)
 {
     hal_ret_t     ret;
@@ -159,7 +159,7 @@ end:
 //------------------------------------------------------------------------------
 // install endpoint learning related ACLs
 //------------------------------------------------------------------------------
-static hal_ret_t
+hal_ret_t
 hal_eplearn_acl_config_init (void)
 {
     hal_ret_t        ret;

@@ -82,7 +82,7 @@ TEST_F(vrf_upgrade_test, test1)
     uint8_t                                 *mem1 = NULL, *mem2 = NULL;
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(10);
     sp_spec.set_ipsg_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);
@@ -121,14 +121,26 @@ TEST_F(vrf_upgrade_test, test1)
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    sec_del_req.mutable_key_or_handle()->set_profile_id(2);
+    sec_del_req.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(sec_del_req, &sec_del_rsp);
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
 
     // Delete default profile
+    sec_del_req.mutable_key_or_handle()->set_profile_id(0);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(sec_del_req, &sec_del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
     sec_del_req.mutable_key_or_handle()->set_profile_id(1);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(sec_del_req, &sec_del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    sec_del_req.mutable_key_or_handle()->set_profile_id(2);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(sec_del_req, &sec_del_rsp);
     hal::hal_cfg_db_close();

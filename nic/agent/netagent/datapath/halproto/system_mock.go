@@ -287,24 +287,6 @@ func (mr *MockSystemClientMockRecorder) MicroSegStatusUpdate(ctx, in interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegStatusUpdate", reflect.TypeOf((*MockSystemClient)(nil).MicroSegStatusUpdate), varargs...)
 }
 
-// SysSpecCreate mocks base method
-func (m *MockSystemClient) SysSpecCreate(ctx context.Context, in *SysSpec, opts ...grpc.CallOption) (*SysSpecResponse, error) {
-	varargs := []interface{}{ctx, in}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "SysSpecCreate", varargs...)
-	ret0, _ := ret[0].(*SysSpecResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SysSpecCreate indicates an expected call of SysSpecCreate
-func (mr *MockSystemClientMockRecorder) SysSpecCreate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{ctx, in}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecCreate", reflect.TypeOf((*MockSystemClient)(nil).SysSpecCreate), varargs...)
-}
-
 // SysSpecUpdate mocks base method
 func (m *MockSystemClient) SysSpecUpdate(ctx context.Context, in *SysSpec, opts ...grpc.CallOption) (*SysSpecResponse, error) {
 	varargs := []interface{}{ctx, in}
@@ -321,6 +303,24 @@ func (m *MockSystemClient) SysSpecUpdate(ctx context.Context, in *SysSpec, opts 
 func (mr *MockSystemClientMockRecorder) SysSpecUpdate(ctx, in interface{}, opts ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{ctx, in}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecUpdate", reflect.TypeOf((*MockSystemClient)(nil).SysSpecUpdate), varargs...)
+}
+
+// SysSpecGet mocks base method
+func (m *MockSystemClient) SysSpecGet(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*SysSpecGetResponse, error) {
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SysSpecGet", varargs...)
+	ret0, _ := ret[0].(*SysSpecGetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SysSpecGet indicates an expected call of SysSpecGet
+func (mr *MockSystemClientMockRecorder) SysSpecGet(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecGet", reflect.TypeOf((*MockSystemClient)(nil).SysSpecGet), varargs...)
 }
 
 // MockSystemServer is a mock of SystemServer interface
@@ -528,19 +528,6 @@ func (mr *MockSystemServerMockRecorder) MicroSegStatusUpdate(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MicroSegStatusUpdate", reflect.TypeOf((*MockSystemServer)(nil).MicroSegStatusUpdate), arg0, arg1)
 }
 
-// SysSpecCreate mocks base method
-func (m *MockSystemServer) SysSpecCreate(arg0 context.Context, arg1 *SysSpec) (*SysSpecResponse, error) {
-	ret := m.ctrl.Call(m, "SysSpecCreate", arg0, arg1)
-	ret0, _ := ret[0].(*SysSpecResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// SysSpecCreate indicates an expected call of SysSpecCreate
-func (mr *MockSystemServerMockRecorder) SysSpecCreate(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecCreate", reflect.TypeOf((*MockSystemServer)(nil).SysSpecCreate), arg0, arg1)
-}
-
 // SysSpecUpdate mocks base method
 func (m *MockSystemServer) SysSpecUpdate(arg0 context.Context, arg1 *SysSpec) (*SysSpecResponse, error) {
 	ret := m.ctrl.Call(m, "SysSpecUpdate", arg0, arg1)
@@ -552,4 +539,17 @@ func (m *MockSystemServer) SysSpecUpdate(arg0 context.Context, arg1 *SysSpec) (*
 // SysSpecUpdate indicates an expected call of SysSpecUpdate
 func (mr *MockSystemServerMockRecorder) SysSpecUpdate(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecUpdate", reflect.TypeOf((*MockSystemServer)(nil).SysSpecUpdate), arg0, arg1)
+}
+
+// SysSpecGet mocks base method
+func (m *MockSystemServer) SysSpecGet(arg0 context.Context, arg1 *Empty) (*SysSpecGetResponse, error) {
+	ret := m.ctrl.Call(m, "SysSpecGet", arg0, arg1)
+	ret0, _ := ret[0].(*SysSpecGetResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SysSpecGet indicates an expected call of SysSpecGet
+func (mr *MockSystemServerMockRecorder) SysSpecGet(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SysSpecGet", reflect.TypeOf((*MockSystemServer)(nil).SysSpecGet), arg0, arg1)
 }

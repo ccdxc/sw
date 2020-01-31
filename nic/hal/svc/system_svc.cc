@@ -209,3 +209,23 @@ SystemServiceImpl::MicroSegStatusUpdate(ServerContext *context,
     return Status::OK;
 }
 
+Status 
+SystemServiceImpl::SysSpecUpdate(ServerContext* context,
+                                 const SysSpec* spec,
+                                 SysSpecResponse* rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd SysSpec update");
+
+    hal::system_handle_fwd_policy_updates(spec, rsp);
+    return Status::OK;
+}
+
+Status 
+SystemServiceImpl::SysSpecGet(ServerContext* context,
+                              const Empty *req,
+                              SysSpecGetResponse* rsp)
+{
+    HAL_TRACE_DEBUG("Rcvd SysSpec get");
+    hal::system_get_fwd_policy_mode(rsp);
+    return Status::OK;
+}

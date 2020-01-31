@@ -52,6 +52,8 @@ hal_ret_t acl_uninstall_mcast_mld_ld(if_t *hal_if);
 hal_ret_t acl_uninstall_mcast_ipv6_nsol(if_t *hal_if);
 hal_ret_t acl_uninstall_mcast_all(if_t *hal_if);
 
+// Micro seg init
+hal_ret_t hal_acl_micro_seg_init(void);
 }    // namespace hal
 
 #endif    // __ACL_API_HPP__

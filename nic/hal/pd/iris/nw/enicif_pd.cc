@@ -1131,11 +1131,13 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     lif_t                                   *lif = NULL;
     pd_l2seg_t                              *l2seg_pd;
     sdk_hash                                *inp_prop_tbl = NULL;
-    uint32_t                                *vlan_tag_idx = NULL, *sband_tag_idx = NULL;
+    uint32_t                                *vlan_tag_idx = NULL, *sband_tag_idx = NULL, nwsec_prof_id = 0;
     bool                                    direct_to_otcam = false;
     bool                                    key_changed = false;
     l2seg_t                                 *hp_l2seg = NULL;
     pd_l2seg_t                              *hp_l2seg_pd = NULL;
+    nwsec_profile_t                         *nwsec_prof = NULL;
+    bool                                    flow_learn = false;
 
     if (enicif_is_swm(hal_if)) {
         HAL_TRACE_DEBUG("Skipping for swm enicif");
@@ -1175,6 +1177,15 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     lif = if_get_lif(hal_if);
     SDK_ASSERT_RETURN((lif != NULL), HAL_RET_ERR);
 
+    if (lif->type == types::LIF_TYPE_HOST) {
+        nwsec_prof_id = L4_PROFILE_HOST_DEFAULT;
+        flow_learn = true;
+    } else {
+        nwsec_prof_id = L4_PROFILE_MGMT_DEFAULT;
+        flow_learn = false;
+    }
+    nwsec_prof = find_nwsec_profile_by_id(nwsec_prof_id);
+
     if (!(upd_flags & ENICIF_UPD_FLAGS_NUM_PROM_LIFS)) {
         // no change in prom lifs
         HAL_TRACE_DEBUG("Number of prom lifs: {}", l2seg_pd->num_prom_lifs);
@@ -1205,7 +1216,7 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     inp_prop.vrf = hp_l2seg_pd ? hp_l2seg_pd->l2seg_fl_lkup_id : l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.reg_mac_vrf = l2seg_pd->l2seg_fl_lkup_id;
     inp_prop.dir = FLOW_DIR_FROM_DMA;
-    inp_prop.l4_profile_idx = L4_PROF_DEFAULT_ENTRY;
+    inp_prop.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
     inp_prop.ipsg_enable = 0;
     inp_prop.src_lport = pd_enicif->enic_lport_id;
     inp_prop.dst_lport = uplink ? if_get_lport_id(uplink) : 0;
@@ -1216,8 +1227,20 @@ pd_enicif_pd_pgm_inp_prop_l2seg(pd_enicif_t *pd_enicif,
     inp_prop.if_label_check_fail_drop = 0;
     inp_prop.mseg_bm_bc_repls = 0;
     inp_prop.mseg_bm_mc_repls = 0;
-    inp_prop.flow_learn = 0;
-    inp_prop.uuc_fl_pe_sup_en = 0;
+    inp_prop.flow_learn = flow_learn;
+    inp_prop.uuc_fl_pe_sup_en = 1;
+#if 0
+    if (hal::g_hal_state->fwd_mode() == sys::FWD_MODE_TRANSPARENT &&
+        (hal::g_hal_state->policy_mode() == sys::POLICY_MODE_FLOW_AWARE ||
+         hal::g_hal_state->policy_mode() == sys::POLICY_MODE_ENFORCE) &&
+        (lif->type == types::LIF_TYPE_HOST)) {
+        inp_prop.flow_learn = 1;
+        inp_prop.uuc_fl_pe_sup_en = 1;
+    } else {
+        inp_prop.flow_learn = 0;
+        inp_prop.uuc_fl_pe_sup_en = 0;
+    }
+#endif
 
     HAL_TRACE_DEBUG("pinned uplink's lport: {}", inp_prop.dst_lport);
 
@@ -2050,6 +2073,10 @@ pd_enicif_inp_prop_mac_vlan_form_data (pd_enicif_t *pd_enicif,
             ipsg_en = nwsec_prof ? nwsec_prof->ipsg_en : 0;
         }
 
+        if (!nwsec_prof) {
+            nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+        }
+
         data.action_id = INPUT_PROPERTIES_MAC_VLAN_INPUT_PROPERTIES_MAC_VLAN_ID;
         inp_prop_mac_vlan_data.vrf = pd_l2seg->l2seg_fl_lkup_id;
         inp_prop_mac_vlan_data.dir = FLOW_DIR_FROM_DMA;
@@ -2057,8 +2084,7 @@ pd_enicif_inp_prop_mac_vlan_form_data (pd_enicif_t *pd_enicif,
         inp_prop_mac_vlan_data.ipsg_enable = ipsg_en;
         inp_prop_mac_vlan_data.src_if_label = pd_uplinkif_if_label(uplink);
         inp_prop_mac_vlan_data.skip_flow_update = 0;
-        // inp_prop_mac_vlan_data.l4_profile_idx = pd_enicif_get_l4_prof_idx(pd_enicif);
-        inp_prop_mac_vlan_data.l4_profile_idx = nwsec_prof ? nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+        inp_prop_mac_vlan_data.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
         inp_prop_mac_vlan_data.src_lport = pd_enicif->enic_lport_id;
         inp_prop_mac_vlan_data.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy((l2seg_t*)(pd_l2seg->l2seg));
         inp_prop_mac_vlan_data.flow_miss_idx = l2seg_base_oifl_id((l2seg_t*)(pd_l2seg->l2seg), uplink);

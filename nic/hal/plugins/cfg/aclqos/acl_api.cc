@@ -1180,4 +1180,30 @@ acl_uninstall_mcast_all (if_t *hal_if)
     return ret;
 }
 
+hal_ret_t
+hal_acl_micro_seg_init (void)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
+
+    ret = hal::aclqos::hal_smart_nic_acl_config_init();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error creating smart nic acl entries ret {}", ret);
+        goto end;
+    }
+
+    ret = hal::aclqos::hal_eplearn_acl_config_init();
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Eplearn acl entry create failed ret {}", ret);
+        goto end;
+    }
+    HAL_TRACE_DEBUG("Eplearn acl entry created");
+
+end:
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+
 } // namespace hal

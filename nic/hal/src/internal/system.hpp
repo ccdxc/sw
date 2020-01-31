@@ -20,6 +20,10 @@ using sys::MicroSegResponse;
 using sys::MicroSegEvent;
 using sys::MicroSegUpdateRequest;
 using sys::MicroSegUpdateResponse;
+using sys::SysSpec;
+using sys::SysSpecResponse;
+using sys::SysSpecGetResponse;
+using types::Empty;
 
 namespace hal {
 
@@ -36,6 +40,9 @@ hal_ret_t micro_seg_update(MicroSegUpdateRequest &req,
                            MicroSegUpdateResponse *rsp);
 hal_ret_t micro_seg_status_update(MicroSegSpec &req, 
                                   MicroSegResponse *rsp);
+hal_ret_t system_handle_fwd_policy_updates(const SysSpec *spec,
+                                           SysSpecResponse *rsp);
+hal_ret_t system_get_fwd_policy_mode(SysSpecGetResponse *rsp);
 
 }    // namespace hal
 

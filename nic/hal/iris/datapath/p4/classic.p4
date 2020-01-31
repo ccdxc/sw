@@ -54,6 +54,11 @@ action registered_macs(dst_lport, multicast_en,
         modify_field(control_metadata.drop_reason, DROP_INPUT_PROPERTIES_MISS);
         drop_packet();
     }
+    if (flow_lkp_metadata.pkt_type == PACKET_TYPE_UNICAST) {
+        if (control_metadata.has_prom_host_lifs == TRUE) {
+            modify_field(control_metadata.flow_learn, TRUE);
+        }
+    }
     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
         if (control_metadata.mseg_bm_mc_repls == TRUE) {
             modify_field(control_metadata.flow_learn, TRUE);

@@ -275,7 +275,7 @@ flow_miss_unicast_reg_mac_miss:
   seq           c1, k.control_metadata_flow_learn, FALSE
   bcf           [c1], flow_miss_unicast_prom_mgmt_mseg_bm
   seq           c1, k.l4_metadata_policy_enf_cfg_en, TRUE
-  bcf           [c1], flow_miss_unicast_sup_copy_prom_mgmt
+  bcf           [c1], flow_miss_unicast_sup_redirect
   seq           c1, k.l4_metadata_flow_learn_cfg_en, TRUE
   bcf           [c1], flow_miss_unicast_sup_copy_prom_mgmt_prom_mseg_bm
   // Prom Mgmt & Prom MSeg/BM
@@ -297,6 +297,12 @@ flow_miss_unicast_reg_mac_hit:
   phvwr.c3      p.capri_intrinsic_tm_cpu, 1
   nop.e
   nop
+
+flow_miss_unicast_sup_redirect:
+  phvwr        p.control_metadata_dst_lport, CPU_LPORT
+  phvwr        p.rewrite_metadata_tunnel_rewrite_index, 0
+  phvwr.e      p.rewrite_metadata_rewrite_index, 0
+  phvwr.f      p.qos_metadata_qos_class_id, k.control_metadata_flow_miss_qos_class_id
 
 // Prom Mgmt & Prom MSeg/BM
 flow_miss_unicast_prom_mgmt_mseg_bm:

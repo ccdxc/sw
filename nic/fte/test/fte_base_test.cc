@@ -52,7 +52,7 @@ hal_handle_t fte_base_test::add_vrf()
     nwsec::SecurityProfileResponse  sp_rsp;
 
     // Create security profile
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_create(sp_spec, &sp_rsp);
     hal::hal_cfg_db_close();

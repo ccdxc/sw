@@ -360,6 +360,12 @@ hal_ret_t acl_get(acl::AclGetRequest& req,
 hal_ret_t acl_store_cb(void *obj, uint8_t *mem,
                        uint32_t len, uint32_t *mlen);
 uint32_t acl_restore_cb(void *obj, uint32_t len);
+
+namespace aclqos {
+hal_ret_t hal_eplearn_acl_config_init(void);
+hal_ret_t hal_smart_nic_acl_config_init(void);
+}
+
 }    // namespace hal
 
 #endif    // __ACL_HPP__

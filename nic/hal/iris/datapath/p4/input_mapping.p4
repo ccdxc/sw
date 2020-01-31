@@ -332,7 +332,7 @@ action input_properties(vrf, reg_mac_vrf, dir, mdest_flow_miss_action, flow_miss
                         mirror_on_drop_en, mirror_on_drop_session_id,
                         clear_promiscuous_repl, if_label_check_en, if_label_check_fail_drop,
                         src_if_label, mseg_bm_bc_repls, mseg_bm_mc_repls, flow_learn,
-                        uuc_fl_pe_sup_en) {
+                        uuc_fl_pe_sup_en, has_prom_host_lifs) {
     modify_field(flow_lkp_metadata.lkp_vrf, vrf);
     modify_field(flow_lkp_metadata.lkp_dir, dir);
     modify_field(control_metadata.mdest_flow_miss_action, mdest_flow_miss_action);
@@ -357,6 +357,7 @@ action input_properties(vrf, reg_mac_vrf, dir, mdest_flow_miss_action, flow_miss
     modify_field(control_metadata.mseg_bm_mc_repls, mseg_bm_mc_repls);
     modify_field(control_metadata.flow_learn, flow_learn);
     modify_field(control_metadata.uuc_fl_pe_sup_en, uuc_fl_pe_sup_en);
+    modify_field(control_metadata.has_prom_host_lifs, has_prom_host_lifs);
     if (flow_lkp_metadata.pkt_type == PACKET_TYPE_MULTICAST) {
         modify_field(flow_lkp_metadata.lkp_reg_mac_vrf, reg_mac_vrf);
     } else {
@@ -486,7 +487,8 @@ action input_properties_mac_vlan(vrf, dir, mdest_flow_miss_action,
                      1,  // mseg_bm_bc_repls
                      1,  // mseg_bm_mc_repls
                      1,  // flow_learn
-                     1); // uuc_fl_pe_sup_en
+                     1,  // uuc_fl_pe_sup_en
+                     0); // has_prom_host_lifs
 
     modify_field(scratch_metadata.src_if_label, src_if_label);
 }

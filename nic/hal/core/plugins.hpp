@@ -85,9 +85,10 @@ private:
 
 inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
     fte::init();
-    bool classic_nic = hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC;
+    // bool classic_nic = hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC;
     std::string plugin_file;
 
+#if 0
     if (classic_nic) {
         plugin_file =  hal_cfg->cfg_path + std::string("/") +
                            std::string(hal_cfg->feature_set) +
@@ -97,6 +98,10 @@ inline hal_ret_t init_plugins(hal_cfg_t *hal_cfg) {
                            std::string(hal_cfg->feature_set) +
                            std::string("/plugins.json");
     }
+#endif
+    plugin_file =  hal_cfg->cfg_path + std::string("/") +
+        std::string(hal_cfg->feature_set) +
+        std::string("/plugins.json");
     std::string plugin_path = hal_cfg->cfg_path + std::string("/plugins");;
 
     plugins::plugin_manager_t &pluginmgr = plugins::plugin_manager_t::get();

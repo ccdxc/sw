@@ -75,6 +75,7 @@ typedef struct pd_l2seg_s {
     hal_handle_t    prom_if_handle;      // Enic if handle for prom_lif.
                                          // Valid only if num_prom_lifs is 1.
     uint32_t        prom_if_dest_lport;  // Prom IF's dlport
+    uint32_t        num_host_prom_lifs;  // Prom lifs on host
 
     void            *l2seg;              // PI L2 segment
 } __PACK__ pd_l2seg_t;

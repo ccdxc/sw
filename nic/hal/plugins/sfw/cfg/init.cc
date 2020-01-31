@@ -24,18 +24,10 @@ namespace sfw {
 
 NwSecurityServiceImpl    g_nwsec_svc;
 
-static void 
-sfw_init_security_profile (hal_cfg_t *hal_cfg)
+void
+sfw_populate_default_enforce_security_profile(SecurityProfileSpec &prof)
 {
-    hal_ret_t                ret;
-    SecurityProfileSpec      prof; 
-    SecurityProfileResponse  rsp;
-
-    hal::hal_cfg_db_open(CFG_OP_WRITE);
-
-    // Init the default security profile with 
-    // default timeouts
-    prof.mutable_key_or_handle()->set_profile_id(1);
+    prof.mutable_key_or_handle()->set_profile_id(L4_PROFILE_ENFORCE_DEFAULT);
     prof.set_session_idle_timeout(90);
     prof.set_tcp_cnxn_setup_timeout(30);
     prof.set_tcp_close_timeout(15);
@@ -125,19 +117,89 @@ sfw_init_security_profile (hal_cfg_t *hal_cfg)
     prof.set_udp_active_session_limit(0);
     prof.set_icmp_active_session_limit(0);
     prof.set_other_active_session_limit(0);
+    prof.set_policy_enforce_en(false);
 
+}
+
+hal_ret_t
+sfw_update_default_security_profile(uint32_t id, bool policy_enforce_en)
+{
+    hal_ret_t                ret;
+    SecurityProfileSpec      prof; 
+    SecurityProfileResponse  rsp;
+
+    prof.mutable_key_or_handle()->set_profile_id(id);
+    prof.set_policy_enforce_en(policy_enforce_en);
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
+    ret = securityprofile_update(prof, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Could not update default security profile err: {}", ret);
+        goto end;
+    }
+
+end:
+    hal::hal_cfg_db_close();
+    return ret;
+}
+
+static void
+sfw_init_default_mgmt_security_profile (hal_cfg_t *hal_cfg)
+{
+    hal_ret_t                ret;
+    SecurityProfileSpec      prof; 
+    SecurityProfileResponse  rsp;
+
+    prof.mutable_key_or_handle()->set_profile_id(L4_PROFILE_MGMT_DEFAULT);
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
+    ret = securityprofile_create(prof, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Could not create default mgmt security profile err: {}", 
+                      ret);
+        return;
+    }
+    hal::hal_cfg_db_close();
+}
+
+static void 
+sfw_init_default_enforce_security_profile (hal_cfg_t *hal_cfg)
+{
+    hal_ret_t                ret;
+    SecurityProfileSpec      prof; 
+    SecurityProfileResponse  rsp;
+
+    sfw_populate_default_enforce_security_profile(prof);
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
     ret = securityprofile_create(prof, &rsp);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Could not create default security profile err: {}", ret);
         return;
     }
-
     hal::hal_cfg_db_close();
    
     g_hal_state->oper_db()->set_default_security_profile(
                                      rsp.profile_status().profile_handle());
-    prof.release_key_or_handle();
-    rsp.release_profile_status();
+}
+
+static void 
+sfw_init_default_host_security_profile(hal_cfg_t *hal_cfg)
+{
+    hal_ret_t                ret;
+    SecurityProfileSpec      prof; 
+    SecurityProfileResponse  rsp;
+
+    prof.mutable_key_or_handle()->set_profile_id(L4_PROFILE_HOST_DEFAULT);
+
+    hal::hal_cfg_db_open(CFG_OP_WRITE);
+    ret = securityprofile_create(prof, &rsp);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Could not create default security profile err: {}", ret);
+        return;
+    }
+    hal::hal_cfg_db_close();
+   
 }
 
 void
@@ -147,15 +209,14 @@ svc_reg (ServerBuilder *server_builder, hal::hal_feature_set_t feature_set)
         return;
     }
 
-    // register all "network" services
-    HAL_TRACE_DEBUG("Registering gRPC network services ...");
+    HAL_TRACE_DEBUG("Registering gRPC nwsec services ...");
     if (feature_set == hal::HAL_FEATURE_SET_IRIS) {
         server_builder->RegisterService(&g_nwsec_svc);
     } else if (feature_set == hal::HAL_FEATURE_SET_GFT) {
         // Revisit. DOL was not able to create Tenant with security profile.
         server_builder->RegisterService(&g_nwsec_svc);
     }
-    HAL_TRACE_DEBUG("gRPC network services registered ...");
+    HAL_TRACE_DEBUG("gRPC nwsec services registered ...");
     return;
 }
 
@@ -168,7 +229,9 @@ sfwcfg_init (hal_cfg_t *hal_cfg)
     SDK_ASSERT(g_rule_stats_indexer != NULL);
 
     svc_reg((ServerBuilder *)hal_cfg->server_builder, hal_cfg->features);
-    sfw_init_security_profile(hal_cfg);
+    sfw_init_default_mgmt_security_profile(hal_cfg);
+    sfw_init_default_enforce_security_profile(hal_cfg);
+    sfw_init_default_host_security_profile(hal_cfg);
     return HAL_RET_OK;
 }
 

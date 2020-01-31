@@ -1320,6 +1320,8 @@ hal_oper_db::init(hal_cfg_t *hal_cfg, shmmgr *mmgr)
     mmgr_ = mmgr;
     SDK_ASSERT_RETURN((init_pss(hal_cfg, mmgr) == true), false);
     SDK_ASSERT_RETURN((init_vss(hal_cfg) == true), false);
+    fwd_mode_ = sys::FWD_MODE_TRANSPARENT;
+    policy_mode_ = sys::POLICY_MODE_BASE_NET;
     return true;
 }
 

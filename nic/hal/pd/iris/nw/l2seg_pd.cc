@@ -748,18 +748,6 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
                                  num_prom_lifs,
                                  prom_enic_if,
                                  data);
-#if 0
-    // check update flags
-    if (!(upd_flags & L2SEG_UPLINK_UPD_FLAGS_NWSEC_PROF)) {
-        // no change, take from l2seg
-        nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
-    }
-
-    if (!(upd_flags & L2SEG_UPLINK_UPD_FLAGS_NUM_PROM_LIFS)) {
-        // no change in prom lifs
-        num_prom_lifs = l2seg_pd->num_prom_lifs;
-    }
-#endif
 
     // Data
     // inp_prop.vrf = l2seg_pd->l2seg_fl_lkup_id;
@@ -773,57 +761,9 @@ l2seg_uplink_inp_prop_form_data (l2seg_t *l2seg, if_t *hal_if,
     // TODO get info from QOS class
     inp_prop.flow_miss_qos_class_id = 0x2;
 
-#if 0
-    // Classic:
-    // - All Vlans are in Classic
-    // Hostpin:
-    // - OOB uplink is in Classic
-    // - Other uplinks are in classic for untagged l2seg.
-    if (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_CLASSIC ||
-        (g_hal_state->forwarding_mode() == HAL_FORWARDING_MODE_SMART_HOST_PINNED &&
-        l2seg_is_mgmt(l2seg))) {
-        // (hal_if->is_oob_management || is_native))) {
-        inp_prop.nic_mode = NIC_MODE_CLASSIC;
-        if (l2seg->single_wire_mgmt) {
-            inp_prop.clear_promiscuous_repl = 0;
-        } else {
-            if (num_prom_lifs == 0) {
-                // No prom. lifs => no promiscuous repl. needed.
-                inp_prop.clear_promiscuous_repl = 1;
-            } else if (num_prom_lifs == 1) {
-                // 1 prom. lif => Get prom lif from inp. props and no prom replication needed
-                SDK_ASSERT(l2seg_pd->prom_if_handle != HAL_HANDLE_INVALID);
-                inp_prop.clear_promiscuous_repl = 1;
-                prom_if = find_if_by_handle(l2seg_pd->prom_if_handle);
-                if (prom_if) {
-                    inp_prop.dst_lport = if_get_lport_id(prom_if);
-                } else {
-                    // if lookup by handle is a miss, prom if has to be passed
-                    pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
-                    inp_prop.dst_lport = pd_enicif->enic_lport_id;
-                }
-            } else {
-                // More than 1 prom. lifs => Have to take prom. replication.
-                inp_prop.clear_promiscuous_repl = 0;
-            }
-        }
-    } else {
-        inp_prop.nic_mode = NIC_MODE_SMART;
-    }
-#endif
-
     HAL_TRACE_DEBUG("clear_prom_repl: {}, dst_lport: {}, swm: {}",
                     inp_prop.clear_promiscuous_repl,
                     inp_prop.dst_lport, l2seg->single_wire_mgmt);
-
-#if 0
-    if ((is_forwarding_mode_host_pinned()) &&
-        (hal::l2seg_get_pinned_uplink(l2seg) != hal::if_get_hal_handle(hal_if))) {
-        inp_prop.allow_flood = 0;
-    } else {
-        inp_prop.allow_flood = 1;
-    }
-#endif
 
     if (!is_native) {
         enc_type = l2seg_get_wire_encap_type(l2seg);
@@ -1517,11 +1457,13 @@ l2seg_cpu_inp_prop_form_data (pd_l2seg_t *l2seg_pd,
     SDK_ASSERT_RETURN((ret == HAL_RET_OK), ret);
 
     nwsec_prof = (nwsec_profile_t *)l2seg_get_pi_nwsec((l2seg_t *)l2seg);
+    if (!nwsec_prof) {
+        nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+    }
 
     inp_prop.dir                        = FLOW_DIR_FROM_DMA;
     inp_prop.vrf                        = l2seg_pd->l2seg_fl_lkup_id;
-    inp_prop.l4_profile_idx             = nwsec_prof ?
-        nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
+    inp_prop.l4_profile_idx             = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
     inp_prop.ipsg_enable                = 0;
     inp_prop.src_lport                  = 0;
     inp_prop.mdest_flow_miss_action     = l2seg_get_bcast_fwd_policy((l2seg_t*)
@@ -1957,7 +1899,11 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
     lif_t                       *lif = NULL;
     pd_enicif_t                 *pd_enicif = (pd_enicif_t *)prom_enic_if->pd_if;
 
+    lif = if_get_lif(prom_enic_if);
     if (inc) {
+        if (lif->type == types::LIF_TYPE_HOST) {
+            pd_l2seg->num_host_prom_lifs++;
+        }
         pd_l2seg->num_prom_lifs++;
         if (pd_l2seg->num_prom_lifs == 1) {
             pd_l2seg->prom_if_handle = prom_enic_if->hal_handle;
@@ -1969,12 +1915,18 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
             pd_l2seg->prom_if_dest_lport = 0;
             // pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
             trigger_inp_prp_pgm = true;
+        } else if (pd_l2seg->num_host_prom_lifs == 1) {
+            trigger_inp_prp_pgm = true;
         }
-        HAL_TRACE_DEBUG("L2seg id: {}, Incrementing prom lifs to: {}, "
+        HAL_TRACE_DEBUG("L2seg id: {}, Incrementing prom_lifs to: {}, host_prom_lifs: {}"
                         "trig_inp_prop: {}",
                         l2seg->seg_id, pd_l2seg->num_prom_lifs,
+                        pd_l2seg->num_prom_lifs,
                         trigger_inp_prp_pgm);
     } else {
+        if (lif->type == types::LIF_TYPE_HOST) {
+            pd_l2seg->num_host_prom_lifs--;
+        }
         pd_l2seg->num_prom_lifs--;
         if (pd_l2seg->num_prom_lifs == 1) {
             // Walk l2seg's enics and pick up the one enic which has prom. lif
@@ -2000,10 +1952,13 @@ pd_l2seg_update_prom_lifs(pd_l2seg_t *pd_l2seg,
             pd_l2seg->prom_if_dest_lport = 0;
             // pd_l2seg->prom_if_dest_lport = pd_enicif->enic_lport_id;
             trigger_inp_prp_pgm = true;
+        } else if (pd_l2seg->num_host_prom_lifs == 0) {
+            trigger_inp_prp_pgm = true;
         }
-        HAL_TRACE_DEBUG("L2seg id: {}, Decrementing prom lifs to: {}, "
+        HAL_TRACE_DEBUG("L2seg id: {}, Decrementing prom_lifs to: {}, host_prom_lifs: {}"
                         "trig_inp_prop: {}",
-                        l2seg->seg_id, pd_l2seg->num_prom_lifs,
+                        l2seg->seg_id, pd_l2seg->num_prom_lifs, 
+                        pd_l2seg->num_host_prom_lifs,
                         trigger_inp_prp_pgm);
     }
 
@@ -2214,6 +2169,11 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+        if (!nwsec_prof) {
+            nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+        }
+        inp_prop.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
+        inp_prop.ipsg_enable = nwsec_prof->ipsg_en;
 #if 0
         if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
             inp_prop.allow_flood = 0;
@@ -2242,7 +2202,33 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(cl_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
-        // inp_prop.allow_flood = 1;
+        // If we are in transparent-flow-aware or transparent-enforce modes,
+        // uuc_fl_pe_sup_en: 1
+        if (!l2seg_is_oob_mgmt(cl_l2seg) &&
+            hal::g_hal_state->fwd_mode() == sys::FWD_MODE_TRANSPARENT) {
+            inp_prop.uuc_fl_pe_sup_en = 1;
+        }
+        if (!nwsec_prof) {
+            if (l2seg_is_oob_mgmt(cl_l2seg)) {
+                nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_MGMT_DEFAULT);
+            } else {
+                nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
+            }
+        }
+        inp_prop.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
+        inp_prop.ipsg_enable = nwsec_prof->ipsg_en;
+#if 0
+        if (hal::g_hal_state->fwd_mode() == sys::FWD_MODE_TRANSPARENT &&
+            (hal::g_hal_state->policy_mode() == sys::POLICY_MODE_FLOW_AWARE ||
+             hal::g_hal_state->policy_mode() == sys::POLICY_MODE_ENFORCE) &&
+            !l2seg_is_oob_mgmt(cl_l2seg)) {
+            inp_prop.uuc_fl_pe_sup_en = 1;
+        }
+#endif
+        // if there are host_prom_lifs: has_prom_host_lifs: 1
+        if (cl_l2seg_pd->num_host_prom_lifs) {
+            inp_prop.has_prom_host_lifs = 1;
+        }
     } else {
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
@@ -2264,6 +2250,11 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         get_clear_prom_repl(hp_l2seg, num_prom_lifs, prom_enic_if, 
                             &inp_prop.clear_promiscuous_repl,
                             &inp_prop.dst_lport);
+        if (!nwsec_prof) {
+            nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_ENFORCE_DEFAULT);
+        }
+        inp_prop.l4_profile_idx = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
+        inp_prop.ipsg_enable = nwsec_prof->ipsg_en;
 #if 0
         if (hal::l2seg_get_pinned_uplink(hp_l2seg) != hal::if_get_hal_handle(hal_if)) {
             inp_prop.allow_flood = 0;
@@ -2272,16 +2263,8 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
         }
 #endif
     }
-    inp_prop.l4_profile_idx = nwsec_prof ?
-        nwsec_get_nwsec_prof_hw_id(nwsec_prof) : L4_PROF_DEFAULT_ENTRY;
-    inp_prop.ipsg_enable = nwsec_prof ? nwsec_prof->ipsg_en : 0;
 
     return HAL_RET_OK;
 }
-
-
-
-
-
 }    // namespace pd
 }    // namespace hal

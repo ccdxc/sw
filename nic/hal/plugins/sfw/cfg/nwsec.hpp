@@ -16,6 +16,13 @@
 #include "gen/proto/kh.pb.h"
 #include "nic/sdk/lib/indexer/indexer.hpp"
 
+// For Pkts on OOB, OOB Mnic, Int Mnic, Inb Mnics, Host Mgmt
+#define L4_PROFILE_MGMT_DEFAULT     0 
+// For Pkts on Host LIFs, Uplinks
+#define L4_PROFILE_HOST_DEFAULT     2
+// Not sure
+#define L4_PROFILE_ENFORCE_DEFAULT  1
+
 #define HAL_NWSEC_INVALID_SG_ID        uint32_t (~0)
 using sdk::lib::ht_ctxt_t;
 using sdk::lib::dllist_ctxt_t;
@@ -255,6 +262,12 @@ security_flow_gate_delete(nwsec::SecurityFlowGateDeleteRequest&      req,
 hal_ret_t nwsec_prof_store_cb (void *obj, uint8_t *mem, uint32_t len,
                                uint32_t *mlen);
 uint32_t nwsec_prof_restore_cb (void *obj, uint32_t len);
+
+namespace plugins {
+namespace sfw {
+hal_ret_t sfw_update_default_security_profile(uint32_t id, bool policy_enforce_en);
+}
+}
 
 }    // namespace hal
 

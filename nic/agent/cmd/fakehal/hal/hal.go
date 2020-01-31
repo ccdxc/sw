@@ -546,6 +546,17 @@ func (h Hal) SysSpecUpdate(ctx context.Context, req *irisproto.SysSpec) (*irispr
 	}, nil
 }
 
+// SysSpecGet Stubbed out
+func (h Hal) SysSpecGet(ctx context.Context, req *irisproto.Empty) (*irisproto.SysSpecGetResponse, error) {
+	dat, _ := json.MarshalIndent(req, "", "  ")
+	log.Info("Got SysSpecGet Request:")
+	fmt.Println(string(dat))
+
+	return &irisproto.SysSpecGetResponse{
+		ApiStatus: irisproto.ApiStatus_API_STATUS_OK,
+	}, nil
+}
+
 // Stop stops the Fake HAL
 func (h Hal) Stop() {
 	log.Infof("Stopping HAL at: %s", h.ListenURL)

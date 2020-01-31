@@ -12,6 +12,8 @@
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "gen/proto/system.pb.h"
 #include "nic/hal/iris/delphi/delphic.hpp"
+#include "nic/hal/plugins/cfg/aclqos/acl_api.hpp"
+#include "nic/hal/plugins/sfw/cfg/nwsec.hpp"
 
 namespace hal {
 
@@ -766,6 +768,78 @@ micro_seg_status_update(MicroSegSpec &req,
 
     rsp->set_api_status(types::API_STATUS_OK);
     return HAL_RET_OK;
+}
+
+/*
+ * Handle system mode changes (fwd & policy)
+ */
+hal_ret_t
+system_handle_fwd_policy_updates(const SysSpec *spec,
+                                 SysSpecResponse *rsp)
+{
+    hal_ret_t ret = HAL_RET_OK;
+
+    if (hal::g_hal_state->fwd_mode() == spec->fwd_mode() &&
+        hal::g_hal_state->policy_mode() == spec->policy_mode()) {
+        HAL_TRACE_WARN("No change in sys spec Noop");
+        goto end;
+    }
+
+    // Check for change of fwd mode
+    if (hal::g_hal_state->fwd_mode() != spec->fwd_mode()) {
+        HAL_TRACE_DEBUG("Fwd mode change {} -> {}",
+                        hal::g_hal_state->fwd_mode(), spec->fwd_mode());
+        if (spec->fwd_mode() == sys::FWD_MODE_MICROSEG) {
+            /*
+             * Fwd Mode: Transparent -> Micro-Seg
+             * 1. Cleanup config from nicmgr.
+             * 2. Set up mode in hal state
+             * 3. Install ACLs for micro seg mode.
+             */
+
+            // 1. Cleanup config from nicmgr.
+            hal::svc::micro_seg_mode_notify((spec->fwd_mode() == sys::FWD_MODE_MICROSEG) ?
+                                            sys::MICRO_SEG_ENABLE:sys::MICRO_SEG_DISABLE);
+            // 2. Set up mode in hal state
+            hal::g_hal_state->set_fwd_mode(spec->fwd_mode());
+
+            // 3. Install ACLs for micro seg mode.
+            ret = hal_acl_micro_seg_init();
+        }
+    }
+
+    if (hal::g_hal_state->policy_mode() != spec->policy_mode()) {
+        HAL_TRACE_DEBUG("Policy mode change {} -> {}",
+                        hal::g_hal_state->policy_mode(), spec->policy_mode());
+
+        if (hal::g_hal_state->policy_mode() == sys::POLICY_MODE_BASE_NET &&
+            (spec->policy_mode() == sys::POLICY_MODE_FLOW_AWARE ||
+             spec->policy_mode() == sys::POLICY_MODE_ENFORCE)) {
+            /*
+             * Policy Mode: Base-Net -> Flow-Aware or Enforce
+             * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
+             */
+            ret = hal::plugins::sfw::sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, 
+                                                                         true);
+        }
+        hal::g_hal_state->set_policy_mode(spec->policy_mode());
+    }
+
+end:
+    rsp->set_api_status(types::API_STATUS_OK);
+    return ret;
+}
+
+/*
+ * Handle system policy & forward mode get
+ */
+hal_ret_t 
+system_get_fwd_policy_mode(SysSpecGetResponse *rsp) {
+   rsp->mutable_spec()->set_fwd_mode(hal::g_hal_state->fwd_mode());
+   rsp->mutable_spec()->set_policy_mode(hal::g_hal_state->policy_mode());
+
+   rsp->set_api_status(types::API_STATUS_OK);
+   return HAL_RET_OK;
 }
 
 }    // namespace hal

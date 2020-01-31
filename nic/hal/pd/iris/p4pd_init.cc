@@ -1597,7 +1597,7 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     // initialize all P4 ingress tables with default entries, if any
     SDK_ASSERT(p4pd_input_mapping_native_init(p4pd_def_cfg) == HAL_RET_OK);
     SDK_ASSERT(p4pd_input_mapping_tunneled_init(p4pd_def_cfg) == HAL_RET_OK);
-    SDK_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
+    // SDK_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);

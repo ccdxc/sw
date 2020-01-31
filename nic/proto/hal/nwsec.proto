@@ -245,7 +245,7 @@ message SecurityProfileSpec {
   uint32                       other_active_session_limit         = 101 [(gogoproto.moretags) = "range:0-128000, venice:default=0"];
 
   // Firewall knobs
-  bool                         policy_enforce_en                  = 102 [(gogoproto.moretags) = "venice:default=false"];;
+  bool                         policy_enforce_en                  = 102 [(gogoproto.moretags) = "venice:default=true"];;
   bool                         flow_learn_en                      = 103 [(gogoproto.moretags) = "venice:default=false"];;
 }
 

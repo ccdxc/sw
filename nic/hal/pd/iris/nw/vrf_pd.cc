@@ -407,16 +407,19 @@ vrf_pd_pgm_inp_prop_tbl (pd_vrf_t *vrf_pd, bool is_upgrade)
     sdk_hash                    *inp_prop_tbl = NULL;
     input_properties_swkey_t    key           = { 0 };
     input_properties_actiondata_t data          = { 0 };
+    nwsec_profile_t             *nwsec_prof = NULL;
 
     inp_prop_tbl = g_hal_state_pd->hash_tcam_table(P4TBL_ID_INPUT_PROPERTIES);
     SDK_ASSERT_RETURN((g_hal_state_pd != NULL), HAL_RET_ERR);
+
+    nwsec_prof = find_nwsec_profile_by_id(L4_PROFILE_HOST_DEFAULT);
 
     key.capri_intrinsic_lif   = HAL_LIF_CPU;
     key.vlan_tag_valid        = 1;
     key.vlan_tag_vid          = vrf_pd->vrf_fromcpu_vlan_id;
     inp_prop.dir              = FLOW_DIR_FROM_UPLINK;
     inp_prop.vrf              = vrf_pd->vrf_fl_lkup_id;
-    inp_prop.l4_profile_idx   = 0;
+    inp_prop.l4_profile_idx   = nwsec_get_nwsec_prof_hw_id(nwsec_prof);
     inp_prop.ipsg_enable      = 0;
     inp_prop.src_lport        = 0;
     inp_prop.mdest_flow_miss_action = 0;

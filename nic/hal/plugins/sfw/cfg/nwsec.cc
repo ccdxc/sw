@@ -351,7 +351,7 @@ nwsec_handle_update (SecurityProfileSpec& spec, nwsec_profile_t *nwsec,
         NWSEC_SPEC_CHECK(other_active_session_limit) ||
         NWSEC_SPEC_CHECK(policy_enforce_en) ||
         NWSEC_SPEC_CHECK(flow_learn_en)) {
-                app_ctxt->nwsec_changed = true;
+            app_ctxt->nwsec_changed = true;
     }
 
     if (NWSEC_SPEC_CHECK(ipsg_en)) {
@@ -1461,6 +1461,8 @@ nwsec_prof_process_get (nwsec_profile_t *sec_prof,
     spec->set_udp_active_session_limit(sec_prof->udp_active_session_limit);
     spec->set_icmp_active_session_limit(sec_prof->icmp_active_session_limit);
     spec->set_other_active_session_limit(sec_prof->other_active_session_limit);
+    spec->set_policy_enforce_en(sec_prof->policy_enforce_en);
+    spec->set_flow_learn_en(sec_prof->flow_learn_en);
 
     // fill operational state of this profile
     rsp->mutable_status()->set_profile_handle(sec_prof->hal_handle);

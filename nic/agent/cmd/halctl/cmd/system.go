@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"container/list"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"google.golang.org/grpc"
@@ -46,6 +47,13 @@ var systemShowCmd = &cobra.Command{
 	Short: "show system information",
 	Long:  "show system information",
 	Run:   systemDetailShowCmdHandler,
+}
+
+var systemModeShowCmd = &cobra.Command{
+	Use:   "mode",
+	Short: "show system forwarding/policy mode",
+	Long:  "show system forwarding/policy mode",
+	Run:   systemModeShowCmdHandler,
 }
 
 var systemFwdModeShowCmd = &cobra.Command{
@@ -169,6 +177,7 @@ func init() {
 	systemShowCmd.AddCommand(systemClockShowCmd)
 	systemShowCmd.AddCommand(systemFeatProfileShowCmd)
 	systemShowCmd.AddCommand(systemFwdModeShowCmd)
+	systemShowCmd.AddCommand(systemModeShowCmd)
 	systemShowCmd.AddCommand(queueStatsCmd)
 	queueStatsCmd.AddCommand(inputQueueStatsCmd)
 	queueStatsCmd.AddCommand(outputQueueStatsCmd)
@@ -186,6 +195,10 @@ func init() {
 	systemPbStatsShowCmd.AddCommand(systemQueueCreditsShowCmd)
 	// systemPbStatsShowCmd.AddCommand(systemPbIQStatsShowCmd)
 	// systemPbStatsShowCmd.AddCommand(systemPbOQStatsShowCmd)
+
+	// System mode show cmd
+	systemModeShowCmd.Flags().Bool("yaml", false, "Output in yaml")
+	systemModeShowCmd.Flags().Bool("json", false, "Output in json")
 }
 
 func systemQueueCreditsShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -266,6 +279,43 @@ func systemFeatProfileShowCmdHandler(cmd *cobra.Command, args []string) {
 	featProf = strings.Replace(featProf, "_", "-", -1)
 
 	fmt.Printf("Feature profile: %s\n", featProf)
+}
+
+func systemModeShowCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	client := halproto.NewSystemClient(c)
+
+	// HAL call
+	var empty *halproto.Empty
+	resp, err := client.SysSpecGet(context.Background(), empty)
+	if err != nil {
+		fmt.Printf("Getting system modes failed. %v\n", err)
+		return
+	}
+
+	if resp.GetApiStatus() != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.GetApiStatus())
+		return
+	}
+
+	if cmd.Flags().Changed("yaml") {
+		respType := reflect.ValueOf(resp)
+		b, _ := yaml.Marshal(respType.Interface())
+		fmt.Println(string(b))
+	} else if cmd.Flags().Changed("json") {
+		respType := reflect.ValueOf(resp)
+		j, _ := json.Marshal(respType.Interface())
+		fmt.Println(string(j))
+	} else {
+		fmt.Printf("Forwarding Mode: %s\n", resp.GetSpec().GetFwdMode().String())
+		fmt.Printf("Policy Mode: %s\n", resp.GetSpec().GetPolicyMode().String())
+	}
 }
 
 func systemFwdModeShowCmdHandler(cmd *cobra.Command, args []string) {
@@ -2470,28 +2520,51 @@ func intfUplinkShowOneResp(resp *halproto.PortGetResponse) {
 	var txBc uint64
 
 	macStats := resp.GetStats().GetMacStats()
-	for _, s := range macStats {
-		switch s.GetType() {
-		case halproto.MacStatsType_FRAMES_RX_UNICAST:
-			rxUc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_RX_MULTICAST:
-			rxMc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_RX_BROADCAST:
-			rxBc = s.GetCount()
-		//case halproto.MacStatsType_FRAMES_RX_ALL:
-		//	rxAll = s.GetCount()
-		case halproto.MacStatsType_FRAMES_TX_UNICAST:
-			txUc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_TX_MULTICAST:
-			txMc = s.GetCount()
-		case halproto.MacStatsType_FRAMES_TX_BROADCAST:
-			txBc = s.GetCount()
-		//case halproto.MacStatsType_FRAMES_TX_ALL:
-		//	txAll = s.GetCount()
-		default:
-			continue
+	mgmtStats := resp.GetStats().GetMgmtMacStats()
+	if len(macStats) > 0 {
+		for _, s := range macStats {
+			switch s.GetType() {
+			case halproto.MacStatsType_FRAMES_RX_UNICAST:
+				rxUc = s.GetCount()
+			case halproto.MacStatsType_FRAMES_RX_MULTICAST:
+				rxMc = s.GetCount()
+			case halproto.MacStatsType_FRAMES_RX_BROADCAST:
+				rxBc = s.GetCount()
+				//case halproto.MacStatsType_FRAMES_RX_ALL:
+				//	rxAll = s.GetCount()
+			case halproto.MacStatsType_FRAMES_TX_UNICAST:
+				txUc = s.GetCount()
+			case halproto.MacStatsType_FRAMES_TX_MULTICAST:
+				txMc = s.GetCount()
+			case halproto.MacStatsType_FRAMES_TX_BROADCAST:
+				txBc = s.GetCount()
+				//case halproto.MacStatsType_FRAMES_TX_ALL:
+				//	txAll = s.GetCount()
+			default:
+				continue
+			}
+		}
+	} else if len(mgmtStats) > 0 {
+		for _, s := range mgmtStats {
+			switch s.GetType() {
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_RX_UNICAST:
+				rxUc = s.GetCount()
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_RX_MULTICAST:
+				rxMc = s.GetCount()
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_RX_BROADCAST:
+				rxBc = s.GetCount()
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_TX_UNICAST:
+				txUc = s.GetCount()
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_TX_MULTICAST:
+				txMc = s.GetCount()
+			case halproto.MgmtMacStatsType_MGMT_MAC_FRAMES_TX_BROADCAST:
+				txBc = s.GetCount()
+			default:
+				continue
+			}
 		}
 	}
+
 	fmt.Printf("%-32s%-10d%-10s%-10d%-10s%-10d%-10s   %-10d%-10s%-10d%-10s%-10d%-10s\n",
 		intfStr,
 		rxUc, "---", rxMc, "---", rxBc, "---",

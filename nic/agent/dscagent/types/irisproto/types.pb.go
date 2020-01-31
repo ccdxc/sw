@@ -452,6 +452,7 @@
 		SysSpec
 		SysSpecStatus
 		SysSpecResponse
+		SysSpecGetResponse
 		CollectorSpec
 		CollectorStatus
 		CollectorResponse

@@ -19,6 +19,8 @@ registered_macs:
   phvwr       p.control_metadata_registered_mac_miss, TRUE
   seq         c2, k.flow_lkp_metadata_lkp_reg_mac_vrf, r0
   bcf         [c2], registered_macs_input_properites_miss_drop
+  seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_UNICAST
+  bcf         [c1], registered_macs_miss_unicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_MULTICAST
   bcf         [c1], registered_macs_all_multicast
   seq         c1, k.flow_lkp_metadata_pkt_type, PACKET_TYPE_BROADCAST
@@ -61,6 +63,10 @@ registered_macs_hit_common1:
   phvwr.c1    p.control_metadata_flow_learn, TRUE
   seq.e       c1, d.registered_macs_d.tunnel_rewrite_en, 1
   phvwr.c1    p.rewrite_metadata_tunnel_rewrite_index, d.registered_macs_d.tunnel_rewrite_index
+
+registered_macs_miss_unicast:
+  seq.e       c1, k.control_metadata_has_prom_host_lifs, TRUE
+  phvwr.c1    p.control_metadata_flow_learn, TRUE
 
 registered_macs_all_multicast:
   seq.e       c1, k.control_metadata_mseg_bm_bc_repls, TRUE

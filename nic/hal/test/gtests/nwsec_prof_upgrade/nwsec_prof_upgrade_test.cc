@@ -77,14 +77,14 @@ TEST_F(nwsec_prof_upgrade_test, test1)
     SecurityProfileDeleteRequest            del_req;
     SecurityProfileDeleteResponse           del_rsp;
     SecurityProfileGetRequest               pre_get_req, del_get_req, post_get_req;
-    SecurityProfileGetResponseMsg           pre_get_rsp_msg, del_get_rsp_msg, post_get_rsp_msg;
+    SecurityProfileGetResponseMsg           pre_get_rsp_msg, pre_get_rsp_msg1, del_get_rsp_msg, post_get_rsp_msg;
     uint8_t                                 *mem1 = NULL, *mem2 = NULL;
     uint32_t                                size = 0;
 
     // shared_memory_object::remove("h3s");
 
     // Create nwsec
-    sp_spec.mutable_key_or_handle()->set_profile_id(2);
+    sp_spec.mutable_key_or_handle()->set_profile_id(10);
     sp_spec.set_ipsg_en(true);
     sp_spec.set_ip_normalization_en(true);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
@@ -101,14 +101,26 @@ TEST_F(nwsec_prof_upgrade_test, test1)
     hal::test::hal_test_preserve_state();
 
     // Delete default nwsec 
+    del_req.mutable_key_or_handle()->set_profile_id(0);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
     del_req.mutable_key_or_handle()->set_profile_id(1);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
     EXPECT_EQ(ret, HAL_RET_OK);
 
-    // Delete nwsec
     del_req.mutable_key_or_handle()->set_profile_id(2);
+    hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
+    ret = hal::securityprofile_delete(del_req, &del_rsp);
+    hal::hal_cfg_db_close();
+    EXPECT_EQ(ret, HAL_RET_OK);
+
+    // Delete nwsec
+    del_req.mutable_key_or_handle()->set_profile_id(10);
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
     ret = hal::securityprofile_delete(del_req, &del_rsp);
     hal::hal_cfg_db_close();
@@ -116,9 +128,9 @@ TEST_F(nwsec_prof_upgrade_test, test1)
 
     // Get nwsec. Should be empty
     hal::hal_cfg_db_open(hal::CFG_OP_WRITE);
-    ret = hal::securityprofile_get(pre_get_req, &pre_get_rsp_msg);
+    ret = hal::securityprofile_get(pre_get_req, &pre_get_rsp_msg1);
     hal::hal_cfg_db_close();
-    EXPECT_EQ(del_get_rsp_msg.response_size(), 0);
+    EXPECT_EQ(pre_get_rsp_msg1.response_size(), 0);
 
     // Restore hal state
     hal::test::hal_test_restore_state();

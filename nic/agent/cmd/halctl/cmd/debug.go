@@ -40,6 +40,8 @@ var (
 	tcpProxyCwndIdle    uint32
 	maxSession          uint64
 	isMicroSegEn        bool
+	fwdModeStr          string
+	policyModeStr       string
 )
 
 var debugCmd = &cobra.Command{
@@ -199,6 +201,13 @@ var microSegCmd = &cobra.Command{
 	Run:   microSegCmdHandler,
 }
 
+var sysDebugCmd = &cobra.Command{
+	Use:   "system",
+	Short: "Set system properties",
+	Long:  "Set system properties",
+	Run:   sysDebugCmdHandler,
+}
+
 func init() {
 	rootCmd.AddCommand(debugCmd)
 	debugCmd.AddCommand(traceDebugCmd)
@@ -213,6 +222,7 @@ func init() {
 	debugCmd.AddCommand(memoryDebugCmd)
 	debugCmd.AddCommand(sessionCtrlDebugCmd)
 	debugCmd.AddCommand(microSegCmd)
+	debugCmd.AddCommand(sysDebugCmd)
 	traceDebugCmd.AddCommand(flushLogsDebugCmd)
 	fwDebugCmd.AddCommand(secProfDebugCmd)
 	showCmd.AddCommand(traceShowCmd)
@@ -269,6 +279,10 @@ func init() {
 
 	// debug micro-seg
 	microSegCmd.Flags().BoolVar(&isMicroSegEn, "enable", false, "Enable micro segmentation")
+
+	// debug modes
+	sysDebugCmd.Flags().StringVar(&fwdModeStr, "fwd", "tp", "Set fwd mode - tp(transparent), ms(micro-seg)")
+	sysDebugCmd.Flags().StringVar(&policyModeStr, "pol", "bn", "Set policy mode - bn(base-net), fa(flow-aware), enf(enforce)")
 }
 
 func microSegCmdHandler(cmd *cobra.Command, args []string) {
@@ -309,6 +323,104 @@ func microSegCmdHandler(cmd *cobra.Command, args []string) {
 		}
 	}
 	fmt.Println("Success: Micro-Segmentation Update succeded.")
+}
+
+func isFwdModeStrValid(str string) bool {
+	switch str {
+	case "bn":
+		return true
+	case "fa":
+		return true
+	case "enf":
+		return true
+	default:
+		return false
+	}
+}
+
+func fwdModeStrToMode(str string) halproto.ForwardMode {
+	switch str {
+	case "tp":
+		return halproto.ForwardMode_FWD_MODE_TRANSPARENT
+	case "ms":
+		return halproto.ForwardMode_FWD_MODE_MICROSEG
+	default:
+		return halproto.ForwardMode_FWD_MODE_TRANSPARENT
+	}
+}
+
+func isPolModeStrValid(str string) bool {
+	switch str {
+	case "bn":
+		return true
+	case "fa":
+		return true
+	case "enf":
+		return true
+	default:
+		return false
+	}
+}
+
+func polModeStrToMode(str string) halproto.PolicyMode {
+	switch str {
+	case "bn":
+		return halproto.PolicyMode_POLICY_MODE_BASE_NET
+	case "fa":
+		return halproto.PolicyMode_POLICY_MODE_FLOW_AWARE
+	case "enf":
+		return halproto.PolicyMode_POLICY_MODE_ENFORCE
+	default:
+		return halproto.PolicyMode_POLICY_MODE_BASE_NET
+	}
+}
+
+func sysDebugCmdHandler(cmd *cobra.Command, args []string) {
+	// Connect to HAL
+	c, err := utils.CreateNewGRPCClient()
+	defer c.Close()
+	if err != nil {
+		fmt.Printf("Could not connect to the HAL. Is HAL Running?\n")
+		os.Exit(1)
+	}
+	defer c.Close()
+
+	if cmd.Flags().Changed("fwd") == true {
+		if isFwdModeStrValid(fwdModeStr) == false {
+			fmt.Printf("Cmd args are not valid. Refer description")
+			return
+		}
+		// fwdMode = fwdModeStrToMode(fwdModeStr)
+	}
+
+	if cmd.Flags().Changed("pol") == true {
+		if isFwdModeStrValid(policyModeStr) == false {
+			fmt.Printf("Cmd args are not valid. Refer description")
+			return
+		}
+		// polMode = fwdModeStrToMode(policyModeStr)
+	}
+
+	fwdMode := fwdModeStrToMode(fwdModeStr)
+	polMode := polModeStrToMode(policyModeStr)
+	client := halproto.NewSystemClient(c)
+	req := &halproto.SysSpec{
+		FwdMode:    fwdMode,
+		PolicyMode: polMode,
+	}
+
+	// HAL call
+	resp, err := client.SysSpecUpdate(context.Background(), req)
+	if err != nil {
+		fmt.Printf("Sys spec update failed. %v\n", err)
+		return
+	}
+
+	if resp.ApiStatus != halproto.ApiStatus_API_STATUS_OK {
+		fmt.Printf("Operation failed with %v error\n", resp.ApiStatus)
+	} else {
+		fmt.Println("Success: System spec create/update succeded.")
+	}
 }
 
 func memoryDebugCmdHandler(cmd *cobra.Command, args []string) {

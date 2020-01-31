@@ -23,6 +23,9 @@ using sys::MicroSegUpdateRequestMsg;
 using sys::MicroSegUpdateResponseMsg;
 using sys::MicroSegUpdateRequest;
 using sys::MicroSegUpdateResponse;
+using sys::SysSpec;
+using sys::SysSpecResponse;
+using sys::SysSpecGetResponse;
 using types::Empty;
 
 class SystemServiceImpl final : public System::Service {
@@ -69,6 +72,12 @@ public:
     Status MicroSegUpdate(ServerContext *context,
                           const MicroSegUpdateRequestMsg *req,
                           MicroSegUpdateResponseMsg *rsp) override;
+    Status SysSpecUpdate(ServerContext* context, 
+                         const SysSpec* spec, 
+                         SysSpecResponse* rsp) override;
+    Status SysSpecGet(ServerContext* context, 
+                      const Empty *req,
+                      SysSpecGetResponse* rsp) override;
 };
 #endif    // __SYSTEM_SVC_HPP__
 
