@@ -42,6 +42,8 @@ copy_files() {
 
     if [ "$pipeline" == "apulu" ];then
         pkgf+='nic/tools/package/pack_apulu_base.txt '
+        pkgf+='nic/tools/package/pack_apulu_extern.txt '
+        pkgf+='nic/tools/package/pack_apulu_venice.txt '
         apollod+='nic/conf/apulu '
         if [ $agent == 1 ];then
             pkgf+='nic/tools/package/pack_apulu_venice.txt '

@@ -1,3 +1,12 @@
+# venice specific files
 nic/build/$ARCH/$PIPELINE/bin/netagent                            /nic/bin/
-nic/build/$ARCH/$PIPELINE/bin/nmd                                 /nic/bin/
-nic/apollo/tools/$PIPELINE/start-nmd.sh				  /nic/tools/
+nic/build/$ARCH/$PIPELINE/bin/nmd                                 /nic/bin
+nic/apollo/tools/$PIPELINE/start-nmd.sh                           /nic/tools/
+
+# global config files
+nic/conf/$PIPELINE/pipeline-venice.json                           /nic/conf/pipeline.json
+nic/sysmgr/src/$PIPELINE/pipeline-venice.json                     /nic/conf/sysmgr.json
+nic/conf/$PIPELINE/device.json                                    /nic/conf/
+
+# system level tools
+nic/apollo/tools/$PIPELINE/bringup_mgmt_ifs_venice.sh             /nic/tools/bringup_mgmt_ifs.sh

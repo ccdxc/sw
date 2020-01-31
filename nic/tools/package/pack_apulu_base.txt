@@ -1,5 +1,4 @@
 nic/conf/init_bins                                                /nic/conf/init_bins/
-nic/conf/$PIPELINE/pipeline.json                                  /nic/conf/
 nic/conf/$PIPELINE/hal_hw.json                                    /nic/conf/$PIPELINE/
 nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIPELINE/8g/
 nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
@@ -128,9 +127,7 @@ nic/debug_cli/images/$ARCH/$PIPELINE/p4ctl                        /nic/bin
 # system level tools and binaries
 nic/tools/sysupdate.sh                                            /nic/tools/
 nic/apollo/tools/apulu/sysinit.sh                                 /nic/tools/
-nic/apollo/tools/apulu/syskill.sh                                 /nic/tools/
-nic/apollo/tools/sysreset.sh                                      /nic/tools/
-nic/apollo/tools/apulu/bringup_mgmt_ifs.sh                        /nic/tools/
+nic/tools/syskill.sh                                              /nic/tools/
 nic/tools/sysreset.sh                                             /nic/tools/
 nic/tools/fwupdate                                                /nic/tools/
 nic/tools/postinstall.sh                                          /nic/tools/
@@ -149,7 +146,6 @@ nic/build/$ARCH/$PIPELINE/out/boot0_submake/boot0.bin             /boot0/
 nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
 
 # platform modules
-nic/sysmgr/src/$PIPELINE/pipeline.json                            /nic/conf/sysmgr.json
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operdctl                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operd                               /nic/bin/

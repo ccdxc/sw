@@ -84,6 +84,7 @@ if args.target == 'sim':
         files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'apulu':
         files.append('nic/tools/package/pack_apulu_base.txt')
+        files.append('nic/tools/package/pack_apulu_extern.txt')
     elif args.pipeline == 'apulu-venice':
         files.append('nic/tools/package/pack_apulu_base.txt')
         files.append('nic/tools/package/pack_apulu_venice.txt')
@@ -167,6 +168,7 @@ else:
         files.append('nic/tools/package/pack_artemis.txt')
     elif args.pipeline == 'apulu':
         files.append('nic/tools/package/pack_apulu_base.txt')
+        files.append('nic/tools/package/pack_apulu_extern.txt')
     elif args.pipeline == 'apulu-venice':
         files.append('nic/tools/package/pack_apulu_base.txt')
         files.append('nic/tools/package/pack_apulu_venice.txt')

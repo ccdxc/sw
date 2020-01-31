@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/nic/agent/nmd/state/ipif"
+
 	"github.com/pensando/sw/api"
 	cmd "github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/nic/agent/protos/nmd"
@@ -220,7 +222,7 @@ func (n *NMD) GetNaplesSoftwareInfo() (*nmd.DSCSoftwareVersionInfo, error) {
 // ReadFruFromJSON reads the fru.json file created at Startup
 func ReadFruFromJSON() *nmd.DistributedServiceCardFru {
 	log.Infof("Updating FRU from /tmp/fru.json")
-	fruJSON, err := os.Open("/tmp/fru.json")
+	fruJSON, err := readFruWithRetries()
 	if err != nil {
 		log.Errorf("Failed to open /tmp/fru.json.")
 		return nil
@@ -512,4 +514,31 @@ func (n *NMD) UpdateNaplesInfoFromConfig() error {
 	nic.Status.Conditions = n.UpdateNaplesHealth()
 	n.SetSmartNIC(nic)
 	return nil
+}
+
+func readFruWithRetries() (fd *os.File, err error) {
+	fruParsed := make(chan bool, 1)
+	ticker := time.NewTicker(time.Second * 10)
+	timeout := time.After(time.Minute * 2)
+	fd, err = os.Open(ipif.FRUFilePath)
+	if err == nil {
+		log.Infof("FRU JSON Parsed from: %v", ipif.FRUFilePath)
+		return
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			fd, err = os.Open(ipif.FRUFilePath)
+			if err != nil {
+				fruParsed <- true
+			}
+		case <-fruParsed:
+			log.Infof("FRU JSON Parsed from: %v", ipif.FRUFilePath)
+			return
+		case <-timeout:
+			log.Errorf("Failed to parse FRU JSON from: %v. | Err: %v", ipif.FRUFilePath, err)
+			return nil, err
+		}
+	}
 }

@@ -137,9 +137,9 @@ ifeq ($(PIPELINE),apulu)
 	OUT_DIR=output FLAVOR=-venice NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
 	mv naples_fw_.tar naples_fw_venice.tar
 endif
-	make penctl-version
 	OUT_DIR=output NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make -C . firmware-normal
 ifeq ($(PIPELINE),iris)
+	make penctl-version
 	OUT_DIR=output NAPLES_FW_NAME=naples_fw.tar FW_PACKAGE_DIR=capri make firmware-upgrade
 endif
 	${TOOLS_DIR}/relative_link.sh ${NICDIR}/build

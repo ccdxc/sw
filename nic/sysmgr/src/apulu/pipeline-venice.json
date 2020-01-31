@@ -5,7 +5,7 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0x3"
     },
     {
         "name": "vpp",
@@ -13,7 +13,7 @@
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
+        "cpu-affinity": "0xC"
     },
     {
         "name": "operd",
@@ -21,6 +21,22 @@
         "dependencies": [],
         "flags": [],
         "timeout": 0.0,
-        "cpu-affinity": "0x1"
-    }
+        "cpu-affinity": "0x3"
+    },
+    {
+        "name": "nmd",
+        "command": "/bin/sh /nic/tools/start-nmd.sh",
+        "dependencies": [],
+        "flags": ["save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+    },
+    {
+        "name": "pen-netagent",
+        "command": "/nic/bin/netagent",
+        "dependencies": [],
+        "flags": ["save_stdout_on_crash"],
+        "timeout": 0.0,
+        "cpu-affinity": "0x3"
+     }
 ]
