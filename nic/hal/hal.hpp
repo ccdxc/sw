@@ -105,6 +105,8 @@ hal_ret_t hal_cfg_db_close(void);
 hal::cfg_op_t hal_cfg_db_get_mode(void);
 
 void asiccfg_init_completion_event(sdk_status_t status);
+void svc_init_done(void);
+
 }    // namespace hal
 
 #endif    // __HAL_HPP__

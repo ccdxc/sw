@@ -18,6 +18,7 @@
 #include "nic/hal/core/core.hpp"
 #include "platform/src/lib/nicmgr/include/dev.hpp"
 #include "platform/src/lib/nicmgr/include/logger.hpp"
+#include "platform/src/lib/devapi_iris/devapi_iris.hpp"
 #include "nic/hal/core/event_ipc.hpp"
 #include "upgrade.hpp"
 #include "nicmgr_ncsi.hpp"
@@ -207,6 +208,10 @@ dev_init:
 
     // ncsi init
     nicmgr::nicmgr_ncsi_ipc_init();
+
+    if (devapi_iris::is_hal_up()) {
+        hal_up_event_handler(NULL, NULL);
+    }
 
     NIC_LOG_INFO("Listening to events");
 }

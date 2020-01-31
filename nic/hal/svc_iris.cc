@@ -90,11 +90,8 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     hal::utils::hal_logger()->flush();
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
 
-    // notify sysmgr that we are up
-    hal::svc::hal_init_done();
-    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
-    // raise HAL_UP event
-    sdk::ipc::broadcast(event_id_t::EVENT_ID_HAL_UP, NULL, 0);
+    // inform hal status
+    hal::svc_init_done();
 
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());

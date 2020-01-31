@@ -42,7 +42,7 @@ MODULE_SOLIBS   = storage_hal_if storage_nicmgr_if storage_qstate_if \
                   sdkasicpd pdcapri pdcommon hal_mock \
                   sdkp4 sdkp4utils sdkxcvrdriver sdkfru p4pd_${PIPELINE} \
                   p4pd_common_p4plus_rxdma p4pd_common_p4plus_txdma \
-                  asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} devapi_iris rdmamgr_iris
+                  asicpd ${NIC_HAL_PD_SOLIBS_${ARCH}} devapi_iris rdmamgr_iris hal_devapi
 ifeq ($(ARCH),x86_64)
 MODULE_SOLIBS   += model_client storage_rdma host_mem
 endif

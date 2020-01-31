@@ -10,10 +10,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "nic/hal/hal.hpp"
+#include "nic/hal/hal_devapi.hpp"
 #include "nic/include/hal_pd.hpp"
 #include "lib/periodic/periodic.hpp"
 #include "nic/hal/src/internal/tcp_proxy_cb.hpp"
 #include "nic/hal/src/internal/proxy.hpp"
+#include "nic/hal/core/event_ipc.hpp"
 #include "nic/fte/fte_core.hpp"
 #include "nic/hal/core/plugins.hpp"
 #include "nic/hal/src/utils/utils.hpp"
@@ -515,6 +517,17 @@ asiccfg_init_completion_event (sdk_status_t status)
         SDK_ASSERT(0);
     }
     hal::svc::set_hal_status(hal_status);
+}
+
+void
+svc_init_done (void)
+{
+    // notify sysmgr that we are up
+    hal::svc::hal_init_done();
+    hal::svc::set_hal_status(hal::HAL_STATUS_UP);
+    g_devapi_hal.set_hal_up(true);
+    // raise HAL_UP event
+    sdk::ipc::broadcast(event_id_t::EVENT_ID_HAL_UP, NULL, 0);
 }
 
 }    // namespace hal

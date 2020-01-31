@@ -2,6 +2,7 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 //-----------------------------------------------------------------------------
 #include "platform/src/lib/nicmgr/include/logger.hpp"
+#include "nic/hal/hal_devapi.hpp"
 #include "devapi_iris.hpp"
 #include "devapi_mem.hpp"
 #include "lif.hpp"
@@ -1017,6 +1018,12 @@ sdk_ret_t
 devapi_iris::swm_disable_rx(uint32_t channel)
 {
     return devapi_swm::swm()->disable_rx(channel);
+}
+
+bool
+devapi_iris::is_hal_up(void)
+{
+    return g_devapi_hal.hal_up();
 }
 
 }    // namespace iris

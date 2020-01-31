@@ -3,7 +3,7 @@ include ${MKDEFS}/pre.mk
 MODULE_ARCH     := x86_64
 MODULE_PIPELINE := iris
 MODULE_TARGET   := devapi_iris_test.gtest
-MODULE_SOLIBS   := devapi_iris halproto indexer
+MODULE_SOLIBS   := devapi_iris halproto indexer hal_devapi
 #MODULE_SOLIBS   := nicmgr hal_api mnet \
 #                   pciemgr_if pciemgr pciemgrutils pciehdevices pcietlp cfgspace \
 #                   intrutils pal misc evutils \

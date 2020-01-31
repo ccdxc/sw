@@ -7,6 +7,7 @@ MODULE_SRCS     := ${MODULE_SRC_DIR}/hal.cc \
                    ${MODULE_SRC_DIR}/hal_state.cc \
                    ${MODULE_SRC_DIR}/hal_obj.cc \
                    ${MODULE_SRC_DIR}/hal_trace.cc \
+                   ${MODULE_SRC_DIR}/hal_devapi.cc \
                    $(wildcard ${MODULE_SRC_DIR}/src/stats/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/src/debug/*.cc) \
                    $(wildcard ${MODULE_SRC_DIR}/src/utils/*.cc)

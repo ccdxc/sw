@@ -78,6 +78,7 @@ public:
     virtual sdk_ret_t set_micro_seg_en(bool en) {
         return SDK_RET_INVALID_OP;
     }
+    static bool is_hal_up(void);
 
     // single wire management APIs
     virtual sdk_ret_t swm_enable(void) = 0;
