@@ -93,8 +93,11 @@ mapping_hit:
     phvwr.!c7.e     p.rewrite_metadata_nexthop_type, \
                         d.mapping_info_d.nexthop_type
     phvwr.!c7.f     p.p4e_i2e_nexthop_id, d.mapping_info_d.nexthop_id
-    phvwr           p.p4e_to_arm_nexthop_id, d.{mapping_info_d.nexthop_id}.hx
-    phvwr           p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    seq             c1, k.p4e_i2e_rx_packet, 1
+    phvwr.!c1       p.p4e_to_arm_nexthop_id, d.{mapping_info_d.nexthop_id}.hx
+    phvwr.!c1       p.p4e_to_arm_nexthop_type, d.mapping_info_d.nexthop_type
+    phvwr.c1        p.p4e_to_arm_nexthop_id, k.{txdma_to_p4e_nexthop_id}.hx
+    phvwr.c1        p.p4e_to_arm_nexthop_type, k.txdma_to_p4e_nexthop_type
     phvwr.e         p.p4e_to_arm_is_local, d.mapping_info_d.is_local
     phvwr.f         p.p4e_to_arm_mapping_hit, TRUE
 

@@ -44,7 +44,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        - networking/local2remote.testbundle
+        - networking/networking.testbundle
         - classic/ethtool.testbundle
         - mtu/mtu.testbundle
         - vlanoffload/vlanoffload.testbundle

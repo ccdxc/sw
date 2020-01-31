@@ -108,6 +108,7 @@ vpc:
           vroutermac       : macaddr/0055.0100.0002
           vnic:
             - id        : 2
+              type      : igw
               count     : 1             # 1 untagged VNIC
               vmac      : macaddr/00ae.cd00.000b
               hostifidx : 0x80000049
@@ -140,12 +141,8 @@ vpc:
                teptype : underlay
                v4routes:
                    - '10.10.0.0\16'
-
-             - type: specific
-               routetype: disjoint
-               v4routes:
                    - '50.5.0.0\16'
-               teptype : underlay
+
       policy:
               - type : specific
                 policytype : default

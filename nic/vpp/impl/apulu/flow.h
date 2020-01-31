@@ -47,8 +47,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
              (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
         rx_rewrite_flags0 =
-            ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
-             (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
+            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -59,7 +59,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         tx_rewrite_flags0 =
             (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
         rx_rewrite_flags0 =
-            (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b0)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -69,7 +69,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         tx_rewrite_flags0 |
         vec_elt(fm->nh_flags, (vnet_buffer(b0)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
-        rx_rewrite_flags0;
+        rx_rewrite_flags0 |
+        (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
 
     if (PREDICT_FALSE(session_program(session_id0, (void *)&actiondata))) {
         *next0 = SESSION_PROG_NEXT_DROP;
@@ -84,8 +85,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
              (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
         rx_rewrite_flags1 =
-            ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
-             (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
+            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -96,7 +97,7 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         tx_rewrite_flags1 =
             (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
         rx_rewrite_flags1 =
-            (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b1)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -106,7 +107,8 @@ pds_session_prog_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
         tx_rewrite_flags1 |
         vec_elt(fm->nh_flags, (vnet_buffer(b1)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
-        rx_rewrite_flags1;
+        rx_rewrite_flags1 |
+        (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
     if (PREDICT_FALSE(session_program(session_id1, (void *)&actiondata))) {
         *next1 = SESSION_PROG_NEXT_DROP;
     } else {
@@ -135,8 +137,8 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
             ((TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START) |
              (TX_REWRITE_SPORT_FROM_NAT << TX_REWRITE_SPORT_START));
         rx_rewrite_flags =
-            ((TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START) |
-             (TX_REWRITE_DPORT_FROM_NAT << TX_REWRITE_DPORT_START));
+            ((RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START) |
+             (RX_REWRITE_DPORT_FROM_NAT << RX_REWRITE_DPORT_START));
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -147,7 +149,7 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         tx_rewrite_flags =
             (TX_REWRITE_SIP_FROM_NAT << TX_REWRITE_SIP_START);
         rx_rewrite_flags =
-            (TX_REWRITE_DIP_FROM_NAT << TX_REWRITE_DIP_START);
+            (RX_REWRITE_DIP_FROM_NAT << RX_REWRITE_DIP_START);
         actiondata.action_u.session_session_info.tx_xlate_id =
             vnet_buffer2(b)->pds_nat_data.xlate_idx;
         actiondata.action_u.session_session_info.rx_xlate_id =
@@ -157,7 +159,8 @@ pds_session_prog_x1 (vlib_buffer_t *b, u32 session_id,
         tx_rewrite_flags |
         vec_elt(fm->nh_flags, (vnet_buffer(b)->pds_flow_data.nexthop) >> 16);
     actiondata.action_u.session_session_info.rx_rewrite_flags =
-        rx_rewrite_flags;
+        rx_rewrite_flags |
+        (RX_REWRITE_DMAC_FROM_MAPPING << RX_REWRITE_DMAC_START);
 
     if (PREDICT_FALSE(session_program(session_id, (void *)&actiondata))) {
         next[0] = SESSION_PROG_NEXT_DROP;
@@ -349,7 +352,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
 
     nexthop = hdr0->nexthop_id;
-    if (!hdr0->mapping_hit && !hdr0->drop) {
+    if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
         vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
                                                  (hdr0->nexthop_type << 16);
     } else {
@@ -377,7 +380,7 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
         (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
         (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr1->nexthop_id;
-    if (!hdr1->mapping_hit && !hdr1->drop) {
+    if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
         vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
                                             (hdr1->nexthop_type << 16);
     } else {
@@ -562,7 +565,7 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
         (vnic->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
     nexthop = hdr->nexthop_id;
-    if (!hdr->mapping_hit && !hdr->drop) {
+    if ((!hdr->mapping_hit || hdr->rx_packet) && !hdr->drop) {
         vnet_buffer(p)->pds_flow_data.nexthop = nexthop |
                                                 (hdr->nexthop_type << 16);
     } else {
