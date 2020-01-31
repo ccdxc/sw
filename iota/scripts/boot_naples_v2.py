@@ -509,7 +509,7 @@ class NaplesManagement(EntityManagement):
         self.__login()
         print("sleeping 60 seconds in RebootGoldFw")
         time.sleep(60)
-        self.__read_ip()
+        self.ReadExternalIP()
         self.WaitForSsh()
 
     def Reboot(self):
@@ -593,16 +593,25 @@ class NaplesManagement(EntityManagement):
             raise Exception(msg)
 
 
-    def __read_ip(self):
+    def ReadExternalIP(self):
         self.__run_dhclient()
-        self.RunCommandOnConsoleWithOutput("ifconfig -a")
         output = self.RunCommandOnConsoleWithOutput("ifconfig oob_mnic0")
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         x = re.findall(ifconfig_regexp, output)
         if len(x) > 0:
             self.ipaddr = x[0]
+            print("Read OOB IP {0}".format(self.ipaddr))
             self.SSHPassInit()
 
+    #if oob is not available read internal IP
+    def ReadInternalIP(self):
+        output = self.RunCommandOnConsoleWithOutput("ifconfig int_mnic0")
+        ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+        x = re.findall(ifconfig_regexp, output)
+        if len(x) > 0:
+            self.ipaddr = x[0]
+            print("Read internal IP {0}".format(self.ipaddr))
+            self.SSHPassInit()
 
     def __read_mac(self):
         output = self.RunCommandOnConsoleWithOutput("ip link | grep oob_mnic0 -A 1 | grep ether")
@@ -617,7 +626,7 @@ class NaplesManagement(EntityManagement):
         print("sleeping 60 seconds in Login")
         time.sleep(60)
         if bringup_oob:
-            self.__read_ip()
+            self.ReadExternalIP()
         self.__read_mac()
 
     @_exceptionWrapper(_errCodes.NAPLES_GOLDFW_UNKNOWN, "Gold FW unknown")
@@ -1235,6 +1244,7 @@ def Main():
             __fullUpdate()
         naples.Reboot()
     else:
+        naples.ReadInternalIP()
         naples.InitForUpgrade(goldfw = True)
         host.InitForUpgrade()
         host.Reboot()
