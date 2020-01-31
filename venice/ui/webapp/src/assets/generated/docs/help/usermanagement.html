@@ -1,6 +1,5 @@
 <h1 id="usermanagement">User Management</h1>
-<p>You can create local users, which will authenticate from the local-user database.  That is done under the "Admin" --&gt; "User Management" section. Click "Add User" to create a new user. </p>
-<h4 id="adduser">Add User</h4>
+<p>You can create local users, which will authenticate from the local-user database.  That is done under the "Admin" --&gt; "User Management" section. Click "User" - "Add User" to create a new user. </p>
 <p>The user management section allows the creation of new users to the local database.  You can add a new user and provide the following information:</p>
 <table>
 <thead>
@@ -36,3 +35,74 @@
 </tr>
 </tbody>
 </table>
+<p>User can update his/her information and change his/her own password.</p>
+<p>Administrator can update other users inforamtion and change pasword for other users.</p>
+<h1 id="rolemanagement">Role Management</h1>
+<p>You can create role, which authorize user access.  That is done under the "Admin" --&gt; "User Management" section. Click "Role" - "Add Role" to create a new user. </p>
+<h4 id="addandupdaterole">Add And Update Role</h4>
+<p>With the roles configuration, it is possible to create various types of roles that provide various capabilities.  Here are the following options with the grouping option that corelates to the "kind" of capabilities with the grouping:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>resource-group</td>
+<td>ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying "<em>All</em>" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.</td>
+</tr>
+<tr>
+<td>resource-kind</td>
+<td>ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in ResrcKind enum. Specifying "<em>All</em>" will match all resource kinds.</td>
+</tr>
+<tr>
+<td>actions</td>
+<td>Actions are actions on a resource that a permission allows. <br> Valid options include:<br> - All Actions <br> - Clear Config <br> - Commit Config <br> - Create <br> - Delete <br> - Read <br> - Update</td>
+</tr>
+</tbody>
+</table>
+<h1 id="rolebinding">Role Binding</h1>
+<p>The role binding associates the user or user groups to a particular role.  The options for this configuration is the following:</p>
+<ul>
+<li>Name: Unique name for the role binding</li>
+<li>Role: Select from the drop down box the list of roles created</li>
+<li>User Groups:  Type in the name of the user group to bind to this role</li>
+<li>Users:  A list of local users are shown and to select the user, move it from the available list to Selected list</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>users</td>
+<td></td>
+</tr>
+<tr>
+<td>user-groups</td>
+<td></td>
+</tr>
+<tr>
+<td>role</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="example">Example:</h2>
+<p><strong>Name:</strong> HRAdmins-binding</p>
+<p><strong>Role:</strong> HRAdminRole</p>
+<p><strong>User Groups:</strong> HRAdmin-Group</p>
+<p><strong>Users:</strong> johndoe</p>

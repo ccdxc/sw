@@ -52,20 +52,21 @@
 </table>
 <p>To add another rule, click on "+RULE".  </p>
 <h2 id="example">Example:</h2>
-<p><strong>Name:</strong> DC1-Security
-<strong>Attach:</strong> Tenant
-<strong>Rules:</strong>
-    1<br />
-        Action: Permit
-        From: 0.0.0.0/0
-        To: DHCP-Servers
-        Proto-Ports:
-            Protocol: udp
-            Ports: 67-68
-    2
-        Action: Permit
-        From: 10.29.100.0/24
-        To: 10.29.50.101 10.29.50.102
-        Proto-Ports:
-            Protocol: tcp
-            Ports: 80, 443</p>
+<p><strong>Name:</strong> DC1-Security</p>
+<p><strong>Attach:</strong> Tenant</p>
+<p><strong>Rules:</strong></p>
+<pre><code>1   
+    Action: Permit
+    From: 0.0.0.0/0
+    To: DHCP-Servers
+    Proto-Ports:
+        Protocol: udp
+        Ports: 67-68
+2
+    Action: Permit
+    From: 10.29.100.0/24
+    To: 10.29.50.101 10.29.50.102
+    Proto-Ports:
+        Protocol: tcp
+        Ports: 80, 443
+</code></pre>

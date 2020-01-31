@@ -1,0 +1,56 @@
+<h1 id="firewalllogpolicy">Firewall Log Policy</h1>
+<p>The firewall logs provide information of the security policy and events of the security rules.  This section will define firewall events that will be sent to a logging destination.  To create this policy, click on Create Firewall Log Policy</p>
+<h2 id="createfirewalllogpolicy">Create Firewall Log Policy</h2>
+<p>A firewall log policy can be created to send all of the logs or specific logs to an external server. To do so, provide the following information:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>export</td>
+<td>Filter firewall logs, FWLOG_ALL default. <br> Valid options include:<br> - All Logs <br> - Allow Logs <br> - Deny Logs <br> - Implicit Deny Logs <br> - No Logs <br> - Reject Logs</td>
+</tr>
+</tbody>
+</table>
+<h5 id="syslogexportconfiguration">SYSLOG EXPORT CONFIGURATION</h5>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>facility-override</td>
+<td>Override default facility with this in exported logs. <br> Valid options include:<br> - Auth <br> - Private Auth <br> - CRON <br> - Daemon <br> - FTP <br> - Kernel <br> - local 0 <br> - local 1 <br> - local 2 <br> - local 3 <br> - local 4 <br> - local 5 <br> - local 6 <br> - local 7 <br> - LPR <br> - Mail <br> - News <br> - Syslog <br> - User <br> - UUCP</td>
+</tr>
+</tbody>
+</table>
+<h5 id="target">TARGET</h5>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>destination</td>
+<td>IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048.</td>
+</tr>
+<tr>
+<td>transport</td>
+<td>Protocol and Port number where an external collector is gathering the data example "UDP/2055". Should be a valid layer 3 or layer 4 protocol and port/type.</td>
+</tr>
+</tbody>
+</table>

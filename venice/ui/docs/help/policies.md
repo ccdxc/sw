@@ -17,8 +17,11 @@ To add another rule, click on "+RULE".
 ## Example:
 
 **Name:** DC1-Security
+
 **Attach:** Tenant
+
 **Rules:**
+
 	1 	
 		Action: Permit
 		From: 0.0.0.0/0

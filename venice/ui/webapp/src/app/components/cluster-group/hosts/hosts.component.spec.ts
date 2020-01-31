@@ -17,6 +17,7 @@ import { MessageService } from '@app/services/message.service';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { RouterLinkStubDirective } from '@common/RouterLinkStub.directive.spec';
 import { TestingUtility } from '@common/TestingUtility';
+import { Utility } from '@common/Utility';
 import { SharedModule } from '@components/shared/shared.module';
 import { MaterialdesignModule } from '@lib/materialdesign.module';
 import { PrimengModule } from '@lib/primeng.module';
@@ -259,6 +260,7 @@ describe('HostsComponent', () => {
   });
 
   beforeEach(() => {
+    Utility.getInstance().clearAllVeniceObjectCacheData(); // prevent using cached data.
     fixture = TestBed.createComponent(HostsComponent);
     component = fixture.componentInstance;
   });
