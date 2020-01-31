@@ -27,6 +27,7 @@ struct ionic_lif;
 
 #define DEVCMD_TIMEOUT  30
 #define SHORT_TIMEOUT   3
+#define MAX_ETH_EQS	64
 
 extern unsigned int max_slaves;
 extern unsigned int rx_copybreak;

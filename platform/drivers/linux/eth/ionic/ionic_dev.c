@@ -746,6 +746,9 @@ void ionic_eqs_free(struct ionic *ionic)
 {
 	int i;
 
+	if (!ionic->eqs)
+		return;
+
 	for (i = 0; i < ionic->neth_eqs; i++) {
 		if (ionic->eqs[i])
 			ionic_eq_free(ionic->eqs[i]);
@@ -788,6 +791,9 @@ void ionic_eq_deinit(struct ionic_eq *eq)
 void ionic_eqs_deinit(struct ionic *ionic)
 {
 	int i;
+
+	if (!ionic->eqs)
+		return;
 
 	for (i = 0; i < ionic->neth_eqs; i++) {
 		if (ionic->eqs[i])

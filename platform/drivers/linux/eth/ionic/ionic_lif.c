@@ -3246,7 +3246,8 @@ void ionic_lifs_unregister(struct ionic *ionic)
 	 * current model, so don't bother searching the
 	 * ionic->lif for candidates to unregister
 	 */
-	if (ionic->master_lif->netdev->reg_state == NETREG_REGISTERED)
+	if (ionic->master_lif &&
+	    ionic->master_lif->netdev->reg_state == NETREG_REGISTERED)
 		unregister_netdev(ionic->master_lif->netdev);
 }
 
@@ -3426,6 +3427,7 @@ int ionic_lifs_size(struct ionic *ionic)
 		dev_neth_eqs = 0;
 	else
 		dev_neth_eqs = le32_to_cpu(ident->dev.eq_count);
+	dev_neth_eqs = min_t(int, dev_neth_eqs, MAX_ETH_EQS);
 
 	nrdma_eqs_per_lif = le32_to_cpu(ident->lif.rdma.eq_qtype.qid_count);
 	nnqs_per_lif = le32_to_cpu(lc->queue_count[IONIC_QTYPE_NOTIFYQ]);
