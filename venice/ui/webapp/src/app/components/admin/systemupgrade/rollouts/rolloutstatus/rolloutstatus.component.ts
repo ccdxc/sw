@@ -379,6 +379,9 @@ export class RolloutstatusComponent extends BaseComponent implements OnInit, OnD
    * @param $event
    */
   onFailureReasonClick($event) {
+    // we don't want the panel collapse when clicking on "view reasons"
+    event.stopPropagation();
+    event.preventDefault();
     const reasons = this.getRolloutFailureReasons();
     const delimiter = '<br/>';
     const msg = reasons.join(delimiter);

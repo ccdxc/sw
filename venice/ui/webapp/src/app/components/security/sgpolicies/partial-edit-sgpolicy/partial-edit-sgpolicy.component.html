@@ -246,36 +246,42 @@
       </div>
     </div>
 
-    <div fxFlex="none" fxLayout="row" fxLayoutAlign="start end">
-      <div fxFlex="50%">
-        <div fxFlex="15px"></div>
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-          <div fxFlex="auto" class="partial-edit-sgpolicy-bold">FROM</div>
-          <div *ngIf="data.rule.$formGroup.get('from-security-groups').value.length !== 0"
-               fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-            <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">Security Groups</div>
-            <div fxFlex="auto">{{ displayArrayField(data, 'from-security-groups') }}</div>
+    <div fxFlex="none" fxLayout="row wrap" fxLayoutAlign="start start">
+      <div class="partial-edit-sgpolicy-fieldgroup" fxLayout="row" fxLayoutAlign="start start">
+        <div class="partial-edit-sgpolicy-fieldgroup-label-from partial-edit-sgpolicy-bold">
+          FROM
+        </div>
+        <div *ngIf="data.rule.$formGroup.get('from-security-groups').value.length !== 0"
+             fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
+          <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">Security Groups</div>
+          <div fxFlex="auto">{{ displayArrayField(data, 'from-security-groups') }}</div>
+        </div>
+        <div *ngIf="data.rule.$formGroup.get('from-ip-addresses').value.length !== 0"
+             class="partial-edit-sgpolicy-ip-fieldgroup" fxLayout="row">
+          <div class="partial-edit-sgpolicy-ip-label partial-edit-sgpolicy-bold-subtext">
+            IP Addresses
           </div>
-          <div *ngIf="data.rule.$formGroup.get('from-ip-addresses').value.length !== 0"
-               fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-            <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">IP Addresses</div>
-            <div fxFlex="auto">{{ displayArrayField(data, 'from-ip-addresses') }}</div>
+          <div class="partial-edit-sgpolicy-ip-value">
+            {{ displayArrayField(data, 'from-ip-addresses') }}
           </div>
         </div>
       </div>
-      <div fxFlex="50%">
-        <div fxFlex="15px"></div>
-        <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-          <div fxFlex="auto" class="partial-edit-sgpolicy-bold" fxLayoutAlign="start start">TO</div>
-          <div *ngIf="data.rule.$formGroup.get('to-security-groups').value.length !== 0"
-               fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-            <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">Security Groups</div>
-            <div fxFlex="auto">{{ displayArrayField(data, 'to-security-groups') }}</div>
+      <div class="partial-edit-sgpolicy-fieldgroup" fxLayout="row" fxLayoutAlign="start start">
+        <div class="partial-edit-sgpolicy-fieldgroup-label-to partial-edit-sgpolicy-bold">
+          TO
+        </div>
+        <div *ngIf="data.rule.$formGroup.get('to-security-groups').value.length !== 0"
+             fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
+          <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">Security Groups</div>
+          <div fxFlex="auto">{{ displayArrayField(data, 'to-security-groups') }}</div>
+        </div>
+        <div *ngIf="data.rule.$formGroup.get('to-ip-addresses').value.length !== 0"
+             class="partial-edit-sgpolicy-ip-fieldgroup" fxLayout="row">
+          <div class="partial-edit-sgpolicy-ip-label partial-edit-sgpolicy-bold-subtext">
+            IP Addresses
           </div>
-          <div *ngIf="data.rule.$formGroup.get('to-ip-addresses').value.length !== 0"
-               fxFlex="auto" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="25px">
-            <div fxFlex="auto" class="partial-edit-sgpolicy-bold-subtext">IP Addresses</div>
-            <div fxFlex="auto">{{ displayArrayField(data, 'to-ip-addresses') }}</div>
+          <div class="partial-edit-sgpolicy-ip-value">
+            {{ displayArrayField(data, 'to-ip-addresses') }}
           </div>
         </div>
       </div>

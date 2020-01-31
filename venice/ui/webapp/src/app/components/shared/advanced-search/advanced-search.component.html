@@ -5,18 +5,16 @@
       <input [(ngModel)]="search" type="text" pInputText [disabled]="showAdvancedPanel"
              placeholder="Search" class="advanced-search-bar-input" (keydown)="onKeydown($event)"
              fxFlex="auto" />
-      <ng-container *ngIf="showSearchAndCancel()">
-        <button (click)="cancelClicked()" pButton
-                class="advanced-search-bar-button-cancel advanced-search-bar-button"
-                title="Cancel" fxFlex="29px">
-          <i class="fa fa-fw fa-ban"></i>
-        </button>
-        <button (click)="searchClicked()" pButton
-                class="advanced-search-bar-button-search advanced-search-bar-button" title="Search"
-                fxFlex="29px">
-          <i class="fa fa-fw fa-search"></i>
-        </button>
-      </ng-container>
+      <button (click)="cancelClicked()" pButton
+              class="advanced-search-bar-button-cancel advanced-search-bar-button"
+              title="Cancel" fxFlex="29px">
+        <i class="fa fa-fw fa-ban"></i>
+      </button>
+      <button (click)="searchClicked()" pButton
+              class="advanced-search-bar-button-search advanced-search-bar-button" title="Search"
+              fxFlex="29px">
+        <i class="fa fa-fw fa-search"></i>
+      </button>
       <button pButton (click)="togglePanel()"
               matTooltip="{{showAdvancedPanel? 'Close advanced search panel' : 'Advanced Search'}}"
               class="advanced-search-bar-button-toggle advanced-search-bar-button" fxFlex="29px">

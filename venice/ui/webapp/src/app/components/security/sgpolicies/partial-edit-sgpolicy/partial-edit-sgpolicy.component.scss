@@ -99,9 +99,36 @@ $vertical-gutter: 5px;
   cursor: pointer;
 }
 
-.partial-edit-sgpolicy-chip {
-  // width: 400px;
-  // height: 30px;
+.partial-edit-sgpolicy-fieldgroup {
+  min-width: 280px;
+  width: 50%;
+}
+
+.partial-edit-sgpolicy-fieldgroup-label-from,
+.partial-edit-sgpolicy-fieldgroup-label-to {
+  margin-left: 15px;
+  margin-right: 25px;
+}
+
+@media(max-width: 860px) {
+  .partial-edit-sgpolicy-fieldgroup {
+    width: 100%;
+  }
+
+  .partial-edit-sgpolicy-fieldgroup-label-to {
+    margin-right: 45px;
+  }
+}
+
+.partial-edit-sgpolicy-ip-label {
+  margin-right: 25px;
+  min-width: 90px;
+  width: 100px;
+}
+
+.partial-edit-sgpolicy-ip-value {
+  margin-right: 15px;
+  margin-top: 2px;
 }
 
 .partial-edit-sgpolicy-input {

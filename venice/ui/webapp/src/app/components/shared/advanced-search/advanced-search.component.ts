@@ -529,11 +529,4 @@ export class AdvancedSearchComponent implements OnInit {
     }
     this.cancelEmitter.emit(null);
   }
-
-  /**
-   * Determine show/hide for search and cancel button
-   */
-  showSearchAndCancel(): boolean {
-    return (this.search !== '' && !this.showAdvancedPanel) || this.showAdvancedPanel;
-  }
 }

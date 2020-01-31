@@ -274,8 +274,12 @@ $vertical-gutter: 5px;
 
   button:disabled {
     .sgpolicy-icons-button {
-      cursor: default;
+      cursor: not-allowed;
       opacity: 0.3;
     }
   }
+}
+
+.sgpolicy-icons-button {
+  cursor: pointer;
 }

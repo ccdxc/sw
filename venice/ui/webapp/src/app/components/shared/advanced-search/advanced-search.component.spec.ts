@@ -187,10 +187,11 @@ describe('AdvancedSearchComponent', () => {
     let cancelBtn = fixture.debugElement.query(By.css('.advanced-search-bar-button-cancel'));
     expect(cancelBtn).toBeTruthy();
 
+    // cancel button should still be visible even when search input is cleared
     tu.sendClick(cancelBtn);
     fixture.detectChanges();
     cancelBtn = fixture.debugElement.query(By.css('.advanced-search-bar-button-cancel'));
-    expect(cancelBtn).toBeFalsy();
+    expect(cancelBtn).toBeTruthy();
     expect(component.search).toBeFalsy();
   });
 
