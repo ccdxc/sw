@@ -3076,7 +3076,7 @@ pds_flow_proto_to_flow_key (pds_flow_key_t *key,
         key->dst_ip.addr.v4_addr = flow_filter.dstaddr().v4addr();
     } else {
         key->src_ip.af = IP_AF_IPV6;
-        memcpy(key->src_ip.addr.v6_addr.addr8, 
+        memcpy(key->src_ip.addr.v6_addr.addr8,
                flow_filter.srcaddr().v6addr().c_str(),
                IP6_ADDR8_LEN);
         key->dst_ip.af = IP_AF_IPV6;
@@ -3347,15 +3347,11 @@ pds_device_proto_to_api_spec (pds_device_spec_t *api_spec,
     if ((ipaddr.af() == types::IP_AF_INET) ||
         (ipaddr.af() == types::IP_AF_INET6)) {
         ipaddr_proto_spec_to_api_spec(&api_spec->device_ip_addr, ipaddr);
-    } else {
-        return SDK_RET_INVALID_ARG;
     }
     MAC_UINT64_TO_ADDR(api_spec->device_mac_addr, macaddr);
     if ((gwipaddr.af() == types::IP_AF_INET) ||
         (gwipaddr.af() == types::IP_AF_INET6)) {
         ipaddr_proto_spec_to_api_spec(&api_spec->gateway_ip_addr, gwipaddr);
-    } else {
-        return SDK_RET_INVALID_ARG;
     }
     api_spec->bridging_en = proto_spec.bridgingen();
     api_spec->learning_en = proto_spec.learningen();
