@@ -27,6 +27,7 @@ type SgpolicyState struct {
 	groups                map[string]*SecurityGroupState
 	stateMgr              *Statemgr         // pointer to state manager
 	NodeVersions          map[string]string // Map for node -> version
+	ruleStats             []security.SGRuleStatus
 }
 
 func versionToInt(v string) int {
@@ -52,10 +53,10 @@ func convertPolicyAction(in string) string {
 
 // convertRules need not handle validation as the rules are already validate by the precommit api server hook
 func convertRules(sgp *SgpolicyState, sgPolicyKey string) (agentRules []netproto.PolicyRule) {
-	sgp.NetworkSecurityPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.NetworkSecurityPolicy.Spec.Rules))
+	sgp.ruleStats = make([]security.SGRuleStatus, len(sgp.NetworkSecurityPolicy.Spec.Rules))
 	for idx, v := range sgp.NetworkSecurityPolicy.Spec.Rules {
 		rhash := generateRuleHash(v, sgPolicyKey)
-		sgp.NetworkSecurityPolicy.Status.RuleStatus[idx].RuleHash = fmt.Sprintf("%d", rhash)
+		sgp.ruleStats[idx].RuleHash = fmt.Sprintf("%d", rhash)
 		if len(v.Apps) > 0 {
 			for _, app := range v.Apps {
 				a := netproto.PolicyRule{
@@ -144,6 +145,7 @@ func (sgp *SgpolicyState) GetKey() string {
 
 // Write writes the object to api server
 func (sgp *SgpolicyState) Write() error {
+	var err error
 
 	sgp.NetworkSecurityPolicy.Lock()
 	defer sgp.NetworkSecurityPolicy.Unlock()
@@ -153,14 +155,18 @@ func (sgp *SgpolicyState) Write() error {
 
 	//Do write only if changed
 	if sgp.stateMgr.propgatationStatusDifferent(prop, newProp) {
+		sgp.NetworkSecurityPolicy.Status.RuleStatus = make([]security.SGRuleStatus, len(sgp.ruleStats))
+		for i, ruleStat := range sgp.ruleStats {
+			sgp.NetworkSecurityPolicy.Status.RuleStatus[i] = ruleStat
+		}
 		sgp.NetworkSecurityPolicy.Status.PropagationStatus = *newProp
-		err := sgp.NetworkSecurityPolicy.Write()
+		err = sgp.NetworkSecurityPolicy.Write()
 		if err != nil {
 			sgp.NetworkSecurityPolicy.Status.PropagationStatus = *prop
 		}
 	}
 
-	return nil
+	return err
 }
 
 // Delete cleans up all state associated with the sg

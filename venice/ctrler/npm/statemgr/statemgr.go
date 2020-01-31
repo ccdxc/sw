@@ -499,10 +499,16 @@ func runPeriodicUpdater(queue chan updatable) {
 			}
 			pending[obj.GetKey()] = obj
 		case _ = <-ticker.C:
+			failedUpdate := []updatable{}
 			for _, obj := range pending {
-				obj.Write()
+				if err := obj.Write(); err != nil {
+					failedUpdate = append(failedUpdate, obj)
+				}
 			}
 			pending = make(map[string]updatable)
+			for _, obj := range failedUpdate {
+				pending[obj.GetKey()] = obj
+			}
 			if shouldExit == true {
 				log.Warnf("Exiting periodic updater")
 				return

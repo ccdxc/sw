@@ -143,7 +143,7 @@ func (it *integTestSuite) TestNpmSgPolicy(c *C) {
 			return false, gerr
 		}
 		if (tsgp.Status.PropagationStatus.Updated != int32(it.numAgents)) || (tsgp.Status.PropagationStatus.Pending != 0) ||
-			(tsgp.Status.PropagationStatus.MinVersion != "") {
+			(tsgp.Status.PropagationStatus.MinVersion != "" || len(tsgp.Status.RuleStatus) != len(sgp.Spec.Rules)) {
 			return false, tsgp
 		}
 		return true, nil

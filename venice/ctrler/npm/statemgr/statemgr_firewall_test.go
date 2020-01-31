@@ -120,8 +120,8 @@ func TestSgpolicyCreateDelete(t *testing.T) {
 	// verify we can find the sg policy
 	sgps, err := stateMgr.FindSgpolicy("default", "test-sgpolicy")
 	AssertOk(t, err, "Could not find the sg policy")
-	Assert(t, len(sgps.NetworkSecurityPolicy.Status.RuleStatus) == len(sgps.NetworkSecurityPolicy.Spec.Rules), "Rule status was not updated")
-	Assert(t, sgps.NetworkSecurityPolicy.Status.RuleStatus[0].RuleHash != "", "Rule hash was not updated")
+	Assert(t, len(sgps.ruleStats) == len(sgps.NetworkSecurityPolicy.Spec.Rules), "Rule status was not updated")
+	Assert(t, sgps.ruleStats[0].RuleHash != "", "Rule hash was not updated")
 
 	// update sg policy
 	newRule := security.SGRule{

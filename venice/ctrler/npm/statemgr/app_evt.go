@@ -17,6 +17,82 @@ import (
 	"github.com/pensando/sw/venice/utils/runtime"
 )
 
+const (
+	dNSDefaultPort = "53"
+	dNSProto       = "udp"
+
+	fTPDefaultPort = "21"
+	fTPProto       = "tcp"
+
+	tFTPDefaultPort = "69"
+	tFTPProto       = "udp"
+
+	sUNRPCDefaultPort = "111"
+	sUNRPCProto       = "tcp"
+
+	mSRPCDefaultPort = "135"
+	mSRPCProto       = "tcp"
+)
+
+func getProtoPorts(app *security.App) []*netproto.ProtoPort {
+
+	if app.Spec.ProtoPorts != nil && len(app.Spec.ProtoPorts) != 0 {
+		var protoPorts []*netproto.ProtoPort
+		for _, protoPort := range app.Spec.ProtoPorts {
+			p := &netproto.ProtoPort{
+				Protocol: protoPort.Protocol,
+				Port:     protoPort.Ports,
+			}
+			protoPorts = append(protoPorts, p)
+
+		}
+		return protoPorts
+	}
+	if app.Spec.ALG != nil {
+		switch app.Spec.ALG.Type {
+		case security.ALG_DNS.String():
+			return []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     dNSDefaultPort,
+					Protocol: dNSProto,
+				},
+			}
+		case security.ALG_MSRPC.String():
+			return []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     mSRPCDefaultPort,
+					Protocol: mSRPCProto,
+				},
+			}
+		case security.ALG_SunRPC.String():
+			return []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     sUNRPCDefaultPort,
+					Protocol: sUNRPCProto,
+				},
+			}
+
+		case security.ALG_FTP.String():
+			return []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     fTPDefaultPort,
+					Protocol: fTPProto,
+				},
+			}
+		case security.ALG_TFTP.String():
+			return []*netproto.ProtoPort{
+				&netproto.ProtoPort{
+					Port:     tFTPDefaultPort,
+					Protocol: tFTPProto,
+				},
+			}
+		}
+
+	}
+
+	return []*netproto.ProtoPort{}
+}
+
 // AppState is a wrapper for app object
 type AppState struct {
 	App      *ctkit.App `json:"-"` // app object
@@ -56,24 +132,12 @@ func NewAppState(app *ctkit.App, stateMgr *Statemgr) (*AppState, error) {
 
 // convertApp converts from npm state to netproto app
 func convertApp(aps *AppState) *netproto.App {
-	var protoPort []*netproto.ProtoPort
-
-	// convert protocol/port
-	for _, pp := range aps.App.Spec.ProtoPorts {
-		p := &netproto.ProtoPort{
-			Protocol: pp.Protocol,
-			Port:     pp.Ports,
-		}
-		protoPort = append(protoPort, p)
-	}
-
 	// build sg message
 	creationTime, _ := types.TimestampProto(time.Now())
 	app := netproto.App{
 		TypeMeta:   aps.App.TypeMeta,
 		ObjectMeta: agentObjectMeta(aps.App.ObjectMeta),
 		Spec: netproto.AppSpec{
-			ProtoPorts:     protoPort,
 			AppIdleTimeout: aps.App.Spec.Timeout,
 			ALG:            &netproto.ALG{},
 		},
@@ -147,6 +211,7 @@ func convertApp(aps *AppState) *netproto.App {
 		}
 	}
 
+	app.Spec.ProtoPorts = getProtoPorts(&aps.App.App)
 	return &app
 }
 
