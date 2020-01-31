@@ -47,22 +47,6 @@ TEST_F(port_svc_test, PortSpecTest) {
     ASSERT_EQ_EVENTUALLY(sdk_->ListKind("PortSpec").size(), 0) << "Port spec object was not deleted";
 }
 
-TEST_F(port_svc_test, PortStatusTest) {
-    port_svc_init(sdk_);
-
-    // set port status
-    port_svc_get()->update_port_status(1, port::PORT_OPER_STATUS_NONE, port::PORT_SPEED_100G);
-
-    ASSERT_EQ_EVENTUALLY(sdk_->ListKind("PortStatus").size(), 1) << "Port status object was not created";
-    ASSERT_EQ_EVENTUALLY(delphi::objects::PortStatus::List(sdk_)[0]->link_status().oper_state(), port::PORT_OPER_STATUS_NONE) << "invalid port status";
-
-    // change port status to up
-    port_svc_get()->update_port_status(1, port::PORT_OPER_STATUS_UP, port::PORT_SPEED_100G);
-
-    // verify opert state got changed
-    ASSERT_EQ_EVENTUALLY(delphi::objects::PortStatus::List(sdk_)[0]->link_status().oper_state(), port::PORT_OPER_STATUS_UP) << "invalid port status";
-}
-
 } // namespace
 
 int main(int argc, char **argv) {

@@ -5195,7 +5195,6 @@ port_event_timer_cb (void *timer, uint32_t timer_id, void *ctxt)
     hal_stream_port_status_update(port_event_info);
     sdk::linkmgr::port_set_leds(port_ctxt->port_num, port_ctxt->event);
     if_port_oper_state_process_event(port_ctxt->port_num, port_ctxt->event);
-    linkmgr::port_event_notify(&port_event_info);
     linkmgr::ipc::port_event_notify(&port_event_info);
 
     // Free ctxt

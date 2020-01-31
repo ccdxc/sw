@@ -44,17 +44,6 @@ public:
     // OnPortDelete gets called when PortSpec object is deleted
     virtual error OnPortSpecDelete(PortSpecPtr port);
 
-    // update_port_status updates port status in delphi
-    error update_port_status(::google::protobuf::uint32 port_id,
-                           PortOperState status,
-                           PortSpeed     speed);
-
-    // update_xcvr_status updates port status in delphi
-    error update_xcvr_status(::google::protobuf::uint32 port_id,
-                           PortXcvrState state, PortXcvrPid pid,
-                           CableType cable_type,
-                           void *xcvr_sprom);
-
 private:
     delphi::SdkPtr sdk_;
 };

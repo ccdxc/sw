@@ -92,9 +92,6 @@ xcvr_event_handler (sdk::ipc::ipc_msg_ptr msg, const void *ctxt)
     NIC_LOG_DEBUG("IPC, Rcvd xcvr event for id {}, state {}, cable type {}, pid {}",
                   st.id, st.xcvr.state, st.xcvr.phy, st.xcvr.pid);
     devmgr->XcvrEventHandler(&st);
-#if 0 // why this is required HAREESH - Check with Sarat.  TODO
-    devmgr->LinkEventHandler(&st);
-#endif
 }
 
 static void
@@ -202,7 +199,7 @@ dev_init:
         // Restore States will be done
         unlink(nicmgr_upgrade_state_file);
     }
-
+    
     evutil_add_check(thread->ev_loop(), &log_check, &log_flush, NULL);
 
     // upgrade init
@@ -214,7 +211,7 @@ dev_init:
     if (devapi_iris::is_hal_up()) {
         hal_up_event_handler(NULL, NULL);
     }
-
+    
     NIC_LOG_INFO("Listening to events");
 }
 

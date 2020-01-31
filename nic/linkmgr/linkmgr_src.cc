@@ -203,7 +203,6 @@ xcvr_event_port_get_ht_cb (void *ht_entry, void *ctxt)
     xcvr_event_info->port_num = port->port_num;
 
     // notify outside
-    xcvr_event_notify(xcvr_event_info);
     linkmgr::ipc::xcvr_event_notify(xcvr_event_info);
 
     return false;
@@ -487,7 +486,6 @@ port_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
         // update the front panel port number
         xcvr_event_info.port_num = pi_p->port_num;
 
-        xcvr_event_notify(&xcvr_event_info);
         linkmgr::ipc::xcvr_event_notify(&xcvr_event_info);
     }
 

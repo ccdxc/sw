@@ -631,30 +631,41 @@ DeviceManager::SetHalClient(devapi *dev_api)
 {
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH) {
+        enum DeviceType type = dev->GetType(); 
+        switch (type) {
+        case ETH: {
             Eth *eth_dev = (Eth *)dev;
             eth_dev->SetHalClient(dev_api);
+            break;
         }
 #ifdef IRIS
-        if (dev->GetType() == ACCEL) {
-            AccelDev *accel_dev = (AccelDev *)dev;
-            accel_dev->SetHalClient(dev_api);
-        }
-        if (dev->GetType() == NVME) {
-            NvmeDev *nvme_dev = (NvmeDev *)dev;
-            nvme_dev->SetHalClient(dev_api);
-        }
-        if (dev->GetType() == VIRTIO) {
-            VirtIODev *virtio_dev = (VirtIODev *)dev;
-            virtio_dev->SetHalClient(dev_api);
-        }
+       case ACCEL: {
+           AccelDev *accel_dev = (AccelDev *)dev;
+           accel_dev->SetHalClient(dev_api);
+           break;
+       }
+       case NVME: {
+           NvmeDev *nvme_dev = (NvmeDev *)dev;
+           nvme_dev->SetHalClient(dev_api);
+           break;
+       }
+       case VIRTIO: {
+           VirtIODev *virtio_dev = (VirtIODev *)dev;
+           virtio_dev->SetHalClient(dev_api);
+           break;
+       }
 #endif // IRIS
 #ifdef ATHENA
-        if (dev->GetType() == FTL) {
-            FtlDev *ftl_dev = (FtlDev *)dev;
-            ftl_dev->SetHalClient(dev_api);
+       case FTL: {
+           FtlDev *ftl_dev = (FtlDev *)dev;
+           ftl_dev->SetHalClient(dev_api);
+           break;
         }
-#endif
+#endif //ATHENA
+       default:
+           NIC_LOG_ERR("Invalid device type {} in SetHalClient",
+                       type);
+       }
     }
 }
 
@@ -696,7 +707,7 @@ DeviceManager::HalEventHandler(bool status)
 
         init_done = true;
     }
-
+       
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
         if (dev->GetType() == ETH) {
@@ -710,32 +721,43 @@ DeviceManager::HalEventHandler(bool status)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH) {
+        enum DeviceType type = dev->GetType();
+        switch (type) {
+        case ETH: {
             Eth *eth_dev = (Eth *)dev;
             if (eth_dev->GetEthType() != ETH_MNIC_OOB_MGMT) {
                 eth_dev->HalEventHandler(status);
             }
+            break;
         }
 #ifdef IRIS
-        if (dev->GetType() == ACCEL) {
+        case ACCEL: {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->HalEventHandler(status);
+            break;
         }
-        if (dev->GetType() == NVME) {
+        case NVME: {
             NvmeDev *nvme_dev = (NvmeDev *)dev;
             nvme_dev->HalEventHandler(status);
+            break;
         }
-        if (dev->GetType() == VIRTIO) {
+        case VIRTIO: {
             VirtIODev *virtio_dev = (VirtIODev *)dev;
             virtio_dev->HalEventHandler(status);
+            break;
         }
 #endif // IRIS
 #ifdef ATHENA
-        if (dev->GetType() == FTL) {
+        case FTL: {
             FtlDev *ftl_dev = (FtlDev *)dev;
             ftl_dev->HalEventHandler(status);
+            break;
         }
-#endif
+#endif // ATHENA
+        default:
+            NIC_LOG_ERR("Invalid device type {} in HalEventHandler",
+                       type); 
+        }
     }
 }
 
@@ -836,24 +858,34 @@ DeviceManager::DelphiMountEventHandler(bool mounted)
 
     for (auto it = devices.begin(); it != devices.end(); it++) {
         Device *dev = it->second;
-        if (dev->GetType() == ETH) {
+        enum DeviceType type = dev->GetType();
+        switch (type) {
+        case ETH: {
             Eth *eth_dev = (Eth *)dev;
             eth_dev->DelphiMountEventHandler(mounted);
+            break;
         }
 #ifdef IRIS
-        if (dev->GetType() == ACCEL) {
+        case ACCEL: {
             AccelDev *accel_dev = (AccelDev *)dev;
             accel_dev->DelphiMountEventHandler(mounted);
+            break;
         }
-        if (dev->GetType() == NVME) {
+        case NVME: {
             NvmeDev *nvme_dev = (NvmeDev *)dev;
             nvme_dev->DelphiMountEventHandler(mounted);
+            break;
         }
-        if (dev->GetType() == VIRTIO) {
+        case VIRTIO: {
             VirtIODev *virtio_dev = (VirtIODev *)dev;
             virtio_dev->DelphiMountEventHandler(mounted);
+            break;
         }
 #endif // IRIS
+        default:
+            NIC_LOG_ERR("Invalid device type {} in DelphiMountEventHandler",
+                            type);
+        }
     }
 }
 

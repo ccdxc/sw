@@ -1,4 +1,7 @@
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved
+//-----------------------------------------------------------------------------
+
 #include "linkmgr_src.hpp"
 #include "nic/sdk/lib/ipc/ipc.hpp"
 #include "nic/hal/core/event_ipc.hpp"
@@ -45,34 +48,8 @@ xcvr_event_notify (xcvr_event_info_t *xcvr_event_info)
     xcvr_state_t state    = xcvr_event_info->state;
     xcvr_pid_t   pid      = xcvr_event_info->pid;
 
-    switch (state) {
-    case xcvr_state_t::XCVR_REMOVED:
-        HAL_TRACE_DEBUG("Xcvr removed; port: {}", port_num);
-
-        send_xcvr_event(xcvr_event_info);
-        break;
-
-    case xcvr_state_t::XCVR_INSERTED:
-        HAL_TRACE_DEBUG("Xcvr inserted; port: {}", port_num);
-
-        send_xcvr_event(xcvr_event_info);
-        break;
-
-    case xcvr_state_t::XCVR_SPROM_READ:
-        HAL_TRACE_DEBUG("Xcvr sprom read; port: {}, pid: {}", port_num, pid);
-
-        send_xcvr_event(xcvr_event_info);
-        break;
-
-    case xcvr_state_t::XCVR_SPROM_READ_ERR:
-        HAL_TRACE_DEBUG("Xcvr sprom read error; port: {}", port_num);
-
-        send_xcvr_event(xcvr_event_info);
-        break;
-
-    default:
-        break;
-    }
+    HAL_TRACE_DEBUG("Xcvr {}; port: {}, pid: {}", sdk::types::xcvrStateToStr(state), port_num, pid);
+    send_xcvr_event(xcvr_event_info);
 }
 }    // namespace ipc
 }    // namespace linkmgr

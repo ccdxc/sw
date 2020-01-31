@@ -8,6 +8,7 @@
 #define __SDK_TYPES_HPP__
 
 #include <cinttypes>
+#include <string>
 
 #define XCVR_SPROM_SIZE 256
 
@@ -214,6 +215,33 @@ typedef enum lif_state {
     LIF_STATE_UP,
     LIF_STATE_DOWN,
 } lif_state_t;
+
+static inline
+std::string xcvrStateToStr (xcvr_state_t state) {
+    std::string str; 
+ 
+    switch (state) { 
+    case XCVR_REMOVED:
+        str = "xcvr removed";
+        break;
+    case XCVR_INSERTED:
+        str = "xcvr inserted"; 
+        break;
+    case XCVR_SPROM_PENDING:
+        str = "xcvr SPROM pending"; 
+        break;
+    case XCVR_SPROM_READ:
+        str = "xcvr SPROM read"; 
+        break; 
+    case XCVR_SPROM_READ_ERR:
+        str = "xcvr SPROM Read Err"; 
+        break; 
+    default: 
+        str = "xcvr Invalid State"; 
+    }
+    
+    return str; 
+} 
 
 }    // namespace types
 }    // namespace sdk

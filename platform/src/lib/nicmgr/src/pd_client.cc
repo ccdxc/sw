@@ -540,11 +540,6 @@ PdClient::init()
     mp_ = mpartition::factory(mpart_cfg_path_.c_str());
     assert(mp_);
 
-#if defined(ARTEMIS)
-    ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
-    SDK_ASSERT(ret == 0);
-#endif
-
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);

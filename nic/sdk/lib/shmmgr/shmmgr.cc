@@ -245,7 +245,6 @@ shmmgr::segment_alloc(const char *name, std::size_t size, bool create) {
     res = shm->find<shm_segment>(name);
     state = res.first;
     if (create) {
-        // free the exiting one in hardinit
         if (state != NULL) {
             addr = (void *)((uint64_t)state - state->offset);
             shm->deallocate(addr);

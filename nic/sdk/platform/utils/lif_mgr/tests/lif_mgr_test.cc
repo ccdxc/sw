@@ -20,10 +20,6 @@ const static char *kLif2QstateHBMLabel = "nicmgrqstate_map";
 
 class pciemgr *pciemgr;
 
-namespace nicmgr {
-    std::shared_ptr<nicmgr::NicMgrService> g_nicmgr_svc;
-}
-
 //------------------------------------------------------------------------------
 // lif_mgr Test Class
 //------------------------------------------------------------------------------
