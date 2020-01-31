@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -17,7 +17,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, tunobj, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING, node)
         parent.AddChild(self)
-        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF REMOTE MAPPING OBJECT ##########
         if (hasattr(spec, 'id')):
@@ -53,7 +53,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
             if self.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = self.SUBNET.V4RouteTable.HasDefaultRoute
         # Provider IP can be v4 or v6
-        self.ProviderIPAddr, self.TunFamily = EzAccessStore.GetProviderIPAddr(count)
+        self.ProviderIPAddr, self.TunFamily = EzAccessStoreClient[node].GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # For testspec
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
@@ -93,7 +93,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         spec.SubnetId = self.SUBNET.GetKey()
         spec.TunnelId = self.TUNNEL.GetKey()
         spec.MACAddr = self.MACAddr.getnum()
-        utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.Encap)
+        utils.GetRpcEncap(self.Node, self.MplsSlot, self.Vnid, spec.Encap)
         if utils.IsPipelineArtemis():
             utils.GetRpcIPAddr(self.ProviderIPAddr, spec.ProviderIp)
         return

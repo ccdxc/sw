@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -28,7 +28,7 @@ class TunnelObject(base.ConfigObjectBase):
         # TODO: Tunnel gets generated from VPC / DEVICE. Fix this
         self.DEVICE = parent
         self.__nhtype = topo.NhType.NONE
-        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF TUNNEL OBJECT #####################
         if (hasattr(spec, 'srcaddr')):
@@ -146,7 +146,7 @@ class TunnelObject(base.ConfigObjectBase):
         spec = grpcmsg.Request.add()
         spec.Id = self.GetKey()
         spec.VPCId = utils.PdsUuid.GetUUIDfromId(0) # TODO: Create Underlay VPC
-        utils.GetRpcEncap(self.EncapValue, self.EncapValue, spec.Encap)
+        utils.GetRpcEncap(self.Node, self.EncapValue, self.EncapValue, spec.Encap)
         spec.Type = self.Type
         utils.GetRpcIPAddr(self.LocalIPAddr, spec.LocalIP)
         utils.GetRpcIPAddr(self.RemoteIPAddr, spec.RemoteIP)
@@ -158,7 +158,7 @@ class TunnelObject(base.ConfigObjectBase):
             if self.Type is tunnel_pb2.TUNNEL_TYPE_SERVICE and self.Remote is True:
                 spec.RemoteService = self.Remote
                 utils.GetRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP)
-                utils.GetRpcEncap(self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
+                utils.GetRpcEncap(self.Node, self.RemoteServiceEncap, self.RemoteServiceEncap, spec.RemoteServiceEncap)
         if self.IsUnderlay():
             spec.NexthopId = utils.PdsUuid.GetUUIDfromId(self.NexthopId)
         elif self.IsUnderlayEcmp():
@@ -168,7 +168,7 @@ class TunnelObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id != self.GetKey():
             return False
-        if utils.ValidateTunnelEncap(self.EncapValue, spec.Encap) == False:
+        if utils.ValidateTunnelEncap(self.Node, self.EncapValue, spec.Encap) == False:
             return False
         if utils.ValidateRpcIPAddr(self.LocalIPAddr, spec.LocalIP) == False:
             return False
@@ -187,7 +187,7 @@ class TunnelObject(base.ConfigObjectBase):
                     return False
                 if utils.ValidateRpcIPAddr(self.RemoteServicePublicIP, spec.RemoteServicePublicIP) == False:
                     return False
-                if utils.ValidateTunnelEncap(self.RemoteServiceEncap, spec.RemoteServiceEncap) == False:
+                if utils.ValidateTunnelEncap(self.Node, self.RemoteServiceEncap, spec.RemoteServiceEncap) == False:
                     return False
         return True
 
@@ -327,7 +327,7 @@ class TunnelObjectClient(base.ConfigClientBase):
             for c in range(t.count):
                 obj = TunnelObject(node, parent, t, False)
                 self.Objs[node].update({obj.Id: obj})
-        EzAccessStore.SetTunnels(self.Objects(node))
+        EzAccessStoreClient[node].SetTunnels(self.Objects(node))
         ResmgrClient[node].CreateInternetTunnels()
         ResmgrClient[node].CreateVnicTunnels()
         ResmgrClient[node].CollectSvcTunnels()

@@ -5,7 +5,7 @@ import itertools
 import copy
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
 
@@ -81,7 +81,7 @@ class SubnetObject(base.ConfigObjectBase):
         else:
             self.HostIf = None
             self.HostIfIdx = int(getattr(spec, 'hostifidx', None))
-            node_uuid = EzAccessStore.GetNodeUuid(node)
+            node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
@@ -198,7 +198,7 @@ class SubnetObject(base.ConfigObjectBase):
             spec.EgV4SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
-        utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
+        utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if utils.IsPipelineApulu():
             if self.HostIfUuid:
                 spec.HostIf = self.HostIfUuid.GetUuid()
@@ -223,7 +223,7 @@ class SubnetObject(base.ConfigObjectBase):
             return False
         if spec.EgV6SecurityPolicyId[0] != utils.PdsUuid.GetUUIDfromId(self.EgV6SecurityPolicyIds[0]):
             return False
-        if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+        if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
             return False
         if utils.IsPipelineApulu():
             if self.HostIfUuid:

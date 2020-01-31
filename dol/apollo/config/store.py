@@ -4,11 +4,18 @@ from infra.common.logging   import logger as logger
 from infra.config.store     import ConfigStore as ConfigStore
 import infra.common.defs as defs
 
-class ApolloConfigStore:
-    def __init__(self):
-        self.objects    = ConfigStore.objects
-        self.templates  = ConfigStore.templates
-        self.specs      = ConfigStore.specs
+class EzAccessStore:
+# Static variables and methods
+    # Batch client
+    batchClient = None
+    templates = ConfigStore.templates
+    specs = ConfigStore.specs
+    dutNode = 1
+
+# Class members
+    def __init__(self, node):
+        self.Node = node
+        self.objects = ConfigStore.objects
 
         # Custom Database for easy access.
         self.trunks = ObjectDatabase()
@@ -17,24 +24,10 @@ class ApolloConfigStore:
         self.nexthopgroups = ObjectDatabase()
         self.device = None
         self.underlay_vpc = None
-        # Batch client
-        self.batchClient = None
         self.hostport = None
         self.switchport = None
         self.dutNode = 1
         return
-
-    def SetDUTNode(self, node):
-        self.dutNode = node
-
-    def GetDUTNode(self):
-        return self.dutNode
-
-    def SetBatchClient(self, obj):
-        self.batchClient = obj
-
-    def GetBatchClient(self):
-        return self.batchClient
 
     def SetTunnels(self, objs):
         if defs.TEST_TYPE == "IOTA":
@@ -200,9 +193,6 @@ class ApolloConfigStore:
     def SetTrunkingUplinks(self, objs):
         return self.trunks.SetAll(objs)
 
-    def GetUuidMap(self, node):
-        return self.uuid_map
-
     def GetNodeUuid(self, node):
         if node in self.uuid_map:
             node_uuid = self.uuid_map[node]
@@ -212,7 +202,32 @@ class ApolloConfigStore:
             return node_uuid
         return None
 
-    def SetUuidMap(self, uuid_map):
-        self.uuid_map = uuid_map
+    @staticmethod
+    def SetBatchClient(obj):
+        EzAccessStore.batchClient = obj
 
-EzAccessStore = ApolloConfigStore()
+    @staticmethod
+    def GetBatchClient():
+        return EzAccessStore.batchClient
+
+    @staticmethod
+    def SetDUTNode(node):
+        EzAccessStore.dutNode = node
+
+    @staticmethod
+    def GetDUTNode():
+        return EzAccessStore.dutNode
+
+    @staticmethod
+    def SetUuidMap(uuid_map):
+        EzAccessStore.uuid_map = uuid_map
+
+    @staticmethod
+    def GetUuidMap(node):
+        return EzAccessStore.uuid_map
+
+client = dict()
+def Init(node):
+    global client
+    storeObj = EzAccessStore(node)
+    client[node] = storeObj

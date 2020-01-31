@@ -9,7 +9,7 @@ import infra.config.base as base
 
 import apollo.config.utils as utils
 import apollo.config.topo as topo
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 # Start and End inclusive range
 def irange(start, end):
@@ -252,62 +252,62 @@ class Resmgr(base.ConfigObjectBase):
         self.InitializeHostInterfaces()
 
     def CreateInternetTunnels(self):
-        objs = EzAccessStore.GetIgwNonNatTunnels()
+        objs = EzAccessStoreClient[self.Node].GetIgwNonNatTunnels()
         if len(objs) != 0:
             self.RemoteInternetNonNatTunAllocator = utils.rrobiniter(objs)
-        objs = EzAccessStore.GetIgwNatTunnels()
+        objs = EzAccessStoreClient[self.Node].GetIgwNatTunnels()
         if len(objs) != 0:
             self.RemoteInternetNatTunAllocator = utils.rrobiniter(objs)
     
     def CollectSvcTunnels(self):
         if utils.IsPipelineArtemis():
-            objs = EzAccessStore.GetSvcTunnels()
+            objs = EzAccessStoreClient[self.Node].GetSvcTunnels()
             if len(objs) != 0:
                 self.SvcTunAllocator = utils.rrobiniter(objs)
-            objs = EzAccessStore.GetSvcTunnels(True)
+            objs = EzAccessStoreClient[self.Node].GetSvcTunnels(True)
             if len(objs) != 0:
                 self.RemoteSvcTunAllocator = utils.rrobiniter(objs)
     
     def CreateVnicTunnels(self):
-        objs = EzAccessStore.GetWorkloadTunnels()
+        objs = EzAccessStoreClient[self.Node].GetWorkloadTunnels()
         if len(objs) != 0:
             self.RemoteMplsVnicTunAllocator = utils.rrobiniter(objs)
     
     def CreateUnderlayTunnels(self):
-        objs = EzAccessStore.GetUnderlayTunnels()
+        objs = EzAccessStoreClient[self.Node].GetUnderlayTunnels()
         if len(objs) != 0:
             self.UnderlayTunAllocator = utils.rrobiniter(objs)
-        objs = EzAccessStore.GetUnderlayTunnels(ecmp=True)
+        objs = EzAccessStoreClient[self.Node].GetUnderlayTunnels(ecmp=True)
         if len(objs) != 0:
             self.UnderlayECMPTunAllocator = utils.rrobiniter(objs)
     
     def CreateUnderlayNHAllocator(self):
-        objs = EzAccessStore.GetUnderlayNexthops()
+        objs = EzAccessStoreClient[self.Node].GetUnderlayNexthops()
         if len(objs) != 0:
             self.UnderlayNHAllocator = utils.rrobiniter(objs)
     
     def CreateOverlayNHAllocator(self):
-        objs = EzAccessStore.GetOverlayNexthops()
+        objs = EzAccessStoreClient[self.Node].GetOverlayNexthops()
         if len(objs) != 0:
             self.OverlayNHAllocator = utils.rrobiniter(objs)
     
     def CreateDualEcmpNhAllocator(self):
-        objs = EzAccessStore.GetDualEcmpNexthops()
+        objs = EzAccessStoreClient[self.Node].GetDualEcmpNexthops()
         if len(objs) != 0:
             self.DualEcmpNhAllocator = utils.rrobiniter(objs)
     
     def CreateUnderlayNhGroupAllocator(self):
-        objs = EzAccessStore.GetUnderlayNhGroups()
+        objs = EzAccessStoreClient[self.Node].GetUnderlayNhGroups()
         if len(objs) != 0:
             self.UnderlayNhGroupAllocator = utils.rrobiniter(objs)
     
     def CreateOverlayNhGroupAllocator(self):
-        objs = EzAccessStore.GetOverlayNhGroups()
+        objs = EzAccessStoreClient[self.Node].GetOverlayNhGroups()
         if len(objs) != 0:
             self.OverlayNhGroupAllocator = utils.rrobiniter(objs)
     
     def CreateDualEcmpNhGroupAllocator(self):
-        objs = EzAccessStore.GetDualEcmpNhGroups()
+        objs = EzAccessStoreClient[self.Node].GetDualEcmpNhGroups()
         if len(objs) != 0:
             self.DualEcmpNhGroupAllocator = utils.rrobiniter(objs)
 

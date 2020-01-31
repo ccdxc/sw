@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -21,7 +21,7 @@ import nh_pb2 as nh_pb2
 class NexthopObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec):
         super().__init__(api.ObjectTypes.NEXTHOP, node)
-        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF NEXTHOP OBJECT #####################
         if (hasattr(spec, 'id')):
@@ -272,7 +272,7 @@ class NexthopObjectClient(base.ConfigClientBase):
         return self.__num_nh_per_vpc
 
     def AssociateObjects(self, node):
-        EzAccessStore.SetNexthops(self.Objects(node))
+        EzAccessStoreClient[node].SetNexthops(self.Objects(node))
         ResmgrClient[node].CreateUnderlayNHAllocator()
         ResmgrClient[node].CreateOverlayNHAllocator()
         ResmgrClient[node].CreateDualEcmpNhAllocator()

@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -40,8 +40,8 @@ class VnicObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, rxmirror, txmirror):
         super().__init__(api.ObjectTypes.VNIC, node)
         parent.AddChild(self)
-        if (EzAccessStore.IsDeviceLearningEnabled()) or \
-                (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceLearningEnabled()) or \
+                (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         ################# PUBLIC ATTRIBUTES OF VNIC OBJECT #####################
         if (hasattr(spec, 'id')):
@@ -145,7 +145,7 @@ class VnicObject(base.ConfigObjectBase):
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_NONE
         spec.MACAddress = self.MACAddr.getnum()
         spec.SourceGuardEnable = self.SourceGuard
-        utils.GetRpcEncap(self.MplsSlot, self.Vnid, spec.FabricEncap)
+        utils.GetRpcEncap(self.Node, self.MplsSlot, self.Vnid, spec.FabricEncap)
         for rxmirror in self.RxMirror:
             spec.RxMirrorSessionId.append(int(rxmirror))
         for txmirror in self.TxMirror:
@@ -170,11 +170,11 @@ class VnicObject(base.ConfigObjectBase):
             return False
         # if int(spec.SubnetId) != self.SUBNET.SubnetId:
         #     return False
-        if EzAccessStore.IsDeviceEncapTypeMPLS():
-            if utils.ValidateTunnelEncap(self.MplsSlot, spec.FabricEncap) is False:
+        if EzAccessStoreClient[self.Node].IsDeviceEncapTypeMPLS():
+            if utils.ValidateTunnelEncap(self.Node, self.MplsSlot, spec.FabricEncap) is False:
                 return False
         else:
-            if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+            if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
                 return False
         if utils.IsPipelineApulu():
             if self.HostIfUuid:

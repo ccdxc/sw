@@ -1,11 +1,12 @@
 #! /usr/bin/python3
-from apollo.config.store import EzAccessStore
-import apollo.config.utils as utils
+import infra.common.parser as parser
 import apollo.config.generator as generator
+import apollo.config.resmgr as resmgr
+import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
 from infra.common.glopts import GlobalOptions
-import infra.common.parser as parser
+from apollo.config.store import EzAccessStore
 
 def __get_topo_file():
     topo_file = '%s.topo' % GlobalOptions.topology
@@ -36,8 +37,9 @@ def __get_topo_spec():
 
 def Main():
     topospec = __get_topo_spec()
+    nodes = len(topospec.node)
     EzAccessStore.SetDUTNode(topospec.dutnode)
-    
+
     for node in topospec.node:
         generator.Main(node.id, node)
     return

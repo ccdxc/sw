@@ -4,7 +4,7 @@ import enum
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 
@@ -60,9 +60,9 @@ class PortObjectClient:
                 return topo.PortTypes.SWITCH
             elif mode == 'host':
                 return topo.PortTypes.HOST
-            if EzAccessStore.IsHostMode():
+            if EzAccessStoreClient[node].IsHostMode():
                 return topo.PortTypes.SWITCH
-            elif EzAccessStore.IsBitwMode():
+            elif EzAccessStoreClient[node].IsBitwMode():
                 if port == UplinkPorts.UplinkPort0:
                     return topo.PortTypes.HOST
                 elif port == UplinkPorts.UplinkPort1:
@@ -79,9 +79,9 @@ class PortObjectClient:
             obj = PortObject(node, port, mode)
             self.__objs.update({obj.PortId: obj})
             if obj.IsHostPort():
-                EzAccessStore.SetHostPort(obj.Port)
+                EzAccessStoreClient[node].SetHostPort(obj.Port)
             elif obj.IsSwitchPort():
-                EzAccessStore.SetSwitchPort(obj.Port)
+                EzAccessStoreClient[node].SetSwitchPort(obj.Port)
         return
 
 client = PortObjectClient()

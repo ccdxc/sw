@@ -12,7 +12,8 @@ import apollo.config.topo as topo
 import apollo.config.objects.dhcprelay as dhcprelay
 
 from infra.common.logging import logger
-from apollo.config.store import EzAccessStore
+from apollo.config.store import EzAccessStore as EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 def IsAlreadySelected(obj, objs):
     if topo.ChosenFlowObjs.use_selected_objs is True and obj in objs:
@@ -33,7 +34,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.__routeTblObj = routetblobj
         self.__tunobj = tunobj
         self.__policyobj = policyobj
-        self.__dev = EzAccessStore.GetDevice()
+        self.__dev = EzAccessStoreClient[self.Node].GetDevice()
         self.Show()
         return
 
@@ -45,8 +46,8 @@ class FlowMapObject(base.ConfigObjectBase):
         obj.tunnel = self.__tunobj
         obj.devicecfg = self.__dev
         #TODO: Handle host mode
-        obj.hostport = EzAccessStore.GetHostPort()
-        obj.switchport = EzAccessStore.GetSwitchPort()
+        obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
+        obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
         obj.dhcprelay = dhcprelay.client.GetDhcpRelayObject(EzAccessStore.GetDUTNode())
         utils.DumpTestcaseConfig(obj)
         return

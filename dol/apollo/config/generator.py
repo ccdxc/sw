@@ -21,6 +21,7 @@ import apollo.config.objects.interface as interface
 import apollo.config.objects.port as port
 import apollo.config.objects.dhcprelay as dhcp_relay
 import apollo.config.objects.nat_pb as nat_pb
+import apollo.config.store as store
 import apollo.config.utils as utils
 
 from infra.common.logging import logger as logger
@@ -143,6 +144,7 @@ def Main(node, topospec, ip=None):
     agentapi.Init(node, ip)
 
     resmgr.Init(node)
+    store.Init(node)
 
     __generate(node, topospec)
 

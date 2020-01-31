@@ -12,12 +12,13 @@ import os
 
 import types_pb2 as types_pb2
 import tunnel_pb2 as tunnel_pb2
+import infra.common.defs as defs
+import apollo.config.agent.api as api
+import apollo.config.topo as topo
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
-import apollo.config.topo as topo
-import apollo.config.agent.api as api
+from apollo.config.store import client as EzAccessStoreClient
 from infra.common.glopts import GlobalOptions
-import infra.common.defs as defs
 
 IP_VERSION_6 = 6
 IP_VERSION_4 = 4
@@ -175,10 +176,10 @@ def ValidateRpcIPAddr(srcaddr, dstaddr):
             return False
     return True
 
-def ValidateTunnelEncap(srcencap, dstencap):
-    if dstencap.type != EzAccessStore.GetDeviceEncapType():
+def ValidateTunnelEncap(node, srcencap, dstencap):
+    if dstencap.type != EzAccessStoreClient[node].GetDeviceEncapType():
         return False
-    if EzAccessStore.IsDeviceEncapTypeMPLS():
+    if EzAccessStoreClient[node].IsDeviceEncapTypeMPLS():
          if dstencap.value.MPLSTag != srcencap:
              return False
     else:
@@ -512,9 +513,9 @@ def GetRpcIPRange(addrLow, addrHigh, addrRange):
         GetRpcIPAddr(addrHigh, addrRange.IPv4Range.High)
     return
 
-def GetRpcEncap(mplsslot, vxlanid, encap):
-    encap.type = EzAccessStore.GetDeviceEncapType()
-    if EzAccessStore.IsDeviceEncapTypeMPLS():
+def GetRpcEncap(node, mplsslot, vxlanid, encap):
+    encap.type = EzAccessStoreClient[node].GetDeviceEncapType()
+    if EzAccessStoreClient[node].IsDeviceEncapTypeMPLS():
          encap.value.MPLSTag  = mplsslot
     else:
          encap.value.Vnid  = vxlanid
@@ -661,7 +662,7 @@ def MergeDicts(objs1, objs2):
 
 def getTunInfo(nh_type, id):
     if nh_type == "tep":
-        tuns = EzAccessStore.tunnels.GetAll()
+        tuns = EzAccessStoreClient[node].tunnels.GetAll()
         for tun in tuns:
             if tun.Id == id:
                 return (tun.EncapValue, str(tun.RemoteIPAddr))

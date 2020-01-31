@@ -7,7 +7,7 @@ import ipaddress
 from infra.common.logging import logger
 import infra.common.objects as objects
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -83,7 +83,7 @@ class InterfaceObject(base.ConfigObjectBase):
         info = None
         self.lifns = getattr(spec, 'lifns', None)
         if utils.IsHostLifSupported() and self.lifns:
-            self.obj_helper_lif = lif.LifObjectHelper()
+            self.obj_helper_lif = lif.LifObjectHelper(node)
             self.__create_lifs(spec)
         info = InterfaceInfoObject(self.Type, spec, ifspec)
         self.IfInfo = info
@@ -189,7 +189,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         spec.ethifidx = 0
         spec.status = 'UP'
         spec.mode = 'host'
-        spec.lifspec = ifspec.lif.Get(EzAccessStore)
+        spec.lifspec = ifspec.lif.Get(EzAccessStoreClient[node])
         for obj in ResmgrClient[node].HostIfs.values():
             spec.id = obj.IfName
             spec.ifinfo = obj

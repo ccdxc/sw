@@ -13,6 +13,7 @@ import tunnel_pb2 as tunnel_pb2
 
 from infra.common.logging import logger
 from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 # Flow based on Local and Remote mapping
 class FlowMapObject(base.ConfigObjectBase):
@@ -25,7 +26,7 @@ class FlowMapObject(base.ConfigObjectBase):
         self.FwdMode = fwdmode
         self.__lobj = lobj
         self.__robj = robj
-        self.__dev = EzAccessStore.GetDevice()
+        self.__dev = EzAccessStoreClient[self.Node].GetDevice()
         self.__routeobj = routeobj
         self.Show()
         return

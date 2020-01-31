@@ -7,6 +7,7 @@ from collections import OrderedDict, defaultdict
 from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -27,7 +28,7 @@ MAX_ROUTE_PRIORITY = 1
 class RouteObject():
     def __init__(self, node, ipaddress, priority=0, nh_type="", nhid=0, nhgid=0, vpcid=0, tunnelid=0, nat_type=None):
         super().__init__()
-        if (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
         self.Id = next(ResmgrClient[node].RouteIdAllocator)
         self.ipaddr = ipaddress
@@ -294,9 +295,9 @@ class RouteTableObject(base.ConfigObjectBase):
         obj.localmapping = self.l_obj
         obj.route = self
         obj.tunnel = self.TUNNEL
-        obj.hostport = EzAccessStore.GetHostPort()
-        obj.switchport = EzAccessStore.GetSwitchPort()
-        obj.devicecfg = EzAccessStore.GetDevice()
+        obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
+        obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
+        obj.devicecfg = EzAccessStoreClient[self.Node].GetDevice()
         obj.vpc = self.VPC
         utils.DumpTestcaseConfig(obj)
         return

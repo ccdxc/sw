@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -232,7 +232,7 @@ class VpcObject(base.ConfigObjectBase):
         spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
         spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
-        utils.GetRpcEncap(self.Vnid, self.Vnid, spec.FabricEncap)
+        utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
             utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
         return
@@ -242,7 +242,7 @@ class VpcObject(base.ConfigObjectBase):
             return False
         if spec.Type != self.Type:
             return False
-        if utils.ValidateTunnelEncap(self.Vnid, spec.FabricEncap) is False:
+        if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
             return False
         if utils.IsPipelineApulu():
             if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():
@@ -342,12 +342,12 @@ class VpcObjectClient(base.ConfigClientBase):
                 obj = VpcObject(node, p, c, p.count)
                 self.Objs[node].update({obj.VPCId: obj})
                 if obj.IsUnderlayVPC():
-                    EzAccessStore.SetUnderlayVPC(obj)
+                    EzAccessStoreClient[node].SetUnderlayVPC(obj)
         # Write the flow and nexthop config to agent hook file
         if utils.IsFlowInstallationNeeded():
             self.__write_cfg(vpc_count)
         if utils.IsPipelineApulu() and not \
-                (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+                (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             # Associate Nexthop objects
             NhGroupClient.CreateAllocator(node)
             NhClient.AssociateObjects(node)

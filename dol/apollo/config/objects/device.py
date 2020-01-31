@@ -4,7 +4,7 @@ import os
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 from apollo.config.objects.nexthop_group import client as NhGroupClient
 
 from apollo.config.resmgr import client as ResmgrClient
@@ -194,7 +194,7 @@ class DeviceObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, node, topospec):
         obj = DeviceObject(node, topospec.device)
         self.Objs[node].update({0: obj})
-        EzAccessStore.SetDevice(obj)
+        EzAccessStoreClient[node].SetDevice(obj)
         return
 
     def CreateObjects(self, node):

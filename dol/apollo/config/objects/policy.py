@@ -9,6 +9,7 @@ from collections import defaultdict
 from infra.common.logging import logger
 
 from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 import apollo.config.agent.api as api
 from apollo.config.resmgr import client as ResmgrClient
@@ -276,9 +277,9 @@ class PolicyObject(base.ConfigObjectBase):
         obj.policy = self
         obj.route = self.l_obj.VNIC.SUBNET.V6RouteTable if self.AddrFamily == 'IPV6' else self.l_obj.VNIC.SUBNET.V4RouteTable
         obj.tunnel = obj.route.TUNNEL
-        obj.hostport = EzAccessStore.GetHostPort()
-        obj.switchport = EzAccessStore.GetSwitchPort()
-        obj.devicecfg = EzAccessStore.GetDevice()
+        obj.hostport = EzAccessStoreClient[self.Node].GetHostPort()
+        obj.switchport = EzAccessStoreClient[self.Node].GetSwitchPort()
+        obj.devicecfg = EzAccessStoreClient[self.Node].GetDevice()
         # select a random rule for this testcase
         if utils.IsPipelineApollo():
             # TODO: move apollo also to random rule

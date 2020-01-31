@@ -7,13 +7,14 @@ import model_sim.src.model_wrap as model_wrap
 
 import infra.common.defs        as defs
 import infra.common.objects     as objects
+import infra.config.base        as base
+import apollo.config.utils      as utils
+import apollo.config.objects.host.queue_type as queue_type
+
 from infra.common.logging       import logger
 from infra.common.glopts        import GlobalOptions
-import infra.config.base        as base
-
-import apollo.config.utils as utils
 from apollo.config.store        import EzAccessStore
-import apollo.config.objects.host.queue_type as queue_type
+from apollo.config.store        import client as EzAccessStoreClient
 
 NICMGR_DEV_CMD_TIMEOUT = 10
 
@@ -138,7 +139,8 @@ class LifObject(base.ConfigObjectBase):
         return super().IsFilterMatch(spec.filters)
 
 class LifObjectHelper:
-    def __init__(self):
+    def __init__(self, node):
+        self.Node = node
         self.lifs = []
 
     def Generate(self, ifinfo, spec, namespace):
@@ -159,7 +161,7 @@ class LifObjectHelper:
         for lif in self.lifs:
             lif.Configure()
             lif.ConfigureQueueTypes()
-        EzAccessStore.objects.SetAll(self.lifs)
+        EzAccessStoreClient[self.Node].objects.SetAll(self.lifs)
 
     def GetRandomHostLif(self):
         if len(self.lifs) == 0:

@@ -3,7 +3,7 @@ import pdb
 
 from infra.common.logging import logger
 
-from apollo.config.store import EzAccessStore
+from apollo.config.store import client as EzAccessStoreClient
 
 from apollo.config.resmgr import client as ResmgrClient
 from apollo.config.resmgr import Resmgr
@@ -21,8 +21,8 @@ class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, ipversion, count):
         super().__init__(api.ObjectTypes.MAPPING, node)
         parent.AddChild(self)
-        if (EzAccessStore.IsDeviceLearningEnabled()) or \
-                (EzAccessStore.IsDeviceOverlayRoutingEnabled()):
+        if (EzAccessStoreClient[node].IsDeviceLearningEnabled()) or \
+                (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
 
         self.__is_public = getattr(spec, 'public', False)
@@ -44,7 +44,7 @@ class LocalMappingObject(base.ConfigObjectBase):
                 self.PublicIPAddr = next(ResmgrClient[node].PublicIpv6AddressAllocator)
             if parent.SUBNET.V6RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V6RouteTable.HasDefaultRoute
-            self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_6)
+            self.SvcIPAddr, self.SvcPort = EzAccessStoreClient[node].GetSvcMapping(utils.IP_VERSION_6)
         else:
             self.AddrFamily = 'IPV4'
             if getattr(spec, 'lipaddr', None) != None:
@@ -57,12 +57,12 @@ class LocalMappingObject(base.ConfigObjectBase):
                 self.PublicIPAddr = next(ResmgrClient[node].PublicIpAddressAllocator)
             if parent.SUBNET.V4RouteTable:
                 self.HasDefaultRoute = parent.SUBNET.V4RouteTable.HasDefaultRoute
-            self.SvcIPAddr, self.SvcPort = EzAccessStore.GetSvcMapping(utils.IP_VERSION_4)
+            self.SvcIPAddr, self.SvcPort = EzAccessStoreClient[node].GetSvcMapping(utils.IP_VERSION_4)
         self.Label = 'NETWORKING'
         self.FlType = "MAPPING"
         self.IP = str(self.IPAddr) # for testspec
         # Provider IP can be v4 or v6
-        self.ProviderIPAddr, self.TunFamily = EzAccessStore.GetProviderIPAddr(count)
+        self.ProviderIPAddr, self.TunFamily = EzAccessStoreClient[node].GetProviderIPAddr(count)
         self.ProviderIP = str(self.ProviderIPAddr) # for testspec
         if self.PublicIPAddr is not None:
             self.PublicIP = str(self.PublicIPAddr) # for testspec
@@ -71,7 +71,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         # different rules will be applied
         self.AppPort = ResmgrClient[node].TransportSrcPort
         self.LBPort = ResmgrClient[node].TransportSrcLBPort
-        self.UnderlayVPCId = EzAccessStore.GetUnderlayVPCId()
+        self.UnderlayVPCId = EzAccessStoreClient[node].GetUnderlayVPCId()
 
         ################# PRIVATE ATTRIBUTES OF MAPPING OBJECT #####################
         self.DeriveOperInfo()
@@ -105,7 +105,7 @@ class LocalMappingObject(base.ConfigObjectBase):
         spec.SubnetId = self.VNIC.SUBNET.GetKey()
         spec.VnicId = self.VNIC.GetKey()
         spec.MACAddr = self.VNIC.MACAddr.getnum()
-        utils.GetRpcEncap(self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
+        utils.GetRpcEncap(self.Node, self.VNIC.MplsSlot, self.VNIC.Vnid, spec.Encap)
         spec.PublicIP.Af = types_pb2.IP_AF_NONE
         if self.PublicIPAddr is not None:
             utils.GetRpcIPAddr(self.PublicIPAddr, spec.PublicIP)
