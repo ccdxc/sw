@@ -507,7 +507,7 @@ def __bringUpWorkloads(wloads):
         AddWorkloadBringUp(req, wload)
     ret = Trigger_BringUpWorkloadsRequest(req)
     if ret != types.status.SUCCESS:
-        return resp, types.status.FAILURE
+        return types.status.FAILURE
 
     return ret
 
@@ -732,11 +732,6 @@ def Trigger_IsSuccess(resp):
     if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
     for cmd in resp.commands:
         if cmd.exit_code != 0: return False
-    return True
-
-def IsApiResponseOk(resp):
-    if resp is None: return False
-    if resp.api_response.api_status != types_pb2.API_STATUS_OK: return False
     return True
 
 # ================================

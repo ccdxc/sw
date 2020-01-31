@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 import yaml
 import json
-import pdb
 
 class Dict2Object(object):
     def __init__(self, d):
@@ -13,7 +12,7 @@ class Dict2Object(object):
 
 def YmlParse(filename):
     with open(filename, 'r') as f:
-        obj = Dict2Object(yaml.load(f))
+        obj = Dict2Object(yaml.load(f, Loader=yaml.FullLoader))
     f.close()
     return obj
 

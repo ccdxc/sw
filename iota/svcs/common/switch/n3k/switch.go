@@ -18,7 +18,6 @@ var (
 	promptRegex        = regexp.MustCompile("# ")
 	configRegex        = regexp.MustCompile(`\(config\)\# `)
 	configIfRegex      = regexp.MustCompile(`\(config-if\)\# `)
-	configVlanRegex    = regexp.MustCompile(`\(config-vlan\)\# `)
 	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
 	configPmapQos      = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
 	configClassQos     = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
@@ -52,7 +51,7 @@ func (wp *writerProxy) Write(p []byte) (n int, err error) {
 	return wp.w.Write(p)
 }
 
-// Close clodes proxy
+// Close close proxy
 func (wp *writerProxy) Close() error {
 	return nil
 }
@@ -374,8 +373,8 @@ func spawnExp(n3k *ConnectCtx, buf *bytes.Buffer) (expect.Expecter, error) {
 	return exp, err
 }
 
-// CheckInterfaceConigured Checks if interface is configured with specified parameters.
-func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, timeout time.Duration) (string, error) {
+// CheckInterfaceConfigured Checks if interface is configured with specified parameters.
+func CheckInterfaceConfigured(n3k *ConnectCtx, port, mode, status, speed string, timeout time.Duration) (string, error) {
 	buf := &bytes.Buffer{}
 	exp, err := spawnExp(n3k, buf)
 	if err != nil {
@@ -401,19 +400,12 @@ func CheckInterfaceConigured(n3k *ConnectCtx, port, mode, status, speed string, 
 	return buf.String(), err
 
 }
+
 func confIfCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
 	if err := exp.Send(cmd); err != nil {
 		return err
 	}
 	_, _, err := exp.Expect(configIfRegex, timeout)
-	return err
-}
-
-func confVlanCmd(exp expect.Expecter, cmd string, timeout time.Duration) error {
-	if err := exp.Send(cmd); err != nil {
-		return err
-	}
-	_, _, err := exp.Expect(configVlanRegex, timeout)
 	return err
 }
 

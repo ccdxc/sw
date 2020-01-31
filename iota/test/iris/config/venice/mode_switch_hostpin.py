@@ -56,7 +56,7 @@ def Main(step):
         req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
         for n in nodes:
             #hack for now, need to set date
-            api.Logger.info("Checking Tranisition phase for node : %s" % n)
+            api.Logger.info("Checking Transition phase for node : %s" % n)
             check_state_cmd = "show naples --json"
             time.sleep(30)
             common.AddPenctlCommand(req, n, check_state_cmd)

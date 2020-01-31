@@ -33,9 +33,6 @@ common:
     debugs:
         -   step : verif.utils.collect_logs_and_cores
 
-    debugs:
-        -   step : verif.utils.collect_logs_and_cores
-
 testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/

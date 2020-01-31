@@ -316,7 +316,7 @@ class Node(object):
         nic_type = self.__inst.Resource.NICType
 
         role = GetNodePersonalityByNicType(nic_type)
-        if role == None:
+        if role is None:
             os.system("cp /warmd.json '%s/iota/logs" % GlobalOptions.topdir)
             os.system("cat /warmd.json")
             Logger.error("Unknown NIC Type : %s %s" % (nic_type, role))
@@ -464,14 +464,14 @@ class Node(object):
         return self.__role != topo_pb2.PERSONALITY_VENICE
 
     def GetDevicesNames(self):
-        return sort(self.__devices.keys())
+        return sorted(self.__devices.keys())
 
     def GetDevices(self):
         return self.__devices
 
     def __get_device(self, device = None):
         key = ""
-        if device == None:
+        if device is None:
             devices = list(self.__devices.keys())
             devices.sort()
             key = devices[0]
@@ -611,7 +611,7 @@ class Node(object):
                     nic_entity.name = device.Name()
 
         script = self.GetStartUpScript()
-        if script != None:
+        if script is not None:
             msg.startup_script = script
 
         return types.status.SUCCESS
@@ -881,9 +881,6 @@ class Topology(object):
     def GetMgmtIPAddress(self, node_name):
         return self.__nodes[node_name].MgmtIpAddress()
 
-    def GetMgmtIPAddress(self, node_name):
-         return self.__nodes[node_name].MgmtIpAddress()
-
     def GetNaplesUuidMap(self):
         uuid_map = {}
         for n in self.__nodes.values():
@@ -972,10 +969,10 @@ class Topology(object):
     def GetNodes(self):
         return list(self.__nodes.values())
 
-    def SetUpTestBedInHostToHostNetworkMode():
+    def SetUpTestBedInHostToHostNetworkMode(self):
         return store.GetTestbed().SetUpTestBedInHostToHostNetworkMode()
 
-    def SetupTestBedNetwork():
+    def SetupTestBedNetwork(self):
         return store.GetTestbed().SetupTestBedNetwork()
 
     def GetDefaultDeivce(self, node_name):

@@ -508,7 +508,7 @@ class _Testbed:
         vlans = self.GetVlanRange()
         for ip, switch in switch_ips.items():
              unsetMsg.vlan_config.unset = True
-             setMsg.vlan_config.vlan_range = vlans
+             unsetMsg.vlan_config.vlan_range = vlans
              unsetMsg.vlan_config.native_vlan = self.GetNativeVlan()
 
         resp = api.DoSwitchOperation(unsetMsg)
@@ -563,7 +563,7 @@ class _Testbed:
                         switch_ctx.username = nw.SwitchUsername
                         switch_ctx.password = nw.SwitchPassword
                         switch_ctx.ip = nw.SwitchIP
-                        native_vlan.append(self.AllocateVlan())
+                        native_vlans.append(self.AllocateVlan())
                         msgs.append(msg)
                         msg.vlan_config.unset = False
                         msg.vlan_config.vlans.append(native_vlans[index])

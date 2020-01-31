@@ -326,7 +326,7 @@ func (sw *nexus3k) CheckSwitchConfiguration(port string, mode PortMode, status P
 	} else {
 		speedStr = speed.String()
 	}
-	buf, err := n3k.CheckInterfaceConigured(sw.ctx, port, mode.String(), status.String(),
+	buf, err := n3k.CheckInterfaceConfigured(sw.ctx, port, mode.String(), status.String(),
 		speedStr, 5*time.Second)
 
 	return buf, err
