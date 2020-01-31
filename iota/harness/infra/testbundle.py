@@ -1,7 +1,9 @@
 #! /usr/bin/python3
+import json
 import pdb
 import time
 import traceback
+import os
 
 import iota.harness.infra.store as store
 import iota.harness.infra.types as types
@@ -15,6 +17,66 @@ import iota.harness.infra.utils.timeprofiler as timeprofiler
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
+
+class TestBundleResults(object):
+    def __init__(self, testbed=None, repo=None, sha=None, shaTitle=None, targetId=None):
+        #these var names map directly to test results viewer schema
+        #do not change.
+        if testbed:
+            self.Testbed = testbed
+        else:
+            self.Testbed = os.getenv("TESTBED_ID","jobd")
+        if repo:
+            self.Repository = repo
+        else:
+            self.Repository = os.getenv("JOB_REPOSITORY")
+        if repo:
+            self.SHA = sha
+        else:
+            self.SHA = os.getenv("")
+        if shaTitle:
+            self.SHATitle = shaTitle
+        else:
+            self.SHATitle = os.getenv("")
+        if targetId:
+            self.TargetID = targetId        
+        else:
+            self.TargetID = os.getenv("TARGET_ID")
+        self.Testcases = []
+
+    def addTestcase(self, tc):
+        self.Testcases.append(tc)
+
+    def getTestCaseResults(self):
+        return self.Testcases
+
+
+class TestCaseResult(object):
+    def __init__(self, tcId, name, desc, owner, area, subArea, feature):
+        #these var names map directly to test results viewer schema
+        #do not change.
+        self.TestcaseID = tcId
+        self.Name = name
+        self.Description = desc
+        self.Result = -1
+        self.Owner = owner
+        self.Area = area
+        self.SubArea = subArea
+        self.Feature = feature
+        self.FinishTime = None
+        self.Duration = 0
+        self.Detail = ""
+
+    def closeResult(self, result, finishTime, duration, detail):
+        if result == 0:
+            self.Result = 1
+        else:
+            self.Result = -1
+        self.FinishTime = finishTime
+        self.Duration = duration
+        self.Detail = detail
+
 
 class TestBundle:
     def __init__(self, bunfile, parent):
@@ -39,7 +101,7 @@ class TestBundle:
         self.__load_bundle()
         self.result = types.status.FAILURE
         self.selected = None
-        return
+        self.__tbunResults = TestBundleResults()
 
     def Name(self):
         return self.__spec.meta.name
@@ -75,6 +137,10 @@ class TestBundle:
     def GetSelector(self):
         return self.selected
 
+    def getTestBundleResults(self, mode=None):
+        if mode == 'json':
+            return json.dumps(self.__tbunResults)
+        return self.__tbunResults
 
     def __resolve_selector(self):
         if getattr(self.__spec, "selector", None):
@@ -126,22 +192,37 @@ class TestBundle:
                types.status.str(self.result).title(), self.__timer.TotalTime()))
         return types.status.SUCCESS
 
+    def addTcResult(self, tcr):
+        self.__tbunResults.addTestcase(tcr)
+
     def __execute_testcases(self):
         result = types.status.SUCCESS
-        for _ in range(GlobalOptions.bundle_stress):
+        for _i in range(GlobalOptions.bundle_stress):
             selected_list = [None]
             if self.__sel_module:
                 selected_list = loader.RunCallback(self.__sel_module, 'Main', False, self.__sel_module_args)
                 if self.__max_select:
                     selected_list = selected_list[:int(self.__max_select)]
+            if not selected_list:
+                tcResId = "tb_{0}_tc_{1}_non_selected_count_{2}".format(self.Name(),tc.Name(),_i)
+                tcResult = TestCaseResult(tcResId, tc.Name(), "unknown")
+                tcResult.closeResult(types.status.SKIPPED, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), 0, types.status.str(types.status.SKIPPED).title())
+                self.addTcResult(tcResult)
             for selected in selected_list:
                 if self.__sel_entry:
                     selected_list = loader.RunCallback(self.__sel_entry, 'Main', False, selected)
                 for tc in self.__testcases:
+                    owner = tc._Testcase__get_owner()
                     api.CurrentTestcase = tc
+                    tcResId = "TB:{0}_TC:{1}_SELECTED:{2}_COUNT:{3}".format(self.Name(), tc.Name(), selected, _i)
+                    tcResult = TestCaseResult(tcId=tcResId, name=tc.Name(), desc="", owner=owner,
+                                              area="", subArea="", feature="")
+                    self.addTcResult(tcResult)
                     tc.SetSelected(selected)
                     tc.SetBundleStore(self.GetStore())
+                    startTime=time.time()
                     ret = tc.Main()
+                    tcResult.closeResult(ret, time.strftime("%Y-%m-%dT%H:%M:%SZ",time.localtime()), time.time()-startTime, types.status.str(ret).title())
                     if ret != types.status.SUCCESS:
                         result = ret
                         if result == types.status.CRITICAL and GlobalOptions.stop_on_critical:

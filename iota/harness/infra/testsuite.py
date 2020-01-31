@@ -273,6 +273,18 @@ class TestSuite:
         except:
             Logger.debug("failed to collect cores. error was {0}".format(traceback.format_exc()))
 
+    def writeTestResults(self):
+        filename = "testsuite_{0}_results.json".format(self.Name())
+        try:
+            results = []
+            for tbun in self.__testbundles:
+                if tbun.getTestBundleResults().getTestCaseResults():
+                    results.append(tbun.getTestBundleResults())
+            with open(filename,'w') as outfile:
+                json.dump(results, outfile, default=lambda x: x.__dict__, sort_keys=True)
+        except:
+            Logger.debug("failed to save test results to file {0}. error was: {1}".format(filename,traceback.format_exc()))
+
     def Main(self):
         if self.__skip:
             Logger.debug("Skipping Testsuite: %s due to filters." % self.Name())
@@ -281,6 +293,7 @@ class TestSuite:
         atexit.register(logcollector.CollectLogs)
         atexit.register(logcollector.CollectTechSupport,(self.Name()))
         atexit.register(self.CollectCores)
+        atexit.register(self.writeTestResults)
 
         # Start the testsuite timer
         self.__timer.Start()
