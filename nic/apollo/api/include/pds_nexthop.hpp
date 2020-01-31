@@ -19,7 +19,7 @@
 /// @{
 
 #define PDS_MAX_NEXTHOP                4095    ///< maximum nexthops
-#define PDS_MAX_NEXTHOP_GROUP          1024    ///< maximum nexthop groups
+#define PDS_MAX_NEXTHOP_GROUP          2048    ///< maximum nexthop groups
 
 /// \brief nexthop type
 typedef enum pds_nh_type_e {

@@ -313,28 +313,6 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
     return ret;
 }
 
-sdk_ret_t
-nexthop_group_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-nexthop_group_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
-nexthop_group_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
-                              api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
-}
-
-sdk_ret_t
-nexthop_group_impl::reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                                  api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_ERR;
-}
-
 void
 nexthop_group_impl::fill_status_(pds_nexthop_group_status_t *status) {
     status->hw_id = hw_id_;

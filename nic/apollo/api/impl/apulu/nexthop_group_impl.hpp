@@ -90,7 +90,9 @@ public:
     // NOTE: this method is called when an object is in the dependent/puppet
     //       object list
     virtual sdk_ret_t reprogram_hw(api_base *api_obj,
-                                   api_obj_ctxt_t *obj_ctxt) override;
+                                   api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_INVALID_OP;
+    }
 
     /// \brief      cleanup all h/w tables relevant to this object except
     ///             stage 0 table(s), if any, by updating packed entries with
@@ -98,7 +100,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t cleanup_hw(api_base *api_obj,
-                                 api_obj_ctxt_t *obj_ctxt) override;
+                                 api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      update all h/w tables relevant to this object except stage 0
     ///             table(s), if any, by updating packed entries with latest
@@ -107,7 +111,9 @@ public:
     /// \param[in]  obj_ctxt transient state associated with this API
     /// \return     #SDK_RET_OK on success, failure status code on error
     virtual sdk_ret_t update_hw(api_base *curr_obj, api_base *prev_obj,
-                                api_obj_ctxt_t *obj_ctxt) override;
+                                api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_OK;
+    }
 
     /// \brief      activate the epoch in the dataplane by programming stage 0
     ///             tables, if any
@@ -133,7 +139,9 @@ public:
     /// NOTE: this method is called when an object is in the dependent/puppet
     ///       object list
     virtual sdk_ret_t reactivate_hw(api_base *api_obj, pds_epoch_t epoch,
-                                    api_obj_ctxt_t *obj_ctxt) override;
+                                    api_obj_ctxt_t *obj_ctxt) override {
+        return SDK_RET_INVALID_OP;
+    }
 
     /// \brief      read spec, statistics and status from hw tables
     /// \param[in]  api_obj API object

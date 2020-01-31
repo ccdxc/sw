@@ -353,7 +353,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     // program IPv4 ingress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
-    // populate IPv4 route table root address in Tx direction entry
+    // populate IPv4 route table root address in Rx direction entry
     route_table_key = subnet->v4_route_table();
     if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table
@@ -408,7 +408,7 @@ vnic_impl::program_vnic_info_(vnic_entry *vnic, vpc_entry *vpc,
     // program IPv6 ingress entry
     memset(&vnic_info_data, 0, sizeof(vnic_info_data));
     vnic_info_data.action_id = VNIC_INFO_RXDMA_VNIC_INFO_RXDMA_ID;
-    // populate IPv6 route table root address in Tx direction entry
+    // populate IPv6 route table root address in Rx direction entry
     route_table_key = subnet->v6_route_table();
     if (route_table_key == PDS_ROUTE_TABLE_ID_INVALID) {
         // try the vpc route table

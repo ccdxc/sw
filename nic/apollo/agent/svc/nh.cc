@@ -332,7 +332,10 @@ NhSvcImpl::NhGroupUpdate(ServerContext *context,
         }
         auto proto_spec = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, proto_spec.id());
-        pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
+        ret = pds_nh_group_proto_to_api_spec(api_spec, proto_spec);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
         ret = core::nh_group_update(&key, api_spec, bctxt);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
         if (ret != SDK_RET_OK) {

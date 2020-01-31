@@ -178,7 +178,10 @@ nexthop_group::read(pds_nexthop_group_info_t *info) {
 
 sdk_ret_t
 nexthop_group::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (nexthop_group_db()->remove((nexthop_group *)orig_obj)) {
+        return nexthop_group_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

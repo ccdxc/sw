@@ -77,14 +77,14 @@ TEST_F(nh_group_test, nh_group_workflow_b1) {
 
 /// \brief Nexthop group WF_B2
 /// \ref WF_B2
-TEST_F(nh_group_test, DISABLED_nh_workflow_b2) {
+TEST_F(nh_group_test, nh_workflow_b2) {
     if (!apulu()) return;
 
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                  int2pdsobjkey(10), 1);
-    feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
+    feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                   int2pdsobjkey(10), 1);
     workflow_b2<nexthop_group_feeder>(feeder1, feeder1A);
 }
@@ -215,17 +215,19 @@ TEST_F(nh_group_test, nh_group_workflow_7) {
 
 /// \brief Nexthop group WF_8
 /// \ref WF_8
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_8) {
+TEST_F(nh_group_test, nh_group_workflow_8) {
     nexthop_group_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
+    feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs),
                  int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                   int2pdsobjkey(1), k_max_groups);
-    feeder1B.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-2),
+    feeder1B.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs),
                   int2pdsobjkey(1), k_max_groups);
     workflow_8<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
 
+#if 0
+    // TODO: overlay ECMP updates are not supported
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
                  int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
@@ -233,29 +235,33 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_8) {
     feeder1B.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-2),
                   int2pdsobjkey(1), k_max_groups);
     workflow_8<nexthop_group_feeder>(feeder1, feeder1A, feeder1B);
+#endif
 }
 
 /// \brief Nexthop group WF_9
 /// \ref WF_9
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_9) {
+TEST_F(nh_group_test, nh_group_workflow_9) {
     nexthop_group_feeder feeder1, feeder1A;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                  int2pdsobjkey(1), k_max_groups);
-    feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
+    feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                   int2pdsobjkey(1), k_max_groups);
     workflow_9<nexthop_group_feeder>(feeder1, feeder1A);
 
+#if 0
+    // TODO: overlay ECMP updates are not supported
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
                  int2pdsobjkey(1), k_max_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
                   int2pdsobjkey(1), k_max_groups);
     workflow_9<nexthop_group_feeder>(feeder1, feeder1A);
+#endif
 }
 
 /// \brief Nexthop group WF_10
 /// \ref WF_10
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
+TEST_F(nh_group_test, nh_group_workflow_10) {
     nexthop_group_feeder feeder1, feeder2, feeder2A, feeder3, feeder3A, feeder4;
 
 
@@ -274,6 +280,8 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
     workflow_10<nexthop_group_feeder>(feeder1, feeder2, feeder2A,
                                       feeder3, feeder3A, feeder4);
 
+#if 0
+    // TODO: overlay ECMP updates are not supported
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
                  int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
@@ -288,6 +296,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_10) {
                  int2pdsobjkey(700), k_num_groups);
     workflow_10<nexthop_group_feeder>(feeder1, feeder2, feeder2A,
                                       feeder3, feeder3A, feeder4);
+#endif
 }
 
 /// \brief Nexthop group WF_N_1
@@ -302,9 +311,10 @@ TEST_F(nh_group_test, nh_group_workflow_neg_1) {
     workflow_neg_1<nexthop_group_feeder>(feeder);
 }
 
+#if 0
 /// \brief Nexthop group WF_N_2
 /// \ref WF_N_2
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_2) {
+TEST_F(nh_group_test, nh_group_workflow_neg_2) {
     nexthop_group_feeder feeder;
 
     feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
@@ -315,6 +325,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_2) {
                 int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_2<nexthop_group_feeder>(feeder);
 }
+#endif
 
 /// \brief Nexthop group WF_N_3
 /// \ref WF_N_3
@@ -384,17 +395,19 @@ TEST_F(nh_group_test, nh_group_workflow_neg_6) {
 
 /// \brief Nexthop group WF_N_7
 /// \ref WF_N_7
-TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_7) {
+TEST_F(nh_group_test, nh_group_workflow_neg_7) {
     nexthop_group_feeder feeder1, feeder1A, feeder2;
 
     feeder1.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                  int2pdsobjkey(100), k_num_groups);
-    feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, (k_max_ecmp_nhs-1),
+    feeder1A.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                   int2pdsobjkey(100), k_num_groups);
     feeder2.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP, k_max_ecmp_nhs,
                  int2pdsobjkey(300), k_num_groups);
     workflow_neg_7<nexthop_group_feeder>(feeder1, feeder1A, feeder2);
 
+#if 0
+    // TODO: overlay ECMP updates are not supported
     feeder1.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
                  int2pdsobjkey(100), k_num_groups);
     feeder1A.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, (k_max_ecmp_teps-1),
@@ -402,6 +415,7 @@ TEST_F(nh_group_test, DISABLED_nh_group_workflow_neg_7) {
     feeder2.init(PDS_NHGROUP_TYPE_OVERLAY_ECMP, k_max_ecmp_teps,
                  int2pdsobjkey(300), k_num_groups);
     workflow_neg_7<nexthop_group_feeder>(feeder1, feeder1A, feeder2);
+#endif
 }
 
 /// \brief Nexthop group WF_N_8

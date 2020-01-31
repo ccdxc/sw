@@ -14,7 +14,7 @@ namespace test {
 namespace api {
 
 // globals
-static constexpr uint16_t k_max_groups = PDS_MAX_NEXTHOP_GROUP;
+static constexpr uint16_t k_max_groups = PDS_MAX_NEXTHOP_GROUP - 1;
 
 // NH group test feeder class
 class nexthop_group_feeder : public feeder {
