@@ -1422,7 +1422,7 @@ func (c *overlay) commitDirect(ctx context.Context, retries, maxEntries int, ver
 			}
 			if v.updateFn != nil && v.resVer == "" {
 				// txn is already updated, no action needed
-				log.Infof("Consistent updated obj skipped [%v][%v][%+v]", v.resVer, v.key, v.val)
+				log.Infof("Consistent updated obj skipped [%v][%v]", v.resVer, v.key)
 				retry = true
 			}
 			err = ctxn.Update(k, v.val)
