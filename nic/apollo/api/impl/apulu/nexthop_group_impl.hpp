@@ -173,7 +173,7 @@ private:
     ///            enabling stage0 tables corresponding to the new epoch
     /// \param[in] epoch epoch being activated
     /// \param[in] nh_group nexthop group obj being programmed
-    /// \param[in] spec  VNIC configuration
+    /// \param[in] spec  nexthop configuration
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_create_(pds_epoch_t epoch, nexthop_group *nh_group,
                                pds_nexthop_group_spec_t *spec);
@@ -184,6 +184,15 @@ private:
     /// \param[in] nh_group nexthop group obj being programmed
     /// \return    SDK_RET_OK on success, failure status code on error
     sdk_ret_t activate_delete_(pds_epoch_t epoch, nexthop_group *nh_group);
+
+    /// \brief      program nexthop group related tables during update by
+    ///             enabling stage0 tables corresponding to the new epoch
+    /// \param[in] epoch epoch being activated
+    /// \param[in] nh_group nexthop group obj being updaated
+    /// \param[in] spec  nexthop configuration
+    /// \return    SDK_RET_OK on success, failure status code on error
+    sdk_ret_t activate_update_(pds_epoch_t epoch, nexthop_group *nh_group,
+                               pds_nexthop_group_spec_t *spec);
 
     /// \brief      populate specification with hardware information
     /// \param[out] spec specification

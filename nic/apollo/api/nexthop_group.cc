@@ -136,6 +136,11 @@ nexthop_group::compute_update(api_obj_ctxt_t *obj_ctxt) {
                       "on nexthop group %s", type_, spec->type, key_.str());
         return SDK_RET_INVALID_ARG;
     }
+    if (type_ != PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+        PDS_TRACE_ERR("Unsupported update of %u type ECMP group %s",
+                      spec->type, key_.str());
+        return SDK_RET_INVALID_ARG;
+    }
     if (num_nexthops_ != spec->num_nexthops) {
         PDS_TRACE_ERR("Change of number of nexthops from %u to %u in "
                       "nexthop group %s not supported", num_nexthops_,

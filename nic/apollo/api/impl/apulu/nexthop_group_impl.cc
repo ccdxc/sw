@@ -73,32 +73,41 @@ nexthop_group_impl::reserve_resources(api_base *api_obj,
     pds_nexthop_group_spec_t *spec;
 
     spec = &obj_ctxt->api_params->nexthop_group_spec;
-    // reserve an entry in NEXTHOP_GROUP table
-    ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(&idx);
-    if (ret != SDK_RET_OK) {
-        PDS_TRACE_ERR("Failed to reserve an entry in ECMP table, ",
-                      "for nexthop group %s, err %u", spec->key.str(), ret);
-        return ret;
-    }
-    hw_id_ = idx;
-    if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
-        if (spec->num_nexthops) {
-            ret = nexthop_impl_db()->nh_idxr()->alloc_block(&idx,
-                                                            spec->num_nexthops);
-            if (ret != SDK_RET_OK) {
-                PDS_TRACE_ERR("Failed to reserve %u entries in "
-                              "NEXTHOP table for nexthop group %s, "
-                              "err %u", spec->num_nexthops,
-                              spec->key.str(), ret);
-                goto error;
-            }
-            nh_base_hw_id_ = idx;
+    switch (obj_ctxt->api_op) {
+    case API_OP_CREATE:
+        // reserve an entry in NEXTHOP_GROUP table
+        ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(&idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to reserve an entry in ECMP table, ",
+                          "for nexthop group %s, err %u", spec->key.str(), ret);
+            return ret;
         }
+        hw_id_ = idx;
+        if (spec->type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
+            if (spec->num_nexthops) {
+                ret = nexthop_impl_db()->nh_idxr()->alloc_block(&idx,
+                                                        spec->num_nexthops);
+                if (ret != SDK_RET_OK) {
+                    PDS_TRACE_ERR("Failed to reserve %u entries in "
+                                  "NEXTHOP table for nexthop group %s, "
+                                  "err %u", spec->num_nexthops,
+                                  spec->key.str(), ret);
+                    goto error;
+                }
+                nh_base_hw_id_ = idx;
+            }
+        }
+    case API_OP_UPDATE:
+        // we will use the same h/w resources as the original object
+    default:
+        break;
     }
     return SDK_RET_OK;
 
 error:
 
+    PDS_TRACE_ERR("Failed to acquire h/w resources for nexthop group %s, "
+                  "err %u", spec->key.str(), ret);
     if (hw_id_ != 0xFFFF) {
         nexthop_group_impl_db()->nhgroup_idxr()->free(hw_id_);
         hw_id_ = 0xFFFF;
@@ -246,6 +255,36 @@ nexthop_group_impl::activate_delete_(pds_epoch_t epoch,
 }
 
 sdk_ret_t
+nexthop_group_impl::activate_update_(pds_epoch_t epoch,
+                                     nexthop_group *nh_group,
+                                     pds_nexthop_group_spec_t *spec) {
+    sdk_ret_t ret;
+    p4pd_error_t p4pd_ret;
+    nexthop_actiondata_t nh_data;
+
+    // program the nexthops first in NEXTHOP table
+    for (uint8_t i = 0; i < spec->num_nexthops; i++) {
+        ret = populate_underlay_nh_info_(&spec->nexthops[i], &nh_data);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Programming of nexthop %u in NEXTHOP table for "
+                          "nexthop group %s failed, err %u",
+                          i, spec->key.str(), ret);
+            return ret;
+        }
+        p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP,
+                                           nh_base_hw_id_ + i,
+                                           NULL, NULL, &nh_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to program nexthop %u of nexthop "
+                          "group %s at idx %u", i, spec->key.str(),
+                          nh_base_hw_id_ + i);
+            return sdk::SDK_RET_HW_PROGRAM_ERR;
+        }
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
                                 pds_epoch_t epoch, api_op_t api_op,
                                 api_obj_ctxt_t *obj_ctxt) {
@@ -258,15 +297,18 @@ nexthop_group_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
         ret = activate_create_(epoch, (nexthop_group *)api_obj, spec);
         break;
 
+    case API_OP_UPDATE:
+        spec = &obj_ctxt->api_params->nexthop_group_spec;
+        ret = activate_update_(epoch, (nexthop_group *)api_obj, spec);
+        break;
+
     case API_OP_DELETE:
         // spec is not available for DELETE operations
         ret = activate_delete_(epoch, (nexthop_group *)api_obj);
         break;
 
-    case API_OP_UPDATE:
     default:
-        ret = SDK_RET_INVALID_OP;
-        break;
+        return SDK_RET_INVALID_OP;
     }
     return ret;
 }
