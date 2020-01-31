@@ -4,6 +4,7 @@ nic/conf/$PIPELINE/8g/hbm_mem.json                                /nic/conf/$PIP
 nic/conf/$PIPELINE/4g/hbm_mem.json                                /nic/conf/$PIPELINE/4g/
 nic/conf/$PIPELINE/operd-regions.json                             /nic/conf/
 nic/conf/$PIPELINE/operd.json                                     /nic/conf/
+nic/conf/$PIPELINE/operd-decoders.json                            /nic/conf/
 nic/conf/$PIPELINE/device.json                                    /nic/conf/
 
 # HW catalog files
@@ -101,6 +102,7 @@ nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libdpdk_device.so                   /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libpdslearn.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/liboperd.so                         /nic/lib/
+nic/build/$ARCH/$PIPELINE/lib/libvpp_operd_dec.so                 /nic/lib/
 
 # p4/asm specific libs
 nic/build/$ARCH/$PIPELINE/bin/p4asm/                              /nic/conf/$PIPELINE/asm_bin/
@@ -149,6 +151,7 @@ nic/build/$ARCH/$PIPELINE/out/boot0_submake/boards.json           /boot0/
 nic/build/$ARCH/$PIPELINE/bin/sysmgr                              /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operdctl                            /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/operd                               /nic/bin/
+nic/build/$ARCH/$PIPELINE/bin/operdvppconsumer                    /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/bflog                               /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/coremgr                             /nic/bin/
 nic/build/$ARCH/$PIPELINE/bin/console                             /nic/bin/

@@ -8,5 +8,12 @@
             "level": "5"
         },
         "input": ["sysmgr"]
+    },
+    {
+        "output": {
+            "type": "binary",
+            "command": "/nic/bin/operdvppconsumer /var/log/pensando/vpp_flow.log"
+        },
+        "input": ["vpp"]
     }
 ]

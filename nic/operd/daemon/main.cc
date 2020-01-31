@@ -5,11 +5,14 @@
 #include <dlfcn.h>
 #include <map>
 #include <memory>
+#include <signal.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "lib/operd/operd.hpp"
 #include "lib/operd/decoder.h"
 
+#include "binary.hpp"
 #include "output.hpp"
 #include "rotated_file.hpp"
 
@@ -97,6 +100,7 @@ library::try_load_(void) {
     assert(this->handler_ == nullptr);
     assert(this->dlhandle_ == NULL);
 
+    fprintf(stderr, "Loading %s\n", this->path_.c_str());
     if (access(this->path_.c_str(), F_OK) != 0) {
         fprintf(stderr, "Can't access %s\n", this->path_.c_str());
         return false;
@@ -216,6 +220,13 @@ parse_output (pt::ptree obj)
         }
         
         return library::factory(path);
+    } else if (type == "binary") {
+        std::string command = obj.get<std::string>("command");
+        if (command == "") {
+            fprintf(stderr, "output needs command property\n");
+            return nullptr;
+        }
+        return binary::factory(command);
     } else if (type == "file") {
         std::string path = obj.get<std::string>("location");
         if (path == "") {
@@ -338,12 +349,27 @@ load_decoders (std::string decoders_file)
     return decoders;
 }
 
+void
+sigchld_handler (int)
+{
+    while (true) {
+        int rc;
+
+        rc = waitpid((pid_t)(-1), 0, WNOHANG);
+        if (rc <= 0) {
+            return;
+        }
+    }
+}
+
 int
 main (int argc, const char *argv[])
 {
     std::map<std::string, input_ptr> inputs;
     std::map<uint8_t, decoder_fn> decoders;
     std::string config;
+
+    signal(SIGCHLD, sigchld_handler);
 
     // Don't buffer stdout and stderr, so we read it in
     // sysmgr log files immediatelly

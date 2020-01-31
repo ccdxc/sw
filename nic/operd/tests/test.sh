@@ -2,13 +2,14 @@
 
 WS_TOP="/sw"
 TOPDIR="/sw/nic"
-BUILD_DIR=${TOPDIR}/build/x86_64/iris/
+BUILD_DIR=${TOPDIR}/build/x86_64/apulu/
 
 export OPERD_REGIONS="./operd-regions.json"
 
 pushd ${TOPDIR}
 
-make operd-daemon.bin libvpp_operd_dec.so libvpp_operd_dec.so
+make PIPELINE=apulu operd-test-vpp-logger.bin operd.bin libvpp_operd_dec.so \
+     liboperdvppconsumer.so operdvppconsumer.bin
 RET=$?
 if [ $RET -ne 0 ]
 then
@@ -18,20 +19,24 @@ fi
 
 popd
 
-rm -rf /dev/shm/vpp*
-rm -rf ./vpp.log
+for TESTCASE in './operd-daemon.json' './operd-daemon-bin.json'
+do
 
-${BUILD_DIR}/bin/operd-test-vpp-logger
+    rm -rf /dev/shm/vpp*
+    rm -rf ./vpp.log
 
-timeout -k 2s 2s ${BUILD_DIR}/bin/operd-daemon ./operd-daemon.json \
-        ./operd-decoders.json
+    ${BUILD_DIR}/bin/operd-test-vpp-logger
 
-grep -c "IPv4 0x1010101 02020202 10 20" vpp.log
-RED=$?
-if [ $RET -ne 0 ]
-then
-    echo "Didn't find 0x1010101 in logs"
-    exit $RET
-fi
+    timeout -k 2s 2s ${BUILD_DIR}/bin/operd $TESTCASE \
+            ./operd-decoders.json >& vpp.log
 
-           
+    cat vpp.log
+    grep -c "Add, allow, ip, source: 1.1.1.1:10, destination: 2.2.2.2:20, proto: 6" vpp.log
+    RED=$?
+    if [ $RET -ne 0 ]
+    then
+        echo "Didn't find expected string in logs"
+        exit $RET
+    fi
+done
+

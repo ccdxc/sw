@@ -1,11 +1,8 @@
 [
     {
         "output": {
-            "type": "file",
-            "location": "./vpp.log",
-            "max-size": "1",
-            "max-files": "5",
-            "level": "5"
+            "type": "library",
+            "location": "/usr/src/github.com/pensando/sw/nic/build/x86_64/apulu/lib/liboperdvppconsumer.so"
         },
         "input": ["vpp"]
     }
