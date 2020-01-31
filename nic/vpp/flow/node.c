@@ -473,15 +473,15 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
 
     if (is_ip4) {
         ip4_header_t *ip40;
-        u32 src_ip, dst_ip;
+        u32 src_ip, dst_ip, r_src_ip, r_dst_ip;
         u16 sport, dport, r_sport, r_dport;
         u8 protocol;
         u16 lkp_id;
 
         ip40 = vlib_buffer_get_current(p0);
 
-        src_ip = clib_net_to_host_u32(ip40->src_address.as_u32);
-        dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
+        r_dst_ip = src_ip = clib_net_to_host_u32(ip40->src_address.as_u32);
+        r_src_ip = dst_ip = clib_net_to_host_u32(ip40->dst_address.as_u32);
         protocol = ip40->protocol;
         lkp_id = vnet_buffer(p0)->sw_if_index[VLIB_TX];
 
@@ -521,13 +521,13 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         // TODO : Handle rx from uplink, service mapping
         if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
             // NAPT - both port and ip are changed
-            dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
             r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
         } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
             // static NAT
-            dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
+            r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
         }
-        ftlv4_cache_set_key(dst_ip, src_ip,
+        ftlv4_cache_set_key(r_src_ip, r_dst_ip,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
         ftlv4_cache_set_epoch(0xff);
