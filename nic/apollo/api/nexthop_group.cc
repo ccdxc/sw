@@ -24,8 +24,8 @@ namespace api {
 /// @{
 
 nexthop_group::nexthop_group() {
-    //SDK_SPINLOCK_INIT(&slock_, PTHREAD_PROCESS_PRIVATE);
     type_ = PDS_NHGROUP_TYPE_NONE;
+    num_nexthops_ = 0;
     ht_ctxt_.reset();
     impl_ = NULL;
 }
@@ -49,8 +49,6 @@ nexthop_group::factory(pds_nexthop_group_spec_t *spec) {
 }
 
 nexthop_group::~nexthop_group() {
-    // TODO: fix me
-    //SDK_SPINLOCK_DESTROY(&slock_);
 }
 
 void
@@ -95,28 +93,8 @@ nexthop_group::free(nexthop_group *nh_group) {
 }
 
 sdk_ret_t
-nexthop_group::init_config(api_ctxt_t *api_ctxt) {
-    pds_nexthop_group_spec_t *spec = &api_ctxt->api_params->nexthop_group_spec;
-
-    memcpy(&this->key_, &spec->key, sizeof(key_));
-    type_ = spec->type;
-    num_nexthops_ = spec->num_nexthops;
-    return SDK_RET_OK;
-}
-
-sdk_ret_t
 nexthop_group::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     return impl_->reserve_resources(this, obj_ctxt);
-}
-
-sdk_ret_t
-nexthop_group::program_create(api_obj_ctxt_t *obj_ctxt) {
-    return impl_->program_hw(this, obj_ctxt);
-}
-
-sdk_ret_t
-nexthop_group::reprogram_config(api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_ERR;
 }
 
 sdk_ret_t
@@ -130,14 +108,46 @@ nexthop_group::nuke_resources_(void) {
 }
 
 sdk_ret_t
+nexthop_group::init_config(api_ctxt_t *api_ctxt) {
+    pds_nexthop_group_spec_t *spec = &api_ctxt->api_params->nexthop_group_spec;
+
+    memcpy(&this->key_, &spec->key, sizeof(key_));
+    type_ = spec->type;
+    num_nexthops_ = spec->num_nexthops;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+nexthop_group::program_create(api_obj_ctxt_t *obj_ctxt) {
+    return impl_->program_hw(this, obj_ctxt);
+}
+
+sdk_ret_t
 nexthop_group::cleanup_config(api_obj_ctxt_t *obj_ctxt) {
     return impl_->cleanup_hw(this, obj_ctxt);
 }
 
 sdk_ret_t
+nexthop_group::compute_update(api_obj_ctxt_t *obj_ctxt) {
+    pds_nexthop_group_spec_t *spec = &obj_ctxt->api_params->nexthop_group_spec;
+
+    if (type_ != spec->type) {
+        PDS_TRACE_ERR("Attempt to modify immutable attr \"type\" from %u to %u "
+                      "on nexthop group %s", type_, spec->type, key_.str());
+        return SDK_RET_INVALID_ARG;
+    }
+    if (num_nexthops_ != spec->num_nexthops) {
+        PDS_TRACE_ERR("Change of number of nexthops from %u to %u in "
+                      "nexthop group %s not supported", num_nexthops_,
+                      spec->num_nexthops, key_.str());
+        return SDK_RET_INVALID_ARG;
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 nexthop_group::program_update(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    //return impl_->update_hw();
-    return sdk::SDK_RET_INVALID_OP;
+    return impl_->update_hw(orig_obj, this, obj_ctxt);
 }
 
 sdk_ret_t
@@ -145,11 +155,6 @@ nexthop_group::activate_config(pds_epoch_t epoch, api_op_t api_op,
                                api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
     PDS_TRACE_DEBUG("Activating nexthop group %s", key_.str());
     return impl_->activate_hw(this, orig_obj, epoch, api_op, obj_ctxt);
-}
-
-sdk_ret_t
-nexthop_group::reactivate_config(pds_epoch_t epoch, api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
 }
 
 void
