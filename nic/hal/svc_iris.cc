@@ -85,8 +85,8 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     server_builder->RegisterService(&system_svc);
     server_builder->RegisterService(&swphv_svc);
 
-    HAL_TRACE_DEBUG("gRPC server listening on ... {}",
-                    g_grpc_server_addr.c_str());
+    HAL_TRACE_INFO("gRPC server listening on ... {}",
+                   g_grpc_server_addr.c_str());
     hal::utils::hal_logger()->flush();
     HAL_SYSLOG_INFO("HAL-STATUS:UP");
 

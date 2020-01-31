@@ -1015,6 +1015,17 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
                     params.table_id = tid;
                     dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                         (directmap*)sldirectmap::factory(&params);
+                    // Set read/write thru mode for Flow Info, Session State & Session Stats tables
+                    p4pd_ret = p4pd_table_properties_set_write_mode(tid, P4_TBL_WRITE_MODE_WRITE_THRU);
+                    if (p4pd_ret != P4PD_SUCCESS) {
+                        HAL_TRACE_ERR("Failed to set table write thru mode {} for tid {}", P4_TBL_WRITE_MODE_WRITE_THRU, tid);
+                        SDK_ASSERT(0);
+                    }
+                    p4pd_ret = p4pd_table_properties_set_read_thru_mode(tid, true);
+                    if (p4pd_ret != P4PD_SUCCESS) {
+                        HAL_TRACE_ERR("Failed to set table read thru mode to true for tid {}", tid);
+                        SDK_ASSERT(0);
+                    }
                 } else {
                     dm_tables_[tid - P4TBL_ID_INDEX_MIN] =
                         directmap::factory(tinfo.tablename, tid, tinfo.tabledepth,
@@ -1031,12 +1042,14 @@ hal_state_pd::init_tables(pd_mem_init_args_t *args)
 
                 if (p4pd_ret != P4PD_SUCCESS) {
                     HAL_TRACE_ERR("Failed to set table write thru mode {} for tid {}", P4_TBL_WRITE_MODE_WRITE_THRU, tid);
+                    SDK_ASSERT(0);
                 }
 
-                p4pd_ret = p4pd_table_properties_set_read_thru_mode (tid, true);
+                p4pd_ret = p4pd_table_properties_set_read_thru_mode(tid, true);
 
                 if (p4pd_ret != P4PD_SUCCESS) {
                     HAL_TRACE_ERR("Failed to set table read thru mode to true for tid {}", tid);
+                    SDK_ASSERT(0);
                 }
             }
 
