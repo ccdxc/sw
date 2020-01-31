@@ -660,6 +660,10 @@ type RolloutAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Rollout, error)
 	Watch(handler RolloutHandler) error
 	StopWatch(handler RolloutHandler) error
+	CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	StopRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
+	RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error)
 }
 
 // dummy struct that implements RolloutAPI
@@ -805,6 +809,62 @@ func (api *rolloutAPI) StopWatch(handler RolloutHandler) error {
 	api.ct.workPools["Rollout"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchRollout(handler)
+}
+
+// CreateRollout is an API action
+func (api *rolloutAPI) CreateRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().Rollout().CreateRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// UpdateRollout is an API action
+func (api *rolloutAPI) UpdateRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().Rollout().UpdateRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// StopRollout is an API action
+func (api *rolloutAPI) StopRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().Rollout().StopRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// RemoveRollout is an API action
+func (api *rolloutAPI) RemoveRollout(obj *rollout.Rollout) (*rollout.Rollout, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.RolloutV1().Rollout().RemoveRollout(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Rollout returns RolloutAPI

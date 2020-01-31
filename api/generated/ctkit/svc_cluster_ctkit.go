@@ -660,6 +660,8 @@ type ClusterAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Cluster, error)
 	Watch(handler ClusterHandler) error
 	StopWatch(handler ClusterHandler) error
+	AuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error)
+	UpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error)
 }
 
 // dummy struct that implements ClusterAPI
@@ -805,6 +807,34 @@ func (api *clusterAPI) StopWatch(handler ClusterHandler) error {
 	api.ct.workPools["Cluster"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchCluster(handler)
+}
+
+// AuthBootstrapComplete is an API action
+func (api *clusterAPI) AuthBootstrapComplete(obj *cluster.ClusterAuthBootstrapRequest) (*cluster.Cluster, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Cluster().AuthBootstrapComplete(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// UpdateTLSConfig is an API action
+func (api *clusterAPI) UpdateTLSConfig(obj *cluster.UpdateTLSConfigRequest) (*cluster.Cluster, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().Cluster().UpdateTLSConfig(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Cluster returns ClusterAPI
@@ -5370,6 +5400,7 @@ type ConfigurationSnapshotAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*ConfigurationSnapshot, error)
 	Watch(handler ConfigurationSnapshotHandler) error
 	StopWatch(handler ConfigurationSnapshotHandler) error
+	Save(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error)
 }
 
 // dummy struct that implements ConfigurationSnapshotAPI
@@ -5515,6 +5546,20 @@ func (api *configurationsnapshotAPI) StopWatch(handler ConfigurationSnapshotHand
 	api.ct.workPools["ConfigurationSnapshot"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchConfigurationSnapshot(handler)
+}
+
+// Save is an API action
+func (api *configurationsnapshotAPI) Save(obj *cluster.ConfigurationSnapshotRequest) (*cluster.ConfigurationSnapshot, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().ConfigurationSnapshot().Save(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // ConfigurationSnapshot returns ConfigurationSnapshotAPI
@@ -6155,6 +6200,7 @@ type SnapshotRestoreAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*SnapshotRestore, error)
 	Watch(handler SnapshotRestoreHandler) error
 	StopWatch(handler SnapshotRestoreHandler) error
+	Restore(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error)
 }
 
 // dummy struct that implements SnapshotRestoreAPI
@@ -6300,6 +6346,20 @@ func (api *snapshotrestoreAPI) StopWatch(handler SnapshotRestoreHandler) error {
 	api.ct.workPools["SnapshotRestore"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchSnapshotRestore(handler)
+}
+
+// Restore is an API action
+func (api *snapshotrestoreAPI) Restore(obj *cluster.SnapshotRestore) (*cluster.SnapshotRestore, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.ClusterV1().SnapshotRestore().Restore(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // SnapshotRestore returns SnapshotRestoreAPI

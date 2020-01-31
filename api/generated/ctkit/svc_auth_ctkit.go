@@ -660,6 +660,9 @@ type UserAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*User, error)
 	Watch(handler UserHandler) error
 	StopWatch(handler UserHandler) error
+	PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error)
+	PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error)
+	IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error)
 }
 
 // dummy struct that implements UserAPI
@@ -805,6 +808,48 @@ func (api *userAPI) StopWatch(handler UserHandler) error {
 	api.ct.workPools["User"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchUser(handler)
+}
+
+// PasswordChange is an API action
+func (api *userAPI) PasswordChange(obj *auth.PasswordChangeRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().User().PasswordChange(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// PasswordReset is an API action
+func (api *userAPI) PasswordReset(obj *auth.PasswordResetRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().User().PasswordReset(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// IsAuthorized is an API action
+func (api *userAPI) IsAuthorized(obj *auth.SubjectAccessReviewRequest) (*auth.User, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().User().IsAuthorized(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // User returns UserAPI
@@ -1445,6 +1490,9 @@ type AuthenticationPolicyAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*AuthenticationPolicy, error)
 	Watch(handler AuthenticationPolicyHandler) error
 	StopWatch(handler AuthenticationPolicyHandler) error
+	LdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	LdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error)
+	TokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error)
 }
 
 // dummy struct that implements AuthenticationPolicyAPI
@@ -1590,6 +1638,48 @@ func (api *authenticationpolicyAPI) StopWatch(handler AuthenticationPolicyHandle
 	api.ct.workPools["AuthenticationPolicy"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchAuthenticationPolicy(handler)
+}
+
+// LdapConnectionCheck is an API action
+func (api *authenticationpolicyAPI) LdapConnectionCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().AuthenticationPolicy().LdapConnectionCheck(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// LdapBindCheck is an API action
+func (api *authenticationpolicyAPI) LdapBindCheck(obj *auth.AuthenticationPolicy) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().AuthenticationPolicy().LdapBindCheck(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// TokenSecretGenerate is an API action
+func (api *authenticationpolicyAPI) TokenSecretGenerate(obj *auth.TokenSecretRequest) (*auth.AuthenticationPolicy, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.AuthV1().AuthenticationPolicy().TokenSecretGenerate(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // AuthenticationPolicy returns AuthenticationPolicyAPI

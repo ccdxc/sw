@@ -667,7 +667,8 @@ type {{.}}API interface {
 	Find(meta *api.ObjectMeta) (*{{.}}, error)
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*{{.}}, error)
 	Watch(handler {{.}}Handler) error
-	StopWatch(handler {{.}}Handler) error
+	StopWatch(handler {{.}}Handler) error {{$actions := getSvcActionEndpoints $svc .}}{{range $actions}}
+  {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {{end}}
 }
 
 // dummy struct that implements {{.}}API
@@ -817,6 +818,22 @@ func (api *{{ToLower .}}API) StopWatch(handler {{.}}Handler) error {
 	return api.ct.StopWatch{{.}}(handler)
 }
 
+{{$actions := getSvcActionEndpoints $svc .}}{{$obj := . }}{{range $actions}}
+// {{.Name}} is an API action
+func (api *{{ToLower $obj}}API) {{.Name}}(obj *{{$pkgname}}.{{.Request}}) (*{{$pkgname}}.{{.Response}}, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.{{$srvname}}().{{$obj}}().{{.Name}}(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+{{end}}
 // {{.}} returns {{.}}API
 func (ct *ctrlerCtx) {{.}}() {{.}}API {
 	return &{{ToLower .}}API{ct: ct}

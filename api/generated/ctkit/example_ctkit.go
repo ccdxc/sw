@@ -660,6 +660,8 @@ type OrderAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Order, error)
 	Watch(handler OrderHandler) error
 	StopWatch(handler OrderHandler) error
+	Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
+	Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error)
 }
 
 // dummy struct that implements OrderAPI
@@ -805,6 +807,34 @@ func (api *orderAPI) StopWatch(handler OrderHandler) error {
 	api.ct.workPools["Order"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchOrder(handler)
+}
+
+// Applydiscount is an API action
+func (api *orderAPI) Applydiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.BookstoreV1().Order().Applydiscount(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// Cleardiscount is an API action
+func (api *orderAPI) Cleardiscount(obj *bookstore.ApplyDiscountReq) (*bookstore.Order, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.BookstoreV1().Order().Cleardiscount(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Order returns OrderAPI
@@ -1445,6 +1475,7 @@ type BookAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Book, error)
 	Watch(handler BookHandler) error
 	StopWatch(handler BookHandler) error
+	Restock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error)
 }
 
 // dummy struct that implements BookAPI
@@ -1590,6 +1621,20 @@ func (api *bookAPI) StopWatch(handler BookHandler) error {
 	api.ct.workPools["Book"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchBook(handler)
+}
+
+// Restock is an API action
+func (api *bookAPI) Restock(obj *bookstore.RestockRequest) (*bookstore.RestockResponse, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.BookstoreV1().Book().Restock(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Book returns BookAPI
@@ -3015,6 +3060,7 @@ type StoreAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Store, error)
 	Watch(handler StoreHandler) error
 	StopWatch(handler StoreHandler) error
+	AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error)
 }
 
 // dummy struct that implements StoreAPI
@@ -3160,6 +3206,20 @@ func (api *storeAPI) StopWatch(handler StoreHandler) error {
 	api.ct.workPools["Store"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchStore(handler)
+}
+
+// AddOutage is an API action
+func (api *storeAPI) AddOutage(obj *bookstore.OutageRequest) (*bookstore.Store, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.BookstoreV1().Store().AddOutage(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Store returns StoreAPI

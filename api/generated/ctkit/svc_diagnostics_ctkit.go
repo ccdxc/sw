@@ -660,6 +660,7 @@ type ModuleAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Module, error)
 	Watch(handler ModuleHandler) error
 	StopWatch(handler ModuleHandler) error
+	Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error)
 }
 
 // dummy struct that implements ModuleAPI
@@ -805,6 +806,20 @@ func (api *moduleAPI) StopWatch(handler ModuleHandler) error {
 	api.ct.workPools["Module"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchModule(handler)
+}
+
+// Debug is an API action
+func (api *moduleAPI) Debug(obj *diagnostics.DiagnosticsRequest) (*diagnostics.DiagnosticsResponse, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.DiagnosticsV1().Module().Debug(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Module returns ModuleAPI

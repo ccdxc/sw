@@ -660,6 +660,8 @@ type BufferAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Buffer, error)
 	Watch(handler BufferHandler) error
 	StopWatch(handler BufferHandler) error
+	Commit(obj *staging.CommitAction) (*staging.CommitAction, error)
+	Clear(obj *staging.ClearAction) (*staging.ClearAction, error)
 }
 
 // dummy struct that implements BufferAPI
@@ -805,6 +807,34 @@ func (api *bufferAPI) StopWatch(handler BufferHandler) error {
 	api.ct.workPools["Buffer"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchBuffer(handler)
+}
+
+// Commit is an API action
+func (api *bufferAPI) Commit(obj *staging.CommitAction) (*staging.CommitAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.StagingV1().Buffer().Commit(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// Clear is an API action
+func (api *bufferAPI) Clear(obj *staging.ClearAction) (*staging.ClearAction, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.StagingV1().Buffer().Clear(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Buffer returns BufferAPI

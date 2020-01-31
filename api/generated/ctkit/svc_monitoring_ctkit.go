@@ -7725,6 +7725,7 @@ type ArchiveRequestAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*ArchiveRequest, error)
 	Watch(handler ArchiveRequestHandler) error
 	StopWatch(handler ArchiveRequestHandler) error
+	Cancel(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error)
 }
 
 // dummy struct that implements ArchiveRequestAPI
@@ -7870,6 +7871,20 @@ func (api *archiverequestAPI) StopWatch(handler ArchiveRequestHandler) error {
 	api.ct.workPools["ArchiveRequest"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchArchiveRequest(handler)
+}
+
+// Cancel is an API action
+func (api *archiverequestAPI) Cancel(obj *monitoring.CancelArchiveRequest) (*monitoring.ArchiveRequest, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.MonitoringV1().ArchiveRequest().Cancel(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // ArchiveRequest returns ArchiveRequestAPI
