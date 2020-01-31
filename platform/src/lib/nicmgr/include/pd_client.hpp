@@ -143,16 +143,17 @@ public:
                             uint64_t mem_bar_addr, uint32_t mem_bar_size,
                             uint32_t max_prefetch_wqes);
 
-    uint64_t rdma_mem_bar_alloc(uint32_t size);
-    int rdma_mem_bar_reserve (uint64_t addr, uint32_t size);
+    void cmb_mem_init(void);
+    uint64_t cmb_mem_alloc(uint64_t size);
+    int cmb_mem_reserve (uint64_t addr, uint64_t size);
 
     void nicmgr_mem_init(void);
-    uint64_t nicmgr_mem_alloc(uint32_t size);
-    int nicmgr_mem_reserve(uint64_t addr, uint32_t size);
+    uint64_t nicmgr_mem_alloc(uint64_t size);
+    int nicmgr_mem_reserve(uint64_t addr, uint64_t size);
 
     void devcmd_mem_init(void);
-    uint64_t devcmd_mem_alloc(uint32_t size);
-    int devcmd_mem_reserve(uint64_t addr, uint32_t size);
+    uint64_t devcmd_mem_alloc(uint64_t size);
+    int devcmd_mem_reserve(uint64_t addr, uint64_t size);
 
     int32_t intr_alloc(uint32_t count);
     int intr_reserve(uint32_t intr_base, uint32_t count);
@@ -179,6 +180,10 @@ private:
     uint64_t devcmd_hbm_base_;
     std::unique_ptr<sdk::lib::BMAllocator> devcmd_hbm_allocator_;
     std::map<uint64_t, uint64_t> devcmd_allocation_sizes_;
+
+    uint64_t cmb_hbm_base_;
+    std::unique_ptr<sdk::lib::BMAllocator> cmb_hbm_allocator_;
+    std::map<uint64_t, uint64_t> cmb_allocation_sizes_;
 
     sdk::lib::indexer *intr_allocator;
 };

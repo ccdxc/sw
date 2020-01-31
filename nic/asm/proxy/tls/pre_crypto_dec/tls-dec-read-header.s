@@ -78,7 +78,7 @@ tls_dec_read_header_process:
      * Launch a locked table-read to the Barco GCM1 PI address in HBM.
      */
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r5, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_256_BITS)
 
@@ -114,7 +114,7 @@ tls_dec_read_header_ccm_process:
      * Launch a locked table-read to the Barco MPP1 PI address in HBM.
      */
     addui       r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi        r5, r5, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
 
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, tls_dec_read_barco_pi_process, r5, TABLE_SIZE_256_BITS)
 

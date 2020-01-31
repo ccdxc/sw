@@ -40,9 +40,9 @@ table_read_BLD_BARCO_ENC_REQ:
      * Launch a locked table-read to the Barco GCM0 PI address in HBM.
      */
     addui.!c1       r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
-    addi.!c1        r5, r0, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi.!c1        r5, r5, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     addui.c1       r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
-    addi.c1        r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi.c1        r5, r5, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
 
     CAPRI_NEXT_TABLE_READ(2, TABLE_LOCK_EN, tls_enc_read_barco_pi_process, r5, TABLE_SIZE_256_BITS)
 	

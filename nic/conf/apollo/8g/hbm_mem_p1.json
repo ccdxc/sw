@@ -64,6 +64,15 @@
             "size": "32768K"
         },
         {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "32M",
+            "cache": "p4plus-all"
+        },
+        {
             "name": "nicmgrqstate_map",
             "size": "32768K",
             "cache": "p4plus-all"

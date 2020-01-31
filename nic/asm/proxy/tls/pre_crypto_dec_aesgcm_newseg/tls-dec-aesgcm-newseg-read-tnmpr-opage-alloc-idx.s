@@ -31,7 +31,7 @@ tls_dec_aesgcm_read_tnmpr_opage:
 
 table_read_TNMDR_PAGE:
 	    addui		r3, r0, hiword(TNMDPR_BIG_TABLE_BASE)
-	    addi		r3, r0, loword(TNMDPR_BIG_TABLE_BASE)
+	    addi		r3, r3, loword(TNMDPR_BIG_TABLE_BASE)
 	    CAPRI_NEXT_TABLE_READ_INDEX(2, D(tnmpr_pidx).wx, TABLE_LOCK_EN,
                         tls_dec_aesgcm_read_tnmpr_opage_entry,
 	                    r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,

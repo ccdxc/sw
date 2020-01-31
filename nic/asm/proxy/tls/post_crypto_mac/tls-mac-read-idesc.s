@@ -54,7 +54,7 @@ tls_mac_post_read_idesc_process:
      * Set the padding in A1/O1/L1 of the idesc.
      */
     addui       r5, r0, hiword(TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE)
+    addi        r5, r5, loword(TLS_PROXY_PAD_BYTES_HBM_TABLE_BASE)
     phvwr       p.idesc_A1, r5.dx
 
      /*

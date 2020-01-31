@@ -22,7 +22,7 @@ esp_ipv4_tunnel_n2h_load_barco_req:
     nop
 
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r5, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_txdma2_load_in_desc, r5, TABLE_SIZE_512_BITS)
 
     add r2, r0, d.{output_list_address}.dx

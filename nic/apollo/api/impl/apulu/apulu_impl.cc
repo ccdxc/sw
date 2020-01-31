@@ -27,6 +27,7 @@
 #include "nic/apollo/api/impl/apulu/impl_utils.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
+#include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"

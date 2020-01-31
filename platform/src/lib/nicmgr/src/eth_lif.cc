@@ -36,7 +36,7 @@ namespace psp
 #include "nic/sdk/platform/intrutils/include/intrutils.h"
 #include "nic/sdk/platform/misc/include/misc.h"
 #include "nic/sdk/platform/pciemgr_if/include/pciemgr_if.hpp"
-#include "nic/sdk/platform/utils/mpartition.hpp"
+#include "gen/platform/mem_regions.hpp"
 
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 

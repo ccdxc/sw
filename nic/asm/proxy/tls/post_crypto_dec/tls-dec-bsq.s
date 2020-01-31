@@ -97,9 +97,9 @@ table_read_rx_bsq_dec:
                                  k.{p4_txdma_intr_qstate_addr_sbit0_ebit1...p4_txdma_intr_qstate_addr_sbit2_ebit33}[31:0],
                                  TLS_TCB_CRYPT_OFFSET, TABLE_SIZE_512_BITS)
     addui.!c1   r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi.!c1    r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi.!c1    r5, r5, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     addui.c1    r5, r0, hiword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
-    addi.c1     r5, r0, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
+    addi.c1     r5, r5, loword(TLS_PROXY_BARCO_MPP1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ_e(1, TABLE_LOCK_EN, tls_dec_free_barco_ci, r5, TABLE_SIZE_256_BITS)
     nop
 

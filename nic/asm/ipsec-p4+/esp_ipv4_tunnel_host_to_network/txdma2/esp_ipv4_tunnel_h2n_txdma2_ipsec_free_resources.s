@@ -48,7 +48,8 @@ esp_ipv4_tunnel_h2n_txdma2_ipsec_free_resources:
     //addi r7, r0, IPSEC_GLOBAL_BAD_DMA_COUNTER_BASE_H2N
     //CAPRI_ATOMIC_STATS_INCR1_NO_CHECK(r7, H2N_TXDMA2_SEM_FREE, 1)
 
-    addi r5, r0, TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE
+    addui r5, r0, hiword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
+    addi r5, r5, loword(TLS_PROXY_BARCO_GCM0_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(0, TABLE_LOCK_EN, esp_ipv4_tunnel_h2n_barco_global_ci, r5, TABLE_SIZE_32_BITS)
     nop.e
     nop

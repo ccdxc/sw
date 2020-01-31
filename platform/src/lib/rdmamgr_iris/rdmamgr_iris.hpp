@@ -23,10 +23,6 @@ private:
     std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_allocator_;
     std::map<uint64_t, uint64_t> rdma_allocation_sizes_;
 
-    uint64_t rdma_hbm_bar_base_;
-    std::unique_ptr<sdk::lib::BMAllocator> rdma_hbm_bar_allocator_;
-    std::map<uint64_t, uint64_t> rdma_bar_allocation_sizes_;
-
 private:
     sdk_ret_t init_(mpartition *mp, lif_mgr *lm);
     uint32_t roundup_to_pow_2_(uint32_t x);
@@ -83,8 +79,7 @@ public:
                        uint32_t max_ahs, uint32_t max_ptes,
                        uint64_t mem_bar_addr, uint32_t mem_bar_size,
                        uint32_t max_prefetch_wqes);
-    uint64_t rdma_mem_bar_alloc(uint32_t size);
-    int rdma_mem_bar_reserve(uint64_t addr, uint32_t size);
+
     uint64_t rdma_get_pt_base_addr (uint32_t lif);
     uint64_t rdma_get_kt_base_addr (uint32_t lif);
 

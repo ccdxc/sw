@@ -32,6 +32,7 @@
 #include "nic/apollo/p4/include/apulu_defines.h"
 #include "nic/apollo/p4/include/apulu_table_sizes.h"
 #include "nic/apollo/core/trace.hpp"
+#include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/apulu/include/p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"

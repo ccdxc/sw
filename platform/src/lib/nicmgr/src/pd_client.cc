@@ -39,6 +39,10 @@ const static uint32_t kNicmgrAllocUnit = 64;
 const static char *kDevcmdHBMLabel = MEM_REGION_DEVCMD_NAME;
 const static uint32_t kDevcmdAllocUnit = 4096;
 
+const static char *kCmbHBMLabel = MEM_REGION_ETH_CMB_NAME;
+const static uint32_t kCmbHBMAllocUnit = 8 * 1024 * 1024;
+
+
 uint8_t *memrev(uint8_t *block, size_t elnum)
 {
     uint8_t *s, *t, tmp;
@@ -182,26 +186,95 @@ PdClient::p4plus_txdma_init_tables()
     return 0;
 }
 
-uint64_t PdClient::rdma_mem_bar_alloc (uint32_t size)
+void
+PdClient::cmb_mem_init()
 {
-    return rdma_mgr_->rdma_mem_bar_alloc(size);
+    uint64_t hbm_addr = mp_->start_addr(kCmbHBMLabel);
+    assert(hbm_addr > 0);
+
+    uint64_t size = mp_->size(kCmbHBMLabel);
+    assert(size != 0);
+
+    uint64_t num_units = size / kCmbHBMAllocUnit;
+    uint64_t align = kCmbHBMAllocUnit - 1;
+    if (hbm_addr & align) {
+        // Not naturally aligned.
+        hbm_addr = (hbm_addr + align) & ~align;
+        num_units--;
+    }
+
+    cmb_hbm_base_ = hbm_addr;
+    cmb_hbm_allocator_.reset(new sdk::lib::BMAllocator(num_units));
+
+    NIC_FUNC_DEBUG("cmb_hbm_base : {:#x}", cmb_hbm_base_);
 }
 
-int PdClient::rdma_mem_bar_reserve (uint64_t addr, uint32_t size)
+uint64_t
+PdClient::cmb_mem_alloc(uint64_t size)
 {
-    return rdma_mgr_->rdma_mem_bar_reserve(addr, size);
+    uint64_t addr = 0;
+    uint32_t alloc_units;
+
+    alloc_units = (size + kCmbHBMAllocUnit - 1) & ~(kCmbHBMAllocUnit - 1);
+    alloc_units /= kCmbHBMAllocUnit;
+    int alloc_offset = cmb_hbm_allocator_->Alloc(alloc_units);
+
+    if (alloc_offset < 0) {
+        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
+        return 0;
+    }
+
+    cmb_allocation_sizes_[alloc_offset] = alloc_units;
+    alloc_offset *= kCmbHBMAllocUnit;
+    addr = cmb_hbm_base_ + alloc_offset;
+    NIC_FUNC_DEBUG("size: {} alloc_offset: {} addr: {:#x}",
+                    size, alloc_offset, addr);
+
+    // Allocations must be naturally aligned because this memory is used
+    // for cmb bar.
+    assert((addr & (kCmbHBMAllocUnit - 1)) == 0);
+
+    return addr;
 }
 
+int
+PdClient::cmb_mem_reserve(uint64_t addr, uint64_t size)
+{
+    uint32_t alloc_units;
+    int alloc_offset, reserved_offset = 0;
 
-void PdClient::nicmgr_mem_init (void)
+    // Allocations must be naturally aligned because this memory is used
+    // for cmb bar.
+    assert((addr & (kCmbHBMAllocUnit - 1)) == 0);
+
+    alloc_offset = ((addr - cmb_hbm_base_)/kCmbHBMAllocUnit);
+
+    alloc_units = (size + kCmbHBMAllocUnit - 1) & ~(kCmbHBMAllocUnit - 1);
+    alloc_units /= kCmbHBMAllocUnit;
+    reserved_offset = cmb_hbm_allocator_->CheckAndReserve(alloc_offset, alloc_units);
+
+    if ((reserved_offset < 0) || (reserved_offset != alloc_offset)) {
+        NIC_FUNC_ERR("Failed to reserve cmb mem at addr {}", addr);
+        return -1;
+    }
+
+    cmb_allocation_sizes_[alloc_offset] = alloc_units;
+    NIC_FUNC_DEBUG("size: {} reserved_offset: {} addr: {:#x}",
+                    size, reserved_offset, addr);
+
+    return 0;
+}
+
+void
+PdClient::nicmgr_mem_init(void)
 {
     uint64_t hbm_addr = mp_->start_addr(kNicmgrHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = mp_->size(kNicmgrHBMLabel);
+    uint64_t size = mp_->size(kNicmgrHBMLabel);
     assert(size != 0);
 
-    uint32_t num_units = size / kNicmgrAllocUnit;
+    uint64_t num_units = size / kNicmgrAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
@@ -214,7 +287,8 @@ void PdClient::nicmgr_mem_init (void)
     NIC_FUNC_DEBUG("nicmgr_hbm_base : {:#x}", nicmgr_hbm_base_);
 }
 
-uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
+uint64_t
+PdClient::nicmgr_mem_alloc(uint64_t size)
 {
     uint64_t addr = 0;
     uint32_t alloc_units;
@@ -242,7 +316,7 @@ uint64_t PdClient::nicmgr_mem_alloc(uint32_t size)
 }
 
 int
-PdClient::nicmgr_mem_reserve(uint64_t addr, uint32_t size)
+PdClient::nicmgr_mem_reserve(uint64_t addr, uint64_t size)
 {
     uint32_t alloc_units;
     int alloc_offset, reserved_offset = 0;
@@ -263,21 +337,22 @@ PdClient::nicmgr_mem_reserve(uint64_t addr, uint32_t size)
     }
 
     nicmgr_allocation_sizes_[alloc_offset] = alloc_units;
-    NIC_FUNC_DEBUG("reserved: size: {} reserved_offset: {} addr: {:#x}",
+    NIC_FUNC_DEBUG("size: {} reserved_offset: {} addr: {:#x}",
                     size, reserved_offset, addr);
 
     return 0;
 }
 
-void PdClient::devcmd_mem_init (void)
+void
+PdClient::devcmd_mem_init(void)
 {
     uint64_t hbm_addr = mp_->start_addr(kDevcmdHBMLabel);
     assert(hbm_addr > 0);
 
-    uint32_t size = mp_->size(kDevcmdHBMLabel);
+    uint64_t size = mp_->size(kDevcmdHBMLabel);
     assert(size != 0);
 
-    uint32_t num_units = size / kDevcmdAllocUnit;
+    uint64_t num_units = size / kDevcmdAllocUnit;
     if (hbm_addr & 0xFFF) {
         // Not 4K aligned.
         hbm_addr = (hbm_addr + 0xFFF) & ~0xFFFULL;
@@ -290,7 +365,8 @@ void PdClient::devcmd_mem_init (void)
     NIC_FUNC_DEBUG("devcmd_hbm_base : {:#x}", devcmd_hbm_base_);
 }
 
-uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
+uint64_t
+PdClient::devcmd_mem_alloc(uint64_t size)
 {
     uint64_t addr = 0;
     uint32_t alloc_units;
@@ -317,7 +393,7 @@ uint64_t PdClient::devcmd_mem_alloc(uint32_t size)
 }
 
 int
-PdClient::devcmd_mem_reserve(uint64_t addr, uint32_t size)
+PdClient::devcmd_mem_reserve(uint64_t addr, uint64_t size)
 {
     uint32_t alloc_units;
     int alloc_offset, reserved_offset = 0;
@@ -337,12 +413,11 @@ PdClient::devcmd_mem_reserve(uint64_t addr, uint32_t size)
     }
 
     devcmd_allocation_sizes_[alloc_offset] = alloc_units;
-    NIC_FUNC_DEBUG("reserved: size: {} reserved_offset: {} addr: {:#x}",
+    NIC_FUNC_DEBUG("size: {} reserved_offset: {} addr: {:#x}",
                     size, reserved_offset, addr);
 
     return 0;
 }
-
 
 int32_t PdClient::intr_alloc(uint32_t count)
 {
@@ -447,6 +522,7 @@ void
 PdClient::init()
 {
     int ret;
+
 #ifdef IRIS
     // initialize capri_state_pd
     sdk::platform::capri::capri_state_pd_init(NULL);
@@ -468,6 +544,7 @@ PdClient::init()
     ret = sdk::asic::pd::asicpd_program_hbm_table_base_addr();
     SDK_ASSERT(ret == 0);
 #endif
+
     NIC_LOG_DEBUG("Initializing LIF Manager ...");
     lm_ = lif_mgr::factory(kNumMaxLIFs, mp_, kLif2QstateHBMLabel);
     assert(lm_);
@@ -482,6 +559,8 @@ PdClient::init()
 
     nicmgr_mem_init();
     devcmd_mem_init();
+    cmb_mem_init();
+
     intr_allocator = sdk::lib::indexer::factory(4096);
     assert(intr_allocator != NULL);
 }

@@ -26,6 +26,7 @@
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/apollo/p4/include/athena_table_sizes.h"
+#include "gen/platform/mem_regions.hpp"
 #include "gen/p4gen/athena/include/p4pd.h"
 #include "gen/p4gen/p4plus_rxdma/include/p4plus_rxdma_p4pd.h"
 #include "gen/p4gen/p4plus_txdma/include/p4plus_txdma_p4pd.h"

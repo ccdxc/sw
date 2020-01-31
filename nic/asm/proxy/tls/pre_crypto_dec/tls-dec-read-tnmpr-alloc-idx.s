@@ -30,7 +30,7 @@ tls_dec_alloc_tnmpr_process:
 
 table_read_TNMDR_PAGE:
 	    addui		r3, r0, hiword(TNMPR_TABLE_BASE)
-	    addi		r3, r0, loword(TNMPR_TABLE_BASE)
+	    addi		r3, r3, loword(TNMPR_TABLE_BASE)
 	    CAPRI_NEXT_TABLE_READ_INDEX(2, d.{u.read_tnmpr_pidx_d.tnmpr_pidx}.wx, TABLE_LOCK_DIS,
                         tls_dec_tpage_alloc_process,
 	                    r3, TNMPR_TABLE_ENTRY_SIZE_SHFT,

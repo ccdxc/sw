@@ -54,6 +54,7 @@ hal_atexit_handler (void)
     if (utils::hal_logger()) {
         utils::hal_logger()->flush();
     }
+    nicmgr::nicmgr_exit();
 }
 
 //------------------------------------------------------------------------------
@@ -68,6 +69,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     }
 
     switch (sig) {
+    case SIGABRT:
     case SIGINT:
     case SIGTERM:
     case SIGQUIT:
@@ -76,6 +78,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
             !getenv("DISABLE_FWLOG"))) {
             ipc_logger::deinit();
         }
+        nicmgr::nicmgr_exit();
         HAL_GCOV_FLUSH();
         hal_destroy();
         raise(SIGKILL);

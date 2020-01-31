@@ -24,7 +24,7 @@ esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex:
     bcf [c1], esp_v4_tunnel_n2h_get_in_desc_from_cb_cindex_abort_txdma1
     nop
     addui       r5, r0, hiword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
-    addi        r5, r0, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
+    addi        r5, r5, loword(TLS_PROXY_BARCO_GCM1_PI_HBM_TABLE_BASE)
     CAPRI_NEXT_TABLE_READ(1, TABLE_LOCK_EN, esp_ipv4_tunnel_n2h_allocate_barco_req_pindex, r5, TABLE_SIZE_512_BITS)
     nop.e
     nop

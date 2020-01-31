@@ -65,17 +65,21 @@
              "size": "64M"
         },
         {
-            "name": "serq",
-            "size": "65536K"
-        },
-        {
+            "comment": "Devcmd region for all devices",
+            "_comment1": "This region is non-movable/non-resizable",
+            "_comment2": "Allocation unit is 4 KiB",
+            "_comment3": "Alignment is page-aligned",
             "name": "devcmd",
-            "size": "32768K"
+            "size": "32M"
         },
         {
-            "_comment": "Combines sesq and asesq",
-            "name": "sesq",
-            "size": "32768K"
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "96M",
+            "cache": "p4plus-all"
         },
         {
             "_comment" : "Storage region address is hereby aligned to 256MB for efficient PCIe BAR mapping,",
@@ -87,18 +91,18 @@
             "size": "256M"
         },
         {
-             "name": "ipsec-global-drop-stats",
-             "size": "2K"
-        },
-        {
             "name": "lif2qstate_map",
-            "size": "98304K",
+            "size": "96M",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "65536K",
+            "size": "64M",
             "cache": "p4plus-all"
+        },
+        {
+             "name": "ipsec-global-drop-stats",
+             "size": "2K"
         },
         {
             "name": "ipsec-cb",
@@ -149,6 +153,10 @@
         {
             "name": "ipsec-nmpr-big-rx",
             "size": "10240K"
+        },
+        {
+            "name": "serq",
+            "size": "65536K"
         },
         {
             "name": "bsq",
@@ -302,6 +310,11 @@
         {
             "name": "ipsec_pad_table",
             "size": "1K"
+        },
+        {
+            "_comment": "Combines sesq and asesq",
+            "name": "sesq",
+            "size": "32768K"
         },
         {
             "name": "brq-ring-xts0",
@@ -484,15 +497,6 @@
         {
             "name": "fwupdate",
             "size": "128K"
-        },
-        {
-            "name": "rdma-hbm-bar",
-            "size" : "32768K",
-            "cache": "p4plus-all"
-        },
-        {
-            "name": "eth_desc_cache",
-            "size": "65536K"
         },
         {
             "name": "tls_proxy_global_stats",

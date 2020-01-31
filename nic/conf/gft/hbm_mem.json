@@ -19,10 +19,6 @@
             "cache": "p4plus-all"
         },
         {
-            "name": "nicmgrqstate_map",
-            "size": "32768K"
-        },
-        {
             "name": "arq-rx",
             "size": "64K"
         },
@@ -189,17 +185,34 @@
             "size": "262144K"
         },
         {
-            "name": "nicmgrd",
-            "size": "65536K"
-        },
-        {
-            "name": "devcmd",
-            "size": "32768K"
-        },
-        {
             "name": "qos-dscp-cos-map",
             "size": "64B",
             "reset": true
+        },
+        {
+            "name": "devcmd",
+            "size": "32M"
+        },
+        {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "32M",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "nicmgrqstate_map",
+            "size": "32M"
+        },
+        {
+            "name": "nicmgr",
+            "size" : "32M"
+        },
+        {
+            "name": "fwupdate",
+            "size": "128K"
         }
     ]
 }

@@ -8,5 +8,5 @@ MODULE_INCS     = ${SDKDIR}/dpdk/build/include/
 MODULE_SOLIBS   = ${NIC_${PIPELINE}_PDSAPI_IMPL_SOLIBS}
 MODULE_DEFS     = -DCAPRI_SW ${NIC_CSR_DEFINES} -DRTE_FORCE_INTRINSICS
 MODULE_FLAGS    = ${NIC_CSR_FLAGS}
-MODULE_PREREQS  = dpdk.submake
+MODULE_PREREQS  = dpdk.submake hal.memrgns
 include ${MKDEFS}/post.mk

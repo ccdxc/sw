@@ -15,9 +15,6 @@ namespace iris {
 const static char *kRdmaHBMLabel = "rdma";
 const static uint32_t kRdmaAllocUnit = 4096;
 
-const static char *kRdmaHBMBarLabel = "rdma-hbm-bar";
-const static uint32_t kRdmaBarAllocUnit = 8 * 1024 * 1024;
-
 // Memory bar should be multiple of 8 MB
 #define MEM_BARMAP_SIZE_SHIFT               (23)
 
@@ -75,23 +72,6 @@ rdmamgr_iris::init_(mpartition *mp, lif_mgr *lm)
 
     NIC_FUNC_DEBUG("rdma_hbm_base : {:#x}", rdma_hbm_base_);
 
-    hbm_addr = mp_->start_addr(kRdmaHBMBarLabel);
-    assert(hbm_addr > 0);
-
-    size = mp_->size(kRdmaHBMBarLabel);
-    assert(size != 0);
-
-    num_units = size / kRdmaBarAllocUnit;
-    if (hbm_addr & 0x7FFFFF) {
-        // Not 4K aligned.
-        hbm_addr = (hbm_addr + 0x7FFFFF) & ~0x7FFFFFULL;
-        num_units--;
-    }
-
-    rdma_hbm_bar_base_ = hbm_addr;
-    rdma_hbm_bar_allocator_.reset(new sdk::lib::BMAllocator(num_units));
-
-    NIC_FUNC_DEBUG("rdma_hbm_bar_base : {:#x}", rdma_hbm_bar_base_);
     return SDK_RET_OK;
 }
 
@@ -352,50 +332,6 @@ rdmamgr_iris::rdma_mem_alloc_(uint32_t size)
                     size, alloc_offset, rdma_hbm_base_ + alloc_offset);
     return rdma_hbm_base_ + alloc_offset;
 }
-
-uint64_t
-rdmamgr_iris::rdma_mem_bar_alloc(uint32_t size)
-{
-    uint32_t alloc_units;
-
-    alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
-    alloc_units /= kRdmaBarAllocUnit;
-    int alloc_offset = rdma_hbm_bar_allocator_->Alloc(alloc_units);
-
-    if (alloc_offset < 0) {
-        NIC_FUNC_ERR("Invalid alloc_offset {}", alloc_offset);
-        return 0;
-    }
-
-    rdma_bar_allocation_sizes_[alloc_offset] = alloc_units;
-    alloc_offset *= kRdmaBarAllocUnit;
-    NIC_FUNC_DEBUG("size: {} alloc_offset: {} hbm_addr: {:#x}",
-                    size, alloc_offset, rdma_hbm_bar_base_ + alloc_offset);
-    return rdma_hbm_bar_base_ + alloc_offset;
-}
-
-int
-rdmamgr_iris::rdma_mem_bar_reserve(uint64_t addr, uint32_t size)
-{
-    uint32_t alloc_units;
-    int32_t alloc_offset, reserved_offset = 0;
-
-    alloc_offset = ((addr - rdma_hbm_bar_base_)/kRdmaBarAllocUnit);
-    alloc_units = (size + kRdmaBarAllocUnit - 1) & ~(kRdmaBarAllocUnit-1);
-    alloc_units /= kRdmaBarAllocUnit;
-    reserved_offset = rdma_hbm_bar_allocator_->CheckAndReserve(alloc_offset, alloc_units);
-
-    if ((reserved_offset < 0) || (reserved_offset != alloc_offset)) {
-        NIC_FUNC_ERR("Cannot reserve addr: {} size: {}", addr, size);
-        return -1;
-    }
-
-    rdma_bar_allocation_sizes_[reserved_offset] = alloc_units;
-    NIC_FUNC_DEBUG("reserved_size: {} reserved_offset: {} reserved_hbm_addr: {:#x}",
-                    size, reserved_offset, addr);
-    return 0;
-}
-
 
 sdk_ret_t
 rdmamgr_iris::

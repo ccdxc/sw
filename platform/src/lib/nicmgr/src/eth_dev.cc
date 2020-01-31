@@ -205,7 +205,7 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
             throw;
         }
 
-        err = pd->rdma_mem_bar_reserve(dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
+        err = pd->cmb_mem_reserve(dev_resources.cmb_mem_addr, dev_resources.cmb_mem_size);
         if (err) {
             NIC_LOG_ERR("{}: Failed to reserve cmb mem with error: {}", spec->name, err);
             throw;
@@ -415,7 +415,7 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
             throw;
         }
 
-        dev_resources.cmb_mem_addr = pd->rdma_mem_bar_alloc(dev_resources.cmb_mem_size);
+        dev_resources.cmb_mem_addr = pd->cmb_mem_alloc(dev_resources.cmb_mem_size);
         assert(dev_resources.cmb_mem_addr != 0);
         // bar address must be aligned to bar size
         assert((dev_resources.cmb_mem_size % dev_resources.cmb_mem_size) == 0);

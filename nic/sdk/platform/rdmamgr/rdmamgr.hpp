@@ -20,8 +20,7 @@ public:
                                uint32_t max_ahs, uint32_t max_ptes,
                                uint64_t mem_bar_addr, uint32_t mem_bar_size,
                                uint32_t max_prefetch) = 0;
-    virtual uint64_t rdma_mem_bar_alloc(uint32_t size) = 0;
-    virtual int rdma_mem_bar_reserve(uint64_t addr, uint32_t size) = 0;
+;
     virtual uint64_t rdma_get_pt_base_addr (uint32_t lif) = 0;
     virtual uint64_t rdma_get_kt_base_addr (uint32_t lif) = 0;
 

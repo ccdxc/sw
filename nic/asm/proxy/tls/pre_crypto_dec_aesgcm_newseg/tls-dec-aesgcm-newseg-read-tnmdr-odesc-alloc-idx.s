@@ -29,7 +29,7 @@ tls_dec_aesgcm_read_tnmdr_odesc:
 
 table_read_TNMDR_DESC:
 	    addui		r3, r0, hiword(TNMDPR_BIG_TABLE_BASE)
-	    addi		r3, r0, loword(TNMDPR_BIG_TABLE_BASE)
+	    addi		r3, r3, loword(TNMDPR_BIG_TABLE_BASE)
 	    CAPRI_NEXT_TABLE_READ_INDEX(1, D(tnmdr_pidx).wx, TABLE_LOCK_EN,
                                tls_dec_aesgcm_read_tnmdr_odesc_entry,
   	                           r3, TNMDR_TABLE_ENTRY_SIZE_SHFT,

@@ -65,29 +65,43 @@
              "size": "64M"
         },
         {
+            "comment": "Devcmd region for all devices",
+            "_comment1": "This region is non-movable/non-resizable",
+            "_comment2": "Allocation unit is 4 KiB",
+            "_comment3": "Alignment is page-aligned",
+            "name": "devcmd",
+            "size": "32M"
+        },
+        {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "96M",
+            "cache": "p4plus-all"
+        },
+        {
             "_comment" : "Storage region is intended for use in classic forwarding mode, i.e., as defined",
             "_comment1": "in hbm_classic_mem.json. For other modes, the region is expected to be used only", 
             "_comment2": "for DOL purposes. If you need to change the size of this region,",
             "_comment3": "please talk to Storage team first.",
             "name": "storage",
-            "size": "131072K"
-        },
-        {
-            "name": "devcmd",
-            "size": "32768K"
-        },
-        {
-             "name": "ipsec-global-drop-stats",
-             "size": "2K"
+            "size": "128M"
         },
         {
             "name": "lif2qstate_map",
-            "size": "98304K",
+            "size": "96M",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgrqstate_map",
-            "size": "32768K"
+            "size": "32M",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ipsec-global-drop-stats",
+            "size": "2K"
         },
         {
             "name": "ipsec-cb",
@@ -487,15 +501,6 @@
         {
             "name": "fwupdate",
             "size": "128K"
-        },
-        {
-            "name": "rdma-hbm-bar",
-            "size" : "32768K",
-            "cache": "p4plus-all"
-        },
-        {
-            "name": "eth_desc_cache",
-            "size" : "65536K"
         },
         {
             "name": "tls_proxy_global_stats",

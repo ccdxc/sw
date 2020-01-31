@@ -133,6 +133,8 @@ nicmgr_init (platform_type_t platform,
     // instantiate the logger
     utils::logger::init();
 
+    NIC_LOG_INFO("Nicmgr initializing!");
+
     if (platform == platform_type_t::PLATFORM_TYPE_SIM) {
         profile = std::string(getenv("HAL_CONFIG_PATH")) + "/../../" +
                   "platform/src/app/nicmgrd/etc/eth.json";
@@ -219,6 +221,10 @@ dev_init:
 void
 nicmgr_exit (void)
 {
+    NIC_LOG_INFO("Nicmgr exiting!");
+
+    log_flush(NULL);
+
     if (devmgr) {
         delete devmgr;
     }

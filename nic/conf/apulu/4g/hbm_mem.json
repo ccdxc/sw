@@ -67,25 +67,35 @@
             "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
             "_comment1" : "Used by memtun, pciemgr, and mputrace. Size is 64MB",
             "_comment2" : "Refer sdk/platform/utils/mpart_rsvd.hpp",
-             "name": "reserved_common",
+            "name": "reserved_common",
             "kind": "static",
-             "size": "64M"
+            "size": "64M"
         },
         {
             "name": "devcmd",
             "kind": "static",
-            "size": "32768K"
+            "size": "32M"
+        },
+        {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "32M",
+            "kind": "static",
+            "cache": "p4plus-all"
         },
         {
             "name": "nicmgrqstate_map",
+            "size": "32M",
             "kind": "static",
-            "size": "32768K",
             "cache": "p4plus-all"
         },
         {
             "name": "nicmgr",
             "kind": "static",
-            "size" : "32768K"
+            "size" : "32M"
         },
         {
             "name": "fwupdate",
