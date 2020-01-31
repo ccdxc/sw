@@ -7,10 +7,12 @@ DOLDIR=`readlink -f $NICDIR/../dol/`
 export PERSISTENT_LOG_DIR=$NICDIR
 DRYRUN=0
 START_VPP=0
+export CONFIG_PATH=$NICDIR/conf
 
 # set file size limit to 30GB so that model logs will not exceed that.
 ulimit -f $((30*1024*1024))
 
+CMDARGS=$*
 argc=$#
 argv=($@)
 for (( j=0; j<argc; j++ )); do
@@ -39,6 +41,23 @@ function stop_process () {
     pstack `pgrep pdsagent` &> $NICDIR/pdsagent_bt.log
     pkill agent
     pkill cap_model
+}
+
+function start_vpp () {
+    if [ $START_VPP == 1 ]; then
+        echo "Starting VPP"
+        sudo $NICDIR/vpp/tools/start-vpp-sim.sh ${CMDARGS}
+        if [[ $? != 0 ]]; then
+            echo "Failed to bring up VPP"
+            exit 1
+        fi
+    fi
+}
+
+function start_process () {
+    $NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
+    $NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
+    start_vpp
 }
 
 function remove_stale_files () {
@@ -79,20 +98,11 @@ if [ $PIPELINE == 'artemis' ];then
     export AGENT_TEST_HOOKS_LIB='libdolagenthooks.so'
 fi
 
-$NICDIR/apollo/tools/$PIPELINE/start-agent-sim.sh > agent.log 2>&1 &
-$NICDIR/apollo/test/tools/$PIPELINE/start-$PIPELINE-model.sh &
-
-export CONFIG_PATH=$NICDIR/conf
-
-if [ $START_VPP == 1 ]; then
-    echo "Starting VPP"
-    sudo $NICDIR/vpp/tools/start-vpp-sim.sh $*
-    if [[ $? != 0 ]]; then
-        echo "Failed to bring up VPP"
-        exit 1
-    fi
+if [ $DRYRUN == 0 ]; then
+    start_process
 fi
 
+# start DOL now
 $DOLDIR/main.py $* 2>&1 | tee dol.log
 status=${PIPESTATUS[0]}
 
