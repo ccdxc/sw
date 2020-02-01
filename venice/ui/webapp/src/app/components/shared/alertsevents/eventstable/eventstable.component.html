@@ -8,21 +8,15 @@
   </app-tableviewedit>
 </div>
 <ng-template #captionTemplate>
-  <div fxFlex="none" fxLayout="column">
+  <div fxFlex="auto" fxLayout="column">
     <div *ngIf="this.selectedEvent" [@slideInOut] fxFlex="auto" fxLayout="row"
          class="eventdetail-container">
       <ng-container *ngTemplateOutlet="selectedEventDetail;"></ng-container>
     </div>
-    <div fxFlex="none" fxLayout="row">
-      <div fxFlex="none" fxLayout="row" fxLayoutAlign="center center">
-        <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
-                         [max]="eventLimit"
-                         [icon]="eventsIcon"
-                         width="250px">
-        </app-tableheader>
-        <div fxFlex></div>
-      </div>
-      <div fxFlex="none" fxLayout="row" fxLayoutAlign="end center">
+    <app-tableheader title="Events" [count]="dataObjects.length" [total]="eventsTotalCount"
+                     [max]="eventLimit" [icon]="eventsIcon"
+                     width="250px">
+      <div fxFlex="grow" fxLayoutAlign="end center">
         <!-- All events are currently informational, so we do not display severity filters or search filter -->
         <!-- <div class="alertsevents-search" fxFlex="fxFlex" fxLayoutAlign="start center" > -->
         <!-- Find Event by:  -->
@@ -59,9 +53,10 @@
                     label="Show Debug Events"
                     [(ngModel)]="showDebugEvents" (onChange)="filterEvents()"></p-checkbox>
         <app-timerange fxFlex="nogrow" [selectedTimeRange]="eventsSelectedTimeRange"
-                       (timeRange)="setEventsTimeRange($event)"></app-timerange>
+                       (timeRange)="setEventsTimeRange($event)"
+                       [hiddenTimeRangeOptions]="['Previous month']"></app-timerange>
       </div>
-    </div>
+    </app-tableheader>
   </div>
 </ng-template>
 

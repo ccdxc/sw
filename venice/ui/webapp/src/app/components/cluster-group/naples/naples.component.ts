@@ -99,17 +99,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
   ];
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {
-      let workloadName: string = '';
-      for (const key in opts.data.associatedWorkloads) {
-        if (key) {
-          if (Number(key) >= opts.data.associatedWorkloads.length - 1 && opts.data.associatedWorkloads.length > 1) {
-            workloadName += ',' + opts.data.associatedWorkloads[key].meta.name;
-          } else {
-            workloadName = opts.data.associatedWorkloads[key].meta.name;
-          }
-        }
-      }
-      return workloadName;
+      return opts.data.associatedWorkloads.map(wkld => wkld.meta.name).join(', ');
     }
   };
 

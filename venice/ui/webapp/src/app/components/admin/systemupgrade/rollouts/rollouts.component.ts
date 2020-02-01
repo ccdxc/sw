@@ -138,6 +138,9 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
     const sub = this.objstoreService.ListObject(Utility.ROLLOUT_IMGAGE_NAMESPACE).subscribe(
       (response) => {
         this.rolloutImages = response.body as IObjstoreObjectList;
+        if (this.rolloutImages.items && this.rolloutImages.items.length > 0) {
+          this.rolloutImages.items = Utility.sortDate(this.rolloutImages.items, ['meta', 'creation-time'], -1);
+        }
       },
       (error) => {
         this.controllerService.invokeRESTErrorToaster('Failed to fetch rollout images.', error);

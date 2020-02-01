@@ -65,8 +65,7 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
   @Input() minEndSelectDateValue: Date = null;
   @Input() maxEndSelectDateValue: Date = new Date();
 
-
-
+  @Input() hiddenTimeRangeOptions: string[] = [];
   @Input() timeRangeOptions: TimeRangeOption[] = [
     {
       text: 'Past hour',
@@ -176,6 +175,15 @@ export class TimeRangeComponent implements OnInit, AfterViewInit, OnDestroy, OnC
     if (!this.maxEndSelectDateValue) {
       this.maxEndSelectDateValue = new Date();
     }
+
+    this.hiddenTimeRangeOptions.forEach(hide => {
+      if (hide) {
+        const idx = this.timeRangeOptions.findIndex(range => range.text.toUpperCase() === hide.toUpperCase());
+        if (idx >= 0) {
+          this.timeRangeOptions.splice(idx, 1);
+        }
+      }
+    });
   }
 
   setTimeRange(opt: TimeRangeOption) {

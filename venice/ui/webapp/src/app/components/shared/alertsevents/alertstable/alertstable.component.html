@@ -45,8 +45,8 @@
 </ng-template>
 
 <ng-template #captionTemplate let-count="count">
-  <div fxFlex fxLayout="column">
-    <div fxFlex *ngIf="this.selectedAlert" [@slideInOut] fxFlex="auto" fxLayout="row"
+  <div fxFlex="auto" fxLayout="column">
+    <div *ngIf="this.selectedAlert" [@slideInOut] fxFlex="auto" fxLayout="row"
          class="alertdetail-container">
       <ng-container *ngTemplateOutlet="selectedAlertDetail;"></ng-container>
     </div>
@@ -109,7 +109,6 @@
              (click)="onAlertNumberClick('info')" [matTooltip]="'Infomational Alerts'"
              *ngIf="(alertNumbers.info>0 && alertNumbers.info !== alerts.length)">
           {{ alertNumbers.info }}</div>
-        &nbsp;|
         <app-timerange fxFlex="nogrow" [selectedTimeRange]="alertsSelectedTimeRange"
                        (timeRange)="setAlertsTimeRange($event)"></app-timerange>
       </div>
