@@ -304,12 +304,16 @@ func (idr *Indexer) initialize() error {
 			idr.logger.Error(err)
 			return err
 		default:
-			idr.Lock()
-			idr.watcherDone = make(chan bool)
-			idr.Unlock()
-
 			_, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
 				return func() (interface{}, error) {
+					if idr.ctx.Err() != nil { // context canceled; indexer stopped
+						return nil, fmt.Errorf("context canceled, returning from create watcher retry loop")
+					}
+
+					idr.Lock()
+					idr.watcherDone = make(chan bool)
+					idr.Unlock()
+
 					return nil, idr.createWatchers()
 				}()
 			}, apiSrvWaitIntvl, maxAPISrvRetries)

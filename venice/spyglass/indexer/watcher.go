@@ -11,7 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	api "github.com/pensando/sw/api"
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/errors"
 	"github.com/pensando/sw/api/generated/monitoring"
 	"github.com/pensando/sw/api/generated/objstore"
@@ -50,6 +50,11 @@ func (idr *Indexer) createWatchers() error {
 	apiClientVal := reflect.ValueOf(idr.apiClient)
 
 	for group := range groupMap {
+		if idr.ctx.Err() != nil { // context canceled; indexer stopped
+			idr.stopWatchersHelper()
+			return fmt.Errorf("context canceled, returning from create watchers")
+		}
+
 		// Objstore is handled separately below
 		if group == "objstore" || group == "bookstore" {
 			continue
@@ -73,6 +78,7 @@ func (idr *Indexer) createWatchers() error {
 		watch, err := serviceGroup[0].Interface().(service).Watch(idr.ctx, &opts)
 		err = idr.addWatcher(key, watch, err)
 		if err != nil {
+			idr.stopWatchersHelper() // stop the existing watchers
 			return err
 		}
 	}
@@ -97,6 +103,7 @@ func (idr *Indexer) createWatchers() error {
 		if err != nil {
 			// VOS does not support restarting a watch currently. Indexer should shutdown and recreate our index
 			// incase we missed delete events
+			idr.stopWatchersHelper()
 			idr.doneCh <- err
 			return err
 		}
@@ -169,6 +176,7 @@ func (idr *Indexer) startWatchers() {
 			// First handle special channels related to watcherDone and Ctx
 			if chosen == 0 {
 				idr.logger.Info("Exiting watcher, watcherDone event")
+				idr.stopWatchers()
 				return
 			} else if chosen == 1 {
 				idr.logger.Info("Exiting watcher, Ctx cancelled")
@@ -187,6 +195,7 @@ func (idr *Indexer) startWatchers() {
 					idr.logger.Errorf(err.Error())
 					// if its an error for objstore, we restart spyglass since we may have missed an event by the time we come back up
 					if strings.Contains(apiGroupMappings[chosen], "Objstore") {
+						idr.stopWatchers()
 						idr.doneCh <- err
 						return
 					}
@@ -254,7 +263,7 @@ func (idr *Indexer) handleWatcherEvent(apiGroup string, et kvstore.WatchEventTyp
 	idr.reqChan[idr.writerMap[apiGroup].writerID] <- req
 }
 
-// Start the Bulk/Batch writer to Elasticseach
+// Start the Bulk/Batch writer to Elasticsearch
 func (idr *Indexer) startWriter(id int) {
 	// input validation
 	if id < 0 || id >= idr.maxWriters {
@@ -270,9 +279,9 @@ func (idr *Indexer) startWriter(id int) {
 	bulkTimeout := int((1 / (indexRetryIntvl.Seconds() * indexMaxRetries)) * failedWriteTimeout.Seconds())
 	for {
 
-		// If we fail to write for 5 min, we drop the request
+		// If we fail to write for 2 min, we drop the request
 		if failedBulkCount == bulkTimeout {
-			idr.logger.Errorf("elastic write failed for %d seconds. so, dropping the request", bulkTimeout)
+			idr.logger.Errorf("Writer: %d elastic write failed for %d seconds. so, dropping the request", id, bulkTimeout)
 			failedBulkCount = 0
 			idr.updateIndexer(id)
 		}
@@ -286,6 +295,7 @@ func (idr *Indexer) startWriter(id int) {
 				if idr.attemptSendBulkRequest(id) != nil {
 					failedBulkCount++
 				} else {
+					idr.logger.Infof("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
 					failedBulkCount = 0
 				}
 			}
@@ -425,6 +435,7 @@ func (idr *Indexer) startWriter(id int) {
 				if idr.attemptSendBulkRequest(id) != nil {
 					failedBulkCount++
 				} else {
+					idr.logger.Infof("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
 					failedBulkCount = 0
 				}
 				break
@@ -445,6 +456,7 @@ func (idr *Indexer) startWriter(id int) {
 				if idr.attemptSendBulkRequest(id) != nil {
 					failedBulkCount++
 				} else {
+					idr.logger.Infof("Writer: %d Bulk request succeeded after (%d) failures", id, failedBulkCount)
 					failedBulkCount = 0
 				}
 				break
@@ -489,17 +501,23 @@ func (idr *Indexer) stopWatchers() {
 
 	idr.Lock()
 	defer idr.Unlock()
-
-	for key, watcher := range idr.watchers {
-		if watcher != nil {
-			watcher.Stop()
-		}
-		idr.watchers[key] = nil
-	}
-	idr.watchers = nil
-	idr.channels = nil
-	close(idr.watcherDone)
+	idr.stopWatchersHelper()
 	idr.logger.Info("Stopped watchers")
+}
+
+// call to this should be protected by a lock
+func (idr *Indexer) stopWatchersHelper() {
+	if idr.watchers != nil {
+		for key, watcher := range idr.watchers {
+			if watcher != nil {
+				watcher.Stop()
+			}
+			idr.watchers[key] = nil
+		}
+		idr.watchers = nil
+		idr.channels = nil
+		close(idr.watcherDone)
+	}
 }
 
 // Update the policy cache

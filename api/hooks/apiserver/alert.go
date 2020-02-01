@@ -107,6 +107,7 @@ func (a *alertHooks) getAlertUpdFunc(flags *alertUpdateFlags) kvstore.UpdateFunc
 				flags.incrementOpenAlerts++
 			}
 		}
+		alertObj.ObjectMeta.ModTime.Timestamp = *timeNow
 		alertObj.Spec.State = flags.alert.Spec.State
 		return alertObj, nil
 	}
