@@ -31,6 +31,7 @@ extern "C" {
 static thread_local ftl_base *ftl_table;
 
 uint32_t ftl_entry_count;
+thread_local bool ftl_entry_valid;
 
 typedef struct pds_flow_read_cbdata_s {
     pds_flow_key_t *key;
@@ -129,7 +130,7 @@ pds_flow_cache_entry_create (pds_flow_spec_t *spec)
     sdk_table_api_params_t params = { 0 };
     flow_hash_entry_t entry;
     uint32_t index;
-    uint8_t index_type;
+    pds_flow_spec_index_type_t index_type;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -159,7 +160,8 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
     flow_hash_entry_t *hwentry = (flow_hash_entry_t *)params->entry;
     pds_flow_read_cbdata_t *cbdata = (pds_flow_read_cbdata_t *)params->cbdata;
 
-    if (hwentry->entry_valid) {
+    // Iterate only when entry valid and if another entry is not found already
+    if (hwentry->entry_valid && (ftl_entry_valid == false)) {
         // TODO: Optimize this
         if ((hwentry->key_metadata_ktype == KEY_TYPE_IPV6) &&
             (cbdata->key->ip_addr_family == IP_AF_IPV4)) {
@@ -178,7 +180,9 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
             (hwentry->key_metadata_smac == cbdata->key->smac)) {
             // Key matching with index, so fill data
             cbdata->info->spec.data.index = hwentry->index;
-            cbdata->info->spec.data.index_type = hwentry->index_type;
+            cbdata->info->spec.data.index_type =
+                (pds_flow_spec_index_type_t)hwentry->index_type;
+            ftl_entry_valid = true;
         }
         return;
     }
@@ -200,6 +204,7 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
     }
 
     entry.clear();
+    ftl_entry_valid = false;
     if ((ret = flow_cache_entry_setup_key(&entry, key))
              != SDK_RET_OK)
          return ret;
@@ -209,7 +214,11 @@ pds_flow_cache_entry_read (pds_flow_key_t *key,
     cbdata.key = key;
     cbdata.info = info;
     params.cbdata = &cbdata;
-    return ftl_table->iterate(&params);
+    ret = ftl_table->iterate(&params);
+    if (ftl_entry_valid == false)
+        return SDK_RET_ENTRY_NOT_FOUND;
+    else
+        return SDK_RET_OK;
 }
 
 sdk_ret_t

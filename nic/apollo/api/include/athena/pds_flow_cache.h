@@ -52,10 +52,16 @@ typedef struct pds_flow_key_s {
     pds_flow_key_l4_t    l4;                         ///< L4 key fields
 } __PACK__ pds_flow_key_t;
 
+/// \brief Index type
+typedef enum pds_flow_spec_index_type_e {
+    PDS_FLOW_SPEC_INDEX_SESSION = 0,    /// Session index
+    PDS_FLOW_SPEC_INDEX_CONNTRACK,      /// Conntrack index
+} pds_flow_spec_index_type_t;
+
 /// \brief Flow data
 typedef struct pds_flow_data_s {
-    uint32_t    index;         ///< session index
-    uint8_t     index_type;    ///< index type
+    pds_flow_spec_index_type_t     index_type;    ///< index type
+    uint32_t                       index;         ///< session index
 } __PACK__ pds_flow_data_t;
 
 /// \brief Flow spec

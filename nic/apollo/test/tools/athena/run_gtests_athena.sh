@@ -16,6 +16,7 @@ fi
 
 run_gtest vnic
 run_gtest conntrack
+run_gtest flow_cache
 
 # end of script
 clean_exit
