@@ -87,6 +87,10 @@ vnic_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         // reserve an entry in the NEXTHOP table for this local vnic
         ret = nexthop_impl_db()->nh_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {

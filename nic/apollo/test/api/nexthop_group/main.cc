@@ -311,7 +311,6 @@ TEST_F(nh_group_test, nh_group_workflow_neg_1) {
     workflow_neg_1<nexthop_group_feeder>(feeder);
 }
 
-#if 0
 /// \brief Nexthop group WF_N_2
 /// \ref WF_N_2
 TEST_F(nh_group_test, nh_group_workflow_neg_2) {
@@ -325,7 +324,6 @@ TEST_F(nh_group_test, nh_group_workflow_neg_2) {
                 int2pdsobjkey(1), k_max_groups+1);
     workflow_neg_2<nexthop_group_feeder>(feeder);
 }
-#endif
 
 /// \brief Nexthop group WF_N_3
 /// \ref WF_N_3

@@ -75,6 +75,10 @@ nexthop_group_impl::reserve_resources(api_base *api_obj,
     spec = &obj_ctxt->api_params->nexthop_group_spec;
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
+        // record the fact that resource reservation was attempted
+        // NOTE: even if we partially acquire resources and fail eventually,
+        //       this will ensure that proper release of resources will happen
+        api_obj->set_rsvd_rsc();
         // reserve an entry in NEXTHOP_GROUP table
         ret = nexthop_group_impl_db()->nhgroup_idxr()->alloc(&idx);
         if (ret != SDK_RET_OK) {
