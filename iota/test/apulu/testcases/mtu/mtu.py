@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import iota.harness.api as api
+import iota.test.apulu.config.api as config_api
 import iota.test.utils.debug as debug_utils
 import iota.test.utils.host as host_utils
 import iota.test.utils.naples_host as naples_host
@@ -164,7 +165,12 @@ def Setup(tc):
     __IS_FREEBSD = isFreeBSDTestbed()
     tc.new_mtu = getMTUconfigs(tc)
 
-    tc.workload_pairs = api.GetRemoteWorkloadPairs()
+    if tc.args.type == 'local_only':
+        tc.workload_pairs = config_api.GetPingableWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY)
+    else:
+        tc.workload_pairs = config_api.GetPingableWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
     if len(tc.workload_pairs) == 0:
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True

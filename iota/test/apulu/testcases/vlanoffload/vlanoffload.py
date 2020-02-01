@@ -2,6 +2,7 @@
 import random
 import yaml
 import iota.harness.api as api
+import iota.test.apulu.config.api as config_api
 import iota.test.apulu.utils.pdsctl as pdsctl
 import iota.test.utils.naples_host as naples_host
 import iota.test.utils.traffic as traffic_utils
@@ -26,12 +27,14 @@ def SetRandom_Offload():
 def Setup(tc):
     tc.skip = False
 
-    if tc.args.type == 'remote_only':
-        tc.workload_pairs = api.GetRemoteWorkloadPairs()
-        if len(tc.workload_pairs) == 0:
-            api.Logger.info("Skipping Testcase due to no workload pairs.")
-            tc.skip = True
+    if tc.args.type == 'local_only':
+        tc.workload_pairs = config_api.GetPingableWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_LOCAL_ONLY)
     else:
+        tc.workload_pairs = config_api.GetPingableWorkloadPairs(
+            wl_pair_type = config_api.WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
+    if len(tc.workload_pairs) == 0:
+        api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
     if api.GetNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':

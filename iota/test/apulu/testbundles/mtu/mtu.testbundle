@@ -14,4 +14,5 @@ testcases:
             #XXX want to test 9100, but vpp panic with pkt size > 5000
             #mtu     : [ 1500, 9100, 68 ]
             mtu     : [ 1500, 68 ]
-
+        args    :
+            type : remote_only
