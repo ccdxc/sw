@@ -55,36 +55,39 @@ func NewSynchAuditor(elasticServer string, rslver resolver.Interface, logger log
 func (a *synchAuditor) ProcessEvents(events ...*auditapi.AuditEvent) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(30*time.Second))
 	defer cancel()
-	// index single audit event; it is costly to perform bulk operation for a single event (doc)
-	if len(events) == 1 {
-		event := events[0]
-		if err := a.elasticClient.Index(ctx,
-			elastic.GetIndex(globals.AuditLogs, event.GetTenant()),
-			elastic.GetDocType(globals.AuditLogs), event.GetUUID(), event); err != nil {
-			a.logger.Errorf("error logging audit event to elastic, err: %v", err)
-			return err
-		}
-	} else {
-		// index multiple audit events; construct bulk audit events request
-		requests := make([]*elastic.BulkRequest, len(events))
-		for i, evt := range events {
-			requests[i] = &elastic.BulkRequest{
-				RequestType: "index",
-				IndexType:   elastic.GetDocType(globals.AuditLogs),
-				ID:          evt.GetUUID(),
-				Obj:         evt,
-				Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
+	_, err := utils.ExecuteWithContext(ctx, func(nctx context.Context) (interface{}, error) {
+		// index single audit event; it is costly to perform bulk operation for a single event (doc)
+		if len(events) == 1 {
+			event := events[0]
+			if err := a.elasticClient.Index(ctx,
+				elastic.GetIndex(globals.AuditLogs, event.GetTenant()),
+				elastic.GetDocType(globals.AuditLogs), event.GetUUID(), event); err != nil {
+				a.logger.Errorf("error logging audit event to elastic, err: %v", err)
+				return false, err
+			}
+		} else {
+			// index multiple audit events; construct bulk audit events request
+			requests := make([]*elastic.BulkRequest, len(events))
+			for i, evt := range events {
+				requests[i] = &elastic.BulkRequest{
+					RequestType: "index",
+					IndexType:   elastic.GetDocType(globals.AuditLogs),
+					ID:          evt.GetUUID(),
+					Obj:         evt,
+					Index:       elastic.GetIndex(globals.AuditLogs, evt.GetTenant()),
+				}
+			}
+			if bulkResp, err := a.elasticClient.Bulk(ctx, requests); err != nil {
+				a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
+				return false, err
+			} else if len(bulkResp.Failed()) > 0 {
+				a.logger.Errorf("bulk audit events logging failed on elastic")
+				return false, err
 			}
 		}
-		if bulkResp, err := a.elasticClient.Bulk(ctx, requests); err != nil {
-			a.logger.Errorf("error logging bulk audit events to elastic, err: %v", err)
-			return err
-		} else if len(bulkResp.Failed()) > 0 {
-			a.logger.Errorf("bulk audit events logging failed on elastic")
-			return err
-		}
-	}
-	return nil
+		return true, nil
+	})
+	return err
 }
 
 func (a *synchAuditor) Run(stopCh <-chan struct{}) error {

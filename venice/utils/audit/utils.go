@@ -150,7 +150,7 @@ func (p *policyChecker) PopulateEvent(event *audit.AuditEvent, populators ...Eve
 	default:
 		switch event.Action {
 		// do not log reads
-		case strings.Title(string(apiintf.GetOper)), strings.Title(string(apiintf.ListOper)), strings.Title(string(apiintf.WatchOper)), auth.Permission_Read.String(), "get":
+		case strings.Title(string(apiintf.GetOper)), strings.Title(string(apiintf.ListOper)), strings.Title(string(apiintf.WatchOper)), auth.Permission_Read.String(), "get", "IsAuthorized":
 			return false, false, nil
 		}
 		event.ServiceName = globals.APIServer
