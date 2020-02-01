@@ -4,7 +4,7 @@ feature:
     package     : test.networking
     module      : networking
     runorder    : 9020
-    enable      : False # TODO: enable once memhash issue is fixed
+    enable      : True
     ignore      : True
 
 modules:

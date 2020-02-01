@@ -28,6 +28,7 @@
         _(IP6_TUN_FLOW, "IPv6 tunnel flow packets" )                \
         _(IP4_NAT, "NAPT flow packets" )                            \
         _(MAX_EXCEEDED, "Session count exceeded packets")           \
+        _(VNIC_NOT_FOUND, "Unknown vnic")                           \
         _(UNKOWN, "Unknown flow packets")                           \
 
 #define foreach_flow_prog_next                                      \

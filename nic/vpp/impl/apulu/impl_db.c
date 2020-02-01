@@ -16,6 +16,7 @@ pds_impl_db_ctx_t impl_db_ctx;
 #define POOL_IMPL_DB_GET(obj, hw_id)                            \
     pds_impl_db_##obj##_entry_t *obj##_info;                    \
     u16 _offset = vec_elt(impl_db_ctx.obj##_pool_idx, hw_id);   \
+    if (_offset == 0xffff) return NULL;                         \
     obj##_info = pool_elt_at_index(impl_db_ctx.obj##_pool_base, \
                                    _offset);                    \
 

@@ -346,60 +346,72 @@ pds_flow_classify_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
     vnic0 = pds_impl_db_vnic_get(hdr0->vnic_id);
-    vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
-    vnet_buffer(p0)->pds_flow_data.flags = flag_orig0 |
-        (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
-        (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
-
-    nexthop = hdr0->nexthop_id;
-    if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
-        vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
-                                                 (hdr0->nexthop_type << 16);
-    } else {
-        vnet_buffer(p0)->pds_flow_data.nexthop = hdr0->drop << 18;
-    }
-    vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
-    vnet_buffer(p0)->l3_hdr_offset =
-            hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
-    vnet_buffer(p0)->l4_hdr_offset =
-            hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
-    vnet_buffer(p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
-    vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
-    if (PREDICT_FALSE(vnic0->max_sessions &&
-            (vnic0->active_session_count >= vnic0->max_sessions))) {
+    if (!vnic0) {
         *next0 = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         next_determined |= 0x1;
     } else {
-        vnic0->active_session_count++;
+        vnet_buffer(p0)->pds_flow_data.flow_hash = hdr0->flow_hash;
+        vnet_buffer(p0)->pds_flow_data.flags = flag_orig0 |
+            (hdr0->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+            (vnic0->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
+
+        nexthop = hdr0->nexthop_id;
+        if ((!hdr0->mapping_hit || hdr0->rx_packet) && !hdr0->drop) {
+            vnet_buffer(p0)->pds_flow_data.nexthop = nexthop |
+                                                     (hdr0->nexthop_type << 16);
+        } else {
+            vnet_buffer(p0)->pds_flow_data.nexthop = hdr0->drop << 18;
+        }
+        vnet_buffer(p0)->l2_hdr_offset = hdr0->l2_offset;
+        vnet_buffer(p0)->l3_hdr_offset =
+                hdr0->l3_inner_offset ? hdr0->l3_inner_offset : hdr0->l3_offset;
+        vnet_buffer(p0)->l4_hdr_offset =
+                hdr0->l4_inner_offset ? hdr0->l4_inner_offset : hdr0->l4_offset;
+        vnet_buffer(p0)->sw_if_index[VLIB_TX] = hdr0->ingress_bd_id;
+        vnet_buffer2(p0)->pds_nat_data.vpc_id = hdr0->vpc_id;
+        if (PREDICT_FALSE(vnic0->max_sessions &&
+                (vnic0->active_session_count >= vnic0->max_sessions))) {
+            *next0 = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+            next_determined |= 0x1;
+        } else {
+            vnic0->active_session_count++;
+        }
     }
 
     vnic1 = pds_impl_db_vnic_get(hdr1->vnic_id);
-    vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
-    vnet_buffer(p1)->pds_flow_data.flags = flag_orig1 |
-        (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
-        (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
-    nexthop = hdr1->nexthop_id;
-    if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
-        vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
-                                            (hdr1->nexthop_type << 16);
-    } else {
-        vnet_buffer(p1)->pds_flow_data.nexthop = hdr1->drop << 18;
-    }
-    vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
-    vnet_buffer(p1)->l3_hdr_offset =
-            hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
-    vnet_buffer(p1)->l4_hdr_offset =
-            hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
-    vnet_buffer(p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
-    vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
-    if (PREDICT_FALSE(vnic1->max_sessions &&
-        (vnic1->active_session_count >= vnic1->max_sessions))) {
+    if (!vnic1) {
         *next1 = FLOW_CLASSIFY_NEXT_DROP;
-        counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
         next_determined |= 0x2;
     } else {
-        vnic1->active_session_count++;
+        vnet_buffer(p1)->pds_flow_data.flow_hash = hdr1->flow_hash;
+        vnet_buffer(p1)->pds_flow_data.flags = flag_orig1 |
+            (hdr1->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) |
+            (vnic1->flow_log_en << VPP_CPU_FLAGS_FLOW_LOG_POS);
+        nexthop = hdr1->nexthop_id;
+        if ((!hdr1->mapping_hit || hdr1->rx_packet) && !hdr1->drop) {
+            vnet_buffer(p1)->pds_flow_data.nexthop = nexthop |
+                                                (hdr1->nexthop_type << 16);
+        } else {
+            vnet_buffer(p1)->pds_flow_data.nexthop = hdr1->drop << 18;
+        }
+        vnet_buffer(p1)->l2_hdr_offset = hdr1->l2_offset;
+        vnet_buffer(p1)->l3_hdr_offset =
+                hdr1->l3_inner_offset ? hdr1->l3_inner_offset : hdr1->l3_offset;
+        vnet_buffer(p1)->l4_hdr_offset =
+                hdr1->l4_inner_offset ? hdr1->l4_inner_offset : hdr1->l4_offset;
+        vnet_buffer(p1)->sw_if_index[VLIB_TX] = hdr1->ingress_bd_id;
+        vnet_buffer2(p1)->pds_nat_data.vpc_id = hdr1->vpc_id;
+        if (PREDICT_FALSE(vnic1->max_sessions &&
+            (vnic1->active_session_count >= vnic1->max_sessions))) {
+            *next1 = FLOW_CLASSIFY_NEXT_DROP;
+            counter[FLOW_CLASSIFY_COUNTER_MAX_EXCEEDED] += 1;
+            next_determined |= 0x2;
+        } else {
+            vnic1->active_session_count++;
+        }
     }
 
     vlib_buffer_advance(p0, pds_flow_classify_get_advance_offset(p0));
@@ -560,6 +572,11 @@ pds_flow_classify_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
          VPP_CPU_FLAGS_IPV4_2_VALID | VPP_CPU_FLAGS_IPV6_2_VALID);
 
     vnic = pds_impl_db_vnic_get(hdr->vnic_id);
+    if (!vnic) {
+        *next = FLOW_CLASSIFY_NEXT_DROP;
+        counter[FLOW_CLASSIFY_COUNTER_VNIC_NOT_FOUND] += 1;
+        return;
+    }
     vnet_buffer(p)->pds_flow_data.flow_hash = hdr->flow_hash;
     vnet_buffer(p)->pds_flow_data.flags = flag_orig |
         (hdr->rx_packet << VPP_CPU_FLAGS_RX_PKT_POS) | 
