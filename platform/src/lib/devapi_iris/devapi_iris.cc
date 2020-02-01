@@ -45,6 +45,8 @@ devapi_iris::factory(void)
 sdk_ret_t
 devapi_iris::init_(void)
 {
+    mirco_seg_en_ = false;
+    num_int_mgmt_mnics_ = 0;
     // Initialize grpc
     hal_grpc::factory();
     // Populate hal_grpc handler in object
@@ -73,7 +75,7 @@ devapi_iris::lif_init(lif_info_t *info)
 {
     sdk_ret_t ret = SDK_RET_OK;
     devapi_lif *lif = NULL;
-    lif = devapi_lif::factory(info);
+    lif = devapi_lif::factory(info, this);
     if (!lif) {
         NIC_LOG_ERR("Failed to create lif. id: {}", info->lif_id);
         ret = SDK_RET_ERR;
@@ -89,7 +91,7 @@ devapi_iris::lif_destroy(uint32_t lif_id)
 
     lif = devapi_lif::lookup(lif_id);
     if (lif) {
-        devapi_lif::destroy(lif);
+        devapi_lif::destroy(lif, this);
     } else {
         // XXX IRIS will not find a lif that was not initialized.
         //
@@ -1024,6 +1026,18 @@ bool
 devapi_iris::is_hal_up(void)
 {
     return g_devapi_hal.hal_up();
+}
+
+void
+devapi_iris::inc_num_int_mgmt_mnics(void)
+{
+    num_int_mgmt_mnics_++;
+}
+
+void
+devapi_iris::dec_num_int_mgmt_mnics(void)
+{
+    num_int_mgmt_mnics_--;
 }
 
 }    // namespace iris

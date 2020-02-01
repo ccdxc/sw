@@ -20,6 +20,7 @@ class devapi_l2seg;
 class devapi_vrf;
 class devapi_filter;
 class devapi_uplink;
+class devapi_iris;
 class devapi_lif : public devapi_object {
 private:
     static devapi_lif *internal_mgmt_ethlif;
@@ -64,8 +65,8 @@ private:
     sdk_ret_t update_vlanins(bool vlan_insert_en);
 
 public:
-    static devapi_lif *factory(lif_info_t *info);
-    static void destroy(devapi_lif *lif);
+    static devapi_lif *factory(lif_info_t *info, devapi_iris *dapi);
+    static void destroy(devapi_lif *lif, devapi_iris *dapi);
 
     static sdk_ret_t set_micro_seg_en(bool en);
 

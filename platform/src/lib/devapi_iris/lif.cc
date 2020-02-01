@@ -12,6 +12,7 @@
 #include "filter.hpp"
 #include "devapi_iris_types.hpp"
 #include "devapi_mem.hpp"
+#include "devapi_iris.hpp"
 #include "hal_grpc.hpp"
 
 namespace iris {
@@ -22,7 +23,7 @@ devapi_lif *devapi_lif::internal_mgmt_ethlif = NULL;
 lif_map_t devapi_lif::lif_db_;
 
 devapi_lif *
-devapi_lif::factory(lif_info_t *info)
+devapi_lif::factory(lif_info_t *info, devapi_iris *dapi)
 {
     sdk_ret_t ret = SDK_RET_OK;
     void *mem = NULL;
@@ -89,7 +90,8 @@ devapi_lif::factory(lif_info_t *info)
 
     if (lif->is_intmgmt()) {
         // For Internal Mgmt mnic, create vrf and native l2seg.
-        if (lif->is_intmgmtmnic()) {
+        if (dapi->num_int_mgmt_mnics() == 0) {
+        // if (lif->is_intmgmtmnic()) {
             // Create Internal Mgmt Vrf
             vrf = devapi_vrf::factory(types::VRF_TYPE_INTERNAL_MANAGEMENT,
                                       NULL);
@@ -104,6 +106,7 @@ devapi_lif::factory(lif_info_t *info)
             }
             lif->set_nativel2seg(native_l2seg);
         }
+        dapi->inc_num_int_mgmt_mnics();
     } else {
 #if 0
         // Skip native vlan for SWM lif
@@ -234,7 +237,7 @@ devapi_lif::get_max_filters(uint32_t *ucast_filters,
 }
 
 void
-devapi_lif::destroy(devapi_lif *lif)
+devapi_lif::destroy(devapi_lif *lif, devapi_iris *dapi)
 {
     api_trace("lif delete");
 
@@ -257,7 +260,8 @@ devapi_lif::destroy(devapi_lif *lif)
         }
 
         if (lif->is_intmgmt()) {
-            if (lif->is_intmgmtmnic()) {
+            // if (lif->is_intmgmtmnic()) {
+            if (dapi->num_int_mgmt_mnics() == 1) {
                 // Delete L2seg
                 devapi_l2seg::destroy(lif->get_nativel2seg());
                 lif->set_nativel2seg(NULL);
@@ -265,6 +269,7 @@ devapi_lif::destroy(devapi_lif *lif)
                 devapi_vrf::destroy(lif->get_vrf());
                 lif->set_vrf(NULL);
             }
+            dapi->dec_num_int_mgmt_mnics();
         } else {
             /*
              * SWM check is for l2seg for OOB to not get deleted when OOB lif

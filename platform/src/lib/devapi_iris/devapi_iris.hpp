@@ -125,6 +125,9 @@ public:
     sdk_ret_t crypto_key_index_upd(uint32_t key_index,
                                    crypto_key_type_t type,
                                    void *key, uint32_t key_size);
+    void inc_num_int_mgmt_mnics(void);
+    void dec_num_int_mgmt_mnics(void);
+    uint32_t num_int_mgmt_mnics(void) { return num_int_mgmt_mnics_; }
 
 private:
     devapi_iris() {
@@ -140,6 +143,7 @@ private:
     bool mirco_seg_en_;
     sdk::lib::dev_forwarding_mode_t fwd_mode_;
     sdk_spinlock_t slock_;
+    uint32_t num_int_mgmt_mnics_;
 };
 
 } // namespace iris
