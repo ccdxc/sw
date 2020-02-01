@@ -544,7 +544,7 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
     case PDS_IF_TYPE_L3:
         {
             auto proto_l3 = proto_spec->mutable_l3ifspec();
-            proto_l3->set_vpcid(api_spec->l3_if_info.vpc.id);
+            proto_l3->set_vpcid(api_spec->l3_if_info.vpc.id, PDS_MAX_KEY_LEN);
             proto_l3->set_ethifindex(api_spec->l3_if_info.eth_ifindex);
             proto_l3->set_macaddress(
                       MAC_TO_UINT64(api_spec->l3_if_info.mac_addr));
@@ -1560,7 +1560,7 @@ pds_service_api_spec_to_proto (pds::SvcMappingSpec *proto_spec,
     }
 
     auto proto_key = proto_spec->mutable_key();
-    proto_key->set_vpcid(api_spec->key.vpc.id);
+    proto_key->set_vpcid(api_spec->key.vpc.id, PDS_MAX_KEY_LEN);
     proto_key->set_backendport(api_spec->key.backend_port);
     ipaddr_api_spec_to_proto_spec(
                 proto_key->mutable_backendip(), &api_spec->key.backend_ip);
@@ -2300,7 +2300,7 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->type == PDS_NH_TYPE_IP) {
         auto ipnhinfo = proto_spec->mutable_ipnhinfo();
-        ipnhinfo->set_vpcid(api_spec->vpc.id);
+        ipnhinfo->set_vpcid(api_spec->vpc.id, PDS_MAX_KEY_LEN);
         ipaddr_api_spec_to_proto_spec(ipnhinfo->mutable_ip(), &api_spec->ip);
         ipnhinfo->set_vlan(api_spec->vlan);
         ipnhinfo->set_mac(MAC_TO_UINT64(api_spec->mac));
@@ -2308,7 +2308,7 @@ pds_nh_api_spec_to_proto (pds::NexthopSpec *proto_spec,
         proto_spec->set_tunnelid(api_spec->tep.id, PDS_MAX_KEY_LEN);
     } else if (api_spec->type == PDS_NH_TYPE_UNDERLAY) {
         auto underlayinfo = proto_spec->mutable_underlaynhinfo();
-        underlayinfo->set_l3interface(api_spec->l3_if.id);
+        underlayinfo->set_l3interface(api_spec->l3_if.id, PDS_MAX_KEY_LEN);
         underlayinfo->set_underlaymac(MAC_TO_UINT64(api_spec->underlay_mac));
     }
 }
@@ -2773,19 +2773,20 @@ pds_route_table_api_spec_to_proto (pds::RouteTableSpec *proto_spec,
         }
         switch (api_spec->routes[i].nh_type) {
         case PDS_NH_TYPE_OVERLAY:
-            route->set_tunnelid(api_spec->routes[i].tep.id);
+            route->set_tunnelid(api_spec->routes[i].tep.id, PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_OVERLAY_ECMP:
-            route->set_nexthopgroupid(api_spec->routes[i].nh_group.id);
+            route->set_nexthopgroupid(api_spec->routes[i].nh_group.id,
+                                      PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_PEER_VPC:
-            route->set_vpcid(api_spec->routes[i].vpc.id);
+            route->set_vpcid(api_spec->routes[i].vpc.id, PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_VNIC:
-            route->set_vnicid(api_spec->routes[i].vnic.id);
+            route->set_vnicid(api_spec->routes[i].vnic.id, PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_IP:
-            route->set_nexthopid(api_spec->routes[i].nh.id);
+            route->set_nexthopid(api_spec->routes[i].nh.id, PDS_MAX_KEY_LEN);
             break;
         case PDS_NH_TYPE_BLACKHOLE:
         default:
@@ -3180,12 +3181,14 @@ pds_mirror_session_api_spec_to_proto (pds::MirrorSessionSpec *proto_spec,
     case PDS_MIRROR_SESSION_TYPE_ERSPAN:
         {
             pds::ERSpanSpec *proto_erspan = proto_spec->mutable_erspanspec();
-            proto_erspan->set_tunnelid(api_spec->erspan_spec.tep.id);
+            proto_erspan->set_tunnelid(api_spec->erspan_spec.tep.id,
+                                       PDS_MAX_KEY_LEN);
             ipaddr_api_spec_to_proto_spec(proto_erspan->mutable_srcip(),
                                           &api_spec->erspan_spec.src_ip);
             proto_erspan->set_dscp(api_spec->erspan_spec.dscp);
             proto_erspan->set_spanid(api_spec->erspan_spec.span_id);
-            proto_erspan->set_vpcid(api_spec->erspan_spec.vpc.id);
+            proto_erspan->set_vpcid(api_spec->erspan_spec.vpc.id,
+                                    PDS_MAX_KEY_LEN);
         }
         break;
 
@@ -3713,7 +3716,7 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
         {
             auto key = proto_spec->mutable_id()->mutable_mackey();
             key->set_macaddr(MAC_TO_UINT64(remote_spec->key.mac_addr));
-            key->set_subnetid(remote_spec->key.subnet.id);
+            key->set_subnetid(remote_spec->key.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
@@ -3721,7 +3724,7 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
             auto key = proto_spec->mutable_id()->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
                                           &remote_spec->key.ip_addr);
-            key->set_vpcid(remote_spec->key.vpc.id);
+            key->set_vpcid(remote_spec->key.vpc.id, PDS_MAX_KEY_LEN);
         }
         break;
     default:

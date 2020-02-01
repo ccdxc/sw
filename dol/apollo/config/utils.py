@@ -240,7 +240,7 @@ def ValidateCreate(obj, resps):
     return
 
 def ValidateRead(obj, resps):
-    if IsDryRun(): return
+    if IsDryRun(): return True
     # set the appropriate expected status
     if obj.IsHwHabitant():
         expApiStatus = types_pb2.API_STATUS_OK
@@ -252,8 +252,10 @@ def ValidateRead(obj, resps):
                 readresponse = GetAttrFromResponse(obj, resp, 'Response')
                 for response in readresponse:
                     if not ValidateObject(obj, response):
+                        logger.info(f"ValidateRead failed for {obj}, received resp {resp} & expected status {expApiStatus}")
                         return False
         else:
+            logger.info(f"ValidateRead failed for {obj} with unexpected status, received resp {resp} & expected status {expApiStatus}")
             return False
     return True
 

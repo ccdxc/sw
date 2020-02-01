@@ -227,7 +227,9 @@ class DolVerifEngineObject(VerifEngineObject):
                 method = getattr(config.actual_object, config.method)
                 if not method:
                     assert 0
-                method(config.spec)
+                if not method(config.spec):
+                    logger.error("Config object verify result = Failed")
+                    return defs.status.ERROR
             if not config.original_object.Equals(config.actual_object, tc):
                 logger.error("Config object compare result = MisMatch")
                 return defs.status.ERROR
