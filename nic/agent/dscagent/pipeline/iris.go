@@ -1208,7 +1208,7 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 	defer log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjEnd)
 
 	// Perform object validations
-	vrf, err := validator.ValidateMirrorSession(i.InfraAPI, mirror)
+	vrf, err := validator.ValidateMirrorSession(i.InfraAPI, mirror, oper)
 	if err != nil {
 		log.Error(err)
 		return nil, err

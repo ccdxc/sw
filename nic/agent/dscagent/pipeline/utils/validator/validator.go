@@ -213,14 +213,14 @@ func ValidateTunnel(i types.InfraAPI, tunnel netproto.Tunnel) (vrf netproto.Vrf,
 }
 
 // ValidateMirrorSession performs static field validations on srcIP, DstIP and named reference validation on vrf
-func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession) (vrf netproto.Vrf, err error) {
+func ValidateMirrorSession(i types.InfraAPI, mirror netproto.MirrorSession, oper types.Operation) (vrf netproto.Vrf, err error) {
 	var collectorIPAddresses []string
 	for _, c := range mirror.Spec.Collectors {
 		collectorIPAddresses = append(collectorIPAddresses, c.ExportCfg.Destination)
 	}
 
 	dat, _ := i.List(mirror.Kind)
-	if len(dat) == types.MaxMirrorSessions {
+	if len(dat) == types.MaxMirrorSessions && oper == types.Create {
 		log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured))
 		return vrf, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrMaxMirrorSessionsConfigured)
 	}
