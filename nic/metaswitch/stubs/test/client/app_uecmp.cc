@@ -151,7 +151,7 @@ static void create_bgp_global_proto_grpc () {
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
     printf ("Pushing BGP Global proto...\n");
-    ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
+    ret_status = g_bgp_stub_->BGPCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -220,12 +220,12 @@ static void create_route_proto_grpc (bool second=false) {
     } else {
     next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
     }
-    proto_spec->set_adminstatus (ADMIN_UP);
-    proto_spec->set_override (BOOL_TRUE);
+    proto_spec->set_state (ADMIN_STATE_ENABLE);
+    proto_spec->set_override (true);
     proto_spec->set_admindist (250);
 
     printf ("Pushing Static Route proto...\n");
-    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    ret_status = g_route_stub_->CPStaticRouteCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -282,7 +282,7 @@ static void create_l2f_test_mac_ip_proto_grpc () {
 
 static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     BGPPeerRequest  request;
-    BGPResponse     response;
+    BGPPeerResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -301,7 +301,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
     proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
-    proto_spec->set_adminen(pds::ADMIN_UP);
+    proto_spec->set_state(pds::ADMIN_STATE_ENABLE);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo && g_node_id !=3) {
@@ -309,11 +309,10 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     } else {
         localaddr->set_v4addr(0);
     }
-    proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
     proto_spec->set_connectretry(5);
-    proto_spec->set_sendcomm(pds::BOOL_TRUE);
-    proto_spec->set_sendextcomm(pds::BOOL_TRUE);
+    proto_spec->set_sendcomm(true);
+    proto_spec->set_sendextcomm(true);
     proto_spec->set_password("test");
     if (lo) {
     proto_spec->set_keepalive(10);
@@ -324,7 +323,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     }
 
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
-    ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+    ret_status = g_bgp_stub_->BGPPeerCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -335,7 +334,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
 
 static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, bool def_origin=false) {
     BGPPeerAfRequest  request;
-    BGPResponse     response;
+    BGPPeerAfResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -363,7 +362,6 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, boo
         localaddr->set_v4addr(0);
     }
 
-    proto_spec->set_ifid(0);
     if (lo) {
         // Disable IP
         proto_spec->set_afi(pds::BGP_AFI_IPV4);
@@ -380,13 +378,13 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, boo
     }
     if (def_origin) {
         printf ("Enabling default originate in BGP on C2 to DUT for IPv4 AF\n");
-        proto_spec->set_defaultorig(pds::BOOL_TRUE);
-        proto_spec->set_disable(pds::BOOL_FALSE);
+        proto_spec->set_defaultorig(true);
+        proto_spec->set_disable(false);
     } else {
-        proto_spec->set_disable(pds::BOOL_TRUE);
-        proto_spec->set_defaultorig(pds::BOOL_FALSE);
+        proto_spec->set_disable(true);
+        proto_spec->set_defaultorig(false);
     }
-    proto_spec->set_nhself(pds::BOOL_FALSE);
+    proto_spec->set_nexthopself(false);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
     ret_status = g_bgp_stub_->BGPPeerAfCreate(&context, request, &response);
@@ -545,7 +543,7 @@ static void get_peer_status_all() {
     ClientContext        context;
     Status               ret_status;
 
-    ret_status = g_bgp_stub_->BGPPeerSpecGet(&context, request, &response);
+    ret_status = g_bgp_stub_->BGPPeerGet(&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of BGP Peer Status Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
@@ -560,8 +558,6 @@ static void get_peer_status_all() {
             paddr = resp.peeraddr().v4addr();
             ip_addr.s_addr = paddr;
             printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
-            printf ("  If Id                : %d\n", resp.ifid());
-            printf ("  Remote ASN           : %d\n", resp.remoteasn());
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());
             uint8_t ler[2];

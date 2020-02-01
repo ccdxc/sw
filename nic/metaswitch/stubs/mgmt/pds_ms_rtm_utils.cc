@@ -27,7 +27,8 @@ rtm_strt_fill_func (CPStaticRouteSpec&      req,
 }
 
 NBB_VOID
-cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status, NBB_ULONG correlator)
+cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status,
+                  NBB_ULONG correlator, bool op_update)
 {
     pds_obj_key_t uuid = {0};
     pds_ms_get_uuid(&uuid, req.interfaceid());

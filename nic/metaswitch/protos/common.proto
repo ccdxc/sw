@@ -1,22 +1,14 @@
 //------------------------------------------------------------------------------
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
-// common protobuf specifications of Metaswitch MIBs
+// common protobuf specifications of control plane protobufs
 //------------------------------------------------------------------------------
 
 syntax = "proto3";
 package pds;
 
-// Admin Status
-enum AdminSt {
-  ADMIN_NONE = 0;
-  ADMIN_UP   = 1;
-  ADMIN_DOWN = 2;
+// Admin State
+enum AdminState {
+  ADMIN_STATE_NONE    = 0;
+  ADMIN_STATE_ENABLE  = 1;
+  ADMIN_STATE_DISABLE = 2;
 }
-
-// AMB Bool
-enum AMBBool {
-  BOOL_NONE  = 0;
-  BOOL_TRUE  = 1;
-  BOOL_FALSE = 2;
-}
-

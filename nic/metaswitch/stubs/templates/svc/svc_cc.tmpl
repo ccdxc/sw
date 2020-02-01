@@ -99,10 +99,15 @@ Status
         pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
         pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
               {{end}}
-              {{if or (HasSuffix $rpc "Create") (HasSuffix $rpc "Update")}}
+              {{if (HasSuffix $rpc "Create")}}
         pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
         pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
         pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator);
+              {{end}}
+              {{if (HasSuffix $rpc "Update")}}
+        pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE);
+        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE);
+        pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE);
               {{end}}
             {{end}}
           {{end}}

@@ -66,22 +66,22 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	ctx := context.TODO()
 	req := msTypes.BGPRequest{
-		Request: &msTypes.BGPGlobalSpec{
+		Request: &msTypes.BGPSpec{
 			Id:       uid.Bytes(),
 			LocalASN: rtCfg.Spec.BGPConfig.ASNumber,
 			RouterId: ip2uint32(rtCfg.Spec.BGPConfig.RouterId),
 		},
 	}
-	resp, err := client.BGPGlobalSpecCreate(ctx, &req)
+	resp, err := client.BGPCreate(ctx, &req)
 	if err != nil {
-		log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
+		log.Infof("BGP Create received resp (%v)[%+v]", err, resp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Global Config (%s)", rtCfg.GetKey(), err)
 	}
 	if resp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("BGP Global Spec Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.Response)
+		log.Infof("BGP Create received resp (%v)[%v, %v]", err, resp.ApiStatus, resp.Response)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Global config status(%s)", rtCfg.GetKey(), resp.ApiStatus)
 	}
-	log.Infof("BGP Global Spec create responded [%v]", resp.Response)
+	log.Infof("BGP create responded [%v]", resp.Response)
 	// Get the controller IPs
 	dscConfig := infraAPI.GetConfig()
 	log.Infof("Adding peers at [%v]", dscConfig.Controllers)
@@ -95,13 +95,12 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	for _, n := range rtCfg.Spec.BGPConfig.Neighbors {
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			AdminEn:      msTypes.AdminSt_ADMIN_UP,
+			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(n.IPAddress),
 			LocalAddr:    unknLocal,
-			IfId:         0,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     msTypes.AMBBool_BOOL_TRUE,
-			SendExtComm:  msTypes.AMBBool_BOOL_TRUE,
+			SendComm:     true,
+			SendExtComm:  true,
 			ConnectRetry: 5,
 		}
 		log.Infof("Add create peer [%+v]", peer)
@@ -111,12 +110,11 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			Id:          uid.Bytes(),
 			PeerAddr:    ip2PDSType(n.IPAddress),
 			LocalAddr:   unknLocal,
-			IfId:        0,
 			Afi:         msTypes.BGPAfi_BGP_AFI_IPV4,
 			Safi:        msTypes.BGPSafi_BGP_SAFI_UNICAST,
-			Disable:     msTypes.AMBBool_BOOL_FALSE,
-			NHself:      msTypes.AMBBool_BOOL_FALSE,
-			DefaultOrig: msTypes.AMBBool_BOOL_FALSE,
+			Disable:     false,
+			NexthopSelf: false,
+			DefaultOrig: false,
 		}
 		log.Infof("Add create peer AF [%+v]", peerAf)
 		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
@@ -136,14 +134,13 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		log.Info("lookuphost returned ", a)
 		peer := msTypes.BGPPeerSpec{
 			Id:       uid.Bytes(),
-			AdminEn:  msTypes.AdminSt_ADMIN_UP,
+			State:    msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr: ip2PDSType(a[0]),
 			// XXX-TBD change to appropriate address
 			LocalAddr:    unknLocal,
-			IfId:         0,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     msTypes.AMBBool_BOOL_TRUE,
-			SendExtComm:  msTypes.AMBBool_BOOL_TRUE,
+			SendComm:     true,
+			SendExtComm:  true,
 			ConnectRetry: 5,
 		}
 		log.Infof("Add create peer [%+v]", peer)
@@ -153,23 +150,22 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 			Id:          uid.Bytes(),
 			PeerAddr:    ip2PDSType(a[0]),
 			LocalAddr:   unknLocal,
-			IfId:        0,
 			Afi:         msTypes.BGPAfi_BGP_AFI_L2VPN,
 			Safi:        msTypes.BGPSafi_BGP_SAFI_EVPN,
-			Disable:     msTypes.AMBBool_BOOL_FALSE,
-			NHself:      msTypes.AMBBool_BOOL_FALSE,
-			DefaultOrig: msTypes.AMBBool_BOOL_FALSE,
+			Disable:     false,
+			NexthopSelf: false,
+			DefaultOrig: false,
 		}
 		log.Infof("Add create peer AF [%+v]", peerAf)
 		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
-	presp, err := client.BGPPeerSpecCreate(ctx, &peerReq)
+	presp, err := client.BGPPeerCreate(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v, %+v]", err, presp.ApiStatus, presp.Response)
+		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
 
@@ -179,7 +175,7 @@ func createRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config (%s)", rtCfg.GetKey(), err)
 	}
 	if afresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("PeerAF create Request returned (%v)[%v, %+v]", err, afresp.ApiStatus, afresp.Response)
+		log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
 	currentRoutingConfig = &rtCfg
@@ -228,12 +224,11 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	for _, o := range delPeers {
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			AdminEn:      msTypes.AdminSt_ADMIN_UP,
+			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(o.IPAddress),
-			IfId:         0,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     msTypes.AMBBool_BOOL_TRUE,
-			SendExtComm:  msTypes.AMBBool_BOOL_TRUE,
+			SendComm:     true,
+			SendExtComm:  true,
 			ConnectRetry: 5,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
@@ -242,7 +237,6 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		peerAf := msTypes.BGPPeerAfSpec{
 			Id:       uid.Bytes(),
 			PeerAddr: ip2PDSType(o.IPAddress),
-			IfId:     0,
 			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
 			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
 		}
@@ -251,16 +245,15 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	ctx := context.TODO()
 
-	presp, err := client.BGPPeerSpecDelete(ctx, &peerReq)
+	presp, err := client.BGPPeerDelete(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v, %+v]", err, presp.ApiStatus, presp.Response)
+		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
-	log.Infof("Peer delete response [%v]", presp.Response)
 
 	afresp, err := client.BGPPeerAfDelete(ctx, &peerAFReq)
 	if err != nil {
@@ -268,7 +261,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config (%s)", rtCfg.GetKey(), err)
 	}
 	if afresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("PeerAF delete request returned (%v)[%v, %+v]", err, afresp.ApiStatus, afresp.Response)
+		log.Infof("PeerAF delete request returned (%v)[%v]", err, afresp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
 
@@ -284,12 +277,11 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	for _, o := range newPeers {
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			AdminEn:      msTypes.AdminSt_ADMIN_UP,
+			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(o.IPAddress),
-			IfId:         0,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     msTypes.AMBBool_BOOL_TRUE,
-			SendExtComm:  msTypes.AMBBool_BOOL_TRUE,
+			SendComm:     true,
+			SendExtComm:  true,
 			ConnectRetry: 5,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
@@ -298,20 +290,19 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		peerAf := msTypes.BGPPeerAfSpec{
 			Id:       uid.Bytes(),
 			PeerAddr: ip2PDSType(o.IPAddress),
-			IfId:     0,
 			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
 			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
 		}
 		log.Infof("Add Delete peer AF [%+v]", peerAf)
 		peerAFReq.Request = append(peerAFReq.Request, &peerAf)
 	}
-	presp, err = client.BGPPeerSpecCreate(ctx, &peerReq)
+	presp, err = client.BGPPeerCreate(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v, %+v]", err, presp.ApiStatus, presp.Response)
+		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
 
@@ -321,7 +312,7 @@ func updateRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config (%s)", rtCfg.GetKey(), err)
 	}
 	if afresp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("PeerAF create Request returned (%v)[%v, %+v]", err, afresp.ApiStatus, afresp.Response)
+		log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Configuring Peer AF Config Status(%v)", rtCfg.GetKey(), afresp.ApiStatus)
 	}
 	currentRoutingConfig = &rtCfg
@@ -340,12 +331,11 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	for _, o := range currentRoutingConfig.Spec.BGPConfig.Neighbors {
 		peer := msTypes.BGPPeerSpec{
 			Id:           uid.Bytes(),
-			AdminEn:      msTypes.AdminSt_ADMIN_UP,
+			State:        msTypes.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:     ip2PDSType(o.IPAddress),
-			IfId:         0,
 			RemoteASN:    rtCfg.Spec.BGPConfig.ASNumber,
-			SendComm:     msTypes.AMBBool_BOOL_TRUE,
-			SendExtComm:  msTypes.AMBBool_BOOL_TRUE,
+			SendComm:     true,
+			SendExtComm:  true,
 			ConnectRetry: 5,
 		}
 		log.Infof("adding peer to be deleted [%v]", peer)
@@ -354,7 +344,6 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 		peerAf := msTypes.BGPPeerAfSpec{
 			Id:       uid.Bytes(),
 			PeerAddr: ip2PDSType(o.IPAddress),
-			IfId:     0,
 			Afi:      msTypes.BGPAfi_BGP_AFI_L2VPN,
 			Safi:     msTypes.BGPSafi_BGP_SAFI_EVPN,
 		}
@@ -363,16 +352,15 @@ func deleteRoutingConfigHandler(infraAPI types.InfraAPI, client msTypes.BGPSvcCl
 	}
 	ctx := context.TODO()
 
-	presp, err := client.BGPPeerSpecDelete(ctx, &peerReq)
+	presp, err := client.BGPPeerDelete(ctx, &peerReq)
 	if err != nil {
 		log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config (%s)", rtCfg.GetKey(), err)
 	}
 	if presp.ApiStatus != pdstypes.ApiStatus_API_STATUS_OK {
-		log.Infof("Peer create Request returned (%v)[%v, %+v]", err, presp.ApiStatus, presp.Response)
+		log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		return errors.Wrapf(types.ErrControlPlaneHanlding, "RoutingConfig: %s | Err: Deleting Peer Config Status(%v)", rtCfg.GetKey(), presp.ApiStatus)
 	}
-	log.Infof("Peer delete response [%v]", presp.Response)
 	currentRoutingConfig = nil
 	return nil
 }

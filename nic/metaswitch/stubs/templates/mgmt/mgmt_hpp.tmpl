@@ -39,8 +39,8 @@ extern "C" {
     {{$mib    := $param.Mib}}
     {{if not (eq $oidLen "")}}
     /*===== Set helpers for MS Table: {{$struct}} =====*/
-    typedef void (*pre_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    typedef void (*post_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
+    typedef void (*pre_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool);
+    typedef void (*post_set_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool);
     NBB_VOID pds_ms_set_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid);
     NBB_VOID pds_ms_fill_{{$struct | ToLower}}_fields(pds::{{$msgName}} &req,
@@ -49,10 +49,9 @@ extern "C" {
                                              NBB_LONG row_status);
     NBB_VOID pds_ms_reg_pre_set_{{$struct | ToLower}}(pre_set_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_set_{{$struct | ToLower}}(post_set_{{$struct | ToLower}}_func_type);
-    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator);
-    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status);
+    NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
+    NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
+    NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req, NBB_LONG row_status, NBB_ULONG correlator, bool op_update=false);
     {{end}}
   {{end}}
   {{if hasExtension "venice.pdsaGetGlobOpts" . }}

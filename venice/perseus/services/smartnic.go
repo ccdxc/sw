@@ -48,7 +48,7 @@ type pegasusPeerUpdate struct {
 
 type pegasusCfg struct {
 	globalOper int
-	globalCfg  pegasusClient.BGPGlobalSpec
+	globalCfg  pegasusClient.BGPSpec
 	peers      []pegasusPeerUpdate
 }
 
@@ -115,25 +115,25 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 		return
 	}
 	req := pegasusClient.BGPRequest{
-		Request: &pegasusClient.BGPGlobalSpec{
+		Request: &pegasusClient.BGPSpec{
 			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,
 			Id:       uid.Bytes(),
 			RouterId: ip2uint32(evtRtConfig.Spec.BGPConfig.RouterId),
 		},
 	}
 	ctx := context.Background()
-	resp, err := m.pegasusClient.BGPGlobalSpecCreate(ctx, &req)
+	resp, err := m.pegasusClient.BGPCreate(ctx, &req)
 	log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
 
 	peerReq := pegasusClient.BGPPeerRequest{}
 	for _, n := range evtRtConfig.Spec.BGPConfig.Neighbors {
 		peer := pegasusClient.BGPPeerSpec{
 			Id:          uid.Bytes(),
-			AdminEn:     pegasusClient.AdminSt_ADMIN_UP,
+			State:       pegasusClient.AdminState_ADMIN_STATE_ENABLE,
 			PeerAddr:    ip2PDSType(n.IPAddress),
 			RemoteASN:   n.RemoteAS,
-			SendComm:    pegasusClient.AMBBool_BOOL_TRUE,
-			SendExtComm: pegasusClient.AMBBool_BOOL_TRUE,
+			SendComm:    true,
+			SendExtComm: true,
 		}
 		peerReq.Request = append(peerReq.Request, &peer)
 	}
@@ -177,14 +177,14 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 			return
 		}
 		req := pegasusClient.BGPRequest{
-			Request: &pegasusClient.BGPGlobalSpec{
+			Request: &pegasusClient.BGPSpec{
 				LocalASN: rtConfig.Spec.BGPConfig.ASNumber,
 				Id:       uid.Bytes(),
 				RouterId: ip2uint32(rtConfig.Spec.BGPConfig.RouterId),
 			},
 		}
 		log.Infof("Updating pegasus with Config [%+v]", req.Request)
-		resp, err := m.pegasusClient.BGPGlobalSpecCreate(ctx, &req)
+		resp, err := m.pegasusClient.BGPCreate(ctx, &req)
 		if err != nil {
 			log.Infof("BGP Global Spec Create received resp (%v)[%+v]", err, resp)
 		} else {
@@ -198,13 +198,12 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 		for _, n := range rtConfig.Spec.BGPConfig.Neighbors {
 			peer := pegasusClient.BGPPeerSpec{
 				Id:           uid.Bytes(),
-				AdminEn:      pegasusClient.AdminSt_ADMIN_UP,
+				State:        pegasusClient.AdminState_ADMIN_STATE_ENABLE,
 				PeerAddr:     ip2PDSType(n.IPAddress),
 				LocalAddr:    unknLocal,
-				IfId:         0,
 				RemoteASN:    n.RemoteAS,
-				SendComm:     pegasusClient.AMBBool_BOOL_TRUE,
-				SendExtComm:  pegasusClient.AMBBool_BOOL_TRUE,
+				SendComm:     true,
+				SendExtComm:  true,
 				ConnectRetry: 5,
 				Password:     []byte(n.Password),
 			}
@@ -215,10 +214,9 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 					Id:          uid.Bytes(),
 					PeerAddr:    ip2PDSType(n.IPAddress),
 					LocalAddr:   unknLocal,
-					IfId:        0,
-					Disable:     pegasusClient.AMBBool_BOOL_FALSE,
-					NHself:      pegasusClient.AMBBool_BOOL_FALSE,
-					DefaultOrig: pegasusClient.AMBBool_BOOL_FALSE,
+					Disable:     false,
+					NexthopSelf: false,
+					DefaultOrig: false,
 				}
 				switch a {
 				case network.BGPAddressFamily_EVPN.String():
@@ -232,17 +230,17 @@ func (m *ServiceHandlers) HandleNodeConfigEvent(et kvstore.WatchEventType, evtNo
 				peerAfReq.Request = append(peerAfReq.Request, &peerAf)
 			}
 		}
-		presp, err := m.pegasusClient.BGPPeerSpecCreate(ctx, &peerReq)
+		presp, err := m.pegasusClient.BGPPeerCreate(ctx, &peerReq)
 		if err != nil {
 			log.Infof("Peer create Request returned (%v)[%v]", err, presp)
 		} else {
-			log.Infof("Peer create Request returned (%v)[%v, %+v]", err, presp.ApiStatus, presp.Response)
+			log.Infof("Peer create Request returned (%v)[%v]", err, presp.ApiStatus)
 		}
 		afresp, err := m.pegasusClient.BGPPeerAfCreate(ctx, &peerAfReq)
 		if err != nil {
 			log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp)
 		} else {
-			log.Infof("PeerAF create Request returned (%v)[%v, %+v]", err, afresp.ApiStatus, afresp.Response)
+			log.Infof("PeerAF create Request returned (%v)[%v]", err, afresp.ApiStatus)
 		}
 		m.updated = true
 		pReq = peerReq
@@ -257,7 +255,7 @@ var pollBGPStatus bool
 func (m *ServiceHandlers) HandleDebugAction(action string, params map[string]string) (interface{}, error) {
 	switch action {
 	case "list-neighbors":
-		return m.pegasusClient.BGPPeerSpecGet(context.TODO(), &pegasusClient.BGPPeerRequest{})
+		return m.pegasusClient.BGPPeerGet(context.TODO(), &pegasusClient.BGPPeerRequest{})
 	case "poll-bgp-status":
 		pollBGPStatus = true
 		return "set to periodically poll BGP status", nil
@@ -275,7 +273,7 @@ func (m *ServiceHandlers) pollStatus() {
 				return
 			}
 			req := pReq
-			resp, err := m.pegasusClient.BGPPeerSpecGet(context.TODO(), &req)
+			resp, err := m.pegasusClient.BGPPeerGet(context.TODO(), &req)
 			if err != nil {
 				log.Errorf("failed to get BGP Peer Get All (%ss)", err)
 			} else {

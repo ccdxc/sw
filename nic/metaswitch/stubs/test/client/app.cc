@@ -131,7 +131,7 @@ static void create_bgp_global_proto_grpc () {
     proto_spec->set_routerid(ntohl(g_test_conf_.local_lo_ip_addr));
 
     printf ("Pushing BGP Global proto...\n");
-    ret_status = g_bgp_stub_->BGPGlobalSpecCreate(&context, request, &response);
+    ret_status = g_bgp_stub_->BGPCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -235,12 +235,12 @@ static void create_route_proto_grpc () {
     auto next_hop   = proto_spec->mutable_nexthopaddr();
     next_hop->set_af (types::IP_AF_INET);
     next_hop->set_v4addr (g_test_conf_.remote_ip_addr);
-    proto_spec->set_adminstatus (ADMIN_UP);
-    proto_spec->set_override (BOOL_TRUE);
+    proto_spec->set_state (ADMIN_STATE_ENABLE);
+    proto_spec->set_override (true);
     proto_spec->set_admindist (250);
 
     printf ("Pushing Default (0/0) Static Route proto...\n");
-    ret_status = g_route_stub_->CPStaticRouteSpecCreate(&context, request, &response);
+    ret_status = g_route_stub_->CPStaticRouteCreate(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -250,7 +250,7 @@ static void create_route_proto_grpc () {
 
 static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerRequest  request;
-    BGPResponse     response;
+    BGPPeerResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -263,7 +263,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
         peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
     }
     proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
-    proto_spec->set_adminen(pds::ADMIN_UP);
+    proto_spec->set_state(pds::ADMIN_STATE_ENABLE);
     auto localaddr = proto_spec->mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     if (lo) {
@@ -271,11 +271,10 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     } else {
         localaddr->set_v4addr(0);
     }
-    proto_spec->set_ifid(0);
     proto_spec->set_remoteasn(g_test_conf_.remote_asn);
     proto_spec->set_connectretry(5);
-    proto_spec->set_sendcomm(pds::BOOL_TRUE);
-    proto_spec->set_sendextcomm(pds::BOOL_TRUE);
+    proto_spec->set_sendcomm(true);
+    proto_spec->set_sendextcomm(true);
     proto_spec->set_password("test");
     if (lo) {
     proto_spec->set_keepalive(10);
@@ -286,9 +285,9 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
     }
     printf ("Pushing BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
     if (op_del) {
-        ret_status = g_bgp_stub_->BGPPeerSpecDelete(&context, request, &response);
+        ret_status = g_bgp_stub_->BGPPeerDelete(&context, request, &response);
     } else {
-        ret_status = g_bgp_stub_->BGPPeerSpecCreate(&context, request, &response);
+        ret_status = g_bgp_stub_->BGPPeerCreate(&context, request, &response);
     }
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
@@ -300,7 +299,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool op_del=false) {
 
 static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
     BGPPeerAfRequest  request;
-    BGPResponse     response;
+    BGPPeerAfResponse response;
     ClientContext   context;
     Status          ret_status;
 
@@ -322,7 +321,6 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
         localaddr->set_v4addr(0);
     }
 
-    proto_spec->set_ifid(0);
     if (lo) {
         // Disable IP
         proto_spec->set_afi(pds::BGP_AFI_IPV4);
@@ -332,9 +330,9 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
         proto_spec->set_afi(pds::BGP_AFI_L2VPN);
         proto_spec->set_safi(pds::BGP_SAFI_EVPN);
     }
-    proto_spec->set_disable(pds::BOOL_TRUE);
-    proto_spec->set_nhself(pds::BOOL_FALSE);
-    proto_spec->set_defaultorig(pds::BOOL_FALSE);
+    proto_spec->set_disable(true);
+    proto_spec->set_nexthopself(false);
+    proto_spec->set_defaultorig(false);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
     if (op_del ) {
@@ -364,8 +362,10 @@ static void create_subnet_proto_grpc () {
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
-    proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
-                           PDS_MAX_KEY_LEN);
+    // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
+    //       Else failure in non-mock PDS mode.
+    //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+    //                       PDS_MAX_KEY_LEN);
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();
@@ -483,7 +483,7 @@ static void get_peer_status_all() {
     ClientContext        context;
     Status               ret_status;
 
-    ret_status = g_bgp_stub_->BGPPeerSpecGet (&context, request, &response);
+    ret_status = g_bgp_stub_->BGPPeerGet (&context, request, &response);
     if (ret_status.ok()) {
         printf ("No of BGP Peer Status Table Entries: %d\n", response.response_size());
         for (int i=0; i<response.response_size(); i++) {
@@ -498,8 +498,6 @@ static void get_peer_status_all() {
             paddr = resp.peeraddr().v4addr();
             ip_addr.s_addr = paddr;
             printf ("  Peer Address         : %s\n", inet_ntoa(ip_addr));
-            printf ("  If Id                : %d\n", resp.ifid());
-            printf ("  Remote ASN           : %d\n", resp.remoteasn());
             printf ("  Status               : %d\n", resp.status());
             printf ("  Previous Status      : %d\n", resp.prevstatus());
             uint8_t ler[2];

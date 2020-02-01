@@ -1031,14 +1031,14 @@ func (a *ApuluAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 		DestAddr:    apuluutils.ConvertIPAddress(obj.DestAddr),
 		PrefixLen:   obj.DestPrefixLen,
 		NextHopAddr: apuluutils.ConvertIPAddress(obj.NextHop),
-		AdminStatus: 1,
+		State:       1,
 		AdminDist:   250,
-		Override:    1}
+		Override:    true}
 
 	staticRouteRequest := &msapi.CPStaticRouteRequest{
 		Request: []*msapi.CPStaticRouteSpec{staticRouteSpec}}
 
-	resp, err := a.CPRouteSvcClient.CPStaticRouteSpecCreate(context.Background(), staticRouteRequest)
+	resp, err := a.CPRouteSvcClient.CPStaticRouteCreate(context.Background(), staticRouteRequest)
 	log.Infof("CPStaticRoute Response: %v. Err: %v", resp, err)
 	if resp != nil {
 		if err := apuluutils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create failed for static route")); err != nil {

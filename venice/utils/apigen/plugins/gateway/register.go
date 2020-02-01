@@ -822,6 +822,9 @@ func getPdsaCastSetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 		}
 		return "pds_ms_set_string_in_byte_array"
 	}
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BOOL && camInfoFieldTypeName == "long" {
+		return "pds_ms_set_amb_bool"
+	}
 	return ""
 }
 
@@ -834,6 +837,9 @@ func getPdsaCastGetFunc(protoFieldTypeName gogoproto.FieldDescriptorProto_Type, 
 			return "pds_ms_get_string_in_byte_array_with_len"
 		}
 		return "pds_ms_get_string_in_byte_array"
+	}
+	if protoFieldTypeName == gogoproto.FieldDescriptorProto_TYPE_BOOL && camInfoFieldTypeName == "long" {
+		return "pds_ms_get_amb_bool"
 	}
 	return ""
 }

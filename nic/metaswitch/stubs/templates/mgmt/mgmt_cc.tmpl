@@ -163,10 +163,14 @@
                 v_{{$struct | ToLower}}->{{$fieldOpt.Field}} = ({{$fieldOpt.CppDataType}})req.{{$fieldOpt.Name | ToLower}}();
                     {{end}}
                   {{else}}
-                    {{if (eq $fieldOpt.FieldHasLen false)}}
-                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                    {{if (eq $castFn "pds_ms_set_amb_bool")}}
+                  {{$castFn}}((NBB_LONG*)&v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
                     {{else}}
-                {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, (NBB_ULONG*)&(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len), req.{{$fieldOpt.Name | ToLower}}());
+                      {{if (eq $fieldOpt.FieldHasLen false)}}
+                    {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, req.{{$fieldOpt.Name | ToLower}}());
+                      {{else}}
+                    {{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}, (NBB_ULONG*)&(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}_len), req.{{$fieldOpt.Name | ToLower}}());
+                      {{end}}
                     {{end}}
                   {{end}}
                 AMB_SET_FIELD_PRESENT(mib_msg, {{$fieldOpt.SetFieldIdx}});
@@ -215,7 +219,8 @@
 
     NBB_VOID pds_ms_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
-                                            NBB_ULONG test_correlator) {
+                                            NBB_ULONG test_correlator,
+                                            bool op_update) {
         ATG_CPI_ROW_UPDATE  *row_update = NULL;
         AMB_GEN_IPS         *mib_msg = NULL;
 
@@ -261,9 +266,10 @@
 
     NBB_VOID pds_ms_pre_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
-                                            NBB_ULONG test_correlator) {
+                                            NBB_ULONG test_correlator,
+                                            bool op_update) {
         if (pre_set_{{$struct | ToLower}}_func != NULL) {
-            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator);
+            pre_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, op_update);
         }
         return;
     } /* pds_ms_pre_set_{{$struct | ToLower}} */
@@ -276,9 +282,10 @@
 
     NBB_VOID pds_ms_post_set_{{$struct | ToLower}}(pds::{{$msgName}} &req,
                                             NBB_LONG row_status,
-                                            NBB_ULONG test_correlator) {
+                                            NBB_ULONG test_correlator,
+                                            bool op_update) {
         if (post_set_{{$struct | ToLower}}_func != NULL) {
-            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator);
+            post_set_{{$struct | ToLower}}_func(req, row_status, test_correlator, op_update);
         }
         return;
     } /* pds_ms_post_set_{{$struct | ToLower}} */
@@ -313,6 +320,7 @@
         /***************************************************************************/
         AMB_GET *v_amb_get;
         NBB_LONG bulk_row;
+        bool specific_get = false;
         {{$struct}} *v_{{$struct | ToLower}};
 
         NBB_TRC_ENTRY("pds_ms_check_get_{{$struct | ToLower}}");
@@ -327,17 +335,18 @@
         pds::{{$rootMsg.GetName}} *resp = (pds::{{$rootMsg.GetName}}*)v_amb_get->correlator.pds_ms_resp_ctx;
         SHARED.saved_ips = NULL;
 
+        if (({{$struct}} *)NTL_OFF_GET_POINTER(v_amb_get, &v_amb_get->bulk_data_offset) == NULL) {
+            specific_get = true;
+        }
         if (v_amb_get->ret_code == AMB_RC_NO_ERROR)
         {
             /*************************************************************************/
             /* This GET response contains entry from {{$struct}}                     */
             /*************************************************************************/
             NBB_TRC_FLOW((NBB_FORMAT "Got a valid {{$struct}} entry"));
-            bool specific_get = false;
             v_{{$struct | ToLower}} = ({{$struct}} *)NTL_OFF_GET_POINTER(v_amb_get,
                                                         &v_amb_get->bulk_data_offset);
             if (v_{{$struct | ToLower}} == NULL) {
-                specific_get = true;
                 v_{{$struct | ToLower}} = ({{$struct}} *)((NBB_BYTE *)v_amb_get +
                                                        v_amb_get->data_offset);
             }
@@ -425,7 +434,7 @@
                             {{end}}
                           {{end}}
                         {{else}}
-                          {{if (eq $castFn "pds_ms_nbb_get_long")}}
+                          {{if or (eq $castFn "pds_ms_nbb_get_long") (eq $castFn "pds_ms_get_amb_bool")}}
                 ent->set_{{$fieldOpt.Name | ToLower}}({{$castFn}}(v_{{$struct | ToLower}}->{{$fieldOpt.Field}}));
                           {{else}}
                             {{if (eq $fieldOpt.FieldHasLen false)}}
@@ -533,6 +542,33 @@
             /* Send response back to the caller.                                     */
             /*************************************************************************/
             pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_OUT_OF_RESOURCE);
+        }
+        else if (v_amb_get->ret_code == AMB_RC_NO_SUCH_OBJECT && specific_get)
+        {
+            /*************************************************************************/
+            /* The product failed to process the Specific GET                        */
+            /*                                                                       */
+            /* A MIB stub could decide to take action here, for example try again or */
+            /* report the error.  However we just free the buffer and continue with  */
+            /* the next FSM action.                                                  */
+            /*************************************************************************/
+            NBB_TRC_FLOW((NBB_FORMAT "GET failure"));
+            v_amb_get->correlator.pds_ms_resp_ctx = NULL;
+            NBB_FREE_BUFFER(v_amb_get);
+            v_amb_get = NULL;
+
+            /*************************************************************************/
+            /* We are no longer responsible for incoming GETs.                       */
+            /*************************************************************************/
+            SHARED.wait_check_get = NULL;
+            {{if or (HasSuffix $msg.GetName "Status") (HasSuffix $msg.GetName "status")}}
+            pds_ms_check_get_{{$struct | ToLower}}_status_response_count = 0;
+            {{end}}
+
+            /*************************************************************************/
+            /* Send response back to the caller.                                     */
+            /*************************************************************************/
+            pds_ms::mgmt_state_t::ms_response_ready(types::ApiStatus::API_STATUS_NOT_FOUND);
         }
         else
         {

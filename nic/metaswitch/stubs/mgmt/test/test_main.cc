@@ -16,7 +16,7 @@ class Client {
 
     void peerCreate() {
         pds::BGPPeerRequest req;
-        pds::BGPResponse res;
+        pds::BGPPeerResponse res;
         grpc::ClientContext context;
 
         auto ent = req.add_request();
@@ -24,17 +24,16 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
         ent->set_id(std::to_string(1));
-        ent->set_adminen(pds::ADMIN_UP);
+        ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_ifid(0);
         ent->set_remoteasn(1);
         ent->set_connectretry(1);
-        ent->set_sendcomm(pds::BOOL_TRUE);
-        ent->set_sendextcomm(pds::BOOL_TRUE);
+        ent->set_sendcomm(true);
+        ent->set_sendextcomm(true);
         //ent->set_localnm(1);
-        grpc::Status status = stub_->BGPPeerSpecCreate(&context, req, &res);
+        grpc::Status status = stub_->BGPPeerCreate(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "inserted 1 more entry into peer table" << std::endl;
@@ -54,14 +53,13 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
         ent->set_id(std::to_string(1));
-        ent->set_adminen(pds::ADMIN_UP);
+        ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_ifid(0);
         ent->set_remoteasn(1);
 
-        grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
+        grpc::Status status = stub_->BGPPeerGet(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "got 1 entry" << std::endl;
@@ -76,8 +74,7 @@ class Client {
                 paddr = resp.localaddr().v4addr();
                 ip_addr.s_addr = paddr;
                 std::cout << "localaf: " << resp.localaddr().af() << " localaddr: " << inet_ntoa(ip_addr) << std::endl;
-                std::cout << "ifid: " << resp.ifid() << std::endl;
-                std::cout << "adminen: " << resp.adminen() << std::endl;
+                std::cout << "state: " << resp.state() << std::endl;
                 std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
                 std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
             }
@@ -89,7 +86,7 @@ class Client {
 
     void peerDelete() {
         pds::BGPPeerRequest req;
-        pds::BGPResponse res;
+        pds::BGPPeerResponse res;
         grpc::ClientContext context;
 
         auto ent = req.add_request();
@@ -97,13 +94,12 @@ class Client {
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
         ent->set_id(std::to_string(1));
-        ent->set_adminen(pds::ADMIN_UP);
+        ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
         localaddr->set_v4addr(1);
-        ent->set_ifid(0);
         ent->set_remoteasn(1);
-        grpc::Status status = stub_->BGPPeerSpecDelete(&context, req, &res);
+        grpc::Status status = stub_->BGPPeerDelete(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "deleted 1 entry" << std::endl;
@@ -118,7 +114,7 @@ class Client {
         pds::BGPPeerGetResponse res;
         grpc::ClientContext context;
 
-        grpc::Status status = stub_->BGPPeerSpecGet(&context, req, &res);
+        grpc::Status status = stub_->BGPPeerGet(&context, req, &res);
 
         if (status.ok()) {
             std::cout << "got peer status table with " << res.response_size() << " entry" << std::endl;
@@ -133,8 +129,7 @@ class Client {
 		paddr = resp.localaddr().v4addr();
 		ip_addr.s_addr = paddr;
                 std::cout << "localaf: " << resp.localaddr().af() << " localaddr: " << inet_ntoa(ip_addr) << std::endl;
-                std::cout << "ifid: " << resp.ifid() << std::endl;
-                std::cout << "adminen: " << resp.adminen() << std::endl;
+                std::cout << "state: " << resp.state() << std::endl;
                 std::cout << "sendcomm: " << resp.sendcomm() << std::endl;
                 std::cout << "remoteasn: " << resp.remoteasn() << std::endl;
             }

@@ -60,7 +60,6 @@ extern "C" {
 #define PDS_MS_EVPN_ENT_INDEX     2 // Use a different entity id than BGP
                                     // Required to redistribute routes to EVPN
                                     // (Type 5 test) 
-
 using namespace std;
 
 sdk_ret_t pds_ms_api_to_sdk_ret(types::ApiStatus api_err);
@@ -83,6 +82,16 @@ bool ip_addr_spec_to_ip_addr (const types::IPAddress& in_ipaddr,
                               ip_addr_t *out_ipaddr);
 
 NBB_LONG pds_ms_nbb_get_long(NBB_BYTE *byteVal);
+
+static inline NBB_LONG pds_ms_get_amb_bool (NBB_LONG amb_bool) {
+    // convert from amb_bool to bool
+    return (amb_bool == AMB_TRUE) ? 1 : 0;
+}
+static inline NBB_VOID pds_ms_set_amb_bool(NBB_LONG *amb_bool,
+                                           NBB_LONG bool_val) {
+    // convert bool to amb_bool
+    *amb_bool = bool_val ? AMB_TRUE : AMB_FALSE;
+}
 
 NBB_VOID
 pds_ms_get_uuid(pds_obj_key_t *out_uuid, const string& in_str);
@@ -127,20 +136,20 @@ pds_ms_get_string_in_byte_array_oid(NBB_ULONG *oid,
                                   NBB_LONG getKeyOidIdx);
 
 namespace pds {
-NBB_VOID bgp_rm_ent_get_fill_func (pds::BGPGlobalSpec &req,
-                                   NBB_ULONG*          oid);
+NBB_VOID bgp_rm_ent_get_fill_func (pds::BGPSpec &req,
+                                   NBB_ULONG*   oid);
 
-NBB_VOID bgp_rm_ent_set_fill_func (pds::BGPGlobalSpec &req, 
+NBB_VOID bgp_rm_ent_set_fill_func (pds::BGPSpec   &req, 
                                AMB_GEN_IPS        *mib_msg, 
                                AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent, 
                                NBB_LONG           row_status);
 
 NBB_VOID bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator);
+                          NBB_ULONG correlator, bool op_update=false);
 
 NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator);
+                          NBB_ULONG correlator, bool op_update=false);
 
 NBB_VOID bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
                                  NBB_ULONG*           oid);
@@ -160,16 +169,20 @@ NBB_VOID bgp_peer_af_set_fill_func (pds::BGPPeerAfSpec&        req,
                                 NBB_LONG               row_status);
 NBB_VOID evpn_evi_pre_set (EvpnEviSpec  &req,
                            NBB_LONG     row_status,
-                           NBB_ULONG    test_correlator);
+                           NBB_ULONG    test_correlator,
+                           bool         op_update=false);
 NBB_VOID evpn_evi_rt_pre_set (EvpnEviRtSpec  &req,
                               NBB_LONG       row_status,
-                              NBB_ULONG      test_correlator);
+                              NBB_ULONG      test_correlator,
+                              bool           op_update=false);
 NBB_VOID evpn_ip_vrf_pre_set (EvpnIpVrfSpec  &req,
                               NBB_LONG       row_status,
-                              NBB_ULONG      test_correlator);
+                              NBB_ULONG      test_correlator,
+                              bool           op_update=false);
 NBB_VOID evpn_ip_vrf_rt_pre_set (EvpnIpVrfRtSpec  &req,
                                  NBB_LONG       row_status,
-                                 NBB_ULONG      test_correlator);
+                                 NBB_ULONG      test_correlator,
+                                 bool           op_update=false);
 NBB_VOID evpn_evi_get_fill_func (EvpnEviSpec&    req,
                                  NBB_ULONG*       oid);
 NBB_VOID evpn_evi_set_fill_func (EvpnEviSpec&    req,
@@ -221,9 +234,10 @@ types::ApiStatus l2f_test_local_mac_ip_del (const CPL2fTestDeleteSpec   *req,
                                             CPL2fTestResponse *resp);
 NBB_VOID lim_l3_if_addr_pre_set(pds::LimInterfaceAddrSpec &req,
                                 NBB_LONG row_status,
-                                NBB_ULONG correlator);
+                                NBB_ULONG correlator,
+                                bool      op_update=false);
 NBB_VOID cp_route_pre_set(pds::CPStaticRouteSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator);
+                          NBB_ULONG correlator, bool op_update=false);
 } // namespace pds
 
 namespace pds_ms {

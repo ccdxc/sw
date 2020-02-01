@@ -45,7 +45,8 @@ bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
 }
 
 NBB_VOID
-bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlator) 
+bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
+                 NBB_ULONG correlator, bool op_update)
 {
     pds_obj_key_t uuid = {0};
     pds_ms_get_uuid(&uuid, req.id());
@@ -55,8 +56,15 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlato
 
     if (uuid_obj == nullptr) {
         if (row_status == AMB_ROW_DESTROY) {
-            SDK_TRACE_ERR("BGP Peer delete with unknown key %s", uuid.str());
-            return;
+            // Should throw an error instead of return.
+            // MS might delete entry if key params match
+            throw Error (std::string("BGP Peer delete with Invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+        }
+        if (op_update) {
+            // Update without an existing entry
+            throw Error (std::string("BGP Peer update with Invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
         }
         // BGP Peer Create - store UUID to key mapping pending confirmation
         ip_addr_t local_ipaddr, peer_ipaddr;
@@ -92,7 +100,7 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status, NBB_ULONG correlato
 
 NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
-                          NBB_ULONG correlator) 
+                          NBB_ULONG correlator, bool op_update)
 {
     pds_obj_key_t uuid = {0};
     pds_ms_get_uuid(&uuid, req.id());
@@ -102,8 +110,15 @@ bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
 
     if (uuid_obj == nullptr) {
         if (row_status == AMB_ROW_DESTROY) {
-            SDK_TRACE_ERR("BGP PeerAF delete with unknown key %s", uuid.str());
-            return;
+            // Should throw an error instead of return.
+            // MS might delete entry if key params match
+            throw Error (std::string("BGP PeerAF delete with Invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+        }
+        if (op_update) {
+            // Update without an existing entry
+            throw Error (std::string("BGP PeerAF update with Invalid key ").
+                         append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
         }
         // BGP PeerAF Create - store UUID to key mapping pending confirmation
         ip_addr_t local_ipaddr, peer_ipaddr;
@@ -185,7 +200,7 @@ bgp_peer_set_fill_func (pds::BGPPeerSpec&   req,
 }
 
 NBB_VOID
-bgp_rm_ent_get_fill_func (pds::BGPGlobalSpec &req,
+bgp_rm_ent_get_fill_func (pds::BGPSpec &req,
                           NBB_ULONG *oid)
 {
     pds_obj_key_t uuid = {0};
@@ -213,7 +228,7 @@ bgp_rm_ent_get_fill_func (pds::BGPGlobalSpec &req,
 }
 
 NBB_VOID 
-bgp_rm_ent_set_fill_func (pds::BGPGlobalSpec &req,
+bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
                       AMB_GEN_IPS        *mib_msg,
                       AMB_BGP_RM_ENT     *v_amb_bgp_rm_ent,
                       NBB_LONG           row_status)
@@ -258,6 +273,11 @@ bgp_rm_ent_set_fill_func (pds::BGPGlobalSpec &req,
         v_amb_bgp_rm_ent->i3_ent_index = PDS_MS_I3_ENT_INDEX;;
         AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_I3_ENT_INDEX);
 
+        v_amb_bgp_rm_ent->update_groups = AMB_TRUE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_UPDATE_GROUPS);
+
+        v_amb_bgp_rm_ent->agg_split_horizon = AMB_FALSE;
+        AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_BGP_RM_AGG_SPLT_HORIZON);
     }
 }
 

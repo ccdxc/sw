@@ -41,17 +41,6 @@
   
   
 
-- [pdsa.proto](#pdsa.proto)
-    - [GlobalOpts](#venice.GlobalOpts)
-    - [PdsaFields](#venice.PdsaFields)
-  
-  
-    - [File-level Extensions](#pdsa.proto-extensions)
-    - [File-level Extensions](#pdsa.proto-extensions)
-    - [File-level Extensions](#pdsa.proto-extensions)
-  
-  
-
 - [gogo.proto](#gogo.proto)
   
   
@@ -127,6 +116,17 @@
   
   
 
+- [pdsa.proto](#pdsa.proto)
+    - [GlobalOpts](#venice.GlobalOpts)
+    - [PdsaFields](#venice.PdsaFields)
+  
+  
+    - [File-level Extensions](#pdsa.proto-extensions)
+    - [File-level Extensions](#pdsa.proto-extensions)
+    - [File-level Extensions](#pdsa.proto-extensions)
+  
+  
+
 - [timestamp.proto](#timestamp.proto)
     - [Timestamp](#google.protobuf.Timestamp)
   
@@ -184,16 +184,14 @@
 
 - [common.proto](#common.proto)
   
-    - [AMBBool](#pds.AMBBool)
-    - [AdminSt](#pds.AdminSt)
+    - [AdminState](#pds.AdminState)
   
   
   
 
 - [bgp.proto](#bgp.proto)
-    - [BGPGlobal](#pds.BGPGlobal)
-    - [BGPGlobalSpec](#pds.BGPGlobalSpec)
-    - [BGPGlobalSpecGetResponse](#pds.BGPGlobalSpecGetResponse)
+    - [BGP](#pds.BGP)
+    - [BGPGetResponse](#pds.BGPGetResponse)
     - [BGPNLRIPrefix](#pds.BGPNLRIPrefix)
     - [BGPNLRIPrefixGetResponse](#pds.BGPNLRIPrefixGetResponse)
     - [BGPNLRIPrefixRequest](#pds.BGPNLRIPrefixRequest)
@@ -202,14 +200,17 @@
     - [BGPPeerAf](#pds.BGPPeerAf)
     - [BGPPeerAfGetResponse](#pds.BGPPeerAfGetResponse)
     - [BGPPeerAfRequest](#pds.BGPPeerAfRequest)
+    - [BGPPeerAfResponse](#pds.BGPPeerAfResponse)
     - [BGPPeerAfSpec](#pds.BGPPeerAfSpec)
     - [BGPPeerAfStatus](#pds.BGPPeerAfStatus)
     - [BGPPeerGetResponse](#pds.BGPPeerGetResponse)
     - [BGPPeerRequest](#pds.BGPPeerRequest)
+    - [BGPPeerResponse](#pds.BGPPeerResponse)
     - [BGPPeerSpec](#pds.BGPPeerSpec)
     - [BGPPeerStatus](#pds.BGPPeerStatus)
     - [BGPRequest](#pds.BGPRequest)
     - [BGPResponse](#pds.BGPResponse)
+    - [BGPSpec](#pds.BGPSpec)
     - [BGPStatus](#pds.BGPStatus)
   
     - [BGPAfi](#pds.BGPAfi)
@@ -222,15 +223,16 @@
   
 
 - [cp_route.proto](#cp_route.proto)
-    - [CPRouteResponse](#pds.CPRouteResponse)
-    - [CPRouteSpec](#pds.CPRouteSpec)
-    - [CPRouteSpecRequest](#pds.CPRouteSpecRequest)
-    - [CPRouteSpecResponse](#pds.CPRouteSpecResponse)
+    - [CPRoute](#pds.CPRoute)
+    - [CPRouteGetRequest](#pds.CPRouteGetRequest)
+    - [CPRouteGetResponse](#pds.CPRouteGetResponse)
+    - [CPRouteStatus](#pds.CPRouteStatus)
     - [CPStaticRouteRequest](#pds.CPStaticRouteRequest)
     - [CPStaticRouteResponse](#pds.CPStaticRouteResponse)
     - [CPStaticRouteSpec](#pds.CPStaticRouteSpec)
+    - [CPStaticRouteStatus](#pds.CPStaticRouteStatus)
   
-    - [RouteProto](#pds.RouteProto)
+    - [RouteProtocol](#pds.RouteProtocol)
     - [RouteType](#pds.RouteType)
   
   
@@ -909,79 +911,6 @@ methods, and PUT verb for idempotent methods instead of the default POST.
 
 
 
-<a name="pdsa.proto"/>
-<p align="right"><a href="#top">Top</a></p>
-
-## pdsa.proto
-
-
-
-<a name="venice.GlobalOpts"/>
-
-### GlobalOpts
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| OidLen | [string](#string) |  |  |
-| Mib | [string](#string) |  |  |
-| FillFn | [string](#string) |  |  |
-| ActionFn | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="venice.PdsaFields"/>
-
-### PdsaFields
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Field | [string](#string) |  |  |
-| SetFieldFn | [string](#string) |  |  |
-| GetFieldFn | [string](#string) |  |  |
-| SetKeyOidIndex | [string](#string) |  |  |
-| GetKeyOidIndex | [string](#string) |  |  |
-| SetKeyOidFn | [string](#string) |  |  |
-| GetKeyOidFn | [string](#string) |  |  |
-| SetKeyOidLenIndex | [string](#string) |  |  |
-| GetKeyOidLenIndex | [string](#string) |  |  |
-| IgnoreIfEmpty | [bool](#bool) |  |  |
-| IsZeroIPValid | [bool](#bool) |  |  |
-| SetKeyOidAddrIndex | [string](#string) |  |  |
-| SetKeyOidAddrTypeIndex | [string](#string) |  |  |
-| AddrTypeFieldName | [string](#string) |  |  |
-| AddrLenFieldName | [string](#string) |  |  |
-
-
-
-
-
- 
-
- 
-
-
-<a name="pdsa.proto-extensions"/>
-
-### File-level Extensions
-| Extension | Type | Base | Number | Description |
-| --------- | ---- | ---- | ------ | ----------- |
-| pdsaFields | PdsaFields | google.protobuf.FieldOptions | 83400 |  |
-| pdsaGetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82401 |  |
-| pdsaSetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82400 |  |
-
- 
-
- 
-
-
-
 <a name="gogo.proto"/>
 <p align="right"><a href="#top">Top</a></p>
 
@@ -1067,6 +996,79 @@ methods, and PUT verb for idempotent methods instead of the default POST.
 | unsafe_marshaler | bool | google.protobuf.MessageOptions | 64023 |  |
 | unsafe_unmarshaler | bool | google.protobuf.MessageOptions | 64024 |  |
 | verbose_equal | bool | google.protobuf.MessageOptions | 64004 |  |
+
+ 
+
+ 
+
+
+
+<a name="pdsa.proto"/>
+<p align="right"><a href="#top">Top</a></p>
+
+## pdsa.proto
+
+
+
+<a name="venice.GlobalOpts"/>
+
+### GlobalOpts
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| OidLen | [string](#string) |  |  |
+| Mib | [string](#string) |  |  |
+| FillFn | [string](#string) |  |  |
+| ActionFn | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="venice.PdsaFields"/>
+
+### PdsaFields
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Field | [string](#string) |  |  |
+| SetFieldFn | [string](#string) |  |  |
+| GetFieldFn | [string](#string) |  |  |
+| SetKeyOidIndex | [string](#string) |  |  |
+| GetKeyOidIndex | [string](#string) |  |  |
+| SetKeyOidFn | [string](#string) |  |  |
+| GetKeyOidFn | [string](#string) |  |  |
+| SetKeyOidLenIndex | [string](#string) |  |  |
+| GetKeyOidLenIndex | [string](#string) |  |  |
+| IgnoreIfEmpty | [bool](#bool) |  |  |
+| IsZeroIPValid | [bool](#bool) |  |  |
+| SetKeyOidAddrIndex | [string](#string) |  |  |
+| SetKeyOidAddrTypeIndex | [string](#string) |  |  |
+| AddrTypeFieldName | [string](#string) |  |  |
+| AddrLenFieldName | [string](#string) |  |  |
+
+
+
+
+
+ 
+
+ 
+
+
+<a name="pdsa.proto-extensions"/>
+
+### File-level Extensions
+| Extension | Type | Base | Number | Description |
+| --------- | ---- | ---- | ------ | ----------- |
+| pdsaFields | PdsaFields | google.protobuf.FieldOptions | 83400 |  |
+| pdsaGetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82401 |  |
+| pdsaSetGlobOpts | GlobalOpts | google.protobuf.MessageOptions | 82400 |  |
 
  
 
@@ -1802,29 +1804,16 @@ Security rule action is one of the below
  
 
 
-<a name="pds.AMBBool"/>
+<a name="pds.AdminState"/>
 
-### AMBBool
-AMB Bool
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| BOOL_NONE | 0 |  |
-| BOOL_TRUE | 1 |  |
-| BOOL_FALSE | 2 |  |
-
-
-
-<a name="pds.AdminSt"/>
-
-### AdminSt
-Admin Status
+### AdminState
+Admin State
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| ADMIN_NONE | 0 |  |
-| ADMIN_UP | 1 |  |
-| ADMIN_DOWN | 2 |  |
+| ADMIN_STATE_NONE | 0 |  |
+| ADMIN_STATE_ENABLE | 1 |  |
+| ADMIN_STATE_DISABLE | 2 |  |
 
 
  
@@ -1842,48 +1831,32 @@ Admin Status
 
 
 
-<a name="pds.BGPGlobal"/>
+<a name="pds.BGP"/>
 
-### BGPGlobal
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [BGPGlobalSpec](#pds.BGPGlobalSpec) |  |  |
-
-
-
-
-
-
-<a name="pds.BGPGlobalSpec"/>
-
-### BGPGlobalSpec
-Global configuration for BGP
+### BGP
+BGP object
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of BGP global config |
-| LocalASN | [uint32](#uint32) |  | The local autonomous system number |
-| RouterId | [fixed32](#fixed32) |  | Router ID for this bgp instance |
+| Spec | [BGPSpec](#pds.BGPSpec) |  |  |
+| Status | [BGPStatus](#pds.BGPStatus) |  |  |
 
 
 
 
 
 
-<a name="pds.BGPGlobalSpecGetResponse"/>
+<a name="pds.BGPGetResponse"/>
 
-### BGPGlobalSpecGetResponse
-BGPGlobalSpec get response
+### BGPGetResponse
+BGP spec get response
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [BGPGlobal](#pds.BGPGlobal) |  |  |
+| Response | [BGP](#pds.BGP) |  |  |
 
 
 
@@ -1893,7 +1866,7 @@ BGPGlobalSpec get response
 <a name="pds.BGPNLRIPrefix"/>
 
 ### BGPNLRIPrefix
-
+BGP NLRI prefix object
 
 
 | Field | Type | Label | Description |
@@ -1908,7 +1881,7 @@ BGPGlobalSpec get response
 <a name="pds.BGPNLRIPrefixGetResponse"/>
 
 ### BGPNLRIPrefixGetResponse
-BGPPeerSpec get response
+BGP NLRI prefix get response
 
 
 | Field | Type | Label | Description |
@@ -1924,12 +1897,12 @@ BGPPeerSpec get response
 <a name="pds.BGPNLRIPrefixRequest"/>
 
 ### BGPNLRIPrefixRequest
-BGPNLRIPrefix request
+BGP NLRI prefix request
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Request | [BGPNLRIPrefixStatus](#pds.BGPNLRIPrefixStatus) | repeated | requests |
+| Request | [BGPNLRIPrefixStatus](#pds.BGPNLRIPrefixStatus) |  | request |
 
 
 
@@ -1939,22 +1912,22 @@ BGPNLRIPrefix request
 <a name="pds.BGPNLRIPrefixStatus"/>
 
 ### BGPNLRIPrefixStatus
-
+BGP NLRI prefix table
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP Address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP Sub-Address family |
-| Prefix | [bytes](#bytes) |  | Prefix in NLRI |
-| PrefixLen | [uint32](#uint32) |  | Prefix Length |
-| RouteSource | [NLRISrc](#pds.NLRISrc) |  | Route Source (learned from BGP Peer or AFM) |
-| RouteSourceIndex | [uint32](#uint32) |  | Route Source Index |
-| PathID | [uint32](#uint32) |  | Path ID |
-| BestRoute | [AMBBool](#pds.AMBBool) |  | Chosen as BGP best route or not |
-| ASPathStr | [bytes](#bytes) |  | AS Path String |
-| PathOrigId | [bytes](#bytes) |  | Originator ID |
-| NextHopAddr | [bytes](#bytes) |  | Next-Hop Address |
+| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
+| Prefix | [bytes](#bytes) |  | prefix in NLRI |
+| PrefixLen | [uint32](#uint32) |  | prefix length |
+| RouteSource | [NLRISrc](#pds.NLRISrc) |  | route source (learned from BGP peer or AFM) |
+| RouteSourceIndex | [uint32](#uint32) |  | route source index |
+| PathID | [uint32](#uint32) |  | path ID |
+| BestRoute | [bool](#bool) |  | chosen as BGP best route or not |
+| ASPathStr | [bytes](#bytes) |  | AS path string |
+| PathOrigId | [bytes](#bytes) |  | originator ID |
+| NextHopAddr | [bytes](#bytes) |  | next-hop address |
 
 
 
@@ -1964,7 +1937,7 @@ BGPNLRIPrefix request
 <a name="pds.BGPPeer"/>
 
 ### BGPPeer
-BGP Peer Object
+BGP peer object
 
 
 | Field | Type | Label | Description |
@@ -1980,7 +1953,7 @@ BGP Peer Object
 <a name="pds.BGPPeerAf"/>
 
 ### BGPPeerAf
-
+BGP peer AF object
 
 
 | Field | Type | Label | Description |
@@ -1996,7 +1969,7 @@ BGP Peer Object
 <a name="pds.BGPPeerAfGetResponse"/>
 
 ### BGPPeerAfGetResponse
-BGPPeerAf get response
+BGP peer AF get response
 
 
 | Field | Type | Label | Description |
@@ -2012,7 +1985,7 @@ BGPPeerAf get response
 <a name="pds.BGPPeerAfRequest"/>
 
 ### BGPPeerAfRequest
-BGPPeerAf create and update request
+BGP peer AF create and update request
 
 
 | Field | Type | Label | Description |
@@ -2024,23 +1997,37 @@ BGPPeerAf create and update request
 
 
 
+<a name="pds.BGPPeerAfResponse"/>
+
+### BGPPeerAfResponse
+BGP peer AF create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
+
+
+
+
+
+
 <a name="pds.BGPPeerAfSpec"/>
 
 ### BGPPeerAfSpec
-BGP PeerAF configurations
+BGP peer AF configurations
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | Id | [bytes](#bytes) |  | unique key/identifier of peer AF config |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Peer IP Address |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Local IP Address |
-| IfId | [uint32](#uint32) |  | IfId |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP Address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP Sub-Address family |
-| Disable | [AMBBool](#pds.AMBBool) |  | Disable AFI SAFI |
-| NHself | [AMBBool](#pds.AMBBool) |  | Enforce this router to set self as next-hop for advertised routes |
-| DefaultOrig | [AMBBool](#pds.AMBBool) |  | Originate a default route to this peer |
+| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address |
+| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
+| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
+| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
+| Disable | [bool](#bool) |  | disable adress family. IPv4-unicast and l2vpn-evpn address families are enabled by default |
+| NexthopSelf | [bool](#bool) |  | enforce this router to set self as next-hop for advertised routes |
+| DefaultOrig | [bool](#bool) |  | originate a default route to this peer |
 
 
 
@@ -2050,20 +2037,7 @@ BGP PeerAF configurations
 <a name="pds.BGPPeerAfStatus"/>
 
 ### BGPPeerAfStatus
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Id | [bytes](#bytes) |  | unique key/identifier of peer AF config |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Peer IP Address |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Local IP Address |
-| IfId | [uint32](#uint32) |  | IfId |
-| Afi | [BGPAfi](#pds.BGPAfi) |  | BGP Address family |
-| Safi | [BGPSafi](#pds.BGPSafi) |  | BGP Sub-Address family |
-| Disable | [AMBBool](#pds.AMBBool) |  | Disable AFI SAFI |
-| NHself | [AMBBool](#pds.AMBBool) |  | Enforce this router to set self as next-hop for advertised routes |
-| DefaultOrig | [AMBBool](#pds.AMBBool) |  | Originate a default route to this peer |
+BGP peer AF status and stats, if any
 
 
 
@@ -2073,7 +2047,7 @@ BGP PeerAF configurations
 <a name="pds.BGPPeerGetResponse"/>
 
 ### BGPPeerGetResponse
-BGPPeerSpec get response
+BGP peer get response
 
 
 | Field | Type | Label | Description |
@@ -2089,7 +2063,7 @@ BGPPeerSpec get response
 <a name="pds.BGPPeerRequest"/>
 
 ### BGPPeerRequest
-BGPPeerSpec create and update request
+BGP peer create and update request
 
 
 | Field | Type | Label | Description |
@@ -2101,31 +2075,41 @@ BGPPeerSpec create and update request
 
 
 
+<a name="pds.BGPPeerResponse"/>
+
+### BGPPeerResponse
+BGP peer create and update response
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
+
+
+
+
+
+
 <a name="pds.BGPPeerSpec"/>
 
 ### BGPPeerSpec
-BGP Peer configurations
+BGP peer configurations
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | Id | [bytes](#bytes) |  | unique key/identifier of peer |
-| AdminEn | [AdminSt](#pds.AdminSt) |  | Whether BGP peer is enabled ? If peer is not enabled then local router must not initiate connections to the neighbor and must not respond to TCP connections attempts from neighbor |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Peer IP Address |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Local IP Address |
-| IfId | [uint32](#uint32) |  | IfId |
-| RemoteASN | [uint32](#uint32) |  | Remote 4-byte (32-bit) AS number |
-| SendComm | [AMBBool](#pds.AMBBool) |  | Send regular community attributes to neighbor |
-| SendExtComm | [AMBBool](#pds.AMBBool) |  | Send extended community attributes to neighbor |
-| RRClient | [BGPPeerRRClient](#pds.BGPPeerRRClient) |  | Peer is a route reflector client |
+| State | [AdminState](#pds.AdminState) |  | peer enable/disable admin state. if peer is not enabled then local router must not initiate connections to the neighbor and must not respond to TCP connections attempts from neighbor |
+| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP local IP address. control plane chooses the local IP address of the session if an all 0 IP address is provided |
+| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
+| RemoteASN | [uint32](#uint32) |  | remote 4-byte AS number |
+| SendComm | [bool](#bool) |  | send regular community attributes to neighbor |
+| SendExtComm | [bool](#bool) |  | send extended community attributes to neighbor |
+| RRClient | [BGPPeerRRClient](#pds.BGPPeerRRClient) |  | peer is a route reflector client |
 | ConnectRetry | [uint32](#uint32) |  | BGP session connect-retry timer in seconds |
 | HoldTime | [uint32](#uint32) |  | BGP session holdtime timer in seconds |
 | KeepAlive | [uint32](#uint32) |  | BGP session keepalive timer in seconds |
-| Password | [bytes](#bytes) |  | MD5 Authentication |
-| Status | [uint32](#uint32) |  | TODO: Get-Only fields follows. Will be moved to status table BGP session Status |
-| PrevStatus | [uint32](#uint32) |  | BGP session Prev Status |
-| LastErrorRcvd | [bytes](#bytes) |  | Last Error Received |
-| LastErrorSent | [bytes](#bytes) |  | Last Error Sent |
+| Password | [bytes](#bytes) |  | MD5 authentication |
 
 
 
@@ -2135,28 +2119,18 @@ BGP Peer configurations
 <a name="pds.BGPPeerStatus"/>
 
 ### BGPPeerStatus
-
+BGP peer status
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | Id | [bytes](#bytes) |  | unique key/identifier of peer |
-| AdminEn | [AdminSt](#pds.AdminSt) |  | Whether BGP peer is enabled ? If peer is not enabled then local router must not initiate connections to the neighbor and must not respond to TCP connections attempts from neighbor |
-| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Peer IP Address |
-| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP Local IP Address |
-| IfId | [uint32](#uint32) |  | IfId |
-| RemoteASN | [uint32](#uint32) |  | Remote 4-byte (32-bit) AS number |
-| SendComm | [AMBBool](#pds.AMBBool) |  | Send regular community attributes to neighbor |
-| SendExtComm | [AMBBool](#pds.AMBBool) |  | Send extended community attributes to neighbor |
-| RRClient | [BGPPeerRRClient](#pds.BGPPeerRRClient) |  | Peer is a route reflector client |
-| ConnectRetry | [uint32](#uint32) |  | BGP session connect-retry timer in seconds |
-| HoldTime | [uint32](#uint32) |  | BGP session holdtime timer in seconds |
-| KeepAlive | [uint32](#uint32) |  | BGP session keepalive timer in seconds |
-| Password | [bytes](#bytes) |  | MD5 Authentication |
-| Status | [uint32](#uint32) |  | TODO: Get-Only fields follows. Will be moved to status table BGP session Status |
-| PrevStatus | [uint32](#uint32) |  | BGP session Prev Status |
-| LastErrorRcvd | [bytes](#bytes) |  | Last Error Received |
-| LastErrorSent | [bytes](#bytes) |  | Last Error Sent |
+| Status | [uint32](#uint32) |  | BGP session status |
+| PrevStatus | [uint32](#uint32) |  | BGP session previous status |
+| LastErrorRcvd | [bytes](#bytes) |  | last error received |
+| LastErrorSent | [bytes](#bytes) |  | Last error sent |
+| LocalAddr | [.types.IPAddress](#pds..types.IPAddress) |  | internal only BGP local IP address |
+| PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
 
 
 
@@ -2166,12 +2140,12 @@ BGP Peer configurations
 <a name="pds.BGPRequest"/>
 
 ### BGPRequest
-BGPGlobalSpec create and update request
+BGP spec create and update request
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Request | [BGPGlobalSpec](#pds.BGPGlobalSpec) |  | requests |
+| Request | [BGPSpec](#pds.BGPSpec) |  | requests |
 
 
 
@@ -2181,7 +2155,7 @@ BGPGlobalSpec create and update request
 <a name="pds.BGPResponse"/>
 
 ### BGPResponse
-BGPGlobalSpec create and update response
+BGP spec create and update response
 
 
 | Field | Type | Label | Description |
@@ -2194,10 +2168,28 @@ BGPGlobalSpec create and update response
 
 
 
+<a name="pds.BGPSpec"/>
+
+### BGPSpec
+BGP configuration
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Id | [bytes](#bytes) |  | unique key/identifier of BGP config |
+| LocalASN | [uint32](#uint32) |  | the local autonomous system number |
+| RouterId | [fixed32](#fixed32) |  | router ID for this bgp instance |
+| ClusterId | [fixed32](#fixed32) |  | cluster ID of the local router. if not configured, router ID will be used as cluster ID |
+
+
+
+
+
+
 <a name="pds.BGPStatus"/>
 
 ### BGPStatus
-operational status of BGP, if any
+operational status of BGP spec, if any
 
 
 
@@ -2223,13 +2215,13 @@ BGP address family identifier
 <a name="pds.BGPPeerRRClient"/>
 
 ### BGPPeerRRClient
-BGP Peer RR Client
+BGP peer RR client
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
-| BGP_NON_CLIENT | 0 |  |
-| BGP_CLIENT | 1 |  |
-| BGP_MESHED_CLIENT | 2 |  |
+| BGP_PEER_RR_NONE | 0 |  |
+| BGP_PEER_RR_CLIENT | 1 |  |
+| BGP_PEER_RR_MESHED_CLIENT | 2 |  |
 
 
 
@@ -2255,13 +2247,13 @@ BGP sub-address family identitfier
 <a name="pds.NLRISrc"/>
 
 ### NLRISrc
-
+NLRI source
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | NLRI_NONE | 0 |  |
-| NLRI_PEER | 1 | Learned from Peer |
-| NLRI_AFM | 2 | Learned from AFM |
+| NLRI_PEER | 1 | learned from peer |
+| NLRI_AFM | 2 | learned from AFM |
 | NLRI_SELF | 3 | created by itself |
 
 
@@ -2273,21 +2265,21 @@ BGP sub-address family identitfier
 <a name="pds.BGPSvc"/>
 
 ### BGPSvc
-The bgp service definition
+bgp service definition
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| BGPGlobalSpecCreate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
-| BGPGlobalSpecUpdate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
-| BGPGlobalSpecDelete | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
-| BGPGlobalSpecGet | [BGPRequest](#pds.BGPRequest) | [BGPGlobalSpecGetResponse](#pds.BGPRequest) |  |
-| BGPPeerSpecCreate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerSpecUpdate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerSpecDelete | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerSpecGet | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerGetResponse](#pds.BGPPeerRequest) |  |
-| BGPPeerAfCreate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPResponse](#pds.BGPPeerAfRequest) |  |
-| BGPPeerAfUpdate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPResponse](#pds.BGPPeerAfRequest) |  |
-| BGPPeerAfDelete | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPResponse](#pds.BGPPeerAfRequest) |  |
+| BGPCreate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
+| BGPUpdate | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
+| BGPDelete | [BGPRequest](#pds.BGPRequest) | [BGPResponse](#pds.BGPRequest) |  |
+| BGPGet | [BGPRequest](#pds.BGPRequest) | [BGPGetResponse](#pds.BGPRequest) |  |
+| BGPPeerCreate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerResponse](#pds.BGPPeerRequest) |  |
+| BGPPeerUpdate | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerResponse](#pds.BGPPeerRequest) |  |
+| BGPPeerDelete | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerResponse](#pds.BGPPeerRequest) |  |
+| BGPPeerGet | [BGPPeerRequest](#pds.BGPPeerRequest) | [BGPPeerGetResponse](#pds.BGPPeerRequest) |  |
+| BGPPeerAfCreate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds.BGPPeerAfRequest) |  |
+| BGPPeerAfUpdate | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds.BGPPeerAfRequest) |  |
+| BGPPeerAfDelete | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfResponse](#pds.BGPPeerAfRequest) |  |
 | BGPPeerAfGet | [BGPPeerAfRequest](#pds.BGPPeerAfRequest) | [BGPPeerAfGetResponse](#pds.BGPPeerAfRequest) |  |
 | BGPNLRIPrefixGet | [BGPNLRIPrefixRequest](#pds.BGPNLRIPrefixRequest) | [BGPNLRIPrefixGetResponse](#pds.BGPNLRIPrefixRequest) |  |
 
@@ -2305,68 +2297,67 @@ protobuf specification for Control Plane Route Table
 ------------------------------------------------------------------------------
 
 
-<a name="pds.CPRouteResponse"/>
+<a name="pds.CPRoute"/>
 
-### CPRouteResponse
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| Spec | [CPRouteSpec](#pds.CPRouteSpec) |  |  |
-
-
-
-
-
-
-<a name="pds.CPRouteSpec"/>
-
-### CPRouteSpec
-Control Plane Route Spec
+### CPRoute
+control plane route object
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| RouteTableId | [uint32](#uint32) |  |  |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  |  |
-| DestPrefixLen | [uint32](#uint32) |  |  |
-| NHAddr | [.types.IPAddress](#pds..types.IPAddress) |  |  |
-| IfIndex | [uint32](#uint32) |  |  |
-| Type | [RouteType](#pds.RouteType) |  |  |
-| proto | [RouteProto](#pds.RouteProto) |  |  |
-| RpmIndex | [uint32](#uint32) |  |  |
+| Status | [CPRouteStatus](#pds.CPRouteStatus) |  |  |
 
 
 
 
 
 
-<a name="pds.CPRouteSpecRequest"/>
+<a name="pds.CPRouteGetRequest"/>
 
-### CPRouteSpecRequest
-
+### CPRouteGetRequest
+control plane route table get request
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| Request | [CPRouteSpec](#pds.CPRouteSpec) | repeated | requests |
+| Request | [CPRouteStatus](#pds.CPRouteStatus) | repeated | requests |
 
 
 
 
 
 
-<a name="pds.CPRouteSpecResponse"/>
+<a name="pds.CPRouteGetResponse"/>
 
-### CPRouteSpecResponse
-EVPN MAC IP get response
+### CPRouteGetResponse
+
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
-| Response | [CPRouteResponse](#pds.CPRouteResponse) | repeated |  |
+| Response | [CPRoute](#pds.CPRoute) | repeated |  |
+
+
+
+
+
+
+<a name="pds.CPRouteStatus"/>
+
+### CPRouteStatus
+control plane route table
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| RouteTableId | [uint32](#uint32) |  | route table id this route belongs to |
+| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
+| DestPrefixLen | [uint32](#uint32) |  | destination address prefix |
+| NHAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
+| IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
+| Type | [RouteType](#pds.RouteType) |  | type of route |
+| proto | [RouteProtocol](#pds.RouteProtocol) |  | protocol via which the route is learned |
 
 
 
@@ -2376,7 +2367,7 @@ EVPN MAC IP get response
 <a name="pds.CPStaticRouteRequest"/>
 
 ### CPStaticRouteRequest
-CRUD request message
+control plane static route create, delete and update message
 
 
 | Field | Type | Label | Description |
@@ -2397,6 +2388,7 @@ response message
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
+| Response | [CPStaticRouteStatus](#pds.CPStaticRouteStatus) |  |  |
 
 
 
@@ -2406,20 +2398,30 @@ response message
 <a name="pds.CPStaticRouteSpec"/>
 
 ### CPStaticRouteSpec
-
+control plane static route configuration
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| RouteTableId | [bytes](#bytes) |  | virtual private cloud this route belongs to |
-| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | Destination Address |
-| PrefixLen | [uint32](#uint32) |  | Destination Address Prefix Length |
-| NextHopAddr | [.types.IPAddress](#pds..types.IPAddress) |  | NextHop Address |
-| AdminStatus | [AdminSt](#pds.AdminSt) |  | Admin Status |
-| Override | [AMBBool](#pds.AMBBool) |  | Override Admin Distance |
-| AdminDist | [uint32](#uint32) |  | Admin Distance |
-| InterfaceId | [bytes](#bytes) |  | Internal only Outgoing Interface UUID needed on Pegasus |
+| RouteTableId | [bytes](#bytes) |  | route table id this route belongs to |
+| DestAddr | [.types.IPAddress](#pds..types.IPAddress) |  | destination address |
+| PrefixLen | [uint32](#uint32) |  | destination address prefix length |
+| NextHopAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
+| State | [AdminState](#pds.AdminState) |  | route is enabled or not |
+| Override | [bool](#bool) |  | override admin distance |
+| AdminDist | [uint32](#uint32) |  | admin distance |
+| InterfaceId | [bytes](#bytes) |  | internal only outgoing interface UUID needed on pegasus |
 | IfIndex | [uint32](#uint32) |  |  |
+
+
+
+
+
+
+<a name="pds.CPStaticRouteStatus"/>
+
+### CPStaticRouteStatus
+status of control plane static route, if any
 
 
 
@@ -2428,14 +2430,16 @@ response message
  
 
 
-<a name="pds.RouteProto"/>
+<a name="pds.RouteProtocol"/>
 
-### RouteProto
-
+### RouteProtocol
+route protocols
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
 | ROUTE_PROTO_NONE | 0 |  |
+| ROUTE_PROTO_LOCAL | 2 |  |
+| ROUTE_PROTO_STATIC | 3 |  |
 | ROUTE_PROTO_BGP | 14 |  |
 
 
@@ -2443,7 +2447,7 @@ response message
 <a name="pds.RouteType"/>
 
 ### RouteType
-
+route type
 
 | Name | Number | Description |
 | ---- | ------ | ----------- |
@@ -2466,10 +2470,10 @@ Control Plane Route service definition
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| CPStaticRouteSpecCreate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
-| CPStaticRouteSpecUpdate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
-| CPStaticRouteSpecDelete | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
-| CPRouteSpecGet | [CPRouteSpecRequest](#pds.CPRouteSpecRequest) | [CPRouteSpecResponse](#pds.CPRouteSpecRequest) |  |
+| CPStaticRouteCreate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
+| CPStaticRouteUpdate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
+| CPStaticRouteDelete | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
+| CPRouteGet | [CPRouteGetRequest](#pds.CPRouteGetRequest) | [CPRouteGetResponse](#pds.CPRouteGetRequest) |  |
 
  
 
