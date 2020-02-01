@@ -154,6 +154,9 @@ func validateQueryRequirements(kinds []string, fieldSel *fields.Selector) error 
 		// remove ".keyword" from the keys
 		for _, req := range fieldSel.Requirements {
 			key := req.Key
+			if len(req.Values) == 0 {
+				return fmt.Errorf("empty value in the query field")
+			}
 			if strings.Contains(key, ".keyword") {
 				key = strings.Replace(key, ".keyword", "", -1)
 			}
