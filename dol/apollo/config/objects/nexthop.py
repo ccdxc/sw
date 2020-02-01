@@ -322,10 +322,11 @@ class NexthopObjectClient(base.ConfigClientBase):
     def CreateObjects(self, node):
         cookie = utils.GetBatchCookie(node)
         if utils.IsPipelineApulu():
+            logger.info(f"Creating {len(self.__underlay_objs[node])} underlay {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs[node].values()))
         else:
+            logger.info(f"Creating {len(self.Objects(node))} {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
-        logger.info(f"Creating {self.ObjType.name} Objects in agent")
         api.client[node].Create(self.ObjType, msgs)
         return
 

@@ -156,12 +156,12 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         c = 0
         v6c = 0
         v4c = 0
-        if utils.IsDol():
-            lmap_spec = vnic_spec_obj
-            lmap_count = vnic_spec_obj.ipcount
-        else:
+        if hasattr(vnic_spec_obj, 'lmap'):
             lmap_spec = vnic_spec_obj.lmap[0]
             lmap_count = lmap_spec.count
+        else:
+            lmap_spec = vnic_spec_obj
+            lmap_count = vnic_spec_obj.ipcount
         while c < lmap_count:
             if isV6Stack:
                 obj = LocalMappingObject(node, parent, lmap_spec, utils.IP_VERSION_6, v6c)
@@ -176,10 +176,11 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self, node):
-        cookie = utils.GetBatchCookie(node)
+        # TODO: Add check to see if 32 IPs per vnic
         super().CreateObjects(node)
 
         if utils.IsServiceMappingSupported():
+            cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects(node)))
             api.client[node].Create(api.ObjectTypes.SVCMAPPING, msgs)
         return
@@ -188,6 +189,7 @@ class LocalMappingObjectClient(base.ConfigClientBase):
         super().ReadObjects(node)
 
         if utils.IsServiceMappingSupported():
+            logger.info(f"Creating {len(self.Objects(node))} SVC {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects(node)))
             api.client[node].Get(api.ObjectTypes.SVCMAPPING, msgs)
         return

@@ -125,6 +125,8 @@ class RouteTableObject(base.ConfigObjectBase):
         elif self.NhGroup:
             logger.info("- TEP: None")
             logger.info("- NexthopGroup%d" % (self.NhGroup.Id))
+        # FIXME: remove
+        return
         for route in self.routes.values():
             route.Show()
         return
@@ -337,12 +339,14 @@ class RouteObjectClient(base.ConfigClientBase):
         if  count > self.Maxlimit:
             return False, "V4 Route Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
+        logger.info(f"Generated {count} IPv4 {self.ObjType.name}TABLE Objects in {node}")
         count = sum(list(map(lambda x: len(x.values()), self.__v6objs[node].values())))
         if  count > self.Maxlimit:
             return False, "V6 Route Table count %d exceeds allowed limit of %d" %\
                           (count, self.Maxlimit)
         #TODO: check route table count equals subnet count in that VPC
         #TODO: check scale of routes per route table
+        logger.info(f"Generated {count} IPv6 {self.ObjType.name}TABLE Objects in {node}")
         return True, ""
 
     def GetRouteV4Table(self, node, vpcid, routetblid):
@@ -501,7 +505,6 @@ class RouteObjectClient(base.ConfigClientBase):
             if natspec:
                 nat_type = getattr(natspec, 'type', None)
                 nat_level = getattr(natspec, 'level', None)
-                logger.info(" NAT INFO ", nat_type, nat_level)
             nh_type = __derive_nh_type_info(spec)
             if nh_type == "vpcpeer":
                 vpcid = vpcpeerid

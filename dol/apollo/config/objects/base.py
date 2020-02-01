@@ -258,6 +258,7 @@ class ConfigClientBase(base.ConfigClientBase):
         if count > self.Maxlimit:
             return False, "%s count %d exceeds allowed limit of %d" % \
                           (self.ObjType, count, self.Maxlimit)
+        logger.info(f"Generated {count} {self.ObjType.name} Objects in {node}")
         return True, ""
 
     def GetKeyfromSpec(self, spec, yaml=False):
@@ -390,7 +391,7 @@ class ConfigClientBase(base.ConfigClientBase):
             return
 
         self.ShowObjects(node)
-        logger.info(f"Creating {self.ObjType.name} Objects in {node}")
+        logger.info(f"Creating {len(fixed)} {self.ObjType.name} Objects in {node}")
         cookie = utils.GetBatchCookie(node)
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
         api.client[node].Create(self.ObjType, msgs)

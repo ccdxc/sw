@@ -37,9 +37,12 @@ def __get_topo_spec():
 
 def Main():
     topospec = __get_topo_spec()
-    nodes = len(topospec.node)
-    EzAccessStore.SetDUTNode(topospec.dutnode)
-
+    # TODO: Fix topos to have node name
+    # Add node class
+    dutnode = "Node%d" % topospec.dutnode
+    EzAccessStore.SetDUTNode(dutnode)
+    
     for node in topospec.node:
-        generator.Main(node.id, node)
+        nodename = "Node%d" % node.id
+        generator.Main(nodename, node)
     return

@@ -253,7 +253,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
         cookie = utils.GetBatchCookie(node)
         if utils.IsL3InterfaceSupported():
             # create l3 if for uplink interface
-            logger.info("Creating L3 interface Objects in agent")
+            logger.info(f"Creating {len(self.__uplinkl3ifs[node])} L3 {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs[node].values()))
             api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
         return

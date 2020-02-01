@@ -774,8 +774,11 @@ class PolicyObjectClient(base.ConfigClientBase):
             return count
 
         def __add_default_policies(vpc_spec_obj, policyspec):
-            num_subnets = __get_num_subnets(vpc_spec_obj)
-            for i in range(num_subnets):
+            policycount = getattr(policyspec, 'count', 0)
+            if policycount == 0:
+                # use number of subnets instead
+                policycount = __get_num_subnets(vpc_spec_obj)
+            for i in range(policycount):
                 __add_user_specified_policy(policyspec, policyspec.policytype, None)
 
         for policy_spec_obj in vpc_spec_obj.policy:

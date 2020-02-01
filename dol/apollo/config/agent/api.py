@@ -41,7 +41,8 @@ import nat_pb2 as nat_pb2
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
-MAX_GRPC_WAIT = 120
+# RPC Timeout - 10mins
+MAX_GRPC_WAIT = 600
 MAX_BATCH_SIZE = 64
 
 class ApiOps(enum.IntEnum):

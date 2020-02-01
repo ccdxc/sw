@@ -36,11 +36,11 @@ class NicmgrInterface:
 class Resmgr(base.ConfigObjectBase):
     #TODO: read from PDS header files & init
     MAX_DEVICE = 1
-    MAX_TUNNEL = 1023
+    MAX_TUNNEL = 2048 if utils.IsPipelineApulu() else 1023
     MAX_NEXTHOP = 4095
     MAX_NEXTHOPGROUP = 1024
     MAX_VPC = 64
-    MAX_VNIC = 128 if utils.IsPipelineArtemis() else 64
+    MAX_VNIC = 128 if utils.IsPipelineArtemis() or utils.IsPipelineApulu() else 64
     MAX_HOST_INTERFACES = 8 if utils.IsPipelineApulu() else 2
     # Apulu supports 8 lif for now and therefore cfg cannot have more than 8 subnets
     MAX_SUBNET = MAX_HOST_INTERFACES if utils.IsPipelineApulu() else 64
@@ -83,7 +83,7 @@ class Resmgr(base.ConfigObjectBase):
         self.Node = node
         self.EpochAllocator = iter(irange(1,4096))
         # tunnel id=1 is mytep
-        self.TunnelIdAllocator = iter(irange(2,1024))
+        self.TunnelIdAllocator = iter(irange(2,4096))
         self.VpcIdAllocator = iter(irange(1,1024))
         self.SubnetIdAllocator = iter(irange(1,1024))
         self.RemoteMappingIdAllocator = iter(irange(1,1*1024*1024))
@@ -102,7 +102,7 @@ class Resmgr(base.ConfigObjectBase):
         self.VirtualRouterMacAllocator = objects.TemplateFieldObject("macstep/00CC.0000.0001/0000.0000.0001")
         self.VnicMacAllocator = objects.TemplateFieldObject("macstep/00DD.0000.0001/0000.0000.0001")
         self.RemoteMappingMacAllocator = objects.TemplateFieldObject("macstep/00EE.0000.0001/0000.0000.0001")
-        self.TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/21').hosts()
+        self.TepIpAddressAllocator = ipaddress.IPv4Network('172.16.0.0/16').hosts()
         self.TepIpv6AddressAllocator = ipaddress.IPv6Network('ffff::100:0/104').hosts()
         self.IGWMplsSlotIdAllocator = iter(irange(30001,31024))
         self.RemoteInternetNonNatTunAllocator = None
@@ -173,6 +173,8 @@ class Resmgr(base.ConfigObjectBase):
         # Host interface configs
         self.HostMemoryAllocator = None
         self.HostIfs = dict()
+        # Host interface index allocator for IOTA
+        self.HostIfIdxAllocator = iter(irange(0x80000048, 0x8000004F))
         return
 
     def Show(self):

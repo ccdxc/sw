@@ -102,8 +102,6 @@ def __getWorkloadPairsBy(wl_pair_type):
 
             w1 = __findWorkloadByVnic(vnic1)
             w2 = __findWorkloadByVnic(vnic2)
-            vnic1.Show()
-            vnic2.Show()
             assert(w1 and w2)
             if wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY and vnic1.Node != vnic2.Node:
                 continue

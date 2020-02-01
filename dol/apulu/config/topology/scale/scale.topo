@@ -1,0 +1,170 @@
+# Scale VxLAN Topology Specification for Host mode
+meta:
+    id: TOPO_VxLAN_HOSTMODE_SCALE
+
+dutnode : 1
+node:
+  - id : 1
+    device:
+        mode        : host # bitw (default), host
+        stack       : ipv4 # ipv4 (default), ipv6
+        bridging    : false # false (default), true
+        learning    : false # false (default), true
+        ipaddress   : None # Taken from resmgr
+        gateway     : None # Taken from resmgr
+        encap       : vxlan # vxlan or mplsodup
+        tunnel      :
+            - count : 1024
+              type  : underlay
+            - count : 1024
+              type  : underlay-ecmp
+    uplink:
+       - entry:
+           id      : uplink0
+           port    : 1
+           mode    : switch
+           status  : UP
+
+       - entry:
+           id      : uplink1
+           port    : 2
+           mode    : switch
+           status  : UP
+    hostinterface:
+        lif         : ref://store/specs/id=LIF_ETH
+    dhcprelay:
+        - vpcid : 10
+          serverip : '100.1.1.1'
+          agentip : '1.1.1.1'
+    vpc:
+        # If dual stack true, VPC and Subnet will have both v4 & v6 based on the prefixlen.
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 1
+          type  : underlay
+          nexthop:
+            - type : underlay
+              count : 2
+          interface:
+            - iid           : 1
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.1.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fde
+              portid        : 1
+              encap         : none
+            - iid           : 2
+              iftype        : l3
+              ifadminstatus : UP
+              ipprefix      : '1.2.0.102\24'
+              macaddress    : macaddr/00ae.cd00.4fdd
+              portid        : 2
+              encap         : none
+
+        - stack  : dual # dual, ipv4 , ipv6
+          count : 4
+          type  : tenant
+          subnet:
+            - count     : 1
+              v4prefixlen : 16
+              v6prefixlen : 64
+              vnic:
+                - count   : 25
+                  ipcount : 32            # Local IP mapping per vnic
+                  srcguard: false         # true or false (default false)
+                  public  : false
+                  tagged  : false         # true or false (default true)
+                  # usehostif - Inherit subnet's host lif (default true)
+                  usehostif: false
+              rmap:                       # Remote IP mappings per subnet
+                - count : 4
+            - count     : 1
+              v4prefixlen : 24
+              v6prefixlen : 96
+              vnic:
+                - count   : 1             # 1 untagged VNIC using subnet host lif
+                  ipcount : 32
+                  srcguard: false
+                  public  : true
+                  tagged  : false
+              rmap:
+                - count : 4
+          nat:
+            count : 2
+            addrtype : PUBLIC_AND_SERVICE
+            protocol : tcp,udp,icmp
+          nexthop:
+            - type : overlay
+              count : 100
+            - type : overlay
+              dual-ecmp : true
+              count : 100
+          nexthop-group:
+            - type : underlay
+              count : 10
+            - type : overlay
+              count : 10
+            - type : overlay
+              dual-ecmp : True
+              count : 10
+          routetbl:
+                 - type: base
+                   routetype: adjacent
+                   count : 64
+                   v4base: '64.0.0.0\8'
+                   v4prefixlen : 24
+                   nv4routes   : 1023
+                   v6base: '2000::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
+                   teptype : underlay
+                   nat:
+                     level : route # all routes will have static nat enabled
+                     type  : static
+
+                 - type: base
+                   routetype: adjacent
+                   count : 64
+                   v4base: '65.0.0.0\8'
+                   v4prefixlen : 24
+                   nv4routes   : 1023
+                   v6base: '2001::\65'
+                   v6prefixlen : 96
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
+                   teptype : underlay-ecmp
+
+                 - type: base
+                   routetype: overlap
+                   count : 64
+                   v4base: '66.77.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1023
+                   v6base: '2002::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
+                   teptype : overlay-ecmp
+
+                 - type: base
+                   routetype: overlap
+                   count : 64
+                   v4base: '67.99.0.0\16'
+                   v4prefixlen: 24
+                   nv4routes   : 1023
+                   v6base: '2003::\65'
+                   v6prefixlen: 120
+                   nv6routes   : 10
+                   v4routes:
+                   v6routes:
+                   teptype : overlay-ecmp
+                   dual-ecmp : true
+
+          policy:
+                  - type : specific
+                    count : 127
+                    policytype : default
+                    direction : bidir

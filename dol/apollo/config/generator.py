@@ -15,6 +15,8 @@ import apollo.config.objects.route as route
 import apollo.config.objects.subnet as subnet
 import apollo.config.objects.tag as tag
 import apollo.config.objects.tunnel as tunnel
+import apollo.config.objects.nexthop as nexthop
+import apollo.config.objects.nexthop_group as nexthop_group
 import apollo.config.objects.vnic as vnic
 import apollo.config.objects.vpc as vpc
 import apollo.config.objects.interface as interface
@@ -31,6 +33,8 @@ ObjectInfo = [None] * agentapi.ObjectTypes.MAX
 def __initialize_object_info():
     ObjectInfo[agentapi.ObjectTypes.DEVICE] = device
     ObjectInfo[agentapi.ObjectTypes.TUNNEL] = tunnel
+    ObjectInfo[agentapi.ObjectTypes.NEXTHOP] = nexthop
+    ObjectInfo[agentapi.ObjectTypes.NEXTHOPGROUP] = nexthop_group
     ObjectInfo[agentapi.ObjectTypes.VPC] = vpc
     ObjectInfo[agentapi.ObjectTypes.SUBNET] = subnet
     ObjectInfo[agentapi.ObjectTypes.VNIC] = vnic

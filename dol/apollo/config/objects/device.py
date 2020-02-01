@@ -53,9 +53,8 @@ class DeviceObject(base.ConfigObjectBase):
         self.__spec = spec
         self.DeriveOperInfo()
         self.Show()
-        if utils.IsDol():
-            if (hasattr(spec, 'tunnel')):
-                tunnel.client.GenerateObjects(node, self, spec.tunnel)
+        if (hasattr(spec, 'tunnel')):
+            tunnel.client.GenerateObjects(node, self, spec.tunnel)
         return
 
     def UpdateAttributes(self):

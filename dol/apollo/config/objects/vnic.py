@@ -65,8 +65,10 @@ class VnicObject(base.ConfigObjectBase):
         else:
             self.Vnid = parent.Vnid
         self.SourceGuard = getattr(spec, 'srcguard', False)
-        self.HostIfIdx = self.SUBNET.HostIfIdx
-        self.HostIfUuid = self.SUBNET.HostIfUuid
+        # TODO: clean this host if logic
+        usehostif = getattr(spec, 'usehostif', True)
+        self.HostIfIdx = self.SUBNET.HostIfIdx if usehostif else None
+        self.HostIfUuid = self.SUBNET.HostIfUuid if usehostif else None
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
         self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
@@ -104,11 +106,8 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
         hostif = self.SUBNET.HostIf
-        if hostif:
-            lif = hostif.lif
-            lififindex = utils.LifId2LifIfIndex(lif.id)
-            logger.info("- HostInterface:%s|%s|%s" %\
-                (hostif.Ifname, lif.GID(), lififindex))
+        if self.HostIfIdx:
+            logger.info("- HostIfIdx:%s" % hex(self.HostIfIdx))
         if self.HostIfUuid:
             logger.info("- HostIf:%s" % self.HostIfUuid)
         if self.__attachpolicy:

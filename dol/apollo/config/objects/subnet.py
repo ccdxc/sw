@@ -71,6 +71,7 @@ class SubnetObject(base.ConfigObjectBase):
             self.Vnid = spec.fabricencapvalue
         else:
             self.Vnid = next(ResmgrClient[node].VxlanIdAllocator)
+        # TODO: clean this host if logic
         if utils.IsDol():
             self.HostIf = InterfaceClient.GetHostInterface(node)
             if self.HostIf:
@@ -80,7 +81,11 @@ class SubnetObject(base.ConfigObjectBase):
             node_uuid = None
         else:
             self.HostIf = None
-            self.HostIfIdx = int(getattr(spec, 'hostifidx', None))
+            hostifidx = getattr(spec, 'hostifidx', None)
+            if hostifidx:
+                self.HostIfIdx = int(hostifidx)
+            else:
+                self.HostIfIdx = next(ResmgrClient[node].HostIfIdxAllocator)
             node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
         self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, node_uuid) if self.HostIfIdx else None
         self.Status = SubnetStatus()
@@ -115,8 +120,12 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\
                     (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))
-        if self.HostIf:
-            logger.info("- HostInterface:", self.HostIf.Ifname)
+        hostif = self.HostIf
+        if hostif:
+            lif = hostif.lif
+            lififindex = hex(utils.LifId2LifIfIndex(lif.id))
+            logger.info("- HostInterface:%s|%s|%s" %\
+                (hostif.Ifname, lif.GID(), lififindex))
         if self.HostIfUuid:
             logger.info("- HostIf:%s" % self.HostIfUuid)
         self.Status.Show()
@@ -358,10 +367,7 @@ class SubnetObjectClient(base.ConfigClientBase):
         return
 
     def CreateObjects(self, node):
-        logger.info("Creating Subnet Objects in agent")
-        cookie = utils.GetBatchCookie(node)
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
-        api.client[node].Create(api.ObjectTypes.SUBNET, msgs)
+        super().CreateObjects(node)
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects(node)
         rmapping.client.CreateObjects(node)
