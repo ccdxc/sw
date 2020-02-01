@@ -123,6 +123,19 @@
             "_comment": "1K descriptors of size 64B"
         },
         {
+            "name": "vlan_to_vnic",
+            "size": "2M",
+            "cache": "p4ig",
+            "_comment": "1M * 2B"
+        },
+        {
+            "name": "mpls_label_to_vnic",
+            "base_region": "vlan_to_vnic",
+            "size": "2M",
+            "cache": "p4ig",
+            "_comment": "Alias of the vlan_to_vnic table"
+        },
+        {
             "name": "flow",
             "size": "256M",
             "cache": "p4ig",
@@ -145,6 +158,12 @@
             "size": "256M",
             "cache": "p4eg",
             "_comment": "4M * 64B"
+        },
+        {
+            "name": "conntrack",
+            "size": "4M",
+            "cache": "p4ig",
+            "_comment": "4M * 1B"
         },
         {
             "name": "config1",

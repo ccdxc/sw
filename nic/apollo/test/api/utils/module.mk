@@ -2,7 +2,7 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET      = libpdstestapiutils.so
-MODULE_PIPELINE    = apollo artemis apulu
+MODULE_PIPELINE    = apollo artemis apulu athena
 MODULE_SRCS        = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 ifdef AGENT_MODE
     MODULE_SRCS   += ${TOPDIR}/nic/apollo/test/scale/api_grpc.cc

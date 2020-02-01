@@ -2,6 +2,6 @@
 
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = libpdstest.so
-MODULE_PIPELINE = apollo artemis apulu
+MODULE_PIPELINE = apollo artemis apulu athena
 MODULE_SRCS     = $(wildcard ${MODULE_SRC_DIR}/*.cc)
 include ${MKDEFS}/post.mk
