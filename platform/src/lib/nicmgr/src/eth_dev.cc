@@ -317,8 +317,7 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     evutil_add_check(EV_A_ & devcmd_check, Eth::DevcmdPoll, this);
     evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
-    // reset the active_lif_ref_cnt to 0
-    active_lif_ref_cnt = 0;
+    active_lif_set.clear();
 
     // Set fw status on this interface when it is created
     SetFwStatus(1);
@@ -530,8 +529,7 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     // initialize heartbeat as 0 when device got created.
     regs->info.fw_heartbeat = 0;
 
-    // reset the active_lif_ref_cnt to 0
-    active_lif_ref_cnt = 0;
+    active_lif_set.clear();
 
     // Set fw status on this interface when it is created
     SetFwStatus(1);
@@ -1793,8 +1791,8 @@ Eth::_CmdLifInit(void *req, void *req_data, void *resp, void *resp_data)
         return (ret);
     }
 
-    active_lif_ref_cnt++;
-    NIC_LOG_DEBUG("{}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
+    active_lif_set.insert(lif_id);
+    NIC_LOG_DEBUG("{}: active_lif_cnt: {}", spec->name, active_lif_set.size());
 
     if (spec->uplink_port_num == 0) {
         port_status->id = 0;
@@ -1875,8 +1873,8 @@ Eth::_CmdLifReset(void *req, void *req_data, void *resp, void *resp_data)
         NIC_LOG_DEBUG("{}: LIF reset failed !", spec->name);
     }
 
-    active_lif_ref_cnt--;
-    NIC_LOG_DEBUG("{}: active_lif_ref_cnt: {}", spec->name, active_lif_ref_cnt);
+    active_lif_set.erase(lif_id);
+    NIC_LOG_DEBUG("{}: active_lif_cnt: {}", spec->name, active_lif_set.size());
 
     return ret;
 }
@@ -2119,7 +2117,10 @@ Eth::Reset()
             NIC_LOG_ERR("{}: Failed to reset lif", spec->name);
             // TODO: Handle lif reset fail
         }
+        active_lif_set.erase(it->first);
     }
+
+    NIC_LOG_DEBUG("{}: active_lif_cnt: {}", spec->name, active_lif_set.size());
 
     return (IONIC_RC_SUCCESS);
 }
@@ -2144,13 +2145,13 @@ Eth::IsDevQuiesced()
 bool
 Eth::IsDevReset()
 {
-    if (!active_lif_ref_cnt) {
+    if (!active_lif_set.size()) {
         NIC_LOG_DEBUG("{}: Device is in reset state!", spec->name);
         return true;
     }
 
     NIC_LOG_DEBUG("{}: Device is not in reset state yet! active_lif_cnt: {}",
-            spec->name, active_lif_ref_cnt);
+            spec->name, active_lif_set.size());
     return false;
 }
 

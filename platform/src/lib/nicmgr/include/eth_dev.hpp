@@ -5,9 +5,10 @@
 #ifndef __ETH_DEV_HPP__
 #define __ETH_DEV_HPP__
 
+#include <map>
+#include <set>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <map>
 
 #include "nic/include/eth_common.h"
 #include "nic/include/notify.hpp"
@@ -164,8 +165,11 @@ class Eth : public Device
     // HAL Info
     devapi *dev_api;
     bool skip_hwinit;
-    // Resources
+    // Lif map
     std::map<uint64_t, EthLif *> lif_map;
+    // Active lif set
+    std::set<uint16_t> active_lif_set;
+    // Resources
     struct eth_dev_res dev_resources;
     // Devcmd
     uint64_t devcmd_mem_addr;
@@ -200,9 +204,6 @@ class Eth : public Device
     bool LoadOprom();
 
     void DevcmdRegsReset();
-
-    // Lif ref cnt
-    uint32_t active_lif_ref_cnt;
 
     /* Command Handlers */
     static void DevcmdPoll(void *obj);
