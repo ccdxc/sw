@@ -22,6 +22,7 @@
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
@@ -121,7 +122,8 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
                                        key->mac_addr);
     } else {
         PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
-                                       vpc->hw_id(), &key->ip_addr);
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
+                                       &key->ip_addr);
     }
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, &mapping_data,
                                    0, sdk::table::handle_t::null());
@@ -135,7 +137,8 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     // read local mapping table, this also tells us if there are public
     // IP mappings
     if (is_local) {
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                             ((vpc_impl *)vpc->impl())->hw_id(),
                                              &key->ip_addr);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                        &local_mapping_data, 0,
@@ -161,7 +164,8 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
         P4_IPADDR_TO_IPADDR(nat_data.nat_action.ip, public_ip, key->ip_addr.af);
 
         // read local mapping for pub ip to get it's xlate index
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                             ((vpc_impl *)vpc->impl())->hw_id(),
                                              &public_ip);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                        &pub_ip_local_mapping_data, 0,
@@ -185,7 +189,7 @@ mapping_impl::build(pds_mapping_key_t *key, mapping_entry *mapping) {
     } else {
         impl->vnic_hw_id_ = PDS_IMPL_RSVD_VNIC_HW_ID;
     }
-    impl->vpc_hw_id_ = vpc->hw_id();
+    impl->vpc_hw_id_ = ((vpc_impl *)vpc->impl())->hw_id();
     impl->subnet_hw_id_ = mapping_data.egress_bd_id;
     if (public_ip_valid) {
         mapping->set_public_ip(&public_ip);
@@ -207,7 +211,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
 
     vnic = vnic_find(&spec->vnic);
     // reserve an entry in LOCAL_MAPPING table for overlay IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
                                          &spec->key.ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
@@ -222,7 +227,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     local_mapping_overlay_ip_hdl_ = tparams.handle;
 
     // reserve an entry in MAPPING table for overlay IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                   ((vpc_impl *)vpc->impl())->hw_id(),
                                    &spec->key.ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
@@ -245,7 +251,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     }
 
     // reserve an entry in LOCAL_MAPPING table for public IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
                                          &spec->public_ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
@@ -261,7 +268,8 @@ mapping_impl::reserve_local_mapping_resources_(mapping_entry *mapping,
     local_mapping_public_ip_hdl_ = tparams.handle;
 
     // reserve an entry in MAPING table for public IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                   ((vpc_impl *)vpc->impl())->hw_id(),
                                    &spec->public_ip);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
                                    sdk::table::handle_t::null());
@@ -323,7 +331,8 @@ mapping_impl::reserve_remote_mapping_resources_(mapping_entry *mapping,
 
     // reserve an entry in MAPPING table
     if (spec->key.type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                        &spec->key.ip_addr);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key, NULL, NULL, 0,
                                        sdk::table::handle_t::null());
@@ -578,7 +587,8 @@ mapping_impl::add_remote_mapping_entries_(vpc_entry *vpc, subnet_entry *subnet,
 
     // add entry to MAPPING table for overlay IP or MAC
     if (spec->key.type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                        &spec->key.ip_addr);
     } else {
         PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
@@ -630,7 +640,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
     vnic = vnic_find(&spec->vnic);
     vnic_impl_obj = (vnic_impl *)vnic->impl();
     // add entry to LOCAL_MAPPING table for overlay IP
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
                                          &spec->key.ip_addr);
     PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
                                            vnic_impl_obj->hw_id(),
@@ -645,7 +656,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
     }
 
     // add entry to MAPPING table for overlay IP
-    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                   ((vpc_impl *)vpc->impl())->hw_id(),
                                    &spec->key.ip_addr);
     memset(&mapping_data, 0, sizeof(mapping_data));
     mapping_data.nexthop_valid = TRUE;
@@ -663,7 +675,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
 
     if (spec->public_ip_valid) {
         // add entry to LOCAL_MAPPING table for public IP
-        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                             ((vpc_impl *)vpc->impl())->hw_id(),
                                              &spec->public_ip);
         PDS_IMPL_FILL_LOCAL_IP_MAPPING_APPDATA(&local_mapping_data,
                                                vnic_impl_obj->hw_id(),
@@ -679,7 +692,8 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
         }
 
         // add entry to MAPPING table for public IP
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                        &spec->public_ip);
         // reuse the mapping data filled above as there is no change
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &mapping_key,
@@ -874,7 +888,8 @@ mapping_impl::read_remote_mapping_(vpc_entry *vpc, subnet_entry *subnet,
     pds_mapping_status_t *status = &info->status;
 
     if (info->spec.key.type == PDS_MAPPING_TYPE_L3) {
-        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+        PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                       ((vpc_impl *)vpc->impl())->hw_id(),
                                        &spec->key.ip_addr);
     } else {
         PDS_IMPL_FILL_L2_MAPPING_SWKEY(&mapping_key,
@@ -939,7 +954,8 @@ mapping_impl::read_local_mapping_(vpc_entry *vpc, pds_mapping_info_t *info) {
     }
 
     // read the local mapping
-    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key, vpc->hw_id(),
+    PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_mapping_key,
+                                         ((vpc_impl *)vpc->impl())->hw_id(),
                                          &spec->key.ip_addr);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &local_mapping_key, NULL,
                                    &local_mapping_data, 0,

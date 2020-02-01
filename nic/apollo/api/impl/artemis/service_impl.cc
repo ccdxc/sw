@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/service_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -131,7 +132,8 @@ svc_mapping_impl::reserve_resources(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt
     vpc = vpc_db()->find(&spec->key.vpc);
     memset(&svc_mapping_key, 0, sizeof(svc_mapping_key));
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &spec->key.backend_ip,
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
+                                    &spec->key.backend_ip,
                                     (ip_addr_t *)NULL, spec->key.backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &svc_mapping_key, NULL,
                                    NULL, 0, sdk::table::handle_t::null());
@@ -241,7 +243,8 @@ svc_mapping_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
     // add an entry in SERVICE_MAPPING with (DIP/overlay_ip, port) as key
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    dip_vpc->hw_id(), &spec->key.backend_ip,
+                                    ((vpc_impl *)dip_vpc->impl())->hw_id(),
+                                    &spec->key.backend_ip,
                                     (ip_addr_t *)NULL, spec->key.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data,
                                    to_vip_nat_hdl_,

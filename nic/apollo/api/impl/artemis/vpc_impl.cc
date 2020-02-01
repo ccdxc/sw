@@ -30,12 +30,6 @@ vpc_impl *
 vpc_impl::factory(pds_vpc_spec_t *spec) {
     vpc_impl *impl;
 
-    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
-        // underlay traffic doesn't come encapped, so no need to
-        // program TEP1_RX table
-        return NULL;
-    }
-
     // TODO: move to slab later
     impl = (vpc_impl *)SDK_CALLOC(SDK_MEM_ALLOC_PDS_VPC_IMPL,
                                    sizeof(vpc_impl));
@@ -52,11 +46,25 @@ vpc_impl::destroy(vpc_impl *impl) {
 sdk_ret_t
 vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
+    uint32_t idx;
     tep1_rx_swkey_t tep1_rx_key = { 0 };
     tep1_rx_swkey_mask_t tep1_rx_mask = { 0 };
     sdk_table_api_params_t api_params = { 0 };
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
+    // reserve a hw id for this vpc
+    ret = vpc_impl_db()->vpc_idxr()->alloc(&idx);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to allocate hw id for vpc %s, err %u",
+                       spec->key.str(), ret);
+        return ret;
+    }
+    hw_id_ = idx;
+
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        api_obj->set_rsvd_rsc();
+        return SDK_RET_OK;
+    }
     SDK_ASSERT(spec->fabric_encap.type == PDS_ENCAP_TYPE_VXLAN);
     tep1_rx_key.vxlan_1_vni = spec->fabric_encap.val.value;
     tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
@@ -70,6 +78,7 @@ vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         return ret;
     }
     tep1_rx_handle_ = api_params.handle;
+
     api_obj->set_rsvd_rsc();
     return SDK_RET_OK;
 }
@@ -78,6 +87,13 @@ sdk_ret_t
 vpc_impl::release_resources(api_base *api_obj) {
     sdk_table_api_params_t api_params = { 0 };
 
+    if (hw_id_ != 0xFFFF) {
+        vpc_impl_db()->vpc_idxr()->free(hw_id_);
+    }
+
+    if (((vpc_entry *)api_obj)->type() == PDS_VPC_TYPE_UNDERLAY) {
+        return SDK_RET_OK;
+    }
     if (tep1_rx_handle_.valid()) {
         api_params.handle = tep1_rx_handle_;
         tep_impl_db()->tep1_rx_tbl()->release(&api_params);
@@ -90,6 +106,12 @@ vpc_impl::nuke_resources(api_base *api_obj) {
     tep1_rx_swkey_t tep1_rx_key = { 0 };
     sdk_table_api_params_t api_params = { 0 };
 
+    if (hw_id_ != 0xFFFF) {
+        vpc_impl_db()->vpc_idxr()->free(hw_id_);
+    }
+    if (((vpc_entry *)api_obj)->type() == PDS_VPC_TYPE_UNDERLAY) {
+        return SDK_RET_OK;
+    }
     if (tep1_rx_handle_.valid()) {
         api_params.key = &tep1_rx_key;
         api_params.handle = tep1_rx_handle_;
@@ -128,7 +150,7 @@ vpc_impl::activate_vpc_create_(pds_epoch_t epoch, vpc_entry *vpc,
     tep1_rx_key.vxlan_1_vni = spec->fabric_encap.val.value;
     tep1_rx_mask.vxlan_1_vni_mask = 0xFFFFFFFF;
     tep1_rx_data.tep1_rx_info.decap_next = 0;
-    tep1_rx_data.tep1_rx_info.src_vpc_id = vpc->hw_id();
+    tep1_rx_data.tep1_rx_info.src_vpc_id = hw_id_;
 
     api_params.key = &tep1_rx_key;
     api_params.mask = &tep1_rx_mask;
@@ -153,11 +175,13 @@ sdk_ret_t
 vpc_impl::activate_hw(api_base *api_obj, api_base *orig_obj, pds_epoch_t epoch,
                        api_op_t api_op, api_obj_ctxt_t *obj_ctxt) {
     sdk_ret_t ret;
-    pds_vpc_spec_t *spec;
+    pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
+    if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+        return SDK_RET_OK;
+    }
     switch (api_op) {
     case API_OP_CREATE:
-        spec = &obj_ctxt->api_params->vpc_spec;
         ret = activate_vpc_create_(epoch, (vpc_entry *)api_obj, spec);
         break;
 

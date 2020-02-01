@@ -230,7 +230,7 @@ TEST_F(vpc, vpc_workflow_neg_1) {
 
 /// \brief VPC WF_N_2
 /// \ref WF_N_2
-TEST_F(vpc, vpc_workflow_neg_2) {
+TEST_F(vpc, DISABLED_vpc_workflow_neg_2) {
     pds_obj_key_t key = int2pdsobjkey(1);
     vpc_feeder feeder;
 

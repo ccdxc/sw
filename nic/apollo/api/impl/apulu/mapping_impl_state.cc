@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/mapping_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/include/pds_debug.hpp"
 #include "nic/apollo/api/include/pds.hpp"
 #include "nic/apollo/p4/include/apulu_defines.h"
@@ -237,7 +238,7 @@ remote_mapping_dump_cb (sdk_table_api_params_t *params)
 
 sdk_ret_t
 mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
-    sdk_table_api_params_t api_params;
+    sdk_table_api_params_t api_params = { 0 };
     mapping_dump_type_t    type = MAPPING_DUMP_TYPE_ALL;
 
     dprintf(fd, "%s\n", std::string(142, '-').c_str());
@@ -277,7 +278,7 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
 
             vpc = vpc_db()->find(&mapping_args->key.vpc);
             PDS_IMPL_FILL_LOCAL_IP_MAPPING_SWKEY(&local_ip_mapping_key,
-                                                 vpc->hw_id(),
+                                                 ((vpc_impl *)vpc->impl())->hw_id(),
                                                  &mapping_args->key.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &local_ip_mapping_key,
                                            NULL, &local_ip_mapping_data, 0,
@@ -298,7 +299,8 @@ mapping_impl_state::mapping_dump(int fd, cmd_args_t *args) {
 
             vpc = vpc_db()->find(&mapping_args->key.vpc);
 
-            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key, vpc->hw_id(),
+            PDS_IMPL_FILL_IP_MAPPING_SWKEY(&mapping_key,
+                                           ((vpc_impl *)vpc->impl())->hw_id(),
                                            &mapping_args->key.ip_addr);
             PDS_IMPL_FILL_TABLE_API_PARAMS(&api_params, &mapping_key, NULL,
                                            &mapping_data, 0,

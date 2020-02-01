@@ -24,6 +24,12 @@ namespace impl {
 
 vpc_impl_state::vpc_impl_state(pds_state *state) {
     sdk_table_factory_params_t    tparams;
+    p4pd_table_properties_t       tinfo;
+
+    p4pd_global_table_properties_get(P4TBL_ID_VPC, &tinfo);
+    // create indexer for vpc hw id allocation and reserve 0th entry
+    vpc_idxr_ = rte_indexer::factory(tinfo.tabledepth, false, true);
+    SDK_ASSERT(vpc_idxr_ != NULL);
 
     // instantiate P4 tables for bookkeeping
     bzero(&tparams, sizeof(tparams));
@@ -31,10 +37,18 @@ vpc_impl_state::vpc_impl_state(pds_state *state) {
     tparams.table_id = P4TBL_ID_VNI;
     vni_tbl_ = slhash::factory(&tparams);
     SDK_ASSERT(vni_tbl_ != NULL);
+
+    // create ht for vpc id to key mapping
+    impl_ht_ = ht::factory(PDS_MAX_VPC >> 2,
+                           vpc_impl::key_get,
+                           sizeof(uint16_t));
+    SDK_ASSERT(impl_ht_ != NULL);
 }
 
 vpc_impl_state::~vpc_impl_state() {
+    rte_indexer::destroy(vpc_idxr_);
     slhash::destroy(vni_tbl_);
+    ht::destroy(impl_ht_);
 }
 
 vpc_impl *
@@ -70,6 +84,29 @@ vpc_impl_state::table_stats(debug::table_stats_get_cb_t cb, void *ctxt) {
     vni_tbl_->stats_get(&stats.api_stats, &stats.table_stats);
     cb(&stats, ctxt);
 
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+vpc_impl_state::insert(uint16_t hw_id, vpc_impl *impl) {
+    impl_ht_->insert_with_key(&hw_id, impl, impl->ht_ctxt());
+    return SDK_RET_OK;
+}
+
+vpc_impl *
+vpc_impl_state::find(uint16_t hw_id) {
+    return (vpc_impl *)impl_ht_->lookup(&hw_id);
+}
+
+sdk_ret_t
+vpc_impl_state::remove(uint16_t hw_id) {
+    vpc_impl *vpc = NULL;
+
+    vpc = (vpc_impl *) impl_ht_->remove(&hw_id);
+    if (!vpc) {
+        PDS_TRACE_ERR("Failed to find vpc impl for hw id %u", hw_id);
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
     return SDK_RET_OK;
 }
 

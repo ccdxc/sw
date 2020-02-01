@@ -133,10 +133,14 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return vpc's h/w id
+    /// \return    h/w id assigned to the vpc
+    uint16_t hw_id(void) { return hw_id_; }
 private:
     /// \brief  constructor
     vpc_impl() {
         tep1_rx_handle_ = handle_t::null();
+        hw_id_          = 0xFFFF;
     }
 
     /// \brief  destructor
@@ -160,6 +164,7 @@ private:
 
 private:
     handle_t    tep1_rx_handle_;    ///< TEP1_RX table handle
+    uint16_t    hw_id_;             ///< VPC hw id
 };
 
 /// @}

@@ -163,10 +163,37 @@ public:
     virtual sdk_ret_t read_hw(api_base *api_obj, obj_key_t *key,
                               obj_info_t *info) override;
 
+    /// \brief     return vpc's h/w id
+    /// \return    h/w id assigned to the vpc
+    uint16_t hw_id(void) const { return hw_id_; }
+
+    /// \brief      get the key from entry in hash table context
+    /// \param[in]  entry in the hash table context
+    /// \return     hw id from the entry
+    static void *key_get(void *entry) {
+        vpc_impl *vpc = (vpc_impl *) entry;
+        return (void *)&(vpc->hw_id_);
+    }
+
+    /// \brief      accessor API for key
+    pds_obj_key_t *key(void) { return &key_; }
+
+    /// \brief      accessor API for hash table context
+    ht_ctxt_t *ht_ctxt(void) { return &ht_ctxt_; }
 private:
     /// \brief  constructor
     vpc_impl() {
+        hw_id_   = 0xFFFF;
         vni_hdl_ = handle_t::null();
+        ht_ctxt_.reset();
+    }
+
+    /// \brief  constructor with spec
+    vpc_impl(pds_vpc_spec_t *spec) {
+        hw_id_ = 0xFFFF;
+        vni_hdl_ = handle_t::null();
+        key_ = spec->key;
+        ht_ctxt_.reset();
     }
 
     /// \brief  destructor
@@ -198,7 +225,13 @@ private:
     sdk_ret_t activate_delete_(pds_epoch_t epoch, vpc_entry *vpc);
 
 private:
+    uint16_t    hw_id_;
     handle_t    vni_hdl_;
+    /// PI specific info
+    struct {
+        pds_obj_key_t key_;
+    };
+    ht_ctxt_t ht_ctxt_;
 };
 
 /// @}

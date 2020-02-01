@@ -19,9 +19,13 @@ namespace impl {
 /// @{
 
 vpc_impl_state::vpc_impl_state(pds_state *state) {
+    // create indexer for vpc hw id allocation and reserve 0th entry
+    vpc_idxr_ = rte_indexer::factory(PDS_MAX_VPC + 2, false, true);
+    SDK_ASSERT(vpc_idxr_ != NULL);
 }
 
 vpc_impl_state::~vpc_impl_state() {
+    rte_indexer::destroy(vpc_idxr_);
 }
 
 sdk_ret_t

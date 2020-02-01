@@ -26,6 +26,7 @@
 #include "nic/apollo/api/impl/apulu/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/p4/include/apulu_table_sizes.h"
 #include "nic/apollo/p4/include/apulu_defines.h"
 
@@ -785,7 +786,7 @@ vnic_impl::add_vlan_entry_(pds_epoch_t epoch, vpc_entry *vpc,
     vlan_data.action_id = VLAN_VLAN_INFO_ID;
     vlan_data.vlan_info.vnic_id = hw_id_;
     vlan_data.vlan_info.bd_id = ((subnet_impl *)subnet->impl())->hw_id();
-    vlan_data.vlan_info.vpc_id = vpc->hw_id();
+    vlan_data.vlan_info.vpc_id = ((vpc_impl *)vpc->impl())->hw_id();
     sdk::lib::memrev(vlan_data.vlan_info.rmac, subnet->vr_mac(), ETH_ADDR_LEN);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VLAN,
                                        spec->vnic_encap.val.vlan_tag,

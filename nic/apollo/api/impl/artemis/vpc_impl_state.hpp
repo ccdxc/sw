@@ -12,6 +12,7 @@
 #define __VPC_IMPL_STATEHPP__
 
 #include "nic/sdk/lib/table/directmap/directmap.hpp"
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
 #include "nic/apollo/api/pds_state.hpp"
@@ -48,9 +49,11 @@ public:
     sdk_ret_t table_transaction_end(void);
 
 private:
+    rte_indexer *vpc_idxr(void) const { return vpc_idxr_; }
     friend class vpc_impl;   // vpc_impl class is friend of vpc_impl_state
 
 private:
+    rte_indexer *vpc_idxr_;  // indexer to allocate hw vpc id
 };
 
 /// @}

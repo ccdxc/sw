@@ -22,6 +22,7 @@
 #include "nic/apollo/api/impl/apulu/route_impl.hpp"
 #include "nic/apollo/api/impl/apulu/tep_impl.hpp"
 #include "nic/apollo/api/impl/apulu/vnic_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/nexthop_group_impl.hpp"
 
 #define PDS_IMPL_NH_VAL_SET_METER_EN(nh_val_)                                \
@@ -316,7 +317,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 ret = SDK_RET_INVALID_ARG;
                 goto cleanup;
             }
-            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_VPC, vpc->hw_id());
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_VPC,
+                                        ((vpc_impl *)vpc->impl())->hw_id());
             rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> vpc %s, "
                             "nh id 0x%x, ", spec->key.str(),

@@ -16,6 +16,7 @@
 #include "nic/apollo/api/core/msg.h"
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/impl/apulu/subnet_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
@@ -222,7 +223,7 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     // fill the data
     vni_data.action_id = VNI_VNI_INFO_ID;
     vni_data.vni_info.bd_id = hw_id_;
-    vni_data.vni_info.vpc_id = vpc->hw_id();
+    vni_data.vni_info.vpc_id = ((vpc_impl *)vpc->impl())->hw_id();
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -238,7 +239,8 @@ subnet_impl::activate_create_(pds_epoch_t epoch, subnet_entry *subnet,
     // subnet and vpc ids appropriately
     if (spec->host_if != k_pds_obj_key_invalid) {
         lif = lif_impl_db()->find(&spec->host_if);
-        ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST, vpc->hw_id(),
+        ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
+                                ((vpc_impl *)vpc->impl())->hw_id(),
                                 hw_id_, lif->vnic_hw_id(),
                                 device_find()->learning_enabled());
         if (ret != SDK_RET_OK) {
@@ -305,7 +307,7 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
     // fill the data
     vni_data.action_id = VNI_VNI_INFO_ID;
     vni_data.vni_info.bd_id = hw_id_;
-    vni_data.vni_info.vpc_id = vpc->hw_id();
+    vni_data.vni_info.vpc_id = ((vpc_impl *)vpc->impl())->hw_id();
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -321,7 +323,8 @@ subnet_impl::activate_update_(pds_epoch_t epoch, subnet_entry *subnet,
         // host ifindex has changed
         if (spec->host_if != k_pds_obj_key_invalid) {
             lif = lif_impl_db()->find(&spec->host_if);
-            ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST, vpc->hw_id(),
+            ret = program_lif_table(lif->id(), P4_LIF_TYPE_HOST,
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
                                     hw_id_, lif->vnic_hw_id(),
                                     device_find()->learning_enabled());
             if (ret != SDK_RET_OK) {

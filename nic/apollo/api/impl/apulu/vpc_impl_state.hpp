@@ -9,8 +9,9 @@
 //----------------------------------------------------------------------------
 
 #ifndef __VPC_IMPL_STATE_HPP__
-#define __VPC_IMPL_STATEHPP__
+#define __VPC_IMPL_STATE_HPP__
 
+#include "nic/sdk/lib/rte_indexer/rte_indexer.hpp"
 #include "nic/sdk/lib/table/slhash/slhash.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/state_base.hpp"
@@ -61,14 +62,34 @@ public:
     /// \return     SDK_RET_OK on success, failure status code on error
     sdk_ret_t table_stats(debug::table_stats_get_cb_t cb, void *ctxt);
 
+    /// \brief      API to insert vpc impl into hash table
+    /// \param[in]  key     vpc key
+    /// \param[in]  impl    vpc impl object
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t insert(uint16_t hw_id, vpc_impl *impl);
+
+    /// \brief      API to find vpc impl obj using hw id
+    /// \return     vpc impl object
+    vpc_impl *find(uint16_t hw_id);
+
+    /// \brief      API to remove hw id and vpc key from the hash table
+    /// \return     SDK_RET_OK on success, failure status code on error
+    sdk_ret_t remove(uint16_t hw_id);
+
 private:
     slhash *vni_tbl(void) { return vni_tbl_; }
+    rte_indexer *vpc_idxr(void) const { return vpc_idxr_; }
+    ht *impl_ht(void) const { return impl_ht_; }
     friend class vpc_impl;      // vpc_impl class is friend of vpc_impl_state
     friend class subnet_impl;   // subnet_impl class is friend of vpc_impl_state
 
 private:
     ///< hash table for vpc VxLAN vnids
-    slhash *vni_tbl_;
+    slhash      *vni_tbl_;
+    ///< indexer to allocate hw vpc id
+    rte_indexer *vpc_idxr_;
+    ///< hash table for hw_id to vpc key
+    ht *impl_ht_;
 };
 
 /// @}

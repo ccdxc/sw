@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/artemis/artemis_impl.hpp"
 #include "nic/apollo/api/impl/artemis/nexthop_impl.hpp"
 #include "nic/apollo/api/impl/artemis/route_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/artemis/tep_impl.hpp"
 
@@ -151,7 +152,8 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
                 goto cleanup;
             }
             rtable->routes[i].nhid =
-                PDS_IMPL_NH_TYPE_PEER_VPC_MASK | vpc->hw_id();
+                PDS_IMPL_NH_TYPE_PEER_VPC_MASK |
+                ((vpc_impl *)vpc->impl())->hw_id();
             PDS_TRACE_DEBUG("Processing route %s -> vpc hw id %u",
                             ippfx2str(&rtable->routes[i].prefix),
                             rtable->routes[i].nhid);

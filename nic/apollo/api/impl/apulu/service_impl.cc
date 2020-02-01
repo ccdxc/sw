@@ -17,6 +17,7 @@
 #include "nic/apollo/api/impl/apulu/pds_impl_state.hpp"
 #include "nic/apollo/api/impl/apulu/apulu_impl.hpp"
 #include "nic/apollo/api/impl/apulu/service_impl.hpp"
+#include "nic/apollo/api/impl/apulu/vpc_impl.hpp"
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
@@ -107,8 +108,8 @@ svc_mapping_impl::build(pds_svc_mapping_key_t *key, svc_mapping *mapping) {
         return NULL;
     }
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &key->backend_ip,
-                                    key->backend_port);
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
+                                    &key->backend_ip, key->backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                    &svc_mapping_data,
                                    SERVICE_MAPPING_SERVICE_MAPPING_INFO_ID,
@@ -149,7 +150,8 @@ svc_mapping_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt)
         // (vpc, overlay_ip, port) -> (vpc, VIP, port)
         vpc = vpc_db()->find(&spec->key.vpc);
         PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                        vpc->hw_id(), &spec->key.backend_ip,
+                                        ((vpc_impl *)vpc->impl())->hw_id(),
+                                        &spec->key.backend_ip,
                                         spec->key.backend_port);
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                        NULL, 0, sdk::table::handle_t::null());
@@ -279,7 +281,8 @@ svc_mapping_impl::activate_create_(pds_epoch_t epoch, svc_mapping *mapping,
 
     vpc = vpc_db()->find(&spec->key.vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &spec->key.backend_ip,
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
+                                    &spec->key.backend_ip,
                                     spec->key.backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, to_vip_nat_idx_);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
@@ -314,7 +317,8 @@ svc_mapping_impl::activate_delete_(pds_epoch_t epoch,
     // disable NAT
     vpc = vpc_db()->find(&key->vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &key->backend_ip,
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
+                                    &key->backend_ip,
                                     key->backend_port);
     PDS_IMPL_FILL_SVC_MAPPING_DATA(&svc_mapping_data, PDS_IMPL_RSVD_NAT_HW_ID);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
@@ -382,7 +386,8 @@ svc_mapping_impl::fill_spec_(pds_svc_mapping_spec_t *spec) {
 
     vpc = vpc_db()->find(&key->vpc);
     PDS_IMPL_FILL_SVC_MAPPING_SWKEY(&svc_mapping_key,
-                                    vpc->hw_id(), &key->backend_ip,
+                                    ((vpc_impl *)vpc->impl())->hw_id(),
+                                    &key->backend_ip,
                                     key->backend_port);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &svc_mapping_key, NULL,
                                    &svc_mapping_data,

@@ -118,20 +118,19 @@ vpc_entry::init_config(api_ctxt_t *api_ctxt) {
 
 sdk_ret_t
 vpc_entry::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
-    uint32_t idx;
+    sdk_ret_t ret = SDK_RET_OK;
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
-        if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&idx) !=
-                sdk::lib::indexer::SUCCESS) {
-            PDS_TRACE_ERR("Failed to allocate index for vpc %s", key_.str());
-            return sdk::SDK_RET_NO_RESOURCE;
-        }
-        hw_id_ = idx & 0xFFFF;
         if (impl_) {
-            impl_->reserve_resources(this, obj_ctxt);
+            ret = impl_->reserve_resources(this, obj_ctxt);
         } else {
-            set_rsvd_rsc();
+            if (vpc_db()->vpc_idxr()->alloc((uint32_t *)&this->hw_id_) !=
+                sdk::lib::indexer::SUCCESS) {
+                PDS_TRACE_ERR("Failed to allocate index for vpc %s",
+                              key_.str());
+                ret = sdk::SDK_RET_NO_RESOURCE;
+            }
         }
         break;
 
@@ -140,9 +139,9 @@ vpc_entry::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
     case API_OP_DELETE:
     default:
-        return SDK_RET_INVALID_ARG;
+        ret = sdk::SDK_RET_INVALID_OP;
     }
-    return SDK_RET_OK;
+    return ret;
 }
 
 sdk_ret_t
@@ -158,15 +157,13 @@ vpc_entry::release_resources(void) {
 
 sdk_ret_t
 vpc_entry::nuke_resources_(void) {
-    if (hw_id_ == 0xFFFF) {
-        // resources not yet allocated
-        return SDK_RET_OK;
-    }
-
     if (impl_) {
         impl_->nuke_resources(this);
     }
-    return this->release_resources();
+    if (hw_id_ != 0xFFFF) {
+        vpc_db()->vpc_idxr()->free(hw_id_);
+    }
+    return SDK_RET_OK;
 }
 
 sdk_ret_t

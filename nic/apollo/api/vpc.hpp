@@ -215,6 +215,10 @@ public:
     /// \return h/w table index for this VPC
     uint16_t hw_id(void) { return hw_id_; }
 
+    /// \brief     return impl instance of this vpc object
+    /// \return    impl instance of the vpc object
+    impl_base *impl(void) { return impl_; }
+
 private:
     /// \brief constructor
     vpc_entry();

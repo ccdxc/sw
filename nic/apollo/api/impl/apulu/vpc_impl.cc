@@ -41,7 +41,7 @@ vpc_impl::factory(pds_vpc_spec_t *spec) {
         return NULL;
     }
     impl = vpc_impl_db()->alloc();
-    new (impl) vpc_impl();
+    new (impl) vpc_impl(spec);
     return impl;
 }
 
@@ -71,10 +71,11 @@ vpc_impl::free(vpc_impl *impl) {
 
 sdk_ret_t
 vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
+    uint32_t idx;
     sdk_ret_t ret;
-    pds_vpc_spec_t *spec;
     vni_swkey_t vni_key =  { 0 };
     sdk_table_api_params_t tparams;
+    pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
     switch (obj_ctxt->api_op) {
     case API_OP_CREATE:
@@ -82,7 +83,15 @@ vpc_impl::reserve_resources(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
         // NOTE: even if we partially acquire resources and fail eventually,
         //       this will ensure that proper release of resources will happen
         api_obj->set_rsvd_rsc();
-        spec = &obj_ctxt->api_params->vpc_spec;
+        // reserve a hw id for this vpc
+        ret = vpc_impl_db()->vpc_idxr()->alloc(&idx);
+        if (ret != SDK_RET_OK) {
+            PDS_TRACE_ERR("Failed to allocate hw id for vpc %s, err %u",
+                           spec->key.str(), ret);
+            return ret;
+        }
+        hw_id_ = idx;
+
         // reserve an entry in VNI table
         vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
         PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
@@ -109,6 +118,10 @@ sdk_ret_t
 vpc_impl::release_resources(api_base *api_obj) {
     sdk_table_api_params_t tparams = { 0 };
 
+    if (hw_id_ != 0xFFFF) {
+        vpc_impl_db()->vpc_idxr()->free(hw_id_);
+    }
+
     if (vni_hdl_.valid()) {
         tparams.handle = vni_hdl_;
         vpc_impl_db()->vni_tbl()->release(&tparams);
@@ -123,19 +136,25 @@ vpc_impl::nuke_resources(api_base *api_obj) {
     vpc_entry *vpc = (vpc_entry *)api_obj;
     sdk_table_api_params_t tparams = { 0 };
 
-    vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
-    PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
-                                   VNI_VNI_INFO_ID,
-                                   vni_hdl_);
-    return vpc_impl_db()->vni_tbl()->remove(&tparams);
+    if (hw_id_ != 0xFFFF) {
+        vpc_impl_db()->vpc_idxr()->free(hw_id_);
+    }
+
+    if (vni_hdl_.valid()) {
+        vni_key.vxlan_1_vni = vpc->fabric_encap().val.vnid;
+        PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, NULL,
+                                       VNI_VNI_INFO_ID,
+                                       vni_hdl_);
+       return vpc_impl_db()->vni_tbl()->remove(&tparams);
+   }
+   return SDK_RET_OK;
 }
 
 sdk_ret_t
 vpc_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
                         api_obj_ctxt_t *obj_ctxt) {
-    vpc_entry *vpc = (vpc_entry *)api_obj;
 
-    msg->cfg_msg.vpc.status.hw_id = vpc->hw_id();
+    msg->cfg_msg.vpc.status.hw_id = hw_id_;
     return SDK_RET_OK;
 }
 
@@ -143,7 +162,6 @@ sdk_ret_t
 vpc_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };
-    vpc_entry *vpc = (vpc_entry *)api_obj;
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
     // program VPC table in the egress pipe
@@ -151,10 +169,10 @@ vpc_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     vpc_data.vpc_info.vni = spec->fabric_encap.val.vnid;
     vpc_data.vpc_info.tos = spec->tos;
     memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, vpc->hw_id(),
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to program VPC table at index %u", vpc->hw_id());
+        PDS_TRACE_ERR("Failed to program VPC table at index %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -164,14 +182,13 @@ sdk_ret_t
 vpc_impl::cleanup_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data { 0 };
-    vpc_entry *vpc = (vpc_entry *)api_obj;
 
     // program VPC table in the egress pipe
     vpc_data.action_id = VPC_VPC_INFO_ID;
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, vpc->hw_id(),
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to cleanup VPC table at index %u", vpc->hw_id());
+        PDS_TRACE_ERR("Failed to cleanup VPC table at index %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -183,14 +200,13 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     sdk_ret_t ret;
     p4pd_error_t p4pd_ret;
     vpc_actiondata_t vpc_data;
-    vpc_entry *vpc = (vpc_entry *)curr_obj;
     pds_vpc_spec_t *spec = &obj_ctxt->api_params->vpc_spec;
 
     // read the VPC table in the egress pipe
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, vpc->hw_id(),
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read VPC table at index %u", vpc->hw_id());
+        PDS_TRACE_ERR("Failed to read VPC table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
 
@@ -199,11 +215,11 @@ vpc_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
     vpc_data.vpc_info.tos = spec->tos;
     memcpy(vpc_data.vpc_info.vrmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_TRACE_DEBUG("Updating VPC table at %u with vni %u",
-                    vpc->hw_id(), vpc_data.vpc_info.vni);
-    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, vpc->hw_id(),
+                    hw_id_, vpc_data.vpc_info.vni);
+    p4pd_ret = p4pd_global_entry_write(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to update VPC table at index %u", vpc->hw_id());
+        PDS_TRACE_ERR("Failed to update VPC table at index %u", hw_id_);
         return sdk::SDK_RET_HW_PROGRAM_ERR;
     }
     return SDK_RET_OK;
@@ -218,14 +234,14 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
     sdk_table_api_params_t tparams = { 0 };
 
     PDS_TRACE_DEBUG("Activating vpc %s, hw id %u create, type %u, "
-                    "fabric encap (%u, %u)", spec->key.str(), vpc->hw_id(),
+                    "fabric encap (%u, %u)", spec->key.str(), hw_id_,
                     spec->type, spec->fabric_encap.type,
                     spec->fabric_encap.val.vnid);
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
-    vni_data.vni_info.bd_id = vpc->hw_id();    // bd hw id = vpc hw id for a vpc
-    vni_data.vni_info.vpc_id = vpc->hw_id();
+    vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -235,6 +251,7 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
         PDS_TRACE_ERR("Programming of VNI table failed for vpc %s, err %u",
                       spec->key.str(), ret);
     }
+    vpc_impl_db()->insert(hw_id_, this);
     return ret;
 }
 
@@ -249,13 +266,13 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
 
     spec = &obj_ctxt->api_params->vpc_spec;
     PDS_TRACE_DEBUG("Activating vpc %s, hw id %u update",
-                    spec->key.str(), vpc->hw_id());
+                    spec->key.str(), hw_id_);
 
     // fill the key
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     // fill the data
-    vni_data.vni_info.bd_id = vpc->hw_id();    // bd hw id = vpc hw id for a vpc
-    vni_data.vni_info.vpc_id = vpc->hw_id();
+    vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
+    vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
@@ -265,6 +282,10 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
         PDS_TRACE_ERR("Updating VNI table failed for vpc %s, err %u",
                       spec->key.str(), ret);
     }
+
+    // delete old impl and insert cloned impl into ht
+    vpc_impl_db()->remove(hw_id_);
+    vpc_impl_db()->insert(hw_id_, this);
     return ret;
 }
 
@@ -292,6 +313,7 @@ vpc_impl::activate_delete_(pds_epoch_t epoch, vpc_entry *vpc) {
         PDS_TRACE_ERR("Programming of VNI table failed for vpc %s, err %u",
                       vpc->key().str(), ret);
     }
+    vpc_impl_db()->remove(hw_id_);
     return ret;
 }
 
@@ -331,15 +353,16 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     vni_actiondata_t vni_data;
     vpc_actiondata_t vpc_data;
     vni_swkey_t vni_key = { 0 };
-    vpc_entry *vpc = (vpc_entry *)api_obj;
     sdk_table_api_params_t tparams = { 0 };
     pds_vpc_info_t *vpcinfo = (pds_vpc_info_t *)info;
+    pds_vpc_status_t *status;
 
     spec = &vpcinfo->spec;
-    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, vpc->hw_id(),
+    status = &vpcinfo->status;
+    p4pd_ret = p4pd_global_entry_read(P4TBL_ID_VPC, hw_id_,
                                        NULL, NULL, &vpc_data);
     if (p4pd_ret != P4PD_SUCCESS) {
-        PDS_TRACE_ERR("Failed to read VPC table at index %u", vpc->hw_id());
+        PDS_TRACE_ERR("Failed to read VPC table at index %u", hw_id_);
         return sdk::SDK_RET_HW_READ_ERR;
     }
     spec->fabric_encap.val.vnid = vpc_data.vpc_info.vni;
@@ -356,7 +379,8 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     }
 
     // validate values read from hw table with sw state
-    SDK_ASSERT(vni_data.vni_info.bd_id == vpc->hw_id());
+    SDK_ASSERT(vni_data.vni_info.bd_id == hw_id_);
+    status->hw_id = hw_id_;
     return SDK_RET_OK;
 }
 

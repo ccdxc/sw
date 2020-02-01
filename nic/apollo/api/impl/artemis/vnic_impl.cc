@@ -21,6 +21,7 @@
 #include "nic/apollo/api/impl/artemis/security_policy_impl.hpp"
 #include "nic/apollo/api/impl/artemis/meter_impl.hpp"
 #include "nic/apollo/api/impl/artemis/vnic_impl.hpp"
+#include "nic/apollo/api/impl/artemis/vpc_impl.hpp"
 #include "nic/apollo/api/impl/artemis/pds_impl_state.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/p4/include/artemis_table_sizes.h"
@@ -457,7 +458,8 @@ vnic_impl::activate_vnic_create_(pds_epoch_t epoch, vnic_entry *vnic,
         vnic_mapping_data.mapping_info_action.vpc_id =
             PDS_IMPL_PUBLIC_VPC_HW_ID;
     } else {
-        vnic_mapping_data.mapping_info_action.vpc_id = vpc->hw_id();
+        vnic_mapping_data.mapping_info_action.vpc_id =
+                                             ((vpc_impl *)vpc->impl())->hw_id();
     }
     api_params.key = &vnic_mapping_key;
     api_params.mask = &vnic_mapping_mask;
