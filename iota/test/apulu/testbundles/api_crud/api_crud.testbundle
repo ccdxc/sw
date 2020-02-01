@@ -1,0 +1,19 @@
+meta:
+    name    : api_crud
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : API_CRUD_Ping_Traffic
+        testcase: testcases.api_crud.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            objtype : [ tunnel, lmapping, device ]
+            oper    : [ delete ]
+

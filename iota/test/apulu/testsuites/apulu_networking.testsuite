@@ -46,6 +46,7 @@ testbundles:
         # Relative paths from iota/test/apulu/testbundles/
         - networking/networking.testbundle
         - classic/ethtool.testbundle
+        - api_crud/api_crud.testbundle
         - mtu/mtu.testbundle
         - vlanoffload/vlanoffload.testbundle
         - classic/driver-features-sanity.testbundle
