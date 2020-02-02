@@ -4485,6 +4485,18 @@ func TestApis(t *testing.T) {
 	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_STRING, "byteArray", opt) != "pds_ms_get_string_in_byte_array_with_len" {
 		t.Errorf("Got wrong value")
 	}
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, "long", opt) != "pds_ms_get_amb_bool" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, "long", opt) != "pds_ms_set_amb_bool" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastGetFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, "byteArray", opt) != "" {
+		t.Errorf("Got wrong value")
+	}
+	if getPdsaCastSetFunc(gogoproto.FieldDescriptorProto_TYPE_BOOL, "byteArray", opt) != "" {
+		t.Errorf("Got wrong value")
+	}
 	if addStr("a", "b") != "ab" {
 		t.Errorf("Got wrong value")
 	}
