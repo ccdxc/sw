@@ -40,12 +40,17 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	vpcReq := convertVrfToVPC(vrf)
 	resp, err := client.VPCCreate(context.Background(), vpcReq)
 	log.Infof("createVPCHandler Response: %v. Err: %v", resp, err)
-	if resp != nil {
+	if err != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", vrf.GetKind(), vrf.GetKey())); err != nil {
 			return err
 		}
 	}
 	if vrf.Spec.VrfType != "CUSTOMER" {
+		dat, _ := vrf.Marshal()
+		if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
+			log.Error(errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err))
+			return errors.Wrapf(types.ErrBoltDBStoreCreate, "VPC: %s | Err: %v", vrf.GetKey(), err)
+		}
 		return nil
 	}
 
@@ -376,7 +381,7 @@ func convertVrfToVPC(vrf netproto.Vrf) *halapi.VPCRequest {
 		BatchCtxt: nil,
 		Request: []*halapi.VPCSpec{
 			{
-				Id:               utils.ConvertID64(vrf.Status.VrfID)[0],
+				Id:               uuid.FromStringOrNil(vrf.UUID).Bytes(),
 				Type:             vpcType,
 				V4RouteTableId:   utils.ConvertID32(vrf.Spec.V4RouteTableID)[0],
 				V6RouteTableId:   utils.ConvertID32(vrf.Spec.V6RouteTableID)[0],
