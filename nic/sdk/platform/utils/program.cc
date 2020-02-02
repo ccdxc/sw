@@ -15,6 +15,8 @@ namespace sdk {
 namespace platform {
 namespace utils {
 
+program_info *program_info::pinfo_ = NULL;
+
 bool
 program_info::init(const char *program_info_file, shmmgr *mmgr)
 {
@@ -79,6 +81,10 @@ program_info::factory(const char *program_info_file, shmmgr *mmgr)
         return NULL;
     }
 
+    if (pinfo_) {
+        return pinfo_;
+    }
+
     if (mmgr) {
         mem = mmgr->alloc(sizeof(program_info), 4, true);
     } else {
@@ -102,6 +108,7 @@ program_info::factory(const char *program_info_file, shmmgr *mmgr)
         }
         return NULL;
     }
+    pinfo_ = new_program_info;
     return new_program_info;
 }
 

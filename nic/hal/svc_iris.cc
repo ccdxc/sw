@@ -96,6 +96,9 @@ svc_reg (hal::hal_cfg_t *hal_cfg)
     // assemble the server
     std::unique_ptr<Server> server(server_builder->BuildAndStart());
 
+    // Setting log level back to debug
+    hal::utils::g_trace_logger->set_trace_level(::utils::trace_debug);
+
     // wait for server to shutdown (some other thread must be responsible for
     // shutting down the server or else this call won't return)
     server->Wait();

@@ -37,16 +37,19 @@ public:
     mem_addr_t program_base_address(const char *program) const;
     mem_addr_t program_end_address(const char *program) const;
     mem_addr_t symbol_address(const char *program, char *symbol) const;
+    static program_info *get_program_info(void) { return pinfo_; }
 
 private:
     shmmgr                                  *mmgr_;
     std::map<std::string, prog_info_t>      program_map_;
     std::map<std::string, symbol_info_t>    symbol_map_;
+    static program_info *pinfo_;
 
 private:
     program_info() {};
     ~program_info();
     bool init(const char *program_info_file, shmmgr *mmgr = NULL);
+
 };
 
 }    // namespace utils
