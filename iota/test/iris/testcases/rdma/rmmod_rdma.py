@@ -11,11 +11,12 @@ def Setup(tc):
     tc.insmod_opts = api.GetTestsuiteAttr("insmod_opts")
     return api.types.status.SUCCESS
 
-def Trigger(tc):
-    pairs = api.GetRemoteWorkloadPairs()
-
-    w1 = pairs[0][0]
-    w2 = pairs[0][1]
+def grep_objs(tc):
+    robjs = [('qp', '-e qpid -e state'),
+             ('cq', '-e cqid -e eqid'),
+             ('mr', '-e mrid -e length'),
+             ('eq', '-e eqid -e irq'),
+             ('aq', '-e aqid -e eqid')]
 
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     for n in tc.nodes:
@@ -24,16 +25,25 @@ def Trigger(tc):
                 pci = host.GetNaplesPci(n, intf)
                 if pci is None:
                     continue
-                cmd = 'grep -e qpid -e state /sys/kernel/debug/ionic/' + pci + '/lif0/rdma/qp/*/info'
             else:
-                cmd = 'sysctl dev.' + host.GetNaplesSysctl(intf) + '.rdma.qp | grep -e qpid -e state'
-            api.Trigger_AddHostCommand(req, n, cmd)
+                sysctl = host.GetNaplesSysctl(intf)
 
-            resp = api.Trigger(req)
-            cmd = resp.commands[0]
-            api.Logger.info("Initial QP state for %s %s (%d):" % \
-                            (n, intf, cmd.exit_code))
-            api.PrintCommandResults(cmd)
+            for (rtype,rkey) in robjs:
+                if tc.os == host.OS_TYPE_LINUX:
+                    cmd = ("grep {} /sys/kernel/debug/ionic/{}/lif0/rdma/{}/*/info"
+                           .format(rkey, pci, rtype))
+                else:
+                    cmd = ("sysctl dev.{}.rdma.{} | grep {}"
+                           .format(sysctl, rtype, rkey))
+                api.Trigger_AddHostCommand(req, n, cmd)
+
+    resp = api.Trigger(req)
+    for cmd in resp.commands:
+        api.PrintCommandResults(cmd)
+
+def Trigger(tc):
+    # Hunting for cases in which rmmod fails because the device is in use
+    grep_objs(tc)
 
     #===============================================================
     # Uninstall RDMA module, so next tests would not have dependency
