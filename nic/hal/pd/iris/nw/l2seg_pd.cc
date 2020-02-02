@@ -2150,7 +2150,7 @@ l2seg_pd_inp_prop_info(l2seg_t *cl_l2seg, l2seg_t *hp_l2seg, if_t *hal_if,
 
     if (cl_l2seg && hp_l2seg) {
         inp_prop.vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
-        inp_prop.reg_mac_vrf = cl_l2seg_pd->l2seg_fl_lkup_id;
+        inp_prop.reg_mac_vrf = hp_l2seg_pd->l2seg_fl_lkup_id;
         inp_prop.mdest_flow_miss_action = l2seg_get_bcast_fwd_policy(hp_l2seg);
         inp_prop.flow_miss_idx = l2seg_base_oifl_id(cl_l2seg, NULL);
         inp_prop.src_if_label = pd_uplinkif_if_label(hal_if);

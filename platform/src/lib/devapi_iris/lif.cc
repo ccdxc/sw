@@ -63,11 +63,13 @@ devapi_lif::factory(lif_info_t *info, devapi_iris *dapi)
     }
     NIC_LOG_DEBUG("After hal create ...");
 
+#if 0
     if (lif->is_intmgmtmnic()) {
         NIC_LOG_DEBUG("lif-{}:Setting Internal management lif",
                       info->lif_id);
         devapi_lif::set_intmgmt_lif(lif);
     }
+#endif
 
     NIC_LOG_DEBUG("Adding lif to db for id: {}", lif->get_id());
     // Store in DB for disruptive upgrade
@@ -91,7 +93,10 @@ devapi_lif::factory(lif_info_t *info, devapi_iris *dapi)
     if (lif->is_intmgmt()) {
         // For Internal Mgmt mnic, create vrf and native l2seg.
         if (dapi->num_int_mgmt_mnics() == 0) {
-        // if (lif->is_intmgmtmnic()) {
+
+            NIC_LOG_DEBUG("lif-{}:Setting Internal management lif, type: {}",
+                          info->lif_id, info->type);
+            devapi_lif::set_intmgmt_lif(lif);
             // Create Internal Mgmt Vrf
             vrf = devapi_vrf::factory(types::VRF_TYPE_INTERNAL_MANAGEMENT,
                                       NULL);
@@ -268,6 +273,8 @@ devapi_lif::destroy(devapi_lif *lif, devapi_iris *dapi)
                 // Delete Vrf
                 devapi_vrf::destroy(lif->get_vrf());
                 lif->set_vrf(NULL);
+
+                devapi_lif::set_intmgmt_lif(NULL);
             }
             dapi->dec_num_int_mgmt_mnics();
         } else {
@@ -1403,6 +1410,16 @@ devapi_lif::get_lifinfo(void)
 devapi_vrf *
 devapi_lif::get_vrf(void)
 {
+    if (is_intmgmt()) {
+        if (internal_mgmt_ethlif->info_.lif_id == info_.lif_id) {
+            return vrf_;
+        } else {
+            return internal_mgmt_ethlif->get_vrf();
+        }
+    } else {
+        return get_uplink()->get_vrf();
+    }
+#if 0
     if (is_intmgmtmnic()) {
         return vrf_;
     } else if (is_hostmgmt()) {
@@ -1410,11 +1427,22 @@ devapi_lif::get_vrf(void)
     } else {
         return get_uplink()->get_vrf();
     }
+#endif
 }
 
 devapi_l2seg *
 devapi_lif::get_nativel2seg(void)
 {
+    if (is_intmgmt()) {
+        if (internal_mgmt_ethlif->info_.lif_id == info_.lif_id) {
+            return native_l2seg_;
+        } else {
+            return internal_mgmt_ethlif->get_nativel2seg();
+        }
+    } else {
+        return get_uplink()->get_native_l2seg();
+    }
+#if 0
     if (is_intmgmtmnic()) {
         return native_l2seg_;
     } else if (is_hostmgmt()) {
@@ -1422,6 +1450,7 @@ devapi_lif::get_nativel2seg(void)
     } else {
         return get_uplink()->get_native_l2seg();
     }
+#endif
 }
 
 bool
