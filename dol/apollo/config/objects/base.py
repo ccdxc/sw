@@ -27,6 +27,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         super().__init__()
         self.Origin = topo.OriginTypes.FIXED
         self.UUID = None
+        # marked HwHabitant when object is in hw
         self.HwHabitant = True
         self.Singleton = False
         self.ObjType = objtype
@@ -35,6 +36,8 @@ class ConfigObjectBase(base.ConfigObjectBase):
         self.Deps = defaultdict(list)
         self.Precedent = None
         self.Mutable = False
+        # marked dirty when object is already in hw, but
+        # there are few updates yet to be pushed to hw
         self.Dirty = False
         self.Node = node
         return
@@ -104,6 +107,9 @@ class ConfigObjectBase(base.ConfigObjectBase):
     def SetDirty(self, value):
         self.Dirty = value
 
+    def IsDirty(self):
+        return self.Dirty
+
     def SetOrigin(self, origintype):
         self.Origin = origintype
 
@@ -121,7 +127,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         return
 
     def Read(self, spec=None):
-        if self.Dirty:
+        if self.IsDirty():
             logger.info("Not reading object from Hw since it is marked Dirty")
             return True
         return utils.ReadObject(self)
@@ -145,14 +151,19 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def Update(self, spec=None):
         if self.Mutable:
-            logger.info("Update Obj %s" % repr(self))
-            clone = self.CopyObject()
-            clone.Precedent = None
-            self.Precedent = clone
-            self.HwHabitant = False
-            self.UpdateAttributes()
-            logger.info("Updated values - Obj %s" % repr(self))
-            self.CommitUpdate()
+            if self.HasPrecedent():
+                logger.info("%s object updated already" % self)
+            else:
+                logger.info("Updating obj %s" % self)
+                clone = self.CopyObject()
+                clone.Precedent = None
+                self.Precedent = clone
+                self.HwHabitant = False
+                self.UpdateAttributes()
+                logger.info("Updated values -")
+                self.Show()
+                self.SetDirty(True)
+                self.CommitUpdate()
         return
 
     def RollbackUpdate(self, spec=None):
@@ -166,9 +177,13 @@ class ConfigObjectBase(base.ConfigObjectBase):
             self.Precedent = None
             self.HwHabitant = False
             self.SetDirty(True)
+            logger.info("Object rolled back to -")
+            self.Show()
         return
 
     def CommitUpdate(self, spec=None):
+        if not self.IsDirty():
+            logger.info("No changes on object %s to commit" % self)
         self.SetDirty(False)
         return utils.UpdateObject(self)
 

@@ -277,15 +277,14 @@ def ValidateDelete(obj, resps):
 def ValidateUpdate(obj, resps):
     if IsDryRun(): return
     for resp in resps:
-        for status in resp.ApiStatus:
-            if status == types_pb2.API_STATUS_OK:
-                obj.SetHwHabitant(True)
-                InformDependents(obj, 'UpdateNotify')
-            else:
-                logger.error("Update failed for %s" %(obj.__repr__()))
-                obj.PrepareRollbackUpdate()
-                obj.SetDirty(False)
-                obj.SetHwHabitant(True)
+        if ValidateGrpcResponse(resp):
+            obj.SetHwHabitant(True)
+            InformDependents(obj, 'UpdateNotify')
+        else:
+            logger.error("Update failed for %s" %(obj.__repr__()))
+            obj.PrepareRollbackUpdate()
+            obj.SetDirty(False)
+            obj.SetHwHabitant(True)
     return
 
 def LoadYaml(cmdoutput):
@@ -650,7 +649,7 @@ def IsUpdateSupported():
 
 def MergeFilteredObjects(objs, selected_objs):
     if topo.ChosenFlowObjs.select_objs is True:
-        topo.ChosenFlowObjs.add(objs)
+        topo.ChosenFlowObjs.Add(objs)
     elif topo.ChosenFlowObjs.use_selected_objs is True:
         objs.extend(selected_objs)
 

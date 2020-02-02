@@ -64,7 +64,7 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (self.__type == topo.InterfaceTypes.L3):
             res = str("VPC:%d|ip:%s|ethifidx:%d|encap:%s|mac:%s"% \
                     (self.VpcId, self.ip_prefix, self.ethifidx, self.encap, \
-                    self.macaddr.getnum()))
+                    self.macaddr.get()))
         else:
             return
         logger.info("- %s" % res)
@@ -114,7 +114,7 @@ class InterfaceObject(base.ConfigObjectBase):
         return clone
 
     def UpdateAttributes(self):
-        self.IfInfo.macaddr = ResmgrClient[node].DeviceMacAllocator.get()
+        self.IfInfo.macaddr = ResmgrClient[self.Node].DeviceMacAllocator.get()
         return
 
     def RollbackAttributes(self):
@@ -147,6 +147,7 @@ class InterfaceObject(base.ConfigObjectBase):
                 return False
             if spec.L3IfSpec.EthIfIndex != self.IfInfo.ethifidx:
                 return False
+            # TODO: Enable once device delete is fixed. MAC is also overwritten with 0 on deleting device config.
             #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():
             #    return False
         return True

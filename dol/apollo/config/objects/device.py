@@ -58,8 +58,8 @@ class DeviceObject(base.ConfigObjectBase):
         return
 
     def UpdateAttributes(self):
-        self.IPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
-        self.GatewayAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+        self.IPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
+        self.GatewayAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
         self.IP = str(self.IPAddr)
         return
 

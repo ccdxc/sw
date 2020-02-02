@@ -65,6 +65,7 @@ function remove_stale_files () {
     rm -f $NICDIR/out.sh
     rm -f $NICDIR/conf/pipeline.json
     rm -f $NICDIR/conf/gen/dol_agentcfg.json
+    rm -rf /sysconfig/config0
 }
 
 function remove_logs () {
@@ -101,6 +102,12 @@ fi
 if [ $DRYRUN == 0 ]; then
     start_process
 fi
+
+# TODO Remove this once agent code is fixed
+# Create dummy device.conf - agent is trying to update it when device object is updated. 
+# Without this, pdsagent crashes since config file is not found.
+mkdir -p "/sysconfig/config0/"
+touch "/sysconfig/config0/device.conf"
 
 # start DOL now
 $DOLDIR/main.py $* 2>&1 | tee dol.log

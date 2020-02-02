@@ -92,23 +92,28 @@ class NexthopObject(base.ConfigObjectBase):
 
     def UpdateAttributes(self):
         if self.__type == topo.NhType.IP:
-            self.IPAddr[0] = next(ResmgrClient[node].NexthopIpV4AddressAllocator)
-            self.IPAddr[1] = next(ResmgrClient[node].NexthopIpV6AddressAllocator)
-            self.VlanId = next(ResmgrClient[node].NexthopVlanIdAllocator)
-            self.MACAddr = ResmgrClient[node].NexthopMacAllocator.get()
+            self.IPAddr[0] = next(ResmgrClient[self.Node].NexthopIpV4AddressAllocator)
+            self.IPAddr[1] = next(ResmgrClient[self.Node].NexthopIpV6AddressAllocator)
+            self.VlanId = next(ResmgrClient[self.Node].NexthopVlanIdAllocator)
+            self.MACAddr = ResmgrClient[self.Node].NexthopMacAllocator.get()
         elif self.__type == topo.NhType.UNDERLAY:
-            self.L3Interface = InterfaceClient.GetL3UplinkInterface()
+            self.L3Interface = InterfaceClient.GetL3UplinkInterface(self.Node)
             self.L3InterfaceId = self.L3Interface.InterfaceId
-            self.underlayMACAddr = ResmgrClient[node].NexthopMacAllocator.get()
+            self.underlayMACAddr = ResmgrClient[self.Node].NexthopMacAllocator.get()
         elif self.__type == topo.NhType.OVERLAY:
             if self.DualEcmp:
-                self.TunnelId = ResmgrClient[node].UnderlayECMPTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[self.Node].UnderlayECMPTunAllocator.rrnext().Id
             else:
-                self.TunnelId = ResmgrClient[node].UnderlayTunAllocator.rrnext().Id
+                self.TunnelId = ResmgrClient[self.Node].UnderlayTunAllocator.rrnext().Id
         return
 
     def RollbackAttributes(self):
-        attrlist = ["IPAddr", "VlanId", "MACAddr", "L3Interface", "underlayMACAddr", "TunnelId", "L3InterfaceId"]
+        if self.__type == topo.NhType.IP:
+            attrlist = ["IPAddr", "VlanId", "MACAddr"]
+        elif self.__type == topo.NhType.UNDERLAY:
+            attrlist = ["L3Interface", "underlayMACAddr", "L3InterfaceId"]
+        elif self.__type == topo.NhType.OVERLAY:
+            attrlist = ["TunnelId"]
         self.RollbackMany(attrlist)
         return
 

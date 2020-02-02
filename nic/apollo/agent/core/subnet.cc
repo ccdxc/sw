@@ -104,13 +104,15 @@ subnet_update_validate (pds_subnet_spec_t *spec)
     }
     // IPv4 prefix for subnet must be within VPC prefix
     if (!ipv4_prefix_within_prefix(&spec->v4_prefix, &vpc_spec->v4_prefix)) {
-        PDS_TRACE_ERR("Failed to create subnet {}, IPv4 prefix invalid",
+        PDS_TRACE_ERR("Failed to update subnet {}, IPv4 prefix invalid",
                       spec->key.str());
         return SDK_RET_INVALID_ARG;
     }
     // IPv6 prefix for subnet must be within VPC prefix
-    if (!ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
-        PDS_TRACE_ERR("Failed to create subnet {}, IPv6 prefix invalid",
+    if ((spec->v6_prefix.addr.af == IP_AF_IPV6) &&
+        (vpc_spec->v6_prefix.addr.af == IP_AF_IPV6) &&
+        !ip_prefix_within_prefix(&spec->v6_prefix, &vpc_spec->v6_prefix)) {
+        PDS_TRACE_ERR("Failed to update subnet {}, IPv6 prefix invalid",
                       spec->key.str());
         return SDK_RET_INVALID_ARG;
     }

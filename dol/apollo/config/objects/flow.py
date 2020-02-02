@@ -38,6 +38,19 @@ class FlowMapObject(base.ConfigObjectBase):
         self.Show()
         return
 
+    def IsFilterMatch(self, selectors):
+        filters = selectors.flow.filters
+        if filters == None:
+            return True
+        for attr,value in filters:
+            if attr == 'AddrFamily':
+                if value != self.__lobj.AddrFamily:
+                    return False
+            elif attr == 'FwdMode':
+                if value != self.FwdMode:
+                    return False
+        return True
+
     def SetupTestcaseConfig(self, obj):
         obj.root = self
         obj.localmapping = self.__lobj
@@ -117,7 +130,7 @@ class FlowMapObjectHelper:
     def GetMatchingConfigObjects(self, selectors):
         objs = []
         fwdmode = None
-        mapsel = selectors
+        mapsel = copy.deepcopy(selectors)
         key = 'FwdMode'
 
         # Consider it only if TEST is for MAPPING
@@ -147,9 +160,9 @@ class FlowMapObjectHelper:
 
         selected_objs = []
         if topo.ChosenFlowObjs.use_selected_objs == True and len(topo.ChosenFlowObjs.objs) != 0:
-            maxlimits = topo.ChosenFlowObjs.getMaxLimits()
-            selected_objs = utils.GetFilteredObjects(topo.ChosenFlowObjs.objs, maxlimits, randomize=False)
-            maxlimits = selectors.maxlimits - topo.ChosenFlowObjs.maxlimits
+            matching_flows = topo.ChosenFlowObjs.GetMatchingFlowObjects(selectors)
+            selected_objs = utils.GetFilteredObjects(matching_flows, topo.ChosenFlowObjs.GetMaxLimits())
+            maxlimits = selectors.maxlimits - len(selected_objs)
             if maxlimits <= 0:
                 return utils.GetFilteredObjects(selected_objs, selectors.maxlimits)
         else:

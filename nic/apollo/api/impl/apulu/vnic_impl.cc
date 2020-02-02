@@ -951,7 +951,7 @@ vnic_impl::activate_delete_(pds_epoch_t epoch, vnic_entry *vnic) {
 sdk_ret_t
 vnic_impl::activate_update_(pds_epoch_t epoch, vnic_entry *vnic,
                             vnic_entry *orig_vnic, api_obj_ctxt_t *obj_ctxt) {
-    sdk_ret_t ret;
+    sdk_ret_t ret = SDK_RET_OK;
     vpc_entry *vpc;
     subnet_entry *subnet;
     pds_vnic_spec_t *spec;

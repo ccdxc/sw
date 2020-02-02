@@ -66,9 +66,7 @@ class VnicObject(base.ConfigObjectBase):
             self.Vnid = parent.Vnid
         self.SourceGuard = getattr(spec, 'srcguard', False)
         # TODO: clean this host if logic
-        usehostif = getattr(spec, 'usehostif', True)
-        self.HostIfIdx = self.SUBNET.HostIfIdx if usehostif else None
-        self.HostIfUuid = self.SUBNET.HostIfUuid if usehostif else None
+        self.UseHostIf = getattr(spec, 'usehostif', True)
         self.RxMirror = rxmirror
         self.TxMirror = txmirror
         self.V4MeterId = MeterClient.GetV4MeterId(node, parent.VPC.VPCId)
@@ -105,11 +103,11 @@ class VnicObject(base.ConfigObjectBase):
         logger.info("- RxMirror:", self.RxMirror)
         logger.info("- TxMirror:", self.TxMirror)
         logger.info("- V4MeterId:%d|V6MeterId:%d" %(self.V4MeterId, self.V6MeterId))
-        hostif = self.SUBNET.HostIf
-        if self.HostIfIdx:
-            logger.info("- HostIfIdx:%s" % hex(self.HostIfIdx))
-        if self.HostIfUuid:
-            logger.info("- HostIf:%s" % self.HostIfUuid)
+        if self.UseHostIf:
+            if self.SUBNET.HostIfIdx:
+                logger.info("- HostIfIdx:%s" % hex(self.SUBNET.HostIfIdx))
+            if self.SUBNET.HostIfUuid:
+                logger.info("- HostIf:%s" % self.SUBNET.HostIfUuid)
         if self.__attachpolicy:
             logger.info("- NumSecurityPolicies:", self.__numpolicy)
             logger.info("- Ing V4 Policies:", self.IngV4SecurityPolicyIds)
@@ -160,8 +158,8 @@ class VnicObject(base.ConfigObjectBase):
         for policyid in self.EgV6SecurityPolicyIds:
             spec.EgV6SecurityPolicyId.append(utils.PdsUuid.GetUUIDfromId(policyid))
         if utils.IsPipelineApulu():
-            if self.HostIfUuid:
-                spec.HostIf = self.HostIfUuid.GetUuid()
+            if self.UseHostIf and self.SUBNET.HostIfUuid:
+                spec.HostIf = self.SUBNET.HostIfUuid.GetUuid()
         return
 
     def ValidateSpec(self, spec):
@@ -176,8 +174,8 @@ class VnicObject(base.ConfigObjectBase):
             if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
                 return False
         if utils.IsPipelineApulu():
-            if self.HostIfUuid:
-                if spec.HostIf != self.HostIfUuid.GetUuid():
+            if self.UseHostIf and self.SUBNET.HostIfUuid:
+                if spec.HostIf != self.SUBNET.HostIfUuid.GetUuid():
                     return False
         if spec.MACAddress != self.MACAddr.getnum():
             return False
@@ -194,8 +192,8 @@ class VnicObject(base.ConfigObjectBase):
         if  utils.GetYamlSpecAttr(spec, 'vnicid') != self.GetKey():
             return False
         if utils.IsPipelineApulu():
-            if self.HostIfUuid:
-                if (utils.GetYamlSpecAttr(spec, 'hostif')) != self.HostIfUuid.GetUuid():
+            if self.UseHostIf and self.SUBNET.HostIfUuid:
+                if (utils.GetYamlSpecAttr(spec, 'hostif')) != self.SUBNET.HostIfUuid.GetUuid():
                     return False
         if spec['macaddress'] != self.MACAddr.getnum():
             return False
@@ -307,8 +305,11 @@ class VnicObject(base.ConfigObjectBase):
     def UpdateNotify(self, dObj):
         logger.info("Notify %s for %s update" % (self, dObj))
         if dObj.ObjType == api.ObjectTypes.SUBNET:
-            logger.info("Updating vnic hostIf since subnet is updated" % (self, dObj))
-            self.Update()
+            logger.info("Updating vnic hostIf since subnet is updated")
+            # vnic takes hostIf value from subnet while populating spec.
+            # hence directly pushing the config here.
+            self.SetDirty(True)
+            self.CommitUpdate()
         return
 
     def DeleteNotify(self, dObj):

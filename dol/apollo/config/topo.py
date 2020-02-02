@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 import enum
-
+from infra.common.logging  import logger as logger
 class InterfaceTypes(enum.IntEnum):
     NONE = 0
     ETH = 1
@@ -65,17 +65,25 @@ class ChosenFlowObjs:
         self.use_selected_objs = False
         self.objs = []
 
-    def add(self, obj):
+    def Add(self, obj):
         self.objs.extend(obj)
 
-    def reset(self):
+    def Reset(self):
         self.__init__()
 
-    def setMaxLimits(self, maxlimits):
+    def SetMaxLimits(self, maxlimits):
         self.maxlimits = maxlimits
 
-    def getMaxLimits(self):
+    def GetMaxLimits(self):
         return self.maxlimits
+
+    def GetMatchingFlowObjects(self, selectors):
+        matching_objs = []
+        for obj in self.objs:
+            if obj.IsFilterMatch(selectors):
+                matching_objs.append(obj)
+        return matching_objs
+        
 
 ChosenFlowObjs = ChosenFlowObjs()
 

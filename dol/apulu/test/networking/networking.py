@@ -11,7 +11,8 @@ from apollo.config.store import EzAccessStore
 def Setup(infra, module):
     if 'WORKFLOW_START' in module.name:
         topo.ChosenFlowObjs.select_objs = True
-        topo.ChosenFlowObjs.setMaxLimits(module.testspec.selectors.maxlimits)
+        topo.ChosenFlowObjs.use_selected_objs = False
+        topo.ChosenFlowObjs.SetMaxLimits(module.testspec.selectors.maxlimits)
     modcbs.Setup(infra, module)
     return True
 
@@ -47,6 +48,6 @@ def TestCaseVerify(tc):
         topo.ChosenFlowObjs.select_objs = False
         topo.ChosenFlowObjs.use_selected_objs = True
     elif 'WORKFLOW_END' in tc.module.name:
-        topo.ChosenFlowObjs.reset()
+        topo.ChosenFlowObjs.Reset()
         generator.__read(EzAccessStore.GetDUTNode())
     return True

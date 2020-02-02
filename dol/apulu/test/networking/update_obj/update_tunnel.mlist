@@ -4,7 +4,7 @@ feature:
     package     : test.networking
     module      : networking
     runorder    : 8060
-    enable      : False
+    enable      : True
     ignore      : True
 
 modules:
@@ -13,6 +13,9 @@ modules:
         name    : TUNNEL_WORKFLOW_START
         spec    : crud_workflow.testspec
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
@@ -23,12 +26,19 @@ modules:
             - object    : tunnel
               operation : Update
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
         name    : LOCAL2REMOTE
         mlist   : local2remote.mlist
+
+    - module:
+        name    : LOCAL2IGW
+        mlist   : local2igw.mlist
 
 # Rollback update to tunnel. packet is not constructed with old values here since mutable fields in tunnel dont contribute to decision making in pipeline.
     - module:
@@ -38,12 +48,19 @@ modules:
             - object    : tunnel
               operation : RollbackUpdate
         iterate :
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAT,Label=NETWORKING
+            - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=IGW_NAPT,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L2,Label=NETWORKING
             - flow : filter://FlType=MAPPING,AddrFamily=IPV4,FwdMode=L3,Label=NETWORKING
 
     - module:
         name    : LOCAL2REMOTE
         mlist   : local2remote.mlist
+
+    - module:
+        name    : LOCAL2IGW
+        mlist   : local2igw.mlist
 
     - module:
         name    : TUNNEL_WORKFLOW_END

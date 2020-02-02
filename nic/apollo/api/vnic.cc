@@ -317,7 +317,10 @@ vnic_entry::read(pds_vnic_info_t *info) {
 
 sdk_ret_t
 vnic_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return SDK_RET_INVALID_OP;
+    if (vnic_db()->remove((vnic_entry *)orig_obj)) {
+        return vnic_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t

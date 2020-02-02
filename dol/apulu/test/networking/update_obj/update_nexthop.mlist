@@ -5,7 +5,7 @@ feature:
     module      : networking
     runorder    : 8040
 # TODO fix nh PopulateKey for GET before enabling
-    enable      : False
+    enable      : True
     ignore      : True
 
 modules:

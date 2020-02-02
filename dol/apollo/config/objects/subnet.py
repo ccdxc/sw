@@ -173,14 +173,17 @@ class SubnetObject(base.ConfigObjectBase):
         return next(self.__ip_address_pool[1])
 
     def UpdateAttributes(self):
-        self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
-        hostIf = InterfaceClient.GetHostInterface()
-        if hostIf != None:
-            self.HostIf = hostIf
+        self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
+        if utils.IsDol():
+            hostIf = InterfaceClient.GetHostInterface(self.Node)
+            if hostIf != None:
+                self.HostIf = hostIf
+                self.HostIfIdx = utils.LifId2LifIfIndex(self.HostIf.lif.id)
+                self.HostIfUuid = utils.PdsUuid(self.HostIfIdx, None) if self.HostIfIdx else None
         return
 
     def RollbackAttributes(self):
-        attrlist = ["VirtualRouterMACAddr", "HostIf"]
+        attrlist = ["VirtualRouterMACAddr", "HostIf", "HostIfIdx", "HostIfUuid"]
         self.RollbackMany(attrlist)
         return
 

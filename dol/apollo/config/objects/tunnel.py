@@ -104,10 +104,10 @@ class TunnelObject(base.ConfigObjectBase):
         if hasattr(self, "Remote") and self.Remote is True:
             remote = " Remote:%s"% (self.Remote)
         return "TEP: %s |LocalIPAddr:%s|RemoteIPAddr:%s|TunnelType:%s%s|" \
-               "EncapValue:%d|Nat:%s|Mac:%s|NhType:%s" % \
+               "EncapValue:%d|Nat:%s|Mac:%s|NhType:%s|NexthopId:%d" % \
                (self.UUID, self.LocalIPAddr, self.RemoteIPAddr,
                utils.GetTunnelTypeString(self.Type), remote, self.EncapValue,
-               self.Nat, self.MACAddr, self.__nhtype)
+               self.Nat, self.MACAddr, self.__nhtype, (self.NexthopId if self.NexthopId != None else 0))
 
     def Show(self):
         logger.info("Tunnel Object: %s" % self)
@@ -117,24 +117,26 @@ class TunnelObject(base.ConfigObjectBase):
     def UpdateAttributes(self):
         if self.LocalIPAddr != self.RemoteIPAddr:
             if self.Type == tunnel_pb2.TUNNEL_TYPE_WORKLOAD:
-                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
             elif self.Type == tunnel_pb2.TUNNEL_TYPE_IGW:
-                self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+                self.RemoteIPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
             else:
                 if utils.IsV4Stack(self.DEVICE.Stack):
-                    self.RemoteIPAddr = next(ResmgrClient[node].TepIpAddressAllocator)
+                    self.RemoteIPAddr = next(ResmgrClient[self.Node].TepIpAddressAllocator)
                 else:
-                    self.RemoteIPAddr = next(ResmgrClient[node].TepIpv6AddressAllocator)
+                    self.RemoteIPAddr = next(ResmgrClient[self.Node].TepIpv6AddressAllocator)
             if self.IsUnderlay():
-                self.NEXTHOP = ResmgrClient[node].UnderlayNHAllocator.rrnext()
+                self.NEXTHOP = ResmgrClient[self.Node].UnderlayNHAllocator.rrnext()
+                self.NexthopId = self.NEXTHOP.NexthopId
             elif self.IsUnderlayEcmp():
-                self.NEXTHOPGROUP = ResmgrClient[node].UnderlayNhGroupAllocator.rrnext()
+                self.NEXTHOPGROUP = ResmgrClient[self.Node].UnderlayNhGroupAllocator.rrnext()
+                self.NexthopGroupId = self.NEXTHOPGROUP.Id
         self.RemoteIP = str(self.RemoteIPAddr) # for testspec
-        self.MACAddr = ResmgrClient[node].TepMacAllocator.get()
+        self.MACAddr = ResmgrClient[self.Node].TepMacAllocator.get()
         return
 
     def RollbackAttributes(self):
-        attrlist = ["RemoteIPAddr", "NEXTHOP", "NEXTHOPGROUP", "RemoteIP", "MACAddr"]
+        attrlist = ["RemoteIPAddr", "NEXTHOP", "NexthopId", "NEXTHOPGROUP", "NexthopGroupId", "RemoteIP", "MACAddr"]
         self.RollbackMany(attrlist)
         return
 
@@ -291,9 +293,12 @@ class TunnelObjectClient(base.ConfigClientBase):
                     tun.NexthopId = nhObj.NexthopId
                     logger.info("Linking %s - %s" % (tun, nhObj))
                     nhObj.AddDependent(tun)
-                else:
+                elif tun.NEXTHOP == None:
                     logger.info("Linking Tunnel%d - Nexthop%d" %
                                 (tun.Id, tun.NexthopId))
+                    # TODO: Keep all clientObjs in topo.py and enable it
+                    # to resolve circular dependency between tunnel and nexthop
+                    #tun.NEXTHOP = NhClient.GetNexthopObject(self.Node, tun.NexthopId)
         return
 
     def FillUnderlayNhGroups(self, node):
