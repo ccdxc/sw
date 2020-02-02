@@ -327,11 +327,9 @@ func microSegCmdHandler(cmd *cobra.Command, args []string) {
 
 func isFwdModeStrValid(str string) bool {
 	switch str {
-	case "bn":
+	case "tp":
 		return true
-	case "fa":
-		return true
-	case "enf":
+	case "ms":
 		return true
 	default:
 		return false
@@ -390,15 +388,13 @@ func sysDebugCmdHandler(cmd *cobra.Command, args []string) {
 			fmt.Printf("Cmd args are not valid. Refer description")
 			return
 		}
-		// fwdMode = fwdModeStrToMode(fwdModeStr)
 	}
 
 	if cmd.Flags().Changed("pol") == true {
-		if isFwdModeStrValid(policyModeStr) == false {
+		if isPolModeStrValid(policyModeStr) == false {
 			fmt.Printf("Cmd args are not valid. Refer description")
 			return
 		}
-		// polMode = fwdModeStrToMode(policyModeStr)
 	}
 
 	fwdMode := fwdModeStrToMode(fwdModeStr)

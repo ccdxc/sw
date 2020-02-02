@@ -1,0 +1,116 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SESSION
+    src:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=True
+    flow        : filter://fwtype=L2,type=MAC
+    maxflows    : 4
+
+packets:
+    - packet:
+        id          : BASE_PKT    # Base Packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+                type    : ref://testcase/config/flow/ethertype
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+
+    - packet:
+        id          : IN_PKT    # Input packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+
+    - packet:
+        id          : EXP_PKT    # Expected packet 
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                vlan: ref://testcase/config/dst/segment/vlan_id
+                prio: ref://testcase/config/flow/txqos/cos
+
+    - packet:
+        id          : SPAN_PKT
+        clone       : ref://testcase/packets/id=IN_PKT
+        encaps      :
+            - ref://factory/packets/id=ENCAP_ERSPAN
+        headers     :
+            erspaneth:
+                src    : callback://networking/packets/GetDropPacketERSPANSrcMac
+                dst    : callback://networking/packets/GetDropPacketERSPANDstMac
+            erspanqtag:
+                prio: 1
+                vlan: callback://networking/packets/GetDropPacketERSPANVlanEncap
+            erspanipv4:
+                tos : 0
+                id  : 0
+                src : callback://networking/packets/GetDropPacketERSPANSrcIp
+                dst : callback://networking/packets/GetDropPacketERSPANDstIp
+            erspangre:
+            erspan:
+                sessionid : const/1
+                ver       : const/2
+                gra       : const/3
+                vlan      : ref://testcase/config/src/endpoint/intf/encap_vlan_id
+                cos       : const/7
+
+buffers:
+    - buffer:
+        id      : BUF1 # Input Buffer
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=IN_PKT/size
+           data : ref://testcase/packets/id=IN_PKT/rawbytes
+
+descriptors:
+    - descriptor:
+        id      : DESC1 # Input Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=BUF1
+            addr  : ref://testcase/buffers/id=BUF1/addr
+            len   : ref://testcase/buffers/id=BUF1/size
+
+    - descriptor:
+        id      : DESC2 # Expected Descriptor
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC1
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    packets:
+        - packet:
+            object  : callback://networking/packets/GetL2UcExpectedPacket
+            port    : callback://networking/fwmode/GetTxExpectedPorts
+        - packet:
+            object  : callback://networking/packets/GetExpectedSpanPacket
+            port    : callback://networking/packets/GetDropPacketDestPort/session=0
+
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=DESC2
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+            buffer  : None
+            packet  : None

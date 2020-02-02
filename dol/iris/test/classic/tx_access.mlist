@@ -5,7 +5,6 @@ feature:
     package     : test.classic
     module      : classic
     spec        : tx_access.testspec
-    enable      : True
     ignore      : False
     runorder    : 10
     enable      : False

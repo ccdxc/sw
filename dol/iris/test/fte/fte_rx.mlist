@@ -21,6 +21,7 @@ modules:
 
     - module:
         name    : IPV6_QTAG
+        spec    : rx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=False
@@ -41,6 +42,7 @@ modules:
 
     - module:
         name    : IPV6_UTAG
+        spec    : rx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=True
@@ -66,6 +68,7 @@ modules:
               
     - module:
         name    : IPV6_PTAG
+        spec    : rx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=True

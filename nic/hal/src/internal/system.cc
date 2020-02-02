@@ -778,6 +778,9 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
                                  SysSpecResponse *rsp)
 {
     hal_ret_t ret = HAL_RET_OK;
+    auto spec_ref = *spec;
+
+    proto_msg_dump(spec_ref);
 
     if (hal::g_hal_state->fwd_mode() == spec->fwd_mode() &&
         hal::g_hal_state->policy_mode() == spec->policy_mode()) {
@@ -819,8 +822,8 @@ system_handle_fwd_policy_updates(const SysSpec *spec,
              * Policy Mode: Base-Net -> Flow-Aware or Enforce
              * 1. Change l4 profile to enable policy_enf_cfg_en to pull packets to FTE
              */
-            ret = hal::plugins::sfw::sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT, 
-                                                                         true);
+            ret = hal::plugins::sfw::
+                sfw_update_default_security_profile(L4_PROFILE_HOST_DEFAULT,true);
         }
         hal::g_hal_state->set_policy_mode(spec->policy_mode());
     }

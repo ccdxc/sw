@@ -179,7 +179,10 @@ action l4_profile(icmp_normalization_en,
     modify_field(l4_metadata.ip_ttl_change_detect_en, ip_ttl_change_detect_en);
     modify_field(l4_metadata.tcp_normalize_mss, tcp_normalize_mss);
     modify_field(l4_metadata.flow_learn_cfg_en, flow_learn_cfg_en);
-    modify_field(l4_metadata.policy_enf_cfg_en, policy_enf_cfg_en);
+    // Only IPv4 packets are sent to FTE. IPv6 and non-IP packets are fwded in P4
+    if (ipv4.valid == TRUE) {
+        modify_field(l4_metadata.policy_enf_cfg_en, policy_enf_cfg_en);
+    }
     modify_field(l4_metadata.ip_bm_mc_policy_enf_cfg_en, ip_bm_mc_policy_enf_cfg_en);
     modify_field(l4_metadata.uuc_fl_pe_sup_en, uuc_fl_pe_sup_en);
 

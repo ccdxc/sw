@@ -30,7 +30,15 @@ modules:
         args    :
             maxflows : None
         iterate:
-            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+            - flow    : filter://action=ALLOW,fte=True,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : TX_FLOW_MISS_IPV6 
+        spec    : tx_ipv6.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,type=IPV6,direction=IFLOW
 
     - module:
         name    : RX_IPV4
@@ -54,7 +62,15 @@ modules:
         args    :
             maxflows : None
         iterate:
-            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+            - flow    : filter://action=ALLOW,fte=True,type=IPV4,direction=IFLOW
+
+    - module:
+        name    : RX_FLOW_MISS_IPV6
+        spec    : rx_ipv6.testspec
+        args    :
+            maxflows : None
+        iterate:
+            - flow    : filter://action=ALLOW,fte=True,type=IPV6,direction=IFLOW
 
     - module:
         name    : TXRX_IPV4
@@ -78,7 +94,7 @@ modules:
         args    :
             maxflows : None
         iterate:
-            - flow    : filter://action=ALLOW,fte=True,direction=IFLOW
+            - flow    : filter://action=ALLOW,fte=True,type=IPV4,direction=IFLOW
 
     # L3 flows
     - module:

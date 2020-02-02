@@ -22,6 +22,7 @@ modules:
 
     - module:
         name    : IPV6_QTAG
+        spec    : tx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=False
@@ -42,6 +43,7 @@ modules:
 
     - module:
         name    : IPV6_UTAG
+        spec    : tx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=True
@@ -67,6 +69,7 @@ modules:
               
     - module:
         name    : IPV6_PTAG
+        spec    : tx_ipv6.testspec
         iterate:
             - flow      : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment   : filter://native=True
@@ -80,7 +83,7 @@ modules:
 
     - module:
         name    : NONIP_QTAG
-        spec    : tx_nonip.testspec
+        spec    : tx_nonip_nofte.testspec
         iterate:
             # Tagged Flows
             - segment: filter://native=False
@@ -88,7 +91,7 @@ modules:
 
     - module:
         name    : NONIP_UTAG
-        spec    : tx_nonip.testspec
+        spec    : tx_nonip_nofte.testspec
         iterate:
             # Untagged Flows
             - segment: filter://native=True

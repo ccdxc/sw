@@ -1,0 +1,120 @@
+# Test Spec
+selectors:
+    root: ref://store/templates/id=SESSION
+    src:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False
+    dst:
+        tenant  : filter://overlay=VLAN,type=TENANT
+        segment : filter://any
+        endpoint: filter://remote=False
+    flow        : filter://fwtype=L2,type=MAC
+    maxflows    : 4
+
+packets:
+    - packet:
+        id          : BASE_PKT # Base packet
+        payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
+        template    : ref://factory/packets/id=ETH
+        headers     :
+            eth:
+                src     : ref://testcase/config/src/endpoint/macaddr
+                dst     : ref://testcase/config/dst/endpoint/macaddr
+                type    : ref://testcase/config/flow/ethertype
+            payload:
+                data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
+
+    - packet:
+        id          : PKT1 # Base packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetPacketEncaps
+        headers     :
+            qtag    :
+                vlan: ref://testcase/config/src/endpoint/intf/encap_vlan_id
+
+    - packet:
+        id          : EXP_PKT # Base packet
+        clone       : ref://testcase/packets/id=BASE_PKT
+        encaps      : callback://networking/packets/GetExpectedPacketEncaps
+        headers     :
+            qtag:
+                prio: 1
+                vlan: ref://testcase/config/dst/endpoint/intf/encap_vlan_id
+
+buffers:
+    - buffer:
+        id      : TXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+           bind : True
+           size : ref://testcase/packets/id=PKT1/size
+           data : ref://testcase/packets/id=PKT1/rawbytes
+
+    - buffer:
+        id      : RXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind: True
+            size: 1518
+            data: None
+
+    - buffer:
+        id      : EXBUF
+        template: ref://factory/templates/id=ETH_BUFFER
+        fields:
+            bind  : False
+            size  : ref://testcase/packets/id=EXP_PKT/size
+            data  : ref://testcase/packets/id=EXP_PKT/rawbytes
+
+
+descriptors:
+    - descriptor:
+        id      : TXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_TX
+        fields:
+            _buf  : ref://testcase/buffers/id=TXBUF
+            addr  : ref://testcase/buffers/id=TXBUF/addr
+            len   : ref://testcase/buffers/id=TXBUF/size
+
+    - descriptor:
+        id      : RXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_RX
+        fields:
+            _buf  : ref://testcase/buffers/id=RXBUF
+            addr  : ref://testcase/buffers/id=RXBUF/addr
+            len   : ref://testcase/buffers/id=RXBUF/size
+
+    - descriptor:
+        id      : EX_TXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_TX_CQ
+        fields:
+            status     : 0x0
+
+    - descriptor:
+        id      : EX_RXDESCR
+        template: ref://factory/templates/id=DESCR_ETH_RX_CQ
+        fields:
+            _buf          : ref://testcase/buffers/id=EXBUF
+            len                   : ref://testcase/buffers/id=EXBUF/size
+
+trigger:
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=RXDESCR
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=TXDESCR
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+expect:
+    delay   : callback://networking/packets/GetExpectDelay
+    descriptors:
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_TXDESCR
+            ring    : ref://testcase/config/src/endpoint/intf/lif/queue_types/id=TX
+
+        - descriptor:
+            object  : ref://testcase/descriptors/id=EX_RXDESCR
+            ring    : ref://testcase/config/dst/endpoint/intf/lif/queue_types/id=RX

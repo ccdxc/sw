@@ -94,7 +94,8 @@ l4_profile:
                 d.{u.l4_profile_d.tcp_split_handshake_detect_en, \
                 u.l4_profile_d.tcp_split_handshake_drop}
   phvwr       p.l4_metadata_flow_learn_cfg_en, d.u.l4_profile_d.flow_learn_cfg_en
-  phvwr       p.l4_metadata_policy_enf_cfg_en, d.u.l4_profile_d.policy_enf_cfg_en
+  seq         c1, k.ipv4_valid, TRUE
+  phvwr.c1    p.l4_metadata_policy_enf_cfg_en, d.u.l4_profile_d.policy_enf_cfg_en
   phvwr       p.l4_metadata_ip_bm_mc_policy_enf_cfg_en, \
                 d.u.l4_profile_d.ip_bm_mc_policy_enf_cfg_en
   phvwr       p.l4_metadata_uuc_fl_pe_sup_en, \

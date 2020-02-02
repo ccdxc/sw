@@ -21,7 +21,8 @@ modules:
 
     - module:
         name    : L2UC_IPV6
-        spec    : tx_rx.testspec
+        spec    : tx_rx_ipv6.testspec
+        ignore  : True
         iterate:
             - flow    : filter://type=IPV6,proto=TCP,label=FTE,direction=IFLOW
               segment : filter://native=False
@@ -55,7 +56,7 @@ modules:
 
     - module:
         name    : L2UC_NONIP
-        spec    : tx_rx_nonip.testspec
+        spec    : tx_rx_nonip_nofte.testspec
         iterate:
             - segment: filter://native=False
               flow   : filter://label=FTE,direction=IFLOW           
