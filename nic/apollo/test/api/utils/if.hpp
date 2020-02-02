@@ -53,7 +53,7 @@ operator<<(std::ostream& os, const pds_if_spec_t *spec) {
        << " type: " << spec->type;
 
     if (spec->type == PDS_IF_TYPE_L3) {
-        os << " eth ifidx: " << (uint32_t)spec->l3_if_info.eth_ifindex
+        os << " port: " << spec->l3_if_info.port.str()
            << " ip pfx: " << ippfx2str(&spec->l3_if_info.ip_prefix)
            << " mac addr: " << macaddr2str(spec->l3_if_info.mac_addr);
     }

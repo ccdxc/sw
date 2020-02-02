@@ -36,7 +36,8 @@ class InterfaceSpec_:
     pass
 
 class InterfaceInfoObject(base.ConfigObjectBase):
-    def __init__(self, iftype, spec, ifspec):
+    def __init__(self, node, iftype, spec, ifspec):
+        self.Node = node
         self.__type = iftype
         if (iftype == topo.InterfaceTypes.UPLINK):
             self.port_num = getattr(spec, 'port', None)
@@ -52,6 +53,11 @@ class InterfaceInfoObject(base.ConfigObjectBase):
             else:
                 self.ip_prefix = next(ResmgrClient[node].L3InterfaceIPv4PfxPool)
             self.ethifidx = getattr(spec, 'ethifidx', -1)
+            if utils.IsDol():
+                node_uuid = None
+            else:
+                node_uuid = EzAccessStoreClient[node].GetNodeUuid(node)
+            self.Port = utils.PdsUuid(self.ethifidx, node_uuid)
             self.port_num = getattr(spec, 'port', -1)
             self.encap = getattr(spec, 'encap', None)
             self.macaddr = getattr(spec, 'MACAddr', None)
@@ -62,15 +68,15 @@ class InterfaceInfoObject(base.ConfigObjectBase):
         elif (self.__type == topo.InterfaceTypes.UPLINKPC):
             res = str("port_bmap: %s" % self.port_bmap)
         elif (self.__type == topo.InterfaceTypes.L3):
-            res = str("VPC:%d|ip:%s|ethifidx:%d|encap:%s|mac:%s"% \
-                    (self.VpcId, self.ip_prefix, self.ethifidx, self.encap, \
+            res = str("VPC:%d|ip:%s|port: %s|encap:%s|mac:%s"% \
+                    (self.VpcId, self.ip_prefix, self.Port, self.encap, \
                     self.macaddr.get()))
         else:
             return
         logger.info("- %s" % res)
 
 class InterfaceObject(base.ConfigObjectBase):
-    def __init__(self, spec, ifspec, node=None):
+    def __init__(self, spec, ifspec, node):
         super().__init__(api.ObjectTypes.INTERFACE, node)
         ################# PUBLIC ATTRIBUTES OF INTERFACE OBJECT #####################
         if (hasattr(ifspec, 'iid')):
@@ -85,7 +91,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if utils.IsHostLifSupported() and self.lifns:
             self.obj_helper_lif = lif.LifObjectHelper(node)
             self.__create_lifs(spec)
-        info = InterfaceInfoObject(self.Type, spec, ifspec)
+        info = InterfaceInfoObject(node, self.Type, spec, ifspec)
         self.IfInfo = info
         self.Status = InterfaceStatus()
         self.GID("Interface ID:%s"%self.InterfaceId)
@@ -131,7 +137,7 @@ class InterfaceObject(base.ConfigObjectBase):
         spec.AdminStatus = interface_pb2.IF_STATUS_UP
         if self.Type == topo.InterfaceTypes.L3:
             spec.Type = interface_pb2.IF_TYPE_L3
-            spec.L3IfSpec.EthIfIndex = self.IfInfo.ethifidx
+            spec.L3IfSpec.PortId = self.IfInfo.Port.GetUuid()
             spec.L3IfSpec.MACAddress = self.IfInfo.macaddr.getnum()
             spec.L3IfSpec.VpcId = utils.PdsUuid.GetUUIDfromId(self.IfInfo.VpcId)
             utils.GetRpcIPPrefix(self.IfInfo.ip_prefix, spec.L3IfSpec.Prefix)
@@ -145,7 +151,7 @@ class InterfaceObject(base.ConfigObjectBase):
         if self.Type == topo.InterfaceTypes.L3:
             if spec.Type != interface_pb2.IF_TYPE_L3:
                 return False
-            if spec.L3IfSpec.EthIfIndex != self.IfInfo.ethifidx:
+            if spec.L3IfSpec.PortId != self.IfInfo.Port.GetUuid():
                 return False
             # TODO: Enable once device delete is fixed. MAC is also overwritten with 0 on deleting device config.
             #if spec.L3IfSpec.MACAddress != self.IfInfo.macaddr.getnum():

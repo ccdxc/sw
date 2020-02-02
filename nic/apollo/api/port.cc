@@ -154,7 +154,8 @@ create_port (pds_ifindex_t ifindex, port_args_t *port_args)
     void *port_info;
     pds_obj_key_t key;
 
-    PDS_TRACE_DEBUG("Creating port %u", port_args->port_num);
+    PDS_TRACE_DEBUG("Creating port %u, ifindex 0x%x",
+                    port_args->port_num, ifindex);
     /**
      * store user configured admin_state in another variable to be used
      * during xcvr insert/remove events

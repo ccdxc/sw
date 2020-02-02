@@ -3,8 +3,8 @@
 //
 //----------------------------------------------------------------------------
 
-#include "nic/apollo/test/api/utils/if.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/apollo/test/api/utils/if.hpp"
 
 namespace test {
 namespace api {
@@ -20,6 +20,8 @@ pds_obj_key_t k_l3_if_key = int2pdsobjkey(0x70000001);
 void
 if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
                 pds_if_type_t type, int num_ifs) {
+    pds_ifindex_t eth_ifindex;
+
     spec_feeder.key = key;
     spec_feeder.type = type;
     spec_feeder.admin_state = PDS_IF_STATE_UP;
@@ -30,9 +32,9 @@ if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
         str2ipv4pfx((char *)ip_pfx_str.c_str(), &l3_info.ip_prefix);
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,
                            (uint64_t)l3_info.ip_prefix.addr.addr.v4_addr);
-        l3_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT,
-                                          TM_PORT_UPLINK_0+1,
-                                          ETH_IF_DEFAULT_CHILD_PORT);
+        eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, TM_PORT_UPLINK_0+1,
+                                  ETH_IF_DEFAULT_CHILD_PORT);
+        l3_info.port = uuid_from_objid(eth_ifindex);
         l3_info.encap.type = PDS_ENCAP_TYPE_VXLAN;
         l3_info.encap.val.vnid = 1;
     }
@@ -43,6 +45,7 @@ if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
 void
 if_feeder::iter_next(int width) {
     ip_addr_t ipaddr = {0};
+    pds_ifindex_t eth_ifindex;
 
     spec_feeder.key = int2pdsobjkey(pdsobjkey2int(spec_feeder.key) + width);
     if (spec_feeder.type == PDS_IF_TYPE_L3) {
@@ -50,9 +53,9 @@ if_feeder::iter_next(int width) {
         memcpy(&l3_info.ip_prefix.addr, &ipaddr, sizeof(ip_addr_t));
         MAC_UINT64_TO_ADDR(l3_info.mac_addr,
                            (uint64_t)l3_info.ip_prefix.addr.addr.v4_addr);
-        l3_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT,
-                                          TM_PORT_UPLINK_1 + 1,
-                                          ETH_IF_DEFAULT_CHILD_PORT);
+        eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, TM_PORT_UPLINK_1 + 1,
+                                  ETH_IF_DEFAULT_CHILD_PORT);
+        l3_info.port = uuid_from_objid(eth_ifindex);
     }
 
     cur_iter_pos++;

@@ -10,6 +10,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
+#include "nic/sdk/linkmgr/port.hpp"
 #include "nic/apollo/core/mem.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/framework/api_engine.hpp"
@@ -150,11 +151,11 @@ if_entry::init_config(api_ctxt_t *api_ctxt) {
      case PDS_IF_TYPE_L3:
          ifindex_ = L3_IFINDEX(l3_if_idxr_++);
          PDS_TRACE_DEBUG("Initializing L3 interface %s, ifindex 0x%x, "
-                         "eth ifindex 0x%x", spec->key.str(), ifindex_,
-                         spec->l3_if_info.eth_ifindex);
+                         "port %s", spec->key.str(), ifindex_,
+                         spec->l3_if_info.port.str());
          if_info_.l3_.vpc_ = spec->l3_if_info.vpc;
          if_info_.l3_.ip_pfx_ = spec->l3_if_info.ip_prefix;
-         if_info_.l3_.eth_ifindex_ = spec->l3_if_info.eth_ifindex;
+         if_info_.l3_.port_ = spec->l3_if_info.port;
          if_info_.l3_.encap_ = spec->l3_if_info.encap;
          memcpy(if_info_.l3_.mac_, spec->l3_if_info.mac_addr,
                 ETH_ADDR_LEN);
@@ -237,7 +238,7 @@ if_entry::fill_spec_(pds_if_spec_t *spec) {
         spec->uplink_info.port_num = if_info_.uplink_.port_;
         break;
     case PDS_IF_TYPE_L3:
-        spec->l3_if_info.eth_ifindex = if_info_.l3_.eth_ifindex_;
+        spec->l3_if_info.port = if_info_.l3_.port_;
         spec->l3_if_info.vpc = if_info_.l3_.vpc_;
         spec->l3_if_info.ip_prefix = if_info_.l3_.ip_pfx_;
         spec->l3_if_info.encap = if_info_.l3_.encap_;
@@ -292,5 +293,26 @@ sdk_ret_t
 if_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_IF, this);
 }
+
+uint8_t
+if_entry::port(void) const {
+    if (type_ == PDS_IF_TYPE_UPLINK) {
+        return if_info_.uplink_.port_;
+    } else if (type_ == PDS_IF_TYPE_L3) {
+        if_entry *phy_intf;
+
+        phy_intf = if_db()->find(&if_info_.l3_.port_);
+        if (!phy_intf) {
+            PDS_TRACE_ERR("port %s not found for l3 intf %s",
+                          if_info_.l3_.port_.str(), key_.str());
+            return PDS_PORT_INVALID;
+        }
+        return (ETH_IFINDEX_TO_PARENT_PORT(phy_intf->ifindex()) - 1);
+    } else if (type_ == PDS_IF_TYPE_ETH) {
+        return ((sdk::linkmgr::port *)if_info_.port_.port_info_)->port_num();
+    }
+    return PDS_PORT_INVALID;
+}
+
 
 }    // namespace api

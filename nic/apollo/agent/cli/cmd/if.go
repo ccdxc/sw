@@ -115,7 +115,7 @@ func printIf(intf *pds.Interface) {
 		lifId = fmt.Sprint(status.GetUplinkIfStatus().GetLifId())
 		portNum = fmt.Sprintf("%d", spec.GetUplinkSpec().GetPortId())
 	case pds.IfType_IF_TYPE_L3:
-		portNum = ifIndexToPortIdStr(spec.GetL3IfSpec().GetEthIfIndex())
+		portNum = fmt.Sprint(spec.GetL3IfSpec().GetPortId())
 		vpc = fmt.Sprint(spec.GetL3IfSpec().GetVpcId())
 		ipPrefix = utils.IPPrefixToStr(spec.GetL3IfSpec().GetPrefix())
 		mac = utils.MactoStr(spec.GetL3IfSpec().GetMACAddress())

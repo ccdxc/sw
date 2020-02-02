@@ -545,7 +545,7 @@ pds_if_api_spec_to_proto (pds::InterfaceSpec *proto_spec,
         {
             auto proto_l3 = proto_spec->mutable_l3ifspec();
             proto_l3->set_vpcid(api_spec->l3_if_info.vpc.id, PDS_MAX_KEY_LEN);
-            proto_l3->set_ethifindex(api_spec->l3_if_info.eth_ifindex);
+            proto_l3->set_portid(api_spec->l3_if_info.port.id, PDS_MAX_KEY_LEN);
             proto_l3->set_macaddress(
                       MAC_TO_UINT64(api_spec->l3_if_info.mac_addr));
             pds_encap_to_proto_encap(proto_l3->mutable_encap(),
@@ -618,14 +618,11 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
         proto_admin_state_to_pds_admin_state(proto_spec.adminstatus());
     switch (proto_spec.type()) {
     case pds::IF_TYPE_L3:
-        if (IFINDEX_TO_IFTYPE(proto_spec.l3ifspec().ethifindex()) !=
-                IF_TYPE_ETH) {
-            return SDK_RET_INVALID_ARG;
-        }
         api_spec->type = PDS_IF_TYPE_L3;
         pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
                                       proto_spec.l3ifspec().vpcid());
-        api_spec->l3_if_info.eth_ifindex = proto_spec.l3ifspec().ethifindex();
+        pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.port,
+                                      proto_spec.l3ifspec().portid());
         api_spec->l3_if_info.encap =
             proto_encap_to_pds_encap(proto_spec.l3ifspec().encap());
         MAC_UINT64_TO_ADDR(api_spec->l3_if_info.mac_addr,

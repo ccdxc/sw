@@ -111,9 +111,9 @@ func convertInterface(intf netproto.Interface) *halapi.InterfaceRequest {
 					AdminStatus: ifStatus,
 					Ifinfo: &halapi.InterfaceSpec_L3IfSpec{
 						L3IfSpec: &halapi.L3IfSpec{
-							VpcId:      utils.ConvertID64(0)[0], // TODO get the object references sorted out here
-							Prefix:     nil,
-							EthIfIndex: 0,
+							VpcId:  utils.ConvertID64(0)[0], // TODO get the object references sorted out here
+							Prefix: nil,
+							PortId: utils.ConvertID64(0)[0],
 							Encap: &halapi.Encap{
 								Type: halapi.EncapType_ENCAP_TYPE_NONE,
 								Value: &halapi.EncapVal{

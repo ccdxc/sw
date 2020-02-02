@@ -1,4 +1,5 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved
+#include "nic/apollo/api/utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_utils.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
@@ -62,9 +63,9 @@ process_interface_update (pds_if_spec_t *if_spec,
                                    PDS_MS_CTM_GRPC_CORRELATOR);
         if (!ip_addr_is_zero(&if_spec->l3_if_info.ip_prefix.addr)) {
             has_ip_addr = true;
-            populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec, 
+            populate_lim_addr_spec (&if_spec->l3_if_info.ip_prefix, lim_addr_spec,
                                     pds::LIM_IF_TYPE_ETH, 
-                                    if_spec->l3_if_info.eth_ifindex);
+                                    api::objid_from_uuid(if_spec->l3_if_info.port));
         }
     } else if (if_spec->type == PDS_IF_TYPE_LOOPBACK){
         // Otherwise, its always singleton loopback
@@ -148,7 +149,7 @@ interface_create (pds_if_spec_t *spec, pds_batch_ctxt_t bctxt)
     try {
         // Get PDS to MS IfIndex
         if (spec->type == PDS_IF_TYPE_L3) {
-           auto eth_ifindex = spec->l3_if_info.eth_ifindex;
+           auto eth_ifindex = api::objid_from_uuid(spec->l3_if_info.port);
 
             ms_ifindex = pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
             SDK_TRACE_INFO ("L3 Intf Create:: UUID %s Eth[0x%X] to MS[0x%X]]",

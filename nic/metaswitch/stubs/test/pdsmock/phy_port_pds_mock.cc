@@ -36,6 +36,7 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
 {
     auto op = (op_create_)?API_OP_CREATE : API_OP_UPDATE;
     test::api::if_feeder if_feeder;
+    pds_ifindex_t eth_ifindex;
     pds_if_spec_t spec = {0};
     spec.key = make_l3if_key_(input);
     spec.type = PDS_IF_TYPE_L3;
@@ -53,8 +54,9 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
     pclose (fp);
 
     mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
-    spec.l3_if_info.eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, input.phy_port,
-                                              ETH_IF_DEFAULT_CHILD_PORT);
+    eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, input.phy_port,
+                              ETH_IF_DEFAULT_CHILD_PORT);
+    spec.l3_if_info.port = test::uuid_from_objid(eth_ifindex);
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE;
     spec.l3_if_info.encap.val.vnid = 0;
     pds_batch.emplace_back (OBJ_ID_IF, op);

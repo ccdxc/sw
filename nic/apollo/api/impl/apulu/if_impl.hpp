@@ -164,9 +164,10 @@ private:
     ~if_impl() {}
 
     /// \brief     program l3 interface related attributes in the datapath
+    /// \param[in] intf  interface obj being programmed
     /// \param[in] spec  interface configuration
     /// \return    SDK_RET_OK on success, failure status code on error
-    sdk_ret_t program_l3_if_(pds_if_spec_t *spec);
+    sdk_ret_t program_l3_if_(if_entry *intf, pds_if_spec_t *spec);
 
     /// \brief     program interface related tables during interface create by
     ///            enabling stage0 tables corresponding to the new epoch

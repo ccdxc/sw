@@ -65,8 +65,8 @@ message L3IfSpec {
   bytes          VpcId      = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // IP address, prefix of this L3 interface
   types.IPPrefix Prefix     = 2 [(gogoproto.moretags) = "meta:mandatory"];
-  // ethernet) ifindex corresponding to the physical port of the this L3 interface
-  uint32         EthIfIndex = 3 [(gogoproto.moretags) = "meta:mandatory"];
+  // Physical port of this L3 interface
+  bytes          PortId     = 3 [(gogoproto.moretags) = "meta:mandatory"];
   // (optional) encap used for packet rewrites if this is a L3 sub interface
   types.Encap    Encap      = 4;
   // MAC address of this L3 interface

@@ -7,6 +7,7 @@
 #define __TEST_BASE_UTILS_HPP__
 
 #include <vector>
+#include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp" //UPLINK_0/1
 #include "nic/apollo/api/include/pds.hpp"
@@ -235,17 +236,25 @@ operator<<(std::ostream& os, const pds_obj_key_t *key) {
     return os;
 }
 
+// construct a 'sticky' uuid given an integer so that same uuid is generated
+// even across reboots i.e., same input gives same uuid everytime
+#define PDS_UUID_MAGIC_BYTE           0x42
+#define PDS_UUID_MAGIC_BYTE_OFFSET    8
+#define PDS_UUID_SYSTEM_MAC_OFFSET    10
 static inline pds_obj_key_t
 uuid_from_objid (uint32_t id)
 {
     pds_obj_key_t key = { 0 };
-    sprintf (key.id, "%08x", id);
+    mac_addr_t    system_mac;
 
-    // stash a signature in 9th byte
-    key.id[8] = 0x42;
+    MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
+    memcpy(&key.id[0], &id, sizeof(id));
+    memset(&key.id[8], 0x42, 2);
+    memcpy(&key.id[10], system_mac, ETH_ADDR_LEN);
     return key;
 }
 
+// extract integer id from given 'sticky' uuid
 static inline uint32_t
 objid_from_uuid (const pds_obj_key_t& key) {
     char *buf;

@@ -104,7 +104,7 @@ static void create_intf_proto_grpc (bool lo=false) {
         pds_if.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
         pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
         pds_if.l3_if_info.ip_prefix.len = 16;
-        pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index;
+        pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
     }
 
     pds_if_api_spec_to_proto (request.add_request(), &pds_if);

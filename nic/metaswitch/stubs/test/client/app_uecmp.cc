@@ -114,11 +114,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         if (second) {
             pds_if.key = msidx2pdsobjkey(k_l3_if_id_2);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr_2;
-            pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index_2;
+            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2);
         } else {
             pds_if.key = msidx2pdsobjkey(k_l3_if_id);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
-            pds_if.l3_if_info.eth_ifindex = g_test_conf_.eth_if_index;
+            pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
         }
         pds_if.type = PDS_IF_TYPE_L3;
         pds_if.admin_state = PDS_IF_STATE_UP;

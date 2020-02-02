@@ -235,7 +235,7 @@ pds_ms_sim_test_config ()
     l3_if_spec.type = PDS_IF_TYPE_L3;
     l3_if_spec.key = msidx2pdsobjkey(g_l3_if_uuid);
     l3_if_spec.l3_if_info.ip_prefix.len = 24;
-    l3_if_spec.l3_if_info.eth_ifindex = g_test_conf.eth_if_index;
+    l3_if_spec.l3_if_info.port = test::uuid_from_objid(g_test_conf.eth_if_index);
     l3_if_spec.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf.local_ip_addr;
     l3_if_spec.l3_if_info.ip_prefix.addr.af = IP_AF_IPV4;
     pds_ms::interface_create (&l3_if_spec, 0);

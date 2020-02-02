@@ -209,23 +209,7 @@ public:
 
     /// \brief    return the physical port number of this interface
     /// \return   physical port number or 0xFF if invalid
-    uint8_t port(void) const {
-        if (type_ == PDS_IF_TYPE_UPLINK) {
-            return if_info_.uplink_.port_;
-        } else if (type_ == PDS_IF_TYPE_L3) {
-            return ETH_IFINDEX_TO_PARENT_PORT(if_info_.l3_.eth_ifindex_) - 1;
-        }
-        return PDS_PORT_INVALID;
-    }
-
-    /// \brief    return the ethernet interface index of this interface
-    /// \return   ethernet interface index or 0x0 if invalid
-    pds_ifindex_t eth_ifindex(void) const {
-        if (type_ == PDS_IF_TYPE_L3) {
-            return if_info_.l3_.eth_ifindex_;
-        }
-        return IFINDEX_INVALID;
-    }
+    uint8_t port(void) const;
 
     /// \brief    return the wire encap of this (L3) interface
     /// \return   wire encap of this L3 interface
@@ -247,6 +231,12 @@ public:
     /// \param[in] port_info    pointer to the port specific information
     void set_port_info(void *port_info) {
         if_info_.port_.port_info_ = port_info;
+    }
+
+    /// \brief    set the interface type for this interface
+    /// \param[in] if_type    interface type
+    void set_type(pds_if_type_t if_type) {
+        type_ = if_type;
     }
 
     /// \brief    return port specific information
@@ -286,11 +276,11 @@ private:
         } uplink_;
         ///< L3 interface specific information
         struct {
-            pds_obj_key_t vpc_;           ///< vpc of this L3 interface
-            ip_prefix_t ip_pfx_;          ///< IP subnet of this L3 interface
-            pds_ifindex_t eth_ifindex_;   ///< eth ifindex
-            pds_encap_t encap_;           ///< wire encap, if any
-            mac_addr_t mac_;              ///< MAC address of this L3 interface
+            pds_obj_key_t vpc_;    ///< vpc of this L3 interface
+            ip_prefix_t ip_pfx_;   ///< IP subnet of this L3 interface
+            pds_obj_key_t port_;   ///< physical port of this L3 interface
+            pds_encap_t encap_;    ///< wire encap, if any
+            mac_addr_t mac_;       ///< MAC address of this L3 interface
         } l3_;
     } if_info_;
 
