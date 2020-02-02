@@ -69,6 +69,9 @@ docker_exec "rm -rf /sw/nic/buildroot/output_diag"
 echo 'Generating diag config'
 docker_exec "cd /sw/nic/buildroot && make capri_diagimg_defconfig O=output_diag"
 
+echo 'Copying fwupdate'
+docker_exec "cd /sw/nic && mkdir -p buildroot/output_diag/images && cp tools/fwupdate buildroot/output_diag/images/"
+
 echo 'Building diag buildroot'
 PLATFORM_LINUX_DIR=/sw/nic/buildroot/output/build/platform-linux/
 docker_exec "rm -rf $PLATFORM_LINUX_DIR && mkdir -p $PLATFORM_LINUX_DIR && cd $PLATFORM_LINUX_DIR && tar -xf /sw/nic/buildroot/output/build/platform-linux.tar.gz"

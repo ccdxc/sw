@@ -18,7 +18,7 @@
 #
 # We do that by adding an entry for buildroot in `/sw/minio/VERSIONS`
 # and tagging the files we want to upload in
-# `/sw/minion/buildroot.txt`
+# `/sw/minio/buildroot.txt`
 #
 # The we run the `create-assets` script, that tars the files found in
 # `buildroot.txt` and uploads the tar file to the minio server with a
@@ -96,28 +96,6 @@ start_shell() {
     make docker/background-shell | tail -n 1
 }
 
-uboot_extra() {
-    last_addr=0x70100000
-    docker_exec "cp -ar /sw/nic/buildroot/output/images/u-boot.bin /sw/nic/buildroot/output/images/u-boot.bin-$last_addr"
-    docker_exec "mv -f /sw/nic/buildroot/output/build/uboot-* /sw/nic/buildroot/output/build/ubootArchive-$last_addr"
-    for addr in 0x70180000 0x74200000 0x74600000 # Add 0x70100000 to build the default uboot without the main build
-    do
-        echo "Clean out old uboot [$last_addr=CONFIG_SYS_TEXT_BASE]"
-        docker_exec "cd /sw/nic/buildroot && make uboot-dirclean"
-        echo "Setup new uboot directory for $addr"
-        docker_exec "cd /sw/nic/buildroot && make uboot-configure"
-        echo "Update .config with $addr=CONFIG_SYS_TEXT_BASE"
-        docker_exec "sed -i 's/CONFIG_SYS_TEXT_BASE.*/CONFIG_SYS_TEXT_BASE=$addr/' /sw/nic/buildroot/output/build/uboot-*/.config"
-        echo "Build uboot with $addr=CONFIG_SYS_TEXT_BASE"
-        docker_exec "cd /sw/nic/buildroot && make uboot"
-        docker_exec "mv -f /sw/nic/buildroot/output/images/u-boot.bin /sw/nic/buildroot/output/images/u-boot.bin-$addr"
-        docker_exec "rm -rf /sw/nic/buildroot/output/build/ubootArchive-$addr"
-        docker_exec "mv -f /sw/nic/buildroot/output/build/uboot-* /sw/nic/buildroot/output/build/ubootArchive-$addr"
-        last_addr=$addr
-    done
-    docker_exec "cp -ar /sw/nic/buildroot/output/images/u-boot.bin-0x70100000 /sw/nic/buildroot/output/images/u-boot.bin"
-}
-
 cleanup() {
     # stop shell
     docker stop $DOCKER_ID
@@ -156,9 +134,6 @@ docker_exec "cd /sw/nic/buildroot && make capri_defconfig"
 
 echo 'Building buildroot'
 docker_exec "cd /sw/nic/buildroot && BUILDROOT_ASSET=1 make -j 24"
-
-echo 'Building extra uboot'
-uboot_extra
 
 echo 'Preparing kernel headers for building external modules'
 docker_exec "sh /sw/nic/tools/prepare_kernel_headers.sh"

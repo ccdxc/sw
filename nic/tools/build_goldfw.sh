@@ -85,6 +85,10 @@ docker_exec "cd /sw/nic/buildroot && make capri_goldimg_defconfig O=output_gold"
 echo 'Copying u-boot files'
 docker_exec "cd /sw/nic/buildroot && mkdir -p output_gold/images && cp output/images/u-boot* output_gold/images/"
 
+echo 'Copying fwupdate'
+docker_exec "cd /sw/nic && cp tools/fwupdate buildroot/output_gold/images/"
+
+
 echo 'Building gold buildroot'
 PLATFORM_LINUX_DIR=/sw/nic/buildroot/output/build/platform-linux/
 docker_exec "rm -rf $PLATFORM_LINUX_DIR && mkdir -p $PLATFORM_LINUX_DIR && cd $PLATFORM_LINUX_DIR && tar -xf /sw/nic/buildroot/output/build/platform-linux.tar.gz"
