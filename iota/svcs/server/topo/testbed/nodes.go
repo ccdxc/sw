@@ -2,31 +2,61 @@ package testbed
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
-	"os"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/sync/errgroup"
+
 	iota "github.com/pensando/sw/iota/protos/gogen"
+	common "github.com/pensando/sw/iota/svcs/common"
 	constants "github.com/pensando/sw/iota/svcs/common"
-	"github.com/pensando/sw/iota/svcs/common/runner"
 	apc "github.com/pensando/sw/iota/svcs/common/apc"
+	"github.com/pensando/sw/iota/svcs/common/runner"
 	vmware "github.com/pensando/sw/iota/svcs/common/vmware"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
-	restartTimeout =  1200 //300 seconds for node restart
+	restartTimeout = 1200 //300 seconds for node restart
 )
+
+func (n *TestNode) setupAgent() error {
+
+	svcName := n.info.Name
+	agentURL, err := n.GetAgentURL()
+	if err != nil {
+		log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
+		msg := fmt.Sprintf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
+		log.Error(msg)
+		return errors.New(msg)
+	}
+
+	c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
+	if err != nil {
+		msg := fmt.Sprintf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", svcName, err)
+		log.Error(msg)
+		return errors.New(msg)
+	}
+
+	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
+
+	return nil
+}
 
 // AddNode adds a node to the topology
 func (n *TestNode) AddNode() error {
 	var ip string
 	var err error
+
+	if err := n.setupAgent(); err != nil {
+		return err
+	}
 
 	if ip, err = n.GetNodeIP(); err != nil {
 		log.Errorf("TOPO SVC | CopyTo node failed to get node IP")
@@ -34,9 +64,9 @@ func (n *TestNode) AddNode() error {
 	}
 
 	addr := fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
+	sshclient, err := ssh.Dial("tcp", addr, n.info.SSHCfg)
 	if sshclient == nil || err != nil {
-		msg := fmt.Sprintf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
+		msg := fmt.Sprintf("SSH connect to %v (%v) failed", n.info.Name, n.info.IPAddress)
 		log.Error(msg)
 		n.RespNode = &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
 		return err
@@ -50,27 +80,28 @@ func (n *TestNode) AddNode() error {
 	log.Infof("TOPO SVC | DEBUG | AddNode Agent . Received Response Msg: %v", resp)
 
 	if err != nil {
-		log.Errorf("Adding node %v failed. Err: %v", n.Node.Name, err)
+		log.Errorf("Adding node %v failed. Err: %v", n.info.Name, err)
 		return err
 	}
 
 	if resp.NodeStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		log.Errorf("Adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
-		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.Node.Name, resp.NodeStatus.ApiStatus)
+		log.Errorf("Adding node %v failed. Agent Returned non ok status: %v", n.info.Name, resp.NodeStatus.ApiStatus)
+		return fmt.Errorf("adding node %v failed. Agent Returned non ok status: %v", n.info.Name, resp.NodeStatus.ApiStatus)
 	}
-	n.RespNode.Name = n.Node.Name
 	//n.Node.NodeUuid = resp.NodeUuid
+	n.SetNodeMsg(resp)
+	log.Infof("Node response set for %v", resp.Name)
 	return nil
 }
 
 func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	cTimeout := time.After(time.Second * time.Duration(timeout))
 	for {
-		addr := n.Node.GetIpAddress()
-		sshCfg := n.SSHCfg
-		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-			sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
-			addr = n.Node.EsxConfig.GetIpAddress()
+		addr := n.info.IPAddress
+		sshCfg := n.info.SSHCfg
+		if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
+			addr = n.info.IPAddress
 		}
 
 		addr = net.JoinHostPort(addr, "22")
@@ -97,7 +128,7 @@ func (n *TestNode) waitForNodeUp(timeout time.Duration) error {
 	}
 
 	//ESX node will take a little longer
-	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		log.Infof("Waiting for little longer for ESX node to come up..")
 		time.Sleep(60 * time.Second)
 	} else {
@@ -128,25 +159,24 @@ func (n *TestNode) GetNodeIP() (string, error) {
 	var err error
 	var host *vmware.Host
 
-	if n.Node.GetOs() != iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-		ip = n.Node.IpAddress
+	if n.info.Os != iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		ip = n.info.IPAddress
 	} else {
-		if n.Node.EsxConfig == nil {
-			log.Errorf("TOPO SVC | GetNodeIP | No ESX config present %v", err.Error())
-			return "", err
-		}
-		host, err = vmware.NewHost(context.Background(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+		host, err = vmware.NewHost(context.Background(), n.info.IPAddress, n.info.Username, n.info.Password)
 		if err != nil {
-			log.Errorf("TOPO SVC | GetNodeIP | Failed to  connect to ESX host  %v %v %v %v", err.Error(), n.Node.EsxConfig.IpAddress, n.Node.EsxConfig.Username, n.Node.EsxConfig.Password)
+			log.Errorf("TOPO SVC | GetNodeIP | Failed to  connect to ESX host  %v %v %v %v", err.Error(),
+				n.info.IPAddress, n.info.Username, n.info.Password)
 			return "", err
 		}
 
 		if on, _ := host.PoweredOn(constants.EsxControlVMName); !on {
+			fmt.Printf("Connecting  failed not on \n", n.info.IPAddress, n.info.Username, n.info.Password)
 			log.Errorf("TOPO SVC | GetNodeIP | Control VM not powered on")
 			return "", errors.New("Control VM not powered on ")
 		}
 		ip, err = host.GetVMIP(constants.EsxControlVMName)
 		if err != nil {
+			fmt.Printf("Connecting  failed %v\n", n.info.IPAddress, n.info.Username, n.info.Password, err.Error())
 			log.Errorf("TOPO SVC | GetNodeIP | Failed to get IP address for control VM  %v", err.Error())
 			return "", err
 		}
@@ -156,7 +186,7 @@ func (n *TestNode) GetNodeIP() (string, error) {
 }
 
 //RestartNode Restart node
-func (n *TestNode) RestartNode() error {
+func (n *TestNode) RestartNode(method string) error {
 
 	var command string
 	var addr, ip string
@@ -164,112 +194,106 @@ func (n *TestNode) RestartNode() error {
 	var sshCfg *ssh.ClientConfig
 	var nrunner *runner.Runner
 
-	log.Infof("Restarting node: %v", n.Node)
+	log.Infof("Restarting node: %v", n.info.Name)
 
-    if n.RestartMethod == "" {
-    	if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
-	    	//Node not up, do a cimc reset
-		    cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
-			    n.CimcIP, n.CimcUserName, n.CimcPassword)
+	if method == "" || method == "reboot" {
+		if err = n.waitForNodeUp(1); err != nil && n.CimcIP != "" {
+			//Node not up, do a cimc reset
+			cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+				n.CimcIP, n.CimcUserName, n.CimcPassword)
 
-    		splitCmd := strings.Split(cmd, " ")
-	    	if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
-		    	log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
-	    	} else {
-    			log.Errorf("TOPO SVC | Reset Node Success")
-		    }
-    	} else {
-    		if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-	    		//First shutdown control node
-		    	sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
-			    nrunner = runner.NewRunner(n.SSHCfg)
-    			if ip, err = n.GetNodeIP(); err == nil {
-	    			addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-		    		command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
-			    	nrunner.Run(addr, command, constants.RunCommandForeground)
-    			}
-	    		addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
-		    	command = fmt.Sprintf("reboot && sleep 30")
-			    nrunner = runner.NewRunner(sshCfg)
-    		} else {
-	    		addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-    			command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
-	    		nrunner = runner.NewRunner(n.SSHCfg)
-		    }
-    		nrunner.Run(addr, command, constants.RunCommandForeground)
-        }
-    } else if n.RestartMethod == "ipmi" {
-        log.Infof("restarting node %s using ipmi",n.Node.Name)
-        if n.CimcIP == "" {
-            log.Errorf("user requested ipmi reset but no cimc ip in node object")
-        } else {
-            cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
-                n.CimcIP, n.CimcUserName, n.CimcPassword)
+			splitCmd := strings.Split(cmd, " ")
+			if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+				log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+			} else {
+				log.Errorf("TOPO SVC | Reset Node Success")
+			}
+		} else {
+			if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+				//First shutdown control node
+				if ip, err = n.GetNodeIP(); err == nil {
+					sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+					nrunner = runner.NewRunner(sshCfg)
+					log.Infof("Restart ctrl vm  %v %v %v",
+						n.info.Username, n.info.Password, ip)
+					addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
+					command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
+					nrunner.Run(addr, command, constants.RunCommandForeground)
+				}
+				addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
+				sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
+				addr = fmt.Sprintf("%s:%d", n.info.IPAddress, constants.SSHPort)
+				nrunner = runner.NewRunner(sshCfg)
+				log.Infof("Restart Host machine wtth %v %v %v",
+					n.info.Username, n.info.Password, n.info.IPAddress)
+				command = fmt.Sprintf("reboot && sleep 30")
+				nrunner = runner.NewRunner(sshCfg)
+			} else {
+				addr = fmt.Sprintf("%s:%d", n.info.IPAddress, constants.SSHPort)
+				sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
+				log.Infof("Restart Host machine wtth %v %v %v",
+					n.info.Username, n.info.Password, n.info.IPAddress)
+				nrunner = runner.NewRunner(sshCfg)
+				command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
+			}
+			nrunner.Run(addr, command, constants.RunCommandForeground)
+		}
+	} else if method == "ipmi" {
+		log.Infof("restarting node %s using ipmi", n.Node.Name)
+		if n.CimcIP == "" {
+			log.Errorf("user requested ipmi reset but no cimc ip in node object")
+		} else {
+			cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power cycle",
+				n.CimcIP, n.CimcUserName, n.CimcPassword)
 
-            splitCmd := strings.Split(cmd, " ")
-            if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
-                log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
-            } else {
-                log.Errorf("TOPO SVC | Reset Node Success")
-            }
-        }
-    } else if n.RestartMethod == "apc" {
-        if n.ApcInfo == nil {
-            log.Errorf("user requested apc power cycle but node %s missing apc info", n.Node.Name)
-        } else {
-            log.Infof("restarting node %s using apc power cycle(ip:%s, user:%s, pass:%s)", n.Node.Name, n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password)
+			splitCmd := strings.Split(cmd, " ")
+			if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+				log.Errorf("TOPO SVC | Reset Node Failed %v", stdout)
+			} else {
+				log.Errorf("TOPO SVC | Reset Node Success")
+			}
+		}
+	} else if method == "apc" {
+		if n.ApcInfo == nil {
+			log.Errorf("user requested apc power cycle but node %s missing apc info", n.Node.Name)
+		} else {
+			log.Infof("restarting node %s using apc power cycle(ip:%s, user:%s, pass:%s)", n.Node.Name, n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password)
 
-            h, err := apc.Dial(n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, os.Stdout)
-            if err != nil {
-                log.Errorf("failed to connect to apc %s with username %s and password %s. error was: %v", n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, err)
-            } else {
-                defer h.Close()
-                if err := h.PowerOff(n.ApcInfo.Port); err != nil {
-                log.Errorf("failed to power off port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
-                }
-                time.Sleep(30 * time.Second)
-                if err := h.PowerOn(n.ApcInfo.Port); err != nil {
-                log.Errorf("failed to power on port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
-                }
-            }
-        }
-    } else if n.RestartMethod == "reboot" {
-        if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-            //First shutdown control node
-            sshCfg = InitSSHConfig(n.Node.EsxConfig.GetUsername(), n.Node.EsxConfig.GetPassword())
-            nrunner = runner.NewRunner(n.SSHCfg)
-            if ip, err = n.GetNodeIP(); err == nil {
-                addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-                command = fmt.Sprintf("sudo sync && sudo shutdown -h now")
-                nrunner.Run(addr, command, constants.RunCommandForeground)
-            }
-            addr = fmt.Sprintf("%s:%d", n.Node.EsxConfig.GetIpAddress(), constants.SSHPort)
-            command = fmt.Sprintf("reboot && sleep 30")
-            nrunner = runner.NewRunner(sshCfg)
-        } else {
-            addr = fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.SSHPort)
-            command = fmt.Sprintf("sudo sync && sudo shutdown -r now")
-            nrunner = runner.NewRunner(n.SSHCfg)
-        }
-        nrunner.Run(addr, command, constants.RunCommandForeground)
-    }
+			h, err := apc.Dial(n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, os.Stdout)
+			if err != nil {
+				log.Errorf("failed to connect to apc %s with username %s and password %s. error was: %v", n.ApcInfo.Ip, n.ApcInfo.Username, n.ApcInfo.Password, err)
+			} else {
+				defer h.Close()
+				if err := h.PowerOff(n.ApcInfo.Port); err != nil {
+					log.Errorf("failed to power off port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
+				}
+				time.Sleep(30 * time.Second)
+				if err := h.PowerOn(n.ApcInfo.Port); err != nil {
+					log.Errorf("failed to power on port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
+				}
+			}
+		}
+	}
 
 	if n.GrpcClient != nil {
 		n.GrpcClient.Client.Close()
 		n.GrpcClient = nil
 	}
 
-   	time.Sleep(60 * time.Second)
+	time.Sleep(60 * time.Second)
 
 	if err = n.waitForNodeUp(restartTimeout); err != nil {
 		return err
 	}
 
-	if n.Node.GetOs() == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		if err = n.initEsxNode(); err != nil {
 			log.Errorf("TOPO SVC | RestartNode | Init ESX node failed :  %v", err.Error())
 			return err
 		}
+		sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	} else {
+		sshCfg = InitSSHConfig(n.info.Username, n.info.Password)
 	}
 
 	if ip, err = n.GetNodeIP(); err != nil {
@@ -278,9 +302,9 @@ func (n *TestNode) RestartNode() error {
 	}
 
 	addr = fmt.Sprintf("%s:%d", ip, constants.SSHPort)
-	sshclient, err := ssh.Dial("tcp", addr, n.SSHCfg)
+	sshclient, err := ssh.Dial("tcp", addr, sshCfg)
 	if sshclient == nil || err != nil {
-		log.Errorf("SSH connect to %v (%v) failed", n.Node.Name, n.Node.IpAddress)
+		log.Errorf("SSH connect to %v (%v) failed", n.info.Name, n.info.IPAddress)
 		return err
 	}
 
@@ -292,35 +316,46 @@ func (n *TestNode) RestartNode() error {
 }
 
 // ReloadNode saves and reboots the nodes.
-func (n *TestNode) ReloadNode(restoreState bool) error {
+func (n *TestNode) ReloadNode(name string, restoreState bool, method string) error {
 	var agentBinary string
 
+	if n.Node == nil {
+		n.Node = &iota.Node{}
+	}
 	resp, err := n.AgentClient.SaveNode(context.Background(), n.Node)
-	log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v", n.Node.GetName(), n.Node.IpAddress, resp)
+	log.Infof("TOPO SVC | DEBUG | SaveNode Agent %v(%v) Received Response Msg: %v",
+		n.Node.GetName(), n.Node.IpAddress, resp)
 	if err != nil {
 		log.Errorf("Saving node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
 
-	if err = n.RestartNode(); err != nil {
+	if err = n.RestartNode(method); err != nil {
 		log.Errorf("Restart node %v failed. Err: %v", n.Node.Name, err)
 		return err
 	}
 
-	if n.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD {
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_FREEBSD {
 		agentBinary = constants.IotaAgentBinaryPathFreebsd
 	} else {
 		agentBinary = constants.IotaAgentBinaryPathLinux
 	}
 
-	log.Infof("TOPO SVC | ReloadNode | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.Node.Name, n.Node.IpAddress)
+	var sshCfg *ssh.ClientConfig
+	if n.info.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		sshCfg = InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	} else {
+		sshCfg = n.info.SSHCfg
+	}
+	ip, _ := n.GetNodeIP()
+	log.Infof("TOPO SVC | ReloadNode | Starting IOTA Agent on TestNode: %v, IPAddress: %v", n.Node.Name, ip)
 	sudoAgtCmd := fmt.Sprintf("sudo %s", constants.DstIotaAgentBinary)
-	if err = n.StartAgent(sudoAgtCmd, n.SSHCfg); err != nil {
+	if err = n.StartAgent(sudoAgtCmd, sshCfg); err != nil {
 		log.Errorf("TOPO SVC | RestartNode | Failed to start agent binary: %v, on TestNode: %v, at IPAddress: %v", agentBinary, n.Node.Name, n.Node.IpAddress)
 		return err
 	}
 
-	agentURL := fmt.Sprintf("%s:%d", n.Node.IpAddress, constants.IotaAgentPort)
+	agentURL := fmt.Sprintf("%s:%d", ip, constants.IotaAgentPort)
 	c, err := constants.CreateNewGRPCClient(n.Node.Name, agentURL, constants.GrpcMaxMsgSize)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
@@ -329,6 +364,7 @@ func (n *TestNode) ReloadNode(restoreState bool) error {
 	}
 
 	n.GrpcClient = c
+	oldClient := n.AgentClient
 	n.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
 	defer cancel()
@@ -340,5 +376,331 @@ func (n *TestNode) ReloadNode(restoreState bool) error {
 			return err
 		}
 	}
+
+	//This is the ugliest hack
+	//Some workload might be living in this node
+	//Point those workload to this new agent client
+	if n.workloadMap != nil {
+		n.workloadMap.Range(func(key interface{}, item interface{}) bool {
+			wload := item.(iotaWorkload)
+			if wload.workload != nil && wload.workload.GetWorkloadAgent() == oldClient {
+				wload.workload.SetWorkloadAgent(n.AgentClient)
+			}
+			return true
+		})
+	}
+
 	return nil
+}
+
+// ReloadNode saves and reboots the nodes.
+func (n *VcenterNode) ReloadNode(name string, restoreState bool, method string) error {
+	pool, _ := errgroup.WithContext(context.Background())
+	for _, mn := range n.managedNodes {
+		mn := mn
+		pool.Go(func() error {
+			if mn.GetNodeInfo().Name == name && mn.GetNodeAgent() != nil {
+				err := n.cl.DeleteHost(mn.GetNodeInfo().IPAddress)
+				if err != nil {
+					log.Errorf("TOPO SVC |  Reload Node | Failed to disconnect host from cluster %v", err.Error())
+					return err
+				}
+
+				err = mn.ReloadNode(name, restoreState, method)
+				if err != nil {
+					return errors.Wrapf(err, "Reload failed for node %v", name)
+				}
+				//Readd all workloads in the node too
+				//TOOD
+
+				err = n.cl.AddHost(mn.GetNodeInfo().IPAddress,
+					mn.GetNodeInfo().Username, mn.GetNodeInfo().Password)
+				if err != nil {
+					log.Errorf("TOPO SVC |  Reload Node | Failed to Add host to cluster after reboot %v", err.Error())
+					return err
+				}
+
+				intfs, err := mn.GetHostInterfaces()
+				if err != nil {
+					return err
+				}
+
+				log.Infof("Adding pnic %v of host %v to dvs", intfs, mn.GetNodeInfo().Name)
+				hostSpecs := []vmware.DVSwitchHostSpec{
+					vmware.DVSwitchHostSpec{
+						Name:  mn.GetNodeInfo().IPAddress,
+						Pnics: intfs,
+					},
+				}
+				dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
+					Name: constants.VcenterDCDvs, Cluster: constants.VcenterCluster,
+					MaxPorts: 10,
+					Pvlans: []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: constants.VcenterPvlanStart,
+						Secondary: constants.VcenterPvlanStart, Type: "promiscuous"}}}
+				err = n.dc.AddDvs(dvsSpec)
+				if err != nil {
+					log.Errorf("TOPO SVC | InitTestbed  | Error add DVS with host spec after reload %v", err.Error())
+					return err
+				}
+
+			}
+			return nil
+		})
+
+		return pool.Wait()
+	}
+
+	return errors.New("Node not found for reload")
+}
+
+// GetNodeMsg returns nodettate
+func (n *VcenterNode) GetNodeMsg(name string) *iota.Node {
+	for _, mn := range n.managedNodes {
+		if mn.GetNodeInfo().Name == name {
+			return mn.GetNodeMsg(name)
+		}
+	}
+
+	return n.RespNode
+}
+
+// GetNodeMsg returns nodettate
+func (n *VcenterNode) GetWorkloads(name string) []*iota.Workload {
+	for _, mn := range n.managedNodes {
+		if mn.GetNodeInfo().Name == name {
+			return mn.GetWorkloads(name)
+		}
+	}
+
+	//default return empty
+	return []*iota.Workload{}
+}
+
+//SetNodeMsg sets node msg
+func (n *TestNode) SetNodeMsg(msg *iota.Node) {
+	n.Node = msg
+	n.info.Name = msg.Name
+	n.RespNode = msg
+}
+
+//GetNodeMsg gets node msg
+func (n *TestNode) GetNodeMsg(name string) *iota.Node {
+	log.Infof("Node response set for %v", n.RespNode.Name)
+	return n.RespNode
+}
+
+//GetWorkloads returns all workloads for nodes.
+func (n *TestNode) GetWorkloads(name string) []*iota.Workload {
+	msg := []*iota.Workload{}
+	n.workloadMap.Range(func(key interface{}, item interface{}) bool {
+		wload, ok := item.(iotaWorkload)
+		if ok && wload.workloadMsg != nil {
+			msg = append(msg, wload.workloadMsg)
+		}
+		return true
+	})
+
+	return msg
+}
+
+//GetNodeInfo gets node info
+func (n *TestNode) GetNodeInfo() NodeInfo {
+	return n.info
+}
+
+//NodeController controller for this node
+func (n *TestNode) NodeController() TestNodeInterface {
+	return n.controlNode
+}
+
+//SetNodeController sets referencs to control node
+func (n *TestNode) SetNodeController(node TestNodeInterface) {
+	n.controlNode = node
+}
+
+//GetControlledNode gets the node which is being controlled by this node
+func (n *TestNode) GetControlledNode(ip string) TestNodeInterface {
+	return nil
+}
+
+//CheckHealth  checks health of node
+func (n *TestNode) CheckHealth(ctx context.Context, heatth *iota.NodeHealth) (*iota.NodeHealth, error) {
+	return n.AgentClient.CheckHealth(ctx, heatth)
+}
+
+//NodeConnector returns connector
+func (n *TestNode) NodeConnector() interface{} {
+	return n.connector
+}
+
+//SetConnector set the connnector
+func (n *TestNode) SetConnector(connector interface{}) {
+	n.connector = connector
+}
+
+//GetManagedNodes get all managed nodes
+func (n *TestNode) GetManagedNodes() []TestNodeInterface {
+	return nil
+}
+
+//AssocaiateIndependentNode adds a node which is provisioned independently too
+func (n *TestNode) AssocaiateIndependentNode(node TestNodeInterface) error {
+	return nil
+}
+
+//GetNodeAgent Retruns node agent
+func (n *TestNode) GetNodeAgent() iota.IotaAgentApiClient {
+	return n.AgentClient
+}
+
+//SetNodeAgent Retruns node agent
+func (n *TestNode) SetNodeAgent(agent iota.IotaAgentApiClient) {
+	n.AgentClient = agent
+}
+
+//RunTriggerLocally run trigger locally for the node
+func (n *TestNode) RunTriggerLocally() {
+	n.triggerLocal = true
+}
+
+// EntityCopy does copy of items to/from entity.
+func (n *TestNode) EntityCopy(cfg *ssh.ClientConfig, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | EntityCopy. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | EntityCopy Returned: %v", req)
+
+	node := n
+
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	if req.Direction == iota.CopyDirection_DIR_IN {
+
+		dstDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/" + req.GetDestDir() + "/"
+		if err := node.CopyTo(cfg, dstDir, req.GetFiles()); err != nil {
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.GetNodeInfo().Name, err.Error())
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
+				req.GetEntityName(), node.GetNodeInfo().Name)
+		}
+	} else if req.Direction == iota.CopyDirection_DIR_OUT {
+		files := []string{}
+		srcDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/"
+		for _, file := range req.GetFiles() {
+			files = append(files, srcDir+file)
+		}
+
+		if err := node.CopyFrom(cfg, req.GetDestDir(), files); err != nil {
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.GetNodeInfo().Name, err.Error())
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		}
+
+	} else {
+		errMsg := fmt.Sprintf("No direction specified for entity copy")
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg: errMsg}
+		return req, nil
+	}
+
+	return req, nil
+}
+
+// EntityCopy does copy of items to/from entity.
+func (n *VcenterNode) EntityCopy(cfg *ssh.ClientConfig, req *iota.EntityCopyMsg) (*iota.EntityCopyMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | EntityCopy. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | EntityCopy Returned: %v", req)
+
+	mnode, ok := n.managedNodes[req.NodeName]
+	if !ok {
+		msg := fmt.Sprintf("Did not find  node  for copy %s, which already exists ", req.NodeName)
+		log.Error(msg)
+		return nil, errors.New(msg)
+	}
+
+	item, ok := mnode.(*EsxNode).workloadMap.Load(req.GetEntityName())
+	if !ok {
+		length := 0
+
+		mnode.(*EsxNode).workloadMap.Range(func(_, _ interface{}) bool {
+			length++
+
+			return true
+		})
+
+		msg := fmt.Sprintf("Did not find  workload  for copy %s, which already exists %p %v", req.GetEntityName(), mnode, length)
+		log.Error(msg)
+		return nil, errors.New(msg)
+	}
+
+	node := item.(iotaWorkload)
+	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	if req.Direction == iota.CopyDirection_DIR_IN {
+
+		dstDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/" + req.GetDestDir() + "/"
+		if err := node.CopyTo(cfg, dstDir, req.GetFiles()); err != nil {
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.name, err.Error())
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
+				req.GetEntityName(), node.name)
+		}
+	} else if req.Direction == iota.CopyDirection_DIR_OUT {
+		files := []string{}
+		srcDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/"
+		for _, file := range req.GetFiles() {
+			files = append(files, srcDir+file)
+		}
+
+		if err := node.CopyFrom(cfg, req.GetDestDir(), files); err != nil {
+			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v (%v)",
+				req.GetEntityName(), node.name, err.Error())
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
+		}
+
+	} else {
+		errMsg := fmt.Sprintf("No direction specified for entity copy")
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+			ErrorMsg: errMsg}
+		return req, nil
+	}
+
+	return req, nil
+}
+
+//GetHostInterfaces get host interfaces
+func (n *TestNode) GetHostInterfaces() ([]string, error) {
+	msg := n.GetNodeMsg(n.GetNodeInfo().Name)
+
+	log.Infof("Get host intf %v %v", n.GetNodeInfo().Name, msg)
+	if msg.Type == iota.PersonalityType_PERSONALITY_NAPLES ||
+		msg.Type == iota.PersonalityType_PERSONALITY_NAPLES_DVS {
+		if msg.GetNaplesConfigs().Configs == nil {
+			return nil, errors.New("No naples config found")
+		}
+		return msg.GetNaplesConfigs().Configs[0].HostIntfs, nil
+	}
+
+	if msg.Type == iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC ||
+		msg.Type == iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC_DVS {
+		if msg.GetThirdPartyNicConfig() == nil {
+			return nil, errors.New("No third party nic config found")
+		}
+		return msg.GetThirdPartyNicConfig().HostIntfs, nil
+	}
+	return nil, errors.New("Invalid personality to get host interfaces")
+}
+
+//SetupNode setup node
+func (n *TestNode) SetupNode() error {
+	return nil
+}
+
+//MoveWorkloads workload move not supported.
+func (n *TestNode) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error) {
+
+	req.ApiResponse = &iota.IotaAPIResponse{
+		ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
+		ErrorMsg:  fmt.Sprintf("Workload Move is not implemented by node %v", req.OrchestratorNode),
+	}
+
+	return req, errors.New("Workload move not supported")
 }

@@ -13,7 +13,7 @@ var _ = Describe("rulestats tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
 		// delete the default allow policy
@@ -41,7 +41,7 @@ var _ = Describe("rulestats tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
@@ -49,21 +49,21 @@ var _ = Describe("rulestats tests", func() {
 			// establish TCP session between workload pairs in same subnet
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloadPairs, 8000)
+				return ts.model.TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
 			/*
 				Eventually(func() error {
-					return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
+					return ts.model.FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
 				}).Should(Succeed())
 			*/
 
 			// verify TCP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "TcpHits": 1}}
 			Eventually(func() error {
-				return ts.model.Action().VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
 			}).Should(Succeed())
 
 		})
@@ -76,7 +76,7 @@ var _ = Describe("rulestats tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
@@ -84,21 +84,21 @@ var _ = Describe("rulestats tests", func() {
 			// establish UDP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
-				return ts.model.Action().UDPSession(workloadPairs, 9000)
+				return ts.model.UDPSession(workloadPairs, 9000)
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
 			// check fwlog ,enable when fwlogs are reported to Venice
 			/*
 				Eventually(func() error {
-					return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
+					return ts.model.FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
 				}).Should(Succeed())
 			*/
 
 			// verify UDP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "UdpHits": 1}}
 			Eventually(func() error {
-				return ts.model.Action().VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
 			}).Should(Succeed())
 
 		})
@@ -111,7 +111,7 @@ var _ = Describe("rulestats tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			//Naples time is set in UTC
@@ -120,21 +120,21 @@ var _ = Describe("rulestats tests", func() {
 			// establish ICMP session between workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(workloadPairs)
+				return ts.model.PingPairs(workloadPairs)
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
 			/*
 				Eventually(func() error {
-					return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+					return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
 				}).Should(Succeed())
 			*/
 
 			// verify ICMP hits and total hits got incremented
 			expCount := []map[string]float64{{"TotalHits": 1, "IcmpHits": 1}}
 			Eventually(func() error {
-				return ts.model.Action().VerifyRuleStats(startTime.String(), spc, expCount)
+				return ts.model.VerifyRuleStats(startTime.String(), spc, expCount)
 			}).Should(Succeed())
 		})
 	})

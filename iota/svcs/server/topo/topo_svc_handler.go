@@ -26,9 +26,9 @@ import (
 type TopologyService struct {
 	SSHConfig        *ssh.ClientConfig
 	tbInfo           testBedInfo
-	Nodes            map[string]*testbed.TestNode
+	Nodes            map[string]testbed.TestNodeInterface
 	Workloads        map[string]*iota.Workload // list of workloads
-	ProvisionedNodes map[string]*testbed.TestNode
+	ProvisionedNodes map[string]testbed.TestNodeInterface
 	downloadedImages bool
 }
 
@@ -279,8 +279,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	ts.SSHConfig = testbed.InitSSHConfig(ts.tbInfo.resp.Username, ts.tbInfo.resp.Password)
 
 	// Run init
-	ts.ProvisionedNodes = make(map[string]*testbed.TestNode)
-	ts.Nodes = make(map[string]*testbed.TestNode)
+	ts.ProvisionedNodes = make(map[string]testbed.TestNodeInterface)
+	ts.Nodes = make(map[string]testbed.TestNodeInterface)
 	// split init nodes into pools of upto 'n' each
 	for nodeIdx := 0; nodeIdx < len(req.Nodes); {
 		poolNodes := []*iota.TestBedNode{}
@@ -294,26 +294,24 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 		pool, _ := errgroup.WithContext(context.Background())
 
 		for _, node := range poolNodes {
-			n := testbed.TestNode{
-				Node: &iota.Node{
-					IpAddress: node.IpAddress,
-					Name:      node.NodeName,
-					//Used if node OS is ESX
-					EsxConfig: &iota.VmwareESXConfig{
-						IpAddress: node.IpAddress,
-						Username:  node.EsxUsername,
-						Password:  node.EsxPassword,
-					},
-					Os: node.Os,
-				},
-				Os:           node.Os,
-				SSHCfg:       ts.SSHConfig,
+			nodeInfo := testbed.NodeInfo{
 				CimcIP:       node.CimcIpAddress,
 				CimcPassword: node.CimcPassword,
 				CimcUserName: node.CimcUsername,
+				Os:           node.Os,
+				SSHCfg:       ts.SSHConfig,
+				Username:     req.Username,
+				Password:     req.Password,
+				Name:         node.NodeName,
+				IPAddress:    node.IpAddress,
+				License:      node.License,
 			}
-
-			ts.Nodes[node.IpAddress] = &n
+			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+				nodeInfo.Username = node.EsxUsername
+				nodeInfo.Password = node.EsxPassword
+			}
+			n := testbed.NewTestNode(nodeInfo)
+			ts.Nodes[node.IpAddress] = n
 			commonCopyArtifacts := []string{
 				ts.tbInfo.resp.VeniceImage,
 				ts.tbInfo.resp.NaplesImage,
@@ -339,7 +337,9 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	for ip, node := range ts.Nodes {
 		for index, reqnode := range req.Nodes {
 			if reqnode.IpAddress == ip && reqnode.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-				req.Nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+				if ip, err := node.GetNodeIP(); err == nil {
+					req.Nodes[index].EsxCtrlNodeIpAddress = ip
+				}
 			}
 		}
 	}
@@ -362,27 +362,29 @@ func (ts *TopologyService) GetTestBed(ctx context.Context, req *iota.TestBedMsg)
 	return ts.tbInfo.resp, nil
 }
 
-func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
+func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNodesMsg) error {
 	pool, ctx := errgroup.WithContext(ctx)
 
-	for _, node := range nodes {
-		n := testbed.TestNode{
-			Node: &iota.Node{
-				IpAddress: node.IpAddress,
-				EsxConfig: &iota.VmwareESXConfig{
-					IpAddress: node.IpAddress,
-					Username:  node.EsxUsername,
-					Password:  node.EsxPassword,
-				},
-			},
-			Os:           node.GetOs(),
-			SSHCfg:       ts.SSHConfig,
+	for _, node := range req.GetNodes() {
+
+		nodeInfo := testbed.NodeInfo{
 			CimcIP:       node.CimcIpAddress,
 			CimcPassword: node.CimcPassword,
 			CimcUserName: node.CimcUsername,
+			Os:           node.Os,
+			SSHCfg:       ts.SSHConfig,
+			Username:     req.Username,
+			Password:     req.Password,
+			Name:         node.NodeName,
+			IPAddress:    node.IpAddress,
+			License:      node.License,
 		}
-
-		ts.Nodes[node.IpAddress] = &n
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			nodeInfo.Username = node.EsxUsername
+			nodeInfo.Password = node.EsxPassword
+		}
+		n := testbed.NewTestNode(nodeInfo)
+		ts.Nodes[node.IpAddress] = n
 		commonCopyArtifacts := []string{
 			ts.tbInfo.resp.VeniceImage,
 			ts.tbInfo.resp.NaplesImage,
@@ -390,7 +392,7 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 
 		pool.Go(func() error {
 			n := n
-			return n.InitNode(reboot, ts.SSHConfig, commonCopyArtifacts)
+			return n.InitNode(req.RebootNodes, ts.SSHConfig, commonCopyArtifacts)
 		})
 	}
 	if err := pool.Wait(); err != nil {
@@ -398,40 +400,69 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, cfg *ssh.ClientCon
 	}
 
 	for ip, node := range ts.Nodes {
-		for index, reqnode := range nodes {
+		for index, reqnode := range req.GetNodes() {
 			if reqnode.IpAddress == ip && reqnode.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
-				nodes[index].EsxCtrlNodeIpAddress = node.Node.IpAddress
+				if ip, err := node.GetNodeIP(); err != nil {
+					req.GetNodes()[index].EsxCtrlNodeIpAddress = ip
+				}
 			}
 		}
 	}
 	return nil
 }
 
-func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool, nodes []*iota.TestBedNode) error {
+func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.ClientConfig, reboot bool,
+	nodes []*iota.TestBedNode, globalLicenses []*iota.License) error {
 
 	pool, ctx := errgroup.WithContext(ctx)
+	cnodes := []testbed.TestNodeInterface{}
 	for _, node := range nodes {
-		n := testbed.TestNode{
-			Node: &iota.Node{
-				IpAddress: node.IpAddress,
-				EsxConfig: &iota.VmwareESXConfig{
-					IpAddress: node.IpAddress,
-					Username:  node.EsxUsername,
-					Password:  node.EsxPassword,
-				},
-			},
-			Os:           node.GetOs(),
-			CimcIP:       node.CimcIpAddress,
-			CimcPassword: node.CimcPassword,
-			CimcUserName: node.CimcUsername,
-			SSHCfg:       cfg,
+		nodeInfo := testbed.NodeInfo{
+			CimcIP:         node.CimcIpAddress,
+			CimcPassword:   node.CimcPassword,
+			CimcUserName:   node.CimcUsername,
+			Os:             node.Os,
+			SSHCfg:         cfg,
+			Username:       ts.tbInfo.resp.Username,
+			Password:       ts.tbInfo.resp.Password,
+			Name:           node.NodeName,
+			IPAddress:      node.IpAddress,
+			License:        node.License,
+			GlobalLicenses: globalLicenses,
+			ApcInfo:        node.ApcInfo,
 		}
-		n.Node.Os = node.GetOs()
-		pool.Go(func() error {
-			n := n
-			return n.CleanUpNode(cfg, reboot)
-		})
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			nodeInfo.Username = node.EsxUsername
+			nodeInfo.Password = node.EsxPassword
+		}
+		n := testbed.NewTestNode(nodeInfo)
+		cnodes = append(cnodes, n)
+
 	}
+
+	//First try to clean up nodes
+	for _, n := range cnodes {
+		if !n.IsOrchesratorNode() {
+			n := n
+			pool.Go(func() error {
+				return n.CleanUpNode(cfg, reboot)
+			})
+		}
+	}
+
+	pool.Wait()
+
+	pool, ctx = errgroup.WithContext(ctx)
+	//Now clean up orchestrator node
+	for _, n := range cnodes {
+		if n.IsOrchesratorNode() {
+			n := n
+			pool.Go(func() error {
+				return n.CleanUpNode(cfg, reboot)
+			})
+		}
+	}
+
 	return pool.Wait()
 }
 
@@ -459,10 +490,10 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("Request must include a user name and password")
 		return req, nil
 	}
-	//ts.TestBedInfo.Username = req.Username
-	//ts.TestBedInfo.Password = req.Password
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
+	ts.tbInfo.resp = req
+
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes(), req.GetLicenses())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -478,7 +509,7 @@ func (ts *TopologyService) CleanUpTestBed(ctx context.Context, req *iota.TestBed
 // InitNodes initializes list of nodes
 func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes(), req.GetLicenses())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -493,7 +524,7 @@ func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg
 	if req.RebootNodes {
 		req.RebootNodes = false
 	}
-	err = ts.initTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
+	err = ts.initTestNodes(ctx, req)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | initnode Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
@@ -508,7 +539,7 @@ func (ts *TopologyService) InitNodes(ctx context.Context, req *iota.TestNodesMsg
 // CleanNodes cleans up list of nodes and removes association
 func (ts *TopologyService) CleanNodes(ctx context.Context, req *iota.TestNodesMsg) (*iota.TestNodesMsg, error) {
 
-	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes())
+	err := ts.cleanUpTestNodes(ctx, testbed.InitSSHConfig(req.Username, req.Password), req.RebootNodes, req.GetNodes(), req.GetLicenses())
 
 	if err != nil {
 		log.Errorf("TOPO SVC | InitNodes | cleanup Node Call Failed. %v", err)
@@ -544,7 +575,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	}
 
 	// Prep Topo
-	newNodes := []*testbed.TestNode{}
+	newNodes := []testbed.TestNodeInterface{}
 	for _, n := range req.Nodes {
 
 		if _, ok := ts.Nodes[n.IpAddress]; !ok {
@@ -554,26 +585,7 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			return req, nil
 		}
 
-		svcName := n.Name
-
 		tbNode := ts.Nodes[n.IpAddress]
-
-		agentURL, err := tbNode.GetAgentURL()
-		if err != nil {
-			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not get agent URL. Err: %v", err)
-			return req, nil
-		}
-
-		c, err := common.CreateNewGRPCClient(svcName, agentURL, common.GrpcMaxMsgSize)
-		if err != nil {
-			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed to establish GRPC Connection to Agent running on Node: %v. Err: %v", n.Name, err)
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("Could not create GRPC Connection to IOTA Agent. Err: %v", err)
-			return req, nil
-		}
-		tbNode.AgentClient = iota.NewIotaAgentApiClient(c.Client)
 
 		if _, ok := ts.ProvisionedNodes[n.Name]; ok {
 			log.Errorf("TOPO SVC | AddNodes | AddNodes call failed as node already provisoned : %v", n.Name)
@@ -582,29 +594,66 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 			return req, nil
 		}
 
-        tbNode.CimcIP = n.CimcIpAddress
-        tbNode.CimcUserName = n.CimcUsername
-        tbNode.CimcPassword = n.CimcPassword
-
 		ts.ProvisionedNodes[n.Name] = tbNode
-		tbNode.Node = n
-		log.Infof("Adding provisioned node %v : %v\n", n.Name, tbNode.Node.Name)
+		tbNode.SetNodeMsg(n)
+		err := tbNode.SetupNode()
+		if err != nil {
+			log.Errorf("TOPO SVC | AddNodes | Setup node failed: %v", n.Name)
+			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+			req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | AddNodes | Setup node failed: : %v", n.Name)
+			return req, nil
+		}
+		log.Infof("Adding provisioned node %v : %v\n", n.Name, tbNode)
 		newNodes = append(newNodes, ts.ProvisionedNodes[n.Name])
 	}
 
-	// Add nodes
-	addNodes := func(ctx context.Context) error {
-		pool, ctx := errgroup.WithContext(ctx)
-
-		for _, node := range newNodes {
-			node := node
+	//First to add nodes which is not orchestrator
+	pool, ctx := errgroup.WithContext(ctx)
+	for _, n := range newNodes {
+		if !n.IsOrchesratorNode() {
+			n := n
 			pool.Go(func() error {
-				return node.AddNode()
+				return n.AddNode()
 			})
 		}
-		return pool.Wait()
 	}
-	err := addNodes(context.Background())
+
+	err := pool.Wait()
+	if err != nil {
+		log.Errorf("TOPO SVC | AddNodes |AddNodes Call Failed. %v", err)
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
+	} else {
+		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	}
+
+	//Associate nodes to orchestrator
+	for _, node := range newNodes {
+		//After successful provisioning, get managed do
+		for _, mnode := range node.GetManagedNodes() {
+			//All managed node references will be to the manager from now on
+			ts.ProvisionedNodes[mnode.GetNodeInfo().Name] = node
+			for _, indepNode := range newNodes {
+				//If managed node is independently provisioned also add independent node
+				if indepNode.GetNodeInfo().Name == mnode.GetNodeInfo().Name {
+					node.AssocaiateIndependentNode(indepNode)
+				}
+			}
+		}
+
+	}
+
+	//Now add orchestration node
+	pool, ctx = errgroup.WithContext(ctx)
+	for _, n := range newNodes {
+		if n.IsOrchesratorNode() {
+			n := n
+			pool.Go(func() error {
+				return n.AddNode()
+			})
+		}
+	}
+
+	err = pool.Wait()
 	if err != nil {
 		log.Errorf("TOPO SVC | AddNodes |AddNodes Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
@@ -613,9 +662,9 @@ func (ts *TopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	}
 
 	for idx, node := range newNodes {
-		req.Nodes[idx] = node.RespNode
-		if node.RespNode.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			req.ApiResponse.ErrorMsg = "Node :" + node.RespNode.GetName() + " : " + node.RespNode.GetNodeStatus().ErrorMsg + "\n"
+		req.Nodes[idx] = node.GetNodeMsg(node.GetNodeInfo().Name)
+		if req.Nodes[idx].GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			req.ApiResponse.ErrorMsg = "Node :" + req.Nodes[idx].GetName() + " : " + req.Nodes[idx].GetNodeStatus().ErrorMsg + "\n"
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		}
 	}
@@ -643,8 +692,9 @@ func (ts *TopologyService) GetNodes(ctx context.Context, req *iota.NodeMsg) (*io
 	}
 
 	for name, node := range ts.ProvisionedNodes {
-		log.Infof("Returning provisioned node %v : %v\n", name, node.RespNode.Name)
-		resp.Nodes = append(resp.Nodes, node.RespNode)
+		respMsg := node.GetNodeMsg(name)
+		log.Infof("Returning provisioned node %v : %v\n", name, respMsg.Name)
+		resp.Nodes = append(resp.Nodes, respMsg)
 	}
 
 	log.Infof("TOPO SVC | DEBUG | GetNodes Returned: %v", resp)
@@ -662,7 +712,12 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg)
 	log.Infof("TOPO SVC | DEBUG | ReloadNodes. Received Request Msg: %v", req)
 	defer log.Infof("TOPO SVC | DEBUG | ReloadNodes Returned: %v", req)
 
-	rNodes := []*testbed.TestNode{}
+	type reloadReq struct {
+		name   string
+		node   testbed.TestNodeInterface
+		method string
+	}
+	rNodes := []reloadReq{}
 
 	for _, node := range req.NodeMsg.Nodes {
 		n, ok := ts.ProvisionedNodes[node.Name]
@@ -671,25 +726,17 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg)
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("Reload on unprovisioned node : %v", node.GetName())
 			return req, nil
 		}
-        if node.ApcInfo != nil {
-            n.ApcInfo = &iota.ApcInfo {
-                Ip : node.ApcInfo.Ip,
-                Port : node.ApcInfo.Port,
-                Username : node.ApcInfo.Username,
-                Password : node.ApcInfo.Password,
-            }
-        }
-        n.RestartMethod = req.RestartMethod
-		rNodes = append(rNodes, n)
+		rNodes = append(rNodes, reloadReq{name: node.Name, node: n, method: req.RestartMethod})
 	}
 
 	reloadNodes := func(ctx context.Context) error {
 		pool, ctx := errgroup.WithContext(ctx)
 
-		for _, node := range rNodes {
-			node := node
+		for _, rnode := range rNodes {
+			node := rnode.node
+			name := rnode.name
 			pool.Go(func() error {
-				return node.ReloadNode(!req.SkipRestore)
+				return node.ReloadNode(name, !req.SkipRestore, rnode.method)
 			})
 		}
 		return pool.Wait()
@@ -703,10 +750,10 @@ func (ts *TopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg)
 		req.ApiResponse.ErrorMsg = err.Error()
 	}
 
-	for idx, node := range rNodes {
-		req.NodeMsg.Nodes[idx] = node.RespNode
-		if node.RespNode.GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
-			req.ApiResponse.ErrorMsg = "Node :" + node.RespNode.GetName() + " : " + node.RespNode.GetNodeStatus().ErrorMsg + "\n"
+	for idx, rnode := range rNodes {
+		req.NodeMsg.Nodes[idx] = rnode.node.GetNodeMsg(rnode.name)
+		if req.NodeMsg.Nodes[idx].GetNodeStatus().ApiStatus != iota.APIResponseType_API_STATUS_OK {
+			req.ApiResponse.ErrorMsg = "Node :" + req.NodeMsg.Nodes[idx].GetName() + " : " + req.NodeMsg.Nodes[idx].GetNodeStatus().ErrorMsg + "\n"
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 		}
 	}
@@ -727,22 +774,32 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
 
-	workloadNodes := []*testbed.TestNode{}
+	workloadNodes := []testbed.TestNodeInterface{}
+	var wlNode map[string]*iota.WorkloadMsg
+	var wlRespNode map[string]*iota.WorkloadMsg
+	wlNode = make(map[string]*iota.WorkloadMsg)
+	var m sync.Mutex
+	wlRespNode = make(map[string]*iota.WorkloadMsg)
+
 	for _, w := range req.Workloads {
 
 		node, ok := ts.ProvisionedNodes[w.NodeName]
+		nodeName := node.GetNodeInfo().Name
 		if !ok {
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("AddWorkloads found to unprovisioned node : %v", w.NodeName)
 			return req, nil
+			//}
 		}
-		if node.WorkloadInfo == nil {
-			node.WorkloadInfo = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
+		if _, ok := wlNode[nodeName]; !ok {
+			wlNode[nodeName] = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
 		}
-		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
+		workloadInfo := wlNode[nodeName]
+
+		workloadInfo.Workloads = append(workloadInfo.Workloads, w)
 		added := false
 		for _, workloadNode := range workloadNodes {
-			if workloadNode.Node.Name == node.Node.Name {
+			if workloadNode.GetNodeInfo().Name == node.GetNodeInfo().Name {
 				added = true
 				break
 			}
@@ -758,21 +815,19 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 		for _, node := range workloadNodes {
 			node := node
 			pool.Go(func() error {
-				return node.AddWorkloads(node.WorkloadInfo)
+				workloadInfo, _ := wlNode[node.GetNodeInfo().Name]
+				log.Infof("Triggering workload add for %v", node.GetNodeInfo().Name)
+				resp, err := node.AddWorkloads(workloadInfo)
+				m.Lock()
+				wlRespNode[node.GetNodeInfo().Name] = resp
+				m.Unlock()
+				return err
 			})
 
 		}
 		return pool.Wait()
 	}
 
-	resetAddWorkloads := func() {
-		for _, node := range workloadNodes {
-			node.WorkloadInfo = nil
-			node.WorkloadResp = nil
-		}
-	}
-
-	defer resetAddWorkloads()
 	err := addWorkloads(context.Background())
 	if err != nil {
 		log.Errorf("TOPO SVC | AddWorkloads |AddWorkloads Call Failed. %v", err)
@@ -785,12 +840,17 @@ func (ts *TopologyService) AddWorkloads(ctx context.Context, req *iota.WorkloadM
 
 	//Assoicate response
 	for _, node := range workloadNodes {
-		for _, respWload := range node.WorkloadResp.Workloads {
+		resp, ok := wlRespNode[node.GetNodeInfo().Name]
+		if !ok {
+			continue
+		}
+		for _, respWload := range resp.Workloads {
 			for index, reqWload := range req.Workloads {
-				if reqWload.GetNodeName() == node.Node.GetName() && reqWload.WorkloadName == respWload.WorkloadName {
+				if reqWload.GetNodeName() == node.GetNodeInfo().Name && reqWload.WorkloadName == respWload.WorkloadName {
 					req.Workloads[index] = respWload
 					if respWload.WorkloadStatus != nil && respWload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 						req.ApiResponse.ErrorMsg = respWload.WorkloadStatus.ErrorMsg
+						req.ApiResponse.ApiStatus = respWload.WorkloadStatus.ApiStatus
 						log.Errorf("TOPO SVC | AddWorkloads | Workload add %v failed with  %v", respWload.GetWorkloadName(), req.ApiResponse.ErrorMsg)
 					}
 					break
@@ -813,8 +873,11 @@ func (ts *TopologyService) GetWorkloads(ctx context.Context, req *iota.WorkloadM
 	var workloads []*iota.Workload
 	log.Infof("TOPO SVC | DEBUG | GetWorkloads. Received Request Msg: %#v", req)
 
-	for _, w := range ts.Workloads {
-		workloads = append(workloads, w)
+	for name, node := range ts.ProvisionedNodes {
+		wloads := node.GetWorkloads(name)
+		for _, wl := range wloads {
+			workloads = append(workloads, wl)
+		}
 	}
 
 	wmsg := &iota.WorkloadMsg{
@@ -843,23 +906,33 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 
 	log.Infof("TOPO SVC | DEBUG | STATE | %v", ts.Nodes)
 
-	workloadNodes := []*testbed.TestNode{}
+	workloadNodes := []testbed.TestNodeInterface{}
+
+	var wlNode map[string]*iota.WorkloadMsg
+	var wlRespNode map[string]*iota.WorkloadMsg
+	wlNode = make(map[string]*iota.WorkloadMsg)
+	var m sync.Mutex
+	wlRespNode = make(map[string]*iota.WorkloadMsg)
+
 	for _, w := range req.Workloads {
 
 		node, ok := ts.ProvisionedNodes[w.NodeName]
+		nodeName := node.GetNodeInfo().Name
 		if !ok {
 			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
 			req.ApiResponse.ErrorMsg = fmt.Sprintf("DeleteWorkloads found to unprovisioned node : %v", w.NodeName)
 			return req, nil
+			//}
 		}
-		if node.WorkloadInfo == nil {
-			node.WorkloadInfo = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
-			node.WorkloadResp = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
+		if _, ok := wlNode[nodeName]; !ok {
+			wlNode[nodeName] = &iota.WorkloadMsg{WorkloadOp: iota.Op_ADD, Workloads: []*iota.Workload{}}
 		}
-		node.WorkloadInfo.Workloads = append(node.WorkloadInfo.Workloads, w)
+		workloadInfo := wlNode[nodeName]
+
+		workloadInfo.Workloads = append(workloadInfo.Workloads, w)
 		added := false
 		for _, workloadNode := range workloadNodes {
-			if workloadNode.Node.Name == node.Node.Name {
+			if workloadNode.GetNodeInfo().Name == node.GetNodeInfo().Name {
 				added = true
 				break
 			}
@@ -875,21 +948,17 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 		for _, node := range workloadNodes {
 			node := node
 			pool.Go(func() error {
-				return node.DeleteWorkloads(node.WorkloadInfo)
+				workloadInfo, _ := wlNode[node.GetNodeInfo().Name]
+				resp, err := node.DeleteWorkloads(workloadInfo)
+				m.Lock()
+				wlRespNode[node.GetNodeInfo().Name] = resp
+				m.Unlock()
+				return err
 			})
 
 		}
 		return pool.Wait()
 	}
-
-	resetDeleteWorkloads := func() {
-		for _, node := range workloadNodes {
-			node.WorkloadInfo = nil
-			node.WorkloadResp = nil
-		}
-	}
-
-	defer resetDeleteWorkloads()
 
 	err := deleteWorkloads(context.Background())
 	if err != nil {
@@ -898,18 +967,22 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 		req.ApiResponse.ErrorMsg = fmt.Sprintf("TOPO SVC | DeleteWorkloads |DeleteWorkloads Call Failed. %v", err)
 		req.ApiResponse.ApiStatus = iota.APIResponseType_API_SERVER_ERROR
 	} else {
-		req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 	}
 
 	//Assoicate response
 	for _, node := range workloadNodes {
-		for _, respWload := range node.WorkloadResp.Workloads {
+		resp, ok := wlRespNode[node.GetNodeInfo().Name]
+		if !ok {
+			continue
+		}
+		for _, respWload := range resp.Workloads {
 			for index, reqWload := range req.Workloads {
-				if reqWload.GetNodeName() == node.Node.GetName() && reqWload.WorkloadName == respWload.WorkloadName {
+				if reqWload.GetNodeName() == node.GetNodeInfo().Name && reqWload.WorkloadName == respWload.WorkloadName {
 					req.Workloads[index] = respWload
 					if respWload.WorkloadStatus != nil && respWload.WorkloadStatus.ApiStatus != iota.APIResponseType_API_STATUS_OK {
 						req.ApiResponse.ErrorMsg = respWload.WorkloadStatus.ErrorMsg
-						log.Errorf("TOPO SVC | DeleteWorkloads | Workload add %v failed with  %v", respWload.GetWorkloadName(), req.ApiResponse.ErrorMsg)
+						log.Errorf("TOPO SVC | Delete | Workload add %v failed with  %v", respWload.GetWorkloadName(), req.ApiResponse.ErrorMsg)
 					}
 					break
 				}
@@ -927,7 +1000,7 @@ func (ts *TopologyService) DeleteWorkloads(ctx context.Context, req *iota.Worklo
 
 func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 
-	triggerNodes := []*testbed.TestNode{}
+	triggerNodes := []testbed.TestNodeInterface{}
 	triggerResp := &iota.TriggerMsg{TriggerMode: req.GetTriggerMode(),
 		TriggerOp: req.GetTriggerOp()}
 
@@ -938,23 +1011,23 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 
 	for index, cmd := range req.GetCommands() {
 		node, _ := ts.ProvisionedNodes[cmd.GetNodeName()]
-		if item, ok := triggerInfoMap.Load(cmd.GetNodeName()); !ok {
+		if item, ok := triggerInfoMap.Load(node.GetNodeInfo().Name); !ok {
 			triggerMsg := &iota.TriggerMsg{Commands: []*iota.Command{cmd},
 				TriggerMode: req.GetTriggerMode(), TriggerOp: req.GetTriggerOp()}
-			triggerInfoMap.Store(cmd.GetNodeName(), triggerMsg)
+			triggerInfoMap.Store(node.GetNodeInfo().Name, triggerMsg)
 			triggerInfo = triggerMsg
-			triggerCmdIndexMap[cmd.GetNodeName()] = []int{}
+			triggerCmdIndexMap[node.GetNodeInfo().Name] = []int{}
 		} else {
 			triggerInfo = item.(*iota.TriggerMsg)
 			triggerInfo.Commands = append(triggerInfo.Commands, cmd)
 		}
 
-		triggerCmdIndexMap[cmd.GetNodeName()] = append(triggerCmdIndexMap[cmd.GetNodeName()], index)
+		triggerCmdIndexMap[node.GetNodeInfo().Name] = append(triggerCmdIndexMap[node.GetNodeInfo().Name], index)
 		//Just copy the request for now
 		triggerResp.Commands = append(triggerResp.Commands, cmd)
 		added := false
 		for _, triggerNode := range triggerNodes {
-			if triggerNode.Node.Name == node.Node.Name {
+			if triggerNode.GetNodeInfo().Name == node.GetNodeInfo().Name {
 				added = true
 				break
 			}
@@ -969,10 +1042,10 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 		for _, node := range triggerNodes {
 			node := node
 			pool.Go(func() error {
-				item, _ := triggerInfoMap.Load(node.Node.Name)
+				item, _ := triggerInfoMap.Load(node.GetNodeInfo().Name)
 				triggerMsg := item.(*iota.TriggerMsg)
 				triggerResp, err := node.TriggerWithContext(ctx3, triggerMsg)
-				triggerRespMap.Store(node.Node.Name, triggerResp)
+				triggerRespMap.Store(node.GetNodeInfo().Name, triggerResp)
 				if err != nil {
 					return err
 				}
@@ -993,10 +1066,10 @@ func (ts *TopologyService) runParallelTrigger(ctx context.Context, req *iota.Tri
 	}
 
 	for _, node := range triggerNodes {
-		item, _ := triggerRespMap.Load(node.Node.Name)
+		item, _ := triggerRespMap.Load(node.GetNodeInfo().Name)
 		triggerMsg := item.(*iota.TriggerMsg)
 		for index, cmd := range triggerMsg.Commands {
-			realIndex := triggerCmdIndexMap[node.Node.Name][index]
+			realIndex := triggerCmdIndexMap[node.GetNodeInfo().Name][index]
 			triggerResp.Commands[realIndex] = cmd
 		}
 	}
@@ -1022,7 +1095,7 @@ func (ts *TopologyService) runSerialTrigger(ctx context.Context, req *iota.Trigg
 		}
 		/* Only one command sent anyway */
 	}
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
+	req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_STATUS_OK}
 	return req, nil
 }
 
@@ -1067,7 +1140,7 @@ func (ts *TopologyService) CheckClusterHealth(ctx context.Context, req *iota.Nod
 
 	for name, node := range ts.ProvisionedNodes {
 		nodeHealth := &iota.NodeHealth{NodeName: name, ClusterDone: req.GetClusterDone()}
-		nodeResp, err := node.AgentClient.CheckHealth(ctx, nodeHealth)
+		nodeResp, err := node.CheckHealth(ctx, nodeHealth)
 		if err == nil {
 			resp.Health = append(resp.Health, nodeResp)
 		}
@@ -1090,36 +1163,21 @@ func (ts *TopologyService) EntityCopy(ctx context.Context, req *iota.EntityCopyM
 		return req, nil
 	}
 
-	req.ApiResponse.ApiStatus = iota.APIResponseType_API_STATUS_OK
-	if req.Direction == iota.CopyDirection_DIR_IN {
+	return node.EntityCopy(ts.SSHConfig, req)
+}
 
-		dstDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/" + req.GetDestDir() + "/"
-		if err := node.CopyTo(ts.SSHConfig, dstDir, req.GetFiles()); err != nil {
-			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files to entity:  %v on node : %v (%v)",
-				req.GetEntityName(), node.Node.Name, err.Error())
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-			req.ApiResponse.ErrorMsg = fmt.Sprintf("Failed to copy files to entity:  %v on node : %v",
-				req.GetEntityName(), node.Node.Name)
-		}
-	} else if req.Direction == iota.CopyDirection_DIR_OUT {
-		files := []string{}
-		srcDir := common.DstIotaEntitiesDir + "/" + req.GetEntityName() + "/"
-		for _, file := range req.GetFiles() {
-			files = append(files, srcDir+file)
-		}
+// MoveWorkloads move workloads
+func (ts *TopologyService) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error) {
+	log.Infof("TOPO SVC | DEBUG | MoveWorkloads. Received Request Msg: %v", req)
+	defer log.Infof("TOPO SVC | DEBUG | MoveWorkloads Returned: %v", req)
 
-		if err := node.CopyFrom(ts.SSHConfig, req.GetDestDir(), files); err != nil {
-			log.Errorf("TOPO SVC | EntityCopy | Failed to copy files from entity:  %v on node : %v (%v)",
-				req.GetEntityName(), node.Node.Name, err.Error())
-			req.ApiResponse.ApiStatus = iota.APIResponseType_API_BAD_REQUEST
-		}
-
-	} else {
-		errMsg := fmt.Sprintf("No direction specified for entity copy")
+	node, ok := ts.ProvisionedNodes[req.OrchestratorNode]
+	if !ok {
+		errMsg := fmt.Sprintf("Node %s  not provisioned", req.OrchestratorNode)
 		req.ApiResponse = &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST,
 			ErrorMsg: errMsg}
 		return req, nil
 	}
 
-	return req, nil
+	return node.MoveWorkloads(ctx, req)
 }

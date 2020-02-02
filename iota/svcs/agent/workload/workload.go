@@ -35,6 +35,9 @@ const (
 	//WorkloadTypeESX vm workload
 	WorkloadTypeESX = "esx-vm"
 
+	//WorkloadTypeVcenter vcenter type worklaod
+	WorkloadTypeVcenter = "vcenter-vm"
+
 	//WorkloadTypeMacVlan  macvlan workload
 	WorkloadTypeMacVlan = "mac-vlan"
 
@@ -68,8 +71,12 @@ type Workload interface {
 	IsHealthy() bool
 	SendArpProbe(ip string, intf string, vlan int) error
 	MgmtIP() string
+	SetMgmtIP(string)
 	GetWorkloadAgent() interface{}
+	SetWorkloadAgent(interface{})
 	TearDown()
+	SetConnector(cluster, hostname string, conn interface{})
+	Host() string
 	Type() string
 	SetSwitch(name string)
 	Switch() string
@@ -167,8 +174,15 @@ func (app *workloadBase) Reinit() error {
 	return nil
 }
 
+func (app *workloadBase) SetConnector(cluster, hostname string, conn interface{}) {
+}
+
 func (app *workloadBase) Type() string {
 	return app.wlType
+}
+
+func (app *workloadBase) Host() string {
+	return "N/A"
 }
 
 func (app *workloadBase) SetBaseDir(dir string) error {
@@ -186,6 +200,10 @@ func (app *workloadBase) genBgCmdHandle() string {
 
 func (app *workloadBase) MgmtIP() string {
 	return ""
+}
+
+func (app *workloadBase) SetMgmtIP(string) {
+	return
 }
 
 func (app *workloadBase) AddVlanInterface(parentIntf string, parentMacAddress string, vlan int) (string, error) {
@@ -228,6 +246,10 @@ func (app *workloadBase) StopCommand(commandHandle string) (*cmd.CmdCtx, error) 
 //GetWorkloadAgent handle.
 func (app *workloadBase) GetWorkloadAgent() interface{} {
 	return nil
+}
+
+//SetWorkloadAgent sets workload agent
+func (app *workloadBase) SetWorkloadAgent(interface{}) {
 }
 
 func (app *workloadBase) IsHealthy() bool {
@@ -1063,6 +1085,7 @@ var iotaWorkloads = map[string]func(name string, parent string, logger *log.Logg
 	WorkloadTypeContainer:        newContainerWorkload,
 	WorkloadTypeVM:               newVMWorkload,
 	WorkloadTypeESX:              newVMESXWorkload,
+	WorkloadTypeVcenter:          newVMVcenterWorkload,
 	WorkloadTypeBareMetal:        newBareMetalWorkload,
 	WorkloadTypeRemote:           newRemoteWorkload,
 	WorkloadTypeMacVlan:          newBareMetalMacVlanWorkload,

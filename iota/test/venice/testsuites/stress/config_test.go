@@ -23,17 +23,17 @@ var _ = Describe("Config Stress tests", func() {
 		/*
 			// verify cluster is in good health
 			ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-				_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
+				_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
 				Expect(err).ShouldNot(HaveOccurred())
 				return nil
 			})
 			Eventually(func() error {
-				return ts.model.Action().VerifyClusterStatus()
+				return ts.model.VerifyClusterStatus()
 			}).Should(Succeed())
 
 			//Start fwlog
 			ts.model.ForEachFakeNaples(func(nc *iotakit.NaplesCollection) error {
-				fwLogCmdCtx, err = ts.model.Action().RunFakeNaplesBackgroundCommand(nc,
+				fwLogCmdCtx, err = ts.model.RunFakeNaplesBackgroundCommand(nc,
 					"LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/fwloggen -metrics -rate 25 -num  5000000")
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(fwLogCmdCtx != nil).Should(BeTrue())
@@ -45,7 +45,7 @@ var _ = Describe("Config Stress tests", func() {
 
 			//Start events and logs.
 			ts.model.ForEachFakeNaples(func(nc *iotakit.NaplesCollection) error {
-				eventsCmdCtx, err = ts.model.Action().RunFakeNaplesBackgroundCommand(nc,
+				eventsCmdCtx, err = ts.model.RunFakeNaplesBackgroundCommand(nc,
 					"LD_LIBRARY_PATH=/naples/nic/lib/:/naples/nic/lib64/ /naples/nic/bin/gen_events -r 1 -t 200000 -s \"scale-testing\"")
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(eventsCmdCtx != nil).Should(BeTrue())
@@ -56,14 +56,14 @@ var _ = Describe("Config Stress tests", func() {
 
 	AfterEach(func() {
 		/*ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
+			_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
 
-		_, err = ts.model.Action().StopCommands(eventsCmdCtx)
+		_, err = ts.model.StopCommands(eventsCmdCtx)
 		//Expect(err).ShouldNot(HaveOccurred())
-		_, err = ts.model.Action().StopCommands(fwLogCmdCtx)
+		_, err = ts.model.StopCommands(fwLogCmdCtx)
 		//Expect(err).ShouldNot(HaveOccurred())
 		ts.tb.AfterTestCommon()
 		*/
@@ -76,8 +76,8 @@ var _ = Describe("Config Stress tests", func() {
 				Skip("Skipping scale connection runs")
 			}
 
-			ts.model.ResetConfigStats()
-			ts.model.ClearConfigPushStat()
+			//ts.model.ResetConfigStats()
+			//ts.model.ClearConfigPushStat()
 			configPushCheck := func() (time.Duration, error) {
 				startTime := time.Now()
 				iter := 1
@@ -127,15 +127,15 @@ var _ = Describe("Config Stress tests", func() {
 				totalCfgPushTime += configPushTime
 				// verify cluster, workload are in good health
 				Eventually(func() error {
-					return ts.model.Action().VerifySystemHealth(false)
+					return ts.model.VerifySystemHealth(false)
 				}).Should(Succeed())
 
 				workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-				Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "8000")).ShouldNot(HaveOccurred())
+				Expect(ts.model.FuzIt(workloadPairs, 100, "tcp", "8000")).ShouldNot(HaveOccurred())
 			}
 
-			ts.model.ReadConfigStats()
-			ts.model.PrintConfigPushStat()
+			//ts.model.ReadConfigStats()
+			//ts.model.PrintConfigPushStat()
 		})
 
 	})

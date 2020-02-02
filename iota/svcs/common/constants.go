@@ -160,6 +160,20 @@ const (
 	DefaultCimcUserName = "admin"
 
 	DefaultCimcPassword = "N0isystem$"
+
+	VcenterDCName = "iota-dc"
+
+	VcenterDCDvs = "pen-dvs"
+
+	VcenterCluster = "iota-cluster"
+
+	IotaVmotionPortgroup = "iota-vmotion-pg"
+
+	IotaVmotionSwitch = "vSwitch0"
+
+	VcenterPvlanPairCount = 64
+
+	VcenterPvlanStart = 1024
 )
 
 // incrementing constants. List all constants whose value you don't care here
@@ -187,6 +201,15 @@ var (
 
 	// DstIotaAgentBinary captures the location of agent on the remote nodes
 	DstIotaAgentBinary = fmt.Sprintf("%s/%s", DstIotaAgentDir, IotaAgentBinaryName)
+
+	// DataVmImageDirectory
+	IotaServerImgDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+
+	// IotaServerDir directory associated for iota server cache
+	IotaServerDir = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/logs", os.Getenv("GOPATH"))
+
+	// DstIotaEntitiesDir has all workload related data for each workload
+	IotaServerEntitiesDir = IotaServerDir + "/entities"
 
 	// BuildItBinary
 	BuildItBinary = fmt.Sprintf("%s/src/github.com/pensando/sw/iota/images/buildit", os.Getenv("GOPATH"))

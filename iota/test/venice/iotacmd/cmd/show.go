@@ -39,6 +39,8 @@ func showTestBedAction(cmd *cobra.Command, args []string) {
 				fmt.Printf("\n\tVenice Peers: %v", node.VeniceConfig.VenicePeers)
 			}
 		case iota.PersonalityType_PERSONALITY_NAPLES:
+			fallthrough
+		case iota.PersonalityType_PERSONALITY_NAPLES_DVS:
 			{
 				for _, naplesConfig := range node.NaplesConfigs.Configs {
 					fmt.Printf("\n\tVenice IPs%v", naplesConfig.VeniceIps)

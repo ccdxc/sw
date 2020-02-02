@@ -16,7 +16,7 @@ var _ = Describe("fwlog tests", func() {
 		// verify cluster is in good health
 		startTime = time.Now().UTC()
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
 	})
@@ -35,7 +35,7 @@ var _ = Describe("fwlog tests", func() {
 
 		// verify policy was propagated correctly
 		Eventually(func() error {
-			return ts.model.Action().VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
+			return ts.model.VerifyPolicyStatus(ts.model.DefaultNetworkSecurityPolicy())
 		}).Should(Succeed())
 	})
 
@@ -57,18 +57,18 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(workloadPairs)
+				return ts.model.PingPairs(workloadPairs)
 			}).Should(Succeed())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
 			}).Should(Succeed())
 		})
 
@@ -87,18 +87,18 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloadPairs, 8000)
+				return ts.model.TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("TCP", "allow", startTime.String(), 8000, workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -119,18 +119,18 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().UDPSession(workloadPairs, 9000)
+				return ts.model.UDPSession(workloadPairs, 9000)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("UDP", "allow", startTime.String(), 9000, workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -151,19 +151,19 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "deny", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairs("ICMP", "deny", startTime.String(), 0, workloadPairs.ReversePairs())
 			}).Should(Succeed())
 		})
 
@@ -184,19 +184,19 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().TCPSessionFails(workloadPairs, 8100)
+				return ts.model.TCPSessionFails(workloadPairs, 8100)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "deny", startTime.String(), 8100, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("TCP", "deny", startTime.String(), 8100, workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -215,7 +215,7 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -224,12 +224,12 @@ var _ = Describe("fwlog tests", func() {
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().UDPSessionFails(workloadPairs, 9100)
+				return ts.model.UDPSessionFails(workloadPairs, 9100)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "deny", startTime.String(), 9100, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("UDP", "deny", startTime.String(), 9100, workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -250,17 +250,17 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "reject", startTime.String(), 0, workloadPairs.ReversePairs())
+				return ts.model.FindFwlogForWorkloadPairs("ICMP", "reject", startTime.String(), 0, workloadPairs.ReversePairs())
 			}).Should(Succeed())
 		})
 
@@ -281,19 +281,19 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().TCPSessionFails(workloadPairs, 8200)
+				return ts.model.TCPSessionFails(workloadPairs, 8200)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("TCP", "reject", startTime.String(), 8200, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("TCP", "reject", startTime.String(), 8200, workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -312,7 +312,7 @@ var _ = Describe("fwlog tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
+				return ts.model.VerifyPolicyStatus(ts.model.NetworkSecurityPolicy("test-policy"))
 			}).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
@@ -321,12 +321,12 @@ var _ = Describe("fwlog tests", func() {
 			By(fmt.Sprintf("workload ip address %+v", workloadPairs.ListIPAddr()))
 
 			Eventually(func() error {
-				return ts.model.Action().UDPSessionFails(workloadPairs, 9200)
+				return ts.model.UDPSessionFails(workloadPairs, 9200)
 			}).Should(Succeed())
 
 			// check fwlog
 			Eventually(func() error {
-				return ts.model.Action().FindFwlogForWorkloadPairs("UDP", "reject", startTime.String(), 9200, workloadPairs)
+				return ts.model.FindFwlogForWorkloadPairs("UDP", "reject", startTime.String(), 9200, workloadPairs)
 			}).Should(Succeed())
 		})
 	})

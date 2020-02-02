@@ -255,6 +255,22 @@ func (agent *Service) AddWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*
 	return resp, nil
 }
 
+// GetWorkloads brings up a workload type on a given node
+func (agent *Service) GetWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+
+	/* Check if the node running an instance to add a workload */
+	agent.logger.Printf("Received Add workloads : %v", in)
+	if agent.node == nil {
+		msg := fmt.Sprintf("Invalid workload add request received")
+		agent.logger.Error(msg)
+		return &iota.WorkloadMsg{ApiResponse: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_BAD_REQUEST, ErrorMsg: msg}}, nil
+	}
+
+	in.Workloads = agent.node.GetWorkloadMsgs()
+
+	return in, nil
+}
+
 // DeleteWorkloads deletes workload specified
 func (agent *Service) DeleteWorkloads(ctx context.Context, in *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
 	agent.logger.Printf("Received delete workloads : %v", in)
@@ -341,8 +357,17 @@ func newEsxNaples() IotaNode {
 	return &esxNaplesHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-esx"}}}}}
 }
 
+func newEsxNaplesDvs() IotaNode {
+	return &esxNaplesDvsHwNode{esxNaplesHwNode: esxNaplesHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "naples-esx-dvs"}}}}}}
+
+}
+
 func newEsxThirdPartyNic() IotaNode {
 	return &esxThirdPartyHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "third-party-esx"}}}}}
+}
+
+func newEsxThirdPartyNicDvs() IotaNode {
+	return &esxThirdPartyDvsHwNode{esxThirdPartyHwNode: esxThirdPartyHwNode{esxHwNode: esxHwNode{naplesHwNode: naplesHwNode{dataNode: dataNode{iotaNode: iotaNode{name: "third-party-esx-dvs"}}}}}}
 }
 
 func newThirdPartyNic() IotaNode {
@@ -378,8 +403,12 @@ func newIotaNode(nodeType iota.PersonalityType, os iota.TestBedNodeOs) IotaNode 
 	//Hack for now as its just one type
 	if nodeType == iota.PersonalityType_PERSONALITY_NAPLES && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		return newEsxNaples()
+	} else if nodeType == iota.PersonalityType_PERSONALITY_NAPLES_DVS && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		return newEsxNaplesDvs()
 	} else if nodeType == iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
 		return newEsxThirdPartyNic()
+	} else if nodeType == iota.PersonalityType_PERSONALITY_THIRD_PARTY_NIC_DVS && os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		return newEsxThirdPartyNicDvs()
 	}
 
 	if _, ok := iotaNodes[nodeType]; ok {

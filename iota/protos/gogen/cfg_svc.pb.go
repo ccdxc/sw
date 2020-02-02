@@ -25,6 +25,7 @@
 		ReloadMsg
 		Entity
 		VmwareESXConfig
+		VcenterConfig
 		NaplesSimInfo
 		Node
 		ApcInfo
@@ -38,14 +39,18 @@
 		VenicePeer
 		VeniceConfig
 		WorkloadMsg
+		DvsInfo
 		Workload
 		TriggerMsg
 		Command
+		WorkloadMove
+		WorkloadMoveMsg
 		ClusterHealthMsg
 		NodeHealth
 		NetworkQosClass
 		NetworkPolicyQos
 		DataSwitch
+		License
 		TestBedMsg
 		TestNodesMsg
 		VlanConfig

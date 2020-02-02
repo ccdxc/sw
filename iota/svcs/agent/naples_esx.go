@@ -44,8 +44,16 @@ type esxNaplesHwNode struct {
 	esxHwNode
 }
 
+type esxNaplesDvsHwNode struct {
+	esxNaplesHwNode
+}
+
 type esxThirdPartyHwNode struct {
 	esxHwNode
+}
+
+type esxThirdPartyDvsHwNode struct {
+	esxThirdPartyHwNode
 }
 
 func (node *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
@@ -56,9 +64,29 @@ func (node *esxHwNode) setupWorkload(wload Workload.Workload, in *iota.Workload)
 
 	node.logger.Println("Doing bring up of esx workload")
 	imageDir, _ := node.imagesMap[in.GetWorkloadImage()]
+
+	host, err := vmware.NewHost(context.Background(), node.hostIP, node.hostUsername, node.hostPassword)
+	if err != nil {
+		return nil, errors.Wrap(err, "Cannot connect to ESX Host")
+		msg := fmt.Sprintf("Cannot connect to ESX Host : %s : %s", in.GetWorkloadName(), err.Error())
+		node.logger.Error(msg)
+		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
+		return resp, err
+	}
+
+	wload.SetConnector("", "", host)
+	cpu := Common.EsxDataVMCpus
+	if int(in.GetCpus()) != 0 {
+		cpu = int(in.GetCpus())
+	}
+	memory := Common.EsxDataVMMemory
+	if int(in.GetMemory()) != 0 {
+		memory = int(in.GetMemory())
+	}
+
 	if err := wload.BringUp(in.GetWorkloadName(), imageDir,
-		node.hostIP, node.hostUsername, node.hostPassword,
-		strconv.Itoa(int(in.GetCpus())), strconv.Itoa(int(in.GetMemory()))); err != nil {
+		strconv.Itoa(cpu), strconv.Itoa(memory),
+		Common.DstIotaAgentBinary); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		node.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
@@ -343,14 +371,13 @@ func (node *esxHwNode) createNaplesMgmtSwitch(hint string) error {
 	vsspec := vmware.VswitchSpec{Name: vsname, Pnics: []string{naplesMgmtIntf}}
 
 	if err = node.host.AddVswitch(vsspec); err != nil {
-		return errors.Wrap(err, "Failed to create naples mgmt switch")
+		//return errors.Wrap(err, "Failed to create naples mgmt switch")
 	}
 
 	nws := []vmware.NWSpec{{Name: Common.EsxNaplesMgmtNetwork, Vlan: 0}}
 
-	_, err = node.host.AddNetworks(nws, vsspec)
+	return node.host.AddNetworks(nws, vsspec)
 
-	return err
 }
 
 func (node *esxHwNode) createNaplesDataSwitch(index int, nicType, hint string) error {
@@ -595,6 +622,35 @@ func (naples *esxNaplesHwNode) Init(in *iota.Node) (*iota.Node, error) {
 
 }
 
+//Init initalize node type
+func (naples *esxNaplesDvsHwNode) Init(in *iota.Node) (*iota.Node, error) {
+	resp, err := naples.esxHwNode.Init(in)
+	if err != nil {
+		return resp, err
+	}
+
+	for index, naplesConfig := range in.GetNaplesConfigs().GetConfigs() {
+		nodeUUID, err := naples.getHwUUID(naples.naplesEntityKey[index])
+		if err != nil {
+			msg := fmt.Sprintf("Error in reading naples hw uuid : %s", err.Error())
+			naples.logger.Error(msg)
+			//For now ignore the error
+			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+		}
+		naplesConfig.NodeUuid = nodeUUID
+	}
+
+	newResp := &iota.Node{NodeStatus: apiSuccess,
+		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
+		NodeInfo: &iota.Node_NaplesConfigs{NaplesConfigs: in.GetNaplesConfigs()}}
+
+	if err = naples.setHostIntfs(newResp); err != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+	}
+	return newResp, nil
+
+}
+
 // Init initalize node type
 func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
 	resp, err := thirdParty.esxHwNode.Init(in)
@@ -607,9 +663,27 @@ func (thirdParty *esxThirdPartyHwNode) Init(in *iota.Node) (*iota.Node, error) {
 		if err != nil {
 			msg := "failed to create naples data switch"
 			thirdParty.logger.Error(msg)
-			return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
+			//return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}, err
 		}
 
+	}
+
+	newResp := &iota.Node{NodeStatus: apiSuccess,
+		Name: resp.GetName(), IpAddress: resp.GetIpAddress(), Type: resp.GetType(),
+		NodeInfo: in.NodeInfo}
+
+	if err = thirdParty.setHostIntfs(newResp); err != nil {
+		return &iota.Node{NodeStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: err.Error()}}, err
+
+	}
+	return newResp, nil
+}
+
+// Init initalize node type
+func (thirdParty *esxThirdPartyDvsHwNode) Init(in *iota.Node) (*iota.Node, error) {
+	resp, err := thirdParty.esxHwNode.Init(in)
+	if err != nil {
+		return resp, err
 	}
 
 	newResp := &iota.Node{NodeStatus: apiSuccess,

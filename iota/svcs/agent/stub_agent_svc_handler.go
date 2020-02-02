@@ -57,6 +57,13 @@ func (*StubService) DeleteWorkloads(ctx context.Context, req *iota.WorkloadMsg) 
 
 }
 
+// GetWorkloads  get a given workloads
+func (*StubService) GetWorkloads(ctx context.Context, req *iota.WorkloadMsg) (*iota.WorkloadMsg, error) {
+	resp := &iota.WorkloadMsg{}
+	return resp, nil
+
+}
+
 // Trigger invokes the workload's trigger. It could be ping, start client/server etc..
 func (*StubService) Trigger(ctx context.Context, req *iota.TriggerMsg) (*iota.TriggerMsg, error) {
 	resp := &iota.TriggerMsg{}

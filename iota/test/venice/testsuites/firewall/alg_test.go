@@ -15,7 +15,7 @@ var _ = Describe("firewall ALG tests", func() {
 		// verify cluster is in good health
 		startTime = time.Now().UTC()
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
 		// delete the default allow policy
@@ -47,7 +47,7 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify FTP get fails
 			Eventually(func() error {
-				return ts.model.Action().FTPGetFails(workloadPairs)
+				return ts.model.FTPGetFails(workloadPairs)
 			}).Should(Succeed())
 
 			// configure policy with ALG
@@ -57,12 +57,12 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify FTP get succeeds now
 			Eventually(func() error {
-				return ts.model.Action().FTPGet(workloadPairs)
+				return ts.model.FTPGet(workloadPairs)
 			}).Should(Succeed())
 
 			// verify FTP get fails in reverse direction
 			Eventually(func() error {
-				return ts.model.Action().FTPGetFails(workloadPairs.ReversePairs())
+				return ts.model.FTPGetFails(workloadPairs.ReversePairs())
 			}).Should(Succeed())
 
 		})
@@ -80,7 +80,7 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify FTP get fails
 			Eventually(func() error {
-				return ts.model.Action().FTPGetFails(workloadPairs)
+				return ts.model.FTPGetFails(workloadPairs)
 			}).Should(Succeed())
 
 			// modify policy with ALG
@@ -89,12 +89,12 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify FTP get succeeds now
 			Eventually(func() error {
-				return ts.model.Action().FTPGet(workloadPairs)
+				return ts.model.FTPGet(workloadPairs)
 			}).Should(Succeed())
 
 			// verify FTP get fails in reverse direction
 			Eventually(func() error {
-				return ts.model.Action().FTPGetFails(workloadPairs.ReversePairs())
+				return ts.model.FTPGetFails(workloadPairs.ReversePairs())
 			}).Should(Succeed())
 		})
 		It("Should be able to verify ICMP ALG", func() {
@@ -102,7 +102,7 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify ping fails
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 
 			// configure policy with ICMP ALG
@@ -113,13 +113,13 @@ var _ = Describe("firewall ALG tests", func() {
 
 			// verify ping is successful
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(workloadPairs)
+				return ts.model.PingPairs(workloadPairs)
 			}).Should(Succeed())
 
 			/* FIXME: disable this part till datapath issue is debugged
 			// verify pig fails in reverse direction
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs.ReversePairs())
+				return ts.model.PingFails(workloadPairs.ReversePairs())
 			}).Should(Succeed())
 			*/
 		})

@@ -10,7 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/common"
+	Testbed "github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -33,8 +35,8 @@ var (
 )
 
 var (
-	setupTb    *iotakit.TestBed
-	setupModel *iotakit.SysModel
+	setupTb    *Testbed.TestBed
+	setupModel model.SysModelInterface
 )
 
 func errorExit(msg string, err error) {
@@ -121,12 +123,12 @@ func initialize() {
 		return
 	}
 
-	setupTb, err = iotakit.GetTestbed(topology, testbed)
+	tb, err := Testbed.NewTestBed(topology, testbed)
 	if err != nil {
 		errorExit("failed to setup testbed", err)
 	}
 
-	setupModel, err = iotakit.NewSysModel(setupTb)
+	setupModel, err = model.NewSysModel(tb, common.DefaultModel)
 	if err != nil || setupModel == nil {
 		errorExit("failed to setup model", err)
 	}

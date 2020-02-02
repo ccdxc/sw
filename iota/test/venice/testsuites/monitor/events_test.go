@@ -5,8 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 )
 
 var _ = Describe("events tests", func() {
@@ -15,7 +14,7 @@ var _ = Describe("events tests", func() {
 		// verify cluster is in good health
 		startTime = time.Now().UTC()
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
@@ -26,8 +25,8 @@ var _ = Describe("events tests", func() {
 
 	Context("tags:type=basic;datapath=true;duration=short Basic events tests", func() {
 		It("tags:sanity=true nevtsproxy should be running all the naples nodes", func() {
-			ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-				out, err := ts.model.Action().RunNaplesCommand(nc, "ps aux | grep [n]evtsproxy")
+			ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+				out, err := ts.model.RunNaplesCommand(nc, "ps aux | grep [n]evtsproxy")
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(len(out) == 1).Should(BeTrue())
 				Expect(out[0]).ShouldNot(BeEmpty())
@@ -48,7 +47,7 @@ var _ = Describe("events tests", func() {
 			npc := ts.model.Naples()
 			nc := npc.Any(1)
 			Expect(nc.Error()).ShouldNot(HaveOccurred())
-			Expect(ts.model.Action().PortFlap(nc)).Should(Succeed())
+			Expect(ts.model.PortFlap(nc)).Should(Succeed())
 			time.Sleep(60 * time.Second) // wait for the event to reach venice
 
 			// ensures the link events are triggered and available in venice
@@ -62,7 +61,7 @@ var _ = Describe("events tests", func() {
 
 			// verify ping is successful across all workloads after the port flap
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 			}).Should(Succeed())
 		})
 	})

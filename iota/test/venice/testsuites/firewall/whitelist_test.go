@@ -17,7 +17,7 @@ var _ = Describe("firewall whitelist tests", func() {
 		// verify cluster is in good health
 		startTime = time.Now().UTC()
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
 		// delete the default allow policy
@@ -39,7 +39,7 @@ var _ = Describe("firewall whitelist tests", func() {
 		It("tags:sanity=true Should not ping between any workload without permit rules", func() {
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(4)
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 		})
 
@@ -55,22 +55,22 @@ var _ = Describe("firewall whitelist tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			// verify TCP connection works between workload pairs
 			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloadPairs, 8000)
+				return ts.model.TCPSession(workloadPairs, 8000)
 			}).Should(Succeed())
 
 			// verify ping fails
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 
 			// verify connections in reverse direction fail
 			Eventually(func() error {
-				return ts.model.Action().TCPSessionFails(workloadPairs.ReversePairs(), 8000)
+				return ts.model.TCPSessionFails(workloadPairs.ReversePairs(), 8000)
 			}).Should(Succeed())
 		})
 
@@ -85,22 +85,22 @@ var _ = Describe("firewall whitelist tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			// verify TCP connection works between workload pairs
 			Eventually(func() error {
-				return ts.model.Action().UDPSession(workloadPairs, 8000)
+				return ts.model.UDPSession(workloadPairs, 8000)
 			}).Should(Succeed())
 
 			// verify ping fails
 			Eventually(func() error {
-				return ts.model.Action().PingFails(workloadPairs)
+				return ts.model.PingFails(workloadPairs)
 			}).Should(Succeed())
 
 			// verify connections in reverse direction fail
 			Eventually(func() error {
-				return ts.model.Action().UDPSessionFails(workloadPairs.ReversePairs(), 8000)
+				return ts.model.UDPSessionFails(workloadPairs.ReversePairs(), 8000)
 			}).Should(Succeed())
 		})
 
@@ -113,17 +113,17 @@ var _ = Describe("firewall whitelist tests", func() {
 
 			// verify policy was propagated correctly
 			Eventually(func() error {
-				return ts.model.Action().VerifyPolicyStatus(spc)
+				return ts.model.VerifyPolicyStatus(spc)
 			}).Should(Succeed())
 
 			// verify ping is successful
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(workloadPairs)
+				return ts.model.PingPairs(workloadPairs)
 			}).Should(Succeed())
 
 			// verify TCP connections fail
 			Eventually(func() error {
-				return ts.model.Action().TCPSessionFails(workloadPairs, 8000)
+				return ts.model.TCPSessionFails(workloadPairs, 8000)
 			}).Should(Succeed())
 		})
 	})
@@ -147,17 +147,17 @@ var _ = Describe("firewall whitelist tests", func() {
 
 				// verify policy was propagated correctly
 				Eventually(func() error {
-					return ts.model.Action().VerifyPolicyStatus(spc)
+					return ts.model.VerifyPolicyStatus(spc)
 				}).Should(Succeed())
 
 				// verify TCP connection works on boundary port
 				Eventually(func() error {
-					return ts.model.Action().TCPSession(workloadPairs, boundaryPort)
+					return ts.model.TCPSession(workloadPairs, boundaryPort)
 				}).Should(Succeed())
 
 				// verify connections above boundary port does not work
 				Eventually(func() error {
-					return ts.model.Action().TCPSessionFails(workloadPairs, boundaryPort+1)
+					return ts.model.TCPSessionFails(workloadPairs, boundaryPort+1)
 				}).Should(Succeed())
 
 				// change the boundary port

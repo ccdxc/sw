@@ -4,30 +4,30 @@ import (
 	"errors"
 	"time"
 
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pensando/sw/iota/test/venice/iotakit"
 )
 
 var _ = Describe("rollout tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
-		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			_, err := ts.model.Action().RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
+		ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+			_, err := ts.model.RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
 	})
 	AfterEach(func() {
 		ts.tb.AfterTestCommon()
-		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			ts.model.Action().RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
+		ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+			ts.model.RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 			return nil
 		})
 
@@ -44,17 +44,17 @@ var _ = Describe("rollout tests", func() {
 			log.Infof(" Length workloadPairs %v", len(workloadPairs.ListIPAddr()))
 			Expect(len(workloadPairs.ListIPAddr()) != 0).Should(BeTrue())
 
-			err = ts.model.Action().PerformRollout(rollout, ts.scaleData)
+			err = ts.model.PerformRollout(rollout, ts.scaleData)
 			Expect(err).ShouldNot(HaveOccurred())
 			rerr := make(chan bool)
 			go func() {
-				options := &iotakit.ConnectionOptions{
+				options := &objects.ConnectionOptions{
 					Duration:          "180s",
 					Port:              "8000",
 					Proto:             "tcp",
 					ReconnectAttempts: 100,
 				}
-				_ = ts.model.Action().ConnectionWithOptions(workloadPairs, options)
+				_ = ts.model.ConnectionWithOptions(workloadPairs, options)
 				log.Infof("TCP SESSION TEST COMPLETE")
 				rerr <- true
 				return
@@ -62,7 +62,7 @@ var _ = Describe("rollout tests", func() {
 
 			// verify rollout is successful
 			Eventually(func() error {
-				return ts.model.Action().VerifyRolloutStatus(rollout.Name)
+				return ts.model.VerifyRolloutStatus(rollout.Name)
 			}).Should(Succeed())
 			log.Infof("Rollout Completed. Waiting for Fuz tests to complete..")
 			errWaitingForFuz := func() error {

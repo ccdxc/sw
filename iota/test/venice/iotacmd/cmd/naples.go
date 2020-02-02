@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/spf13/cobra"
 )
 
@@ -73,8 +73,8 @@ func naplesDeleteAction(cmd *cobra.Command, args []string) {
 
 func naplesUpgradeAction(cmd *cobra.Command, args []string) {
 
-	setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-		setupModel.Action().RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
+	setupModel.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		setupModel.RunNaplesCommand(nc, "touch /update/upgrade_to_same_firmware_allowed")
 		return nil
 	})
 
@@ -93,7 +93,7 @@ func doNaplesRemoveAdd(percent int) error {
 		return err
 	}
 
-	return setupModel.Action().RemoveAddNaples(naples)
+	return setupModel.RemoveAddNaples(naples)
 }
 
 func doNaplesMgmtLinkFlap(percent int) error {
@@ -104,24 +104,24 @@ func doNaplesMgmtLinkFlap(percent int) error {
 		return err
 	}
 
-	return setupModel.Action().FlapMgmtLinkNaples(naples)
+	return setupModel.FlapMgmtLinkNaples(naples)
 }
 
 func doNaplesUpgrade(percent int) error {
 
 	numNaples := 0
-	setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-		_, err := setupModel.Action().RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
+	setupModel.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		_, err := setupModel.RunNaplesCommand(nc, "touch /data/upgrade_to_same_firmware_allowed")
 		numNaples++
 		return err
 	})
 
-	defer setupModel.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-		_, err := setupModel.Action().RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
+	defer setupModel.ForEachNaples(func(nc *objects.NaplesCollection) error {
+		_, err := setupModel.RunNaplesCommand(nc, "rm /data/upgrade_to_same_firmware_allowed")
 		return err
 	})
 
-	setupModel.ForEachFakeNaples(func(nc *iotakit.NaplesCollection) error {
+	setupModel.ForEachFakeNaples(func(nc *objects.NaplesCollection) error {
 		numNaples++
 		return nil
 	})
@@ -131,7 +131,7 @@ func doNaplesUpgrade(percent int) error {
 		return err
 	}
 
-	err = setupModel.Action().PerformRollout(rollout, true)
+	err = setupModel.PerformRollout(rollout, true)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func doNaplesUpgrade(percent int) error {
 		case <-TimedOutEvent:
 			return errors.New("Error waiting for upgrade, timed out")
 		default:
-			err = setupModel.Action().VerifyRolloutStatus(rollout.Name)
+			err = setupModel.VerifyRolloutStatus(rollout.Name)
 			if err == nil {
 				//Sleep for while to make sure all naples are connected
 				time.Sleep(60 * time.Second)
@@ -156,29 +156,29 @@ func doNaplesUpgrade(percent int) error {
 
 func generateEvents(rate, count string) error {
 
-	setupModel.Action().StopEventsGenOnNaples(setupModel.Naples())
+	setupModel.StopEventsGenOnNaples(setupModel.Naples())
 
-	return setupModel.Action().StartEventsGenOnNaples(setupModel.Naples(),
+	return setupModel.StartEventsGenOnNaples(setupModel.Naples(),
 		rate, count)
 }
 
 func stopEvents(rate, count string) error {
 
-	setupModel.Action().StopEventsGenOnNaples(setupModel.Naples())
+	setupModel.StopEventsGenOnNaples(setupModel.Naples())
 	return nil
 }
 
 func generateFWLogs(rate, count string) error {
 
-	setupModel.Action().StopFWLogGenOnNaples(setupModel.Naples())
+	setupModel.StopFWLogGenOnNaples(setupModel.Naples())
 
-	return setupModel.Action().StartFWLogGenOnNaples(setupModel.Naples(),
+	return setupModel.StartFWLogGenOnNaples(setupModel.Naples(),
 		rate, count)
 }
 
 func stopFWLogs(rate, count string) error {
 
-	setupModel.Action().StopFWLogGenOnNaples(setupModel.Naples())
+	setupModel.StopFWLogGenOnNaples(setupModel.Naples())
 	return nil
 
 }

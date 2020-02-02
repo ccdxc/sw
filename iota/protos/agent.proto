@@ -36,4 +36,8 @@ service IotaAgentApi {
 
     // Load Node will save, reboot and load context
     rpc ReloadNode (Node) returns (Node) {};
+
+     // GetWorkloads returns workloads on the node
+    rpc GetWorkloads (WorkloadMsg) returns (WorkloadMsg) {};
+
 }

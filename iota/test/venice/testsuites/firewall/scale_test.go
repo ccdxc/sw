@@ -6,26 +6,26 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 var _ = Describe("firewall scale tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
-		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
+		ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+			_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 
 	AfterEach(func() {
-		ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-			_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
+		ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+			_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
 			Expect(err).ShouldNot(HaveOccurred())
 			return nil
 		})
@@ -40,7 +40,7 @@ var _ = Describe("firewall scale tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "0")).ShouldNot(HaveOccurred())
+			Expect(ts.model.FuzIt(workloadPairs, 100, "tcp", "0")).ShouldNot(HaveOccurred())
 
 		})
 
@@ -51,7 +51,7 @@ var _ = Describe("firewall scale tests", func() {
 			}
 
 			workloadPairs := ts.model.WorkloadPairs().Deny(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
-			Expect(ts.model.Action().FuzIt(workloadPairs, 100, "tcp", "0")).Should(HaveOccurred())
+			Expect(ts.model.FuzIt(workloadPairs, 100, "tcp", "0")).Should(HaveOccurred())
 
 		})
 	})

@@ -160,12 +160,12 @@ func initEsxCtrlVM() (string, error) {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to create vswitch %v ", err.Error())
 	}
 	nws := []vmware.NWSpec{{Name: constants.EsxDefaultNetwork, Vlan: int32(constants.EsxDefaultNetworkVlan)}, {Name: constants.EsxVMNetwork, Vlan: int32(constants.EsxVMNetworkVlan)}}
-	_, err = host.AddNetworks(nws, vsspec)
+	err = host.AddNetworks(nws, vsspec)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestBed | Failed to create networks %v ", err.Error())
 	}
 
-	vmInfo, err := host.DeployVM(constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
+	vmInfo, err := host.DeployVM("", "", constants.EsxControlVMName, constants.EsxControlVMCpus, constants.EsxControlVMMemory, constants.EsxControlVMNetworks, ctrlVMDir)
 
 	if err != nil {
 

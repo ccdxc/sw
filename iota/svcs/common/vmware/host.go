@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -11,13 +12,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/ovf"
 
 	//"github.com/vmware/govmomi/ovf"
 	"github.com/vmware/govmomi/property"
+	"github.com/vmware/govmomi/view"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
 	"github.com/vmware/govmomi/vim25/types"
@@ -46,30 +47,43 @@ type PortGroupSpec struct {
 	Vswitch string
 }
 
-// TLSVerify turns on TLS verification.
-var TLSVerify = false
-
-// Client encapsulates all we ask of the govmomi client; to be used in-between
-// different data types. It belongs, however, to the host and the host controls
-// it.
-type Client struct {
-	*govmomi.Client
-}
-
-// Context is a top-level context.Context wrapper for controlling actions to
-// the host at a global level.
-type Context struct {
-	context    context.Context
-	cancelFunc context.CancelFunc
-}
-
 // Host encapsulates operations on a vmware host.
 type Host struct {
-	Hostname string
-	URL      *url.URL
+	hs *object.HostSystem
+	Entity
+}
 
-	client  *Client
-	context *Context
+// Vcenter managed host
+type VHost struct {
+	Host
+}
+
+func (h *Host) GetHostSystem() (*object.HostSystem, error) {
+
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	finder := h.Finder()
+
+	hs, err := finder.DefaultHostSystem(h.Ctx())
+	if err != nil {
+		return nil, err
+	}
+
+	return hs, nil
+}
+
+func (h *VHost) GetHostSystem() (*object.HostSystem, error) {
+
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	finder := h.Finder()
+
+	hs, err := finder.DefaultHostSystem(h.Ctx())
+	if err != nil {
+		return nil, err
+	}
+
+	return hs, nil
 }
 
 // NewHost returns a new *Host for the given hostname.
@@ -83,18 +97,73 @@ func NewHost(ctx context.Context, hostname, username, password string) (*Host, e
 		return nil, errors.Wrap(err, "credentials are invalid")
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	client, err := govmomi.NewClient(ctx, u, !TLSVerify)
-	if err != nil {
-		cancel()
-		return nil, err
+	host := &Host{
+		Entity: Entity{
+			Name: hostname,
+			URL:  u,
+		},
 	}
-	return &Host{
-		Hostname: hostname,
-		URL:      u,
-		context:  &Context{context: ctx, cancelFunc: cancel},
-		client:   &Client{client},
-	}, nil
+
+	if err := host.Reinit(ctx); err != nil {
+		return nil, errors.Wrapf(err, "Connection failed")
+	}
+
+	dc, err := host.Entity.Finder().DefaultDatacenter(context.Background())
+	if err != nil {
+		return nil, errors.Wrapf(err, "Failed to find datacenter")
+	}
+
+	host.Entity.Finder().SetDatacenter(dc)
+	host.hs, err = host.Entity.Finder().DefaultHostSystem(host.Entity.Ctx())
+	if err != nil {
+		return nil, errors.Wrapf(err, "Not able to find host system")
+	}
+
+	return host, nil
+}
+
+//GetVcenterForHost associated vcenter
+func (h *Host) GetVcenterForHost() (string, error) {
+
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	ctx := h.Ctx()
+
+	m := view.NewManager(h.Client().Client)
+
+	v, err := m.CreateContainerView(ctx, h.Client().ServiceContent.RootFolder, []string{"HostSystem"}, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer v.Destroy(ctx)
+	var hosts []mo.HostSystem
+	err = v.Retrieve(ctx, []string{"HostSystem"}, nil, &hosts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, host := range hosts {
+		return host.Summary.ManagementServerIp, nil
+	}
+
+	return "", errors.New("Host not found")
+}
+
+//NewVHost create a new Host managed by vcenter
+func NewVHost(ctx context.Context, hs *object.HostSystem, pc *property.Collector, finder *find.Finder) *VHost {
+	return &VHost{Host: Host{
+		Entity: Entity{
+			Name: hs.Name(),
+			ConnCtx: ConnectionCtx{
+				finder:  finder,
+				context: &Context{context: ctx},
+			},
+		},
+		hs: hs,
+	},
+	}
+
 }
 
 func (c *Client) finder() (*find.Finder, *object.Datacenter, error) {
@@ -110,24 +179,21 @@ func (c *Client) finder() (*find.Finder, *object.Datacenter, error) {
 }
 
 func (h *Host) cancel() {
-	h.context.cancelFunc()
+	//	h.Ctx().cancelFunc()
 }
 
 // Close closes any connections and forcibly stops any active work.
 func (h *Host) Close() error {
 	h.cancel()
-	h.client.CloseIdleConnections()
+	h.Client().CloseIdleConnections()
 	return nil
 }
 
 // GetAllVms gets all vms on this host
 func (h *Host) GetAllVms() ([]*VM, error) {
-	finder, _, err := h.client.finder()
-	if err != nil {
-		return nil, err
-	}
-
-	vms, err := finder.VirtualMachineList(h.context.context, "*")
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	vms, err := h.Finder().VirtualMachineList(h.Ctx(), "*")
 	if err != nil {
 		//May be no VMs at all
 		return nil, nil
@@ -143,24 +209,43 @@ func (h *Host) GetAllVms() ([]*VM, error) {
 }
 
 func (h *Host) hostNetworkSystem() (*object.HostNetworkSystem, error) {
-	finder, _, err := h.client.finder()
+
+	hs, err := h.Entity.Finder().DefaultHostSystem(h.Ctx())
+	if err != nil {
+		fmt.Printf("Error %v\n", err)
+		return nil, err
+	}
+
+	return hs.ConfigManager().NetworkSystem(h.Ctx())
+
+}
+
+func (h *VHost) hostNetworkSystem() (*object.HostNetworkSystem, error) {
+
+	return h.hostNetworkSystemByName(h.Name)
+}
+
+func (h *Host) hostNetworkSystemByName(name string) (*object.HostNetworkSystem, error) {
+	hsList, err := h.Finder().HostSystemList(h.Ctx(), "*")
 	if err != nil {
 		return nil, err
 	}
 
-	hs, err := finder.DefaultHostSystem(h.context.context)
-	if err != nil {
-		return nil, err
+	for _, hs := range hsList {
+		if hs.Name() == name {
+			return hs.ConfigManager().NetworkSystem(h.Ctx())
+		}
 	}
 
-	return hs.ConfigManager().NetworkSystem(h.context.context)
+	return nil, fmt.Errorf("Did not find host network system for %v", name)
 }
 
 func (h *Host) vSwitchExists(name string, ns *object.HostNetworkSystem) bool {
-	pc := property.DefaultCollector(h.client.Client.Client)
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	var mns mo.HostNetworkSystem
 
-	err := pc.RetrieveOne(h.context.context, ns.Reference(), []string{"networkInfo.vswitch"}, &mns)
+	err := h.Entity.ConnCtx.pc.RetrieveOne(h.Ctx(), ns.Reference(), []string{"networkInfo.vswitch"}, &mns)
 	if err != nil {
 		return false
 	}
@@ -176,6 +261,8 @@ func (h *Host) vSwitchExists(name string, ns *object.HostNetworkSystem) bool {
 
 // RemoveVswitch removes vswitch from target host
 func (h *Host) RemoveVswitch(vspec VswitchSpec) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
@@ -186,11 +273,13 @@ func (h *Host) RemoveVswitch(vspec VswitchSpec) error {
 		return nil
 	}
 
-	return ns.RemoveVirtualSwitch(h.context.context, vspec.Name)
+	return ns.RemoveVirtualSwitch(h.Ctx(), vspec.Name)
 }
 
 // AddVswitch adds vswitch to target host
 func (h *Host) AddVswitch(vspec VswitchSpec) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
@@ -210,19 +299,54 @@ func (h *Host) AddVswitch(vspec VswitchSpec) error {
 		}
 	}
 
-	return ns.AddVirtualSwitch(h.context.context, vspec.Name, spec)
+	return ns.AddVirtualSwitch(h.Ctx(), vspec.Name, spec)
+}
+
+func addVirtualSwitch(ctx context.Context, ns *object.HostNetworkSystem, vspec VswitchSpec) error {
+	spec := &types.HostVirtualSwitchSpec{
+		NumPorts: 128, // default, but required!
+	}
+	if len(vspec.Pnics) > 0 {
+		spec.Bridge = &types.HostVirtualSwitchBondBridge{
+			NicDevice: vspec.Pnics,
+		}
+	}
+
+	return ns.AddVirtualSwitch(ctx, vspec.Name, spec)
+}
+
+// AddVswitch adds vswitch to target host
+func (h *VHost) AddVswitch(vspec VswitchSpec) error {
+	ns, err := h.hostNetworkSystem()
+	if err != nil {
+		return err
+	}
+
+	// if the switch exists, just return
+	if h.Host.vSwitchExists(vspec.Name, ns) {
+		return nil
+	}
+
+	return addVirtualSwitch(h.Ctx(), ns, vspec)
+}
+
+// AddNetworks add specified network for
+func (h *VHost) AddNetworks(specs []NWSpec, vsSpec VswitchSpec) error {
+
+	return h.Host.AddNetworks(specs, vsSpec)
 }
 
 // ListVswitchs lists all vswitches in the ESX host
 func (h *Host) ListVswitchs() ([]VswitchSpec, error) {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return nil, err
 	}
-	pc := property.DefaultCollector(h.client.Client.Client)
 	var mns mo.HostNetworkSystem
 
-	err = pc.RetrieveOne(h.context.context, ns.Reference(), []string{"networkInfo.vswitch"}, &mns)
+	err = h.Entity.ConnCtx.pc.RetrieveOne(h.Ctx(), ns.Reference(), []string{"networkInfo.vswitch"}, &mns)
 	if err != nil {
 		return nil, err
 	}
@@ -242,15 +366,22 @@ func (h *Host) ListVswitchs() ([]VswitchSpec, error) {
 	return specs, nil
 }
 
+// ListVswitchs lists all vswitches in the ESX host
+func (h *VHost) ListVswitchs() ([]VswitchSpec, error) {
+	return h.Host.ListVswitchs()
+}
+
 // RemoveNetworks removes the specified virtual networks
 func (h *Host) RemoveNetworks(specs []NWSpec) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
 	}
 
 	for _, s := range specs {
-		err = ns.RemovePortGroup(h.context.context, s.Name)
+		err = ns.RemovePortGroup(h.Ctx(), s.Name)
 		if err != nil {
 			return fmt.Errorf("Failed to remove %s - %v", s.Name, err)
 		}
@@ -259,19 +390,28 @@ func (h *Host) RemoveNetworks(specs []NWSpec) error {
 	return nil
 }
 
+// RemoveNetworks removes the specified virtual networks
+func (h *VHost) RemoveNetworks(specs []NWSpec) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	return h.Host.RemoveNetworks(specs)
+}
+
 // AddNetworks adds the specified virtual networks
-func (h *Host) AddNetworks(specs []NWSpec, vsSpec VswitchSpec) ([]string, error) {
+func (h *Host) AddNetworks(specs []NWSpec, vsSpec VswitchSpec) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	var nets []string
 
 	// create our private vswitch
 	err := h.AddVswitch(vsSpec)
 	if err != nil {
-		return nets, err
+		//return nets, err
 	}
 
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
-		return nets, err
+		return err
 	}
 
 	// allow everything on the port group
@@ -288,27 +428,28 @@ func (h *Host) AddNetworks(specs []NWSpec, vsSpec VswitchSpec) ([]string, error)
 			VswitchName: vsSpec.Name,
 			Policy:      types.HostNetworkPolicy{Security: nsp},
 		}
-		err = ns.AddPortGroup(h.context.context, pgs)
+		err = ns.AddPortGroup(h.Ctx(), pgs)
 		if err != nil {
-			return nets, err
+			return err
 		}
 
 		nets = append(nets, s.Name)
 	}
 
-	return nets, nil
+	return nil
 }
 
 // ListNetworks return networks in the system
 func (h *Host) ListNetworks() ([]PortGroupSpec, error) {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return nil, err
 	}
-	pc := property.DefaultCollector(h.client.Client.Client)
 	var mns mo.HostNetworkSystem
 
-	err = pc.RetrieveOne(h.context.context, ns.Reference(), []string{"networkInfo.portgroup"}, &mns)
+	err = h.ConnCtx.pc.RetrieveOne(h.Ctx(), ns.Reference(), []string{"networkInfo.portgroup"}, &mns)
 	if err != nil {
 		return nil, err
 	}
@@ -325,18 +466,127 @@ func (h *Host) ListNetworks() ([]PortGroupSpec, error) {
 	return specs, nil
 }
 
-// RemoveKernelNic removes the specified kernel nic
-func (h *Host) RemoveKernelNic(vnicName string) error {
+// ListNetworks return networks in the system
+func (h *VHost) ListNetworks() ([]PortGroupSpec, error) {
+	return h.Host.ListNetworks()
+}
+
+// AddKernelNic adds the specified kernel nic
+func (h *Host) AddKernelNic(cluster, host string, portGroupName string, enableVmotion bool) error {
 	ns, err := h.hostNetworkSystem()
 	if err != nil {
 		return err
 	}
 
-	return ns.RemoveVirtualNic(h.context.context, vnicName)
+	spec := types.HostVirtualNicSpec{
+		Ip: &types.HostIpConfig{Dhcp: true},
+		//Portgroup:           portGroupName,
+		//Mtu:                 1500,
+		//TsoEnabled:          types.NewBool(true),
+		//NetStackInstanceKey: "defaultTcpipStack",
+	}
+	name, err := ns.AddVirtualNic(h.Ctx(), portGroupName, spec)
+	if err != nil {
+		return err
+	}
+
+	if enableVmotion {
+		vnicMgr, err := h.hs.ConfigManager().VirtualNicManager(h.Ctx())
+		if err != nil {
+			return errors.Wrap(err, "Unble to get vnic manager")
+		}
+
+		err = vnicMgr.SelectVnic(h.Ctx(), "vmotion", name)
+		if err != nil {
+			return errors.Wrap(err, "enabling vmotion failed")
+		}
+	}
+
+	return err
 }
 
-func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (*VMInfo, error) {
-	vm, err := finder.VirtualMachine(h.context.context, name)
+// RemoveKernelNic removes the specified kernel nic
+func (h *Host) RemoveKernelNic(cluster, host string, vnicName string) error {
+	ns, err := h.hostNetworkSystem()
+	if err != nil {
+		return err
+	}
+
+	pc := property.DefaultCollector(h.Client().Client)
+	var mns mo.HostNetworkSystem
+
+	err = pc.RetrieveOne(h.Ctx(), ns.Reference(), []string{"networkInfo.vnic"}, &mns)
+	if err != nil {
+		return err
+	}
+
+	for _, pg := range mns.NetworkInfo.Vnic {
+		if vnicName == pg.Spec.Portgroup {
+			return ns.RemoveVirtualNic(h.Ctx(), pg.Device)
+		}
+	}
+	return nil
+}
+
+// AddKernelNic adds the specified kernel nic
+func (h *VHost) AddKernelNic(cluster, host string, portGroupName string, enableVmotion bool) error {
+	ns, err := h.hostNetworkSystem()
+	if err != nil {
+		return err
+	}
+
+	spec := types.HostVirtualNicSpec{
+		Ip: &types.HostIpConfig{Dhcp: true},
+		//Portgroup:           portGroupName,
+		//Mtu:                 1500,
+		//TsoEnabled:          types.NewBool(true),
+		//NetStackInstanceKey: "defaultTcpipStack",
+	}
+	name, err := ns.AddVirtualNic(h.Ctx(), portGroupName, spec)
+	if err != nil {
+		return err
+	}
+
+	if enableVmotion {
+		vnicMgr, err := h.hs.ConfigManager().VirtualNicManager(h.Ctx())
+		if err != nil {
+			return errors.Wrap(err, "Unble to get vnic manager")
+		}
+
+		err = vnicMgr.SelectVnic(h.Ctx(), "vmotion", name)
+		if err != nil {
+			return errors.Wrap(err, "enabling vmotion failed")
+		}
+	}
+
+	return err
+}
+
+// RemoveKernelNic removes the specified kernel nic
+func (h *VHost) RemoveKernelNic(cluster, host string, vnicName string) error {
+	ns, err := h.hostNetworkSystem()
+	if err != nil {
+		return err
+	}
+
+	pc := property.DefaultCollector(h.Client().Client)
+	var mns mo.HostNetworkSystem
+
+	err = pc.RetrieveOne(h.Ctx(), ns.Reference(), []string{"networkInfo.vnic"}, &mns)
+	if err != nil {
+		return err
+	}
+
+	for _, pg := range mns.NetworkInfo.Vnic {
+		if vnicName == pg.Spec.Portgroup {
+			return ns.RemoveVirtualNic(h.Ctx(), pg.Device)
+		}
+	}
+	return nil
+}
+
+func (h *Host) boot(name string, ncpus uint, memory uint) (*VMInfo, error) {
+	vm, err := h.Finder().VirtualMachine(h.Ctx(), name)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "Could not find VM")
@@ -346,17 +596,17 @@ func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (
 		return nil, errors.Wrap(err, "Reconfiguration failed")
 	}
 
-	task, err := vm.PowerOn(h.context.context)
+	task, err := vm.PowerOn(h.Ctx())
 	if err != nil {
 		return nil, errors.Wrap(err, "Power on task start failed")
 	}
-	err = task.Wait(h.context.context)
+	err = task.Wait(h.Ctx())
 	if err != nil {
 		return nil, errors.Wrap(err, "Power on task failed")
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(h.context.context)
+	ip, err = vm.WaitForIP(h.Ctx())
 	if err != nil {
 		return nil, errors.Wrap(err, "Wait for IP failed")
 	}
@@ -366,33 +616,35 @@ func (h *Host) boot(name string, ncpus uint, memory uint, finder *find.Finder) (
 
 // BootVM botts up a new vm
 func (h *Host) BootVM(name string) (*VMInfo, error) {
-	ds, err := h.Datastore("datastore1")
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	ds, err := h.Datastore("")
 
 	if err != nil {
 		return nil, err
 	}
 
-	finder, _, err := ds.client.finder()
+	finder := ds.Entity.Finder()
 	if err != nil {
 		return nil, err
 	}
 
-	vm, err := finder.VirtualMachine(h.context.context, name)
+	vm, err := finder.VirtualMachine(h.Ctx(), name)
 
 	if err != nil {
 		return nil, err
 	}
-	task, err := vm.PowerOn(h.context.context)
+	task, err := vm.PowerOn(h.Ctx())
 	if err != nil {
 		return nil, err
 	}
-	err = task.Wait(h.context.context)
+	err = task.Wait(h.Ctx())
 	if err != nil {
 		return nil, err
 	}
 
 	var ip string
-	ip, err = vm.WaitForIP(h.context.context)
+	ip, err = vm.WaitForIP(h.Ctx())
 	if err != nil {
 		return nil, err
 	}
@@ -402,27 +654,26 @@ func (h *Host) BootVM(name string) (*VMInfo, error) {
 
 // PowerOffVM powers off a vm
 func (h *Host) PowerOffVM(name string) error {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 	ds, err := h.Datastore("datastore1")
 
 	if err != nil {
 		return err
 	}
 
-	finder, _, err := ds.client.finder()
-	if err != nil {
-		return err
-	}
+	finder := ds.Entity.Finder()
 
-	vm, err := finder.VirtualMachine(h.context.context, name)
+	vm, err := finder.VirtualMachine(h.Ctx(), name)
 
 	if err != nil {
 		return err
 	}
-	task, err := vm.PowerOff(h.context.context)
+	task, err := vm.PowerOff(h.Ctx())
 	if err != nil {
 		return err
 	}
-	err = task.Wait(h.context.context)
+	err = task.Wait(h.Ctx())
 	if err != nil {
 		return err
 	}
@@ -432,36 +683,34 @@ func (h *Host) PowerOffVM(name string) error {
 
 // GetVMIP gets VM's ip address
 func (h *Host) GetVMIP(name string) (string, error) {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
 
-	finder, _, err := h.client.finder()
+	finder := h.Finder()
+
+	vm, err := finder.VirtualMachine(h.Ctx(), name)
+
 	if err != nil {
 		return "", err
 	}
 
-	vm, err := finder.VirtualMachine(h.context.context, name)
-
-	if err != nil {
-		return "", err
-	}
-
-	return vm.WaitForIP(h.context.context)
+	return vm.WaitForIP(h.Ctx())
 }
 
 //PoweredOn VM powered on
 func (h *Host) PoweredOn(name string) (bool, error) {
 
-	finder, _, err := h.client.finder()
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	finder := h.Finder()
+
+	vm, err := finder.VirtualMachine(h.Ctx(), name)
+
 	if err != nil {
 		return false, err
 	}
 
-	vm, err := finder.VirtualMachine(h.context.context, name)
-
-	if err != nil {
-		return false, err
-	}
-
-	state, err := vm.PowerState(h.context.context)
+	state, err := vm.PowerState(h.Ctx())
 	if err != nil {
 		return false, err
 	}
@@ -476,28 +725,25 @@ func (h *Host) PoweredOn(name string) (bool, error) {
 
 // Datastore returns a *Datastore which allows you to perform operations on it.
 func (h *Host) Datastore(name string) (*Datastore, error) {
-	finder, dc, err := h.client.finder()
-	if err != nil {
-		return nil, err
-	}
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	finder := h.Finder()
 
 	var ds *object.Datastore
+	var err error
 	if name == "" {
-		ds, err = finder.DefaultDatastore(h.context.context)
+		ds, err = finder.DefaultDatastore(h.Ctx())
 
 	} else {
-		ds, err = finder.Datastore(h.context.context, name)
+		ds, err = finder.Datastore(h.Ctx(), name)
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	return &Datastore{
-		datastore:  ds,
-		datacenter: dc,
-		host:       h,
-		client:     h.client,
-		context:    h.context,
+		datastore: ds,
+		Entity:    &h.Entity,
 	}, nil
 }
 
@@ -565,7 +811,7 @@ func (h *Host) getNWMap(ovfDir string, networks []string, finder *find.Finder) (
 		}
 
 		hostNet := networks[ix]
-		if netObj, err := finder.Network(h.context.context, hostNet); err == nil {
+		if netObj, err := finder.Network(h.Ctx(), hostNet); err == nil {
 			nm = append(nm, types.OvfNetworkMapping{
 				Name:    ovfNet.Name,
 				Network: netObj.Reference(),
@@ -595,13 +841,13 @@ func (h *Host) getImportSpec(name string, ds *Datastore, ovfDir string, finder *
 		NetworkMapping:   nwMap,
 	}
 
-	rp, err := finder.DefaultResourcePool(h.context.context)
+	rp, err := finder.DefaultResourcePool(h.Ctx())
 	if err != nil {
 		return nil, err
 	}
 
-	mgr := ovf.NewManager(h.client.Client.Client)
-	spec, err := mgr.CreateImportSpec(h.context.context, string(ovfSrc), rp, ds.datastore.Reference(), cisp)
+	mgr := ovf.NewManager(h.Client().Client)
+	spec, err := mgr.CreateImportSpec(h.Ctx(), string(ovfSrc), rp, ds.datastore.Reference(), cisp)
 	if err != nil {
 		return nil, err
 	}
@@ -617,25 +863,6 @@ func (h *Host) getImportSpec(name string, ds *Datastore, ovfDir string, finder *
 	return spec, nil
 }
 
-func (h *Host) wipeOut(name string) error {
-	vm, err := h.NewVM(name)
-	if err != nil {
-		return err
-	}
-
-	err = vm.Destroy()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// RemoveVM removes a vm
-func (h *Host) RemoveVM(name string) error {
-	return h.wipeOut(name)
-}
-
 func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint) error {
 	bigMemory := int64(memory * 1024)
 
@@ -645,7 +872,7 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 
 	t := true
 
-	task, err = vm.Reconfigure(h.context.context, types.VirtualMachineConfigSpec{
+	task, err = vm.Reconfigure(h.Ctx(), types.VirtualMachineConfigSpec{
 		MemoryReservationLockedToMax: &t,
 		NumCPUs:                      int32(ncpus),
 		MemoryMB:                     bigMemory,
@@ -654,11 +881,11 @@ func (h *Host) reconfigureVM(vm *object.VirtualMachine, ncpus uint, memory uint)
 		return err
 	}
 
-	return task.Wait(h.context.context)
+	return task.Wait(h.Ctx())
 }
 
 func (h *Host) importVapp(dir string, spec *types.OvfCreateImportSpecResult, finder *find.Finder) (retErr error) {
-	ctx, cancel := context.WithTimeout(h.context.context, 30*time.Minute)
+	ctx, cancel := context.WithTimeout(h.Ctx(), 30*time.Minute)
 	defer cancel()
 
 	host, err := finder.DefaultHostSystem(ctx)
@@ -713,6 +940,7 @@ func (h *Host) importVapp(dir string, spec *types.OvfCreateImportSpecResult, fin
 	return nil
 }
 
+/*
 // DeployVMOnDataStore deploys a VM on a datastore
 func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
 
@@ -735,34 +963,35 @@ func (h *Host) DeployVMOnDataStore(ds *Datastore, name string, ncpus uint, memor
 
 	//SLeep for a while before booting.
 	time.Sleep(5 * time.Second)
-	return h.boot(name, ncpus, memory, finder)
+	return h.boot(name, ncpus, memory)
 }
+*/
 
 // DeployVM deploys a vm
-func (h *Host) DeployVM(name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
-	ds, err := h.Datastore("datastore1")
+func (h *Host) DeployVM(clName, hostName, name string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	ds, err := h.Datastore("")
 
 	if err != nil {
 		return nil, err
 	}
 
-	return h.DeployVMOnDataStore(ds, name, ncpus, memory, networks, ovfDir)
+	return h.DeployVMOnDataStore(ds, h.hs, name, ncpus, memory, networks, ovfDir)
 }
 
-// VMExists returns true if VM by the name exists
-func (h *Host) VMExists(name string) bool {
-
-	finder, _, err := h.client.finder()
-	if err != nil {
-		return false
-	}
-
-	_, err = finder.VirtualMachine(h.context.context, name)
-
-	return err == nil
+// CloneVM clones a VM
+func (h *Host) CloneVM(name, newName string, ncpus uint, memory uint, networks []string, ovfDir string) (*VMInfo, error) {
+	h.getClientWithRLock()
+	defer h.releaseClientRLock()
+	return h.cloneVMOnHost(h.hs, name, newName, ncpus, memory)
 }
 
-// DestoryVM destroys the vm
-func (h *Host) DestoryVM(name string) error {
-	return h.RemoveVM(name)
+func (h *Host) FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error) {
+
+	return "", errors.New("NOT IMPLEMENTED")
+}
+
+func (h *Host) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error {
+	return errors.New("NOT IMPLEMENTED")
 }

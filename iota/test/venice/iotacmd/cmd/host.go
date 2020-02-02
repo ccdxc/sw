@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -33,7 +33,7 @@ func rebootHosts(percent int) error {
 	if err != nil {
 		return err
 	}
-	return setupModel.Action().ReloadHosts(hc)
+	return setupModel.ReloadHosts(hc)
 }
 
 func hostRebootAction(cmd *cobra.Command, args []string) {
@@ -53,7 +53,7 @@ func hostRebootAction(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var hc *iotakit.HostCollection
+	var hc *objects.HostCollection
 	var err error
 	if all {
 		hc = setupModel.Hosts()
@@ -66,7 +66,7 @@ func hostRebootAction(cmd *cobra.Command, args []string) {
 		}
 		log.Infof("The following hosts will be rebooted %v", args)
 	}
-	err = setupModel.Action().ReloadHosts(hc)
+	err = setupModel.ReloadHosts(hc)
 	if err != nil {
 		errorExit("rebooting hosts", err)
 	}

@@ -67,6 +67,9 @@ service TopologyApi {
     // EntityCopy copies files in/out from entities
     rpc EntityCopy(EntityCopyMsg) returns  (EntityCopyMsg) {};
 
+    // WorkloadMoveMsg moves workloads
+    rpc MoveWorkloads(WorkloadMoveMsg) returns  (WorkloadMoveMsg) {};
+
 }
 
 // Op defines topology operation
@@ -127,6 +130,12 @@ enum PersonalityType {
     // Node just run commands
     PERSONALITY_COMMAND_NODE            = 12;
     PERSONALITY_VENICE_BM               = 13;
+    PERSONALITY_VCENTER_NODE            = 14;
+
+    // Naples with DVS mode
+    PERSONALITY_NAPLES_DVS              = 15;
+
+    PERSONALITY_THIRD_PARTY_NIC_DVS     = 16;
 }
 
 enum EntityType {
@@ -152,7 +161,15 @@ message VmwareESXConfig {
 
     // IP address of esx
     string ip_address = 3;
+
+    // name of esx node
+    string name = 4;
 }
+
+message VcenterConfig {
+    repeated VmwareESXConfig esx_configs = 1;
+}
+
 
 message NaplesSimInfo {
 
@@ -190,6 +207,8 @@ message Node {
 
         // naples multiple sim on same node
         NaplesMultiSimConfig    naples_multi_sim_config    = 9;
+
+        VcenterConfig           vcenter_config = 10;
     }
 
     // NodeStatus captures the details of the node action
@@ -208,15 +227,9 @@ message Node {
     // Flag to indicate that node is being reload from saved config
     bool                reload          = 17;
 
-    ApcInfo             apc_info        = 18;
 
     string              RestartMethod   = 19;
 
-    string     cimc_ip_address = 20;
-
-    string     cimc_username   = 21;
-
-    string     cimc_password   = 22;
  }
 
 message ApcInfo {
@@ -293,7 +306,7 @@ message NaplesConfig {
 }
 
 message NaplesConfigs {
-    repeated NaplesConfig configs = 1;
+    repeated NaplesConfig configs = 2;
 }
 
 message ThirdPartyNicConfig {
@@ -361,6 +374,7 @@ enum InterfaceType {
     INTERFACE_TYPE_NONE  = 0;
     INTERFACE_TYPE_VSS   = 1;
     INTERFACE_TYPE_SRIOV = 2;
+    INTERFACE_TYPE_DVS   = 3;
 }
 
 enum WorkloadType {
@@ -371,6 +385,14 @@ enum WorkloadType {
     WORKLOAD_TYPE_BARE_METAL_MAC_VLAN        = 4;
     WORKLOAD_TYPE_BARE_METAL_MAC_VLAN_ENCAP  = 5;
     WORKLOAD_TYPE_CONTAINER_MAC_VLAN         = 6;
+}
+
+message DvsInfo {
+    // switch name 
+    string switch_name                      = 1;
+
+    // network name
+    string network_name                    = 2;
 }
 
 message Workload {
@@ -429,6 +451,9 @@ message Workload {
 
     // Management IP of the workload if VM
     string mgmt_ip                          = 19;
+
+    //If interface type is DVS
+    DvsInfo  dvs                            = 20;
 }
 
 enum TriggerOp {
@@ -511,6 +536,41 @@ message Command {
     //retries on failure, for unreliable commands
     uint32          retries_on_failure  = 14;
 }
+
+
+enum WorkloadMoveType {
+    WORKLOAD_MOVE_TYPE_DEFAULT = 0;
+}
+
+message WorkloadMove {
+
+    // workload move type
+    WorkloadMoveType     type            = 1;
+
+    // src node name
+    string              src_node_name    = 2;
+
+    // dst node name
+    string              dst_node_name    = 3;
+
+    // entity name to run command on
+    string              workload_name    = 4;
+
+    // workload move response
+    IotaAPIResponse     api_response     = 5;
+}
+
+// WorkloadMoveMsg move workloads 
+message WorkloadMoveMsg {
+    IotaAPIResponse api_response          = 1;
+
+    // List of workload moves
+    repeated WorkloadMove workload_moves  = 2;
+
+    //Orchestrator node 
+    string orchestrator_node              = 3;
+}
+
 
 // Captures the overall health of the e2e cluster
 message ClusterHealthMsg {
@@ -596,6 +656,21 @@ message DataSwitch {
     bool igmp_disabled = 10;
 }
 
+message License {
+    enum Type {
+        LICENSE_NONE          = 0;
+        LICENSE_VCENTER       = 1;
+    }
+
+    string username = 1;
+
+    string password = 2;
+
+    string key      = 3;
+
+    string type     = 4;
+}
+
 message TestBedMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
@@ -633,6 +708,9 @@ message TestBedMsg {
 
     // Reboot Nodes
     bool reboot_nodes                   = 12;
+
+    // global licenses
+    repeated License licenses           = 13;
 }
 
 message TestNodesMsg {
@@ -650,6 +728,9 @@ message TestNodesMsg {
 
     // Reboot Nodes
     bool reboot_nodes                   = 5;
+
+    // global licenses
+    repeated License licenses           = 13;
 }
 
 
@@ -712,12 +793,17 @@ enum TestBedNodeType {
     //Run multiple sim on HW
     TESTBED_NODE_TYPE_MULTI_SIM  = 3;
     TESTBED_NODE_TYPE_VENICE_BM  = 4;
+    //Vcenter node
+    TESTBED_NODE_TYPE_VCENTER     = 5;
+
+    TESTBED_NODE_TYPE_THIRD_PARTY = 6;
 }
 
 enum TestBedNodeOs {
     TESTBED_NODE_OS_LINUX   = 0;
     TESTBED_NODE_OS_FREEBSD = 1;
     TESTBED_NODE_OS_ESX     = 2;
+    TESTBED_NODE_OS_VCENTER = 3;
 }
 
 message TestBedNode {
@@ -771,6 +857,11 @@ message TestBedNode {
 
     //server type
     string server_type              = 22;
+
+    //license
+    string license                  = 23;
+
+    ApcInfo apc_info                = 24;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

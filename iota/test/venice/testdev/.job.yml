@@ -39,6 +39,9 @@ e2e-targets:
           VmOs: linux
           EsxUsername: root
           EsxPassword: Pen0trl!
+          VcenterUsername: "administrator@vsphere.local"
+          VcenterPassword: "N0isytem$"
+          VcenterLicense: "YN69K-6YK5J-78X8T-0M3RH-0T12H"
 
 logfiles:
   - /go/src/github.com/pensando/sw/iota/logs/venice-iota.tgz

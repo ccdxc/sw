@@ -186,6 +186,18 @@ class _Testbed:
             else:
                 node_msg.os = topo_pb2.TESTBED_NODE_OS_LINUX
 
+            res = instance.Resource
+            if getattr(res,"ApcIP",None):
+                node_msg.apc_info.ip = res.ApcIP
+                node_msg.apc_info.port = res.ApcPort
+                node_msg.apc_info.username = res.ApcUsername
+                node_msg.apc_info.password = res.ApcPassword
+            if getattr(instance, "NodeCimcIP", "") != "":
+                node_msg.cimc_ip_address = instance.NodeCimcIP
+                node_msg.cimc_username = getattr(instance,"NodeCimcUsername","admin")
+                node_msg.cimc_password = getattr(instance,"NodeCimcPassword","N0isystem$")
+
+
             #If Vlan base not set, ask topo server to allocate.
             if not getattr(self.__tbspec, "TestbedVlanBase", None):
                 switch_ips = {}

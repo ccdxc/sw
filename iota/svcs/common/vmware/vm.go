@@ -10,9 +10,9 @@ import (
 
 // VM encapsulates a single VM
 type VM struct {
-	host *Host
-	name string
-	vm   *object.VirtualMachine
+	entity *Entity
+	name   string
+	vm     *object.VirtualMachine
 }
 
 // VMInfo contains info about a vm
@@ -26,22 +26,11 @@ func (vm VM) Name() string {
 	return vm.name
 }
 
-func (h *Host) makeVM(name string, vm *object.VirtualMachine) *VM {
-	return &VM{
-		host: h,
-		name: name,
-		vm:   vm,
-	}
-}
-
 // NewVM creates a new virtual machine
 func (h *Host) NewVM(name string) (*VM, error) {
-	finder, _, err := h.client.finder()
-	if err != nil {
-		return nil, err
-	}
+	finder := h.Finder()
 
-	vm, err := finder.VirtualMachine(h.context.context, name)
+	vm, err := finder.VirtualMachine(h.Ctx(), name)
 	if err != nil {
 		return nil, err
 	}
@@ -55,31 +44,49 @@ func (vm *VM) Destroy() error {
 		return err
 	}
 
-	task, err := vm.vm.Destroy(vm.host.context.context)
+	task, err := vm.vm.Destroy(vm.entity.Ctx())
 	if err != nil {
 		return err
 	}
 
-	return task.Wait(vm.host.context.context)
+	return task.Wait(vm.entity.Ctx())
 }
 
 // PowerOff the VM
 func (vm *VM) PowerOff() error {
-	state, err := vm.vm.PowerState(vm.host.context.context)
+	state, err := vm.vm.PowerState(vm.entity.Ctx())
 	if err != nil {
 		return err
 	}
 
 	if state != types.VirtualMachinePowerStatePoweredOff {
-		task, err := vm.vm.PowerOff(vm.host.context.context)
+		task, err := vm.vm.PowerOff(vm.entity.Ctx())
 		if err != nil {
 			return err
 		}
 
-		return task.Wait(vm.host.context.context)
+		return task.Wait(vm.entity.Ctx())
 	}
 
 	return nil
+}
+
+// Migrate VM to destination host
+func (vm *VM) Migrate(host *Host, dref *types.ManagedObjectReference) error {
+
+	href := host.hs.Reference()
+	config := types.VirtualMachineRelocateSpec{
+		Datastore: dref,
+		Host:      &href,
+	}
+	task, err := vm.vm.Relocate(vm.entity.Ctx(), config,
+		types.VirtualMachineMovePriorityDefaultPriority)
+	if err != nil {
+		return err
+	}
+
+	return task.Wait(vm.entity.Ctx())
+
 }
 
 //ReconfigureNetwork will connect interface connected from one network to other network
@@ -89,7 +96,27 @@ func (vm *VM) ReconfigureNetwork(currNW string, newNW string) error {
 	var devList object.VirtualDeviceList
 	var err error
 
-	devList, err = vm.vm.Device(vm.host.context.context)
+	net, err := vm.entity.Finder().Network(vm.entity.Ctx(), newNW)
+	if err != nil {
+		return errors.Wrap(err, "Failed Find Network")
+	}
+
+	curNet, err := vm.entity.Finder().Network(vm.entity.Ctx(), currNW)
+	if err != nil {
+		return errors.Wrap(err, "Failed Find current Network")
+	}
+
+	curNetRef, err := curNet.EthernetCardBackingInfo(vm.entity.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Failed Find current Network")
+	}
+
+	nwRef, err := net.EthernetCardBackingInfo(vm.entity.Ctx())
+	if err != nil {
+		return errors.Wrap(err, "Failed Find Network devices")
+	}
+
+	devList, err = vm.vm.Device(vm.entity.Ctx())
 	if err != nil {
 		return errors.Wrap(err, "Failed to device list of VM")
 	}
@@ -97,23 +124,66 @@ func (vm *VM) ReconfigureNetwork(currNW string, newNW string) error {
 	for _, d := range devList.SelectByType((*types.VirtualEthernetCard)(nil)) {
 		veth := d.GetVirtualDevice()
 
-		if veth.Backing.(*types.VirtualEthernetCardNetworkBackingInfo).DeviceName != currNW {
-			fmt.Println("Skipping as network  ", veth.Backing.(*types.VirtualEthernetCardNetworkBackingInfo).DeviceName, currNW)
-			continue
-		}
-		veth.Backing = &types.VirtualEthernetCardNetworkBackingInfo{
-			VirtualDeviceDeviceBackingInfo: types.VirtualDeviceDeviceBackingInfo{
+		switch nw := nwRef.(type) {
+		case *types.VirtualEthernetCardNetworkBackingInfo:
+			switch a := veth.Backing.(type) {
+			case *types.VirtualEthernetCardNetworkBackingInfo:
+				if veth.Backing.(*types.VirtualEthernetCardNetworkBackingInfo).DeviceName != currNW {
+					fmt.Println("Skipping as current network does not match ", currNW)
+					continue
+				}
+			case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+				switch curn := curNetRef.(type) {
+				case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+					if a.Port.SwitchUuid != curn.Port.SwitchUuid ||
+						a.Port.PortgroupKey != curn.Port.SwitchUuid {
+						fmt.Println("Skipping as current network does not match ", currNW)
+						continue
+					}
+				}
+			}
+
+			veth.Backing = &types.VirtualEthernetCardNetworkBackingInfo{
+				VirtualDeviceDeviceBackingInfo: types.VirtualDeviceDeviceBackingInfo{
+					VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
+					DeviceName:               newNW,
+				},
+			}
+		case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+			switch a := veth.Backing.(type) {
+			case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+				switch curn := curNetRef.(type) {
+				case *types.VirtualEthernetCardDistributedVirtualPortBackingInfo:
+					if a.Port.SwitchUuid != curn.Port.SwitchUuid ||
+						a.Port.PortgroupKey != curn.Port.SwitchUuid {
+						fmt.Println("Skipping as network already connected ", currNW)
+						continue
+					}
+				}
+
+			case *types.VirtualEthernetCardNetworkBackingInfo:
+				if veth.Backing.(*types.VirtualEthernetCardNetworkBackingInfo).DeviceName != currNW {
+					fmt.Println("Skipping as network already connected ", currNW)
+					continue
+				}
+			}
+			veth.Backing = &types.VirtualEthernetCardDistributedVirtualPortBackingInfo{
 				VirtualDeviceBackingInfo: types.VirtualDeviceBackingInfo{},
-				DeviceName:               newNW,
-			},
+				Port: types.DistributedVirtualSwitchPortConnection{
+					SwitchUuid:   nw.Port.SwitchUuid,
+					PortKey:      nw.Port.PortKey,
+					PortgroupKey: nw.Port.PortgroupKey,
+				},
+			}
 		}
 
 		fmt.Println("Configuring network...", newNW)
-		task, err = vm.vm.Reconfigure(vm.host.context.context, types.VirtualMachineConfigSpec{DeviceChange: []types.BaseVirtualDeviceConfigSpec{&types.VirtualDeviceConfigSpec{Operation: types.VirtualDeviceConfigSpecOperationEdit, Device: d}}})
+		task, err = vm.vm.Reconfigure(vm.entity.Ctx(),
+			types.VirtualMachineConfigSpec{DeviceChange: []types.BaseVirtualDeviceConfigSpec{&types.VirtualDeviceConfigSpec{Operation: types.VirtualDeviceConfigSpecOperationEdit, Device: d}}})
 		if err != nil {
 			return err
 		}
-		if err := task.Wait(vm.host.context.context); err != nil {
+		if err := task.Wait(vm.entity.Ctx()); err != nil {
 			return errors.Wrap(err, "Reconfiguring to network failed")
 		}
 	}

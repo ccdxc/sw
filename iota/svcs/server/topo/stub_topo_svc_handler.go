@@ -72,6 +72,12 @@ func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg
 	return resp, nil
 }
 
+// MoveWorkloads move workloads
+func (*StubTopologyService) MoveWorkloads(ctx context.Context, req *iota.WorkloadMoveMsg) (*iota.WorkloadMoveMsg, error) {
+	resp := &iota.WorkloadMoveMsg{}
+	return resp, nil
+}
+
 // DeleteNodes deletes a node from the topology
 func (ts *StubTopologyService) DeleteNodes(ctx context.Context, req *iota.NodeMsg) (*iota.NodeMsg, error) {
 	log.Infof("TOPO SVC | DEBUG | DeleteNodes. Received Request Msg: %v", req)

@@ -35,19 +35,19 @@ var _ = Describe("metrics test", func() {
 			log.Infof("wait to get to the console")
 			time.Sleep(time.Second * 30)
 			Eventually(func() error {
-				return ts.model.Action().DropIcmpFlowTTLSession(workloadPairs, "--icmp --icmptype 4 --count 1")
+				return ts.model.DropIcmpFlowTTLSession(workloadPairs, "--icmp --icmptype 4 --count 1")
 			}).Should(Succeed())
 			time.Sleep(time.Second * 30)
 
 			// check fwlog, enable when fwlogs are reported to Venice
 			/*
 				Eventually(func() error {
-					return ts.model.Action().FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
+					return ts.model.FindFwlogForWorkloadPairs("ICMP", "allow", startTime.String(), 0, workloadPairs.ReversePairs())
 				}).Should(Succeed())
 			*/
 
 			Eventually(func() error {
-				return ts.model.Action().QueryDropMetricsForWorkloadPairs(workloadPairs, startTime.String())
+				return ts.model.QueryDropMetricsForWorkloadPairs(workloadPairs, startTime.String())
 			}).Should(Succeed())
 
 		})

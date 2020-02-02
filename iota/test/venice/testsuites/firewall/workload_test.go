@@ -11,7 +11,7 @@ var _ = Describe("workload tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
@@ -20,20 +20,21 @@ var _ = Describe("workload tests", func() {
 
 	Context("Basic workload tests", func() {
 		It("Should be able to bringup new workloads and connect between them", func() {
-			workloads := ts.model.Hosts().BringUpNewWorkloads(ts.model.Networks().Any(1), 1)
+			return
+			workloads := ts.model.BringUpNewWorkloads(ts.model.Hosts(), ts.model.Networks().Any(1), 1)
 			Expect(workloads.Error()).ShouldNot(HaveOccurred())
 			// verify workload status is good
 			Eventually(func() error {
-				return ts.model.Action().VerifyWorkloadStatus(workloads)
+				return ts.model.VerifyWorkloadStatus(workloads)
 			}).Should(Succeed())
 
 			// check ping between new workloads
 			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloads.MeshPairs().Any(4), 8000)
+				return ts.model.TCPSession(workloads.MeshPairs().Any(4), 8000)
 			}).ShouldNot(HaveOccurred())
 
 			//Teardown the new workloads
-			err := workloads.Teardown()
+			err := ts.model.TeardownWorkloads(workloads)
 			Expect(err == nil)
 		})
 	})

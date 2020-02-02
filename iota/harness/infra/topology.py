@@ -528,12 +528,6 @@ class Node(object):
         msg.ip_address = self.__ip_address
         msg.name = self.__name
 
-        cimcInfo = self.GetCimcInfo()
-        if cimcInfo:
-            msg.cimc_ip_address = cimcInfo.GetIp()
-            msg.cimc_username = cimcInfo.GetUsername()
-            msg.cimc_password = cimcInfo.GetPassword()
-
         if self.__os== 'esx':
             msg.os = topo_pb2.TESTBED_NODE_OS_ESX
             msg.esx_config.username = self.__esx_username
@@ -737,12 +731,6 @@ class Topology(object):
             node = self.__nodes[node_name]
             msg = req.node_msg.nodes.add()
             msg.name = node_name
-            apcInfo = node.GetApcInfo()
-            if apcInfo:
-                msg.apc_info.ip = apcInfo.GetIp()
-                msg.apc_info.port = apcInfo.GetPort()
-                msg.apc_info.username = apcInfo.GetUsername()
-                msg.apc_info.password = apcInfo.GetPassword()
 
         resp = api.ReloadNodes(req)
         if not api.IsApiResponseOk(resp):

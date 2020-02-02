@@ -11,19 +11,17 @@ import (
 type Datastore struct {
 	Name string
 
-	host       *Host
-	client     *Client
-	context    *Context
+	Entity     *Entity
 	datacenter *object.Datacenter
 	datastore  *object.Datastore
 }
 
 // Upload uploads the contents of a reader to the path provided.
 func (ds *Datastore) Upload(fullPath string, r io.Reader) error {
-	return ds.datastore.Upload(ds.context.context, r, fullPath, &soap.DefaultUpload)
+	return ds.datastore.Upload(ds.Entity.ConnCtx.context.context, r, fullPath, &soap.DefaultUpload)
 }
 
 // Remove removes a path from the datastore.
 func (ds *Datastore) Remove(p string) error {
-	return ds.datastore.NewFileManager(ds.datacenter, true).Delete(ds.context.context, p)
+	return ds.datastore.NewFileManager(ds.datacenter, true).Delete(ds.Entity.ConnCtx.context.context, p)
 }

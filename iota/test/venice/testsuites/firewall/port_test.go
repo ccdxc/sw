@@ -11,7 +11,7 @@ var _ = Describe("Port tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
@@ -29,12 +29,12 @@ var _ = Describe("Port tests", func() {
 			// get a random naples and flap the port
 			nc := ts.model.Naples().Any(1)
 			Expect(nc.Error()).ShouldNot(HaveOccurred())
-			Expect(ts.model.Action().PortFlap(nc)).Should(Succeed())
+			Expect(ts.model.PortFlap(nc)).Should(Succeed())
 			time.Sleep(60 * time.Second) // wait for the event to reach venice
 
 			// verify ping is successful across all workloads after the port flap
 			Eventually(func() error {
-				return ts.model.Action().PingPairs(ts.model.WorkloadPairs().WithinNetwork())
+				return ts.model.PingPairs(ts.model.WorkloadPairs().WithinNetwork())
 			}).Should(Succeed())
 		})
 	})

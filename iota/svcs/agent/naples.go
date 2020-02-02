@@ -1448,6 +1448,9 @@ func (dnode *dataNode) GetWorkloadMsgs() []*iota.Workload {
 	wloadMsgs := []*iota.Workload{}
 	dnode.entityMap.Range(func(key interface{}, item interface{}) bool {
 		wl := item.(iotaWorkload)
+		if wl.workloadMsg == nil {
+			wl.workloadMsg = &iota.Workload{WorkloadName: wl.workload.Name()}
+		}
 		wloadMsgs = append(wloadMsgs, wl.workloadMsg)
 		return true
 	})

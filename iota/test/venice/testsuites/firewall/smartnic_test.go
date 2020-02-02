@@ -8,14 +8,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 )
 
 var _ = Describe("smartnic tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 	AfterEach(func() {
@@ -28,17 +28,17 @@ var _ = Describe("smartnic tests", func() {
 
 			for i := 0; i < 2; i++ {
 				// reload each host
-				ts.model.ForEachHost(func(hc *iotakit.HostCollection) error {
-					Expect(ts.model.Action().ReloadHosts(hc)).Should(Succeed())
+				ts.model.ForEachHost(func(hc *objects.HostCollection) error {
+					Expect(ts.model.ReloadHosts(hc)).Should(Succeed())
 
 					// wait for cluster to be back in good state
 					Eventually(func() error {
-						return ts.model.Action().VerifyClusterStatus()
+						return ts.model.VerifyClusterStatus()
 					}).Should(Succeed())
 
 					// verify ping between all workloads
 					Eventually(func() error {
-						return ts.model.Action().TCPSession(ts.model.WorkloadPairs().WithinNetwork().Any(4), 8000)
+						return ts.model.TCPSession(ts.model.WorkloadPairs().WithinNetwork().Any(4), 8000)
 					}).Should(Succeed())
 
 					return nil
@@ -52,19 +52,19 @@ var _ = Describe("smartnic tests", func() {
 			}
 			for i := 0; i < 2; i++ {
 				// reload each host
-				ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-					Expect(ts.model.Action().DisconnectNaples(nc)).Should(Succeed())
+				ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+					Expect(ts.model.DisconnectNaples(nc)).Should(Succeed())
 					time.Sleep(time.Second * 30)
-					Expect(ts.model.Action().ConnectNaples(nc)).Should(Succeed())
+					Expect(ts.model.ConnectNaples(nc)).Should(Succeed())
 
 					// wait for cluster to be back in good state
 					Eventually(func() error {
-						return ts.model.Action().VerifyClusterStatus()
+						return ts.model.VerifyClusterStatus()
 					}).Should(Succeed())
 
 					// verify ping between all workloads
 					Eventually(func() error {
-						return ts.model.Action().TCPSession(ts.model.WorkloadPairs().WithinNetwork().Any(4), 8000)
+						return ts.model.TCPSession(ts.model.WorkloadPairs().WithinNetwork().Any(4), 8000)
 					}).Should(Succeed())
 
 					return nil

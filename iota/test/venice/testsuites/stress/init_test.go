@@ -11,7 +11,8 @@ import (
 
 	"testing"
 
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model"
+	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -24,10 +25,10 @@ var stressFlag = flag.Uint64("stress", 1, "Stress, how many times to run")
 
 // TestSuite : firewall test suite
 type TestSuite struct {
-	tb        *iotakit.TestBed  // testbed
-	model     *iotakit.SysModel // system model
-	scaleData bool              // configuration if connections would need to scale
-	stress    uint64            // stress
+	tb        *testbed.TestBed        // testbed
+	model     model.SysModelInterface // system model
+	scaleData bool                    // configuration if connections would need to scale
+	stress    uint64                  // stress
 }
 
 var ts *TestSuite
@@ -51,12 +52,12 @@ func TestIotaFirewallTest(t *testing.T) {
 
 // BeforeSuite runs before the test suite and sets up the testbed
 var _ = BeforeSuite(func() {
-	tb, model, err := iotakit.InitSuite(*topoName, *testbedParams, *scaleFlag, *scaleDataFlag)
+	tb, model, err := model.InitSuite(*topoName, *testbedParams, *scaleFlag, *scaleDataFlag)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	// verify cluster, workload are in good health
 	Eventually(func() error {
-		return model.Action().VerifySystemHealth(true)
+		return model.VerifySystemHealth(true)
 	}).Should(Succeed())
 
 	// test suite

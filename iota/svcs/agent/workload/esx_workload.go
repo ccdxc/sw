@@ -13,6 +13,8 @@ import (
 	Cmd "github.com/pensando/sw/iota/svcs/agent/command"
 	Utils "github.com/pensando/sw/iota/svcs/agent/utils"
 	constants "github.com/pensando/sw/iota/svcs/common"
+	"github.com/pensando/sw/iota/svcs/common/copier"
+	"golang.org/x/crypto/ssh"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -28,22 +30,38 @@ const (
 	arpTimeout = 3000 //3 seconds
 )
 
-type vmESXWorkload struct {
+type vmESXWorkloadBase struct {
 	remoteWorkload
-	vmName       string
-	host         *vmware.Host
-	vm           *vmware.VM
-	hostIP       string
-	hostUsername string
-	hostPassword string
-	agentClient  iota.IotaAgentApiClient
+	vmName          string
+	hostName        string
+	cluster         string
+	vm              *vmware.VM
+	agentClient     iota.IotaAgentApiClient
+	agentBinaryPath string
+}
+
+type vmESXWorkload struct {
+	vmESXWorkloadBase
+	host *vmware.Host
+}
+
+type vmVcenterWorkload struct {
+	vmESXWorkloadBase
+	vhost vmware.EntityIntf
+	vm    *vmware.VM
 }
 
 func newVMESXWorkload(name string, parent string, logger *log.Logger) Workload {
-	return &vmESXWorkload{remoteWorkload: remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}
+	return &vmESXWorkload{vmESXWorkloadBase: vmESXWorkloadBase{
+		remoteWorkload: remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}}
 }
 
-func (vm *vmESXWorkload) waitForVMUp(timeout time.Duration) error {
+func newVMVcenterWorkload(name string, parent string, logger *log.Logger) Workload {
+	return &vmVcenterWorkload{
+		vmESXWorkloadBase: vmESXWorkloadBase{remoteWorkload: remoteWorkload{workloadBase: workloadBase{name: name, parent: parent, logger: logger}}}}
+}
+
+func (vm *remoteWorkload) waitForVMUp(timeout time.Duration) error {
 	cTimeout := time.After(time.Second * time.Duration(timeout))
 	for {
 		conn, _ := net.DialTimeout("tcp", net.JoinHostPort(vm.ip, "22"), 2*time.Second)
@@ -62,13 +80,13 @@ func (vm *vmESXWorkload) waitForVMUp(timeout time.Duration) error {
 	return nil
 }
 
-func (vm *vmESXWorkload) startVMAgent(args ...string) error {
+func (vm *vmESXWorkloadBase) startVMAgent(args ...string) error {
 
 	//VM workloads are linux today
 	agentBinary := constants.IotaAgentBinaryPathLinux
 
 	//Directory is mounted copy there
-	cpCmd := []string{"cp", constants.DstIotaAgentBinary, vm.baseDir}
+	cpCmd := []string{"cp", vm.agentBinaryPath, vm.baseDir}
 
 	if retCode, _, stderr := Utils.Run(cpCmd, 0, false, false, nil); retCode != 0 {
 		return errors.Errorf("Copy agent to workload VM failed %s : %s", vm.Name(), stderr)
@@ -110,40 +128,41 @@ func (vm *vmESXWorkload) startVMAgent(args ...string) error {
 	return nil
 }
 
+func (vm *vmESXWorkload) SetConnector(cluster, host string, conn interface{}) {
+	vm.host = conn.(*vmware.Host)
+}
+
+func (vm *vmVcenterWorkload) SetConnector(cluster, host string, conn interface{}) {
+	vm.vhost = conn.(vmware.EntityIntf)
+	vm.hostName = host
+	vm.cluster = cluster
+}
+
 func (vm *vmESXWorkload) BringUp(args ...string) error {
 	var dataVMDir string
 	var vmInfo *vmware.VMInfo
+	var err error
 
 	vm.vmName = args[0]
 	dataVMDir = args[1]
-	vm.hostIP = args[2]
-	vm.hostUsername = args[3]
-	vm.hostPassword = args[4]
-	cpu := uint(constants.EsxDataVMCpus)
-	memory := uint(constants.EsxDataVMMemory)
+	cpu := uint(0)
+	memory := uint(0)
 
-	if len(args) > 5 {
-		if val, err := strconv.Atoi(args[5]); err == nil && val != 0 {
-			cpu = (uint)(val)
-		}
+	if val, err := strconv.Atoi(args[2]); err == nil && val != 0 {
+		cpu = (uint)(val)
 	}
 
-	if len(args) > 6 {
-		if val, err := strconv.Atoi(args[6]); err == nil && val != 0 {
-			memory = (uint)(val)
-		}
+	if val, err := strconv.Atoi(args[3]); err == nil && val != 0 {
+		memory = (uint)(val)
 	}
 
-	host, err := vmware.NewHost(context.Background(), vm.hostIP, vm.hostUsername, vm.hostPassword)
-	if err != nil {
-		return errors.Wrap(err, "Cannot connect to ESX Host")
-	}
-
+	vm.agentBinaryPath = args[4]
 	//Power on is not consistent.
+	host := vm.host
 	host.DestoryVM(vm.vmName)
 	if !host.VMExists(vm.vmName) {
 		vm.logger.Info("Deploying VM...")
-		vmInfo, err = host.DeployVM(vm.vmName, cpu, memory,
+		vmInfo, err = host.DeployVM("", "", vm.vmName, cpu, memory,
 			constants.EsxDataVMNetworks, dataVMDir)
 		if err != nil {
 			return errors.Wrap(err, "Deploy VM failed")
@@ -162,7 +181,6 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	}
 
 	vm.logger.Info("VM is up now..")
-	vm.host = host
 	vm.vm, err = host.NewVM(vm.vmName)
 	if err != nil {
 		return errors.Wrap(err, "Could not find deployed VM")
@@ -198,7 +216,7 @@ func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, mac
 	nwName := constants.EsxDataNWPrefix + strconv.Itoa(vlan)
 
 	nws := []vmware.NWSpec{{Name: nwName, Vlan: int32(vlan)}}
-	if _, err := vm.host.AddNetworks(nws, vsspec); err != nil {
+	if err := vm.host.AddNetworks(nws, vsspec); err != nil {
 		//return "", errors.Wrap(err, "Error in creating network")
 	}
 
@@ -247,12 +265,12 @@ func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, mac
 	return constants.EsxDataVMInterface, nil
 }
 
-func (vm *vmESXWorkload) MoveInterface(name string) error {
+func (vm *vmESXWorkloadBase) MoveInterface(name string) error {
 	/* Move interface is not supported for ESX workloads */
 	return errors.New("move interface not supported for esx workloads")
 }
 
-func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, retries, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
+func (vm *vmESXWorkloadBase) RunCommand(cmd []string, dir string, retries, timeout uint32, background bool, shell bool) (*Cmd.CmdCtx, string, error) {
 
 	var runCmd string
 	if dir != "" {
@@ -284,7 +302,7 @@ func (vm *vmESXWorkload) RunCommand(cmd []string, dir string, retries, timeout u
 	return cmdInfo.Ctx, handleKey, nil
 }
 
-func (vm *vmESXWorkload) SendArpProbe(ip string, intf string, vlan int) error {
+func (vm *vmESXWorkloadBase) SendArpProbe(ip string, intf string, vlan int) error {
 
 	if ip == "" {
 		return nil
@@ -296,21 +314,250 @@ func (vm *vmESXWorkload) SendArpProbe(ip string, intf string, vlan int) error {
 }
 
 //GetWorkloadAgent handle.
-func (vm *vmESXWorkload) GetWorkloadAgent() interface{} {
+func (vm *vmESXWorkloadBase) GetWorkloadAgent() interface{} {
 	return vm.agentClient
 }
 
-func (vm *vmESXWorkload) MgmtIP() string {
+//SetsWorkloadAgent sets workload agent
+func (vm *vmESXWorkloadBase) SetWorkloadAgent(agent interface{}) {
+	vm.agentClient = agent.(iota.IotaAgentApiClient)
+}
+
+func (vm *vmESXWorkloadBase) MgmtIP() string {
 	return vm.ip
 }
 
+func (vm *vmESXWorkloadBase) SetMgmtIP(ip string) {
+	vm.ip = ip
+}
+
+func (vm *vmESXWorkloadBase) Host() string {
+	return vm.hostName
+}
+
 //TearDown VM workload, just power off.
-func (vm *vmESXWorkload) TearDown() {
+func (vm *vmESXWorkloadBase) TearDown() {
 
 	//Stop all bg cmds first
 	vm.workloadBase.TearDown()
-	//Power off VM in ESX, Deploy is expensive
-	vm.vm.PowerOff()
+	if vm.vm != nil {
+		//Power off VM in ESX, Deploy is expensive
+		vm.vm.PowerOff()
+		vm.vm.Destroy()
+	}
+}
 
-	vm.vm.Destroy()
+func (vm *vmVcenterWorkload) BringUp(args ...string) error {
+	var dataVMDir string
+	var clusterName string
+	var hostName string
+	var vmInfo *vmware.VMInfo
+	var err error
+
+	vm.vmName = args[0]
+	dataVMDir = args[1]
+	clusterName = args[2]
+	hostName = args[3]
+	vm.agentBinaryPath = args[4]
+	cpu := uint(constants.EsxDataVMCpus)
+	memory := uint(constants.EsxDataVMMemory)
+
+	if len(args) > 5 {
+		if val, err := strconv.Atoi(args[5]); err == nil && val != 0 {
+			cpu = (uint)(val)
+		}
+	}
+
+	if len(args) > 6 {
+		if val, err := strconv.Atoi(args[6]); err == nil && val != 0 {
+			memory = (uint)(val)
+		}
+	}
+
+	//Power on is not consistent.
+	host := vm.vhost
+	host.DestoryVM(vm.vmName)
+	if !host.VMExists(vm.vmName) {
+		vm.logger.Infof("Deploying VM on cluster %v, host %v", clusterName, hostName)
+		vmInfo, err = host.DeployVM(clusterName, hostName, vm.vmName, cpu, memory,
+			constants.EsxDataVMNetworks, dataVMDir)
+		if err != nil {
+			return errors.Wrap(err, "Deploy VM failed")
+		}
+	} else {
+		vmInfo, err = host.BootVM(vm.vmName)
+		if err != nil {
+			return errors.Wrap(err, "Booting Deployed VM failed")
+		}
+	}
+
+	vm.logger.Info("Deploying VM Complete...")
+	vm.ip = vmInfo.IP
+	if err = vm.waitForVMUp(restartTimeout); err != nil {
+		return errors.Wrap(err, "SSH connection failed")
+	}
+
+	vm.logger.Info("VM is up now..")
+	vm.vm, err = host.NewVM(vm.vmName)
+	if err != nil {
+		return errors.Wrap(err, "Could not find deployed VM")
+	}
+
+	//CAll remote workload bring up to set up SSH handles
+	vm.logger.Infof("Connecting to  VM %v at %v:%v", vm.vmName, vm.ip, sshPort)
+	err = vm.remoteWorkload.BringUp(vm.ip, strconv.Itoa(sshPort), constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	if err != nil {
+		return errors.Wrap(err, "Remote workload bring up failed")
+	}
+
+	err = vm.remoteWorkload.mountDirectory(constants.EsxDataVMUsername, constants.EsxDataVMPassword, vm.baseDir, vm.baseDir)
+
+	if err != nil {
+		vm.logger.Errorf("Mounting VM directory failed")
+	}
+
+	cmd := []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh1=1024"}
+	vm.RunCommand(cmd, "", 0, 0, false, true)
+	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh2=2048"}
+	vm.RunCommand(cmd, "", 0, 0, false, true)
+	cmd = []string{"sysctl", "-w", "net.ipv4.neigh.default.gc_thresh3=4096"}
+	vm.RunCommand(cmd, "", 0, 0, false, true)
+
+	return vm.startVMAgent()
+}
+
+func (vm *vmVcenterWorkload) AddInterface(name string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+
+	vsname := constants.VcenterDCDvs
+
+	pgName, err := vm.vhost.FindDvsPortGroup(vsname, vmware.DvsPGMatchCriteria{Type: vmware.DvsVlanID, VlanID: int32(vlan)})
+
+	if err != nil {
+		pgName = constants.EsxDataNWPrefix + strconv.Itoa(vlan)
+		//Create the port group
+		err = vm.vhost.AddPortGroupToDvs(vsname,
+			[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName, Ports: 32, Type: "earlyBinding", Vlan: int32(vlan)}})
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to add portgroup to dvs")
+		}
+	}
+
+	if err := vm.vm.ReconfigureNetwork(constants.EsxDefaultNetwork, pgName); err != nil {
+		return "", errors.Wrap(err, "Error in Reconfiguring Def network")
+	}
+
+	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterface); err != nil {
+		return "", errors.Wrap(err, "Disabling DHCP on interface failed")
+	}
+
+	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra1); err != nil {
+		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
+	}
+	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra2); err != nil {
+		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
+	}
+	if macAddress != "" {
+		var setMacAddrCmd []string
+		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
+		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", macAddress}
+		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
+			return "", errors.Wrap(err, ctx.Stdout)
+		}
+	}
+
+	if ipaddress != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, ipaddress}
+		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
+			return "", errors.Wrap(err, ctx.Stdout)
+		}
+	}
+
+	if ipaddress != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", ipv6address}
+		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
+			return "", errors.Wrap(err, ctx.Stdout)
+		}
+	}
+
+	cmd := []string{"sudo", "sysctl", "-w", "net.ipv4.neigh." + constants.EsxDataVMInterface + ".retrans_time_ms=" + strconv.Itoa(arpTimeout)}
+	if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
+		return "", errors.Wrap(err, "ARP retrans timeout set failed")
+	}
+
+	return constants.EsxDataVMInterface, nil
+}
+
+// InitSSHConfig establishes the SSH Config required for remote logging in of the nodes
+func InitSSHConfig(user, pass string) *ssh.ClientConfig {
+	return &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(pass),
+			ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) (answers []string, err error) {
+				answers = make([]string, len(questions))
+				for n := range questions {
+					answers[n] = pass
+				}
+				return answers, nil
+			}),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Second * 30,
+	}
+}
+
+//GetWorkloadAgent handle.
+func (vm *vmVcenterWorkload) GetWorkloadAgent() interface{} {
+	return vm.agentClient
+}
+
+func (vm *vmVcenterWorkload) startVMAgent(args ...string) error {
+
+	//VM workloads are linux today
+	agentBinary := constants.IotaAgentBinaryPathLinux
+
+	addr := fmt.Sprintf("%s:%d", vm.ip, constants.SSHPort)
+
+	cfg := InitSSHConfig(constants.EsxDataVMUsername, constants.EsxDataVMPassword)
+	copyHandle := copier.NewCopier(cfg)
+
+	if err := copyHandle.CopyTo(addr, vm.baseDir, []string{vm.agentBinaryPath}); err != nil {
+		vm.logger.Errorf("Error copying  VM agent on node %s failed", vm.Name())
+		return fmt.Errorf("CopyTo node failed, TestNode: %v, IPAddress: %v , Err: %v", vm.Name(), addr, err)
+	}
+
+	vm.logger.Printf("Starting VM agent on node %s", vm.Name())
+
+	sudoAgtCmd := []string{vm.baseDir + "/" + filepath.Base(agentBinary)}
+
+	if ctx, _, err := vm.RunCommand(sudoAgtCmd, "", 0, 0, true, true); ctx.ExitCode != 0 {
+		vm.logger.Errorf("Starting VM agent on node %s failed", vm.Name())
+		return errors.Wrap(err, ctx.Stdout)
+	}
+
+	agentURL := fmt.Sprintf("%s:%d", vm.ip, constants.IotaAgentPort)
+	c, err := constants.CreateNewGRPCClient(vm.Name(), agentURL, constants.GrpcMaxMsgSize)
+	if err != nil {
+		errorMsg := fmt.Sprintf("Could not create GRPC Connection to IOTA VM Agent. Err: %v", err)
+		return errors.Wrap(err, errorMsg)
+	}
+
+	vm.agentClient = iota.NewIotaAgentApiClient(c.Client)
+
+	req := &iota.Node{Name: vm.Name(), IpAddress: "",
+		Type: iota.PersonalityType_PERSONALITY_COMMAND_NODE,
+	}
+
+	resp, err := vm.agentClient.AddNode(context.Background(), req)
+	if err != nil {
+		vm.logger.Errorf("Failed add not grpc messeage ")
+		return err
+	}
+
+	if resp.NodeStatus.GetApiStatus() != iota.APIResponseType_API_STATUS_OK {
+		vm.logger.Errorf("Failed to add naples esx personality %v", resp.NodeStatus.GetErrorMsg())
+		return err
+	}
+
+	return nil
 }

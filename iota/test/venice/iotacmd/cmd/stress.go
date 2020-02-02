@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +15,6 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/pensando/sw/iota/test/venice/iotakit"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -220,55 +217,59 @@ func (stRecipe *stressRecipe) validate() error {
 
 func printConfigPushStats() {
 
-	cfgPushStats := iotakit.ConfigPushStats{}
-	readStatConfig := func() {
-		jsonFile, err := os.OpenFile(iotakit.ConfigPushStatsFile, os.O_RDONLY, 0755)
-		if err != nil {
-			panic(err)
-		}
-		byteValue, _ := ioutil.ReadAll(jsonFile)
+	//Will have to fix it later
+	return
+	/*
+		cfgPushStats := base.ConfigPushStats{}
+		readStatConfig := func() {
+			jsonFile, err := os.OpenFile(base.ConfigPushStatsFile, os.O_RDONLY, 0755)
+			if err != nil {
+				panic(err)
+			}
+			byteValue, _ := ioutil.ReadAll(jsonFile)
 
-		err = json.Unmarshal(byteValue, &cfgPushStats)
-		if err != nil {
-			panic(err)
+			err = json.Unmarshal(byteValue, &cfgPushStats)
+			if err != nil {
+				panic(err)
+			}
+			jsonFile.Close()
 		}
-		jsonFile.Close()
-	}
 
-	readStatConfig()
+		readStatConfig()
 
-	var totalCfgDuration time.Duration
-	maxDuration := time.Duration(0)
-	minDuration := time.Duration(math.MaxInt64)
-	for _, stat := range cfgPushStats.Stats {
-		cfgDuration, err := time.ParseDuration(stat.Config)
-		if err != nil {
-			fmt.Printf("Invalid duration value %v", stat.Config)
-			return
+		var totalCfgDuration time.Duration
+		maxDuration := time.Duration(0)
+		minDuration := time.Duration(math.MaxInt64)
+		for _, stat := range cfgPushStats.Stats {
+			cfgDuration, err := time.ParseDuration(stat.Config)
+			if err != nil {
+				fmt.Printf("Invalid duration value %v", stat.Config)
+				return
+			}
+			if maxDuration < cfgDuration {
+				maxDuration = cfgDuration
+			}
+			if minDuration > cfgDuration {
+				minDuration = cfgDuration
+			}
+			totalCfgDuration += cfgDuration
 		}
-		if maxDuration < cfgDuration {
-			maxDuration = cfgDuration
-		}
-		if minDuration > cfgDuration {
-			minDuration = cfgDuration
-		}
-		totalCfgDuration += cfgDuration
-	}
 
-	averageDuration := time.Duration(int64(totalCfgDuration) / int64(len(cfgPushStats.Stats)))
+		averageDuration := time.Duration(int64(totalCfgDuration) / int64(len(cfgPushStats.Stats)))
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"MinDuration", "MaxDuration", "Average"})
-	table.SetAutoMergeCells(true)
-	table.SetBorder(false) // Set Border to false
-	table.SetRowLine(true) // Enable row line
-	// Change table lines
-	table.SetCenterSeparator("*")
-	table.SetColumnSeparator("╪")
-	table.SetRowSeparator("-")
-	table.Append([]string{minDuration.String(),
-		maxDuration.String(), averageDuration.String()})
-	table.Render()
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"MinDuration", "MaxDuration", "Average"})
+		table.SetAutoMergeCells(true)
+		table.SetBorder(false) // Set Border to false
+		table.SetRowLine(true) // Enable row line
+		// Change table lines
+		table.SetCenterSeparator("*")
+		table.SetColumnSeparator("╪")
+		table.SetRowSeparator("-")
+		table.Append([]string{minDuration.String(),
+			maxDuration.String(), averageDuration.String()})
+		table.Render()
+	*/
 }
 
 func (stRecipe *stressRecipe) printReport() {
@@ -301,7 +302,7 @@ func (stRecipe *stressRecipe) execute() error {
 	fmt.Printf("Running Stress receipe : %v\n", stRecipe.Meta.Name)
 
 	os.Remove(stressRunFile)
-	os.Remove(iotakit.ConfigPushStatsFile)
+	//os.Remove(model.ConfigPushStatsFile)
 
 	duration, err := time.ParseDuration(stRecipe.Config.MaxRunTime)
 	if err != nil {
@@ -421,7 +422,7 @@ Loop:
 					sdata.successCount++
 					if skipInstall == false && skipSetup == false {
 						//start console logging again as console would have been lost
-						setupModel.Action().StartConsoleLogging()
+						setupModel.StartConsoleLogging()
 					}
 					skipInstall = true
 					rebootOnly = false

@@ -73,7 +73,7 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 
 	// verify policy was propagated correctly
 	err = checkEventually(func() error {
-		return ts.model.Action().VerifyPolicyStatus(spc)
+		return ts.model.VerifyPolicyStatus(spc)
 	})
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 		case "any":
 			fallthrough // fallthrough to ICMP test
 		case "icmp":
-			aerr := ts.model.Action().PingPairs(workloadPairs)
+			aerr := ts.model.PingPairs(workloadPairs)
 			if aerr != nil {
 				return aerr
 			}
@@ -104,39 +104,39 @@ func testWhitelistPolicy(fromIP, toIP, proto, port string) error {
 				}
 
 				if proto == "udp" {
-					aerr := ts.model.Action().UDPSession(workloadPairs, portMin)
+					aerr := ts.model.UDPSession(workloadPairs, portMin)
 					if aerr != nil {
 						return err
 					}
-					aerr = ts.model.Action().UDPSession(workloadPairs, portMax)
+					aerr = ts.model.UDPSession(workloadPairs, portMax)
 					if aerr != nil {
 						return aerr
 					}
 					if port != "any" {
-						aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMin-1)
+						aerr = ts.model.UDPSessionFails(workloadPairs, portMin-1)
 						if aerr != nil {
 							return aerr
 						}
-						aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMax+1)
+						aerr = ts.model.UDPSessionFails(workloadPairs, portMax+1)
 						if aerr != nil {
 							return aerr
 						}
 					}
 				} else {
-					aerr := ts.model.Action().TCPSession(workloadPairs, portMin)
+					aerr := ts.model.TCPSession(workloadPairs, portMin)
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().TCPSession(workloadPairs, portMax)
+					aerr = ts.model.TCPSession(workloadPairs, portMax)
 					if aerr != nil {
 						return aerr
 					}
 					if port != "any" {
-						aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMin-1)
+						aerr = ts.model.TCPSessionFails(workloadPairs, portMin-1)
 						if aerr != nil {
 							return aerr
 						}
-						aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMax+1)
+						aerr = ts.model.TCPSessionFails(workloadPairs, portMax+1)
 						if aerr != nil {
 							return aerr
 						}
@@ -168,7 +168,7 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 
 	// verify policy was propagated correctly
 	err = checkEventually(func() error {
-		return ts.model.Action().VerifyPolicyStatus(spc)
+		return ts.model.VerifyPolicyStatus(spc)
 	})
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 		case "any":
 			fallthrough // fallthrough to ICMP test
 		case "icmp":
-			aerr := ts.model.Action().PingFails(workloadPairs)
+			aerr := ts.model.PingFails(workloadPairs)
 			if aerr != nil {
 				return aerr
 			}
@@ -199,39 +199,39 @@ func testBlacklistPolicy(fromIP, toIP, proto, port string) error {
 				}
 
 				if proto == "udp" {
-					aerr := ts.model.Action().UDPSessionFails(workloadPairs, portMin)
+					aerr := ts.model.UDPSessionFails(workloadPairs, portMin)
 					if aerr != nil {
 						return err
 					}
-					aerr = ts.model.Action().UDPSessionFails(workloadPairs, portMax)
+					aerr = ts.model.UDPSessionFails(workloadPairs, portMax)
 					if aerr != nil {
 						return aerr
 					}
 					if port != "any" {
-						aerr = ts.model.Action().UDPSession(workloadPairs, portMin-1)
+						aerr = ts.model.UDPSession(workloadPairs, portMin-1)
 						if aerr != nil {
 							return aerr
 						}
-						aerr = ts.model.Action().UDPSession(workloadPairs, portMax+1)
+						aerr = ts.model.UDPSession(workloadPairs, portMax+1)
 						if aerr != nil {
 							return aerr
 						}
 					}
 				} else {
-					aerr := ts.model.Action().TCPSessionFails(workloadPairs, portMin)
+					aerr := ts.model.TCPSessionFails(workloadPairs, portMin)
 					if aerr != nil {
 						return aerr
 					}
-					aerr = ts.model.Action().TCPSessionFails(workloadPairs, portMax)
+					aerr = ts.model.TCPSessionFails(workloadPairs, portMax)
 					if aerr != nil {
 						return aerr
 					}
 					if port != "any" {
-						aerr = ts.model.Action().TCPSession(workloadPairs, portMin-1)
+						aerr = ts.model.TCPSession(workloadPairs, portMin-1)
 						if aerr != nil {
 							return aerr
 						}
-						aerr = ts.model.Action().TCPSession(workloadPairs, portMax+1)
+						aerr = ts.model.TCPSession(workloadPairs, portMax+1)
 						if aerr != nil {
 							return aerr
 						}
@@ -252,7 +252,7 @@ var _ = Describe("firewall policy model tests", func() {
 	BeforeEach(func() {
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 
 		// delete the default allow policy

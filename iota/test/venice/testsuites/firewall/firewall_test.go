@@ -8,7 +8,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/pensando/sw/iota/test/venice/iotakit"
+	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 )
 
 var _ = Describe("firewall tests", func() {
@@ -18,7 +18,7 @@ var _ = Describe("firewall tests", func() {
 		startTime = time.Now().UTC()
 		// verify cluster is in good health
 		Eventually(func() error {
-			return ts.model.Action().VerifyClusterStatus()
+			return ts.model.VerifyClusterStatus()
 		}).Should(Succeed())
 	})
 
@@ -44,7 +44,7 @@ var _ = Describe("firewall tests", func() {
 			// ping all workload pairs in same subnet
 			workloadPairs := ts.model.WorkloadPairs().Permit(ts.model.DefaultNetworkSecurityPolicy(), "tcp")
 			Eventually(func() error {
-				return ts.model.Action().TCPSession(workloadPairs, 0)
+				return ts.model.TCPSession(workloadPairs, 0)
 			}).Should(Succeed())
 		})
 
@@ -54,7 +54,7 @@ var _ = Describe("firewall tests", func() {
 			// randomly pick one workload and verify ping fails between them
 			Eventually(func() error {
 				//Pass 0 to derice ports from workload pairs
-				return ts.model.Action().TCPSessionFails(workloadPairs, 0)
+				return ts.model.TCPSessionFails(workloadPairs, 0)
 			}).Should(Succeed())
 
 		})
@@ -64,13 +64,13 @@ var _ = Describe("firewall tests", func() {
 				Skip("Disabling on naples sim till traffic issue is debugged")
 			}
 
-			ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-				_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
+			ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+				_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level error")
 				Expect(err).ShouldNot(HaveOccurred())
 				return nil
 			})
-			defer ts.model.ForEachNaples(func(nc *iotakit.NaplesCollection) error {
-				_, err := ts.model.Action().RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
+			defer ts.model.ForEachNaples(func(nc *objects.NaplesCollection) error {
+				_, err := ts.model.RunNaplesCommand(nc, "/nic/bin/halctl debug trace --level debug")
 				Expect(err).ShouldNot(HaveOccurred())
 				return nil
 			})
@@ -88,7 +88,7 @@ var _ = Describe("firewall tests", func() {
 
 			}
 			go func() {
-				options := &iotakit.ConnectionOptions{
+				options := &objects.ConnectionOptions{
 					Cps:               cps,
 					Duration:          duration,
 					NumConns:          conns,
@@ -96,7 +96,7 @@ var _ = Describe("firewall tests", func() {
 					Proto:             "tcp",
 					ReconnectAttempts: 5,
 				}
-				err <- ts.model.Action().ConnectionWithOptions(workloadPairs, options)
+				err <- ts.model.ConnectionWithOptions(workloadPairs, options)
 			}()
 
 			select {
