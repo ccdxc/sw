@@ -160,6 +160,7 @@ class VnicObject(base.ConfigObjectBase):
         if utils.IsPipelineApulu():
             if self.UseHostIf and self.SUBNET.HostIfUuid:
                 spec.HostIf = self.SUBNET.HostIfUuid.GetUuid()
+            spec.FlowLearnEn = True
         return
 
     def ValidateSpec(self, spec):

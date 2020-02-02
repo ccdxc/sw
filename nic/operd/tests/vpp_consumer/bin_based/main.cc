@@ -47,7 +47,7 @@ print_flow (int fd, char *data, uint64_t data_length)
             
             dprintf(fd, "ip, ");
             if (flow.key().ipflowkey().srcip().af() == types::IP_AF_INET) {
-                ip_addr.s_addr = flow.key().ipflowkey().srcip().v4addr();
+                ip_addr.s_addr = htonl(flow.key().ipflowkey().srcip().v4addr());
                 inet_ntop(AF_INET, &ip_addr, buffer, INET6_ADDRSTRLEN);
             } else {
                 memcpy(ip6_addr.s6_addr,
@@ -60,7 +60,7 @@ print_flow (int fd, char *data, uint64_t data_length)
 
             
             if (flow.key().ipflowkey().dstip().af() == types::IP_AF_INET) {
-                ip_addr.s_addr = flow.key().ipflowkey().dstip().v4addr();
+                ip_addr.s_addr = htonl(flow.key().ipflowkey().dstip().v4addr());
                 inet_ntop(AF_INET, &ip_addr, buffer, INET6_ADDRSTRLEN);
             } else {
                 memcpy(ip6_addr.s6_addr,
