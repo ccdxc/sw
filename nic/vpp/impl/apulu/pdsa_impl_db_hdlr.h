@@ -19,7 +19,9 @@ int pds_impl_db_vnic_set(uint8_t *mac,
                          uint8_t flow_log_en,
                          uint8_t dot1q,
                          uint8_t dot1ad,
-                         uint16_t vlan_id);
+                         uint16_t vlan_id,
+                         uint16_t nh_hw_id);
+
 int pds_impl_db_vnic_del(uint16_t vnic_hw_id);
 
 int pds_impl_db_subnet_set(uint32_t subnet_ip,

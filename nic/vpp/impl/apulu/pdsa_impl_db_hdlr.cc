@@ -70,7 +70,8 @@ pds_cfg_db_vnic_set_cb (const pds_cfg_msg_t *msg)
                               subnet_hw_id,
                               msg->vnic.spec.flow_learn_en,
                               dot1q, dot1ad,
-                              msg->vnic.spec.vnic_encap.val.vlan_tag);
+                              msg->vnic.spec.vnic_encap.val.vlan_tag,
+                              msg->vnic.status.nh_hw_id);
 
     if (rc == 0) {
         return sdk::SDK_RET_OK;

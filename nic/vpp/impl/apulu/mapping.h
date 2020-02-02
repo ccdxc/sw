@@ -13,6 +13,12 @@ extern "C" {
 #endif
 
 static inline int
+pds_vnic_id_get (void *hdr)
+{
+    return (((p4_rx_cpu_hdr_t*)hdr)->vnic_id);
+}
+
+static inline int
 pds_ingress_bd_id_get (void *hdr)
 {
     return (((p4_rx_cpu_hdr_t*)hdr)->ingress_bd_id);

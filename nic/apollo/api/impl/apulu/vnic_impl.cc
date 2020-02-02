@@ -283,6 +283,8 @@ sdk_ret_t
 vnic_impl::populate_msg(pds_msg_t *msg, api_base *api_obj,
                         api_obj_ctxt_t *obj_ctxt) {
     msg->cfg_msg.vnic.status.hw_id = hw_id_;
+    msg->cfg_msg.vnic.status.nh_hw_id = nh_idx_;
+
     return SDK_RET_OK;
 }
 
@@ -1058,6 +1060,7 @@ vnic_impl::reprogram_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 void
 vnic_impl::fill_status_(pds_vnic_status_t *status) {
     status->hw_id = hw_id_;
+    status->nh_hw_id = nh_idx_;
 }
 
 sdk_ret_t

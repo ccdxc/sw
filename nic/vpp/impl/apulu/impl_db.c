@@ -50,7 +50,8 @@ pds_impl_db_vnic_set (uint8_t *mac,
                       uint8_t flow_log_en,
                       uint8_t dot1q,
                       uint8_t dot1ad,
-                      uint16_t vlan_id)
+                      uint16_t vlan_id,
+                      uint16_t nh_hw_id)
 {
     POOL_IMPL_DB_ADD(vnic);
 
@@ -73,6 +74,7 @@ pds_impl_db_vnic_set (uint8_t *mac,
     } else {
         vnic_info->enacp_type = PDS_ETH_ENCAP_NO_VLAN;
     }
+    vnic_info->nh_hw_id = nh_hw_id;
 
     return 0;
 }

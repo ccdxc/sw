@@ -82,6 +82,7 @@ typedef struct pds_vnic_spec_s {
 /// \brief VNIC status
 typedef struct pds_vnic_status_s {
     uint16_t hw_id;       ///< hardware id
+    uint16_t nh_hw_id;    ///< nexthop id
 } pds_vnic_status_t;
 
 /// \brief VNIC statistics

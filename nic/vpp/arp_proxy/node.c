@@ -13,14 +13,6 @@ VLIB_PLUGIN_REGISTER () = {
 vlib_node_registration_t arp_proxy_node;
 
 always_inline void
-arp_proxy_next_node_fill (u8 idx, u16 *next, u32 *counters, u16 node,
-                          u32 cidx)
-{
-    next[idx] = node;
-    counters[cidx]++;
-}
-
-always_inline void
 arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
                       mac_addr_t mac, u32 id)
 {
@@ -35,7 +27,7 @@ arp_proxy_trace_fill (arp_proxy_trace_t *trace, ethernet_arp_header_t *arp,
 }
 
 always_inline void
-arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
+arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
                     vlib_node_runtime_t *node, vlib_main_t *vm)
 {
     ethernet_header_t *e0;
@@ -49,7 +41,8 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     u32 dst_addr;
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
-    bd_id = clib_net_to_host_u16(pds_ingress_bd_id_get(p4_rx_meta));
+    bd_id = (pds_ingress_bd_id_get(p4_rx_meta));
+    vnet_buffer(p0)->pds_arp_data.vnic_id = pds_vnic_id_get(p4_rx_meta);
     if (PREDICT_FALSE(!(offset = pds_arp_pkt_offset_get(p4_rx_meta))))
         goto error;
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
@@ -73,10 +66,8 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
                     &arp->ip4_over_ethernet[0].mac, ETH_ADDR_LEN);
         clib_memcpy(&arp->ip4_over_ethernet[0].mac,
                     vr_mac, ETH_ADDR_LEN);
-        arp_proxy_next_node_fill(*next_idx, nexts, counter,
-                                 ARP_PROXY_NEXT_EXIT,
-                                 ARP_PROXY_COUNTER_REPLY_SUCCESS);
-        (*next_idx)++;
+        *next0 = ARP_PROXY_NEXT_EXIT;
+        counter[ARP_PROXY_COUNTER_REPLY_SUCCESS]++;
         if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                           p0->flags & VLIB_BUFFER_IS_TRACED)) {
             trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
@@ -89,10 +80,8 @@ arp_proxy_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
     return;
 
 error:
-    arp_proxy_next_node_fill(*next_idx, nexts, counter,
-                             ARP_PROXY_NEXT_DROP,
-                             ARP_PROXY_COUNTER_REPLY_FAILED);
-    (*next_idx)++;
+    *next0 = ARP_PROXY_NEXT_DROP;
+    counter[ARP_PROXY_COUNTER_REPLY_FAILED]++;
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
@@ -107,29 +96,36 @@ arp_proxy (vlib_main_t * vm,
            vlib_frame_t * from_frame)
 {
     u32 counter[ARP_PROXY_COUNTER_LAST] = {0};
-    u8 next_idx = 0;
 
     PDS_PACKET_LOOP_START {
 
         PDS_PACKET_DUAL_LOOP_START (WRITE, READ) {
-            vnet_buffer (_b[0])->sw_if_index[VLIB_TX] = vnet_buffer (_b[0])->sw_if_index[VLIB_RX];
-            vnet_buffer (_b[1])->sw_if_index[VLIB_TX] = vnet_buffer (_b[1])->sw_if_index[VLIB_RX];
+            vlib_buffer_t *p0, *p1;
 
-            arp_proxy_internal(_b[0], &next_idx, _nexts, counter, node, vm);
-            // TODO : advance based on the new header that will be added
-            //vlib_buffer_advance(_b[0], -16);
+            p0 = PDS_PACKET_BUFFER(0);
+            p1 = PDS_PACKET_BUFFER(1);
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] = vnet_buffer(p0)->sw_if_index[VLIB_RX];
+            vnet_buffer(p1)->sw_if_index[VLIB_TX] = vnet_buffer(p1)->sw_if_index[VLIB_RX];
 
-            arp_proxy_internal(_b[1], &next_idx, _nexts, counter, node, vm);
-            //vlib_buffer_advance(_b[1], -16);
+            arp_proxy_internal(p0, PDS_PACKET_NEXT_NODE_PTR(0), counter, node, vm);
+            arp_proxy_internal(p1, PDS_PACKET_NEXT_NODE_PTR(1), counter, node, vm);
+            vlib_buffer_advance(p0,
+                                VPP_P4_TO_ARM_HDR_SZ - VPP_ARM_TO_P4_HDR_SZ );
+            vlib_buffer_advance(p1,
+                                VPP_P4_TO_ARM_HDR_SZ - VPP_ARM_TO_P4_HDR_SZ );
 
         } PDS_PACKET_DUAL_LOOP_END;
 
         PDS_PACKET_SINGLE_LOOP_START {
+            vlib_buffer_t *p0;
 
-            vnet_buffer (_b[0])->sw_if_index[VLIB_TX] = vnet_buffer (_b[0])->sw_if_index[VLIB_RX];
+            p0 = PDS_PACKET_BUFFER(0);
 
-            arp_proxy_internal(_b[0], &next_idx, _nexts, counter, node, vm);
-            //vlib_buffer_advance(_b[0], -16);
+            vnet_buffer(p0)->sw_if_index[VLIB_TX] = vnet_buffer(p0)->sw_if_index[VLIB_RX];
+
+            arp_proxy_internal(p0, PDS_PACKET_NEXT_NODE_PTR(0), counter, node, vm);
+            vlib_buffer_advance(p0,
+                                VPP_P4_TO_ARM_HDR_SZ - VPP_ARM_TO_P4_HDR_SZ );
 
         } PDS_PACKET_SINGLE_LOOP_END;
 
@@ -200,29 +196,6 @@ VLIB_INIT_FUNCTION (arp_proxy_init) =
 
 vlib_node_registration_t exit_node;
 
-always_inline void
-arp_proxy_exit_internal_x2 (vlib_buffer_t *p0, vlib_buffer_t *p1,
-                            u16* next0, u16 *next1, u32 *counter)
-{
-    // TODO add the header to p4
-    // *next0 = *next1 = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-    // counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 2;
-    // TODO enqueue to drop node for now
-    *next0 = *next1 = ARP_PROXY_EXIT_NEXT_DROP;
-    counter[ARP_PROXY_EXIT_COUNTER_DROP] += 2;
-}
-
-always_inline void
-arp_proxy_exit_internal_x1 (vlib_buffer_t *p, u16 *next, u32 *counter)
-{
-    // TODO add the header to p4
-    // *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-    // counter[ARP_PROXY_EXIT_COUNTER_FILL_HDR] += 1;
-    // TODO enqueue to drop node for now
-    *next = ARP_PROXY_EXIT_NEXT_DROP;
-    counter[ARP_PROXY_EXIT_COUNTER_DROP] += 1;
-}
-
 static uword
 arp_proxy_exit (vlib_main_t * vm,
                 vlib_node_runtime_t * node,
@@ -234,15 +207,15 @@ arp_proxy_exit (vlib_main_t * vm,
 
         PDS_PACKET_DUAL_LOOP_START (WRITE, WRITE) {
             arp_proxy_exit_internal_x2(PDS_PACKET_BUFFER(0),
-                                       PDS_PACKET_BUFFER(1),
-                                       PDS_PACKET_NEXT_NODE_PTR(0),
-                                       PDS_PACKET_NEXT_NODE_PTR(1),
-                                       counter);
+                                       PDS_PACKET_BUFFER(1));
+            *PDS_PACKET_NEXT_NODE_PTR(0) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+            *PDS_PACKET_NEXT_NODE_PTR(1) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+            counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR] += 2;
         } PDS_PACKET_DUAL_LOOP_END;
         PDS_PACKET_SINGLE_LOOP_START {
-            arp_proxy_exit_internal_x1(PDS_PACKET_BUFFER(0),
-                                       PDS_PACKET_NEXT_NODE_PTR(0),
-                                       counter);
+            arp_proxy_exit_internal_x1(PDS_PACKET_BUFFER(0));
+            *PDS_PACKET_NEXT_NODE_PTR(0) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+            counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR] += 1;
         } PDS_PACKET_SINGLE_LOOP_END;
 
     } PDS_PACKET_LOOP_END;
