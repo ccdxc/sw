@@ -50,7 +50,7 @@ resp_tx_rqcb_process:
     bcf             [c3 | c4], timestamp_memwr_done
     add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (3*CB_UNIT_SIZE_BYTES) // BD Slot
     add             r2, r2, FIELD_OFFSET(rqcb3_t, resp_tx_timestamp)
-    memwr.h         r2, r4
+    memwr.dx        r2, r4
     // memwr proxy_pindex if there are buffers posted, irrespective of which ring is scheduled
     add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
     add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
