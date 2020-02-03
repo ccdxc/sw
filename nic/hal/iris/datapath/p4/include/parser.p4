@@ -216,11 +216,13 @@ header udp_t inner_udp;
 @pragma hdr_len parser_metadata.ip_options_len
 header ipv6_options_blob_t ipv6_options_blob;
 header ipv6_extn_generic_t v6_generic;
+header ipv6_extn_frag_t v6_fragment;
 
 // Inner IPv6 extension headers
 @pragma hdr_len parser_metadata.inner_ip_options_len
 header ipv6_options_blob_t inner_ipv6_options_blob;
 header ipv6_extn_generic_t inner_v6_generic;
+header ipv6_extn_frag_t inner_v6_fragment;
 
 // name 'capri_i2e_metadata' has a special meaning
 header capri_i2e_metadata_t capri_i2e_metadata;
@@ -875,7 +877,26 @@ parser parse_v6_generic_ext_hdr2 {
     set_metadata(l3_metadata.ipv6_ulp, parser_metadata.ipv6_nextHdr);
     set_metadata(parser_metadata.ip_options_len,
                  parser_metadata.ip_options_len + (v6_generic.len << 3) + 8);
+    set_metadata(parser_metadata.ipv6_nextHdr, parser_metadata.ipv6_nextHdr + 0);
     return parse_ipv6_extn_hdrs;
+}
+
+parser parse_v6_fragment_hdr {
+    set_metadata(l3_metadata.ip_frag, 1);
+    set_metadata(parser_metadata.ipv6_nextHdr, current(0, 8) + 0);
+    return parse_v6_fragment_hdr2;
+}
+
+@pragma no_extract
+parser parse_v6_fragment_hdr2 {
+    extract(v6_fragment);
+    set_metadata(l3_metadata.ipv6_ulp, parser_metadata.ipv6_nextHdr);
+    // options len + 8 - 20
+    set_metadata(ohi.ipv6_options_blob___hdr_len,
+                 parser_metadata.ip_options_len -12);
+    set_metadata(l3_metadata.ipv6_options_len,
+                 parser_metadata.ip_options_len - 12);
+    return ingress;
 }
 
 @pragma dont_advance_packet
@@ -926,7 +947,7 @@ parser parse_ipv6_extn_hdrs {
     return select(parser_metadata.ipv6_nextHdr) {
         IPV6_PROTO_EXTN_HOPBYHOP :  parse_v6_generic_ext_hdr;
         IPV6_PROTO_EXTN_ROUTING_HDR : parse_v6_generic_ext_hdr;
-        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_v6_fragment_hdr;
         IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_v6_generic_ext_hdr;
         IPV6_PROTO_EXTN_MOBILITY_HDR : parse_v6_generic_ext_hdr;
         default: parse_ipv6_ulp;
@@ -1923,7 +1944,28 @@ parser parse_inner_v6_generic_ext_hdr2 {
     set_metadata(parser_metadata.inner_ip_options_len,
                  parser_metadata.inner_ip_options_len +
                  (inner_v6_generic.len << 3) + 8);
+    set_metadata(parser_metadata.inner_ipv6_nextHdr,
+                 parser_metadata.inner_ipv6_nextHdr + 0);
     return parse_inner_ipv6_extn_hdrs;
+}
+
+parser parse_inner_v6_fragment_hdr {
+    set_metadata(l3_metadata.inner_ip_frag, 1);
+    set_metadata(parser_metadata.inner_ipv6_nextHdr, current(0, 8) + 0);
+    return parse_inner_v6_fragment_hdr2;
+}
+
+@pragma no_extract
+parser parse_inner_v6_fragment_hdr2 {
+    extract(inner_v6_fragment);
+    set_metadata(l3_metadata.inner_ipv6_ulp,
+                 parser_metadata.inner_ipv6_nextHdr);
+    // options len + 8 - 20
+    set_metadata(ohi.inner_ipv6_options_blob___hdr_len,
+                 parser_metadata.inner_ip_options_len - 12);
+    set_metadata(l3_metadata.inner_ipv6_options_len,
+                 parser_metadata.inner_ip_options_len - 12);
+    return ingress;
 }
 
 @pragma header_ordering inner_v6_generic
@@ -1932,7 +1974,7 @@ parser parse_inner_ipv6_extn_hdrs {
     return select(parser_metadata.inner_ipv6_nextHdr) {
         IPV6_PROTO_EXTN_HOPBYHOP :  parse_inner_v6_generic_ext_hdr;
         IPV6_PROTO_EXTN_ROUTING_HDR : parse_inner_v6_generic_ext_hdr;
-        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_inner_v6_generic_ext_hdr;
+        IPV6_PROTO_EXTN_FRAGMENT_HDR : parse_inner_v6_fragment_hdr;
         IPV6_PROTO_EXTN_DEST_OPT_HDR : parse_inner_v6_generic_ext_hdr;
         IPV6_PROTO_EXTN_MOBILITY_HDR : parse_inner_v6_generic_ext_hdr;
         default: parse_inner_ipv6_ulp;
