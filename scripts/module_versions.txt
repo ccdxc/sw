@@ -8,4 +8,4 @@ nic/third-party/ofp 3df0b142806ad96f30dfe30622dc5143c35c8333
 platform/src/third-party/rdma/krping 1502c186e187e608cbe3f86e8352ecd90c0b372c
 platform/src/third-party/rdma/perftest 13388add4d665496814a029114958962e94e8eb6
 platform/src/third-party/rdma/qperf e660421110763446317f06de37efda208508543d
-platform/src/third-party/rdma/rdma-core c499eac8079fb6f552e5f76f7b6cd2df12c41823
+platform/src/third-party/rdma/rdma-core ac9afd94ba2d6107a8c499b704c855bc019c83da
