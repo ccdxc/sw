@@ -48,6 +48,11 @@ func (h *rolloutTestHelper) WriteStatus(ctx context.Context, s *rolloutproto.Ven
 }
 
 func TestRolloutMgr(t *testing.T) {
+	savedServiceSyncDelaySeconds := serviceSyncDelaySeconds
+	serviceSyncDelaySeconds = 0
+	defer func() {
+		serviceSyncDelaySeconds = savedServiceSyncDelaySeconds
+	}()
 	r := newRolloutMgr()
 	env.Options = options.NewServerRunOptions()
 	env.Options.CommonConfigDir = "/"

@@ -18,7 +18,7 @@ const rolloutPhasesTimeoutSeconds = 10 //timeout between rollout phases
 
 var preUpgradeTimeout = dSCTimeoutSeconds * time.Second
 var rolloutPhasesTimeout = rolloutPhasesTimeoutSeconds * time.Second
-var veniceUpgradeTimeout = 15 * time.Minute
+var veniceUpgradeTimeout = 17 * time.Minute
 var rolloutRetryTimeout = 5 * time.Minute
 var maxRetriesBeforeAbort uint32 = 5
 

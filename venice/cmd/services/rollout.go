@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -37,6 +38,10 @@ type rolloutMgr struct {
 	venicePreCheck      func(version string) error
 	veniceRunVersion    func(version string) error
 }
+
+const syncDelaySeconds = 120
+
+var serviceSyncDelaySeconds = syncDelaySeconds * time.Second
 
 func newRolloutMgr() *rolloutMgr {
 	r := rolloutMgr{
@@ -160,6 +165,11 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				OpStatus: opStatus,
 			},
 		}
+		if utils.IsRunningOnVeniceAppl() {
+			//Wait long enough for citadel to sync-data
+			log.Infof(" Waiting long enough (2mins) for services to comeup")
+			time.Sleep(serviceSyncDelaySeconds)
+		}
 		log.Infof(" Writing venice rollout status :%#v ", s)
 		r.statusWriter.WriteStatus(context.TODO(), &s)
 	}
@@ -269,6 +279,9 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 				OpStatus: opStatus,
 			},
 		}
+		//Wait long enough for citadel to sync-data
+		log.Infof(" Waiting long enough(2mins) for services to sync data")
+		time.Sleep(serviceSyncDelaySeconds)
 		log.Infof(" Writing service rollout status :%#v ", s)
 		r.serviceStatusWriter.WriteServiceStatus(context.TODO(), &s)
 	}
