@@ -72,8 +72,8 @@ func init() {
 	naplesCmd.Flags().StringVarP(&id, "id", "i", "", "DSC ID")
 	naplesCmd.Flags().StringVarP(&mgmtIP, "mgmt-ip", "m", "", "Management IP in CIDR format")
 	naplesCmd.Flags().StringVarP(&defaultGW, "default-gw", "g", "", "Default GW for mgmt")
-	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "default", "Active Distributed Service Card Profile")
-	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "default", "Active Distributed Service Card Profile")
+	naplesCmd.Flags().StringVarP(&naplesProfile, "dsc-profile", "s", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
+	naplesCmd.Flags().StringVarP(&naplesProfile, "naples-profile", "f", "FEATURE_PROFILE_BASE", "Active Distributed Service Card Profile")
 	naplesCmd.Flags().StringSliceVarP(&dnsServers, "dns-servers", "d", make([]string, 0), "List of DNS servers")
 
 	naplesProfileUpdateCmd.Flags().StringVarP(&profileName, "name", "n", "", "Name of the Distributed Service Card profile to be created")
@@ -317,7 +317,7 @@ func naplesCmdValidator(cmd *cobra.Command, args []string) (err error) {
 			}
 		}
 
-		if len(naplesProfile) != 0 && naplesProfile != "default" {
+		if len(naplesProfile) != 0 && naplesProfile != "FEATURE_PROFILE_BASE" {
 			err = fmt.Errorf("dsc profile is not applicable when Distributed Service Card is manged by network")
 		}
 
