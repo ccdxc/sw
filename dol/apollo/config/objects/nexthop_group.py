@@ -100,7 +100,8 @@ class NexthopGroupObject(base.ConfigObjectBase):
         logger.error(" - ERROR: %s not handling %s restoration" %\
                      (self.ObjType.name, cObj.ObjType))
         assert(0)
-        # self.Update()
+        self.SetDirty(True)
+        self.CommitUpdate()
         return
 
     def DeleteNotify(self, dObj):
@@ -112,7 +113,8 @@ class NexthopGroupObject(base.ConfigObjectBase):
         logger.error(" - ERROR: %s not handling %s deletion" %\
                      (self.ObjType.name, dObj.ObjType))
         assert(0)
-        # self.Update()
+        self.SetDirty(True)
+        self.CommitUpdate()
         return
 
     def IsUnderlay(self):

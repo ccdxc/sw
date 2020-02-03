@@ -300,7 +300,8 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("%s ignoring %s restoration" %\
                         (self.ObjType.name, cObj.ObjType))
             return
-        # self.Update()
+        self.SetDirty(True)
+        self.CommitUpdate()
         return
 
     def UpdateNotify(self, dObj):
@@ -362,7 +363,8 @@ class VnicObject(base.ConfigObjectBase):
             logger.info("%s ignoring %s deletion" %\
                         (self.ObjType.name, dObj.ObjType))
             return
-        # self.Update()
+        self.SetDirty(True)
+        self.CommitUpdate()
         return
 
 class VnicObjectClient(base.ConfigClientBase):

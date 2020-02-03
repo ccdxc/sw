@@ -137,6 +137,26 @@ device_impl::activate_hw(api_base *api_obj, api_base *orig_obj,
 
     case API_OP_DELETE:
         PDS_TRACE_DEBUG("Cleaning up device config");
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4I_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4i_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read P4I_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+
+        p4pd_ret = p4pd_global_entry_read(P4TBL_ID_P4E_DEVICE_INFO, 0,
+                                           NULL, NULL, &p4e_device_info_data);
+        if (p4pd_ret != P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read P4E_DEVICE_INFO table");
+            return sdk::SDK_RET_HW_READ_ERR;
+        }
+
+        p4i_device_info_data.p4i_device_info.device_ipv4_addr = 0;
+        p4e_device_info_data.p4e_device_info.device_ipv4_addr = 0;
+        memset(p4i_device_info_data.p4i_device_info.device_ipv6_addr, 0, IP6_ADDR8_LEN);
+        memset(p4e_device_info_data.p4e_device_info.device_ipv6_addr, 0, IP6_ADDR8_LEN);
+        p4i_device_info_data.p4i_device_info.l2_enabled = FALSE;
+
         // program the P4I_DEVICE_INFO table
         p4pd_ret = p4pd_global_entry_write(P4TBL_ID_P4I_DEVICE_INFO, 0,
                                            NULL, NULL, &p4i_device_info_data);

@@ -128,6 +128,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
                          (self.ObjType.name, cObj.ObjType))
             assert(0)
         # self.Update()
+        # Update is not supported on Mapping objects. hence deleting and re-adding them
+        self.Delete()
+        self.Create()
         return
 
     def DeleteNotify(self, dObj):
@@ -143,6 +146,9 @@ class RemoteMappingObject(base.ConfigObjectBase):
                          (self.ObjType.name, dObj.ObjType))
             assert(0)
         # self.Update()
+        # Update is not supported on Mapping objects. hence deleting and re-adding them
+        self.Delete()
+        self.Create()
         return
 
 class RemoteMappingObjectClient(base.ConfigClientBase):
