@@ -88,14 +88,22 @@ end:
 hal_ret_t
 pd_ep_update (pd_func_args_t *pd_func_args)
 {
-    hal_ret_t           ret = HAL_RET_OK;
-    pd_ep_update_args_t *pd_ep_upd_args = pd_func_args->pd_ep_update;
+    hal_ret_t               ret = HAL_RET_OK;
+    pd_ep_update_args_t     *pd_ep_upd_args = pd_func_args->pd_ep_update;
+    pd_ep_t                 *ep_pd = (pd_ep_t *)pd_ep_upd_args->ep->pd;;
+    pd_ep_if_update_args_t  if_upd_args = {0};
 
     HAL_TRACE_DEBUG("updating pd state for ep:{}",
                     ep_l2_key_to_str(pd_ep_upd_args->ep));
 
     if (pd_ep_upd_args->iplist_change) {
         ret = pd_ep_upd_iplist_change(pd_ep_upd_args);
+    }
+
+    if (pd_ep_upd_args->if_change) {
+        if_upd_args.if_change = pd_ep_upd_args->if_change;
+        if_upd_args.new_if = pd_ep_upd_args->new_if;
+        ret = pd_ep_pgm_registered_mac(ep_pd, &if_upd_args, NULL, TABLE_OPER_UPDATE);
     }
 
     return ret;
@@ -977,7 +985,11 @@ pd_ep_pgm_registered_mac(pd_ep_t *pd_ep,
     SDK_ASSERT_RETURN((reg_mac_tbl != NULL), HAL_RET_ERR);
 
     l2seg = l2seg_lookup_by_handle(pi_ep->l2seg_handle);
-    pi_if = find_if_by_handle(pi_ep->if_handle);
+    if (if_args && if_args->if_change) {
+        pi_if = if_args->new_if;
+    } else {
+        pi_if = find_if_by_handle(pi_ep->if_handle);
+    }
 
     if (hal::intf_get_if_type(pi_if) == intf::IF_TYPE_ENIC) {
         if (if_args && if_args->lif_change) {
@@ -1139,37 +1151,79 @@ pd_ep_quiesce (pd_func_args_t *pd_func_args)
     nacl_swkey_t           key;
     nacl_swkey_mask_t      mask;
     nacl_actiondata_t      data;
+    if_t                  *pi_if = NULL;
+
+    if (!pd_ep) {
+        HAL_TRACE_ERR("EP Quiesce NACL removing error. pd_ep not found");
+        return HAL_RET_ERR;
+    }
 
     SDK_ASSERT_RETURN((acl_tbl != NULL), HAL_RET_ERR);
 
     if (args->entry_add) {
+        pi_if = find_if_by_handle(pi_ep->if_handle);
+
+        // Install destination NACL - Drop any traffic destined towards this local EP
         memset(&key, 0, sizeof(key));
         memset(&mask, 0, sizeof(mask));
         memset(&data, 0, sizeof(data));
         // Key
-        key.entry_inactive_nacl        = 0;
-        mask.entry_inactive_nacl_mask  = 0x1;
+        key.entry_inactive_nacl              = 0;
+        mask.entry_inactive_nacl_mask        = 0x1;
+        key.control_metadata_from_cpu        = 0;
+        mask.control_metadata_from_cpu_mask  = 0x1;
         memcpy(key.ethernet_dstAddr, pi_ep->l2_key.mac_addr, sizeof(mac_addr_t));
         memset(mask.ethernet_dstAddr_mask, 0xFF, sizeof(mac_addr_t));
         // Data
         data.action_id                 = NACL_NACL_DENY_ID;
 
         ret = acl_tbl->insert(&key, &mask, &data, ACL_QUIESCE_ENTRY_PRIORITY,
-                &pd_ep->ep_quiesce_nacl_hdl);
+                              &pd_ep->ep_quiesce_dst_nacl_hdl);
         if (ret == HAL_RET_OK) {
-            HAL_TRACE_DEBUG("EP Quiesce NACL programmed at: {}.", pd_ep->ep_quiesce_nacl_hdl);
+            HAL_TRACE_DEBUG("EP Quiesce NACL programmed at: {}.", pd_ep->ep_quiesce_dst_nacl_hdl);
+        } else {
+            HAL_TRACE_ERR("EP Quiesce NACL programming error. ret: {}", ret);
+        }
+
+        // Install source NACL - Drop any traffic coming from this local EP
+        memset(&key, 0, sizeof(key));
+        memset(&mask, 0, sizeof(mask));
+        // Key
+        key.entry_inactive_nacl              = 0;
+        mask.entry_inactive_nacl_mask        = 0x1;
+        key.control_metadata_src_lport       = if_get_lport_id(pi_if);
+        mask.control_metadata_src_lport_mask = 0xFFFF;
+        // Data
+        data.action_id                 = NACL_NACL_DENY_ID;
+
+        ret = acl_tbl->insert(&key, &mask, &data, ACL_QUIESCE_ENTRY_PRIORITY,
+                              &pd_ep->ep_quiesce_src_nacl_hdl);
+        if (ret == HAL_RET_OK) {
+            HAL_TRACE_DEBUG("EP Quiesce NACL programmed at: {}. lport:{}",
+                             pd_ep->ep_quiesce_src_nacl_hdl, key.control_metadata_src_lport);
         } else {
             HAL_TRACE_ERR("EP Quiesce NACL programming error. ret: {}", ret);
         }
     } else {
-        ret = acl_tbl->remove(pd_ep->ep_quiesce_nacl_hdl);
+        HAL_TRACE_DEBUG("EP Quiesce NACL removed at: Src:{} Dst:{}.",
+                        pd_ep->ep_quiesce_src_nacl_hdl, pd_ep->ep_quiesce_dst_nacl_hdl);
+
+        ret = acl_tbl->remove(pd_ep->ep_quiesce_src_nacl_hdl);
 
         if (ret == HAL_RET_OK) {
-            pd_ep->ep_quiesce_nacl_hdl = INVALID_INDEXER_INDEX;
-            HAL_TRACE_DEBUG("EP Quiesce NACL removed at: {}.", pd_ep->ep_quiesce_nacl_hdl);
+            pd_ep->ep_quiesce_src_nacl_hdl = INVALID_INDEXER_INDEX;
         } else {
-            HAL_TRACE_ERR("EP Quiesce NACL removing error. ret: {} hndl: {}",
-                          ret, pd_ep->ep_quiesce_nacl_hdl);
+            HAL_TRACE_ERR("EP Quiesce Source NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_quiesce_src_nacl_hdl);
+        }
+
+        ret = acl_tbl->remove(pd_ep->ep_quiesce_dst_nacl_hdl);
+
+        if (ret == HAL_RET_OK) {
+            pd_ep->ep_quiesce_dst_nacl_hdl = INVALID_INDEXER_INDEX;
+        } else {
+            HAL_TRACE_ERR("EP Quiesce Destination NACL removing error. ret: {} hndl: {}",
+                          ret, pd_ep->ep_quiesce_dst_nacl_hdl);
         }
     }
     return ret;

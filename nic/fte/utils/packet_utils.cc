@@ -40,12 +40,21 @@ build_arp_packet(uint8_t *pkt,
     if (vlan_tag) {
         arphead = (struct ether_arp *)(pkt + sizeof(vlan_header_t));
         vlan_hdr = (vlan_header_t *)(pkt);
-        vlan_hdr->etype =  htons(ETH_TYPE_ARP);
+        if ((arp_pkt_type == ARPOP_REQUEST) || (arp_pkt_type == ARPOP_REPLY)) {
+            vlan_hdr->etype =  htons(ETH_TYPE_ARP);
+        } else if (arp_pkt_type == ARPOP_REVREQUEST)  {
+            vlan_hdr->etype =  htons(ETH_TYPE_RARP);
+        }
         vlan_hdr->tpid = htons(ETH_TYPE_DOT1Q);
         vlan_hdr->vlan_tag = htons(*vlan_tag);
     } else {
         arphead = (struct ether_arp *)(pkt + L2_ETH_HDR_LEN);
-        eth_hdr->etype = htons(ETH_TYPE_ARP);
+        if ((arp_pkt_type == ARPOP_REQUEST) || (arp_pkt_type == ARPOP_REPLY)) {
+            eth_hdr->etype = htons(ETH_TYPE_ARP);
+        } else if (arp_pkt_type == ARPOP_REVREQUEST)  {
+            eth_hdr->etype = htons(ETH_TYPE_RARP);
+            memcpy(arphead->arp_tha, src_mac, ETH_ADDR_LEN);
+        }
     }
 
     if (dst_mac) {
@@ -85,9 +94,12 @@ hal_inject_arp_packet(const arp_pkt_data_t *pkt_data, uint32_t type) {
     p4plus_to_p4_header_t       p4plus_hdr = {0};
     pd_func_args_t pd_func_args = {0};
     hal_ret_t                   ret = HAL_RET_OK;
-    hal::if_t *ep_if;
+    hal::if_t                   *ep_if;
+    hal::if_t                   *uplink_if = NULL;
+    hal_handle_t                l2seg_hdl = 0;
+    l2seg_t                     *l2seg = NULL;
     pd::pd_if_get_lport_id_args_t args;
-    uint16_t vlan_id;
+    uint16_t                    vlan_id;
 
     if (pkt_data->ep == nullptr) {
          ret = HAL_RET_INVALID_ARG;
@@ -101,15 +113,24 @@ hal_inject_arp_packet(const arp_pkt_data_t *pkt_data, uint32_t type) {
          goto out;
      }
 
-     args.pi_if = ep_if;
-     pd_func_args.pd_if_get_lport_id = &args;
-     if (hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID,
-                                       &pd_func_args) != HAL_RET_OK) {
-         HAL_TRACE_ERR("EP Dest Lport not found..");
-         ret = HAL_RET_IF_NOT_FOUND;
-         goto out;
-     }
-
+    if (type == ARPOP_REVREQUEST) {
+        ret = if_enicif_get_pinned_if(ep_if, &uplink_if);
+        if ((ret != HAL_RET_OK) || (!uplink_if)) {
+            HAL_TRACE_ERR("EP uplink not found..");
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto out;
+        }
+        args.pi_if = uplink_if;
+    } else {
+        args.pi_if = ep_if;
+    }
+    pd_func_args.pd_if_get_lport_id = &args;
+    if (hal_pd_call(hal::pd::PD_FUNC_ID_IF_GET_LPORT_ID,
+                    &pd_func_args) != HAL_RET_OK) {
+            HAL_TRACE_ERR("EP Dest Lport not found..");
+            ret = HAL_RET_IF_NOT_FOUND;
+            goto out;
+    }
 
     if (!g_cpu_bypass_flowid) {
         pd_get_cpu_bypass_flowid_args_t args;
@@ -129,12 +150,27 @@ hal_inject_arp_packet(const arp_pkt_data_t *pkt_data, uint32_t type) {
     p4plus_hdr.dst_lport_valid = 1;
     p4plus_hdr.dst_lport = args.lport_id;
 
-    vlan_id = (uint16_t)(ep_if->encap_vlan);
-
-    build_arp_packet(pkt, type,
+    if (type == ARPOP_REVREQUEST) {
+        l2seg_hdl = pkt_data->ep->l2seg_handle;
+        l2seg     = l2seg_lookup_by_handle(l2seg_hdl);
+        if (!l2seg) {
+          HAL_TRACE_ERR("l2seg not found...");
+          ret = HAL_RET_IF_NOT_FOUND;
+          goto out;
+        }
+        vlan_id = (uint16_t)(l2seg->wire_encap.val);
+        build_arp_packet(pkt, type,
+            pkt_data->src_ip_addr, *pkt_data->src_mac,
+            &vlan_id, pkt_data->dst_ip_addr, NULL);
+    } else {
+        vlan_id = (uint16_t)(ep_if->encap_vlan);
+        build_arp_packet(pkt, type,
             pkt_data->src_ip_addr, *pkt_data->src_mac,
             &vlan_id, pkt_data->dst_ip_addr, pkt_data->ep->l2_key.mac_addr);
+    }
 
+    HAL_TRACE_VERBOSE("Sending ARP of type {} for Mac {} Vlan {} lport {}",
+        type, macaddr2str(pkt_data->ep->l2_key.mac_addr), vlan_id, args.lport_id);
 
     fte::fte_asq_send(&cpu_hdr, &p4plus_hdr, pkt, ARP_DOT1Q_PKT_SIZE);
 
@@ -143,13 +179,18 @@ out:
 }
 
 hal_ret_t
-hal_inject_arp_request_pkt(const arp_pkt_data_t *pkt_data) {
+hal_inject_arp_request_pkt (const arp_pkt_data_t *pkt_data) {
     return hal_inject_arp_packet(pkt_data, ARPOP_REQUEST);
 }
 
 hal_ret_t
-hal_inject_arp_response_pkt(const arp_pkt_data_t *pkt_data) {
+hal_inject_arp_response_pkt (const arp_pkt_data_t *pkt_data) {
     return hal_inject_arp_packet(pkt_data, ARPOP_REPLY);
+}
+
+hal_ret_t
+hal_inject_rarp_request_pkt (const arp_pkt_data_t *pkt_data) {
+    return hal_inject_arp_packet(pkt_data, ARPOP_REVREQUEST);
 }
 
 

@@ -145,6 +145,7 @@ message FlowInfo {
   uint32                             expected_source_lif          = 14;    // Expected source lif for the flow. 
   repeated kh.MirrorSessionKeyHandle ing_mirror_sessions          = 15  [(gogoproto.moretags) = "venice:constraints={range:0-7}"]; // list of mirror destinations
   repeated kh.MirrorSessionKeyHandle egr_mirror_sessions          = 16 [(gogoproto.moretags) = "venice:constraints={range:0-7}"];// list of mirror destinations
+  uint32                             idle_timeout                 = 17;    // Idle timeout of the flow
 }
 
 message ConnTrackExceptions {
@@ -302,13 +303,18 @@ message SessionStatus {
   uint32                 app_id_state      = 7;    // L7 app id state
   nwsec.ALGName          alg               = 8;    // ALG applied on the session
   oneof alg_info {
-      TFTPALGInfo        tftp_info         = 9;   
+      TFTPALGInfo        tftp_info         = 9;
       RPCALGInfo         rpc_info          = 10;
       SIPALGInfo         sip_info          = 11;
       RTSPALGInfo        rtsp_info         = 12;
       DNSALGInfo         dns_info          = 13;
       FTPALGInfo         ftp_info          = 14;
   } 
+  bool                   session_syncing   = 15;    // Session in the midst of syncing by vMotion
+  fixed64                lookup_vrf        = 16;    // Hardware lookup VRF of the L2Seg
+  fixed64                smac              = 17;   // source MAC address
+  fixed64                dmac              = 18;   // destination MAC address
+  uint32                 l2seg_id          = 19;   // L2 segment id
 }
 
 // SessionResponse is the response to one SessionSpec

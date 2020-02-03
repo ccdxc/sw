@@ -602,6 +602,7 @@ typedef struct pd_if_delete_args_s {
                 bool            l2seg_clsc_change;
                 block_list      *add_l2seg_clsclist;
                 block_list      *del_l2seg_clsclist;
+                bool            del_only_inp_mac_vlan;
             } __PACK__;
         } __PACK__;
     } __PACK__;
@@ -807,6 +808,10 @@ typedef struct pd_ep_update_args_s {
     dllist_ctxt_t           *add_iplist;
     dllist_ctxt_t           *del_iplist;
 
+    // Interface change attrs
+    bool                    if_change;
+    if_t                    *new_if;
+
     ep_update_app_ctxt_t    *app_ctxt;
 
     // X change attrs
@@ -823,6 +828,8 @@ typedef struct pd_ep_if_update_args_s {
     ep_t            *ep;
     bool            lif_change;
     lif_t           *new_lif;
+    bool            if_change;
+    if_t            *new_if;
 } __PACK__ pd_ep_if_update_args_t;
 
 typedef struct pd_ep_mem_free_args_s {
@@ -936,6 +943,7 @@ pd_session_update_args_init (pd_session_update_args_t *args)
     args->update_rflow = false;
     args->iflow_hash = 0;
     args->clock = 0;
+    args->nwsec_prof = NULL;
 
     return;
 }
@@ -951,6 +959,20 @@ pd_session_get_args_init (pd_session_get_args_t *args)
 {
     args->session = NULL;
     args->session_state = NULL;
+    args->rsp = NULL;
+
+    return;
+}
+
+typedef struct pd_session_age_reset_args_s {
+    session_t          *session;
+    SessionResponse    *rsp;
+} __PACK__ pd_session_age_reset_args_t;
+
+static inline void
+pd_session_age_reset_args_init (pd_session_age_reset_args_t *args)
+{
+    args->session = NULL;
     args->rsp = NULL;
 
     return;
@@ -3622,8 +3644,9 @@ pd_nvme_cq_create_args_init (pd_nvme_cq_create_args_t *args)
     ENTRY(PD_FUNC_ID_BARCO_RING_META_CONFIG_GET, 334, "PD_FUNC_ID_BARCO_RING_META_CONFIG_GET")\
     ENTRY(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 335, "PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD")        \
     ENTRY(PD_FUNC_ID_CLOCK_TRIGGER_SYNC,         336, "PD_FUNC_ID_CLOCK_TRIGGER_SYNC")\
-    ENTRY(PD_FUNC_ID_EP_QUIESCE,                 337, "PD_FUNC_ID_EP_QUIESCE")\
-    ENTRY(PD_FUNC_ID_MAX,                        338, "pd_func_id_max")
+    ENTRY(PD_FUNC_ID_SESSION_AGE_RESET,          338, "PD_FUNC_ID_SESSION_AGE_RESET")\
+    ENTRY(PD_FUNC_ID_EP_QUIESCE,                 339, "PD_FUNC_ID_EP_QUIESCE")\
+    ENTRY(PD_FUNC_ID_MAX,                        340, "pd_func_id_max")
 DEFINE_ENUM(pd_func_id_t, PD_FUNC_IDS)
 #undef PD_FUNC_IDS
 
@@ -3719,6 +3742,7 @@ typedef struct pd_func_args_s {
         PD_UNION_ARGS_FIELD(pd_session_update);
         PD_UNION_ARGS_FIELD(pd_session_delete);
         PD_UNION_ARGS_FIELD(pd_session_get);
+        PD_UNION_ARGS_FIELD(pd_session_age_reset);
         PD_UNION_ARGS_FIELD(pd_get_cpu_bypass_flowid);
         PD_UNION_ARGS_FIELD(pd_flow_hash_get);
 
@@ -4201,6 +4225,7 @@ PD_FUNCP_TYPEDEF(pd_session_create);
 PD_FUNCP_TYPEDEF(pd_session_update);
 PD_FUNCP_TYPEDEF(pd_session_delete);
 PD_FUNCP_TYPEDEF(pd_session_get);
+PD_FUNCP_TYPEDEF(pd_session_age_reset);
 PD_FUNCP_TYPEDEF(pd_session_get_for_age_thread);
 PD_FUNCP_TYPEDEF(pd_get_cpu_bypass_flowid);
 PD_FUNCP_TYPEDEF(pd_flow_hash_get);

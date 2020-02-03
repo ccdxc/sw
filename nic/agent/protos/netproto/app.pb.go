@@ -50,7 +50,6 @@
 		EndpointList
 		EndpointEvent
 		EndpointEventList
-		EndpointMigrationStatus
 		FlowExportPolicy
 		FlowExportPolicySpec
 		ExportConfig

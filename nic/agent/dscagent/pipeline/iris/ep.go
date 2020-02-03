@@ -4,7 +4,9 @@ package iris
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
+	"net"
 
 	"github.com/pkg/errors"
 
@@ -17,6 +19,7 @@ import (
 
 // HandleEndpoint handles crud operations on endpoint
 func HandleEndpoint(infraAPI types.InfraAPI, epClient halapi.EndpointClient, intfClient halapi.InterfaceClient, oper types.Operation, endpoint netproto.Endpoint, vrfID, networkID uint64) error {
+	log.Infof("CREATE EP Handler")
 	switch oper {
 	case types.Create:
 		return createEndpointHandler(infraAPI, epClient, intfClient, endpoint, vrfID, networkID)
@@ -44,7 +47,11 @@ func createEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClie
 	}
 
 	endpointReqMsg := convertEndpoint(endpoint, infraAPI.GetConfig().MgmtIntf, vrfID, networkID)
-	log.Infof("Endpoint Msg: %v", endpointReqMsg.String())
+	if endpointReqMsg == nil {
+		log.Errorf("Converting EP failed. ")
+		return fmt.Errorf("failed to convert ep")
+	}
+
 	resp, err := epClient.EndpointCreate(context.Background(), endpointReqMsg)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.Response[0].ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", endpoint.GetKind(), endpoint.GetKey())); err != nil {
@@ -65,6 +72,8 @@ func createEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClie
 			return err
 		}
 	}
+
+	endpoint.Status.NodeUUID = endpoint.Spec.NodeUUID
 	dat, _ := endpoint.Marshal()
 
 	if err := infraAPI.Store(endpoint.Kind, endpoint.GetKey(), dat); err != nil {
@@ -138,8 +147,37 @@ func deleteEndpointHandler(infraAPI types.InfraAPI, epClient halapi.EndpointClie
 	return nil
 }
 
+func getHalAPIMigration(migrationState string) halapi.MigrationState {
+	switch migrationState {
+	case netproto.MigrationState_START.String():
+		return halapi.MigrationState_IN_PROGRESS
+	case netproto.MigrationState_DONE.String():
+		return halapi.MigrationState_SUCCESS
+	case netproto.MigrationState_ABORT.String():
+		return halapi.MigrationState_ABORTED
+	}
+
+	return halapi.MigrationState_NONE
+}
+
+func getNetprotoMigration(migrationState halapi.MigrationState) string {
+	switch migrationState {
+	case halapi.MigrationState_IN_PROGRESS:
+		return netproto.MigrationState_START.String()
+	case halapi.MigrationState_SUCCESS:
+		return netproto.MigrationState_DONE.String()
+	case halapi.MigrationState_ABORTED:
+		fallthrough
+	case halapi.MigrationState_FAILED:
+		return netproto.MigrationState_ABORT.String()
+	}
+
+	return netproto.MigrationState_NONE.String()
+}
+
 func convertEndpoint(endpoint netproto.Endpoint, mgmtIntf string, vrfID, networkID uint64) *halapi.EndpointRequestMsg {
-	return &halapi.EndpointRequestMsg{
+
+	ret := &halapi.EndpointRequestMsg{
 		Request: []*halapi.EndpointSpec{
 			{
 				KeyOrHandle:   convertEpKeyHandle(networkID, endpoint.Spec.MacAddress),
@@ -148,11 +186,24 @@ func convertEndpoint(endpoint netproto.Endpoint, mgmtIntf string, vrfID, network
 			},
 		},
 	}
+
+	if endpoint.Spec.Migration != netproto.MigrationState_NONE.String() && len(endpoint.Status.NodeUUID) != 0 && endpoint.Spec.NodeUUID != endpoint.Status.NodeUUID {
+		log.Infof("Migration in progress")
+		if len(endpoint.Spec.HomingHostAddr) == 0 {
+			log.Errorf("No homing host IP passed. Cannot initiate migration.")
+			return nil
+		}
+
+		ret.Request[0].EndpointAttrs.VmotionState = getHalAPIMigration(endpoint.Spec.Migration)
+		ret.Request[0].EndpointAttrs.OldHomingHostIp = utils.ConvertIPAddresses(endpoint.Spec.HomingHostAddr)[0]
+	}
+
+	return ret
 }
 
 // TODO get HAL to accept same message types for create and update
 func convertEndpointUpdate(endpoint netproto.Endpoint, mgmtIntf string, vrfID, networkID uint64) *halapi.EndpointUpdateRequestMsg {
-	return &halapi.EndpointUpdateRequestMsg{
+	updateReq := &halapi.EndpointUpdateRequestMsg{
 		Request: []*halapi.EndpointUpdateRequest{
 			{
 				KeyOrHandle:   convertEpKeyHandle(networkID, endpoint.Spec.MacAddress),
@@ -161,6 +212,9 @@ func convertEndpointUpdate(endpoint netproto.Endpoint, mgmtIntf string, vrfID, n
 			},
 		},
 	}
+
+	updateReq.Request[0].EndpointAttrs.VmotionState = getHalAPIMigration(endpoint.Spec.Migration)
+	return updateReq
 }
 
 func convertEpKeyHandle(l2SegID uint64, macAddr string) *halapi.EndpointKeyHandle {
@@ -225,4 +279,12 @@ func convertEnicInterface(macAddress string, intfID, l2SegID uint64, usegVLAN ui
 			},
 		},
 	}
+}
+
+// ipv4ToUint32 converts net.IP to a 32 bit integer
+func ipv4Touint32(ip net.IP) uint32 {
+	if len(ip) == 16 {
+		return binary.BigEndian.Uint32(ip[12:16])
+	}
+	return binary.BigEndian.Uint32(ip)
 }

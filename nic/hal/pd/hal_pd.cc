@@ -154,6 +154,7 @@ hal_pd_load_symbols (void)
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET, pd_session_get);
     PD_FUNC_LOAD(PD_FUNC_ID_SESSION_GET_FOR_AGE_THREAD, 
                  pd_session_get_for_age_thread);
+    PD_FUNC_LOAD(PD_FUNC_ID_SESSION_AGE_RESET, pd_session_age_reset);
     PD_FUNC_LOAD(PD_FUNC_ID_BYPASS_FLOWID_GET, pd_get_cpu_bypass_flowid);
     PD_FUNC_LOAD(PD_FUNC_ID_FLOW_HASH_GET, pd_flow_hash_get);
 

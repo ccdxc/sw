@@ -235,6 +235,11 @@ fte::pipeline_action_t ep_learn_exec(fte::ctx_t &ctx) {
             ctx.set_feature_status(ret);
             ctx.update_flow(flowupd, FLOW_ROLE_INITIATOR);
         }
+    } else if (is_rarp_flow(&ctx.key()) && is_host_originated_packet(ctx)) {
+        HAL_TRACE_INFO("EP_LEARN : RARP packet processing...");
+        if (process_vmotion_rarp(&ctx) != true) {
+            HAL_TRACE_ERR("Err in processing vmotion rarp packet");
+        }
     } else if (is_host_originated_packet(ctx) &&
             is_dpkt_ep_learning_enabled(ctx) &&
             dpkt_learn_required(ctx)) {

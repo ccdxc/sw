@@ -38,6 +38,7 @@ using session::FlowStatus;
 using session::ConnTrackInfo;
 using session::SessionSpec;
 using session::SessionStatus;
+using session::SessionStats;
 using session::SessionFilter;
 using session::SessionResponse;
 using session::SessionRequestMsg;
@@ -454,6 +455,7 @@ typedef struct session_cfg_s {
     uint8_t             conn_track_en:1;          // enable connection tracking
     uint8_t             skip_sfw_reval:1;         // skip firewall reval
     uint8_t             sfw_action:3;             // sfw action
+    uint8_t             syncing_session:1;        // Session in midst of syncing by vMotion
 
     session_id_t        session_id;               // unique session id
     uint32_t            idle_timeout;             // Session idle timeout
@@ -478,6 +480,8 @@ typedef struct session_args_s {
     hal_handle_t       sl2seg_handle;                     // source l2seg
     hal_handle_t       dl2seg_handle;                     // dest l2seg
     SessionSpec        *spec;                             // session spec
+    SessionStatus      *status;                           // session status
+    SessionStats       *stats;                            // session stats
     SessionResponse    *rsp;                              // session response
     uint32_t           flow_hash;                         // flow hash
 } __PACK__ session_args_t;
@@ -497,6 +501,7 @@ struct session_s {
     uint16_t            is_ipfix_flow:1;          // to track ipfix flows
     uint16_t            sfw_action:3;             // sfw action to log
     uint16_t            deleting:1;               // is session queued up for deletion 
+    uint16_t            syncing_session:1;        // Session in the midst of syncing by vMotion
     uint64_t            sfw_rule_id;              // sfw rule id
 
     flow_t              *iflow;                   // initiator flow
@@ -562,6 +567,7 @@ typedef struct session_get_stream_filter_ {
 #define SESSION_AGE_DEBUG                  0
 
 session_t *find_session_by_handle(hal_handle_t handle);
+session_t *find_session_from_spec(const SessionSpec& spec, uint32_t lookup_vrf);
 //session_t *find_session_by_id(session_id_t session_id);
 
 extern void *session_get_key_func (void *entry);
@@ -607,12 +613,15 @@ hal_ret_t system_fte_txrx_stats_get (SystemResponse *rsp);
 hal_ret_t system_session_summary_get (SystemResponse *rsp);
 hal_ret_t session_delete (session::SessionDeleteRequest& spec,
                       session::SessionDeleteResponseMsg *rsp);
+hal_ret_t system_get_fill_rsp (session_t *session,
+                      session::SessionGetResponse *response);
 void incr_global_session_tcp_rst_stats (uint8_t fte_id);
 void incr_global_session_icmp_error_stats (uint8_t fte_id);
 hal_ret_t session_handle_upgrade (void);
 hal_ret_t session_flow_hash_get(FlowHashGetRequest& req,
                                 FlowHashGetResponseMsg *rsp);
 void enqueue_flow_telemetry_state_to_age_list (flow_t *flow_p);
+bool session_modified_after_timestamp (session_t *session, uint64_t ts);
 
 }    // namespace hal
 

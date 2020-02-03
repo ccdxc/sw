@@ -13,6 +13,7 @@
 #include "nic/hal/plugins/cfg/nw/l2segment.hpp"
 #include "gen/proto/endpoint.pb.h"
 #include "gen/proto/eplearn.pb.h"
+#include "gen/proto/session.pb.h"
 #include "nic/include/pd.hpp"
 #include <netinet/ether.h>
 
@@ -34,6 +35,8 @@ using endpoint::EndpointGetResponseMsg;
 using endpoint::EndpointUpdateRequestMsg;
 using endpoint::EndpointUpdateResponseMsg;
 using endpoint::EndpointUpdateRequest;
+using endpoint::MigrationResponse;
+using endpoint::MigrationState;
 using endpoint::EndpointIpAddress;
 using eplearn::DhcpTransactionState;
 using eplearn::DhcpStatus;
@@ -43,8 +46,8 @@ using kh::EndpointKeyHandle;
 using endpoint::EndpointDeleteRequest;
 using kh::EndpointL2Key;
 using kh::EndpointKey;
+using session::SessionGetResponseMsg;
 
-using endpoint::EndpointVmotionState;
 using namespace endpoint;
 using sdk::lib::ht_ctxt_t;
 
@@ -61,6 +64,17 @@ namespace hal {
 #define MAX_SG_PER_ARRAY                             0x10 //16
 
 #define EP_UPDATE_SESSION_TIMER                      (250) 
+
+// flow direction tells whether flow is from or to the workload
+typedef enum ep_vmotion_state_s {
+    VMOTION_STATE_NONE             = 0, // No vMotion
+    VMOTION_STATE_MIGRATE_IN       = 1, // vMotion in progress and EP is moving in
+    VMOTION_STATE_MIGRATE_OUT      = 2, // vMotion in progress and EP is moving out
+    VMOTION_STATE_MIGRATE_FAIL     = 3, // vMotion failed in the middle
+    VMOTION_STATE_DONE             = 4, // vMotion completed
+} ep_vmotion_state_t;
+
+
 typedef hal_ret_t (*dhcp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
         DhcpStatus *dhcp_status);
 typedef hal_ret_t (*arp_status_func_t)(vrf_id_t vrf_id, ip_addr_t *ip_addr,
@@ -114,8 +128,8 @@ typedef struct ep_s {
     vlan_id_t            useg_vlan;            // micro-seg vlan allocated for this endpoint
     uint64_t             ep_flags;             // endpoint flags
     ep_sginfo_t          sgs;                  // Holds the security group ids
-    EndpointVmotionState vmotion_state;        // Vmotion state
-    ip_addr_t            homing_host_ip;       // IP Address of host where the ep is homed
+    MigrationState       vmotion_state;        // Vmotion state
+    ip_addr_t            old_homing_host_ip;   // IP Address of host where the ep was homed - for vMotion
     dllist_ctxt_t        ip_list_head;         // list of IP addresses for this endpoint
     bool                 egress_en;            // based on filter cfg from NIC mgr
 
@@ -155,23 +169,23 @@ typedef struct ep_create_app_ctxt_s {
     vrf_t           *vrf;
     l2seg_t         *l2seg;
     if_t            *hal_if;
+    MigrationState   vmotion_state;   
 } __PACK__ ep_create_app_ctxt_t;
 
 typedef struct ep_update_app_ctxt_s {
     uint64_t                iplist_change:1;
     uint64_t                if_change:1;
-    uint64_t                vmotion_state_change:1;
-    uint64_t                homing_host_ip_change:1;
     uint64_t                useg_vlan_change:1;
+    uint64_t                vmotion_state_change:1;
 
     dllist_ctxt_t           *add_iplist;
     dllist_ctxt_t           *del_iplist;
     hal_handle_t            new_if_handle;
-    EndpointVmotionState    new_vmotion_state;
     ip_addr_t               new_homing_host_ip;
     ip_addr_t               source_host_ip;
     ip_addr_t               destination_host_ip;
     vlan_id_t               new_useg_vlan;
+    MigrationState          new_vmotion_state;
 } __PACK__ ep_update_app_ctxt_t;
 
 typedef struct ep_sess_upd_ctxt_s {
@@ -258,10 +272,13 @@ hal_ret_t endpoint_delete(EndpointDeleteRequest& spec,
 hal_ret_t endpoint_get(endpoint::EndpointGetRequest& spec,
                        endpoint::EndpointGetResponseMsg *rsp);
 bool endpoint_is_remote(ep_t *ep);
+hal_ret_t endpoint_migration_status_update (ep_t *ep, MigrationState migration_state);
+void      endpoint_migration_session_age_reset(ep_t *ep);
+hal_ret_t endpoint_migration_if_update(ep_t *ep);
 
 hal_ret_t ep_store_cb(void *obj, uint8_t *mem, uint32_t len, uint32_t *mlen);
 uint32_t ep_restore_cb(void *obj, uint32_t len);
-hal_ret_t ep_handle_vmotion(ep_t *ep, EndpointVmotionState vmotion_state);
+hal_ret_t ep_handle_vmotion(ep_t *ep, MigrationState new_vmotion_state);
 hal_ret_t ep_quiesce(ep_t *ep, bool entry_add);
 
 void register_dhcp_ep_status_callback(dhcp_status_func_t func);
@@ -271,7 +288,7 @@ void register_sessions_empty_callback(sessions_empty_cb_t func);
 hal_ret_t endpoint_create_process_sessions(ep_t *ep);
 void fte_session_update_list(void *data);
 void ep_create_session_timer_cb(void *timer, uint32_t timer_id, void *ctxt);
-
+hal_ret_t ep_get_session_info (ep_t *ep, session::SessionGetResponseMsg *rsp, uint64_t ts = 0);
 
 // Filter APIs
 hal_ret_t filter_create(FilterSpec& spec, FilterResponse *rsp);

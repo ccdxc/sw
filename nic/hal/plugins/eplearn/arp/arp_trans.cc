@@ -7,6 +7,7 @@
 #include "arp_trans.hpp"
 #include "nic/utils/fsm/fsm.hpp"
 #include "nic/hal/plugins/eplearn/eplearn.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint.hpp"
 #include "nic/fte/utils/packet_utils.hpp"
 #include "nic/hal/plugins/cfg/nw/nw.hpp"
 #include "nic/include/pd_api.hpp"
@@ -288,8 +289,21 @@ bool arp_trans_t::arp_fsm_t::process_rarp_request(fsm_state_ctx ctx,
         trans->sm_->throw_event(ARP_ERROR, NULL);
         return false;
     }
+    // handover to vmotion statemachine in following scenarios
+    // - rarp rcvd after ep update recevied by proto (vmotion_state)
+    // - rarp rcvd first, so ep points to non_local
+    //   add check for src_intf being eNIC (DMA)
+    if (((endpoint_is_remote(ep_entry)) &&
+         (fte_ctx->cpu_rxhdr()->lkp_dir == hal::FLOW_DIR_FROM_DMA))) {
 
-    arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+        // TODO: add a debug counter and increment it to keep track of rarp pkts
+        // drop the original rarp packet
+        // will be re-created from EP and sent after sync complete 
+        if (hal::g_hal_state->get_vmotion()->process_rarp(*(ep_get_mac_addr(ep_entry))))
+            fte_ctx->set_drop();
+    } else {
+        arp_trans_t::arplearn_key_ht()->insert((void *)trans, &trans->ht_ctxt_);
+    }
 
     return true;
 }

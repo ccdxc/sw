@@ -69,6 +69,9 @@ message EndpointSpec {
     string HomingHostAddr                   = 7  [(gogoproto.jsontag) = "homing-host-address,omitempty"];
     // Microsegment VLAN for the endpoint. Required only for Local EPs.
     uint32 UsegVlan                         = 8  [(gogoproto.jsontag) = "useg-vlan,omitempty"];
+    // Migration stage as expected by VCenter 
+    string Migration                        = 9 [(gogoproto.nullable) = true,
+                                                 (gogoproto.jsontag) = "migration,omitempty"];
 
 }
 
@@ -78,11 +81,10 @@ message EndpointStatus {
     uint64 EnicID                     = 1 [(gogoproto.jsontag) = "enic-id,omitempty"];
     // NodeUUID is the nodeuuid where the endpoint currntly exists.
     string NodeUUID                   = 2  [(gogoproto.jsontag) = "node-uuid,omitempty"];
-    // Spec of Migration of the endpoint
-    EndpointMigrationStatus Migration = 3 [(gogoproto.nullable) = true,
+    // Status of Migration of the endpoint
+    string Migration                  = 3 [(gogoproto.nullable) = true,
                                            (gogoproto.jsontag) = "migration,omitempty"];
 }
-
 
 // list of endpoints
 message EndpointList {
@@ -101,18 +103,13 @@ message EndpointEventList {
     repeated EndpointEvent EndpointEvents  = 1;
 }
 
-message EndpointMigrationStatus {
-    // State
-    enum MigrationState {
-      // ui-hint: None
-      NONE    = 0; // No Migration is in progress
-      // ui-hint: Start
-      START = 1; // Start migration
-      // ui-hint: Abort
-      FAILED = 2; // Abort Migration
-    }
-
-    // Status of migration
-    string Status                 = 1 [(venice.check) = "StrEnum(EndpointMigrationStatus.MigrationState)",
-                                        (gogoproto.jsontag) = "status, omitempty"];
+enum MigrationState {
+  // ui-hint: None
+  NONE    = 0; // No Migration is in progress
+  // ui-hint: Start
+  START = 1; // Start migration
+  // ui-hint : Migration done
+  DONE = 2; // Migration Done
+  // ui-hint: Abort
+  ABORT = 3; // Abort Migration
 }

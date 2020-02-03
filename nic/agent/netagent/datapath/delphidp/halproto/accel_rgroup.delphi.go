@@ -271,7 +271,6 @@ It has these top-level messages:
 	DoSPolicyStats
 	DoSPolicyGetResponse
 	DoSPolicyGetResponseMsg
-	EndpointVmotion
 	EndpointAttributes
 	EndpointSpec
 	EndpointRequestMsg
@@ -297,6 +296,7 @@ It has these top-level messages:
 	EndpointStats
 	EndpointGetResponse
 	EndpointGetResponseMsg
+	MigrationResponse
 	FilterSpec
 	FilterRequestMsg
 	FilterStatus

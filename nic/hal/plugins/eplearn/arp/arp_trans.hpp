@@ -232,6 +232,8 @@ uint32_t arptrans_handle_key_size(void);
 
 hal_ret_t arp_process_ip_move(hal_handle_t ep_handle, const ip_addr_t *ip_addr);
 
+bool process_vmotion_rarp(fte::ctx_t* ctx);
+
 }  // namespace eplearn
 }  // namespace hal
 

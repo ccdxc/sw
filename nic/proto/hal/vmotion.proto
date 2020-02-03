@@ -28,7 +28,7 @@ message VmotionInitiate {
 }
 
 message VmotionSync {
-  repeated session.SessionGetResponse response = 1; // list of sessions
+  repeated session.SessionGetResponse sessions = 1; // list of sessions
 }
 
 message VmotionSyncEnd {
@@ -39,7 +39,7 @@ message VmotionTermSyncReq {
 }
 
 message VmotionTermSync {
-  repeated session.SessionGetResponse response = 1; // list of sessions
+  repeated session.SessionGetResponse sessions = 1; // list of sessions
 }
 
 message VmotionTermSyncEnd {

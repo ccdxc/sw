@@ -153,7 +153,7 @@ pd_enicif_pd_pgm_inp_prop(pd_enicif_t *pd_enicif,
 hal_ret_t
 pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif_t *pd_enicif);
 hal_ret_t pd_enicif_pd_depgm_output_mapping_tbl (pd_enicif_t *pd_enicif);
-hal_ret_t pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif);
+hal_ret_t pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif, bool del_only_inp_mac_vlan);
 bool pd_enicif_get_vlan_strip (lif_t *lif, pd_if_lif_update_args_t *lif_upd);
 hal_ret_t pd_enicif_alloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);
 hal_ret_t pd_enicif_dealloc_pd_l2seg_entries(dllist_ctxt_t *pi_l2seg_list);

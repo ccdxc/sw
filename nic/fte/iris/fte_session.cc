@@ -9,7 +9,8 @@ namespace fte {
 
 // Process Session create in fte thread
 hal_ret_t
-session_create_in_fte (SessionSpec& spec, SessionResponse *rsp)
+session_create_in_fte (SessionSpec *spec, SessionStatus *status, SessionStats *stats,
+                       SessionResponse *rsp)
 {
     hal_ret_t        ret = HAL_RET_OK;
     ctx_t            ctx = {};
@@ -25,7 +26,7 @@ session_create_in_fte (SessionSpec& spec, SessionResponse *rsp)
     }
 
     //Init context
-    ret = ctx.init(&spec, rsp,  iflow, rflow, feature_state, num_features);
+    ret = ctx.init(spec, status, stats, rsp,  iflow, rflow, feature_state, num_features);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("fte: failied to init context, ret={}", ret);
         goto end;
@@ -51,7 +52,7 @@ hal_ret_t
 session_create (SessionSpec& spec, SessionResponse *rsp)
 {
     struct fn_ctx_t {
-        SessionSpec& spec;
+        SessionSpec&     spec;
         SessionResponse *rsp;
         hal_ret_t ret;
     } fn_ctx = { spec, rsp, HAL_RET_OK };
@@ -61,7 +62,7 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
 
     fte_execute(0, [](void *data) {
             fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
-            fn_ctx->ret = session_create_in_fte(fn_ctx->spec, fn_ctx->rsp);
+            fn_ctx->ret = session_create_in_fte(&fn_ctx->spec, NULL, NULL, fn_ctx->rsp);
         }, &fn_ctx);
 
 
@@ -70,6 +71,32 @@ session_create (SessionSpec& spec, SessionResponse *rsp)
     return fn_ctx.ret;
 }
 
+// Process vMotion session_create
+hal_ret_t
+session_create (SessionSpec& spec, SessionStatus& status, SessionStats& stats, SessionResponse *rsp)
+{
+    struct fn_ctx_t {
+        SessionSpec&     spec;
+        SessionStatus&   status;
+        SessionStats&    stats;
+        SessionResponse *rsp;
+        hal_ret_t ret;
+    } fn_ctx = { spec, status, stats, rsp, HAL_RET_OK };
+
+    hal::hal_api_trace(" API Begin: vMotion Session create ");
+    hal::proto_msg_dump(spec);
+
+    fte_execute(0, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
+            fn_ctx->ret = session_create_in_fte(&fn_ctx->spec, &fn_ctx->status,
+                                                &fn_ctx->stats, fn_ctx->rsp);
+        }, &fn_ctx);
+
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return fn_ctx.ret;
+}
 
 // Process Session delete in fte thread
 hal_ret_t
@@ -204,6 +231,76 @@ end:
         HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
     }
     return ret;
+}
+
+hal_ret_t
+session_update_in_fte (SessionSpec *spec, SessionStatus *status, SessionStats *stats,
+                       SessionResponse *rsp, uint64_t featureid_bitmap)
+{
+    hal_ret_t        ret;
+    ctx_t            ctx = {};
+    uint16_t         num_features;
+    flow_t           iflow[ctx_t::MAX_STAGES], rflow[ctx_t::MAX_STAGES];
+    size_t           fstate_size = feature_state_size(&num_features);
+    feature_state_t *feature_state = (feature_state_t*)HAL_MALLOC(hal::HAL_MEM_ALLOC_FTE,
+                                                                  fstate_size);
+    if (!feature_state) {
+        ret = HAL_RET_OOM;
+        goto end;
+    }
+
+    //Init context
+    ret = ctx.init(spec, status, stats, rsp, iflow, rflow, feature_state, num_features);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("fte: failed to init context, ret={}", ret);
+        goto end;
+    }
+
+    ctx.set_pipeline_event(FTE_SESSION_UPDATE);
+    ctx.set_featureid_bitmap(featureid_bitmap);
+
+    ret = ctx.process();
+
+end:
+    rsp->set_api_status(hal::hal_prepare_rsp(ret));
+
+    if (feature_state) {
+        HAL_FREE(hal::HAL_MEM_ALLOC_FTE, feature_state);
+    }
+    if (ret == HAL_RET_OK && ctx.session()) {
+        rsp->mutable_status()->set_session_handle(ctx.session()->hal_handle);
+    }
+    return ret;
+}
+
+// Process vMotion session_update
+hal_ret_t
+session_update (SessionSpec& spec, SessionStatus& status, SessionStats& stats,
+                SessionResponse *rsp, uint64_t feature_bitmap)
+{
+    struct fn_ctx_t {
+        SessionSpec&     spec;
+        SessionStatus&   status;
+        SessionStats&    stats;
+        SessionResponse *rsp;
+        uint64_t         featureid_bitmap;
+        hal_ret_t ret;
+    } fn_ctx = { spec, status, stats, rsp, feature_bitmap, HAL_RET_OK};
+
+    hal::hal_api_trace(" API Begin: vMotion Session update ");
+    hal::proto_msg_dump(spec);
+
+    fte_execute(0, [](void *data) {
+            fn_ctx_t *fn_ctx = (fn_ctx_t *)data;
+            fn_ctx->ret = session_update_in_fte(&fn_ctx->spec, &fn_ctx->status,
+                                                &fn_ctx->stats, fn_ctx->rsp,
+                                                fn_ctx->featureid_bitmap);
+        }, &fn_ctx);
+
+
+    HAL_TRACE_DEBUG("----------------------- API End ------------------------");
+
+    return fn_ctx.ret;
 }
 
 hal_ret_t

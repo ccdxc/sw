@@ -204,16 +204,38 @@ ctx_t::lookup_flow_objs()
         }
     } else if (existing_session()) {
         sep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
-                                       session_->iflow->config.l2_info.smac);
-        HAL_TRACE_VERBOSE("src ep found by L2 lookup seg_id:{} smac:{}",
-                           session_->iflow->config.l2_info.l2seg_id,
-                           macaddr2str(session_->iflow->config.l2_info.smac));
+                                      session_->iflow->config.l2_info.smac);
         dep_ = hal::find_ep_by_l2_key(session_->iflow->config.l2_info.l2seg_id,
                                       session_->iflow->config.l2_info.dmac);
-        HAL_TRACE_VERBOSE("dst ep found by L2 lookup, seg_id:{} dmac:{}",
+
+        HAL_TRACE_VERBOSE("L2 lookup sep: {} dep: {} seg_id:{} smac: {} dmac:{}",
+                          (sep_ != NULL) ? "found" : "not found",
+                          (dep_ != NULL) ? "found" : "not found",
                           session_->iflow->config.l2_info.l2seg_id,
+                          macaddr2str(session_->iflow->config.l2_info.smac),
                           macaddr2str(session_->iflow->config.l2_info.dmac));
     } 
+
+    if (protobuf_request() && sess_status_) {
+        l2seg_id_t l2seg_id = sess_status_->l2seg_id();
+        sl2seg_ = hal::find_l2seg_by_id(l2seg_id);
+        mac_addr_t smac = {0};
+        mac_addr_t dmac = {0};
+
+        MAC_UINT64_TO_ADDR(smac, sess_status_->smac());
+        sep_ = hal::find_ep_by_l2_key(l2seg_id, smac);
+        if (sep_) {
+            HAL_TRACE_VERBOSE("src ep {} found by L2 lookup seg_id:{} smac:{}",
+                              sep_->hal_handle, l2seg_id, macaddr2str(sep_->l2_key.mac_addr));
+        }
+        MAC_UINT64_TO_ADDR(dmac, sess_status_->dmac());
+        dep_ = hal::find_ep_by_l2_key(l2seg_id, dmac);
+        if (dep_) {
+            HAL_TRACE_VERBOSE("dst ep {} found by L2 lookup, seg_id:{} dmac:{}",
+                              dep_->hal_handle, l2seg_id, macaddr2str(dep_->l2_key.mac_addr));
+        }
+    }
+
     if ((sep_ == NULL || dep_ == NULL) && 
         hal::is_platform_type_sim()) {
         hal::ep_t *sep = NULL, *dep = NULL;
@@ -229,9 +251,10 @@ ctx_t::lookup_flow_objs()
     if (sep_) {
         sep_handle_ = sep_->hal_handle;
         if (protobuf_request()) {
-            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA :
-                      hal::FLOW_DIR_FROM_UPLINK;
+            key_.dir = (sep_->ep_flags & EP_FLAGS_LOCAL) ? hal::FLOW_DIR_FROM_DMA
+                                                         : hal::FLOW_DIR_FROM_UPLINK;
         }
+
         if ((sl2seg_ == NULL) ||
             (sl2seg_ != NULL && sl2seg_->hal_handle != sep_->l2seg_handle)) {
             sl2seg_ = hal::l2seg_lookup_by_handle(sep_->l2seg_handle);
@@ -260,9 +283,20 @@ ctx_t::lookup_flow_objs()
                  HAL_TRACE_VERBOSE("fte: dest lif not found or discovered yet.");
              }
         }
+    } else {
+        if (protobuf_request()) {
+            if (sl2seg_) {
+                dl2seg_ = sl2seg_;
+                dif_ = hal::find_if_by_handle(sl2seg_->pinned_uplink);
+            }
+            HAL_TRACE_VERBOSE("DIF Lookup.. sl2seg:{:p} dif:{:p}", (void *)sl2seg_, (void*)dif_);
+        }
     }
 
-    if (protobuf_request() || hal::is_platform_type_sim()) {
+    if (sess_status_) {
+        key_.lkpvrf = sess_status_->lookup_vrf();
+        HAL_TRACE_VERBOSE("Session Status Lookup vrf {}", key_.lkpvrf);
+    } else if (protobuf_request() || hal::is_platform_type_sim()) {
         HAL_TRACE_VERBOSE("Looking up flow lookup vrf sl2seg_: {:p}", (void *)sl2seg_);
         if (sl2seg_) {
             args.l2seg = sl2seg_;
@@ -374,10 +408,6 @@ ctx_t::init_ctxt_from_session(hal::session_t *sess)
 hal_ret_t
 ctx_t::lookup_session()
 {
-    if (protobuf_request()) {
-        return HAL_RET_SESSION_NOT_FOUND;
-    }
-
     session_ = hal::session_lookup(key_, &role_);
     if (!session_) {
         return HAL_RET_SESSION_NOT_FOUND;
@@ -397,8 +427,10 @@ hal_ret_t
 ctx_t::create_session()
 {
     hal_ret_t ret;
-    hal::flow_key_t l2_info;
+    hal::flow_key_t l2_info = {0};
     ether_header_t *ethhdr = NULL;
+
+    bzero(&l2_info, sizeof(hal::flow_key_t));
 
     if (sl2seg_) {
         l2_info.l2seg_id = sl2seg_->seg_id;
@@ -578,7 +610,7 @@ ctx_t::update_flow_table()
     hal::session_t *session = NULL;
     hal::pd::pd_tunnelif_get_rw_idx_args_t t_args;
     hal::pd::pd_func_args_t          pd_func_args = {0};
-    std::string      update_type = "create";
+    std::string      update_type = "none";
     hal::app_redir::app_redir_ctx_t* app_ctx = hal::app_redir::app_redir_ctx(*this, false);
     bool             session_exists = existing_session();
 
@@ -588,6 +620,10 @@ ctx_t::update_flow_table()
         session_cfg.session_id = sess_spec_->session_id();
         session_state.tcp_ts_option = sess_spec_->tcp_ts_option();
         session_state.tcp_sack_perm_option = sess_spec_->tcp_sack_perm_option();
+        if (sess_status_) {
+            session_args.session_state  = &session_state;
+            session_cfg.syncing_session = sess_status_->session_syncing(); 
+        }
     }
 
     if (ignore_session_create()) {
@@ -673,7 +709,7 @@ ctx_t::update_flow_table()
                         "is_proxy_en={} is_proxy_mcast={} export_en={} export_id1={} "
                         "export_id2={} export_id3={} export_id4={} conn_track_en={} "
                         "session_idle_timeout={} smac={} dmac={} l2seg_id={}, skip_sfw_reval={} "
-                        "sfw_rule_id={}, sfw_action={}",
+                        "sfw_rule_id={}, sfw_action={}, sync={}",
                         stage, iflow_cfg.key, iflow_attrs.lkp_inst, key_.lkpvrf,
                         iflow_cfg.action, iflow_attrs.mac_sa_rewrite,
                         iflow_attrs.mac_da_rewrite, iflow_attrs.ttl_dec, iflow_attrs.mcast_en,
@@ -691,7 +727,7 @@ ctx_t::update_flow_table()
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.smac),
                         ether_ntoa((struct ether_addr*)&iflow_cfg.l2_info.dmac),
                         iflow_cfg.l2_info.l2seg_id, session_cfg.skip_sfw_reval, session_cfg.sfw_rule_id,
-                        session_cfg.sfw_action);
+                        session_cfg.sfw_action, session_cfg.syncing_session);
     }
 
     for (uint8_t stage = 0; valid_rflow_ && !hal_cleanup() && stage <= rstage_; stage++) {
@@ -791,6 +827,8 @@ ctx_t::update_flow_table()
     session_args.sl2seg_handle = sl2seg_?sl2seg_->hal_handle:HAL_HANDLE_INVALID;
     session_args.dl2seg_handle = dl2seg_?dl2seg_->hal_handle:HAL_HANDLE_INVALID;
     session_args.spec        = sess_spec_;
+    session_args.status      = sess_status_;
+    session_args.stats       = sess_stats_;
     session_args.rsp         = sess_resp_;
     session_args.valid_rflow = valid_rflow_;
 
@@ -810,6 +848,7 @@ ctx_t::update_flow_table()
         }
     } else {
         // Create a new HAL session
+        update_type = "create";
         ret = hal::session_create(&session_args, &session_handle, &session);
         if (ret == HAL_RET_OK) {
             session_ = session;

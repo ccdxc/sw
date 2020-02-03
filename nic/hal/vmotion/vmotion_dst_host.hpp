@@ -23,6 +23,7 @@ enum vmotion_dst_host_fsm_state_t {
     STATE_DST_HOST_SYNC_REQ,
     STATE_DST_HOST_SYNCING,
     STATE_DST_HOST_SYNCED,
+    STATE_DST_HOST_TERM_SYNC_START, // start term sync process
     STATE_DST_HOST_TERM_SYNCING,
     STATE_DST_HOST_TERM_SYNCED,
     STATE_DST_HOST_EP_MOVED,
@@ -30,12 +31,17 @@ enum vmotion_dst_host_fsm_state_t {
 };
 
 #define DST_HOST_EVENT_ENTRIES(ENTRY)                 \
-    ENTRY(EVT_START_SYNC,     0, "EVT_START_SYNC")    \
-    ENTRY(EVT_SYNC,           1, "EVT_SYNC")          \
-    ENTRY(EVT_SYNC_END,       2, "EVT_SYNC_END")      \
-    ENTRY(EVT_TERM_SYNC,      3, "EVT_TERM_SYNC")     \
-    ENTRY(EVT_TERM_SYNC_END,  4, "EVT_TERM_SYNC_END") \
-    ENTRY(EVT_DST_EP_MOVED,   5, "EVT_DST_EP_MOVED")
+    ENTRY(EVT_START_SYNC,         0, "EVT_START_SYNC")    \
+    ENTRY(EVT_SYNC,               1, "EVT_SYNC")          \
+    ENTRY(EVT_SYNC_END,           2, "EVT_SYNC_END")      \
+    ENTRY(EVT_TERM_SYNC,          3, "EVT_TERM_SYNC")     \
+    ENTRY(EVT_TERM_SYNC_END,      4, "EVT_TERM_SYNC_END") \
+    ENTRY(EVT_DST_EP_MOVED,       5, "EVT_DST_EP_MOVED")  \
+    ENTRY(EVT_RARP_RCVD,          6, "EVT_RARP_RCVD")     \
+    ENTRY(EVT_EP_MV_START_RCVD,   7, "EVT_EP_MV_START_RCVD")   \
+    ENTRY(EVT_EP_MV_DONE_RCVD,    8, "EVT_EP_MV_DONE_RCVD")   \
+    ENTRY(EVT_EP_MV_ABORT_RCVD,   9, "EVT_EP_MV_ABORT_RCVD")   \
+    ENTRY(EVT_DST_TERM_SYNC_REQ,  10, "EVT_DST_TERM_SYNC_REQ")
 
 DEFINE_ENUM(vmotion_dst_host_fsm_event_t, DST_HOST_EVENT_ENTRIES)
 
@@ -53,7 +59,13 @@ private:
     bool process_term_sync(fsm_state_ctx ctx, fsm_event_data data);
     bool process_term_sync_end(fsm_state_ctx ctx, fsm_event_data data);
     bool process_ep_moved(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_rarp_req(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_ep_move_done(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_send_term_sync_rarp(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_send_term_sync_ep_move_done(fsm_state_ctx ctx, fsm_event_data data);
+    bool process_send_term_req(fsm_state_ctx ctx, fsm_event_data data);
     void state_dst_host_end(fsm_state_ctx ctx);
+    void state_dst_host_synced(fsm_state_ctx ctx);
 
     fsm_state_machine_def_t dst_host_sm_def_;
 };

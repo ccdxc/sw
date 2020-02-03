@@ -137,9 +137,7 @@ pd_if_get_lport_id(pd_func_args_t *pd_func_args)
     switch(if_type) {
         case intf::IF_TYPE_ENIC:
             pd_enicif = (pd_enicif_t *)if_get_pd_if(pi_if);
-            SDK_ASSERT(pd_enicif!= NULL);
-
-            args->lport_id = pd_enicif->enic_lport_id;
+            args->lport_id = pd_enicif ? pd_enicif->enic_lport_id : 0;
             break;
         case intf::IF_TYPE_UPLINK:
             pd_upif = (pd_uplinkif_t *)if_get_pd_if(pi_if);

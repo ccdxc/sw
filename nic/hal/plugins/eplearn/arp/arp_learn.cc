@@ -38,6 +38,11 @@ bool is_arp_flow(const hal::flow_key_t *key) {
             key->ether_type == ETH_TYPE_ARP);
 }
 
+bool is_rarp_flow(const hal::flow_key_t *key) {
+    return (key->flow_type == hal::FLOW_TYPE_L2 &&
+            key->ether_type == ETH_TYPE_RARP);
+}
+
 static hal_ret_t arp_process_req_entry(uint16_t opcode, uint8_t *hw_address,
         uint8_t *protocol_address, fte::ctx_t &ctx) {
 
@@ -129,7 +134,7 @@ static hal_ret_t validate_arp_packet(const struct ether_arp *arphead,
     }
 
     memset(spa, 0, sizeof(arphead->arp_spa));
-    if (memcmp(arphead->arp_spa, spa, sizeof(spa)) == 0) {
+    if ((opcode != ARPOP_REVREQUEST) && (memcmp(arphead->arp_spa, spa, sizeof(spa)) == 0)) {
         HAL_TRACE_ERR(
             "Ignoring ARP Request type {} received from EP with protocol address 0 "
             "with hardware address",
@@ -158,6 +163,42 @@ static hal_ret_t validate_arp_packet(const struct ether_arp *arphead,
     }
 
     return HAL_RET_OK;
+}
+
+bool
+process_vmotion_rarp(fte::ctx_t *ctx) {
+    const unsigned char *ether_pkt = ctx->pkt();
+    struct ether_arp *arphead;
+    hal_ret_t ret = HAL_RET_OK;
+    uint16_t opcode;
+
+    if (ether_pkt == nullptr) {
+        /* Skipping as not packet to process */
+        HAL_TRACE_ERR("ARP: ether_pkt -> NULL");
+        return false;
+    }
+
+    if (ctx->vlan_valid()) {
+        arphead = (struct ether_arp *)(ether_pkt + sizeof(vlan_header_t));
+    } else {
+        arphead = (struct ether_arp *)(ether_pkt + L2_ETH_HDR_LEN);
+    }
+
+    opcode = ntohs(arphead->ea_hdr.ar_op);
+    ret = validate_arp_packet(arphead, *ctx);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("ARP: RARP type {} , SRC {} validation failed",
+                    opcode, macaddr2str(arphead->arp_sha));
+        return false;
+    }
+    HAL_TRACE_INFO("ARP: Processing RARP type {} , SRC {} ",
+                    opcode, macaddr2str(arphead->arp_sha));
+
+    if (opcode == ARPOP_REVREQUEST) {
+       if (hal::g_hal_state->get_vmotion()->process_rarp(arphead->arp_sha))
+           ctx->set_drop();
+    }
+    return true;
 }
 
 hal_ret_t

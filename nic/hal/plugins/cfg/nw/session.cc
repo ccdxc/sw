@@ -164,6 +164,38 @@ find_session_by_handle (hal_handle_t handle)
     return (session_t *)g_hal_state->session_hal_handle_ht()->lookup(&handle);
 }
 
+session_t *
+find_session_from_spec (const SessionSpec& spec, uint32_t lookup_vrf)
+{
+    session_t      *session = NULL;
+    flow_key_t      flow_key = {0};
+
+    if (spec.has_initiator_flow()) {
+        extract_flow_key_from_spec(spec.vrf_key_handle().vrf_id(), &flow_key,
+                                   spec.initiator_flow().flow_key());
+        flow_key.dir = 1; // TEMP
+        flow_key.lkpvrf = lookup_vrf;
+
+        HAL_TRACE_DEBUG("spec lookup: iKey {}", flowkey2str(flow_key));
+
+        session = (session_t *)g_hal_state->session_hal_iflow_ht()->lookup(std::addressof(flow_key));
+
+        if (session)
+            return session;
+    }
+    if (spec.has_responder_flow()) {
+        extract_flow_key_from_spec(spec.vrf_key_handle().vrf_id(), &flow_key,
+                                   spec.responder_flow().flow_key());
+        flow_key.dir = 1; // TEMP
+        flow_key.lkpvrf = lookup_vrf;
+
+        HAL_TRACE_DEBUG("spec lookup: rKey {}", flowkey2str(flow_key));
+
+        session = (session_t *)g_hal_state->session_hal_rflow_ht()->lookup(std::addressof(flow_key));
+    }
+    return session;
+}
+
 //------------------------------------------------------------------------------
 // thread safe helper to stringify flow_key_t
 //------------------------------------------------------------------------------
@@ -434,6 +466,29 @@ add_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle,
 }
 
 //------------------------------------------------------------------------------
+// insert this session in all meta data structures
+//------------------------------------------------------------------------------
+static inline hal_ret_t
+updt_session_to_db (hal_handle_t sep_handle, hal_handle_t dep_handle, session_t *session)
+{
+    ep_t *sep = find_ep_by_handle(sep_handle);
+    ep_t *dep = find_ep_by_handle(dep_handle);
+
+    HAL_TRACE_VERBOSE("sep_hdl:{} dep_hdl:{} sep:{:p} dep:{:p} sess_sep_hdl:{} sess_dep_hdl:{}",
+                      sep_handle, dep_handle, (void *)sep, (void *)dep,
+                      session->sep_handle, session->dep_handle);
+    if ((sep) && (session->sep_handle == HAL_HANDLE_INVALID)) {
+        session->sep_handle = sep->hal_handle;
+        ep_add_session(sep, session);
+    }
+    if ((dep) && (session->dep_handle == HAL_HANDLE_INVALID)) {
+        session->dep_handle = dep->hal_handle;
+        ep_add_session(dep, session);
+    }
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
 // remove this session from all meta data structures
 //------------------------------------------------------------------------------
 static inline void
@@ -572,6 +627,42 @@ flow_data_to_flow_data_spec(flow_t *flow, FlowData *flow_data)
 }
 
 static void
+connection_track_response_to_flow_state (flow_state_t *flow, const ConnTrackInfo& conn_info)
+{
+    auto exceptions = conn_info.exceptions();
+
+    // Get Connection Tracking info
+    flow->create_ts = conn_info.flow_create_ts();
+    flow->packets = conn_info.flow_packets();
+    flow->bytes = conn_info.flow_bytes();
+    flow->tcp_seq_num = conn_info.tcp_seq_num();
+    flow->tcp_ack_num = conn_info.tcp_ack_num();
+    flow->tcp_win_sz = conn_info.tcp_win_sz();
+    flow->tcp_win_scale = conn_info.tcp_win_scale();
+    flow->tcp_mss = conn_info.tcp_mss();
+    flow->tcp_sack_perm_option_sent = conn_info.tcp_sack_perm_option_sent();
+    flow->syn_ack_delta = conn_info.iflow_syn_ack_delta();
+    flow->tcp_ws_option_sent = conn_info.tcp_ws_option_sent();
+    flow->tcp_ts_option_sent = conn_info.tcp_ts_option_sent();
+
+    // Get Connection Tracking Exceptions
+    flow->exception_bmap |= (exceptions.tcp_syn_retransmit() ? TCP_SYN_REXMIT : 0);
+    flow->exception_bmap |= (exceptions.tcp_win_zero_drop() ?  TCP_WIN_ZERO_DROP : 0);
+    flow->exception_bmap |= (exceptions.tcp_full_retransmit() ? TCP_FULL_REXMIT : 0);
+    flow->exception_bmap |= (exceptions.tcp_partial_overlap() ? TCP_PARTIAL_OVERLAP : 0);
+    flow->exception_bmap |= (exceptions.tcp_packet_reorder() ? TCP_PACKET_REORDER : 0);
+    flow->exception_bmap |= (exceptions.tcp_out_of_window() ? TCP_OUT_OF_WINDOW : 0);
+    flow->exception_bmap |= (exceptions.tcp_invalid_ack_num() ? TCP_ACK_ERR : 0);
+    flow->exception_bmap |= (exceptions.tcp_normalization_drop() ? TCP_NORMALIZATION_DROP : 0);
+    flow->exception_bmap |= (exceptions.tcp_split_handshake_detected() ? TCP_SPLIT_HANDSHAKE_DETECTED : 0);
+    flow->exception_bmap |= (exceptions.tcp_data_after_fin() ? TCP_DATA_AFTER_FIN : 0);
+    flow->exception_bmap |= (exceptions.tcp_non_rst_pkt_after_rst() ? TCP_NON_RST_PKT_AFTER_RST : 0);
+    flow->exception_bmap |= (exceptions.tcp_invalid_first_pkt_from_responder() ? TCP_INVALID_RESPONDER_FIRST_PKT : 0);
+    flow->exception_bmap |= (exceptions.tcp_unexpected_pkt() ? TCP_UNEXPECTED_PKT : 0);
+    flow->exception_bmap |= (exceptions.tcp_rst_with_invalid_ack_num() ? TCP_RST_WITH_INVALID_ACK_NUM : 0);
+}
+
+static void
 flow_state_to_connection_track_response(flow_state_t *flow, ConnTrackInfo *conn_info)
 {
     ConnTrackExceptions  *exceptions = conn_info->mutable_exceptions();
@@ -659,6 +750,7 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
     vrf_t   *vrf = vrf_lookup_by_handle(session->vrf_handle);
 
     response->mutable_status()->set_session_handle(session->hal_handle);
+    response->mutable_status()->set_session_syncing(session->syncing_session);
     response->mutable_spec()->mutable_vrf_key_handle()->set_vrf_id(vrf->vrf_id);
     response->mutable_spec()->set_conn_track_en(session->conn_track_en);
 
@@ -682,6 +774,32 @@ session_to_session_get_response (session_t *session, SessionGetResponse *respons
                               response->mutable_status()->mutable_peer_rflow_status());
         }
     }
+    // if sep_handle exists for  this session, copy mac for this ep to status
+    if (session->sep_handle) {
+       auto sep = find_ep_by_handle(session->sep_handle);
+       if (sep) {
+          response->mutable_status()->set_smac(MAC_TO_UINT64(sep->l2_key.mac_addr));
+       }
+    }
+    // if dep_handle exists for  this session, copy mac for this ep to status
+    if (session->dep_handle) {
+       auto dep = find_ep_by_handle(session->dep_handle);
+       if (dep) {
+          response->mutable_status()->set_dmac(MAC_TO_UINT64(dep->l2_key.mac_addr));
+       }
+    }
+}
+
+static void
+flow_stats_response_to_flow_state (flow_stats_t *flow_stats, flow_state_t *flow_state,
+                                   const FlowStats &stats)
+{
+    flow_state->packets = stats.flow_permitted_packets();
+    flow_state->bytes = stats.flow_permitted_bytes();
+    flow_state->drop_packets = stats.flow_dropped_packets();
+    flow_state->drop_bytes = stats.flow_dropped_bytes();
+    flow_stats->num_tcp_tickles_sent = stats.num_tcp_tickles_sent();
+    flow_stats->num_tcp_rst_sent = stats.num_tcp_rst_sent();
 }
 
 static void
@@ -696,6 +814,64 @@ flow_state_to_flow_stats_response (flow_stats_t *flow_stats,
     stats->set_num_tcp_tickles_sent(flow_stats->num_tcp_tickles_sent);
     stats->set_num_tcp_rst_sent(flow_stats->num_tcp_rst_sent);
     return;
+}
+
+static void
+session_status_proto_to_session_state (session_t *session, SessionSpec *spec, SessionStatus *status,
+                                       SessionStats *stats, session_state_t *session_state)
+{
+    // Flow idle timeout
+    session->idle_timeout = spec->initiator_flow().flow_data().flow_info().idle_timeout();
+
+    // TCP state
+    session_state->iflow_state.state = spec->initiator_flow().flow_data().flow_info().tcp_state();
+    session->iflow->state = spec->initiator_flow().flow_data().flow_info().hal_tcp_state();
+    session->iflow->pgm_attrs.expected_src_lif_en =
+        spec->initiator_flow().flow_data().flow_info().source_lif_check_enable();
+    if (session->iflow->pgm_attrs.expected_src_lif_en) {
+        session->iflow->pgm_attrs.expected_src_lif =
+            spec->initiator_flow().flow_data().flow_info().expected_source_lif();
+    }
+
+    flow_stats_response_to_flow_state(&session->iflow->stats, &session_state->iflow_state,
+                                      stats->initiator_flow_stats());
+    connection_track_response_to_flow_state(&session_state->iflow_state,
+            spec->initiator_flow().flow_data().conn_track_info());
+
+    if (spec->has_responder_flow()) {
+        // TCP state
+        session_state->rflow_state.state =
+            spec->responder_flow().flow_data().flow_info().tcp_state();
+        session->rflow->state =
+            spec->responder_flow().flow_data().flow_info().hal_tcp_state();
+        session->rflow->pgm_attrs.expected_src_lif_en =
+            spec->responder_flow().flow_data().flow_info().source_lif_check_enable();
+        if (session->rflow->pgm_attrs.expected_src_lif_en) {
+            session->rflow->pgm_attrs.expected_src_lif =
+                spec->responder_flow().flow_data().flow_info().expected_source_lif();
+        }
+
+        flow_stats_response_to_flow_state(&session->rflow->stats, &session_state->rflow_state,
+                                          stats->responder_flow_stats());
+        connection_track_response_to_flow_state(&session_state->rflow_state,
+                                             spec->responder_flow().flow_data().conn_track_info());
+    }
+
+    if (spec->has_peer_initiator_flow()) {
+        flow_stats_response_to_flow_state(&session->iflow->assoc_flow->stats,
+                                          &session_state->iflow_aug_state,
+                                          stats->peer_initiator_flow_stats());
+        connection_track_response_to_flow_state(&session_state->iflow_aug_state,
+                spec->peer_initiator_flow().flow_data().conn_track_info());
+    }
+
+    if (spec->has_peer_responder_flow()) {
+        flow_stats_response_to_flow_state(&session->rflow->assoc_flow->stats,
+                                          &session_state->rflow_aug_state,
+                                          stats->peer_responder_flow_stats());
+        connection_track_response_to_flow_state(&session_state->rflow_aug_state,
+                spec->peer_responder_flow().flow_data().conn_track_info());
+    }
 }
 
 static void
@@ -723,6 +899,10 @@ session_state_to_session_get_response (session_t *session,
 
     response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
               mutable_flow_info()->set_last_packet_seen_time(session_state->iflow_state.last_pkt_ts);
+
+    // Flow idle timeout
+    response->mutable_spec()->mutable_initiator_flow()->mutable_flow_data()->\
+                              mutable_flow_info()->set_idle_timeout(session->idle_timeout);
 
     // Flow remaining inactivity timeout
     session_timeout = session_aging_timeout(session, session->iflow, session->rflow);
@@ -2354,10 +2534,16 @@ session_create (const session_args_t *args, hal_handle_t *session_handle,
     }
     session->hal_handle = hal_alloc_handle();
     session->conn_track_en = args->session->conn_track_en;
+    session->syncing_session = args->session->syncing_session;
     session->idle_timeout = args->session->idle_timeout;
     session->skip_sfw_reval = args->session->skip_sfw_reval;
     session->sfw_rule_id = args->session->sfw_rule_id;
     session->sfw_action = args->session->sfw_action;
+
+    if (args->stats) {
+        session_status_proto_to_session_state(session, args->spec, args->status,
+                                              args->stats, args->session_state);
+    }
 
     // allocate all PD resources and finish programming, if any
     pd::pd_session_create_args_init(&pd_session_args);
@@ -2419,14 +2605,26 @@ hal_ret_t
 session_update(const session_args_t *args, session_t *session)
 {
     hal_ret_t                       ret;
+    nwsec_profile_t                *nwsec_prof = NULL;
     pd::pd_session_update_args_t    pd_session_args;
     pd::pd_func_args_t              pd_func_args = {0};
+    vrf_t                          *vrf = NULL;
 
     //SDK_ASSERT_RETURN(session->fte_id == fte::fte_id(), HAL_RET_INVALID_ARG);
 
     if (session->fte_id != fte::fte_id()) {
         HAL_TRACE_ERR("session fte_id {} current fte_id {}", session->fte_id, fte::fte_id());
         return HAL_RET_OK;
+    }
+
+    HAL_TRACE_VERBOSE("Updating session {:p} VRF: {}", (void *)session, args->vrf_handle);
+
+    vrf = vrf_lookup_by_handle(args->vrf_handle);
+    SDK_ASSERT_RETURN((vrf != NULL), HAL_RET_INVALID_ARG);
+
+    // fetch the security profile, if any
+    if (vrf->nwsec_profile_handle != HAL_HANDLE_INVALID) {
+        nwsec_prof = find_nwsec_profile_by_handle(vrf->nwsec_profile_handle);
     }
 
     session->idle_timeout = args->session->idle_timeout;
@@ -2459,6 +2657,11 @@ session_update(const session_args_t *args, session_t *session)
         session->rflow->reverse_flow = session->iflow;
     }
 
+    if (args->stats) {
+        session_status_proto_to_session_state(session, args->spec, args->status,
+                                              args->stats, args->session_state);
+    }
+
     // allocate all PD resources and finish programming, if any
     pd::pd_session_update_args_init(&pd_session_args);
     pd_session_args.session = session;
@@ -2466,6 +2669,7 @@ session_update(const session_args_t *args, session_t *session)
     pd_session_args.rsp = args->rsp;
     pd_session_args.update_iflow = args->update_iflow;
     pd_session_args.update_rflow = args->update_rflow;
+    pd_session_args.nwsec_prof = nwsec_prof;
 
     pd_func_args.pd_session_update = &pd_session_args;
     ret = pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_UPDATE, &pd_func_args);
@@ -2473,6 +2677,13 @@ session_update(const session_args_t *args, session_t *session)
         HAL_TRACE_ERR("PD session update failure, err : {}", ret);
     }
 
+    // Update syncing status, after updating entry in hardware
+    if (args->session->syncing_session)
+        session->syncing_session = args->session->syncing_session;
+
+    // Update this session to our db
+    updt_session_to_db(args->sep_handle, args->dep_handle, session);
+    
     return ret;
 }
 
@@ -2711,6 +2922,40 @@ build_tcp_packet (hal::flow_t *flow, session_t *session,
     return offset;
 }
 
+bool
+session_modified_after_timestamp (session_t *session, uint64_t ts)
+{
+    pd::pd_session_get_args_t  args;
+    pd::pd_func_args_t         pd_func_args = {0};
+    session_state_t            session_state = {0};
+    flow_t                    *iflow =  session->iflow;
+    flow_t                    *rflow =  session->rflow;
+
+    if (!iflow) {
+        HAL_TRACE_ERR("session {} has no iflow, ignoring ...", session->hal_handle);
+        return false;
+    }
+
+    args.session       = session;
+    args.session_state = &session_state;
+
+    pd_func_args.pd_session_get = &args;
+
+    if (pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_GET, &pd_func_args) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to fetch session state for session {}", session->hal_handle);
+        return false;
+    }
+
+    if ((session_state.iflow_state.last_pkt_ts > ts) ||
+        ((rflow) && (session_state.rflow_state.last_pkt_ts > ts))) {
+        HAL_TRACE_DEBUG("Session {} TS {} iFlow TS:{} rFlow TS: {}", session->hal_handle, ts,
+                        session_state.iflow_state.last_pkt_ts,
+                        session_state.rflow_state.last_pkt_ts);
+        return true;
+    }
+    return false;
+}
+
 static session_aged_ret_t
 hal_has_session_aged (session_t *session, uint64_t ctime_ns,
                       session_state_t *session_state_p, bool age_thread)
@@ -2808,6 +3053,10 @@ hal_has_session_aged (session_t *session, uint64_t ctime_ns,
     }
 
     if (rflow) {
+#if SESSION_AGE_DEBUG
+    HAL_TRACE_VERBOSE("session_age_cb: rflow:last pkt ts: {} state: {}",
+                      session_state_p->rflow_state.last_pkt_ts, session->rflow->state);
+#endif
         //check responder flow. Check for session state as we dont want to age half-closed
         //connections if half-closed timeout is disabled.
         if ((TIME_DIFF(ctime_ns, session_state_p->rflow_state.last_pkt_ts) >= session_timeout) ||
@@ -3073,7 +3322,8 @@ session_age_cb (void *entry, void *ctxt)
     (*args->num_sessions)++;
 
     // In case session or handle is invalid, we dont want to look further
-    if (session == NULL || session->hal_handle == HAL_HANDLE_INVALID) {
+    // Also dont age the session, if its marked as syncing session
+    if (session == NULL || session->hal_handle == HAL_HANDLE_INVALID || session->syncing_session) {
         return false;
     }
 

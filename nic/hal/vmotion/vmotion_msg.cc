@@ -56,7 +56,6 @@ end:
 hal_ret_t
 vmotion_recv_msg (VmotionMessage& msg, int sd)
 {
-    hal_ret_t ret = HAL_RET_OK;
     int       byte_count;
     uint32_t  data_len, msg_len;
     char      *buff = (char *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION_BUFFER, VMOTION_MSG_HDR_LEN);
@@ -100,7 +99,7 @@ vmotion_recv_msg (VmotionMessage& msg, int sd)
     HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff);
     HAL_FREE(HAL_MEM_ALLOC_VMOTION_BUFFER, buff_msg);
 
-    return ret;
+    return HAL_RET_OK;
 }
 
 } // namespace hal

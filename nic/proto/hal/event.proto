@@ -9,6 +9,7 @@ import "types.proto";
 import "interface.proto";
 import "port.proto";
 import "system.proto";
+import "endpoint.proto";
 package event;
 option go_package="halproto";
 
@@ -24,6 +25,7 @@ enum EventId {
   EVENT_ID_PORT_STATE      = 1;
   EVENT_ID_LIF_ADD_UPDATE  = 2;
   EVENT_ID_MICRO_SEG_STATE = 3;
+  EVENT_ID_EP_MIGRATION    = 4;
 }
 
 enum EventOp {
@@ -45,5 +47,6 @@ message EventResponse {
       intf.LifGetResponse         lif_event         = 3;    // Lif Info
       port.PortResponse           port_event        = 4;    // Port Info
       sys.MicroSegEvent           micro_seg_event   = 5;    // Micro Seg Event
+      endpoint.MigrationResponse  migration_event   = 6;    // EP Migration Info
   }
 }

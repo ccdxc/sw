@@ -51,6 +51,7 @@ class updown_mgr {
 public:
     void subscribe(uint32_t subscriber, uint32_t target);
     void up(uint32_t thread_id);
+    void down(uint32_t thread_id);
 private:
     std::map<uint32_t, updown_status_t> status_;
     std::map<uint32_t, std::set<uint32_t> > subscriptions_;
@@ -154,6 +155,14 @@ updown_mgr::up(uint32_t thread_id) {
         assert(g_event_thread_table[subscriber] != NULL);
         g_event_thread_table[subscriber]->handle_thread_up(thread_id);
     }
+    this->mutex_.unlock();
+}
+
+void
+updown_mgr::down(uint32_t thread_id) {
+    assert(thread_id <= MAX_THREAD_ID);
+    this->mutex_.lock();
+    this->status_[thread_id] = THREAD_DOWN;
     this->mutex_.unlock();
 }
 
@@ -346,6 +355,8 @@ event_thread::run_(void) {
     if (this->exit_func_) {
         this->exit_func_(this->user_ctx_);
     }
+
+    g_updown.down(this->thread_id());
 
     ev_loop_destroy(this->loop_);
     this->loop_ = NULL;

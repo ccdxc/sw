@@ -13,8 +13,9 @@ namespace pd {
 
 struct pd_ep_s {
     uint32_t                rw_tbl_idx[REWRITE_MAX_ID];
-    uint32_t                reg_mac_tbl_idx;        // Only in classic mode
-    acl_tcam_entry_handle_t ep_quiesce_nacl_hdl;    // EP Quiesce NACL Handle
+    uint32_t                reg_mac_tbl_idx;         // Only in classic mode
+    acl_tcam_entry_handle_t ep_quiesce_src_nacl_hdl; // EP Quiesce source NACL Handle
+    acl_tcam_entry_handle_t ep_quiesce_dst_nacl_hdl; // EP Quiesce destination NACL Handle
 
     // pi ptr
     void                    *pi_ep;

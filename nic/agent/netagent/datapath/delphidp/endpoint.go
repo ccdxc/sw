@@ -32,6 +32,7 @@ func ipv4Touint32(ip net.IP) uint32 {
 // CreateLocalEndpoint creates a local endpoint in datapath
 func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netproto.Network, lifID, enicID uint64, vrf *netproto.Vrf) (*types.IntfInfo, error) {
 	var halIPAddresses []*halproto.IPAddress
+	var homingHostIP *halproto.IPAddress
 	var lifHandle *halproto.LifKeyHandle
 
 	// convert mac address
@@ -53,6 +54,26 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		}
 
 		halIPAddresses = append(halIPAddresses, v4Addr)
+	}
+
+	vmotionState := halproto.MigrationState.NONE
+	if ep.Spec.NodeUUID != ep.Status.NodeUUID {
+		vmotionState = halproto.MigrationState.IN_PROGRESS
+	}
+
+	if len(ep.Spec.HomingHostAddr) > 0 {
+                ipaddr, _, err := net.ParseCIDR(ep.Spec.HomingHostAddr)
+                if err != nil {
+                        return nil, fmt.Errorf("ipv4 address for endpoint creates should be in CIDR format")
+                }
+                // convert v4 address
+                v4Addr := &halproto.IPAddress{
+                        IpAf: halproto.IPAddressFamily_IP_AF_INET,
+                        V4OrV6: &halproto.IPAddress_V4Addr{
+                                V4Addr: ipv4Touint32(ipaddr),
+                        },
+                }
+		homingHostIP = v4Addr
 	}
 
 	vrfKey := halproto.VrfKeyHandle{
@@ -77,6 +98,7 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 		InterfaceKeyHandle: &ifKey,
 		UsegVlan:           ep.Spec.UsegVlan,
 		IpAddress:          halIPAddresses,
+		OldHomingHostIp:    homingHostIP,
 	}
 
 	epHandle := halproto.EndpointKeyHandle{
@@ -122,6 +144,7 @@ func (dp *DelphiDatapath) CreateLocalEndpoint(ep *netproto.Endpoint, nt *netprot
 				},
 			},
 		},
+		VmotionState: vmotionState,
 	}
 
 	// write it to delphi

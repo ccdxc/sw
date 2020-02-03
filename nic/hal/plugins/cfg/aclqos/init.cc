@@ -225,7 +225,7 @@ hal_eplearn_acl_config_init (void)
         action = spec.mutable_action();
         *action = arp_action;
         spec.mutable_key_or_handle()->set_acl_id(acl_id++);
-        spec.set_priority(priority++);
+        spec.set_priority(ACL_RARP_ENTRY_PRIORITY);
 
         match->mutable_eth_selector()->set_eth_type(ETH_TYPE_RARP);
         match->mutable_eth_selector()->set_eth_type_mask(0xffff);

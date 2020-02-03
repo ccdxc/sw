@@ -65,13 +65,20 @@ std::string hex_str(const uint8_t *buf, size_t sz)
 // the entry is programmed
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
+p4pd_add_upd_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t permit_packets,
+                                     uint64_t permit_bytes, uint64_t drop_packets,
+                                     uint64_t drop_bytes, uint64_t clock, bool update)
 {
     hal_ret_t ret;
     sdk_ret_t sdk_ret;
     sldirectmap *stats_table = NULL;
     flow_stats_actiondata_t d = { 0 };
     sdk_table_api_params_t params;
+
+    if (!update && (*assoc_hw_idx)) {
+        HAL_TRACE_VERBOSE("Hw entry already created Hw index:{}", *assoc_hw_idx);
+        return HAL_RET_OK;
+    }
 
     SDK_ASSERT(assoc_hw_idx != NULL);
     stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
@@ -80,14 +87,22 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
     d.action_id = FLOW_STATS_FLOW_STATS_ID;
     // P4 has 32 bits so we have to use top 32 bits. We lose the precision by 2^16 ns
     d.action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
-    HAL_TRACE_VERBOSE("Setting the last seen timestamp: {} clock {}",
-                      d.action_u.flow_stats_flow_stats.last_seen_timestamp,
-                      clock);
+
+    memcpy(d.action_u.flow_stats_flow_stats.permit_packets, &permit_packets, sizeof(uint64_t));
+    memcpy(d.action_u.flow_stats_flow_stats.permit_bytes, &permit_bytes, sizeof(uint64_t));
+    memcpy(d.action_u.flow_stats_flow_stats.drop_packets, &drop_packets, sizeof(uint64_t));
+    memcpy(d.action_u.flow_stats_flow_stats.drop_bytes, &drop_bytes, sizeof(uint64_t));
 
     bzero(&params, sizeof(sdk_table_api_params_t));
     params.actiondata = &d;
-    // insert the entry
-    sdk_ret = stats_table->insert(&params);
+
+    if (update) {
+        params.handle.pindex(*assoc_hw_idx);
+        sdk_ret = stats_table->update(&params);
+    } else {
+        // insert the entry
+        sdk_ret = stats_table->insert(&params);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
@@ -96,6 +111,53 @@ p4pd_add_flow_stats_table_entry (uint32_t *assoc_hw_idx, uint64_t clock)
  
     SDK_ASSERT(params.handle.pvalid());
     *assoc_hw_idx = params.handle.pindex();
+
+    HAL_TRACE_VERBOSE("Setting the last seen timestamp: {} clock {} hwIndx: {}",
+                      d.action_u.flow_stats_flow_stats.last_seen_timestamp,
+                      clock, *assoc_hw_idx);
+
+    return HAL_RET_OK;
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+hal_ret_t
+p4pd_flow_stats_table_entry_last_seen_ts (uint32_t assoc_hw_idx, uint64_t clock)
+{
+    sldirectmap            *stats_table = NULL;
+    hal_ret_t               ret;
+    sdk_ret_t               sdk_ret;
+    flow_stats_actiondata_t d = { 0 };
+    sdk_table_api_params_t  params;
+
+    stats_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_FLOW_STATS);
+    SDK_ASSERT(stats_table != NULL);
+
+    // Get the entry
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.handle.pindex(assoc_hw_idx);
+    params.actiondata = &d;
+
+    sdk_ret = stats_table->get(&params);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Error reading stats entry {} ret {}", assoc_hw_idx, ret);
+        return ret;
+    }
+
+    // Update the last seen timestamp field
+    d.action_u.flow_stats_flow_stats.last_seen_timestamp = clock >> 16;
+
+    sdk_ret = stats_table->update(&params);
+    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("flow stats table write failure, err : {}", ret);
+        return ret;
+    }
+ 
+    HAL_TRACE_VERBOSE("Setting the last seen timestamp: {} clock {} hwIndx: {}",
+                      d.action_u.flow_stats_flow_stats.last_seen_timestamp,
+                      clock, assoc_hw_idx);
 
     return HAL_RET_OK;
 }
@@ -126,36 +188,81 @@ p4pd_del_flow_stats_table_entry (uint32_t assoc_hw_idx)
 // program flow stats table entries for a given session
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_flow_stats_table_entries (pd_session_t *session_pd, pd_session_create_args_t *args)
+p4pd_add_flow_stats_table_entries (pd_session_t *session_pd, pd_session_create_args_t *args,
+                                   bool update)
 {
     hal_ret_t ret = HAL_RET_OK;
 
+    HAL_TRACE_VERBOSE("iAugVld:{} rVld:{} rAugVld:{} iID:{} iAugID:{} rID:{} rAugID:{} Updt:{}",
+                      session_pd->iflow_aug.valid, session_pd->rflow.valid, session_pd->rflow_aug.valid,
+                      session_pd->iflow.assoc_hw_id, session_pd->iflow_aug.assoc_hw_id,
+                      session_pd->rflow.assoc_hw_id, session_pd->rflow_aug.assoc_hw_id, update);
+
     // program flow_stats table entry for iflow
-    if (!session_pd->iflow.assoc_hw_id) {
-        ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow.assoc_hw_id, args->clock);
-        if (ret != HAL_RET_OK) {
-            return ret;
-        }
+    if (args->session_state) {
+        ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->iflow.assoc_hw_id,
+                                                  args->session_state->iflow_state.packets,
+                                                  args->session_state->iflow_state.bytes,
+                                                  args->session_state->iflow_state.drop_packets,
+                                                  args->session_state->iflow_state.drop_bytes,
+                                                  args->clock, update);
+    } else {
+        ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->iflow.assoc_hw_id,
+                                                  0, 0, 0, 0, args->clock, update);
+    }
+    if (ret != HAL_RET_OK) {
+        return ret;
     }
 
-    if (session_pd->iflow_aug.valid && !session_pd->iflow_aug.assoc_hw_id) {
-        ret = p4pd_add_flow_stats_table_entry(&session_pd->iflow_aug.assoc_hw_id, args->clock);
+    if (session_pd->iflow_aug.valid) {
+        if (args->session_state) {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->iflow_aug.assoc_hw_id,
+                                                      args->session_state->iflow_aug_state.packets,
+                                                      args->session_state->iflow_aug_state.bytes,
+                                                      args->session_state->iflow_aug_state.drop_packets,
+                                                      args->session_state->iflow_aug_state.drop_bytes,
+                                                      args->clock, update);
+        } else {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->iflow_aug.assoc_hw_id,
+                                                      0, 0, 0, 0, args->clock, update);
+
+        }
         if (ret != HAL_RET_OK) {
             return ret;
         }
     }
 
     // program flow_stats table entry for rflow
-    if (session_pd->rflow.valid && !session_pd->rflow.assoc_hw_id) {
-        ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow.assoc_hw_id, args->clock);
+    if (session_pd->rflow.valid) {
+        if (args->session_state) {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->rflow.assoc_hw_id,
+                                                      args->session_state->rflow_state.packets,
+                                                      args->session_state->rflow_state.bytes,
+                                                      args->session_state->rflow_state.drop_packets,
+                                                      args->session_state->rflow_state.drop_bytes,
+                                                      args->clock, update);
+        } else {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->rflow.assoc_hw_id,
+                                                      0, 0, 0, 0, args->clock, update);
+        }
         if (ret != HAL_RET_OK) {
             p4pd_del_flow_stats_table_entry(session_pd->iflow.assoc_hw_id);
             return ret;
         }
     }
 
-    if (session_pd->rflow_aug.valid && !session_pd->rflow_aug.assoc_hw_id) {
-        ret = p4pd_add_flow_stats_table_entry(&session_pd->rflow_aug.assoc_hw_id, args->clock);
+    if (session_pd->rflow_aug.valid) {
+        if (args->session_state) {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->rflow_aug.assoc_hw_id,
+                                                      args->session_state->rflow_aug_state.packets,
+                                                      args->session_state->rflow_aug_state.bytes,
+                                                      args->session_state->rflow_aug_state.drop_packets,
+                                                      args->session_state->rflow_aug_state.drop_bytes,
+                                                      args->clock, update);
+        } else {
+            ret = p4pd_add_upd_flow_stats_table_entry(&session_pd->rflow_aug.assoc_hw_id,
+                                                      0, 0, 0, 0, args->clock, update);
+        }
         if (ret != HAL_RET_OK) {
             return ret;
         }
@@ -193,9 +300,10 @@ p4pd_del_flow_stats_table_entries (pd_session_t *session_pd)
 // the entry is programmed
 //------------------------------------------------------------------------------
 hal_ret_t
-p4pd_add_session_state_table_entry (pd_session_t *session_pd,
-                                    session_state_t *session_state,
-                                    nwsec_profile_t *nwsec_profile)
+p4pd_add_upd_session_state_table_entry (pd_session_t *session_pd,
+                                        session_state_t *session_state,
+                                        nwsec_profile_t *nwsec_profile,
+                                        bool update)
 {
     hal_ret_t                ret;
     sdk_ret_t                sdk_ret;
@@ -212,6 +320,21 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
 
     session_state_table = (sldirectmap *)g_hal_state_pd->dm_table(P4TBL_ID_SESSION_STATE);
     SDK_ASSERT(session_state_table != NULL);
+
+    bzero(&params, sizeof(sdk_table_api_params_t));
+    params.actiondata = &d;
+
+    if (update) {
+        params.handle.pindex(session_pd->session_state_idx);
+
+        sdk_ret = session_state_table->get(&params);
+        ret = hal_sdk_ret_to_hal_ret(sdk_ret);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("sess table update entry: {} not found", session_pd->session_state_idx);
+            return ret;
+        }
+    }
+    HAL_TRACE_DEBUG("sess table updt:{} Index:{}", update, session_pd->session_state_idx);
 
     // populate the action information
     d.action_id = SESSION_STATE_TCP_SESSION_STATE_INFO_ID;
@@ -245,6 +368,15 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
         d.action_u.session_state_tcp_session_state_info.iflow_exceptions_seen =
             session_state->iflow_state.exception_bmap;
 
+        HAL_TRACE_VERBOSE("iflow:S:{} Seq:{} Ack:{} Sz:{} Sc:{} Mss:{} Ws:{}, ts:{}, Sa:{}, Ex:{}",
+                session_state->iflow_state.state,session_state->iflow_state.tcp_seq_num,
+                session_state->iflow_state.tcp_ack_num, session_state->iflow_state.tcp_win_sz,
+                session_state->iflow_state.tcp_win_scale, session_state->iflow_state.tcp_mss,
+                session_state->iflow_state.tcp_ws_option_sent,
+                session_state->iflow_state.tcp_ts_option_sent,
+                session_state->iflow_state.tcp_sack_perm_option_sent,
+                session_state->iflow_state.exception_bmap);
+
         // responder flow specific information
         d.action_u.session_state_tcp_session_state_info.rflow_tcp_state =
             session_state->rflow_state.state;
@@ -261,6 +393,11 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
         d.action_u.session_state_tcp_session_state_info.rflow_exceptions_seen =
             session_state->rflow_state.exception_bmap;
 
+        HAL_TRACE_VERBOSE("rflow: S:{} Seq:{} Ack:{}, Sz:{} Sc:{}, Mss:{}, Ex:{}",
+                session_state->rflow_state.state,session_state->rflow_state.tcp_seq_num,
+                session_state->rflow_state.tcp_ack_num, session_state->rflow_state.tcp_win_sz,
+                session_state->rflow_state.tcp_win_scale, session_state->rflow_state.tcp_mss,
+                session_state->rflow_state.exception_bmap);
 
         d.action_u.session_state_tcp_session_state_info.syn_cookie_delta =
             session_state->iflow_state.syn_ack_delta;
@@ -269,11 +406,13 @@ p4pd_add_session_state_table_entry (pd_session_t *session_pd,
     d.action_u.session_state_tcp_session_state_info.flow_rtt_seq_check_enabled =
         nwsec_profile ?  nwsec_profile->tcp_rtt_estimate_en : FALSE;
 
-    bzero(&params, sizeof(sdk_table_api_params_t));
-    params.actiondata = &d;
-
-    // insert the entry
-    sdk_ret = session_state_table->insert(&params);
+    if (update) {
+        // update the entry
+        sdk_ret = session_state_table->update(&params);
+    } else {
+        // insert the entry
+        sdk_ret = session_state_table->insert(&params);
+    }
     ret = hal_sdk_ret_to_hal_ret(sdk_ret);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("session state table write failure, err : {}", ret);
@@ -477,8 +616,8 @@ p4pd_add_upd_flow_info_table_entry (session_t *session, pd_flow_t *flow_pd,
                  sess_pd->session_state_idx : 0;
    
         // Dont update the start timestamp during update
-        // we dont want to mess up aging logic    
-        if (!entry_exists) 
+        // we dont want to mess up aging logic
+        if (!entry_exists)
             d.action_u.flow_info_flow_info.start_timestamp = (clock>>16);
     } // End updateion flow allow action
 
@@ -1024,7 +1163,7 @@ pd_session_create (pd_func_args_t *pd_func_args)
     args->clock = clock;
 
     // add flow stats entries first
-    ret = p4pd_add_flow_stats_table_entries(session_pd, args);
+    ret = p4pd_add_flow_stats_table_entries(session_pd, args, false);
     if (ret != HAL_RET_OK) {
         return ret;
     }
@@ -1038,7 +1177,8 @@ pd_session_create (pd_func_args_t *pd_func_args)
     // if connection tracking is on, add flow state entry for this session
     if (args->session->conn_track_en) {
         session_pd->conn_track_en = 1;
-        ret = p4pd_add_session_state_table_entry(session_pd, args->session_state, args->nwsec_prof);
+        ret = p4pd_add_upd_session_state_table_entry(session_pd, args->session_state,
+                                                     args->nwsec_prof, false);
         if (ret != HAL_RET_OK) {
             goto cleanup;
         }
@@ -1117,10 +1257,22 @@ pd_session_update (pd_func_args_t *pd_func_args)
     args->clock = clock;
 
     // update/add flow stats entries first
-    ret = p4pd_add_flow_stats_table_entries(session_pd, (pd_session_create_args_t *)args);
+    ret = p4pd_add_flow_stats_table_entries(session_pd, (pd_session_create_args_t *)args, true);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("Flow stats table entry upd failure");
         return ret;
+    }
+
+    // if connection tracking is on, add flow state entry for this session
+    if (args->session->conn_track_en) {
+        session_pd->conn_track_en = 1;
+        ret = p4pd_add_upd_session_state_table_entry(session_pd, args->session_state,
+                                                     args->nwsec_prof, true);
+        if (ret != HAL_RET_OK) {
+            goto cleanup;
+        }
+    } else {
+        session_pd->conn_track_en = 0;
     }
 
     // update/add flow info table entries
@@ -1322,6 +1474,50 @@ pd_session_get (pd_func_args_t *pd_func_args)
     return HAL_RET_OK;
 }
 
+hal_ret_t
+pd_session_age_reset (pd_func_args_t *pd_func_args)
+{
+    pd_conv_sw_clock_to_hw_clock_args_t clock_args;
+    pd_session_age_reset_args_t         *args = pd_func_args->pd_session_age_reset;
+    session_t                           *session = args->session;
+    pd_session_t                        *session_pd = (session ? session->pd : NULL);
+    pd_func_args_t                      pd_clock_fn_args = {0};
+    timespec_t                          ts;
+    uint64_t                            sw_ns = 0, clock = 0; 
+
+    if (session_pd == NULL) {
+        return HAL_RET_INVALID_ARG;
+    }
+
+    HAL_TRACE_VERBOSE("Session:{} iAugVld:{} rVld:{} rAugVld:{} iID:{} iAugID:{} rID:{} rAugID:{}",
+                      session->hal_handle, session_pd->iflow_aug.valid, session_pd->rflow.valid,
+                      session_pd->rflow_aug.valid, session_pd->iflow.assoc_hw_id,
+                      session_pd->iflow_aug.assoc_hw_id, session_pd->rflow.assoc_hw_id,
+                      session_pd->rflow_aug.assoc_hw_id);
+
+    // Get the hw clock
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    sdk::timestamp_to_nsecs(&ts, &sw_ns);
+    clock_args.hw_tick = &clock;
+    clock_args.sw_ns   = sw_ns;
+    pd_clock_fn_args.pd_conv_sw_clock_to_hw_clock = &clock_args;
+    pd_conv_sw_clock_to_hw_clock(&pd_clock_fn_args);
+
+    p4pd_flow_stats_table_entry_last_seen_ts(session_pd->iflow.assoc_hw_id, clock);
+
+    if (session_pd->iflow_aug.valid) {
+        p4pd_flow_stats_table_entry_last_seen_ts(session_pd->iflow_aug.assoc_hw_id, clock);
+    }
+    if (session_pd->rflow.valid) {
+        p4pd_flow_stats_table_entry_last_seen_ts(session_pd->rflow.assoc_hw_id, clock);
+    }
+    if (session_pd->rflow_aug.valid) {
+        p4pd_flow_stats_table_entry_last_seen_ts(session_pd->rflow_aug.assoc_hw_id, clock);
+    }
+
+    return HAL_RET_OK;
+}
+ 
 typedef struct flow_atomic_stats_ {
     uint64_t permit_bytes:64;
     uint64_t permit_packets:64;
@@ -1772,7 +1968,7 @@ pd_add_cpu_bypass_flow_info (uint32_t *flow_info_hwid)
     pd_clock_fn_args.pd_conv_sw_clock_to_hw_clock = &clock_args;
     pd_conv_sw_clock_to_hw_clock(&pd_clock_fn_args);
 
-    ret = p4pd_add_flow_stats_table_entry(flow_info_hwid, clock);
+    ret = p4pd_add_upd_flow_stats_table_entry(flow_info_hwid, 0, 0, 0, 0, clock, false);
     if (ret != HAL_RET_OK) {
         return ret;
     }

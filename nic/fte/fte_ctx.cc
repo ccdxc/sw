@@ -295,7 +295,8 @@ ctx_t::init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pk
 // Initialize the context from GRPC protobuf
 //------------------------------------------------------------------------------
 hal_ret_t
-ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
+ctx_t::init(SessionSpec* spec, SessionStatus *status, SessionStats *stats,
+            SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
             feature_state_t feature_state[], uint16_t num_features)
 {
     hal_ret_t ret;
@@ -306,8 +307,10 @@ ctx_t::init(SessionSpec* spec, SessionResponse *rsp, flow_t iflow[], flow_t rflo
         return ret;
     }
 
-    sess_spec_ = spec;
-    sess_resp_ = rsp;
+    sess_spec_   = spec;
+    sess_status_ = status;
+    sess_stats_  = stats;
+    sess_resp_   = rsp;
 
     ret = init_flows(iflow, rflow);
     if (ret != HAL_RET_OK) {

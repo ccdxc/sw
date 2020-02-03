@@ -7,11 +7,30 @@
 #include "nic/hal/vmotion/vmotion_src_host.hpp"
 #include "nic/hal/vmotion/vmotion_msg.hpp"
 #include "nic/hal/iris/include/hal_state.hpp"
+#include "nic/hal/plugins/cfg/nw/endpoint_api.hpp"
 #include "gen/proto/vmotion.pb.h"
+#include "gen/proto/session.pb.h"
 
 namespace hal {
 
 using namespace vmotion_msg;
+
+void
+src_host_end (vmotion_ep *vmn_ep, MigrationState migration_state)
+{
+    auto ep = vmn_ep->get_ep();
+
+    HAL_TRACE_INFO("Source Host end EP: {}", macaddr2str(ep->l2_key.mac_addr));
+
+    // Remove EP Quiesce NACL entry
+    ep_quiesce(ep, FALSE);
+
+    ep->vmotion_state = migration_state;
+
+    // Stop the watcher
+    vmn_ep->get_event_thread()->stop();
+}
+
 
 vmotion_src_host_fsm_def *
 vmotion_src_host_fsm_def::factory(void)
@@ -56,24 +75,72 @@ vmotion_src_host_fsm_def::vmotion_src_host_fsm_def(void)
     set_state_machine(sm_def);
 }
 
+static bool
+copy_session_info (VmotionMessage *msg_rsp, SessionGetResponseMsg *rsp,
+                   unsigned int *cur_sess, unsigned int *sess_count)
+{
+    unsigned int sess_cnt = 0;
+
+    if (!rsp || !msg_rsp) {
+        return false;
+    }
+    for (int i = *cur_sess; (i < rsp->response_size()) && (sess_cnt < VMOTION_MAX_SESS_PER_MSG);
+         i++) {
+        const session::SessionGetResponse& sessResp = rsp->response(i);
+        session::SessionGetResponse* sess_resp = msg_rsp->mutable_sync()->add_sessions();
+        sess_resp->CopyFrom(sessResp);
+        sess_cnt++;
+    }
+    *sess_count = sess_cnt;
+    HAL_TRACE_DEBUG(" Cur_Session : {}, Session_Count : {} ", *cur_sess, *sess_count);
+    return true;
+}
+
 bool
 vmotion_src_host_fsm_def::proc_sync_begin(fsm_state_ctx ctx, fsm_event_data data)
 {
     vmotion_ep     *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    VmotionMessage  msg_rsp;
+    SessionGetResponseMsg *rsp = new SessionGetResponseMsg;
+    ep_t            *ep = vmn_ep->get_ep();
+    unsigned int    cur_sessions = 0;
+    unsigned int    sess_count = 0;
+    bool            ret = true;
 
-    HAL_TRACE_INFO("Sync Begin EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
- 
-    msg_rsp.set_type(VMOTION_MSG_TYPE_SYNC);
+    HAL_TRACE_INFO("Sync Begin EP: {}", macaddr2str(ep->l2_key.mac_addr));
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("vmotion unable to send sync message");
-        return false;
+    // Record the current time
+    vmn_ep->set_last_sync_time();
+
+    if (hal::ep_get_session_info(ep, rsp) != HAL_RET_OK) {
+        HAL_TRACE_DEBUG("Sync no session EP: {}", macaddr2str(ep->l2_key.mac_addr));
+        ret = false;
+        goto end;
     }
+    
+    do {
+        sess_count = 0;
+        VmotionMessage  msg_rsp;
+        if (copy_session_info(&msg_rsp, rsp, &cur_sessions, &sess_count) != true) {
+            HAL_TRACE_ERR("unable to copy resp message");
+            ret = false;
+            goto end;
+        }
+        if (sess_count) {
+            msg_rsp.set_type(VMOTION_MSG_TYPE_SYNC);
+            if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+                HAL_TRACE_ERR("vmotion unable to send sync message");
+                ret = HAL_RET_ERR;
+                goto end;
+            }
+            cur_sessions += sess_count;
+        }
+    } while (sess_count == VMOTION_MAX_SESS_PER_MSG);
 
     vmn_ep->throw_event(EVT_SYNC_DONE, NULL);
 
-    return true;
+end:
+    delete rsp;
+    return ret;
 }
 
 bool
@@ -97,24 +164,51 @@ vmotion_src_host_fsm_def::proc_evt_sync_done(fsm_state_ctx ctx, fsm_event_data d
 bool
 vmotion_src_host_fsm_def::proc_term_sync_req(fsm_state_ctx ctx, fsm_event_data data)
 {
-    vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
-    VmotionMessage  msg_rsp;
+    vmotion_ep            *vmn_ep       = reinterpret_cast<vmotion_ep *>(ctx);
+    SessionGetResponseMsg *rsp          = new SessionGetResponseMsg;
+    unsigned int           cur_sessions = 0;
+    unsigned int           sess_count   = 0;
+    bool                   ret          = true;
 
     HAL_TRACE_INFO("Term Sync Req EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
 
     // Add EP Quiesce NACL entry
     ep_quiesce(vmn_ep->get_ep(), TRUE);
 
-    msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC);
+    // Reset the enic interface to NULL in PD
+    if (endpoint_migration_if_update(vmn_ep->get_ep()) != HAL_RET_OK) {
+        HAL_TRACE_ERR("Unable to update pd state for EP moved:  {}",
+                      ep_l2_key_to_str(vmn_ep->get_ep()));
+    }
 
-    if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
-        HAL_TRACE_ERR("vmotion unable to send term sync message");
+    if (hal::ep_get_session_info(vmn_ep->get_ep(), rsp, vmn_ep->get_last_sync_time()) != HAL_RET_OK) {
         return false;
     }
 
+    do {
+        VmotionMessage  msg_rsp;
+        sess_count = 0;
+        if (copy_session_info(&msg_rsp, rsp, &cur_sessions, &sess_count) != true) {
+            HAL_TRACE_ERR("unable to copy resp message");
+            ret = false;
+            goto end;
+        }
+        if (sess_count) {
+            msg_rsp.set_type(VMOTION_MSG_TYPE_TERM_SYNC);
+            if (vmotion_send_msg(msg_rsp, vmn_ep->get_socket_fd()) != HAL_RET_OK) {
+                HAL_TRACE_ERR("vmotion unable to send sync message");
+                ret = false;
+                goto end;
+            }
+            cur_sessions += sess_count;
+        }
+    } while(sess_count ==  VMOTION_MAX_SESS_PER_MSG);
+
     vmn_ep->throw_event(EVT_TERM_SYNC_DONE, NULL);
 
-    return true;
+end:
+    delete rsp;
+    return ret;
 }
 
 bool
@@ -159,8 +253,6 @@ vmotion_src_host_fsm_def::proc_ep_moved_ack(fsm_state_ctx ctx, fsm_event_data da
 
     HAL_TRACE_INFO("Ep Moved Ack EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
 
-    // Stop the watcher
-    vmn_ep->get_event_thread()->stop();
     return true;
 }
 
@@ -169,25 +261,15 @@ vmotion_src_host_fsm_def::state_src_host_end_entry(fsm_state_ctx ctx)
 {
     vmotion_ep *vmn_ep = reinterpret_cast<vmotion_ep *>(ctx);
 
-    HAL_TRACE_INFO("Source Host End EP: {}", macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr));
-
-    // Remove EP Quiesce NACL entry
-    ep_quiesce(vmn_ep->get_ep(), FALSE);
-
-    // Stop the watcher
-    vmn_ep->get_event_thread()->stop();
+    src_host_end(vmn_ep, MigrationState::SUCCESS);
 }
 
 vmotion_ep *
 src_host_proc_init_msg(vmotion *vmn, VmotionMessage msg, vmotion_thread_ctx_t *thread_ctx)
 {
     VmotionInitiate    init_msg = msg.init();
-#if 1 // TEMP
-    mac_addr_t mac = {0x0, 0x0, 0x0, 0x0, 0xAB, 0xCD};
-#else
     mac_addr_t         mac;
     MAC_UINT64_TO_ADDR(mac, init_msg.mac_address());
-#endif
     auto ep = find_ep_by_mac(mac);
     if (!ep) {
         HAL_TRACE_ERR("EP Not exists in Init Msg. MAC: {}", init_msg.mac_address());
@@ -211,6 +293,7 @@ src_host_proc_init_msg(vmotion *vmn, VmotionMessage msg, vmotion_thread_ctx_t *t
 
     vmn_ep->set_socket_fd(thread_ctx->fd);
     vmn_ep->set_event_thread(thread_ctx->th);
+    vmn_ep->set_thread_id(thread_ctx->tid);
 
     vmn_ep->process_event(EVT_SYNC_BEGIN, NULL);
     return vmn_ep;
@@ -223,10 +306,17 @@ src_host_thread_rcv_sock_msg (sdk::event_thread::io_t *io, int sock_fd, int even
     vmotion_ep           *vmn_ep = thread_ctx->vmn_ep;
     vmotion_ep           *new_ep = NULL;
     VmotionMessage        msg;
+    hal_ret_t             ret;
 
-    vmotion_recv_msg(msg, thread_ctx->fd);
+    ret = vmotion_recv_msg(msg, thread_ctx->fd);
 
-    HAL_TRACE_DEBUG("source host thread recvd sock msg: {}", VmotionMessageType_Name(msg.type()));
+    HAL_TRACE_DEBUG("source host thread recvd sock msg: {} Ret: {}",
+                    VmotionMessageType_Name(msg.type()), ret);
+
+    if (ret == HAL_RET_CONN_CLOSED) {
+        src_host_end(vmn_ep, MigrationState::FAILED);
+        return;
+    }
 
     switch(msg.type()) {
     case VMOTION_MSG_TYPE_INIT:
@@ -287,14 +377,17 @@ static void
 src_host_thread_exit (void *ctxt)
 {
     vmotion_thread_ctx_t *thread_ctx = (vmotion_thread_ctx_t *)ctxt;
+    vmotion_ep           *vmn_ep = thread_ctx->vmn_ep;
 
     HAL_TRACE_DEBUG("Source host thread exit");
 
     sdk::event_thread::event_thread::destroy(thread_ctx->th);
 
-    g_hal_state->get_vmotion()->release_thread_id(thread_ctx->tid);
+    vmn_ep->get_vmotion()->release_thread_id(thread_ctx->tid);
 
     close(thread_ctx->fd);
+
+    vmn_ep->get_vmotion()->delete_vmotion_ep(vmn_ep);
 
     hal::delay_delete_to_slab(HAL_SLAB_VMOTION_THREAD_CTX, thread_ctx);
 }
@@ -302,6 +395,13 @@ src_host_thread_exit (void *ctxt)
 static void
 src_host_thread_rcv_event (void *message, void *ctx)
 {
+    vmotion_ep            *vmn_ep = (vmotion_ep *)ctx;
+    vmotion_thread_evt_t  *evt = (vmotion_thread_evt_t *) message;
+
+    HAL_TRACE_ERR("vMotion src host event thread error. EP: {} Event:{} Flags: {}",
+                  macaddr2str(vmn_ep->get_ep()->l2_key.mac_addr), *evt, *vmn_ep->get_flags());
+
+    HAL_FREE(HAL_MEM_ALLOC_VMOTION, evt);
 }
 
 hal_ret_t

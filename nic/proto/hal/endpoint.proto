@@ -33,26 +33,21 @@ service Endpoint {
   rpc FilterGet (FilterGetRequestMsg) returns (FilterGetResponseMsg) {}
 }
 
-enum EndpointVmotionState {
-    VMOTION_STATE_NONE     = 0; // No vMotion State
-    VMOTION_STATE_START    = 1; // vMotion Started
-    VMOTION_STATE_FAILED   = 2; // vMotion failed
-    VMOTION_STATE_DONE     = 3; // vMotion End
-}
-
-message EndpointVmotion {
-    EndpointVmotionState        vmotion_state       = 1;    // EP vMotion state
-    types.IPAddress             source_host_ip        = 2;  // EP vMotion from host's IP
-    types.IPAddress             destination_host_ip  = 3;  // EP Migrating to   host's IP
-}
-
 message EndpointAttributes {
     kh.InterfaceKeyHandle       interface_key_handle             = 1 [(gogoproto.moretags) = "venice:ref"];
     uint32                      useg_vlan                        = 2;    // microseg vlan assigned to this EP
     repeated types.IPAddress    ip_address                       = 3;    // IP address(es) of endpoint
     repeated kh.SecurityGroupKeyHandle sg_key_handle             = 4 [(gogoproto.moretags) = "venice:ref"];
-    types.IPAddress             homing_host_ip                   = 5;    // IP address of host where this endpoint exists
-    EndpointVmotion             vmotion_attrs                    = 6;    // Endpoint vMotion attributes
+    types.IPAddress             old_homing_host_ip               = 5;    // IP address of host where this endpoint exists
+    MigrationState              vmotion_state                    = 6;    // vMotion state
+}
+
+enum MigrationState {
+    NONE        = 0;  // No Migration in progress
+    IN_PROGRESS = 1;  // Migration in progress
+    SUCCESS     = 2;  // Migration succeeded
+    FAILED      = 3;  // Migration failed in the middle because of internal reasons
+    ABORTED     = 4;  // Migration aborted in the middle by vCenter
 }
 
 // EndpointSpec is used to add or update an endpoint
@@ -212,6 +207,11 @@ message EndpointGetResponse {
 message EndpointGetResponseMsg {
   types.ApiStatus                 api_status = 1 [(gogoproto.moretags) = "venice:api_status"];    // API status code
   repeated EndpointGetResponse    response   = 2;    // batched get response
+}
+
+message MigrationResponse {
+  EndpointSpec      spec            =  1;  // EP for which migration action happened
+  MigrationState    migration_state =  2;  // Current migration state
 }
 
 // Filter Spec

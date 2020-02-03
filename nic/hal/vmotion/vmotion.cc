@@ -38,7 +38,7 @@ vmotion::init(uint32_t max_threads, uint32_t vmotion_port)
     vmotion_.max_threads     = max_threads;
     vmotion_.port            = vmotion_port;
 
-    vmotion_.threads_idxr    = rte_indexer::factory(max_threads, false, true);
+    vmotion_.threads_idxr    = rte_indexer::factory(max_threads, false, false);
     SDK_ASSERT(vmotion_.threads_idxr != NULL);
 
     // spawn master server thread
@@ -72,6 +72,8 @@ vmotion::alloc_thread_id(uint32_t *tid)
     }
     VMOTION_WUNLOCK
 
+    (*tid) += HAL_THREAD_ID_VMOTION_THREADS_MIN;
+
     return ret;
 }
 
@@ -80,10 +82,12 @@ vmotion::release_thread_id(uint32_t tid)
 {
     hal_ret_t ret = HAL_RET_OK;
 
+    tid -= HAL_THREAD_ID_VMOTION_THREADS_MIN;
+
     // free tid
     VMOTION_WLOCK
-    if (vmotion_.threads_idxr->alloc(tid) != SDK_RET_OK) {
-        HAL_TRACE_ERR("unable to free thread id");
+    if (vmotion_.threads_idxr->free(tid) != SDK_RET_OK) {
+        HAL_TRACE_ERR("unable to free thread id: {}", tid);
         ret = HAL_RET_ERR;
     }
     VMOTION_WUNLOCK
@@ -145,17 +149,26 @@ vmotion::master_thread_cb(sdk::event_thread::io_t *io, int sock_fd, int events)
 }
 
 void
-vmotion::run_vmotion(ep_t *ep, vmotion_type_t type)
+vmotion::run_vmotion(ep_t *ep, vmotion_thread_evt_t event)
 {
     vmotion_ep *vmn_ep = get_vmotion_ep(ep);
 
     if (!vmn_ep) {
-        vmn_ep = create_vmotion_ep(ep, type);
-        if (!vmn_ep) {
-            HAL_TRACE_ERR("EP Creation failed in run vMotion");
-            return;
+        if (event == VMOTION_EVT_EP_MV_START) {
+            vmn_ep = create_vmotion_ep(ep, VMOTION_TYPE_MIGRATE_IN);
+            if (!vmn_ep) {
+                HAL_TRACE_ERR("EP Creation failed in run vMotion");
+            }
+        } else {
+            HAL_TRACE_ERR("vMotion trigger failed. Event:{}", event);
         }
+        return;
     }
+    vmotion_thread_evt_t *evt =
+        (vmotion_thread_evt_t *)HAL_CALLOC(HAL_MEM_ALLOC_VMOTION, sizeof(vmotion_thread_evt_t));
+    *evt = event;
+
+    sdk::event_thread::message_send(vmn_ep->get_thread_id(), (void *)evt);
 }
 
 vmotion_ep *
@@ -203,7 +216,6 @@ vmotion_ep::factory(ep_t *ep, vmotion_type_t type)
     vmotion_ep* vmn_ep = new (mem) vmotion_ep();
 
     if (vmn_ep->init(ep, type) != HAL_RET_OK) {
-        delete vmn_ep;
         hal::delay_delete_to_slab(HAL_SLAB_VMOTION_EP, mem);
         return NULL;
     }
@@ -215,8 +227,6 @@ vmotion_ep::destroy(vmotion_ep *vmn_ep)
 {
     // Free the state machine
     delete vmn_ep->get_sm();
-    // Destructor
-    delete vmn_ep;
     // Free the memory
     hal::delay_delete_to_slab(HAL_SLAB_VMOTION_EP, vmn_ep);
 }
@@ -228,9 +238,10 @@ vmotion_ep::init(ep_t *ep, vmotion_type_t type)
         return HAL_RET_ERR;
     }
 
-    vmotion_ptr_  = g_hal_state->get_vmotion();
-    vmotion_type_ = type;
-    ep_           = ep;
+    vmotion_ptr_        = g_hal_state->get_vmotion();
+    vmotion_type_       = type;
+    ep_hdl_             = ep->hal_handle;
+    old_homing_host_ip_ = ep->old_homing_host_ip;
 
     if (type == VMOTION_TYPE_MIGRATE_IN) {
         sm_ = new fsm_state_machine_t(get_vmotion()->get_dst_host_fsm_def_func,
@@ -254,26 +265,37 @@ vmotion_ep::init(ep_t *ep, vmotion_type_t type)
     return HAL_RET_OK;
 }
 
-hal_ret_t
+// This function returns TRUE, if packet will be handled by vMotion.
+bool
 vmotion::process_rarp(mac_addr_t mac)
 {
-    auto ep = find_ep_by_mac(mac);
-
-    if (!ep) {
-        HAL_TRACE_ERR("Ignoring RARP Packet. EP Not found MAC: {}", macaddr2str(mac));
-        return HAL_RET_ERR;
+    auto  vmn = g_hal_state->get_vmotion();
+    if (!vmn) {
+        HAL_TRACE_VERBOSE("Ignore vMotion event. vMotion not enabled");
+        return false;
     }
 
-    run_vmotion(ep, VMOTION_TYPE_MIGRATE_IN);
+    auto  ep = find_ep_by_mac(mac);
+    if ((!ep) || (ep->vmotion_state != MigrationState::IN_PROGRESS)) {
+        HAL_TRACE_VERBOSE("Ignoring RARP Packet. EP {} ptr {:p} vmotion state {}",
+                          macaddr2str(mac), (void *)ep, (ep ? ep->vmotion_state : 0));
+        return false;
+    }
 
-    return HAL_RET_OK;
+    run_vmotion(ep, VMOTION_EVT_RARP_RCVD);
+
+    return true;
 }
 
-hal_ret_t
-vmotion_ep::ep_quiesce_rule_add(void)
-{
-    ep_quiesce(ep_, TRUE);
-    return HAL_RET_OK;
+void
+vmotion_ep::set_last_sync_time() {
+    timespec_t  ctime;
+
+    // get current time
+    clock_gettime(CLOCK_MONOTONIC, &ctime);
+
+    // Set the time
+    sdk::timestamp_to_nsecs(&ctime, &last_sync_time_);
 }
 
 } // namespace hal

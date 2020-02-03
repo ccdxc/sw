@@ -88,7 +88,6 @@
 		QosClassKeyHandle
 		CoppKeyHandle
 		AppKeyHandle
-		EndpointVmotion
 		EndpointAttributes
 		EndpointSpec
 		EndpointRequestMsg
@@ -114,6 +113,7 @@
 		EndpointStats
 		EndpointGetResponse
 		EndpointGetResponseMsg
+		MigrationResponse
 		FilterSpec
 		FilterRequestMsg
 		FilterStatus

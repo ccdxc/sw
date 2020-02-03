@@ -435,6 +435,18 @@ validate_endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
         return HAL_RET_HANDLE_INVALID;
     }
 
+    if (spec.endpoint_attrs().vmotion_state() != NONE) {
+        if (!spec.endpoint_attrs().has_old_homing_host_ip()) {
+            HAL_TRACE_ERR("EP has vMotion state but not Old homing host IP");
+            return HAL_RET_INVALID_ARG;
+        }
+        if (spec.endpoint_attrs().vmotion_state() != IN_PROGRESS) {
+            HAL_TRACE_ERR("vMotion state:{} not expected in endpoint create",
+                           spec.endpoint_attrs().vmotion_state());
+            return HAL_RET_INVALID_ARG;
+        }
+    }
+
     MAC_UINT64_TO_ADDR(mac_addr, spec.key_or_handle().endpoint_key().l2_key().mac_address());
     if (IS_MCAST_MAC_ADDR(mac_addr)) {
         HAL_TRACE_ERR("EP is being created with mcast MACa ddr  {}",
@@ -632,6 +644,10 @@ endpoint_create_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             HAL_TRACE_ERR("unable to process remote sessions. err: {}", ret);
             goto end;
         }
+    }
+
+    if (app_ctxt->vmotion_state != NONE) {
+        ep_handle_vmotion(ep, app_ctxt->vmotion_state);
     }
 
 end:
@@ -1095,7 +1111,10 @@ ep_init_from_spec (ep_t *ep, const EndpointSpec& spec, bool create)
     ep->vrf_handle = vrf->hal_handle;
     ep->useg_vlan = spec.endpoint_attrs().useg_vlan();
     ep->ep_flags = EP_FLAGS_LEARN_SRC_CFG;
-    ip_addr_spec_to_ip_addr(&ep->homing_host_ip, spec.endpoint_attrs().homing_host_ip());
+
+    if (spec.endpoint_attrs().has_old_homing_host_ip()) {
+        ip_addr_spec_to_ip_addr(&ep->old_homing_host_ip, spec.endpoint_attrs().old_homing_host_ip());
+    }
     if (hal_if->if_type == intf::IF_TYPE_ENIC) {
         ep->ep_flags |= EP_FLAGS_LOCAL;
         HAL_TRACE_DEBUG("Setting local flag in EP {}", ep->ep_flags);
@@ -1267,6 +1286,7 @@ endpoint_create (EndpointSpec& spec, EndpointResponse *rsp)
     app_ctxt.vrf = vrf;
     app_ctxt.l2seg = l2seg;
     app_ctxt.hal_if = hal_if;
+    app_ctxt.vmotion_state = spec.endpoint_attrs().vmotion_state();
 
     dhl_entry.handle = ep->hal_handle;
     dhl_entry.obj = ep;
@@ -1350,86 +1370,59 @@ fte_session_update_list (void *data)
     HAL_FREE(HAL_MEM_ALLOC_SESS_UPD_LIST, session_list);
 }
 
-static void
-ep_update_session_walk_cb(void *timer, uint32_t timer_id, void *ctxt)
+// get session info (in protobuf) for a given endpoint
+hal_ret_t
+ep_get_session_info (ep_t *ep, SessionGetResponseMsg *rsp, uint64_t ts) 
 {
-    ep_session_upd_args_t           *args = (ep_session_upd_args_t *)ctxt;
-    hal_ret_t                       ret;
+    dllist_ctxt_t                   *curr, *next;
+    hal_handle_id_list_entry_t      *entry = NULL;
 
-    HAL_TRACE_VERBOSE("Ep Session update walk cb");
+    for (uint8_t fte_id=0; fte_id < HAL_MAX_DATA_THREAD; fte_id++) {
+        if (dllist_empty(&ep->session_list_head[fte_id])) {
+            HAL_TRACE_DEBUG("No sessions found for fte_id: {}", fte_id);
+            continue;
+        }
 
-    // Walk though session list and call FTE provided API
-    for (uint32_t idx = 0; idx < args->num_list; idx++) {
-        ret = fte::fte_softq_enqueue(args->fte_id,
-                                  fte_session_update_list,
-                                  (void *)args->session_hdl_list[idx]);
-            SDK_ASSERT(ret == HAL_RET_OK);
-        if (ret != HAL_RET_OK) {
-            HAL_TRACE_ERR("failed to post session update");
+        dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+            session_t *session  = hal::find_session_by_handle(entry->handle_id);
+            if (session) {
+                // If timestamp is provided, return the session only if its modified
+                // after the given timestamp
+                if (!ts || session_modified_after_timestamp(session, ts)) {
+                    hal::system_get_fill_rsp(session, rsp->add_response());
+                }
+            } else {
+                HAL_TRACE_ERR("No session found for session hdl: {}", entry->handle_id);
+            }
         }
     }
-
-    HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_LIST, args->session_hdl_list);
-    HAL_FREE(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT, args);
-    return;
+    return HAL_RET_OK;
 }
 
 hal_ret_t
 ep_handle_if_change (ep_t *ep, hal_handle_t new_if_handle)
 {
-    hal_ret_t                       ret = HAL_RET_OK;
-    void                            *ep_timer = NULL;
-    uint32_t                         idx = 0, list=0;
-    ep_session_upd_args_t           *ctxt = NULL;
-    dllist_ctxt_t                   *curr, *next;
-    hal_handle_id_list_entry_t      *entry = NULL;
+    if_t      *hal_if = find_if_by_handle(new_if_handle);
 
-    HAL_TRACE_DEBUG("Received IF change notification for ep: {}", ep->hal_handle);
+    HAL_TRACE_DEBUG("IF change for ep:{} new: {}", ep->hal_handle, new_if_handle);
 
-    for (uint8_t fte_id=0; fte_id<HAL_MAX_DATA_THREAD; fte_id++) {
-        if (dllist_empty(&ep->session_list_head[fte_id])) {
-            continue;
-        }
-
-        ctxt = (ep_session_upd_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_CTXT,
-                                       sizeof(ep_session_upd_args_t));
-        SDK_ASSERT(ctxt != NULL);
-
-        uint32_t num_list = (dllist_count(&ep->session_list_head[fte_id])/HAL_MAX_SESSIONS_PER_UPDATE) + 1;
-        ctxt->session_hdl_list = (hal_handle_t **)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_UPD_LIST,
-                               sizeof(hal_handle_t*)*num_list);
-        SDK_ASSERT(ctxt->session_hdl_list != NULL);
-  
-        ctxt->session_hdl_list[list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
-                               sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
-        SDK_ASSERT(ctxt->session_hdl_list[list] != NULL);
-
-        dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
-            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
-            ctxt->session_hdl_list[list][idx] = entry->handle_id;
-            idx = idx + 1;
-            if (idx == HAL_MAX_SESSIONS_PER_UPDATE) {
-                idx = 0; list = list + 1;
-                SDK_ASSERT(list < num_list);
-                ctxt->session_hdl_list[list] = (hal_handle_t *)HAL_CALLOC(HAL_MEM_ALLOC_SESS_UPD_LIST,
-                               sizeof(hal_handle_t)*HAL_MAX_SESSIONS_PER_UPDATE);
-                SDK_ASSERT(ctxt->session_hdl_list[list] != NULL);
-            }
-        }
-        ctxt->num_list = num_list;
-        ctxt->fte_id = fte_id;
-
-        ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_UPD, 
-                                 EP_UPDATE_SESSION_TIMER, 
-                                 (void *) ctxt,
-                                 ep_update_session_walk_cb, false); 
-
-        if (!ep_timer) {
-            HAL_TRACE_ERR("Failed to schedule the timer for the ep");
-            continue; 
-        }
+    if (!hal_if) {
+        HAL_TRACE_ERR("Invalid update, new if {} not present", new_if_handle);
+        return HAL_RET_INVALID_ARG;
     }
-    return ret;
+
+    if (hal_if->if_type == intf::IF_TYPE_ENIC) {
+        ep->ep_flags |= EP_FLAGS_LOCAL;
+        ep->ep_flags &= ~EP_FLAGS_REMOTE;
+        HAL_TRACE_VERBOSE("Setting local flag in EP {}", ep->ep_flags);
+    } else {
+        ep->ep_flags |= EP_FLAGS_REMOTE;
+        ep->ep_flags &= ~EP_FLAGS_LOCAL;
+        HAL_TRACE_VERBOSE("Setting remote flag in EP {}", ep->ep_flags);
+    }
+
+    return HAL_RET_OK;
 }
 
 //------------------------------------------------------------------------------
@@ -1454,13 +1447,23 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
     app_ctxt  = (ep_update_app_ctxt_t *)cfg_ctxt->app_ctxt;
     ep = (ep_t *)dhl_entry->obj;
 
-    HAL_TRACE_DEBUG("EP update cb");
+    HAL_TRACE_DEBUG("EP update cb IP:{} If:{}", app_ctxt->iplist_change, app_ctxt->if_change);
+
+    pd::pd_ep_update_args_init(&pd_ep_args);
+    pd_ep_args.ep            = ep;
+
     if (app_ctxt->iplist_change) {
-        pd::pd_ep_update_args_init(&pd_ep_args);
-        pd_ep_args.ep            = ep;
         pd_ep_args.iplist_change = app_ctxt->iplist_change;
         pd_ep_args.add_iplist    = app_ctxt->add_iplist;
         pd_ep_args.del_iplist    = app_ctxt->del_iplist;
+    }
+
+    if (app_ctxt->if_change) {
+        pd_ep_args.if_change = app_ctxt->if_change;
+        pd_ep_args.new_if    = find_if_by_handle(app_ctxt->new_if_handle);
+    }
+
+    if (pd_ep_args.iplist_change || pd_ep_args.if_change) {
         pd_ep_args.app_ctxt      = app_ctxt;
         pd_func_args.pd_ep_update = &pd_ep_args;
         ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_UPDATE, &pd_func_args);
@@ -1478,14 +1481,9 @@ endpoint_update_upd_cb (cfg_op_ctxt_t *cfg_ctxt)
         }
     }
 
-    if (app_ctxt->homing_host_ip_change) {
-        memcpy(&ep->homing_host_ip, &app_ctxt->new_homing_host_ip, sizeof(ip_addr_t));
-    }
-
     if (app_ctxt->vmotion_state_change) {
         ep_handle_vmotion(ep, app_ctxt->new_vmotion_state);
     }
-
 end:
 
     return ret;
@@ -1579,6 +1577,16 @@ endpoint_update_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
     if (app_ctxt->useg_vlan_change) {
         ep_clone->useg_vlan = app_ctxt->new_useg_vlan;
     }
+
+    if (app_ctxt->if_change) {
+        ep_clone->if_handle = app_ctxt->new_if_handle;
+    }
+
+    if (app_ctxt->vmotion_state_change) {
+        ep_clone->vmotion_state = app_ctxt->new_vmotion_state;
+    }
+
+    ep_clone->ep_flags = ep->ep_flags;
 
     // Copy the session list
     ep_copy_session_list(ep_clone, ep);
@@ -1716,98 +1724,16 @@ end:
     return ret;
 }
 
-//------------------------------------------------------------------------------
-// Validating ep update changes
-//------------------------------------------------------------------------------
-#define EP_VMOTION_STATE_CHECK(old_state, new_state) \
-    (ep->vmotion_state == old_state && app_ctxt->new_vmotion_state == new_state)
-hal_ret_t
-endpoint_validate_update_change (ep_t *ep, ep_update_app_ctxt_t *app_ctxt)
-{
-    hal_ret_t               ret     = HAL_RET_OK;
-    if_t                    *hal_if = NULL;
-
-    SDK_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
-    SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
-
-    if (app_ctxt->vmotion_state_change) {
-        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_DONE) ||
-            EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_FAILED)) {
-            HAL_TRACE_DEBUG("Vmotion state change : {} => {}",
-                            ep->vmotion_state, app_ctxt->new_vmotion_state);
-        } else {
-            HAL_TRACE_ERR("Invalid vmotion state change: {} => {}",
-                          ep->vmotion_state, app_ctxt->new_vmotion_state);
-            ret = HAL_RET_INVALID_ARG;
-            goto end;
-        }
-
-        // Vmotion None => Start
-        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_NONE, VMOTION_STATE_START)) {
-            // check if "if" changed to tunnel
-            if (!app_ctxt->if_change) {
-                HAL_TRACE_ERR("Invalid update, if has to change");
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-
-            hal_if = find_if_by_handle(app_ctxt->new_if_handle);
-            if (!hal_if) {
-                HAL_TRACE_ERR("Invalid update, new if {} not present", app_ctxt->new_if_handle);
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-
-            if (hal_if->if_type != intf::IF_TYPE_TUNNEL) {
-                // Handle the vMotion state change message only in the new destination host
-                HAL_TRACE_DEBUG("Ignoring update. Not new host. if_hdl : {}, if_type : {}",
-                                app_ctxt->new_if_handle, hal_if->if_type);
-                ret = HAL_RET_OK;
-                app_ctxt->vmotion_state_change = false;
-                goto end;
-            }
-
-            if (!memcmp(&app_ctxt->destination_host_ip, &ep->homing_host_ip, sizeof(ip_addr_t))) {
-                HAL_TRACE_ERR("vMotion Destination Host & Current Host is same. New: {} Curr: {}",
-                        ipaddr2str(&app_ctxt->destination_host_ip),
-                        ipaddr2str(&ep->homing_host_ip));
-                return HAL_RET_ERR;
-            }
-        }
-
-        // Vmotion Start => End
-        if (EP_VMOTION_STATE_CHECK(VMOTION_STATE_START, VMOTION_STATE_DONE)) {
-            // For now, assumption is nothing else changes
-            if (app_ctxt->iplist_change || app_ctxt->if_change) {
-                HAL_TRACE_ERR("Invalid update. vmotion update "
-                              "requires nothing else should change"
-                              "iplist_chg : {}, if_change : {}",
-                              app_ctxt->iplist_change, app_ctxt->if_change);
-                ret = HAL_RET_INVALID_ARG;
-                goto end;
-            }
-        }
-    }
-
-end:
-
-    return ret;
-}
-
 hal_ret_t
 endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                        ep_update_app_ctxt_t *app_ctxt)
 {
     hal_ret_t               ret = HAL_RET_OK;
-    ip_addr_t               homing_host_ip;
 
     SDK_ASSERT_RETURN(ep != NULL, HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN(app_ctxt != NULL, HAL_RET_INVALID_ARG);
 
     app_ctxt->if_change = false;
-    app_ctxt->vmotion_state_change = false;
-    app_ctxt->homing_host_ip_change = false;
     app_ctxt->new_if_handle = HAL_HANDLE_INVALID;
     if (req.has_endpoint_attrs()) {
         auto hal_if =
@@ -1820,6 +1746,7 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
         if (ep->if_handle != hal_if->hal_handle) {
             app_ctxt->if_change = true;
             app_ctxt->new_if_handle = hal_if->hal_handle;
+            HAL_TRACE_DEBUG("if change {} => {}", ep->if_handle, hal_if->hal_handle);
         }
 
         if (ep->useg_vlan != req.endpoint_attrs().useg_vlan()) {
@@ -1829,30 +1756,14 @@ endpoint_check_update (EndpointUpdateRequest& req, ep_t *ep,
                             app_ctxt->new_useg_vlan);
         }
 
-        // Check if homing Host IP change
-        ip_addr_spec_to_ip_addr(&homing_host_ip, req.endpoint_attrs().homing_host_ip());
-        if (!memcmp(&ep->homing_host_ip, &homing_host_ip, sizeof(ip_addr_t))) {
-            app_ctxt->homing_host_ip_change = true;
-            memcpy(&app_ctxt->new_homing_host_ip, &homing_host_ip, sizeof(ip_addr_t));
-        }
-
-        // Check if vmotion state changed
-        if (ep->vmotion_state != req.endpoint_attrs().vmotion_attrs().vmotion_state()) {
+        if (ep->vmotion_state != req.endpoint_attrs().vmotion_state()) {
             app_ctxt->vmotion_state_change = true;
-            app_ctxt->new_vmotion_state    = req.endpoint_attrs().vmotion_attrs().vmotion_state();
-            memcpy(&app_ctxt->new_homing_host_ip, &homing_host_ip, sizeof(ip_addr_t));
+            app_ctxt->new_vmotion_state = req.endpoint_attrs().vmotion_state();
+            HAL_TRACE_DEBUG("vmotion state change {} => {}", ep->vmotion_state,
+                            app_ctxt->new_vmotion_state);
         }
     }
-
-    // validate changes
-    ret = endpoint_validate_update_change(ep, app_ctxt);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("EP update change validation failed");
-        goto end;
-    }
-
 end:
-
     return ret;
 }
 
@@ -2342,7 +2253,7 @@ endpoint_update (EndpointUpdateRequest& req, EndpointResponse *rsp)
 
 
     if (!app_ctxt.if_change && !app_ctxt.useg_vlan_change &&
-        !l2seg_change && !iplist_change) {
+        !l2seg_change && !iplist_change && !app_ctxt.vmotion_state_change) {
         HAL_TRACE_WARN("No change in EP update");
         goto end;
     }
@@ -2495,7 +2406,6 @@ static void
 ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
 {
     ep_session_delete_args_t       *args = (ep_session_delete_args_t *)ctxt;
-    hal_ret_t                       ret = HAL_RET_OK;
 
     HAL_TRACE_VERBOSE("Ep Session delete walk cb");
     // delete all sessions
@@ -2504,9 +2414,20 @@ ep_session_delete_cb(void *timer, uint32_t timer_id, void *ctxt)
         hal_handle_id_list_entry_t  *entry =
             dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
         session_t *session = hal::find_session_by_handle(entry->handle_id);
+        bool       del = true;;
+
         if (session) {
-            ret = fte::session_delete_async(session, true);
-            if (ret != HAL_RET_OK) {
+            // If the session is referenced by another local EP (as SEP or DEP) dont delete
+            if (((session->sep_handle == args->ep_handle) &&
+                 (session->dep_handle != HAL_HANDLE_INVALID)) || 
+                ((session->dep_handle == args->ep_handle) &&
+                 (session->sep_handle != HAL_HANDLE_INVALID))) {
+                del = false;
+            }
+            HAL_TRACE_VERBOSE("ep delete: Ep:{} Sess:{} Sep:{} Dep:{} Del:{}", args->ep_handle,
+                               entry->handle_id, session->sep_handle, session->dep_handle, del);
+
+            if (del && (fte::session_delete_async(session, true) != HAL_RET_OK)) {
                 HAL_TRACE_ERR("Couldnt delete session with handle: {}", entry->handle_id);
             }
             // clean up the session to ctxt reference
@@ -2562,16 +2483,15 @@ endpoint_delete_commit_cb (cfg_op_ctxt_t *cfg_ctxt)
             void                        *ep_timer = NULL;
 
             ctxt = (ep_session_delete_args_t *)HAL_CALLOC(HAL_MEM_ALLOC_EP_SESS_DELETE_CTXT,
-                                       sizeof(ep_session_delete_args_t));
+                                                          sizeof(ep_session_delete_args_t));
             SDK_ASSERT(ctxt != NULL);
 
             sdk::lib::dllist_move(&ctxt->session_list, &ep->session_list_head[idx]);
-     
-            ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
-                                 EP_UPDATE_SESSION_TIMER,
-                                 (void *)ctxt,
-                                 ep_session_delete_cb, false);
+            ctxt->ep_handle = ep->hal_handle;
 
+            ep_timer = sdk::lib::timer_schedule(HAL_TIMER_ID_EP_SESSION_DELETE,
+                                                EP_UPDATE_SESSION_TIMER, (void *)ctxt,
+                                                ep_session_delete_cb, false);
             if (!ep_timer) {
                 HAL_TRACE_ERR("Failed to schedule the timer for the ep session delete");
                 return HAL_RET_ERR;
@@ -3299,13 +3219,32 @@ ep_restore_cb (void *obj, uint32_t len)
 }
 
 hal_ret_t
-ep_handle_vmotion(ep_t *ep, EndpointVmotionState new_vmotion_state)
+ep_handle_vmotion(ep_t *ep, MigrationState mig_state)
 {
-    // Migration start notification
-    if ((ep->vmotion_state == VMOTION_STATE_NONE) && (new_vmotion_state == VMOTION_STATE_START)) {
-        g_hal_state->get_vmotion()->run_vmotion(ep, VMOTION_TYPE_MIGRATE_IN);
+    vmotion_thread_evt_t vmotion_thrd_evt;
+    auto                 vmn = g_hal_state->get_vmotion();
+
+    if (!vmn) {
+        HAL_TRACE_VERBOSE("Ignore vMotion event. vMotion not enabled");
+        return HAL_RET_OK;
     }
-    ep->vmotion_state = new_vmotion_state;
+
+    if (mig_state == IN_PROGRESS) {
+        vmotion_thrd_evt = VMOTION_EVT_EP_MV_START;
+    } else if (mig_state == SUCCESS) {
+        vmotion_thrd_evt = VMOTION_EVT_EP_MV_DONE;
+    } else if (mig_state == ABORTED) {
+        vmotion_thrd_evt = VMOTION_EVT_EP_MV_ABORT;
+    } else {
+        HAL_TRACE_ERR("Invalid vMotion state {}", mig_state);
+        return HAL_RET_ERR;
+    }
+
+    HAL_TRACE_INFO("EP vMotion CurrState:{} mig_state:{}", ep->vmotion_state, mig_state);
+
+    vmn->run_vmotion(ep, vmotion_thrd_evt);
+
+    ep->vmotion_state = mig_state;
 
     return HAL_RET_OK;
 }
@@ -3338,7 +3277,119 @@ endpoint_is_remote(ep_t *ep)
     return (ep && (ep->ep_flags & EP_FLAGS_REMOTE));
 }
 
+static void
+endpoint_migration_status_get (ep_t *ep, MigrationResponse *rsp, MigrationState migration_state)
+{
+    EndpointSpec   *spec = rsp->mutable_spec();
 
+    auto vrf       = vrf_lookup_by_handle(ep->vrf_handle);
+    auto interface = find_if_by_handle(ep->if_handle);
+
+    spec->mutable_vrf_key_handle()->set_vrf_id(vrf ? vrf->vrf_id : HAL_HANDLE_INVALID);
+    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->\
+          mutable_l2segment_key_handle()->set_segment_id(ep->l2_key.l2_segid);
+    spec->mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->\
+          set_mac_address(MAC_TO_UINT64(ep->l2_key.mac_addr));
+    spec->mutable_endpoint_attrs()->set_useg_vlan(ep->useg_vlan);
+    spec->mutable_endpoint_attrs()->mutable_interface_key_handle()->\
+          set_interface_id(interface->if_id);
+
+    rsp->set_migration_state(migration_state);
+}
+
+hal_ret_t
+endpoint_migration_status_update (ep_t *ep, MigrationState migration_state)
+{
+    struct ep_migration_ctx_t {
+        ep_t          *ep;
+        MigrationState state;
+    } ctxt = {};
+
+    auto walk_cb = [](uint32_t event_id, void *event_ctxt, void *lctxt) {
+        grpc::ServerWriter<EventResponse> *stream = (grpc::ServerWriter<EventResponse> *)lctxt;
+        EventResponse                      evtresponse;
+
+        evtresponse.set_event_id(::event::EVENT_ID_EP_MIGRATION);
+
+        endpoint_migration_status_get(((ep_migration_ctx_t *)event_ctxt)->ep,
+                                      evtresponse.mutable_migration_event(),
+                                      ((ep_migration_ctx_t *)event_ctxt)->state);
+        stream->Write(evtresponse);
+        return true;
+    };
+
+    ctxt.ep    = ep;
+    ctxt.state = migration_state;
+
+    g_hal_state->event_mgr()->notify_event(::event::EVENT_ID_EP_MIGRATION, &ctxt, walk_cb);
+
+    return HAL_RET_OK;
+}
+
+void
+endpoint_migration_session_age_reset (ep_t *ep)
+{
+    hal_handle_id_list_entry_t        *entry = NULL;
+    pd::pd_session_age_reset_args_t   args;
+    pd::pd_func_args_t                pd_func_args = {0};
+    dllist_ctxt_t                     *curr, *next;
+
+    pd_func_args.pd_session_age_reset = &args;
+
+    for (uint8_t fte_id = 0; fte_id < HAL_MAX_DATA_THREAD; fte_id++) {
+        dllist_for_each_safe(curr, next, &ep->session_list_head[fte_id]) {
+            entry = dllist_entry(curr, hal_handle_id_list_entry_t, dllist_ctxt);
+
+            session_t *session = hal::find_session_by_handle(entry->handle_id);
+            if (session) {
+                args.session = session;
+
+                pd::hal_pd_call(pd::PD_FUNC_ID_SESSION_AGE_RESET, &pd_func_args);
+
+                session->syncing_session = false;
+            }
+        }
+    }
+}
+
+hal_ret_t
+endpoint_migration_if_update (ep_t *ep)
+{
+    hal_ret_t                   ret = HAL_RET_OK;
+    pd::pd_func_args_t          pd_func_args = {0};
+    pd::pd_ep_if_update_args_t  pd_ep_if_args = {0};
+    pd::pd_if_delete_args_t     pd_if_args = { 0 };
+    if_t                        *intf = NULL;
+
+    pd_ep_if_args.lif_change     = true;
+    pd_ep_if_args.new_lif        = 0;
+    pd_ep_if_args.ep             = ep;
+    pd_func_args.pd_ep_if_update = &pd_ep_if_args;
+
+    HAL_TRACE_DEBUG("EP VMotion {} updating enic to uplink(none)", ep_l2_key_to_str(ep));
+
+    ret = pd::hal_pd_call(pd::PD_FUNC_ID_EP_IF_UPDATE, &pd_func_args);
+    if (ret != HAL_RET_OK) {
+        HAL_TRACE_ERR("Failed to update EP with if update, err  : {}", ret);
+        return ret;
+    }
+
+    intf = find_if_by_handle(ep->if_handle);
+    // delete call to PD
+    if (intf->pd_if) {
+        memset(&pd_func_args, 0, sizeof(pd::pd_func_args_t));
+        pd::pd_if_delete_args_init(&pd_if_args);
+        pd_if_args.intf                  = intf;
+        pd_if_args.del_only_inp_mac_vlan = true;
+        pd_func_args.pd_if_delete = &pd_if_args;
+
+        ret = pd::hal_pd_call(pd::PD_FUNC_ID_IF_DELETE, &pd_func_args);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("Failed to delete if pd, err : {}", ret);
+        }
+    }
+    return ret;
+}
 
 }    // namespace hal
 

@@ -141,6 +141,10 @@ fte_asq_send(hal::pd::cpu_to_p4plus_header_t* cpu_header,
              hal::pd::p4plus_to_p4_header_t* p4plus_header,
              uint8_t* pkt, size_t pkt_len)
 {
+    if (fte_disabled_) {
+        return HAL_RET_OK;
+    }
+
     SDK_ASSERT_RETURN(t_inst, HAL_RET_INVALID_ARG);
     return t_inst->asq_send(cpu_header, p4plus_header, pkt, pkt_len);
 }
@@ -187,6 +191,7 @@ fte_softq_enqueue(uint8_t fte_id, softq_fn_t fn, void *data)
     if (fte_disabled_) {
         // call the function directly
         fn(data);
+        return (HAL_RET_OK);
     }
 
     SDK_ASSERT_RETURN(fte_id < hal::MAX_FTE_THREADS, HAL_RET_INVALID_ARG);

@@ -162,19 +162,25 @@ pd_enicif_delete (pd_if_delete_args_t *args)
     SDK_ASSERT_RETURN((args != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->intf != NULL), HAL_RET_INVALID_ARG);
     SDK_ASSERT_RETURN((args->intf->pd_if != NULL), HAL_RET_INVALID_ARG);
+    enicif_pd = (pd_enicif_t *)args->intf->pd_if;
+    if (!enicif_pd) {
+        HAL_TRACE_DEBUG("deleting pd state for enicif not found");
+        return HAL_RET_OK;
+    }
     HAL_TRACE_DEBUG("deleting pd state for enicif: {}",
                     args->intf->if_id);
-    enicif_pd = (pd_enicif_t *)args->intf->pd_if;
 
     // deprogram HW
-    ret = pd_enicif_deprogram_hw(enicif_pd);
+    ret = pd_enicif_deprogram_hw(enicif_pd, args->del_only_inp_mac_vlan);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram hw");
     }
 
-    ret = pd_enicif_cleanup(enicif_pd);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("failed pd enicif delete");
+    if (!args->del_only_inp_mac_vlan) {
+        ret = pd_enicif_cleanup(enicif_pd);
+        if (ret != HAL_RET_OK) {
+            HAL_TRACE_ERR("failed pd enicif delete");
+        }
     }
 
     return ret;
@@ -562,7 +568,7 @@ end:
 // DeProgram HW
 // ----------------------------------------------------------------------------
 hal_ret_t
-pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
+pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif, bool del_only_inp_mac_vlan)
 {
     hal_ret_t       ret = HAL_RET_OK;
     if_t            *hal_if = (if_t *)pd_enicif->pi_if;
@@ -573,6 +579,10 @@ pd_enicif_deprogram_hw (pd_enicif_t *pd_enicif)
     ret = pd_enicif_depgm_inp_prop_mac_vlan_tbl(pd_enicif);
     if (ret != HAL_RET_OK) {
         HAL_TRACE_ERR("unable to deprogram hw");
+        goto end;
+    }
+
+    if (del_only_inp_mac_vlan) {
         goto end;
     }
 

@@ -527,8 +527,8 @@ public:
     hal_ret_t init(cpu_rxhdr_t *cpu_rxhdr, uint8_t *pkt, size_t pkt_len, bool copied_pkt,
                    flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
-    hal_ret_t init(SessionSpec *spec, SessionResponse *rsp,
-                   flow_t iflow[], flow_t rflow[],
+    hal_ret_t init(SessionSpec *spec, SessionStatus *status, SessionStats *stats,
+                   SessionResponse *rsp, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
     hal_ret_t init(hal::session_t *session, flow_t iflow[], flow_t rflow[],
                    feature_state_t feature_state[], uint16_t num_features);
@@ -783,6 +783,8 @@ private:
                                                 // freed. If we dont do this, we might leak the packet buffers.
 
     session::SessionSpec           *sess_spec_;
+    session::SessionStatus         *sess_status_;
+    session::SessionStats          *sess_stats_;
     session::SessionResponse       *sess_resp_;
     session::SessionGetResponse    *sess_get_resp_;
 

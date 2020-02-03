@@ -154,7 +154,7 @@ TEST_F(endpoint_test, test1)
     ret = hal::interface_create(up_spec, &up_rsp);
     hal::hal_cfg_db_close();
     ASSERT_TRUE(ret == HAL_RET_OK);
-    // ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
+    ::google::protobuf::uint64 up_hdl = up_rsp.mutable_status()->if_handle();
 
     up_spec.set_type(intf::IF_TYPE_UPLINK);
     up_spec.mutable_key_or_handle()->set_interface_id(2);
@@ -216,7 +216,7 @@ TEST_F(endpoint_test, test1)
     // ep_req.mutable_key_or_handle()->set_endpoint_handle(ep_rsp.endpoint_status().mutable_key_or_handle().endpoint_handle());
     ep_req.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->mutable_l2segment_key_handle()->set_l2segment_handle(l2seg_hdl);
     ep_req.mutable_key_or_handle()->mutable_endpoint_key()->mutable_l2_key()->set_mac_address(0x00000000ABCD);
-    ep_req.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl2);
+    ep_req.mutable_endpoint_attrs()->mutable_interface_key_handle()->set_if_handle(up_hdl);
     ep_req.mutable_endpoint_attrs()->add_ip_address();
     ep_req.mutable_endpoint_attrs()->add_ip_address();
     ep_req.mutable_endpoint_attrs()->add_ip_address();
