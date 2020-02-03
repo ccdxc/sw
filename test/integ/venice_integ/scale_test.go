@@ -16,7 +16,7 @@ import (
 	. "github.com/pensando/sw/venice/utils/testutils"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/iota/test/venice/iotakit/cfgen"
+	"github.com/pensando/sw/iota/test/venice/iotakit/cfg/cfgen"
 )
 
 // TestNpmFirewallProfile tests firewall profile create/update/delete operations
