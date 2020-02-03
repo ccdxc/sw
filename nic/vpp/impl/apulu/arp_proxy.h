@@ -40,12 +40,12 @@ pds_arp_proxy_add_tx_hdrs_x2 (vlib_buffer_t *b0, vlib_buffer_t *b1,
     tx0->lif_flags = 0;
     tx0->nexthop_valid = 1;
     tx0->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx0->nexthop_id = nh_id0;
+    tx0->nexthop_id = clib_host_to_net_u16(nh_id0);
     tx0->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
     tx1->lif_flags = 0;
     tx1->nexthop_valid = 1;
     tx1->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx1->nexthop_id = nh_id1;
+    tx1->nexthop_id = clib_host_to_net_u16(nh_id1);
     tx1->lif_flags = clib_host_to_net_u16(tx0->lif_flags);
 }
 
@@ -58,7 +58,7 @@ pds_arp_proxy_add_tx_hdrs_x1 (vlib_buffer_t *b, u16 nh_id)
     tx->lif_flags = 0;
     tx->nexthop_valid = 1;
     tx->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx->nexthop_id = nh_id;
+    tx->nexthop_id = clib_host_to_net_u16(nh_id);
     tx->lif_flags = clib_host_to_net_u16(tx->lif_flags);
 }
 
