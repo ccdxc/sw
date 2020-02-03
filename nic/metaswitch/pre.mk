@@ -48,6 +48,7 @@ MS_INCLPATH = \
 	code/stubs/l2f/          \
 	code/stubs/hals/         \
 	code/stubs/smi           \
+	code/stubs/nar           \
 	code/comn/l2             \
 	code/lim                 \
 	code/bgp                 \

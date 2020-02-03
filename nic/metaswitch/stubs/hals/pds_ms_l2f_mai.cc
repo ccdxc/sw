@@ -524,18 +524,14 @@ void l2f_mai_t::handle_add_upd_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
             return;
         }
 
-        // TODO - Cannot differentiate between Create and Update for 
-        // Remote Mapping IP entry
-        // Assume Create
+        // Cannot detect Update of existing Remote Mapping IP entry
+        // PDS HAL accepts Create for existing Remote Mapping entries
         op_create_ = true;
+
         resolve_teps_(state_ctxt.state());
-
         cookie_uptr_.reset(new cookie_t);
-        pds_bctxt_guard = make_batch_pds_spec_(); 
 
-        // If we have batched multiple IPS earlier flush it now
-        // Cannot add Subnet If Bind to an existing batch
-        state_ctxt.state()->flush_outstanding_pds_batch();
+        pds_bctxt_guard = make_batch_pds_spec_(); 
 
     } // End of state thread_context
       // Do Not access/modify global state after this
@@ -583,9 +579,6 @@ void l2f_mai_t::handle_delete_ip(const ATG_MAI_MAC_IP_ID* mai_ip_id) {
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = state_t::thread_context();
         fetch_store_info_(state_ctxt.state());
-        // If we have batched multiple IPS earlier flush it now
-        // Cannot add Subnet If Unbind to an existing batch
-        state_ctxt.state()->flush_outstanding_pds_batch();
 
     } // End of state thread_context
       // Do Not access/modify global state after this

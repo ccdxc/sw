@@ -452,7 +452,8 @@ static void create_underlay_vpc_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id, PDS_MAX_KEY_LEN);
+    pds_obj_key_t rttable_id = {0};
+    proto_spec->set_v4routetableid(rttable_id.id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_NONE);

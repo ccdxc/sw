@@ -40,6 +40,15 @@ public:
 
     void delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                       const char *vrf_name);
+    NBB_BYTE update_routers_mac(ATG_INET_ADDRESS *ip_address,
+                                NBB_BYTE *mac_addr,
+                                NBB_ULONG if_index,
+                                const char *vrf_name);
+
+    void delete_routers_mac(ATG_INET_ADDRESS *ip_address,
+                            NBB_BYTE *mac_addr,
+                            NBB_ULONG if_index,
+                            const char *vrf_name);
 };
 
 } // End namespace

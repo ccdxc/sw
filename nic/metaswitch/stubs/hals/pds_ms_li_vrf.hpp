@@ -9,6 +9,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_defs.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
+#include "nic/apollo/api/include/pds.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include <nbase.h>
 extern "C"
@@ -62,6 +63,9 @@ private:
 // Metaswitch controlplane. Requires Synchronous HAL update completion
 sdk_ret_t li_vrf_update_pds_synch(state_t::context_t&& state_ctxt,
                                   vpc_obj_t* vpc_obj);
+sdk_ret_t li_vrf_underlay_vpc_commit_pds_synch(pds_vpc_spec_t& vpc_spec,
+                                            bool is_create);
+sdk_ret_t li_vrf_underlay_vpc_delete_pds_synch(pds_obj_key_t& vpc_key);
 
 } // End namespace
 #endif

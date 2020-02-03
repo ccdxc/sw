@@ -437,6 +437,7 @@ static void create_subnet_proto_grpc (bool second=false) {
     } else {
     proto_spec->set_id(pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
     }
+
     proto_spec->set_vpcid(msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_VXLAN);
@@ -469,6 +470,29 @@ static void create_subnet_proto_grpc (bool second=false) {
     }
 }
 
+static void delete_subnet_proto_grpc (bool second=false) {
+    SubnetDeleteRequest   request;
+    SubnetDeleteResponse  response;
+    ClientContext   context;
+    Status          ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
+
+    if (second) {
+    request.add_id(pds_ms::msidx2pdsobjkey(k_subnet_id+1).id, PDS_MAX_KEY_LEN);
+    } else {
+    request.add_id(pds_ms::msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    }
+    printf ("Pushing Subnet Del proto...\n");
+    ret_status = g_subnet_stub_->SubnetDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus(0) != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus(0));
+        exit(1);
+    }
+}
+
 static void create_underlay_vpc_proto_grpc () {
     VPCRequest      request;
     VPCResponse     response;
@@ -479,7 +503,8 @@ static void create_underlay_vpc_proto_grpc () {
 
     auto proto_spec = request.add_request();
     proto_spec->set_id(msidx2pdsobjkey(k_underlay_vpc_id).id, PDS_MAX_KEY_LEN);
-    proto_spec->set_v4routetableid(msidx2pdsobjkey(k_underlay_rttbl_id).id, PDS_MAX_KEY_LEN);
+    pds_obj_key_t rttable_id = {0};
+    proto_spec->set_v4routetableid(rttable_id.id, PDS_MAX_KEY_LEN);
     proto_spec->set_type(pds::VPC_TYPE_UNDERLAY);
     auto proto_encap = proto_spec->mutable_fabricencap();
     proto_encap->set_type(types::ENCAP_TYPE_NONE);
@@ -739,6 +764,12 @@ int main(int argc, char** argv)
             return 0;
         } else if (!strcmp (argv[1], "evpn_mac_ip")) {
             get_evpn_mac_ip_all();
+            return 0;
+        } else if (!strcmp(argv[1], "subnet-del")) {
+            delete_subnet_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "subnet-create")) {
+            create_subnet_proto_grpc();
             return 0;
         }
     }

@@ -60,6 +60,7 @@ pds_tep_spec_t li_vxlan_port::make_pds_tep_spec_(void) {
     spec.type = PDS_TEP_TYPE_IGW;
     spec.encap.type = PDS_ENCAP_TYPE_VXLAN;
     spec.encap.val.vnid = vxp_prop.vni;
+    MAC_ADDR_COPY(spec.mac, vxp_prop.dmaci);
 
     spec.ip_addr = ips_info_.src_ip;
     auto& tep_prop = store_info_.tep_obj->properties();

@@ -93,4 +93,15 @@ li_vrf_update_pds_synch (state_t::context_t&& state_ctxt,
 {
     return SDK_RET_OK;
 }
+sdk_ret_t
+li_vrf_underlay_vpc_commit_pds_synch (pds_vpc_spec_t& vpc_spec,
+                                   bool is_create)
+{
+    return SDK_RET_OK;
+}
+sdk_ret_t
+li_vrf_underlay_vpc_delete_pds_synch (pds_obj_key_t& vpc_key)
+{
+    return SDK_RET_OK;
+}
 } // End namespace

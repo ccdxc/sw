@@ -23,7 +23,7 @@ public:
         ms_ps_id_t                ms_ps_id;
         properties_t(ms_ps_id_t ps_id) : ms_ps_id(ps_id) {}; 
     };
-    // PDS HAL Overlay ECMP table entrie are created from both the
+    // PDS HAL Overlay ECMP table entries are created from both the
     // MS VXLAN Tunnel(Type2) and MS Pathset(Type5) HAL stub objects
     // requiring index mgmt.
     // Index Guard provides automatic alloc/free of Overlay ECMP index

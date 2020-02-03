@@ -24,8 +24,14 @@ void underlay_ecmp_pds_mock_t::generate_addupd_specs(const underlay_ecmp_input_p
     auto op = (op_create_) ? API_OP_CREATE : API_OP_UPDATE;
 
     test::api::nexthop_group_feeder nhgroup_feeder;
+    uint32_t num_nh; 
+    if (!op_create_) {
+        num_nh = input.nexthops.size() * 2;
+    } else {
+        num_nh = input.nexthops.size();
+    }
     nhgroup_feeder.init(PDS_NHGROUP_TYPE_UNDERLAY_ECMP,
-                        input.nexthops.size(), // Num Nexthops
+                        num_nh, // Num Nexthops
                         pds_ms::msidx2pdsobjkey(input.pathset_id, true),  // ID
                         PDS_MAX_NEXTHOP_GROUP);
     int i = 0;

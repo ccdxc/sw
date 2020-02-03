@@ -7,6 +7,7 @@
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_bd.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_mai.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_l2f_utils.hpp"
+#include "nic/metaswitch/stubs/hals/pds_ms_rtr_mac.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
@@ -118,6 +119,33 @@ NBB_BYTE l2f_integ_subcomp_t::add_upd_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac
 void l2f_integ_subcomp_t::delete_vrf_arp_entry(const ATG_MAI_MAC_IP_ID *mac_ip_id,
                                                const char *vrf_name)
 {
+}
+
+NBB_BYTE l2f_integ_subcomp_t::update_routers_mac(ATG_INET_ADDRESS *ip_address,
+                                                 NBB_BYTE *mac_addr,
+                                                 NBB_ULONG if_index,
+                                                 const char *vrf_name)
+{
+    ip_addr_t  tep_ip;
+    ms_to_pds_ipaddr(*ip_address, &tep_ip);
+    SDK_TRACE_INFO("Add Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s ---- ",
+                    ipaddr2str(&tep_ip), macaddr2str(mac_addr), if_index, vrf_name);
+    rtr_mac_update (ip_address, mac_addr, if_index, vrf_name,
+                    false /* create */);
+    return ATG_OK;
+}
+
+void l2f_integ_subcomp_t::delete_routers_mac(ATG_INET_ADDRESS *ip_address,
+                        NBB_BYTE *mac_addr,
+                        NBB_ULONG if_index,
+                        const char *vrf_name)
+{
+    ip_addr_t  tep_ip;
+    ms_to_pds_ipaddr(*ip_address, &tep_ip);
+    SDK_TRACE_INFO("Delete Router's MAC for TEP %s MAC %s IfIndex 0x%x VRF %s",
+                    ipaddr2str(&tep_ip), macaddr2str(mac_addr), if_index, vrf_name);
+    rtr_mac_update (ip_address, mac_addr, if_index, vrf_name,
+                    true /* delete */);
 }
 
 } // End namespace

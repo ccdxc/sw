@@ -180,11 +180,14 @@ vpc_uuid_2_idx_alloc (const pds_vpc_spec_t* spec)
                     .append(key.str()).append(" containing ")
                     .append(uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
     }
-    auto rttbl_uuid_obj = mgmt_ctxt.state()->lookup_uuid(spec->v4_route_table);
-    if (rttbl_uuid_obj != nullptr) {
-        throw Error(std::string("VPC Create cannot use existing Route Table UUID ")
-                    .append(spec->v4_route_table.str()).append(" containing ")
-                    .append(rttbl_uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
+    // VPC may not always have a RouteTable ID associated
+    if (!is_pds_obj_key_invalid (spec->v4_route_table)) {
+        auto rttbl_uuid_obj = mgmt_ctxt.state()->lookup_uuid(spec->v4_route_table);
+        if (rttbl_uuid_obj != nullptr) {
+            throw Error(std::string("VPC Create cannot use existing Route Table UUID ")
+                        .append(spec->v4_route_table.str()).append(" containing ")
+                        .append(rttbl_uuid_obj->str()), SDK_RET_ENTRY_EXISTS);
+        }
     }
     vpc_uuid_obj_uptr_t vpc_uuid_obj (new vpc_uuid_obj_t
                                       (key, spec->type == PDS_VPC_TYPE_UNDERLAY));
@@ -248,8 +251,11 @@ vpc_create (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
                                spec->key.str(), ret_status);
                 return pds_ms_api_to_sdk_ret (ret_status);
             }
-            // TODO PDS Batch commit Underlay VPC create to HAL
-
+            auto ret = li_vrf_underlay_vpc_commit_pds_synch(*spec, true);
+            if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("Error commiting Underlay VPC to HAL");
+                return ret;
+            }
             // Commit UUID mapping store
             auto mgmt_ctxt = mgmt_state_t::thread_context();
             mgmt_ctxt.state()->commit_pending_uuid();
@@ -278,6 +284,15 @@ vpc_delete (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, true);
 
+        if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+            auto ret = li_vrf_underlay_vpc_delete_pds_synch(spec->key);
+            if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("Error commiting Underlay VPC to HAL");
+                return ret;
+            }
+            pds_cache_vpc_spec(spec, vrf_id, true);
+            return SDK_RET_OK;
+        }
         ret_status = process_vpc_update (vrf_id, rtm_index, AMB_ROW_DESTROY);
         if (ret_status != types::ApiStatus::API_STATUS_OK) {
             SDK_TRACE_ERR ("Failed to process VPC %s VRF %d delete (error=%d)",
@@ -305,6 +320,14 @@ vpc_update (pds_vpc_spec_t *spec, pds_batch_ctxt_t bctxt)
         mib_idx_t   rtm_index;
         std::tie(vrf_id,rtm_index) = vpc_uuid_2_idx_fetch(spec->key, false);
 
+        if (spec->type == PDS_VPC_TYPE_UNDERLAY) {
+            auto ret = li_vrf_underlay_vpc_commit_pds_synch(*spec, false);
+            if (ret != SDK_RET_OK) {
+                SDK_TRACE_ERR("Error commiting Underlay VPC Update to HAL");
+                return ret;
+            }
+            return SDK_RET_OK;
+        }
         auto state_ctxt = state_t::thread_context();
         auto vpc_obj = state_ctxt.state()->vpc_store().get(vrf_id);
         if (vpc_obj == nullptr) {

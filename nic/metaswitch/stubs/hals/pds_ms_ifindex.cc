@@ -88,6 +88,13 @@ lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
 
     state_ctxt.state()->if_store().
         walk([lnx_ifindex, &ms_ifindex, &found] (ms_ifindex_t ifindex, if_obj_t& if_obj) ->bool {
+            if (if_obj.type() == ms_iftype_t::VXLAN_PORT) {
+                if (lnx_ifindex == ifindex) {
+                    found = true;
+                    ms_ifindex = ifindex;
+                    return false;
+                }
+            }
             if (if_obj.type() != ms_iftype_t::PHYSICAL_PORT) {
                 return true; // Continue walk
             }
@@ -103,7 +110,8 @@ lnx_to_ms_ifindex (NBB_LONG lnx_ifindex, NBB_ULONG location)
         SDK_TRACE_VERBOSE("MS UserExit: Lnx IfIndex %ld -> MS IfIndex 0x%lx", 
                           lnx_ifindex, ms_ifindex);
     } else {
-        SDK_TRACE_ERR("MS UserExit: Lnx IfIndex %ld -> Ms IfIndex conversion Failed");
+        SDK_TRACE_ERR("MS UserExit: Lnx IfIndex 0x%lx -> "
+                      "Ms IfIndex conversion Failed", lnx_ifindex);
     }
     return ms_ifindex; 
 }

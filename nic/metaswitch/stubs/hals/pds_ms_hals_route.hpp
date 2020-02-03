@@ -49,10 +49,12 @@ private:
     pds_obj_key_t rttbl_key_ = {0};
 
 private:
-    pds_batch_ctxt_guard_t make_batch_pds_spec_(void);
+    pds_batch_ctxt_guard_t make_batch_pds_spec_(const pds_obj_key_t&
+                                                rttable_key);
     void populate_route_id(ATG_ROPI_ROUTE_ID* route_id);
     bool parse_ips_info_(ATG_ROPI_UPDATE_ROUTE* route_add_upd);
-    void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl);
+    void make_pds_rttable_spec_(pds_route_table_spec_t &rttbl,
+                                const pds_obj_key_t& rttable_key);
     pds_obj_key_t make_pds_rttable_key_(void);
 };
 

@@ -50,9 +50,10 @@ pds_obj_key_t hals_route_t::make_pds_rttable_key_(void) {
     return (rttbl_key_);
 }
 
-void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable) {
+void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable,
+                                          const pds_obj_key_t& rttable_key) {
     memset(&rttable, 0, sizeof(pds_route_table_spec_t));
-    rttable.key = make_pds_rttable_key_();
+    rttable.key = rttable_key;
     rttable.af = IP_AF_IPV4;
     
     // Populate the new route
@@ -90,7 +91,8 @@ void hals_route_t::make_pds_rttable_spec_(pds_route_table_spec_t &rttable) {
     return;
 }
 
-pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(void) {
+pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(const pds_obj_key_t&
+                                                          rttable_key) {
     pds_batch_ctxt_guard_t bctxt_guard_;
     sdk_ret_t ret = SDK_RET_OK;
 
@@ -108,7 +110,7 @@ pds_batch_ctxt_guard_t hals_route_t::make_batch_pds_spec_(void) {
     pds_route_table_spec_t rttbl_spec;
     // Delete is a route table update with the deleted route.
     // The route table is ONLY deleted when VRF gets deleted
-    make_pds_rttable_spec_(rttbl_spec);
+    make_pds_rttable_spec_(rttbl_spec, rttable_key);
     if (!PDS_MOCK_MODE()) {
         ret = pds_route_table_update(&rttbl_spec, bctxt);
     }
@@ -138,9 +140,11 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
 
     parse_ips_info_(add_upd_route_ips);
 
-    SDK_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d",
+    SDK_TRACE_DEBUG("Route Add IPS VRF %d Prefix %s Type %d Overlay ECMP %d",
                      ips_info_.vrf_id, ipaddr2str(&ips_info_.pfx.addr),
-                     add_upd_route_ips->route_properties.type);
+                     add_upd_route_ips->route_properties.type,
+                     ips_info_.overlay_ecmp_id);
+
     if ((add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_CONNECTED) ||
         (add_upd_route_ips->route_properties.type == ATG_ROPI_ROUTE_LOCAL_ADDRESS)) {
         SDK_TRACE_DEBUG("Ignore connected route");
@@ -152,7 +156,13 @@ void hals_route_t::handle_add_upd_ips(ATG_ROPI_UPDATE_ROUTE* add_upd_route_ips) 
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
-        pds_bctxt_guard = make_batch_pds_spec_(); 
+        auto rttable_key = make_pds_rttable_key_();
+        if (is_pds_obj_key_invalid(rttable_key)) {
+            SDK_TRACE_DEBUG("Ignore MS route for VRF %d that does not"
+                            " have Route table ID", ips_info_.vrf_id);
+            return;
+        }
+        pds_bctxt_guard = make_batch_pds_spec_(rttable_key); 
         // Flush any outstanding batch
         state_ctxt.state()->flush_outstanding_pds_batch();
     } // End of state thread_context
@@ -268,7 +278,13 @@ void hals_route_t::handle_delete(ATG_ROPI_ROUTE_ID route_id) {
         auto state_ctxt = pds_ms::state_t::thread_context();
         // Empty cookie
         cookie_uptr_.reset(new cookie_t);
-        pds_bctxt_guard = make_batch_pds_spec_(); 
+        auto rttable_key = make_pds_rttable_key_();
+        if (is_pds_obj_key_invalid(rttable_key)) {
+            SDK_TRACE_DEBUG("Ignore MS route delete for VRF %d that does not"
+                            " have Route table ID", ips_info_.vrf_id);
+            return;
+        }
+        pds_bctxt_guard = make_batch_pds_spec_(rttable_key); 
         // If we have batched multiple IPS earlier flush it now
         // Cannot add Subnet Delete to an existing batch
         state_ctxt.state()->flush_outstanding_pds_batch();

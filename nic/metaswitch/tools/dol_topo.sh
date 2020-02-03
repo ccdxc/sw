@@ -1,4 +1,5 @@
 #! /bin/bash
+#set -x
 CUR_DIR=`pwd`
 SW_DIR=`dirname $CUR_DIR`
 SUBNET=Test_Subnet
@@ -79,7 +80,8 @@ fi
 # TODO: Change to start Container 1 (DUT) alone in PDS non-mock mode
 echo "start pdsagent in "$CONTAINER"1 in PDS_MOCK_MODE"
 ret=0
-docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'PDS_MOCK_MODE=1 VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
+docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
+#docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'PDS_MOCK_MODE=1 VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
 
 if [ $ret -ne 0 ]; then
     echo "failed to start pdsagent in "$CONTAINER"1: $ret"
@@ -134,10 +136,10 @@ do
 done
 
 	echo "Originate EVPN Type 5 route from "$CONTAINER"2"
-    docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
-    docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=250"
+   docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
+   docker exec -it "$CONTAINER"2 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
     if [ "$rr" != "1" ]; then
 	echo "Originate EVPN Type 5 route from "$CONTAINER"3"
     docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmRedistTable rtmRedistFteIndex=2 rtmRedistEntryId=10 rtmRedistRowStatus=createAndGo rtmRedistAdminStat=adminStatusUp  rtmRedistInfoSrc=atgQcProtStatic  rtmRedistInfoDest=atgQcProtBgp rtmRedistDestInstFlt=true rtmRedistDestInst=2  rtmRedistRedistFlag=true"
-    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=250"
+    docker exec -it "$CONTAINER"3 sh -c "python /sw/nic/third-party/metaswitch/code/comn/tools/mibapi/metaswitch/cam/mib.py set localhost rtmStaticRtTable rtmStaticRtFteIndex=2 rtmStaticRtDestAddrType=inetwkAddrTypeIpv4 rtmStaticRtDestAddr=0x80100000 rtmStaticRtDestLen=16 rtmStaticRtNextHopType=inetwkAddrTypeIpv4 rtmStaticRtNextHop=0xc0a8010a rtmStaticRtIfIndex=0 rtmStaticRtRowStatus=createAndGo rtmStaticRtAdminStat=adminStatusUp rtmStaticRtOverride=true rtmStaticRtAdminDist=150"
     fi

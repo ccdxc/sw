@@ -120,7 +120,7 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
 
     if (op_delete_) { // Delete
         auto rttbl_key = make_pds_rttable_key_();
-        if (!PDS_MOCK_MODE()) {
+        if (!is_pds_obj_key_invalid(rttbl_key) && !PDS_MOCK_MODE()) {
             pds_route_table_delete(&rttbl_key, bctxt);
         }
         auto vpc_key = make_pds_vpc_key_();
@@ -136,7 +136,8 @@ pds_batch_ctxt_guard_t li_vrf_t::make_batch_pds_spec_(bool async) {
             if (!PDS_MOCK_MODE()) {
                 ret = pds_vpc_create(&vpc_spec, bctxt);
             }
-            if ((ret == SDK_RET_OK) && (!PDS_MOCK_MODE())) {
+            if ((ret == SDK_RET_OK) && (!is_pds_obj_key_invalid(rttbl_spec.key)) 
+                && (!PDS_MOCK_MODE())) {
                 ret = pds_route_table_create(&rttbl_spec, bctxt);
             }
         } else {
@@ -408,6 +409,73 @@ li_vrf_update_pds_synch (state_t::context_t&& state_ctxt, vpc_obj_t* vpc_obj)
         SDK_TRACE_ERR ("VRF Add Update processing failed %s", e.what());
         return SDK_RET_ERR;
     }
+}
+
+sdk_ret_t
+li_vrf_underlay_vpc_commit_pds_synch (pds_vpc_spec_t& vpc_spec,
+                                   bool is_create)
+{
+    if (PDS_MOCK_MODE()) {
+        return SDK_RET_OK;
+    }
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, false,
+                           nullptr, nullptr};
+
+    auto bctxt = pds_batch_start(&bp);
+    sdk_ret_t ret;
+
+    if (is_create) {
+        ret = pds_vpc_create(&vpc_spec, bctxt);
+    } else {
+        ret = pds_vpc_update(&vpc_spec, bctxt);
+    }
+    if (unlikely (ret != SDK_RET_OK)) {
+        SDK_TRACE_ERR("Underlay VPC PDS Direct VPC Create failed for %s err=%d",
+                      vpc_spec.key.str(), ret);
+        return ret;
+    }
+
+    ret = pds_batch_commit(bctxt);
+    if (unlikely (ret != SDK_RET_OK)) {
+        SDK_TRACE_ERR ("Underlay VPC PDS Direct VPC Create Batch commit failed for %s err=%d",
+                      vpc_spec.key.str(), ret);
+        return ret;
+    }
+
+    SDK_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Create Batch commit suuccessful for %s",
+                      vpc_spec.key.str());
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+li_vrf_underlay_vpc_delete_pds_synch (pds_obj_key_t& vpc_key)
+{
+    if (PDS_MOCK_MODE()) {
+        return SDK_RET_OK;
+    }
+    pds_batch_params_t bp {PDS_BATCH_PARAMS_EPOCH, false,
+                           nullptr, nullptr};
+
+    auto bctxt = pds_batch_start(&bp);
+    sdk_ret_t ret;
+
+    ret = pds_vpc_delete(&vpc_key, bctxt);
+    if (unlikely (ret != SDK_RET_OK)) {
+        SDK_TRACE_ERR("Underlay VPC PDS Direct VPC Delete failed for %s err=%d",
+                      vpc_key.str(), ret);
+        return ret;
+    }
+
+    ret = pds_batch_commit(bctxt);
+    if (unlikely (ret != SDK_RET_OK)) {
+        SDK_TRACE_ERR ("Underlay VPC PDS Direct VPC Delete Batch commit failed for %s err=%d",
+                      vpc_key.str(), ret);
+        return ret;
+    }
+
+    SDK_TRACE_DEBUG ("Underlay VPC PDS Direct VPC Delete Batch commit suuccessful for %s",
+                      vpc_key.str());
+    return SDK_RET_OK;
 }
 
 } // End namespace

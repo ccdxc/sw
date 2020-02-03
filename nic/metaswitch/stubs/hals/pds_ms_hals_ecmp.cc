@@ -89,13 +89,13 @@ pds_obj_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
     } else {
         idx = store_info_.pathset_obj->hal_oecmp_idx_guard->idx();
     }
+    // Since underlay and overlay NH Groups go into the same PDS HAL table
+    // their IDs cannot clash
     return msidx2pdsobjkey(idx, underlay);
 }
 
 void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
                                  (pds_nexthop_group_spec_t& nhgroup_spec) {
-    nhgroup_spec.num_nexthops = ips_info_.nexthops.size();
-
     int i = 0, num_repeats = 0;
     if (op_create_) {
         num_repeats = 1;
@@ -134,6 +134,7 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
             ++i;
         }
     }
+    nhgroup_spec.num_nexthops = i;
 }
 
 void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
@@ -149,20 +150,28 @@ void hals_ecmp_t::make_pds_overlay_nhgroup_spec_
         auto& vxp_prop = vxp_if_obj->vxlan_port_properties();
         auto tep_obj = state_ctxt.state()->tep_store()
                                 .get(vxp_if_obj->vxlan_port_properties().tep_ip);
-        if (memcmp(vxp_if_obj->vxlan_port_properties().dmaci, nh.mac_addr.m_mac,
-                   ETH_ADDR_LEN) != 0) {
+        auto& dmaci = vxp_if_obj->vxlan_port_properties().dmaci;
+        if (memcmp(dmaci, nh.mac_addr.m_mac, ETH_ADDR_LEN) != 0) {
             // Change in L3 VXLAN Port DMAC
             // This is basically the Router MAC advertised in Type 5 routes
             // TODO: Assuming that the same {TEP, VNI} will not advertise
             // multiple Router MACs. Hence blindly overwriting existing MAC
-            MAC_ADDR_COPY(vxp_if_obj->vxlan_port_properties().dmaci, nh.mac_addr.m_mac);
-            li_vxlan_port vxp;
-            vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
-                                 false /* Op Update */);
-            SDK_TRACE_DEBUG("Change DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
-                            " 0x%x to %s",
-                            ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
-                            vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
+            if (is_mac_set(dmaci)) {
+                SDK_TRACE_ERR("!! Change in Router MAC address for TEP %s VNI %s"
+                              " L3 VXLAN Port 0x%x from %s to %s NOT SUPPORTED !!!",
+                              ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
+                              vxp_prop.ifindex, macaddr2str(dmaci),
+                              macaddr2str(nh.mac_addr.m_mac));
+            } else {
+                MAC_ADDR_COPY(dmaci, nh.mac_addr.m_mac);
+                li_vxlan_port vxp;
+                vxp.add_pds_tep_spec(store_info_.bctxt, vxp_if_obj, tep_obj,
+                                     false /* Op Update */);
+                SDK_TRACE_DEBUG("Change DMAC for Type5 TEP %s VNI %d L3 VXLAN Port"
+                                " 0x%x to %s",
+                                ipaddr2str(&vxp_prop.tep_ip), vxp_prop.vni,
+                                vxp_prop.ifindex, macaddr2str(nh.mac_addr.m_mac));
+            }
         }
         nhgroup_spec.nexthops[i].tep = msidx2pdsobjkey(tep_obj->properties().hal_tep_idx);
         SDK_TRACE_DEBUG("Add Type5 TEP %s VNI %d Idx 0x%x UUID %sto Overlay NHGroup %d",
@@ -298,7 +307,6 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     // Alloc new cookie to capture async info
     cookie_uptr_.reset (new cookie_t);
     pds_batch_ctxt_guard_t  pds_bctxt_guard;
-    pathset_obj_uptr_t pathset_obj_uptr;
 
     { // Enter thread-safe context to access/modify global state
         auto state_ctxt = pds_ms::state_t::thread_context();
@@ -307,8 +315,11 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
             fetch_store_info_(state_ctxt.state());
             if (likely(store_info_.pathset_obj == nullptr)) {
                 op_create_ = true;
-                pathset_obj_uptr.reset(new pathset_obj_t(ips_info_.pathset_id));
+                pathset_obj_uptr_t pathset_obj_uptr(new pathset_obj_t(ips_info_.pathset_id));
                 store_info_.pathset_obj = pathset_obj_uptr.get();
+                // Cache the new object in the cookie to revisit asynchronously
+                // when the PDS API response is received
+                cookie_uptr_->objs.push_back(std::move(pathset_obj_uptr));
                 SDK_TRACE_DEBUG ("MS Overlay ECMP %ld: Create IPS Num nexthops %ld", 
                                  ips_info_.pathset_id, ips_info_.nexthops.size());
             } else {
@@ -386,9 +397,10 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
                     hals::Ecmp::set_ips_rc(&add_upd_ecmp_ips->ips_hdr,
                                          (pds_status)?ATG_OK:ATG_UNSUCCESSFUL);
                 SDK_ASSERT(send_response);
-                SDK_TRACE_DEBUG("+++++++ Send ECMP %ld Async IPS response %s"
-                                " stateless mode ++++++++",
-                                pathset_id, (pds_status) ? "Success" : "Failure");
+                SDK_TRACE_DEBUG("+++++++ Send ECMP %ld dp_corr %d Async IPS"
+                                " response %s stateless mode ++++++++",
+                                pathset_id, dp_corr, (pds_status) ? "Success" :
+                                                                    "Failure");
                 hals::Fte::get().get_nhpi_join()->
                     send_ips_reply(&add_upd_ecmp_ips->ips_hdr);
             } else {
@@ -418,6 +430,7 @@ void hals_ecmp_t::handle_add_upd_ips(ATG_NHPI_ADD_UPDATE_ECMP* add_upd_ecmp_ips)
     add_upd_ecmp_ips->return_code = ATG_ASYNC_COMPLETION;
     SDK_TRACE_DEBUG ("MS ECMP %ld: Add/Upd PDS Batch commit successful", 
                      ips_info_.pathset_id);
+
     if (PDS_MOCK_MODE()) {
         // Call the HAL callback in PDS mock mode
         std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
