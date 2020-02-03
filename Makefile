@@ -134,7 +134,12 @@ ws-tools: pregen
 	@CGO_LDFLAGS_ALLOW="-I/usr/local/share/libtool" go install ${TO_INSTALL}
 
 # checks ensure that the go code meets standards
-checks: goimports-src golint-src govet-src ginkgo-src
+checks: nic-protos goimports-src golint-src govet-src ginkgo-src
+
+# nic-protos builds protos from nic to help generate go files that are needed
+nic-protos:
+	make -C nic/metaswitch/protos
+	make -C nic/apollo/agent/protos
 
 # gen does all the autogeneration. viz venice cli, proto sources. Ensure that any new autogen target is added to TO_GEN above
 gen:
