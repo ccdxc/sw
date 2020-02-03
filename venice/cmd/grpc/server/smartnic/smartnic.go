@@ -733,7 +733,7 @@ func (s *RPCServer) MonitorHealth() {
 			// if the leader transitioned in past 60s, then wait for the cache to be warmed up
 			if time.Since(env.LeaderService.LastTransitionTime()) <= StateMgrWarmupInterval {
 				time.Sleep(StateMgrWarmupInterval)
-				s.stateMgr.MarkAllSmartNICsDirty()
+				s.stateMgr.MarkSmartNICsDirty()
 				continue
 			}
 

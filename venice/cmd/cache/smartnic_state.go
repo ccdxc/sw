@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/utils"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
 
 // SmartNICState security policy state
@@ -250,15 +253,47 @@ func (sm *Statemgr) GetSmartNICByID(hostname string) *cluster.DistributedService
 	return sm.hostnameToSmartNICMap[hostname]
 }
 
-// MarkAllSmartNICsDirty sets the dirty flag on all SmartNICs, so that next update
-// gets forcefully pushed to ApiServer
-func (sm *Statemgr) MarkAllSmartNICsDirty() {
-	objs := sm.memDB.ListObjects("DistributedServiceCard", nil)
-	log.Infof("StateMgr: marking %v SmartNICs objects as dirty", len(objs))
-	for _, obj := range objs {
-		sg, _ := SmartNICStateFromObj(obj)
-		sg.Lock()
-		sg.dirty = true
-		sg.Unlock()
+// MarkSmartNICsDirty retrieves SmartNIC objects from ApiServer and compares to local DB.
+// If it finds a difference, it marks the SmartNIC as dirty, so that next update gets
+// forcefully pushed to ApiServer
+func (sm *Statemgr) MarkSmartNICsDirty() {
+	var nics []*cluster.DistributedServiceCard
+	var err error
+	for i := 0; i < maxAPIServerWriteRetries; i++ {
+		if sm.APIClient() == nil {
+			log.Infof("APICLient not available, try %d of %d", i, maxAPIServerWriteRetries)
+			time.Sleep(apiServerRPCTimeout)
+			continue
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
+		nics, err = sm.APIClient().DistributedServiceCard().List(ctx, &api.ListWatchOptions{})
+		if err == nil {
+			cancel()
+			break
+		}
+		log.Errorf("Error listing DSCs from ApiServer, try %d of %d: %v", i, maxAPIServerWriteRetries, err)
+		cancel()
+		time.Sleep(apiClientRetryInterval)
+	}
+	if err != nil {
+		log.Errorf("Error listing DSCs from ApiServer, retries exhausted")
+		return
+	}
+
+	log.Infof("MarkSmartNICsDirty: got %d DSC objects", len(nics))
+	for _, n := range nics {
+		o, err := sm.FindObject("DistributedServiceCard", "", n.ObjectMeta.Name)
+		if err == nil {
+			s, _ := SmartNICStateFromObj(o)
+			s.Lock()
+			// mark dirty if it is out-of-sync
+			if !runtime.FilterUpdate(n.Status, s.Status, []string{"LastTransitionTime"}, []string{"Conditions", "AdmissionPhase"}) {
+				s.dirty = true
+				log.Infof("Marked DSC %s dirty", n.ObjectMeta.Name)
+			}
+			s.Unlock()
+		} else {
+			log.Errorf("Error looking up DSC object %s in memdb", n.ObjectMeta.Name)
+		}
 	}
 }
