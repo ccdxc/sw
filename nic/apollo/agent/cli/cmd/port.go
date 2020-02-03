@@ -320,7 +320,7 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewPortSvcClient(c)
 
 	var req *pds.PortGetRequest
-	if cmd.Flags().Changed("port") {
+	if cmd != nil && cmd.Flags().Changed("port") {
 		req = &pds.PortGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
 		}
@@ -352,9 +352,9 @@ func portShowStatusCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printPortStatusHeader() {
-	hdrLine := strings.Repeat("-", 89)
+	hdrLine := strings.Repeat("-", 98)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-37s%-10s%-12s%-12s%-10s%-14s\n",
+	fmt.Printf("%-40s%-10s%-12s%-12s%-10s%-14s\n",
 		"Id", "Name", "IfIndex", "AdminState", "OperState", "Transceiver")
 	fmt.Println(hdrLine)
 }
@@ -385,7 +385,7 @@ func printPortStatus(resp *pds.Port) {
 		xcvrStr = xcvrStateStr
 	}
 
-	fmt.Printf("%-37s%-10s0x%-12x%-12s%-10s%-14s\n",
+	fmt.Printf("%-40s%-10s0x%-12x%-12s%-10s%-14s\n",
 		uuid.FromBytesOrNil(resp.GetSpec().GetId()).String(),
 		ifIndexToPortIdStr(resp.GetStatus().GetIfIndex()),
 		resp.GetStatus().GetIfIndex(), adminStateStr, operStatusStr, xcvrStr)
@@ -408,7 +408,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewPortSvcClient(c)
 
 	var req *pds.PortGetRequest
-	if cmd.Flags().Changed("port") {
+	if cmd != nil && cmd.Flags().Changed("port") {
 		req = &pds.PortGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(portID).Bytes()},
 		}

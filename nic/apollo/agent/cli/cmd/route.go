@@ -52,7 +52,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewRouteSvcClient(c)
 
 	var req *pds.RouteTableGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Route
 		req = &pds.RouteTableGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(routeID).Bytes()},
@@ -77,7 +77,7 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Routes
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -93,9 +93,9 @@ func routeShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printRouteHeader() {
-	hdrLine := strings.Repeat("-", 90)
+	hdrLine := strings.Repeat("-", 94)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-6s%-20s%-12s%-16s\n",
+	fmt.Printf("%-40s%-6s%-20s%-12s%-16s\n",
 		"ID", "IPAF", "Prefix", "NextHopType", "NextHopValue")
 	fmt.Println(hdrLine)
 }
@@ -105,7 +105,7 @@ func printRoute(rt *pds.RouteTable) {
 	routes := spec.GetRoutes()
 	first := true
 
-	fmt.Printf("%-36s%-6s", uuid.FromBytesOrNil(spec.GetId()).String(),
+	fmt.Printf("%-40s%-6s", uuid.FromBytesOrNil(spec.GetId()).String(),
 		strings.Replace(spec.GetAf().String(), "IP_AF_", "", -1))
 
 	for _, route := range routes {

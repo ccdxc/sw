@@ -133,13 +133,13 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewMeterSvcClient(c)
 
-	if cmd.Flags().Changed("yaml") == false {
+	if cmd != nil && cmd.Flags().Changed("yaml") == false {
 		fmt.Printf("Only yaml output is supported. Use --yaml flag\n")
 		return
 	}
 
 	var req *pds.MeterGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Meter
 		req = &pds.MeterGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(meterID).Bytes()},
@@ -163,8 +163,8 @@ func meterShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Vnics
-	if cmd.Flags().Changed("yaml") {
+	// Print Meter
+	if cmd == nil || cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())

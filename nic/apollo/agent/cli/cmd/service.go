@@ -62,7 +62,7 @@ func serviceShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Nexthops
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())

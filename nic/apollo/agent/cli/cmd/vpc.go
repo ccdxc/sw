@@ -53,7 +53,7 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewVPCSvcClient(c)
 
 	var req *pds.VPCGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific VPC
 		req = &pds.VPCGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(ID).Bytes()},
@@ -78,7 +78,7 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print VPCs
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -94,16 +94,16 @@ func vpcShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVPCHeader() {
-	hdrLine := strings.Repeat("-", 116)
+	hdrLine := strings.Repeat("-", 124)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-10s%-36s%-20s%-14s\n",
+	fmt.Printf("%-40s%-10s%-40s%-20s%-14s\n",
 		"ID", "Type", "V4RtTblId", "VR MAC", "FabricEncap")
 	fmt.Println(hdrLine)
 }
 
 func printVPC(vpc *pds.VPC) {
 	spec := vpc.GetSpec()
-	fmt.Printf("%-36s%-10s%-36s%-20s%-14s\n",
+	fmt.Printf("%-40s%-10s%-40s%-20s%-14s\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		strings.Replace(spec.GetType().String(), "VPC_TYPE_", "", -1),
 		uuid.FromBytesOrNil(spec.GetV4RouteTableId()).String(),

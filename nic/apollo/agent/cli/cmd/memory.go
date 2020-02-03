@@ -52,14 +52,16 @@ func memShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewDebugSvcClient(c)
 
-	if cmd.Flags().Changed("slab") {
-		slab = true
-	}
-	if cmd.Flags().Changed("mtrack") {
-		mtrack = true
-	}
-	if cmd.Flags().Changed("heap") {
-		heap = true
+	if cmd != nil {
+		if cmd.Flags().Changed("slab") {
+			slab = true
+		}
+		if cmd.Flags().Changed("mtrack") {
+			mtrack = true
+		}
+		if cmd.Flags().Changed("heap") {
+			heap = true
+		}
 	}
 
 	if (slab || heap || mtrack) == false {

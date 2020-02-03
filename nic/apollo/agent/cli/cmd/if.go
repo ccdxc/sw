@@ -58,7 +58,7 @@ func ifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var req *pds.InterfaceGetRequest
 
-	if cmd.Flags().Changed("id") == false {
+	if cmd == nil || cmd.Flags().Changed("id") == false {
 		req = &pds.InterfaceGetRequest{
 			Id: [][]byte{},
 		}
@@ -170,7 +170,7 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	var req *pds.LifGetRequest
 
-	if cmd.Flags().Changed("id") == false {
+	if cmd == nil || cmd.Flags().Changed("id") == false {
 		req = &pds.LifGetRequest{
 			Id: [][]byte{},
 		}
@@ -200,9 +200,9 @@ func lifShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printLifHeader() {
-	hdrLine := strings.Repeat("-", 149)
+	hdrLine := strings.Repeat("-", 155)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-12s%-15s%-20s%-36s%-25s%-5s\n",
+	fmt.Printf("%-40s%-10s%-15s%-20s%-40s%-25s%-5s\n",
 		"ID", "IfIndex", "Name", "MAC Address", "PinnedInterface",
 		"Type", "State")
 	fmt.Println(hdrLine)
@@ -214,7 +214,7 @@ func printLif(lif *pds.Lif) {
 	lifType := strings.Replace(spec.GetType().String(), "LIF_TYPE_", "", -1)
 	lifType = strings.Replace(lifType, "_", "-", -1)
 	state := strings.Replace(status.GetStatus().String(), "IF_STATUS_", "", -1)
-	fmt.Printf("%-36s%-10x%-15s%-20s%-36s%-25s%-5s\n",
+	fmt.Printf("%-40s%-10x%-15s%-20s%-40s%-25s%-5s\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(), status.GetIfIndex(),
 		status.GetName(), utils.MactoStr(spec.GetMacAddress()),
 		uuid.FromBytesOrNil(spec.GetPinnedInterface()).String(), lifType, state)

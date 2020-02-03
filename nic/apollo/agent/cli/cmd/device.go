@@ -161,7 +161,7 @@ func deviceShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		respType := reflect.ValueOf(resp)
 		b, _ := yaml.Marshal(respType.Interface())
 		fmt.Println(string(b))
@@ -178,7 +178,7 @@ func printDeviceHeader() {
 	fmt.Printf("%-16s%-20s%-16s%-10s%-12s%-12s%-10s%-18s\n",
 		"IPAddr", "MACAddr", "GatewayIP",
 		"Profile", "BridgingEn", "LearningEn",
-		"OperMode","OverlayRoutingEn")
+		"OperMode", "OverlayRoutingEn")
 	fmt.Println(hdrLine)
 }
 

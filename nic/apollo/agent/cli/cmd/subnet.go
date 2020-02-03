@@ -52,7 +52,7 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewSubnetSvcClient(c)
 
 	var req *pds.SubnetGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Subnet
 		req = &pds.SubnetGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(subnetID).Bytes()},
@@ -77,7 +77,7 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Subnets
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -93,13 +93,13 @@ func subnetShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printSubnetHeader() {
-	hdrLine := strings.Repeat("-", 249)
+	hdrLine := strings.Repeat("-", 269)
 	fmt.Printf("\n")
 	fmt.Printf("RtTblID - Route Table IDs (IPv4/IPv6)           HostIf    - Host interface subnet is deployed on\n")
 	fmt.Printf("IngSGID - Ingress Security Group ID (IPv4/IPv6) EgSGID  - Egress Security Group ID (IPv4/IPv6)\n")
 	fmt.Printf("ToS     - Type of Service in outer IP header\n")
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3s\n",
+	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3s\n",
 		"ID", "VpcID", "HostIf", "IPv4Prefix", "VR IPv4", "VR MAC",
 		"RtTblID", "IngSGID", "EgSGID", "ToS")
 	fmt.Println(hdrLine)
@@ -111,7 +111,7 @@ func printSubnet(subnet *pds.Subnet) {
 	if len(spec.GetHostIf()) > 0 {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
-	fmt.Printf("%-36s%-36s%-10s%-20s%-16s%-20s%-36s%-36s%-36s%-3d\n",
+	fmt.Printf("%-40s%-40s%-10s%-20s%-16s%-20s%-40s%-40s%-40s%-3d\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetVPCId()).String(), lifName,
 		utils.IPv4PrefixToStr(spec.GetV4Prefix()),

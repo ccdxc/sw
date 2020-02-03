@@ -48,7 +48,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("yaml") == false {
+	if cmd != nil && cmd.Flags().Changed("yaml") == false {
 		fmt.Printf("Only yaml output is supported. Use --yaml flag\n")
 		return
 	}
@@ -56,7 +56,7 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewTagSvcClient(c)
 
 	var req *pds.TagGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Tag
 		req = &pds.TagGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(tagID).Bytes()},
@@ -80,8 +80,8 @@ func tagShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Print Vnics
-	if cmd.Flags().Changed("yaml") {
+	// Print Tags
+	if cmd == nil || cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())

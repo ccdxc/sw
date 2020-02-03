@@ -341,8 +341,8 @@ func systemQueueStatsCmdHandler(cmd *cobra.Command, args []string) {
 	input := false
 	output := false
 
-	if cmd.Flags().Changed("input") ||
-		cmd.Flags().Changed("ouput") {
+	if cmd != nil && (cmd.Flags().Changed("input") ||
+		cmd.Flags().Changed("ouput")) {
 		if cmd.Flags().Changed("input") {
 			input = true
 		}
@@ -926,7 +926,7 @@ func llcSetupCmdHandler(cmd *cobra.Command, args []string) {
 
 	var llcType pds.LlcCounterType
 
-	if cmd.Flags().Changed("type") {
+	if cmd != nil && cmd.Flags().Changed("type") {
 		if strings.Compare(llcTypeStr, "cache-read") == 0 {
 			llcType = pds.LlcCounterType_LLC_COUNTER_CACHE_READ
 		} else if strings.Compare(llcTypeStr, "cache-write") == 0 {
@@ -1001,7 +1001,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	var traceReq *pds.TraceRequest
 
-	if cmd.Flags().Changed("level") {
+	if cmd != nil && cmd.Flags().Changed("level") {
 		if isTraceLevelValid(traceLevel) != true {
 			fmt.Printf("Invalid argument\n")
 			return
@@ -1024,7 +1024,7 @@ func traceDebugCmdHandler(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("Trace level set to %-12s\n", resp.GetTraceLevel())
-	} else if cmd.Flags().Changed("flush") {
+	} else if cmd == nil || cmd.Flags().Changed("flush") {
 		var empty *pds.Empty
 
 		// PDS call
@@ -1099,14 +1099,14 @@ func systemShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewDebugSvcClient(c)
 
-	if cmd.Flags().Changed("power") {
+	if cmd != nil && cmd.Flags().Changed("power") {
 		power = true
 	}
-	if cmd.Flags().Changed("temperature") {
+	if cmd != nil && cmd.Flags().Changed("temperature") {
 		temp = true
 	}
-	if cmd.Flags().Changed("power") == false &&
-		cmd.Flags().Changed("temperature") == false {
+	if cmd == nil || (cmd.Flags().Changed("power") == false &&
+		cmd.Flags().Changed("temperature") == false) {
 		temp = true
 		power = true
 	}
@@ -1192,11 +1192,11 @@ func systemDebugCmdHandler(cmd *cobra.Command, args []string) {
 
 	client := pds.NewDebugSvcClient(c)
 
-	if cmd.Flags().Changed("clock-frequency") {
+	if cmd != nil && cmd.Flags().Changed("clock-frequency") {
 		systemClockFrequencySet(client)
 	}
 
-	if cmd.Flags().Changed("arm-clock-frequency") {
+	if cmd != nil && cmd.Flags().Changed("arm-clock-frequency") {
 		systemArmClockFrequencySet(client)
 	}
 }

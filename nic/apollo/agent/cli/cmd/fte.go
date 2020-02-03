@@ -69,12 +69,14 @@ func fteStatsClearCmdHandler(cmd *cobra.Command, args []string) {
 	apiStats := true
 	tableStats := true
 
-	if cmd.Flags().Changed("api") == false &&
-		cmd.Flags().Changed("table") == false {
-	} else if cmd.Flags().Changed("api") == false {
-		apiStats = false
-	} else if cmd.Flags().Changed("table") == false {
-		tableStats = false
+	if cmd != nil {
+		if cmd.Flags().Changed("api") == false &&
+			cmd.Flags().Changed("table") == false {
+		} else if cmd.Flags().Changed("api") == false {
+			apiStats = false
+		} else if cmd.Flags().Changed("table") == false {
+			tableStats = false
+		}
 	}
 
 	client := pds.NewDebugSvcClient(c)
@@ -116,14 +118,15 @@ func fteStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 	apiStats := true
 	tableStats := true
 
-	if cmd.Flags().Changed("api") == false &&
-		cmd.Flags().Changed("table") == false {
-	} else if cmd.Flags().Changed("api") == false {
-		apiStats = false
-	} else if cmd.Flags().Changed("table") == false {
-		tableStats = false
+	if cmd != nil {
+		if cmd.Flags().Changed("api") == false &&
+			cmd.Flags().Changed("table") == false {
+		} else if cmd.Flags().Changed("api") == false {
+			apiStats = false
+		} else if cmd.Flags().Changed("table") == false {
+			tableStats = false
+		}
 	}
-
 	client := pds.NewDebugSvcClient(c)
 
 	var empty *pds.Empty

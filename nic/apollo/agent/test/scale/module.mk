@@ -9,7 +9,7 @@ MODULE_INCS          = /usr/local/include \
 MODULE_LDLIBS        = pthread \
                        ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \
                        ${NIC_COMMON_LDLIBS}
-MODULE_SOLIBS        = pdsproto trace logger agentclient
+MODULE_SOLIBS        = pdsproto trace logger agentclient sdkfru pal
 MODULE_FLAGS         = -DTEST_GRPC_APP
 MODULE_EXCLUDE_FLAGS = -O2
 MODULE_SRCS          = $(wildcard ${MODULE_SRC_DIR}/*.cc) \

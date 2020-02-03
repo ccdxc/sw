@@ -11,6 +11,9 @@
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/sdk/platform/capri/capri_p4.hpp" //UPLINK_0/1
 #include "nic/apollo/api/include/pds.hpp"
+#ifndef SIM
+#include "nic/sdk/platform/fru/fru.hpp"
+#endif
 
 namespace test {
 
@@ -247,10 +250,17 @@ uuid_from_objid (uint32_t id)
     pds_obj_key_t key = { 0 };
     mac_addr_t    system_mac;
 
-    MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
     memcpy(&key.id[0], &id, sizeof(id));
     memset(&key.id[8], 0x42, 2);
+#ifdef SIM
+    MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
+#else
+    std::string   mac_str;
+    sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
+    mac_str_to_addr((char *)mac_str.c_str(), system_mac);
+#endif
     memcpy(&key.id[10], system_mac, ETH_ADDR_LEN);
+
     return key;
 }
 

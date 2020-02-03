@@ -48,13 +48,13 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("vpc-id") != cmd.Flags().Changed("ip") {
+	if cmd != nil && (cmd.Flags().Changed("vpc-id") != cmd.Flags().Changed("ip")) {
 		fmt.Printf("Cannot specify only one of VPC ID and mapping IP address\n")
 		return
 	}
 
 	mType := pds.MappingDumpType_MAPPING_DUMP_ALL
-	if cmd.Flags().Changed("type") {
+	if cmd != nil && cmd.Flags().Changed("type") {
 		switch mappingType {
 		case "all":
 			mType = pds.MappingDumpType_MAPPING_DUMP_ALL
@@ -69,7 +69,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 	var cmdCtxt *pds.CommandCtxt
 
-	if cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
+	if cmd != nil && cmd.Flags().Changed("vpc-id") && cmd.Flags().Changed("ip") {
 		// dump specific Mapping
 		var key *pds.MappingKey
 		key = &pds.MappingKey{
@@ -90,7 +90,7 @@ func mappingShowCmdHandler(cmd *cobra.Command, args []string) {
 				},
 			},
 		}
-	} else if cmd.Flags().Changed("type") {
+	} else if cmd != nil && cmd.Flags().Changed("type") {
 		cmdCtxt = &pds.CommandCtxt{
 			Version: 1,
 			Cmd:     pds.Command_CMD_MAPPING_DUMP,

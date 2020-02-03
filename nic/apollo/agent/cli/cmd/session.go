@@ -225,7 +225,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	if cmd.Flags().Changed("vpcid") != cmd.Flags().Changed("srcip") !=
+	if cmd != nil && cmd.Flags().Changed("vpcid") != cmd.Flags().Changed("srcip") !=
 		cmd.Flags().Changed("dstip") != cmd.Flags().Changed("srcport") !=
 		cmd.Flags().Changed("dstport") != cmd.Flags().Changed("ipproto") {
 		fmt.Printf("Only specifying all filters or none is supported\n")
@@ -234,7 +234,7 @@ func flowShowCmdHandler(cmd *cobra.Command, args []string) {
 
 	// If one of the filters is set, then all of them are set, so just checking
 	// for one
-	filter := cmd.Flags().Changed("srcip")
+	filter := cmd != nil && cmd.Flags().Changed("srcip")
 
 	// If a filter is specified, use GRPC, otherwise use UDS to get the flow
 	// data

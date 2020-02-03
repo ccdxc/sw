@@ -51,7 +51,7 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewMirrorSvcClient(c)
 
 	var req *pds.MirrorSessionGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Mirror session
 		req = &pds.MirrorSessionGetRequest{
 			Id: []uint32{mirrorsessionID},
@@ -76,7 +76,7 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print mirror sessions
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -96,60 +96,60 @@ func mirrorSessionShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printMirrorSessionRspanHeader() {
-    hdrLine := strings.Repeat("-", 60)
-    rspanLine := strings.Repeat(" ",23)
-    rspanLine += "RSPAN SESSIONS"
-    rspanLine += strings.Repeat(" ",23)
-    fmt.Println(hdrLine)
-    fmt.Println(rspanLine)
-    fmt.Println(hdrLine)
-    fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
-               "ID", "SpanType", "snapLen", "Encap", "Interface")
-    fmt.Println(hdrLine)
+	hdrLine := strings.Repeat("-", 60)
+	rspanLine := strings.Repeat(" ", 23)
+	rspanLine += "RSPAN SESSIONS"
+	rspanLine += strings.Repeat(" ", 23)
+	fmt.Println(hdrLine)
+	fmt.Println(rspanLine)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
+		"ID", "SpanType", "snapLen", "Encap", "Interface")
+	fmt.Println(hdrLine)
 }
 
 func printMirrorSessionErspanHeader() {
-    hdrLine := strings.Repeat("-", 60)
-    erspanLine := strings.Repeat(" ",22)
-    erspanLine += "ERSPAN  SESSIONS"
-    erspanLine += strings.Repeat(" ",22)
-    fmt.Println(hdrLine)
-    fmt.Println(erspanLine)
-    fmt.Println(hdrLine)
-    fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
-               "ID", "SpanType", "snapLen", "SrcIP", "ERSpanDst")
-    fmt.Println(hdrLine)
+	hdrLine := strings.Repeat("-", 60)
+	erspanLine := strings.Repeat(" ", 22)
+	erspanLine += "ERSPAN  SESSIONS"
+	erspanLine += strings.Repeat(" ", 22)
+	fmt.Println(hdrLine)
+	fmt.Println(erspanLine)
+	fmt.Println(hdrLine)
+	fmt.Printf("%-6s%-10s%-10s%-16s%-16s\n",
+		"ID", "SpanType", "snapLen", "SrcIP", "ERSpanDst")
+	fmt.Println(hdrLine)
 }
 
 func printRspanMirrorSession(ms *pds.MirrorSession) {
-    spec := ms.GetSpec()
-    spanTypeStr :=""
-    if(spec.GetRspanSpec() != nil) {
-        spanTypeStr += "RSPAN"
-    } else if (spec.GetErspanSpec() != nil) {
-        spanTypeStr += "ERSPAN"
-    }
-    if (spanTypeStr == "RSPAN") {
-        encapStr := utils.EncapToString(spec.GetRspanSpec().GetEncap())
-	    fmt.Printf("%-6d%-10s%-10d%-16s%-16s\n",
-                       spec.GetId(), spanTypeStr,
-                       spec.GetSnapLen(), encapStr,
-                       ifIndexToPortIdStr(spec.GetRspanSpec().GetInterfaceId()))
-    }
+	spec := ms.GetSpec()
+	spanTypeStr := ""
+	if spec.GetRspanSpec() != nil {
+		spanTypeStr += "RSPAN"
+	} else if spec.GetErspanSpec() != nil {
+		spanTypeStr += "ERSPAN"
+	}
+	if spanTypeStr == "RSPAN" {
+		encapStr := utils.EncapToString(spec.GetRspanSpec().GetEncap())
+		fmt.Printf("%-6d%-10s%-10d%-16s%-16s\n",
+			spec.GetId(), spanTypeStr,
+			spec.GetSnapLen(), encapStr,
+			ifIndexToPortIdStr(spec.GetRspanSpec().GetInterfaceId()))
+	}
 }
 
 func printErspanMirrorSession(ms *pds.MirrorSession) {
-    spec := ms.GetSpec()
-    spanTypeStr :=""
-    if(spec.GetRspanSpec() != nil) {
-        spanTypeStr += "RSPAN"
-    } else if (spec.GetErspanSpec() != nil) {
-        spanTypeStr += "ERSPAN"
-    }
-    if (spanTypeStr == "ERSPAN") {
-	    fmt.Printf("%-6d%-10s%-10d%-16s%-16d\n",
-                       spec.GetId(), spanTypeStr,spec.GetSnapLen(),
-                       utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIP()),
-                       spec.GetErspanSpec().GetTunnelId())
-    }
+	spec := ms.GetSpec()
+	spanTypeStr := ""
+	if spec.GetRspanSpec() != nil {
+		spanTypeStr += "RSPAN"
+	} else if spec.GetErspanSpec() != nil {
+		spanTypeStr += "ERSPAN"
+	}
+	if spanTypeStr == "ERSPAN" {
+		fmt.Printf("%-6d%-10s%-10d%-16s%-16d\n",
+			spec.GetId(), spanTypeStr, spec.GetSnapLen(),
+			utils.IPAddrToStr(spec.GetErspanSpec().GetSrcIP()),
+			spec.GetErspanSpec().GetTunnelId())
+	}
 }

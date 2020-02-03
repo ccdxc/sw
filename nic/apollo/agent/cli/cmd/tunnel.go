@@ -52,7 +52,7 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewTunnelSvcClient(c)
 
 	var req *pds.TunnelGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Tunnel
 		req = &pds.TunnelGetRequest{
 			Id: [][]byte{uuid.FromStringOrNil(tunnelID).Bytes()},
@@ -77,7 +77,7 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Tunnels
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -93,9 +93,9 @@ func tunnelShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printTunnelHeader() {
-	hdrLine := strings.Repeat("-", 120)
+	hdrLine := strings.Repeat("-", 128)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-16s%-16s%-16s\n",
+	fmt.Printf("%-40s%-40s%-16s%-16s%-16s\n",
 		"ID", "VpcID", "Encap", "LocalIP", "RemoteIP")
 	fmt.Println(hdrLine)
 }
@@ -103,7 +103,7 @@ func printTunnelHeader() {
 func printTunnel(tunnel *pds.Tunnel) {
 	spec := tunnel.GetSpec()
 	encapStr := utils.EncapToString(spec.GetEncap())
-	fmt.Printf("%-36s%-36s%-16s%-16s%-16s\n",
+	fmt.Printf("%-40s%-40s%-16s%-16s%-16s\n",
 		uuid.FromBytesOrNil(spec.GetId()).String(),
 		uuid.FromBytesOrNil(spec.GetVPCId()).String(),
 		encapStr, utils.IPAddrToStr(spec.GetLocalIP()),

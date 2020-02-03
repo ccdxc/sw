@@ -52,7 +52,7 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	client := pds.NewVnicSvcClient(c)
 
 	var req *pds.VnicGetRequest
-	if cmd.Flags().Changed("id") {
+	if cmd != nil && cmd.Flags().Changed("id") {
 		// Get specific Vnic
 		req = &pds.VnicGetRequest{
 			VnicId: [][]byte{uuid.FromStringOrNil(vnicID).Bytes()},
@@ -77,7 +77,7 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 	}
 
 	// Print Vnics
-	if cmd.Flags().Changed("yaml") {
+	if cmd != nil && cmd.Flags().Changed("yaml") {
 		for _, resp := range respMsg.Response {
 			respType := reflect.ValueOf(resp)
 			b, _ := yaml.Marshal(respType.Interface())
@@ -93,9 +93,9 @@ func vnicShowCmdHandler(cmd *cobra.Command, args []string) {
 }
 
 func printVnicHeader() {
-	hdrLine := strings.Repeat("-", 187)
+	hdrLine := strings.Repeat("-", 195)
 	fmt.Println(hdrLine)
-	fmt.Printf("%-36s%-36s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s\n",
+	fmt.Printf("%-40s%-40s%-14s%-20s%-10s%-14s%-18s%-18s%-11s%-10s\n",
 		"VnicID", "SubnetID", "VnicEncap", "MAC", "SrcGuard", "FabricEncap",
 		"RxMirrorSessionID", "TxMirrorSessionID", "SwitchVnic", "HostIf")
 	fmt.Println(hdrLine)
@@ -120,7 +120,7 @@ func printVnic(vnic *pds.Vnic) {
 		lifName = lifGetNameFromKey(spec.GetHostIf())
 	}
 
-	fmt.Printf("%-36s%-36s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10s\n",
+	fmt.Printf("%-40s%-40s%-14s%-20s%-10t%-14s%-18s%-18s%-11t%-10s\n",
 		uuid.FromBytesOrNil(spec.GetVnicId()).String(),
 		uuid.FromBytesOrNil(spec.GetSubnetId()).String(), vnicEncapStr,
 		utils.MactoStr(spec.GetMACAddress()), spec.GetSourceGuardEnable(),
