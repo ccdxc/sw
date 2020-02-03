@@ -10,7 +10,7 @@
 #include "nic/utils/penlog/lib/penlog.hpp"
 
 #define DEVICE_JSON "/sysconfig/config0/device.conf"
-#define DEFAULT_SYSMGR_JSON "/nic/conf/sysmgr.json"
+#define DEFAULT_SYSMGR_JSON "/nic/conf/sysmgr-default.json"
 
 extern const pid_t       mypid;
 extern std::string       log_location;

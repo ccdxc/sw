@@ -50,11 +50,15 @@ get_main_config_file (void)
         "feature-profile", 
          device::FEATURE_PROFILE_BASE);
     if (feature_profile == device::FEATURE_PROFILE_NONE ||
-        feature_profile == device::FEATURE_PROFILE_BASE) {
-        feature = "FEATURE_PROFILE_BASE";
-    } else {
-        throw std::runtime_error("Unknown feature-mode");
+	feature_profile == device::FEATURE_PROFILE_BASE ||
+	feature_profile == device::FEATURE_PROFILE_STORAGE ||
+	feature_profile == device::FEATURE_PROFILE_SRIOV ||
+	feature_profile == device::FEATURE_PROFILE_VIRTUALIZED ||
+	feature_profile == device::FEATURE_PROFILE_PROXY ||
+        feature_profile == device::FEATURE_PROFILE_DEVELOPER) {
+	// For all feature profiles naples_hostpin is to be selected
+	return DEFAULT_SYSMGR_JSON;
     }
 
-    return "/nic/conf/sysmgr-" + fwd_mode + "-" + feature + ".json";
+    throw std::runtime_error("unkown feature profile");
 }

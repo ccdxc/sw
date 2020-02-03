@@ -11,12 +11,10 @@ nic/conf/iris/hbm_mem_base.json                                     /nic/conf/ir
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/conf/iris/operd-regions.json                                    /nic/conf/
 nic/conf/iris/operd.json                                            /nic/conf/
-nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr.json
+nic/sysmgr/src/naples.json                                          /nic/conf/sysmgr-default.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-default.json
-nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-FEATURE_PROFILE_BASE.json
 nic/sysmgr/src/naples_classic.json                                  /nic/conf/sysmgr-classic-eth-dev-scale.json
 nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-default.json
-nic/sysmgr/src/naples_hostpin.json                                  /nic/conf/sysmgr-hostpin-FEATURE_PROFILE_BASE.json
 nic/sysmgr/src/naples_gold.json                                     /nic/conf/sysmgr_gold.json
 nic/conf/naples-tsa.json                                            /nic/conf/
 nic/build/aarch64/iris/bin/p4asm/                                   /nic/conf/iris/asm_bin/
