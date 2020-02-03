@@ -12,13 +12,18 @@ struct s1_tbl_session_fsm_exec_d        d;
 #define r_expiry_scan_id_base           r3
 #define r_expiry_map_entries_scanned    r4
 #define r_session_info_addr             r5
-#define r_num_scannables                r6
+#define r_expiry_map_bit_pos            r6
 #define r_scratch                       r7
 
 /*
  * Registers reuse (post expiry_scan_id_base computation)
  */
 #define r_limit                         r_expiry_scan_id_base 
+ 
+/*
+ * Registers reuse (post expiry_map_bit_pos computation)
+ */
+#define r_num_scannables                r_expiry_map_bit_pos
  
 /*
  * Registers reuse (for _resume_summarize)
@@ -53,6 +58,7 @@ session_fsm_exec:
     add         r_total_entries_scanned, d.total_entries_scanned, r0 // delay slot
     add         r_expiry_map_entries_scanned, d.expiry_map_entries_scanned, r0
     add         r_expiry_scan_id_base, d.expiry_scan_id_base, r0
+    add         r_expiry_map_bit_pos, d.expiry_map_bit_pos, r0
     phvwr       p.session_kivec0_session_table_addr, d.scan_addr_base
 
     add         r_scratch, d.fsm_state, r0
@@ -64,7 +70,6 @@ _switch0:
   .brcase SCANNER_STATE_RESTART_RANGE
   
     tblwr       d.scan_id_next, d.scan_id_base
-    tblwr       d.total_entries_scanned, r0
     add         r_scan_id_next, d.scan_id_base, r0
 
     // No "fall through" with MPU assembly (unless # of
@@ -77,8 +82,8 @@ _switch0:
   
 _expiry_map_restart:
 
-    tblwr       d.expiry_map_entries_scanned, r0
     add         r_expiry_map_entries_scanned, r0, r0
+    add         r_expiry_map_bit_pos, r0, r0
     b           _reevaluate
     add         r_expiry_scan_id_base, r_scan_id_next, r0 // delay slot
     
@@ -114,8 +119,20 @@ _reevaluate:
         
     phvwr       p.session_kivec0_session_id_curr, r_scan_id_next
     tblwr       d.expiry_scan_id_base, r_expiry_scan_id_base
-    phvwr       p.session_kivec8_expiry_session_id_base, r_expiry_scan_id_base
+    phvwr       p.session_kivec8_expiry_id_base, r_expiry_scan_id_base
 
+    // Each PHV invocation builds a sub-map of SESSION_MPU_TABLES_TOTAL
+    // session bits (16). These sub-maps will eventually be shifted and
+    // OR'ed into d.expiry_map0...d.expiry_map3 in the summarize stage.
+    // Here we set the shift position to ease the work during summarize. 
+    
+    phvwr       p.session_kivec8_expiry_map_bit_pos, r_expiry_map_bit_pos
+    add         r_expiry_map_bit_pos, r_expiry_map_bit_pos, SESSION_MPU_TABLES_TOTAL
+    tblwr       d.expiry_map_bit_pos, r_expiry_map_bit_pos
+
+    // WARNING: r_expiry_map_bit_pos no longer valid after this point
+    // as it is aliased to r_num_scannables below.
+    
     sub         r_num_scannables, d.scan_range_sz, r_total_entries_scanned
     sle         c1, SESSION_MPU_TABLES_TOTAL, r_num_scannables
     add.c1      r_num_scannables, r0, SESSION_MPU_TABLES_TOTAL
@@ -137,14 +154,14 @@ _if2:
     sub         r_limit, d.scan_burst_sz, r_limit
     sle         c3, r_limit, r_num_scannables
     add.c3      r_num_scannables, r0, r_limit
-    phvwr.c3    p.session_kivec8_session_burst_full, 1
+    phvwr.c3    p.session_kivec8_burst_full, 1
 _endif2:
     
     // Update certain state info for next PHV resumption
     add         r_total_entries_scanned, r_total_entries_scanned, \
                 r_num_scannables
     sle         c4, d.scan_range_sz, r_total_entries_scanned
-    phvwr.c4    p.session_kivec8_session_range_full, 1
+    phvwr.c4    p.session_kivec8_range_full, 1
     tblwr       d.total_entries_scanned, r_total_entries_scanned
     
     add         r_expiry_map_entries_scanned, r_expiry_map_entries_scanned, \

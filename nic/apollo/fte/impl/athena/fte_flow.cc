@@ -41,7 +41,6 @@
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session.h"
 #include "gen/p4gen/p4/include/ftl.h"
-#include "nic/apollo/api/impl/athena/ftl_dev_impl.hpp"
 
 namespace fte {
 
@@ -283,12 +282,6 @@ fte_ftl_init (unsigned int lcore_id)
         return;
     }
     PDS_TRACE_DEBUG("pds_flow_cache_create success. core#:%d \n", lcore_id);
-
-    if (ftl_dev_impl::init(lcore_id) != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("fte_ftl_dev::init failed. core#:%d \n", lcore_id);
-        return;
-    }
-
     return;     
 }
 

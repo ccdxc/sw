@@ -40,12 +40,9 @@ typedef struct pds_flow_age_timeout_s {
     uint32_t    other_tmo;              ///< All others established or not established
 } __PACK__ pds_flow_age_timeouts_t;
 
-/// \brief user directives supplied by user expiry callback
-typedef struct pds_flow_age_user_directives_s {
-    bool                del;            ///< TRUE to have the calling function delete this flow
-    bool                del_rflow;      ///< TRUE to have the calling function also delete
-                                        ///< the reverse flow, if any
-} pds_flow_age_user_directives_t;
+/// \brief user callback to process an expired session or conntrack ID
+typedef void (*expiry_user_cb_t)(uint32_t expiry_id,
+                                 pds_flow_age_expiry_type_t expiry_type);
 
 /// \brief     Start all instances of HW scanner
 /// \return    #SDK_RET_OK on success, failure status code on error
@@ -68,6 +65,25 @@ sdk_ret_t pds_flow_age_hw_scanners_stop(bool quiesce_check);
 /// \remark    This function discards all pending "poller slot data" in all poller queues
 // \remark     and returns them to the empty state.
 sdk_ret_t pds_flow_age_sw_pollers_flush(void);
+
+/// \brief     Return the number of poller queues configured
+/// \param[out] ret_qcount: locattion to hold the returned queue count
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    This function returns the number of poller queues
+// \remark     and returns them to the empty state.
+sdk_ret_t pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount);
+
+/// \brief     Return the number of poller queues configured
+/// \param[in] poller_id: poller queue ID
+/// \param[in] expiry_user_cb: user callback to process expired flows
+/// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    This function submits a burst dequeue on a poller queue
+// \remark     corresponding to poller_id. If expiry_user_cb is non-NULL, that
+// \remark     function will be invoked to process any expired entries found.
+// \remark     Otherwise, an internal default handler will be used to processs
+// \remark     the expired entries.
+sdk_ret_t pds_flow_age_pollers_poll(uint32_t poller_id,
+                                    expiry_user_cb_t expiry_user_cb);
 
 /// \brief     Set normal inactivity timeout values for different types of flow
 /// \param[in] normal timeouts specification
@@ -93,17 +109,6 @@ sdk_ret_t pds_flow_age_accel_timeouts_set(const pds_flow_age_timeouts_t *accel_a
 /// \remark    The default is false (deselect).
 sdk_ret_t pds_flow_age_accel_control(bool enable_sense);
 
-/// \brief     Supply a flow expiry user callback function
-/// \param[in] user callback function (NULL is allowed)
-/// \return    #SDK_RET_OK on success, failure status code on error
-/// \remark    The user can supply a callback function to influence the decision as to whether or
-/// \remark    not to delete a given expired flow. The user callback function will be called
-/// \remark    from software poller threads for every session/conntrack ID found in their
-/// \remark    corresponding queues. This means the call can be made from any lcores on which
-/// \remark    poller threads are hosted.
-sdk_ret_t pds_flow_age_expiry_user_callback_set(void (*user_cb)(uint32_t expiry_id,
-                                                pds_flow_age_expiry_type_t expiry_type,
-                                                const pds_flow_age_user_directives_t *user_directives));
 /// @}
 
 #ifdef __cplusplus

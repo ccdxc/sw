@@ -49,6 +49,7 @@
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/apollo/fte/fte.hpp"
+#include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
 
 namespace fte {
 
@@ -81,6 +82,8 @@ typedef struct gls_s {
 
 gls_t gls = { NULL, FTE_MAX_TXDSCR, FTE_MAX_RXDSCR };
 
+static uint32_t pollers_client_qcount;
+
 static void
 _process (struct rte_mbuf *m)
 {
@@ -98,19 +101,22 @@ _process (struct rte_mbuf *m)
 
 // main processing loop
 static void
-fte_rx_loop (void)
+fte_rx_loop (int poller_qid)
 {
     struct rte_mbuf *pkts_burst[FTE_PKT_BATCH_SIZE];
     int numrx, numtx;
 
-    PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u \n", rte_lcore_id());
+    PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
+        if (poller_qid != -1) {
+            ftl_pollers_client::poll(poller_qid);
+        }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);
         if (!numrx) {
             continue;
         }
 
-    	PDS_TRACE_DEBUG("\n\nFTE receives %d packets.. \n\n", numrx);
+        PDS_TRACE_DEBUG("\n\nFTE receives %d packets.. \n\n", numrx);
         gls.stats.rx += numrx;
         for (int i = 0; i < numrx; i++) {
             auto m = pkts_burst[i];
@@ -136,9 +142,16 @@ fte_rx_loop (void)
 static int
 fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
+    int poller_qid;
+
     fte_ftl_init(rte_lcore_id());
 
-    fte_rx_loop();
+    poller_qid = rte_lcore_index(rte_lcore_id());
+    if (poller_qid >= (int)pollers_client_qcount) {
+        poller_qid = -1;
+    }
+
+    fte_rx_loop(poller_qid);
     return 0;
 }
 
@@ -247,6 +260,21 @@ _init_txbf (uint16_t portid)
     return;
 }
 
+static void
+_init_pollers_client()
+{
+    if (ftl_pollers_client::init() != SDK_RET_OK) {
+        rte_exit(EXIT_FAILURE, "failed ftl_pollers_client init");
+    }
+
+    pollers_client_qcount = ftl_pollers_client::qcount_get();
+    if (rte_lcore_count() < pollers_client_qcount) {
+        PDS_TRACE_DEBUG("Number of lcores (%u) is less than number of "
+                        "poller queues (%u)", rte_lcore_count(),
+                        pollers_client_qcount);
+    }
+}
+
 static int
 fte_main(void)
 {
@@ -257,6 +285,8 @@ fte_main(void)
     if (ret < 0) {
         rte_exit(EXIT_FAILURE, "Invalid EAL arguments\n");
     }
+
+    _init_pollers_client();
 
     // Initialize Global State
     _init_gls();
@@ -297,7 +327,7 @@ fte_thread_start (void *ctxt)
     SDK_THREAD_INIT(ctxt);
 
     sleep(10);
-    
+
     PDS_TRACE_DEBUG("FTE entering forever loop ...");
 
     fte_main();

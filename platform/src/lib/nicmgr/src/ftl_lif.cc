@@ -654,6 +654,7 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
                    void *rsp_data)
 {
     ftl_lif_event_t event;
+    bool            log_cpl = false;
 
     fsm_ctx.devcmd.req = req;
     fsm_ctx.devcmd.req_data = req_data;
@@ -677,6 +678,7 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
     default:
         NIC_LOG_DEBUG("{}: Handling cmd: {}", LifNameGet(),
                       ftl_dev_opcode_str(req->cmd.opcode));
+        log_cpl = true;
 
         auto iter = opcode2event_map.find(req->cmd.opcode);
         if (iter != opcode2event_map.end()) {
@@ -692,8 +694,10 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
     }
 
     rsp->status = fsm_ctx.devcmd.status;
-    NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", LifNameGet(),
-                  ftl_dev_opcode_str(req->cmd.opcode), fsm_ctx.devcmd.status);
+    if (log_cpl) {
+        NIC_LOG_DEBUG("{}: Done cmd: {}, status: {}", LifNameGet(),
+                      ftl_dev_opcode_str(req->cmd.opcode), fsm_ctx.devcmd.status);
+    }
     return fsm_ctx.devcmd.status;
 }
 
@@ -1894,8 +1898,9 @@ ftl_lif_queues_ctl_t::scanner_session_init_single(const scanner_init_single_cmd_
 
     qstate.cb.normal_tmo_cb_addr = lif.normal_age_cb_addr();
     qstate.cb.accel_tmo_cb_addr = lif.accel_age_cb_addr();
-    qstate.cb.scan_resched_time = cmd->scan_resched_time;
-
+    qstate.cb.scan_resched_ticks =
+           time_us_to_timer_ticks(cmd->scan_resched_time,
+                                  &qstate.cb.resched_uses_slow_timer);
     /*
      * burst size may be zero but range size must be > 0
      */
@@ -1965,8 +1970,9 @@ ftl_lif_queues_ctl_t::scanner_ct_init_single(const scanner_init_single_cmd_t *cm
 
     qstate.cb.normal_tmo_cb_addr = lif.normal_age_cb_addr();
     qstate.cb.accel_tmo_cb_addr = lif.accel_age_cb_addr();
-    qstate.cb.scan_resched_time = cmd->scan_resched_time;
-
+    qstate.cb.scan_resched_ticks =
+           time_us_to_timer_ticks(cmd->scan_resched_time,
+                                  &qstate.cb.resched_uses_slow_timer);
     /*
      * burst size may be zero but range size must be > 0
      */

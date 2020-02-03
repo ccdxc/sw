@@ -221,18 +221,24 @@ header_type session_kivec7_t {
  */
 header_type session_kivec8_t {
     fields {
-        expiry_session_id_base          : 32;
-        session_range_full              : 1;
-        session_burst_full              : 1;
+        expiry_id_base                  : 32;
+        expiry_map_bit_pos              : 9;
+        range_full                      : 1;
+        burst_full                      : 1;
         expiry_maps_full                : 1;
+        range_has_posted                : 1;
+        resched_uses_slow_timer         : 1;
     }
 }
 
 #define SESSION_KIVEC8_USE(scratch, kivec)                                      \
-    modify_field(scratch.expiry_session_id_base, kivec.expiry_session_id_base); \
-    modify_field(scratch.session_range_full, kivec.session_range_full);         \
-    modify_field(scratch.session_burst_full, kivec.session_burst_full);         \
+    modify_field(scratch.expiry_id_base, kivec.expiry_id_base);                 \
+    modify_field(scratch.expiry_map_bit_pos, kivec.expiry_map_bit_pos);         \
+    modify_field(scratch.range_full, kivec.range_full);                         \
+    modify_field(scratch.burst_full, kivec.burst_full);                         \
     modify_field(scratch.expiry_maps_full, kivec.expiry_maps_full);             \
+    modify_field(scratch.range_has_posted, kivec.range_has_posted);             \
+    modify_field(scratch.resched_uses_slow_timer, kivec.resched_uses_slow_timer);\
     
 /*
  * kivec9: header union with stage_2_stage for table 3 (160 bits max)
@@ -341,20 +347,26 @@ metadata ring_entry_t                   ring_entry;
 metadata doorbell_data_raw_t            db_data_no_index;
 
 @pragma dont_trim
-metadata doorbell_data_raw_t            db_data_burst_timer;
+metadata doorbell_data_raw_t            db_data_burst_ticks;
 
 @pragma dont_trim
-metadata doorbell_data_raw_t            db_data_qfull_repost_timer;
+metadata doorbell_data_raw_t            db_data_qfull_repost_ticks;
 
 @pragma dont_trim
 @pragma pa_align 512
 metadata poller_slot_data_t             poller_slot_data; 
 
 @pragma dont_trim
+metadata doorbell_data_raw_t            db_data_range_empty_ticks;
+
+@pragma dont_trim
 metadata ring_pi_t                      poller_posted_pi; 
 
 @pragma dont_trim
 metadata scanner_session_fsm_state_t    fsm_state_next; 
+
+@pragma dont_trim
+metadata poller_range_has_posted_t      poller_range_has_posted;
 
 @pragma dont_trim
 @pragma pa_align 512
@@ -409,6 +421,30 @@ metadata dma_cmd_phv2mem_t dma_p2m_7;
 @pragma dont_trim
 @pragma pa_header_union ingress dma_p2m_7
 metadata dma_cmd_mem2mem_t dma_m2m_7;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_8;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_8
+metadata dma_cmd_mem2mem_t dma_m2m_8;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_9;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_9
+metadata dma_cmd_mem2mem_t dma_m2m_9;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_10;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_10
+metadata dma_cmd_mem2mem_t dma_m2m_10;
+
+@pragma dont_trim
+metadata dma_cmd_phv2mem_t dma_p2m_11;
+@pragma dont_trim
+@pragma pa_header_union ingress dma_p2m_11
+metadata dma_cmd_mem2mem_t dma_m2m_11;
 
 
 /*

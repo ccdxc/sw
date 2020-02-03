@@ -10,6 +10,7 @@
 
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
 #include "ftl_dev_impl.hpp"
+#include "ftl_pollers_client.hpp"
 
 extern "C" {
 
@@ -32,6 +33,12 @@ pds_flow_age_sw_pollers_flush(void)
 }
 
 sdk_ret_t
+pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount)
+{
+    return ftl_dev_impl::pollers_qcount_get(ret_qcount);
+}
+
+sdk_ret_t
 pds_flow_age_normal_timeouts_set(const pds_flow_age_timeouts_t *norm_age_timeouts)
 {
     return ftl_dev_impl::normal_timeouts_set(norm_age_timeouts);
@@ -50,12 +57,10 @@ pds_flow_age_accel_control(bool enable_sense)
 }
 
 sdk_ret_t
-pds_flow_age_expiry_user_callback_set(void (*user_cb)(
-                                            uint32_t expiry_id,
-                                            pds_flow_age_expiry_type_t expiry_type,
-                                            const pds_flow_age_user_directives_t *user_directives))
+pds_flow_age_pollers_poll(uint32_t poller_id,
+                          expiry_user_cb_t expiry_user_cb)
 {
-    return SDK_RET_OK;
+    return ftl_pollers_client::poll(poller_id, expiry_user_cb);
 }
 
 }

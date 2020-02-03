@@ -169,11 +169,33 @@
 #define SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS_SHFT 8 // log2(SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS)
  
 /*
- * scanner reschedule time upon detecting software poller queue full
+ * Two types of LIF timer:
+ * - Fast: Capri configured resolution is 1us per delta tick
+ * - Slow: Capri configured resolution is 1000 * 1us = 1ms per delta tick
+ * For both timers, the max config width is 10 bits for a max value of 1023:
+ * - Fast: max is 1023us
+ * - Slow: max is 1023ms
  */
-#define SCANNER_SESSION_POLLER_QFULL_REPOST_TIME 1000   // in ASIC system ticks
-#define SCANNER_CT_POLLER_QFULL_REPOST_TIME     1000
+#define HW_SLOW_TIMER_TICKS_MULT                1000    // multiples over fast timer
+#define HW_FAST_TIMER_TICKS_MAX                 1023
+#define HW_SLOW_TIMER_TICKS_MAX                 1023
 
+/*
+ * scanner reschedule time upon detecting software poller queue full.
+ */
+
+#define SCANNER_POLLER_QFULL_REPOST_TIMER       CAPRI_MEM_FAST_TIMER_START
+#define SCANNER_POLLER_QFULL_REPOST_TICKS       100  // 100us
+
+/*
+ * scanner reschedule time upon range_full but when no non-empty expiry maps
+ * have been posted for the same range. Since inactivity timeout granularity
+ * is in units of second, it should be fine to start rescanning in
+ * 0.5 sec or less.
+ */
+#define SCANNER_RANGE_EMPTY_RESCHED_TIMER       CAPRI_MEM_SLOW_TIMER_START
+#define SCANNER_RANGE_EMPTY_RESCHED_TICKS       300  // 300ms
+ 
 #ifdef __cplusplus
 
 namespace ftl_dev_if {
@@ -203,10 +225,11 @@ typedef uint16_t            scanner_session_cb_activate_t;
 
 typedef struct {
     qstate_1ring_cb_t       qstate_1ring;
-    uint32_t                scan_resched_time;
+    uint32_t                scan_resched_ticks;
     uint64_t                normal_tmo_cb_addr;
     uint64_t                accel_tmo_cb_addr;
-    uint8_t                 pad[30];
+    uint8_t                 resched_uses_slow_timer;
+    uint8_t                 pad[29];
     scanner_session_cb_activate_t cb_activate;    // must be last in CB
 } __attribute__((packed)) scanner_session_cb_t;
 
@@ -225,7 +248,8 @@ typedef struct {
     uint32_t                expiry_map_entries_scanned;
     uint32_t                total_entries_scanned;
     uint64_t                scan_addr_base;
-    uint8_t                 pad1[22];
+    uint16_t                expiry_map_bit_pos;
+    uint8_t                 pad1[20];
     scanner_session_cb_activate_t cb_activate;    // must be last in CB
 }  __attribute__((packed)) scanner_session_fsm_t;
 
@@ -234,7 +258,8 @@ typedef struct {
  */
 typedef struct {
     uint8_t                 poller_qdepth_shft;
-    uint8_t                 pad0[3];
+    uint8_t                 range_has_posted;
+    uint8_t                 pad0[2];
     uint64_t                poller_qstate_addr;
     uint64_t                expiry_map0;
     uint64_t                expiry_map1;
@@ -272,10 +297,11 @@ typedef uint16_t            scanner_ct_cb_activate_t;
 
 typedef struct {
     qstate_1ring_cb_t       qstate_1ring;
-    uint32_t                scan_resched_time;
+    uint32_t                scan_resched_ticks;
     uint64_t                normal_tmo_cb_addr;
     uint64_t                accel_tmo_cb_addr;
-    uint8_t                 pad[30];
+    uint8_t                 resched_uses_slow_timer;
+    uint8_t                 pad[29];
     scanner_ct_cb_activate_t cb_activate;    // must be last in CB
 } __attribute__((packed)) scanner_ct_cb_t;
 
@@ -379,6 +405,26 @@ typedef struct {
     uint32_t                other_tmo;
     uint8_t                 pad1[24];
 } __attribute__((packed)) age_tmo_cb_t;
+
+/**
+ * Convert time in microseconds to scheduler timer ticks
+ */
+static inline uint32_t
+time_us_to_timer_ticks(uint32_t time_us,
+                       uint8_t *use_slow_timer)
+{
+    uint32_t    ticks = time_us;
+
+    *use_slow_timer = false;
+    if (time_us > HW_FAST_TIMER_TICKS_MAX) {
+        ticks = (time_us + HW_SLOW_TIMER_TICKS_MULT - 1) / HW_SLOW_TIMER_TICKS_MULT;
+        if (ticks > HW_SLOW_TIMER_TICKS_MAX) {
+            ticks = HW_SLOW_TIMER_TICKS_MAX;
+        }
+        *use_slow_timer = true;
+    }
+    return ticks;
+}
 
 } // namespace ftl_dev_if
 

@@ -235,7 +235,7 @@
     SESSION_KIVEC_UDP_EST_TMO(3)
 #define SESSION_KIVEC3_TCP_SYN_TMO                                              \
     SESSION_KIVEC_TCP_SYN_TMO(3)
-#define SESSION_KIVEC3_TCP_EST_TMO                                              \
+ #define SESSION_KIVEC3_TCP_EST_TMO                                              \
     SESSION_KIVEC_TCP_EST_TMO(3)
 #define SESSION_KIVEC3_TCP_FIN_TMO                                              \
     SESSION_KIVEC_TCP_FIN_TMO(3)
@@ -291,14 +291,20 @@
 #define SESSION_KIVEC7_POLLER_QSTATE_ADDR                                       \
     k.{session_kivec7_poller_qstate_addr_sbit0_ebit1...session_kivec7_poller_qstate_addr_sbit58_ebit63}
     
-#define SESSION_KIVEC8_EXPIRY_SESSION_ID_BASE                                   \
-    k.{session_kivec8_expiry_session_id_base}
-#define SESSION_KIVEC8_SESSION_RANGE_FULL                                       \
-    k.{session_kivec8_session_range_full}
-#define SESSION_KIVEC8_SESSION_BURST_FULL                                       \
-    k.{session_kivec8_session_burst_full}
+#define SESSION_KIVEC8_EXPIRY_ID_BASE                                           \
+    k.{session_kivec8_expiry_id_base}
+#define SESSION_KIVEC8_EXPIRY_MAP_BIT_POS                                       \
+    k.{session_kivec8_expiry_map_bit_pos_sbit0_ebit7...session_kivec8_expiry_map_bit_pos_sbit8_ebit8}
+#define SESSION_KIVEC8_RANGE_FULL                                               \
+    k.{session_kivec8_range_full}
+#define SESSION_KIVEC8_BURST_FULL                                               \
+    k.{session_kivec8_burst_full}
 #define SESSION_KIVEC8_EXPIRY_MAPS_FULL                                         \
     k.{session_kivec8_expiry_maps_full}
+#define SESSION_KIVEC8_RANGE_HAS_POSTED                                         \
+    k.{session_kivec8_range_has_posted}
+#define SESSION_KIVEC8_RESCHED_USES_SLOW_TIMER                                  \
+    k.{session_kivec8_resched_uses_slow_timer}
  
 #define SESSION_KIVEC9_CB_CFG_DISCARDS                                          \
     k.{session_kivec9_cb_cfg_discards}
@@ -535,12 +541,12 @@
  * Load 64-bit immediate
  */
 #define SCANNER_IMM64_LOAD(_reg, _imm64)                                        \
-    addi        _reg, r0,  loword(_imm64);                                      \
-    addui       _reg, reg, hiword(_imm64);                                      \
+    addi        _reg, r0,   loword(_imm64);                                     \
+    addui       _reg, _reg, hiword(_imm64);                                     \
     
 #define SCANNER_IMM64_LOAD_c(_cf, _reg, _imm64)                                 \
-    addi._cf    _reg, r0,  loword(_imm64);                                      \
-    addui._cf   _reg, reg, hiword(_imm64);                                      \
+    addi._cf    _reg, r0,   loword(_imm64);                                     \
+    addui._cf   _reg, _reg, hiword(_imm64);                                     \
 
 /*
  * Doorbell related
@@ -575,23 +581,31 @@
 #define TIMER_ADDR_LIF_SHFT                     3
 #endif
 
-#define SCANNER_DB_ADDR_FAST_TIMER(_lif)                                        \
-    addi        r_db_addr, r0, CAPRI_MEM_FAST_TIMER_START;                      \
+#define SCANNER_DB_ADDR_TIMER(_tmr_addr, _lif)                                  \
+    addi        r_db_addr, r0, _tmr_addr;                                       \
     add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
+
+#define SCANNER_DB_ADDR_FAST_TIMER(_lif)                                        \
+    SCANNER_DB_ADDR_TIMER(CAPRI_MEM_FAST_TIMER_START, _lif)                     \
 
 #define SCANNER_DB_ADDR_SLOW_TIMER(_lif)                                        \
-    addi        r_db_addr, r0, CAPRI_MEM_SLOW_TIMER_START;                      \
-    add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
+    SCANNER_DB_ADDR_TIMER(CAPRI_MEM_SLOW_TIMER_START, _lif)                     \
 
+#define SCANNER_DB_ADDR_FAST_OR_SLOW_TIMER(_use_slow_timer, _lif)               \
+    seq         c1, _use_slow_timer, 1;                                         \
+    addi.c1     r_db_addr, r0, CAPRI_MEM_SLOW_TIMER_START;                      \
+    addi.!c1    r_db_addr, r0, CAPRI_MEM_FAST_TIMER_START;                      \
+    add         r_db_addr, r_db_addr, _lif, TIMER_ADDR_LIF_SHFT;                \
+    
+#define SCANNER_DB_DATA_TIMER(_qid, _delta_time)                                \
+    add         r_db_data, r0, _qid, TIMER_QID_SHFT;                            \
+    or          r_db_data, r_db_data, _delta_time, TIMER_DELTA_TIME_SHFT;       \
+   
 #define SCANNER_DB_DATA_TIMER_WITH_RING(_type, _qid, _ring, _delta_time)        \
     add         r_db_data, _type, _qid, TIMER_QID_SHFT;                         \
     or          r_db_data, r_db_data, _ring, TIMER_RING_SHFT;                   \
     or          r_db_data, r_db_data, _delta_time, TIMER_DELTA_TIME_SHFT;       \
         
-#define SCANNER_DB_DATA_TIMER(_qid, _delta_time)                                \
-    add         r_db_data, r0, _qid, TIMER_QID_SHFT;                            \
-    or          r_db_data, r_db_data, _delta_time, TIMER_DELTA_TIME_SHFT;       \
-   
 /*
  * Metrics related
  */

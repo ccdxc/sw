@@ -4,12 +4,12 @@
 ///----------------------------------------------------------------------------
 ///
 /// \file
-/// Flow Table Library device handling
+/// Flow Table Library device implementation
 ///
 ///----------------------------------------------------------------------------
 
-#ifndef __FTL_DEV_IMPL__
-#define __FTL_DEV_IMPL__
+#ifndef __FTL_DEV_IMPL_HPP__
+#define __FTL_DEV_IMPL_HPP__
 
 #include <cstdio>
 #include <iostream>
@@ -39,12 +39,17 @@
 
 namespace ftl_dev_impl {
 
-sdk_ret_t init(unsigned int lcore_id);
+sdk_ret_t init(void);
+sdk_ret_t pollers_qcount_get(uint32_t *ret_qcount);
 sdk_ret_t scanners_start(void);
 sdk_ret_t scanners_stop(bool quiesce_check);
 sdk_ret_t scanners_start_single(enum ftl_qtype qtype,
                                 uint32_t qid);
 sdk_ret_t pollers_flush(void);
+sdk_ret_t pollers_dequeue_burst(uint32_t qid,
+                                poller_slot_data_t *slot_data_buf,
+                                uint32_t slot_data_buf_sz,
+                                uint32_t *burst_count);
 sdk_ret_t normal_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
 sdk_ret_t accel_timeouts_set(const pds_flow_age_timeouts_t *age_tmo);
 sdk_ret_t accel_aging_control(bool enable_sense);
@@ -69,15 +74,21 @@ public:
                     devcmd_t *owner_devcmd = nullptr);
     sdk_ret_t start_single(uint32_t qid);
     sdk_ret_t flush(void);
-
+    sdk_ret_t dequeue_burst(uint32_t qid,
+                            poller_slot_data_t *slot_data_buf,
+                            uint32_t slot_data_buf_sz,
+                            uint32_t *burst_count,
+                            devcmd_t *owner_devcmd = nullptr);
     void lock(uint32_t qid);
     void unlock(uint32_t qid);
     void lock_all(void);
     void unlock_all(void);
+    uint32_t qcount_get(void) { return qcount_actual; }
 
 private:
     enum ftl_qtype          qtype;
     uint32_t                qcount;
+    uint32_t                qcount_actual;
     uint32_t                qdepth;
     rte_spinlock_t          *spinlocks;
 
@@ -147,4 +158,4 @@ private:
 
 } // namespace ftl_dev_impl
 
-#endif // __FTL_DEV_IMPL__
+#endif // __FTL_DEV_IMPL_HPP__

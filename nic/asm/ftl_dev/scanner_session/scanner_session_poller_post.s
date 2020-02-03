@@ -20,7 +20,42 @@ struct s7_tbl_session_poller_post_d     d;
 
 /*
  * Entered when
- * 1) range_full=1, or
+ * 1) range_full=1 and current expiry_maps are zero
+ */   
+session_poller_empty_post_eval:
+
+    // If nothing had ever been posted before for the range, don't post anything
+    // and simply reschedule with a timer delay for the next range rescan.
+    // Otherwise, post an empty map anyway with request for poller to
+    // reschedule us.
+
+    bbne        SESSION_KIVEC8_RANGE_HAS_POSTED, 0, session_poller_post
+    CLEAR_TABLE0                                                // delay slot
+    
+    // When using timer, send an update eval to quiet the scheduler
+    // (unless scheduling was already disabled prior).
+    //
+    // DMA0 = scheduler update eval
+    
+    SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
+                               SESSION_KIVEC7_QTYPE)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
+                                r_db_addr,
+                                db_data_no_index_data,
+                                db_data_no_index_data)
+    // DMA1 = Reschedule with a range empty delay
+    
+    SCANNER_DB_ADDR_TIMER(SCANNER_RANGE_EMPTY_RESCHED_TIMER,
+                          SESSION_KIVEC7_LIF)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_1_dma_cmd,
+                                             r_db_addr,
+                                             db_data_range_empty_ticks_data,
+                                             db_data_range_empty_ticks_data)
+    .align
+    
+/*
+ * Entered when
+ * 1) range_full=1 (and some non-zero expiry_maps had been posted prior), or
  * 2) expiry_maps_full=1 and current expiry_maps are non-zero
  */   
 session_poller_post:
@@ -31,7 +66,6 @@ session_poller_post:
     mincr       r_pi_shadow, d.qdepth_shft, 1
     mincr       r_ci, d.qdepth_shft, r0
     beq         r_pi_shadow, r_ci, _poller_qfull
-    DMA_CMD_PTR_INIT(dma_p2m_0)                                 // delay slot
     
     // If completed one full sweep (i.e., range_full), 
     //
@@ -40,9 +74,9 @@ session_poller_post:
     // is to prevent duplicate postings to the software poller.
     
 _if4:    
-    sne         c3, SESSION_KIVEC8_SESSION_RANGE_FULL, r0
+    sne         c3, SESSION_KIVEC8_RANGE_FULL, r0               // delay slot
     bcf         [!c3], _endif4
-    phvwr.c3    p.poller_slot_data_flags, SCANNER_RESCHED_REQUESTED     // delay slot
+    phvwr.c3    p.poller_slot_data_flags, SCANNER_RESCHED_REQUESTED // delay slot
     SCANNER_DB_ADDR_SCHED_RESET(SESSION_KIVEC7_LIF,
                                 SESSION_KIVEC7_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
@@ -54,7 +88,7 @@ _endif4:
     // Calculate slot address at which to write post data 
     
     tblmincri.f d.pi_0_shadow, d.qdepth_shft, 1
-    phvwr       p.poller_posted_pi_pi, r_pi_shadow
+    phvwr       p.poller_posted_pi_pi, r_pi_shadow.hx
     mincr       r_pi_shadow, d.qdepth_shft, -1
     add         r_poller_slot_addr, d.wring_base_addr, r_pi_shadow, \
                 POLLER_SLOT_DATA_BYTES_SHFT
@@ -86,21 +120,33 @@ _endif4:
                                 fsm_state_next_state,
                                 fsm_state_next_state)
 
+    // DMA4 = set or clear indication of whether we have posted any expiry maps.
+    // Since we're posting, set indication to 1 unless we're at range end,
+    // in which case, clear it.
+     
+    phvwr.!c3    p.poller_range_has_posted_posted, 1
+    add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
+                SCANNER_CT_CB_TABLE_SUMMARIZE_OFFSET + \
+                SCANNER_STRUCT_BYTE_OFFS(s6_tbl_session_summarize_d, range_has_posted)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_4_dma_cmd,
+                                r_qstate_addr,
+                                poller_range_has_posted_posted,
+                                poller_range_has_posted_posted)
+    
     // Reschedule if not range_full;
     
 _if6:    
     bcf         [c3], _endif6
     cmov        r_fsm_state_next, c3, SCANNER_STATE_RESTART_RANGE, \
                                       SCANNER_STATE_RESTART_EXPIRY_MAP // delay slot
-
 _if8:
-    bbeq        SESSION_KIVEC8_SESSION_BURST_FULL, 1, _else8
+    bbeq        SESSION_KIVEC8_BURST_FULL, 1, _else8
                                     
-    // DMA4 = reschedule with a PI increment
+    // DMA5 = reschedule with a PI increment
     
     SCANNER_DB_ADDR_SCHED_PIDX_INC(SESSION_KIVEC7_LIF,
                                    SESSION_KIVEC7_QTYPE)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_4_dma_cmd,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_5_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
                                 db_data_no_index_data)
@@ -109,30 +155,42 @@ _if8:
                                         
 _else8:
                                              
-    // Alternatively, DMA4 = reschedule with a burst timer delay.
-    // (Scheduler already disabled above so no need to sched eval.)
+    // Alternatively, reschedule with a burst timer delay.
+    // When using timer, send an update eval to quiet the scheduler
+    //
+    // DMA5 = scheduler update eval
     
-    SCANNER_DB_ADDR_FAST_TIMER(SESSION_KIVEC7_LIF)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_4_dma_cmd,
+    SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
+                               SESSION_KIVEC7_QTYPE)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_5_dma_cmd,
                                 r_db_addr,
-                                db_data_burst_timer_data,
-                                db_data_burst_timer_data)
+                                db_data_no_index_data,
+                                db_data_no_index_data)
+                                
+    // DMA6 = burst timer delay
+    
+    SCANNER_DB_ADDR_FAST_OR_SLOW_TIMER(SESSION_KIVEC8_RESCHED_USES_SLOW_TIMER,
+                                       SESSION_KIVEC7_LIF)
+    CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_6_dma_cmd,
+                                r_db_addr,
+                                db_data_burst_ticks_data,
+                                db_data_burst_ticks_data)
 _endif8:
-    CAPRI_DMA_CMD_FENCE(dma_p2m_4_dma_cmd)
+    CAPRI_DMA_CMD_FENCE(dma_p2m_5_dma_cmd)
     
 _endif6:
     
-    // DMA5 = increment poller PI last to ensure that, if poller were to
+    // DMA7 = increment poller PI last to ensure that, if poller were to
     // reschedule us, all our state would have been updated prior.
                                 
     add         r_qstate_addr, SESSION_KIVEC7_POLLER_QSTATE_ADDR, \
                 SCANNER_STRUCT_BYTE_OFFS(s7_tbl_session_poller_post_d, pi_0)
-    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(dma_p2m_5_dma_cmd,
+    CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP(dma_p2m_7_dma_cmd,
                                      r_qstate_addr,
                                      poller_posted_pi_pi,
                                      poller_posted_pi_pi)
     phvwr.e     p.fsm_state_next_state, r_fsm_state_next
-    CAPRI_DMA_CMD_FENCE_COND(dma_p2m_5_dma_cmd, c3)     // delay slot
+    CAPRI_DMA_CMD_FENCE_COND(dma_p2m_7_dma_cmd, c3)     // delay slot
     
 /*
  * Software poller queue is full, next fsm_state is to reevaluate
@@ -165,11 +223,12 @@ _poller_qfull:
                                 db_data_no_index_data)
     // DMA2 = Reschedule with a repost delay
     
-    SCANNER_DB_ADDR_FAST_TIMER(SESSION_KIVEC7_LIF)
+    SCANNER_DB_ADDR_TIMER(SCANNER_POLLER_QFULL_REPOST_TIMER,
+                          SESSION_KIVEC7_LIF)
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_2_dma_cmd,
                                              r_db_addr,
-                                             db_data_qfull_repost_timer_data,
-                                             db_data_qfull_repost_timer_data)
+                                             db_data_qfull_repost_ticks_data,
+                                             db_data_qfull_repost_ticks_data)
 
 
     .align
@@ -182,8 +241,6 @@ _poller_qfull:
 session_fsm_state_eval:
 
     CLEAR_TABLE0
-    DMA_CMD_PTR_INIT(dma_p2m_0)
-                
     seq         c1, SESSION_KIVEC8_EXPIRY_MAPS_FULL, r0
     cmov        r_fsm_state_next, c1, SCANNER_STATE_REEVALUATE, \
                                       SCANNER_STATE_RESTART_EXPIRY_MAP 
@@ -199,7 +256,7 @@ session_fsm_state_eval:
                                 fsm_state_next_state,
                                 fsm_state_next_state)
                                 
-    bbeq        SESSION_KIVEC8_SESSION_BURST_FULL, 1, _burst_full_resched
+    bbeq        SESSION_KIVEC8_BURST_FULL, 1, _burst_full_resched
     phvwr       p.fsm_state_next_state, r_fsm_state_next        // delay slot
                                     
     // DMA1 = reschedule with a PI increment
@@ -226,11 +283,12 @@ _burst_full_resched:
                                 db_data_no_index_data)
     // DMA2 = reschedule with a burst timer delay
     
-    SCANNER_DB_ADDR_FAST_TIMER(SESSION_KIVEC7_LIF)
+    SCANNER_DB_ADDR_FAST_OR_SLOW_TIMER(SESSION_KIVEC8_RESCHED_USES_SLOW_TIMER,
+                                       SESSION_KIVEC7_LIF)
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_2_dma_cmd,
                                              r_db_addr,
-                                             db_data_burst_timer_data,
-                                             db_data_burst_timer_data)
+                                             db_data_burst_ticks_data,
+                                             db_data_burst_ticks_data)
 
     .align
     
@@ -240,7 +298,6 @@ _burst_full_resched:
 session_scan_disable:
  
     CLEAR_TABLE0
-    DMA_CMD_PTR_INIT(dma_p2m_0)
                 
     // DMA0 = update FSM state
     

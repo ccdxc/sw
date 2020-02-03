@@ -114,15 +114,15 @@ static sdk_ret_t ftl_status_2_sdk_ret(ftl_status_code_t ftl_status);
 
 
 sdk_ret_t
-init(unsigned int lcore_id)
+init(void)
 {
     DeviceManager       *devmgr_if;
     sdk_ret_t           ret = SDK_RET_OK;
 
     if (rte_atomic16_test_and_set(&module_inited)) {
         platform_type = api::g_pds_state.platform_type();
-        PDS_TRACE_DEBUG("One-time initialization lcore_id %d platform_type %d",
-                        lcore_id, platform_type);
+        PDS_TRACE_DEBUG("One-time initialization platform_type %d",
+                        platform_type);
         devmgr_if = nicmgr::nicmgrapi::devmgr_if();
         SDK_ASSERT_TRACE_RETURN(devmgr_if, SDK_RET_ENTRY_NOT_FOUND,
                                 "failed to locate devmgr_if");
@@ -174,6 +174,38 @@ scanners_stop(bool quiesce_check)
 }
 
 sdk_ret_t
+scanners_start_single(enum ftl_qtype qtype,
+                      uint32_t qid)
+{
+    lif_queues_ctl_t    *qctl;
+    sdk_ret_t           ret = SDK_RET_INVALID_ARG;
+
+    /*
+     * start-single is expected to be called well after init time
+     * (since it would only be called from an active poller)
+     * so no need to incur the lif_init_done test.
+     */
+    qctl = qtype_queue_ctl(qtype);
+    if (qctl) {
+        ret = qctl->start_single(qid);
+    }
+    return ret;
+}
+
+sdk_ret_t
+pollers_qcount_get(uint32_t *ret_qcount)
+{
+    *ret_qcount = 0;
+    if (!lif_init_done()) {
+        return SDK_RET_RETRY;
+    }
+    if (pollers()) {
+        *ret_qcount = pollers()->qcount_get();
+    }
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 pollers_flush(void)
 {
     sdk_ret_t       ret = SDK_RET_OK;
@@ -188,19 +220,19 @@ pollers_flush(void)
 }
 
 sdk_ret_t
-scanners_start_single(enum ftl_qtype qtype,
-                      uint32_t qid)
+pollers_dequeue_burst(uint32_t qid,
+                      poller_slot_data_t *slot_data_buf,
+                      uint32_t slot_data_buf_sz,
+                      uint32_t *burst_count)
 {
-    lif_queues_ctl_t    *qctl;
-    sdk_ret_t           ret = SDK_RET_INVALID_ARG;
+    sdk_ret_t       ret = SDK_RET_NOOP;
 
-    /*
-     * start-single is expected to be called well after init time
-     * so no need to incur the lif_init_done test.
-     */
-    qctl = qtype_queue_ctl(qtype);
-    if (qctl) {
-        ret = qctl->start_single(qid);
+    if (!lif_init_done()) {
+        return SDK_RET_RETRY;
+    }
+    if (pollers()) {
+        ret = pollers()->dequeue_burst(qid, slot_data_buf,
+                                       slot_data_buf_sz, burst_count);
     }
     return ret;
 }
@@ -369,9 +401,11 @@ pollers_alloc(enum ftl_qtype qtype)
     PDS_TRACE_DEBUG("qtype %d qcount %d qdepth %d", qtype,
                     qident->qcount, qident->qdepth);
     if (qident->qcount) {
-        queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount, qident->qdepth);
+        queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount,
+                                                 qident->qdepth);
         SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], SDK_RET_OOM,
-                                "failed to allocate pollers for qtype %d", qtype);
+                                "failed to allocate pollers for qtype %d",
+                                qtype);
     }
     return SDK_RET_OK;
 }
@@ -388,9 +422,11 @@ scanners_alloc(enum ftl_qtype qtype)
     PDS_TRACE_DEBUG("qtype %d qcount %d qdepth %d", qtype,
                     qident->qcount, qident->qdepth);
     if (qident->qcount) {
-        queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount, qident->qdepth);
+        queues_ctl[qtype] = new lif_queues_ctl_t(qtype, qident->qcount,
+                                                 qident->qdepth);
         SDK_ASSERT_TRACE_RETURN(queues_ctl[qtype], SDK_RET_OOM,
-                                "failed to allocate scanners for qtype %d", qtype);
+                                "failed to allocate scanners for qtype %d",
+                                qtype);
     }
     return SDK_RET_OK;
 }
@@ -403,6 +439,7 @@ lif_queues_ctl_t::lif_queues_ctl_t(enum ftl_qtype qtype,
                                    uint32_t qdepth) :
     qtype(qtype),
     qcount(qcount),
+    qcount_actual(0),
     qdepth(qdepth)
 {
     spinlocks = (rte_spinlock_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTL_DEV_IMPL_LOCKS,
@@ -444,7 +481,6 @@ lif_queues_ctl_t::init(devcmd_t *owner_devcmd)
         break;
 
     default:
-        PDS_TRACE_ERR("unsupported qtype %d", qtype);
         ret = SDK_RET_ERR;
         break;
     }
@@ -494,7 +530,6 @@ lif_queues_ctl_t::start(devcmd_t *owner_devcmd)
         break;
 
     default:
-        PDS_TRACE_ERR("unsupported qtype %d", qtype);
         ret = SDK_RET_ERR;
         break;
     }
@@ -546,7 +581,6 @@ lif_queues_ctl_t::stop(bool quiesce_check,
         break;
 
     default:
-        PDS_TRACE_ERR("unsupported qtype %d", qtype);
         ret = SDK_RET_ERR;
         break;
     }
@@ -616,7 +650,59 @@ lif_queues_ctl_t::flush(void)
         break;
 
     default:
-        PDS_TRACE_ERR("unsupported qtype %d", qtype);
+        ret = SDK_RET_ERR;
+        break;
+    }
+    return ret;
+}
+
+sdk_ret_t
+lif_queues_ctl_t::dequeue_burst(uint32_t qid,
+                                poller_slot_data_t *slot_data_buf,
+                                uint32_t slot_data_buf_sz,
+                                uint32_t *burst_count,
+                                devcmd_t *owner_devcmd)
+{
+    devcmd_t        *devcmd;
+    sdk_ret_t       ret;
+
+    switch (qtype) {
+
+    case FTL_QTYPE_POLLER:
+
+        if ((qid < qcount) && slot_data_buf_sz && *burst_count) {
+            devcmd_t local_devcmd(ftl_lif, pollers_lock_one, pollers_unlock_one,
+                                  this, qid);
+            devcmd = owner_devcmd ? owner_devcmd : &local_devcmd;
+            devcmd->req().pollers_deq_burst.opcode = FTL_DEVCMD_OPCODE_POLLERS_DEQ_BURST;
+            devcmd->req().pollers_deq_burst.qtype = qtype;
+            devcmd->req().pollers_deq_burst.index = qid;
+            devcmd->req().pollers_deq_burst.burst_count = *burst_count;
+            devcmd->req().pollers_deq_burst.buf_sz = slot_data_buf_sz;
+
+            ret = devcmd->submit(nullptr, slot_data_buf);
+            if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
+                PDS_TRACE_ERR("failed devcmd: error %d", ret);
+            }
+
+            *burst_count = devcmd->rsp().pollers_deq_burst.read_count;
+            break;
+        }
+
+        ret = SDK_RET_INVALID_ARG;
+        break;
+
+    case FTL_QTYPE_SCANNER_SESSION:
+    case FTL_QTYPE_SCANNER_CONNTRACK:
+
+        /*
+         * HW queues have nothing to dequeue
+         */
+        *burst_count = 0;
+        ret = SDK_RET_OK;
+        break;
+
+    default:
         ret = SDK_RET_ERR;
         break;
     }
@@ -654,6 +740,7 @@ lif_queues_ctl_t::pollers_init(devcmd_t *devcmd)
     if (!platform_is_hw(platform_type)) {
         devcmd->req().pollers_init.qcount = 1;
     }
+    qcount_actual = devcmd->req().pollers_init.qcount;
 
     ret = devcmd->submit();
     if (ret != SDK_RET_OK) {
@@ -667,7 +754,7 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
 {
     queue_identity_t        *qident = &lif_ident.base.qident[qtype];
     queue_identity_t        *pollers_qident = &lif_ident.base.qident[FTL_QTYPE_POLLER];
-    p4pd_table_properties_t tprop;
+    p4pd_table_properties_t tprop = {0};
     sdk_ret_t               ret;
 
     devcmd->req_clr();
@@ -689,6 +776,9 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
         devcmd->req().scanners_init.scan_id_base = 0;
         devcmd->req().scanners_init.scan_table_sz = tprop.tabledepth;
     }
+    PDS_TRACE_DEBUG("qtype %d scan_addr_base 0x%llx scan_table_sz %u",
+                    qtype, tprop.base_mem_pa, tprop.tabledepth);
+
     devcmd->req().scanners_init.scan_burst_sz = qident->burst_sz;
     devcmd->req().scanners_init.scan_resched_time = qident->burst_resched_time_us;
     devcmd->req().scanners_init.poller_lif = lif_ident.base.hw_index;
@@ -702,9 +792,10 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
      */
     if (!platform_is_hw(platform_type)) {
         devcmd->req().scanners_init.qcount = 1;
-        devcmd->req().scanners_init.scan_table_sz = 64;
+        devcmd->req().scanners_init.scan_table_sz = 640;
         devcmd->req().scanners_init.poller_qcount = 1;
     }
+    qcount_actual = devcmd->req().scanners_init.qcount;
 
     ret = devcmd->submit();
     if (ret != SDK_RET_OK) {
@@ -903,7 +994,7 @@ scanners_unlock_one(void *user_arg,
     arg_scanners->unlock(idx);
 }
 
-static void __attribute__((unused))
+static void
 pollers_lock_one(void *user_arg,
                  uint32_t idx)
 {
@@ -911,7 +1002,7 @@ pollers_lock_one(void *user_arg,
     arg_pollers->lock(idx);
 }
 
-static void __attribute__((unused))
+static void
 pollers_unlock_one(void *user_arg,
                    uint32_t idx)
 {
