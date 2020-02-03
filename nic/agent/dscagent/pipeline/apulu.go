@@ -170,10 +170,6 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 
 		return
 	case types.Create:
-		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
-		if vrf.Status.VrfID == 0 {
-			vrf.Status.VrfID = a.InfraAPI.AllocateID(types.VrfID, types.VrfOffSet)
-		}
 	case types.Update:
 		// Get to ensure that the object exists
 		var existingVrf netproto.Vrf
@@ -194,8 +190,6 @@ func (a *ApuluAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []net
 			return nil, nil
 		}
 
-		// Reuse ID from store
-		vrf.Status.VrfID = existingVrf.Status.VrfID
 	case types.Delete:
 		var existingVrf netproto.Vrf
 		dat, err := a.InfraAPI.Read(vrf.Kind, vrf.GetKey())
