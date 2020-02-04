@@ -107,10 +107,13 @@ func ValidateMeta(oper types.Operation, kind string, meta api.ObjectMeta) error 
 // ValidateIPAddresses ensures that IP Address string is a valid v4 address. TODO v6 support
 func ValidateIPAddresses(ipAddresses ...string) (err error) {
 	for _, a := range ipAddresses {
-		ip := net.ParseIP(strings.TrimSpace(a))
-		if len(ip) == 0 {
-			err = errors.Wrapf(types.ErrInvalidIP, "IP Address: %s | Err: %v", a, types.ErrBadRequest)
-			return
+		aTrimmed := strings.TrimSpace(a)
+		if len(aTrimmed) > 0 {
+			ip := net.ParseIP(a)
+			if len(ip) == 0 {
+				err = errors.Wrapf(types.ErrInvalidIP, "IP Address: %s | Err: %v", a, types.ErrBadRequest)
+				return
+			}
 		}
 	}
 	return
