@@ -195,7 +195,7 @@ var typesMapRoute = map[string]*api.Struct{
 			"resource-version":        api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"router-id":               api.CLIInfo{Path: "Spec.BGPConfig.RouterId", Skip: false, Insert: "", Help: ""},
 			"self-link":               api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"shutdown":                api.CLIInfo{Path: "Spec.EVPNConfig.Shutdown", Skip: false, Insert: "", Help: ""},
+			"shutdown":                api.CLIInfo{Path: "Spec.BGPConfig.Neighbors[].Shutdown", Skip: false, Insert: "", Help: ""},
 			"tenant":                  api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"uuid":                    api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},

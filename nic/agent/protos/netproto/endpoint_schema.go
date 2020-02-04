@@ -61,13 +61,13 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"kind":                api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":              api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-address":         api.CLIInfo{Path: "Spec.MacAddress", Skip: false, Insert: "", Help: ""},
+			"migration":           api.CLIInfo{Path: "Spec.Migration", Skip: false, Insert: "", Help: ""},
 			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"network-name":        api.CLIInfo{Path: "Spec.NetworkName", Skip: false, Insert: "", Help: ""},
-			"node-uuid":           api.CLIInfo{Path: "Status.NodeUUID", Skip: false, Insert: "", Help: ""},
+			"node-uuid":           api.CLIInfo{Path: "Spec.NodeUUID", Skip: false, Insert: "", Help: ""},
 			"resource-version":    api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":           api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"status":              api.CLIInfo{Path: "Status.Migration.Status", Skip: false, Insert: "", Help: ""},
 			"tenant":              api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
 			"useg-vlan":           api.CLIInfo{Path: "Spec.UsegVlan", Skip: false, Insert: "", Help: ""},
 			"uuid":                api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
@@ -94,12 +94,6 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"endpoints": api.Field{Name: "endpoints", CLITag: api.CLIInfo{ID: "endpoints", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.Endpoint"},
 		},
 	},
-	"netproto.EndpointMigrationStatus": &api.Struct{
-		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointMigrationStatus{}) },
-		Fields: map[string]api.Field{
-			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
-		},
-	},
 	"netproto.EndpointSpec": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(EndpointSpec{}) },
 		Fields: map[string]api.Field{
@@ -118,6 +112,8 @@ var typesMapEndpoint = map[string]*api.Struct{
 			"HomingHostAddr": api.Field{Name: "HomingHostAddr", CLITag: api.CLIInfo{ID: "homing-host-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "homing-host-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"UsegVlan": api.Field{Name: "UsegVlan", CLITag: api.CLIInfo{ID: "useg-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "useg-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"netproto.EndpointStatus": &api.Struct{
@@ -127,7 +123,7 @@ var typesMapEndpoint = map[string]*api.Struct{
 
 			"NodeUUID": api.Field{Name: "NodeUUID", CLITag: api.CLIInfo{ID: "node-uuid", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "node-uuid", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
-			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.EndpointMigrationStatus"},
+			"Migration": api.Field{Name: "Migration", CLITag: api.CLIInfo{ID: "migration", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 }
