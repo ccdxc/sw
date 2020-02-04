@@ -323,6 +323,11 @@ class EntityManagement:
                 print("failed to find sync message, trying again")
         raise Exception("buffer sync failed")
 
+    def SyncLine(self, hdl = None):
+        if hdl is None:
+            hdl = self.hdl
+        self.__syncLine(hdl)
+
     def __sendlineExpect(self, line, expect, hdl, timeout):
         os.system("date")
         hdl.sendline(line)
@@ -491,6 +496,7 @@ class NaplesManagement(EntityManagement):
                 ret = self.SendlineExpect(GlobalOptions.password, ["#", pexpect.TIMEOUT], timeout = 3)
                 if ret == 1: self.SendlineExpect("", "#")
                 #login successful
+                self.SyncLine()
                 return
             except: 
                 print("failed to login, trying again")
@@ -542,6 +548,7 @@ class NaplesManagement(EntityManagement):
         self.SendlineExpect("/nic/tools/sysupdate.sh -p " + NAPLES_TMP_DIR + "/" + os.path.basename(GlobalOptions.image),
                             "#", timeout = UPGRADE_TIMEOUT)
         self.SendlineExpect("/nic/tools/fwupdate -s mainfwa", "#", trySync=True)
+        self.SyncLine()
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_MAIN:
         #    raise Exception('failed to switch firmware to mainfwa')
 
@@ -708,6 +715,7 @@ class NaplesManagement(EntityManagement):
             self.SendlineExpect("fwupdate -s goldfw", "#", trySync=True)
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
         #    raise Exception('failed to switch firmware to goldfw')
+        self.SyncLine()
 
     def Close(self):
         if self.hdl:
@@ -736,6 +744,7 @@ class NaplesManagement(EntityManagement):
     @_exceptionWrapper(_errCodes.NAPLES_INIT_FOR_UPGRADE_FAILED, "Switch to gold fw failed")
     def SwitchToGoldFW(self):
         self.SendlineExpect("fwupdate -s goldfw", "#", trySync=True)
+        self.SyncLine()
         #if self.ReadSavedFirmwareType() != FIRMWARE_TYPE_GOLD:
         #    raise Exception('failed to switch firmware to goldfw')
 
