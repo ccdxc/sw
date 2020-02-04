@@ -90,10 +90,10 @@ checktemperature(void)
         pal_write_hbmfatal_temp(g_sysmon_cfg.catalog->hbmtemperature_threshold());
         pal_write_qsfp_temp(temperature.qsfp1temp, QSFP_PORT1);
         pal_write_qsfp_temp(temperature.qsfp2temp, QSFP_PORT2);
-        pal_write_qsfp_alarm_temp(temperature.qsfp1warningtemp, QSFP_PORT1);
-        pal_write_qsfp_alarm_temp(temperature.qsfp2warningtemp, QSFP_PORT2);
-        pal_write_qsfp_warning_temp(temperature.qsfp1alarmtemp, QSFP_PORT1);
-        pal_write_qsfp_warning_temp(temperature.qsfp2alarmtemp, QSFP_PORT2);
+        pal_write_qsfp_alarm_temp(temperature.qsfp1alarmtemp, QSFP_PORT1);
+        pal_write_qsfp_alarm_temp(temperature.qsfp2alarmtemp, QSFP_PORT2);
+        pal_write_qsfp_warning_temp(temperature.qsfp1warningtemp, QSFP_PORT1);
+        pal_write_qsfp_warning_temp(temperature.qsfp2warningtemp, QSFP_PORT2);
 
         if (startingfrequency_1100 == 1) {
             changefrequency(temperature.hbmtemp);
