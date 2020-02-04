@@ -170,6 +170,7 @@ message BGPPeerStatus {
   option (venice.pdsaGetGlobOpts) = {
       OidLen: "AMB_BGP_PRST_OID_LEN",
       Mib:    "bgpPeerStatusTable",
+      FillFn: "bgp_peer_status_get_fill_func"
   };
   // unique key/identifier of peer
   bytes           Id            = 1;
@@ -184,9 +185,9 @@ message BGPPeerStatus {
 
   // internal only
   // BGP local IP address
-  types.IPAddress LocalAddr     = 1000 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
+  types.IPAddress LocalAddr     = 1000 [(venice.pdsaFields) = {Field: "local_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
   // BGP peer IP address
-  types.IPAddress PeerAddr      = 1001 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_LOCAL_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_LOCAL_ADDR_TYP_IX"}];
+  types.IPAddress PeerAddr      = 1001 [(venice.pdsaFields) = {Field: "remote_addr", SetKeyOidAddrIndex: "AMB_BGP_PRST_REMOTE_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_BGP_PRST_REMOTE_ADDR_TYP_IX"}];
 }
 
 // BGP peer object

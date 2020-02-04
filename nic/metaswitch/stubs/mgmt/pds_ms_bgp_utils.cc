@@ -158,6 +158,13 @@ bgp_peer_get_fill_func (pds::BGPPeerSpec&   req,
     oid[AMB_BGP_PER_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
 }
 
+NBB_VOID
+bgp_peer_status_get_fill_func (pds::BGPPeerStatus&   req,
+                               NBB_ULONG*            oid)
+{
+    oid[AMB_BGP_PRST_RM_ENT_INDEX_INDEX] = PDS_MS_BGP_RM_ENT_INDEX;
+}
+
 NBB_VOID 
 bgp_peer_set_fill_func (pds::BGPPeerSpec&   req,
                     AMB_GEN_IPS         *mib_msg,
