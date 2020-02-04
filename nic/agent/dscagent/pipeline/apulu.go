@@ -784,9 +784,28 @@ func (a *ApuluAPI) HandleRoutingConfig(oper types.Operation, rtcfg netproto.Rout
 	return
 }
 
-// ReplayConfigs unimplemented
+// ReplayConfigs replays last known configs from boltDB
 func (a *ApuluAPI) ReplayConfigs() error {
-	return errors.Wrapf(types.ErrNotImplemented, "Config Replays not implemented by Apulu Pipeline")
+	// Replay vrf objects
+	vrfs, err := a.InfraAPI.List("Vrf")
+	if err == nil {
+		for _, o := range vrfs {
+			var vrf netproto.Vrf
+			err := vrf.Unmarshal(o)
+			if err != nil {
+				log.Errorf("Failed to unmarshal object to Vrf, Err: %v", err)
+				continue
+			}
+			creator, ok := vrf.ObjectMeta.Labels["CreatedBy"]
+			if ok && creator == "Venice" {
+				log.Info("Replaying persisted Vrf object")
+				if _, err := a.HandleVrf(types.Create, vrf); err != nil {
+					log.Errorf("Failed to recreate Vrf: %v. Err: %v", vrf.GetKey(), err)
+				}
+			}
+		}
+	}
+	return errors.Wrapf(types.ErrNotImplemented, "Not all config replays not implemented by pipeline")
 }
 
 // PurgeConfigs unimplemented
