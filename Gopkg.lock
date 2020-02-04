@@ -2927,6 +2927,7 @@
     "github.com/docker/docker/api/types/mount",
     "github.com/docker/docker/api/types/network",
     "github.com/docker/docker/client",
+    "github.com/docker/go-connections/nat",
     "github.com/fatih/structs",
     "github.com/fsnotify/fsnotify",
     "github.com/ghodss/yaml",
