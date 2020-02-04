@@ -274,11 +274,29 @@ func (app *containerWorkload) BringUp(args ...string) error {
 
 	image := args[1]
 	name := args[0]
+
+	ports := ""
+	if len(args) > 2 {
+		ports = args[2]
+	}
+
+	pBindings := []utils.PortBinding{}
+	if ports != "" {
+		portMaps := strings.Split(ports, ",")
+		for _, portMap := range portMaps {
+			portProto := strings.Split(portMap, ":")
+			if len(portProto) == 2 {
+				bind := utils.PortBinding{Port: portProto[0], Proto: portProto[1]}
+				pBindings = append(pBindings, bind)
+			}
+
+		}
+	}
 	if image != "" {
-		app.containerHandle, err = utils.NewContainer(name, image, "", app.baseDir, ContainerPrivileged)
+		app.containerHandle, err = utils.NewContainer(name, image, "", app.baseDir, ContainerPrivileged, pBindings)
 	} else {
 		/* Workload already spun up */
-		app.containerHandle, err = utils.NewContainer(name, "", name, app.baseDir, ContainerPrivileged)
+		app.containerHandle, err = utils.NewContainer(name, "", name, app.baseDir, ContainerPrivileged, pBindings)
 	}
 
 	if err != nil || app.containerHandle == nil {

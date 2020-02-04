@@ -32,9 +32,9 @@ func stubRunCmd(cmdArgs []string, timeout int, background bool, shell bool,
 }
 
 func stubGetContainer(name string,
-	registry string, containerID string, mountDir string, privileged bool) (*Utils.Container, error) {
+	registry string, containerID string, mountDir string, privileged bool, pbindings []Utils.PortBinding) (*Utils.Container, error) {
 	var err error
-	stubNaplesContainer, err = Utils.NewContainer(naplesSimName, "alpine", "", "", privileged)
+	stubNaplesContainer, err = Utils.NewContainer(naplesSimName, "alpine", "", "", privileged, pbindings)
 	if err != nil {
 		log.Fatal("container create failed")
 	}

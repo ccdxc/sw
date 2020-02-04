@@ -4,6 +4,7 @@ import copy
 from collections import defaultdict
 
 import iota.harness.infra.types as types
+from iota.harness.infra.utils.logger import Logger as Logger
 
 __gl_testbed = None
 __gl_topology = None
@@ -74,6 +75,16 @@ class Workload:
             self.cpus = msg.cpus
             self.memory = msg.memory
             self.mgmt_ip = msg.mgmt_ip
+            Logger.info("Workload %s Mgmt IP %s" % (self.workload_name, self.mgmt_ip))
+            self.exposed_tcp_ports = []
+            self.exposed_udp_ports = []
+            for exposed_port in msg.exposed_ports:
+                if exposed_port.Proto == "tcp":
+                    self.exposed_tcp_ports.append(exposed_port.Port)
+                if exposed_port.Proto == "udp":
+                    self.exposed_udp_ports.append(exposed_port.Port)
+            Logger.info("Worklaod %s exposed tcp ports %s" % (self.workload_name, self.exposed_tcp_ports))
+            Logger.info("Workload %s exposed udp ports %s" % (self.workload_name, self.exposed_udp_ports))
         return
 
     def init(self, workload_name, node_name, ip_address, interface=None):

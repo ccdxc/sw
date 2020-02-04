@@ -395,6 +395,12 @@ message DvsInfo {
     string network_name                    = 2;
 }
 
+message ExposedPorts {
+    string  Port    = 1;
+    
+    string  Proto   = 2;
+}
+
 message Workload {
     // Workload Identifier
     string workload_name                    = 1;
@@ -454,6 +460,9 @@ message Workload {
 
     //If interface type is DVS
     DvsInfo  dvs                            = 20;
+
+    //Ports exposted to host for container workload
+    repeated ExposedPorts exposed_ports     = 21;
 }
 
 enum TriggerOp {

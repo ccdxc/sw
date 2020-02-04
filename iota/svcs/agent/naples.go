@@ -186,7 +186,7 @@ func (naples *naplesSimNode) bringUpNaples(name string, image string, ctrlIntf s
 	naples.name = name
 
 	var err error
-	if naples.container, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged); err != nil {
+	if naples.container, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged, nil); err != nil {
 		return errors.Wrap(err, "Naples sim not running!")
 	}
 
@@ -433,8 +433,13 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 func (dnode *dataNode) setupWorkload(wload Workload.Workload, in *iota.Workload) (*iota.Workload, error) {
 	/* Create working directory and set that as base dir */
 	wDir := Common.DstIotaEntitiesDir + "/" + in.GetWorkloadName()
+
+	ports := ""
+	for _, wport := range in.ExposedPorts {
+		ports = ports + wport.Port + ":" + wport.Proto + ","
+	}
 	wload.SetBaseDir(wDir)
-	if err := wload.BringUp(in.GetWorkloadName(), in.GetWorkloadImage()); err != nil {
+	if err := wload.BringUp(in.GetWorkloadName(), in.GetWorkloadImage(), ports); err != nil {
 		msg := fmt.Sprintf("Error in workload image bring up : %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)
 		resp := &iota.Workload{WorkloadStatus: &iota.IotaAPIResponse{ApiStatus: iota.APIResponseType_API_SERVER_ERROR, ErrorMsg: msg}}
@@ -1729,7 +1734,7 @@ func (naples *naplesMultiSimNode) bringUpNaples(index uint32, name string, macAd
 
 	time.Sleep(5 * time.Second)
 
-	if naplesContainer, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged); err != nil {
+	if naplesContainer, err = Utils.GetContainer(name, "", name, "", Workload.ContainerPrivileged, nil); err != nil {
 		return "", errors.Wrap(err, "Naples sim not running!")
 	}
 

@@ -40,6 +40,7 @@
 		VeniceConfig
 		WorkloadMsg
 		DvsInfo
+		ExposedPorts
 		Workload
 		TriggerMsg
 		Command

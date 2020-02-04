@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/go-connections/nat"
+
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -534,7 +536,12 @@ func (ctr *Container) RunCommand(cmdHandle CommandHandle, timeout uint32) (Comma
 	return CommandResp{}, nil
 }
 
-func bringUpAppContainer(name string, registry string, mountTarget string, privileged bool) (*string, error) {
+type PortBinding struct {
+	Proto string
+	Port  string
+}
+
+func bringUpAppContainer(name string, registry string, mountTarget string, privileged bool, pBindings []PortBinding) (*string, error) {
 	var entryPoint []string
 	opts := types.ImagePullOptions{}
 	out, err := _DockerClient.ImagePull(_DockerCtx,
@@ -570,17 +577,30 @@ func bringUpAppContainer(name string, registry string, mountTarget string, privi
 		entryPoint = append(entryPoint, "/usr/sbin/init")
 	}
 
+	portBindings := nat.PortMap{}
+	exposedPorts := nat.PortSet{}
+	if pBindings != nil {
+		for _, bind := range pBindings {
+			key := bind.Port + "/" + bind.Proto
+			portBindings[nat.Port(key)] = []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: bind.Port}}
+			exposedPorts[nat.Port(key)] = struct{}{}
+		}
+
+	}
+
 	resp, err := _DockerClient.ContainerCreate(_DockerCtx, &container.Config{
 		Image:           registry,
-		NetworkDisabled: true,
+		NetworkDisabled: false,
 		AttachStdin:     true,
 		AttachStdout:    true,
 		Tty:             true,
 		StopSignal:      "SIGKILL",
 		Entrypoint:      entryPoint,
+		ExposedPorts:    exposedPorts,
 	}, &container.HostConfig{AutoRemove: true,
-		Mounts:     mounts,
-		Privileged: privileged},
+		Mounts:       mounts,
+		Privileged:   privileged,
+		PortBindings: portBindings},
 		nil, name)
 	if err != nil {
 		fmt.Println(err.Error(), mountDir)
@@ -599,7 +619,7 @@ func bringUpAppContainer(name string, registry string, mountTarget string, privi
 
 //NewContainer Create a new instance
 func NewContainer(name string,
-	registry string, containerID string, mount string, privileged bool) (*Container, error) {
+	registry string, containerID string, mount string, privileged bool, pbindings []PortBinding) (*Container, error) {
 	_container := new(Container)
 	_container.client = _DockerClient
 	_container.ctx = _DockerCtx
@@ -610,7 +630,7 @@ func NewContainer(name string,
 		_container.ctrID = containerID
 		_container.NS.Init(false)
 	} else {
-		id, cErr := bringUpAppContainer(name, registry, mount, privileged)
+		id, cErr := bringUpAppContainer(name, registry, mount, privileged, pbindings)
 		if cErr != nil {
 			return nil, cErr
 		}

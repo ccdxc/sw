@@ -20,6 +20,12 @@ ipv4_subnet_allocator = {} # network name(config.yaml) --> list of ipv4 addresse
 ipv6_subnet_allocator = {} # network name(config.yaml) --> list of ipv6 addresses
 classic_mac_allocator = resmgr.MacAddressStep("00AA.0000.0001", "0000.0000.0001")
 
+__max_udp_ports = 8
+__max_tcp_ports = 8
+
+portUdpAllocator = resmgr.TestbedPortAllocator(20000)
+portTcpAllocator = resmgr.TestbedPortAllocator(30000)
+
 #This class is responsible for testbed vlan allocation
 #It maintain mapping for each config vlan to testbed vlan
 class NodeVlan:
@@ -138,6 +144,7 @@ def __add_config_worklads(req, target_node = None):
 
         wl_msg.workload_type = api.GetWorkloadTypeForNode(wl_msg.node_name)
         wl_msg.workload_image = api.GetWorkloadImageForNode(wl_msg.node_name)
+        wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
         wl_msg.cpus = api.GetWorkloadCpusForNode(wl_msg.node_name)
         wl_msg.memory = api.GetWorkloadMemoryForNode(wl_msg.node_name)
 
@@ -159,6 +166,18 @@ def GetIPv6Allocator(nw_name):
 
 def GetMacAllocator():
     return copy.deepcopy(classic_mac_allocator)
+
+def _add_exposed_ports(wl_msg):
+    if  wl_msg.workload_type != topo_svc.WORKLOAD_TYPE_CONTAINER:
+        return
+    for _ in range(__max_tcp_ports):
+        tcp_port = wl_msg.exposed_ports.add()
+        tcp_port.Port = str(portTcpAllocator.Alloc())
+        tcp_port.Proto = "tcp"
+    for _ in range(__max_udp_ports):
+        udp_port = wl_msg.exposed_ports.add()
+        udp_port.Port = str(portUdpAllocator.Alloc())
+        udp_port.Proto = "udp"      
 
 def __add_config_classic_workloads(req, target_node = None):
     classic_yml = "{}/config.yml".format(api.GetTopologyDirectory())
@@ -250,6 +269,8 @@ def __add_config_classic_workloads(req, target_node = None):
                 wl_msg.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
                 wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
+                wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
+                _add_exposed_ports(wl_msg)
     # Forming subif  workloads
     nw_specs = {} # ith subif -> nw_spec
     ipv4_allocators = {} # ith subif -> ipv4_allocator
@@ -321,6 +342,8 @@ def __add_config_classic_workloads(req, target_node = None):
                 wl_msg.parent_interface = node_intf
                 wl_msg.workload_type = api.GetWorkloadTypeForNode(wl.node)
                 wl_msg.workload_image = api.GetWorkloadImageForNode(wl.node)
+                wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
+                _add_exposed_ports(wl_msg)
                 for a in sec_ipv4_allocators[i]:
                     wl_msg.sec_ip_prefix.append(str(next(a))+"/"+str(nw_spec.ipv4.prefix_length))
                 for a in sec_ipv6_allocators[i]:
@@ -498,6 +521,7 @@ def __readd_classic_workloads(target_node = None):
         wl_msg.parent_interface = wl.parent_interface
         wl_msg.workload_type = wl.workload_type
         wl_msg.workload_image = wl.workload_image
+        wl_msg.mgmt_ip = api.GetMgmtIPAddress(wl_msg.node_name)
     if len(req.workloads):
         resp = api.AddWorkloads(req)
         if resp is None:
