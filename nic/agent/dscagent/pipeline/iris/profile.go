@@ -57,22 +57,21 @@ func convertProfile(profile netproto.Profile) *halapi.SysSpec {
 
 func convertFwdMode(fwdMode string) halapi.ForwardMode {
 	switch strings.ToLower(fwdMode) {
-	case strings.ToLower(string(netproto.ProfileSpec_TRANSPARENT)):
+	case strings.ToLower(netproto.ProfileSpec_TRANSPARENT.String()):
 		return halapi.ForwardMode_FWD_MODE_TRANSPARENT
-	case strings.ToLower(string(netproto.ProfileSpec_USEG)):
+	case strings.ToLower(netproto.ProfileSpec_USEG.String()):
 		return halapi.ForwardMode_FWD_MODE_MICROSEG
 	default:
 		return halapi.ForwardMode_FWD_MODE_NONE
 	}
 }
-
 func convertPolicyMode(policyMode string) halapi.PolicyMode {
-	switch policyMode {
-	case strings.ToLower(string(netproto.ProfileSpec_BASENET)):
+	switch strings.ToLower(policyMode) {
+	case strings.ToLower(netproto.ProfileSpec_BASENET.String()):
 		return halapi.PolicyMode_POLICY_MODE_BASE_NET
-	case strings.ToLower(string(netproto.ProfileSpec_FLOWAWARE)):
+	case strings.ToLower(netproto.ProfileSpec_FLOWAWARE.String()):
 		return halapi.PolicyMode_POLICY_MODE_FLOW_AWARE
-	case strings.ToLower(string(netproto.ProfileSpec_ENFORCED)):
+	case strings.ToLower(netproto.ProfileSpec_ENFORCED.String()):
 		return halapi.PolicyMode_POLICY_MODE_ENFORCE
 	default:
 		return halapi.PolicyMode_POLICY_MODE_NONE

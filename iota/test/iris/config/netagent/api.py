@@ -17,9 +17,15 @@ base_url = "http://"+ip+":8888/"
 AGENT_URLS = []
 AGENT_NODES = []
 gl_hw = False
+init_done = False
 
 def Init(agent_nodes, hw=False):
     global AGENT_URLS
+    global init_done
+
+    if init_done:
+        return
+
     for node in agent_nodes:
         agent_ip = api.GetNaplesMgmtIpAddress(node)
         if agent_ip == None:
@@ -32,6 +38,7 @@ def Init(agent_nodes, hw=False):
     global gl_hw
     gl_hw = hw
 
+    init_done = True
     return
 
 def __get_base_url(nic_ip):
@@ -316,6 +323,18 @@ def DeleteAllowAllPolicy(node_names = None, namespaces = None):
         DeleteConfigObjects(__allow_all_policies[ns], ignore_error=True)
         RemoveConfigObjects(__allow_all_policies[ns])
 
+def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True):
+    profile_json = api.GetTopologyDirectory() + "/" + "profile.json"
+    objects = QueryConfigs("profile")
+
+    if len(objects) == 0:
+        objects = AddOneConfig(profile_json)
+
+    for obj in objects:
+        obj.spec.fwd_mode = fwd_mode
+        obj.spec.policy_mode = policy_mode
+
+    return PushConfigObjects(objects) if push else api.types.status.SUCCESS
 
 def __findWorkloadsByIP(ip):
     wloads = api.GetWorkloads()
