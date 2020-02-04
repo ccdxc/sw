@@ -86,8 +86,7 @@ class TunnelObject(base.ConfigObjectBase):
                 elif spec.type == 'underlay-ecmp':
                     self.__nhtype = topo.NhType.UNDERLAY_ECMP
                     self.NEXTHOPGROUP = None
-        if utils.IsDol():
-            self.RemoteIP = str(self.RemoteIPAddr) # for testspec
+        self.RemoteIP = str(self.RemoteIPAddr) # for testspec
         if getattr(spec, 'macaddress', None) != None:
             self.MACAddr = spec.macaddress
         else:

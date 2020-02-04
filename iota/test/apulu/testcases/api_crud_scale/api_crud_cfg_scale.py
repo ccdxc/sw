@@ -2,6 +2,18 @@
 import iota.harness.api as api
 import iota.test.apulu.config.api as config_api
 
+MEMCMDS = ["free -m", "/data/ps_mem.py", "/nic/bin/pdsctl show system memory"]
+
+def RunMemoryCmds(node):
+    req = api.Trigger_CreateExecuteCommandsRequest()
+    for cmd in MEMCMDS:
+        api.Trigger_AddNaplesCommand(req, node, cmd)
+    resp = api.Trigger(req)
+    commands = resp.commands
+    for cmd in commands:
+        api.PrintCommandResults(cmd)
+    return
+
 def TriggerAPIConfig(nodes, objType, objClient, operFn):
     result = api.types.status.SUCCESS
     cfgFn = getattr(objClient, operFn, None)
@@ -9,13 +21,15 @@ def TriggerAPIConfig(nodes, objType, objClient, operFn):
         api.Logger.critical(f"Invalid operation {operFn} on {objType}")
         return api.types.status.FAILURE
     for node in nodes:
+        api.Logger.info(f"API_CRUD_CFG_SCALE : Oper {operFn} for {objType} in {node}")
         if not cfgFn(node):
             api.Logger.error(f"API_CRUD_CFG_SCALE : Oper {operFn} failed for {objType} in {node}")
             result = api.types.status.FAILURE
+        RunMemoryCmds(node)
     return result
 
 def Setup(tc):
-    api.Logger.error(f"API_CRUD_CFG_SCALE : TC for {tc.iterators.objtype}")
+    api.Logger.info(f"API_CRUD_CFG_SCALE : TC for {tc.iterators.objtype}")
     result = api.types.status.SUCCESS
     tc.objClient = config_api.GetObjClient(tc.iterators.objtype)
     tc.Nodes = api.GetNaplesHostnames()

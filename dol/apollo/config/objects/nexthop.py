@@ -377,6 +377,30 @@ class NexthopObjectClient(base.ConfigClientBase):
         list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return True
 
+    def UpdateObjects(self, node):
+        if utils.IsPipelineApulu():
+            cfgObjects = self.__underlay_objs[node].values()
+        else:
+            cfgObjects = self.Objects(node)
+        logger.info(f"Updating {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Update(), cfgObjects))
+        if not all(result):
+            logger.info(f"Updating {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
+
+    def RollbackUpdateObjects(self, node):
+        if utils.IsPipelineApulu():
+            cfgObjects = self.__underlay_objs[node].values()
+        else:
+            cfgObjects = self.Objects(node)
+        logger.info(f"RollbackUpdate {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.RollbackUpdate(), cfgObjects))
+        if not all(result):
+            logger.info(f"RollbackUpdate {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
+
 client = NexthopObjectClient()
 
 def GetMatchingObjects(selectors):

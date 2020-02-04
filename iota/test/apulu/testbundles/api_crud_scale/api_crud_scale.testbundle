@@ -16,8 +16,7 @@ testcases:
     -   name    : API_CRUD_SCALE_UPDATE
         testcase: testcases.api_crud_scale.api_crud_cfg_scale
         stress  : True
-        enable  : False
         iterators :
             type    : nested
-            objtype : [ subnet ]
+            objtype : [ subnet, interface, tunnel, device, nexthop ]
             oper    : [ update ]
