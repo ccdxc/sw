@@ -64,6 +64,8 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 		return err
 	}
 
+	nws, _ := host.ListNetworks()
+
 	for _, vm := range vms {
 		if vm == nil {
 			continue
@@ -93,13 +95,14 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 					log.Errorf("TOPO SVC | CleanUpNode | Clean up on node %v failed, IPAddress: %v , Err: %v", n.GetNodeInfo().Name, ip, err)
 				}
 			}
-
-			err = vm.ReconfigureNetwork(constants.EsxNaplesMgmtNetwork, constants.EsxDefaultNetwork)
-			if err != nil {
-				log.Errorf("TOPO SVC | CleanUpNode | Reconfiguring mgmt naples mgmt network failed %v done, IPAddress: %v %v", n.GetNodeInfo().Name, ip, err.Error())
+			if nws != nil {
+				for _, nw := range nws {
+					if strings.Contains(nw.Name, constants.EsxNaplesMgmtNetwork) {
+						vm.ReconfigureNetwork(nw.Name, constants.EsxDefaultNetwork)
+					}
+				}
 			}
-
-			log.Infof("TOPO SVC | CleanUpNode | Clean up control VM node %v done, IPAddress: %v", n.GetNodeInfo().Name, ip)
+			log.Errorf("TOPO SVC | CleanUpNode | Clean up control VM node %v done, IPAddress: %v", n.Node.Name, ip)
 			continue
 		}
 
@@ -143,7 +146,7 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 		runner.Run(addr, cmd, constants.RunCommandForeground)
 	}
 
-	if nws, err := host.ListNetworks(); err == nil {
+	if nws != nil {
 		delNws := []vmware.NWSpec{}
 		for _, nw := range nws {
 			if nw.Name != "VM Network" && nw.Name != constants.EsxDefaultNetwork {

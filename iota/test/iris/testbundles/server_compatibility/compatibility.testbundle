@@ -1,10 +1,11 @@
 meta:
     name    : server
-    os      : [ linux ]
+    os      : [ linux, esx ]
     nics    : [ pensando ]
     targetcount : 1
 
 testcases:
+# assuming 14min per reboot
 
     -   name    : APC-Reboot
         testcase: testcases.server.reboot
@@ -15,9 +16,10 @@ testcases:
             type            : nested
             reboot_method   : ['apc']
         args    :
-            timeout: 42200
+            timeout: 360000
             type: host
-            reboots: 55
+            # 60% of the test cycle time spent on APC power cycle
+            reboots: 195
 
     -   name    : IPMI-Reboot
         testcase: testcases.server.reboot
@@ -28,9 +30,10 @@ testcases:
             type            : nested
             reboot_method   : [ 'ipmi']
         args    :
-            timeout: 27900
+            timeout: 360000
             type: host
-            reboots: 35
+            # 30% of the test cycle time spent on IPMI power cycle
+            reboots: 60
 
     -   name    : OS-Reboot
         testcase: testcases.server.reboot
@@ -41,7 +44,7 @@ testcases:
             type            : nested
             reboot_method   : [ 'reboot']
         args    :
-            timeout: 13500
+            timeout: 360000
             type: host
-            reboots: 15
-
+            # 10% of the test cycle time spent on OS Reboot
+            reboots: 50

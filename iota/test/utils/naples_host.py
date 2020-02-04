@@ -3,6 +3,7 @@ import yaml
 
 OS_TYPE_LINUX = "linux"
 OS_TYPE_BSD   = "freebsd"
+OS_TYPE_ESX   = "esx"
 
 LinuxDriverPath   = api.HOST_NAPLES_DIR + "/drivers-linux-eth/drivers/eth/ionic/ionic.ko"
 FreeBSDDriverPath = api.HOST_NAPLES_DIR + "/drivers-freebsd-eth/sys/modules/ionic/ionic.ko"

@@ -8,39 +8,39 @@ rebase: true
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + baremetal Esx test cases
-# compat-ucs220-skylake:
-#   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
-#   owners: ["email:dbarsky@pensando.io"]
-#   area:
-#   sub-area:
-#   feature:
-#   max-duration: 24h
-#   build-dependencies:
-#     - build-iris-arm
-#     - build-iota
-#   clusters:
-#     - image: build-9
-#       count: 1
-#       resources:
-#         servers:
-#         - type: server-d
-#         nic-type: naples
-#   provision:
-#       username: vm
-#       password: vm
-#       vars:
-#          BmOs: linux
-#          VmOs: linux
-#          EsxUsername: root
-#          EsxPassword: Pen0trl!
-
- compat-DELL-R6525:
+ compat-ucs220-skylake-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
    owners: ["email:dbarsky@pensando.io"]
    area:
    sub-area:
    feature:
-   max-duration: 24h
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-9
+       count: 1
+       resources:
+         servers:
+         - type: server-d
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ compat-DELL-R6525-linux:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
    build-dependencies:
      - build-iris-arm
      - build-iota
@@ -60,13 +60,13 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
  
- compat-HPE-DL325:
+ compat-HPE-DL325-linux:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite compatibility"]
    owners: ["email:dbarsky@pensando.io"]
    area:
    sub-area:
    feature:
-   max-duration: 24h
+   max-duration: 72h
    build-dependencies:
      - build-iris-arm
      - build-iota

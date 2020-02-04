@@ -269,6 +269,8 @@ def AddNaplesWorkloads(node_if_info):
 def Main(tc):
     nodes = api.GetWorkloadNodeHostnames()
     for node in nodes:
+        if api.GetNodeOs(node) == "esx":
+            continue
         api.Logger.debug("Creating NodeInterface for node: %s" % node)
         node_if_info = GetNodeInterface(node)
         api.Logger.debug("Adding MgmtWorkloads for node: %s" % node)

@@ -358,7 +358,7 @@ func (node *esxHwNode) getNaplesMgmtIntf(hint string) (string, error) {
 
 }
 
-func (node *esxHwNode) createNaplesMgmtSwitch(hint string) error {
+func (node *esxHwNode) createNaplesMgmtSwitch(inst int, hint string) error {
 
 	naplesMgmtIntf, err := node.getNaplesMgmtIntf(hint)
 	if err != nil || naplesMgmtIntf == "" {
@@ -374,7 +374,8 @@ func (node *esxHwNode) createNaplesMgmtSwitch(hint string) error {
 		//return errors.Wrap(err, "Failed to create naples mgmt switch")
 	}
 
-	nws := []vmware.NWSpec{{Name: Common.EsxNaplesMgmtNetwork, Vlan: 0}}
+	mgmtNetwork := getMgmtNetwork(inst)
+	nws := []vmware.NWSpec{{Name: mgmtNetwork, Vlan: 0}}
 
 	return node.host.AddNetworks(nws, vsspec)
 
@@ -448,9 +449,13 @@ func (node *esxHwNode) setUpNaplesMgmtIP(hint string) (string, error) {
 	return naplesIP, nil
 }
 
-func (node *esxHwNode) setUpNaplesMgmtNetwork(hint string) error {
+func getMgmtNetwork(inst int) string {
+	return Common.EsxNaplesMgmtNetwork + "-" + strconv.Itoa(inst)
+}
 
-	if err := node.createNaplesMgmtSwitch(hint); err != nil {
+func (node *esxHwNode) setUpNaplesMgmtNetwork(inst int, hint string) error {
+
+	if err := node.createNaplesMgmtSwitch(inst, hint); err != nil {
 		return errors.Wrap(err, "Failed to create naples mgmt switch")
 	}
 
@@ -459,7 +464,9 @@ func (node *esxHwNode) setUpNaplesMgmtNetwork(hint string) error {
 		return errors.Wrap(err, "Failed to find control VM")
 	}
 
-	err = ctrlVM.ReconfigureNetwork(Common.EsxDefaultNetwork, Common.EsxNaplesMgmtNetwork)
+	mgmtNetwork := getMgmtNetwork(inst)
+
+	err = ctrlVM.ReconfigureNetwork(Common.EsxDefaultNetwork, mgmtNetwork)
 	if err != nil {
 		return errors.Wrap(err, "Failed to reconfigure Ctrl VM to Naples Mgmt network")
 	}
@@ -507,10 +514,10 @@ func (node *esxHwNode) addNaplesEntity(in *iota.Node) error {
 	for _, entityEntry := range in.GetEntities() {
 		var wload Workload.Workload
 		if entityEntry.GetType() == iota.EntityType_ENTITY_TYPE_NAPLES {
-			for _, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
+			for inst, naplesCfg := range in.GetNaplesConfigs().GetConfigs() {
 				if naplesCfg.Name == entityEntry.Name {
 					if !in.Reload {
-						if err := node.setUpNaplesMgmtNetwork(naplesCfg.NicHint); err != nil {
+						if err := node.setUpNaplesMgmtNetwork(inst, naplesCfg.NicHint); err != nil {
 							return err
 						}
 					}

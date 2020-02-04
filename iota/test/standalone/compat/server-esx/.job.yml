@@ -1,0 +1,94 @@
+---
+version: 2.0
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/iota/test/standalone"
+rebase: true
+
+# e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
+e2e-targets:
+  # baremetal + baremetal Esx test cases
+ compat-ucs220-skylake-esx:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+         - type: server-d
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+ compat-DELL-R6525-esx:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+         - type: server-dell-r6525
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+ 
+ compat-HPE-DL325-esx:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+         - type: server-hpe-dl325
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
+logfiles:
+  - /sw/iota/iota_sanity_logs.tar.gz
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/naples-disruptive-upgrade-tech-support.tar.gz-node2
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node1
+  - /sw/iota/logs/hostpin_vm/tcdata/COPY_TECH_SUPPORT_1/pre-upgrade-logs.tar.gz-node2

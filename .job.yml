@@ -140,8 +140,10 @@ jobs:
     labels: ["daily"]
   iota/test/standalone/regression/linkmgr:
     labels: ["daily"]
-  iota/test/standalone/compat/server:
-    labels: ["compat"]
+  iota/test/standalone/compat/server-linux:
+    labels: ["compat-linux"]
+  iota/test/standalone/compat/server-esx:
+    labels: ["compat-esx"]
 #  iota/test/venice/regression:
 #    labels: ["daily"]
   iota/test/venice/sim:
@@ -395,5 +397,3 @@ dependencies:
   penctl:
     - reference: iota/test/standalone/sanity/esx
     - reference: iota/test/standalone/sanity/linux
-  iota/test/iris/testcases/server:
-    - reference: iota/test/standalone/compat/server

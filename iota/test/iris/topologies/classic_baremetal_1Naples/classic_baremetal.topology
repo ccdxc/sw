@@ -13,3 +13,6 @@ nodes:
         freebsd:
             type    : WORKLOAD_TYPE_BARE_METAL
             image   : "N/A"
+        esx:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"

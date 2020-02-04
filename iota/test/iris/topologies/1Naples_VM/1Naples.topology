@@ -7,5 +7,14 @@ nodes:
       name: naples1
       role: PERSONALITY_NAPLES
       workloads:
-            type:   WORKLOAD_TYPE_VM
-            image:  "build-115"
+        esx:
+            type       : WORKLOAD_TYPE_VM
+            image      : "build-199"
+            ncpu       : 4
+            memory     : 4
+            #Max number of concurrent workloads
+            concurrent : 25
+        linux:
+            type    : WORKLOAD_TYPE_BARE_METAL
+            image   : "N/A"
+

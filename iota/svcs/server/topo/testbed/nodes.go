@@ -271,8 +271,17 @@ func (n *TestNode) RestartNode(method string) error {
 				if err := h.PowerOn(n.ApcInfo.Port); err != nil {
 					log.Errorf("failed to power on port %s of apc %s. error was: %v", n.ApcInfo.Port, n.ApcInfo.Ip, err)
 				}
-			}
-		}
+                                time.Sleep(2*time.Minute)
+                                 cmd := fmt.Sprintf("ipmitool -I lanplus -H %s -U %s -P %s power on",
+                                       n.CimcIP, n.CimcUserName, n.CimcPassword)
+                                splitCmd := strings.Split(cmd, " ")
+                                if stdout, err := exec.Command(splitCmd[0], splitCmd[1:]...).CombinedOutput(); err != nil {
+            			    log.Errorf("TOPO SVC | Failed to call ipmi power on: %v", stdout)
+            			} else {
+                		    log.Errorf("TOPO SVC | ipmi power on Success")
+            			}
+	    		}	
+	    	}
 	}
 
 	if n.GrpcClient != nil {

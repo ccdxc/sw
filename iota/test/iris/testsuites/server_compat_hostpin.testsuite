@@ -1,0 +1,35 @@
+meta:
+    name        : server_compat_hostpin 
+    description : Server Compatibility Hostpin 
+    mode        : hardware
+    cfgmode     : netagent
+    nicmode     : hostpin
+    enable      : True
+    os          : [ esx, linux ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/1Naples_VM/1Naples.topology
+    config  :
+        - step : utils.cleanup
+
+common:
+    verifs:
+        # N/A
+    debugs:
+        # N/A
+    setup:
+        # N/A
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        # - networking/connectivity.testbundle
+        - server_compatibility/compatibility.testbundle
+
+teardown:
+        # N/A
