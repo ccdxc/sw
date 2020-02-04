@@ -117,8 +117,8 @@ action ingress_recirc() {
 }
 
 action p4i_inter_pipe() {
-    if ((ingress_recirc.flow_done == FALSE) or
-        (ingress_recirc.local_mapping_done == FALSE)) {
+    if ((control_metadata.flow_done == FALSE) or
+        (control_metadata.local_mapping_done == FALSE)) {
         ingress_recirc();
         // return
     }

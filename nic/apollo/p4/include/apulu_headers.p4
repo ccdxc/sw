@@ -92,9 +92,6 @@ header_type apulu_ingress_recirc_header_t {
     fields {
         flow_ohash          : 32;
         local_mapping_ohash : 32;
-        pad                 : 6;
-        flow_done           : 1;
-        local_mapping_done  : 1;
     }
 }
 

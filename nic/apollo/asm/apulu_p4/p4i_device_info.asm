@@ -12,19 +12,17 @@ struct phv_                 p;
 p4i_device_info:
     sub             r1, k.capri_p4_intrinsic_frame_size, \
                         k.offset_metadata_l2_1
-    or              r7, k.capri_intrinsic_tm_oq_s3_e4, \
-                        k.capri_intrinsic_tm_oq_s0_e2, 2
-    sne             c1, r7, TM_P4_RECIRC_QUEUE
-    phvwr.c1        p.capri_intrinsic_tm_iq, r7
+    sne             c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
+    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq
     phvwr.!c1       p.capri_intrinsic_tm_oq, k.capri_intrinsic_tm_iq
     bbeq            k.ingress_recirc_valid, FALSE, p4i_recirc_done
     phvwr           p.capri_p4_intrinsic_packet_len, r1
 
 p4i_recirc:
-    xor             r1, k.ingress_recirc_local_mapping_done, 0x1
-    phvwr           p.control_metadata_local_mapping_ohash_lkp, r1
-    xor             r1, k.ingress_recirc_flow_done, 0x1
-    phvwr           p.control_metadata_flow_ohash_lkp, r1
+    sne             c1, k.ingress_recirc_local_mapping_ohash, 0
+    phvwr.c1        p.control_metadata_local_mapping_ohash_lkp, TRUE
+    sne             c1, k.ingress_recirc_flow_ohash, 0
+    phvwr.c1        p.control_metadata_flow_ohash_lkp, TRUE
 
 p4i_recirc_done:
     seq             c1, k.ethernet_1_dstAddr, \
@@ -50,7 +48,5 @@ p4i_recirc_done:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4i_device_info_error:
     phvwr           p.capri_intrinsic_drop, 1
-    or              r7, k.capri_intrinsic_tm_oq_s3_e4, \
-                        k.capri_intrinsic_tm_oq_s0_e2, 2
-    sne.e           c1, r7, TM_P4_RECIRC_QUEUE
-    phvwr.c1        p.capri_intrinsic_tm_iq, r7
+    sne.e           c1, k.capri_intrinsic_tm_oq, TM_P4_RECIRC_QUEUE
+    phvwr.c1        p.capri_intrinsic_tm_iq, k.capri_intrinsic_tm_oq

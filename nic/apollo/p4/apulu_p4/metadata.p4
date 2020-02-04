@@ -71,6 +71,8 @@ header_type control_metadata_t {
         binding_check_enabled   : 1;
         mapping_done            : 1;
         session_tracking_en     : 1;
+        local_mapping_done      : 1;
+        flow_done               : 1;
     }
 }
 

@@ -35,13 +35,13 @@ label_flow_miss:
     phvwrpair.c7    p.p4i_to_arm_flow_hit, TRUE, \
                         p.p4i_to_arm_flow_role, d.ipv4_flow_hash_d.flow_role
     phvwr.e         p.control_metadata_flow_miss, TRUE
-    phvwr.f         p.ingress_recirc_flow_done, TRUE
+    phvwr.f         p.control_metadata_flow_done, TRUE
 
 label_flow_hit:
     slt             c1, d.ipv4_flow_hash_d.epoch, k.control_metadata_epoch
     seq             c7, d.ipv4_flow_hash_d.force_flow_miss, TRUE
     bcf             [c1 | c7], label_flow_miss
-    phvwr           p.ingress_recirc_flow_done, TRUE
+    phvwr           p.control_metadata_flow_done, TRUE
     smneb           c1, k.tcp_flags, (TCP_FLAG_FIN|TCP_FLAG_RST), 0
     bcf             [c1], label_force_flow_miss
     seq             c1, d.ipv4_flow_hash_d.nexthop_valid, TRUE

@@ -16,13 +16,13 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
         if ((scratch_metadata.epoch < control_metadata.epoch) or
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             if (force_flow_miss == TRUE) {
                 modify_field(p4i_to_arm.flow_hit, TRUE);
                 modify_field(p4i_to_arm.flow_role, flow_role);
             }
         } else {
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
             modify_field(scratch_metadata.session_id, session_index);
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
@@ -92,11 +92,11 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             modify_field(control_metadata.flow_ohash_lkp, TRUE);
             modify_field(ingress_recirc.flow_ohash, scratch_metadata.flow_hint);
         } else {
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             modify_field(control_metadata.flow_miss, TRUE);
         }
     } else {
-        modify_field(ingress_recirc.flow_done, TRUE);
+        modify_field(control_metadata.flow_done, TRUE);
         modify_field(control_metadata.flow_miss, TRUE);
     }
 
@@ -155,13 +155,13 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
         if ((scratch_metadata.epoch < control_metadata.epoch) or
             (force_flow_miss == TRUE)) {
             modify_field(control_metadata.flow_miss, TRUE);
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             if (force_flow_miss == TRUE) {
                 modify_field(p4i_to_arm.flow_hit, TRUE);
                 modify_field(p4i_to_arm.flow_role, flow_role);
             }
         } else {
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
             modify_field(scratch_metadata.session_id, session_index);
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
@@ -222,11 +222,11 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             modify_field(ingress_recirc.flow_ohash,
                          scratch_metadata.ipv4_flow_hint);
         } else {
-            modify_field(ingress_recirc.flow_done, TRUE);
+            modify_field(control_metadata.flow_done, TRUE);
             modify_field(control_metadata.flow_miss, TRUE);
         }
     } else {
-        modify_field(ingress_recirc.flow_done, TRUE);
+        modify_field(control_metadata.flow_done, TRUE);
         modify_field(control_metadata.flow_miss, TRUE);
     }
 
@@ -266,7 +266,7 @@ table ipv4_flow_ohash {
 }
 
 control flow_lookup {
-    if (ingress_recirc.valid == FALSE) {
+    if (control_metadata.flow_ohash_lkp == FALSE) {
         if (key_metadata.ktype == KEY_TYPE_IPV4) {
             apply(ipv4_flow);
         } else {

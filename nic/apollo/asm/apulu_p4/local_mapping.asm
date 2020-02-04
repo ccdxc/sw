@@ -7,7 +7,7 @@ struct local_mapping_k_ k;
 struct local_mapping_d  d;
 struct phv_             p;
 
-#define HASH_MSB 31:18
+#define HASH_MSB 31:17
 
 %%
 
@@ -69,7 +69,7 @@ local_mapping_info:
     bcf         [c1&c2], local_mapping_hash_hit
     add         r2, r2, d.local_mapping_info_d.more_hints
 local_mapping_miss:
-    phvwr.e     p.ingress_recirc_local_mapping_done, TRUE
+    phvwr.e     p.control_metadata_local_mapping_done, TRUE
     phvwr.f     p.control_metadata_local_mapping_miss, TRUE
 
 local_mapping_hit:
@@ -79,7 +79,7 @@ local_mapping_hit:
                     d.local_mapping_info_d.binding_check_enabled
     phvwr       p.vnic_metadata_binding_id, d.local_mapping_info_d.binding_id1
     phvwr.e     p.p4i_i2e_xlate_id, d.local_mapping_info_d.xlate_id
-    phvwr.f     p.ingress_recirc_local_mapping_done, TRUE
+    phvwr.f     p.control_metadata_local_mapping_done, TRUE
 
 local_mapping_hash_hit:
     phvwr.e     p.ingress_recirc_local_mapping_ohash, r2

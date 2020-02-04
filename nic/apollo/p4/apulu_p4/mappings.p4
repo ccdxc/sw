@@ -19,7 +19,7 @@ action local_mapping_info(entry_valid, vnic_id,
                      binding_check_enabled);
         modify_field(vnic_metadata.binding_id, binding_id1);
         modify_field(scratch_metadata.binding_id, binding_id2);
-        modify_field(ingress_recirc.local_mapping_done, TRUE);
+        modify_field(control_metadata.local_mapping_done, TRUE);
 
         // if hardware register indicates miss, compare hashes with r1
         // (scratch_metadata.local_mapping_hash) and setup lookup in
@@ -85,11 +85,11 @@ action local_mapping_info(entry_valid, vnic_id,
             modify_field(control_metadata.local_mapping_ohash_lkp, TRUE);
         } else {
             modify_field(control_metadata.local_mapping_miss, TRUE);
-            modify_field(ingress_recirc.local_mapping_done, TRUE);
+            modify_field(control_metadata.local_mapping_done, TRUE);
         }
     } else {
         modify_field(control_metadata.local_mapping_miss, TRUE);
-        modify_field(ingress_recirc.local_mapping_done, TRUE);
+        modify_field(control_metadata.local_mapping_done, TRUE);
     }
 
     modify_field(scratch_metadata.flag, entry_valid);
@@ -196,7 +196,7 @@ table service_mapping_otcam {
 }
 
 control local_mapping {
-    if (ingress_recirc.valid == FALSE) {
+    if (control_metadata.local_mapping_ohash_lkp == FALSE) {
         apply(local_mapping);
     }
     if (control_metadata.local_mapping_ohash_lkp == TRUE) {
