@@ -36,6 +36,8 @@
 #define LIF_NAME_MAX_SZ			8
 #define MAX_VLAN_TAG 			4095
 
+#define IONIC_GET_COS(ifp) ((ifp->if_pcp == IFNET_PCP_NONE) ? 0 : ifp->if_pcp)
+
 struct ionic_adminq_stats {
 	uint64_t comp_err;
 };
@@ -339,6 +341,7 @@ struct ionic_lif {
 	unsigned int nrxqs;
 
 	unsigned int rx_mode;
+	uint8_t cos;
 
 	int rx_mbuf_size;		/* Rx mbuf size pool. */
 	uint16_t max_frame_size;	/* MTU size. */

@@ -694,7 +694,7 @@ ionic_qos_tc_init(struct ionic *ionic, int tc, union qos_config *qos)
 	struct ionic_dev *idev = &ionic->idev;
 	int i, err, nwords;
 
-	IONIC_DEV_PRINT(ionic->dev, "Init TC: %d pcp: %d weight: %d drop: %s "
+	IONIC_DEV_INFO(ionic->dev, "Init TC: %d pcp: %d weight: %d drop: %s "
 	    " class: %d pause_type: %d pfc_cos: %d flags: 0x%x "
 	    "ndscp: %d[%d,%d,%d,%d]\n",
 	    tc, qos->dot1q_pcp, qos->dwrr_weight,
@@ -770,8 +770,10 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	else
 		qos->pause_type = pause_type;
 
-	// By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped); 
-	// if the PCP is already mapped to some other TC, pick the first available PCP
+	/*
+	 * By default, map the PCP to respective TC (TC <-> PCP one-to-one mapped); 
+	 * if the PCP is already mapped to some other TC, pick the first available PCP
+	 */
 	for (i = 0; i < ionic->qos.max_tcs; i++) {
 		if (ident->qos.config[i].dot1q_pcp == tc)
 			tc_pcp_available = false;
@@ -782,7 +784,7 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	}
 
 	if(!tc_pcp_available) {
-		// TC PCP not available; pick the first free PCP
+		/* TC PCP not available; pick the first free PCP */
 		for(i = 0; i < IONIC_QOS_PCP_MAX; i++) {
 			if(pcp_to_tc_map[i] == -1)
 				def_pcp = i;
@@ -794,9 +796,8 @@ ionic_qos_set_default(struct ionic_lif *lif, int tc, union qos_config *qos)
 	if(def_pcp != -1)
 		qos->dot1q_pcp = def_pcp;
 
-	// default to DWRR
 	qos->sched_type = QOS_SCHED_TYPE_DWRR;
-	qos->dwrr_weight = 25; // TODO: set this to 0 when bw_perc is enabled
+	qos->dwrr_weight = 25; /* TODO: set this to 0 when bw_perc is enabled */
 
 	IONIC_NETDEV_INFO(lif->netdev, "default values for tc: %d pause_type: %d pcp: %d "
 				"sched_type: %d wt: %d\n", 
@@ -864,8 +865,10 @@ ionic_qos_pcp_to_tc_update(struct ionic_lif *lif, uint8_t *pcp)
 			continue;
 		}
 
-		// TODO: remove this once DSCP classification type is supported
-		// Default it to PCP until then
+		/*
+		 * TODO: remove this once DSCP classification type is supported
+		 * Default it to PCP until then
+		 */
 		if (qos->class_type == QOS_CLASS_TYPE_NONE) {
 			qos->class_type = QOS_CLASS_TYPE_PCP;
 		}
@@ -1010,7 +1013,7 @@ ionic_qos_enable_update(struct ionic_lif *lif, uint8_t *enable)
 		if (!enable[tc]) {
 			/* Delete the class if it already exists, except 0 */
 			if (qos->flags & IONIC_QOS_CONFIG_F_ENABLE) {
-				IONIC_NETDEV_DEBUG(lif->netdev, "Resetting QoS TC: %d\n", tc);
+				IONIC_NETDEV_INFO(ifp, "Resetting QoS TC: %d\n", tc);
 				ionic_qos_class_reset(ionic, tc);
 			}
 			continue;

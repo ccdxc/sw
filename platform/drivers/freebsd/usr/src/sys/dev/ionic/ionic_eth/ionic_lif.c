@@ -2922,6 +2922,7 @@ ionic_lif_adminq_init(struct ionic_lif *lif)
 	union dev_cmd cmd = {
 		.q_init.opcode = CMD_OPCODE_Q_INIT,
 		.q_init.lif_index = lif->index,
+		.q_init.cos = lif->cos,
 		.q_init.type = adminq->type,
 		.q_init.index = adminq->index,
 		.q_init.flags = (IONIC_QINIT_F_IRQ | IONIC_QINIT_F_ENA),
@@ -3101,6 +3102,7 @@ ionic_lif_notifyq_init(struct ionic_lif *lif,
 		.cmd.q_init = {
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = lif->index,
+			.cos = lif->cos,
 			.type = notifyq->type,
 			.index = notifyq->index,
 			.flags = (IONIC_QINIT_F_IRQ | IONIC_QINIT_F_ENA),
@@ -3226,6 +3228,7 @@ ionic_lif_txq_init(struct ionic_lif *lif, struct ionic_txque *txq)
 		.cmd.q_init = {
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = lif->index,
+			.cos = lif->cos,
 			.type = txq->type,
 			.index = txq->index,
 			.ver = txq->ver,
@@ -3455,6 +3458,7 @@ ionic_lif_rxq_init(struct ionic_lif *lif, struct ionic_rxque *rxq)
 		.cmd.q_init = {
 			.opcode = CMD_OPCODE_Q_INIT,
 			.lif_index = lif->index,
+			.cos = lif->cos,
 			.type = rxq->type,
 			.index = rxq->index,
 			.flags = (IONIC_QINIT_F_IRQ | IONIC_QINIT_F_SG),
@@ -4100,7 +4104,7 @@ ionic_lif_reinit(struct ionic_lif *lif, bool wdog_reset_path)
 	lif->reinit_in_progress = true;
 	IONIC_LIF_UNLOCK(lif);
 
-	IONIC_QUE_WARN(lif->adminq, "resetting LIF\n");
+	IONIC_NETDEV_INFO(ifp, "resetting device\n");
 
 	/*
 	 * Shut down the watchdogs only if we are NOT
@@ -4126,7 +4130,7 @@ ionic_lif_reinit(struct ionic_lif *lif, bool wdog_reset_path)
 	if (ifp->if_drv_flags & IFF_DRV_RUNNING) {
 		was_open = true;
 		lif->stop = true;
-		lif->netdev->if_drv_flags &= ~IFF_DRV_RUNNING;
+		ifp->if_drv_flags &= ~IFF_DRV_RUNNING;
 	}
 
 	ionic_lif_deinit(lif);
@@ -4146,7 +4150,7 @@ ionic_lif_reinit(struct ionic_lif *lif, bool wdog_reset_path)
 		goto out_abort;
 	}
 
-	ionic_addr_add(lif->netdev, lif->dev_addr);
+	ionic_addr_add(ifp, lif->dev_addr);
 
 	ionic_set_hw_features(lif, lif->hw_features);
 

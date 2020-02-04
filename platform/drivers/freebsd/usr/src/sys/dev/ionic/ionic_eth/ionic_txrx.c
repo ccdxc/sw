@@ -1616,6 +1616,7 @@ ionic_lif_netdev_alloc(struct ionic_lif *lif, int ndescs)
 	/* Connect lif to ifnet, taking a long-lived reference */
 	if_ref(ifp);
 	lif->netdev = ifp;
+	lif->cos = IONIC_GET_COS(ifp);
 #ifdef NETAPP_PATCH
 	lif->iff_up = (ifp->if_flags & IFF_UP) != 0;
 #endif
@@ -2700,6 +2701,92 @@ ionic_setup_mac_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 }
 
 static void
+ionic_setup_mgmt_mac_stats(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
+    struct sysctl_oid_list *child)
+{
+	struct mgmt_port_stats *stats;
+	struct sysctl_oid *queue_node;
+	struct sysctl_oid_list *queue_list;
+	char namebuf[QUEUE_NAME_LEN];
+
+	snprintf(namebuf, QUEUE_NAME_LEN, "mac");
+	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, namebuf,
+				CTLFLAG_RD, NULL, "MAC provided counters");
+	queue_list = SYSCTL_CHILDREN(queue_node);
+	stats = &lif->ionic->idev.port_info->mgmt_stats;
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_ok", CTLFLAG_RD,
+			&stats->frames_rx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_all", CTLFLAG_RD,
+			&stats->frames_rx_all, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_fcs", CTLFLAG_RD,
+			&stats->frames_rx_bad_fcs, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_all", CTLFLAG_RD,
+			&stats->frames_rx_bad_all, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_rx_ok", CTLFLAG_RD,
+			&stats->octets_rx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_rx_all", CTLFLAG_RD,
+			&stats->octets_rx_all, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_unicast", CTLFLAG_RD,
+			&stats->frames_rx_unicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_multicast", CTLFLAG_RD,
+			&stats->frames_rx_multicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_broadcast", CTLFLAG_RD,
+			&stats->frames_rx_broadcast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_pause", CTLFLAG_RD,
+			&stats->frames_rx_pause, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_bad_length", CTLFLAG_RD,
+			&stats->frames_rx_bad_length, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_undersized", CTLFLAG_RD,
+			&stats->frames_rx_undersized, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_oversized", CTLFLAG_RD,
+			&stats->frames_rx_oversized, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_fragments", CTLFLAG_RD,
+			&stats->frames_rx_fragments, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_jabber", CTLFLAG_RD,
+			&stats->frames_rx_jabber, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_64b", CTLFLAG_RD,
+			&stats->frames_rx_64b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_65b_127b", CTLFLAG_RD,
+			&stats->frames_rx_65b_127b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_128b_255b", CTLFLAG_RD,
+			&stats->frames_rx_128b_255b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_256b_511b", CTLFLAG_RD,
+			&stats->frames_rx_256b_511b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_512b_1023b", CTLFLAG_RD,
+			&stats->frames_rx_512b_1023b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_1024b_1518b", CTLFLAG_RD,
+			&stats->frames_rx_1024b_1518b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_gt_1518b", CTLFLAG_RD,
+			&stats->frames_rx_gt_1518b, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_rx_fifo_full", CTLFLAG_RD,
+			&stats->frames_rx_fifo_full, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_ok", CTLFLAG_RD,
+			&stats->frames_tx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_all", CTLFLAG_RD,
+			&stats->frames_tx_all, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_bad", CTLFLAG_RD,
+			&stats->frames_tx_bad, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_tx_ok", CTLFLAG_RD,
+			&stats->octets_tx_ok, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "octets_tx_total", CTLFLAG_RD,
+			&stats->octets_tx_total, "");
+
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_unicast", CTLFLAG_RD,
+			&stats->frames_tx_unicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_multicast", CTLFLAG_RD,
+			&stats->frames_tx_multicast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_broadcast", CTLFLAG_RD,
+			&stats->frames_tx_broadcast, "");
+	SYSCTL_ADD_ULONG(ctx, queue_list, OID_AUTO, "frames_tx_pause", CTLFLAG_RD,
+			&stats->frames_tx_pause, "");
+}
+
+static void
 ionic_notifyq_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
     struct sysctl_oid_list *child)
 {
@@ -3061,7 +3148,7 @@ ionic_qos_sysctl(struct ionic_lif *lif, struct sysctl_ctx_list *ctx,
 	int i;
 
 	queue_node = SYSCTL_ADD_NODE(ctx, child, OID_AUTO, "qos",
-	    CTLFLAG_RD, NULL, "QoS policy for ports");
+	    CTLFLAG_RD, NULL, "QoS policy for RDMA traffic");
 	queue_list = SYSCTL_CHILDREN(queue_node);
 
 	SYSCTL_ADD_UINT(ctx, queue_list, OID_AUTO, "max_tcs", CTLFLAG_RD,
@@ -3269,6 +3356,8 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			&lif->rx_mbuf_size, 0, "Size of receive buffers");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "rx_mode", CTLFLAG_RD,
 			&lif->rx_mode, 0, "Current receive mode");
+	SYSCTL_ADD_U8(ctx, child, OID_AUTO, "cos", CTLFLAG_RD,
+			&lif->cos, 0, "Class of service");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "curr_coal_us", CTLFLAG_RD,
 			&lif->intr_coalesce_us, 0, "Get current interrupt coalescing value(us)");
 	SYSCTL_ADD_UINT(ctx, child, OID_AUTO, "coal_max_us", CTLFLAG_RD,
@@ -3330,7 +3419,11 @@ ionic_setup_device_stats(struct ionic_lif *lif)
 			ionic_firmware_update_sysctl, "I", "Firmware update");
 
 	ionic_setup_fw_stats(lif, ctx, child);
-	ionic_setup_mac_stats(lif, ctx, child);
+	if (lif->ionic->is_mgmt_nic)
+		ionic_setup_mgmt_mac_stats(lif, ctx, child);
+	else
+		ionic_setup_mac_stats(lif, ctx, child);
+
 	ionic_adminq_sysctl(lif, ctx, child);
 	ionic_notifyq_sysctl(lif, ctx, child);
 	ionic_qos_sysctl(lif, ctx, child);
@@ -3658,6 +3751,10 @@ ionic_ioctl(struct ifnet *ifp, u_long command, caddr_t data)
 
 	default:
 		error = ether_ioctl(ifp, command, data);
+		if ((command == SIOCSLANPCP) && (lif->cos != IONIC_GET_COS(ifp))) {
+			lif->cos = IONIC_GET_COS(ifp);
+			error = ionic_lif_reinit(lif, false);
+		}
 		break;
 	}
 

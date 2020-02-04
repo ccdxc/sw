@@ -2233,28 +2233,28 @@ struct mgmt_port_stats {
 	__le64 frames_rx_multicast;
 	__le64 frames_rx_broadcast;
 	__le64 frames_rx_pause;
-	__le64 frames_rx_bad_length0;
-	__le64 frames_rx_undersized1;
-	__le64 frames_rx_oversized2;
-	__le64 frames_rx_fragments3;
-	__le64 frames_rx_jabber4;
-	__le64 frames_rx_64b5;
-	__le64 frames_rx_65b_127b6;
-	__le64 frames_rx_128b_255b7;
-	__le64 frames_rx_256b_511b8;
-	__le64 frames_rx_512b_1023b9;
-	__le64 frames_rx_1024b_1518b0;
-	__le64 frames_rx_gt_1518b1;
-	__le64 frames_rx_fifo_full2;
-	__le64 frames_tx_ok3;
-	__le64 frames_tx_all4;
-	__le64 frames_tx_bad5;
-	__le64 octets_tx_ok6;
-	__le64 octets_tx_total7;
-	__le64 frames_tx_unicast8;
-	__le64 frames_tx_multicast9;
-	__le64 frames_tx_broadcast0;
-	__le64 frames_tx_pause1;
+	__le64 frames_rx_bad_length;
+	__le64 frames_rx_undersized;
+	__le64 frames_rx_oversized;
+	__le64 frames_rx_fragments;
+	__le64 frames_rx_jabber;
+	__le64 frames_rx_64b;
+	__le64 frames_rx_65b_127b;
+	__le64 frames_rx_128b_255b;
+	__le64 frames_rx_256b_511b;
+	__le64 frames_rx_512b_1023b;
+	__le64 frames_rx_1024b_1518b;
+	__le64 frames_rx_gt_1518b;
+	__le64 frames_rx_fifo_full;
+	__le64 frames_tx_ok;
+	__le64 frames_tx_all;
+	__le64 frames_tx_bad;
+	__le64 octets_tx_ok;
+	__le64 octets_tx_total;
+	__le64 frames_tx_unicast;
+	__le64 frames_tx_multicast;
+	__le64 frames_tx_broadcast;
+	__le64 frames_tx_pause;
 };
 
 /**
@@ -2297,7 +2297,10 @@ union port_identity {
 struct port_info {
 	union port_config config;
 	struct port_status status;
-	struct port_stats stats;
+	union {
+	struct port_stats      stats;
+	struct mgmt_port_stats mgmt_stats;
+	};
 };
 
 /**
