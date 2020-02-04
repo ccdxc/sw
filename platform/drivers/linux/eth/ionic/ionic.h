@@ -18,15 +18,14 @@ struct ionic_lif;
 #define IONIC_DRV_DESCRIPTION	"Pensando Ethernet NIC Driver"
 #define IONIC_DRV_VERSION	"1.5.0"
 
-// TODO: register these with the official include/linux/pci_ids.h
 #define PCI_VENDOR_ID_PENSANDO			0x1dd8
 
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_PF	0x1002
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_VF	0x1003
 #define PCI_DEVICE_ID_PENSANDO_IONIC_ETH_MGMT	0x1004
 
-#define DEVCMD_TIMEOUT  30
-#define SHORT_TIMEOUT   3
+#define DEVCMD_TIMEOUT  5
+#define SHORT_TIMEOUT   1
 #define MAX_ETH_EQS	64
 
 extern unsigned int max_slaves;

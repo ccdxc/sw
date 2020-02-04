@@ -439,6 +439,7 @@ int ionic_setup(struct ionic *ionic)
 		return err;
 
 	ionic_debugfs_add_dev_cmd(ionic);
+	ionic_reset(ionic);
 
 	return 0;
 }
