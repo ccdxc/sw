@@ -11,10 +11,11 @@ struct phv_   p;
 
 .align
 lif_info:
-  seq.e         c1, d.lif_info_d.ingress_mirror_en, 1
+  sne           c1, k.p4plus_to_p4_p4plus_app_id, P4PLUS_APPTYPE_CPU
+  seq.c1        c1, d.lif_info_d.ingress_mirror_en, 1
+  nop.e
   phvwr.c1      p.capri_intrinsic_tm_span_session, \
                     d.lif_info_d.ingress_mirror_session_id 
-  nop
 
 /*****************************************************************************/
 /* error function                                                            */
