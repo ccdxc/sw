@@ -106,6 +106,7 @@ hal::cfg_op_t hal_cfg_db_get_mode(void);
 
 void asiccfg_init_completion_event(sdk_status_t status);
 void svc_init_done(void);
+std::string hal_get_mpart_file_path (hal_cfg_t *hal_cfg);
 
 }    // namespace hal
 

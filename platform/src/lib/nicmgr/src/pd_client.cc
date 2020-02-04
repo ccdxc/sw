@@ -492,32 +492,6 @@ hal_cfg_path()
     return hal_cfg_path;
 }
 
-static std::string
-mpart_cfg_path(std::string hal_cfg_path, sdk::lib::dev_forwarding_mode_t fwd_mode)
-{
-    std::string mpart_json;
-
-    // WARNING -- this must be picked based on profile, this is guaranteed to be
-    // broken soon
-#if defined(APOLLO)
-    mpart_json = hal_cfg_path + "/apollo/hbm_mem.json";
-#elif defined(ARTEMIS)
-    mpart_json = hal_cfg_path + "/artemis/hbm_mem.json";
-#elif defined(APULU)
-    mpart_json = hal_cfg_path + "/apulu/8g/hbm_mem.json";
-#elif defined(ATHENA)
-    mpart_json = hal_cfg_path + "/athena/hbm_mem.json";
-#else
-    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
-        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH)
-        mpart_json = hal_cfg_path + "/iris/hbm_mem.json";
-    else
-        mpart_json = hal_cfg_path + "/iris/hbm_classic_mem.json" ;
-#endif
-
-    return mpart_json;
-}
-
 void
 PdClient::init()
 {

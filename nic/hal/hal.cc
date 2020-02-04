@@ -98,7 +98,7 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     }
 }
 
-static inline std::string
+std::string
 hal_get_mpart_file_path (hal_cfg_t *hal_cfg)
 {
     std::string cfg_path = hal_cfg->cfg_path;
@@ -106,22 +106,6 @@ hal_get_mpart_file_path (hal_cfg_t *hal_cfg)
     hal_feature_profile_t profile = hal_cfg->device_cfg.feature_profile;
     std::string profile_name;
 
-#if 0
-    hal_forwarding_mode_t forwarding_mode = hal_cfg->device_cfg.forwarding_mode;
-    if (forwarding_mode == HAL_FORWARDING_MODE_CLASSIC)
-    {
-        return cfg_path + "/" + feature_set + "/hbm_classic_mem.json";
-    }
-
-    if (profile != HAL_FEATURE_PROFILE_NONE &&
-        profile != HAL_FEATURE_PROFILE_CLASSIC_DEFAULT )
-    {
-        profile_name = std::string(FEATURE_PROFILES_str(profile));
-        profile_name.replace(0, std::string("HAL_FEATURE_PROFILE").length(), "");
-        std::transform(profile_name.begin(), profile_name.end(),
-                       profile_name.begin(), ::tolower);
-    }
-#endif
     profile_name = std::string(FEATURE_PROFILES_str(profile));
     profile_name.replace(0, std::string("HAL_FEATURE_PROFILE").length(), "");
     std::transform(profile_name.begin(), profile_name.end(),
@@ -280,7 +264,7 @@ hal_init (hal_cfg_t *hal_cfg)
     if (hal_logger_init(hal_cfg) != HAL_RET_OK) {
         HAL_TRACE_ERR("Failed to initialize HAL logger, ignoring ...");
     }
-    HAL_TRACE_DEBUG("Initializing HAL with : {}", mpart_json);
+    HAL_TRACE_INFO("Initializing HAL with : {}", mpart_json);
 
     // parse and initialize the catalog
     catalog = sdk::lib::catalog::factory(hal_cfg->cfg_path, hal_cfg->catalog_file, hal_cfg->platform);

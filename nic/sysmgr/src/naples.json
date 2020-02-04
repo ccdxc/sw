@@ -4,7 +4,8 @@
         "command": "/nic/bin/delphi_hub",
         "dependencies": [],
         "flags": [],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "canary0",
@@ -51,7 +52,8 @@
                 "service-name": "delphi"
             }],
         "flags": ["critical"],
-        "timeout": 30.0
+        "timeout": 30.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "hal",
@@ -63,7 +65,8 @@
             }],
         "flags": [],
         "memory-limit": 800.0,
-        "timeout": 30.0
+        "timeout": 60.0,
+        "cpu-affinity": "0xD"
     },
     {
         "name": "pen-netagent",
@@ -78,7 +81,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "nmd",
@@ -106,7 +110,8 @@
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "tmagent",
@@ -121,7 +126,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "nevtsproxy",
@@ -136,7 +142,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "sysmond",
@@ -151,7 +158,8 @@
                 "service-name": "hal"
             }],
         "flags": [],
-        "timeout": 30.0
+        "timeout": 30.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "upgrade",
@@ -167,7 +175,8 @@
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 300.0
+        "timeout": 300.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "pen-ntsa",
@@ -183,7 +192,8 @@
                 }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
     },
     {
         "name": "network",
@@ -196,7 +206,8 @@
             }
         ],
         "flags": [],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xD"
     },
     {
         "name": "firewall",
@@ -209,13 +220,32 @@
             }
         ],
         "flags": [],
-        "timeout": 0.0
+        "timeout": 0.0,
+        "cpu-affinity": "0xD"
     },
     {
         "name": "operd",
         "command": "/nic/bin/operd /nic/conf/operd.json",
-        "dependencies": [ ],
+        "dependencies": [],
         "flags": [],
-        "timeout": 0.0
-    }
+        "timeout": 0.0,
+        "cpu-affinity": "0xC"
+    },
+    {
+         "name": "cpldmon",
+         "command": "/platform/bin/cpldmon",
+         "dependencies": [
+             {
+                 "kind": "service",
+                 "service-name": "delphi"
+             },
+             {
+                 "kind": "service",
+                 "service-name": "hal"
+             }
+         ],
+         "flags": ["restartable", "save_stdout_on_crash"],
+         "timeout": 0.0,
+         "cpu-affinity": "0xF"
+     }
 ]

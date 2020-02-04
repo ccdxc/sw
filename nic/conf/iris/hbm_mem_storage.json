@@ -1,0 +1,569 @@
+{
+    "regions": [
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-tx-dr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-tx-pr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-rx-dpr",
+            "size": "128K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "cpu-tx-descriptor",
+            "size": "2048K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent, used only for cpu originated packets",
+            "name": "cpu-tx-page",
+            "size": "16384K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "arq-rx",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "ascq",
+            "size": "256K",
+            "cc": "true"
+        },
+        {
+            "_comment" : "cache coherent",
+            "name": "asq",
+            "size": "256K",
+            "cc"     : "true"
+        },
+        {
+            "_comment" : "cache coherent, used for cpu rx packets allocated by",
+            "_comment1": "P4+, freed by ARM. The size of this region is to",
+            "_comment2": "make cache coherent region order of 2 - currently 64MB",
+            "_comment3": "from beg(hbm base) including this region",
+            "name" : "cpu-rx-desc-page",
+            "size" : "45952K",
+            "cc"      : "true"
+        },
+        {
+            "_comment" : "This reserved region is hardcoded to HBM base + 64MB(above cc regions)",
+            "_comment1": "Used by memtun, pciemgr, and mputrace. Size is 64MB",
+            "_comment2": "Refer sdk/platform/utils/mpart_rsvd.hpp",
+             "name": "reserved_common",
+             "size": "64M"
+        },
+        {
+            "comment": "Devcmd region for all devices",
+            "_comment1": "This region is non-movable/non-resizable",
+            "_comment2": "Allocation unit is 4 KiB",
+            "_comment3": "Alignment is page-aligned",
+            "name": "devcmd",
+            "size": "32M"
+        },
+        {
+            "comment": "CMB region for ethernet devices",
+            "_comment1": "This region is non-moveable/growable (provided all regions below are moveable)",
+            "_comment2": "Allocation unit is 8 MiB",
+            "_comment3": "Alignment is naturally-aligned",
+            "name": "eth_cmb",
+            "size": "96M",
+            "cache": "p4plus-all"
+        },
+        {
+            "_comment" : "Storage region address is hereby aligned to 256MB for efficient PCIe BAR mapping,",
+            "_comment1": "allowing full use of the region. Please do not add any other regions in between ",
+            "_comment2": "reserved_common and storage inclusive. ",
+            "_comment4": "If you need to change the size of any of the above mentioned regions, ",
+            "_comment5": "please talk to Storage team first.",
+            "name": "storage",
+            "size": "256M"
+        },
+        {
+            "name": "lif2qstate_map",
+            "size": "96M",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "nicmgrqstate_map",
+            "size": "64M",
+            "cache": "p4plus-all"
+        },
+        {
+             "name": "ipsec-global-drop-stats",
+             "size": "2K"
+        },
+        {
+            "name": "ipsec-cb",
+            "size": "128K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ipsec_cb_barco",
+            "size": "2048K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ipsec-nmdr-tx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-nmdr-rx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-big-nmdr-tx",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-big-nmdr-rx",
+            "size": "128K"
+        },
+        {
+            "name": "nmdr-tx-gc",
+            "size": "128K"
+        },
+        {
+            "name": "nmdr-rx-gc",
+            "size": "128K"
+        },
+        {
+            "name": "ipsec-nmpr-tx",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-rx",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec-nmpr-big-tx",
+            "size": "10240K"
+        },
+        {
+            "name": "ipsec-nmpr-big-rx",
+            "size": "10240K"
+        },
+        {
+            "name": "serq",
+            "size": "65536K"
+        },
+        {
+            "name": "bsq",
+            "size": "16384K"
+        },
+        {
+            "name": "brq-ring-asym",
+            "size": "32K"
+        },
+        {
+            "name": "crypto-asym-dma-descr",
+            "size": "24K"
+        },
+        {
+            "name": "brq-ring-mpp0",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp1",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp2",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-mpp3",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-cp",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-cp-hot",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-dc",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-dc-hot",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "crypto-sym-msg-descr",
+            "size": "64K"
+        },
+        {
+            "name": "crypto-hbm-mem",
+            "size": "512K"
+        },
+        {
+            "_comment": "512K x 10",
+            "name": "crypto-hbm-mem-big",
+            "size": "5120K"
+        },
+        {
+            "name": "ipsec-descriptor-tx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-descriptor-rx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-tx",
+            "size": "2048K"
+        },
+        {
+            "name": "ipsec-big-descriptor-rx",
+            "size": "2048K"
+        },
+        {
+            "name": "page-small-tx",
+            "size": "24576K"
+        },
+        {
+            "name": "page-small-rx",
+            "size": "24576K"
+        },
+        {
+            "name": "enc-page-big-tx",
+            "size": "8192K"
+        },
+        {
+            "name": "enc-page-big-rx",
+            "size": "8192K"
+        },
+        {
+            "name": "dec-page-big-tx",
+            "size": "8192K"
+        },
+        {
+            "name": "dec-page-big-rx",
+            "size": "8192K"
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-small-tx",
+            "size": "32K"
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-small-rx",
+            "size": "32K"
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-big-tx",
+            "size": "128K"
+        },
+        {
+            "_comment": "4K Entry Ring",
+            "name": "nmdpr-big-rx",
+            "size": "128K"
+        },
+        {
+            "_comment": "4K Objs of (2048 + 128), unused in Classic mode (hence invalid size)",
+            "name": "small-tx-objs",
+            "size": "1K"
+        },
+        {
+            "_comment": "4K Objs of (2048 + 128), unused in Classic mode (hence invalid size)",
+            "name": "small-rx-objs",
+            "size": "1K"
+        },
+        {
+            "_comment": "4K Objs of (9216 + 128), unused in Classic mode (hence invalid size)",
+            "name": "big-tx-objs",
+            "size": "1K"
+        },
+        {
+            "_comment": "4K Objs of (9216 + 128), unused in Classic mode (hence invalid size)",
+            "name": "big-rx-objs",
+            "size": "1K"
+        },
+        {
+            "name": "key-mem",
+            "size": "4096K"
+        },
+        {
+            "name": "crypto-asym-key-desc-array",
+            "size": "1024K"
+        },
+        {
+            "name": "ipsec_pad_table",
+            "size": "1K"
+        },
+        {
+            "_comment": "Combines sesq and asesq",
+            "name": "sesq",
+            "size": "32768K"
+        },
+        {
+            "name": "brq-ring-xts0",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "name": "brq-ring-xts1",
+            "size": "512K",
+            "reset": true
+        },
+        {
+            "name": "tls_proxy_pad_table",
+            "size": "1K"
+        },
+        {
+            "name": "lif_stats",
+            "size": "1024K",
+            "reset": true,
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "ingress_tx_stats",
+            "size": "1024K",
+            "base_region": "lif_stats",
+            "_comment": "Alias to lif-stats region"
+        },
+        {
+            "name": "p4_program",
+            "size": "64K",
+            "reset": true
+        },
+        {
+            "name": "p4_atomic_stats",
+            "size": "33792K",
+            "reset": true
+        },
+        {
+            "name": "tcp_proxy_stats",
+            "size": "1K",
+            "reset": true
+        },
+        {
+            "name": "flow_hash",
+            "size": "131072K",
+            "cache": "p4ig",
+            "reset": true
+        },
+        {
+            "name": "flow_hash_overflow",
+            "size": "16384K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_info",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "session_state",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "flow_stats",
+            "size": "65536K",
+            "cache": "p4ig"
+        },
+        {
+            "name": "mcast_repl",
+            "size": "4096K",
+            "reset": true
+        },
+        {
+            "name": "p4plus_program",
+            "size": "256K",
+            "cache": "p4plus-all",
+            "reset": true
+        },
+        {
+            "name": "rdma",
+            "size": "280576K",
+            "cache": "p4plus-all"
+        },
+        {
+            "name": "rdma-atomic-resource-addr",
+            "size": "1K",
+            "reset": true
+        },
+        {
+            "name": "key-desc-array",
+            "size": "1024K"
+        },
+        {
+            "name": "rdma-eq-intr-table",
+            "size": "32K",
+            "reset": true
+        },
+        {
+            "name": "rdma-stats-hdrs",
+            "size": "2K",
+            "reset": true
+        },
+        {
+            "name": "ipfix",
+            "size": "32K"
+        },
+        {
+            "name": "ipfix_stats",
+            "size": "1K",
+            "_comment": "16 exporters x 8 counters(8B)"
+        },
+        {
+            "name": "app-redir-rawc",
+            "size": "2048K"
+        },
+        {
+            "name": "app-redir-proxyr",
+            "size": "2048K"
+        },
+        {
+            "name": "app-redir-proxyc",
+            "size": "2048K"
+        },
+        {
+            "_comment": "hash depth = 1024",
+            "_comment1": "data space = 1024 * 16 * 64 = 1024K",
+            "_comment1": "key space = 1024 * 64 = 64K",
+            "_comment2": "Num timers = hash depth * 16 * 12 = 196608",
+            "name": "timers",
+            "size": "1088K",
+            "reset": true
+        },
+        {
+            "name": "tx-scheduler",
+            "size": "2048K",
+            "reset": true
+        },
+        {
+            "name": "p4pt-tcb",
+            "size": "2048K"
+        },
+        {
+            "name": "p4pt-tcb-iscsi-rec",
+            "size": "2048K"
+        },
+        {
+            "name": "p4pt-tcb-iscsi-stats",
+            "size": "2048K"
+        },
+        {
+            "name": "p4pt-tcb-iscsi-read-latency-distribution",
+            "size": "2048K"
+        },
+        {
+            "name": "p4pt-tcb-iscsi-write-latency-distribution",
+            "size": "2048K"
+        },
+        {
+            "name": "rss_indir_table",
+            "size": "1024K",
+            "cache": "p4plus-rxdma"
+        },
+        {
+            "name": "qos-hbm-fifo",
+            "size": "262144K"
+        },
+        {
+            "name": "brq-ring-gcm0",
+            "size": "128K"
+        },
+        {
+            "name": "brq-ring-gcm1",
+            "size": "128K"
+        },
+        {
+            "name": "nicmgr",
+            "size": "32768K"
+        },
+        {
+            "name": "fwupdate",
+            "size": "128K"
+        },
+        {
+            "name": "tls_proxy_global_stats",
+            "size": "1K",
+            "reset": true
+        },
+        {
+            "name": "tcp_ooo_rx2tx_queue",
+            "size": "16384K"
+        },
+        {
+            "name": "tcp_ooo_qbase_ring",
+            "size": "32K"
+        },
+        {
+            "name": "tcp_ooo_queue",
+            "size": "8192K"
+        },
+        {
+            "name": "session-summary-stats",
+            "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "fte-stats",
+            "size": "512B",
+            "reset": true
+        },
+        {
+            "name": "p4_hwerr_stats",
+            "size": "1K",
+            "reset": true
+        },
+        {
+            "name": "storage-qinfo",
+            "size": "1M"
+        },
+        {
+            "name": "storage-rgroup",
+            "size": "4K",
+            "reset": true
+        },
+        {
+            "name": "qos-dscp-cos-map",
+            "size": "64B",
+            "reset": true
+        },   
+        {
+            "_comment" : "32 entries of 64 Bytes each",
+            "name": "opaque_tag",
+            "size": "2K",
+            "reset": true
+        },
+        {
+            "name": "tcp-actl-q",
+            "size": "256K",
+            "reset": true
+        },
+        {
+            "name": "port_stats",
+            "size": "3K",
+            "reset": true
+        },
+        {
+            "name": "clock",
+            "size": "64B",
+            "cache": "p4eg"
+        }
+    ]
+}

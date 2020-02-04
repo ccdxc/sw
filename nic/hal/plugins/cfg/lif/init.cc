@@ -45,16 +45,10 @@ lif_init (hal_cfg_t *hal_cfg)
 {
     g_pinfo = program_info::factory((hal_cfg->cfg_path +
                                      "/gen/mpu_prog_info.json").c_str());
-    std::string mpart_json =
-        hal_cfg->device_cfg.forwarding_mode == HAL_FORWARDING_MODE_CLASSIC ?
-        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_classic_mem.json" :
-        hal_cfg->cfg_path + "/" + hal_cfg->feature_set + "/hbm_mem.json";
-    mpartition *mp = mpartition::factory(mpart_json.c_str());
+    SDK_ASSERT(g_pinfo && hal_cfg->mempartition);
 
-    SDK_ASSERT(g_pinfo && mp);
-
-    // g_lif_manager = LIFManager::factory(mp, pinfo, "lif2qstate_map");
-    g_lif_manager = lif_mgr::factory(kNumMaxLIFs, mp, "lif2qstate_map");
+    g_lif_manager = lif_mgr::factory(kNumMaxLIFs, hal_cfg->mempartition, 
+                                     "lif2qstate_map");
 
     // Proxy Init
     if (hal_cfg->features == HAL_FEATURE_SET_IRIS) {

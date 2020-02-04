@@ -712,17 +712,6 @@ parse_forwarding_mode (std::string forwarding_mode)
     return HAL_FORWARDING_MODE_CLASSIC;
 }
 
-static inline hal_feature_profile_t
-parse_feature_profile (std::string feature_profile)
-{
-    if (feature_profile == "classic-default") {
-        return HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
-    } else if (feature_profile == "classic-eth-dev-scale") {
-        return HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE;
-    }
-    return HAL_FEATURE_PROFILE_CLASSIC_DEFAULT;
-}
-
 //------------------------------------------------------------------------------
 // initialize port control operations
 //------------------------------------------------------------------------------

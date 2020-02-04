@@ -151,26 +151,6 @@ nicmgr_init (platform_type_t platform,
     fwd_mode = device->get_forwarding_mode();
     micro_seg_en = (device->get_micro_seg_en() == device::MICRO_SEG_ENABLE);
 
-#if 0
-    feature_profile = device->get_feature_profile();
-    // TODO: Profile should be independent of forwarding mode.
-    // TODO: No need to figure out the profile while upgrading.
-    if (fwd_mode == sdk::lib::FORWARDING_MODE_HOSTPIN ||
-        fwd_mode == sdk::lib::FORWARDING_MODE_SWITCH) {
-        profile = "/platform/etc/nicmgrd/eth_smart.json";
-    } else {
-        if (feature_profile == sdk::lib::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE) {
-            profile = "/platform/etc/nicmgrd/eth_scale.json";
-        } else {
-            profile = "/platform/etc/nicmgrd/device.json";
-        }
-    }
-
-    NIC_LOG_INFO("Forwarding Mode {}", fwd_mode);
-    NIC_LOG_INFO("Micro-segmentation {}", micro_seg_en);
-    NIC_LOG_INFO("Feature Profile {} {}", feature_profile, profile);
-#endif
-
 dev_init:
     // Are we in the middle of an upgrade?
     if (rollback_in_progress()) {

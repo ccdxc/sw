@@ -8,6 +8,7 @@ nic/conf/iris/plugins.json                                          /nic/conf/ir
 nic/conf/iris/classic-plugins.json                                  /nic/conf/iris/
 nic/conf/iris/hbm_mem.json                                          /nic/conf/iris/
 nic/conf/iris/hbm_mem_base.json                                     /nic/conf/iris/
+nic/conf/iris/hbm_mem_storage.json                                  /nic/conf/iris/
 nic/conf/iris/hbm_classic_mem.json                                  /nic/conf/iris/
 nic/conf/iris/operd-regions.json                                    /nic/conf/
 nic/conf/iris/operd.json                                            /nic/conf/

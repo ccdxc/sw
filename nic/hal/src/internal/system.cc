@@ -702,12 +702,23 @@ feature_profile_get (FeatureProfileResponse *rsp)
     case HAL_FEATURE_PROFILE_BASE:
         rsp->set_feature_profile(sys::FEATURE_PROFILE_BASE);
         break;
-    case HAL_FEATURE_PROFILE_CLASSIC_DEFAULT:
-        rsp->set_feature_profile(sys::FEATURE_PROFILE_CLASSIC_DEFAULT);
+    case HAL_FEATURE_PROFILE_STORAGE:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_STORAGE);
         break;
-    case HAL_FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE:
-        rsp->set_feature_profile(sys::FEATURE_PROFILE_CLASSIC_ETH_DEV_SCALE);
+    case HAL_FEATURE_PROFILE_SRIOV:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_SRIOV);
         break;
+    case HAL_FEATURE_PROFILE_VIRTUALIZED:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_VIRTUALIZED);
+        break;
+    case HAL_FEATURE_PROFILE_PROXY:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_PROXY);
+        break;
+    case HAL_FEATURE_PROFILE_DEVELOPER:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_DEVELOPER);
+        break;
+    default:
+        rsp->set_feature_profile(sys::FEATURE_PROFILE_NONE);
     }
     rsp->set_api_status(types::API_STATUS_OK);
 
