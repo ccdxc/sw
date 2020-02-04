@@ -120,8 +120,9 @@ table key_tunneled {
 action ingress_recirc_header_info() {
     if (ingress_recirc_header.valid == TRUE) {
 
-        modify_field(control_metadata.flow_ohash_lkp,
-                     ~ingress_recirc_header.flow_done);
+        modify_field(control_metadata.flow_ohash_lkp, TRUE);
+        modify_field(control_metadata.dnat_ohash_lkp, TRUE);
+                     
         modify_field(capri_p4_intrinsic.recirc, FALSE);
     }
 }

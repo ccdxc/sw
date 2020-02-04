@@ -1,8 +1,9 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 #include "athena.h"
+#include "INGRESS_flow_k.h"
 
-struct flow_k   k;
+struct flow_k_  k;
 struct flow_d   d;
 struct phv_     p;
 

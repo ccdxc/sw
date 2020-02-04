@@ -1,6 +1,6 @@
 #include "athena.h"
-#include "ingress.h"
-#include "INGRESS_p.h"
+#include "egress.h"
+#include "EGRESS_p.h"
 
 struct nacl_d   d;
 struct phv_     p;

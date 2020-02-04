@@ -5,7 +5,8 @@
 
 
 action p4i_to_p4e() {
-    if (ingress_recirc_header.flow_done != TRUE) {
+    if ((ingress_recirc_header.flow_done != TRUE) or 
+        (ingress_recirc_header.dnat_done != TRUE)) {
         /* Recirc back to P4I */
         add_header(ingress_recirc_header);
         modify_field(ingress_recirc_header.direction, control_metadata.direction);

@@ -10,9 +10,9 @@ struct phv_             p;
 
 init_config:
     bbne            k.ingress_recirc_header_valid, TRUE, ingress_recirc_header_done
-    xor             r1, k.ingress_recirc_header_flow_done, 0x1
-    phvwr           p.control_metadata_flow_ohash_lkp, r1
     phvwr           p.capri_p4_intrinsic_recirc, FALSE
+    phvwr           p.control_metadata_flow_ohash_lkp, TRUE
+    phvwr           p.control_metadata_dnat_ohash_lkp, TRUE
 
 ingress_recirc_header_done:
     seq             c1, k.control_metadata_skip_flow_lkp, TRUE

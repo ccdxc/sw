@@ -57,12 +57,10 @@ action dnat_hash(entry_valid, pad, addr_type, addr,
             modify_field(ingress_recirc_header.dnat_ohash, scratch_metadata.flow_hint);
         } else {
             modify_field(ingress_recirc_header.dnat_done, TRUE);
-            modify_field(control_metadata.flow_miss, TRUE);
         }
     }
     else {
         modify_field(ingress_recirc_header.dnat_done, TRUE);
-        modify_field(control_metadata.flow_miss, TRUE);
     }
     modify_field(scratch_metadata.pad31, pad);
     modify_field(scratch_metadata.flag, entry_valid);

@@ -124,16 +124,15 @@
         },
         {
             "name": "vlan_to_vnic",
-            "size": "2M",
+            "size": "8K",
             "cache": "p4ig",
-            "_comment": "1M * 2B"
+            "_comment": "4K * 2B"
         },
         {
             "name": "mpls_label_to_vnic",
-            "base_region": "vlan_to_vnic",
             "size": "2M",
             "cache": "p4ig",
-            "_comment": "Alias of the vlan_to_vnic table"
+            "_comment": "1M * 2B"
         },
         {
             "name": "flow",
@@ -176,6 +175,30 @@
             "base_region": "config1",
             "size": "2M",
             "_comment": "Alias of the config1 table"
+        },
+        {
+            "name": "vlan_to_vnic",
+            "size": "8K",
+            "cache": "p4ig",
+            "_comment": "4K * 2B"
+        },
+        {
+            "name": "mpls_label_to_vnic",
+            "size": "2M",
+            "cache": "p4ig",
+            "_comment": "1M * 2B"
+        },
+        {
+            "name": "dnat",
+            "size": "1M",
+            "cache": "p4ig",
+            "_comment": "16K * 64B"
+        },
+        {
+            "name": "dnat_ohash",
+            "size": "256M",
+            "cache": "p4ig",
+            "_comment": "4K * 64B"
         },
         {
             "name": "qos-hbm-fifo",

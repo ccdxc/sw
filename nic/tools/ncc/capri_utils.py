@@ -212,7 +212,7 @@ def xgress_from_string(x):
 def table_width_to_allocation_units(type, width):
     return pad_to_16(width) / 16 if type == 'sram' else \
            pad_to_16(width) / 16 if type == 'tcam' else \
-           pad_to_64(width) /  8 if type == 'hbm'  else \
+           pad_to_16(width) /  8 if type == 'hbm'  else \
            width
 
 def allocation_units_to_table_width(type, units):

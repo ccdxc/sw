@@ -2,6 +2,7 @@
 #include "ingress.h"
 #include "INGRESS_p.h"
 
+#if 0
 struct policer_bw_d         d;
 struct phv_                 p;
 
@@ -14,3 +15,8 @@ policer_bw:
     //phvwr.c1.e  p.control_metadata_p4e_drop_reason[P4E_DROP_VNIC_POLICER_RX], 1
     phvwr.c1.f.e  p.capri_intrinsic_drop, TRUE
     nop
+#else
+%%
+    nop.e
+    nop
+#endif

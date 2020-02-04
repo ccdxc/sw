@@ -56,7 +56,7 @@ action flow_hash(entry_valid, index, index_type,
     modify_field(scratch_metadata.flow_hash, hash2);
 }
 
-@pragma stage 1
+@pragma stage 3
 @pragma hbm_table
 table flow {
     reads {
@@ -76,7 +76,7 @@ table flow {
     size : FLOW_TABLE_SIZE;
 }
 
-@pragma stage 2
+@pragma stage 4
 @pragma hbm_table
 @pragma overflow_table flow
 table flow_ohash {

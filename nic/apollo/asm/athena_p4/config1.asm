@@ -1,6 +1,6 @@
-#include "ingress.h"
-#include "INGRESS_config1_k.h"
-#include "INGRESS_p.h"
+#include "egress.h"
+#include "EGRESS_config1_k.h"
+#include "EGRESS_p.h"
 #include "athena.h"
 
 struct config1_k_   k;

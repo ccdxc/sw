@@ -39,9 +39,6 @@ control ingress {
     dnat_lookup();
     offloads();
     flow_lookup();
-    nacl();
-    config_verify();
-    policers();
     ingress_inter_pipe();
 }
 
@@ -52,6 +49,9 @@ control egress {
     //session_info_encap_lookup();
     //statistics();
     session_info_lookup();
+    config_verify();
+    nacl();
+    //policers();
     update_checksums();
     egress_inter_pipe();
     conntrack_state_update();

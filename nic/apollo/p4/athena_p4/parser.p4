@@ -619,7 +619,7 @@ parser parse_egress {
     extract(p4i_to_p4e_header);
     return  select(p4i_to_p4e_header.flow_miss) {
         TRUE: parse_egress_flow_miss;
-        default: parse_egress_mux;
+        default: parse_packet;
     }
 }
 
@@ -627,19 +627,8 @@ parser parse_egress {
 @pragma allow_set_meta control_metadata.flow_miss
 parser parse_egress_flow_miss {
     set_metadata(control_metadata.flow_miss, TRUE);
-    return parse_egress_mux;
+    return parse_packet;
 }
-
-
-@pragma xgress egress
-parser parse_egress_mux {
-    return select(p4i_to_p4e_header.packet_type) {
-        P4E_PACKET_OVERLAY_IPV4 :  parse_ipv4_1;
-        P4E_PACKET_OVERLAY_IPV6 : parse_ipv6_1;
-        default: parse_packet;
-    }
-}
-
 
 /******************************************************************************/
 /* Egress deparser                                                            */

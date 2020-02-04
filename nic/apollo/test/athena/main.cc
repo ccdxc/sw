@@ -26,11 +26,12 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "nic/sdk/lib/p4/p4_api.hpp"
 #include "gen/p4gen/p4/include/p4pd.h"
-#include "nic/apollo/p4/include/athena_defines.h"
+//#include "nic/apollo/p4/include/athena_defines.h"
 #include "nic/apollo/p4/include/athena_table_sizes.h"
 #include "trace.hpp"
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/p4/include/ftl_table.hpp"
+#include "nic/apollo/api/include/athena/pds_vnic.h"
 
 namespace core {
 // number of trace files to keep
@@ -152,7 +153,7 @@ flow_table_init(void)
 
     memset(&factory_params, 0, sizeof(factory_params));
     factory_params.table_id = P4TBL_ID_FLOW;
-    factory_params.num_hints = 3;
+    factory_params.num_hints = 2;
     factory_params.max_recircs = 8;
     factory_params.key2str = NULL;
     factory_params.appdata2str = NULL;
@@ -266,6 +267,7 @@ uint8_t     g_h2s_proto = 0x11;
 uint16_t    g_h2s_sport = 0x03e8;
 uint16_t    g_h2s_dport = 0x2710;
 
+uint16_t    g_h2s_vnic_id = 0x0001;
 
 #if 0
 sdk_ret_t
@@ -382,6 +384,24 @@ uint16_t    substrate_udp_dport = 0x1234;
 uint32_t    mpls1_label = 0x12345;
 uint32_t    mpls2_label = 0x6789a;
 
+static void
+vlan_to_vnic_map()
+{
+    pds_vlan_to_vnic_map_spec_t     spec;
+    sdk_ret_t                       ret = SDK_RET_OK;
+
+    spec.key.vlan_id = g_h2s_vlan;
+    spec.data.vnic_type = VNIC_TYPE_L3;
+    spec.data.vnic_id = g_h2s_vnic_id;
+
+    ret = pds_vlan_to_vnic_map_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to setup VLAN: %hu to VNIC:%hu mapping\n",
+                g_h2s_vlan, g_h2s_vnic_id);
+    }
+    printf("Setup VLAN: %hu to VNIC:%hu mapping\n",
+            g_h2s_vlan, g_h2s_vnic_id);
+}
 
 static void
 flow_init_h2s ()
@@ -707,6 +727,9 @@ main (int argc, char **argv)
 
     flow_table_init();
 
+    // Setup VNIC Mappings
+    vlan_to_vnic_map();
+
     // Setup H2S flow
     flow_init_h2s();
 
@@ -715,10 +738,10 @@ main (int argc, char **argv)
 
     // wait forver
     printf("Initialization done ...\n");
-    send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
+    //send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
     send_packet("h2s pkt", g_snd_pkt_h2s, sizeof(g_snd_pkt_h2s), g_h2s_port, NULL, 0, 0);
 
-    send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);
+    //send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);
 
 
     while (1);

@@ -1,5 +1,10 @@
 action mpls_label_to_vnic(vnic_type, vnic_id) {
     if (vnic_id == 0) {
+        /* Skip DNAT and Flow lookup */
+        modify_field(control_metadata.skip_dnat_lkp, TRUE);
+        modify_field(control_metadata.skip_flow_lkp, TRUE);
+        modify_field(ingress_recirc_header.flow_done, TRUE);
+        modify_field(ingress_recirc_header.dnat_done, TRUE);
         /* Treat it as a flow miss for now */
         modify_field(control_metadata.flow_miss, TRUE);
     }
@@ -24,6 +29,11 @@ table mpls_label_to_vnic {
 
 action vlan_to_vnic(vnic_type, vnic_id) {
     if (vnic_id == 0) {
+        /* Skip DNAT and Flow lookup */
+        modify_field(control_metadata.skip_dnat_lkp, TRUE);
+        modify_field(control_metadata.skip_flow_lkp, TRUE);
+        modify_field(ingress_recirc_header.flow_done, TRUE);
+        modify_field(ingress_recirc_header.dnat_done, TRUE);
         /* Treat it as a flow miss for now */
         modify_field(control_metadata.flow_miss, TRUE);
     }

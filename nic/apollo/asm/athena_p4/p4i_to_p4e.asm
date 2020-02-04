@@ -11,6 +11,7 @@ struct phv_             p;
 
 p4i_to_p4e:
     seq             c1, k.ingress_recirc_header_flow_done, TRUE
+    seq.c1          c1, k.ingress_recirc_header_dnat_done, TRUE
     /* Recirc scenario */
 #if 0
     phvwr.!c1       p.p4plus_to_p4_vlan_valid, FALSE
