@@ -29,7 +29,28 @@ var CreateDistributedServiceCardFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "default-gw",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "dns-servers",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "id",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "ip-address",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,

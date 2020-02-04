@@ -191,8 +191,29 @@ func removeCustomerOper(obj interface{}) error {
 // CreateOrderFlags specifies flags for Order create operation
 var CreateOrderFlags = []gen.CliFlag{
 	{
+		ID:     "ISBNId",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "Id",
 		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "Quantity",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "books",
+		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

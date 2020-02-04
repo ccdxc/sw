@@ -82,7 +82,7 @@ var typesMapLb = map[string]*api.Struct{
 			"self-link":             api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"session-affinity":      api.CLIInfo{Path: "Spec.SessionAffinity", Skip: false, Insert: "", Help: ""},
 			"tenant":                api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"type":                  api.CLIInfo{Path: "Status.Services", Skip: false, Insert: "", Help: ""},
+			"type":                  api.CLIInfo{Path: "Spec.Type", Skip: false, Insert: "", Help: ""},
 			"uuid":                  api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},

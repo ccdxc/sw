@@ -57,7 +57,7 @@ var typesMapWorkload = map[string]*api.Struct{
 			"external-vlan":    api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: "External vlan associated with the workload"},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"host-name":        api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: "Host name where the workload runs"},
-			"ip-addresses":     api.CLIInfo{Path: "Status.Interfaces[].IpAddresses", Skip: false, Insert: "", Help: ""},
+			"ip-addresses":     api.CLIInfo{Path: "Spec.Interfaces[].IpAddresses", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"mac-address":      api.CLIInfo{Path: "Spec.Interfaces[].MACAddress", Skip: false, Insert: "", Help: "MAC address of the interface as seen by the workload"},

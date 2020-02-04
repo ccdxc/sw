@@ -79,7 +79,7 @@ var CreateRoutingConfigFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "shutdown",
-		Type:   "Bool",
+		Type:   "StringSlice",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

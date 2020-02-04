@@ -29,6 +29,13 @@ var CreateWorkloadFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "ip-addresses",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "mac-address",
 		Type:   "StringSlice",
 		Help:   "MAC address of the interface as seen by the workload",

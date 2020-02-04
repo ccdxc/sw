@@ -77,6 +77,13 @@ var CreateNetworkInterfaceFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "type",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeNetworkInterfaceOper(obj interface{}) error {

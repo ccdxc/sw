@@ -13,7 +13,22 @@ import (
 )
 
 // CreateEndpointFlags specifies flags for Endpoint create operation
-var CreateEndpointFlags = []gen.CliFlag{}
+var CreateEndpointFlags = []gen.CliFlag{
+	{
+		ID:     "homing-host-addr",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "node-uuid",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+}
 
 func removeEndpointOper(obj interface{}) error {
 	if v, ok := obj.(*workload.Endpoint); ok {
@@ -29,6 +44,7 @@ func removeEndpointOper(obj interface{}) error {
 func init() {
 	cl := gen.GetInfo()
 
+	cl.AddCliInfo("workload.Endpoint", "create", CreateEndpointFlags)
 	cl.AddRemoveObjOperFunc("workload.Endpoint", removeEndpointOper)
 
 }

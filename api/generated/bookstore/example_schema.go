@@ -491,13 +491,13 @@ var typesMapExample = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"ISBNId":           api.CLIInfo{Path: "Status.Filled[].ISBNId", Skip: false, Insert: "", Help: ""},
+			"ISBNId":           api.CLIInfo{Path: "Spec.Order[].ISBNId", Skip: false, Insert: "", Help: ""},
 			"Id":               api.CLIInfo{Path: "Spec.Id", Skip: false, Insert: "", Help: ""},
 			"Message":          api.CLIInfo{Path: "Status.Message", Skip: false, Insert: "", Help: ""},
-			"Quantity":         api.CLIInfo{Path: "Status.Filled[].Quantity", Skip: false, Insert: "", Help: ""},
+			"Quantity":         api.CLIInfo{Path: "Spec.Order[].Quantity", Skip: false, Insert: "", Help: ""},
 			"Status":           api.CLIInfo{Path: "Status.Status", Skip: false, Insert: "", Help: ""},
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"books":            api.CLIInfo{Path: "Status.Filled[].Book", Skip: false, Insert: "", Help: ""},
+			"books":            api.CLIInfo{Path: "Spec.Order[].Book", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},

@@ -50,6 +50,13 @@ var CreateNetworkFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "namespace",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "orchestrator-name",
 		Type:   "StringSlice",
 		Help:   "",

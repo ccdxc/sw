@@ -63,6 +63,13 @@ var CreateLbPolicyFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "type",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeLbPolicyOper(obj interface{}) error {

@@ -72,7 +72,7 @@ var typesMapLicense = map[string]*api.Struct{
 		CLITags: map[string]api.CLIInfo{
 			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"expiry":           api.CLIInfo{Path: "Status.Features[].Expiry", Skip: false, Insert: "", Help: ""},
-			"feature-key":      api.CLIInfo{Path: "Status.Features[].FeatureKey", Skip: false, Insert: "", Help: ""},
+			"feature-key":      api.CLIInfo{Path: "Spec.Features[].FeatureKey", Skip: false, Insert: "", Help: ""},
 			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},

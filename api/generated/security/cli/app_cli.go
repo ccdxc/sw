@@ -79,7 +79,7 @@ var CreateAppFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "timeout",
-		Type:   "StringSlice",
+		Type:   "String",
 		Help:   "",
 		Skip:   false,
 		Insert: "",

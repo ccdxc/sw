@@ -114,7 +114,7 @@ var typesMapModule = map[string]*api.Struct{
 			"log-level":           api.CLIInfo{Path: "Spec.LogLevel", Skip: false, Insert: "", Help: ""},
 			"mac-address":         api.CLIInfo{Path: "Status.MACAddress", Skip: false, Insert: "", Help: ""},
 			"module":              api.CLIInfo{Path: "Status.Module", Skip: false, Insert: "", Help: ""},
-			"name":                api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"name":                api.CLIInfo{Path: "Status.ServicePorts[].Name", Skip: false, Insert: "", Help: ""},
 			"namespace":           api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
 			"node":                api.CLIInfo{Path: "Status.Node", Skip: false, Insert: "", Help: ""},
 			"port":                api.CLIInfo{Path: "Status.ServicePorts[].Port", Skip: false, Insert: "", Help: ""},

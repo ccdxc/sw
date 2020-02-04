@@ -15,6 +15,13 @@ import (
 // CreateLicenseFlags specifies flags for License create operation
 var CreateLicenseFlags = []gen.CliFlag{
 	{
+		ID:     "feature-key",
+		Type:   "StringSlice",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "licence",
 		Type:   "StringSlice",
 		Help:   "",

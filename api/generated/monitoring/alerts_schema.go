@@ -71,7 +71,7 @@ var typesMapAlerts = map[string]*api.Struct{
 			"severity":         api.CLIInfo{Path: "Status.Severity", Skip: false, Insert: "", Help: ""},
 			"state":            api.CLIInfo{Path: "Spec.State", Skip: false, Insert: "", Help: ""},
 			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"user":             api.CLIInfo{Path: "Status.Resolved.User", Skip: false, Insert: "", Help: ""},
+			"user":             api.CLIInfo{Path: "Status.Acknowledged.User", Skip: false, Insert: "", Help: ""},
 			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 			"values":           api.CLIInfo{Path: "Status.Reason.MatchedRequirements[].Values", Skip: false, Insert: "", Help: ""},
 		},

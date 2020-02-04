@@ -3125,6 +3125,7 @@ func getCLITags(strct Struct, path, prefix string, msgMap map[string]Struct, m m
 				// panic(fmt.Sprintf("duplicate tag [%s] at [%s]", fld.CLITag, fpath))
 				// Dont panic during initial development. Will panic in production
 				glog.V(1).Infof("Duplicate tag [%v] at [%s] Will CRASH&BURN", fld.CLITag, fpath)
+				continue
 			}
 			fld.CLITag.path = fpath
 			fld.CLITag.cliType = getCLIType(&fld)

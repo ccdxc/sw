@@ -59,7 +59,7 @@ var typesMapSgpolicy = map[string]*api.Struct{
 			"attach-tenant":        api.CLIInfo{Path: "Spec.AttachTenant", Skip: false, Insert: "", Help: ""},
 			"from-ip":              api.CLIInfo{Path: "Spec.Rules[].FromIPAddresses", Skip: false, Insert: "", Help: ""},
 			"from-security-groups": api.CLIInfo{Path: "Spec.Rules[].FromSecurityGroups", Skip: false, Insert: "", Help: ""},
-			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"generation-id":        api.CLIInfo{Path: "Status.PropagationStatus.GenerationID", Skip: false, Insert: "", Help: ""},
 			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"min-version":          api.CLIInfo{Path: "Status.PropagationStatus.MinVersion", Skip: false, Insert: "", Help: ""},
