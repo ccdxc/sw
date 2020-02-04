@@ -205,20 +205,15 @@ class NexthopGroupObjectClient(base.ConfigClientBase):
         self.__num_nhgs_per_vpc.append(nhg_spec_obj.count)
         return
 
-    def CreateObjects(self, node):
-        cookie = utils.GetBatchCookie(node)
-        msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))
-        api.client[node].Create(api.ObjectTypes.NEXTHOPGROUP, msgs)
-        return
-
     def GetGrpcReadAllMessage(self, node):
-        grpcmsg = nh_pb2.NhgroupGetRequest()
+        grpcmsg = nh_pb2.NhGroupGetRequest()
         return grpcmsg
 
     def ReadObjects(self, node):
         msg = self.GetGrpcReadAllMessage(node)
         api.client[node].Get(api.ObjectTypes.NEXTHOPGROUP, [msg])
-        return
+        # TODO: Add validation
+        return True
 
 client = NexthopGroupObjectClient()
 

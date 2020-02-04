@@ -1,6 +1,20 @@
-# VxLAN Topology Specification
+# Scale VxLAN Topology Specification for Host mode
 meta:
-    id: TOPO_VxLAN_HOSTMODE
+    id: TOPO_VxLAN_HOSTMODE_SCALE
+
+# scale is based on apulu for 4G DSC
+#
+# 1 Device
+# 9 VPCs (1 underlay + 8 Tenants)
+# 8 Subnets (as we can have only 8 Host interfaces)
+# 120 VNICs
+# 3840 Local mappings (32 per VNIC. So 32*120)
+# 1638400 Remote mappings
+# 32 V4 Route table (each with 1023 routes)
+# 32 V4 Security Policy (each with 4 rules)
+# 2048 Tunnels
+# 1602 Nexthops (1600 overlay + 2 underlay)
+# 360 NexthopGroups (each has random [1-8] no of nexthops)
 
 device:
     id          : 1
@@ -54,37 +68,25 @@ vpc:
           encap         : none
 
     - stack  : dual # dual, ipv4 , ipv6
-      count : 4
+      count : 8
       type  : tenant
       subnet:
         - count     : 1
-          v4prefixlen : 16
+          v4prefixlen : 10
           v6prefixlen : 64
           vnic:
-            - count   : 25
+            - count   : 15
               ipcount : 32            # Local IP mapping per vnic
-              srcguard: false         # true or false (default false)
-              public  : false
+              public  : true
               tagged  : false         # true or false (default true)
               # usehostif - Inherit subnet's host lif (default true)
               usehostif: false
           rmap:                       # Remote IP mappings per subnet
-            - count : 4
-        - count     : 1
-          v4prefixlen : 24
-          v6prefixlen : 96
-          vnic:
-            - count   : 1             # 1 untagged VNIC using subnet host lif
-              ipcount : 32
-              srcguard: false
-              public  : true
-              tagged  : false
-          rmap:
-            - count : 4
-      nat:
-        count : 2
-        addrtype : PUBLIC_AND_SERVICE
-        protocol : tcp,udp,icmp
+            - count : 204800
+      #nat:
+      #  count : 1
+      #  addrtype : PUBLIC_AND_SERVICE
+      #  protocol : tcp,udp,icmp
       nexthop:
         - type : overlay
           count : 100
@@ -93,16 +95,16 @@ vpc:
           count : 100
       nexthop-group:
         - type : underlay
-          count : 10
+          count : 15
         - type : overlay
-          count : 10
+          count : 15
         - type : overlay
           dual-ecmp : True
-          count : 10
+          count : 15
       routetbl:
              - type: base
                routetype: adjacent
-               count : 64
+               count : 1
                v4base: '64.0.0.0\8'
                v4prefixlen : 24
                nv4routes   : 1023
@@ -118,7 +120,7 @@ vpc:
 
              - type: base
                routetype: adjacent
-               count : 64
+               count : 1
                v4base: '65.0.0.0\8'
                v4prefixlen : 24
                nv4routes   : 1023
@@ -131,7 +133,7 @@ vpc:
 
              - type: base
                routetype: overlap
-               count : 64
+               count : 1
                v4base: '66.77.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1023
@@ -144,7 +146,7 @@ vpc:
 
              - type: base
                routetype: overlap
-               count : 64
+               count : 1
                v4base: '67.99.0.0\16'
                v4prefixlen: 24
                nv4routes   : 1023
@@ -158,6 +160,6 @@ vpc:
 
       policy:
               - type : specific
-                count : 5
+                count : 2
                 policytype : default
                 direction : bidir

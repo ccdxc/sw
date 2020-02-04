@@ -242,6 +242,7 @@ operator<<(std::ostream& os, const pds_obj_key_t *key) {
 // construct a 'sticky' uuid given an integer so that same uuid is generated
 // even across reboots i.e., same input gives same uuid everytime
 #define PDS_UUID_MAGIC_BYTE           0x42
+#define PDS_UUID_MAGIC_BYTE_LEN       0x2
 #define PDS_UUID_MAGIC_BYTE_OFFSET    8
 #define PDS_UUID_SYSTEM_MAC_OFFSET    10
 static inline pds_obj_key_t
@@ -251,7 +252,8 @@ uuid_from_objid (uint32_t id)
     mac_addr_t    system_mac;
 
     memcpy(&key.id[0], &id, sizeof(id));
-    memset(&key.id[8], 0x42, 2);
+    memset(&key.id[PDS_UUID_MAGIC_BYTE_OFFSET], PDS_UUID_MAGIC_BYTE,
+           PDS_UUID_MAGIC_BYTE_LEN);
 #ifdef SIM
     MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
 #else
@@ -259,8 +261,7 @@ uuid_from_objid (uint32_t id)
     sdk::platform::readFruKey(MACADDRESS_KEY, mac_str);
     mac_str_to_addr((char *)mac_str.c_str(), system_mac);
 #endif
-    memcpy(&key.id[10], system_mac, ETH_ADDR_LEN);
-
+    memcpy(&key.id[PDS_UUID_SYSTEM_MAC_OFFSET], system_mac, ETH_ADDR_LEN);
     return key;
 }
 

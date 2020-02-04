@@ -15,7 +15,6 @@ images:
 setup:
     topology: test/apulu/topologies/classic_baremetal/classic_baremetal.topology
     config  :
-        #- step : utils.naples_workloads
         - step : verif.config.verify_oob
         - step : config.set_max_mtu
         - step : config.topology
@@ -26,8 +25,6 @@ setup:
           args :
              spec : 2naples_bm_dynamic_scale_node2.cfgyml
              node : node2
-        - step : config.bringup_workloads
-        #- step : config.add_static_arp
 
 common:
     verifs:
@@ -44,7 +41,7 @@ common:
 testbundles:
     sanity:
         # Relative paths from iota/test/apulu/testbundles/
-        - networking/local2remote.testbundle
+        - api_crud_scale/api_crud_scale.testbundle
 
     regression:
         # Relative paths from iota/test/iris/testbundles/

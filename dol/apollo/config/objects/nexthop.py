@@ -341,32 +341,40 @@ class NexthopObjectClient(base.ConfigClientBase):
         return grpcmsg
 
     def ReadObjects(self, node):
-        if len(self.Objects(node)) == 0:
-            return
-        msg = self.GetGrpcReadAllMessage(node)
-        resp = api.client[node].Get(self.ObjType, [msg])
-        # TODO: Fix get all for nh, currently not supported
-        # nh read is based on id and type only
-        if False:
-            result = self.ValidateObjects(resp)
-            if result is False:
-                logger.critical("NEXTHOP object validation failed!!!")
-                sys.exit(1)
-        return
+        if utils.IsPipelineApulu():
+            cfgObjects = self.__underlay_objs[node].values()
+        else:
+            cfgObjects = self.Objects(node)
+        result = list(map(lambda x: x.Read(), cfgObjects))
+        if not all(result):
+            logger.critical(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
 
-    def ValidateObjects(self, getResp):
-        if utils.IsDryRun(): return True
-        for obj in getResp:
-            if not utils.ValidateGrpcResponse(obj):
-                logger.error("NEXTHOP get request failed for ", obj)
-                return False
-            for resp in obj.Response:
-                spec = resp.Spec
-                nh = self.GetObjectByKey(int(spec.Id))
-                if not utils.ValidateObject(nh, resp):
-                    logger.error("NEXTHOP validation failed for ", obj)
-                    vnic.Show()
-                    return False
+    def DeleteObjects(self, node):
+        if utils.IsPipelineApulu():
+            cfgObjects = self.__underlay_objs[node].values()
+        else:
+            cfgObjects = self.Objects(node)
+        logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Delete(), cfgObjects))
+        if not all(result):
+            logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        list(map(lambda x: x.SetHwHabitant(False), cfgObjects))
+        return True
+
+    def RestoreObjects(self, node):
+        if utils.IsPipelineApulu():
+            cfgObjects = self.__underlay_objs[node].values()
+        else:
+            cfgObjects = self.Objects(node)
+        logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Create(), cfgObjects))
+        if not all(result):
+            logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return True
 
 client = NexthopObjectClient()

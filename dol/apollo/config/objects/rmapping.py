@@ -15,7 +15,7 @@ import ipaddress
 
 class RemoteMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, tunobj, ipversion, count):
-        super().__init__(api.ObjectTypes.MAPPING, node)
+        super().__init__(api.ObjectTypes.RMAPPING, node)
         parent.AddChild(self)
         if (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
             self.SetOrigin(topo.OriginTypes.DISCOVERED)
@@ -153,12 +153,12 @@ class RemoteMappingObject(base.ConfigObjectBase):
 
 class RemoteMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.MAPPING)
+        super().__init__(api.ObjectTypes.RMAPPING, Resmgr.MAX_RMAPPING)
         return
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for remote mapping
-        return
+        return True
 
     def GenerateObjects(self, node, parent, subnet_spec_obj):
         if getattr(subnet_spec_obj, 'rmap', None) == None:
@@ -188,6 +188,16 @@ class RemoteMappingObjectClient(base.ConfigClientBase):
                     c = c + 1
                     v4c = v4c + 1
         return
+
+    def ReadObjects(self, node):
+        # read all not supported for local mapping - so do one by one
+        cfgObjects = self.Objects(node)
+        logger.info(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Read(), cfgObjects))
+        if not all(result):
+            logger.info(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
 
 client = RemoteMappingObjectClient()
 

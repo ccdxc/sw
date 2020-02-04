@@ -36,9 +36,12 @@ class NicmgrInterface:
 class Resmgr(base.ConfigObjectBase):
     #TODO: read from PDS header files & init
     MAX_DEVICE = 1
+    MAX_INTERFACE = 2
     MAX_TUNNEL = 2048 if utils.IsPipelineApulu() else 1023
     MAX_NEXTHOP = 4095
-    MAX_NEXTHOPGROUP = 1024
+    MAX_NEXTHOPGROUP = 2048
+    MAX_LMAPPING = 131072
+    MAX_RMAPPING = 2097152
     MAX_VPC = 64
     MAX_VNIC = 128 if utils.IsPipelineArtemis() or utils.IsPipelineApulu() else 64
     MAX_HOST_INTERFACES = 8 if utils.IsPipelineApulu() else 2
@@ -86,9 +89,9 @@ class Resmgr(base.ConfigObjectBase):
         self.TunnelIdAllocator = iter(irange(2,4096))
         self.VpcIdAllocator = iter(irange(1,1024))
         self.SubnetIdAllocator = iter(irange(1,1024))
-        self.RemoteMappingIdAllocator = iter(irange(1,1*1024*1024))
+        self.RemoteMappingIdAllocator = iter(irange(1,16*1024*1024))
         self.FlowIdAllocator = iter(irange(1,1*1024*1024))
-        self.LocalMappingIdAllocator = iter(irange(1,33*1024))
+        self.LocalMappingIdAllocator = iter(irange(1,128*1024))
         self.VnicVlanIdAllocator = iter(irange(1,1024))
         self.VnicMplsSlotIdAllocator = iter(irange(10000,11024))
         self.VnicIdAllocator = iter(irange(1,1024))
@@ -137,7 +140,7 @@ class Resmgr(base.ConfigObjectBase):
         self.SvcMappingPublicIpV6AddressAllocator = ipaddress.IPv6Network('eeee:dddd:dddd:0::/64').hosts()
         self.NexthopVlanIdAllocator = iter(irange(4001, 5124))
         # Provider IP for local and remote. One to One mapping now. Many to one can be done later
-        self.ProviderIpV4Network = '220.0.0.0/16'
+        self.ProviderIpV4Network = '220.0.0.0/8'
         self.ProviderIpV6Network = 'eeee:eeee:eee0:0::/64'
         self.ProviderIpV4Network = ipaddress.IPv4Network(self.ProviderIpV4Network)
         self.ProviderIpV6Network = ipaddress.IPv6Network(self.ProviderIpV6Network)
@@ -320,10 +323,10 @@ class Resmgr(base.ConfigObjectBase):
     @staticmethod
     def CreateIPv4SubnetPool(base, sublen, poolid):
         assert(isinstance(base, ipaddress.IPv4Network))
-        assert(sublen >= 16)
+        assert(sublen >= 10)
         assert(poolid < 16)
-        addr = base.network_address + (poolid << (32 - 12))
-        pfxstr = "%s/12" %(str(ipaddress.IPv4Address(addr)))
+        addr = base.network_address + (poolid << (32 - 8))
+        pfxstr = "%s/8" %(str(ipaddress.IPv4Address(addr)))
         base = ipaddress.IPv4Network(pfxstr)
         return iter(base.subnets(new_prefix=sublen))
 

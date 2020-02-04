@@ -19,7 +19,7 @@ import types_pb2 as types_pb2
 
 class LocalMappingObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, ipversion, count):
-        super().__init__(api.ObjectTypes.MAPPING, node)
+        super().__init__(api.ObjectTypes.LMAPPING, node)
         parent.AddChild(self)
         if (EzAccessStoreClient[node].IsDeviceLearningEnabled()) or \
                 (EzAccessStoreClient[node].IsDeviceOverlayRoutingEnabled()):
@@ -143,12 +143,12 @@ class LocalMappingObject(base.ConfigObjectBase):
 
 class LocalMappingObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.MAPPING)
+        super().__init__(api.ObjectTypes.LMAPPING, Resmgr.MAX_LMAPPING)
         return
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for local mapping
-        return
+        return True
 
     def GenerateObjects(self, node, parent, vnic_spec_obj):
         isV4Stack = utils.IsV4Stack(parent.SUBNET.VPC.Stack)
@@ -183,16 +183,22 @@ class LocalMappingObjectClient(base.ConfigClientBase):
             cookie = utils.GetBatchCookie(node)
             msgs = list(map(lambda x: x.GetGrpcSvcMappingCreateMessage(cookie), self.Objects(node)))
             api.client[node].Create(api.ObjectTypes.SVCMAPPING, msgs)
-        return
+        return True
 
     def ReadObjects(self, node):
-        super().ReadObjects(node)
+        # read all not supported for local mapping - so do one by one
+        cfgObjects = self.Objects(node)
+        logger.info(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Read(), cfgObjects))
+        if not all(result):
+            logger.info(f"Reading {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
 
         if utils.IsServiceMappingSupported():
             logger.info(f"Creating {len(self.Objects(node))} SVC {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcSvcMappingReadMessage(), self.Objects(node)))
             api.client[node].Get(api.ObjectTypes.SVCMAPPING, msgs)
-        return
+        return True
 
     def GetVnicAddresses(self, vnic):
         ip_addresses = []

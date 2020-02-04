@@ -376,7 +376,7 @@ class SubnetObjectClient(base.ConfigClientBase):
         # Create VNIC and Remote Mapping Objects
         vnic.client.CreateObjects(node)
         rmapping.client.CreateObjects(node)
-        return
+        return True
 
 client = SubnetObjectClient()
 

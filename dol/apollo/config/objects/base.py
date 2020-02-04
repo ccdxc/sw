@@ -10,6 +10,8 @@ import apollo.config.agent.api as api
 import apollo.config.utils as utils
 import apollo.config.topo as topo
 
+from apollo.config.store import EzAccessStore
+
 import types_pb2 as types_pb2
 
 class StatusObjectBase(base.StatusObjectBase):
@@ -123,8 +125,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
          return self.Precedent
 
     def Create(self, spec=None):
-        utils.CreateObject(self)
-        return
+        return utils.CreateObject(self)
 
     def Read(self, spec=None):
         if self.IsDirty():
@@ -134,7 +135,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
 
     def Delete(self, spec=None):
         utils.DeleteObject(self)
-        return
+        return True
 
     def UpdateNotify(self, dObj):
         return
@@ -163,13 +164,13 @@ class ConfigObjectBase(base.ConfigObjectBase):
                 logger.info("Updated values -")
                 self.Show()
                 self.SetDirty(True)
-                self.CommitUpdate()
-        return
+                return self.CommitUpdate()
+        return True
 
     def RollbackUpdate(self, spec=None):
         self.PrepareRollbackUpdate(spec)
         self.CommitUpdate(spec)
-        return
+        return True
 
     def PrepareRollbackUpdate(self, spec=None):
         if self.HasPrecedent():
@@ -291,6 +292,7 @@ class ConfigClientBase(base.ConfigClientBase):
         for obj in self.Objects(node):
             if (obj.HwHabitant == False):
                 count = count - 1
+        logger.info(f"GetNumHwObjects returned {count} for {self.ObjType.name} in {node}")
         return count
 
     def GetNumObjects(self, node):
@@ -327,7 +329,7 @@ class ConfigClientBase(base.ConfigClientBase):
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("GRPC get request failed for ", obj)
-                return False
+                continue
             for resp in obj.Response:
                 numObjs += 1
                 key = self.GetKeyfromSpec(resp.Spec)
@@ -338,9 +340,8 @@ class ConfigClientBase(base.ConfigClientBase):
                     return False
                 if hasattr(cfgObj, 'Status'):
                     cfgObj.Status.Update(resp.Status)
-
-        assert(numObjs == self.GetNumHwObjects(node))
-        return True
+        logger.info(f"GRPC read count {numObjs} for {self.ObjType.name} in {node}")
+        return (numObjs == self.GetNumHwObjects(node))
 
     def GrpcRead(self, node):
         # read all via grpc
@@ -348,8 +349,8 @@ class ConfigClientBase(base.ConfigClientBase):
         resp = api.client[node].Get(self.ObjType, [msg])
         if not self.ValidateGrpcRead(node, resp):
             logger.critical("Object validation failed for %s" % (self.ObjType))
-            assert(0)
-        return
+            return False
+        return True
 
     def ValidatePdsctlRead(self, node, ret, stdout):
         if utils.IsDryRun(): return True
@@ -381,14 +382,16 @@ class ConfigClientBase(base.ConfigClientBase):
         ret, op = pdsctl.GetObjects(node, self.ObjType)
         if not self.ValidatePdsctlRead(node, ret, op):
             logger.critical("Object validation failed for ", self.ObjType, ret, op)
-            assert(0)
-        return
+            return False
+        return True
 
     def ReadObjects(self, node):
         logger.info(f"Reading {self.ObjType.name} Objects from {node}")
-        self.GrpcRead(node)
-        self.PdsctlRead(node)
-        return
+        if not self.GrpcRead(node):
+            return False
+        if not self.PdsctlRead(node):
+            return False
+        return True
 
     def CreateObjects(self, node):
         fixed, discovered = [], []
@@ -410,5 +413,44 @@ class ConfigClientBase(base.ConfigClientBase):
         cookie = utils.GetBatchCookie(node)
         msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), fixed))
         api.client[node].Create(self.ObjType, msgs)
-        #TODO: Add validation for create
-        return
+        #TODO: Add validation for create & based on that set HW habitant
+        list(map(lambda x: x.SetHwHabitant(True), fixed))
+        return True
+
+    def DeleteObjects(self, node):
+        cfgObjects = self.Objects(node)
+        logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Delete(), cfgObjects))
+        if not all(result):
+            logger.info(f"Deleting {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        list(map(lambda x: x.SetHwHabitant(False), cfgObjects))
+        return True
+
+    def RestoreObjects(self, node):
+        cfgObjects = self.Objects(node)
+        logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Create(), cfgObjects))
+        if not all(result):
+            logger.info(f"Restoring {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
+        return True
+
+    def UpdateObjects(self, node):
+        cfgObjects = self.Objects(node)
+        logger.info(f"Updating {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.Update(), cfgObjects))
+        if not all(result):
+            logger.info(f"Updating {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True
+
+    def RollbackUpdateObjects(self, node):
+        cfgObjects = self.Objects(node)
+        logger.info(f"RollbackUpdate {len(cfgObjects)} {self.ObjType.name} Objects in {node}")
+        result = list(map(lambda x: x.RollbackUpdate(), cfgObjects))
+        if not all(result):
+            logger.info(f"RollbackUpdate {len(cfgObjects)} {self.ObjType.name} Objects FAILED in {node}")
+            return False
+        return True

@@ -326,7 +326,7 @@ class RouteObjectClient(base.ConfigClientBase):
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for route table
-        return
+        return True
 
     def GetRouteTableObject(self, node, routetableid):
         return self.GetObjectByKey(node, routetableid)

@@ -210,12 +210,15 @@ class DeviceObjectClient(base.ConfigClientBase):
 
     def ValidateGrpcRead(self, node, getResp):
         if utils.IsDryRun(): return True
+        device = self.GetObjectByKey(node, 0)
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
-                logger.error("GRPC get request failed for ", obj)
-                return False
+                if device.IsHwHabitant():
+                    logger.error(f"GRPC get request failed for {device} with {obj}")
+                    device.Show()
+                    return False
+                return True
             resp = obj.Response
-            device = self.GetObjectByKey(node, 0)
             if not utils.ValidateObject(device, resp):
                 logger.error("GRPC read validation failed for  ", obj)
                 device.Show()
@@ -227,6 +230,13 @@ class DeviceObjectClient(base.ConfigClientBase):
         if not ret:
             logger.error("pdsctl show cmd failed for ", self.ObjType)
             return False
+        device = self.GetObjectByKey(node, 0)
+        if "API_STATUS_NOT_FOUND" in stdout:
+            if device.IsHwHabitant():
+                logger.error(f"GRPC get request failed for {device} with {stdout}")
+                device.Show()
+                return False
+            return True
         # split output per object
         cmdop = stdout.split("---")
         for op in cmdop:

@@ -41,8 +41,8 @@ import nat_pb2 as nat_pb2
 from infra.common.glopts  import GlobalOptions
 from infra.common.logging import logger
 
-# RPC Timeout - 10mins
-MAX_GRPC_WAIT = 600
+# RPC Timeout - 20mins
+MAX_GRPC_WAIT = 1200
 MAX_BATCH_SIZE = 64
 
 class ApiOps(enum.IntEnum):
@@ -64,7 +64,7 @@ class ObjectTypes(enum.IntEnum):
     SUBNET = 4
     TUNNEL = 5
     VNIC = 6
-    MAPPING = 7
+    LMAPPING = 7
     ROUTE = 8
     POLICY = 9
     MIRROR = 10
@@ -76,7 +76,8 @@ class ObjectTypes(enum.IntEnum):
     INTERFACE = 16
     DHCP_RELAY = 17
     NAT_PB = 18
-    MAX = 19
+    RMAPPING = 19
+    MAX = 20
 
 class ClientModule:
     def __init__(self, module, msg_prefix):
@@ -190,7 +191,9 @@ class ApolloAgentClient:
                                                       self.__channel, 'Tunnel')
         self.__stubs[ObjectTypes.VNIC] = ClientStub(vnic_pb2_grpc.VnicSvcStub,
                                                       self.__channel, 'Vnic')
-        self.__stubs[ObjectTypes.MAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
+        self.__stubs[ObjectTypes.LMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
+                                                      self.__channel, 'Mapping')
+        self.__stubs[ObjectTypes.RMAPPING] = ClientStub(mapping_pb2_grpc.MappingSvcStub,
                                                       self.__channel, 'Mapping')
         self.__stubs[ObjectTypes.ROUTE] = ClientStub(route_pb2_grpc.RouteSvcStub,
                                                       self.__channel, 'RouteTable')
@@ -217,7 +220,8 @@ class ApolloAgentClient:
     def __create_msgreq_table(self):
         self.__msgreqs[ObjectTypes.DEVICE] = ClientModule(device_pb2, 'Device')
         self.__msgreqs[ObjectTypes.INTERFACE] = ClientModule(interface_pb2, 'Interface')
-        self.__msgreqs[ObjectTypes.MAPPING] = ClientModule(mapping_pb2, 'Mapping')
+        self.__msgreqs[ObjectTypes.LMAPPING] = ClientModule(mapping_pb2, 'Mapping')
+        self.__msgreqs[ObjectTypes.RMAPPING] = ClientModule(mapping_pb2, 'Mapping')
         self.__msgreqs[ObjectTypes.METER] = ClientModule(meter_pb2, 'Meter')
         self.__msgreqs[ObjectTypes.MIRROR] = ClientModule(mirror_pb2, 'MirrorSession')
         self.__msgreqs[ObjectTypes.NEXTHOP] = ClientModule(nh_pb2, 'Nexthop')

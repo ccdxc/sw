@@ -2,7 +2,7 @@
 import ipaddress
 import random
 #Following come from dol/infra
-
+from apollo.config.generator import ObjectInfo as ObjClient
 import apollo.config.objects.device as device
 import apollo.config.objects.vpc as vpc
 import apollo.config.objects.subnet as subnet
@@ -55,6 +55,9 @@ def GetEndpoints():
             eps.append(ep)
 
     return eps
+
+def GetObjClient(objname):
+    return ObjClient[objname]
 
 def __findWorkloadsByIP(ip):
     wloads = api.GetWorkloads()

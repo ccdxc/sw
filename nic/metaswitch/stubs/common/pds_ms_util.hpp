@@ -198,6 +198,7 @@ pdsobjkey2msidx (const pds_obj_key_t& key) {
 }
 
 #define PDS_UUID_MAGIC_BYTE           0x42
+#define PDS_UUID_MAGIC_BYTE_LEN       0x2
 #define PDS_UUID_MAGIC_BYTE_OFFSET    8
 #define PDS_UUID_SYSTEM_MAC_OFFSET    10
 static inline pds_obj_key_t
@@ -208,8 +209,9 @@ uuid_from_msid (uint32_t id)
 
     MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
     memcpy(&key.id[0], &id, sizeof(id));
-    memset(&key.id[8], 0x42, 2);
-    memcpy(&key.id[10], system_mac, ETH_ADDR_LEN);
+    memset(&key.id[PDS_UUID_MAGIC_BYTE_OFFSET], PDS_UUID_MAGIC_BYTE,
+           PDS_UUID_MAGIC_BYTE_LEN);
+    memcpy(&key.id[PDS_UUID_SYSTEM_MAC_OFFSET], system_mac, ETH_ADDR_LEN);
     return key;
 }
 

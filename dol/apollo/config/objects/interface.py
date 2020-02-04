@@ -168,7 +168,7 @@ class InterfaceObject(base.ConfigObjectBase):
 
 class InterfaceObjectClient(base.ConfigClientBase):
     def __init__(self):
-        super().__init__(api.ObjectTypes.INTERFACE)
+        super().__init__(api.ObjectTypes.INTERFACE, Resmgr.MAX_INTERFACE)
         self.__uplinkl3ifs = defaultdict(dict)
         self.__uplinkl3ifs_iter = defaultdict(dict)
         self.__hostifs = defaultdict(dict)
@@ -204,7 +204,7 @@ class InterfaceObjectClient(base.ConfigClientBase):
             lifend = lifstart + obj.LifCount - 1
             spec.lifns = objects.TemplateFieldObject("range/%d/%d" % (lifstart, lifend))
             ifobj = InterfaceObject(spec, ifspec, node=node)
-            self.Objs[node].update({ifobj.InterfaceId: ifobj})
+            # self.Objs[node].update({ifobj.InterfaceId: ifobj})
             self.__hostifs[node].update({ifobj.InterfaceId: ifobj})
 
         if self.__hostifs[node]:
@@ -259,10 +259,12 @@ class InterfaceObjectClient(base.ConfigClientBase):
     def CreateObjects(self, node):
         cookie = utils.GetBatchCookie(node)
         if utils.IsL3InterfaceSupported():
+            cfgObjects = self.__uplinkl3ifs[node].values()
             # create l3 if for uplink interface
-            logger.info(f"Creating {len(self.__uplinkl3ifs[node])} L3 {self.ObjType.name} Objects in {node}")
-            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__uplinkl3ifs[node].values()))
+            logger.info(f"Creating {len(cfgObjects)} L3 {self.ObjType.name} Objects in {node}")
+            msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), cfgObjects))
             api.client[node].Create(api.ObjectTypes.INTERFACE, msgs)
+            list(map(lambda x: x.SetHwHabitant(True), cfgObjects))
         return
 
     def ReadObjects(self, node):
@@ -271,26 +273,28 @@ class InterfaceObjectClient(base.ConfigClientBase):
         result = self.ValidateObjects(resp, node)
         if result is False:
             logger.critical("INTERFACE object validation failed!!!")
-            assert(0)
-        return
+            return False
+        return True
 
     def ValidateObjects(self, getResp, node):
         if utils.IsDryRun(): return True
+        numObjs = 0
         for obj in getResp:
             if not utils.ValidateGrpcResponse(obj):
                 logger.error("INTERFACE get request failed for ", obj)
-                return False
+                continue
             for resp in obj.Response:
                 key = self.GetKeyfromSpec(resp.Spec)
                 inf = self.GetInterfaceObject(node, key)
                 if inf is not None:
+                    numObjs += 1
                     if not utils.ValidateObject(inf, resp):
                         logger.error("INTERFACE validation failed for ", resp.Spec)
                         inf.Show()
                         return False
                     # update status for this interface object
                     inf.Status.Update(inf.Type, resp.Status)
-        return True
+        return (numObjs == self.GetNumHwObjects(node))
 
 
 client = InterfaceObjectClient()

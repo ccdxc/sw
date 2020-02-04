@@ -213,6 +213,9 @@ def ValidateYamlValues(obj, resp):
            obj.ValidateYamlStatus(status)
 
 def ValidateObject(obj, resp, yaml=False):
+    if obj is None:
+        logger.info(f"Read failed - No object found for the response {resp}")
+        return False
     if yaml:
         return ValidateYamlValues(obj, resp)
     return ValidateGrpcValues(obj, resp)
@@ -263,7 +266,7 @@ def ValidateDelete(obj, resps):
     if IsDryRun():
         # assume deletion was fine in case of dry run
         obj.SetHwHabitant(False)
-        return
+        return True
     for resp in resps:
         respStatus = GetAttrFromResponse(obj, resp, 'ApiStatus')
         for status in respStatus:
@@ -272,10 +275,11 @@ def ValidateDelete(obj, resps):
             else:
                 logger.error("Deletion failed for %s" % (obj))
                 obj.Show()
-    return
+                return False
+    return True
 
 def ValidateUpdate(obj, resps):
-    if IsDryRun(): return
+    if IsDryRun(): return True
     for resp in resps:
         if ValidateGrpcResponse(resp):
             obj.SetHwHabitant(True)
@@ -285,7 +289,8 @@ def ValidateUpdate(obj, resps):
             obj.PrepareRollbackUpdate()
             obj.SetDirty(False)
             obj.SetHwHabitant(True)
-    return
+            return False
+    return True
 
 def LoadYaml(cmdoutput):
     return yaml.load(cmdoutput, Loader=yaml.FullLoader)
@@ -305,10 +310,11 @@ def InformDependents(dependee, cbFn):
             getattr(depender, cbFn)(dependee)
     return
 
+#TODO - Fix validation returns appropriately for DOL & IOTA
 def CreateObject(obj):
     if obj.IsHwHabitant():
         logger.info("Already restored %s" % (obj))
-        return
+        return True
     batchClient = EzAccessStore.GetBatchClient()
 
     def RestoreObj(robj, node):
@@ -325,6 +331,7 @@ def CreateObject(obj):
     RestoreObj(obj, obj.Node);
     for childObj in obj.Children:
         CreateObject(childObj)
+    return True
 
 def ReadObject(obj):
     msg = obj.GetGrpcReadMessage()
@@ -340,13 +347,12 @@ def UpdateObject(obj):
     msg = obj.GetGrpcUpdateMessage(cookie)
     resps = api.client[node].Update(obj.ObjType, [msg])
     batchClient.Commit(node)
-    ValidateUpdate(obj, resps)
-    return
+    return ValidateUpdate(obj, resps)
 
 def DeleteObject(obj):
     if not obj.IsHwHabitant():
         logger.info("Already deleted %s" % (obj))
-        return
+        return True
     batchClient = EzAccessStore.GetBatchClient()
 
     def DelObj(dobj, node):
@@ -357,14 +363,13 @@ def DeleteObject(obj):
         msg = dobj.GetGrpcDeleteMessage(cookie)
         resps = api.client[node].Delete(dobj.ObjType, [msg])
         batchClient.Commit(node)
-        ValidateDelete(dobj, resps)
+        return ValidateDelete(dobj, resps)
 
     # Delete from bottom to top
     for childObj in obj.Children:
         DeleteObject(childObj)
     # Delete the final
-    DelObj(obj, obj.Node)
-    return
+    return DelObj(obj, obj.Node)
 
 def GetIPProtoByName(protoname):
     """

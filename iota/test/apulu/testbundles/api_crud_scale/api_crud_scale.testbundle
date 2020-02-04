@@ -1,0 +1,23 @@
+meta:
+    name    : api_crud_scale
+    os      : [ linux ]
+    nicmode : classic
+    nics    : [ pensando ]
+
+testcases:
+    -   name    : API_CRUD_SCALE_DELETE
+        testcase: testcases.api_crud_scale.api_crud_cfg_scale
+        stress  : True
+        iterators :
+            type    : nested
+            objtype : [ policy, route, tunnel, rmapping, lmapping, interface, nexthop, nexthopgroup, vnic, subnet, vpc, device ]
+            oper    : [ delete ]
+
+    -   name    : API_CRUD_SCALE_UPDATE
+        testcase: testcases.api_crud_scale.api_crud_cfg_scale
+        stress  : True
+        enable  : False
+        iterators :
+            type    : nested
+            objtype : [ subnet ]
+            oper    : [ update ]

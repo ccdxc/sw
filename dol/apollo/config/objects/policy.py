@@ -312,7 +312,7 @@ class PolicyObjectClient(base.ConfigClientBase):
 
     def PdsctlRead(self, node):
         # pdsctl show not supported for policy
-        return
+        return True
 
     def GetPolicyObject(self, node, policyid):
         return self.GetObjectByKey(node, policyid)
