@@ -149,10 +149,10 @@ int main(int argc, char** argv) {
 
     client.peerGetAll();
     client.peerCreate();
-    //client.peerGet();
+    client.peerGet();
 //    sleep(25);
     client.peerGetAll();
-//    client.peerDelete();
+    client.peerDelete();
     client.peerGetAll();
 
     return 0;
