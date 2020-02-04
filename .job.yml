@@ -132,8 +132,8 @@ jobs:
     labels: ["precommit", "2xhourly"]
   iota/test/standalone/sanity/apulu-networking:
     labels: ["daily"]
-#  iota/test/standalone/regression/esx:
-#    labels: ["daily"]
+  iota/test/standalone/regression/esx:
+    labels: ["daily"]
   iota/test/standalone/regression/freebsd:
     labels: ["daily"]
   iota/test/standalone/regression/linux:

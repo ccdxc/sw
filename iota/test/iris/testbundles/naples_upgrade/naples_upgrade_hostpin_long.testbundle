@@ -37,6 +37,7 @@ testcases:
             type : simple
             option : ["linkdownpause", "hostdownpause", "posthostdownpause", "savestatepause"]
         args      :
+            timeout: 4800
             sleep : 450
 
     -   name: DISRUPTIVE_UPGRADE_PAUSE_POST_SWITCHROOT
