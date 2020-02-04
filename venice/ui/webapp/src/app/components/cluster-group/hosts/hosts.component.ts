@@ -116,19 +116,10 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
   fieldFormArray = new FormArray([]);
 
   exportFilename: string = 'Venice-hosts';
+
   exportMap: CustomExportMap = {
     'workloads': (opts): string => {
-      let workloadName: string = '';
-      for (const key in opts.data.processedWorkloads) {
-        if (key) {
-          if (Number(key) >= opts.data.processedWorkloads.length - 1 && opts.data.processedWorkloads.length > 1) {
-            workloadName += ',' + opts.data.processedWorkloads[key].meta.name;
-          } else {
-            workloadName = opts.data.processedWorkloads[key].meta.name;
-          }
-        }
-      }
-      return workloadName;
+      return opts.data.processedWorkloads.map(wkld => wkld.meta.name).join(', ');
     }
   };
 

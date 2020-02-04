@@ -17,6 +17,7 @@ const URL = "10.30.1.175"  // Srividhya Swaminathan
 // const URL = "10.8.102.52"; // scale setup admin/Pensando0$
 // const URL = "10.8.102.157"; // scale setup admin/Pensando0$
 // const URL = "10.30.5.181";  // qixin setup admin/Systest-1$
+// const URL = "10.30.1.111" // arunkumar's esx server
 
 const PROXY_CONFIG =
   {
