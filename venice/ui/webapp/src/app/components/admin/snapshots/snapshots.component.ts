@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
 import { Animations } from '@app/animations';
 import { Utility } from '@app/common/Utility';
 import { TableCol, CustomExportMap } from '@app/components/shared/tableviewedit';
@@ -13,6 +14,7 @@ import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { ClusterConfigurationSnapshotRequest, ClusterSnapshotRestore, IApiStatus, IClusterConfigurationSnapshotRequest, IClusterSnapshotRestore, IClusterConfigurationSnapshot, ClusterConfigurationSnapshot } from '@sdk/v1/models/generated/cluster';
 import { IObjstoreObject, IObjstoreObjectList, ObjstoreObject } from '@sdk/v1/models/generated/objstore';
 import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
+import { maxLengthValidator, patternValidator } from '@sdk/v1/utils/validators';
 import { Observable } from 'rxjs';
 import { AUTH_KEY } from '@app/core';
 
@@ -81,6 +83,16 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   shouldEnable_refresh_button: boolean = true;
   exportMap: CustomExportMap = {};
 
+  saveConfigForm: FormGroup = new FormGroup({
+    meta: new FormGroup({
+      name: new FormControl('', [
+        maxLengthValidator(10),
+        patternValidator('^[\\w\\-]*$', 'Only alphanumeric, -, or _ characters are allowed.'),
+      ]),
+    })
+  });
+  savingConfig: boolean = false;
+
   constructor(protected controllerService: ControllerService,
     protected uiconfigsService: UIConfigsService,
     protected cdr: ChangeDetectorRef,
@@ -94,7 +106,6 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
     this.checkAndMakeSnapshotPolicy();
     this.getSnapshots();
   }
-
 
   setDefaultToolbar() {
     const buttons = [];
@@ -111,7 +122,10 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
           cssClass: 'global-button-primary snapshots-toolbar-button snapshots-toolbar-button-ADD',
           text: 'SAVE A CONFIG SNAPSHOT',
           computeClass: () => this.shouldEnable_takesnapshot_button ? '' : 'global-button-disabled',
-          callback: () => { this.checkAndSaveConfigSnapshot(); }
+          callback: () => {
+            this.setToolbarSaveSnapshots();
+            this.createNewObject();
+          }
         };
         buttons.push(saveButton);
       }
@@ -122,8 +136,50 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
       breadcrumb: [{ label: 'Snapshots', url: Utility.getBaseUIUrl() + 'admin/snapshots' }]
     });
   }
+
   refresh() {
     this.getSnapshots();
+  }
+
+  isSaveSnapshotsOpen() {
+    return this.creatingMode;
+  }
+
+  /**
+   * Set toolbar buttons when form is open for "save a config snapshot"
+   */
+  setToolbarSaveSnapshots(): void {
+    const currToolbar = this._controllerService.getToolbarData();
+    currToolbar.buttons = [
+      {
+        cssClass: 'global-button-primary snapshots-toolbar-button snapshots-toolbar-button-ADD',
+        text: 'SAVE CONFIGURATION',
+        callback: () => { this.checkAndSaveConfigSnapshot(); },
+        computeClass: () => this.computeSaveBtnClass()
+      },
+      {
+        cssClass: 'global-button-neutral snapshots-toolbar-button snapshots-toolbar-button-CANCEL',
+        text: 'CANCEL',
+        callback: () => { this.closeSaveConfigSnapshot(); },
+        computeClass: () => this.computeSaveBtnClass()
+      },
+    ];
+
+    this._controllerService.setToolbarData(currToolbar);
+  }
+
+  computeSaveBtnClass() {
+    if (this.savingConfig || !this.saveConfigForm.valid) {
+      return 'global-button-disabled';
+    }
+
+    return '';
+  }
+
+  closeSaveConfigSnapshot() {
+    this.setDefaultToolbar();
+    this.creationFormClose();
+    this.saveConfigForm.reset();
   }
 
   /**
@@ -140,14 +196,21 @@ export class SnapshotsComponent extends TablevieweditAbstract<IObjstoreObject, O
   }
 
   saveConfigSnapshot() {
-    const clusterConfigurationSnapshotRequest: IClusterConfigurationSnapshotRequest = new ClusterConfigurationSnapshotRequest();
+    this.savingConfig = true;
+    this.saveConfigForm.disable();
+    const clusterConfigurationSnapshotRequest: IClusterConfigurationSnapshotRequest = new ClusterConfigurationSnapshotRequest(this.saveConfigForm.value);
     this.clusterService.Save(clusterConfigurationSnapshotRequest).subscribe(
       () => {
+        this.closeSaveConfigSnapshot();
         this.controllerService.invokeSuccessToaster('Success.', 'Saved configuration snapshot.');
         this.refresh();
       },
       (error) => {
         this._controllerService.invokeRESTErrorToaster('Failed to save config snapshot', error);
+      },
+      () => {
+        this.savingConfig = false;
+        this.saveConfigForm.enable();
       }
     );
   }

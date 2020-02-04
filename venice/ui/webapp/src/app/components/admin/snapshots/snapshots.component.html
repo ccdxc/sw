@@ -42,6 +42,7 @@
                      [showRowExpand]="showRowExpand" [data]="dataObjects" [cols]="cols"
                      [virtualRowHeight]="50"
                      [expandedRowData]="expandedRowData" [captionTemplate]="captionTemplate"
+                     [createTemplate]="createTemplate"
                      [bodyTemplate]="bodyTemplate"
                      [actionTemplate]="actionTemplate" [enableCheckbox]="true"
                      [tableLoading]="tableLoading"
@@ -124,4 +125,23 @@
       </div>
     </div>
   </ng-container>
+</ng-template>
+
+<ng-template #createTemplate>
+  <div class="snapshots-save-panel-header">
+    Snapshot Configuration
+  </div>
+  <div [formGroup]="saveConfigForm" class="snapshots-save-content"
+       fxLayout="row wrap" fxLayoutAlign="start center" fxLayoutGap="15px">
+    <div [class]="'snapshots-save-label ' + (saveConfigForm.get(['meta', 'name']).invalid ? 'snapshots-save-label-invalid' : '')"
+         matTooltip="Optional, leave blank to use default timestamp format.">
+      Name:
+    </div>
+    <div formGroupName="meta" class="snapshots-save-name-input">
+      <input formControlName="name"
+             class="snapshots-save-name-input"
+             placeholder="Configuration Name..." pInputText
+             appErrorTooltip spellcheck="false" type="text">
+    </div>
+  </div>
 </ng-template>
