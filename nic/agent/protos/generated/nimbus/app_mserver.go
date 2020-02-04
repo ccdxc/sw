@@ -36,11 +36,11 @@ func (ms *MbusServer) FindApp(objmeta *api.ObjectMeta) (*netproto.App, error) {
 }
 
 // ListApps lists all Apps in the mbus
-func (ms *MbusServer) ListApps(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.App, error) {
+func (ms *MbusServer) ListApps(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.App, error) {
 	var objlist []*netproto.App
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("App", filterFn)
+	objs := ms.memDB.ListObjects("App", filters)
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type AppStatusReactor interface {
 	OnAppDeleteReq(nodeID string, objinfo *netproto.App) error
 	OnAppOperUpdate(nodeID string, objinfo *netproto.App) error
 	OnAppOperDelete(nodeID string, objinfo *netproto.App) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type AppNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *AppTopic) GetApp(ctx context.Context, objmeta *api.ObjectMeta) (*netpr
 func (eh *AppTopic) ListApps(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.AppList, error) {
 	var objlist netproto.AppList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("App", objsel)
+		filters = eh.statusReactor.GetWatchFilter("App", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("App", filterFn)
+	objs := eh.server.memDB.ListObjects("App", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := AppFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *AppTopic) WatchApps(watchOptions *api.ListWatchOptions, stream netprot
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("App", watchOptions)
+		watcher.Filters["App"] = eh.statusReactor.GetWatchFilter("App", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["App"] = append(watcher.Filters["App"], filt)
 	}
 
 	ctx := stream.Context()

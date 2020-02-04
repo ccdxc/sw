@@ -36,11 +36,11 @@ func (ms *MbusServer) FindProfile(objmeta *api.ObjectMeta) (*netproto.Profile, e
 }
 
 // ListProfiles lists all Profiles in the mbus
-func (ms *MbusServer) ListProfiles(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Profile, error) {
+func (ms *MbusServer) ListProfiles(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Profile, error) {
 	var objlist []*netproto.Profile
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Profile", filterFn)
+	objs := ms.memDB.ListObjects("Profile", filters)
 	for _, oo := range objs {
 		obj, err := ProfileFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type ProfileStatusReactor interface {
 	OnProfileDeleteReq(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperUpdate(nodeID string, objinfo *netproto.Profile) error
 	OnProfileOperDelete(nodeID string, objinfo *netproto.Profile) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type ProfileNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *ProfileTopic) GetProfile(ctx context.Context, objmeta *api.ObjectMeta)
 func (eh *ProfileTopic) ListProfiles(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.ProfileList, error) {
 	var objlist netproto.ProfileList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Profile", objsel)
+		filters = eh.statusReactor.GetWatchFilter("Profile", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Profile", filterFn)
+	objs := eh.server.memDB.ListObjects("Profile", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := ProfileFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *ProfileTopic) WatchProfiles(watchOptions *api.ListWatchOptions, stream
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Profile", watchOptions)
+		watcher.Filters["Profile"] = eh.statusReactor.GetWatchFilter("Profile", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["Profile"] = append(watcher.Filters["Profile"], filt)
 	}
 
 	ctx := stream.Context()

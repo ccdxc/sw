@@ -10,6 +10,7 @@ It is generated from these files:
 	delphi/interface.proto
 	delphi/ipam.proto
 	delphi/network.proto
+	delphi/profile.proto
 	delphi/route.proto
 	delphi/sgpolicy.proto
 	delphi/secprofile.proto
@@ -21,6 +22,7 @@ It has these top-level messages:
 	Interface
 	IPAMPolicy
 	Network
+	Profile
 	RoutingConfig
 	NetworkSecurityPolicy
 	SecurityProfile

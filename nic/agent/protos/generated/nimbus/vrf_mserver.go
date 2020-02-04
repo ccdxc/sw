@@ -36,11 +36,11 @@ func (ms *MbusServer) FindVrf(objmeta *api.ObjectMeta) (*netproto.Vrf, error) {
 }
 
 // ListVrfs lists all Vrfs in the mbus
-func (ms *MbusServer) ListVrfs(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Vrf, error) {
+func (ms *MbusServer) ListVrfs(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Vrf, error) {
 	var objlist []*netproto.Vrf
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Vrf", filterFn)
+	objs := ms.memDB.ListObjects("Vrf", filters)
 	for _, oo := range objs {
 		obj, err := VrfFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type VrfStatusReactor interface {
 	OnVrfDeleteReq(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperUpdate(nodeID string, objinfo *netproto.Vrf) error
 	OnVrfOperDelete(nodeID string, objinfo *netproto.Vrf) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type VrfNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *VrfTopic) GetVrf(ctx context.Context, objmeta *api.ObjectMeta) (*netpr
 func (eh *VrfTopic) ListVrfs(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.VrfList, error) {
 	var objlist netproto.VrfList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Vrf", objsel)
+		filters = eh.statusReactor.GetWatchFilter("Vrf", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Vrf", filterFn)
+	objs := eh.server.memDB.ListObjects("Vrf", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := VrfFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *VrfTopic) WatchVrfs(watchOptions *api.ListWatchOptions, stream netprot
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Vrf", watchOptions)
+		watcher.Filters["Vrf"] = eh.statusReactor.GetWatchFilter("Vrf", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["Vrf"] = append(watcher.Filters["Vrf"], filt)
 	}
 
 	ctx := stream.Context()

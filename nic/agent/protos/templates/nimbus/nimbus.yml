@@ -10,3 +10,5 @@
    - template: "nimbus_client_global.tmpl"
      outputpath: "nimbus_client.go"
      once: true
+   - template: "../../../../../venice/utils/apigen/templates/schema.tmpl"
+     outputpath: "../../netproto/{FILE}_schema.go"

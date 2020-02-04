@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto10 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto11 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Vrf struct {
 	Meta *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key  string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Vrf  *netproto10.Vrf    `protobuf:"bytes,3,opt,name=Vrf" json:"Vrf,omitempty"`
+	Vrf  *netproto11.Vrf    `protobuf:"bytes,3,opt,name=Vrf" json:"Vrf,omitempty"`
 }
 
 func (m *Vrf) GetDelphiMessage() proto.Message {
@@ -126,7 +126,7 @@ type VrfReactor interface {
 func (m *Vrf) Reset()                    { *m = Vrf{} }
 func (m *Vrf) String() string            { return proto.CompactTextString(m) }
 func (*Vrf) ProtoMessage()               {}
-func (*Vrf) Descriptor() ([]byte, []int) { return fileDescriptor8, []int{0} }
+func (*Vrf) Descriptor() ([]byte, []int) { return fileDescriptor9, []int{0} }
 
 func (m *Vrf) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -142,7 +142,7 @@ func (m *Vrf) GetKey() string {
 	return ""
 }
 
-func (m *Vrf) GetVrf() *netproto10.Vrf {
+func (m *Vrf) GetVrf() *netproto11.Vrf {
 	if m != nil {
 		return m.Vrf
 	}
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*Vrf)(nil), "dnetproto.Vrf")
 }
 
-func init() { proto.RegisterFile("delphi/vrf.proto", fileDescriptor8) }
+func init() { proto.RegisterFile("delphi/vrf.proto", fileDescriptor9) }
 
-var fileDescriptor8 = []byte{
+var fileDescriptor9 = []byte{
 	// 142 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x48, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0x2b, 0x4a, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0xc9,

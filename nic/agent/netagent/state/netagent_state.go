@@ -100,7 +100,8 @@ func (na *Nagent) GetWatchOptions(cts context.Context, kind string) api.ListWatc
 	var ret api.ListWatchOptions
 	switch kind {
 	case "Endpoint":
-		ret.Name = na.NodeUUID
+		str := fmt.Sprintf("spec.node-uuid=%s", na.NodeUUID)
+		ret.FieldSelector = str
 	}
 	return ret
 }

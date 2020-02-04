@@ -3,8 +3,8 @@ NimbusDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/nim
 RestClientDir := ${GOPATH}/src/github.com/pensando/sw/nic/agent/protos/generated/restclient
 
 # all the sources for which .pb.go is generated
-SRC := app.proto agg_watch.proto endpoint.proto  flowexport.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto route.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto types.proto vrf.proto profile.proto
-NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto network.proto route.proto sgpolicy.proto secprofile.proto vrf.proto
+SRC := app.proto agg_watch.proto endpoint.proto  flowexport.proto interface.proto ipam.proto match.proto mirror.proto namespace.proto network.proto port.proto profile.proto route.proto sgpolicy.proto secprofile.proto tenant.proto tunnel.proto types.proto vrf.proto
+NIMBUS_SRC := app.proto endpoint.proto interface.proto ipam.proto network.proto profile.proto route.proto sgpolicy.proto secprofile.proto vrf.proto
 
 #these wont have _api.go generated
 FILTER_OUT_API := agg_watch.proto ipam.proto  match.proto namespace.proto tenant.proto port.proto route.proto
@@ -80,3 +80,4 @@ delphi-gen: ${DELPHI_SRC}
 gen-clean:
 	rm -f ${DEST}
 	rm -f ${NIMBUS_DEST}
+	rm -f *schema.go

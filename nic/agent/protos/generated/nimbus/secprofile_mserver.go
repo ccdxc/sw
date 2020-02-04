@@ -36,11 +36,11 @@ func (ms *MbusServer) FindSecurityProfile(objmeta *api.ObjectMeta) (*netproto.Se
 }
 
 // ListSecurityProfiles lists all SecurityProfiles in the mbus
-func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.SecurityProfile, error) {
+func (ms *MbusServer) ListSecurityProfiles(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.SecurityProfile, error) {
 	var objlist []*netproto.SecurityProfile
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("SecurityProfile", filterFn)
+	objs := ms.memDB.ListObjects("SecurityProfile", filters)
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type SecurityProfileStatusReactor interface {
 	OnSecurityProfileDeleteReq(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperUpdate(nodeID string, objinfo *netproto.SecurityProfile) error
 	OnSecurityProfileOperDelete(nodeID string, objinfo *netproto.SecurityProfile) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type SecurityProfileNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *SecurityProfileTopic) GetSecurityProfile(ctx context.Context, objmeta 
 func (eh *SecurityProfileTopic) ListSecurityProfiles(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.SecurityProfileList, error) {
 	var objlist netproto.SecurityProfileList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("SecurityProfile", objsel)
+		filters = eh.statusReactor.GetWatchFilter("SecurityProfile", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("SecurityProfile", filterFn)
+	objs := eh.server.memDB.ListObjects("SecurityProfile", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := SecurityProfileFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *SecurityProfileTopic) WatchSecurityProfiles(watchOptions *api.ListWatc
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("SecurityProfile", watchOptions)
+		watcher.Filters["SecurityProfile"] = eh.statusReactor.GetWatchFilter("SecurityProfile", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["SecurityProfile"] = append(watcher.Filters["SecurityProfile"], filt)
 	}
 
 	ctx := stream.Context()

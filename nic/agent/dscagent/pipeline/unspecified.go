@@ -1457,7 +1457,8 @@ func (i *FakeAgentAPI) PurgeConfigs() error {
 func (i *FakeAgentAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.ListWatchOptions) {
 	switch kind {
 	case "Endpoint":
-		ret.Name = i.InfraAPI.GetDscName()
+		str := fmt.Sprintf("spec.node-uuid=%s", i.InfraAPI.GetDscName())
+		ret.FieldSelector = str
 	}
 	return ret
 }

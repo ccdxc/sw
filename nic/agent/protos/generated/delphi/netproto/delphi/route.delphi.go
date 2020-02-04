@@ -126,7 +126,7 @@ type RoutingConfigReactor interface {
 func (m *RoutingConfig) Reset()                    { *m = RoutingConfig{} }
 func (m *RoutingConfig) String() string            { return proto.CompactTextString(m) }
 func (*RoutingConfig) ProtoMessage()               {}
-func (*RoutingConfig) Descriptor() ([]byte, []int) { return fileDescriptor5, []int{0} }
+func (*RoutingConfig) Descriptor() ([]byte, []int) { return fileDescriptor6, []int{0} }
 
 func (m *RoutingConfig) GetMeta() *delphi.ObjectMeta {
 	if m != nil {
@@ -154,9 +154,9 @@ func init() {
 	proto.RegisterType((*RoutingConfig)(nil), "dnetproto.RoutingConfig")
 }
 
-func init() { proto.RegisterFile("delphi/route.proto", fileDescriptor5) }
+func init() { proto.RegisterFile("delphi/route.proto", fileDescriptor6) }
 
-var fileDescriptor5 = []byte{
+var fileDescriptor6 = []byte{
 	// 155 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4a, 0x49, 0xcd, 0x29,
 	0xc8, 0xc8, 0xd4, 0x2f, 0xca, 0x2f, 0x2d, 0x49, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2,

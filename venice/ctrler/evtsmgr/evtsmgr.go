@@ -275,8 +275,9 @@ func (em *EventsManager) GCAlerts(retentionPeriod time.Duration) {
 		retries++
 	}
 
-	// fetch all the resolved alerts
-	resolvedAlerts := em.memDb.ListObjects("Alert", func(obj memdb.Object) bool {
+	filters := []memdb.FilterFn{}
+
+	filter := func(obj, prev memdb.Object) bool {
 		alert := obj.(*monitoring.Alert)
 		if alert.Spec.State == monitoring.AlertState_RESOLVED.String() && alert.Status.Resolved != nil {
 			tm, err := alert.Status.Resolved.Time.Time()
@@ -288,7 +289,10 @@ func (em *EventsManager) GCAlerts(retentionPeriod time.Duration) {
 			}
 		}
 		return false
-	})
+	}
+	filters = append(filters, filter)
+	// fetch all the resolved alerts
+	resolvedAlerts := em.memDb.ListObjects("Alert", filters)
 
 	for _, alert := range resolvedAlerts {
 		if em.ctx.Err() != nil {

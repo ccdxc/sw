@@ -36,11 +36,11 @@ func (ms *MbusServer) FindIPAMPolicy(objmeta *api.ObjectMeta) (*netproto.IPAMPol
 }
 
 // ListIPAMPolicys lists all IPAMPolicys in the mbus
-func (ms *MbusServer) ListIPAMPolicys(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.IPAMPolicy, error) {
+func (ms *MbusServer) ListIPAMPolicys(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.IPAMPolicy, error) {
 	var objlist []*netproto.IPAMPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("IPAMPolicy", filterFn)
+	objs := ms.memDB.ListObjects("IPAMPolicy", filters)
 	for _, oo := range objs {
 		obj, err := IPAMPolicyFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type IPAMPolicyStatusReactor interface {
 	OnIPAMPolicyDeleteReq(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperUpdate(nodeID string, objinfo *netproto.IPAMPolicy) error
 	OnIPAMPolicyOperDelete(nodeID string, objinfo *netproto.IPAMPolicy) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type IPAMPolicyNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *IPAMPolicyTopic) GetIPAMPolicy(ctx context.Context, objmeta *api.Objec
 func (eh *IPAMPolicyTopic) ListIPAMPolicys(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.IPAMPolicyList, error) {
 	var objlist netproto.IPAMPolicyList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("IPAMPolicy", objsel)
+		filters = eh.statusReactor.GetWatchFilter("IPAMPolicy", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("IPAMPolicy", filterFn)
+	objs := eh.server.memDB.ListObjects("IPAMPolicy", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := IPAMPolicyFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *IPAMPolicyTopic) WatchIPAMPolicys(watchOptions *api.ListWatchOptions, 
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("IPAMPolicy", watchOptions)
+		watcher.Filters["IPAMPolicy"] = eh.statusReactor.GetWatchFilter("IPAMPolicy", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["IPAMPolicy"] = append(watcher.Filters["IPAMPolicy"], filt)
 	}
 
 	ctx := stream.Context()

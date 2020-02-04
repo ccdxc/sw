@@ -217,26 +217,6 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 
 		switch kind {
 		{{range $key, $value := $manifest}}
-			{{ if strEq $value.Object "Endpoint"}}
-			case "{{$value.Object}}":
-				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
-				if err != nil {
-					log.Errorf("Error getting a list of objects. Err: %v", err)
-					return nil, err
-				}
-				for _, obj := range objlist {
-					if obj.Spec.NodeUUID != nodeID {
-						//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
-						continue
-					}
-					mobj, err := types.MarshalAny(obj)
-					if err != nil {
-						log.Errorf("Error  marshalling any object. Err: %v", err)
-						return nil, err
-					}
-					addAggObjectEvent(mobj, obj.GetObjectMeta())
-				}
-			{{else}}
 			case "{{$value.Object}}":
 				objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
 				if err != nil {
@@ -253,8 +233,6 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				}
 
 			{{end}}
-
-		{{end}}
 		}
 	}
 
@@ -500,17 +478,30 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 
 // WatchObjects watches aggregate  and sends streaming resp
 func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
-
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher := memdb.Watcher{}
 	watcher.Name = nodeID
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	kindStrings := []string{}
 	for _, kind := range kinds.WatchOptions {
 		kindStrings = append(kindStrings, kind.Kind)
+		switch kind.Kind {
+		{{range $key, $value := $manifest}}
+		case "{{$value.Object}}":
+			if _, ok := eh.statusReactor.({{$value.Object}}StatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.({{$value.Object}}StatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+		{{end}}
+		}
 	}
 
 	aggKey := strings.Join(kindStrings, "-")
@@ -533,28 +524,8 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		}
 		switch kind {
 		{{range $key, $value := $manifest}}
-		{{ if strEq $value.Object "Endpoint"}}
 		case "{{$value.Object}}":
-			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
-			if err != nil {
-				log.Errorf("Error getting a list of objects. Err: %v", err)
-				return err
-			}
-			for _, obj := range objlist {
-				if obj.Spec.NodeUUID != nodeID {
-					//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
-					continue
-				}
-				mobj, err := types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-				addAggObjectEvent(mobj, obj.GetObjectMeta())
-			}
-		{{else}}
-		case "{{$value.Object}}":
-			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), nil)
+			objlist, err := eh.server.List{{$value.Object}}s(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -568,7 +539,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 				addAggObjectEvent(mobj,obj.GetObjectMeta())
 			}
 		{{end}}
-	{{end}}
 		}
 
 		// walk all objects and send it out
@@ -600,7 +570,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 	}
 
 	// loop forever on watch channel
-	Watching:
 	for {
 		select {
 		// read from channel
@@ -630,23 +599,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			var mobj *types.Any
 			switch kind {
 			{{range $key, $value := $manifest}}
-			{{ if strEq $value.Object "Endpoint"}}
-			case "{{$value.Object}}":
-				obj, err := {{$value.Object}}FromObj(evt.Obj)
-				if err != nil {
-					return err
-				}
-				if obj.Spec.NodeUUID != nodeID {
-					//log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
-					continue Watching
-				}
-				mobj, err = types.MarshalAny(obj)
-				if err != nil {
-					log.Errorf("Error  marshalling any object. Err: %v", err)
-					return err
-				}
-			{{else}}
-
 			case "{{$value.Object}}":
 				obj, err := {{$value.Object}}FromObj(evt.Obj)
 				if err != nil {
@@ -658,7 +610,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 					return err
 				}
 			{{end}}
-		{{end}}
 			}
 			watchEvt.AggObj.Object.Any = *mobj
 			watchEvts.AggObjectEvents = append(watchEvts.AggObjectEvents, &watchEvt)

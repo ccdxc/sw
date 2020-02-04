@@ -36,11 +36,11 @@ func (ms *MbusServer) FindEndpoint(objmeta *api.ObjectMeta) (*netproto.Endpoint,
 }
 
 // ListEndpoints lists all Endpoints in the mbus
-func (ms *MbusServer) ListEndpoints(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Endpoint, error) {
+func (ms *MbusServer) ListEndpoints(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Endpoint, error) {
 	var objlist []*netproto.Endpoint
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Endpoint", filterFn)
+	objs := ms.memDB.ListObjects("Endpoint", filters)
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type EndpointStatusReactor interface {
 	OnEndpointDeleteReq(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperUpdate(nodeID string, objinfo *netproto.Endpoint) error
 	OnEndpointOperDelete(nodeID string, objinfo *netproto.Endpoint) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type EndpointNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *EndpointTopic) GetEndpoint(ctx context.Context, objmeta *api.ObjectMet
 func (eh *EndpointTopic) ListEndpoints(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.EndpointList, error) {
 	var objlist netproto.EndpointList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Endpoint", objsel)
+		filters = eh.statusReactor.GetWatchFilter("Endpoint", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Endpoint", filterFn)
+	objs := eh.server.memDB.ListObjects("Endpoint", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := EndpointFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *EndpointTopic) WatchEndpoints(watchOptions *api.ListWatchOptions, stre
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Endpoint", watchOptions)
+		watcher.Filters["Endpoint"] = eh.statusReactor.GetWatchFilter("Endpoint", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["Endpoint"] = append(watcher.Filters["Endpoint"], filt)
 	}
 
 	ctx := stream.Context()

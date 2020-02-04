@@ -131,12 +131,12 @@ func (obj *objState) updateUnResolved() {
 }
 
 //FilterFn filter function
-type FilterFn func(Object) bool
+type FilterFn func(obj, prev Object) bool
 
 //Watcher watcher attributes
 type Watcher struct {
 	Name    string
-	Filter  FilterFn
+	Filters map[string][]FilterFn
 	Channel chan Event
 }
 
@@ -165,6 +165,7 @@ type Memdb struct {
 
 // watchEvent sends out watch event to all watchers
 func (od *Objdb) watchEvent(obj Object, et EventType) error {
+	done := false
 	// create the event
 	ev := Event{
 		EventType: et,
@@ -173,8 +174,19 @@ func (od *Objdb) watchEvent(obj Object, et EventType) error {
 	od.WatchLock.RLock()
 	// send it to each watcher
 	for _, watcher := range od.watchers {
-		if watcher.Filter != nil && !watcher.Filter(ev.Obj) {
-			continue
+		if len(watcher.Filters) != 0 {
+			if filters, ok := watcher.Filters[obj.GetObjectKind()]; ok {
+				for _, flt := range filters {
+					if !flt(ev.Obj, nil) {
+						done = true
+						break
+					}
+				}
+				if done == true {
+					done = false
+					continue
+				}
+			}
 		}
 		//fmt.Printf("Sending obj evemt %v %v\n", ev, obj.GetObjectMeta().GetKey())
 		select {
@@ -493,7 +505,8 @@ func (md *Memdb) FindObject(kind string, ometa *api.ObjectMeta) (Object, error) 
 }
 
 // ListObjects returns a list of all objects of a kind
-func (md *Memdb) ListObjects(kind string, filter FilterFn) []Object {
+func (md *Memdb) ListObjects(kind string, filters []FilterFn) []Object {
+	done := false
 	// get objdb
 	od := md.getObjdb(kind)
 
@@ -504,8 +517,20 @@ func (md *Memdb) ListObjects(kind string, filter FilterFn) []Object {
 	// walk all objects and add it to return list
 	var objs []Object
 	for _, obj := range od.objects {
-		if filter == nil || filter(obj.obj) {
+		if filters == nil {
 			objs = append(objs, obj.obj)
+		} else {
+			for _, filter := range filters {
+				if !filter(obj.obj, nil) {
+					done = true
+					break
+				}
+			}
+			if done == true {
+				done = false
+			} else {
+				objs = append(objs, obj.obj)
+			}
 		}
 	}
 

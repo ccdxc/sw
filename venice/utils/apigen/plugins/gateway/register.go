@@ -49,6 +49,8 @@ type scratchVars struct {
 
 var scratch scratchVars
 
+var ignorePkgs = []string{"netproto"}
+
 func (s *scratchVars) setBool(val bool, id int) bool {
 	s.B[id] = val
 	// Dummy return to satisfy templates
@@ -2796,6 +2798,15 @@ func hasListHelper(msg *descriptor.Message) bool {
 	return false
 }
 
+func ignorePackage(pkgName string) bool {
+	for _, pkg := range ignorePkgs {
+		if pkg == pkgName {
+			return true
+		}
+	}
+	return false
+}
+
 func getAutoRestOper(meth *descriptor.Method) (string, error) {
 	if v, err := reg.GetExtension("venice.methodAutoGen", meth); err == nil {
 		if v.(bool) == false {
@@ -3194,7 +3205,7 @@ func genMsgMap(file *descriptor.File) (map[string]Struct, []string, error) {
 	for _, msg := range file.Messages {
 		var kind, group string
 		var scopes []string
-		if isSpecStatusMessage(msg) || (hasTypeMeta(msg) && hasListHelper(msg)) {
+		if !ignorePackage(pkg) && (isSpecStatusMessage(msg) || (hasTypeMeta(msg) && hasListHelper(msg))) {
 			kind = *msg.Name
 			group = file.GoPkg.Name
 			if v, _ := isTenanted(msg); v {

@@ -2566,21 +2566,98 @@ func TestWatchFilter(t *testing.T) {
 		return
 	}
 
-	options := api.ListWatchOptions{}
-	options.Name = "0000.0000.0001"
+	options1 := api.ListWatchOptions{}
+	options1.Name = "xyz"
+	options1.ResourceVersion = "100"
+	options1.Tenant = "test"
+	options1.Namespace = "test"
 
-	filterFn1 := stateMgr.GetWatchFilter("Network", &options)
-	filterFn2 := stateMgr.GetWatchFilter("Endpoint", &options)
+	options2 := api.ListWatchOptions{}
+	options2.FieldSelector = "spec.node-uuid=0000.0000.0001"
+
+	options3 := api.ListWatchOptions{}
+	options3.FieldSelector = "spec.node-uui=0000.0000.0001"
+
+	filterFn1 := stateMgr.GetWatchFilter("Network", &options1)
+	filterFn2 := stateMgr.GetWatchFilter("netproto.Endpoint", &options2)
+	filterFn3 := stateMgr.GetWatchFilter("Endpoint", &options2)
+	filterFn4 := stateMgr.GetWatchFilter("netproto.Endpoint", &options3)
 
 	obj1 := netproto.Network{}
 	obj1.Name = "xyz"
+	obj1.ResourceVersion = "100"
+	obj1.Tenant = "test"
+	obj1.Namespace = "test"
+
 	obj2 := netproto.Endpoint{}
-	Assert(t, filterFn1(&obj1), "expecting filter to pass")
-	Assert(t, filterFn2(&obj2), "expecting filter to pass")
+	res := true
+
+	for _, filt := range filterFn1 {
+		if !filt(&obj1, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res, "expecting filter to pass")
+
 	obj2.Spec.NodeUUID = "0000.0000.0001"
-	Assert(t, filterFn2(&obj2), "expecting filter to pass")
+	res = true
+	for _, filt := range filterFn2 {
+		if !filt(&obj2, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res, "expecting filter to pass")
 	obj2.Spec.NodeUUID = "0000.0000.0002"
-	Assert(t, filterFn2(&obj2) == false, "expecting filter to fail")
+
+	res = true
+	for _, filt := range filterFn2 {
+		if !filt(&obj2, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res == false, "expecting filter to fail")
+
+	res = true
+	for _, filt := range filterFn3 {
+		if !filt(&obj2, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res == true, "expecting filter to pass")
+
+	res = true
+	for _, filt := range filterFn4 {
+		if !filt(&obj2, nil) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res == true, "expecting filter to pass")
+
+	obj3 := obj1
+	obj3.Name = "newtest"
+	options4 := api.ListWatchOptions{}
+	options4.FieldChangeSelector = []string{"ObjectMeta.Name"}
+	filterFn5 := stateMgr.GetWatchFilter("Network", &options4)
+
+	res = true
+	for _, filt := range filterFn5 {
+		if !filt(&obj3, &obj1) {
+			res = false
+			break
+		}
+	}
+
+	Assert(t, res == true, "expecting filter to pass")
 
 	stateMgr.StopAppWatch()
 	stateMgr.StartAppWatch()

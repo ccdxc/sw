@@ -315,6 +315,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.({{$value.Object}}Reactor).GetWatchOptions(ctx, "{{$value.Object}}")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
         {{end}}
 		}
@@ -322,7 +325,6 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 
 	// start the watch
 	aggRPCClient := netproto.NewAggWatchApiV1Client(client.rpcClient.ClientConn)
-
 	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
 	if err != nil {
 		log.Errorf("Error watching Aggregate watch for . Err: %v", err)

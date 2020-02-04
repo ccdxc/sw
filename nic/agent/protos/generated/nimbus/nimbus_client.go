@@ -1077,6 +1077,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(AppReactor).GetWatchOptions(ctx, "App")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Endpoint":
@@ -1086,6 +1089,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(EndpointReactor).GetWatchOptions(ctx, "Endpoint")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "IPAMPolicy":
@@ -1095,6 +1101,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(IPAMPolicyReactor).GetWatchOptions(ctx, "IPAMPolicy")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Interface":
@@ -1104,6 +1113,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(InterfaceReactor).GetWatchOptions(ctx, "Interface")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Network":
@@ -1113,6 +1125,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(NetworkReactor).GetWatchOptions(ctx, "Network")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "NetworkSecurityPolicy":
@@ -1122,6 +1137,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(NetworkSecurityPolicyReactor).GetWatchOptions(ctx, "NetworkSecurityPolicy")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Profile":
@@ -1131,6 +1149,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(ProfileReactor).GetWatchOptions(ctx, "Profile")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "RoutingConfig":
@@ -1140,6 +1161,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(RoutingConfigReactor).GetWatchOptions(ctx, "RoutingConfig")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "SecurityProfile":
@@ -1149,6 +1173,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(SecurityProfileReactor).GetWatchOptions(ctx, "SecurityProfile")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		case "Vrf":
@@ -1158,6 +1185,9 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 			}
 			aggKind := api.KindWatchOptions{}
 			aggKind.Kind = kind
+			aggKind.Group = "netproto"
+			listWatchOptions := reactor.(VrfReactor).GetWatchOptions(ctx, "Vrf")
+			aggKind.Options = listWatchOptions
 			aggKinds.WatchOptions = append(aggKinds.WatchOptions, aggKind)
 
 		}
@@ -1165,7 +1195,6 @@ func (client *NimbusClient) WatchAggregate(ctx context.Context, kinds []string, 
 
 	// start the watch
 	aggRPCClient := netproto.NewAggWatchApiV1Client(client.rpcClient.ClientConn)
-
 	stream, err := aggRPCClient.WatchObjects(ctx, &aggKinds)
 	if err != nil {
 		log.Errorf("Error watching Aggregate watch for . Err: %v", err)

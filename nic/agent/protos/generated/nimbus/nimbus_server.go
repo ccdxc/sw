@@ -237,10 +237,6 @@ func (eh *AggregateTopic) ListObjects(ctx context.Context, kinds *api.AggWatchOp
 				return nil, err
 			}
 			for _, obj := range objlist {
-				if obj.Spec.NodeUUID != nodeID {
-					//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
-					continue
-				}
 				mobj, err := types.MarshalAny(obj)
 				if err != nil {
 					log.Errorf("Error  marshalling any object. Err: %v", err)
@@ -792,17 +788,120 @@ func (eh *AggregateTopic) WatcherInConfigSync(nodeID string, kind string, event 
 
 // WatchObjects watches aggregate  and sends streaming resp
 func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netproto.AggWatchApiV1_WatchObjectsServer) error {
-
 	ctx := stream.Context()
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
 	watcher := memdb.Watcher{}
 	watcher.Name = nodeID
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	kindStrings := []string{}
 	for _, kind := range kinds.WatchOptions {
 		kindStrings = append(kindStrings, kind.Kind)
+		switch kind.Kind {
+
+		case "App":
+			if _, ok := eh.statusReactor.(AppStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(AppStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "Endpoint":
+			if _, ok := eh.statusReactor.(EndpointStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(EndpointStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "IPAMPolicy":
+			if _, ok := eh.statusReactor.(IPAMPolicyStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(IPAMPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "Interface":
+			if _, ok := eh.statusReactor.(InterfaceStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(InterfaceStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "Network":
+			if _, ok := eh.statusReactor.(NetworkStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "NetworkSecurityPolicy":
+			if _, ok := eh.statusReactor.(NetworkSecurityPolicyStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(NetworkSecurityPolicyStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "Profile":
+			if _, ok := eh.statusReactor.(ProfileStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(ProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "RoutingConfig":
+			if _, ok := eh.statusReactor.(RoutingConfigStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(RoutingConfigStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "SecurityProfile":
+			if _, ok := eh.statusReactor.(SecurityProfileStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(SecurityProfileStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		case "Vrf":
+			if _, ok := eh.statusReactor.(VrfStatusReactor); ok {
+				watcher.Filters[kind.Kind] = eh.statusReactor.(VrfStatusReactor).GetWatchFilter(kind.Group+"."+kind.Kind, &kind.Options)
+			} else {
+				filt := func(obj, prev memdb.Object) bool {
+					return true
+				}
+				watcher.Filters[kind.Kind] = append(watcher.Filters[kind.Kind], filt)
+			}
+
+		}
 	}
 
 	aggKey := strings.Join(kindStrings, "-")
@@ -826,7 +925,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 		switch kind {
 
 		case "App":
-			objlist, err := eh.server.ListApps(context.Background(), nil)
+			objlist, err := eh.server.ListApps(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -841,16 +940,12 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Endpoint":
-			objlist, err := eh.server.ListEndpoints(context.Background(), nil)
+			objlist, err := eh.server.ListEndpoints(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
 			}
 			for _, obj := range objlist {
-				if obj.Spec.NodeUUID != nodeID {
-					//log.Infof("Skipping Adding EP: %v | Node ID: %s | Ctx Node ID: %s", obj.GetKey(), obj.Spec.NodeUUID, nodeID)
-					continue
-				}
 				mobj, err := types.MarshalAny(obj)
 				if err != nil {
 					log.Errorf("Error  marshalling any object. Err: %v", err)
@@ -860,7 +955,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "IPAMPolicy":
-			objlist, err := eh.server.ListIPAMPolicys(context.Background(), nil)
+			objlist, err := eh.server.ListIPAMPolicys(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -875,7 +970,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Interface":
-			objlist, err := eh.server.ListInterfaces(context.Background(), nil)
+			objlist, err := eh.server.ListInterfaces(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -890,7 +985,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Network":
-			objlist, err := eh.server.ListNetworks(context.Background(), nil)
+			objlist, err := eh.server.ListNetworks(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -905,7 +1000,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "NetworkSecurityPolicy":
-			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), nil)
+			objlist, err := eh.server.ListNetworkSecurityPolicys(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -920,7 +1015,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Profile":
-			objlist, err := eh.server.ListProfiles(context.Background(), nil)
+			objlist, err := eh.server.ListProfiles(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -935,7 +1030,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "RoutingConfig":
-			objlist, err := eh.server.ListRoutingConfigs(context.Background(), nil)
+			objlist, err := eh.server.ListRoutingConfigs(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -950,7 +1045,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "SecurityProfile":
-			objlist, err := eh.server.ListSecurityProfiles(context.Background(), nil)
+			objlist, err := eh.server.ListSecurityProfiles(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -965,7 +1060,7 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 			}
 
 		case "Vrf":
-			objlist, err := eh.server.ListVrfs(context.Background(), nil)
+			objlist, err := eh.server.ListVrfs(context.Background(), watcher.Filters[kind])
 			if err != nil {
 				log.Errorf("Error getting a list of objects. Err: %v", err)
 				return err
@@ -1010,7 +1105,6 @@ func (eh *AggregateTopic) WatchObjects(kinds *api.AggWatchOptions, stream netpro
 	}
 
 	// loop forever on watch channel
-Watching:
 	for {
 		select {
 		// read from channel
@@ -1055,10 +1149,6 @@ Watching:
 				obj, err := EndpointFromObj(evt.Obj)
 				if err != nil {
 					return err
-				}
-				if obj.Spec.NodeUUID != nodeID {
-					//log.Infof("Skipping sending Filtered out obj. NodeUUID: %s | SelfNodeUUID: %s", obj.Spec.NodeUUID, nodeID)
-					continue Watching
 				}
 				mobj, err = types.MarshalAny(obj)
 				if err != nil {

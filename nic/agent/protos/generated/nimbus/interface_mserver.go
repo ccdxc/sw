@@ -36,11 +36,11 @@ func (ms *MbusServer) FindInterface(objmeta *api.ObjectMeta) (*netproto.Interfac
 }
 
 // ListInterfaces lists all Interfaces in the mbus
-func (ms *MbusServer) ListInterfaces(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.Interface, error) {
+func (ms *MbusServer) ListInterfaces(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.Interface, error) {
 	var objlist []*netproto.Interface
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("Interface", filterFn)
+	objs := ms.memDB.ListObjects("Interface", filters)
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type InterfaceStatusReactor interface {
 	OnInterfaceDeleteReq(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperUpdate(nodeID string, objinfo *netproto.Interface) error
 	OnInterfaceOperDelete(nodeID string, objinfo *netproto.Interface) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type InterfaceNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *InterfaceTopic) GetInterface(ctx context.Context, objmeta *api.ObjectM
 func (eh *InterfaceTopic) ListInterfaces(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.InterfaceList, error) {
 	var objlist netproto.InterfaceList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("Interface", objsel)
+		filters = eh.statusReactor.GetWatchFilter("Interface", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("Interface", filterFn)
+	objs := eh.server.memDB.ListObjects("Interface", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := InterfaceFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *InterfaceTopic) WatchInterfaces(watchOptions *api.ListWatchOptions, st
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("Interface", watchOptions)
+		watcher.Filters["Interface"] = eh.statusReactor.GetWatchFilter("Interface", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["Interface"] = append(watcher.Filters["Interface"], filt)
 	}
 
 	ctx := stream.Context()

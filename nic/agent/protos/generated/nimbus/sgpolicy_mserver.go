@@ -36,11 +36,11 @@ func (ms *MbusServer) FindNetworkSecurityPolicy(objmeta *api.ObjectMeta) (*netpr
 }
 
 // ListNetworkSecurityPolicys lists all NetworkSecurityPolicys in the mbus
-func (ms *MbusServer) ListNetworkSecurityPolicys(ctx context.Context, filterFn func(memdb.Object) bool) ([]*netproto.NetworkSecurityPolicy, error) {
+func (ms *MbusServer) ListNetworkSecurityPolicys(ctx context.Context, filters []memdb.FilterFn) ([]*netproto.NetworkSecurityPolicy, error) {
 	var objlist []*netproto.NetworkSecurityPolicy
 
 	// walk all objects
-	objs := ms.memDB.ListObjects("NetworkSecurityPolicy", filterFn)
+	objs := ms.memDB.ListObjects("NetworkSecurityPolicy", filters)
 	for _, oo := range objs {
 		obj, err := NetworkSecurityPolicyFromObj(oo)
 		if err == nil {
@@ -58,7 +58,7 @@ type NetworkSecurityPolicyStatusReactor interface {
 	OnNetworkSecurityPolicyDeleteReq(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperUpdate(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
 	OnNetworkSecurityPolicyOperDelete(nodeID string, objinfo *netproto.NetworkSecurityPolicy) error
-	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) func(memdb.Object) bool
+	GetWatchFilter(kind string, watchOptions *api.ListWatchOptions) []memdb.FilterFn
 }
 
 type NetworkSecurityPolicyNodeStatus struct {
@@ -343,17 +343,20 @@ func (eh *NetworkSecurityPolicyTopic) GetNetworkSecurityPolicy(ctx context.Conte
 func (eh *NetworkSecurityPolicyTopic) ListNetworkSecurityPolicys(ctx context.Context, objsel *api.ListWatchOptions) (*netproto.NetworkSecurityPolicyList, error) {
 	var objlist netproto.NetworkSecurityPolicyList
 	nodeID := netutils.GetNodeUUIDFromCtx(ctx)
+	filters := []memdb.FilterFn{}
 
-	filterFn := func(memdb.Object) bool {
+	filterFn := func(obj, prev memdb.Object) bool {
 		return true
 	}
 
 	if eh.statusReactor != nil {
-		filterFn = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", objsel)
+		filters = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", objsel)
+	} else {
+		filters = append(filters, filterFn)
 	}
 
 	// walk all objects
-	objs := eh.server.memDB.ListObjects("NetworkSecurityPolicy", filterFn)
+	objs := eh.server.memDB.ListObjects("NetworkSecurityPolicy", filters)
 	//creationTime, _ := types.TimestampProto(time.Now())
 	for _, oo := range objs {
 		obj, err := NetworkSecurityPolicyFromObj(oo)
@@ -373,14 +376,16 @@ func (eh *NetworkSecurityPolicyTopic) WatchNetworkSecurityPolicys(watchOptions *
 	// watch for changes
 	watcher := memdb.Watcher{}
 	watcher.Channel = make(chan memdb.Event, memdb.WatchLen)
+	watcher.Filters = make(map[string][]memdb.FilterFn)
 	defer close(watcher.Channel)
 
 	if eh.statusReactor != nil {
-		watcher.Filter = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", watchOptions)
+		watcher.Filters["NetworkSecurityPolicy"] = eh.statusReactor.GetWatchFilter("NetworkSecurityPolicy", watchOptions)
 	} else {
-		watcher.Filter = func(memdb.Object) bool {
+		filt := func(obj, prev memdb.Object) bool {
 			return true
 		}
+		watcher.Filters["NetworkSecurityPolicy"] = append(watcher.Filters["NetworkSecurityPolicy"], filt)
 	}
 
 	ctx := stream.Context()

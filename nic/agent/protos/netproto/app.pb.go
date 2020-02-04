@@ -16,6 +16,7 @@
 		namespace.proto
 		network.proto
 		port.proto
+		profile.proto
 		route.proto
 		sgpolicy.proto
 		secprofile.proto
@@ -23,7 +24,6 @@
 		tunnel.proto
 		types.proto
 		vrf.proto
-		profile.proto
 
 	It has these top-level messages:
 		App
@@ -103,6 +103,12 @@
 		PortStatus
 		PortList
 		PortEvent
+		Profile
+		ProfileSpec
+		ProfileStatus
+		ProfileList
+		ProfileEvent
+		ProfileEventList
 		RouteDistinguisher
 		RDSpec
 		Route
@@ -152,12 +158,6 @@
 		VrfList
 		VrfEvent
 		VrfEventList
-		Profile
-		ProfileSpec
-		ProfileStatus
-		ProfileList
-		ProfileEvent
-		ProfileEventList
 */
 package netproto
 

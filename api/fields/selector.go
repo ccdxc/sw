@@ -15,6 +15,10 @@ import (
 	ustrconv "github.com/pensando/sw/venice/utils/strconv"
 )
 
+type matchObject interface {
+	GetObjectKind() string // returns the object kind
+}
+
 // ByKey sorts requirements by key to obtain deterministic parser
 type ByKey []*Requirement
 
@@ -75,7 +79,7 @@ func (r *Requirement) hasValue(value string) bool {
 //		obj's value for that key is less than or equal to Requirement's value
 // (6) The operator is Gte (supported on non-string fields), Fields has the Requirements's key and
 //		obj's value for that key is greater than or equal to Requirement's value
-func (r *Requirement) MatchesObj(obj runtime.Object) bool {
+func (r *Requirement) MatchesObj(obj matchObject) bool {
 	vals, err := ref.FieldValues(reflect.ValueOf(obj), r.Key)
 	if err != nil || len(vals) == 0 {
 		return false
@@ -546,7 +550,7 @@ func (s *Selector) ValidateRequirements(schemaType string, ignoreNonExistentFiel
 
 // MatchesObj for a Selector returns true if all of the Requirements match the
 // provided object. It returns false for an empty selector.
-func (s *Selector) MatchesObj(obj runtime.Object) bool {
+func (s *Selector) MatchesObj(obj matchObject) bool {
 	if len(s.Requirements) == 0 {
 		return false
 	}

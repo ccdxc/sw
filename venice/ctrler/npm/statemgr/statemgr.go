@@ -4,22 +4,24 @@ package statemgr
 
 import (
 	"fmt"
-	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/api/fields"
 	"github.com/pensando/sw/api/generated/ctkit"
 	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/labels"
 	"github.com/pensando/sw/nic/agent/protos/generated/nimbus"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/diagnostics"
 	"github.com/pensando/sw/venice/utils/featureflags"
 	hdr "github.com/pensando/sw/venice/utils/histogram"
 	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/utils/memdb"
+	"github.com/pensando/sw/venice/utils/ref"
 	"github.com/pensando/sw/venice/utils/resolver"
 	"github.com/pensando/sw/venice/utils/rpckit"
 	"github.com/pensando/sw/venice/utils/runtime"
@@ -552,29 +554,122 @@ func references(obj apiServerObject) map[string]apiintf.ReferenceObj {
 	return resp
 }
 
-// GetWatchFilter returns a filter function to filter Watch Events
-func (sm *Statemgr) GetWatchFilter(kind string, ometa *api.ListWatchOptions) func(memdb.Object) bool {
-	switch kind {
-	case "Endpoint":
-		objMac, err := net.ParseMAC(ometa.Name)
-		name := objMac.String()
+func fromVersionFilterFn(fromVer uint64) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		meta := obj.GetObjectMeta()
+		ver, err := strconv.ParseUint(meta.ResourceVersion, 10, 64)
 		if err != nil {
-			sm.logger.Infof("object meta does not have a valid mac - returning default func [%+v]", ometa)
-			return func(memdb.Object) bool {
+			log.Fatalf("unable to parse version string [%s](%s)", meta.ResourceVersion, err)
+		}
+		return ver >= fromVer
+	}
+}
+
+func nameFilterFn(name string) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		meta := obj.GetObjectMeta()
+		return meta.Name == name
+	}
+}
+
+func tenantFilterFn(tenant string) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		meta := obj.GetObjectMeta()
+		return meta.Tenant == tenant
+	}
+}
+
+func namespaceFilterFn(namespace string) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		meta := obj.GetObjectMeta()
+		return meta.Namespace == namespace
+	}
+}
+
+func labelSelectorFilterFn(selector *labels.Selector) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		meta := obj.GetObjectMeta()
+		labels := labels.Set(meta.Labels)
+		return selector.Matches(labels)
+	}
+}
+
+func fieldSelectorFilterFn(selector *fields.Selector) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		return selector.MatchesObj(obj)
+	}
+}
+
+func fieldChangeSelectorFilterFn(selectors []string) memdb.FilterFn {
+	return func(obj, prev memdb.Object) bool {
+		diffs, ok := ref.ObjDiff(obj, prev)
+		if !ok {
+			return false
+		}
+		for _, f := range selectors {
+			if diffs.Lookup(f) {
 				return true
 			}
 		}
-		return func(obj memdb.Object) bool {
-			ep := obj.(*netproto.Endpoint)
-			if inmac, err := net.ParseMAC(ep.Spec.NodeUUID); err == nil {
-				return inmac.String() == name
-			}
-			return true
+		return false
+	}
+}
+
+// GetWatchFilter returns a filter function to filter Watch Events
+func (sm *Statemgr) GetWatchFilter(kind string, opts *api.ListWatchOptions) []memdb.FilterFn {
+	var filters []memdb.FilterFn
+
+	if opts.ResourceVersion != "" {
+		ver, err := strconv.ParseUint(opts.ResourceVersion, 10, 64)
+		if err != nil {
+			log.Fatalf("unable to parse version string [%s](%s)", opts.ResourceVersion, err)
 		}
+		filters = append(filters, fromVersionFilterFn(ver))
 	}
-	return func(memdb.Object) bool {
-		return true
+
+	if opts.Name != "" {
+		filters = append(filters, nameFilterFn(opts.Name))
 	}
+
+	if opts.Tenant != "" {
+		filters = append(filters, tenantFilterFn(opts.Tenant))
+	}
+
+	if opts.Namespace != "" {
+		filters = append(filters, namespaceFilterFn(opts.Namespace))
+	}
+
+	if opts.LabelSelector != "" {
+		selector, err := labels.Parse(opts.LabelSelector)
+		if err != nil {
+			log.Errorf("invalid label selector specification(%s)", err)
+			return nil
+		}
+		filters = append(filters, labelSelectorFilterFn(selector))
+	}
+
+	if opts.FieldSelector != "" {
+		var selector *fields.Selector
+		var err error
+		if kind != "" {
+			selector, err = fields.ParseWithValidation(kind, opts.FieldSelector)
+			if err != nil {
+				log.Errorf("invalid field selector specification(%s)", err)
+				return nil
+			}
+		} else {
+			selector, err = fields.Parse(opts.FieldSelector)
+			if err != nil {
+				log.Errorf("invalid field selector specification(%s)", err)
+				return nil
+			}
+		}
+		filters = append(filters, fieldSelectorFilterFn(selector))
+	}
+	if len(opts.FieldChangeSelector) != 0 {
+		filters = append(filters, fieldChangeSelectorFilterFn(opts.FieldChangeSelector))
+	}
+	return filters
 }
 
 //

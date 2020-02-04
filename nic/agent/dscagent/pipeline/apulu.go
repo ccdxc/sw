@@ -817,7 +817,8 @@ func (a *ApuluAPI) PurgeConfigs() error {
 func (a *ApuluAPI) GetWatchOptions(ctx context.Context, kind string) (ret api.ListWatchOptions) {
 	switch kind {
 	case "Endpoint":
-		ret.Name = a.InfraAPI.GetDscName()
+		str := fmt.Sprintf("spec.node-uuid=%s", a.InfraAPI.GetDscName())
+		ret.FieldSelector = str
 	}
 	return ret
 }
