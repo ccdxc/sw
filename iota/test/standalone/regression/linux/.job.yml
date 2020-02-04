@@ -95,6 +95,32 @@ e2e-targets:
           EsxUsername: root
           EsxPassword: Pen0trl!
 
+ e2e-linux-bm-regression-eth-RHEL80:
+   commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite classic --regression --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr"]
+   owners: ["email:ci-status@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 24h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-13
+       count: 2
+       resources:
+         server-type: server-a
+         # nic-type is naples now. In the future, it can be mellanox, or raw, which means no special need
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: linux
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
  e2e-linux-bm-regression-eth-Ubuntu1804:
    commands: ["sh", "-c", "make regression-eth && ./run_iota.sh --testsuite classic --regression --testbundle ethtool,connectivity,filters,subifs,rx_mode,mnicclassic,oob1g,ionicdrv,penctl,ionicdrv_regr"]
    #commands: [ "sh" , "-c", "cat /warmd.json && sleep 30000000"]

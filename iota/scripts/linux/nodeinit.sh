@@ -21,11 +21,12 @@ chown vm:vm /pensando
 dhcp_disable() {
     # Check if its centos
     os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
+    os_version=`awk -F= '$1=="VERSION_ID" { print $2 ;}' /etc/os-release | sed -e 's/\([678]\)\../\1/'`
     if [[ $os_str == *"Ubuntu"* ]]; then
         echo "Ubuntu: No need to disable DHCP on Naples IFs"
         return
-    elif [[ $os_str == *"CentOS"* ]]; then
-        echo "CentOS: Explicitly disabling DHCP on Naples IFs"
+    elif [[ $os_str == *"CentOS"* || $os_str == *"Red Hat"* ]]; then
+        echo "CentOS/RHEL: Explicitly disabling DHCP on Naples IFs"
         declare -a ifs=(`systool -c net | grep "Class Device"  | tail -4 | head -3 | cut -d = -f 2 | cut -d \" -f 2`)
         for i in  "${ifs[@]}"
         do
@@ -34,7 +35,11 @@ dhcp_disable() {
             echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$i
             echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$i
         done
-        sudo service network restart
+        if [[ $os_version == *"8"* ]]; then
+            nmcli connection load /etc/sysconfig/network-scripts/ifcfg-$i
+        else
+	    sudo service network restart
+        fi
         for i in  "${ifs[@]}"
         do
            ifconfig $i up
