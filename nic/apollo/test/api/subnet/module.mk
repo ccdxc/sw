@@ -3,7 +3,7 @@
 include ${MKDEFS}/pre.mk
 MODULE_TARGET   = ${PIPELINE}_subnet_test.gtest
 MODULE_PIPELINE = apollo artemis apulu
-MOULE_ARCH      = x86_64
+MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \
                   pdstest pdstestapiutils \
                   ${NIC_${PIPELINE}_P4PD_SOLIBS} \

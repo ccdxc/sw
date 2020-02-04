@@ -1,7 +1,7 @@
 # {C} Copyright 2019 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET   = ${PIPELINE}_conntrack_test.gtest
+MODULE_TARGET   = athena_conntrack_test.gtest
 MODULE_PIPELINE = athena
 MODULE_ARCH     = x86_64
 MODULE_SOLIBS   = pal pdsframework pdscore pdsapi pdsapi_impl \

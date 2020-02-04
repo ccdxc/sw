@@ -69,7 +69,7 @@ TEST_F(vnic_test, vnic_workflow_b1) {
 
 /// \brief VNIC WF_B2
 /// \ref WF_B2
-TEST_F(vnic_test, DISABLED_vnic_workflow_b2) {
+TEST_F(vnic_test, vnic_workflow_b2) {
     if (!apulu()) return;
 
     vnic_feeder feeder1, feeder1A;
@@ -149,7 +149,7 @@ TEST_F(vnic_test, vnic_workflow_6) {
     feeder1.init(int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q);
-    feeder1B.init(int2pdsobjkey(1), k_max_vnic, 0xb010101010101010,
+    feeder1B.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_6<vnic_feeder>(feeder1, feeder1A, feeder1B);
 }
@@ -164,53 +164,52 @@ TEST_F(vnic_test, vnic_workflow_7) {
     feeder1.init(int2pdsobjkey(1));
     feeder1A.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q);
-    feeder1B.init(int2pdsobjkey(1), k_max_vnic, 0xb010101010101010,
+    feeder1B.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_7<vnic_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief VNIC WF_8
 /// \ref WF_8
-TEST_F(vnic_test, DISABLED_vnic_workflow_8) {
-    if (artemis()) return;
-
+TEST_F(vnic_test, vnic_workflow_8) {
+    if (!apulu()) return;
     vnic_feeder feeder1, feeder1A, feeder1B;
 
-    feeder1.init(int2pdsobjkey(1));
+    feeder1.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac);
     feeder1A.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
-    feeder1B.init(int2pdsobjkey(1), k_max_vnic, 0xb010101010101010,
+    feeder1B.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_MPLSoUDP, FALSE);
     workflow_8<vnic_feeder>(feeder1, feeder1A, feeder1B);
 }
 
 /// \brief VNIC WF_9
 /// \ref WF_9
-TEST_F(vnic_test, DISABLED_vnic_workflow_9) {
-    if (artemis()) return;
+TEST_F(vnic_test, vnic_workflow_9) {
+    if (!apulu()) return;
 
     vnic_feeder feeder1, feeder1A;
 
-    feeder1.init(int2pdsobjkey(1));
-    feeder1A.init(int2pdsobjkey(1), k_max_vnic, 0xb010101010101010,
+    feeder1.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac);
+    feeder1A.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN);
     workflow_9<vnic_feeder>(feeder1, feeder1A);
 }
 
 /// \brief VNIC WF_10
 /// \ref WF_10
-TEST_F(vnic_test, DISABLED_vnic_workflow_10) {
-    if (artemis()) return;
+TEST_F(vnic_test, vnic_workflow_10) {
+    if (!apulu()) return;
 
     vnic_feeder feeder1, feeder2, feeder3, feeder4;
     vnic_feeder feeder2A, feeder3A;
 
     feeder1.init(int2pdsobjkey(10), 20);
-    feeder2.init(int2pdsobjkey(40), 20);
-    feeder2A.init(int2pdsobjkey(40), 20, 0xb010101010101010,
+    feeder2.init(int2pdsobjkey(40), 20, 0x202020000000);
+    feeder2A.init(int2pdsobjkey(40), 20, 0x202020000000,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
-    feeder3.init(int2pdsobjkey(70), 20);
-    feeder3A.init(int2pdsobjkey(70), 20, 0xb010101010101010,
+    feeder3.init(int2pdsobjkey(70), 20, 0x303030000000);
+    feeder3A.init(int2pdsobjkey(70), 20, 0x303030000000,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     feeder4.init(int2pdsobjkey(100), 20);
     workflow_10<vnic_feeder>(feeder1, feeder2, feeder2A, feeder3,
@@ -269,8 +268,8 @@ TEST_F(vnic_test, vnic_workflow_neg_5) {
 
     vnic_feeder feeder1, feeder1A;
 
-    feeder1.init(int2pdsobjkey(1));
-    feeder1A.init(int2pdsobjkey(1), k_max_vnic, 0xb010101010101010,
+    feeder1.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac);
+    feeder1A.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_neg_5<vnic_feeder>(feeder1, feeder1A);
 }
@@ -282,8 +281,8 @@ TEST_F(vnic_test, vnic_workflow_neg_6) {
 
     vnic_feeder feeder1, feeder1A;
 
-    feeder1.init(int2pdsobjkey(1));
-    feeder1A.init(int2pdsobjkey(1), k_max_vnic+1, 0xb010101010101010,
+    feeder1.init(int2pdsobjkey(1), k_max_vnic, k_feeder_mac);
+    feeder1A.init(int2pdsobjkey(1), k_max_vnic+1, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
     workflow_neg_6<vnic_feeder>(feeder1, feeder1A);
 }
@@ -295,10 +294,10 @@ TEST_F(vnic_test, vnic_workflow_neg_7) {
 
     vnic_feeder feeder1, feeder1A, feeder2;
 
-    feeder1.init(int2pdsobjkey(10), 20);
-    feeder1A.init(int2pdsobjkey(10), 20, 0xb010101010101010,
+    feeder1.init(int2pdsobjkey(10), 20, k_feeder_mac);
+    feeder1A.init(int2pdsobjkey(10), 20, k_feeder_mac,
                   PDS_ENCAP_TYPE_DOT1Q, PDS_ENCAP_TYPE_VXLAN, FALSE);
-    feeder2.init(int2pdsobjkey(40), 20);
+    feeder2.init(int2pdsobjkey(40), 20, 0x202020000000);
     workflow_neg_7<vnic_feeder>(feeder1, feeder1A, feeder2);
 }
 
