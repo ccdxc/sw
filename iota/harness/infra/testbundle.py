@@ -19,39 +19,6 @@ from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
 
 
-class TestBundleResults(object):
-    def __init__(self, testbed=None, repo=None, sha=None, shaTitle=None, targetId=None):
-        #these var names map directly to test results viewer schema
-        #do not change.
-        if testbed:
-            self.Testbed = testbed
-        else:
-            self.Testbed = os.getenv("TESTBED_ID","jobd")
-        if repo:
-            self.Repository = repo
-        else:
-            self.Repository = os.getenv("JOB_REPOSITORY")
-        if repo:
-            self.SHA = sha
-        else:
-            self.SHA = os.getenv("")
-        if shaTitle:
-            self.SHATitle = shaTitle
-        else:
-            self.SHATitle = os.getenv("")
-        if targetId:
-            self.TargetID = targetId        
-        else:
-            self.TargetID = os.getenv("TARGET_ID")
-        self.Testcases = []
-
-    def addTestcase(self, tc):
-        self.Testcases.append(tc)
-
-    def getTestCaseResults(self):
-        return self.Testcases
-
-
 class TestCaseResult(object):
     def __init__(self, tcId, name, desc, owner, area, subArea, feature):
         #these var names map directly to test results viewer schema
@@ -101,7 +68,7 @@ class TestBundle:
         self.__load_bundle()
         self.result = types.status.FAILURE
         self.selected = None
-        self.__tbunResults = TestBundleResults()
+        self.__tbunResults = []
 
     def Name(self):
         return self.__spec.meta.name
@@ -193,7 +160,7 @@ class TestBundle:
         return types.status.SUCCESS
 
     def addTcResult(self, tcr):
-        self.__tbunResults.addTestcase(tcr)
+        self.__tbunResults.append(tcr)
 
     def __execute_testcases(self):
         result = types.status.SUCCESS

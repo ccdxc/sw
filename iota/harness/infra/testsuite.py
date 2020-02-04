@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import atexit
 import json
+import os
 import pdb
 import re
 import time
@@ -21,6 +22,40 @@ import iota.harness.infra.utils.timeprofiler as timeprofiler
 
 from iota.harness.infra.utils.logger import Logger as Logger
 from iota.harness.infra.glopts import GlobalOptions as GlobalOptions
+
+
+class TestSuiteResults(object):
+    def __init__(self, testbed=None, repo=None, sha=None, shaTitle=None, targetId=None):
+        #these var names map directly to test results viewer schema
+        #do not change.
+        if testbed:
+            self.Testbed = testbed
+        else:
+            self.Testbed = os.getenv("TESTBED_ID","jobd")
+        if repo:
+            self.Repository = repo
+        else:
+            self.Repository = os.getenv("JOB_REPOSITORY")
+        if repo:
+            self.SHA = sha
+        else:
+            self.SHA = os.getenv("")
+        if shaTitle:
+            self.SHATitle = shaTitle
+        else:
+            self.SHATitle = os.getenv("")
+        if targetId:
+            self.TargetID = targetId
+        else:
+            self.TargetID = os.getenv("TARGET_ID")
+        self.Testcases = []
+
+    def addTestcase(self, tc):
+        self.Testcases.append(tc)
+
+    def getTestCaseResults(self):
+        return self.Testcases
+
 
 class TestSuite:
     def __init__(self, spec):
@@ -171,6 +206,8 @@ class TestSuite:
         return types.status.SUCCESS
 
     def __setup_config(self):
+        if GlobalOptions.dryrun:
+            return types.status.SUCCESS
         for s in self.__spec.setup.config:
             # Reset the running directory before every step
             Logger.info("Starting Config Step: ", s.step)
@@ -276,12 +313,12 @@ class TestSuite:
     def writeTestResults(self):
         filename = "testsuite_{0}_results.json".format(self.Name())
         try:
-            results = []
+            tsr = TestSuiteResults()
             for tbun in self.__testbundles:
-                if tbun.getTestBundleResults().getTestCaseResults():
-                    results.append(tbun.getTestBundleResults())
+                if tbun.getTestBundleResults():
+                    tsr.Testcases.extend(tbun.getTestBundleResults())
             with open(filename,'w') as outfile:
-                json.dump(results, outfile, default=lambda x: x.__dict__, sort_keys=True)
+                json.dump(tsr, outfile, default=lambda x: x.__dict__, sort_keys=True)
         except:
             Logger.debug("failed to save test results to file {0}. error was: {1}".format(filename,traceback.format_exc()))
 
