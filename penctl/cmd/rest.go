@@ -298,7 +298,7 @@ func restGetWithBody(v interface{}, url string) ([]byte, error) {
 		if verbose {
 			fmt.Println(getResp.Status + " " + url)
 		}
-		return nil, errors.New(string(bodyBytes))
+		return nil, errors.New(url + " not found. Please make sure dsc is reachable and provide token file if dsc is part of cluster.")
 	}
 
 	if isJSONString(string(bodyBytes)) && (jsonFormat || yamlFormat) {
