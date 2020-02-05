@@ -66,6 +66,9 @@ func registerWorkloadHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks")
 	svc.GetCrudService("Workload", apiintf.CreateOper).WithPreCommitHook(r.validateIPAddressHook)
 	svc.GetCrudService("Workload", apiintf.UpdateOper).WithPreCommitHook(r.validateIPAddressHook)
+	// For workloads created by orchhub
+	svc.GetCrudService("Workload", apiintf.UpdateOper).WithPreCommitHook(createOrchCheckHook("Workload"))
+	svc.GetCrudService("Workload", apiintf.DeleteOper).WithPreCommitHook(createOrchCheckHook("Workload"))
 }
 
 func init() {

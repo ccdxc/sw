@@ -7,9 +7,9 @@ import (
 
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/staging"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
@@ -166,8 +166,7 @@ func (s *stagingHooks) registerAddOwnerPreAuthzHook(svc apigw.APIGatewayService)
 
 func registerStagingHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := globals.APIServer
-	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
 	s := &stagingHooks{
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		logger:           l,

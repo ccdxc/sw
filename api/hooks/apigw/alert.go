@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -24,7 +24,7 @@ func (a *alertHooks) addUserInfoToContext(ctx context.Context, i interface{}) (c
 		return ctx, i, true, apigwpkg.ErrNoUserInContext
 	}
 
-	newCtxWithUser, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, []auth.Permission{})
+	newCtxWithUser, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, false, []auth.Permission{})
 	if err != nil {
 		a.logger.Errorf("failed to get new context with user info, err: %v", err)
 		return ctx, i, true, err

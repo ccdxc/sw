@@ -12,7 +12,7 @@ import (
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/utils/authz"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
@@ -147,6 +147,7 @@ func TestUserContextHook(t *testing.T) {
 		user          *auth.User
 		in            interface{}
 		expectedPerms []auth.Permission
+		expectedAdmin bool
 		out           interface{}
 		skipCall      bool
 		err           bool
@@ -176,6 +177,7 @@ func TestUserContextHook(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
+			expectedAdmin: false,
 			out: &search.SearchRequest{
 				Tenants: []string{"testTenant"},
 			},
@@ -211,6 +213,7 @@ func TestUserContextHook(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
+			expectedAdmin: false,
 			out: &search.PolicySearchRequest{
 				Tenant:                "testTenant",
 				Namespace:             "default",
@@ -247,6 +250,7 @@ func TestUserContextHook(t *testing.T) {
 					"",
 					auth.Permission_AllActions.String()),
 			},
+			expectedAdmin: false,
 			out: &search.PolicySearchRequest{
 				Tenant:                "testTenant",
 				Namespace:             "default",
@@ -281,6 +285,7 @@ func TestUserContextHook(t *testing.T) {
 			},
 			in:            &struct{ name string }{name: "invalid object type"},
 			expectedPerms: nil,
+			expectedAdmin: false,
 			out:           &struct{ name string }{name: "invalid object type"},
 			skipCall:      true,
 			err:           true,
@@ -302,6 +307,7 @@ func TestUserContextHook(t *testing.T) {
 			},
 			in:            &search.SearchRequest{},
 			expectedPerms: nil,
+			expectedAdmin: false,
 			out: &search.SearchRequest{
 				Tenants: []string{"testTenant"},
 			},
@@ -321,6 +327,9 @@ func TestUserContextHook(t *testing.T) {
 		perms, _, _ := authzgrpcctx.PermsFromOutgoingContext(nctx)
 		Assert(t, rbac.ArePermsEqual(test.expectedPerms, perms),
 			fmt.Sprintf("[%s] test failed, expected perms [%s], got [%s]", test.name, rbac.PrintPerms(test.name, test.expectedPerms), rbac.PrintPerms(test.name, perms)))
+		isAdmin, _ := authzgrpcctx.UserIsAdminFromOutgoingContext(nctx)
+		Assert(t, reflect.DeepEqual(test.expectedAdmin, isAdmin),
+			fmt.Sprintf("[%s] test failed, expected isAdmin to be [%v], got [%v]", test.name, test.expectedAdmin, isAdmin))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
 	}

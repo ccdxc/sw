@@ -2030,7 +2030,7 @@ func TestPrivilegeEscalationCheck(t *testing.T) {
 		t.Fatalf("error populating cluster obj in kvstore: %v", err)
 	}
 	for _, test := range tests {
-		nctx, err := authzgrpcctx.NewIncomingContextWithUserPerms(ctx, test.user, test.allowedPerms)
+		nctx, err := authzgrpcctx.NewIncomingContextWithUserPerms(ctx, test.user, false, test.allowedPerms)
 		err = kvs.Create(nctx, test.role.MakeKey("auth"), test.role)
 		if err != nil {
 			t.Fatalf("error creating test role [%#v]in kvstore: %v", test.role, err)

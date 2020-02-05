@@ -3,12 +3,13 @@ package impl
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
@@ -30,6 +31,7 @@ func TestNewContextWithUserPerms(t *testing.T) {
 		name          string
 		user          *auth.User
 		expectedPerms []auth.Permission
+		expectedAdmin bool
 		err           bool
 	}{
 		{
@@ -56,7 +58,8 @@ func TestNewContextWithUserPerms(t *testing.T) {
 					"",
 					auth.Permission_Read.String()),
 			},
-			err: false,
+			expectedAdmin: false,
+			err:           false,
 		},
 		{
 			name:          "no user in context",
@@ -93,5 +96,9 @@ func TestNewContextWithUserPerms(t *testing.T) {
 		perms, _, _ := authzgrpcctx.PermsFromOutgoingContext(nctx)
 		Assert(t, rbac.ArePermsEqual(test.expectedPerms, perms),
 			fmt.Sprintf("[%s] test failed, expected perms [%s], got [%s]", test.name, rbac.PrintPerms(test.name, test.expectedPerms), rbac.PrintPerms(test.name, perms)))
+
+		isAdmin, _ := authzgrpcctx.UserIsAdminFromOutgoingContext(nctx)
+		Assert(t, reflect.DeepEqual(test.expectedAdmin, isAdmin),
+			fmt.Sprintf("[%s] test failed, expected isAdmin to be [%v], got [%v]", test.name, test.expectedAdmin, isAdmin))
 	}
 }

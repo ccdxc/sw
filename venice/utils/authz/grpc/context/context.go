@@ -10,15 +10,8 @@ import (
 	"github.com/pensando/sw/venice/utils/authz"
 )
 
-const (
-	userTenantKey = "pensando-venice-user-tenant-key"
-	usernameKey   = "pensando-venice-user-key"
-	// permsKey with -bin suffix tells grpc that value is binary. grpc auto base64 encodes and decodes it
-	permsKey = "pensando-venice-perms-key-bin"
-)
-
 // NewOutgoingContextWithUserPerms creates a new context with user and permissions metadata to send to grpc backend.
-func NewOutgoingContextWithUserPerms(ctx context.Context, user *auth.User, perms []auth.Permission) (context.Context, error) {
+func NewOutgoingContextWithUserPerms(ctx context.Context, user *auth.User, isAdmin bool, perms []auth.Permission) (context.Context, error) {
 	md, ok := metadata.FromOutgoingContext(ctx)
 	if !ok {
 		md = metadata.MD{}
@@ -26,14 +19,15 @@ func NewOutgoingContextWithUserPerms(ctx context.Context, user *auth.User, perms
 		md = md.Copy()
 	}
 	// set user info in md
-	if err := populateMetadataWithUserPerms(md, user, perms); err != nil {
+	if err := populateMetadataWithUserPerms(md, user, isAdmin, perms); err != nil {
 		return ctx, err
 	}
-	return metadata.NewOutgoingContext(ctx, md), nil
+	nctx := metadata.NewOutgoingContext(ctx, md)
+	return nctx, nil
 }
 
 // NewIncomingContextWithUserPerms creates a new context with user and permissions metadata to send to grpc backend. This is for testing only.
-func NewIncomingContextWithUserPerms(ctx context.Context, user *auth.User, perms []auth.Permission) (context.Context, error) {
+func NewIncomingContextWithUserPerms(ctx context.Context, user *auth.User, isAdmin bool, perms []auth.Permission) (context.Context, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		md = metadata.MD{}
@@ -41,7 +35,7 @@ func NewIncomingContextWithUserPerms(ctx context.Context, user *auth.User, perms
 		md = md.Copy()
 	}
 	// set user info in md
-	if err := populateMetadataWithUserPerms(md, user, perms); err != nil {
+	if err := populateMetadataWithUserPerms(md, user, isAdmin, perms); err != nil {
 		return ctx, err
 	}
 	return metadata.NewIncomingContext(ctx, md), nil
@@ -69,6 +63,28 @@ func permsFromMD(md metadata.MD) ([]auth.Permission, bool, error) {
 	return authz.PermsFromMap(md, false)
 }
 
+// UserIsAdminFromOutgoingContext returns user roles from grpc metadata in outgoing context
+func UserIsAdminFromOutgoingContext(ctx context.Context) (bool, bool) {
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if !ok {
+		return false, ok
+	}
+	return userIsAdminFromMD(md)
+}
+
+// UserIsAdminFromIncomingContext returns user roles from grpc metadata in incoming context
+func UserIsAdminFromIncomingContext(ctx context.Context) (bool, bool) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return false, ok
+	}
+	return userIsAdminFromMD(md)
+}
+
+func userIsAdminFromMD(md metadata.MD) (bool, bool) {
+	return authz.UserIsAdminFromMap(md)
+}
+
 // UserMetaFromIncomingContext return user meta info from grpc metadata in incoming context
 func UserMetaFromIncomingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -87,6 +103,6 @@ func UserMetaFromOutgoingContext(ctx context.Context) (*api.ObjectMeta, bool) {
 	return authz.UserMetaFromMap(md)
 }
 
-func populateMetadataWithUserPerms(md metadata.MD, user *auth.User, perms []auth.Permission) error {
-	return authz.PopulateMapWithUserPerms(md, user, perms, false)
+func populateMetadataWithUserPerms(md metadata.MD, user *auth.User, isAdmin bool, perms []auth.Permission) error {
+	return authz.PopulateMapWithUserPerms(md, user, isAdmin, perms, false)
 }

@@ -21,6 +21,8 @@ const (
 	UserTenantKey = "pensando-venice-user-tenant-key"
 	// UsernameKey stores username
 	UsernameKey = "pensando-venice-user-key"
+	// UserIsAdmin stores whether user is admin
+	UserIsAdmin = "pensando-venice-user-is-admin"
 	// PermsKey with -bin suffix tells grpc that value is binary. grpc auto base64 encodes and decodes it TODO see if we remove bin and manually base64 encode/decode
 	PermsKey = "pensando-venice-perms-key-bin"
 )
@@ -254,8 +256,8 @@ func PrintOperations(operations []Operation) string {
 	return message
 }
 
-// PopulateMapWithUserPerms puts user and its permissions in the provided map. Pass in nil perms for only populating user info
-func PopulateMapWithUserPerms(data map[string][]string, user *auth.User, perms []auth.Permission, encodePerms bool) error {
+// PopulateMapWithUserPerms puts user and its permissions in the provided map. Pass in nil perms/roles for only populating user info
+func PopulateMapWithUserPerms(data map[string][]string, user *auth.User, isAdmin bool, perms []auth.Permission, encodePerms bool) error {
 	// validate user obj
 	if user == nil {
 		return errors.New("no user specified")
@@ -269,6 +271,11 @@ func PopulateMapWithUserPerms(data map[string][]string, user *auth.User, perms [
 	// set user info
 	data[UserTenantKey] = []string{user.Tenant}
 	data[UsernameKey] = []string{user.Name}
+	// set role info
+	data[UserIsAdmin] = []string{}
+	if isAdmin {
+		data[UserIsAdmin] = []string{"true"}
+	}
 	// set perms, reset existing value
 	data[PermsKey] = []string{}
 	for _, perm := range perms {
@@ -291,6 +298,7 @@ func PopulateMapWithUserPerms(data map[string][]string, user *auth.User, perms [
 func RemoveUserPerms(data map[string][]string) {
 	delete(data, UserTenantKey)
 	delete(data, UsernameKey)
+	delete(data, UserIsAdmin)
 	delete(data, PermsKey)
 }
 
@@ -302,6 +310,17 @@ func UserMetaFromMap(data map[string][]string) (*api.ObjectMeta, bool) {
 		return nil, false
 	}
 	return &api.ObjectMeta{Name: names[0], Tenant: tenants[0]}, true
+}
+
+// UserIsAdminFromMap returens user roles
+func UserIsAdminFromMap(data map[string][]string) (bool, bool) {
+	if data[UserIsAdmin] == nil {
+		return false, false
+	}
+	if len(data[UserIsAdmin]) == 0 {
+		return false, true
+	}
+	return true, true
 }
 
 // PermsFromMap returns user permissions

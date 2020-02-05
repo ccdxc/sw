@@ -7,7 +7,7 @@ import (
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
@@ -78,8 +78,7 @@ func (e *auditHooks) registerAuditHooks(svc apigw.APIGatewayService) error {
 
 func registerAuditHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := globals.APIServer
-	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
 	r := &auditHooks{
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
 		logger:           l,

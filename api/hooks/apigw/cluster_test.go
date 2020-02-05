@@ -7,19 +7,21 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/apiclient"
 	"github.com/pensando/sw/api/generated/auth"
+	"github.com/pensando/sw/api/generated/cluster"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/api/login"
 	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
+	"github.com/pensando/sw/venice/apigw/pkg/mocks"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
-
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/venice/apigw/pkg/mocks"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/authz/rbac"
+	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
-
-	. "github.com/pensando/sw/venice/utils/authz/testutils"
 	. "github.com/pensando/sw/venice/utils/testutils"
 )
 
@@ -29,15 +31,19 @@ func TestClusterHooksRegistration(t *testing.T) {
 	svc := mocks.NewFakeAPIGwService(l, false)
 	r := &clusterHooks{}
 	r.logger = l
-	err := registerClusterHooks(svc, l)
+	err := r.registerClusterHooks(svc)
 	AssertOk(t, err, "apigw cluster hook registration failed")
 	prof, err := svc.GetCrudServiceProfile("Tenant", "create")
 	AssertOk(t, err, "error getting service profile for Tenant create")
 	Assert(t, len(prof.PreAuthNHooks()) == 1, fmt.Sprintf("unexpected number of pre authn hooks [%d] for Tenant create profile", len(prof.PreAuthNHooks())))
 
+	prof, err = svc.GetCrudServiceProfile("Host", apiintf.DeleteOper)
+	AssertOk(t, err, "error getting service profile for Host delete")
+	Assert(t, len(prof.PreCallHooks()) == 1, fmt.Sprintf("unexpected number of pre call hooks [%d] for Host delete profile", len(prof.PreCallHooks())))
+
 	// test error
 	svc = mocks.NewFakeAPIGwService(l, true)
-	err = registerClusterHooks(svc, l)
+	err = r.registerClusterHooks(svc)
 	Assert(t, err != nil, "expected error in cluster hook registration")
 }
 
@@ -166,5 +172,104 @@ func TestAddOwnerForVersionGetAndWatch(t *testing.T) {
 			fmt.Sprintf("unexpected operations, [%s] test failed", test.name))
 		Assert(t, reflect.DeepEqual(test.out, out),
 			fmt.Sprintf("expected returned object [%v], got [%v], [%s] test failed", test.out, out, test.name))
+	}
+}
+
+func TestHostsUserContextHook(t *testing.T) {
+	testUserRole := login.NewRole("UserRole", "testTenant",
+		login.NewPermission(
+			"testTenant",
+			string(apiclient.GroupCluster),
+			string(cluster.KindHost),
+			authz.ResourceNamespaceAll,
+			"",
+			auth.Permission_AllActions.String()))
+
+	testUserRoleBinding := login.NewRoleBinding("UserRoleBinding", "testTenant", "UserRole", "testUser", "")
+	tests := []struct {
+		name          string
+		user          *auth.User
+		in            interface{}
+		expectedPerms []auth.Permission
+		expectedAdmin bool
+		out           interface{}
+		skipCall      bool
+		err           bool
+	}{
+		{
+			name: "Delete host",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in: &cluster.Host{},
+			expectedPerms: []auth.Permission{
+				login.NewPermission(
+					"testTenant",
+					string(apiclient.GroupCluster),
+					string(cluster.KindHost),
+					authz.ResourceNamespaceAll,
+					"",
+					auth.Permission_AllActions.String()),
+			},
+			expectedAdmin: false,
+			out:           &cluster.Host{},
+			skipCall:      false,
+			err:           false,
+		},
+		{
+			name: "Invalid input",
+			user: &auth.User{
+				TypeMeta: api.TypeMeta{Kind: "User"},
+				ObjectMeta: api.ObjectMeta{
+					Tenant: "testTenant",
+					Name:   "testUser",
+				},
+				Spec: auth.UserSpec{
+					Fullname: "Test User",
+					Password: "password",
+					Email:    "testuser@pensandio.io",
+					Type:     auth.UserSpec_Local.String(),
+				},
+			},
+			in:            &cluster.Tenant{},
+			expectedPerms: []auth.Permission{},
+			expectedAdmin: false,
+			out:           &cluster.Host{},
+			skipCall:      false,
+			err:           true,
+		},
+	}
+	r := &clusterHooks{}
+	logConfig := log.GetDefaultConfig("TestAPIGwClusterHooks")
+	r.logger = log.GetNewLogger(logConfig)
+	r.permissionGetter = rbac.NewMockPermissionGetter([]*auth.Role{testUserRole}, []*auth.RoleBinding{testUserRoleBinding}, nil, nil)
+	for _, test := range tests {
+		nctx := apigwpkg.NewContextWithUser(context.TODO(), test.user)
+		nctx, out, skipCall, err := r.userContext(nctx, test.in)
+		Assert(t, test.err == (err != nil), fmt.Sprintf("got error [%v], [%s] test failed", err, test.name))
+		if !test.err {
+			Assert(t, skipCall == test.skipCall, fmt.Sprintf("[%s] test failed", test.name))
+			perms, _, _ := authzgrpcctx.PermsFromOutgoingContext(nctx)
+			Assert(t, rbac.ArePermsEqual(test.expectedPerms, perms),
+				fmt.Sprintf("[%s] test failed, expected perms [%s], got [%s]", test.name, rbac.PrintPerms(test.name, test.expectedPerms), rbac.PrintPerms(test.name, perms)))
+			Assert(t, reflect.DeepEqual(test.out, out),
+				fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
+
+			isAdmin, _ := authzgrpcctx.UserIsAdminFromOutgoingContext(nctx)
+			Assert(t, reflect.DeepEqual(test.expectedAdmin, isAdmin),
+				fmt.Sprintf("[%s] test failed, expected isAdmin to be [%v], got [%v]", test.name, test.expectedAdmin, isAdmin))
+			Assert(t, reflect.DeepEqual(test.out, out),
+				fmt.Sprintf("[%s] test failed, expected returned object [%v], got [%v]", test.name, test.out, out))
+		}
 	}
 }

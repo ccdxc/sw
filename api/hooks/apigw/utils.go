@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/utils/authz"
 
 	"github.com/pensando/sw/api/generated/auth"
-	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
@@ -21,7 +21,9 @@ func newContextWithUserPerms(ctx context.Context, permGetter rbac.PermissionGett
 		return ctx, apigwpkg.ErrNoUserInContext
 	}
 	perms := permGetter.GetPermissions(user)
-	nctx, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, perms)
+	isAdmin := isGlobalAdmin(user, permGetter)
+
+	nctx, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, isAdmin, perms)
 	if err != nil {
 		logger.ErrorLog("method", "setUserContext", "msg", "error creating outgoing context with user permissions", "user", user.Name, "tenant", user.Tenant, "err", err)
 		return ctx, err

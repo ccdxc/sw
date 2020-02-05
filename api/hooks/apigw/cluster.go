@@ -7,17 +7,19 @@ import (
 
 	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/cluster"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/bootstrapper"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 type clusterHooks struct {
-	bootstrapper bootstrapper.Bootstrapper
-	logger       log.Logger
+	permissionGetter rbac.PermissionGetter
+	bootstrapper     bootstrapper.Bootstrapper
+	logger           log.Logger
 }
 
 func (a *clusterHooks) authBootstrap(ctx context.Context, i interface{}) (context.Context, interface{}, bool, error) {
@@ -85,27 +87,43 @@ func (a *clusterHooks) checkFFBootstrap(ctx context.Context, in interface{}) (co
 	return ctx, in, true, nil
 }
 
-func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
-	r := clusterHooks{
-		bootstrapper: bootstrapper.GetBootstrapper(),
-		logger:       l,
+// userContext is a pre-call hook to set user and permissions in grpc metadata in outgoing context
+func (a *clusterHooks) userContext(ctx context.Context, in interface{}) (context.Context, interface{}, bool, error) {
+	a.logger.DebugLog("msg", "APIGw userContext pre-call hook called")
+	switch in.(type) {
+	// check read authorization for sg policy included in policy search request
+	case *cluster.Host:
+	default:
+		return ctx, in, true, errors.New("invalid input type")
 	}
+	nctx, err := newContextWithUserPerms(ctx, a.permissionGetter, a.logger)
+	if err != nil {
+		return ctx, in, true, err
+	}
+	return nctx, in, false, nil
+}
+
+func (a *clusterHooks) registerClusterHooks(svc apigw.APIGatewayService) error {
 	prof, err := svc.GetCrudServiceProfile("Tenant", apiintf.CreateOper)
 	if err != nil {
 		return err
 	}
-	prof.AddPreAuthNHook(r.authBootstrap)
+	prof.AddPreAuthNHook(a.authBootstrap)
+
+	// Host object - add user context to request for apiserver hook
+	prof, err = svc.GetCrudServiceProfile("Host", apiintf.DeleteOper)
+	prof.AddPreCallHook(a.userContext)
 
 	// user should get and watch version without limitation
 	prof, err = svc.GetCrudServiceProfile("Version", apiintf.GetOper)
-	prof.AddPreAuthZHook(r.addOwner)
+	prof.AddPreAuthZHook(a.addOwner)
 	prof, err = svc.GetCrudServiceProfile("Version", apiintf.WatchOper)
-	prof.AddPreAuthZHook(r.addOwner)
+	prof.AddPreAuthZHook(a.addOwner)
 
 	prof, err = svc.GetCrudServiceProfile("License", apiintf.CreateOper)
-	prof.AddPreAuthNHook(r.checkFFBootstrap)
+	prof.AddPreAuthNHook(a.checkFFBootstrap)
 	prof, err = svc.GetCrudServiceProfile("License", apiintf.UpdateOper)
-	prof.AddPreAuthNHook(r.checkFFBootstrap)
+	prof.AddPreAuthNHook(a.checkFFBootstrap)
 
 	prof, err = svc.GetServiceProfile("Save")
 	if err != nil {
@@ -113,7 +131,18 @@ func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	}
 	prof.SetAuditLevel(audit.Level_Response.String())
 
-	return r.registerSetAuthBootstrapFlagHook(svc)
+	return a.registerSetAuthBootstrapFlagHook(svc)
+}
+
+func registerClusterHooks(svc apigw.APIGatewayService, l log.Logger) error {
+	gw := apigwpkg.MustGetAPIGateway()
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
+	a := clusterHooks{
+		bootstrapper:     bootstrapper.GetBootstrapper(),
+		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),
+		logger:           l,
+	}
+	return a.registerClusterHooks(svc)
 }
 
 func init() {

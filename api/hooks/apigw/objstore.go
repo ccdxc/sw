@@ -3,19 +3,17 @@ package impl
 import (
 	"context"
 
-	"github.com/pensando/sw/api/generated/audit"
-
 	"github.com/pkg/errors"
 
 	"github.com/pensando/sw/api/generated/apiclient"
+	"github.com/pensando/sw/api/generated/audit"
 	"github.com/pensando/sw/api/generated/auth"
 	"github.com/pensando/sw/api/generated/objstore"
+	apiintf "github.com/pensando/sw/api/interfaces"
+	"github.com/pensando/sw/venice/apigw"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
-
-	"github.com/pensando/sw/api/interfaces"
-	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -111,8 +109,7 @@ func (b *objstoreHooks) userContext(ctx context.Context, in interface{}) (contex
 
 func registerObjstoreHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := globals.APIServer
-	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
 	r := objstoreHooks{logger: l, permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver())}
 
 	prof, err := svc.GetProxyServiceProfile("/uploads/images")

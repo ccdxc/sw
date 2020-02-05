@@ -680,8 +680,7 @@ func (a *authHooks) registerRolePreAuthZHook(svc apigw.APIGatewayService) error 
 
 func registerAuthHooks(svc apigw.APIGatewayService, l log.Logger) error {
 	gw := apigwpkg.MustGetAPIGateway()
-	grpcaddr := globals.APIServer
-	grpcaddr = gw.GetAPIServerAddr(grpcaddr)
+	grpcaddr := gw.GetAPIServerAddr(globals.APIServer)
 	r := authHooks{
 		authGetter:       manager.GetAuthGetter(globals.APIGw, grpcaddr, gw.GetResolver(), l),
 		permissionGetter: rbac.GetPermissionGetter(globals.APIGw, grpcaddr, gw.GetResolver()),

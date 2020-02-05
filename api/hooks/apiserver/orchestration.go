@@ -9,9 +9,17 @@ import (
 	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/apiserver"
 	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
+	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
+	"github.com/pensando/sw/venice/globals"
+	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
+	"github.com/pensando/sw/venice/utils/ctxutils"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/log"
+	"github.com/pensando/sw/venice/utils/runtime"
 )
+
+// ErrOrchManaged is the error message returned when a user tries to modify an object created by Orchhub
+var ErrOrchManaged = fmt.Errorf("object is managed by Venice and can only be deleted by Admin")
 
 type orchHooks struct {
 	logger log.Logger
@@ -39,6 +47,47 @@ func (o *orchHooks) validateOrchestrator(ctx context.Context, kv kvstore.Interfa
 		}
 	}
 	return i, true, nil
+}
+
+func createOrchCheckHook(kind string) apiserver.PreCommitFunc {
+	return func(ctx context.Context, kvs kvstore.Interface, txn kvstore.Txn, key string, oper apiintf.APIOperType, dryrun bool, i interface{}) (interface{}, bool, error) {
+
+		existingObj, err := runtime.GetDefaultScheme().New(kind)
+		err = kvs.Get(ctx, key, existingObj)
+		if err != nil {
+			// Update/delete call will return 404
+			return i, true, nil
+		}
+
+		existingObjMeta, err := runtime.GetObjectMeta(existingObj)
+		if err != nil {
+			return i, true, fmt.Errorf("Failed to extract object meta: %s", err)
+		}
+
+		if ctxutils.GetPeerID(ctx) != globals.APIGw {
+			// No checks required if coming from inside venice
+			return i, true, nil
+		}
+
+		// If the request is a delete, and the user is super admin, no need to check
+		if oper == apiintf.DeleteOper {
+			isAdmin, ok := authzgrpcctx.UserIsAdminFromIncomingContext(ctx)
+			if !ok {
+				return i, true, fmt.Errorf("Failed to get user role from context")
+			}
+			if isAdmin {
+				// Admin is allowed to delete all objects
+				return i, true, nil
+			}
+		}
+		for k := range existingObjMeta.Labels {
+			// if it has orch-name label then the object cannot be deleted unless the user is admin
+			if k == utils.OrchNameKey {
+				return i, true, ErrOrchManaged
+			}
+		}
+		return i, true, nil
+	}
 }
 
 func registerOrchestrationHooks(svc apiserver.Service, l log.Logger) {

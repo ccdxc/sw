@@ -9,10 +9,9 @@ import (
 	"github.com/pensando/sw/api/generated/search"
 	"github.com/pensando/sw/api/generated/security"
 	"github.com/pensando/sw/venice/apigw"
-	"github.com/pensando/sw/venice/apigw/pkg"
+	apigwpkg "github.com/pensando/sw/venice/apigw/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
-	authzgrpcctx "github.com/pensando/sw/venice/utils/authz/grpc/context"
 	"github.com/pensando/sw/venice/utils/authz/rbac"
 	"github.com/pensando/sw/venice/utils/log"
 )
@@ -79,8 +78,7 @@ func (e *searchHooks) userContext(ctx context.Context, in interface{}) (context.
 	default:
 		return ctx, in, true, errors.New("invalid input type")
 	}
-	perms := e.permissionGetter.GetPermissions(user)
-	nctx, err := authzgrpcctx.NewOutgoingContextWithUserPerms(ctx, user, perms)
+	nctx, err := newContextWithUserPerms(ctx, e.permissionGetter, e.logger)
 	if err != nil {
 		e.logger.Errorf("error creating outgoing context with user permissions for user [%s|%s]: %v", user.Tenant, user.Name, err)
 		return ctx, in, true, err

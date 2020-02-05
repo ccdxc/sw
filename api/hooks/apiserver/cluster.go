@@ -13,7 +13,7 @@ import (
 	"github.com/pensando/sw/venice/utils/featureflags"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 	"google.golang.org/grpc/codes"
 
 	"github.com/pensando/sw/api"
@@ -25,13 +25,13 @@ import (
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/api/generated/objstore"
 	"github.com/pensando/sw/api/generated/security"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/login"
-	"github.com/pensando/sw/api/utils"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/events/generated/eventattrs"
 	"github.com/pensando/sw/events/generated/eventtypes"
 	"github.com/pensando/sw/venice/apiserver"
-	"github.com/pensando/sw/venice/apiserver/pkg"
+	apisrvpkg "github.com/pensando/sw/venice/apiserver/pkg"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/authz"
 	"github.com/pensando/sw/venice/utils/events/recorder"
@@ -1028,6 +1028,10 @@ func registerClusterHooks(svc apiserver.Service, logger log.Logger) {
 	logger.Log("msg", "registering Hooks for cluster apigroup")
 	svc.GetCrudService("Host", apiintf.CreateOper).WithPreCommitHook(r.hostPreCommitHook).GetRequestType().WithValidate(r.validateHostConfig)
 	svc.GetCrudService("Host", apiintf.UpdateOper).WithPreCommitHook(r.hostPreCommitHook).GetRequestType().WithValidate(r.validateHostConfig)
+	// For hosts created by orchhub
+	svc.GetCrudService("Host", apiintf.UpdateOper).WithPreCommitHook(createOrchCheckHook("Host"))
+	svc.GetCrudService("Host", apiintf.DeleteOper).WithPreCommitHook(createOrchCheckHook("Host"))
+
 	svc.GetCrudService("Node", apiintf.CreateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Node", apiintf.UpdateOper).GetRequestType().WithValidate(r.validateNodeConfig)
 	svc.GetCrudService("Cluster", apiintf.CreateOper).WithPreCommitHook(r.checkAuthBootstrapFlag).GetRequestType().WithValidate(r.validateClusterConfig)

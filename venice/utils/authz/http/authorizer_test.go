@@ -79,7 +79,7 @@ func TestIsAuthorized(t *testing.T) {
 	}
 	for _, test := range tests {
 		request, _ := http.NewRequest("GET", "http://venice.pensando.io", nil)
-		err := AddUserPermsToRequest(request, test.user, test.perms)
+		err := AddUserPermsToRequest(request, test.user, false, test.perms)
 		Assert(t, reflect.DeepEqual(err, test.err), fmt.Sprintf("[%s] test failed, expected error [%v], got [%v]", test.name, test.err, err))
 		if err == nil {
 			authorizer, err := NewAuthorizer(context.TODO(), request)
@@ -100,7 +100,7 @@ func TestNoUserInRequest(t *testing.T) {
 func TestUserMismatch(t *testing.T) {
 	request, _ := http.NewRequest("GET", "http://venice.pensando.io", nil)
 	user := &auth.User{ObjectMeta: api.ObjectMeta{Name: "testuser", Tenant: globals.DefaultTenant}}
-	err := AddUserPermsToRequest(request, user, nil)
+	err := AddUserPermsToRequest(request, user, false, nil)
 	AssertOk(t, err, "unexpected error adding user to request")
 	authorizer, err := NewAuthorizer(context.TODO(), request)
 	AssertOk(t, err, "unexpected error creating authorizer")
@@ -184,7 +184,7 @@ func TestAuthorizedOperations(t *testing.T) {
 	user := &auth.User{ObjectMeta: api.ObjectMeta{Name: "testuser", Tenant: globals.DefaultTenant}}
 	for _, test := range tests {
 		request, _ := http.NewRequest("GET", "http://venice.pensando.io", nil)
-		err := AddUserPermsToRequest(request, user, test.perms)
+		err := AddUserPermsToRequest(request, user, false, test.perms)
 		AssertOk(t, err, fmt.Sprintf("[%s] test failed, unexpected error adding user and perms to request", test.name))
 		authorizer, err := NewAuthorizer(context.TODO(), request)
 		AssertOk(t, err, "unexpected error creating authorizer")
