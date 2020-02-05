@@ -50,6 +50,7 @@ type eWorkloadV1Endpoints struct {
 	Svc                      sworkloadSvc_workloadBackend
 	fnAutoWatchSvcWorkloadV1 func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 
+	fnAbortMigration     func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddEndpoint    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoAddWorkload    func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoDeleteEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
@@ -60,6 +61,8 @@ type eWorkloadV1Endpoints struct {
 	fnAutoListWorkload   func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateEndpoint func(ctx context.Context, t interface{}) (interface{}, error)
 	fnAutoUpdateWorkload func(ctx context.Context, t interface{}) (interface{}, error)
+	fnFinishMigration    func(ctx context.Context, t interface{}) (interface{}, error)
+	fnStartMigration     func(ctx context.Context, t interface{}) (interface{}, error)
 
 	fnAutoWatchEndpoint func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
 	fnAutoWatchWorkload func(in *api.ListWatchOptions, stream grpc.ServerStream, svcprefix string) error
@@ -155,6 +158,15 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 		srv := apisrvpkg.NewService("workload.WorkloadV1")
 		s.endpointsWorkloadV1.fnAutoWatchSvcWorkloadV1 = srv.WatchFromKv
 
+		s.endpointsWorkloadV1.fnAbortMigration = srv.AddMethod("AbortMigration",
+			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AbortMigration")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
 		s.endpointsWorkloadV1.fnAutoAddEndpoint = srv.AddMethod("AutoAddEndpoint",
 			apisrvpkg.NewMethod(srv, pkgMessages["workload.Endpoint"], pkgMessages["workload.Endpoint"], "workload", "AutoAddEndpoint")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			return "", fmt.Errorf("not rest endpoint")
@@ -226,6 +238,24 @@ func (s *sworkloadSvc_workloadBackend) regSvcsFunc(ctx context.Context, logger l
 
 		s.endpointsWorkloadV1.fnAutoUpdateWorkload = srv.AddMethod("AutoUpdateWorkload",
 			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "AutoUpdateWorkload")).WithOper(apiintf.UpdateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnFinishMigration = srv.AddMethod("FinishMigration",
+			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "FinishMigration")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
+			in, ok := i.(workload.Workload)
+			if !ok {
+				return "", fmt.Errorf("wrong type")
+			}
+			return fmt.Sprint("/", globals.ConfigURIPrefix, "/", "workload/v1/tenant/", in.Tenant, "/workloads/", in.Name), nil
+		}).HandleInvocation
+
+		s.endpointsWorkloadV1.fnStartMigration = srv.AddMethod("StartMigration",
+			apisrvpkg.NewMethod(srv, pkgMessages["workload.Workload"], pkgMessages["workload.Workload"], "workload", "StartMigration")).WithOper(apiintf.CreateOper).WithVersion("v1").WithMakeURI(func(i interface{}) (string, error) {
 			in, ok := i.(workload.Workload)
 			if !ok {
 				return "", fmt.Errorf("wrong type")
@@ -490,6 +520,14 @@ func (s *sworkloadSvc_workloadBackend) Reset() {
 	cleanupRegistration()
 }
 
+func (e *eWorkloadV1Endpoints) AbortMigration(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnAbortMigration(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
 func (e *eWorkloadV1Endpoints) AutoAddEndpoint(ctx context.Context, t workload.Endpoint) (workload.Endpoint, error) {
 	r, err := e.fnAutoAddEndpoint(ctx, t)
 	if err == nil {
@@ -564,6 +602,22 @@ func (e *eWorkloadV1Endpoints) AutoUpdateEndpoint(ctx context.Context, t workloa
 }
 func (e *eWorkloadV1Endpoints) AutoUpdateWorkload(ctx context.Context, t workload.Workload) (workload.Workload, error) {
 	r, err := e.fnAutoUpdateWorkload(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
+func (e *eWorkloadV1Endpoints) FinishMigration(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnFinishMigration(ctx, t)
+	if err == nil {
+		return r.(workload.Workload), err
+	}
+	return workload.Workload{}, err
+
+}
+func (e *eWorkloadV1Endpoints) StartMigration(ctx context.Context, t workload.Workload) (workload.Workload, error) {
+	r, err := e.fnStartMigration(ctx, t)
 	if err == nil {
 		return r.(workload.Workload), err
 	}

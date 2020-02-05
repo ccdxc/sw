@@ -12,6 +12,7 @@ import { WorkloadWorkloadIntfSpec, IWorkloadWorkloadIntfSpec } from './workload-
 export interface IWorkloadWorkloadSpec {
     'host-name': string;
     'interfaces'?: Array<IWorkloadWorkloadIntfSpec>;
+    'migration-timeout'?: string;
     '_ui'?: any;
 }
 
@@ -19,13 +20,15 @@ export interface IWorkloadWorkloadSpec {
 export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkloadSpec {
     /** Field for holding arbitrary ui state */
     '_ui': any = {};
-    /** Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname. */
+    /** Hostname of the server where the workload should be running. Should be a valid host address, IP address or hostname. */
     'host-name': string = null;
     /** Spec of all interfaces in the Workload identified by Primary MAC. */
     'interfaces': Array<WorkloadWorkloadIntfSpec> = null;
+    /** Should be a valid time duration. */
+    'migration-timeout': string = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadSpec]: PropInfoItem } = {
         'host-name': {
-            description:  `Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname.`,
+            description:  `Hostname of the server where the workload should be running. Should be a valid host address, IP address or hostname.`,
             hint:  '10.1.1.1, ff02::5, localhost, example.domain.com ',
             required: true,
             type: 'string'
@@ -34,6 +37,13 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
             description:  `Spec of all interfaces in the Workload identified by Primary MAC.`,
             required: false,
             type: 'object'
+        },
+        'migration-timeout': {
+            default: '3m',
+            description:  `Should be a valid time duration.`,
+            hint:  '2h',
+            required: false,
+            type: 'string'
         },
     }
 
@@ -84,6 +94,13 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         } else {
             this['interfaces'] = [];
         }
+        if (values && values['migration-timeout'] != null) {
+            this['migration-timeout'] = values['migration-timeout'];
+        } else if (fillDefaults && WorkloadWorkloadSpec.hasDefaultValue('migration-timeout')) {
+            this['migration-timeout'] = WorkloadWorkloadSpec.propInfo['migration-timeout'].default;
+        } else {
+            this['migration-timeout'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -93,6 +110,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
             this._formGroup = new FormGroup({
                 'host-name': CustomFormControl(new FormControl(this['host-name'], [required, ]), WorkloadWorkloadSpec.propInfo['host-name']),
                 'interfaces': new FormArray([]),
+                'migration-timeout': CustomFormControl(new FormControl(this['migration-timeout']), WorkloadWorkloadSpec.propInfo['migration-timeout']),
             });
             // generate FormArray control elements
             this.fillFormArray<WorkloadWorkloadIntfSpec>('interfaces', this['interfaces'], WorkloadWorkloadIntfSpec);
@@ -113,6 +131,7 @@ export class WorkloadWorkloadSpec extends BaseModel implements IWorkloadWorkload
         if (this._formGroup) {
             this._formGroup.controls['host-name'].setValue(this['host-name']);
             this.fillModelArray<WorkloadWorkloadIntfSpec>(this, 'interfaces', this['interfaces'], WorkloadWorkloadIntfSpec);
+            this._formGroup.controls['migration-timeout'].setValue(this['migration-timeout']);
         }
     }
 }

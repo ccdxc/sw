@@ -53,6 +53,33 @@ type adapterWorkloadV1 struct {
 	gw      apigw.APIGateway
 }
 
+func (a adapterWorkloadV1) AbortMigration(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1AbortMigration", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("AbortMigration")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, "AbortMigration"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.AbortMigration(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) AutoAddEndpoint(oldctx oldcontext.Context, t *workload.Endpoint, options ...grpc.CallOption) (*workload.Endpoint, error) {
 	// Not using options for now. Will be passed through context as needed.
 	trackTime := time.Now()
@@ -333,6 +360,60 @@ func (a adapterWorkloadV1) AutoUpdateWorkload(oldctx oldcontext.Context, t *work
 	return ret.(*workload.Workload), err
 }
 
+func (a adapterWorkloadV1) FinishMigration(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1FinishMigration", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("FinishMigration")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, "FinishMigration"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.FinishMigration(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
+func (a adapterWorkloadV1) StartMigration(oldctx oldcontext.Context, t *workload.Workload, options ...grpc.CallOption) (*workload.Workload, error) {
+	// Not using options for now. Will be passed through context as needed.
+	trackTime := time.Now()
+	defer func() {
+		hdr.Record("apigw.WorkloadV1StartMigration", time.Since(trackTime))
+	}()
+	ctx := context.Context(oldctx)
+	prof, err := a.gwSvc.GetServiceProfile("StartMigration")
+	if err != nil {
+		return nil, errors.New("unknown service profile")
+	}
+	oper, kind, tenant, namespace, group, name, auditAction := apiintf.CreateOper, "Workload", t.Tenant, t.Namespace, "workload", t.Name, "StartMigration"
+
+	op := authz.NewAPIServerOperation(authz.NewResource(tenant, group, kind, namespace, name), oper, auditAction)
+	ctx = apigwpkg.NewContextWithOperations(ctx, op)
+
+	fn := func(ctx context.Context, i interface{}) (interface{}, error) {
+		in := i.(*workload.Workload)
+		return a.service.StartMigration(ctx, in)
+	}
+	ret, err := a.gw.HandleRequest(ctx, t, prof, fn)
+	if ret == nil {
+		return nil, err
+	}
+	return ret.(*workload.Workload), err
+}
+
 func (a adapterWorkloadV1) AutoWatchSvcWorkloadV1(oldctx oldcontext.Context, in *api.ListWatchOptions, options ...grpc.CallOption) (workload.WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
 	ctx := context.Context(oldctx)
 	prof, err := a.gwSvc.GetServiceProfile("AutoWatchSvcWorkloadV1")
@@ -510,6 +591,8 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.defSvcProf.SetDefaults()
 	e.svcProf = make(map[string]apigw.ServiceProfile)
 
+	e.svcProf["AbortMigration"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
+
 	e.svcProf["AutoAddWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 
 	e.svcProf["AutoDeleteWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.DeleteOper)
@@ -527,6 +610,10 @@ func (e *sWorkloadV1GwService) setupSvcProfile() {
 	e.svcProf["AutoWatchEndpoint"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgEndpointWatchHelper", "workload", apiintf.WatchOper)
 
 	e.svcProf["AutoWatchWorkload"] = apigwpkg.NewServiceProfile(e.defSvcProf, "AutoMsgWorkloadWatchHelper", "workload", apiintf.WatchOper)
+
+	e.svcProf["FinishMigration"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
+
+	e.svcProf["StartMigration"] = apigwpkg.NewServiceProfile(e.defSvcProf, "Workload", "workload", apiintf.CreateOper)
 }
 
 // GetDefaultServiceProfile returns the default fallback service profile for this service

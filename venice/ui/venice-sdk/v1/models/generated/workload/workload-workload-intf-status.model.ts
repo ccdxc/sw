@@ -11,6 +11,9 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 export interface IWorkloadWorkloadIntfStatus {
     'ip-addresses'?: Array<string>;
     'endpoint'?: string;
+    'micro-seg-vlan'?: number;
+    'mac-address'?: string;
+    'external-vlan'?: number;
     '_ui'?: any;
 }
 
@@ -22,6 +25,12 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
     'ip-addresses': Array<string> = null;
     /** Endpoint associated with this Workload interface. */
     'endpoint': string = null;
+    /** Micro-segmentation vlan used by this interface. */
+    'micro-seg-vlan': number = null;
+    /** MACAddress contains the MAC address of the interface as seen by the workload. */
+    'mac-address': string = null;
+    /** External vlan assigned for this interface. */
+    'external-vlan': number = null;
     public static propInfo: { [prop in keyof IWorkloadWorkloadIntfStatus]: PropInfoItem } = {
         'ip-addresses': {
             description:  `List of all IP addresses configured and discovered on a Workload Interface.`,
@@ -32,6 +41,21 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
             description:  `Endpoint associated with this Workload interface.`,
             required: false,
             type: 'string'
+        },
+        'micro-seg-vlan': {
+            description:  `Micro-segmentation vlan used by this interface.`,
+            required: false,
+            type: 'number'
+        },
+        'mac-address': {
+            description:  `MACAddress contains the MAC address of the interface as seen by the workload.`,
+            required: false,
+            type: 'string'
+        },
+        'external-vlan': {
+            description:  `External vlan assigned for this interface.`,
+            required: false,
+            type: 'number'
         },
     }
 
@@ -84,6 +108,27 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
         } else {
             this['endpoint'] = null
         }
+        if (values && values['micro-seg-vlan'] != null) {
+            this['micro-seg-vlan'] = values['micro-seg-vlan'];
+        } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('micro-seg-vlan')) {
+            this['micro-seg-vlan'] = WorkloadWorkloadIntfStatus.propInfo['micro-seg-vlan'].default;
+        } else {
+            this['micro-seg-vlan'] = null
+        }
+        if (values && values['mac-address'] != null) {
+            this['mac-address'] = values['mac-address'];
+        } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('mac-address')) {
+            this['mac-address'] = WorkloadWorkloadIntfStatus.propInfo['mac-address'].default;
+        } else {
+            this['mac-address'] = null
+        }
+        if (values && values['external-vlan'] != null) {
+            this['external-vlan'] = values['external-vlan'];
+        } else if (fillDefaults && WorkloadWorkloadIntfStatus.hasDefaultValue('external-vlan')) {
+            this['external-vlan'] = WorkloadWorkloadIntfStatus.propInfo['external-vlan'].default;
+        } else {
+            this['external-vlan'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -93,6 +138,9 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
             this._formGroup = new FormGroup({
                 'ip-addresses': CustomFormControl(new FormControl(this['ip-addresses']), WorkloadWorkloadIntfStatus.propInfo['ip-addresses']),
                 'endpoint': CustomFormControl(new FormControl(this['endpoint']), WorkloadWorkloadIntfStatus.propInfo['endpoint']),
+                'micro-seg-vlan': CustomFormControl(new FormControl(this['micro-seg-vlan']), WorkloadWorkloadIntfStatus.propInfo['micro-seg-vlan']),
+                'mac-address': CustomFormControl(new FormControl(this['mac-address']), WorkloadWorkloadIntfStatus.propInfo['mac-address']),
+                'external-vlan': CustomFormControl(new FormControl(this['external-vlan']), WorkloadWorkloadIntfStatus.propInfo['external-vlan']),
             });
         }
         return this._formGroup;
@@ -106,6 +154,9 @@ export class WorkloadWorkloadIntfStatus extends BaseModel implements IWorkloadWo
         if (this._formGroup) {
             this._formGroup.controls['ip-addresses'].setValue(this['ip-addresses']);
             this._formGroup.controls['endpoint'].setValue(this['endpoint']);
+            this._formGroup.controls['micro-seg-vlan'].setValue(this['micro-seg-vlan']);
+            this._formGroup.controls['mac-address'].setValue(this['mac-address']);
+            this._formGroup.controls['external-vlan'].setValue(this['external-vlan']);
         }
     }
 }

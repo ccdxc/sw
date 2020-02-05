@@ -39,7 +39,7 @@ message Workload {
 // Spec part of Workload object
 message WorkloadSpec {
 
-    // Hostname of the server where the workload is running.
+    // Hostname of the server where the workload should be running.
     // cli-help: Host name where the workload runs
     string HostName                         = 1 [(venice.objRelation) = {Type: "NamedRef", To: "cluster/Host"},
                                                 (venice.check) = "HostAddr()",
@@ -49,6 +49,7 @@ message WorkloadSpec {
     repeated WorkloadIntfSpec Interfaces    = 2 [(gogoproto.nullable) = false,
                                                 (gogoproto.jsontag) = "interfaces,omitempty"];
 
+    string MigrationTimeout                 = 3 [(gogoproto.jsontag) = "migration-timeout,omitempty", (venice.default)="3m", (venice.check) = "EmptyOr(Duration(0,0))"];
 }
 
 // Status part of Workload object
@@ -57,8 +58,13 @@ message WorkloadStatus {
     security.PropagationStatus PropagationStatus = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "propagation-status"];
 
     // Status of all interfaces in the Workload identified by Primary MAC
-    repeated WorkloadIntfStatus Interfaces  = 2 [(gogoproto.nullable) = false,
-                                                (gogoproto.jsontag) = "interfaces,omitempty"];
+    repeated WorkloadIntfStatus Interfaces       = 2 [(gogoproto.nullable) = false,
+                                                     (gogoproto.jsontag) = "interfaces,omitempty"];
+    // Hostname of the server where the workload is currently running.
+    string HostName                              = 3 [(gogoproto.jsontag) = "host-name,omitempty"];
+
+    // Status of workload migration when migration is in process
+    WorkloadMigrationStatus MigrationStatus      = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "migration-status,omitempty"];
 }
 
 // Spec of a Workload interface
@@ -90,4 +96,39 @@ message WorkloadIntfStatus {
 
     // Endpoint associated with this Workload interface
     string Endpoint             = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "endpoint,omitempty"];
+
+    // Micro-segmentation vlan used by this interface
+    uint32 MicroSegVlan         = 3 [(gogoproto.jsontag) = "micro-seg-vlan,omitempty"];
+
+    // MACAddress contains the MAC address of the interface as seen by the workload
+    string MACAddress           = 4 [(gogoproto.jsontag) = "mac-address,omitempty"];
+
+    // External vlan assigned for this interface
+    uint32 ExternalVlan         = 5 [(gogoproto.jsontag) = "external-vlan, omitempty"];
+}
+
+message WorkloadMigrationStatus {
+    // migration stage
+    enum MigrationStage {
+        MIGRATION_NONE            = 0 [(venice.enumValueStr) = "migration-none"];
+        MIGRATION_START           = 1 [(venice.enumValueStr) = "migration-start"];
+        MIGRATION_DONE            = 2 [(venice.enumValueStr) = "migration-done"];
+        MIGRATION_ABORT           = 3 [(venice.enumValueStr) = "migration-abort"];
+    }
+
+    enum DataplaneStatus {
+        NONE      = 0 [(venice.enumValueStr) = "none"];
+        STARTED   = 1 [(venice.enumValueStr) = "started"];
+        DONE      = 2 [(venice.enumValueStr) = "done"];
+        FAILED    = 3 [(venice.enumValueStr) = "failed"];
+        TIMED_OUT = 4 [(venice.enumValueStr) = "timed-out"];
+    }
+    // Controller's migration stage
+    string Stage              = 1 [(gogoproto.jsontag) = "stage", (venice.check) = "StrEnum(WorkloadMigrationStatus.MigrationStage)"];
+    // migration start time
+    api.Timestamp StartedAt   = 2 [(gogoproto.jsontag) = "started-at"];
+    // The status from the dataplane performing migration
+    string Status             = 3 [(gogoproto.jsontag) = "status", (venice.check) = "StrEnum(WorkloadMigrationStatus.DataplaneStatus)"];
+    // migration completion time
+    api.Timestamp CompletedAt = 4 [(gogoproto.jsontag) = "completed-at"];
 }

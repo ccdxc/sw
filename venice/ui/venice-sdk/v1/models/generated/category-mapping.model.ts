@@ -317,7 +317,7 @@ export const CategoryMapping: CatMap  = {
     "Workload" : {
       instance: new WorkloadWorkload(),
       scopes: [ 'tenant', ] ,
-      actions:  [] ,
+      actions:  [ 'StartMigration',  'FinishMigration',  'AbortMigration', ] ,
     },
   },
 }

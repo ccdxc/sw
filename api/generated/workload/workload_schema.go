@@ -52,22 +52,25 @@ var typesMapWorkload = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":      api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"endpoint":         api.CLIInfo{Path: "Status.Interfaces[].Endpoint", Skip: false, Insert: "", Help: ""},
-			"external-vlan":    api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: "External vlan associated with the workload"},
-			"generation-id":    api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"host-name":        api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: "Host name where the workload runs"},
-			"ip-addresses":     api.CLIInfo{Path: "Spec.Interfaces[].IpAddresses", Skip: false, Insert: "", Help: ""},
-			"kind":             api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":           api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"mac-address":      api.CLIInfo{Path: "Spec.Interfaces[].MACAddress", Skip: false, Insert: "", Help: "MAC address of the interface as seen by the workload"},
-			"micro-seg-vlan":   api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: "Vlan identifying host unique vlan id"},
-			"name":             api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":        api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"resource-version": api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":        api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"tenant":           api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"uuid":             api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"api-version":       api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"endpoint":          api.CLIInfo{Path: "Status.Interfaces[].Endpoint", Skip: false, Insert: "", Help: ""},
+			"external-vlan":     api.CLIInfo{Path: "Spec.Interfaces[].ExternalVlan", Skip: false, Insert: "", Help: "External vlan associated with the workload"},
+			"generation-id":     api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"host-name":         api.CLIInfo{Path: "Spec.HostName", Skip: false, Insert: "", Help: "Host name where the workload runs"},
+			"ip-addresses":      api.CLIInfo{Path: "Spec.Interfaces[].IpAddresses", Skip: false, Insert: "", Help: ""},
+			"kind":              api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":            api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"mac-address":       api.CLIInfo{Path: "Spec.Interfaces[].MACAddress", Skip: false, Insert: "", Help: "MAC address of the interface as seen by the workload"},
+			"micro-seg-vlan":    api.CLIInfo{Path: "Spec.Interfaces[].MicroSegVlan", Skip: false, Insert: "", Help: "Vlan identifying host unique vlan id"},
+			"migration-timeout": api.CLIInfo{Path: "Spec.MigrationTimeout", Skip: false, Insert: "", Help: ""},
+			"name":              api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":         api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"resource-version":  api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":         api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"stage":             api.CLIInfo{Path: "Status.MigrationStatus.Stage", Skip: false, Insert: "", Help: ""},
+			"status":            api.CLIInfo{Path: "Status.MigrationStatus.Status", Skip: false, Insert: "", Help: ""},
+			"tenant":            api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"uuid":              api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"workload.WorkloadIntfSpec": &api.Struct{
@@ -88,6 +91,24 @@ var typesMapWorkload = map[string]*api.Struct{
 			"IpAddresses": api.Field{Name: "IpAddresses", CLITag: api.CLIInfo{ID: "ip-addresses", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-addresses", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Endpoint": api.Field{Name: "Endpoint", CLITag: api.CLIInfo{ID: "endpoint", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "endpoint", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MicroSegVlan": api.Field{Name: "MicroSegVlan", CLITag: api.CLIInfo{ID: "micro-seg-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "micro-seg-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"MACAddress": api.Field{Name: "MACAddress", CLITag: api.CLIInfo{ID: "mac-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "mac-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"ExternalVlan": api.Field{Name: "ExternalVlan", CLITag: api.CLIInfo{ID: "external-vlan", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "external-vlan", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+		},
+	},
+	"workload.WorkloadMigrationStatus": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(WorkloadMigrationStatus{}) },
+		Fields: map[string]api.Field{
+			"Stage": api.Field{Name: "Stage", CLITag: api.CLIInfo{ID: "stage", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "stage", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"StartedAt": api.Field{Name: "StartedAt", CLITag: api.CLIInfo{ID: "started-at", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "started-at", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
+
+			"Status": api.Field{Name: "Status", CLITag: api.CLIInfo{ID: "status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"CompletedAt": api.Field{Name: "CompletedAt", CLITag: api.CLIInfo{ID: "completed-at", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "completed-at", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "api.Timestamp"},
 		},
 	},
 	"workload.WorkloadSpec": &api.Struct{
@@ -96,6 +117,8 @@ var typesMapWorkload = map[string]*api.Struct{
 			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{ID: "host-name", Path: "", Skip: false, Insert: "", Help: "Host name where the workload runs"}, JSONTag: "host-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfSpec"},
+
+			"MigrationTimeout": api.Field{Name: "MigrationTimeout", CLITag: api.CLIInfo{ID: "migration-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration-timeout", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 		},
 	},
 	"workload.WorkloadStatus": &api.Struct{
@@ -104,6 +127,10 @@ var typesMapWorkload = map[string]*api.Struct{
 			"PropagationStatus": api.Field{Name: "PropagationStatus", CLITag: api.CLIInfo{ID: "propagation-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "propagation-status", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "security.PropagationStatus"},
 
 			"Interfaces": api.Field{Name: "Interfaces", CLITag: api.CLIInfo{ID: "interfaces", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "interfaces", Pointer: false, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadIntfStatus"},
+
+			"HostName": api.Field{Name: "HostName", CLITag: api.CLIInfo{ID: "host-name", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "host-name", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"MigrationStatus": api.Field{Name: "MigrationStatus", CLITag: api.CLIInfo{ID: "migration-status", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "migration-status", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "workload.WorkloadMigrationStatus"},
 		},
 	},
 }

@@ -43,6 +43,7 @@ type EndpointsWorkloadV1Client struct {
 	Client                         WorkloadV1Client
 	AutoWatchSvcWorkloadV1Endpoint endpoint.Endpoint
 
+	AbortMigrationEndpoint     endpoint.Endpoint
 	AutoAddEndpointEndpoint    endpoint.Endpoint
 	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
@@ -53,6 +54,8 @@ type EndpointsWorkloadV1Client struct {
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
 	AutoUpdateWorkloadEndpoint endpoint.Endpoint
+	FinishMigrationEndpoint    endpoint.Endpoint
+	StartMigrationEndpoint     endpoint.Endpoint
 }
 
 // EndpointsWorkloadV1RestClient is the REST client
@@ -62,6 +65,7 @@ type EndpointsWorkloadV1RestClient struct {
 	instance string
 	bufferId string
 
+	AbortMigrationEndpoint         endpoint.Endpoint
 	AutoAddEndpointEndpoint        endpoint.Endpoint
 	AutoAddWorkloadEndpoint        endpoint.Endpoint
 	AutoDeleteEndpointEndpoint     endpoint.Endpoint
@@ -75,6 +79,8 @@ type EndpointsWorkloadV1RestClient struct {
 	AutoWatchEndpointEndpoint      endpoint.Endpoint
 	AutoWatchSvcWorkloadV1Endpoint endpoint.Endpoint
 	AutoWatchWorkloadEndpoint      endpoint.Endpoint
+	FinishMigrationEndpoint        endpoint.Endpoint
+	StartMigrationEndpoint         endpoint.Endpoint
 }
 
 // MiddlewareWorkloadV1Server adds middle ware to the server
@@ -84,6 +90,7 @@ type MiddlewareWorkloadV1Server func(ServiceWorkloadV1Server) ServiceWorkloadV1S
 type EndpointsWorkloadV1Server struct {
 	svcWatchHandlerWorkloadV1 func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 
+	AbortMigrationEndpoint     endpoint.Endpoint
 	AutoAddEndpointEndpoint    endpoint.Endpoint
 	AutoAddWorkloadEndpoint    endpoint.Endpoint
 	AutoDeleteEndpointEndpoint endpoint.Endpoint
@@ -94,9 +101,25 @@ type EndpointsWorkloadV1Server struct {
 	AutoListWorkloadEndpoint   endpoint.Endpoint
 	AutoUpdateEndpointEndpoint endpoint.Endpoint
 	AutoUpdateWorkloadEndpoint endpoint.Endpoint
+	FinishMigrationEndpoint    endpoint.Endpoint
+	StartMigrationEndpoint     endpoint.Endpoint
 
 	watchHandlerEndpoint func(options *api.ListWatchOptions, stream grpc.ServerStream) error
 	watchHandlerWorkload func(options *api.ListWatchOptions, stream grpc.ServerStream) error
+}
+
+// AbortMigration is endpoint for AbortMigration
+func (e EndpointsWorkloadV1Client) AbortMigration(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.AbortMigrationEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1AbortMigration struct {
+	V   Workload
+	Err error
 }
 
 // AutoAddEndpoint is endpoint for AutoAddEndpoint
@@ -239,6 +262,34 @@ type respWorkloadV1AutoUpdateWorkload struct {
 	Err error
 }
 
+// FinishMigration is endpoint for FinishMigration
+func (e EndpointsWorkloadV1Client) FinishMigration(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.FinishMigrationEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1FinishMigration struct {
+	V   Workload
+	Err error
+}
+
+// StartMigration is endpoint for StartMigration
+func (e EndpointsWorkloadV1Client) StartMigration(ctx context.Context, in *Workload) (*Workload, error) {
+	resp, err := e.StartMigrationEndpoint(ctx, in)
+	if err != nil {
+		return &Workload{}, err
+	}
+	return resp.(*Workload), nil
+}
+
+type respWorkloadV1StartMigration struct {
+	V   Workload
+	Err error
+}
+
 func (e EndpointsWorkloadV1Client) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error) {
 	return e.Client.AutoWatchSvcWorkloadV1(ctx, in)
 }
@@ -251,6 +302,28 @@ func (e EndpointsWorkloadV1Client) AutoWatchEndpoint(ctx context.Context, in *ap
 // AutoWatchWorkload performs Watch for Workload
 func (e EndpointsWorkloadV1Client) AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchWorkloadClient, error) {
 	return e.Client.AutoWatchWorkload(ctx, in)
+}
+
+// AbortMigration implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) AbortMigration(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.AbortMigrationEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1AbortMigrationEndpoint creates  AbortMigration endpoints for the service
+func MakeWorkloadV1AbortMigrationEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.AbortMigration(ctx, *req)
+		return respWorkloadV1AbortMigration{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:AbortMigration")(f)
 }
 
 // AutoAddEndpoint implementation on server Endpoint
@@ -473,6 +546,50 @@ func MakeWorkloadV1AutoUpdateWorkloadEndpoint(s ServiceWorkloadV1Server, logger 
 	return trace.ServerEndpoint("WorkloadV1:AutoUpdateWorkload")(f)
 }
 
+// FinishMigration implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) FinishMigration(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.FinishMigrationEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1FinishMigrationEndpoint creates  FinishMigration endpoints for the service
+func MakeWorkloadV1FinishMigrationEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.FinishMigration(ctx, *req)
+		return respWorkloadV1FinishMigration{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:FinishMigration")(f)
+}
+
+// StartMigration implementation on server Endpoint
+func (e EndpointsWorkloadV1Server) StartMigration(ctx context.Context, in Workload) (Workload, error) {
+	resp, err := e.StartMigrationEndpoint(ctx, in)
+	if err != nil {
+		return Workload{}, err
+	}
+	return *resp.(*Workload), nil
+}
+
+// MakeWorkloadV1StartMigrationEndpoint creates  StartMigration endpoints for the service
+func MakeWorkloadV1StartMigrationEndpoint(s ServiceWorkloadV1Server, logger log.Logger) endpoint.Endpoint {
+	f := func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(*Workload)
+		v, err := s.StartMigration(ctx, *req)
+		return respWorkloadV1StartMigration{
+			V:   v,
+			Err: err,
+		}, nil
+	}
+	return trace.ServerEndpoint("WorkloadV1:StartMigration")(f)
+}
+
 func (e EndpointsWorkloadV1Server) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error {
 	return e.svcWatchHandlerWorkloadV1(in, stream)
 }
@@ -516,6 +633,7 @@ func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger)
 	return EndpointsWorkloadV1Server{
 		svcWatchHandlerWorkloadV1: MakeAutoWatchSvcWorkloadV1Endpoint(s, logger),
 
+		AbortMigrationEndpoint:     MakeWorkloadV1AbortMigrationEndpoint(s, logger),
 		AutoAddEndpointEndpoint:    MakeWorkloadV1AutoAddEndpointEndpoint(s, logger),
 		AutoAddWorkloadEndpoint:    MakeWorkloadV1AutoAddWorkloadEndpoint(s, logger),
 		AutoDeleteEndpointEndpoint: MakeWorkloadV1AutoDeleteEndpointEndpoint(s, logger),
@@ -526,6 +644,8 @@ func MakeWorkloadV1ServerEndpoints(s ServiceWorkloadV1Server, logger log.Logger)
 		AutoListWorkloadEndpoint:   MakeWorkloadV1AutoListWorkloadEndpoint(s, logger),
 		AutoUpdateEndpointEndpoint: MakeWorkloadV1AutoUpdateEndpointEndpoint(s, logger),
 		AutoUpdateWorkloadEndpoint: MakeWorkloadV1AutoUpdateWorkloadEndpoint(s, logger),
+		FinishMigrationEndpoint:    MakeWorkloadV1FinishMigrationEndpoint(s, logger),
+		StartMigrationEndpoint:     MakeWorkloadV1StartMigrationEndpoint(s, logger),
 
 		watchHandlerEndpoint: MakeAutoWatchEndpointEndpoint(s, logger),
 		watchHandlerWorkload: MakeAutoWatchWorkloadEndpoint(s, logger),
@@ -562,6 +682,19 @@ type loggingWorkloadV1MiddlewareServer struct {
 	next   ServiceWorkloadV1Server
 }
 
+func (m loggingWorkloadV1MiddlewareClient) AbortMigration(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AbortMigration", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.AbortMigration(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareClient) AutoAddEndpoint(ctx context.Context, in *Endpoint) (resp *Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -692,6 +825,32 @@ func (m loggingWorkloadV1MiddlewareClient) AutoUpdateWorkload(ctx context.Contex
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareClient) FinishMigration(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "FinishMigration", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.FinishMigration(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareClient) StartMigration(ctx context.Context, in *Workload) (resp *Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "StartMigration", "result", rslt, "duration", time.Since(begin), "error", err)
+	}(time.Now())
+	resp, err = m.next.StartMigration(ctx, in)
+	return
+}
 
 func (m loggingWorkloadV1MiddlewareClient) AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (resp WorkloadV1_AutoWatchSvcWorkloadV1Client, err error) {
 	defer func(begin time.Time) {
@@ -734,6 +893,19 @@ func (m loggingWorkloadV1MiddlewareClient) AutoWatchWorkload(ctx context.Context
 	return
 }
 
+func (m loggingWorkloadV1MiddlewareServer) AbortMigration(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "AbortMigration", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.AbortMigration(ctx, in)
+	return
+}
 func (m loggingWorkloadV1MiddlewareServer) AutoAddEndpoint(ctx context.Context, in Endpoint) (resp Endpoint, err error) {
 	defer func(begin time.Time) {
 		var rslt string
@@ -864,6 +1036,32 @@ func (m loggingWorkloadV1MiddlewareServer) AutoUpdateWorkload(ctx context.Contex
 	resp, err = m.next.AutoUpdateWorkload(ctx, in)
 	return
 }
+func (m loggingWorkloadV1MiddlewareServer) FinishMigration(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "FinishMigration", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.FinishMigration(ctx, in)
+	return
+}
+func (m loggingWorkloadV1MiddlewareServer) StartMigration(ctx context.Context, in Workload) (resp Workload, err error) {
+	defer func(begin time.Time) {
+		var rslt string
+		if err == nil {
+			rslt = "Success"
+		} else {
+			rslt = err.Error()
+		}
+		m.logger.Audit(ctx, "service", "WorkloadV1", "method", "StartMigration", "result", rslt, "duration", time.Since(begin))
+	}(time.Now())
+	resp, err = m.next.StartMigration(ctx, in)
+	return
+}
 
 func (m loggingWorkloadV1MiddlewareServer) AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) (err error) {
 	defer func(begin time.Time) {
@@ -927,6 +1125,11 @@ func (r *EndpointsWorkloadV1RestClient) getHTTPRequest(ctx context.Context, in i
 		return nil, fmt.Errorf("could not encode request (%s)", err)
 	}
 	return req, nil
+}
+
+//
+func makeURIWorkloadV1AbortMigrationCreateOper(in *Workload) string {
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name, "/AbortMigration")
 }
 
 //
@@ -996,6 +1199,16 @@ func makeURIWorkloadV1AutoWatchSvcWorkloadV1WatchOper(in *api.ListWatchOptions) 
 //
 func makeURIWorkloadV1AutoWatchWorkloadWatchOper(in *api.ListWatchOptions) string {
 	return fmt.Sprint("/configs/workload/v1", "/watch/tenant/", in.Tenant, "/workloads")
+}
+
+//
+func makeURIWorkloadV1FinishMigrationCreateOper(in *Workload) string {
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name, "/FinishMigration")
+}
+
+//
+func makeURIWorkloadV1StartMigrationCreateOper(in *Workload) string {
+	return fmt.Sprint("/configs/workload/v1", "/tenant/", in.Tenant, "/workloads/", in.Name, "/StartMigration")
 }
 
 // AutoAddEndpoint CRUD method for Endpoint
@@ -1261,6 +1474,69 @@ func (r *EndpointsWorkloadV1RestClient) AutoWatchWorkload(ctx context.Context, o
 		conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "client closing"), time.Now().Add(3*time.Second))
 	}()
 	return lw, nil
+}
+
+func (r *EndpointsWorkloadV1RestClient) StartMigrationWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIWorkloadV1StartMigrationCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespWorkloadV1StartMigration(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+func (r *EndpointsWorkloadV1RestClient) FinishMigrationWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIWorkloadV1FinishMigrationCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespWorkloadV1FinishMigration(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
+}
+
+func (r *EndpointsWorkloadV1RestClient) AbortMigrationWorkload(ctx context.Context, in *Workload) (*Workload, error) {
+	if r.bufferId != "" {
+		return nil, errors.New("staging not allowed")
+	}
+	path := makeURIWorkloadV1AbortMigrationCreateOper(in)
+	req, err := r.getHTTPRequest(ctx, in, "POST", path)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := r.client.Do(req.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("request failed (%s)", err)
+	}
+	defer resp.Body.Close()
+	ret, err := decodeHTTPrespWorkloadV1AbortMigration(ctx, resp)
+	if err != nil {
+		return nil, err
+	}
+	return ret.(*Workload), err
 }
 
 // MakeWorkloadV1RestClientEndpoints make REST client endpoints

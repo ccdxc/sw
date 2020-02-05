@@ -1445,6 +1445,9 @@ type WorkloadAPI interface {
 	List(ctx context.Context, opts *api.ListWatchOptions) ([]*Workload, error)
 	Watch(handler WorkloadHandler) error
 	StopWatch(handler WorkloadHandler) error
+	StartMigration(obj *workload.Workload) (*workload.Workload, error)
+	FinishMigration(obj *workload.Workload) (*workload.Workload, error)
+	AbortMigration(obj *workload.Workload) (*workload.Workload, error)
 }
 
 // dummy struct that implements WorkloadAPI
@@ -1590,6 +1593,48 @@ func (api *workloadAPI) StopWatch(handler WorkloadHandler) error {
 	api.ct.workPools["Workload"].Stop()
 	api.ct.Unlock()
 	return api.ct.StopWatchWorkload(handler)
+}
+
+// StartMigration is an API action
+func (api *workloadAPI) StartMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.WorkloadV1().Workload().StartMigration(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// FinishMigration is an API action
+func (api *workloadAPI) FinishMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.WorkloadV1().Workload().FinishMigration(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
+}
+
+// AbortMigration is an API action
+func (api *workloadAPI) AbortMigration(obj *workload.Workload) (*workload.Workload, error) {
+	if api.ct.resolver != nil {
+		apicl, err := api.ct.apiClient()
+		if err != nil {
+			api.ct.logger.Errorf("Error creating API server clent. Err: %v", err)
+			return nil, err
+		}
+
+		return apicl.WorkloadV1().Workload().AbortMigration(context.Background(), obj)
+	}
+	return nil, fmt.Errorf("Action not implemented for local operation")
 }
 
 // Workload returns WorkloadAPI

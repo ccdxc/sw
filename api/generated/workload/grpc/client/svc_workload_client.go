@@ -30,6 +30,20 @@ var _ kvstore.Interface
 // NewWorkloadV1 sets up a new client for WorkloadV1
 func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWorkloadV1Client {
 
+	var lAbortMigrationEndpoint endpoint.Endpoint
+	{
+		lAbortMigrationEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"AbortMigration",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lAbortMigrationEndpoint = trace.ClientEndPoint("WorkloadV1:AbortMigration")(lAbortMigrationEndpoint)
+	}
 	var lAutoAddEndpointEndpoint endpoint.Endpoint
 	{
 		lAutoAddEndpointEndpoint = grpctransport.NewClient(
@@ -170,9 +184,38 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		).Endpoint()
 		lAutoUpdateWorkloadEndpoint = trace.ClientEndPoint("WorkloadV1:AutoUpdateWorkload")(lAutoUpdateWorkloadEndpoint)
 	}
+	var lFinishMigrationEndpoint endpoint.Endpoint
+	{
+		lFinishMigrationEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"FinishMigration",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lFinishMigrationEndpoint = trace.ClientEndPoint("WorkloadV1:FinishMigration")(lFinishMigrationEndpoint)
+	}
+	var lStartMigrationEndpoint endpoint.Endpoint
+	{
+		lStartMigrationEndpoint = grpctransport.NewClient(
+			conn,
+			"workload.WorkloadV1",
+			"StartMigration",
+			workload.EncodeGrpcReqWorkload,
+			workload.DecodeGrpcRespWorkload,
+			&workload.Workload{},
+			grpctransport.ClientBefore(trace.ToGRPCRequest(logger)),
+			grpctransport.ClientBefore(dummyBefore),
+		).Endpoint()
+		lStartMigrationEndpoint = trace.ClientEndPoint("WorkloadV1:StartMigration")(lStartMigrationEndpoint)
+	}
 	return workload.EndpointsWorkloadV1Client{
 		Client: workload.NewWorkloadV1Client(conn),
 
+		AbortMigrationEndpoint:     lAbortMigrationEndpoint,
 		AutoAddEndpointEndpoint:    lAutoAddEndpointEndpoint,
 		AutoAddWorkloadEndpoint:    lAutoAddWorkloadEndpoint,
 		AutoDeleteEndpointEndpoint: lAutoDeleteEndpointEndpoint,
@@ -183,6 +226,8 @@ func NewWorkloadV1(conn *grpc.ClientConn, logger log.Logger) workload.ServiceWor
 		AutoListWorkloadEndpoint:   lAutoListWorkloadEndpoint,
 		AutoUpdateEndpointEndpoint: lAutoUpdateEndpointEndpoint,
 		AutoUpdateWorkloadEndpoint: lAutoUpdateWorkloadEndpoint,
+		FinishMigrationEndpoint:    lFinishMigrationEndpoint,
+		StartMigrationEndpoint:     lStartMigrationEndpoint,
 	}
 }
 
@@ -491,6 +536,33 @@ func (a *grpcObjWorkloadV1Workload) Watch(ctx context.Context, options *api.List
 	return lw, nil
 }
 
+func (a *grpcObjWorkloadV1Workload) StartMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{StartMigration Workload Workload}", "oper", "StartMigration")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.StartMigration(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{FinishMigration Workload Workload}", "oper", "FinishMigration")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.FinishMigration(nctx, in)
+}
+
+func (a *grpcObjWorkloadV1Workload) AbortMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	a.logger.DebugLog("msg", "received call", "object", "{AbortMigration Workload Workload}", "oper", "AbortMigration")
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	nctx := addVersion(ctx, "v1")
+	return a.client.AbortMigration(nctx, in)
+}
+
 func (a *grpcObjWorkloadV1Workload) Allowed(oper apiintf.APIOperType) bool {
 	return true
 }
@@ -575,6 +647,25 @@ func (a *restObjWorkloadV1Workload) Allowed(oper apiintf.APIOperType) bool {
 	default:
 		return false
 	}
+}
+
+func (a *restObjWorkloadV1Workload) StartMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.StartMigrationWorkload(ctx, in)
+}
+func (a *restObjWorkloadV1Workload) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.FinishMigrationWorkload(ctx, in)
+}
+func (a *restObjWorkloadV1Workload) AbortMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	if in == nil {
+		return nil, errors.New("invalid input")
+	}
+	return a.endpoints.AbortMigrationWorkload(ctx, in)
 }
 
 type crudClientWorkloadV1 struct {

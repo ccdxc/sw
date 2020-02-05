@@ -37,6 +37,9 @@ type WorkloadV1WorkloadInterface interface {
 	List(ctx context.Context, options *api.ListWatchOptions) ([]*Workload, error)
 	Watch(ctx context.Context, options *api.ListWatchOptions) (kvstore.Watcher, error)
 	Allowed(oper apiintf.APIOperType) bool
+	StartMigration(ctx context.Context, in *Workload) (*Workload, error)
+	FinishMigration(ctx context.Context, in *Workload) (*Workload, error)
+	AbortMigration(ctx context.Context, in *Workload) (*Workload, error)
 }
 
 // WorkloadV1Interface exposes objects with CRUD operations allowed by the service

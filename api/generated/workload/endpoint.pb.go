@@ -23,6 +23,7 @@
 		Workload
 		WorkloadIntfSpec
 		WorkloadIntfStatus
+		WorkloadMigrationStatus
 		WorkloadSpec
 		WorkloadStatus
 */

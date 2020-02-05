@@ -1207,7 +1207,14 @@
           },
           {
             "name": "spec.host-name",
-            "description": "Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname.",
+            "description": "Hostname of the server where the workload should be running. Should be a valid host address, IP address or hostname.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.migration-timeout",
+            "description": "Should be a valid time duration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -1258,6 +1265,43 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.host-name",
+            "description": "Hostname of the server where the workload is currently running.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.stage",
+            "description": "Controller's migration stage.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.started-at",
+            "description": "migration start time.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration-status.status",
+            "description": "The status from the dataplane performing migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.completed-at",
+            "description": "migration completion time.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -1395,6 +1439,231 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/workloadWorkloadUpdate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/AbortMigration": {
+      "post": {
+        "summary": "Abort Workload Migration operation",
+        "operationId": "AbortMigration",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/FinishMigration": {
+      "post": {
+        "summary": "Finish Workload Migration operation",
+        "operationId": "FinishMigration",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/tenant/{O.Tenant}/workloads/{O.Name}/StartMigration": {
+      "post": {
+        "summary": "Start Workload Migration operation",
+        "operationId": "StartMigration",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Tenant",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
             }
           }
         ],
@@ -2426,7 +2695,14 @@
           },
           {
             "name": "spec.host-name",
-            "description": "Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname.",
+            "description": "Hostname of the server where the workload should be running. Should be a valid host address, IP address or hostname.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "spec.migration-timeout",
+            "description": "Should be a valid time duration.",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2477,6 +2753,43 @@
             "items": {
               "type": "string"
             }
+          },
+          {
+            "name": "status.host-name",
+            "description": "Hostname of the server where the workload is currently running.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.stage",
+            "description": "Controller's migration stage.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.started-at",
+            "description": "migration start time.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "migration-status.status",
+            "description": "The status from the dataplane performing migration.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "migration-status.completed-at",
+            "description": "migration completion time.",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -2602,6 +2915,213 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/workloadWorkloadUpdate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/workloads/{O.Name}/AbortMigration": {
+      "post": {
+        "summary": "Abort Workload Migration operation",
+        "operationId": "AbortMigration_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/workloads/{O.Name}/FinishMigration": {
+      "post": {
+        "summary": "Finish Workload Migration operation",
+        "operationId": "FinishMigration_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
+            }
+          }
+        ],
+        "tags": [
+          "workload/v1"
+        ]
+      }
+    },
+    "/configs/workload/v1/workloads/{O.Name}/StartMigration": {
+      "post": {
+        "summary": "Start Workload Migration operation",
+        "operationId": "StartMigration_1",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/workloadWorkload"
+            }
+          },
+          "400": {
+            "description": "Bad request parameters",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "401": {
+            "description": "Unauthorized request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "409": {
+            "description": "Conflict while processing request",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "412": {
+            "description": "Pre-condition failed",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          },
+          "501": {
+            "description": "Request not implemented",
+            "schema": {
+              "$ref": "#/definitions/apiStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "O.Name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/workloadWorkloadCreate"
             }
           }
         ],
@@ -3274,6 +3794,20 @@
         "endpoint": {
           "type": "string",
           "description": "Endpoint associated with this Workload interface."
+        },
+        "micro-seg-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Micro-segmentation vlan used by this interface."
+        },
+        "mac-address": {
+          "type": "string",
+          "description": "MACAddress contains the MAC address of the interface as seen by the workload."
+        },
+        "external-vlan": {
+          "type": "integer",
+          "format": "int64",
+          "description": "External vlan assigned for this interface."
         }
       },
       "description": "Status of a Workload interface."
@@ -3300,6 +3834,48 @@
       },
       "description": "WorkloadList is a container object for list of Workload objects."
     },
+    "workloadWorkloadMigrationStatus": {
+      "type": "object",
+      "required": [
+        "stage",
+        "status"
+      ],
+      "properties": {
+        "stage": {
+          "type": "string",
+          "enum": [
+            "migration-none",
+            "migration-start",
+            "migration-done",
+            "migration-abort"
+          ],
+          "default": "migration-none",
+          "description": "Controller's migration stage."
+        },
+        "started-at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "migration start time."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "none",
+            "started",
+            "done",
+            "failed",
+            "timed-out"
+          ],
+          "default": "none",
+          "description": "The status from the dataplane performing migration."
+        },
+        "completed-at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "migration completion time."
+        }
+      }
+    },
     "workloadWorkloadSpec": {
       "type": "object",
       "required": [
@@ -3309,7 +3885,7 @@
         "host-name": {
           "type": "string",
           "example": "10.1.1.1, ff02::5, localhost, example.domain.com ",
-          "description": "Hostname of the server where the workload is running. Should be a valid host address, IP address or hostname."
+          "description": "Hostname of the server where the workload should be running. Should be a valid host address, IP address or hostname."
         },
         "interfaces": {
           "type": "array",
@@ -3317,6 +3893,12 @@
             "$ref": "#/definitions/workloadWorkloadIntfSpec"
           },
           "description": "Spec of all interfaces in the Workload identified by Primary MAC."
+        },
+        "migration-timeout": {
+          "type": "string",
+          "default": "3m",
+          "example": "2h",
+          "description": "Should be a valid time duration."
         }
       },
       "description": "Spec part of Workload object."
@@ -3334,6 +3916,14 @@
             "$ref": "#/definitions/workloadWorkloadIntfStatus"
           },
           "description": "Status of all interfaces in the Workload identified by Primary MAC."
+        },
+        "host-name": {
+          "type": "string",
+          "description": "Hostname of the server where the workload is currently running."
+        },
+        "migration-status": {
+          "$ref": "#/definitions/workloadWorkloadMigrationStatus",
+          "description": "Status of workload migration when migration is in process."
         }
       },
       "description": "Status part of Workload object."

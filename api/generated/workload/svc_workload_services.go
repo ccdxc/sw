@@ -19,6 +19,7 @@ var _ api.ObjectMeta
 type ServiceWorkloadV1Client interface {
 	AutoWatchSvcWorkloadV1(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchSvcWorkloadV1Client, error)
 
+	AbortMigration(ctx context.Context, t *Workload) (*Workload, error)
 	AutoAddEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 	AutoAddWorkload(ctx context.Context, t *Workload) (*Workload, error)
 	AutoDeleteEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
@@ -29,6 +30,8 @@ type ServiceWorkloadV1Client interface {
 	AutoListWorkload(ctx context.Context, t *api.ListWatchOptions) (*WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, t *Endpoint) (*Endpoint, error)
 	AutoUpdateWorkload(ctx context.Context, t *Workload) (*Workload, error)
+	FinishMigration(ctx context.Context, t *Workload) (*Workload, error)
+	StartMigration(ctx context.Context, t *Workload) (*Workload, error)
 
 	AutoWatchEndpoint(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchEndpointClient, error)
 	AutoWatchWorkload(ctx context.Context, in *api.ListWatchOptions) (WorkloadV1_AutoWatchWorkloadClient, error)
@@ -38,6 +41,7 @@ type ServiceWorkloadV1Client interface {
 type ServiceWorkloadV1Server interface {
 	AutoWatchSvcWorkloadV1(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchSvcWorkloadV1Server) error
 
+	AbortMigration(ctx context.Context, t Workload) (Workload, error)
 	AutoAddEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 	AutoAddWorkload(ctx context.Context, t Workload) (Workload, error)
 	AutoDeleteEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
@@ -48,6 +52,8 @@ type ServiceWorkloadV1Server interface {
 	AutoListWorkload(ctx context.Context, t api.ListWatchOptions) (WorkloadList, error)
 	AutoUpdateEndpoint(ctx context.Context, t Endpoint) (Endpoint, error)
 	AutoUpdateWorkload(ctx context.Context, t Workload) (Workload, error)
+	FinishMigration(ctx context.Context, t Workload) (Workload, error)
+	StartMigration(ctx context.Context, t Workload) (Workload, error)
 
 	AutoWatchEndpoint(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchEndpointServer) error
 	AutoWatchWorkload(in *api.ListWatchOptions, stream WorkloadV1_AutoWatchWorkloadServer) error

@@ -268,6 +268,45 @@ func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) Allowed(oper interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Allowed", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).Allowed), oper)
 }
 
+// StartMigration mocks base method
+func (m *MockWorkloadV1WorkloadInterface) StartMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	ret := m.ctrl.Call(m, "StartMigration", ctx, in)
+	ret0, _ := ret[0].(*workload.Workload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StartMigration indicates an expected call of StartMigration
+func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) StartMigration(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartMigration", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).StartMigration), ctx, in)
+}
+
+// FinishMigration mocks base method
+func (m *MockWorkloadV1WorkloadInterface) FinishMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	ret := m.ctrl.Call(m, "FinishMigration", ctx, in)
+	ret0, _ := ret[0].(*workload.Workload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FinishMigration indicates an expected call of FinishMigration
+func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) FinishMigration(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinishMigration", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).FinishMigration), ctx, in)
+}
+
+// AbortMigration mocks base method
+func (m *MockWorkloadV1WorkloadInterface) AbortMigration(ctx context.Context, in *workload.Workload) (*workload.Workload, error) {
+	ret := m.ctrl.Call(m, "AbortMigration", ctx, in)
+	ret0, _ := ret[0].(*workload.Workload)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AbortMigration indicates an expected call of AbortMigration
+func (mr *MockWorkloadV1WorkloadInterfaceMockRecorder) AbortMigration(ctx, in interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AbortMigration", reflect.TypeOf((*MockWorkloadV1WorkloadInterface)(nil).AbortMigration), ctx, in)
+}
+
 // MockWorkloadV1Interface is a mock of WorkloadV1Interface interface
 type MockWorkloadV1Interface struct {
 	ctrl     *gomock.Controller

@@ -49,6 +49,13 @@ var CreateWorkloadFlags = []gen.CliFlag{
 		Skip:   false,
 		Insert: "",
 	},
+	{
+		ID:     "migration-timeout",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
 }
 
 func removeWorkloadOper(obj interface{}) error {

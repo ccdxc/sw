@@ -331,10 +331,11 @@ func (s *sworkloadWorkloadBackend) regMsgsFunc(l log.Logger, scheme *runtime.Sch
 			}
 		}),
 
-		"workload.WorkloadIntfSpec":   apisrvpkg.NewMessage("workload.WorkloadIntfSpec"),
-		"workload.WorkloadIntfStatus": apisrvpkg.NewMessage("workload.WorkloadIntfStatus"),
-		"workload.WorkloadSpec":       apisrvpkg.NewMessage("workload.WorkloadSpec"),
-		"workload.WorkloadStatus":     apisrvpkg.NewMessage("workload.WorkloadStatus"),
+		"workload.WorkloadIntfSpec":        apisrvpkg.NewMessage("workload.WorkloadIntfSpec"),
+		"workload.WorkloadIntfStatus":      apisrvpkg.NewMessage("workload.WorkloadIntfStatus"),
+		"workload.WorkloadMigrationStatus": apisrvpkg.NewMessage("workload.WorkloadMigrationStatus"),
+		"workload.WorkloadSpec":            apisrvpkg.NewMessage("workload.WorkloadSpec"),
+		"workload.WorkloadStatus":          apisrvpkg.NewMessage("workload.WorkloadStatus"),
 		// Add a message handler for ListWatch options
 		"api.ListWatchOptions": apisrvpkg.NewMessage("api.ListWatchOptions"),
 	}

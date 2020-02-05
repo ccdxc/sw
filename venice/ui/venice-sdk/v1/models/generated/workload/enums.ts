@@ -25,6 +25,21 @@ export enum WorkloadEndpointMigrationStatus_status {
     'aborted' = "aborted",
 }
 
+export enum WorkloadWorkloadMigrationStatus_stage {
+    'migration-none' = "migration-none",
+    'migration-start' = "migration-start",
+    'migration-done' = "migration-done",
+    'migration-abort' = "migration-abort",
+}
+
+export enum WorkloadWorkloadMigrationStatus_status {
+    'none' = "none",
+    'started' = "started",
+    'done' = "done",
+    'failed' = "failed",
+    'timed-out' = "timed-out",
+}
+
 
 export enum ApiListWatchOptions_sort_order_uihint {
     'by-creation-time' = "By Creation Time",
@@ -77,6 +92,8 @@ export class AllEnums {
 
     ApiListWatchOptions_sort_order = ApiListWatchOptions_sort_order;
     WorkloadEndpointMigrationStatus_status = WorkloadEndpointMigrationStatus_status;
+    WorkloadWorkloadMigrationStatus_stage = WorkloadWorkloadMigrationStatus_stage;
+    WorkloadWorkloadMigrationStatus_status = WorkloadWorkloadMigrationStatus_status;
 
     ApiListWatchOptions_sort_order_uihint = ApiListWatchOptions_sort_order_uihint;
     WorkloadEndpointMigrationStatus_status_uihint = WorkloadEndpointMigrationStatus_status_uihint;

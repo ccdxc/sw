@@ -892,6 +892,11 @@
               "list",
               "watch"
             ],
+            "Actions": [
+              "StartMigration",
+              "FinishMigration",
+              "AbortMigration"
+            ],
             "URI": "/configs/workload/v1/workloads"
           }
         }

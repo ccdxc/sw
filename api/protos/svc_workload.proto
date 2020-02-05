@@ -33,4 +33,31 @@ service WorkloadV1 {
         Object: "Workload"
         Method: [ "get", "put", "delete", "post", "list", "watch" ]
     };
+
+    // Action to start migration.
+    option (venice.apiAction) = {
+     Object: "Workload"
+     Action: "StartMigration"
+     Request: "Workload"
+     Response: "Workload"
+     Desc: "Start Workload Migration operation"
+    };
+
+    // Action to finish migration.
+    option (venice.apiAction) = {
+     Object: "Workload"
+     Action: "FinishMigration"
+     Request: "Workload"
+     Response: "Workload"
+     Desc: "Finish Workload Migration operation"
+    };
+
+    // Action to abort migration.
+    option (venice.apiAction) = {
+     Object: "Workload"
+     Action: "AbortMigration"
+     Request: "Workload"
+     Response: "Workload"
+     Desc: "Abort Workload Migration operation"
+    };
 }
