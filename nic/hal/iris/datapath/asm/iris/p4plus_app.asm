@@ -14,7 +14,6 @@ struct phv_          p;
 p4plus_app_default:
   slt         c1, k.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
   phvwr.c1    p.capri_p4_intrinsic_packet_len, MIN_ETHER_FRAME_LEN
-  phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   seq         c1, k.tcp_valid, TRUE
   sle         c2, k.tcp_dataOffset, 5
   setcf.e     c1, [c1 & !c2]
@@ -23,7 +22,6 @@ p4plus_app_default:
 
 .align
 p4plus_app_classic_nic:
-  phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr         p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   // r7 : packet_len
@@ -72,7 +70,6 @@ p4plus_app_tcp_proxy:
 
   phvwrpair.!c7 p.vlan_tag_valid, FALSE, p.ethernet_valid, FALSE
   phvwrpair.!c7 p.ipv4_valid, FALSE, p.ipv6_valid, FALSE
-  phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_options_blob_valid) == 12)
   phvwrpair.!c7 p.{tcp_option_eol_valid...tcp_options_blob_valid}, r0, p.tcp_valid, r0
   or            r3, r0, k.capri_p4_intrinsic_packet_len
@@ -117,7 +114,6 @@ p4plus_app_cpu:
   add         r6, r0, r0 // pass packet start offset = 0
 
 p4plus_app_cpu_raw_redir_common:
-  phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   or            r1, r0, r0
   seq           c1, k.ipv4_valid, TRUE
   seq           c2, k.ipv6_valid, TRUE
@@ -162,7 +158,6 @@ p4plus_app_cpu_common:
 
 .align
 p4plus_app_ipsec:
-  phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr       p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
   phvwr       p.p4_to_p4plus_ipsec_valid, TRUE
@@ -249,7 +244,6 @@ p4plus_app_p4pt:
   phvwr       p.ipv4_valid, FALSE
   phvwr       p.ipv6_valid, FALSE
   phvwr       p.udp_valid, FALSE
-  phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_options_blob_valid) == 12)
   phvwr       p.{tcp_option_eol_valid...tcp_options_blob_valid}, r0
   phvwr       p.tcp_valid, r0

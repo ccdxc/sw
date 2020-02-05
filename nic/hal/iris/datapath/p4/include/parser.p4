@@ -194,7 +194,6 @@ header ipv4_options_blob_t ipv4_options_blob;
 header ipv4_options_blob_t ipv4_options_blob2;
 header ipv4_option_eol_t ipv4_option_eol;
 header ipv4_option_nop_t ipv4_option_nop;
-header ipv4_option_rr_t ipv4_option_rr;
 header ipv4_option_generic_t ipv4_option_generic;
 
 // Inner IPv4 Options
@@ -203,7 +202,6 @@ header ipv4_options_blob_t inner_ipv4_options_blob;
 header ipv4_options_blob_t inner_ipv4_options_blob2;
 header ipv4_option_eol_t inner_ipv4_option_eol;
 header ipv4_option_nop_t inner_ipv4_option_nop;
-header ipv4_option_rr_t inner_ipv4_option_rr;
 header ipv4_option_generic_t inner_ipv4_option_generic;
 
 header ethernet_t inner_ethernet;
@@ -751,29 +749,12 @@ parser parse_ipv4_option_generic {
     return parse_ipv4_options;
 }
 
-@pragma no_extract
-parser parse_ipv4_option_rr {
-    return select(current(8, 16)) {
-        0x1320 : parse_ipv4_option_rr_special;
-        default : parse_ipv4_option_generic;
-    }
-}
-
-parser parse_ipv4_option_rr_special {
-    extract(ipv4_option_rr);
-    set_metadata(control_metadata.record_route_dst_ip, ipv4_option_rr.dst_ip);
-    set_metadata(parser_metadata.ip_options_len,
-                 parser_metadata.ip_options_len - ipv4_option_rr.len);
-    return parse_ipv4_options;
-}
-
-@pragma header_ordering ipv4_option_generic ipv4_option_rr ipv4_option_nop ipv4_option_eol
+@pragma header_ordering ipv4_option_generic ipv4_option_nop ipv4_option_eol
 parser parse_ipv4_options {
     return select(parser_metadata.ip_options_len, current(0, 8)) {
         0x0000 mask 0xff00  : parse_ipv4_after_options;
         0x0000 mask 0x00ff  : parse_ipv4_option_eol;
         0x0001 mask 0x00ff  : parse_ipv4_option_nop;
-        0x0007 mask 0x00ff  : parse_ipv4_option_rr;
         default             : parse_ipv4_option_generic;
     }
 }
@@ -1637,30 +1618,12 @@ parser parse_inner_ipv4_option_generic {
     return parse_inner_ipv4_options;
 }
 
-@pragma no_extract
-parser parse_inner_ipv4_option_rr {
-    return select(current(8, 16)) {
-        0x1320 : parse_inner_ipv4_option_rr_special;
-        default : parse_inner_ipv4_option_generic;
-    }
-}
-
-parser parse_inner_ipv4_option_rr_special {
-    extract(inner_ipv4_option_rr);
-    set_metadata(control_metadata.record_route_inner_dst_ip,
-                 inner_ipv4_option_rr.dst_ip);
-    set_metadata(parser_metadata.inner_ip_options_len,
-                 parser_metadata.inner_ip_options_len - inner_ipv4_option_rr.len);
-    return parse_inner_ipv4_options;
-}
-
-@pragma header_ordering inner_ipv4_option_generic inner_ipv4_option_rr inner_ipv4_option_nop inner_ipv4_option_eol
+@pragma header_ordering inner_ipv4_option_generic inner_ipv4_option_nop inner_ipv4_option_eol
 parser parse_inner_ipv4_options {
     return select(parser_metadata.inner_ip_options_len, current(0, 8)) {
         0x0000 mask 0xff00  : parse_inner_ipv4_after_options;
         0x0000 mask 0x00ff  : parse_inner_ipv4_option_eol;
         0x0001 mask 0x00ff  : parse_inner_ipv4_option_nop;
-        0x0007 mask 0x00ff  : parse_inner_ipv4_option_rr;
         default             : parse_inner_ipv4_option_generic;
     }
 }

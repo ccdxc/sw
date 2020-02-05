@@ -67,17 +67,6 @@ header_type ipv4_option_nop_t {
     }
 }
 
-header_type ipv4_option_rr_t {
-    fields {
-        type_ : 8;
-        len : 8;
-        ptr : 8;
-        pad : 64;
-        src_ip : 32;
-        dst_ip : 32;
-    }
-}
-
 header_type ipv4_option_generic_t {
     fields {
         opt_val : 8;

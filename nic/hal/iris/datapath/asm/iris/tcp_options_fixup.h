@@ -1,5 +1,4 @@
 tcp_options_fixup:
-  phvwrpair   p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   seq         c1, k.tcp_valid, TRUE
   nop.!c1.e
   seq         c1, k.tcp_options_blob_valid, TRUE

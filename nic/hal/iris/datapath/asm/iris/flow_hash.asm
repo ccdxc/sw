@@ -81,7 +81,6 @@ flow_hash_more_hashes:
   add         r2, r0, d.flow_hash_info_d.more_hints
 
 flow_hash_recirc:
-  phvwrpair     p.inner_ipv4_option_rr_valid, 0, p.ipv4_option_rr_valid, 0
   .assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_mss_valid) == 11)
   phvwr         p.{tcp_option_eol_valid...tcp_option_mss_valid}, r0
 
