@@ -80,6 +80,9 @@ func (c *configCache) getPegasusConfig(in *network.RoutingConfig) (*pegasusCfg, 
 
 func ip2uint32(ipstr string) uint32 {
 	ip := net.ParseIP(ipstr).To4()
+	if len(ip) == 0 {
+		return 0
+	}
 	return (((uint32(ip[3])*256)+uint32(ip[2]))*256+uint32(ip[1]))*256 + uint32(ip[0])
 	// return (((uint32(ip[0])*256)+uint32(ip[1]))*256+uint32(ip[2]))*256 + uint32(ip[3])
 }
@@ -114,6 +117,7 @@ func (m *ServiceHandlers) HandleRoutingConfigEvent(et kvstore.WatchEventType, ev
 		log.Errorf("failed to parse UUID (%v)", err)
 		return
 	}
+	cfgAsn = evtRtConfig.Spec.BGPConfig.ASNumber
 	req := pegasusClient.BGPRequest{
 		Request: &pegasusClient.BGPSpec{
 			LocalASN: evtRtConfig.Spec.BGPConfig.ASNumber,
