@@ -27,7 +27,7 @@ tep_impl_state::tep_impl_state(pds_state *state) {
 
     // instantiate TUNNEL table for bookkeeping
     p4pd_table_properties_get(P4TBL_ID_TUNNEL, &tinfo);
-    tunnel_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, false);
+    tunnel_idxr_ = rte_indexer::factory(tinfo.tabledepth, true, true);
     SDK_ASSERT(tunnel_idxr_ != NULL);
 
     // instantiate TUNNEL2 table for bookkeeping (0th entry is reserved)

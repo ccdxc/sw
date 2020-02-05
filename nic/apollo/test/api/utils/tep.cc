@@ -15,7 +15,7 @@ constexpr pds_encap_t k_zero_encap = {PDS_ENCAP_TYPE_NONE, 0};
 constexpr uint64_t k_tep_mac = 0x0E0D0A0B0200;
 const pds_obj_key_t k_base_nh_key = int2pdsobjkey(1);
 const pds_obj_key_t k_base_nh_group_key = int2pdsobjkey(1);
-const uint16_t k_max_tep = apulu() ? 2048 : PDS_MAX_TEP;
+const uint16_t k_max_tep = apulu() ? 2048-1 : PDS_MAX_TEP;
 static constexpr bool k_nat = FALSE;
 static const std::string k_base_dipi = "50::50:1:1";
 
