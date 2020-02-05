@@ -102,7 +102,7 @@ func (n *TestNode) cleanupEsxNode(cfg *ssh.ClientConfig) error {
 					}
 				}
 			}
-			log.Errorf("TOPO SVC | CleanUpNode | Clean up control VM node %v done, IPAddress: %v", n.Node.Name, ip)
+			log.Errorf("TOPO SVC | CleanUpNode | Clean up control VM node %v done, IPAddress: %v", vm.Name(), ip)
 			continue
 		}
 
