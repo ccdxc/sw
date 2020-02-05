@@ -41,10 +41,8 @@ protected:
                        ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                        ::testing::UnitTest::GetInstance()->current_test_info()->name());
     }
-    static void SetUpTestCase() {
-    }
-    static void TearDownTestCase() {
-    }
+    static void SetUpTestCase() {}
+    static void TearDownTestCase() {}
 };
 
 //----------------------------------------------------------------------------

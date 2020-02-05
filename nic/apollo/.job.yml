@@ -265,8 +265,8 @@ targets:
     build-dependencies:
     - build-apulu-x86
 
-  athena/build_tests:
-    commands: ["sh", "-c", "true"]
+  athena/gtests:
+    commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
     owners: ["email:skittur@pensando.io"]
     area:
     sub-area:

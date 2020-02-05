@@ -29,7 +29,7 @@ protected:
         pds_test_base::SetUpTestCase(g_tc_params);
     }
     static void TearDownTestCase() {
-        //pds_test_base::TearDownTestCase();
+        pds_test_base::TearDownTestCase();
     }
 };
 

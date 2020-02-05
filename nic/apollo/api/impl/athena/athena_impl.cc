@@ -139,6 +139,7 @@ athena_impl::destroy(athena_impl *impl) {
         tparams.handle = athena_impl_db()->key_tunneled_tbl_hdls_[i];
         athena_impl_db()->key_tunneled_tbl()->remove(&tparams);
     }
+#if 0
     // Remove drop stats table entries
     for (i = P4E_DROP_REASON_MIN; i <= P4E_DROP_REASON_MAX; i++) {
         tparams.handle = athena_impl_db()->egress_drop_stats_tbl_hdls_[i];
@@ -148,6 +149,7 @@ athena_impl::destroy(athena_impl *impl) {
         tparams.handle = athena_impl_db()->ingress_drop_stats_tbl_hdls_[i];
         athena_impl_db()->ingress_drop_stats_tbl()->remove(&tparams);
     }
+#endif
     api::impl::pds_impl_state::destroy(&api::impl::g_pds_impl_state);
     p4pd_cleanup();
 }

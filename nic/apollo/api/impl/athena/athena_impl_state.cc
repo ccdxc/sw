@@ -57,8 +57,10 @@ athena_impl_state::athena_impl_state(pds_state *state) {
 athena_impl_state::~athena_impl_state() {
     sltcam::destroy(key_native_tbl());
     sltcam::destroy(key_tunneled_tbl());
+#if 0
     sltcam::destroy(ingress_drop_stats_tbl());
     sltcam::destroy(egress_drop_stats_tbl());
+#endif
     sltcam::destroy(nacl_tbl());
 }
 

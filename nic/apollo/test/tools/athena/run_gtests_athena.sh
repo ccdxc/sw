@@ -14,7 +14,7 @@ if [[ "$1" ==  --coveragerun ]]; then
     run_sdk_gtest
 fi
 
-run_gtest vnic
+run_gtest athena_vnic
 run_gtest conntrack
 run_gtest flow_cache
 
