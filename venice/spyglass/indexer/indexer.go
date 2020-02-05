@@ -209,13 +209,15 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 	}
 
 	// Initialize api client
+	apiClientBalancer := balancer.New(rsr)
 	result, err := utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-		return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(balancer.New(rsr)))
+		return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.APIServer, logger, rpckit.WithBalancer(apiClientBalancer))
 	}, apiSrvWaitIntvl, maxAPISrvRetries)
 	if err != nil {
 		logger.Errorf("Failed to create api client, addr: %s err: %v",
 			apiServerAddr, err)
 		indexer.elasticClient.Close()
+		apiClientBalancer.Close()
 		return nil, err
 	}
 
@@ -223,13 +225,16 @@ func NewIndexer(ctx context.Context, apiServerAddr string, rsr resolver.Interfac
 	indexer.apiClient = result.(apiservice.Services)
 
 	if indexer.watchVos {
+		vosClientBalancer := balancer.New(rsr)
 		result, err = utils.ExecuteWithRetry(func(ctx context.Context) (interface{}, error) {
-			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.Vos, logger, rpckit.WithBalancer(balancer.New(rsr)))
+			return apiservice.NewGrpcAPIClient(globals.Spyglass, globals.Vos, logger, rpckit.WithBalancer(vosClientBalancer))
 		}, apiSrvWaitIntvl, maxAPISrvRetries)
 		if err != nil {
 			logger.Errorf("Failed to create vos client, addr: %s err: %v",
 				apiServerAddr, err)
 			indexer.elasticClient.Close()
+			indexer.apiClient.Close()
+			vosClientBalancer.Close()
 			return nil, err
 		}
 
@@ -353,6 +358,9 @@ func (idr *Indexer) Stop() {
 	}
 	idr.elasticClient.Close()
 	idr.apiClient.Close()
+	if idr.vosClient != nil {
+		idr.vosClient.Close()
+	}
 	idr.logger.Info("Stopped indexer")
 }
 

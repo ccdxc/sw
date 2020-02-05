@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
 	"github.com/pensando/sw/venice/cmd/env"
@@ -287,6 +289,7 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 	}
 
 	log.Infof(" Cluster version Info %v", clusterVersion)
+	c, _ := gogotypes.TimestampProto(time.Now())
 	if env.CfgWatcherService != nil && clusterVersion.Status.BuildVersion != env.GitVersion {
 		clusterVersion = &cluster.Version{
 			TypeMeta: api.TypeMeta{
@@ -294,7 +297,9 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 				APIVersion: "v1",
 			},
 			ObjectMeta: api.ObjectMeta{
-				Name: globals.DefaultVersionName,
+				Name:         globals.DefaultVersionName,
+				CreationTime: clusterVersion.CreationTime,
+				ModTime:      api.Timestamp{Timestamp: *c},
 			},
 			Spec: cluster.VersionSpec{},
 			Status: cluster.VersionStatus{
