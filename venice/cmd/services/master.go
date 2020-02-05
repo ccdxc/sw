@@ -535,9 +535,7 @@ func (m *masterService) updateClusterStatus() {
 		case <-ticker.C:
 			updateStatus()
 		case _, ok := <-m.updateCh:
-			if ok {
-				updateStatus()
-			} else {
+			if !ok {
 				close(m.closeCh)
 				log.Infof("Stopping updateClusterStatus master service function")
 				return
