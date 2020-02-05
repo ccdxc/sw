@@ -683,11 +683,40 @@ DeviceManager::HalEventHandler(bool status)
         dev_api->set_micro_seg_en(micro_seg_en);
         pd->update();
 
+        if (!skip_hwinit) {
+            for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
+                uplink_t *up = it->second;
+                if (up->is_oob) {
+                    dev_api->uplink_create(up->id, up->port, up->is_oob);
+                }
+            }
+        }
+
+        // Setting hal clients in all devices
+        SetHalClient(dev_api);
+    }
+       
+    // OOB bring UP first for NCSI
+    for (auto it = devices.begin(); it != devices.end(); it++) {
+        Device *dev = it->second;
+        if (dev->GetType() == ETH) {
+            Eth *eth_dev = (Eth *)dev;
+            if (eth_dev->GetEthType() == ETH_MNIC_OOB_MGMT) {
+                eth_dev->HalEventHandler(status);
+                break;
+            }
+        }
+    }
+
+    // Initialize SWM
+    if (status && !init_done) {
         // Create uplinks
         if (!skip_hwinit) {
             for (auto it = uplinks.begin(); it != uplinks.end(); it++) {
                 uplink_t *up = it->second;
-                dev_api->uplink_create(up->id, up->port, up->is_oob);
+                if (!up->is_oob) {
+                    dev_api->uplink_create(up->id, up->port, up->is_oob);
+                }
             }
             dev_api->swm_enable();
             // Create NCSI Channels for non-oob uplinks
@@ -698,25 +727,8 @@ DeviceManager::HalEventHandler(bool status)
                     dev_api->swm_create_channel(cid++, up->port);
                 }
             }
-
-            // dev_api->swm_set_port(1);
         }
-
-        // Setting hal clients in all devices
-        SetHalClient(dev_api);
-
         init_done = true;
-    }
-       
-    for (auto it = devices.begin(); it != devices.end(); it++) {
-        Device *dev = it->second;
-        if (dev->GetType() == ETH) {
-            Eth *eth_dev = (Eth *)dev;
-            if (eth_dev->GetEthType() == ETH_MNIC_OOB_MGMT) {
-                eth_dev->HalEventHandler(status);
-                break;
-            }
-        }
     }
 
     for (auto it = devices.begin(); it != devices.end(); it++) {

@@ -1,5 +1,14 @@
 [
     {
+        "name": "hal",
+        "command": "/bin/sh /nic/tools/start-hal-haps.sh",
+        "dependencies": [],
+        "flags": [],
+        "memory-limit": 800.0,
+        "timeout": 60.0,
+        "cpu-affinity": "0xD"
+    },
+    {
         "name": "delphi",
         "command": "/nic/bin/delphi_hub",
         "dependencies": [],
@@ -54,19 +63,6 @@
         "flags": ["critical"],
         "timeout": 30.0,
         "cpu-affinity": "0xC"
-    },
-    {
-        "name": "hal",
-        "command": "/bin/sh /nic/tools/start-hal-haps.sh",
-        "dependencies": [
-            {
-                "kind": "service",
-                "service-name": "delphi"
-            }],
-        "flags": [],
-        "memory-limit": 800.0,
-        "timeout": 60.0,
-        "cpu-affinity": "0xD"
     },
     {
         "name": "pen-netagent",
@@ -246,6 +242,6 @@
          ],
          "flags": ["restartable", "save_stdout_on_crash"],
          "timeout": 0.0,
-         "cpu-affinity": "0xF"
+         "cpu-affinity": "0xD"
      }
 ]

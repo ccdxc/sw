@@ -710,11 +710,24 @@ Eth::CreateLocalDevice()
 #define NICMGRD_THREAD_ID_MNET 0
     sdk::lib::thread *mnet_thread = NULL;
 
-    sdk::lib::thread::control_cores_mask_set(0x8);
-    mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), NICMGRD_THREAD_ID_MNET,
-                                            sdk::lib::THREAD_ROLE_CONTROL, 0x8, create_mnet,
-                                            sched_get_priority_max(SCHED_OTHER), SCHED_OTHER,
-                                            false); // yield
+    // sdk::lib::thread::control_cores_mask_set(0xD);
+    if (spec->eth_type == ETH_MNIC_OOB_MGMT) {
+        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), 
+                                                NICMGRD_THREAD_ID_MNET,
+                                                sdk::lib::THREAD_ROLE_CONTROL, 0xD, 
+                                                create_mnet,
+                                                sched_get_priority_max(SCHED_FIFO),
+                                                SCHED_FIFO,
+                                                false); // yield
+    } else {
+        mnet_thread = sdk::lib::thread::factory(spec->name.c_str(), 
+                                                NICMGRD_THREAD_ID_MNET,
+                                                sdk::lib::THREAD_ROLE_CONTROL, 
+                                                0xD, create_mnet,
+                                                sched_get_priority_max(SCHED_OTHER), 
+                                                SCHED_OTHER,
+                                                false); // yield
+    }
     if (mnet_thread == NULL) {
         NIC_LOG_ERR("{}: Unable to start mnet thread. Exiting!!", spec->name);
         return false;

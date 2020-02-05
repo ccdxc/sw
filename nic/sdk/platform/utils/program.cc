@@ -41,7 +41,7 @@ program_info::init(const char *program_info_file, shmmgr *mmgr)
         pinfo.base_addr = std::stol(base_addr);
         pinfo.end_addr = std::stol(end_addr);
         program_map_[program] = pinfo;
-        //SDK_TRACE_DEBUG("Added program %s to map", program.c_str());
+        // SDK_TRACE_ERR("Added program %s to map", program.c_str());
 
         // iterate through all the symbols now
         pt::ptree& symbols = pgm.second.get_child(JSON_KEY_SYMBOLS);
@@ -56,13 +56,38 @@ program_info::init(const char *program_info_file, shmmgr *mmgr)
             }
             sinfo.addr = std::stol(addr);
             symbol_map_[(program + ":" + symbol)] = sinfo;
-            //SDK_TRACE_DEBUG("Added symbol %s to map with addr: %lu",
-                              //(program + ":" + symbol).c_str(),
-                              //sinfo.addr);
+            // SDK_TRACE_ERR("Added symbol %s to map with addr: %lu",
+            //               (program + ":" + symbol).c_str(),
+            //               sinfo.addr);
         }
     }
 
     return true;
+}
+
+program_info *
+program_info::factory(shmmgr *mmgr)
+{
+    void            *mem;
+    program_info    *new_program_info;
+
+    if (pinfo_) {
+        return pinfo_;
+    }
+
+    if (mmgr) {
+        mem = mmgr->alloc(sizeof(program_info), 4, true);
+    } else {
+        mem = SDK_CALLOC(SDK_MEM_ALLOC_LIB_PLATFORM, sizeof(program_info));
+    }
+    if (mem == NULL) {
+        SDK_TRACE_ERR("Failed to create program info instance");
+        return NULL;
+    }
+
+    new_program_info = new (mem) program_info();
+    pinfo_ = new_program_info;
+    return new_program_info;
 }
 
 program_info *
@@ -114,6 +139,43 @@ program_info::factory(const char *program_info_file, shmmgr *mmgr)
 
 program_info::~program_info()
 {
+}
+
+void 
+program_info::add_program(std::string program, mem_addr_t base_addr, mem_addr_t end_addr)
+{
+    prog_info_t pinfo;
+
+    if (program_map_.find(program) != program_map_.end()) {
+        SDK_TRACE_ERR("Program %s info exists already !! duplicate ??",
+                      program.c_str());
+        return;
+    }
+
+    // SDK_TRACE_DEBUG("Added program %s to map", program.c_str());
+    pinfo.base_addr = base_addr;
+    pinfo.end_addr = end_addr;
+    program_map_[program] = pinfo;
+}
+
+void 
+program_info::add_symbol(std::string program, std::string symbol, mem_addr_t addr)
+{
+    symbol_info_t sinfo;
+
+    if (symbol_map_.find(program + ":" + symbol) != symbol_map_.end()) {
+        SDK_TRACE_ERR("Symbol %s:%s info exists already !! duplicate ??",
+                      program.c_str(), symbol.c_str());
+        return;
+    }
+
+#if 0
+    SDK_TRACE_DEBUG("Added symbol %s to map with addr: %lu",
+                    (program + ":" + symbol).c_str(),
+                    addr);
+#endif
+    sinfo.addr = addr;
+    symbol_map_[(program + ":" + symbol)] = sinfo;
 }
 
 void

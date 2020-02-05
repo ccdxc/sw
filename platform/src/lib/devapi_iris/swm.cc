@@ -191,7 +191,7 @@ devapi_swm::initialize_lif_(channel_info_t *cinfo)
     info.max_mac_vlan_filters     = 0;
 
     // Creates lif, enic and brings up untag
-    ret = dapi_->lif_create(&info);
+    ret = dapi_->lif_init(&info);
 
     return ret;
 }

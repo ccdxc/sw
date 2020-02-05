@@ -33,11 +33,14 @@ public:
     // constructor to build program info instance given full path of the json
     // file containing loader generated information
     static program_info *factory(const char *program_info_file, shmmgr *mmgr = NULL);
+    static program_info *factory(shmmgr *mmgr = NULL);
     static void destroy(program_info *program_info);
     mem_addr_t program_base_address(const char *program) const;
     mem_addr_t program_end_address(const char *program) const;
     mem_addr_t symbol_address(const char *program, char *symbol) const;
     static program_info *get_program_info(void) { return pinfo_; }
+    void add_program(std::string program, mem_addr_t base_addr, mem_addr_t end_addr);
+    void add_symbol(std::string program, std::string symbol, mem_addr_t addr);
 
 private:
     shmmgr                                  *mmgr_;

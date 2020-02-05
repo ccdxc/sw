@@ -17,6 +17,7 @@
 #include "third-party/asic/capri/model/capsim-master/lib/libcapisa/include/libcapisa.h"
 #include "third-party/asic/capri/model/capsim-master/lib/libmpuobj/include/libmpuobj.h"
 #include "asic/rw/asicrw.hpp"
+#include "platform/utils/program.hpp"
 
 namespace sdk {
 namespace p4 {
@@ -550,13 +551,14 @@ p4_program_to_base_addr(const char *handle,
 sdk_ret_t
 p4_dump_program_info (const char *cfg_path)
 {
-    struct stat             st = { 0 };
-    std::string             prog_info_file;
-    p4_loader_ctx_t         *ctx;
-    p4_program_info_t       *program_info;
-    pt::ptree               root, programs, program;
-    MpuSymbol               *symbol;
-    char                    numbuf[32];
+    struct stat                         st = { 0 };
+    std::string                         prog_info_file;
+    p4_loader_ctx_t                     *ctx;
+    p4_program_info_t                   *program_info;
+    pt::ptree                           root, programs, program;
+    MpuSymbol                           *symbol;
+    char                                numbuf[32];
+    sdk::platform::utils::program_info  *prog_info;
 
     if (!cfg_path) {
         // write in the current dir
@@ -584,33 +586,39 @@ p4_dump_program_info (const char *cfg_path)
         prog_info_file = gen_dir + std::string("/") + std::string(LDD_INFO_FILE_NAME);
     }
 
+    prog_info = program_info::factory();
+
     for (auto it = loader_instances.begin(); it != loader_instances.end(); it++) {
         if ((ctx = loader_instances[it->first]) != NULL) {
             SDK_TRACE_DEBUG("Listing programs for handle name %s", it->first.c_str());
             program_info = ctx->program_info;
             for (int i = 0; i < ctx->num_programs; i++) {
                 pt::ptree    symbols;
+                prog_info->add_program(program_info[i].name, program_info[i].base_addr,
+                                       (((program_info[i].base_addr + program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1));
+
                 program.put("name", program_info[i].name.c_str());
                 program.put("base_addr", program_info[i].base_addr);
-		snprintf(numbuf, sizeof(numbuf), "0x%lx",
-			 program_info[i].base_addr);
-		program.put("base_addr_hex", numbuf);
+                snprintf(numbuf, sizeof(numbuf), "0x%lx",
+                         program_info[i].base_addr);
+                program.put("base_addr_hex", numbuf);
                 program.put("end_addr",
                             ((program_info[i].base_addr +
                               program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
-		snprintf(numbuf, sizeof(numbuf), "0x%lx",
-			 ((program_info[i].base_addr +
-			   program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
-		program.put("end_addr_hex", numbuf);
+                snprintf(numbuf, sizeof(numbuf), "0x%lx",
+                         ((program_info[i].base_addr +
+                           program_info[i].size + 63) & 0xFFFFFFFFFFFFFFC0L) - 1);
+                program.put("end_addr_hex", numbuf);
                 for (int j = 0; j < (int) program_info[i].prog.symtab.size(); j++) {
                     pt::ptree    sym;
                     symbol = program_info[i].prog.symtab.get_byid(j);
                     if ((symbol != NULL) && (symbol->type == MPUSYM_LABEL)) {
+                        prog_info->add_symbol(program_info[i].name, symbol->name, symbol->val);
                         sym.put("name", symbol->name.c_str());
                         sym.put("addr", symbol->val);
-			snprintf(numbuf, sizeof(numbuf), "0x%lx",
-				 symbol->val);
-			sym.put("addr_hex", numbuf);
+                        snprintf(numbuf, sizeof(numbuf), "0x%lx",
+                                 symbol->val);
+                        sym.put("addr_hex", numbuf);
                         symbols.push_back(std::make_pair("", sym));
                         sym.clear();
                     }
