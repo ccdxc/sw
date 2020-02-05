@@ -7,8 +7,12 @@ Input file: interface.proto
 package restapi
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"time"
 
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 
 	"github.com/pensando/sw/api"
@@ -22,6 +26,14 @@ func (s *RestServer) AddInterfaceAPIRoutes(r *mux.Router) {
 
 	r.Methods("GET").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.listInterfaceHandler))
 
+	r.Methods("GET").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.getInterfaceHandler))
+
+	r.Methods("POST").Subrouter().HandleFunc("/", httputils.MakeHTTPHandler(s.postInterfaceHandler))
+
+	r.Methods("DELETE").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.deleteInterfaceHandler))
+
+	r.Methods("PUT").Subrouter().HandleFunc("/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}", httputils.MakeHTTPHandler(s.putInterfaceHandler))
+
 }
 
 func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) {
@@ -30,4 +42,104 @@ func (s *RestServer) listInterfaceHandler(r *http.Request) (interface{}, error) 
 	}
 
 	return s.pipelineAPI.HandleInterface(types.List, o)
+}
+
+func (s *RestServer) getInterfaceHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	data, err := s.pipelineAPI.HandleInterface(types.Get, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return data, nil
+
+}
+
+func (s *RestServer) postInterfaceHandler(r *http.Request) (interface{}, error) {
+	var o netproto.Interface
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleInterface(types.Create, o)
+
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) deleteInterfaceHandler(r *http.Request) (interface{}, error) {
+	tenant, _ := mux.Vars(r)["ObjectMeta.Tenant"]
+	namespace, _ := mux.Vars(r)["ObjectMeta.Namespace"]
+	name, _ := mux.Vars(r)["ObjectMeta.Name"]
+	o := netproto.Interface{
+		TypeMeta: api.TypeMeta{Kind: "Interface"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    tenant,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+
+	_, err := s.pipelineAPI.HandleInterface(types.Delete, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
+}
+
+func (s *RestServer) putInterfaceHandler(r *http.Request) (interface{}, error) {
+	var o netproto.Interface
+	b, _ := ioutil.ReadAll(r.Body)
+	err := json.Unmarshal(b, &o)
+	if err != nil {
+		return nil, err
+	}
+	c, _ := protoTypes.TimestampProto(time.Now())
+	o.CreationTime = api.Timestamp{
+		Timestamp: *c,
+	}
+	o.ModTime = api.Timestamp{
+		Timestamp: *c,
+	}
+
+	_, err = s.pipelineAPI.HandleInterface(types.Update, o)
+	if err != nil {
+		return Response{
+			StatusCode: http.StatusInternalServerError,
+		}, err
+	}
+	return Response{
+		StatusCode: http.StatusOK,
+	}, nil
 }

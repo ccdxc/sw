@@ -20,7 +20,7 @@ service InterfaceApiV1 {
     // options for auto generating rest endpoints
     option(venice.naplesRestService) = {
         Object: "Interface",
-        Method: ["list"],
+        Method: ["list", "get", "post", "delete", "put"],
         Pattern: "/{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}"
     };
 
@@ -28,13 +28,6 @@ service InterfaceApiV1 {
     rpc WatchInterfaces (api.ListWatchOptions) returns (stream InterfaceEventList) {};
     rpc InterfaceOperUpdate (stream InterfaceEvent) returns (api.TypeMeta) {};
     rpc CreateInterface (Interface) returns (Interface) {};
-//    rpc GetInterface (api.ObjectMeta) returns (Interface) {};
-//    rpc ListInterfaces (api.ObjectMeta) returns (InterfaceList) {};
-//    rpc DeleteInterface (Interface) returns (Interface) {};
-//    rpc WatchInterfaces (api.ObjectMeta) returns (stream InterfaceEventList) {};
-//    rpc UpdateInterface (Interface) returns (Interface) {};
-//    rpc InterfaceOperUpdate (stream InterfaceEvent) returns (api.TypeMeta) {};
-
 }
 
 // Interface object

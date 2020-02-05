@@ -19,3 +19,31 @@ func (cl *AgentClient) InterfaceList() ([]netproto.Interface, error) {
 
 	return interfaceList, err
 }
+
+// InterfacePost creates Interface object
+func (cl *AgentClient) InterfaceCreate(postData netproto.Interface) error {
+	var resp Response
+
+	err := netutils.HTTPPost("http://"+cl.agentURL+"/api/interfaces/", &postData, &resp)
+
+	return err
+
+}
+
+// InterfaceDelete deletes Interface object
+func (cl *AgentClient) InterfaceDelete(deleteData netproto.Interface) error {
+	var resp Response
+
+	err := netutils.HTTPDelete("http://"+cl.agentURL+"/api/interfaces/default/default/testDeleteInterface", &deleteData, &resp)
+
+	return err
+}
+
+// InterfacePut updates Interface object
+func (cl *AgentClient) InterfaceUpdate(putData netproto.Interface) error {
+	var resp Response
+
+	err := netutils.HTTPPut("http://"+cl.agentURL+"/api/interfaces/default/default/preCreatedInterface", &putData, &resp)
+
+	return err
+}

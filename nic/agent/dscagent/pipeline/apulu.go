@@ -390,7 +390,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		return
 	case types.Create:
 		// Allow only L3 and loopback interfaces be created
-		if intf.Spec.Type != "L3" && intf.Spec.Type != "LOOPBACK" {
+		if intf.Spec.Type != netproto.InterfaceSpec_L3.String() && intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType)
 		}
@@ -417,7 +417,7 @@ func (a *ApuluAPI) HandleInterface(oper types.Operation, intf netproto.Interface
 		var existingIntf netproto.Interface
 
 		// Allow only L3 and loopback interfaces be deleted
-		if intf.Spec.Type != "L3" && intf.Spec.Type != "LOOPBACK" {
+		if intf.Spec.Type != netproto.InterfaceSpec_L3.String() && intf.Spec.Type != netproto.InterfaceSpec_LOOPBACK.String() {
 			log.Error(errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType))
 			return nil, errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrInvalidInterfaceType)
 		}

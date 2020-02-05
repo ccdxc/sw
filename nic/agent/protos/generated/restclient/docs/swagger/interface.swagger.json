@@ -66,6 +66,47 @@
           "Interface"
         ]
       }
+    },
+    "//{ObjectMeta.Tenant}/{ObjectMeta.Namespace}/{ObjectMeta.Name}": {
+      "delete": {
+        "summary": "Deletes a Interface Object",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          },
+          "500": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/netprotoApiResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string"
+                },
+                "meta": {
+                  "$ref": "#/definitions/apiObjectMeta"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "Interface"
+        ]
+      }
     }
   },
   "definitions": {
