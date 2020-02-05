@@ -256,6 +256,7 @@ func (sm *Statemgr) createRolloutState(ro *roproto.Rollout) error {
 	}
 
 	ros.Status.CompletionPercentage = ro.Status.CompletionPercentage
+	ros.completionSum = float32(ro.Status.CompletionPercentage)
 	sm.memDB.AddObject(&ros)
 
 	// TODO: Ensure there is only one Rollout object that is running the state machine at any point of time
