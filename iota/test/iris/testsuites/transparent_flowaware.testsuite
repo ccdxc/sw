@@ -1,0 +1,88 @@
+meta:
+    name        : transparent_flowaware
+    description : Transparent Flowaware Test Suite
+    mode        : hardware
+    cfgmode     : netagent
+    #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
+    nicmode     : classic
+    os          : [ linux ]
+
+packages:
+    - iota.test.iris
+
+images:
+    naples: nic/naples_fw.tar
+
+setup:
+    topology: test/iris/topologies/classic_baremetal/classic_baremetal.topology
+    config  :
+
+        - step : utils.cleanup
+        - step : testcases.penctl.install
+        - step : config.netagent.mode_switch
+          args :
+               fwd_mode    : "TRANSPARENT"
+               policy_Mode : "FLOWAWARE"
+        - step : utils.naples_workloads
+        - step : config.config_link_flap
+        - step : config.netagent.hw_push_config
+        - step : testcases.drivers.install_iperf
+
+common:
+    verifs:
+        -   step    : verif.utils.verify_interrupts
+        -   step    : verif.utils.verify_ionic_stats
+    debugs:
+        # Commenting out techsupport collection. If tech support fails,
+        #   run gets stuck for a long time
+        #-   step : verif.utils.collect_logs_and_cores
+
+    setup:
+        #-   step    : verif.utils.link_flap
+        #-   step    : verif.utils.del_add_config
+
+testbundles:
+    sanity:
+        # Relative paths from iota/test/iris/testbundles/
+        - classic/ethtool.testbundle
+        # enable connectivity after fixing IPv4 remote ping
+        #- networking/connectivity.testbundle
+        #- classic/rdma.testbundle
+        - linktest/linktest.testbundle
+        # enable filters once its supported in unified mode
+        #- filters/filters.testbundle
+        # enable mtu once its supported in unified mode
+        #- mtu/mtu.testbundle
+        #- subifs/subifs.testbundle
+        #- rx_mode/rx_mode.testbundle
+        #- vlanoffload/vlanoffload.testbundle
+        #- linktest/linktest.testbundle
+        - mnic/mnic_classic.testbundle
+        - linktest/linktest.testbundle
+        # enable int-mgmt once its supported in unified mode
+        #- classic/driver-features-int_mgmt-sanity.testbundle
+        - linktest/linktest.testbundle
+        - classic/driver-features-oob-1g-sanity.testbundle
+        #- linktest/linktest.testbundle
+        #- tso/tso.testbundle
+        - classic/driver-features-sanity.testbundle
+        - linktest/linktest.testbundle
+        #- storage/storage.testbundle
+        - penctl/penctl_classic.testbundle
+        #- penctl/mode_change.testbundle
+        #- post_diag/post_diag.testbundle
+        #- asic_tools/asic_tools.testbundle
+        #- system/obfl_check.testbundle
+        #- sysmon/interrupts.testbundle
+        #- cpld/cpldupgrade.testbundle
+        #- hpe_ilo/hpe_ilo.testbundle
+
+    sanity_ext:
+        # Relative paths from iota/test/iris/testbundles/
+
+    regression:
+        # Relative paths from iota/test/iris/testbundles/
+
+teardown:
+    #- step      : verif.utils.collect_logs_and_cores
+    #- step      : testcases.frequency.clock_settings_td
