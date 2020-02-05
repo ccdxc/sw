@@ -38,8 +38,9 @@
           <span class="app-shell-cluster-name"> {{ cluster?.meta.name}}</span>
           <span class="app-shell-spacer"></span>
           <div class="app-shell-toolbar-icon-div">
-            <a class="app-shell-doclink" [href]="docLink" target="_blank">
-              <button [disableRipple]="true" mat-button>DOCS</button>
+            <a mat-icon-button class="app-shell-doclink" [href]="docLink" target="_blank"
+               matTooltip="Docs">
+              <mat-icon style="font-size: 28px;">library_books</mat-icon>
             </a>
             <ng-container *ngIf="!isUINavigationBlocked">
               <button *featureGuard="'help'" mat-icon-button
@@ -77,12 +78,16 @@
                 </button>
               </a> 
                -->
-              <a class="app-shell-externallink" href="https://support.pensando.io" target="_blank">
-                <button mat-menu-item class="app-externallink-button">
-                  <mat-icon style="color: black">face</mat-icon>
-                  <span>Support</span>
-                </button>
+              <a mat-menu-item class="app-shell-externallink"
+                 href="https://support.pensando.io" target="_blank">
+                <mat-icon style="color: black">face</mat-icon>
+                <span>Support</span>
               </a>
+              <div mat-menu-item class="app-shell-cluster-version"
+                   [matTooltip]="'Click to see details'" (click)="showVersionDialog=true">
+                <mat-icon style="color: black">settings_system_daydream</mat-icon>
+                <span>About</span>
+              </div>
             </mat-menu>
             <!-- Currently hidden because no functionality to display in it -->
             <ng-container *ngIf="!isUINavigationBlocked">
@@ -182,9 +187,6 @@
               </app-bgfileupload>
             </div>
             <div fxFlex fxLayout="column"></div>
-            <div class="app-shell-cluster-version" fxLayout="column" fxLayoutAlign="center end"
-                 [matTooltip]="'Click to see details'"
-                 (click)="versionOp.toggle($event)">{{version?.status["build-version"]}}</div>
             <div fxFlex="20px" fxLayout="column"></div>
             <div fxLayout="column" fxLayoutAlign="center end"
                  [matTooltip]="'The Venice system tracks time in UTC, please note the offset for your local time zone.'">
@@ -197,29 +199,27 @@
   </div>
 </div>
 
-<p-overlayPanel #versionOp>
-  <div class="app-shell-version-text" fxLayout="column">
-    <div fxLayout="row">
-      <div fxLayout="column">
-        <div><b>Build Version:</b></div>
-        <div>{{version?.status["build-version"]}}</div>
-      </div>
+<p-dialog #versionOp
+          class="app-shell-version-dialog"
+          [closeOnEscape]="true"
+          [modal]="true"
+          [(visible)]="showVersionDialog"
+          header="Pensando Policy and Service Manager">
+  <div class="app-shell-version-text" fxLayout="column" fxLayoutGap="10px">
+    <div>
+      <div><b>Build Version:</b></div>
+      <div>{{version?.status["build-version"]}}</div>
     </div>
-    <div fxLayout="row">
-      <div fxLayout="column">
-        <div><b>VCS Commit ID:</b>
-        </div>
-        <div>{{ version?.status["vcs-commit"] }}</div>
-      </div>
+    <div>
+      <div><b>VCS Commit ID:</b></div>
+      <div>{{ version?.status["vcs-commit"] }}</div>
     </div>
-    <div fxLayout="row">
-      <div fxLayout="column">
-        <div><b>Build Date:</b></div>
-        <div>{{ version?.status["build-date"] }}</div>
-      </div>
+    <div>
+      <div><b>Build Date:</b></div>
+      <div>{{ version?.status["build-date"] }}</div>
     </div>
   </div>
-</p-overlayPanel>
+</p-dialog>
 
 <ng-template #SideNavMenu let-items="items">
   <ng-container *ngIf="!isUINavigationBlocked">

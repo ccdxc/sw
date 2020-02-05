@@ -206,7 +206,7 @@ export class HostsComponent extends TablevieweditAbstract<IClusterHost, ClusterH
       this.macToNameMap = _myDSCnameToMacMap.macToNameMap;
     },
       (error) => {
-        this.controllerService.invokeRESTErrorToaster('Error', 'Failed to get Fetch Hosts');
+        this.controllerService.invokeRESTErrorToaster('Error', error);
       },
       () => {
         this.invokeWatch();

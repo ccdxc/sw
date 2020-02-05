@@ -100,6 +100,7 @@ export class AppcontentComponent extends BaseComponent implements OnInit, OnDest
   versionArray: ReadonlyArray<ClusterVersion> = [];
   version: ClusterVersion = new ClusterVersion();
   versionSubscription: Subscription = null;
+  showVersionDialog: boolean = false;
 
   clock: any; // VS-838 build a UTC clock in Venice-UI
   clocktimer: any = null;

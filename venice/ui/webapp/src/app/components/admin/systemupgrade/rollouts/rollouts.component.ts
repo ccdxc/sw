@@ -139,7 +139,7 @@ export class RolloutsComponent extends TablevieweditAbstract <IRolloutRollout, R
       (response) => {
         this.rolloutImages = response.body as IObjstoreObjectList;
         if (this.rolloutImages.items && this.rolloutImages.items.length > 0) {
-          this.rolloutImages.items = Utility.sortDate(this.rolloutImages.items, ['meta', 'creation-time'], -1);
+          this.rolloutImages.items = Utility.sortDate(this.rolloutImages.items, ['meta', 'mod-time'], -1);
         }
       },
       (error) => {

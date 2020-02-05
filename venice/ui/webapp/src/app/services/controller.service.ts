@@ -460,8 +460,8 @@ export class ControllerService {
     if (error == null) {
       return;
     }
-    if (error.statusCode == null) {
-      error.statusCode = 0;
+    if (Utility.getLodash().isObject(error) && !error['statusCode']) {
+      error['statusCode'] = 0;
     }
     if (removeSameSummary) {
       // Remove any toasters that already have this summary
