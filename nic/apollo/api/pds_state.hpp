@@ -109,8 +109,10 @@ public:
     string pipeline(void) const { return pipeline_; }
     void set_catalog(catalog *catalog) { catalog_ = catalog; }
     catalog *catalogue(void) const { return catalog_; }
-    void set_mpartition(mpartition *mpartition) { mpartition_ = mpartition; }
+    void set_mempartition(mpartition *mpartition) { mpartition_ = mpartition; }
     mpartition *mempartition(void) const { return mpartition_; }
+    void set_mempartition_cfg(string mpart_cfg) { mpart_cfg_ = mpart_cfg; }
+    string mempartition_cfg(void) { return mpart_cfg_; }
     void set_prog_info(program_info *pginfo) { pginfo_ = pginfo; }
     program_info *prog_info(void) const { return pginfo_; }
     void set_platform_type(platform_type_t type) { platform_type_ = type; }
@@ -210,10 +212,13 @@ public:
     void set_system_mac(mac_addr_t mac) {
         memcpy(system_mac_, mac, sizeof(system_mac_));
     }
+    void set_upg_event_cb(pds_upg_event_cb_t event_cb) { upg_event_cb_ = event_cb; }
+    pds_upg_event_cb_t upg_event_cb(void) { return upg_event_cb_; }
 
 private:
     string                  cfg_path_;
     string                  pipeline_;
+    string                  mpart_cfg_;
     catalog                 *catalog_;
     mpartition              *mpartition_;
     platform_type_t         platform_type_;
@@ -227,6 +232,7 @@ private:
     uint16_t                num_data_cores_;
     state_base              *state_[PDS_STATE_MAX];
     pds_event_cb_t          event_cb_;
+    pds_upg_event_cb_t      upg_event_cb_;
     mac_addr_t              system_mac_;
 };
 extern pds_state g_pds_state;

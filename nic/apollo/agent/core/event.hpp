@@ -7,6 +7,7 @@
 
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/api/include/pds_event.hpp"
+#include "nic/apollo/api/include/pds_upgrade.hpp"
 
 /// \brief event operation
 typedef enum pds_event_op_e {
@@ -39,6 +40,11 @@ sdk_ret_t update_event_listener(void *ctxt);
 /// \brief handle event notifications received (from PDS HAL)
 /// \param[in] event    event being notified
 void handle_event_ntfn(const pds_event_t *event);
+
+/// \brief handle upgrade event notifications received (from PDS HAL)
+/// \param[in] spec     upgrade stage the event is for
+/// \return    SDK_RET_OK on success, failure status code on error
+sdk_ret_t handle_upg_event_ntfn(const pds_upg_spec_t *spec);
 
 }    // namespace core
 

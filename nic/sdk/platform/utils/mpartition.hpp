@@ -179,21 +179,20 @@ public:
 
     /*
      * @brief Dump the memory partition regions to a file
-     * Should be called when a bootup/upgrade is complete
-     * Otherwise it will overwrite the existing configuration
+     * @param[in] cfg_path config path
      *
      * @return SDK_RET_OK on success, failure code on error
      */
-    sdk_ret_t dump_regions_info();
+    sdk_ret_t dump_regions_info(const char *cfg_path);
     /*
      * @brief Offsets the memory partition regions during upgrade
      *
-     * @param[in] regions_fname output file generated using dump_region_info
+     * @param[in] cfg_path config path where dump_region_info output is written
      * @param[in] oper_table_persist flag to indicate the operational table regions
      *
      * @return SDK_RET_OK on success, failure code on error
      */
-    sdk_ret_t upg_regions(const char *regions_fname, bool oper_table_persist);
+    sdk_ret_t upg_regions(const char *cfg_path, bool oper_table_persist);
 
 private:
     static mpartition *instance_;

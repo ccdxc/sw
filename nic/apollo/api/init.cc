@@ -26,6 +26,7 @@
 #include "nic/apollo/core/core.hpp"
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/api/include/pds_if.hpp"
+#include "nic/apollo/api/upgrade.hpp"
 #include "platform/sysmon/sysmon.hpp"
 
 const pds_obj_key_t k_pds_obj_key_invalid = { 0 };
@@ -244,25 +245,20 @@ pds_init (pds_init_params_t *params)
 
     // parse hbm memory region configuration file
     if (params->scale_profile == PDS_SCALE_PROFILE_DEFAULT) {
-        mem_json =
-            api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.catalogue()->memory_capacity_str() +
-                "/hbm_mem.json";
+        mem_json = "hbm_mem.json";
     } else if (params->scale_profile == PDS_SCALE_PROFILE_P1) {
-        mem_json =
-            api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.catalogue()->memory_capacity_str() +
-                "/hbm_mem_p1.json";
+        mem_json =  "hbm_mem_p1.json";
     } else if (params->scale_profile == PDS_SCALE_PROFILE_P2) {
-        mem_json =
-            api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
-                api::g_pds_state.catalogue()->memory_capacity_str() +
-                "/hbm_mem_p2.json";
+        mem_json = "hbm_mem_p2.json";
     } else {
         PDS_TRACE_ERR("Unknown profile %u, aborting ...",
                       params->scale_profile);
         return SDK_RET_INVALID_ARG;
     }
+    api::g_pds_state.set_mempartition_cfg(mem_json);
+    mem_json = api::g_pds_state.cfg_path() + "/" + params->pipeline + "/" +
+                   api::g_pds_state.catalogue()->memory_capacity_str() + "/" + mem_json;
+
     api::g_pds_state.set_scale_profile(params->scale_profile);
     PDS_TRACE_INFO("Initializing PDS with %s, profile %u",
                    mem_json.c_str(), params->scale_profile);
@@ -273,8 +269,17 @@ pds_init (pds_init_params_t *params)
                       mem_json.c_str());
         return ret;
     }
-    api::g_pds_state.set_mpartition(
+    api::g_pds_state.set_mempartition(
         sdk::platform::utils::mpartition::factory(mem_json.c_str()));
+    // below file is used during upgrade
+    api::g_pds_state.mempartition()->dump_regions_info(
+        api::g_pds_state.cfg_path().c_str());
+
+    // upgrade initialize
+    ret = upg::upg_init(params);
+    if (ret != SDK_RET_OK) {
+        return SDK_RET_ERR;
+    }
 
     // setup all asic specific config params
     api::asic_global_config_init(params, &asic_cfg);

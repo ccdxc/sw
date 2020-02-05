@@ -73,8 +73,8 @@ region_kind_to_str (mpartition_region_kind_t kind)
 }
 
 sdk_ret_t
-mpartition::dump_regions_info (void) {
-    std::string         gen_dir = std::string(getenv("HAL_CONFIG_PATH")) + "/gen";
+mpartition::dump_regions_info (const char *cfg_path) {
+    std::string         gen_dir = std::string(cfg_path) + "/gen";
     pt::ptree           root, regions, entry;
     mpartition_region_t *reg;
     char                numbuf[64];
@@ -112,13 +112,13 @@ mpartition::dump_regions_info (void) {
 // not used by the currently running process.
 // Upgrade manager sends NEW request to process A(to be upgraded) which
 // will dump its memory configuration.
-// The below function reads that find out the free area based on its
+// Below function find out the free area based on its
 // memory configuration(hbm_mem.json) and update its tables.
 // It also validates the static offsets which should be consistent
 // across upgrades.
 sdk_ret_t
-mpartition::upg_regions (const char *regions_fname, bool oper_table_persist) {
-    std::string         file = std::string(regions_fname);
+mpartition::upg_regions (const char *cfg_path, bool oper_table_persist) {
+    std::string         file = std::string(cfg_path) + "/gen/" + MPART_INFO_FILE_NAME;
     pt::ptree           json_pt;
     mpartition_region_t *mreg;
     std::vector<std::pair <uint64_t, uint64_t> > free_mem; // start address, end address
@@ -175,16 +175,26 @@ mpartition::upg_regions (const char *regions_fname, bool oper_table_persist) {
         // and should match in offset and size
         if (reg_kind == JKEYVAL_REGION_KIND_STATIC) {
             mreg = region(reg_name.c_str());
-            SDK_ASSERT(mreg != NULL);
-            SDK_ASSERT(mreg->start_offset == offset);
-            SDK_ASSERT(mreg->size == size);
+            if (mreg == NULL) {
+                SDK_TRACE_ERR("Static region %s does not exist", reg_name.c_str());
+                return SDK_RET_ERR;
+            }
+            if (mreg->start_offset != offset || mreg->size != size) {
+                SDK_TRACE_ERR("Static region mismatch name %s, cur_offset %lx,"
+                              "new_offset %lx, cur_size %u, new_size %u",
+                              reg_name.c_str(),mreg->start_offset, offset, mreg->size, size);
+                return SDK_RET_ERR;
+            }
             mreg->upgrade_check_done = true;
         } else if (reg_kind == JKEYVAL_REGION_KIND_OPERTBL) {
             // if no oper table copy, oper table in the existing should
             // present in new. preserve the offset and size
             if (oper_table_persist) {
                 mreg = region(reg_name.c_str());
-                SDK_ASSERT(mreg != NULL);
+                if (mreg == NULL) {
+                    SDK_TRACE_ERR("Oper state region %s does not exist", reg_name.c_str());
+                    return SDK_RET_ERR;
+                }
                 mreg->start_offset = offset;
                 mreg->size = size;
                 mreg->upgrade_check_done = true;
@@ -226,7 +236,11 @@ mpartition::upg_regions (const char *regions_fname, bool oper_table_persist) {
         SDK_TRACE_DEBUG("Setting region %s offset from  0x%" PRIx64 " to  0x%" PRIx64 "",
                         mreg->mem_reg_name, mreg->start_offset, offset);
         mreg->start_offset = offset;
-        SDK_ASSERT(mreg->start_offset != INVALID_MEM_ADDRESS);
+        if (mreg->start_offset == INVALID_MEM_ADDRESS) {
+            SDK_TRACE_ERR("Insufficient memory for upgrade reserve for tbl %s",
+                          mreg->mem_reg_name);
+            return SDK_RET_NO_RESOURCE;
+        }
         mreg->upgrade_check_done = true;
     }
 

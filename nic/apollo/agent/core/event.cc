@@ -43,4 +43,11 @@ handle_event_ntfn (const pds_event_t *event)
     publish_event(event);
 }
 
+sdk_ret_t
+handle_upg_event_ntfn (const pds_upg_spec_t *spec)
+{
+    // TODO
+    return SDK_RET_OK;
+}
+
 }    // namespace core

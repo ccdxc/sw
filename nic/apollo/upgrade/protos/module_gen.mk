@@ -1,7 +1,7 @@
 # {C} Copyright 2020 Pensando Systems Inc. All rights reserved
 
 include ${MKDEFS}/pre.mk
-MODULE_TARGET       = pdsupgradegen.proto
+MODULE_TARGET       = pdsupggen.proto
 MODULE_PIPELINE     = apulu
 MODULE_GEN_TYPES    = PY CC
 MODULE_INCS         = ${MODULE_DIR} \

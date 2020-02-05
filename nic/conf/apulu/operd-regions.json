@@ -6,5 +6,9 @@
     "vpp": {
         "chunk-count": 4096,
         "severity": 3
+    },
+    "upgrade": {
+        "chunk-count": 512,
+        "severity": 3
     }
 }
