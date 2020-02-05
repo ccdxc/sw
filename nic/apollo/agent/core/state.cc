@@ -30,6 +30,9 @@ namespace core {
 }
 
 #define DEL_FROM_OBJ_DB(obj, key) {                                            \
+    obj##_db_t::const_iterator iterator =                                      \
+        obj##_map()->find(*key);                                               \
+    obj##_slab()->free(iterator->second);                                      \
     obj##_map()->erase(*key);                                                  \
     return true;                                                               \
 }
@@ -55,6 +58,9 @@ namespace core {
 }
 
 #define DEL_FROM_DB(obj, key) {                                                \
+    obj##_db_t::const_iterator iterator =                                      \
+        obj##_map()->find((uint32_t)key->id);                                  \
+    obj##_slab()->free(iterator->second);                                      \
     obj##_map()->erase((uint32_t)key->id);                                     \
     return true;                                                               \
 }
