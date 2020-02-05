@@ -5148,6 +5148,8 @@ port_update_admin_state (port_admin_state_t admin_state)
             continue;
         }
         port_args.admin_state = admin_state;
+        port_args.auto_neg_enable = port_args.auto_neg_cfg;
+        port_args.num_lanes = port_args.num_lanes_cfg;
 
         hal_cfg_db_open(CFG_OP_WRITE);
 
