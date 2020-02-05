@@ -3,40 +3,63 @@
 /******************************************************************************/
 action native_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
-    modify_field(key_metadata.src, ipv4_1.srcAddr);
-    modify_field(key_metadata.dst, ipv4_1.dstAddr);
-    if (udp_1.valid == TRUE) {
-        modify_field(key_metadata.sport, udp_1.srcPort);
-        modify_field(key_metadata.dport, udp_1.dstPort);
+
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(key_metadata.src, ipv4_1.srcAddr);
+        modify_field(key_metadata.dst, ipv4_1.dstAddr);
+        if (udp_1.valid == TRUE) {
+            modify_field(key_metadata.sport, udp_1.srcPort);
+            modify_field(key_metadata.dport, udp_1.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.sport, tcp.srcPort);
+            modify_field(key_metadata.dport, tcp.dstPort);
+        }
     }
-    if (tcp.valid == TRUE) {
-        modify_field(key_metadata.sport, tcp.srcPort);
-        modify_field(key_metadata.dport, tcp.dstPort);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        modify_field(key_metadata.dst, ipv4_1.srcAddr);
+        modify_field(key_metadata.src, ipv4_1.dstAddr);
+        if (udp_1.valid == TRUE) {
+            modify_field(key_metadata.dport, udp_1.srcPort);
+            modify_field(key_metadata.sport, udp_1.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.dport, tcp.srcPort);
+            modify_field(key_metadata.sport, tcp.dstPort);
+        }
     }
+    modify_field(key_metadata.proto, ipv4_1.protocol);
     //modify_field(p4_to_p4plus_tcp_proxy.payload_len,
     //             (ipv4_1.totalLen - ((ipv4_1.ihl + tcp.dataOffset) * 4)));
-    modify_field(key_metadata.proto, ipv4_1.protocol);
-    // FIXME: The follwing exceeds K+I beyond 512b
-    modify_field(key_metadata.ingress_port, control_metadata.direction);
-    modify_field(key_metadata.tcp_flags, tcp.flags);
 }
 
 action native_ipv6_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
-    modify_field(key_metadata.src, ipv6_1.srcAddr);
-    modify_field(key_metadata.dst, ipv6_1.dstAddr);
-    if (udp_1.valid == TRUE) {
-        modify_field(key_metadata.sport, udp_1.srcPort);
-        modify_field(key_metadata.dport, udp_1.dstPort);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(key_metadata.src, ipv6_1.srcAddr);
+        modify_field(key_metadata.dst, ipv6_1.dstAddr);
+        if (udp_1.valid == TRUE) {
+            modify_field(key_metadata.sport, udp_1.srcPort);
+            modify_field(key_metadata.dport, udp_1.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.sport, tcp.srcPort);
+            modify_field(key_metadata.dport, tcp.dstPort);
+        }
     }
-    if (tcp.valid == TRUE) {
-        modify_field(key_metadata.sport, tcp.srcPort);
-        modify_field(key_metadata.dport, tcp.dstPort);
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        modify_field(key_metadata.dst, ipv6_1.srcAddr);
+        modify_field(key_metadata.src, ipv6_1.dstAddr);
+        if (udp_1.valid == TRUE) {
+            modify_field(key_metadata.dport, udp_1.srcPort);
+            modify_field(key_metadata.sport, udp_1.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.dport, tcp.srcPort);
+            modify_field(key_metadata.sport, tcp.dstPort);
+        }
     }
     modify_field(key_metadata.proto, ipv6_1.nextHdr);
-    // FIXME: The follwing exceeds K+I beyond 512b
-    modify_field(key_metadata.ingress_port, control_metadata.direction);
-    modify_field(key_metadata.tcp_flags, tcp.flags);
 }
 
 action native_nonip_packet() {
@@ -45,36 +68,60 @@ action native_nonip_packet() {
 
 action tunneled_ipv4_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV4);
-    modify_field(key_metadata.src, ipv4_2.srcAddr);
-    modify_field(key_metadata.dst, ipv4_2.dstAddr);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(key_metadata.src, ipv4_2.srcAddr);
+        modify_field(key_metadata.dst, ipv4_2.dstAddr);
+        if (udp_2.valid == TRUE) {
+            modify_field(key_metadata.sport, udp_2.srcPort);
+            modify_field(key_metadata.dport, udp_2.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.sport, tcp.srcPort);
+            modify_field(key_metadata.dport, tcp.dstPort);
+        }
+    }
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        modify_field(key_metadata.dst, ipv4_2.srcAddr);
+        modify_field(key_metadata.src, ipv4_2.dstAddr);
+        if (udp_2.valid == TRUE) {
+            modify_field(key_metadata.dport, udp_2.srcPort);
+            modify_field(key_metadata.sport, udp_2.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.dport, tcp.srcPort);
+            modify_field(key_metadata.sport, tcp.dstPort);
+        }
+    }
     modify_field(key_metadata.proto, ipv4_2.protocol);
-    if (udp_2.valid == TRUE) {
-        modify_field(key_metadata.sport, udp_2.srcPort);
-        modify_field(key_metadata.dport, udp_2.dstPort);
-    }
-    if (tcp.valid == TRUE) {
-        modify_field(key_metadata.sport, tcp.srcPort);
-        modify_field(key_metadata.dport, tcp.dstPort);
-    }
-    modify_field(key_metadata.ingress_port, control_metadata.direction);
-    modify_field(key_metadata.tcp_flags, tcp.flags);
 }
 
 action tunneled_ipv6_packet() {
     modify_field(key_metadata.ktype, KEY_TYPE_IPV6);
-    modify_field(key_metadata.src, ipv6_2.srcAddr);
-    modify_field(key_metadata.dst, ipv6_2.dstAddr);
+    if (control_metadata.direction == TX_FROM_HOST) {
+        modify_field(key_metadata.src, ipv6_2.srcAddr);
+        modify_field(key_metadata.dst, ipv6_2.dstAddr);
+        if (udp_2.valid == TRUE) {
+            modify_field(key_metadata.sport, udp_2.srcPort);
+            modify_field(key_metadata.dport, udp_2.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.sport, tcp.srcPort);
+            modify_field(key_metadata.dport, tcp.dstPort);
+        }
+    }
+    if (control_metadata.direction == RX_FROM_SWITCH) {
+        modify_field(key_metadata.dst, ipv6_2.srcAddr);
+        modify_field(key_metadata.src, ipv6_2.dstAddr);
+        if (udp_2.valid == TRUE) {
+            modify_field(key_metadata.dport, udp_2.srcPort);
+            modify_field(key_metadata.sport, udp_2.dstPort);
+        }
+        if (tcp.valid == TRUE) {
+            modify_field(key_metadata.dport, tcp.srcPort);
+            modify_field(key_metadata.sport, tcp.dstPort);
+        }
+    }
     modify_field(key_metadata.proto, ipv6_2.nextHdr);
-    if (udp_2.valid == TRUE) {
-        modify_field(key_metadata.sport, udp_2.srcPort);
-        modify_field(key_metadata.dport, udp_2.dstPort);
-    }
-    if (tcp.valid == TRUE) {
-        modify_field(key_metadata.sport, tcp.srcPort);
-        modify_field(key_metadata.dport, tcp.dstPort);
-    }
-    modify_field(key_metadata.ingress_port, control_metadata.direction);
-    modify_field(key_metadata.tcp_flags, tcp.flags);
 }
 
 action tunneled_nonip_packet()  {
@@ -122,8 +169,6 @@ action ingress_recirc_header_info() {
 
         modify_field(control_metadata.flow_ohash_lkp, TRUE);
         modify_field(control_metadata.dnat_ohash_lkp, TRUE);
-                     
-        modify_field(capri_p4_intrinsic.recirc, FALSE);
     }
 }
 

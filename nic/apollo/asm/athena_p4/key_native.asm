@@ -15,29 +15,59 @@ nop:
 
 .align
 native_ipv4_packet:
+    phvwr           p.key_metadata_proto, k.ipv4_1_protocol
+
+    seq             c2, k.control_metadata_direction, RX_FROM_SWITCH
+    b.c2            native_ipv4_packet_from_switch
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV4
-    phvwr           p.key_metadata_src, k.ipv4_1_srcAddr
+
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
     seq             c1, k.tcp_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.tcp_srcPort
     phvwr.c1        p.key_metadata_dport, k.tcp_dstPort
-    phvwr.e         p.key_metadata_dst, k.ipv4_1_dstAddr
-    phvwr.f         p.key_metadata_proto, k.ipv4_1_protocol
+    phvwr.e         p.key_metadata_src, k.ipv4_1_srcAddr
+    phvwr.f         p.key_metadata_dst, k.ipv4_1_dstAddr
+
+native_ipv4_packet_from_switch:
+    seq             c1, k.udp_1_valid, TRUE
+    phvwr.c1        p.key_metadata_dport, k.udp_1_srcPort
+    phvwr.c1        p.key_metadata_sport, k.udp_1_dstPort
+    seq             c1, k.tcp_valid, TRUE
+    phvwr.c1        p.key_metadata_dport, k.tcp_srcPort
+    phvwr.c1        p.key_metadata_sport, k.tcp_dstPort
+    phvwr.e         p.key_metadata_dst, k.ipv4_1_srcAddr
+    phvwr.f         p.key_metadata_src, k.ipv4_1_dstAddr
+    
 
 .align
 native_ipv6_packet:
+    phvwr           p.key_metadata_proto, k.ipv6_1_nextHdr
+
+    seq             c2, k.control_metadata_direction, RX_FROM_SWITCH
+    b.c2            native_ipv6_packet_from_switch
     phvwr           p.key_metadata_ktype, KEY_TYPE_IPV6
-    phvwr           p.key_metadata_src, k.ipv6_1_srcAddr
+
     seq             c1, k.udp_1_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.udp_1_srcPort
     phvwr.c1        p.key_metadata_dport, k.udp_1_dstPort
     seq             c1, k.tcp_valid, TRUE
     phvwr.c1        p.key_metadata_sport, k.tcp_srcPort
     phvwr.c1        p.key_metadata_dport, k.tcp_dstPort
-    phvwr.e         p.key_metadata_dst, k.ipv6_1_dstAddr
-    phvwr.f         p.key_metadata_proto, k.ipv6_1_nextHdr
+    phvwr.e         p.key_metadata_src, k.ipv6_1_srcAddr
+    phvwr.f         p.key_metadata_dst, k.ipv6_1_dstAddr
+
+native_ipv6_packet_from_switch:
+    seq             c1, k.udp_1_valid, TRUE
+    phvwr.c1        p.key_metadata_dport, k.udp_1_srcPort
+    phvwr.c1        p.key_metadata_sport, k.udp_1_dstPort
+    seq             c1, k.tcp_valid, TRUE
+    phvwr.c1        p.key_metadata_dport, k.tcp_srcPort
+    phvwr.c1        p.key_metadata_sport, k.tcp_dstPort
+    phvwr.e         p.key_metadata_dst, k.ipv6_1_srcAddr
+    phvwr.f         p.key_metadata_src, k.ipv6_1_dstAddr
+
 
 .align
 native_nonip_packet:

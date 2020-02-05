@@ -32,7 +32,13 @@ ftlv6_set_index_type (flow_hash_entry_t *entry, uint8_t index_type)
 static inline void
 ftlv6_set_key_vnic_id (flow_hash_entry_t *entry, uint16_t vnic_id)
 {
-    return entry->set_key_metadata_vnic_id(vnic_id);
+    /* FIXME: FTL generated code has the bit positions flipped
+     * using hand-coded implementation for now
+     */
+    //return entry->set_key_metadata_vnic_id(vnic_id);
+    entry->key_metadata_vnic_id_sbit8_ebit8 = (vnic_id & 0x01);
+    entry->key_metadata_vnic_id_sbit0_ebit7 = (vnic_id >> 1) & 0xFF;
+    return;
 }
 
 static inline void

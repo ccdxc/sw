@@ -32,6 +32,7 @@
 #include "nic/sdk/lib/utils/utils.hpp"
 #include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
+#include "nic/apollo/api/include/athena/pds_flow_cache.h"
 
 namespace core {
 // number of trace files to keep
@@ -149,6 +150,7 @@ insert_ (flow_hash_entry_t *flow_entry)
 sdk_ret_t
 flow_table_init(void)
 {
+#if 0
     sdk_table_factory_params_t  factory_params;
 
     memset(&factory_params, 0, sizeof(factory_params));
@@ -161,7 +163,8 @@ flow_table_init(void)
     factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
     flow_table = flow_hash::factory(&factory_params);
     assert(flow_table);
-    return SDK_RET_OK;
+#endif
+    return pds_flow_cache_create(0);
 }
 
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -238,6 +241,18 @@ uint8_t g_snd_pkt_h2s_flow_miss[] = {
     0x78, 0x79
 };
 
+
+/*
+ * Normalized key
+ */
+uint16_t    g_h2s_vnic_id = 0x0001;
+uint32_t    g_h2s_sip = 0x02000001;
+uint32_t    g_h2s_dip = 0xc0000201;
+uint8_t     g_h2s_proto = 0x11;
+uint16_t    g_h2s_sport = 0x03e8;
+uint16_t    g_h2s_dport = 0x2710;
+
+
 /*
  * Host to Switch:
  */
@@ -258,16 +273,9 @@ uint8_t g_snd_pkt_h2s[] = {
 };
 
 /*
- * Key fields 
+ * H2S Specific fields 
  */
 uint32_t    g_h2s_vlan = 0x0001;
-uint32_t    g_h2s_sip = 0x02000001;
-uint32_t    g_h2s_dip = 0xc0000201;
-uint8_t     g_h2s_proto = 0x11;
-uint16_t    g_h2s_sport = 0x03e8;
-uint16_t    g_h2s_dport = 0x2710;
-
-uint16_t    g_h2s_vnic_id = 0x0001;
 
 #if 0
 sdk_ret_t
@@ -333,12 +341,14 @@ create_h2s_v4_session_info_rewrite(uint32_t session_index,
     }
     return SDK_RET_OK;
 }
+#endif
 
 sdk_ret_t
-create_h2s_v4_flow (uint8_t port, uint16_t vlan,
-        ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
-        uint8_t proto, uint16_t sport, uint16_t dport, uint32_t session_index)
+create_v4_flow (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_dip,
+        uint8_t proto, uint16_t sport, uint16_t dport,
+        pds_flow_spec_index_type_t index_type, uint32_t index)
 {
+#if 0
     flow_hash_entry_t   flow_entry;
     ipv6_addr_t         v6_addr_sip, v6_addr_dip;
 
@@ -365,10 +375,27 @@ create_h2s_v4_flow (uint8_t port, uint16_t vlan,
     if (ret != SDK_RET_OK) {
         return ret;
     }
-
-    return SDK_RET_OK;
-}
 #endif
+    pds_flow_spec_t             spec;
+
+
+    spec.key.vnic_id = vnic_id;
+    spec.key.smac = 0;
+    spec.key.dmac = 0;
+    spec.key.ip_addr_family = IP_AF_IPV4;
+    memset(spec.key.ip_saddr, 0, sizeof(spec.key.ip_saddr));
+    memcpy(spec.key.ip_saddr, &v4_addr_sip, sizeof(ipv4_addr_t));
+    memset(spec.key.ip_daddr, 0, sizeof(spec.key.ip_daddr));
+    memcpy(spec.key.ip_daddr, &v4_addr_dip, sizeof(ipv4_addr_t));
+    spec.key.ip_proto = proto;
+    spec.key.l4.tcp_udp.sport = sport;
+    spec.key.l4.tcp_udp.dport = dport;
+
+    spec.data.index_type = index_type;
+    spec.data.index = index;
+
+    return pds_flow_cache_entry_create(&spec);
+}
 
 /*
  * Session into rewrite
@@ -384,23 +411,24 @@ uint16_t    substrate_udp_dport = 0x1234;
 uint32_t    mpls1_label = 0x12345;
 uint32_t    mpls2_label = 0x6789a;
 
-static void
-vlan_to_vnic_map()
+static sdk_ret_t
+vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
 {
     pds_vlan_to_vnic_map_spec_t     spec;
     sdk_ret_t                       ret = SDK_RET_OK;
 
-    spec.key.vlan_id = g_h2s_vlan;
+    spec.key.vlan_id = vlan_id;
     spec.data.vnic_type = VNIC_TYPE_L3;
-    spec.data.vnic_id = g_h2s_vnic_id;
+    spec.data.vnic_id = vnic_id;
 
     ret = pds_vlan_to_vnic_map_create(&spec);
     if (ret != SDK_RET_OK) {
         printf("Failed to setup VLAN: %hu to VNIC:%hu mapping\n",
-                g_h2s_vlan, g_h2s_vnic_id);
+                vlan_id, vnic_id);
     }
     printf("Setup VLAN: %hu to VNIC:%hu mapping\n",
-            g_h2s_vlan, g_h2s_vnic_id);
+            vlan_id, vnic_id);
+    return ret;
 }
 
 static void
@@ -596,6 +624,30 @@ flow_init_s2h ()
     g_session_index++;
 }
 
+sdk_ret_t
+setup_flow(void)
+{
+    sdk_ret_t       ret = SDK_RET_OK;
+
+    // Setup VNIC Mappings
+    ret = vlan_to_vnic_map(g_h2s_vlan, g_h2s_vnic_id);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    // Setup Normalized Flow entry
+    ret = create_v4_flow(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
+            g_h2s_proto, g_h2s_sport, g_h2s_dport,
+            PDS_FLOW_SPEC_INDEX_CONNTRACK, g_session_index);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+    return ret;
+}
+
+
+
 void inline
 print_usage (char **argv)
 {
@@ -727,14 +779,7 @@ main (int argc, char **argv)
 
     flow_table_init();
 
-    // Setup VNIC Mappings
-    vlan_to_vnic_map();
-
-    // Setup H2S flow
-    flow_init_h2s();
-
-    // Setup S2H flow
-    flow_init_s2h();
+    setup_flow();
 
     // wait forver
     printf("Initialization done ...\n");
