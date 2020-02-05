@@ -109,7 +109,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 				Sipv4:     srcIP,
 				Dipv4:     destIP,
 				Dport:     10000,
-				IpProt:    20000,
+				IpProt:    1,
 			},
 		},
 	}
@@ -136,10 +136,6 @@ func TestObjStoreErrors(t *testing.T) {
 	AssertOk(t, err, "failed to create tp agent")
 	Assert(t, ps != nil, "invalid policy state received")
 	defer ps.Close()
-
-	// Object store init failure due to empty resolver
-	err = ps.ObjStoreInit(t.Name(), mock.New(), time.Duration(1)*time.Second, nil)
-	Assert(t, err != nil, "failed to init objectstore")
 
 	// Pass nil resolver
 	err = ps.ObjStoreInit(t.Name(), nil, time.Duration(1)*time.Second, nil)

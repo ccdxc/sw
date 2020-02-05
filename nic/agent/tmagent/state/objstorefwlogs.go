@@ -38,23 +38,50 @@ type TestObject struct {
 // The fwlog is sent on the testChannel as well if not nil
 func (s *PolicyState) ObjStoreInit(nodeUUID string,
 	rc resolver.Interface, periodicTransmitTime time.Duration, testChannel chan<- TestObject) error {
-	c, err := createBucketClient(s.ctx, rc, "default", "fwlogs")
-	if err != nil {
-		log.Errorf("Could not create minio client (%s)", err)
-		return fmt.Errorf("Could not create minio client (%s)", err)
+	if rc == nil {
+		log.Errorf("Resolver cannot be null")
+		return fmt.Errorf("Resolver cannot be null")
 	}
-	go periodicTransmit(s.ctx, c, s.logsChannel, periodicTransmitTime, testChannel, nodeUUID)
+
+	go periodicTransmit(s.ctx, rc, s.logsChannel,
+		periodicTransmitTime, testChannel, nodeUUID)
 	return nil
 }
 
-func periodicTransmit(ctx context.Context, c objstore.Client, lc <-chan map[string]interface{},
-	periodicTransmitTime time.Duration, testChannel chan<- TestObject, nodeUUID string) error {
+func periodicTransmit(ctx context.Context, rc resolver.Interface, lc <-chan map[string]interface{},
+	periodicTransmitTime time.Duration, testChannel chan<- TestObject, nodeUUID string) {
+
+	var c objstore.Client
+	clientChannel := make(chan interface{}, 1)
+
+	// Initalize the minio client asynchronously
+	go func(ctx context.Context, cc chan<- interface{}) {
+	loop:
+		for {
+			select {
+			case <-ctx.Done():
+				cc <- fmt.Errorf("Not connecting to MinIO Client, context cancelled")
+			default:
+				if c, err := createBucketClient(ctx, rc, "default", "fwlogs"); c != nil {
+					cc <- c
+					break loop
+				} else if err != nil {
+					log.Errorf("Could not create minio client (%s)", err)
+				}
+			}
+		}
+	}(ctx, clientChannel)
+
 	bufferedLogs := []map[string]interface{}{}
 	// StartTs & EndTs represent the timestamp of the first log and the last log in a window
 	var startTs, endTs time.Time
 
 	helper := func() {
-		go transmitLogs(ctx, c, bufferedLogs, startTs, endTs, testChannel, nodeUUID)
+		if c != nil {
+			go transmitLogs(ctx, c, bufferedLogs, startTs, endTs, testChannel, nodeUUID)
+		}
+
+		// If client has not been initialized yet then drop the collected logs and move on.
 		bufferedLogs = []map[string]interface{}{}
 	}
 
@@ -66,7 +93,21 @@ func periodicTransmit(ctx context.Context, c objstore.Client, lc <-chan map[stri
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("Context cancelled")
+			log.Errorf("context cancelled")
+			return
+		case data := <-clientChannel:
+			// Adding this condition to the select loop should not
+			// add any overheasd because it will receive data only once
+			// i.e. when the minio client gets initialzied in the beginning.
+			// Its added to the same select loop so that we can in parallel
+			// listen on the logs channel and keep dropping the logs until
+			// the client is initialized.
+			if err, ok := data.(error); ok {
+				log.Errorf("error while connecting to minio client (%s)", err)
+				return
+			} else if client, ok := data.(objstore.Client); ok {
+				c = client
+			}
 		case l := <-lc:
 			if len(bufferedLogs) == 0 {
 				startTs = l["ts"].(time.Time)
@@ -130,14 +171,8 @@ func transmitLogs(ctx context.Context,
 }
 
 func createBucketClient(ctx context.Context, resolver resolver.Interface, tenantName string, bucketName string) (objstore.Client, error) {
-	if resolver == nil {
-		log.Errorf("Resolver cannot be null")
-		return nil, fmt.Errorf("Resolver cannot be null")
-	}
-
 	tlsp, err := rpckit.GetDefaultTLSProvider(globals.Vos)
 	if err != nil {
-		log.Errorf("Error getting tls provider (%s)", err)
 		return nil, fmt.Errorf("Error getting tls provider (%s)", err)
 	}
 
@@ -147,7 +182,6 @@ func createBucketClient(ctx context.Context, resolver resolver.Interface, tenant
 
 	tlsc, err := tlsp.GetClientTLSConfig(globals.Vos)
 	if err != nil {
-		log.Errorf("Error getting tls client (%s)", err)
 		return nil, fmt.Errorf("Error getting tls client (%s)", err)
 	}
 	tlsc.ServerName = globals.Vos
