@@ -28,6 +28,10 @@ var PenCtlVer string
 var BuiltTime string
 
 func getPenctlVer() string {
+	v := strings.Split(PenCtlVer, "-")
+	if len(v) > 1 {
+		PenCtlVer = strings.Join(v[:len(v)-1], "-")
+	}
 	return fmt.Sprintf("Sha:       %s\nVersion:   %s\nBuiltTime: %s\n", GitCommit, PenCtlVer, BuiltTime)
 }
 
