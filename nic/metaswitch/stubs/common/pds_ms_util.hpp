@@ -165,8 +165,16 @@ public:
     }
 };
 
-// generate a sticky uuid from an interger id
-// same id always returs the same uuid
+// The following UUID conversion utilities are used by control-plane
+// to generate UUIDs for TEP, ECMP and Next-hop tables from their u32 indexes.
+// Currently these UUIDs are not unique across different tables
+// within the same Naples as the u32 index can overlap for different tables. 
+//
+// This routine has logic to return different UUIDs for
+// underlay and overlay ECMP table even if their u32 index overlaps.
+// Because of this requirement we cannot use the generic
+// api::uuid_from_objid() since that always returns the same sticky UUID
+// for a given u32 index
 static inline pds_obj_key_t
 msidx2pdsobjkey (uint32_t id, bool underlay=false) {
     pds_obj_key_t key = { 0 };
@@ -195,37 +203,6 @@ pdsobjkey2msidx (const pds_obj_key_t& key) {
     memcpy(buf, key.id, 8);
     buf[8] = '\0';
     return std::stoul((const char *)buf, 0, 16);
-}
-
-#define PDS_UUID_MAGIC_BYTE           0x42
-#define PDS_UUID_MAGIC_BYTE_LEN       0x2
-#define PDS_UUID_MAGIC_BYTE_OFFSET    8
-#define PDS_UUID_SYSTEM_MAC_OFFSET    10
-static inline pds_obj_key_t
-uuid_from_msid (uint32_t id)
-{
-    pds_obj_key_t key = { 0 };
-    mac_addr_t    system_mac;
-
-    MAC_UINT64_TO_ADDR(system_mac, PENSANDO_NIC_MAC);
-    memcpy(&key.id[0], &id, sizeof(id));
-    memset(&key.id[PDS_UUID_MAGIC_BYTE_OFFSET], PDS_UUID_MAGIC_BYTE,
-           PDS_UUID_MAGIC_BYTE_LEN);
-    memcpy(&key.id[PDS_UUID_SYSTEM_MAC_OFFSET], system_mac, ETH_ADDR_LEN);
-    return key;
-}
-
-// extract integer id from given 'sticky' uuid
-static inline uint32_t
-msid_from_uuid (const pds_obj_key_t& key) {
-    char *buf;
-    char id_buf[4][9];
-    static thread_local uint8_t next_buf = 0;
-
-    buf = id_buf[next_buf++ & 0x3];
-    memcpy(buf, key.id, 8);
-    buf[8] = '\0';
-    return *(uint32_t *)buf;
 }
 
 static inline bool

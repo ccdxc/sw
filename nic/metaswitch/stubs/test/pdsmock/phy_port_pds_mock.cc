@@ -8,7 +8,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_cookie.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 #include "nic/metaswitch/stubs/common/pds_ms_util.hpp"
-#include "nic/apollo/test/base/utils.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/include/sdk/if.hpp"
 #include <cstdlib>
 #include <cstdio>
@@ -56,7 +56,7 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
     mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
     eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, input.phy_port,
                               ETH_IF_DEFAULT_CHILD_PORT);
-    spec.l3_if_info.port = test::uuid_from_objid(eth_ifindex);
+    spec.l3_if_info.port = api::uuid_from_objid(eth_ifindex);
     spec.l3_if_info.encap.type = PDS_ENCAP_TYPE_NONE;
     spec.l3_if_info.encap.val.vnid = 0;
     pds_batch.emplace_back (OBJ_ID_IF, op);

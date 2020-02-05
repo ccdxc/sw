@@ -122,6 +122,8 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
         for (auto& nh: ips_info_.nexthops) {
             // Nexthop key is unused
             nhgroup_spec.nexthops[i].type = PDS_NH_TYPE_UNDERLAY;
+            // TODO: The incoming L3 Intf UUID needs to be cached and
+            // looked up here
             nhgroup_spec.nexthops[i].l3_if = 
                 msidx2pdsobjkey(nh.ms_ifindex);
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,

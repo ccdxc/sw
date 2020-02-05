@@ -11,6 +11,7 @@
 #include "nic/metaswitch/stubs/common/pds_ms_ifindex.hpp"
 #include "nic/metaswitch/stubs/hals/pds_ms_hal_init.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_state.hpp"
+#include "nic/apollo/api/utils.hpp"
 #include "nic/sdk/lib/logger/logger.hpp"
 #include <li_fte.hpp>
 #include <li_lipi_slave_join.hpp>
@@ -100,14 +101,8 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
         if (!get_linux_intf_params(ips_info_.if_name,
                                    &phy_port_prop.lnx_ifindex,
                                    phy_port_prop.mac_addr)) {
-#if 0 /* TODO Container may come up with different interface names
-         Need to fix name */
-            throw Error (std::string("Could not fetch Linux params for ")
+            throw Error (std::string("Could not fetch Linux params (S-MAC) for ")
                          .append(ips_info_.if_name));
-#else
-            SDK_TRACE_ERR("Could not fetch Linux params (S-MAC) for %s",
-                          ips_info_.if_name);
-#endif
         }
     } else {
         // Create a new object in order to store the updated fields
@@ -164,6 +159,8 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 }
 
 pds_obj_key_t li_intf_t::make_pds_if_key_(void) {
+    //TODO: The incoming UUID in L3 Intf create needs to be stored
+    // and looked up here 
     return msidx2pdsobjkey(ips_info_.ifindex);
 }
 
@@ -179,9 +176,12 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     auto& port_prop = store_info_.phy_port_if_obj->phy_port_properties();
     spec.admin_state =
         (port_prop.admin_state) ? PDS_IF_STATE_UP : PDS_IF_STATE_DOWN;
-    // TODO: Change this to eth IfIndex when HAL supports it
+
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
-    spec.l3_if_info.port = uuid_from_msid(ifindex);
+    spec.l3_if_info.port = api::uuid_from_objid(ifindex);
+
+    SDK_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x Port UUID %s",
+                   ips_info_.ifindex, ifindex, spec.l3_if_info.port.str());
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
     return spec;
 }

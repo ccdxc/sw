@@ -260,8 +260,10 @@ bgp_rm_ent_set_fill_func (pds::BGPSpec   &req,
             auto bgp_uuid_obj = (bgp_uuid_obj_t*)uuid_obj;
             entity_index = bgp_uuid_obj->ms_id();
         } else {
-            SDK_TRACE_ERR("BGP RM Request with unknown UUID %s of type %d",
-                          uuid.str(), uuid_obj_type_str(uuid_obj->obj_type()));
+            throw Error (std::string("BGP RM Request with unknown UUID ")
+                         .append(uuid.str()).append(" of type ")
+                         .append(uuid_obj_type_str(uuid_obj->obj_type())),
+                         SDK_RET_INVALID_ARG);
         }
     }
 
