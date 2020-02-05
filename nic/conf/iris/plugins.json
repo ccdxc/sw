@@ -214,15 +214,6 @@
             "deps"      : ["pensando.io/nw"]
         },
         {
-            "name"      : "gft",
-            "provider"  : "pensando.io",
-            "lib"       : "libcfg_plugin_gft.so",
-            "init_func" : "gft_init",
-            "exit_func" : "gft_exit",
-            "auto_load" : "true",
-            "deps"      : ["pensando.io/nw"]
-        },
-        {
             "name"      : "l4lbcfg",
             "provider"  : "pensando.io",
             "lib"       : "libcfg_plugin_l4lb.so",

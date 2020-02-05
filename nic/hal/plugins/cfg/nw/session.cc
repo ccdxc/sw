@@ -3630,8 +3630,8 @@ tcp_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    HAL_TRACE_DEBUG("TCP close timer callback -- deleting session with handle {}",
-                    session_handle);
+    HAL_TRACE_VERBOSE("TCP close timer callback -- deleting session with handle {}",
+                      session_handle);
 
     // time to clean up the session
     // Delete asynchronously so we dont hold the periodic thread
@@ -3732,8 +3732,8 @@ schedule_tcp_close_timer (session_t *session)
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("TCP Close timer started for session {}",
-                    (session->iflow)?session->iflow->config.key:key);
+    HAL_TRACE_VERBOSE("TCP Close timer started for session {}",
+                      (session->iflow)?session->iflow->config.key:key);
 
     return HAL_RET_OK;
 }
@@ -3772,8 +3772,8 @@ tcp_half_close_cb (void *timer, uint32_t timer_id, void *ctxt)
         return;
     }
 
-    HAL_TRACE_DEBUG("Session handle: {} IFlow State: {}",
-                     session_handle, state.iflow_state.state);
+    HAL_TRACE_VERBOSE("Session handle: {} IFlow State: {}",
+                      session_handle, state.iflow_state.state);
 
     session->tcp_cxntrack_timer = NULL;
 
@@ -3824,8 +3824,8 @@ schedule_tcp_half_closed_timer (session_t *session)
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("TCP Half Closed timer started for session {}",
-                     session->hal_handle);
+    HAL_TRACE_VERBOSE("TCP Half Closed timer started for session {}",
+                      session->hal_handle);
 
     return HAL_RET_OK;
 }
@@ -3906,8 +3906,8 @@ schedule_tcp_cxnsetup_timer (session_t *session)
     if (!session->tcp_cxntrack_timer) {
         return HAL_RET_ERR;
     }
-    HAL_TRACE_DEBUG("TCP Cxn Setup timer started for session {}",
-                     session->hal_handle);
+    HAL_TRACE_VERBOSE("TCP Cxn Setup timer started for session {}",
+                      session->hal_handle);
 
     return HAL_RET_OK;
 }

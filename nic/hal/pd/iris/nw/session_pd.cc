@@ -886,10 +886,6 @@ p4pd_add_upd_flow_hash_table_entry (flow_key_t *flow_key,
    
     bool hash_valid = (hash_val) ? true : false;
 
-    HAL_TRACE_DEBUG("hash value {}, hash valid {}, hash entry {} ",
-                    hash_val, hash_valid,
-                    hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t))); 
-
     if (update) {
         ret = g_hal_state_pd->flow_table_pd_get()->update(&key,
                                                           &hash_val, hash_valid);
@@ -937,9 +933,6 @@ p4pd_del_flow_hash_table_entry (flow_key_t *flow_key,
         }
         HAL_TRACE_VERBOSE("src {}, dst {}", src_buf.c_str(), dst_buf.c_str());
     }
-
-
-    HAL_TRACE_DEBUG("Hash entry {} ", hex_str((uint8_t*)&key, sizeof(flow_hash_info_entry_t)));
 
     ret = g_hal_state_pd->flow_table_pd_get()->remove(&key);
     if (ret == HAL_RET_OK) {

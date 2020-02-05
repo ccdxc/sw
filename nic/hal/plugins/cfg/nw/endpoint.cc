@@ -2899,7 +2899,7 @@ ep_add_nh (ep_t *ep, nexthop_t *nh)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Added nh {} to ep {}", nh->nh_id, ep_l2_key_to_str(ep));
+    HAL_TRACE_VERBOSE("Added nh {} to ep {}", nh->nh_id, ep_l2_key_to_str(ep));
 end:
     return ret;
 }
@@ -2926,8 +2926,8 @@ ep_del_nh (ep_t *ep, nexthop_t *nh)
         goto end;
     }
 
-    HAL_TRACE_DEBUG("Deleted nh {} from ep {}", nexthop_to_str(nh),
-                    ep_l2_key_to_str(ep));
+    HAL_TRACE_VERBOSE("Deleted nh {} from ep {}", nexthop_to_str(nh),
+                      ep_l2_key_to_str(ep));
 end:
     return ret;
 }
@@ -2967,10 +2967,10 @@ ep_del_session (ep_t *ep, session_t *session)
     }
     ep_unlock(ep, __FILENAME__, __LINE__, __func__);    // unlock
 
-    HAL_TRACE_DEBUG("delete ep =/=> session, ep id: {}, "
-                    "hdls: {} => {}, ret:{}",
-                    ep_l2_key_to_str(ep),
-                    ep->hal_handle, session->hal_handle, ret);
+    HAL_TRACE_VERBOSE("delete ep =/=> session, ep id: {}, "
+                      "hdls: {} => {}, ret:{}",
+                      ep_l2_key_to_str(ep),
+                      ep->hal_handle, session->hal_handle, ret);
     /* For now calling empty callback only if all sessions are deleted
      * Might not be the case as some IPs sessions might be cleared up earlier.
      */

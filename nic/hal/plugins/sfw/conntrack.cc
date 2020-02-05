@@ -142,7 +142,7 @@ process_tcp_close(fte::ctx_t& ctx)
         state = session::FLOW_TCP_STATE_RESET;
     }
 
-    HAL_TRACE_DEBUG("Received {} for session with key: {}", state, ctx.key());
+    HAL_TRACE_VERBOSE("Received {} for session with key: {}", state, ctx.key());
     // Start a timer to cleanup session if this is the first FIN/RST received
     // Timer is started in order to wait for either side to close the TCP
     // connection

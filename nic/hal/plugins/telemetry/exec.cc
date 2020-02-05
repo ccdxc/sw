@@ -86,7 +86,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
     ret = acl_classify(acl_ctx, (const uint8_t *)&acl_key, (const acl_rule_t **)&rule, 0x01);
 
     if (ret != HAL_RET_OK) {
-        HAL_TRACE_DEBUG("telemetry policy didn't match ret={}", ret);
+        HAL_TRACE_VERBOSE("telemetry policy didn't match ret={}", ret);
         goto end;
     }
 
@@ -144,7 +144,7 @@ update_flow_from_telemetry_rules (fte::ctx_t& ctx, bool mirror_action)
             }
         }
     } else {
-        HAL_TRACE_DEBUG("Flow did not match any telemetry rules!");
+        HAL_TRACE_VERBOSE("Flow did not match any telemetry rules!");
     }
 
 end:
@@ -311,7 +311,7 @@ telemetry_exec (fte::ctx_t &ctx)
                  return fte::PIPELINE_CONTINUE;
             }
         }
-        HAL_TRACE_DEBUG("Processing IPFIX flow");
+        HAL_TRACE_VERBOSE("Processing IPFIX flow");
         sfw_info = sfw::sfw_feature_state(ctx);
         // IPFIX flows are always allowed
         sfw_info->skip_sfw = true;
