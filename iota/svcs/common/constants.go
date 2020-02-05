@@ -161,10 +161,6 @@ const (
 
 	DefaultCimcPassword = "N0isystem$"
 
-	VcenterDCName = "iota-dc"
-
-	VcenterDCDvs = "pen-dvs"
-
 	VcenterCluster = "iota-cluster"
 
 	IotaVmotionPortgroup = "iota-vmotion-pg"

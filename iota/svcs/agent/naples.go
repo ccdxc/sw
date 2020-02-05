@@ -396,7 +396,18 @@ func (dnode *dataNode) configureWorkload(wload Workload.Workload, in *iota.Workl
 
 	var intf string
 
-	attachedIntf, err := wload.AddInterface(in.GetParentInterface(), in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan()))
+	spec := Workload.InterfaceSpec{
+		IntfType:      in.GetInterfaceType().String(),
+		Parent:        in.GetParentInterface(),
+		Name:          in.GetInterface(),
+		Mac:           in.GetMacAddress(),
+		IPV4Address:   in.GetIpPrefix(),
+		IPV6Address:   in.GetIpv6Prefix(),
+		PrimaryVlan:   int(in.GetEncapVlan()),
+		SecondaryVlan: int(in.GetSecondaryEncapVlan()),
+		Switch:        in.GetSwitchName(),
+	}
+	attachedIntf, err := wload.AddInterface(spec)
 	if err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		dnode.logger.Error(msg)

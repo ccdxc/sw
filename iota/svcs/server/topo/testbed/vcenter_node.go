@@ -3,6 +3,7 @@ package testbed
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	iota "github.com/pensando/sw/iota/protos/gogen"
@@ -14,6 +15,9 @@ import (
 	"golang.org/x/crypto/ssh"
 	//"golang.org/x/sync/errgroup"
 )
+
+var dcName = ""
+var dvsName = ""
 
 func (n *VcenterNode) cleanUpVcenter() error {
 
@@ -27,9 +31,22 @@ func (n *VcenterNode) cleanUpVcenter() error {
 		return err
 	}
 
-	dvsSpec := vmware.DVSwitchSpec{Name: constants.VcenterDCDvs}
+	uid := os.Getenv("USER")
+	if uid == "" {
+		uid = os.Getenv("SUDO_USER")
+		if uid == "" {
+			if os.Getenv("JOB_ID") != "" {
+				return fmt.Errorf("DC name cannot be derived, please run as non-sudo user")
+			}
+			uid = "default-" + os.Getenv("HOSTNAME")
+		}
+	}
 
-	dc, err := vc.SetupDataCenter(constants.VcenterDCName)
+	dcName = uid + "-iota-dc"
+	dvsName = uid + "-iota-dvs"
+	dvsSpec := vmware.DVSwitchSpec{Name: dvsName}
+
+	dc, err := vc.SetupDataCenter(dcName)
 	if err == nil {
 
 		//Datacenter exists
@@ -52,9 +69,9 @@ func (n *VcenterNode) cleanUpVcenter() error {
 			return err
 		}
 
-		err = vc.DestroyDataCenter(constants.VcenterDCName)
+		err = vc.DestroyDataCenter(dcName)
 		if err != nil {
-			fmt.Printf("Initing fialed %v.\n", err.Error())
+			fmt.Printf("Initing failed %v.\n", err.Error())
 			log.Errorf("TOPO SVC | CleanTestBed | Destroying data center failed %v", err.Error())
 			return err
 		}
@@ -82,7 +99,7 @@ func (n *VcenterNode) initVcenter() error {
 	n.vc = vc
 
 	//TODO , create based on current User -ID
-	dc, err := vc.CreateDataCenter(constants.VcenterDCName)
+	dc, err := vc.CreateDataCenter(dcName)
 	if err != nil {
 		log.Errorf("TOPO SVC | InitTestbed  | Failed to create datacenter  %v", err.Error())
 		return err
@@ -138,7 +155,7 @@ func (n *VcenterNode) initVcenter() error {
 	}
 
 	dvsSpec := vmware.DVSwitchSpec{Hosts: hostSpecs,
-		Name: constants.VcenterDCDvs, Cluster: constants.VcenterCluster,
+		Name: dvsName, Cluster: constants.VcenterCluster,
 		MaxPorts: 10,
 		Pvlans: []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: constants.VcenterPvlanStart,
 			Secondary: constants.VcenterPvlanStart, Type: "promiscuous"}}}
@@ -328,4 +345,8 @@ func (n *VcenterNode) AssocaiateIndependentNode(node TestNodeInterface) error {
 	}
 
 	return nil
+}
+
+func init() {
+
 }

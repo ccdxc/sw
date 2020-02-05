@@ -672,6 +672,7 @@ type DvsPortGroup struct {
 	Type         string
 	VlanOverride bool
 	Vlan         int32
+	Private      bool
 }
 
 // VswitchSpec specifies a virtual switch
@@ -988,7 +989,7 @@ func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 	pgSpec := []types.DVPortgroupConfigSpec{}
 	for _, pair := range pairs {
 
-		pgSpec = append(pgSpec, types.DVPortgroupConfigSpec{
+		spec := types.DVPortgroupConfigSpec{
 			Name:     pair.Name,
 			NumPorts: pair.Ports,
 			Type:     pair.Type,
@@ -1006,12 +1007,23 @@ func (dc *DataCenter) AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
 				//UplinkTeamingOverrideAllowed:  false,
 				//SecurityPolicyOverrideAllowed: false,
 			},
-			DefaultPortConfig: &types.VMwareDVSPortSetting{
+		}
+
+		if pair.Private {
+			spec.DefaultPortConfig = &types.VMwareDVSPortSetting{
+				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
+					PvlanId: pair.Vlan,
+				},
+			}
+		} else {
+			spec.DefaultPortConfig = &types.VMwareDVSPortSetting{
 				Vlan: &types.VmwareDistributedVirtualSwitchVlanIdSpec{
 					VlanId: pair.Vlan,
 				},
-			},
-		})
+			}
+		}
+
+		pgSpec = append(pgSpec, spec)
 
 	}
 	task, err := dvs.AddPortgroup(dc.Ctx(), pgSpec)

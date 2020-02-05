@@ -70,7 +70,19 @@ func (n *TestNode) configureWorkload(wload workload.Workload, in *iota.Workload)
 
 	var intf string
 
-	attachedIntf, err := wload.AddInterface(in.GetParentInterface(), in.GetInterface(), in.GetMacAddress(), in.GetIpPrefix(), in.GetIpv6Prefix(), int(in.GetEncapVlan()))
+	spec := workload.InterfaceSpec{
+		IntfType:      in.GetInterfaceType().String(),
+		Parent:        in.GetParentInterface(),
+		Name:          in.GetInterface(),
+		Mac:           in.GetMacAddress(),
+		IPV4Address:   in.GetIpPrefix(),
+		IPV6Address:   in.GetIpv6Prefix(),
+		PrimaryVlan:   int(in.GetEncapVlan()),
+		SecondaryVlan: int(in.GetSecondaryEncapVlan()),
+		Switch:        in.GetSwitchName(),
+	}
+
+	attachedIntf, err := wload.AddInterface(spec)
 	if err != nil {
 		msg := fmt.Sprintf("Error in Interface attachment %s : %s", in.GetWorkloadName(), err.Error())
 		n.logger.Error(msg)

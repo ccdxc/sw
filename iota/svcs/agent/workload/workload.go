@@ -54,6 +54,19 @@ var (
 	macVlanIntfPrefixCnt uint64
 )
 
+//InterfaceSpec def
+type InterfaceSpec struct {
+	IntfType      string
+	Parent        string
+	Name          string
+	Mac           string
+	IPV4Address   string
+	IPV6Address   string
+	Switch        string
+	PrimaryVlan   int
+	SecondaryVlan int
+}
+
 //Workload interface
 type Workload interface {
 	Name() string
@@ -64,7 +77,7 @@ type Workload interface {
 		background bool, shell bool) (*cmd.CmdCtx, string, error)
 	StopCommand(commandHandle string) (*cmd.CmdCtx, error)
 	WaitCommand(commandHandle string) (*cmd.CmdCtx, error)
-	AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error)
+	AddInterface(spec InterfaceSpec) (string, error)
 	AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error
 	AddSecondaryIpv6Addresses(intf string, ipaddresses []string) error
 	MoveInterface(name string) error
@@ -218,7 +231,7 @@ func (app *workloadBase) SendArpProbe(ip string, intf string, vlan int) error {
 	return nil
 }
 
-func (app *workloadBase) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *workloadBase) AddInterface(spec InterfaceSpec) (string, error) {
 	return "", nil
 }
 
@@ -353,22 +366,21 @@ func (app *containerWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *containerWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
-
-	ifconfigCmd := []string{"ifconfig", parentInterface, "up"}
+func (app *containerWorkload) AddInterface(spec InterfaceSpec) (string, error) {
+	ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
 	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", parentInterface, stdout)
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
 	}
-	intfToAttach := parentInterface
+	intfToAttach := spec.Parent
 
-	if vlan != 0 {
-		vlanintf := vlanIntf(parentInterface, vlan)
+	if spec.PrimaryVlan != 0 {
+		vlanintf := vlanIntf(spec.Parent, spec.PrimaryVlan)
 		delVlanCmd := []string{"ip", "link", "del", vlanintf}
 		//Delete the interface if already exists , ignore the error for now.
 		utils.Run(delVlanCmd, 0, false, false, nil)
-		addVlanCmd := []string{"ip", "link", "add", "link", parentInterface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+		addVlanCmd := []string{"ip", "link", "add", "link", spec.Parent, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(spec.PrimaryVlan)}
 		if retCode, stdout, _ := utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", parentInterface, vlan, stdout)
+			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", spec.Parent, spec.PrimaryVlan, stdout)
 		}
 		intfToAttach = vlanintf
 	}
@@ -377,20 +389,20 @@ func (app *containerWorkload) AddInterface(parentInterface string, workloadInter
 		return "", errors.Wrap(err, "Interface attach failed")
 	}
 
-	if macAddress != "" {
-		if err := app.containerHandle.SetMacAddress(intfToAttach, macAddress, 0); err != nil {
+	if spec.Mac != "" {
+		if err := app.containerHandle.SetMacAddress(intfToAttach, spec.Mac, 0); err != nil {
 			return "", errors.Wrapf(err, "Set Mac Address failed")
 		}
 	}
 
-	if ipaddress != "" {
-		if err := app.containerHandle.SetIPAddress(intfToAttach, ipaddress, 0, false); err != nil {
+	if spec.IPV4Address != "" {
+		if err := app.containerHandle.SetIPAddress(intfToAttach, spec.IPV4Address, 0, false); err != nil {
 			return "", errors.Wrapf(err, "Set IP Address failed")
 		}
 	}
 
-	if ipv6address != "" {
-		if err := app.containerHandle.SetIPAddress(intfToAttach, ipv6address, 0, true); err != nil {
+	if spec.IPV6Address != "" {
+		if err := app.containerHandle.SetIPAddress(intfToAttach, spec.IPV6Address, 0, true); err != nil {
 			return "", errors.Wrapf(err, "Set IPv6 Address failed")
 		}
 	}
@@ -403,14 +415,14 @@ func (app *containerMacVlanWorkload) BringUp(args ...string) error {
 	return app.containerWorkload.BringUp(args...)
 }
 
-func (app *containerMacVlanWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *containerMacVlanWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
-	stdout, err := addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6address, macAddress)
+	stdout, err := addMacVlanInterface(spec.Parent, spec.Name, spec.IPV4Address, spec.IPV6Address, spec.Mac)
 	if err != nil {
 		return stdout, err
 	}
 
-	return app.containerWorkload.AddInterface(workloadInterface, workloadInterface, macAddress, ipaddress, ipv6address, 0)
+	return app.containerWorkload.AddInterface(spec)
 }
 
 func (app *containerWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
@@ -542,58 +554,58 @@ func (app *bareMetalWorkload) SendArpProbe(ip string, intf string, vlan int) err
 
 }
 
-func (app *bareMetalWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *bareMetalWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
-	ifconfigCmd := []string{"ifconfig", parentInterface, "up"}
+	ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
 	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
-		return "", errors.Errorf("Could not bring up parent interface %s : %s", parentInterface, stdout)
+		return "", errors.Errorf("Could not bring up parent interface %s : %s", spec.Parent, stdout)
 	}
-	intfToAttach := parentInterface
+	intfToAttach := spec.Parent
 
-	if vlan != 0 {
+	if spec.PrimaryVlan != 0 {
 		vlanintf := ""
 		var addVlanCmd []string
 		var delVlanCmd []string
 		if isFreeBsd() {
-			vlanintf = freebsdVlanIntf(parentInterface, vlan)
+			vlanintf = freebsdVlanIntf(spec.Parent, spec.PrimaryVlan)
 			delVlanCmd = []string{"ifconfig", vlanintf, "destroy"}
 			addVlanCmd = []string{"ifconfig", vlanintf, "create", "inet"}
 		} else {
-			vlanintf = vlanIntf(parentInterface, vlan)
+			vlanintf = vlanIntf(spec.Parent, spec.PrimaryVlan)
 			delVlanCmd = []string{"ip", "link", "del", vlanintf}
-			addVlanCmd = []string{"ip", "link", "add", "link", parentInterface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+			addVlanCmd = []string{"ip", "link", "add", "link", spec.Parent, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(spec.PrimaryVlan)}
 		}
 		utils.Run(delVlanCmd, 0, false, false, nil)
 		if retCode, stdout, _ := utils.Run(addVlanCmd, 0, false, false, nil); retCode != 0 {
-			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", parentInterface, vlan, stdout)
+			return "", errors.Errorf("IP link create to add vlan failed %s:%d, err :%s", spec.Parent, spec.PrimaryVlan, stdout)
 		}
 
 		intfToAttach = vlanintf
 	}
 
-	if macAddress != "" {
+	if spec.Mac != "" {
 		var setMacAddrCmd []string
 		if !isFreeBsd() {
 			//Mac address change only works on linux
-			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", macAddress}
+			setMacAddrCmd = []string{"ifconfig", intfToAttach, "hw", "ether", spec.Mac}
 			if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 				return "", errors.Wrap(err, stdout)
 			}
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", intfToAttach, ipaddress}
+	if spec.IPV4Address != "" {
+		cmd := []string{"ifconfig", intfToAttach, spec.IPV4Address}
 		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
 	}
 
-	if ipv6address != "" {
+	if spec.IPV6Address != "" {
 		//unset ipv6 address first
-		cmd := []string{"ifconfig", intfToAttach, "inet6", "del", ipv6address}
+		cmd := []string{"ifconfig", intfToAttach, "inet6", "del", spec.IPV6Address}
 		utils.Run(cmd, 0, false, false, nil)
-		cmd = []string{"ifconfig", intfToAttach, "inet6", "add", ipv6address}
+		cmd = []string{"ifconfig", intfToAttach, "inet6", "add", spec.IPV6Address}
 		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
@@ -662,16 +674,16 @@ func addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6addr
 	return "", nil
 }
 
-func (app *bareMetalMacVlanWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *bareMetalMacVlanWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
-	stdout, err := addMacVlanInterface(parentInterface, workloadInterface, ipaddress, ipv6address, macAddress)
+	stdout, err := addMacVlanInterface(spec.Parent, spec.Name, spec.IPV4Address, spec.IPV6Address, spec.Mac)
 	if err != nil {
 		return stdout, err
 	}
 
-	app.subIF = workloadInterface
+	app.subIF = spec.Name
 
-	return workloadInterface, nil
+	return spec.Name, nil
 }
 
 func (app *bareMetalMacVlanWorkload) AddSecondaryIpv4Addresses(intf string, ipaddresses []string) error {
@@ -694,7 +706,7 @@ func (app *bareMetalMacVlanWorkload) AddSecondaryIpv6Addresses(intf string, ipad
 	return nil
 }
 
-func (app *bareMetalMacVlanEncapWorkload) AddInterface(parentInterface string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (app *bareMetalMacVlanEncapWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
 	var addVlanCmd []string
 	var delVlanCmd []string
@@ -703,20 +715,20 @@ func (app *bareMetalMacVlanEncapWorkload) AddInterface(parentInterface string, w
 		return "", errors.New("Mac vlan Not supported on freebsd")
 	}
 
-	ifconfigCmd := []string{"ifconfig", parentInterface, "up"}
+	ifconfigCmd := []string{"ifconfig", spec.Parent, "up"}
 	utils.Run(ifconfigCmd, 0, false, false, nil)
 
-	if vlan == 0 {
-		return "", errors.Errorf("Need vlan for Mac vlan Encap workload on :%s", parentInterface)
+	if spec.PrimaryVlan == 0 {
+		return "", errors.Errorf("Need vlan for Mac vlan Encap workload on :%s", spec.Parent)
 	}
 
-	vlanintf := vlanIntf(parentInterface, vlan)
-	addVlanCmd = []string{"ip", "link", "add", "link", parentInterface, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(vlan)}
+	vlanintf := vlanIntf(spec.Parent, spec.PrimaryVlan)
+	addVlanCmd = []string{"ip", "link", "add", "link", spec.Parent, "name", vlanintf, "type", "vlan", "id", strconv.Itoa(spec.PrimaryVlan)}
 	//Ignore error as sub if could be created earlier
 	utils.Run(addVlanCmd, 0, false, false, nil)
 
-	parentInterface = vlanintf
-	workloadInterface = generateMacVlanIntfName(vlan)
+	parentInterface := vlanintf
+	workloadInterface := generateMacVlanIntfName(spec.PrimaryVlan)
 
 	ifconfigCmd = []string{"ifconfig", parentInterface, "up"}
 	if retCode, stdout, _ := utils.Run(ifconfigCmd, 0, false, false, nil); retCode != 0 {
@@ -730,26 +742,26 @@ func (app *bareMetalMacVlanEncapWorkload) AddInterface(parentInterface string, w
 		return "", errors.Errorf("IP link failed to create mac vlan failed %s, err :%s", workloadInterface, stdout)
 	}
 
-	if macAddress != "" {
+	if spec.Mac != "" {
 		var setMacAddrCmd []string
-		setMacAddrCmd = []string{"ifconfig", workloadInterface, "hw", "ether", macAddress}
+		setMacAddrCmd = []string{"ifconfig", workloadInterface, "hw", "ether", spec.Mac}
 		if retCode, stdout, err := utils.Run(setMacAddrCmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", workloadInterface, ipaddress}
+	if spec.IPV4Address != "" {
+		cmd := []string{"ifconfig", workloadInterface, spec.IPV4Address}
 		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}
 	}
 
-	if ipv6address != "" {
+	if spec.IPV6Address != "" {
 		//unset ipv6 address first
-		cmd := []string{"ifconfig", workloadInterface, "inet6", "del", ipv6address}
+		cmd := []string{"ifconfig", workloadInterface, "inet6", "del", spec.IPV6Address}
 		utils.Run(cmd, 0, false, false, nil)
-		cmd = []string{"ifconfig", workloadInterface, "inet6", "add", ipv6address}
+		cmd = []string{"ifconfig", workloadInterface, "inet6", "add", spec.IPV6Address}
 		if retCode, stdout, err := utils.Run(cmd, 0, false, false, nil); retCode != 0 {
 			return "", errors.Wrap(err, stdout)
 		}

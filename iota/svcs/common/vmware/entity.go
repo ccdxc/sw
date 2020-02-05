@@ -97,9 +97,9 @@ type EntityIntf interface {
 	BootVM(name string) (*VMInfo, error)
 	FindDvsPortGroup(name string, mcriteria DvsPGMatchCriteria) (string, error)
 	AddPortGroupToDvs(name string, pairs []DvsPortGroup) error
+	AddPvlanPairsToDvs(name string, pairs []DvsPvlanPair) error
 	AddKernelNic(cluster, host string, pgName string, enableVmotion bool) error
 	RemoveKernelNic(cluster, host string, pgName string) error
-	IsVcenter() bool
 }
 
 //Reinit vcenter

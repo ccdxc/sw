@@ -209,13 +209,13 @@ func (vm *vmESXWorkload) BringUp(args ...string) error {
 	return vm.startVMAgent()
 }
 
-func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (vm *vmESXWorkload) AddInterface(spec InterfaceSpec) (string, error) {
 
 	vsspec := vmware.VswitchSpec{Name: vm.Switch()}
 
-	nwName := constants.EsxDataNWPrefix + strconv.Itoa(vlan)
+	nwName := constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
 
-	nws := []vmware.NWSpec{{Name: nwName, Vlan: int32(vlan)}}
+	nws := []vmware.NWSpec{{Name: nwName, Vlan: int32(spec.PrimaryVlan)}}
 	if err := vm.host.AddNetworks(nws, vsspec); err != nil {
 		//return "", errors.Wrap(err, "Error in creating network")
 	}
@@ -234,24 +234,24 @@ func (vm *vmESXWorkload) AddInterface(name string, workloadInterface string, mac
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra2); err != nil {
 		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
 	}
-	if macAddress != "" {
+	if spec.Mac != "" {
 		var setMacAddrCmd []string
 		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
-		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", macAddress}
+		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", spec.Mac}
 		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, ipaddress}
+	if spec.IPV4Address != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, spec.IPV4Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", ipv6address}
+	if spec.IPV6Address != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", spec.IPV6Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
@@ -426,19 +426,46 @@ func (vm *vmVcenterWorkload) BringUp(args ...string) error {
 	return vm.startVMAgent()
 }
 
-func (vm *vmVcenterWorkload) AddInterface(name string, workloadInterface string, macAddress string, ipaddress string, ipv6address string, vlan int) (string, error) {
+func (vm *vmVcenterWorkload) AddInterface(spec InterfaceSpec) (string, error) {
+	var pgName string
+	var err error
 
-	vsname := constants.VcenterDCDvs
+	//vsname := constants.VcenterDCDvs
+	vsname := spec.Switch
 
-	pgName, err := vm.vhost.FindDvsPortGroup(vsname, vmware.DvsPGMatchCriteria{Type: vmware.DvsVlanID, VlanID: int32(vlan)})
+	if spec.IntfType == iota.InterfaceType_INTERFACE_TYPE_DVS_PVLAN.String() {
+		err = vm.vhost.AddPvlanPairsToDvs(vsname, []vmware.DvsPvlanPair{vmware.DvsPvlanPair{Primary: int32(spec.PrimaryVlan),
+			Secondary: int32(spec.SecondaryVlan), Type: "isolated"}})
 
-	if err != nil {
-		pgName = constants.EsxDataNWPrefix + strconv.Itoa(vlan)
+		if err != nil {
+			return "", errors.Wrapf(err, "Error creating pvlan pair %v", spec.PrimaryVlan)
+		}
+
+		pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
 		//Create the port group
 		err = vm.vhost.AddPortGroupToDvs(vsname,
-			[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName, Ports: 32, Type: "earlyBinding", Vlan: int32(vlan)}})
+			[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName,
+				VlanOverride: true,
+				Private:      true,
+				Ports:        32, Type: "earlyBinding",
+				Vlan: int32(spec.PrimaryVlan)}})
 		if err != nil {
 			return "", errors.Wrap(err, "Failed to add portgroup to dvs")
+		}
+
+	} else {
+		pgName, err = vm.vhost.FindDvsPortGroup(vsname, vmware.DvsPGMatchCriteria{Type: vmware.DvsVlanID, VlanID: int32(spec.PrimaryVlan)})
+		if err != nil {
+			pgName = constants.EsxDataNWPrefix + strconv.Itoa(spec.PrimaryVlan)
+			//Create the port group
+			err = vm.vhost.AddPortGroupToDvs(vsname,
+				[]vmware.DvsPortGroup{vmware.DvsPortGroup{Name: pgName,
+					VlanOverride: true,
+					Ports:        32, Type: "earlyBinding",
+					Vlan: int32(spec.PrimaryVlan)}})
+			if err != nil {
+				return "", errors.Wrap(err, "Failed to add portgroup to dvs")
+			}
 		}
 	}
 
@@ -456,24 +483,24 @@ func (vm *vmVcenterWorkload) AddInterface(name string, workloadInterface string,
 	if err := Utils.DisableDhcpOnInterfaceRemote(vm.sshHandle, constants.EsxDataVMInterfaceExtra2); err != nil {
 		return "", errors.Wrap(err, "Disabling DHCP on extra interface failed")
 	}
-	if macAddress != "" {
+	if spec.Mac != "" {
 		var setMacAddrCmd []string
 		//setMacAddrCmd = []string{"ifconfig", intfToAttach, "ether", macAddress}
-		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", macAddress}
+		setMacAddrCmd = []string{"ifconfig", constants.EsxDataVMInterface, "hw", "ether", spec.Mac}
 		if ctx, _, err := vm.RunCommand(setMacAddrCmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, ipaddress}
+	if spec.IPV4Address != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, spec.IPV4Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}
 	}
 
-	if ipaddress != "" {
-		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", ipv6address}
+	if spec.IPV6Address != "" {
+		cmd := []string{"ifconfig", constants.EsxDataVMInterface, "inet6", "add", spec.IPV6Address}
 		if ctx, _, err := vm.RunCommand(cmd, "", 0, 0, false, true); ctx.ExitCode != 0 {
 			return "", errors.Wrap(err, ctx.Stdout)
 		}

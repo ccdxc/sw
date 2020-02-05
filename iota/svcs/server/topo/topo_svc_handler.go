@@ -306,7 +306,8 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 				IPAddress:    node.IpAddress,
 				License:      node.License,
 			}
-			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+			if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX ||
+				node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
 				nodeInfo.Username = node.EsxUsername
 				nodeInfo.Password = node.EsxPassword
 			}
@@ -379,7 +380,8 @@ func (ts *TopologyService) initTestNodes(ctx context.Context, req *iota.TestNode
 			IPAddress:    node.IpAddress,
 			License:      node.License,
 		}
-		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX ||
+			node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
 			nodeInfo.Username = node.EsxUsername
 			nodeInfo.Password = node.EsxPassword
 		}
@@ -431,7 +433,8 @@ func (ts *TopologyService) cleanUpTestNodes(ctx context.Context, cfg *ssh.Client
 			GlobalLicenses: globalLicenses,
 			ApcInfo:        node.ApcInfo,
 		}
-		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX {
+		if node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_ESX ||
+			node.Os == iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER {
 			nodeInfo.Username = node.EsxUsername
 			nodeInfo.Password = node.EsxPassword
 		}
