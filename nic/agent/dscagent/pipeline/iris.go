@@ -14,6 +14,9 @@ import (
 	"sync"
 	"time"
 
+	delphi "github.com/pensando/sw/nic/delphi/gosdk"
+	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
+
 	"github.com/gogo/protobuf/proto"
 	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
@@ -32,6 +35,7 @@ import (
 // IrisAPI implements PipelineAPI for Iris Pipeline
 type IrisAPI struct {
 	sync.Mutex
+	SysmgrClient    *sysmgr.Client
 	InfraAPI        types.InfraAPI
 	VrfClient       halapi.VrfClient
 	L2SegmentClient halapi.L2SegmentClient
@@ -66,12 +70,31 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*IrisAPI, error) {
 		SystemClient:    halapi.NewSystemClient(conn),
 	}
 
+	delphiClient, err := delphi.NewClient(&i)
+	if err != nil {
+		log.Fatalf("delphi NewClient failed")
+	}
+	i.SysmgrClient = sysmgr.NewClient(delphiClient, types.Netagent)
+	go delphiClient.Run()
+
 	if err := i.PipelineInit(); err != nil {
 		log.Error(errors.Wrapf(types.ErrPipelineInit, "Iris Init: %v", err))
 		return nil, errors.Wrapf(types.ErrPipelineInit, "Iris Init: %v", err)
 	}
 
 	return &i, nil
+}
+
+// ############################################### SysMgr Methods  ###############################################
+
+// OnMountComplete informs sysmgr that mount is done
+func (i *IrisAPI) OnMountComplete() {
+	i.SysmgrClient.InitDone()
+}
+
+// Name returns netagent svc name
+func (i *IrisAPI) Name() string {
+	return types.Netagent
 }
 
 // ############################################### PipelineAPI Methods  ###############################################

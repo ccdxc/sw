@@ -17,7 +17,7 @@ type DistributedServiceCardStatus struct {
 
 //DSCInterfaceIP captures the IP interface info of DSC interfaces
 type DSCInterfaceIP struct {
-	IfId          int8
+	IfID          int8
 	DestPrefixLen int8
 	IPAddress     string
 	GatewayIP     string

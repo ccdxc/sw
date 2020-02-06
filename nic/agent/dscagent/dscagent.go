@@ -11,8 +11,6 @@ import (
 	"github.com/pensando/sw/nic/agent/dscagent/infra"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
-	delphi "github.com/pensando/sw/nic/delphi/gosdk"
-	sysmgr "github.com/pensando/sw/nic/sysmgr/golib"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -23,17 +21,6 @@ type DSCAgent struct {
 	PipelineAPI   types.PipelineAPI
 	InfraAPI      types.InfraAPI
 	Logger        log.Logger
-	SysmgrClient  *sysmgr.Client
-}
-
-// OnMountComplete informs sysmgr that mount is doine
-func (ag *DSCAgent) OnMountComplete() {
-	ag.SysmgrClient.InitDone()
-}
-
-// Name returns netagent svc name
-func (ag *DSCAgent) Name() string {
-	return types.Netagent
 }
 
 // NewDSCAgent returns a new instance of DSCAgent
@@ -54,13 +41,6 @@ func NewDSCAgent(logger log.Logger, npmURL, tpmURL, tsmURL, restURL string) (*DS
 		InfraAPI:      infraAPI,
 		Logger:        logger,
 	}
-
-	delphiClient, err := delphi.NewClient(&d)
-	if err != nil {
-		log.Fatalf("delphi NewClient failed")
-	}
-	d.SysmgrClient = sysmgr.NewClient(delphiClient, types.Netagent)
-	go delphiClient.Run()
 
 	return &d, nil
 }
