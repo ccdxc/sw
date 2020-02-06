@@ -318,9 +318,6 @@ Eth::Eth(devapi *dev_api, struct EthDevInfo *dev_info, PdClient *pd_client, EV_P
     evutil_timer_start(EV_A_ & devcmd_timer, Eth::DevcmdPoll, this, 0.0, 0.001);
 
     active_lif_set.clear();
-
-    // Set fw status on this interface when it is created
-    SetFwStatus(1);
 }
 
 Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
@@ -530,9 +527,6 @@ Eth::Eth(devapi *dev_api, void *dev_spec, PdClient *pd_client, EV_P)
     regs->info.fw_heartbeat = 0;
 
     active_lif_set.clear();
-
-    // Set fw status on this interface when it is created
-    SetFwStatus(1);
 }
 
 std::vector<Eth *>
@@ -2013,6 +2007,8 @@ Eth::HalEventHandler(bool status)
         EthLif *eth_lif = it->second;
         eth_lif->HalEventHandler(status);
     }
+
+    SetFwStatus(status);
 }
 
 void
@@ -2183,12 +2179,11 @@ Eth::SendFWDownEvent()
 {
     for (auto it = lif_map.cbegin(); it != lif_map.cend(); it++) {
         EthLif *eth_lif = it->second;
-
         NIC_LOG_DEBUG("{}: DBG: setting fw_state to 0", spec->name);
-
         eth_lif->SendFWDownEvent();
     }
 
+    // TODO: Wait for device reset before doing this!
     SetFwStatus(0);
 
     return 0;
@@ -2219,6 +2214,8 @@ Eth::SetHalClient(devapi *dapi)
 void
 Eth::SetFwStatus(uint8_t fw_status)
 {
+    NIC_LOG_INFO("{}: fw_status {}", spec->name, fw_status);
+
     regs->info.fw_status = fw_status;
 #ifndef __aarch64__
     WRITE_MEM(dev_resources.regs_mem_addr + offsetof(union dev_regs, info) +
