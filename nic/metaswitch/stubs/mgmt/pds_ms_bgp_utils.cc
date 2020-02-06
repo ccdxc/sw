@@ -37,11 +37,55 @@ bgp_peer_af_fill_keys_(pds::BGPPeerAfSpec& req,
 
     auto peeraddr = req.mutable_peeraddr();
     ip_addr_to_spec(&bgp_peer_af_uuid_obj->ms_id().peer_ip, peeraddr);
+    req.set_afi((pds::BGPAfi) bgp_peer_af_uuid_obj->ms_id().afi);
+    req.set_safi((pds::BGPSafi) bgp_peer_af_uuid_obj->ms_id().safi);
+
 
     SDK_TRACE_VERBOSE("BGP Peer Pre-set Keys UUID %s Local IP %s Peer IP %s",
                       uuid_obj->uuid().str(),
                       ipaddr2str(&bgp_peer_af_uuid_obj->ms_id().local_ip),
                       ipaddr2str(&bgp_peer_af_uuid_obj->ms_id().peer_ip));
+}
+
+static NBB_VOID
+populate_disable_peer_af_spec (BGPPeerSpec &peer, BGPPeerAfSpec *peer_af,
+                               BGPAfi afi, BGPSafi safi)
+{
+    auto paddr = peer_af->mutable_peeraddr();
+    auto laddr = peer_af->mutable_localaddr();
+    paddr->set_af (peer.peeraddr().af());
+    paddr->set_v4addr(peer.peeraddr().v4addr());
+    laddr->set_af (peer.localaddr().af());
+    laddr->set_v4addr(peer.localaddr().v4addr());
+    peer_af->set_afi(afi);
+    peer_af->set_safi(safi);
+    peer_af->set_disable(true);
+}
+
+NBB_VOID
+bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp)
+{
+    pds_obj_key_t uuid = {0};
+    pds_ms_get_uuid(&uuid, req.id());
+
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+    if (uuid_obj == nullptr) {
+        // Invalid UUID in get request
+        throw Error (std::string("BGP Peer get with invalid key ").
+                     append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+        // BGP Peer Update - Fill keys
+        bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
+    } else {
+        // Venice may use the same UUID for multiple protos
+        // BGP Global, Peer and PeerAF
+        // in which case it will fill the appropriate keys
+        // and the UUID need not be created or deleted
+        SDK_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
+                          uuid_obj_type_str(uuid_obj->obj_type()));
+    }
 }
 
 NBB_VOID
@@ -81,8 +125,18 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
         SDK_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
                           uuid.str(), ipaddr2str(&local_ipaddr),
                           ipaddr2str(&peer_ipaddr));
-    }
-    else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
+
+        // Disable AFs for newly created Peer. User has to enable (create) address
+        // families as per the peer connectivity
+        BGPPeerAfSpec peer_af_spec;
+        populate_disable_peer_af_spec (req, &peer_af_spec,
+                                       BGP_AFI_IPV4, BGP_SAFI_UNICAST);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
+        populate_disable_peer_af_spec (req, &peer_af_spec,
+                                       BGP_AFI_L2VPN, BGP_SAFI_EVPN);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
+
+    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
         // BGP Peer Update - Fill keys
         bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
         if (row_status == AMB_ROW_DESTROY) {
@@ -98,6 +152,32 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
     }
 }
 
+NBB_VOID
+bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
+                          pds::BGPPeerAfGetResponse* resp)
+{
+    pds_obj_key_t uuid = {0};
+    pds_ms_get_uuid(&uuid, req.id());
+
+    auto mgmt_ctxt = mgmt_state_t::thread_context();
+    auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(uuid);
+
+    if (uuid_obj == nullptr) {
+        // Invalid UUID in get request
+        throw Error (std::string("BGP PeerAF get with invalid key ").
+                     append(uuid.str()), SDK_RET_ENTRY_NOT_FOUND);
+    } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER_AF) {
+        // BGP Peer Update - Fill keys
+        bgp_peer_af_fill_keys_(req, (bgp_peer_af_uuid_obj_t*)uuid_obj);
+    } else {
+        // Venice may use the same UUID for multiple protos
+        // BGP Global, Peer and PeerAF
+        // in which case it will fill the appropriate keys
+        // and the UUID need not be created or deleted
+        SDK_TRACE_VERBOSE("Received BGP PeerAF get request with UUID type %s",
+                          uuid_obj_type_str(uuid_obj->obj_type()));
+    }
+}
 NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, bool op_update)

@@ -321,16 +321,16 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool op_del=false) {
         localaddr->set_v4addr(0);
     }
 
-    if (lo) {
-        // Disable IP
+    if (!lo) {
+        // Enable IP
         proto_spec->set_afi(pds::BGP_AFI_IPV4);
         proto_spec->set_safi(pds::BGP_SAFI_UNICAST);
     } else {
-        // Disable EVPN
+        // Enable EVPN
         proto_spec->set_afi(pds::BGP_AFI_L2VPN);
         proto_spec->set_safi(pds::BGP_SAFI_EVPN);
     }
-    proto_spec->set_disable(true);
+    proto_spec->set_disable(false);
     proto_spec->set_nexthopself(false);
     proto_spec->set_defaultorig(false);
 

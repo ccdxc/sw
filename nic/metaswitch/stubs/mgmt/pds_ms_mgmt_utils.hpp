@@ -151,6 +151,9 @@ NBB_VOID
 bgp_peer_afi_safi_pre_set(pds::BGPPeerAfSpec &req, NBB_LONG row_status,
                           NBB_ULONG correlator, bool op_update=false);
 
+NBB_VOID bgp_peer_pre_get(pds::BGPPeerSpec &req, pds::BGPPeerGetResponse* resp);
+NBB_VOID bgp_peer_afi_safi_pre_get(pds::BGPPeerAfSpec &req,
+                                   pds::BGPPeerAfGetResponse* resp);
 NBB_VOID bgp_peer_status_get_fill_func (pds::BGPPeerStatus& req,
                                         NBB_ULONG*          oid);
 

@@ -332,7 +332,7 @@ static void create_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
     }
 }
 
-static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, bool def_origin=false) {
+static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
     BGPPeerAfRequest  request;
     BGPPeerAfResponse response;
     ClientContext   context;
@@ -362,28 +362,23 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false, boo
         localaddr->set_v4addr(0);
     }
 
-    if (lo) {
-        // Disable IP
+    if (!lo) {
+        // Enable IP
         proto_spec->set_afi(pds::BGP_AFI_IPV4);
         proto_spec->set_safi(pds::BGP_SAFI_UNICAST);
     } else {
-        if (def_origin) {
-        proto_spec->set_afi(pds::BGP_AFI_IPV4);
-        proto_spec->set_safi(pds::BGP_SAFI_UNICAST);
-        } else {
-        // Disable EVPN
+        // Enable EVPN
         proto_spec->set_afi(pds::BGP_AFI_L2VPN);
         proto_spec->set_safi(pds::BGP_SAFI_EVPN);
-        }
     }
-    if (def_origin) {
+    if (g_node_id == 2 && !lo) {
         printf ("Enabling default originate in BGP on C2 to DUT for IPv4 AF\n");
         proto_spec->set_defaultorig(true);
-        proto_spec->set_disable(false);
     } else {
-        proto_spec->set_disable(true);
         proto_spec->set_defaultorig(false);
     }
+
+    proto_spec->set_disable(false);
     proto_spec->set_nexthopself(false);
 
     printf ("Pushing BGP %s Peer AF proto...\n", (lo) ? "Overlay" : "Underlay" );
@@ -655,13 +650,6 @@ int main(int argc, char** argv)
             create_bgp_peer_af_proto_grpc();
             create_bgp_peer_proto_grpc(false, true /* second peer */);
             create_bgp_peer_af_proto_grpc(false, true);
-            if (g_node_id == 2) {
-                /* Originate default route in BGP on C2 */
-                create_bgp_peer_af_proto_grpc(false /* underlay */, false /* first */,
-                                              true /* def_orig */);
-                create_bgp_peer_af_proto_grpc(false /* underlay */, true /* second */,
-                                              true /* def_orig */);
-            }
             sleep(5);
         }
         if (g_node_id == 1 || g_node_id == 3) {

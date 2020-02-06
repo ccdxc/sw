@@ -238,6 +238,9 @@ message BGPPeerAfSpec {
   BGPSafi         Safi        = 5 [(venice.pdsaFields) = {Field: "safi",  SetKeyOidIndex: "AMB_BGP_PAS_SAFI_INDEX", GetKeyOidIndex: "AMB_BGP_PAST_SAFI_INDEX"}];
   // disable adress family. IPv4-unicast and l2vpn-evpn address families
   // are enabled by default
+  // TODO: Disable field should become "internal-only" field once auto-gen support for this special case is added
+  // create/update should set Disable field to false
+  // delete should set Disable field to true
   bool            Disable     = 6 [(venice.pdsaFields) = {Field: "disable_afi_safi"}];
   // enforce this router to set self as next-hop for advertised routes
   bool            NexthopSelf = 7 [(venice.pdsaFields) = {Field: "next_hop_self"}];

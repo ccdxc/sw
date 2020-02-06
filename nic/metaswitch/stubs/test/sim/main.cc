@@ -121,9 +121,9 @@ pds_ms_sim_test_bgp_update ()
     localaddr = bgp_peer_af.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(0);
-    bgp_peer_af.set_afi(pds::BGP_AFI_L2VPN);
-    bgp_peer_af.set_safi(pds::BGP_SAFI_EVPN);
-    bgp_peer_af.set_disable(true);
+    bgp_peer_af.set_afi(pds::BGP_AFI_IPV4);
+    bgp_peer_af.set_safi(pds::BGP_SAFI_UNICAST);
+    bgp_peer_af.set_disable(false);
     bgp_peer_af.set_nexthopself(false);
     bgp_peer_af.set_defaultorig(false);
 
@@ -174,9 +174,9 @@ pds_ms_sim_test_overlay_bgp_update ()
     localaddr = bgp_peer_af.mutable_localaddr();
     localaddr->set_af(types::IP_AF_INET);
     localaddr->set_v4addr(g_test_conf.local_lo_ip_addr);
-    bgp_peer_af.set_afi(pds::BGP_AFI_IPV4);
-    bgp_peer_af.set_safi(pds::BGP_SAFI_UNICAST);
-    bgp_peer_af.set_disable(true);
+    bgp_peer_af.set_afi(pds::BGP_AFI_L2VPN);
+    bgp_peer_af.set_safi(pds::BGP_SAFI_EVPN);
+    bgp_peer_af.set_disable(false);
     bgp_peer_af.set_nexthopself(false);
     bgp_peer_af.set_defaultorig(false);
 
