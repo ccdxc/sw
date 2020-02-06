@@ -18,6 +18,7 @@ import (
 
 func setupMaster(t *testing.T) (*mock.LeaderService, types.SystemdService, *mock.CfgWatcherService, types.MasterService) {
 	env.Options = &options.ServerRunOptions{} // use empty options so that we don't bind to fixed ports
+	ClusterStatusUpdateInterval = time.Second
 	l := mock.NewLeaderService(t.Name())
 	s := NewSystemdService(WithSysIfSystemdSvcOption(&mock.SystemdIf{}))
 	n := NewNtpService(nil, []string{t.Name()}, t.Name())
@@ -147,7 +148,6 @@ func TestMasterServiceSetStatusOnLeadershipWin(t *testing.T) {
 func TestMasterServiceSetStatusOnConfigWatch(t *testing.T) {
 	t.Parallel()
 	l, s, cw, m := setupMaster(t)
-	ClusterStatusUpdateInterval = time.Second
 
 	s.Start()
 	l.Start() // node t.Name() will always become the leader. refer mock leader service
