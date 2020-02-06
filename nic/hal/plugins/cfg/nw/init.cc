@@ -210,8 +210,7 @@ nw_thread_init (int tid)
         return;
 
     // Init periodic timer for session garbage collection
-    if ((hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT) &&
-        (hal::g_hal_cfg.device_cfg.forwarding_mode != HAL_FORWARDING_MODE_CLASSIC))
+    if (hal::g_hal_cfg.features != hal::HAL_FEATURE_SET_GFT)
         HAL_ABORT(hal::session_init(&hal::g_hal_cfg) == HAL_RET_OK);
 
     return;

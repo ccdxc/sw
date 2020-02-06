@@ -7,10 +7,12 @@ import pdb
 GRACE_TIME = 5
 
 def Setup(tc):
+    tc.resp = None
+    tc.config_update_fail = 0
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pairs = api.GetLocalWorkloadPairs()
+    pairs = api.GetLocalWorkloadPairs(naples=True)
     tc.cmd_cookies = []
     server,client  = pairs[0]
     naples = server
@@ -39,7 +41,6 @@ def Trigger(tc):
         basecmd = 'iperf -u -p %d ' % server_port
         proto   = 17
         timeout_str = 'udp-drop'
-
     #Step 0: Update the timeout in the config object
     update_timeout(timeout_str, tc.iterators.timeout)
     update_sgpolicy(client.ip_address, server.ip_address, tc.iterators.proto, server_port)
@@ -51,12 +52,13 @@ def Trigger(tc):
     for command in profcommandresp.commands:
         api.PrintCommandResults(command)
     timeout = get_haltimeout(timeout_str, cmd)
-    tc.config_update_fail = 0
+    api.Logger.info("Hal timeout %s, tc timeout %s" % (timeout, timetoseconds(tc.iterators.timeout)))
     if (timeout != timetoseconds(tc.iterators.timeout)):
+        api.Logger.errror("Found mismatch in HAL and testcase timeout")
         tc.config_update_fail = 1
-    timeout += GRACE_TIME
-    api.Logger.info("Hal timeout %s" % (timeout))
+        return api.types.status.FAILURE
 
+    timeout += GRACE_TIME
     cmd_cookie = "iperf -s"
     api.Trigger_AddCommand(req, server.node_name, server.workload_name,
                            "%s -s -t 300 " % basecmd, background = True)
@@ -89,6 +91,7 @@ def Trigger(tc):
 
 def Verify(tc):
     if tc.resp is None:
+        api.Logger.error("Empty response")
         return api.types.status.FAILURE
 
     result = api.types.status.SUCCESS
@@ -98,6 +101,7 @@ def Verify(tc):
         grep_cmd = "UDP"
 
     if tc.config_update_fail == 1:
+        api.Logger.error("Updating timeout failed.")
         return api.types.status.FAILURE
 
     for cmd in tc.resp.commands:

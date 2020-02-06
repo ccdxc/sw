@@ -18,7 +18,10 @@ setup:
     config  :
         - step : utils.cleanup
         - step : testcases.penctl.install
-        - step : config.venice.mode_switch_hostpin
+        - step : config.netagent.mode_switch
+          args :
+               fwd_mode    : "USEG"
+               policy_Mode : "ENFORCED"
         - step : config.netagent.hw_push_config
           args :
              spec : scale_cfg_1vrf_1nw_2ep_2rep.cfgyml
@@ -41,7 +44,7 @@ testbundles:
         - flowstats/flowstats.testbundle
         - tcp_proxy/tcp_proxy.testbundle
         - networking/upgrade.testbundle
-        - networking/telemetry.testbundle
+        #- networking/telemetry.testbundle
         - linktest/linktest.testbundle
         - firewall/policy.testbundle
         - aging/aging.testbundle

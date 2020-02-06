@@ -173,13 +173,15 @@ def DeleteWorkloads(req):
         del __gl_workloads[wl.workload_name]
     return
 
-def GetLocalWorkloadPairs():
+def GetLocalWorkloadPairs(naples=False):
     pairs = []
     for w1 in GetWorkloads():
         for w2 in GetWorkloads():
             if id(w1) == id(w2): continue
             if w1.uplink_vlan != w2.uplink_vlan: continue
             if w1.node_name == w2.node_name:
+                if naples and not w1.IsNaples():
+                    continue
                 pairs.append((w1, w2))
     return pairs
 

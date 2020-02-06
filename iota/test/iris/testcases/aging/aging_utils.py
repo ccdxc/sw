@@ -178,7 +178,6 @@ def get_tickleinfo(cmd):
 
 def get_haltimeout(timeout, cmd):
     yaml_out = yaml.load_all(cmd.stdout, Loader=yaml.FullLoader)
-    print(type(yaml_out))
     for data in yaml_out:
         if data is not None:
            if (timeout == 'tcp-timeout'):

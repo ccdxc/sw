@@ -197,8 +197,8 @@ def DeleteWorkloads(req, skip_store=False):
 def GetWorkloads(node = None):
     return store.GetWorkloads(node)
 
-def GetLocalWorkloadPairs():
-    return store.GetLocalWorkloadPairs()
+def GetLocalWorkloadPairs(naples=False):
+    return store.GetLocalWorkloadPairs(naples=naples)
 
 def GetRemoteWorkloadPairs():
     return store.GetRemoteWorkloadPairs()

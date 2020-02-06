@@ -14,7 +14,7 @@ def Setup(tc):
     return api.types.status.SUCCESS
 
 def Trigger(tc):
-    pairs = api.GetLocalWorkloadPairs()
+    pairs = api.GetLocalWorkloadPairs(naples=True)
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     tc.cmd_cookies = []
 
