@@ -357,27 +357,6 @@ p4pd_nacl_stats_init (void)
 }
 
 static hal_ret_t
-p4pd_l4_profile_init (void)
-{
-    hal_ret_t                ret;
-    sdk_ret_t                sdk_ret;
-    directmap                *dm;
-    l4_profile_actiondata_t    data = { 0 };
-
-    dm = g_hal_state_pd->dm_table(P4TBL_ID_L4_PROFILE);
-    SDK_ASSERT(dm != NULL);
-    sdk_ret = dm->insert_withid(&data, L4_PROF_DEFAULT_ENTRY);
-    ret = hal_sdk_ret_to_hal_ret(sdk_ret);
-    if (ret != HAL_RET_OK) {
-        HAL_TRACE_ERR("L4 profile table write failure, idx : 0, err : {}",
-                      ret);
-        return ret;
-    }
-
-    return HAL_RET_OK;
-}
-
-static hal_ret_t
 p4pd_flow_info_init (void)
 {
     hal_ret_t               ret;
@@ -1597,7 +1576,6 @@ p4pd_table_defaults_init (p4pd_def_cfg_t *p4pd_def_cfg)
     // initialize all P4 ingress tables with default entries, if any
     SDK_ASSERT(p4pd_input_mapping_native_init(p4pd_def_cfg) == HAL_RET_OK);
     SDK_ASSERT(p4pd_input_mapping_tunneled_init(p4pd_def_cfg) == HAL_RET_OK);
-    // SDK_ASSERT(p4pd_l4_profile_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_flow_info_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_session_state_init() == HAL_RET_OK);
     SDK_ASSERT(p4pd_flow_stats_init() == HAL_RET_OK);

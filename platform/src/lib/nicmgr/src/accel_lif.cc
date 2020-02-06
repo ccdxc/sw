@@ -2140,13 +2140,15 @@ AccelLif::accel_ring_info_get_all(void)
 void
 AccelLif::accel_ring_info_del_all(void)
 {
+#ifdef NICMGR_DELPHI_METRICS_ENABLE
     uint32_t    ring_handle;
     uint32_t    sub_ring;
+#endif
 
     auto iter = rgroup_map.begin();
     while (iter != rgroup_map.end()) {
-         accel_rgroup_ring_t& rgroup_ring = iter->second;
 #ifdef NICMGR_DELPHI_METRICS_ENABLE
+         accel_rgroup_ring_t& rgroup_ring = iter->second;
          if (rgroup_ring.delphi_metrics) {
              accel_rgroup_ring_key_extract(iter->first, ring_handle, sub_ring);
              NIC_LOG_DEBUG("{}: deleting delphi_metrics ring {} "
@@ -2156,7 +2158,6 @@ AccelLif::accel_ring_info_del_all(void)
              rgroup_ring.delphi_metrics.reset();
          }
 #endif
-
          iter = rgroup_map.erase(iter);
     }
     accel_rgroup_rings_del();

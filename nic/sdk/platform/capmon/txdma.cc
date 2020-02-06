@@ -131,7 +131,7 @@ ptd_read_counters(int verbose)
                   cnt, 3);
     uint64_t phv_cnt =
         CAP_PTD_CSR_CNT_MA_CNT_MA_0_3_SOP_31_0_GET(cnt[0]) |
-        (CAP_PTD_CSR_CNT_MA_CNT_MA_1_3_SOP_39_32_GET(cnt[1]) << 32);
+        ((uint64_t)(CAP_PTD_CSR_CNT_MA_CNT_MA_1_3_SOP_39_32_GET(cnt[1])) << 32);
 
     // Number of PHVs recirculated
     pal_reg_rd32w(CAP_ADDR_BASE_PT_PT_OFFSET +
@@ -139,7 +139,7 @@ ptd_read_counters(int verbose)
                   cnt, 3);
     uint64_t resub_cnt =
         CAP_PTD_CSR_CNT_NPV_RESUB_CNT_NPV_RESUB_0_3_SOP_31_0_GET(cnt[0]) |
-        (CAP_PTD_CSR_CNT_NPV_RESUB_CNT_NPV_RESUB_1_3_SOP_39_32_GET(cnt[1]) << 32);
+        ((uint64_t)(CAP_PTD_CSR_CNT_NPV_RESUB_CNT_NPV_RESUB_1_3_SOP_39_32_GET(cnt[1])) << 32);
 
     // Number of packets transmitted
     pal_reg_rd32w(CAP_ADDR_BASE_PT_PT_OFFSET +
@@ -147,7 +147,7 @@ ptd_read_counters(int verbose)
                   cnt, 3);
     uint64_t pb_cnt =
         CAP_PTD_CSR_CNT_PB_CNT_PB_0_3_SOP_31_0_GET(cnt[0]) |
-        (CAP_PTD_CSR_CNT_PB_CNT_PB_1_3_SOP_39_32_GET(cnt[1]) << 32);
+        ((uint64_t)(CAP_PTD_CSR_CNT_PB_CNT_PB_1_3_SOP_39_32_GET(cnt[1])) << 32);
 
     for (i = 0; i < polls; i++) {
         // FIFO Status

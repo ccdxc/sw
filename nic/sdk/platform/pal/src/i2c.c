@@ -52,7 +52,7 @@ static int pal_i2c_read(const uint8_t *buffer, uint32_t size,
         msgs[0].addr = slaveaddr;
         msgs[0].flags = 0;
         msgs[0].len = n;
-        msgs[0].buf = &wbuf;
+        msgs[0].buf = wbuf;
 
         msgs[1].addr = slaveaddr;
         msgs[1].flags = I2C_M_RD | I2C_M_NOSTART;
