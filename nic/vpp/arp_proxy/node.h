@@ -35,7 +35,7 @@ typedef enum
 // ARP proxy exit node
 #define foreach_arp_proxy_exit_counter                      \
     _(BUILD_P4_HDR, "Build P4 header" )                     \
-    _(DROP, "error" )                                       \
+    _(VNIC_MISSING_DROP, "vnic non-existing in vpp" )       \
 
 #define foreach_arp_proxy_exit_next                         \
     _(INTF_OUT, "interface-tx" )                            \

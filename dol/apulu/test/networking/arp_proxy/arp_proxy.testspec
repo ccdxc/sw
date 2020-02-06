@@ -10,10 +10,14 @@ packets:
         id          : FROM_HOST_PKT
         payloadsize : ref://factory/payloads/id=PAYLOAD_ZERO64/size
         template    : ref://factory/packets/id=ETH_ARP
+        encaps      : callback://networking/packets/GetEncapForARP
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
                 dst     : ff:ff:ff:ff:ff:ff
+            outerqtag:
+                vlan    : 0
+                prio    : 0
             qtag:
                 vlan    : ref://testcase/config/localmapping/VNIC/VlanId
             arp:
@@ -21,7 +25,7 @@ packets:
                 hwsrc   : ref://testcase/config/localmapping/VNIC/MACAddr
                 hwdst   : 00:00:00:00:00:00
                 psrc    : ref://testcase/config/localmapping/IP
-                pdst    : ref://testcase/config/remotemapping/IP
+                pdst    : callback://networking/packets/GetDstIpForARP
             payload:
                 data    : ref://factory/payloads/id=PAYLOAD_ZERO64/data
 

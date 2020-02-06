@@ -609,10 +609,42 @@ def GetUnderlayRemoteMac(testcase, args=None):
     mac = nh.underlayMACAddr.get()
     return mac
 
-def GetRingFromMapping(testcase, args):
+def GetRingFromMapping(testcase, args=None):
     if args.type == "remote":
         hostIf = testcase.config.remotemapping.VNIC.SUBNET.HostIf
     else:
         hostIf = testcase.config.localmapping.VNIC.SUBNET.HostIf
     return hostIf.lif.GetQt(args.qid)
 
+def GetSrcMacInArpReply(testcase, packet, args):
+    if args.type == "subnet":
+        return testcase.config.localmapping.VNIC.SUBNET.VirtualRouterMACAddr
+    else:
+        return testcase.config.remotemapping.MACAddr
+
+def GetEncapForARP(testcase, packet):
+    vlan_encap = None
+    encaps = []
+    if testcase.config.localmapping.VNIC.dot1Qenabled:
+        vlan_encap = infra_api.GetPacketTemplate('ENCAP_QTAG')
+    elif testcase.config.localmapping.VNIC.QinQenabled:
+        vlan_encap = infra_api.GetPacketTemplate('ENCAP_QINQ')
+    else:
+        return encaps
+    encaps.append(vlan_encap)
+    return encaps
+
+def __get_type_val(modargs):
+    return __get_module_args_value(modargs, "type")
+
+def GetDstIpForARP(testcase, packet, args=None):
+    if "NO_MAPPING" in testcase.module.name:
+# select a dst ip which is not in mapping table
+        return testcase.config.devicecfg.IP
+    type = __get_type_val(testcase.module.args)
+    if type == "outside_subnet":
+        pfx = testcase.config.localmapping.VNIC.SUBNET.IPPrefix[1]
+        nextpfx = str(pfx.broadcast_address + 2)
+        return nextpfx
+    else:
+        return testcase.config.remotemapping.IP

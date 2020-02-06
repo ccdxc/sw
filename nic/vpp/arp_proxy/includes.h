@@ -11,6 +11,7 @@
 #include <vnet/plugin/plugin.h>
 #include <arp_proxy.h>
 #include <mapping.h>
+#include <vnic.h>
 #include <pkt.h>
 #include "node.h"
 

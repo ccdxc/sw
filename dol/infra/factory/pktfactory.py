@@ -67,7 +67,7 @@ class PacketHeaderFields(objects.FrameworkObject):
 
         if objects.IsAutoField(data):
             return None
-        
+
         if objects.IsReference(data):
             # This will be resolved in 2nd phase.
             return data
@@ -97,7 +97,6 @@ class PacketHeaderFields(objects.FrameworkObject):
             elif isinstance(data, list):
                 self.__build_list(data, testcase, packet)
         return
-       
 
     def Build(self, testcase, packet):
         self.__build(self, testcase, packet)
@@ -197,22 +196,22 @@ class Packet(objects.FrameworkObject):
         self.__get_packet_base(tc, pktspec)
         self.encaps = []
         self.__get_packet_encaps(tc, pktspec)
-        
+
         self.spec = pktspec
         self.__get_payload_size(tc)
 
         self.GID(self.spec.id)
         self.__process(tc)
-        
+
         self.spktobj    = None
         self.rawbytes   = None
         self.size       = None
         self.pendol     = pktspec.pendol or self.pendol
         return
-    
+
     def GetPcap(self):
         return self.pktspec.pcap
-    
+
     def IsDolHeaderRequired(self):
         return self.pendol
 
@@ -233,9 +232,9 @@ class Packet(objects.FrameworkObject):
             self.basepkt = basepkt
 
             # Special handling for ICRC inheritance.
-            # ICRC is not carried in the hdrsorder metadata, 
-            # hence it must be explicitly inherited. Current 'icrc' 
-            # knob is used to calculate new icrc for this packet. 
+            # ICRC is not carried in the hdrsorder metadata,
+            # hence it must be explicitly inherited. Current 'icrc'
+            # knob is used to calculate new icrc for this packet.
             # Hence adding a new knob for inherit case.
             self.inherit_icrc = False
             if self.basepkt.icrc is True and pktspec.icrc is False:
@@ -280,7 +279,7 @@ class Packet(objects.FrameworkObject):
     def SetStepId(self, step_id):
         #self.headers.pendol.step_id = step_id
         return
-    
+
     def GetPayloadSize(self):
         return self.payloadsize
     def GetPaddingSize(self):
@@ -304,7 +303,7 @@ class Packet(objects.FrameworkObject):
             size = spec_size.get()
         else:
             size = spec_size
-        
+
         self.payloadsize = size
         return
 

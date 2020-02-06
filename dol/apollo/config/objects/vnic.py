@@ -81,6 +81,7 @@ class VnicObject(base.ConfigObjectBase):
         # get num of policies [0-5] in rrob order if needed
         self.__numpolicy = ResmgrClient[node].NumVnicPolicyAllocator.rrnext() if self.__attachpolicy else 0
         self.dot1Qenabled = getattr(spec, 'tagged', True)
+        self.QinQenabled = False
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
         self.Show()

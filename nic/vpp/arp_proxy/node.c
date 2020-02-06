@@ -38,11 +38,17 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     mac_addr_t vr_mac;
     u32 bd_id = 0;
     bool remote = FALSE; // knob based on config for arp-proxy
+                         // set based on device cfg
     u32 dst_addr;
+    u16 vnic_id;
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
-    bd_id = (pds_ingress_bd_id_get(p4_rx_meta));
-    vnet_buffer(p0)->pds_arp_data.vnic_id = pds_vnic_id_get(p4_rx_meta);
+    bd_id = pds_ingress_bd_id_get(p4_rx_meta);
+    vnic_id = pds_vnic_id_get(p4_rx_meta);
+    if (PREDICT_FALSE(!is_vnic_present(vnic_id))) {
+        goto error;
+    }
+    vnet_buffer(p0)->pds_arp_data.vnic_id = vnic_id;
     if (PREDICT_FALSE(!(offset = pds_arp_pkt_offset_get(p4_rx_meta))))
         goto error;
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
@@ -50,6 +56,10 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
+        // TODO take vr mac from vnic
+        // if vnic is null, drop it
+        // make sure the dst addr is in the same subnet
+        // remote flag - reset based on device config
         pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst_addr);
 
         // Ethernet
@@ -91,9 +101,9 @@ error:
 }
 
 static uword
-arp_proxy (vlib_main_t * vm,
-           vlib_node_runtime_t * node,
-           vlib_frame_t * from_frame)
+arp_proxy (vlib_main_t *vm,
+           vlib_node_runtime_t *node,
+           vlib_frame_t *from_frame)
 {
     u32 counter[ARP_PROXY_COUNTER_LAST] = {0};
 
@@ -196,26 +206,41 @@ VLIB_INIT_FUNCTION (arp_proxy_init) =
 
 vlib_node_registration_t exit_node;
 
+always_inline void
+arp_proxy_exit_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
+{
+    u16 vnic_id;
+
+    vnic_id = vnet_buffer(p)->pds_arp_data.vnic_id;
+    if (PREDICT_FALSE(!is_vnic_present(vnic_id))) {
+        *next = ARP_PROXY_NEXT_DROP;
+        counter[ARP_PROXY_EXIT_COUNTER_VNIC_MISSING_DROP]++;
+    } else {
+        arp_proxy_exit_internal_x1(p, vnic_id);
+        *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+        counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR]++;
+    }
+}
+
 static uword
-arp_proxy_exit (vlib_main_t * vm,
-                vlib_node_runtime_t * node,
-                vlib_frame_t * from_frame)
+arp_proxy_exit (vlib_main_t *vm,
+                vlib_node_runtime_t *node,
+                vlib_frame_t *from_frame)
 {
     u32 counter[ARP_PROXY_COUNTER_LAST] = {0};
 
     PDS_PACKET_LOOP_START {
 
         PDS_PACKET_DUAL_LOOP_START (WRITE, WRITE) {
-            arp_proxy_exit_internal_x2(PDS_PACKET_BUFFER(0),
-                                       PDS_PACKET_BUFFER(1));
-            *PDS_PACKET_NEXT_NODE_PTR(0) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-            *PDS_PACKET_NEXT_NODE_PTR(1) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-            counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR] += 2;
+            arp_proxy_exit_internal(PDS_PACKET_BUFFER(0),
+                                    PDS_PACKET_NEXT_NODE_PTR(0), counter);
+            arp_proxy_exit_internal(PDS_PACKET_BUFFER(1),
+                                    PDS_PACKET_NEXT_NODE_PTR(1), counter);
         } PDS_PACKET_DUAL_LOOP_END;
+
         PDS_PACKET_SINGLE_LOOP_START {
-            arp_proxy_exit_internal_x1(PDS_PACKET_BUFFER(0));
-            *PDS_PACKET_NEXT_NODE_PTR(0) = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-            counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR] += 1;
+            arp_proxy_exit_internal(PDS_PACKET_BUFFER(0),
+                                    PDS_PACKET_NEXT_NODE_PTR(0), counter);
         } PDS_PACKET_SINGLE_LOOP_END;
 
     } PDS_PACKET_LOOP_END;

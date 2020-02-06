@@ -7,11 +7,41 @@ feature:
     module      : networking
     runorder    : 15000
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
     - module:
-        name    : IPV4_ARP_PROXY
+        name    : IPV4_ARP_PROXY_NO_VLAN
         spec    : arp_proxy.testspec
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+
+    - module:
+        name    : IPV4_ARP_PROXY_SINGLE_VLAN
+        spec    : arp_proxy.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+        ignore   : True
+
+    - module:
+        name    : IPV4_ARP_PROXY_DOUBLE_VLAN
+        spec    : arp_proxy.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+        ignore   : True
+
+    - module:
+        name    : IPV4_ARP_PROXY_NO_MAPPING_ENTRY
+        spec    : arp_proxy.testspec
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+        ignore   : True
+
+    - module:
+        name    : IPV4_ARP_PROXY_OUTSIDE_SUBNET
+        spec    : arp_proxy.testspec
+        args    :
+            - type      : outside_subnet
+        iterate :
+            - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
+        ignore   : True
