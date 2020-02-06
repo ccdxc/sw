@@ -8,6 +8,7 @@ mount -t hugetlbfs nodev /dev/hugepages
 #VPP Partial init env variables
 export NIC_DIR=/nic/
 export HAL_CONFIG_PATH=$NIC_DIR/conf/
+export CONFIG_PATH=$NIC_DIR/conf/
 
 ulimit -c unlimited
 

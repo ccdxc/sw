@@ -13,6 +13,7 @@ mount -t hugetlbfs nodev /dev/hugepages
 
 #VPP Partial init env variables
 export HAL_CONFIG_PATH=$NICDIR/conf/
+export CONFIG_PATH=$NICDIR/conf/
 export ZMQ_SOC_DIR=$NICDIR
 #This is used in DPDK to chosing DESC/Pkt buffer memory pool
 export DPDK_SIM_APP_ID=1
