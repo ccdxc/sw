@@ -129,14 +129,19 @@ func (v *VCHub) createProbe(config *orchestration.Orchestrator) {
 }
 
 // Destroy tears down VCHub instance
-func (v *VCHub) Destroy() {
+func (v *VCHub) Destroy(cleanRemote bool) {
 	// Teardown probe and store
 	v.Log.Infof("Destroying VCHub....")
-	v.cancel()
 
-	v.Wg.Wait()
 	// Clearing probe/session state after all routines finish
 	// so that a thread in the middle of writing doesn't get a nil client
+	if cleanRemote {
+		v.Log.Infof("Cleaning up state on VCenter.")
+		v.deleteAllDVS()
+	}
+	v.cancel()
+	v.Wg.Wait()
+
 	v.probe.ClearState()
 	v.Log.Infof("VCHub Destroyed")
 }
@@ -144,8 +149,30 @@ func (v *VCHub) Destroy() {
 // UpdateConfig handles if the Orchestrator config has changed
 func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
 	// Restart vchub
-	v.Destroy()
+	v.Destroy(false)
 	v.setupVCHub(v.StateMgr, v.OrchConfig, v.Log, v.opts...)
+}
+
+// deleteAllDVS cleans up all the PensandoDVS present in the DCs within the VC deployment
+func (v *VCHub) deleteAllDVS() {
+	v.DcMapLock.Lock()
+	defer v.DcMapLock.Unlock()
+
+	for _, dc := range v.DcMap {
+		if v.ForceDCname != "" && dc.Name != v.ForceDCname {
+			log.Infof("Skipping deletion of DVS from %v.", v.ForceDCname)
+			continue
+		}
+
+		dc.Lock()
+		for _, penDVS := range dc.DvsMap {
+			err := v.probe.RemovePenDVS(dc.Name, penDVS.DvsName)
+			if err != nil {
+				log.Errorf("Failed deleting DVS %v in DC %v. Err : %v", penDVS.DvsName, dc.Name, err)
+			}
+		}
+		dc.Unlock()
+	}
 }
 
 // Sync handles an instance manager request to reqsync the inventory

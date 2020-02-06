@@ -56,6 +56,7 @@ type ProbeInf interface {
 	GetPenDVS(dcName, dvsName string) (*object.DistributedVirtualSwitch, error)
 	UpdateDVSPortsVlan(dcName, dvsName string, portsSetting PenDVSPortSettings) error
 	GetPenDVSPorts(dcName, dvsName string, criteria *types.DistributedVirtualSwitchPortCriteria) ([]types.DistributedVirtualPort, error)
+	RemovePenDVS(dcName, dvsName string) error
 
 	// Tag methods
 	TagObjAsManaged(ref types.ManagedObjectReference) error

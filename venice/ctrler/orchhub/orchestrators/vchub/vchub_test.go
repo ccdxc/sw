@@ -91,7 +91,7 @@ func TestVCWrite(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	defer func() {
-		vchub.Destroy()
+		vchub.Destroy(false)
 		defer s.Destroy()
 	}()
 
@@ -284,5 +284,5 @@ func TestVCHub(t *testing.T) {
 	// Wait for vchub to restart
 	time.Sleep(3 * time.Second)
 
-	vchub.Destroy()
+	vchub.Destroy(false)
 }

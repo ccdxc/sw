@@ -106,7 +106,7 @@ func TestVCSyncPG(t *testing.T) {
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 
 	vchub.Sync()
 
@@ -204,7 +204,7 @@ func TestVCSyncHost(t *testing.T) {
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
@@ -381,7 +381,7 @@ func TestVCSyncVM(t *testing.T) {
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
 
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 	dc1, err := s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 	logger.Infof("Creating PenDC for %s\n", dc1.Obj.Reference().Value)
@@ -416,7 +416,7 @@ func TestVCSyncVM(t *testing.T) {
 	pg1, err := mockProbe.GetPenPG(dc1.Obj.Name, createPGName("pg1"))
 	AssertOk(t, err, "failed to get pg")
 
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 
 	// Setting up VMs
 	vmExistingPort := "10"
@@ -654,7 +654,7 @@ func TestSyncVmkNics(t *testing.T) {
 		}
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 
 	// Add DC
 	dc, err := s.AddDC(defaultTestParams.TestDCName)

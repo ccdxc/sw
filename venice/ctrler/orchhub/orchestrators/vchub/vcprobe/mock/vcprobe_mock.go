@@ -249,6 +249,18 @@ func (mr *MockProbeInfMockRecorder) GetPenDVSPorts(dcName, dvsName, criteria int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenDVSPorts", reflect.TypeOf((*MockProbeInf)(nil).GetPenDVSPorts), dcName, dvsName, criteria)
 }
 
+// RemovePenDVS mocks base method
+func (m *MockProbeInf) RemovePenDVS(dcName, dvsName string) error {
+	ret := m.ctrl.Call(m, "RemovePenDVS", dcName, dvsName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePenDVS indicates an expected call of RemovePenDVS
+func (mr *MockProbeInfMockRecorder) RemovePenDVS(dcName, dvsName interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePenDVS", reflect.TypeOf((*MockProbeInf)(nil).RemovePenDVS), dcName, dvsName)
+}
+
 // TagObjAsManaged mocks base method
 func (m *MockProbeInf) TagObjAsManaged(ref types.ManagedObjectReference) error {
 	ret := m.ctrl.Call(m, "TagObjAsManaged", ref)

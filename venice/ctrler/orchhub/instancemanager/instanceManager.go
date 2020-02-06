@@ -15,7 +15,9 @@ import (
 // Orchestrator is the interface all orchestrator components
 // must implement in order to be managed by instance manager
 type Orchestrator interface {
-	Destroy()
+	// cleanRemote controls if the objects on the remote server
+	// are to be cleaned up when Destroy is called
+	Destroy(cleanRemote bool)
 	UpdateConfig(*orchestration.Orchestrator)
 	Sync()
 }
@@ -129,7 +131,7 @@ func (w *InstanceManager) handleConfigEvent(evtType kvstore.WatchEventType, conf
 		if !ok {
 			return
 		}
-		orchInst.Destroy()
+		orchInst.Destroy(true)
 		delete(w.orchestratorMap, config.GetKey())
 	}
 }

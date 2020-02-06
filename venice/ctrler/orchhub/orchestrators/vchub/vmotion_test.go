@@ -71,7 +71,7 @@ func TestVmotion(t *testing.T) {
 		}
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
-	defer vchub.Destroy()
+	defer vchub.Destroy(false)
 
 	// Add DC
 	dc, err := s.AddDC(defaultTestParams.TestDCName)
