@@ -679,10 +679,11 @@ int ionic_eq_alloc(struct ionic *ionic, int index)
 	ionic_intr_mask_assert(ionic->idev.intr_ctrl, eq->intr.index,
 			       IONIC_INTR_MASK_SET);
 
-	eq->intr.cpu = index % num_online_cpus();
-	if (cpu_online(eq->intr.cpu))
-		cpumask_set_cpu(eq->intr.cpu,
-				&eq->intr.affinity_mask);
+	/* try to get the irq on the local numa node first */
+	eq->intr.cpu = cpumask_local_spread(eq->intr.index,
+					    dev_to_node(ionic->dev));
+	if (eq->intr.cpu != -1)
+		cpumask_set_cpu(eq->intr.cpu, &eq->intr.affinity_mask);
 
 	eq->ring[0].gen_color = 1;
 	eq->ring[0].base = dma_alloc_coherent(ionic->dev, ring_bytes,

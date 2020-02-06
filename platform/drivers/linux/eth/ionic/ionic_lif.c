@@ -518,10 +518,11 @@ static int ionic_qcq_alloc(struct ionic_lif *lif, unsigned int type,
 		ionic_intr_mask_assert(idev->intr_ctrl, new->intr.index,
 				       IONIC_INTR_MASK_SET);
 
-		new->intr.cpu = new->intr.index % num_online_cpus();
-		if (cpu_online(new->intr.cpu))
-			cpumask_set_cpu(new->intr.cpu,
-					&new->intr.affinity_mask);
+		/* try to get the irq on the local numa node first */
+		new->intr.cpu = cpumask_local_spread(new->intr.index,
+						     dev_to_node(dev));
+		if (new->intr.cpu != -1)
+			cpumask_set_cpu(new->intr.cpu, &new->intr.affinity_mask);
 	} else {
 		new->intr.index = IONIC_INTR_INDEX_NOT_ASSIGNED;
 	}
@@ -1292,6 +1293,7 @@ static int ionic_set_nic_features(struct ionic_lif *lif,
 	u64 vlan_flags = ETH_HW_VLAN_TX_TAG |
 			 ETH_HW_VLAN_RX_STRIP |
 			 ETH_HW_VLAN_RX_FILTER;
+	u64 old_hw_features;
 	int err;
 
 	ctx.cmd.lif_setattr.features = ionic_netdev_features_to_nic(features);
@@ -1299,8 +1301,12 @@ static int ionic_set_nic_features(struct ionic_lif *lif,
 	if (err)
 		return err;
 
+	old_hw_features = lif->hw_features;
 	lif->hw_features = le64_to_cpu(ctx.cmd.lif_setattr.features &
 				       ctx.comp.lif_setattr.features);
+
+	if ((old_hw_features ^ lif->hw_features) & ETH_HW_RX_HASH)
+		ionic_lif_rss_config(lif, lif->rss_types, NULL, NULL);
 
 	if ((vlan_flags & features) &&
 	    !(vlan_flags & le64_to_cpu(ctx.comp.lif_setattr.features)))
@@ -1592,13 +1598,15 @@ int ionic_lif_rss_config(struct ionic_lif *lif, const u16 types,
 		.cmd.lif_setattr = {
 			.opcode = CMD_OPCODE_LIF_SETATTR,
 			.attr = IONIC_LIF_ATTR_RSS,
-			.rss.types = cpu_to_le16(types),
 			.rss.addr = cpu_to_le64(lif->rss_ind_tbl_pa),
 		},
 	};
 	unsigned int i, tbl_sz;
 
-	lif->rss_types = types;
+	if (lif->hw_features & ETH_HW_RX_HASH) {
+		lif->rss_types = types;
+		ctx.cmd.lif_setattr.rss.types = cpu_to_le16(types);
+	}
 
 	if (key)
 		memcpy(lif->rss_hash_key, key, IONIC_RSS_HASH_KEY_SIZE);
@@ -3023,48 +3031,6 @@ static int ionic_station_set(struct ionic_lif *lif)
 	return 0;
 }
 
-static int ionic_lif_init_queues(struct ionic_lif *lif)
-{
-	int err;
-
-	err = ionic_lif_adminq_init(lif);
-	if (err)
-		goto err_out_adminq_deinit;
-
-	if (is_master_lif(lif) && lif->ionic->nnqs_per_lif) {
-		err = ionic_lif_notifyq_init(lif);
-		if (err)
-			goto err_out_notifyq_deinit;
-	}
-
-	err = ionic_init_nic_features(lif);
-	if (err)
-		goto err_out_notifyq_deinit;
-
-	err = ionic_rx_filters_init(lif);
-	if (err)
-		goto err_out_notifyq_deinit;
-
-	err = ionic_station_set(lif);
-	if (err)
-		goto err_out_notifyq_deinit;
-
-	lif->rx_copybreak = rx_copybreak;
-
-	set_bit(IONIC_LIF_F_INITED, lif->state);
-
-	INIT_WORK(&lif->tx_timeout_work, ionic_tx_timeout_work);
-
-	return 0;
-
-err_out_notifyq_deinit:
-	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
-err_out_adminq_deinit:
-	ionic_lif_qcq_deinit(lif, lif->adminqcq);
-
-	return err;
-}
-
 static int ionic_lif_init(struct ionic_lif *lif)
 {
 	struct ionic_dev *idev = &lif->ionic->idev;
@@ -3126,15 +3092,40 @@ static int ionic_lif_init(struct ionic_lif *lif)
 
 	ionic_debugfs_add_lif(lif);
 
-	err = ionic_lif_init_queues(lif);
-	if (err) {
-		dev_err(dev, "Cannot init LIF queues: %d, aborting\n", err);
-		goto err_out_free_eqs;
+	err = ionic_lif_adminq_init(lif);
+	if (err)
+		goto err_out_adminq_deinit;
+
+	if (is_master_lif(lif) && lif->ionic->nnqs_per_lif) {
+		err = ionic_lif_notifyq_init(lif);
+		if (err)
+			goto err_out_notifyq_deinit;
 	}
+
+	err = ionic_init_nic_features(lif);
+	if (err)
+		goto err_out_notifyq_deinit;
+
+	err = ionic_rx_filters_init(lif);
+	if (err)
+		goto err_out_notifyq_deinit;
+
+	err = ionic_station_set(lif);
+	if (err)
+		goto err_out_notifyq_deinit;
+
+	lif->rx_copybreak = rx_copybreak;
+
+	set_bit(IONIC_LIF_F_INITED, lif->state);
+
+	INIT_WORK(&lif->tx_timeout_work, ionic_tx_timeout_work);
 
 	return 0;
 
-err_out_free_eqs:
+err_out_notifyq_deinit:
+	ionic_lif_qcq_deinit(lif, lif->notifyqcq);
+err_out_adminq_deinit:
+	ionic_lif_qcq_deinit(lif, lif->adminqcq);
 	ionic_eqs_deinit(lif->ionic);
 	ionic_eqs_free(lif->ionic);
 err_out_free_dbid:
