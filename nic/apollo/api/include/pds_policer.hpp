@@ -18,7 +18,8 @@
 /// \defgroup PDS_POLICER Policer API
 /// @{
 
-#define PDS_POLICER_ID_INVALID    0     ///< invalid policer id
+/// invalid policer key
+#define PDS_POLICER_ID_INVALID    k_pds_obj_key_invalid
 #define PDS_MAX_TX_POLICER        1024
 #define PDS_MAX_RX_POLICER        1024
 #define PDS_MAX_POLICER           (PDS_MAX_TX_POLICER + PDS_MAX_RX_POLICER)

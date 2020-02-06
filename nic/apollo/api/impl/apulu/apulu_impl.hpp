@@ -352,27 +352,38 @@ sdk_ret_t program_lif_table(uint16_t lif_hw_id, uint8_t lif_type,
                                     PDS_POLICER_MAX_TOKENS_PER_INTERVAL,       \
                                     &rate_tokens, &burst_tokens);              \
         SDK_ASSERT_RETURN((ret == SDK_RET_OK), ret);                           \
-        memcpy(tbl ## _data.tbl ## _info.burst, &burst_tokens,                 \
-               std::min(sizeof(tbl ## _data.tbl ## _info.burst),               \
-                        sizeof(burst_tokens)));                                \
-        memcpy(tbl ## _data.tbl ## _info.rate, &rate_tokens,                   \
-               std::min(sizeof(tbl ## _data.tbl ## _info.rate),                \
-                        sizeof(rate_tokens)));                                 \
-        memcpy(tbl ## _data.tbl ## _info.tbkt, &burst_tokens,                  \
-               std::min(sizeof(tbl ## _data.tbl ## _info.tbkt),                \
-               sizeof(burst_tokens)));                                         \
+        tbl ## _data.tbl ## _info.burst[0] = burst_tokens & 0xff;              \
+        tbl ## _data.tbl ## _info.burst[1] = (burst_tokens >> 8) & 0xff;       \
+        tbl ## _data.tbl ## _info.burst[2] = (burst_tokens >> 16) & 0xff;      \
+        tbl ## _data.tbl ## _info.burst[3] = (burst_tokens >> 24) & 0xff;      \
+        tbl ## _data.tbl ## _info.burst[4] = (burst_tokens >> 32) & 0xff;      \
+                                                                               \
+        tbl ## _data.tbl ## _info.rate[0] = rate_tokens & 0xff;                \
+        tbl ## _data.tbl ## _info.rate[1] = (rate_tokens >> 8) & 0xff;         \
+        tbl ## _data.tbl ## _info.rate[2] = (rate_tokens >> 16) & 0xff;        \
+        tbl ## _data.tbl ## _info.rate[3] = (rate_tokens >> 24) & 0xff;        \
+        tbl ## _data.tbl ## _info.rate[4] = (rate_tokens >> 32) & 0xff;        \
+                                                                               \
+        tbl ## _data.tbl ## _info.tbkt[0] = burst_tokens & 0xff;               \
+        tbl ## _data.tbl ## _info.tbkt[1] = (burst_tokens >> 8) & 0xff;        \
+        tbl ## _data.tbl ## _info.tbkt[2] = (burst_tokens >> 16) & 0xff;       \
+        tbl ## _data.tbl ## _info.tbkt[3] = (burst_tokens >> 24) & 0xff;       \
+        tbl ## _data.tbl ## _info.tbkt[4] = (burst_tokens >> 32) & 0xff;       \
     }                                                                          \
-    memset(&tbl ## _data_mask.tbl ## _info, 0xFF,                              \
-           sizeof(tbl ## _data_mask.tbl ## _info));                            \
-    tbl ## _data_mask.tbl ## _info.rsvd = 0;                                   \
-    tbl ## _data_mask.tbl ## _info.axi_wr_pend = 0;                            \
     if (upd) {                                                                 \
+        memset(&tbl ## _data_mask.tbl ## _info, 0xFF,                          \
+               sizeof(tbl ## _data_mask.tbl ## _info));                        \
+        tbl ## _data_mask.tbl ## _info.rsvd = 0;                               \
+        tbl ## _data_mask.tbl ## _info.axi_wr_pend = 0;                        \
         memset(tbl ## _data_mask.tbl ## _info.tbkt, 0,                         \
                sizeof(tbl ## _data_mask.tbl ## _info.tbkt));                   \
+        p4pd_ret = p4pd_global_entry_write_with_datamask(tid, idx, NULL, NULL, \
+                                                         &tbl ## _data,        \
+                                                         &tbl ## _data_mask);  \
+    } else {                                                                   \
+        p4pd_ret = p4pd_global_entry_write(tid, idx, NULL, NULL,               \
+                                           &tbl ## _data);                     \
     }                                                                          \
-    p4pd_ret = p4pd_global_entry_write_with_datamask(tid, idx,                 \
-                                                     NULL, NULL, &tbl ## _data,\
-                                                     &tbl ## _data_mask);      \
     if (p4pd_ret != P4PD_SUCCESS) {                                            \
         PDS_TRACE_ERR("Failed to write to tbl %u table at idx %u", tid, idx);  \
         return sdk::SDK_RET_HW_PROGRAM_ERR;                                    \

@@ -19,6 +19,12 @@
 
 namespace api {
 
+typedef struct policer_update_ctxt_s {
+    policer_entry *policer;
+    api_obj_ctxt_t *obj_ctxt;
+    uint64_t upd_bmap;
+} __PACK__ policer_update_ctxt_t;
+
 policer_entry::policer_entry() {
     ht_ctxt_.reset();
     impl_ = NULL;
@@ -168,12 +174,41 @@ policer_entry::del_from_db(void) {
 
 sdk_ret_t
 policer_entry::update_db(api_base *orig_obj, api_obj_ctxt_t *obj_ctxt) {
-    return sdk::SDK_RET_INVALID_OP;
+    if (policer_db()->remove((policer_entry *)orig_obj)) {
+        return policer_db()->insert(this);
+    }
+    return SDK_RET_ENTRY_NOT_FOUND;
 }
 
 sdk_ret_t
 policer_entry::delay_delete(void) {
     return delay_delete_to_slab(PDS_SLAB_ID_POLICER, this);
 }
+
+static bool
+vnic_upd_walk_cb_ (void *api_obj, void *ctxt)
+{
+    vnic_entry *vnic;
+    policer_update_ctxt_t *upd_ctxt = (policer_update_ctxt_t *)ctxt;
+
+    vnic = (vnic_entry *)api_framework_obj((api_base *)api_obj);
+    if ((vnic->policer(PDS_POLICER_DIR_INGRESS) == upd_ctxt->policer->key()) ||
+        (vnic->policer(PDS_POLICER_DIR_EGRESS) == upd_ctxt->policer->key())) {
+        api_obj_add_to_deps(OBJ_ID_VNIC, upd_ctxt->obj_ctxt->api_op,
+                            (api_base *)api_obj, upd_ctxt->upd_bmap);
+    }
+    return false;
+}
+
+sdk_ret_t
+policer_entry::add_deps(api_obj_ctxt_t *obj_ctxt) {
+    policer_update_ctxt_t upd_ctxt = { 0 };
+
+    upd_ctxt.policer = this;
+    upd_ctxt.obj_ctxt = obj_ctxt;
+    upd_ctxt.upd_bmap = PDS_VNIC_UPD_POLICER;
+    return vnic_db()->walk(vnic_upd_walk_cb_, &upd_ctxt);
+}
+
 
 }    // namespace api

@@ -14,6 +14,7 @@
 #include "nic/sdk/lib/ht/ht.hpp"
 #include "nic/apollo/framework/api_base.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/apollo/api/include/pds_policer.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 
 namespace api {
@@ -31,6 +32,7 @@ class vnic_state;
 // a route table change on subnet can affect vnic's programming
 // TODO: revisit and see if there is a better way to handle this
 #define PDS_VNIC_UPD_ROUTE_TABLE         0x20
+#define PDS_VNIC_UPD_POLICER             0x40
 
 /// \defgroup PDS_VNIC_ENTRY - vnic functionality
 /// \ingroup PDS_VNIC
@@ -218,6 +220,18 @@ public:
         return v6_meter_;
     }
 
+    /// \brief     return ingress/egress policer of this vnic
+    /// \param[in] dir    traffic direction
+    /// \return    key of the meter policy being applied
+    pds_obj_key_t policer(uint8_t dir) {
+        if (dir == PDS_POLICER_DIR_INGRESS) {
+            return rx_policer_;
+        } else if (dir == PDS_POLICER_DIR_EGRESS) {
+            return tx_policer_;
+        }
+        return PDS_POLICER_ID_INVALID;
+    }
+
     /// \brief     return vnic encap information of vnic
     /// \return    vnic encap type and value
     pds_encap_t vnic_encap(void) { return vnic_encap_; }
@@ -317,22 +331,24 @@ private:
     bool          switch_vnic_;     ///< TRUE if this is switch vnic
     mac_addr_t    mac_;             ///< MAC address of this vnic
     pds_obj_key_t host_if_;         ///< PF/VF this vnic is behind
-    ///< number of ingress IPv4 policies
+    /// number of ingress IPv4 policies
     uint8_t       num_ing_v4_policy_;
-    ///< ingress IPv4 policies
+    /// ingress IPv4 policies
     pds_obj_key_t ing_v4_policy_[PDS_MAX_VNIC_POLICY];
-    ///< number of ingress IPv6 policies
+    /// number of ingress IPv6 policies
     uint8_t       num_ing_v6_policy_;
-    ///< ingress IPv6 policies
+    /// ingress IPv6 policies
     pds_obj_key_t ing_v6_policy_[PDS_MAX_VNIC_POLICY];
-    ///< number of egress IPv4 policies
+    /// number of egress IPv4 policies
     uint8_t       num_egr_v4_policy_;
-    ///< egress IPv4 policies
+    /// egress IPv4 policies
     pds_obj_key_t egr_v4_policy_[PDS_MAX_VNIC_POLICY];
-    ///< number of egress IPv6 policies
+    /// number of egress IPv6 policies
     uint8_t       num_egr_v6_policy_;
-    ///< egress IPv6 policies
+    /// egress IPv6 policies
     pds_obj_key_t egr_v6_policy_[PDS_MAX_VNIC_POLICY];
+    pds_obj_key_t tx_policer_;       ///< egress policer index
+    pds_obj_key_t rx_policer_;       ///< ingress policer index
     ht_ctxt_t     ht_ctxt_;          ///< hash table context
     impl_base     *impl_;            ///< impl object instance
 

@@ -118,6 +118,8 @@ vnic_entry::init_config(api_ctxt_t *api_ctxt) {
     subnet_ = spec->subnet;
     v4_meter_ = spec->v4_meter;
     v6_meter_ = spec->v6_meter;
+    rx_policer_ = spec->rx_policer;
+    tx_policer_ = spec->tx_policer;
     vnic_encap_ = spec->vnic_encap;
     if (unlikely((vnic_encap_.type != PDS_ENCAP_TYPE_NONE) &&
                  (vnic_encap_.type != PDS_ENCAP_TYPE_DOT1Q))) {
@@ -250,6 +252,10 @@ vnic_entry::compute_update(api_obj_ctxt_t *obj_ctxt) {
     }
     if (host_if_ != spec->host_if) {
         obj_ctxt->upd_bmap |= PDS_VNIC_UPD_HOST_IFINDEX;
+    }
+    if ((rx_policer_ != spec->rx_policer) ||
+        (tx_policer_ != spec->tx_policer)) {
+        obj_ctxt->upd_bmap |= PDS_VNIC_UPD_POLICER;
     }
     PDS_TRACE_DEBUG("vnic %s upd bmap 0x%lx", key_.str(), obj_ctxt->upd_bmap);
     return SDK_RET_OK;

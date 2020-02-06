@@ -447,6 +447,11 @@ sdk_ret_t pds_policer_create(pds_policer_spec_s *spec,
     return SDK_RET_OK;
 }
 
+sdk_ret_t pds_policer_delete(pds_obj_key_t *key,
+                             pds_batch_ctxt_t bctxt) {
+    return SDK_RET_OK;
+}
+
 sdk_ret_t pds_svc_mapping_create(pds_svc_mapping_spec_s *spec,
                                  pds_batch_ctxt_t bctxt) {
     return SDK_RET_OK;
