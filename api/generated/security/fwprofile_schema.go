@@ -55,12 +55,14 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"api-version":                  api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
 			"drop-timeout":                 api.CLIInfo{Path: "Spec.DropTimeout", Skip: false, Insert: "", Help: ""},
 			"generation-id":                api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"icmp-active-session-limit":    api.CLIInfo{Path: "Spec.IcmpActiveSessionLimit", Skip: false, Insert: "", Help: ""},
 			"icmp-drop-timeout":            api.CLIInfo{Path: "Spec.ICMPDropTimeout", Skip: false, Insert: "", Help: ""},
 			"icmp-timeout":                 api.CLIInfo{Path: "Spec.IcmpTimeout", Skip: false, Insert: "", Help: ""},
 			"kind":                         api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
 			"labels":                       api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
 			"name":                         api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
 			"namespace":                    api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"other-active-session-limit":   api.CLIInfo{Path: "Spec.OtherActiveSessionLimit", Skip: false, Insert: "", Help: ""},
 			"resource-version":             api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
 			"self-link":                    api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
 			"session-idle-timeout":         api.CLIInfo{Path: "Spec.SessionIdleTimeout", Skip: false, Insert: "", Help: ""},
@@ -68,8 +70,10 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"tcp-connection-setup-timeout": api.CLIInfo{Path: "Spec.TCPConnectionSetupTimeout", Skip: false, Insert: "", Help: ""},
 			"tcp-drop-timeout":             api.CLIInfo{Path: "Spec.TCPDropTimeout", Skip: false, Insert: "", Help: ""},
 			"tcp-half-closed-timeout":      api.CLIInfo{Path: "Spec.TCPHalfClosedTimeout", Skip: false, Insert: "", Help: ""},
+			"tcp-half-open-session-limit":  api.CLIInfo{Path: "Spec.TcpHalfOpenSessionLimit", Skip: false, Insert: "", Help: ""},
 			"tcp-timeout":                  api.CLIInfo{Path: "Spec.TcpTimeout", Skip: false, Insert: "", Help: ""},
 			"tenant":                       api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"udp-active-session-limit":     api.CLIInfo{Path: "Spec.UdpActiveSessionLimit", Skip: false, Insert: "", Help: ""},
 			"udp-drop-timeout":             api.CLIInfo{Path: "Spec.UDPDropTimeout", Skip: false, Insert: "", Help: ""},
 			"udp-timeout":                  api.CLIInfo{Path: "Spec.UdpTimeout", Skip: false, Insert: "", Help: ""},
 			"uuid":                         api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
@@ -99,6 +103,14 @@ var typesMapFwprofile = map[string]*api.Struct{
 			"UdpTimeout": api.Field{Name: "UdpTimeout", CLITag: api.CLIInfo{ID: "udp-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "udp-timeout", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"IcmpTimeout": api.Field{Name: "IcmpTimeout", CLITag: api.CLIInfo{ID: "icmp-timeout", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-timeout", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TcpHalfOpenSessionLimit": api.Field{Name: "TcpHalfOpenSessionLimit", CLITag: api.CLIInfo{ID: "tcp-half-open-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tcp-half-open-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"UdpActiveSessionLimit": api.Field{Name: "UdpActiveSessionLimit", CLITag: api.CLIInfo{ID: "udp-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "udp-active-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"IcmpActiveSessionLimit": api.Field{Name: "IcmpActiveSessionLimit", CLITag: api.CLIInfo{ID: "icmp-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-active-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"OtherActiveSessionLimit": api.Field{Name: "OtherActiveSessionLimit", CLITag: api.CLIInfo{ID: "other-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "other-active-session-limit", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
 		},
 	},
 	"security.FirewallProfileStatus": &api.Struct{

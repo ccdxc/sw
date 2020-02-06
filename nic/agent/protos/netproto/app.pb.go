@@ -134,6 +134,7 @@
 		SecurityProfile
 		SecurityProfileSpec
 		Timeouts
+		RateLimits
 		SecurityProfileStatus
 		SecurityProfileList
 		SecurityProfileEvent

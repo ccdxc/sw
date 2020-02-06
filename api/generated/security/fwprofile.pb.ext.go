@@ -92,14 +92,18 @@ func (m *FirewallProfileSpec) Defaults(ver string) bool {
 	default:
 		m.DropTimeout = "60s"
 		m.ICMPDropTimeout = "60s"
+		m.IcmpActiveSessionLimit = 0
 		m.IcmpTimeout = "6s"
+		m.OtherActiveSessionLimit = 0
 		m.SessionIdleTimeout = "90s"
 		m.TCPCloseTimeout = "15s"
 		m.TCPConnectionSetupTimeout = "30s"
 		m.TCPDropTimeout = "90s"
 		m.TCPHalfClosedTimeout = "120s"
+		m.TcpHalfOpenSessionLimit = 0
 		m.TcpTimeout = "3600s"
 		m.UDPDropTimeout = "60s"
+		m.UdpActiveSessionLimit = 0
 		m.UdpTimeout = "30s"
 	}
 	return ret
@@ -285,10 +289,34 @@ func init() {
 		m := i.(*FirewallProfileSpec)
 		args := make([]string, 0)
 		args = append(args, "0")
+		args = append(args, "128000")
+
+		if err := validators.IntRange(m.IcmpActiveSessionLimit, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"IcmpActiveSessionLimit", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FirewallProfileSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
 		args = append(args, "0")
 
 		if err := validators.Duration(m.IcmpTimeout, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"IcmpTimeout", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FirewallProfileSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "128000")
+
+		if err := validators.IntRange(m.OtherActiveSessionLimit, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"OtherActiveSessionLimit", err.Error())
 		}
 		return nil
 	})
@@ -357,6 +385,18 @@ func init() {
 		m := i.(*FirewallProfileSpec)
 		args := make([]string, 0)
 		args = append(args, "0")
+		args = append(args, "128000")
+
+		if err := validators.IntRange(m.TcpHalfOpenSessionLimit, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"TcpHalfOpenSessionLimit", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FirewallProfileSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
 		args = append(args, "0")
 
 		if err := validators.Duration(m.TcpTimeout, args); err != nil {
@@ -373,6 +413,18 @@ func init() {
 
 		if err := validators.Duration(m.UDPDropTimeout, args); err != nil {
 			return fmt.Errorf("%v failed validation: %s", path+"."+"UDPDropTimeout", err.Error())
+		}
+		return nil
+	})
+
+	validatorMapFwprofile["FirewallProfileSpec"]["all"] = append(validatorMapFwprofile["FirewallProfileSpec"]["all"], func(path string, i interface{}) error {
+		m := i.(*FirewallProfileSpec)
+		args := make([]string, 0)
+		args = append(args, "0")
+		args = append(args, "128000")
+
+		if err := validators.IntRange(m.UdpActiveSessionLimit, args); err != nil {
+			return fmt.Errorf("%v failed validation: %s", path+"."+"UdpActiveSessionLimit", err.Error())
 		}
 		return nil
 	})

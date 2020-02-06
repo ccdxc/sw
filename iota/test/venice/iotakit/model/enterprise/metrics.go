@@ -182,3 +182,47 @@ func (sm *SysModel) QueryMetrics(kind, name, timestr string, count int32) (*tele
 
 	return result, err
 }
+
+func (sm *SysModel) QueryMetricsFields(kind, timestr string) (*telemetryclient.MetricsQueryResponse, error) {
+	ctx, err := sm.VeniceLoggedInCtx(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	tmcs, err := sm.TelemetryClient()
+	if err != nil {
+		return nil, err
+	}
+	stime := &api.Timestamp{}
+	stime.Parse(timestr)
+
+	// build the query
+	query := &telemetry_query.MetricsQueryList{
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+		Queries: []*telemetry_query.MetricsQuerySpec{
+			{
+				TypeMeta: api.TypeMeta{
+					Kind: kind,
+				},
+				StartTime:    stime,
+				GroupbyField: "reporterID",
+				Pagination: &telemetry_query.PaginationSpec{
+					Count: 1,
+				},
+			},
+		},
+	}
+
+	log.Debugf("Sending metrics fields query: %+v", query.Queries[0])
+
+	var result *telemetryclient.MetricsQueryResponse
+	for _, tmc := range tmcs {
+		result, err = tmc.Metrics(ctx, query)
+		if err == nil {
+			break
+		}
+	}
+
+	return result, err
+}

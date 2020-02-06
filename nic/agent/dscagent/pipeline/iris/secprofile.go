@@ -134,7 +134,11 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 		udpTimeout,
 		udpDropTimeout,
 		icmpTimeout,
-		icmpDropTimeout uint32
+		icmpDropTimeout,
+		tcpHalfOpenSessionLimit,
+		udpActiveSessionLimit,
+		icmpActiveSessionLimit,
+		otherActiveSessionLimit uint32
 	)
 
 	timeouts := profile.Spec.Timeouts
@@ -241,6 +245,15 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 		}
 	}
 
+	rateLimits := profile.Spec.RateLimits
+
+	if rateLimits != nil {
+		tcpHalfOpenSessionLimit = uint32(rateLimits.TcpHalfOpenSessionLimit)
+		udpActiveSessionLimit = uint32(rateLimits.UdpActiveSessionLimit)
+		icmpActiveSessionLimit = uint32(rateLimits.IcmpActiveSessionLimit)
+		otherActiveSessionLimit = uint32(rateLimits.OtherActiveSessionLimit)
+	}
+
 	return &halapi.SecurityProfileRequestMsg{
 		Request: []*halapi.SecurityProfileSpec{
 			{
@@ -257,6 +270,12 @@ func convertSecurityProfile(profile netproto.SecurityProfile) *halapi.SecurityPr
 				UdpDropTimeout:       udpDropTimeout,
 				IcmpTimeout:          icmpTimeout,
 				IcmpDropTimeout:      icmpDropTimeout,
+
+				// user configured session limits
+				TcpHalfOpenSessionLimit: tcpHalfOpenSessionLimit,
+				UdpActiveSessionLimit:   udpActiveSessionLimit,
+				IcmpActiveSessionLimit:  icmpActiveSessionLimit,
+				OtherActiveSessionLimit: otherActiveSessionLimit,
 
 				// Defaults Enables
 				TcpTsNotPresentDrop:    true,

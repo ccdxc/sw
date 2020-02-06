@@ -104,6 +104,7 @@ type ObjectIntf interface {
 	LinkUpEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection
 	LinkDownEventsSince(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection
 	ServiceStoppedEvents(since time.Time, npc *objects.NaplesCollection) *objects.EventsCollection
+	NewFirewallProfile(name string) *objects.FirewallProfileCollection
 }
 
 //NaplesActionIntf All actions related to naples

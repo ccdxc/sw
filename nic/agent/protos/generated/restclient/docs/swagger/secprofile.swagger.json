@@ -446,6 +446,32 @@
         }
       }
     },
+    "netprotoRateLimits": {
+      "type": "object",
+      "properties": {
+        "tcp-half-open-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Tcp Half OpenSession Limit."
+        },
+        "udp-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Udp Active Session Limit."
+        },
+        "icmp-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Icmp Active Session Limit."
+        },
+        "other-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Other Active Session Limit."
+        }
+      },
+      "description": "RateLimits for security profile in x units."
+    },
     "netprotoSecurityProfile": {
       "type": "object",
       "properties": {
@@ -515,6 +541,10 @@
         "timeouts": {
           "$ref": "#/definitions/netprotoTimeouts",
           "description": "Timeouts for the security profile."
+        },
+        "rate-limits": {
+          "$ref": "#/definitions/netprotoRateLimits",
+          "description": "Rate limits for the security profile."
         }
       },
       "description": "SecurityProfileSpec captures all the security profile configuration."

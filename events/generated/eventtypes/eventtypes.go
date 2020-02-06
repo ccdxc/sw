@@ -433,6 +433,62 @@ func init() {
 		Desc:       "Configuration failed",
 		SuppressMM: false}
 
+	eventTypes[TCP_HALF_OPEN_SESSION_LIMIT_APPROACH] = &EventTypeAttributes{
+		EType:      TCP_HALF_OPEN_SESSION_LIMIT_APPROACH.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "TCP Session Limit approaching",
+		SuppressMM: false}
+
+	eventTypes[TCP_HALF_OPEN_SESSION_LIMIT_REACHED] = &EventTypeAttributes{
+		EType:      TCP_HALF_OPEN_SESSION_LIMIT_REACHED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "TCP Session Limit reached",
+		SuppressMM: false}
+
+	eventTypes[UDP_ACTIVE_SESSION_LIMIT_APPROACH] = &EventTypeAttributes{
+		EType:      UDP_ACTIVE_SESSION_LIMIT_APPROACH.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "UDP Session Limit approaching",
+		SuppressMM: false}
+
+	eventTypes[UDP_ACTIVE_SESSION_LIMIT_REACHED] = &EventTypeAttributes{
+		EType:      UDP_ACTIVE_SESSION_LIMIT_REACHED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "UDP Session Limit reached",
+		SuppressMM: false}
+
+	eventTypes[ICMP_ACTIVE_SESSION_LIMIT_APPROACH] = &EventTypeAttributes{
+		EType:      ICMP_ACTIVE_SESSION_LIMIT_APPROACH.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "ICMP Session Limit approaching",
+		SuppressMM: false}
+
+	eventTypes[ICMP_ACTIVE_SESSION_LIMIT_REACHED] = &EventTypeAttributes{
+		EType:      ICMP_ACTIVE_SESSION_LIMIT_REACHED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "ICMP Session Limit reached",
+		SuppressMM: false}
+
+	eventTypes[OTHER_ACTIVE_SESSION_LIMIT_APPROACH] = &EventTypeAttributes{
+		EType:      OTHER_ACTIVE_SESSION_LIMIT_APPROACH.String(),
+		Severity:   "warn",
+		Category:   "cluster",
+		Desc:       "OTHER Session Limit approaching",
+		SuppressMM: false}
+
+	eventTypes[OTHER_ACTIVE_SESSION_LIMIT_REACHED] = &EventTypeAttributes{
+		EType:      OTHER_ACTIVE_SESSION_LIMIT_REACHED.String(),
+		Severity:   "critical",
+		Category:   "cluster",
+		Desc:       "OTHER Session Limit reached",
+		SuppressMM: false}
+
 }
 
 func GetEventTypeAttrs(eType EventType) *EventTypeAttributes {

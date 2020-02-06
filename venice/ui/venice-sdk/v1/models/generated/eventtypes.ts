@@ -29,6 +29,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'ELECTION_STARTED',
     'ELECTION_STOPPED',
     'HOST_DSC_SPEC_CONFLICT',
+    'ICMP_ACTIVE_SESSION_LIMIT_APPROACH',
+    'ICMP_ACTIVE_SESSION_LIMIT_REACHED',
     'LEADER_CHANGED',
     'LEADER_ELECTED',
     'LEADER_LOST',
@@ -38,6 +40,8 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'NODE_HEALTHY',
     'NODE_JOINED',
     'NODE_UNREACHABLE',
+    'OTHER_ACTIVE_SESSION_LIMIT_APPROACH',
+    'OTHER_ACTIVE_SESSION_LIMIT_REACHED',
     'PASSWORD_CHANGED',
     'PASSWORD_RESET',
     'QUORUM_MEMBER_ADD',
@@ -45,6 +49,10 @@ export const categoryToEventType: { [cat: string]: string[] } = {
     'QUORUM_MEMBER_REMOVE',
     'QUORUM_MEMBER_UNHEALTHY',
     'QUORUM_UNHEALTHY',
+    'TCP_HALF_OPEN_SESSION_LIMIT_APPROACH',
+    'TCP_HALF_OPEN_SESSION_LIMIT_REACHED',
+    'UDP_ACTIVE_SESSION_LIMIT_APPROACH',
+    'UDP_ACTIVE_SESSION_LIMIT_REACHED',
     'UNSUPPORTED_QUORUM_SIZE',
   ],
   config: [
@@ -174,6 +182,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.warn,
       "Desc": "The system has detected a conflict between the DSC specifications of different Host objects",
   },
+  'ICMP_ACTIVE_SESSION_LIMIT_APPROACH' : {
+      "Name": "ICMP_ACTIVE_SESSION_LIMIT_APPROACH",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "ICMP Session Limit approaching",
+  },
+  'ICMP_ACTIVE_SESSION_LIMIT_REACHED' : {
+      "Name": "ICMP_ACTIVE_SESSION_LIMIT_REACHED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "ICMP Session Limit reached",
+  },
   'LEADER_CHANGED' : {
       "Name": "LEADER_CHANGED",
       "Severity": EventsEvent_severity.info,
@@ -219,6 +237,16 @@ export const eventTypes: { [name: string]: EventType } = {
       "Severity": EventsEvent_severity.critical,
       "Desc": "Node is unreachable",
   },
+  'OTHER_ACTIVE_SESSION_LIMIT_APPROACH' : {
+      "Name": "OTHER_ACTIVE_SESSION_LIMIT_APPROACH",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "OTHER Session Limit approaching",
+  },
+  'OTHER_ACTIVE_SESSION_LIMIT_REACHED' : {
+      "Name": "OTHER_ACTIVE_SESSION_LIMIT_REACHED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "OTHER Session Limit reached",
+  },
   'PASSWORD_CHANGED' : {
       "Name": "PASSWORD_CHANGED",
       "Severity": EventsEvent_severity.warn,
@@ -253,6 +281,26 @@ export const eventTypes: { [name: string]: EventType } = {
       "Name": "QUORUM_UNHEALTHY",
       "Severity": EventsEvent_severity.critical,
       "Desc": "Quorum does not have enough healthy members",
+  },
+  'TCP_HALF_OPEN_SESSION_LIMIT_APPROACH' : {
+      "Name": "TCP_HALF_OPEN_SESSION_LIMIT_APPROACH",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "TCP Session Limit approaching",
+  },
+  'TCP_HALF_OPEN_SESSION_LIMIT_REACHED' : {
+      "Name": "TCP_HALF_OPEN_SESSION_LIMIT_REACHED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "TCP Session Limit reached",
+  },
+  'UDP_ACTIVE_SESSION_LIMIT_APPROACH' : {
+      "Name": "UDP_ACTIVE_SESSION_LIMIT_APPROACH",
+      "Severity": EventsEvent_severity.warn,
+      "Desc": "UDP Session Limit approaching",
+  },
+  'UDP_ACTIVE_SESSION_LIMIT_REACHED' : {
+      "Name": "UDP_ACTIVE_SESSION_LIMIT_REACHED",
+      "Severity": EventsEvent_severity.critical,
+      "Desc": "UDP Session Limit reached",
   },
   'UNSUPPORTED_QUORUM_SIZE' : {
       "Name": "UNSUPPORTED_QUORUM_SIZE",

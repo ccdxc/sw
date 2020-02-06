@@ -959,6 +959,38 @@
             "type": "string"
           },
           {
+            "name": "spec.tcp-half-open-session-limit",
+            "description": "Tcp half open session limit config after which new open requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.udp-active-session-limit",
+            "description": "Udp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.icmp-active-session-limit",
+            "description": "Icmp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.other-active-session-limit",
+            "description": "Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "propagation-status.generation-id",
             "description": "The Generation ID this status is for.",
             "in": "query",
@@ -3112,6 +3144,38 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "spec.tcp-half-open-session-limit",
+            "description": "Tcp half open session limit config after which new open requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.udp-active-session-limit",
+            "description": "Udp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.icmp-active-session-limit",
+            "description": "Icmp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "spec.other-active-session-limit",
+            "description": "Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           },
           {
             "name": "propagation-status.generation-id",
@@ -6557,7 +6621,11 @@
         "drop-timeout",
         "tcp-timeout",
         "udp-timeout",
-        "icmp-timeout"
+        "icmp-timeout",
+        "tcp-half-open-session-limit",
+        "udp-active-session-limit",
+        "icmp-active-session-limit",
+        "other-active-session-limit"
       ],
       "properties": {
         "session-idle-timeout": {
@@ -6625,6 +6693,34 @@
           "default": "6s",
           "example": "2h",
           "description": "Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration."
+        },
+        "tcp-half-open-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "default": "0",
+          "maximum": 128000,
+          "description": "Tcp half open session limit config after which new open requests will be dropped. Value should be between 0 and 128000."
+        },
+        "udp-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "default": "0",
+          "maximum": 128000,
+          "description": "Udp active session limit config after which new requests will be dropped. Value should be between 0 and 128000."
+        },
+        "icmp-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "default": "0",
+          "maximum": 128000,
+          "description": "Icmp active session limit config after which new requests will be dropped. Value should be between 0 and 128000."
+        },
+        "other-active-session-limit": {
+          "type": "integer",
+          "format": "int64",
+          "default": "0",
+          "maximum": 128000,
+          "description": "Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000."
         }
       },
       "description": "FirewallProfileSpec - spec part of FirewallProfile object."

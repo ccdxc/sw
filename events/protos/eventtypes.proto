@@ -304,5 +304,36 @@ enum EventTypes {
     CONFIG_FAIL                     = 801 [(category) = Config,
                                            (severity) = WARN,
                                            (desc)     = "Configuration failed"];
+    // ------------------------------ Session Limit events -------------------------- //
+    TCP_HALF_OPEN_SESSION_LIMIT_APPROACH      = 901 [(category) = Cluster,
+                                                     (severity) = WARN,
+                                                     (desc)     = "TCP Session Limit approaching"];
 
+    TCP_HALF_OPEN_SESSION_LIMIT_REACHED       = 902 [(category) = Cluster,
+                                                     (severity) = CRITICAL,
+                                                     (desc)     = "TCP Session Limit reached"];
+
+    UDP_ACTIVE_SESSION_LIMIT_APPROACH         = 903 [(category) = Cluster,
+                                                     (severity) = WARN,
+                                                     (desc)     = "UDP Session Limit approaching"];
+
+    UDP_ACTIVE_SESSION_LIMIT_REACHED          = 904 [(category) = Cluster,
+                                                     (severity) = CRITICAL,
+                                                     (desc)     = "UDP Session Limit reached"];
+
+    ICMP_ACTIVE_SESSION_LIMIT_APPROACH        = 905 [(category) = Cluster,
+                                                     (severity) = WARN,
+                                                     (desc)     = "ICMP Session Limit approaching"];
+
+    ICMP_ACTIVE_SESSION_LIMIT_REACHED         = 906 [(category) = Cluster,
+                                                     (severity) = CRITICAL,
+                                                     (desc)     = "ICMP Session Limit reached"];
+
+    OTHER_ACTIVE_SESSION_LIMIT_APPROACH       = 907 [(category) = Cluster,
+                                                     (severity) = WARN,
+                                                     (desc)     = "OTHER Session Limit approaching"];
+
+    OTHER_ACTIVE_SESSION_LIMIT_REACHED        = 908 [(category) = Cluster,
+                                                     (severity) = CRITICAL,
+                                                     (desc)     = "OTHER Session Limit reached"];
 }

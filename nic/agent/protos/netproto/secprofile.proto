@@ -51,6 +51,8 @@ message SecurityProfileSpec {
     repeated string AttachVrfs        = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "attach-vrfs,omitempty"];
     // Timeouts for the security profile
     Timeouts    Timeouts              = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "timeouts,omitempty"];
+	// Rate limits for the security profile
+	RateLimits  RateLimits            = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "rate-limits,omitempty"];
 }
 
 
@@ -90,6 +92,17 @@ message Timeouts {
     string ICMPDrop             = 11 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-drop,omitempty"];
 }
 
+// RateLimits for security profile in x units
+message RateLimits {
+	// Tcp Half OpenSession Limit
+	uint32 TcpHalfOpenSessionLimit  = 1 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "tcp-half-open-session-limit,omitempty"];
+	// Udp Active Session Limit
+	uint32 UdpActiveSessionLimit    = 2 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "udp-active-session-limit,omitempty"];
+	// Icmp Active Session Limit
+	uint32 IcmpActiveSessionLimit   = 3 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "icmp-active-session-limit,omitempty"];
+	// Other Active Session Limit
+	uint32 OtherActiveSessionLimit  = 4 [(gogoproto.nullable) = true, (gogoproto.jsontag) = "other-active-session-limit,omitempty"];
+}
 
 // SecurityProfileStatus captures the security profile status
 message SecurityProfileStatus {

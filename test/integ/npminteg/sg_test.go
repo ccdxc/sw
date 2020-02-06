@@ -547,6 +547,10 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 			TcpTimeout:                "3m",
 			UdpTimeout:                "3m",
 			IcmpTimeout:               "3m",
+			TcpHalfOpenSessionLimit:   20000,
+			UdpActiveSessionLimit:     20000,
+			IcmpActiveSessionLimit:    20000,
+			OtherActiveSessionLimit:   20000,
 		},
 	}
 
@@ -577,8 +581,14 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 		}, "Sg not found on agent", "10ms", it.pollTimeout())
 	}
 
+	// invalid range checks
+	fwp.Spec.TcpHalfOpenSessionLimit = 128001
+	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Update(context.Background(), &fwp)
+	Assert(c, err != nil, "Invalid range above 128000 must fail for SessionLimit")
+
 	// change conn track and session timeout
 	fwp.Spec.SessionIdleTimeout = "5m"
+	fwp.Spec.TcpHalfOpenSessionLimit = 128000
 	_, err = it.apisrvClient.SecurityV1().FirewallProfile().Update(context.Background(), &fwp)
 	AssertOk(c, err, "Error updating firewall profile")
 
@@ -591,7 +601,7 @@ func (it *integTestSuite) TestNpmFwProfileCreateDelete(c *C) {
 			}
 			secp, cerr := ag.dscAgent.PipelineAPI.HandleSecurityProfile(agentTypes.Get, profileMeta)
 
-			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) {
+			if (cerr != nil) || (secp[0].Spec.Timeouts.SessionIdle != fwp.Spec.SessionIdleTimeout) || (secp[0].Spec.RateLimits.TcpHalfOpenSessionLimit != fwp.Spec.TcpHalfOpenSessionLimit) {
 				return false, secp
 			}
 			return true, nil

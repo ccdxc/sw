@@ -293,6 +293,12 @@ func populatePreTestData(nagent *state.Nagent) (err error) {
 				ICMP:               "100ms",
 				ICMPDrop:           "1h10m15s",
 			},
+			RateLimits: &netproto.RateLimits{
+				TcpHalfOpenSessionLimit: 0,
+				UdpActiveSessionLimit:   0,
+				IcmpActiveSessionLimit:  0,
+				OtherActiveSessionLimit: 0,
+			},
 		},
 	}
 

@@ -22,6 +22,13 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "icmp-active-session-limit",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "icmp-drop-timeout",
 		Type:   "String",
 		Help:   "",
@@ -30,6 +37,13 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 	},
 	{
 		ID:     "icmp-timeout",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "other-active-session-limit",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,
@@ -71,7 +85,21 @@ var CreateFirewallProfileFlags = []gen.CliFlag{
 		Insert: "",
 	},
 	{
+		ID:     "tcp-half-open-session-limit",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
 		ID:     "tcp-timeout",
+		Type:   "String",
+		Help:   "",
+		Skip:   false,
+		Insert: "",
+	},
+	{
+		ID:     "udp-active-session-limit",
 		Type:   "String",
 		Help:   "",
 		Skip:   false,

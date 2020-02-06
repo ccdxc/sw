@@ -45,6 +45,10 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 			TcpTimeout:                "3m",
 			UdpTimeout:                "3m",
 			IcmpTimeout:               "3m",
+			TcpHalfOpenSessionLimit:   20000,
+			UdpActiveSessionLimit:     20000,
+			IcmpActiveSessionLimit:    20000,
+			OtherActiveSessionLimit:   20000,
 		},
 	}
 
@@ -127,6 +131,10 @@ func (it *veniceIntegSuite) TestFirewallProfile(c *C) {
 		AssertEquals(c, secp[0].Spec.Timeouts.UDPDrop, fwp.Spec.UDPDropTimeout, "incorrect params")
 		AssertEquals(c, secp[0].Spec.Timeouts.ICMP, fwp.Spec.IcmpTimeout, "incorrect params")
 		AssertEquals(c, secp[0].Spec.Timeouts.ICMPDrop, fwp.Spec.ICMPDropTimeout, "incorrect params")
+		AssertEquals(c, secp[0].Spec.RateLimits.TcpHalfOpenSessionLimit, fwp.Spec.TcpHalfOpenSessionLimit, "incorrect params")
+		AssertEquals(c, secp[0].Spec.RateLimits.UdpActiveSessionLimit, fwp.Spec.UdpActiveSessionLimit, "incorrect params")
+		AssertEquals(c, secp[0].Spec.RateLimits.IcmpActiveSessionLimit, fwp.Spec.IcmpActiveSessionLimit, "incorrect params")
+		AssertEquals(c, secp[0].Spec.RateLimits.OtherActiveSessionLimit, fwp.Spec.OtherActiveSessionLimit, "incorrect params")
 	}
 
 	// verify FirewallProfile status reflects propagation status

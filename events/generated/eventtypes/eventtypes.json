@@ -98,6 +98,16 @@
    "Desc": "The system has detected a conflict between the DSC specifications of different Host objects"
   },
   {
+   "Name": "ICMP_ACTIVE_SESSION_LIMIT_APPROACH",
+   "Severity": "warn",
+   "Desc": "ICMP Session Limit approaching"
+  },
+  {
+   "Name": "ICMP_ACTIVE_SESSION_LIMIT_REACHED",
+   "Severity": "critical",
+   "Desc": "ICMP Session Limit reached"
+  },
+  {
    "Name": "LEADER_CHANGED",
    "Severity": "info",
    "Desc": "Leader changed in the election"
@@ -143,6 +153,16 @@
    "Desc": "Node is unreachable"
   },
   {
+   "Name": "OTHER_ACTIVE_SESSION_LIMIT_APPROACH",
+   "Severity": "warn",
+   "Desc": "OTHER Session Limit approaching"
+  },
+  {
+   "Name": "OTHER_ACTIVE_SESSION_LIMIT_REACHED",
+   "Severity": "critical",
+   "Desc": "OTHER Session Limit reached"
+  },
+  {
    "Name": "PASSWORD_CHANGED",
    "Severity": "warn",
    "Desc": "Password changed"
@@ -176,6 +196,26 @@
    "Name": "QUORUM_UNHEALTHY",
    "Severity": "critical",
    "Desc": "Quorum does not have enough healthy members"
+  },
+  {
+   "Name": "TCP_HALF_OPEN_SESSION_LIMIT_APPROACH",
+   "Severity": "warn",
+   "Desc": "TCP Session Limit approaching"
+  },
+  {
+   "Name": "TCP_HALF_OPEN_SESSION_LIMIT_REACHED",
+   "Severity": "critical",
+   "Desc": "TCP Session Limit reached"
+  },
+  {
+   "Name": "UDP_ACTIVE_SESSION_LIMIT_APPROACH",
+   "Severity": "warn",
+   "Desc": "UDP Session Limit approaching"
+  },
+  {
+   "Name": "UDP_ACTIVE_SESSION_LIMIT_REACHED",
+   "Severity": "critical",
+   "Desc": "UDP Session Limit reached"
   },
   {
    "Name": "UNSUPPORTED_QUORUM_SIZE",

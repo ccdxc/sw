@@ -20,6 +20,10 @@ export interface ISecurityFirewallProfileSpec {
     'tcp-timeout': string;
     'udp-timeout': string;
     'icmp-timeout': string;
+    'tcp-half-open-session-limit': number;
+    'udp-active-session-limit': number;
+    'icmp-active-session-limit': number;
+    'other-active-session-limit': number;
     '_ui'?: any;
 }
 
@@ -49,6 +53,14 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
     'udp-timeout': string = null;
     /** Icmp Timeout is the period for which a ICMP session is kept alive during inactivity. Should be a valid time duration. */
     'icmp-timeout': string = null;
+    /** Tcp half open session limit config after which new open requests will be dropped. Value should be between 0 and 128000. */
+    'tcp-half-open-session-limit': number = null;
+    /** Udp active session limit config after which new requests will be dropped. Value should be between 0 and 128000. */
+    'udp-active-session-limit': number = null;
+    /** Icmp active session limit config after which new requests will be dropped. Value should be between 0 and 128000. */
+    'icmp-active-session-limit': number = null;
+    /** Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000. */
+    'other-active-session-limit': number = null;
     public static propInfo: { [prop in keyof ISecurityFirewallProfileSpec]: PropInfoItem } = {
         'session-idle-timeout': {
             default: '90s',
@@ -126,6 +138,30 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             hint:  '2h',
             required: true,
             type: 'string'
+        },
+        'tcp-half-open-session-limit': {
+            default: parseInt('0'),
+            description:  `Tcp half open session limit config after which new open requests will be dropped. Value should be between 0 and 128000.`,
+            required: true,
+            type: 'number'
+        },
+        'udp-active-session-limit': {
+            default: parseInt('0'),
+            description:  `Udp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.`,
+            required: true,
+            type: 'number'
+        },
+        'icmp-active-session-limit': {
+            default: parseInt('0'),
+            description:  `Icmp active session limit config after which new requests will be dropped. Value should be between 0 and 128000.`,
+            required: true,
+            type: 'number'
+        },
+        'other-active-session-limit': {
+            default: parseInt('0'),
+            description:  `Other Active Session limit config after which new requests will be dropped. Value should be between 0 and 128000.`,
+            required: true,
+            type: 'number'
         },
     }
 
@@ -240,6 +276,34 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
         } else {
             this['icmp-timeout'] = null
         }
+        if (values && values['tcp-half-open-session-limit'] != null) {
+            this['tcp-half-open-session-limit'] = values['tcp-half-open-session-limit'];
+        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('tcp-half-open-session-limit')) {
+            this['tcp-half-open-session-limit'] = SecurityFirewallProfileSpec.propInfo['tcp-half-open-session-limit'].default;
+        } else {
+            this['tcp-half-open-session-limit'] = null
+        }
+        if (values && values['udp-active-session-limit'] != null) {
+            this['udp-active-session-limit'] = values['udp-active-session-limit'];
+        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('udp-active-session-limit')) {
+            this['udp-active-session-limit'] = SecurityFirewallProfileSpec.propInfo['udp-active-session-limit'].default;
+        } else {
+            this['udp-active-session-limit'] = null
+        }
+        if (values && values['icmp-active-session-limit'] != null) {
+            this['icmp-active-session-limit'] = values['icmp-active-session-limit'];
+        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('icmp-active-session-limit')) {
+            this['icmp-active-session-limit'] = SecurityFirewallProfileSpec.propInfo['icmp-active-session-limit'].default;
+        } else {
+            this['icmp-active-session-limit'] = null
+        }
+        if (values && values['other-active-session-limit'] != null) {
+            this['other-active-session-limit'] = values['other-active-session-limit'];
+        } else if (fillDefaults && SecurityFirewallProfileSpec.hasDefaultValue('other-active-session-limit')) {
+            this['other-active-session-limit'] = SecurityFirewallProfileSpec.propInfo['other-active-session-limit'].default;
+        } else {
+            this['other-active-session-limit'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -258,6 +322,10 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
                 'tcp-timeout': CustomFormControl(new FormControl(this['tcp-timeout'], [required, ]), SecurityFirewallProfileSpec.propInfo['tcp-timeout']),
                 'udp-timeout': CustomFormControl(new FormControl(this['udp-timeout'], [required, ]), SecurityFirewallProfileSpec.propInfo['udp-timeout']),
                 'icmp-timeout': CustomFormControl(new FormControl(this['icmp-timeout'], [required, ]), SecurityFirewallProfileSpec.propInfo['icmp-timeout']),
+                'tcp-half-open-session-limit': CustomFormControl(new FormControl(this['tcp-half-open-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['tcp-half-open-session-limit']),
+                'udp-active-session-limit': CustomFormControl(new FormControl(this['udp-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['udp-active-session-limit']),
+                'icmp-active-session-limit': CustomFormControl(new FormControl(this['icmp-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['icmp-active-session-limit']),
+                'other-active-session-limit': CustomFormControl(new FormControl(this['other-active-session-limit'], [required, maxValueValidator(128000), ]), SecurityFirewallProfileSpec.propInfo['other-active-session-limit']),
             });
         }
         return this._formGroup;
@@ -280,6 +348,10 @@ export class SecurityFirewallProfileSpec extends BaseModel implements ISecurityF
             this._formGroup.controls['tcp-timeout'].setValue(this['tcp-timeout']);
             this._formGroup.controls['udp-timeout'].setValue(this['udp-timeout']);
             this._formGroup.controls['icmp-timeout'].setValue(this['icmp-timeout']);
+            this._formGroup.controls['tcp-half-open-session-limit'].setValue(this['tcp-half-open-session-limit']);
+            this._formGroup.controls['udp-active-session-limit'].setValue(this['udp-active-session-limit']);
+            this._formGroup.controls['icmp-active-session-limit'].setValue(this['icmp-active-session-limit']);
+            this._formGroup.controls['other-active-session-limit'].setValue(this['other-active-session-limit']);
         }
     }
 }

@@ -36,6 +36,14 @@ message FirewallProfileSpec {
     string UdpTimeout                   = 10 [(gogoproto.jsontag) = "udp-timeout,omitempty", (venice.default) = "30s", (venice.check) = "Duration(0,0)"];
     // Icmp Timeout is the period for which a ICMP session is kept alive during inactivity
     string IcmpTimeout                  = 11 [(gogoproto.jsontag) = "icmp-timeout,omitempty", (venice.default) = "6s", (venice.check) = "Duration(0,0)"];
+	// Tcp half open session limit config after which new open requests will be dropped
+	uint32 TcpHalfOpenSessionLimit      = 12 [(gogoproto.jsontag) = "tcp-half-open-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	// Udp active session limit config after which new requests will be dropped
+	uint32 UdpActiveSessionLimit        = 13 [(gogoproto.jsontag) = "udp-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	// Icmp active session limit config after which new requests will be dropped
+	uint32 IcmpActiveSessionLimit       = 14 [(gogoproto.jsontag) = "icmp-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
+	// Other Active Session limit config after which new requests will be dropped
+	uint32 OtherActiveSessionLimit      = 15 [(gogoproto.jsontag) = "other-active-session-limit,omitempty", (venice.default) = "0", (venice.check) = "IntRange(0,128000)"];
 }
 
 

@@ -78,9 +78,15 @@ func convertFirewallProfile(fps *FirewallProfileState) *netproto.SecurityProfile
 				TCPHalfClose:       fps.FirewallProfile.Spec.TCPHalfClosedTimeout,
 				Drop:               fps.FirewallProfile.Spec.DropTimeout,
 				UDP:                fps.FirewallProfile.Spec.UdpTimeout,
-				UDPDrop:            fps.FirewallProfile.FirewallProfile.Spec.UDPDropTimeout,
+				UDPDrop:            fps.FirewallProfile.Spec.UDPDropTimeout,
 				ICMP:               fps.FirewallProfile.Spec.IcmpTimeout,
 				ICMPDrop:           fps.FirewallProfile.Spec.ICMPDropTimeout,
+			},
+			RateLimits: &netproto.RateLimits{
+				TcpHalfOpenSessionLimit: fps.FirewallProfile.Spec.TcpHalfOpenSessionLimit,
+				UdpActiveSessionLimit:   fps.FirewallProfile.Spec.UdpActiveSessionLimit,
+				IcmpActiveSessionLimit:  fps.FirewallProfile.Spec.IcmpActiveSessionLimit,
+				OtherActiveSessionLimit: fps.FirewallProfile.Spec.OtherActiveSessionLimit,
 			},
 		},
 	}
