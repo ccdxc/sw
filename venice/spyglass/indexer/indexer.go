@@ -292,7 +292,9 @@ func (idr *Indexer) initializeAndStartWatchers() {
 
 	if err := idr.initialize(); err != nil {
 		idr.logger.Errorf("failed to create watchers, err: %v", err)
-		idr.doneCh <- err // context cancelled
+		if idr.GetRunningStatus() == true {
+			idr.doneCh <- err // context cancelled
+		}
 		return
 	}
 
