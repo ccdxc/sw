@@ -674,6 +674,10 @@ DeviceManager::HalEventHandler(bool status)
 {
     NIC_HEADER_TRACE("HAL Event");
 
+    if (init_done) {
+        return;
+    }
+
     // Hal UP
     if (status && !init_done) {
         NIC_LOG_DEBUG("Hal UP: Initializing hal client and creating VRFs.");
