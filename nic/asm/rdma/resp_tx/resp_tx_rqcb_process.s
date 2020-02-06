@@ -48,12 +48,21 @@ resp_tx_rqcb_process:
     seq             c4, RQ_C_INDEX, RQ_P_INDEX
     // memwr timestamp into rqcb3 only if pindex != cindex
     bcf             [c3 | c4], timestamp_memwr_done
-    add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (3*CB_UNIT_SIZE_BYTES) // BD Slot
-    add             r2, r2, FIELD_OFFSET(rqcb3_t, resp_tx_timestamp)
-    memwr.dx        r2, r4
+    // to stop scheduler ringing for ever, artificially move c_index to p_index.
+    tblwr           RQ_C_INDEX, RQ_P_INDEX // BD Slot
+    add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, (3*CB_UNIT_SIZE_BYTES)
+    add             r3, r2, FIELD_OFFSET(rqcb3_t, resp_tx_timestamp)
+    memwr.dx        r3, r4
     // memwr proxy_pindex if there are buffers posted, irrespective of which ring is scheduled
+    //take copy of pindex into proxy_pindex, so that
+    //resp_rx can use this variable from rqcb1 to compare
+    //against proxy_cindex for queue full/empty conditions
     add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
     add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
+    // we do not need to load RQCB1 to populate this value.
+    // There is always a possibility of RxDMA seeing this
+    // change in a delayed manner, irrespective of whether we
+    // update using tblwr, memwr or DMA.
     memwr.hx        r2, RQ_P_INDEX
 
 timestamp_memwr_done:
@@ -62,27 +71,13 @@ timestamp_memwr_done:
     nop
 
     .brcase         RQ_RING_ID
-        // reset sched_eval_done
-        tblwr           d.ring_empty_sched_eval_done, 0
-
-        //to stop scheduler ringing for ever, artificially move c_index to p_index. 
-        //take copy of pindex into proxy_pindex, so that 
-        //resp_rx can use this variable from rqcb1 to compare
-        //against proxy_cindex for queue full/empty conditions
-        //proxy_c_index would track the real c_index
-        tblwr           RQ_C_INDEX, RQ_P_INDEX
-
         // if prefetch is enabled, skip memwr of proxy pindex
         // in prefetch case, proxy pindex will be written using DMA
         // after WQE's are actually prefetched
         bcf             [c3], skip_memwr
-        add             r2, CAPRI_TXDMA_INTRINSIC_QSTATE_ADDR, CB_UNIT_SIZE_BYTES // BD Slot
-        add             r2, r2, FIELD_OFFSET(rqcb1_t, proxy_pindex)
-        // we do not need to load RQCB1 to populate this value.
-        // There is always a possibility of RxDMA seeing this
-        // change in a delayed manner, irrespective of whether we
-        // update using tblwr, memwr or DMA.
-        memwr.hx        r2, RQ_P_INDEX
+        // reset sched_eval_done
+        tblwr           d.ring_empty_sched_eval_done, 0 // BD Slot
+
         phvwr.e         p.common.p4_intr_global_drop, 1
         nop // Exit Slot
 
