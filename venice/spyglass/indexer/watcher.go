@@ -286,7 +286,7 @@ func (idr *Indexer) startWriter(id int) {
 			idr.updateIndexer(id)
 		}
 
-		if len(idr.requests[id]) == idr.batchSize {
+		if len(idr.requests[id]) == idr.batchSize || failedBulkCount > 0 {
 			select {
 			case <-idr.ctx.Done():
 				idr.logger.Infof("Stopping Writer: %d, ctx cancelled", id)
