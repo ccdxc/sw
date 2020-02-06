@@ -48,7 +48,9 @@ arp_proxy_exit_internal_x1 (vlib_buffer_t *p,
     pds_impl_db_vnic_entry_t *vnic;
 
     vnic = pds_impl_db_vnic_get(vnic_id);
-    pds_arp_proxy_add_tx_hdrs_x1(p, vnic->nh_hw_id);
+    if (PREDICT_TRUE(vnic != NULL)) {
+        pds_arp_proxy_add_tx_hdrs_x1(p, vnic->nh_hw_id);
+    }
 }
 
 #endif      //__VPP_IMPL_APULU_ARP_PROXY_H__

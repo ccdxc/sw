@@ -30,12 +30,17 @@ def Verify(tc):
     commands = tc.resp.commands
     cookie_idx = 0
     for cmd in commands:
-        if getattr(tc.iterators, "oper", None) == 'delete':
+        if getattr(tc.iterators, "oper", None) == 'Delete':
             res = config_api.IsAnyConfigDeleted(tc.workload_pairs[cookie_idx])
             if (res is True and cmd.exit_code == 0) or (res is False and cmd.exit_code != 0):
                 api.Logger.error("verifyPing failed for %s" % (tc.cmd_cookies[cookie_idx]))
                 api.PrintCommandResults(cmd)
                 result = api.types.status.FAILURE
+        elif getattr(tc.iterators, "oper", None) == 'Update':
+            if cmd.exit_code != 0:
+                api.PrintCommandResults(cmd)
+                # TODO: some objetcs(tunnel, interface) fail due to 1-1 config, move to dol config
+                # result = api.types.status.FAILURE
         cookie_idx += 1
     api.Logger.debug(f"Verify result: {result}")
     return result

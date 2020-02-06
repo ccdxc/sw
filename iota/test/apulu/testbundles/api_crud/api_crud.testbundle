@@ -5,7 +5,7 @@ meta:
     nics    : [ pensando ]
 
 testcases:
-    -   name    : API_CRUD_Ping_Traffic
+    -   name    : API_CRUD_For_Delete_Ping_Traffic
         testcase: testcases.api_crud.ping
         stress  : True
         args    :
@@ -14,6 +14,25 @@ testcases:
             type    : nested
             #ipaf   : [ ipv4, ipv6 ]
             ipaf    : [ ipv4 ]
-            objtype : [ tunnel, lmapping, device ]
-            oper    : [ delete ]
+            # objects tested with delete config.
+            # TODO: nh, nh-group, interface
+            # route object excluded from local2remote tests, because no hit
+            objtype : [ device, vpc, subnet, vnic, tunnel, lmapping, rmapping ]
+            oper    : [ Delete ]
+
+    -   name    : API_CRUD_For_Update_Ping_Traffic
+        testcase: testcases.api_crud.ping
+        stress  : True
+        args    :
+            type: remote_only
+        iterators :
+            type    : nested
+            #ipaf   : [ ipv4, ipv6 ]
+            ipaf    : [ ipv4 ]
+            # objects tested with update config.
+            # TODO: vnic, nh-group
+            # excluded vpc object because no mutable config present
+            objtype : [ device, subnet, tunnel, nexthop, interface, nexthop ]
+            oper    : [ Update ]
+
 

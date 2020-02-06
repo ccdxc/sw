@@ -5,7 +5,7 @@ import iota.test.apulu.utils.pdsctl as pdsctl
 
 def verifyFlowLogging(af, workload_pairs):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = False)
-    
+
     if af != "ipv4":
         return api.types.status.SUCCESS
     log_file = "/var/log/pensando/vpp_flow.log"
@@ -56,7 +56,7 @@ def clearFlowTable(workload_pairs):
     return api.types.status.SUCCESS
 
 def parseFlowEntries(entries, w1, w2):
-    iflow_found = False 
+    iflow_found = False
     rflow_found = False
     api.Logger.info("parseFlowEntries: entries %s" %(entries))
     for entry in entries.splitlines():
@@ -94,7 +94,7 @@ def verifyFlowTable(af, workload_pairs):
         if ret != True:
             api.Logger.error("Failed to execute show flows at node %s : %s" %(w2.node_name, resp))
             return api.types.status.FAILURE
-        iflow_found, rflow_found = parseFlowEntries(resp, w1, w2)
+        iflow_found, rflow_found = parseFlowEntries(resp, w2, w1)
         if iflow_found == False or rflow_found == False:
             api.Logger.error("Flows not found at node %s : %s[iflow %d, rflow %d]" %(w2.node_name, resp, iflow_found, rflow_found))
             return api.types.status.FAILURE

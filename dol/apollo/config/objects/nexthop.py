@@ -277,6 +277,9 @@ class NexthopObjectClient(base.ConfigClientBase):
     def GetNumNextHopPerVPC(self):
         return self.__num_nh_per_vpc
 
+    def GetUnderlayNexthops(self, node):
+        return self.__underlay_objs[node].values()
+
     def AssociateObjects(self, node):
         EzAccessStoreClient[node].SetNexthops(self.Objects(node))
         ResmgrClient[node].CreateUnderlayNHAllocator()
