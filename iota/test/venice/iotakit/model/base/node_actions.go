@@ -1,6 +1,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
-package enterprise
+package base
 
 import (
 	"context"
@@ -11,12 +11,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pensando/sw/api/generated/cluster"
 	iota "github.com/pensando/sw/iota/protos/gogen"
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 	utils "github.com/pensando/sw/iota/test/venice/iotakit/model/utils"
+	"github.com/pensando/sw/iota/test/venice/iotakit/testbed"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/log"
 )
+
+// CollectLogs collects all logs files from the testbed
+
+// SetUpNaplesAuthenticationOnHosts changes naples to managed mode
+func (sm *SysModel) SetUpNaplesAuthenticationOnHosts(hc *objects.HostCollection) error {
+
+	testNodes := []*testbed.TestNode{}
+
+	for _, node := range hc.Hosts {
+		for _, testNode := range sm.Tb.Nodes {
+			if node.GetIotaNode().Name == testNode.GetIotaNode().Name {
+				testNodes = append(testNodes, testNode)
+			}
+		}
+	}
+
+	return sm.JoinNaplesToVenice(testNodes)
+}
 
 // ReloadHosts reloads a host
 func (sm *SysModel) ReloadHosts(hc *objects.HostCollection) error {
@@ -98,11 +118,11 @@ func (sm *SysModel) DisconnectVeniceNodesFromCluster(vnc *objects.VeniceNodeColl
 
 	for _, venice := range vnc.Nodes {
 
-		if _, ok := sm.veniceNodesDisconnected[venice.Name()]; ok {
+		if _, ok := sm.VeniceNodesMapDisconnected[venice.Name()]; ok {
 			log.Errorf("Venice node %v alreadt disconnected", venice.Name)
 			continue
 		}
-		for otherNode := range sm.veniceNodes {
+		for otherNode := range sm.VeniceNodeMap {
 			if venice.Name() == otherNode {
 				continue
 			}
@@ -111,7 +131,7 @@ func (sm *SysModel) DisconnectVeniceNodesFromCluster(vnc *objects.VeniceNodeColl
 				venice.Name(), 3)
 		}
 
-		for otherNode := range sm.veniceNodesDisconnected {
+		for otherNode := range sm.VeniceNodesMapDisconnected {
 			if venice.Name() == otherNode {
 				continue
 			}
@@ -137,10 +157,10 @@ func (sm *SysModel) DisconnectVeniceNodesFromCluster(vnc *objects.VeniceNodeColl
 	}
 
 	for _, venice := range vnc.Nodes {
-		for name, otherNode := range sm.veniceNodes {
+		for name, otherNode := range sm.VeniceNodeMap {
 			if venice.Name() == name {
-				sm.veniceNodesDisconnected[name] = otherNode
-				delete(sm.veniceNodes, name)
+				sm.VeniceNodesMapDisconnected[name] = otherNode
+				delete(sm.VeniceNodeMap, name)
 			}
 		}
 	}
@@ -149,7 +169,7 @@ func (sm *SysModel) DisconnectVeniceNodesFromCluster(vnc *objects.VeniceNodeColl
 	if naples != nil && (len(naples.Nodes) != 0 || len(naples.FakeNodes) != 0) {
 		sm.DenyVeniceNodesFromNaples(vnc, naples)
 	}
-	return sm.initCfgModel()
+	return sm.InitCfgModel()
 }
 
 //ConnectVeniceNodesToCluster  reconnect venice.Nodes to cluster.
@@ -157,11 +177,11 @@ func (sm *SysModel) ConnectVeniceNodesToCluster(vnc *objects.VeniceNodeCollectio
 	trig := sm.Tb.NewTrigger()
 
 	for _, venice := range vnc.Nodes {
-		if _, ok := sm.veniceNodesDisconnected[venice.Name()]; !ok {
+		if _, ok := sm.VeniceNodesMapDisconnected[venice.Name()]; !ok {
 			log.Errorf("Venice node %v not disconnected to be connected", venice.Name())
 			continue
 		}
-		for otherNode := range sm.veniceNodes {
+		for otherNode := range sm.VeniceNodeMap {
 			if venice.Name() == otherNode {
 				continue
 			}
@@ -171,7 +191,7 @@ func (sm *SysModel) ConnectVeniceNodesToCluster(vnc *objects.VeniceNodeCollectio
 		}
 
 		//Make sure remove entry disonnected node too.
-		for otherNode := range sm.veniceNodesDisconnected {
+		for otherNode := range sm.VeniceNodesMapDisconnected {
 			if venice.Name() == otherNode {
 				continue
 			}
@@ -197,10 +217,10 @@ func (sm *SysModel) ConnectVeniceNodesToCluster(vnc *objects.VeniceNodeCollectio
 
 	//Node is back to be connected.
 	for _, venice := range vnc.Nodes {
-		for name, otherNode := range sm.veniceNodesDisconnected {
+		for name, otherNode := range sm.VeniceNodesMapDisconnected {
 			if venice.Name() == name {
-				sm.veniceNodes[name] = otherNode
-				delete(sm.veniceNodesDisconnected, name)
+				sm.VeniceNodeMap[name] = otherNode
+				delete(sm.VeniceNodesMapDisconnected, name)
 			}
 		}
 	}
@@ -209,7 +229,7 @@ func (sm *SysModel) ConnectVeniceNodesToCluster(vnc *objects.VeniceNodeCollectio
 		sm.AllowVeniceNodesFromNaples(vnc, naples)
 	}
 
-	return sm.initCfgModel()
+	return sm.InitCfgModel()
 }
 
 func getRuleCookie(naples *objects.NaplesCollection) (string, error) {
@@ -899,6 +919,217 @@ func (sm *SysModel) StopFWLogGenOnNaples(naples *objects.NaplesCollection) error
 			"pkill -9 fwloggen")
 		return nil
 	})
+
+	return nil
+}
+
+func (sm *SysModel) DeleteNaplesNodes(names []string) error {
+	//First add to testbed.
+
+	nodes := []*testbed.TestNode{}
+	naplesMap := make(map[string]bool)
+	for _, name := range names {
+		log.Infof("Deleting naples node : %v", name)
+		naples, ok := sm.NaplesNodes[name]
+		if !ok {
+			return errors.New("naples not found to delete")
+		}
+
+		if _, ok := naplesMap[naples.GetIotaNode().Name]; ok {
+			//Node already added
+			continue
+		}
+		naplesMap[naples.GetIotaNode().Name] = true
+		nodes = append(nodes, naples.GetTestNode())
+	}
+
+	err := sm.Tb.DeleteNodes(nodes)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+
+		if naples, ok := sm.NaplesNodes[name]; ok {
+			delete(sm.NaplesNodes, name)
+			delete(sm.NaplesHosts, naples.GetTestNode().NodeName)
+
+		}
+	}
+	//Reassociate hosts as new naples is added now.
+	return sm.AssociateHosts()
+}
+
+// DeleteVeniceNodes nodes on the fly
+func (sm *SysModel) DeleteVeniceNodes(names []string) error {
+	//First add to testbed.
+
+	clusterNodes, err := sm.ListClusterNodes()
+	if err != nil {
+		return err
+	}
+
+	nodes := []*testbed.TestNode{}
+	veniceMap := make(map[string]bool)
+	for _, name := range names {
+		log.Infof("Deleting venice node : %v", name)
+		venice, ok := sm.VeniceNodeMap[name]
+		if !ok {
+			return errors.New("venice not found to delete")
+		}
+
+		if _, ok := veniceMap[venice.Name()]; ok {
+			//Node already added
+			continue
+		}
+		veniceMap[venice.Name()] = true
+		nodes = append(nodes, venice.GetTestNode())
+	}
+
+	clusterDelNodes := []*cluster.Node{}
+	for _, node := range nodes {
+		added := false
+		for _, cnode := range clusterNodes {
+			if cnode.ObjectMeta.Name == node.GetIotaNode().IpAddress {
+				clusterDelNodes = append(clusterDelNodes, cnode)
+				added = true
+				break
+			}
+		}
+		if !added {
+			return fmt.Errorf("Node %v not found in the cluster", node.GetIotaNode().Name)
+		}
+	}
+
+	//Remove from the cluster
+	for _, node := range clusterDelNodes {
+
+		//Remember the cluster node if we want to create again
+		for name, vnode := range sm.VeniceNodeMap {
+			if vnode.IP() == node.Name {
+				veniceNode, _ := sm.VeniceNodes().Select("name=" + vnode.IP())
+				if err != nil {
+					log.Errorf("Error finding venice node .%v", "name="+vnode.Name())
+					return err
+				}
+				//Disconnect node before deleting
+				err = sm.DisconnectVeniceNodesFromCluster(veniceNode, sm.Naples())
+				if err != nil {
+					log.Errorf("Error disonnecting venice node.")
+					return err
+				}
+				vnode.ClusterNode = node
+				sm.VeniceNodesMapDisconnected[name] = vnode
+				break
+			}
+		}
+
+		//Sleep for 2 minutes to for cluster to be reformed.
+		time.Sleep(120 * time.Second)
+		log.Infof("Deleting venice node from cluster : %v", node.Name)
+		err := sm.DeleteClusterNode(node)
+		if err != nil {
+			log.Errorf("Error deleting cluster venice node.%v", err)
+			return err
+		}
+
+	}
+
+	log.Infof("Deleting venice node from testbed : %v", nodes)
+	err = sm.Tb.DeleteNodes(nodes)
+	if err != nil {
+		log.Errorf("Error cleaning up venice node.%v", err)
+		return err
+	}
+
+	for _, name := range names {
+		delete(sm.VeniceNodeMap, name)
+	}
+	//Sleep for a while to for the cluster
+	time.Sleep(120 * time.Second)
+	log.Infof("Deleting venice complete")
+
+	return sm.InitCfgModel()
+}
+
+// AddVeniceNodes node on the fly
+func (sm *SysModel) AddVeniceNodes(names []string) error {
+	//First add to testbed.
+	log.Infof("Adding venice nodes : %v", names)
+	nodes, err := sm.Tb.AddNodes(iota.PersonalityType_PERSONALITY_VENICE, names)
+	if err != nil {
+		return err
+	}
+
+	//Add to cluster
+	for _, node := range nodes {
+		added := false
+		for name, vnode := range sm.VeniceNodesMapDisconnected {
+			if vnode.IP() == node.GetIotaNode().IpAddress {
+				err := sm.AddClusterNode(vnode.ClusterNode)
+				if err != nil {
+					return fmt.Errorf("Node add failed %v", err)
+				}
+			}
+			added = true
+			//Add to connected nodes
+			sm.VeniceNodeMap[name] = vnode
+		}
+
+		if !added {
+			return fmt.Errorf("Node %v not added to cluster", node.GetIotaNode().Name)
+		}
+
+	}
+
+	for _, name := range names {
+		delete(sm.VeniceNodesMapDisconnected, name)
+	}
+
+	//Sleep for a while to for the cluster
+	time.Sleep(120 * time.Second)
+	//Setup venice nodes again.
+	sm.SetupVeniceNodes()
+
+	return sm.InitCfgModel()
+
+}
+
+// AddNaplesNodes node on the fly
+func (sm *SysModel) AddNaplesNodes(names []string) error {
+	//First add to testbed.
+	log.Infof("Adding naples nodes : %v", names)
+	nodes, err := sm.Tb.AddNodes(iota.PersonalityType_PERSONALITY_NAPLES, names)
+	if err != nil {
+		return err
+	}
+
+	// move naples to managed mode
+	err = sm.DoModeSwitchOfNaples(nodes)
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
+		return err
+	}
+
+	// add venice node to naples
+	err = sm.JoinNaplesToVenice(nodes)
+	if err != nil {
+		log.Errorf("Setting up naples failed. Err: %v", err)
+		return err
+	}
+
+	for _, node := range nodes {
+		if err := sm.CreateNaples(node); err != nil {
+			return err
+		}
+
+	}
+
+	//Reassociate hosts as new naples is added now.
+	if err := sm.AssociateHosts(); err != nil {
+		log.Infof("Error in host association %v", err.Error())
+		return err
+	}
 
 	return nil
 }

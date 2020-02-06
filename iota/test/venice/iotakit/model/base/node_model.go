@@ -1,15 +1,12 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
-package enterprise
+package base
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/willf/bitset"
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
@@ -21,52 +18,14 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-const (
-	hostToolsDir        = "/pensando/iota"
-	penctlPath          = "nic/bin"
-	penctlPkgName       = "../nic/host.tar"
-	penctlLinuxBinary   = "penctl.linux"
-	penctlFreebsdBinary = "penctl.freebsd"
-)
-
 // SwitchPorts returns list of all switch ports
 func (sm *SysModel) SwitchPorts() *objects.SwitchPortCollection {
 	var swPc objects.SwitchPortCollection
-	for _, port := range sm.switchPorts {
+	for _, port := range sm.SwitchPortsList {
 		swPc.Ports = append(swPc.Ports, port)
 	}
 
 	return &swPc
-}
-
-// createHost creates a new host instance
-func (sm *SysModel) createSwitch(sw *iota.DataSwitch) (*objects.Switch, error) {
-
-	smSw := objects.NewSwitch(sw)
-
-	getHostName := func(ip, port string) (string, error) {
-		for _, node := range sm.Tb.Nodes {
-			for _, dn := range node.InstanceParams().DataNetworks {
-				if dn.Name == port && dn.SwitchIP == ip {
-					return node.NodeName, nil
-				}
-			}
-		}
-		return "", fmt.Errorf("Node name not found for switch %v %v", port, ip)
-	}
-	for _, p := range sw.GetPorts() {
-
-		hostName, err := getHostName(smSw.IP(), p)
-		if err != nil {
-			return nil, err
-		}
-		swPort := objects.NewSwitchPort(hostName, smSw, p)
-
-		sm.switchPorts = append(sm.switchPorts, swPort)
-	}
-	sm.switches[sw.GetIp()] = smSw
-
-	return smSw, nil
 }
 
 // Hosts returns list of all hosts in the system
@@ -76,7 +35,7 @@ func (sm *SysModel) Hosts() *objects.HostCollection {
 		hc.Hosts = append(hc.Hosts, hst)
 	}
 
-	for _, hst := range sm.fakeHosts {
+	for _, hst := range sm.FakeHosts {
 		hc.FakeHosts = append(hc.FakeHosts, hst)
 	}
 
@@ -111,6 +70,19 @@ func (sm *SysModel) HostWorkloads() []*objects.HostWorkloadCollection {
 	}
 
 	return hc
+}
+
+// ForEachFakeNaples calls an iterator for each naples in the model
+func (sm *SysModel) ForEachFakeNaples(fn objects.NaplesIteratorFn) error {
+	fakeNaples := []*objects.Naples{}
+	for _, node := range sm.FakeNaples {
+		fakeNaples = append(fakeNaples, node)
+	}
+	err := fn(&objects.NaplesCollection{FakeNodes: fakeNaples})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // ForEachHost calls a function for each host
@@ -250,19 +222,6 @@ func (sm *SysModel) ForEachNaples(fn objects.NaplesIteratorFn) error {
 	return nil
 }
 
-// ForEachFakeNaples calls an iterator for each naples in the model
-func (sm *SysModel) ForEachFakeNaples(fn objects.NaplesIteratorFn) error {
-	fakeNaples := []*objects.Naples{}
-	for _, node := range sm.fakeNaples {
-		fakeNaples = append(fakeNaples, node)
-	}
-	err := fn(&objects.NaplesCollection{FakeNodes: fakeNaples})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // Naples returns all naples in the model
 func (sm *SysModel) Naples() *objects.NaplesCollection {
 	var naples []*objects.Naples
@@ -271,7 +230,7 @@ func (sm *SysModel) Naples() *objects.NaplesCollection {
 		naples = append(naples, np)
 	}
 
-	for _, np := range sm.fakeNaples {
+	for _, np := range sm.FakeNaples {
 		fakesNaples = append(fakesNaples, np)
 	}
 	return &objects.NaplesCollection{Nodes: naples, FakeNodes: fakesNaples}
@@ -289,14 +248,14 @@ func (sm *SysModel) ThirdParties() *objects.ThirdPartyCollection {
 
 func (sm *SysModel) createVeniceNode(node *testbed.TestNode) error {
 
-	sm.veniceNodes[node.NodeName] = objects.NewVeniceNode(node)
+	sm.VeniceNodeMap[node.NodeName] = objects.NewVeniceNode(node)
 
 	return nil
 }
 
 // ForEachVeniceNode runs an iterator function on each venice node
 func (sm *SysModel) ForEachVeniceNode(fn objects.VeniceNodeIteratorFn) error {
-	for _, node := range sm.veniceNodes {
+	for _, node := range sm.VeniceNodeMap {
 		err := fn(&objects.VeniceNodeCollection{Nodes: []*objects.VeniceNode{node}})
 		if err != nil {
 			return err
@@ -309,7 +268,7 @@ func (sm *SysModel) ForEachVeniceNode(fn objects.VeniceNodeIteratorFn) error {
 // VeniceNodes returns a collection of venice nodes
 func (sm *SysModel) VeniceNodes() *objects.VeniceNodeCollection {
 	vnc := objects.NewVeniceNodeCollection(sm.ObjClient(), sm.Tb)
-	for _, node := range sm.veniceNodes {
+	for _, node := range sm.VeniceNodeMap {
 		vnc.Nodes = append(vnc.Nodes, node)
 	}
 
@@ -374,7 +333,7 @@ func (sm *SysModel) GetVeniceNodeWithService(vnc *objects.VeniceNodeCollection, 
 	ret := triggerResp[0].Stdout
 	hostIP := strings.Split(ret, "\n")
 
-	for _, vn := range sm.veniceNodes {
+	for _, vn := range sm.VeniceNodeMap {
 		for _, ip := range hostIP {
 			if vn.IP() == ip {
 				srvVnc.Nodes = append(srvVnc.Nodes, vn)
@@ -401,117 +360,6 @@ func (sm *SysModel) ListRealHosts() ([]*objects.Host, error) {
 	}
 
 	return hosts, nil
-}
-
-// AssociateHosts gets all real hosts from venice cluster
-func (sm *SysModel) AssociateHosts() error {
-	objs, err := sm.ListHost()
-	if err != nil {
-		return err
-	}
-
-	if sm.Tb.IsMockMode() {
-		//One on One association if mock mode
-		convertMac := func(s string) string {
-			mac := strings.Replace(s, ".", "", -1)
-			var buffer bytes.Buffer
-			var l1 = len(mac) - 1
-			for i, rune := range mac {
-				buffer.WriteRune(rune)
-				if i%2 == 1 && i != l1 {
-					buffer.WriteRune(':')
-				}
-			}
-			return buffer.String()
-		}
-		//In mockmode we retrieve mac from the snicList, so we should convert to format that venice likes.
-		for _, naples := range sm.NaplesNodes {
-			naples.Nodeuuid = convertMac(naples.Nodeuuid)
-		}
-	}
-
-	for k := range sm.NaplesHosts {
-		delete(sm.NaplesHosts, k)
-	}
-	for _, n := range sm.NaplesNodes {
-		n.SmartNic.Labels = make(map[string]string)
-		nodeMac := strings.Replace(n.Nodeuuid, ":", "", -1)
-		nodeMac = strings.Replace(nodeMac, ".", "", -1)
-		for _, obj := range objs {
-			objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
-			if objMac == nodeMac {
-				log.Infof("Associating host %v(ip:%v) with %v(ip:%v)\n", obj.GetName(),
-					n.IP(), n.Name(),
-					n.SmartNic.GetStatus().IPConfig.IPAddress)
-				bs := bitset.New(uint(4096))
-				bs.Set(0).Set(1).Set(4095)
-
-				h := objects.NewHost(obj, n.GetIotaNode(), n)
-				sm.NaplesHosts[n.GetIotaNode().Name] = h
-
-				//Add BM type to support upgrade
-				n.SmartNic.Labels["type"] = "bm"
-				if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
-					log.Infof("Error updating smart nic object %v", err)
-					return err
-				}
-				break
-			}
-		}
-	}
-
-	for k := range sm.fakeHosts {
-		delete(sm.fakeHosts, k)
-	}
-	sm.ListSmartNIC()
-	for simName, n := range sm.fakeNaples {
-		n.SmartNic.Labels = make(map[string]string)
-		for _, simNaples := range n.GetIotaNode().GetNaplesMultiSimConfig().GetSimsInfo() {
-			if simNaples.GetName() == simName {
-				nodeMac := strings.Replace(simNaples.GetNodeUuid(), ":", "", -1)
-				nodeMac = strings.Replace(nodeMac, ".", "", -1)
-				for _, obj := range objs {
-					objMac := strings.Replace(obj.GetSpec().DSCs[0].MACAddress, ".", "", -1)
-					if objMac == nodeMac {
-						log.Infof("Associating host %v(ip:%v) with %v(%v on %v)\n", obj.GetName(),
-							n.GetIotaNode().GetIpAddress(), simName, simNaples.GetIpAddress(), n.GetIotaNode().Name)
-						bs := bitset.New(uint(4096))
-						bs.Set(0).Set(1).Set(4095)
-
-						// add it to database
-						h := objects.NewHost(obj, n.GetIotaNode(), n)
-						sm.fakeHosts[obj.GetName()] = h
-						//Add BM type to support upgrade
-						n.SmartNic.Labels["type"] = "sim"
-						if err := sm.UpdateSmartNIC(n.SmartNic); err != nil {
-							log.Infof("Error updating smart nic object %v", err)
-							return err
-						}
-						break
-					}
-				}
-			}
-		}
-	}
-
-	for k := range sm.ThirdPartyHosts {
-		delete(sm.ThirdPartyHosts, k)
-	}
-	for _, n := range sm.ThirdPartyNodes {
-		for _, obj := range objs {
-			if obj.GetSpec().DSCs[0].MACAddress == n.Node.Nodeuuid {
-				h := objects.NewHost(obj, n.GetIotaNode(), nil)
-				log.Infof("Associating third party host %v(ip:%v) with %v(\n", obj.GetName(),
-					n.IP(), n.Name())
-				sm.ThirdPartyHosts[n.Name()] = h
-			}
-		}
-
-	}
-
-	log.Infof("Total number of hosts associated %v\n", len(sm.NaplesHosts)+len(sm.fakeHosts))
-	log.Infof("Total number of 3rd Party hosts associated %v\n", len(sm.ThirdPartyHosts))
-	return nil
 }
 
 // ListWorkloadsOnHost gets Workloads on host

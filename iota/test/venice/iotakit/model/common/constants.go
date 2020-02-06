@@ -8,6 +8,9 @@ const (
 	DefaultModel ModelType = 0
 	//VcenterModel for Vcenter
 	VcenterModel = 1
+
+	//CloudModel for equnix
+	CloudModel = 2
 )
 
 //MockVeniceURL mock venice url

@@ -24,6 +24,8 @@ const (
 	DefaultModel Type = 0
 	//VcenterModel for Vcenter
 	VcenterModel = 1
+	//CloudModel
+	CloudModel = 2
 )
 
 //SysModelInterface interface for sysmodel
@@ -180,6 +182,8 @@ func NewSysModel(tb *testbed.TestBed, modelType common.ModelType) (SysModelInter
 	switch modelType {
 	case VcenterModel:
 		return factory.NewVcenterSysModel(tb, cfgModel.VcenterCfgType)
+	case CloudModel:
+		return factory.NewCloudSysModel(tb, cfgModel.CloudCfgType)
 	}
 	return factory.NewDefaultSysModel(tb, cfgModel.GsCfgType)
 
@@ -189,6 +193,8 @@ func getModelTypeFromTopo(mtype testbed.ModelType) common.ModelType {
 	switch mtype {
 	case testbed.VcenterModel:
 		return common.VcenterModel
+	case testbed.CloudModel:
+		return common.CloudModel
 	}
 
 	return common.DefaultModel

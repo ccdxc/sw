@@ -1,6 +1,6 @@
 // {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
 
-package enterprise
+package base
 
 import (
 	"context"
