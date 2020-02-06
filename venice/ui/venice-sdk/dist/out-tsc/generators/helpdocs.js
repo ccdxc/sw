@@ -57,7 +57,7 @@ function generateHelpDocs(config) {
             Object.keys(refMap).forEach(function (key) {
                 text = text.replace(new RegExp(utils_1.regexQuote('(%' + key + ')'), 'g'), '(' + refMap[key] + ')');
             });
-            text = text.replace('/images/', path.join(config.htmlLinkBase, '/images/'));
+            text = text.replace(/\/images\//g, path.join(config.htmlLinkBase, '/images/'));
             return text;
         }
     };

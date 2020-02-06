@@ -37,36 +37,6 @@
 </table>
 <p>User can update his/her information and change his/her own password.</p>
 <p>Administrator can update other users inforamtion and change pasword for other users.</p>
-<h1 id="rolemanagement">Role Management</h1>
-<p>You can create role, which authorize user access.  That is done under the "Admin" --&gt; "User Management" section. Click "Role" - "Add Role" to create a new user. </p>
-<h4 id="addandupdaterole">Add And Update Role</h4>
-<p>With the roles configuration, it is possible to create various types of roles that provide various capabilities.  Here are the following options with the grouping option that corelates to the "kind" of capabilities with the grouping:</p>
-<table>
-<thead>
-<tr>
-<th>Option</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>name</td>
-<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
-</tr>
-<tr>
-<td>resource-group</td>
-<td>ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying "<em>All</em>" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.</td>
-</tr>
-<tr>
-<td>resource-kind</td>
-<td>ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in ResrcKind enum. Specifying "<em>All</em>" will match all resource kinds.</td>
-</tr>
-<tr>
-<td>actions</td>
-<td>Actions are actions on a resource that a permission allows. <br> Valid options include:<br> - All Actions <br> - Clear Config <br> - Commit Config <br> - Create <br> - Delete <br> - Read <br> - Update</td>
-</tr>
-</tbody>
-</table>
 <h1 id="rolebinding">Role Binding</h1>
 <p>The role binding associates the user or user groups to a particular role.  The options for this configuration is the following:</p>
 <ul>
@@ -106,3 +76,91 @@
 <p><strong>Role:</strong> HRAdminRole</p>
 <p><strong>User Groups:</strong> HRAdmin-Group</p>
 <p><strong>Users:</strong> johndoe</p>
+<h1 id="rolemanagement">Role Management</h1>
+<p>You can create role, which authorize user access.  That is done under the "Admin" --&gt; "User Management" section. Click "Role" - "Add Role" to create a new user. </p>
+<h4 id="addandupdaterole">Add And Update Role</h4>
+<p>With the roles configuration, it is possible to create various types of roles that provide various capabilities.  Here are the following options with the grouping option that corelates to the "kind" of capabilities with the grouping:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>Name of the object, unique within a Namespace for scoped objects. Must start and end with alpha numeric and can have alphanumeric, -, _, . Length of string should be between 2 and 64.</td>
+</tr>
+<tr>
+<td>resource-group</td>
+<td>ResourceGroup is grouping of resource types for which a permission is defined. It is empty for Search, Event, MetricsQuery and non-api server endpoint. Specifying "<em>All</em>" will match all api groups including empty group for non-api server endpoints like those defined in ResrcKind enum.</td>
+</tr>
+<tr>
+<td>resource-kind</td>
+<td>ResourceKind is a resource kind for which permission is defined. It can be an API Server object kind or kinds defined in ResrcKind enum. Specifying "<em>All</em>" will match all resource kinds.</td>
+</tr>
+<tr>
+<td>actions</td>
+<td>Actions are actions on a resource that a permission allows. <br> Valid options include:<br> - All Actions <br> - Clear Config <br> - Commit Config <br> - Create <br> - Delete <br> - Read <br> - Update</td>
+</tr>
+</tbody>
+</table>
+<h1 id="roleconfiguration">Role configuration</h1>
+<p>UI pages include mulitple objects. Venice administrator should configure roles.</p>
+<h4 id="cluster">Cluster</h4>
+<p>To access cluster and cluster-node page (https://server:port/#/cluster/cluster and https://server:port/#/cluster/cluster/node1), you can set up a role and permissions as </p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/cluster_read.png" alt="CLUSTER_READ image" /></p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/node_read.png" alt="NODE_READ image" /></p>
+<p>To access cluster DSCs and DSC detail pages (https://server:port/#/cluster/dscs and https://server:port/#/cluster/dscs/xxx), you can set up a role and permissions as:</p>
+<p>To view DSCs</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/dscs_read.png" alt="DSCS_READ image" /></p>
+<p>To create, update or delete DSCs</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/dscs_cud.png" alt="DSCS_CUD image" /></p>
+<p>To access cluster node page (https://server:port/#/cluster/hosts) you can set up a role and permissions as </p>
+<p>To view host</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/hosts_read.png" alt="hosts_read image" /></p>
+<p>To create, update or delete host</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/hosts_cud.png" alt="hosts_cud image" /></p>
+<h4 id="security">Security</h4>
+<p>To access security policis and security-detail pages (https://server:port/#/security/sgpolicies, https://server:port/#security/sgpolicies/sg-1)  you can set up a role and permissions as </p>
+<p>To view policies or policy detail</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/policies_read.png" alt="policies_read image" /></p>
+<p>To create, update or delete policies or policy detail</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/policies_read.png" alt="policies_cud image" /></p>
+<p>To access security apps page (https://server:port/#/security/securityapps) you can set up a role and permissions as </p>
+<p>To view apps </p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/app_read.png" alt="policies_read image" /></p>
+<p>To create, update or delete app</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/app_cud.png" alt="policies_cud image" /></p>
+<h4 id="techsupport">Tech Support</h4>
+<p>To access tech support page  (https://server:port/#/admin/techsupport) you can set up a role and permissions as </p>
+<p>To view tech-supports </p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/techsupport_read.png" alt="techsupport_read image" /></p>
+<p>To create, update or delete tech-support</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/techsupport_cud.png" alt="techsupport_cud image" /></p>
+<h4 id="pagesonlyaccessiblebyadminroleuser">Pages only accessible by admin role user</h4>
+<p>Only admin role user can access auth policy, system upgrade, snapshot and server certificate pages.  </p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/admin_role.png" alt="admin role image" /></p>
+<h4 id="manageuserroleandrolebinding">Manage User, Role and Rolebinding</h4>
+<p>To view user, role and rolebinding</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/user_management_read.png" alt="user_management_read image" /></p>
+<p>To create, update or delete user, role and rolebinding</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/user_management_cud.png" alt="user_management_cud image" /></p>
+<h4 id="alertsevents">Alerts &amp; Events</h4>
+<p>To access alerts and events pages,  (https://server:port/#/monitoring/alertsevents), you can setup role as</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/alertsevents_crud.png" alt="alertsevents_crud image" /></p>
+<h4 id="eventalertpolicyandalertdestination">Event alert policy and alert destination</h4>
+<p>To access alert desination page (https://server:port/#/monitoring/alertsevents/alertdestinations), you can setup role as</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/alertdestination_crud.png" alt="alertsdestination_crud image" /></p>
+<p>To access event alert policies page (https://server:port/#/monitoring/alertsevents/alertpolicies), you can setut role as</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/eventalert_policy_crud.png" alt="event_alert_policy_crud image" /></p>
+<h4 id="metricsandauditlogs">Metrics and Audit Logs</h4>
+<p>System requires user to have 'read all' permission to access metrics and audit logs</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/readonly.png" alt="read only image" /></p>
+<h4 id="firewalllogspolicies">Firewall Logs Policies</h4>
+<p>To manage firewall logs plicies, you can setup role as</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/firewalllog_policies_crud.png" alt="firewall log policies image" /></p>
+<h4 id="flowexport">Flow Export</h4>
+<p>To manage flow export plicies, you can setup role as</p>
+<p><img src="/assets/generated/docs/help/images/roleconfig/flowexport_policies_crud.png" alt="flow export image" /></p>

@@ -73,7 +73,7 @@ export function generateHelpDocs(config: Config) {
       Object.keys(refMap).forEach( (key) => {
         text = text.replace(new RegExp(regexQuote('(%' + key + ')'), 'g'), '(' + refMap[key] + ')');
       });
-      text = text.replace('/images/', path.join(config.htmlLinkBase, '/images/'))
+      text = text.replace(/\/images\//g, path.join(config.htmlLinkBase, '/images/'))
       return text;
     }
   };
