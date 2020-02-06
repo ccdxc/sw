@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -28,7 +29,7 @@ var portShowCmd = &cobra.Command{
 	Short: "show port object",
 	Long:  "show port object",
 	Args:  cobra.NoArgs,
-	Run:   portShowCmdHandler,
+	RunE:  portShowCmdHandler,
 }
 
 var portStatusShowCmd = &cobra.Command{
@@ -36,7 +37,7 @@ var portStatusShowCmd = &cobra.Command{
 	Short: "show port object status",
 	Long:  "show port object status",
 	Args:  cobra.NoArgs,
-	Run:   portStatusShowCmdHandler,
+	RunE:  portStatusShowCmdHandler,
 }
 
 var portCmd = &cobra.Command{
@@ -44,7 +45,7 @@ var portCmd = &cobra.Command{
 	Short: "update port object",
 	Long:  "update port object",
 	Args:  cobra.NoArgs,
-	Run:   portUpdateCmdHandler,
+	RunE:  portUpdateCmdHandler,
 }
 
 var portStatsShowCmd = &cobra.Command{
@@ -52,7 +53,7 @@ var portStatsShowCmd = &cobra.Command{
 	Short: "show port statistics",
 	Long:  "show port statistics",
 	Args:  cobra.NoArgs,
-	Run:   portStatsShowCmdHandler,
+	RunE:  portStatsShowCmdHandler,
 }
 
 func init() {
@@ -73,7 +74,7 @@ func init() {
 	portShowCmd.AddCommand(portStatsShowCmd)
 }
 
-func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
+func portStatsShowCmdHandler(cmd *cobra.Command, args []string) error {
 	halctlStr := "halctl show port statistics"
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
@@ -85,12 +86,10 @@ func portStatsShowCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[3:], " "),
 	}
 
-	naplesExecCmd(v)
-
-	return
+	return naplesExecCmd(v)
 }
 
-func portShowCmdHandler(cmd *cobra.Command, args []string) {
+func portShowCmdHandler(cmd *cobra.Command, args []string) error {
 	halctlStr := "halctl show port "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
@@ -99,8 +98,7 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 			Executable: "halctlshowport",
 			Opts:       strings.Join(execCmd[3:], " "),
 		}
-		naplesExecCmd(v)
-		return
+		return naplesExecCmd(v)
 	}
 
 	v := &nmd.DistributedServiceCardCmdExecute{
@@ -108,12 +106,10 @@ func portShowCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join([]string{""}, ""),
 	}
 
-	naplesExecCmd(v)
-
-	return
+	return naplesExecCmd(v)
 }
 
-func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
+func portStatusShowCmdHandler(cmd *cobra.Command, args []string) error {
 	halctlStr := "halctl show port status "
 	if cmd.Flags().Changed("port") {
 		halctlStr += ("--port " + fmt.Sprint(portNum))
@@ -125,17 +121,14 @@ func portStatusShowCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[3:], " "),
 	}
 
-	naplesExecCmd(v)
-
-	return
+	return naplesExecCmd(v)
 }
 
-func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
+func portUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
 		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
-		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-		return
+		return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 	}
 
 	halctlStr := "halctl debug port "
@@ -145,16 +138,14 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 
 	if cmd.Flags().Changed("pause") == true {
 		if isPauseTypeValid(portPause) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-			return
+			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 		halctlStr += ("--pause " + portPause + " ")
 	}
 
 	if cmd.Flags().Changed("fec-type") == true {
 		if isFecTypeValid(portFecType) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-			return
+			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 		halctlStr += ("--fec-type " + portFecType + " ")
 	}
@@ -165,23 +156,20 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		} else if strings.Compare(portAutoNeg, "enable") == 0 {
 			halctlStr += ("--auto-neg " + portAutoNeg + " ")
 		} else {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-			return
+			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 	}
 
 	if cmd.Flags().Changed("admin-state") == true {
 		if isAdminStateValid(portAdminState) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-			return
+			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 		halctlStr += ("--admin-state " + portAdminState + " ")
 	}
 
 	if cmd.Flags().Changed("speed") == true {
 		if isSpeedValid(strings.ToUpper(portSpeed)) == false {
-			fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
-			return
+			return errors.New("Command arguments not provided correctly. Refer to help string for guidance")
 		}
 		halctlStr += ("--speed " + strings.ToUpper(portSpeed) + " ")
 	}
@@ -196,9 +184,7 @@ func portUpdateCmdHandler(cmd *cobra.Command, args []string) {
 		Opts:       strings.Join(execCmd[2:], " "),
 	}
 
-	naplesExecCmd(v)
-
-	return
+	return naplesExecCmd(v)
 }
 
 func isSpeedValid(str string) bool {
