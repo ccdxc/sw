@@ -86,7 +86,7 @@ main_table::initctx_(Apictx *ctx) {
     FTL_TRACE_VERBOSE("M: TID:%d Idx:%d", ctx->table_id, ctx->table_index);
     ctx->bucket = &buckets_[ctx->table_index];
 
-    return ctx->bucket->read_(ctx);
+    return SDK_RET_OK;
 }
 
 //---------------------------------------------------------------------------
@@ -110,6 +110,9 @@ main_table::insert_(Apictx *ctx) {
     // 3) Else if SUCCESS, insert is complete.
 
     lock_(ctx);
+
+    SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
+
     auto ret = buckets_[ctx->table_index].insert_(ctx);
     if (unlikely(ret == SDK_RET_COLLISION)) {
         // COLLISION case
@@ -150,6 +153,10 @@ main_table::remove_(Apictx *ctx) {
 __label__ done;
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
+    lock_(ctx);
+
+    SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
+
     auto ret = buckets_[ctx->table_index].remove_(ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket remove r:%d", ret);
 
@@ -171,11 +178,13 @@ __label__ done;
 
     ctx->tstats->dec_entries();
 done:
+    unlock_(ctx);
     return ret;
 }
 
 //---------------------------------------------------------------------------
 // main_table update_: Remove entry from main table
+// find_ is invoked internally by the main table. No need for bucket lock.
 //---------------------------------------------------------------------------
 sdk_ret_t
 main_table::find_(Apictx *ctx,
@@ -184,6 +193,7 @@ __label__ done;
     if (!ctx->inited) {
         // If entry_valid, then context is already initialized.
         SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+        SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
     }
 
     auto ret = ctx->bucket->find_(ctx);
@@ -210,6 +220,10 @@ __label__ done;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
 
+    lock_(ctx);
+
+    SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
+
     auto ret = find_(ctx, &match_ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
 
@@ -217,6 +231,7 @@ __label__ done;
     FTL_RET_CHECK_AND_GOTO(ret, done, "bucket update r:%d", ret);
 
 done:
+    unlock_(ctx);
     return ret;
 }
 
@@ -226,6 +241,10 @@ __label__ done;
     Apictx *match_ctx = NULL;
 
     SDK_ASSERT(initctx_(ctx) == SDK_RET_OK);
+
+    lock_(ctx);
+
+    SDK_ASSERT(ctx->bucket->read_(ctx) == SDK_RET_OK);
 
     auto ret = find_(ctx, &match_ctx);
     FTL_RET_CHECK_AND_GOTO(ret, done, "find r:%d", ret);
@@ -242,6 +261,7 @@ __label__ done;
     ctx->entry->copy_key_data(match_ctx->params->entry);
 
 done:
+    unlock_(ctx);
     return ret;
 }
 
