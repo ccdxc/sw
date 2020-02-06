@@ -184,7 +184,7 @@ func testIncorrectUserAuthentication(t *testing.T, config *LdapConfig) {
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned while authenticating with incorrect username")
 	Assert(t, err != nil, "No error returned while authenticating with incorrect username")
-	Assert(t, err == ldap.ErrNoneOrMultipleUserEntries, "Incorrect error type returned")
+	Assert(t, err == ldap.ErrNoneOrMultipleUserEntries, fmt.Sprintf("Incorrect error type returned: %v", err))
 }
 
 func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
@@ -193,7 +193,7 @@ func testIncorrectLdapAttributeMapping(t *testing.T, config *LdapConfig) {
 			{
 				Servers: []*auth.LdapServer{
 					{
-						Url: tinfo.ldapAddr,
+						Url: config.URL,
 						TLSOptions: &auth.TLSOptions{
 							StartTLS:                   true,
 							SkipServerCertVerification: false,
@@ -236,7 +236,7 @@ func testIncorrectBaseDN(t *testing.T, config *LdapConfig) {
 			{
 				Servers: []*auth.LdapServer{
 					{
-						Url: tinfo.ldapAddr,
+						Url: config.URL,
 						TLSOptions: &auth.TLSOptions{
 							StartTLS:                   true,
 							SkipServerCertVerification: false,
@@ -279,7 +279,7 @@ func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
 			{
 				Servers: []*auth.LdapServer{
 					{
-						Url: tinfo.ldapAddr,
+						Url: config.URL,
 						TLSOptions: &auth.TLSOptions{
 							StartTLS:                   true,
 							SkipServerCertVerification: false,
@@ -314,48 +314,4 @@ func testIncorrectBindPassword(t *testing.T, config *LdapConfig) {
 	Assert(t, !ok, "Successful ldap user authentication")
 	Assert(t, autheduser == nil, "User returned with misconfigured authentication policy: Incorrect Bind Password")
 	Assert(t, err != nil, "No error returned while authenticating with misconfigured authentication policy: Incorrect Bind Password")
-}
-
-func testDisabledLdapAuthenticator(t *testing.T, config *LdapConfig) {
-	policy, err := CreateAuthenticationPolicy(tinfo.apicl, &auth.Local{}, &auth.Ldap{
-		Domains: []*auth.LdapDomain{
-			{
-				Servers: []*auth.LdapServer{
-					{
-						Url: tinfo.ldapAddr,
-						TLSOptions: &auth.TLSOptions{
-							StartTLS:                   true,
-							SkipServerCertVerification: false,
-							ServerName:                 config.ServerName,
-							TrustedCerts:               config.TrustedCerts,
-						},
-					},
-				},
-				BaseDN:       config.BaseDN,
-				BindDN:       config.BindDN,
-				BindPassword: config.BindPassword,
-				AttributeMapping: &auth.LdapAttributeMapping{
-					User:             config.UserAttribute,
-					UserObjectClass:  config.UserObjectClassAttribute,
-					Group:            config.GroupAttribute,
-					GroupObjectClass: config.GroupObjectClassAttribute,
-				},
-			},
-		},
-	})
-
-	if err != nil {
-		t.Errorf("err %s in CreateAuthenticationPolicy", err)
-		return
-	}
-	defer DeleteAuthenticationPolicy(tinfo.apicl)
-
-	// create ldap authenticator
-	authenticator := ldap.NewLdapAuthenticator(policy.Spec.Authenticators.GetLdap())
-
-	// authenticate
-	autheduser, ok, err := authenticator.Authenticate(&auth.PasswordCredential{Username: config.LdapUser, Password: config.LdapUserPassword})
-	Assert(t, !ok, "Successful ldap user authentication")
-	Assert(t, autheduser == nil, "User returned with disabled LDAP authenticator")
-	AssertOk(t, err, "Error returned with disabled LDAP authenticator")
 }

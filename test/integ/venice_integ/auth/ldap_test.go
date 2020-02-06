@@ -22,7 +22,7 @@ func getOpenLdapConfig() *LdapConfig {
 	return &LdapConfig{
 		ServerName:                ServerName,
 		TrustedCerts:              TrustedCerts,
-		URL:                       tinfo.ldapAddr,
+		URL:                       tinfo.openLDAPAddr,
 		BaseDN:                    BaseDN,
 		BindDN:                    BindDN,
 		BindPassword:              BindPassword,
@@ -49,7 +49,7 @@ func setupOpenLdap() error {
 	var usedPort int
 	// start ldap server
 	if !CheckEventually(func() (bool, interface{}) {
-		tinfo.ldapAddr, usedPort, err = StartOpenLdapServer(config.LdapServer)
+		tinfo.openLDAPAddr, usedPort, err = StartOpenLdapServer(config.LdapServer)
 		if err != nil {
 			return false, err
 		}
@@ -72,7 +72,7 @@ func setupOpenLdap() error {
 	}
 	// create test ldap user
 	if !CheckEventually(func() (bool, interface{}) {
-		if err = CreateLdapUser(tinfo.ldapAddr, config.LdapUser, config.LdapUserPassword, testTenant, config.LdapUserGroupsDN); err != nil {
+		if err = CreateLdapUser(tinfo.openLDAPAddr, config.LdapUser, config.LdapUserPassword, testTenant, config.LdapUserGroupsDN); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -83,7 +83,7 @@ func setupOpenLdap() error {
 	}
 	// create test Administrators group
 	if !CheckEventually(func() (bool, interface{}) {
-		if err = CreateGroup(tinfo.ldapAddr, ldapUserGroupDN, []string{}, []string{fmt.Sprintf("cn=%s,%s", config.LdapUser, config.BaseDN)}); err != nil {
+		if err = CreateGroup(tinfo.openLDAPAddr, ldapUserGroupDN, []string{}, []string{fmt.Sprintf("cn=%s,%s", config.LdapUser, config.BaseDN)}); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -127,7 +127,7 @@ func setupOpenLdap() error {
 	}
 	// create referral entry in ldap server
 	if !CheckEventually(func() (bool, interface{}) {
-		if err = CreateReferral(tinfo.ldapAddr, config.ReferralUser, "ldap://"+tinfo.referralAddr+"/"+config.BaseDN); err != nil {
+		if err = CreateReferral(tinfo.openLDAPAddr, config.ReferralUser, "ldap://"+tinfo.referralAddr+"/"+config.BaseDN); err != nil {
 			return false, err
 		}
 		return true, nil
@@ -173,11 +173,6 @@ func TestIncorrectBaseDN(t *testing.T) {
 func TestIncorrectBindPassword(t *testing.T) {
 	config := getOpenLdapConfig()
 	testIncorrectBindPassword(t, config)
-}
-
-func TestDisabledLdapAuthenticator(t *testing.T) {
-	config := getOpenLdapConfig()
-	testDisabledLdapAuthenticator(t, config)
 }
 
 func TestReferral(t *testing.T) {

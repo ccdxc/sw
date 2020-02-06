@@ -50,6 +50,7 @@ type tInfo struct {
 	fdr           finder.Interface
 	fdrAddr       string
 	ldapAddr      string
+	openLDAPAddr  string
 	referralAddr  string
 	restcl        apiclient.Services
 	apicl         apiclient.Services

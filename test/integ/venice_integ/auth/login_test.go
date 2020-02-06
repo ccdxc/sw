@@ -300,7 +300,21 @@ func TestAuthPolicy(t *testing.T) {
 			},
 			Spec: auth.AuthenticationPolicySpec{
 				Authenticators: auth.Authenticators{
-					Ldap:               &auth.Ldap{Domains: []*auth.LdapDomain{{BindDN: getADConfig().BindDN, BindPassword: getADConfig().BindPassword}}},
+					Ldap: &auth.Ldap{Domains: []*auth.LdapDomain{
+						{
+							Servers:      []*auth.LdapServer{{Url: getADConfig().URL}},
+							BaseDN:       getADConfig().BaseDN,
+							BindDN:       getADConfig().BindDN,
+							BindPassword: getADConfig().BindPassword,
+							AttributeMapping: &auth.LdapAttributeMapping{
+								User:             getADConfig().UserAttribute,
+								UserObjectClass:  getADConfig().UserObjectClassAttribute,
+								Group:            getADConfig().GroupAttribute,
+								GroupObjectClass: getADConfig().GroupObjectClassAttribute,
+							},
+						},
+					},
+					},
 					Radius:             &auth.Radius{Domains: []*auth.RadiusDomain{{Servers: []*auth.RadiusServer{{Url: getACSConfig().URL, Secret: getACSConfig().NasSecret}}}}},
 					Local:              &auth.Local{},
 					AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
@@ -336,7 +350,7 @@ func TestAuthPolicy(t *testing.T) {
 			Authenticators: auth.Authenticators{
 				Ldap:               &auth.Ldap{},
 				Local:              &auth.Local{},
-				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String(), auth.Authenticators_LDAP.String()},
+				AuthenticatorOrder: []string{auth.Authenticators_LOCAL.String()},
 			},
 			TokenExpiry: "1m",
 		},

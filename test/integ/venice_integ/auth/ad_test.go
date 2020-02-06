@@ -91,8 +91,3 @@ func TestADIncorrectBindPassword(t *testing.T) {
 	config := getADConfig()
 	testIncorrectBindPassword(t, config)
 }
-
-func TestADDisabledLdapAuthenticator(t *testing.T) {
-	config := getADConfig()
-	testDisabledLdapAuthenticator(t, config)
-}
