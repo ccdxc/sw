@@ -651,6 +651,7 @@ vnic_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {
         nh_data.nexthop_info.vlan = spec->vnic_encap.val.vlan_tag;
     }
+    sdk::lib::memrev(nh_data.nexthop_info.dmaci, spec->mac_addr, ETH_ADDR_LEN);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_NEXTHOP, nh_idx_,
                                        NULL, NULL, &nh_data);
     if (p4pd_ret != P4PD_SUCCESS) {
@@ -1114,6 +1115,7 @@ vnic_impl::fill_spec_(pds_vnic_spec_t *spec) {
         spec->vnic_encap.val.vlan_tag = nh_data.nexthop_info.vlan;
         spec->vnic_encap.type = PDS_ENCAP_TYPE_DOT1Q;
     }
+    sdk::lib::memrev(spec->mac_addr, nh_data.nexthop_info.dmaci, ETH_ADDR_LEN);
     return SDK_RET_OK;
 }
 

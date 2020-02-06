@@ -293,7 +293,6 @@ vnic_entry::fill_spec_(pds_vnic_spec_t *spec) {
 
     memcpy(&spec->key, &key_, sizeof(pds_obj_key_t));
     spec->subnet = subnet_;
-    memcpy(&spec->mac_addr, &mac_, ETH_ADDR_LEN);
     spec->fabric_encap = fabric_encap_;
     spec->vnic_encap = vnic_encap_;
     spec->v4_meter = v4_meter_;
