@@ -1,6 +1,6 @@
 // {C} Copyright 2020 Pensando Systems Inc. All rights reserved.
 
-package enterprise
+package base
 
 import (
 	//"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/pensando/sw/iota/test/venice/iotakit/model/objects"
 )
 
-func (sm *SysModel) NewFirewallProfile(name string) *objects.FirewallProfileCollection{
+func (sm *SysModel) NewFirewallProfile(name string) *objects.FirewallProfileCollection {
 	return objects.NewFirewallProfile(name, sm.ObjClient(), sm.Tb)
 }
 
@@ -23,4 +23,3 @@ func (sm *SysModel) FirewallProfiles() *objects.FirewallProfileCollection {
 	return &fwp
 }
 */
-
