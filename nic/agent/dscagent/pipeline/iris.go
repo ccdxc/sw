@@ -216,6 +216,12 @@ func (i *IrisAPI) HandleVrf(oper types.Operation, vrf netproto.Vrf) (vrfs []netp
 		return
 	case types.Create:
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(vrf.Kind, vrf.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", vrf.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Vrf: %s | Err: %v", vrf.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		if vrf.Status.VrfID == 0 {
 			vrf.Status.VrfID = i.InfraAPI.AllocateID(types.VrfID, types.VrfOffSet)
 		}
@@ -322,6 +328,12 @@ func (i *IrisAPI) HandleNetwork(oper types.Operation, network netproto.Network) 
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(network.Kind, network.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Network: %s | Err: %v", network.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Network: %s | Err: %v", network.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if network.Status.NetworkID == 0 {
 			network.Status.NetworkID = i.InfraAPI.AllocateID(types.NetworkID, types.NetworkOffSet)
@@ -435,6 +447,12 @@ func (i *IrisAPI) HandleEndpoint(oper types.Operation, endpoint netproto.Endpoin
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(endpoint.Kind, endpoint.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Endpoint: %s | Err: %v", endpoint.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Endpoint: %s | Err: %v", endpoint.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		if i.isLocalEP(endpoint.Spec.NodeUUID) {
 			endpoint.Status.EnicID = i.InfraAPI.AllocateID(types.EnicID, types.EnicOffset)
 		}
@@ -552,6 +570,12 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(intf.Kind, intf.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Interface: %s | Err: %v", intf.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays.
 		if intf.Status.InterfaceID == 0 {
 			intf.Status.InterfaceID = i.InfraAPI.AllocateID(types.InterfaceID, types.UplinkOffset)
@@ -666,6 +690,12 @@ func (i *IrisAPI) HandleTunnel(oper types.Operation, tunnel netproto.Tunnel) (tu
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(tunnel.Kind, tunnel.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Tunnel: %s | Err: %v", tunnel.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Tunnel: %s | Err: %v", tunnel.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if tunnel.Status.TunnelID == 0 {
 			tunnel.Status.TunnelID = i.InfraAPI.AllocateID(types.TunnelID, types.TunnelOffset)
@@ -780,6 +810,12 @@ func (i *IrisAPI) HandleApp(oper types.Operation, app netproto.App) (apps []netp
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(app.Kind, app.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "App: %s | Err: %v", app.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if app.Status.AppID == 0 {
 			app.Status.AppID = i.InfraAPI.AllocateID(types.AppID, 0)
@@ -926,6 +962,12 @@ func (i *IrisAPI) HandleNetworkSecurityPolicy(oper types.Operation, nsp netproto
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(nsp.Kind, nsp.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "NetworkSecurityPolicy: %s | Err: %v", nsp.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if nsp.Status.NetworkSecurityPolicyID == 0 {
 			nsp.Status.NetworkSecurityPolicyID = i.InfraAPI.AllocateID(types.NetworkSecurityPolicyID, 0)
@@ -1050,6 +1092,12 @@ func (i *IrisAPI) HandleSecurityProfile(oper types.Operation, profile netproto.S
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if profile.Status.SecurityProfileID == 0 {
 			profile.Status.SecurityProfileID = i.InfraAPI.AllocateID(types.SecurityProfileID, types.SecurityProfileOffSet)
@@ -1163,6 +1211,12 @@ func (i *IrisAPI) HandleMirrorSession(oper types.Operation, mirror netproto.Mirr
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if mirror.Status.MirrorSessionID == 0 {
 			mirror.Status.MirrorSessionID = i.InfraAPI.AllocateID(types.MirrorSessionID, 0)
@@ -1278,6 +1332,12 @@ func (i *IrisAPI) HandleFlowExportPolicy(oper types.Operation, netflow netproto.
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(netflow.Kind, netflow.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "FlowExportPolicy: %s | Err: %v", netflow.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
 		if netflow.Status.FlowExportPolicyID == 0 {
 			netflow.Status.FlowExportPolicyID = i.InfraAPI.AllocateID(types.FlowExportPolicyID, 0)
@@ -1396,6 +1456,12 @@ func (i *IrisAPI) HandleProfile(oper types.Operation, profile netproto.Profile) 
 
 		return
 	case types.Create:
+		// Check if Create is called on an existing objects.
+		_, err := i.InfraAPI.Read(profile.Kind, profile.GetKey())
+		if err == nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed))
+			return nil, errors.Wrapf(types.ErrBadRequest, "Profile: %s | Err: %v", profile.GetKey(), types.ErrCreateOperOnExistingObjNotPermitteed)
+		}
 
 	case types.Update:
 		// Get to ensure that the object exists
