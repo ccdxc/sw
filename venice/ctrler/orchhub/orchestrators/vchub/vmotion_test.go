@@ -206,31 +206,59 @@ func TestVmotion(t *testing.T) {
 	verifyVMWorkloads(testWorkloads, "VM not found on host1")
 
 	// move VM to host2 - build the event and all event receiver directly ??
-	logger.Infof("===== Move VM to host2 =====")
-	err = dc.UpdateVMHost(vm1, "host2")
-	AssertOk(t, err, "VM host update failed")
-	// Verify that VM is on host2 by getting workload for the vm
+
 	vchub.Wg.Add(1)
 	go vchub.startEventsListener()
-	vmEvent := types.VmBeingRelocatedEvent{
-		VmRelocateSpecEvent: types.VmRelocateSpecEvent{
-			VmEvent: types.VmEvent{
-				Event: types.Event{
-					Key: 1,
-					Vm: &types.VmEventArgument{
-						Vm: vm1.Reference(),
-					},
-				},
-			},
-		},
-		DestHost: types.HostEventArgument{
-			Host: penHost2.Obj.Reference(),
+
+	logger.Infof("===== Move VM to host2 =====")
+	vmEventArg := types.VmEventArgument{Vm: vm1.Reference()}
+	// Generate migration start event
+	events1 := []types.BaseEvent{
+		&types.VmBeingHotMigratedEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 1, Vm: &vmEventArg}},
+			DestHost: types.HostEventArgument{Host: penHost2.Obj.Reference()},
 		},
 	}
-	vchub.probe.TestReceiveEvents(dc.Obj.Reference(), []types.BaseEvent{&vmEvent})
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
+
+	err = dc.UpdateVMHost(vm1, "host2")
+	AssertOk(t, err, "VM host update failed")
+
+	// send done event
+	events2 := []types.BaseEvent{
+		&types.VmMigratedEvent{
+			VmEvent:    types.VmEvent{Event: types.Event{Key: 2, Vm: &vmEventArg}},
+			SourceHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
+		},
+	}
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events2)
+
+	// Verify that VM is on host2 by getting workload for the vm
 	host2Name := createHostName(orchInfo1[0].Name, dc.Obj.Self.Value, penHost2.Obj.Self.Value)
 	testWorkloads[vmName] = host2Name
 	verifyVMWorkloads(testWorkloads, "VM not found on host2")
+
+	logger.Infof("===== Move VM to host1 and Abort migration =====")
+	// Generate migration start event
+	events1 = []types.BaseEvent{
+		&types.VmBeingHotMigratedEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 3, Vm: &vmEventArg}},
+			DestHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
+		},
+	}
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
+
+	// XXX Workload object should show on host1 (spec not status)
+
+	events3 := []types.BaseEvent{
+		&types.VmFailedMigrateEvent{
+			VmEvent:  types.VmEvent{Event: types.Event{Key: 22, Vm: &vmEventArg}},
+			DestHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
+		},
+	}
+	vcp.TestReceiveEvents(dc.Obj.Reference(), events3)
+
+	// work should be back on host2
 
 	// VcSim BUG:
 	// In vcsim there is some problem in setting up the pnics for host.. all hosts are getting
@@ -262,7 +290,7 @@ func TestVmotion(t *testing.T) {
 	logger.Infof("===== Move VM to host3 =====")
 	err = dc.UpdateVMHost(vm1, "host3")
 	AssertOk(t, err, "VM host update failed")
-	vmEvent = types.VmBeingRelocatedEvent{
+	vmEvent := types.VmBeingRelocatedEvent{
 		VmRelocateSpecEvent: types.VmRelocateSpecEvent{
 			VmEvent: types.VmEvent{
 				Event: types.Event{

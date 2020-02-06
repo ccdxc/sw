@@ -130,6 +130,8 @@ const (
 	VMotionStart = VCNotificationType("VMotion Start")
 	// VMotionFailed indicates failure/cancellation of a VM migration/relocation
 	VMotionFailed = VCNotificationType("VMotion Failed")
+	// VMotionDone indicates completion of a VM migration/relocation
+	VMotionDone = VCNotificationType("VMotionDone")
 )
 
 // VCNotificationMsg defines notifications from VC Event manager
@@ -140,17 +142,30 @@ type VCNotificationMsg struct {
 
 // VMotionStartMsg indicates start of VM migration
 type VMotionStartMsg struct {
-	VMKey       string
-	DestHostKey string
-	DcID        string
+	VMKey        string
+	HotMigration bool
+	DcID         string
+	// DstHostKey/Name
+	DstHostKey  string
+	DstHostName string
+	// DstDcID/Name is applicable for inter-DC migration
+	DstDcName string
+	DstDcID   string
 }
 
 // VMotionFailedMsg indicates that VMtion operation failed/stopped
 type VMotionFailedMsg struct {
-	VMKey       string
-	Reason      string
-	DestHostKey string
-	DcID        string
+	DcID       string
+	VMKey      string
+	Reason     string
+	DstHostKey string
+}
+
+// VMotionDoneMsg indicates completion of VM migration
+type VMotionDoneMsg struct {
+	DcID       string
+	VMKey      string
+	SrcHostKey string
 }
 
 // TagEntry is an item of a TagMsg
@@ -179,3 +194,8 @@ type State struct {
 	// TODO: for testing locally only, remove eventually
 	ForceDCname string
 }
+
+const (
+	// MaxVmotionTimeout is the maximum time allowed for vmotion to complete
+	MaxVmotionTimeout = "100s"
+)

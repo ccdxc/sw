@@ -329,7 +329,7 @@ func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
 
 	var vmList []string
 	if len(objs) == 0 {
-		t.Log.Debugf("No objects on tag %s", tagID)
+		//t.Log.Debugf("No objects on tag %s", tagID)
 		return
 	}
 	tagName := objs[0].Tag.Name
@@ -345,7 +345,7 @@ func (t *tagsProbe) fetchTagInfo(tagID string, chSet *DeltaStrSet) {
 	vmSet := t.vmsOnKey[key]
 	if vmSet == nil && len(vmList) == 0 {
 		// this tag can be ignored
-		t.Log.Debugf("No vms on %s", key)
+		// t.Log.Debugf("No vms on %s", key)
 		return
 	}
 

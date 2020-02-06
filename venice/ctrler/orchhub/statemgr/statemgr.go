@@ -162,7 +162,7 @@ func (s *Statemgr) SendProbeEvent(orchKey string, obj runtime.Object, evtType kv
 // startWatchers starts ctkit watchers which reconciles all the objects in the local cache
 // and APIserver
 func (s *Statemgr) startWatchers() error {
-	// All the Watch options ensure that the perform a diff of the objects present
+	// All the Watch options ensure that they perform a diff of the objects present
 	// in local cache and API server and update the local cache accordingly in
 	// order to ensure the cache and the API server are in sync. This operation
 	// is performed synchronously when the Watch is first setup and before a

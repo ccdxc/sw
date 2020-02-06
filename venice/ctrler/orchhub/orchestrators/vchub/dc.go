@@ -108,6 +108,18 @@ func (v *VCHub) GetDC(name string) *PenDC {
 	return dc
 }
 
+// GetDCFromID returns the DC by vcenter DcID
+func (v *VCHub) GetDCFromID(dcID string) *PenDC {
+	v.DcMapLock.Lock()
+	defer v.DcMapLock.Unlock()
+	for _, dc := range v.DcMap {
+		if dc.dcRef.Value == dcID {
+			return dc
+		}
+	}
+	return nil
+}
+
 // AddPG adds a PG to all DVS in this DC, unless dvsName is not blank
 func (d *PenDC) AddPG(pgName string, networkMeta api.ObjectMeta, dvsName string) []error {
 	d.Lock()

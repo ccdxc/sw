@@ -53,7 +53,7 @@ func NewHostState(host *ctkit.Host, stateMgr *Statemgr) (*HostState, error) {
 	return w, nil
 }
 
-// HostStateFromObj conerts from memdb object to host state
+// HostStateFromObj converts from memdb object to host state
 func HostStateFromObj(obj runtime.Object) (*HostState, error) {
 	switch obj.(type) {
 	case *ctkit.Host:

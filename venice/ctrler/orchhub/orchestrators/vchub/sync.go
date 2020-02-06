@@ -313,13 +313,13 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 		portSetting, ok := port.Config.Setting.(*types.VMwareDVSPortSetting)
 		if !ok {
 			// skipping
-			v.Log.Infof("Skipping port %s - port setting %v", portKey, port.Config.Setting)
+			// v.Log.Infof("Skipping port %s - port setting %v", portKey, port.Config.Setting)
 			continue
 		}
 		vlanSpec, ok := portSetting.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
 		if !ok {
 			// Skipping
-			v.Log.Infof("Skipping port %s - port setting vlan type %v", portKey, portSetting.Vlan)
+			// v.Log.Infof("Skipping port %s - port setting vlan type %v", portKey, portSetting.Vlan)
 			continue
 		}
 		if vlanSpec.VlanId == 0 {

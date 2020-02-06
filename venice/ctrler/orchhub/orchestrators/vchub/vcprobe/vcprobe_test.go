@@ -453,6 +453,22 @@ func TestEventReceiver(t *testing.T) {
 			},
 			DestHost: destHost,
 		},
+		&types.VmEmigratingEvent{
+			VmEvent: types.VmEvent{Event: types.Event{Key: 4, Vm: &vmEventArg}},
+		},
+		&types.EventEx{
+			EventTypeId: "com.vmware.vc.vm.VmHotMigratingWithEncryptionEvent",
+			Arguments: []types.KeyAnyValue{
+				{
+					Key:   "destHost",
+					Value: "host1",
+				},
+				{
+					Key:   "destDatacenter",
+					Value: "DC1",
+				},
+			},
+		},
 	}
 	events2 := []types.BaseEvent{
 		&types.VmMigratedEvent{

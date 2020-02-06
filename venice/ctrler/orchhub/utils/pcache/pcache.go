@@ -98,6 +98,17 @@ func (p *PCache) GetWorkload(meta *api.ObjectMeta) *workload.Workload {
 	return nil
 }
 
+// GetWorkloadByName Retrieves a workload
+func (p *PCache) GetWorkloadByName(wlName string) *workload.Workload {
+	meta := &api.ObjectMeta{
+		Name: wlName,
+		// TODO: Don't use default tenant
+		Tenant:    globals.DefaultTenant,
+		Namespace: globals.DefaultNamespace,
+	}
+	return p.GetWorkload(meta)
+}
+
 // Get retrieves the object from either the PCache (apiserver object) or from statemgr (ctkit object)
 func (p *PCache) Get(kind string, meta *api.ObjectMeta) interface{} {
 	p.RLock()
