@@ -143,6 +143,14 @@ sdk_ret_t pds_meter_create(pds_meter_spec_t *spec,
 /// \return     #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_meter_read(pds_obj_key_t *key, pds_meter_info_t *info);
 
+typedef void (*meter_read_cb_t)(pds_meter_info_t *info, void *ctxt);
+
+/// \brief      read all meter
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_meter_read_all(meter_read_cb_t meter_get_cb, void *ctxt);
+
 /// \brief     update meter
 /// \param[in] spec meter configuration
 /// \param[in] bctxt batch context if API is invoked in a batch

@@ -1049,7 +1049,7 @@ pds_meter_api_stats_to_proto (pds::MeterStats *proto_stats,
 
 // populate proto buf from meter API info
 static inline void
-pds_meter_api_info_to_proto (const pds_meter_info_t *api_info, void *ctxt)
+pds_meter_api_info_to_proto (pds_meter_info_t *api_info, void *ctxt)
 {
     pds::MeterGetResponse *proto_rsp = (pds::MeterGetResponse *)ctxt;
     auto meter = proto_rsp->add_response();

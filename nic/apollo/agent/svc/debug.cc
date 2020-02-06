@@ -347,7 +347,10 @@ DebugSvcImpl::SlabGet(ServerContext *context,
                       const Empty *proto_req,
                       pds::SlabGetResponse *proto_rsp) {
     sdk_ret_t ret;
-    ret = debug::pds_slab_get(pds_slab_to_proto, proto_rsp);
+    ret = core::agent_state::state()->slab_walk(pds_slab_to_proto, proto_rsp);
+    if (ret == SDK_RET_OK) {
+        ret = debug::pds_slab_get(pds_slab_to_proto, proto_rsp);
+    }
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     return Status::OK;
 }

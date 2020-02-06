@@ -19,7 +19,7 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
     pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_meter_spec_t *api_spec = NULL;
+    pds_meter_spec_t api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -42,25 +42,18 @@ MeterSvcImpl::MeterCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_meter_spec_t *)
-                    core::agent_state::state()->meter_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = pds_meter_proto_to_api_spec(api_spec, request);
+        ret = pds_meter_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
-            core::agent_state::state()->meter_slab()->free(api_spec);
             goto end;
         }
-        ret = core::meter_create(&key, api_spec, bctxt);
+        ret = core::meter_create(&key, &api_spec, bctxt);
 
         // free the rules memory
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
-            api_spec->rules = NULL;
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -92,7 +85,7 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
     pds_obj_key_t key = { 0 };
     bool batched_internally = false;
     pds_batch_params_t batch_params;
-    pds_meter_spec_t *api_spec = NULL;
+    pds_meter_spec_t api_spec;
 
     if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
@@ -115,25 +108,18 @@ MeterSvcImpl::MeterUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_meter_spec_t *)
-                    core::agent_state::state()->meter_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = pds_meter_proto_to_api_spec(api_spec, request);
+        ret = pds_meter_proto_to_api_spec(&api_spec, request);
         if (ret != SDK_RET_OK) {
-            core::agent_state::state()->meter_slab()->free(api_spec);
             goto end;
         }
-        ret = core::meter_update(&key, api_spec, bctxt);
+        ret = core::meter_update(&key, &api_spec, bctxt);
 
         // free the rules memory
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec->rules);
-            api_spec->rules = NULL;
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_ID_METER, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
