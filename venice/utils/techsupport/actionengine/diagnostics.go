@@ -5,6 +5,7 @@ package actionengine
 
 import (
 	"fmt"
+	"os/exec"
 	"regexp"
 
 	"github.com/pensando/sw/api/generated/diagnostics"
@@ -59,7 +60,8 @@ func RunDiagnosticsActions(diagnosticsReq *diagnostics.DiagnosticsRequest) ([]by
 		return nil, fmt.Errorf("illegal characters in cmd %v", cmd)
 	}
 
-	outBin, err := RunShellCmd(matchStr)
+	cmdOut := exec.Command("bash", "-c", matchStr)
+	outBin, err := cmdOut.Output()
 	if err != nil {
 		log.Errorf("Failed running command. Err : %v", err)
 		return nil, fmt.Errorf("Failed to run commands %v. Err : %v", cmd, err)

@@ -196,8 +196,7 @@ func (ag *TSMClient) deleteTechsupportFiles(work *tsproto.TechSupportRequest) er
 	log.Info("Deleting techsupport files")
 	targetID := ag.generateTargetID(work.Spec.InstanceID, work.ObjectMeta.Name)
 	cmd := fmt.Sprintf("rm -rf %s/%s", ag.cfg.FileSystemRoot, targetID)
-	_, err := action.RunShellCmd(cmd)
-	return err
+	return action.RunShellCmd(cmd, ag.cfg.FileSystemRoot)
 }
 
 func (ag *TSMClient) handleTechSupportRetention(work *tsproto.TechSupportRequest) error {

@@ -6,22 +6,32 @@ package actionengine
 import (
 	"fmt"
 	"os/exec"
+	"regexp"
+	"strings"
 
 	"github.com/pensando/sw/venice/utils/log"
 )
 
 // RunShellCmd runs shell command
-func RunShellCmd(cmdStr string) ([]byte, error) {
+func RunShellCmd(cmdStr, cmdsDir string) error {
+	reg, err := regexp.Compile("[^a-zA-Z0-9_]+")
+	if err != nil {
+		return nil
+	}
+	cmdFileName := strings.ReplaceAll(cmdStr, " ", "_")
+	cmdFileName = reg.ReplaceAllString(cmdFileName, "")
+	cmdStr = fmt.Sprintf("%s >> %s/%s.txt", cmdStr, cmdsDir, cmdFileName)
+
 	log.Infof("Running : " + cmdStr)
-	cmd := exec.Command("bash", "-c", cmdStr)
-	return cmd.Output()
+	cmdOut := exec.Command("bash", "-c", cmdStr)
+	_, err = cmdOut.Output()
+	return err
 }
 
 // GetDelphiObject gets delphi object details
-func GetDelphiObject(obj string) []byte {
+func GetDelphiObject(obj, cmdsDir string) error {
 	log.Infof("Getting DelphiObject : %v", obj)
-	ret, _ := RunShellCmd("delphictl db get " + obj)
-	return ret
+	return RunShellCmd("delphictl db get "+obj, cmdsDir)
 }
 
 // MakeRESTCall  makes a rest call
@@ -34,6 +44,5 @@ func MakeRESTCall(cmd string) error {
 func CollectFile(targetDir, fileName string) error {
 	log.Infof("Collecting File : %v", fileName)
 	cmd := fmt.Sprintf("mkdir -p %v/%v && cp %v/* %v/%v/", targetDir, fileName, fileName, targetDir, fileName)
-	_, err := RunShellCmd(cmd)
-	return err
+	return RunShellCmd(cmd, "files.txt")
 }

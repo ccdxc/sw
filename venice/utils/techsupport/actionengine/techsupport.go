@@ -39,29 +39,25 @@ func RunActions(actions []*tsconfig.ActionItem, techsupportDir string, skipCores
 		}
 	}
 
-	fmt.Println("Creating Techsupport Directory : ", techsupportDir)
-	f, err := os.OpenFile(techsupportDir+"/cmd.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Errorf("Could not open file : %v", err)
+	cmdsDir := fmt.Sprintf("%s/cmds/", techsupportDir)
+	if _, err := os.Stat(cmdsDir); os.IsNotExist(err) {
+		log.Infof("Creating techsupport directory : %v", cmdsDir)
+		res := os.MkdirAll(cmdsDir, 0777)
+		if res != nil {
+			return err
+		}
 	}
 
 	for _, action := range actions {
 		switch action.GetMethod() {
 		case tsconfig.ActionItem_ShellCmd:
 			if !(skipCores && strings.Contains(action.Command, "core")) {
-				f.WriteString("==== Running Command ====\n")
-				f.WriteString(action.Command + "\n")
-				out, _ := RunShellCmd(action.Command)
-				f.WriteString(string(out) + "\n")
+				RunShellCmd(action.Command, cmdsDir)
 			} else {
-				f.WriteString("==== Skipping Command ====\n")
-				f.WriteString(action.Command + "\n")
+				log.Infof("==== Skipping Command : %v ====", action.Command)
 			}
-
 		case tsconfig.ActionItem_DelphiObj:
-			f.WriteString(fmt.Sprintf("==== Getting Delphi Object : %v ====\n", action.Command))
-			out := GetDelphiObject(action.Command)
-			f.WriteString(string(out) + "\n")
+			GetDelphiObject(action.Command, cmdsDir)
 		case tsconfig.ActionItem_RESTCall:
 			MakeRESTCall(action.Command)
 		case tsconfig.ActionItem_CollectFile:
@@ -72,7 +68,6 @@ func RunActions(actions []*tsconfig.ActionItem, techsupportDir string, skipCores
 		log.Infof("ACTION : %v", action)
 	}
 
-	f.Close()
 	return nil
 }
 
