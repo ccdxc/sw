@@ -27,7 +27,7 @@ copy_files() {
     nicf='nic/Makefile nic/include/capri_barco.h nic/tools/print-cores.sh nic/tools/savelogs.sh '
     nicf+='nic/tools/merge_model_debug.py nic/tools/relative_link.sh nic/include/globals.hpp '
     nicf+='nic/include/notify.hpp nic/include/edmaq.h nic/include/eth_common.h '
-    nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h nic/include/virtio_dev_if.h'
+    nicf+='nic/include/adminq.h nic/include/nvme_dev_if.h nic/include/virtio_dev_if.h '
 
     p4d='nic/p4/include nic/p4/common nic/p4/common-p4+ nic/asm/common-p4+/include/ nic/p4-hlir '
     p4d+='nic/include/hal_pd_error.hpp nic/p4/eth nic/asm/eth '
@@ -51,7 +51,15 @@ copy_files() {
     elif [ "$pipeline" == "apollo" ];then
         pkgf+='nic/tools/package/pack_apollo.txt '
         apollod+='nic/conf/apollo '
+    elif [ "$pipeline" == "athena" ];then
+        pkgf+='nic/tools/package/pack_athena.txt '
+        apollod+='nic/conf/athena '
+        nicf+='nic/include/base.hpp nic/include/ftl_dev_if.hpp nic/hal/hal_trace.hpp '
+        #nicf+='nic/p4/ftl_dev/include/ftl_dev_shared.h nic/hal/pd/pd.hpp '
+        nicf+='nic/hal/pd/pd.hpp '
+        p4d+='nic/asm/ftl_dev nic/p4/ftl_dev '
     fi
+
 
     utilsd='nic/utils/ftlite '
 
@@ -95,6 +103,7 @@ copy_files() {
     for f in $files ; do
         if [ ! -e "$DST/$f" ];then
             cp  -r --parents -u $f $DST
+            echo "Copied file/dir : $f"
         else
             echo "Skipping files/dir : $f"
         fi
@@ -175,7 +184,7 @@ save_files() {
     # Platform includes used by nicmgr
     platform_inc='pciemgr_if/include/pciemgr_if.hpp '
     platform_inc+='nicmgr/include/dev.hpp nicmgr/include/pd_client.hpp nicmgr/include/device.hpp nicmgr/include/pal_compat.hpp '
-    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp nicmgr/include/nicmgr_utils.hpp'
+    platform_inc+='nicmgr/include/eth_dev.hpp nicmgr/include/eth_lif.hpp nicmgr/include/logger.hpp nicmgr/include/nicmgr_utils.hpp nicmgr/include/ftl_dev.hpp nicmgr/include/ftl_lif.hpp '
 
     mkdir -p $LIBDIR
     cd $DST/nic/build
@@ -241,20 +250,31 @@ rebuild_and_runtest() {
 }
 
 if [ $# != 3 ];then
-    echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)> <pipeline(apollo/apulu)"
+    echo "Usage : ./build_dev_docker.sh <agent(1/0)> <buildarch(aarch64/x86_64/all)> <pipeline(apollo/apulu/athena)"
     exit;
 fi
 
+echo "Invoke copy_files"
 copy_files
+echo "Invoke copy_job_files"
 copy_job_files
 #remove_all_job_files
+echo "Invoke build"
 build 0 $DST/nic
 # TODO check for build success before removing the asic files
+echo "Invoke save_files"
 save_files
+echo "Invoke remove_files"
 remove_files
+echo "Invoke remove_hiddens"
 remove_hiddens
+echo "Invoke remove_build"
 remove_build $DST/nic
+echo "Invoke rebuild_and_runtest"
 rebuild_and_runtest
 # Comment the below calls, if we want to keep the images build for future debug
+echo "Invoke remove_build"
 remove_build /sw/nic
+echo "Invoke script_exit"
 script_exit 1 0
+echo "Post script_exit"

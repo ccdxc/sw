@@ -159,6 +159,7 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
 {
     flow_hash_entry_t *hwentry = (flow_hash_entry_t *)params->entry;
     pds_flow_read_cbdata_t *cbdata = (pds_flow_read_cbdata_t *)params->cbdata;
+    uint16_t            vnic_id;
 
     // Iterate only when entry valid and if another entry is not found already
     if (hwentry->entry_valid && (ftl_entry_valid == false)) {
@@ -170,7 +171,8 @@ flow_cache_entry_find_cb (sdk_table_api_params_t *params)
             (cbdata->key->ip_addr_family == IP_AF_IPV6)) {
             return;
         }
-        if ((hwentry->get_key_metadata_vnic_id() == cbdata->key->vnic_id) &&
+        vnic_id = (hwentry->key_metadata_vnic_id_sbit0_ebit7 << 1) | hwentry->key_metadata_vnic_id_sbit8_ebit8;
+        if ((vnic_id == cbdata->key->vnic_id) &&
             (!memcmp(hwentry->key_metadata_dst, cbdata->key->ip_daddr, IP6_ADDR8_LEN)) &&
             (!memcmp(hwentry->key_metadata_src, cbdata->key->ip_saddr, IP6_ADDR8_LEN)) &&
             (hwentry->key_metadata_proto == cbdata->key->ip_proto) &&

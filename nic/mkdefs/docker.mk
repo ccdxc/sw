@@ -17,7 +17,7 @@ docker/shell: docker/build-shell-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
 endif
 
-ifeq ($(PIPELINE),apulu)
+ifeq ($(PIPELINE),$(filter $(PIPELINE),apulu athena))
 docker/customer-shell: docker/build-customer-shell-image
 	docker run -it --rm --sysctl net.ipv6.conf.all.disable_ipv6=1 --privileged --name ${CONTAINER_NAME} -v $(SW_DIR):/sw  -v /vol/builds:/vol/builds -w /sw/nic pensando/nic su -l $(CUR_USER)
 else

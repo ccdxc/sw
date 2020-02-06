@@ -30,7 +30,7 @@ build_fw() {
 }
 
 print_usage() {
-    echo "./build_custom_docker.sh <arch(x86_64/aarch64/firmware/clean)> <pipeline(apollo/apulu)> <extra make params>"
+    echo "./build_custom_docker.sh <arch(x86_64/aarch64/firmware/clean)> <pipeline(apollo/apulu/athena)> <extra make params>"
     echo "                   extra make params : V=1, -d etc"
 }
 

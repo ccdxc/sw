@@ -1,7 +1,7 @@
 #ifndef __FTL_DEV_SHARED_H
 #define __FTL_DEV_SHARED_H
 
-#include "nic/include/pd.hpp"
+#include "nic/hal/pd/pd.hpp"
 
 /*
  * HBM regions

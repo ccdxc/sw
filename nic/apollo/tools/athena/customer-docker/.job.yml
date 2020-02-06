@@ -1,0 +1,19 @@
+---
+version: 2.0
+targets:
+ apollo/tools/athena/gtests:
+  commands: ["make", "PIPELINE=athena", "jobd/athena/gtests"]
+  owners: ["email:ksmurty@pensando.io"]
+  area:
+  sub-area:
+  feature:
+
+cache:
+  name: "sw"
+  mount_dir: "/root/.cache"
+image:
+  bind_dir: "/sw"
+  work_dir: "/sw/nic"
+
+logfiles:
+  - /sw/nic/apollo/tools/dev-docker-sanity/nic_sanity_logs.tar.gz
