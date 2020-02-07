@@ -689,7 +689,7 @@ static int ionic_query_ah_cmd(struct ionic_ibdev *dev,
 	if (dev->admin_opcodes <= IONIC_V1_ADMIN_QUERY_AH)
 		return -ENOSYS;
 
-	hdr_buf = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	hdr_buf = contig_kmalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!hdr_buf) {
 		rc = -ENOMEM;
 		goto err_buf;
