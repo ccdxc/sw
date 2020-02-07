@@ -66,6 +66,12 @@ func (ts *StubTopologyService) AddNodes(ctx context.Context, req *iota.NodeMsg) 
 	return req, nil
 }
 
+// IpmiNodeControl runs any ipmi power command on node
+func (*StubTopologyService) IpmiNodeControl(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
+	resp := &iota.ReloadMsg{}
+	return resp, nil
+}
+
 // ReloadNodes saves and loads node personality
 func (*StubTopologyService) ReloadNodes(ctx context.Context, req *iota.ReloadMsg) (*iota.ReloadMsg, error) {
 	resp := &iota.ReloadMsg{}

@@ -128,6 +128,7 @@ type TestNodeInterface interface {
 	AddNode() error
 	GetAgentURL() (string, error)
 	GetNodeIP() (string, error)
+	IpmiNodeControl(name string, restoreState bool, method string) error
 	ReloadNode(name string, restoreState bool, method string) error
 	SetNodeMsg(*iota.Node)
 	GetNodeMsg(name string) *iota.Node

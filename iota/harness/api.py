@@ -827,6 +827,9 @@ def CopyFromWorkload(node_name, workload_name, files, dest_dir):
 def RestartNodes(nodes, restartMode=''):
     return store.GetTestbed().GetCurrentTestsuite().GetTopology().RestartNodes(nodes,restartMode)
 
+def IpmiNodes(nodes, ipmiMethod):
+    return store.GetTestbed().GetCurrentTestsuite().GetTopology().IpmiNodes(nodes,ipmiMethod)
+
 def ReinitForTestsuite():
     return store.GetTestbed().InitForTestsuite()
 

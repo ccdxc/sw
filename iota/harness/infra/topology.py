@@ -697,6 +697,13 @@ class Topology(object):
     RestartMethodReboot = 'reboot'
     RestartMethods = [RestartMethodAuto, RestartMethodApc, RestartMethodIpmi, RestartMethodReboot]
 
+    IpmiMethodCycle = "cycle"
+    IpmiMethodOn = "on"
+    IpmiMethodOff = "off"
+    IpmiMethodReset = "reset"
+    IpmiMethodSoft = "soft"
+    IpmiMethods = [IpmiMethodCycle, IpmiMethodOn, IpmiMethodOff, IpmiMethodReset, IpmiMethodSoft]
+
     def __init__(self, spec):
         self.__nodes = {}
 
@@ -718,6 +725,25 @@ class Topology(object):
 
     def Nodes(self):
         return self.__nodes.values()
+
+    def IpmiNodes(self, node_names, ipmiMethod):
+        if ipmiMethod not in self.IpmiMethods:
+            raise ValueError('ipmiMethod must be one of {0}'.format(self.IpmiMethods))
+        req = topo_pb2.ReloadMsg()
+        req.restart_method = ipmiMethod
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found" % node_name)
+                return types.status.FAILURE
+            node = self.__nodes[node_name]
+            msg = req.node_msg.nodes.add()
+            msg.name = node_name
+
+        resp = api.IpmiNodeControl(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+
+        return types.status.SUCCESS
 
     def RestartNodes(self, node_names, restartMethod=RestartMethodAuto):
         if restartMethod not in self.RestartMethods:
