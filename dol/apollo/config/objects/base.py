@@ -42,6 +42,7 @@ class ConfigObjectBase(base.ConfigObjectBase):
         # there are few updates yet to be pushed to hw
         self.Dirty = False
         self.Node = node
+        self.Duplicate = None
         return
 
     def __get_GrpcMsg(self, op):

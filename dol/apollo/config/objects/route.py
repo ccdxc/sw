@@ -274,7 +274,7 @@ class RouteTableObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunnelId = 0
+            self.TunnelId = dObj.Duplicate.Id
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))

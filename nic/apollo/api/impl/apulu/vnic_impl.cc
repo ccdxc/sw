@@ -699,7 +699,9 @@ vnic_impl::update_hw(api_base *orig_obj, api_base *curr_obj,
         } else {
             lif_key = vnic->host_if();
             lif = lif_impl_db()->find(&lif_key);
-            nh_data.nexthop_info.lif = lif->id();
+            if (lif) {
+                nh_data.nexthop_info.lif = lif->id();
+            }
             nh_data.nexthop_info.port = TM_PORT_DMA;
         }
         if (spec->vnic_encap.type == PDS_ENCAP_TYPE_DOT1Q) {

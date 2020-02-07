@@ -114,6 +114,14 @@ class InterfaceObject(base.ConfigObjectBase):
             self.IfInfo.Show()
         return
 
+    def Dup(self):
+        dupObj = copy.copy(self)
+        dupObj.InterfaceId = next(ResmgrClient[self.Node].InterfaceIdAllocator)
+        dupObj.GID("DupInterface ID:%s"%dupObj.InterfaceId)
+        dupObj.UUID = utils.PdsUuid(dupObj.InterfaceId)
+        self.Duplicate = dupObj
+        return dupObj
+
     def CopyObject(self):
         clone = copy.copy(self)
         clone.IfInfo = copy.copy(self.IfInfo)
@@ -254,6 +262,14 @@ class InterfaceObjectClient(base.ConfigClientBase):
             return
         iflist = getattr(topospec, 'interface', [])
         self.__generate_l3_uplink_interfaces(node, parent, iflist)
+        return
+
+    def AddObjToDict(self, obj, node):
+        self.Objs[node].update({obj.InterfaceId: obj})
+        return
+
+    def DeleteObjFromDict(self, obj, node):
+        self.Objs[node].pop(obj.InterfaceId, None)
         return
 
     def CreateObjects(self, node):

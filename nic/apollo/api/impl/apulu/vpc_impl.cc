@@ -367,6 +367,7 @@ vpc_impl::read_hw(api_base *api_obj, obj_key_t *key, obj_info_t *info) {
     }
     spec->fabric_encap.val.vnid = vpc_data.vpc_info.vni;
     memcpy(spec->vr_mac, vpc_data.vpc_info.vrmac, ETH_ADDR_LEN);
+    spec->tos = vpc_data.vpc_info.tos;
     vni_key.vxlan_1_vni = spec->fabric_encap.val.vnid;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, handle_t::null());

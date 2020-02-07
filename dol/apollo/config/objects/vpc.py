@@ -85,6 +85,8 @@ class VpcObject(base.ConfigObjectBase):
             self.PfxSel = 0
         self.Vnid = next(ResmgrClient[node].VpcVxlanIdAllocator)
         self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
+        self.Tos = 0 # to start with
+        self.Mutable = utils.IsUpdateSupported()
         self.Status = VpcStatus()
         ################# PRIVATE ATTRIBUTES OF VPC OBJECT #####################
         self.__ip_subnet_prefix_pool = {}
@@ -215,12 +217,13 @@ class VpcObject(base.ConfigObjectBase):
             self.__svc_mapping_shared_count = (self.__svc_mapping_shared_count + 1) % self.__max_svc_mapping_shared_count
         return __get()
 
-    #TODO - no scenario currently in DOL which uses vpc vrmac
-    #def UpdateAttributes(self):
-    #    self.VirtualRouterMACAddr = ResmgrClient[node].VirtualRouterMacAllocator.get()
+    def UpdateAttributes(self):
+        self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
+        self.Tos += 1
 
-    #def RollbackAttributes(self):
-    #    self.VirtualRouterMACAddr = self.GetPrecedent().VirtualRouterMACAddr
+    def RollbackAttributes(self):
+        attrlist = ["VirtualRouterMACAddr", "Tos"]
+        self.RollbackMany(attrlist)
 
     def PopulateKey(self, grpcmsg):
         grpcmsg.Id.append(self.GetKey())
@@ -233,6 +236,7 @@ class VpcObject(base.ConfigObjectBase):
         spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
         spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
+        spec.ToS = self.Tos
         utils.GetRpcEncap(self.Node, self.Vnid, self.Vnid, spec.FabricEncap)
         if self.Nat46_pfx is not None:
             utils.GetRpcIPv6Prefix(self.Nat46_pfx, spec.Nat46Prefix)
@@ -244,6 +248,8 @@ class VpcObject(base.ConfigObjectBase):
         if spec.Type != self.Type:
             return False
         if utils.ValidateTunnelEncap(self.Node, self.Vnid, spec.FabricEncap) is False:
+            return False
+        if spec.ToS != self.Tos:
             return False
         if utils.IsPipelineApulu():
             if spec.VirtualRouterMac != self.VirtualRouterMACAddr.getnum():

@@ -122,7 +122,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
             return
         logger.info(" - Linking %s to %s " % (cObj, self))
         if cObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunID = cObj.Id
+            self.TUNNEL = cObj
         else:
             logger.error(" - ERROR: %s not handling %s restoration" %\
                          (self.ObjType.name, cObj.ObjType))
@@ -140,7 +140,8 @@ class RemoteMappingObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunID = 0
+            logger.info(" - Linking %s to %s " % (dObj.Duplicate, self))
+            self.TUNNEL = dObj.Duplicate
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))

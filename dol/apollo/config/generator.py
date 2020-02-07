@@ -151,6 +151,7 @@ def __read(node):
 def Main(node, topospec, ip=None):
     logger.info("Initializing object info")
     __initialize_object_info()
+    store.EzAccessStore.SetConfigClientDict(ObjectInfo)
 
     agentapi.Init(node, ip)
 

@@ -20,6 +20,8 @@ def TestCaseSetup(tc):
     tc.AddIgnorePacketField('UDP', 'sport')
     tc.AddIgnorePacketField('UDP', 'chksum')
     tc.AddIgnorePacketField('IP', 'chksum') #Needed to pass NAT testcase
+    # TODO: Ignore tos until all testspecs are updated to take tos from VPC
+    tc.AddIgnorePacketField('IP', 'tos')
     if tc.config.root.FwdMode == 'IGW_NAPT':
         tc.AddIgnorePacketField('IP', 'src')
         tc.AddIgnorePacketField('UDP', 'sport')

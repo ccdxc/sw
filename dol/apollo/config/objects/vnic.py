@@ -121,11 +121,13 @@ class VnicObject(base.ConfigObjectBase):
     def UpdateAttributes(self):
         if self.dot1Qenabled:
             self.VlanId = next(ResmgrClient[node].VnicVlanIdAllocator)
+        self.UseHostIf = not(self.UseHostIf)
         return
 
     def RollbackAttributes(self):
         if self.dot1Qenabled:
             self.VlanId = self.GetPrecedent().VlanId
+        self.UseHostIf = not(self.UseHostIf)
         return
 
     def PopulateKey(self, grpcmsg):

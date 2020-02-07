@@ -14,6 +14,7 @@ import apollo.config.objects.base as base
 
 import tunnel_pb2 as tunnel_pb2
 import ipaddress
+import copy
 
 class TunnelObject(base.ConfigObjectBase):
     def __init__(self, node, parent, spec, local):
@@ -97,6 +98,14 @@ class TunnelObject(base.ConfigObjectBase):
         self.DeriveOperInfo()
         self.Show()
         return
+
+    def Dup(self):
+        dupObj = copy.copy(self)
+        dupObj.Id = next(ResmgrClient[self.Node].TunnelIdAllocator)
+        dupObj.GID("DupTunnel%d"%dupObj.Id)
+        dupObj.UUID = utils.PdsUuid(dupObj.Id)
+        self.Duplicate = dupObj
+        return dupObj
 
     def __repr__(self):
         remote = ""
@@ -235,9 +244,9 @@ class TunnelObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.NEXTHOP:
-            self.NexthopId = 0
-        elif dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
-            self.NexthopGroupId = 0
+            self.NexthopId = dObj.Duplicate.NexthopId
+        #elif dObj.ObjType == api.ObjectTypes.NEXTHOPGROUP:
+        #    self.NexthopGroupId = 0
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))
@@ -281,6 +290,10 @@ class TunnelObjectClient(base.ConfigClientBase):
         super().__init__(api.ObjectTypes.TUNNEL, Resmgr.MAX_TUNNEL)
         return
 
+    def AddObject(self, node, obj):
+        self.Objs[node].update({obj.Id: obj})
+        return
+
     def GetTunnelObject(self, node, tunnelid):
         return self.GetObjectByKey(node, tunnelid)
 
@@ -313,6 +326,13 @@ class TunnelObjectClient(base.ConfigClientBase):
                 nhGroupObj.AddDependent(tun)
         return
 
+    def AddObjToDict(self, obj, node):
+        self.Objs[node].update({obj.Id: obj})
+        return
+
+    def DeleteObjFromDict(self, obj, node):
+        self.Objs[node].pop(obj.Id, None)
+        return
 
     def GenerateObjects(self, node, parent, tunnelspec):
         def __isTunFeatureSupported(tunnel_type):

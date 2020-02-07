@@ -15,7 +15,7 @@ import apollo.config.topo as topo
 import apollo.config.objects.base as base
 from apollo.config.objects.interface import client as InterfaceClient
 from apollo.config.objects.tunnel    import client as TunnelClient
-
+import copy
 import nh_pb2 as nh_pb2
 
 class NexthopObject(base.ConfigObjectBase):
@@ -89,6 +89,14 @@ class NexthopObject(base.ConfigObjectBase):
         logger.info("Nexthop object:", self)
         logger.info("- %s" % repr(self))
         return
+
+    def Dup(self):
+        dupObj = copy.copy(self)
+        dupObj.NexthopId = next(ResmgrClient[self.Node].NexthopIdAllocator)
+        dupObj.GID('DupNexthop%d'%dupObj.NexthopId)
+        dupObj.UUID = utils.PdsUuid(dupObj.NexthopId)
+        self.Duplicate = dupObj
+        return dupObj
 
     def UpdateAttributes(self):
         if self.__type == topo.NhType.IP:
@@ -209,9 +217,10 @@ class NexthopObject(base.ConfigObjectBase):
             return
         logger.info(" - Unlinking %s from %s " % (dObj, self))
         if dObj.ObjType == api.ObjectTypes.TUNNEL:
-            self.TunnelId = 0
+            logger.info(" - Linking %s to %s " % (dObj.Duplicate, self))
+            self.TunnelId = dObj.Duplicate.Id
         elif dObj.ObjType == api.ObjectTypes.INTERFACE:
-            self.L3InterfaceId = 0
+            self.L3InterfaceId = dObj.Duplicate.InterfaceId
         else:
             logger.error(" - ERROR: %s not handling %s deletion" %\
                          (self.ObjType.name, dObj.ObjType))
@@ -328,11 +337,21 @@ class NexthopObjectClient(base.ConfigClientBase):
         self.__num_nh_per_vpc.append(nh_spec_obj.count)
         return
 
+    def AddObjToDict(self, obj, node):
+        self.Objs[node].update({obj.NexthopId: obj})
+        return
+
+    def DeleteObjFromDict(self, obj, node):
+        self.Objs[node].pop(obj.NexthopId, None)
+        return
+
     def CreateObjects(self, node):
         cookie = utils.GetBatchCookie(node)
         if utils.IsPipelineApulu():
             logger.info(f"Creating {len(self.__underlay_objs[node])} underlay {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.__underlay_objs[node].values()))
+            list(map(lambda x: x.SetHwHabitant(False), self.Objects(node)))
+            list(map(lambda x: x.SetHwHabitant(True), self.__underlay_objs[node].values()))
         else:
             logger.info(f"Creating {len(self.Objects(node))} {self.ObjType.name} Objects in {node}")
             msgs = list(map(lambda x: x.GetGrpcCreateMessage(cookie), self.Objects(node)))

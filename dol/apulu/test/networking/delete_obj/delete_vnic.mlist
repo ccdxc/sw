@@ -5,7 +5,7 @@ feature:
     module      : networking
     runorder    : 9020
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
@@ -28,9 +28,8 @@ modules:
 
     # mlists to run post vnic deletion
     - module:
-        name    : Local2Remote_PostVnicDelete
-        mlist   : local2remote.mlist
-        ignore  : True
+        name    : Remote2Local_PostVnicDelete
+        mlist   : remote2local.mlist
 
     - module:
         name    : RESTORE_VNIC
@@ -44,9 +43,12 @@ modules:
 
     # mlists to run post vnic restore
     - module:
+        name    : Remote2Local_PostVnicRestore
+        mlist   : remote2local.mlist
+
+    - module:
         name    : Local2Remote_PostVnicRestore
         mlist   : local2remote.mlist
-        ignore  : True
 
     - module:
         name    : VNIC_WORKFLOW_END

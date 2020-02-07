@@ -11,6 +11,7 @@ class EzAccessStore:
     templates = ConfigStore.templates
     specs = ConfigStore.specs
     dutNode = 1
+    configClientDict = dict()
 
 # Class members
     def __init__(self, node):
@@ -225,6 +226,15 @@ class EzAccessStore:
     @staticmethod
     def GetUuidMap(node):
         return EzAccessStore.uuid_map
+
+    @staticmethod
+    def SetConfigClientDict(obj):
+        EzAccessStore.configClientDict = obj
+        return
+
+    @staticmethod
+    def GetConfigClient(objType):
+        return EzAccessStore.configClientDict.get(objType.name.lower(), None)
 
 client = dict()
 def Init(node):

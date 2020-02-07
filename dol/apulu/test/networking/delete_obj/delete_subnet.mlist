@@ -5,7 +5,7 @@ feature:
     module      : networking
     runorder    : 9080
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
@@ -30,9 +30,8 @@ modules:
 
     # mlists to run post subnet deletion
     - module:
-        name    : Local2Remote_PostSubnetDelete
-        mlist   : local2remote.mlist
-        ignore  : True
+        name    : Remote2Local_PostSubnetDelete
+        mlist   : remote2local.mlist
 
     # restore the deleted subnet objects
     - module:
@@ -47,9 +46,12 @@ modules:
 
     # mlists to run post subnet restore
     - module:
+        name    : Remote2Local_PostSubnetRestore
+        mlist   : remote2local.mlist
+
+    - module:
         name    : Local2Remote_PostSubnetRestore
         mlist   : local2remote.mlist
-        ignore  : True
 
     # workflow_end - clear the cached objects
     - module:

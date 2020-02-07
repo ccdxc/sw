@@ -5,7 +5,7 @@ feature:
     module      : networking
     runorder    : 9000
     enable      : True
-    ignore      : True
+    ignore      : False
 
 modules:
 # specify all the filters that are used in the packet testcases that will follow
@@ -28,9 +28,8 @@ modules:
 
     # mlists to run post localmapping deletion
     - module:
-        name    : Local2Remote_PostLMappingDelete
-        mlist   : local2remote.mlist
-        ignore  : True
+        name    : Remote2Local_PostLMappingDelete
+        mlist   : remote2local.mlist
 
     - module:
         name    : RESTORE_LMAPPING
@@ -44,9 +43,12 @@ modules:
 
     # mlists to run post localmapping restore
     - module:
+        name    : Remote2Local_PostLMappingRestore
+        mlist   : remote2local.mlist
+
+    - module:
         name    : Local2Remote_PostLMappingRestore
         mlist   : local2remote.mlist
-        ignore  : True
 
     - module:
         name    : LMAPPING_WORKFLOW_END

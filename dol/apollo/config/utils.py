@@ -301,31 +301,50 @@ def GetBatchCookie(node):
     return obj.GetBatchCookie()
 
 def InformDependents(dependee, cbFn):
-    # TODO: FIXME after UPDATE is implemented
-    # otherwise, read validation will fail
-    return
     # inform dependent objects
     for objType, ObjList in dependee.Deps.items():
         for depender in ObjList:
             getattr(depender, cbFn)(dependee)
     return
 
+def TriggerCreate(obj, node):
+    batchClient = EzAccessStore.GetBatchClient()
+    batchClient.Start(node)
+    cookie = GetBatchCookie(node)
+    msg = obj.GetGrpcCreateMessage(cookie)
+    resps = api.client[node].Create(obj.ObjType, [msg])
+    ValidateCreate(obj, resps)
+    batchClient.Commit(node)
+    return True
+
 #TODO - Fix validation returns appropriately for DOL & IOTA
 def CreateObject(obj):
     if obj.IsHwHabitant():
         logger.info("Already restored %s" % (obj))
         return True
-    batchClient = EzAccessStore.GetBatchClient()
 
     def RestoreObj(robj, node):
         logger.info("Recreating object %s" % (robj))
-        batchClient.Start(node)
-        cookie = GetBatchCookie(node)
-        msg = robj.GetGrpcCreateMessage(cookie)
-        resps = api.client[node].Create(robj.ObjType, [msg])
-        ValidateCreate(robj, resps)
-        batchClient.Commit(node)
-        InformDependents(robj, 'RestoreNotify')
+        
+
+        if robj.Duplicate != None:
+            #TODO: Ideally a new dependee object should be created first
+            # and all dependents should be updated to point to the new object
+            # before we delete this. Otherwise, for a moment, the dependent objects
+            # are pointing to an object which has been deleted which leads to
+            # inconsistency. Doing it this way in DOL, since IOTA scale test cases
+            # uses the same code, and at full scale we can't create an object
+            # without freeing another.
+            logger.info("Deleting object %s" % (robj.Duplicate))
+            TriggerDelete(robj.Duplicate, node)
+            confClient = EzAccessStoreClient[node].GetConfigClient(robj.ObjType)
+            if confClient == None:
+                return False
+            confClient.DeleteObjFromDict(robj.Duplicate, node)
+            robj.Duplicate = None
+        TriggerCreate(robj, node)
+        if IsUpdateSupported():
+            InformDependents(robj, 'RestoreNotify')
 
     # create from top to bottom
     RestoreObj(obj, obj.Node);
@@ -349,21 +368,46 @@ def UpdateObject(obj):
     batchClient.Commit(node)
     return ValidateUpdate(obj, resps)
 
+def TriggerDelete(obj, node):
+    batchClient = EzAccessStore.GetBatchClient()
+    batchClient.Start(node)
+    cookie = GetBatchCookie(node)
+    msg = obj.GetGrpcDeleteMessage(cookie)
+    resps = api.client[node].Delete(obj.ObjType, [msg])
+    batchClient.Commit(node)
+    ret = ValidateDelete(obj, resps)
+    return True
+
 def DeleteObject(obj):
     if not obj.IsHwHabitant():
         logger.info("Already deleted %s" % (obj))
         return True
-    batchClient = EzAccessStore.GetBatchClient()
 
     def DelObj(dobj, node):
-        InformDependents(dobj, 'DeleteNotify')
         logger.info("Deleting object %s" % (dobj))
-        batchClient.Start(node)
-        cookie = GetBatchCookie(node)
-        msg = dobj.GetGrpcDeleteMessage(cookie)
-        resps = api.client[node].Delete(dobj.ObjType, [msg])
-        batchClient.Commit(node)
-        return ValidateDelete(dobj, resps)
+        #TODO: Ideally a new dependee object should be created first
+        # and all dependents should be updated to point to the new object
+        # before we delete this. Otherwise, for a moment, the dependent objects
+        # are pointing to an object which has been deleted which leads to
+        # inconsistency. Doing it this way in DOL, since IOTA scale test cases
+        # uses the same code, and at full scale we can't create an object
+        # without freeing another.
+        ret = TriggerDelete(dobj, node)
+        if not ret:
+            return False
+
+        if IsUpdateSupported():
+            if dobj.ObjType == api.ObjectTypes.TUNNEL or\
+               dobj.ObjType == api.ObjectTypes.NEXTHOP or\
+               dobj.ObjType == api.ObjectTypes.INTERFACE:
+                dupObj = dobj.Dup()
+                confClient = EzAccessStore.GetConfigClient(dobj.ObjType)
+                if confClient == None:
+                    return False
+                confClient.AddObjToDict(dupObj, node)
+                TriggerCreate(dupObj, node)
+                InformDependents(dobj, 'DeleteNotify')
+        return True
 
     # Delete from bottom to top
     for childObj in obj.Children:
