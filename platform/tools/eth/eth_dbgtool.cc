@@ -892,10 +892,12 @@ rdma_qstate(uint16_t lif, uint8_t qtype, uint32_t qid)
 }
 
 void
-rdma_qstate_all(uint16_t lif)
+rdma_qstate_all(uint16_t lif, uint8_t qtype)
 {
     queue_info_t qinfo[QTYPE_MAX] = {0};
-    uint8_t qtype;
+    uint8_t qtype_idx;
+    uint8_t start_qtype = 0;
+    uint8_t end_qtype = QTYPE_MAX;
     uint32_t qid;
 
     if (!get_lif_qstate(lif, qinfo)) {
@@ -903,14 +905,25 @@ rdma_qstate_all(uint16_t lif)
         return;
     }
 
+    // specific qtype
+    if (qtype != QTYPE_MAX) {
+        start_qtype = qtype;
+        end_qtype = qtype + 1;
+    }
+
+    if (start_qtype >= QTYPE_MAX || qinfo[start_qtype].size == 0) {
+        printf("Invalid type %u for lif %u\n", start_qtype, lif);
+        return;
+    }
+
     /* Print the state of every queue */
     printf("RDMA queue state for lif %u:\n", lif);
-    for (qtype = 0; qtype < QTYPE_MAX; qtype++) {
-        if (qinfo[qtype].size == 0)
+    for (qtype_idx = start_qtype; qtype_idx < end_qtype; qtype_idx++) {
+        if (qinfo[qtype_idx].size == 0)
             continue;
 
-        for (qid = 0; qid < qinfo[qtype].length; qid++)
-            rdma_qstate_one(qinfo, qtype, qid);
+        for (qid = 0; qid < qinfo[qtype_idx].length; qid++)
+            rdma_qstate_one(qinfo, qtype_idx, qid);
     }
 }
 
@@ -2497,13 +2510,16 @@ main(int argc, char **argv)
         uint32_t qid = std::strtoul(argv[4], NULL, 0);
         nvme_qstate(lif, qtype, qid);
     } else if (strcmp(argv[1], "rdma_qstate") == 0) {
-        if (argc != 3 && argc != 5) {
+        if (argc < 3 || argc > 5) {
             usage();
         }
         uint16_t lif = std::strtoul(argv[2], NULL, 0);
 
         if (argc == 3) {
-            rdma_qstate_all(lif);
+            rdma_qstate_all(lif, QTYPE_MAX);
+        } else if (argc == 4) {
+            uint8_t qtype = std::strtoul(argv[3], NULL, 0);
+            rdma_qstate_all(lif, qtype);
         } else {
             uint8_t qtype = std::strtoul(argv[3], NULL, 0);
             uint32_t qid = std::strtoul(argv[4], NULL, 0);
