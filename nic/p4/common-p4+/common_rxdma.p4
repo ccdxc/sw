@@ -1353,12 +1353,12 @@ control common_p4plus_stage0 {
 
     if (app_header.app_type == P4PLUS_APPTYPE_CLASSIC_NIC) {
         apply(eth_rx_rss_params);
-        if (app_header.table0_valid == 0) {
-            if (app_header.table1_valid == 0) {
-                if (app_header.table2_valid == 0) {
-                    if (app_header.table3_valid == 0) {
-                        apply(eth_rx_rss_indir);
-                    }
+    }
+    if (app_header.table0_valid == 0) {
+        if (app_header.table1_valid == 0) {
+            if (app_header.table2_valid == 0) {
+                if (app_header.table3_valid == 0) {
+                    apply(eth_rx_rss_indir);
                 }
             }
         }
