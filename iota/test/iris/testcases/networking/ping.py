@@ -17,6 +17,11 @@ def Setup(tc):
         api.Logger.info("Skipping Testcase due to no workload pairs.")
         tc.skip = True
 
+    # skipping IPv4 test for unified mode
+    if tc.iterators.ipaf == 'ipv4' and api.GetFwdMode() == 'transparent' and api.GetPolicyMode() == 'flowaware':
+        api.Logger.info("Skipping Testcase: IPv4 not supported in Transparent-Flowaware mode.")
+        tc.skip = True
+
     if api.GetNicMode() == 'hostpin' and tc.iterators.ipaf == 'ipv6':
         api.Logger.info("Skipping Testcase: IPv6 not supported in hostpin mode.")
         tc.skip = True

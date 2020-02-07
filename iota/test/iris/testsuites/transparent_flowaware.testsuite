@@ -5,6 +5,8 @@ meta:
     cfgmode     : netagent
     #nicmode will be removed from this once we have fwd/policy mode config added to testsuite
     nicmode     : classic
+    fwdmode     : transparent
+    policymode  : flowaware
     os          : [ linux ]
 
 packages:
@@ -45,8 +47,7 @@ testbundles:
     sanity:
         # Relative paths from iota/test/iris/testbundles/
         - classic/ethtool.testbundle
-        # enable connectivity after fixing IPv4 remote ping
-        #- networking/connectivity.testbundle
+        - networking/connectivity.testbundle
         #- classic/rdma.testbundle
         - linktest/linktest.testbundle
         # enable filters once its supported in unified mode

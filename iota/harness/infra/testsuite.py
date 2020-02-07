@@ -137,6 +137,11 @@ class TestSuite:
     def IsBitw(self):
        return getattr(self.__spec.meta, "nicmode", None) == "bitw"
 
+    def GetFwdMode(self):
+       return getattr(self.__spec.meta, "fwdmode", "")
+
+    def GetPolicyMode(self):
+       return getattr(self.__spec.meta, "policymode", "")
 
     def DoConfig(self):
         return self.__setup_config()

@@ -412,6 +412,12 @@ def IsRegression():
 def GetNicMode():
     return store.GetTestbed().GetCurrentTestsuite().GetNicMode()
 
+def GetFwdMode():
+    return store.GetTestbed().GetCurrentTestsuite().GetFwdMode()
+
+def GetPolicyMode():
+    return store.GetTestbed().GetCurrentTestsuite().GetPolicyMode()
+
 #Returns true if tests running on same switch
 def RunningOnSameSwitch():
     return (len(store.GetTestbed().GetCurrentTestsuite().GetTopology().Switches()) <= 1 )
