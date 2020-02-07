@@ -6,6 +6,7 @@
 #define _FTL_DEV_IF_H_
 
 #include "nic/apollo/api/include/athena/pds_flow_age.h"
+#include "nic/p4/ftl_dev/include/ftl_dev_shared.h"
 
 #if !defined(_LINUX_TYPES_H) && !defined(_LINUX_TYPES_H_)
 typedef uint16_t __le16;
@@ -159,10 +160,10 @@ enum ftl_dev_type {
 };
 
 enum ftl_qtype {
-    FTL_QTYPE_SCANNER_SESSION,
-    FTL_QTYPE_SCANNER_CONNTRACK,
-    FTL_QTYPE_POLLER,
-    FTL_QTYPE_MAX           = 8,
+    FTL_QTYPE_SCANNER_SESSION   = FTL_DEV_QTYPE_SCANNER_SESSION,
+    FTL_QTYPE_SCANNER_CONNTRACK = FTL_DEV_QTYPE_SCANNER_CONNTRACK,
+    FTL_QTYPE_POLLER            = FTL_DEV_QTYPE_POLLER,
+    FTL_QTYPE_MAX               = 8,
 };
 
 /**
@@ -346,6 +347,8 @@ enum lif_attr {
     FTL_LIF_ATTR_NAME         = 0,
     FTL_LIF_ATTR_NORMAL_AGE_TMO,
     FTL_LIF_ATTR_ACCEL_AGE_TMO,
+    FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS,  // for debugging on SIM platform
+    FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS,
 };
 
 typedef pds_flow_age_timeouts_t lif_attr_age_tmo_t;
@@ -364,6 +367,7 @@ typedef struct lif_setattr_cmd {
     union {
         char                name[FTL_DEV_IFNAMSIZ];
         lif_attr_age_tmo_t  age_tmo;
+        uint8_t             force_expired_ts;
         uint8_t             rsvd[60];
     };
 } lif_setattr_cmd_t;
@@ -393,6 +397,7 @@ typedef struct lif_getattr_cpl {
     __le16      cpl_index;
     union {
         // char    name[FTL_DEV_IFNAMSIZ];
+        uint8_t         force_expired_ts;
         uint8_t         rsvd2[12];
     };
 } lif_getattr_cpl_t;

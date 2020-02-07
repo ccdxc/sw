@@ -66,9 +66,10 @@ header_type scanner_session_fsm_t {
         expiry_map_entries_scanned      : 32;
         total_entries_scanned           : 32;
         scan_addr_base                  : 64;
+        range_start_ts                  : 64;
         expiry_map_bit_pos              : 16;
         
-        pad1                            : 160;
+        pad1                            : 96;
         cb_activate                     : 16;  // must be last in CB
     }
 }
@@ -77,14 +78,14 @@ header_type scanner_session_fsm_t {
     fsm_state, pad0, scan_burst_sz_shft, scan_burst_sz,                         \
     scan_id_base, scan_id_next, scan_range_sz,                                  \
     expiry_scan_id_base, expiry_map_entries_scanned,                            \
-    total_entries_scanned, scan_addr_base, expiry_map_bit_pos,                  \
-    pad1, cb_activate                                                           \
+    total_entries_scanned, scan_addr_base, range_start_ts,                      \
+    expiry_map_bit_pos, pad1, cb_activate                                       \
     
 #define SCANNER_SESSION_FSM_PRAGMA                                              \
 @pragma little_endian scan_burst_sz_shft scan_burst_sz                          \
     scan_id_base scan_id_next scan_range_sz                                     \
     expiry_scan_id_base expiry_map_entries_scanned total_entries_scanned        \
-    scan_addr_base expiry_map_bit_pos cb_activate
+    scan_addr_base range_start_ts expiry_map_bit_pos cb_activate
 
 #define SCANNER_SESSION_FSM_USE(scratch)                                        \
     modify_field(scratch.fsm_state, fsm_state);                                 \
@@ -98,6 +99,7 @@ header_type scanner_session_fsm_t {
     modify_field(scratch.expiry_map_entries_scanned, expiry_map_entries_scanned);\
     modify_field(scratch.total_entries_scanned, total_entries_scanned);         \
     modify_field(scratch.scan_addr_base, scan_addr_base);                       \
+    modify_field(scratch.range_start_ts, range_start_ts);                       \
     modify_field(scratch.expiry_map_bit_pos, expiry_map_bit_pos);               \
     modify_field(scratch.pad1, pad1);                                           \
     modify_field(scratch.cb_activate, cb_activate);                             \
@@ -150,23 +152,28 @@ header_type scanner_session_summarize_t {
 header_type scanner_session_metrics0_t {
     fields {
 
-        // CAUTION: order of fields must match session_kivec9_t
         cb_cfg_discards                 : 64;
         scan_invocations                : 64;
         expired_entries                 : 64;
+        min_range_elapsed_ticks         : 64;
+        max_range_elapsed_ticks         : 64;
     }
 }
 
 #define SCANNER_SESSION_METRICS0_DATA                                           \
-    cb_cfg_discards, scan_invocations, expired_entries
+    cb_cfg_discards, scan_invocations, expired_entries,                         \
+    min_range_elapsed_ticks, max_range_elapsed_ticks
     
 #define SCANNER_SESSION_METRICS0_PRAGMA                                         \
 @pragma little_endian cb_cfg_discards scan_invocations expired_entries          \
+    min_range_elapsed_ticks max_range_elapsed_ticks
     
 #define SCANNER_SESSION_METRICS0_USE(scratch)                                   \
     modify_field(scratch.cb_cfg_discards, cb_cfg_discards);                     \
     modify_field(scratch.scan_invocations, scan_invocations);                   \
     modify_field(scratch.expired_entries, expired_entries);                     \
+    modify_field(scratch.min_range_elapsed_ticks, min_range_elapsed_ticks);     \
+    modify_field(scratch.max_range_elapsed_ticks, max_range_elapsed_ticks);     \
     
 /*
  * Aging timeout values
@@ -184,8 +191,11 @@ header_type age_tmo_cb_t {
         icmp_tmo                        : 32;
         udp_tmo                         : 32;
         udp_est_tmo                     : 32;
-        other_tmo                       : 32;
-        pad1                            : 192;
+        others_tmo                      : 32;
+        session_tmo                     : 32;
+        force_session_expired_ts        : 8;    // for debugging on SIM platform
+        force_conntrack_expired_ts      : 8;
+        pad1                            : 144;
     }
 }
 
@@ -199,9 +209,10 @@ header_type age_tmo_cb_t {
 
 #define SCANNER_AGE_TMO_CB_DATA                                                 \
     cb_activate, cb_select, pad0,                                               \
-    tcp_syn_tmo, tcp_est_tmo, tcp_fin_tmo,                                      \
-    tcp_timewait_tmo, tcp_rst_tmo, icmp_tmo,                                    \
-    udp_tmo, udp_est_tmo, other_tmo, pad1                                       \
+    tcp_syn_tmo, tcp_est_tmo, tcp_fin_tmo, tcp_timewait_tmo,                    \
+    tcp_rst_tmo, icmp_tmo, udp_tmo, udp_est_tmo,                                \
+    others_tmo, session_tmo,                                                    \
+    force_session_expired_ts, force_conntrack_expired_ts, pad1                  \
     
 #define SCANNER_AGE_TMO_CB_USE(scratch)                                         \
     modify_field(scratch.cb_activate, cb_activate);                             \
@@ -215,9 +226,12 @@ header_type age_tmo_cb_t {
     modify_field(scratch.icmp_tmo, icmp_tmo);                                   \
     modify_field(scratch.udp_tmo, udp_tmo);                                     \
     modify_field(scratch.udp_est_tmo, udp_est_tmo);                             \
-    modify_field(scratch.other_tmo, other_tmo);                                 \
+    modify_field(scratch.others_tmo, others_tmo);                               \
+    modify_field(scratch.session_tmo, session_tmo);                             \
+    modify_field(scratch.force_session_expired_ts, force_session_expired_ts);   \
+    modify_field(scratch.force_conntrack_expired_ts, force_conntrack_expired_ts);\
     modify_field(scratch.pad1, pad1);                                           \
-    
+
 /*
  * Poller qstate (control block)
  * Note that there are no RxDMA/TxDMA programs for software pollers
@@ -304,8 +318,7 @@ header_type session_info_common_d {
         s2h_vnic_statistics_id          : 9;
         s2h_vnic_statistics_mask        : 16;
         s2h_vnic_histogram_id           : 9;
-        flow_type                       : 3;    /* temporary (planned for CT table only) */
-        pad_to_512b                     : 350;
+        pad_to_512b                     : 353;
     }
 }
 
@@ -314,7 +327,7 @@ header_type session_info_common_d {
     h2s_throttle_pps_id, h2s_throttle_bw_id, h2s_vnic_statistics_id,            \
     h2s_vnic_statistics_mask, h2s_vnic_histogram_id, s2h_throttle_pps_id,       \
     s2h_throttle_bw_id, s2h_vnic_statistics_id, s2h_vnic_statistics_mask,       \
-    s2h_vnic_histogram_id, flow_type, pad_to_512b                               \
+    s2h_vnic_histogram_id, pad_to_512b                                          \
 
 #define SESSION_INFO_USE(scratch)                                               \
     modify_field(scratch.valid_flag, valid_flag);                               \
@@ -330,7 +343,27 @@ header_type session_info_common_d {
     modify_field(scratch.s2h_vnic_statistics_id, s2h_vnic_statistics_id);       \
     modify_field(scratch.s2h_vnic_statistics_mask, s2h_vnic_statistics_mask);   \
     modify_field(scratch.s2h_vnic_histogram_id, s2h_vnic_histogram_id);         \
+    modify_field(scratch.pad_to_512b, pad_to_512b);                             \
+
+header_type conntrack_info_d {
+    fields {
+        valid_flag                      : 1;
+        flow_type                       : 2;
+        flow_state                      : 4;
+        timestamp                       : 48;
+        pad_to_512b                     : 457;
+    }
+}
+
+#define CONNTRACK_INFO_DATA                                                     \
+    valid_flag, flow_type, flow_state, timestamp,                               \
+    pad_to_512b                                                                 \
+
+#define CONNTRACK_INFO_USE(scratch)                                             \
+    modify_field(scratch.valid_flag, valid_flag);                               \
     modify_field(scratch.flow_type, flow_type);                                 \
+    modify_field(scratch.flow_state, flow_state);                               \
+    modify_field(scratch.timestamp, timestamp);                                 \
     modify_field(scratch.pad_to_512b, pad_to_512b);                             \
 
 /*

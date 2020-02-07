@@ -102,6 +102,11 @@
 #define CONNTRACK_FLOW_STATE_TIME_WAIT          8
 #define CONNTRACK_FLOW_STATE_RST_CLOSE          9
 #define CONNTRACK_FLOW_STATE_REMOVED            10
+#define CONNTRACK_FLOW_STATE_RSVD0              11
+#define CONNTRACK_FLOW_STATE_RSVD1              12
+#define CONNTRACK_FLOW_STATE_RSVD2              13
+#define CONNTRACK_FLOW_STATE_RSVD3              14
+#define CONNTRACK_FLOW_STATE_RSVD4              15
 
 
 #endif /* _ATHENA_DEFINES_H_ */

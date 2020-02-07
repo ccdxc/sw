@@ -57,6 +57,10 @@
 #define tx_table_s2_t1_action   session_round0_session1
 #define tx_table_s2_t2_action   session_round0_session2
 #define tx_table_s2_t3_action   session_round0_session3
+#define tx_table_s2_t0_action1  conntrack_round0_session0
+#define tx_table_s2_t1_action1  conntrack_round0_session1
+#define tx_table_s2_t2_action1  conntrack_round0_session2
+#define tx_table_s2_t3_action1  conntrack_round0_session3
 
 /*
  * stage 3
@@ -65,6 +69,10 @@
 #define tx_table_s3_t1_action   session_round1_session1
 #define tx_table_s3_t2_action   session_round1_session2
 #define tx_table_s3_t3_action   session_round1_session3
+#define tx_table_s3_t0_action1  conntrack_round1_session0
+#define tx_table_s3_t1_action1  conntrack_round1_session1
+#define tx_table_s3_t2_action1  conntrack_round1_session2
+#define tx_table_s3_t3_action1  conntrack_round1_session3
 
 /*
  * stage 4
@@ -73,6 +81,10 @@
 #define tx_table_s4_t1_action   session_round2_session1
 #define tx_table_s4_t2_action   session_round2_session2
 #define tx_table_s4_t3_action   session_round2_session3
+#define tx_table_s4_t0_action1  conntrack_round2_session0
+#define tx_table_s4_t1_action1  conntrack_round2_session1
+#define tx_table_s4_t2_action1  conntrack_round2_session2
+#define tx_table_s4_t3_action1  conntrack_round2_session3
 
 /*
  * stage 5
@@ -81,6 +93,10 @@
 #define tx_table_s5_t1_action   session_round3_session1
 #define tx_table_s5_t2_action   session_round3_session2
 #define tx_table_s5_t3_action   session_round3_session3
+#define tx_table_s5_t0_action1  conntrack_round3_session0
+#define tx_table_s5_t1_action1  conntrack_round3_session1
+#define tx_table_s5_t2_action1  conntrack_round3_session2
+#define tx_table_s5_t3_action1  conntrack_round3_session3
 
 /*
  * stage 6
@@ -114,7 +130,10 @@ header_type session_kivec0_t {
         session_table_addr              : 34;
         session_id_curr                 : 32;
         num_scannables                  : 5;
+        qtype                           : 1;    // currently only 2 scanner qtypes supported
         cb_cfg_discard                  : 1;
+        force_session_expired_ts        : 1;    // for SIM platform debug
+        force_conntrack_expired_ts      : 1;
         
         // The following is arranged in big endian layout,
         // with higher rounds/sessions in the MSB
@@ -142,7 +161,10 @@ header_type session_kivec0_t {
     modify_field(scratch.session_table_addr, kivec.session_table_addr);         \
     modify_field(scratch.session_id_curr, kivec.session_id_curr);               \
     modify_field(scratch.num_scannables, kivec.num_scannables);                 \
+    modify_field(scratch.qtype, kivec.qtype);                                   \
     modify_field(scratch.cb_cfg_discard, kivec.cb_cfg_discard);                 \
+    modify_field(scratch.force_session_expired_ts, kivec.force_session_expired_ts);\
+    modify_field(scratch.force_conntrack_expired_ts, kivec.force_conntrack_expired_ts);\
     modify_field(scratch.round3_session3_expired, kivec.round3_session3_expired);\
     modify_field(scratch.round3_session2_expired, kivec.round3_session2_expired);\
     modify_field(scratch.round3_session1_expired, kivec.round3_session1_expired);\
@@ -167,6 +189,7 @@ header_type session_kivec0_t {
  *
  * tcp_est_tmo - 17 bits, max is 36 hours
  * udp_tmo, udp_est_tmo - 14 bits, max is 4 hours
+ * session_tmo is overlaid with others_tmo - 14 bits, max is 4 hours
  * all other timeouts - 13 bits, max is 2 hours
  */
 #define SESSION_KIVEC_AGE_TMO(_vec)                                             \
@@ -180,7 +203,7 @@ header_type session_kivec##_vec##_t {                                           
         tcp_fin_tmo                     : 13;                                   \
         tcp_timewait_tmo                : 13;                                   \
         tcp_rst_tmo                     : 13;                                   \
-        other_tmo                       : 13;                                   \
+        others_tmo                      : 14;                                   \
     }                                                                           \
 }                                                                               \
 
@@ -198,7 +221,7 @@ SESSION_KIVEC_AGE_TMO(5)
     modify_field(scratch.tcp_fin_tmo, kivec.tcp_fin_tmo);                       \
     modify_field(scratch.tcp_timewait_tmo, kivec.tcp_timewait_tmo);             \
     modify_field(scratch.tcp_rst_tmo, kivec.tcp_rst_tmo);                       \
-    modify_field(scratch.other_tmo, kivec.other_tmo);                           \
+    modify_field(scratch.others_tmo, kivec.others_tmo);                         \
     
 /*
  * kivec7: header union with to_stage7 (128 bits max)
@@ -206,14 +229,12 @@ SESSION_KIVEC_AGE_TMO(5)
 header_type session_kivec7_t {
     fields {
         lif                             : 11;
-        qtype                           : 3;
         poller_qstate_addr              : 64;
     }
 }
         
 #define SESSION_KIVEC7_USE(scratch, kivec)                                      \
     modify_field(scratch.lif, kivec.lif);                                       \
-    modify_field(scratch.qtype, kivec.qtype);                                   \
     modify_field(scratch.poller_qstate_addr, kivec.poller_qstate_addr);         \
     
 /*
@@ -245,11 +266,10 @@ header_type session_kivec8_t {
  */
 header_type session_kivec9_t {
     fields {
-        // CAUTION: order of fields must match session_metrics0_t
         metrics0_start                  : 1;
         cb_cfg_discards                 : 1;
         scan_invocations                : 1;
-        expired_entries                 : 8;
+        range_elapsed_ticks             : 48;
         metrics0_end                    : 1;
     }
 }
@@ -258,7 +278,7 @@ header_type session_kivec9_t {
     modify_field(scratch.metrics0_start, kivec.metrics0_start);                 \
     modify_field(scratch.cb_cfg_discards, kivec.cb_cfg_discards);               \
     modify_field(scratch.scan_invocations, kivec.scan_invocations);             \
-    modify_field(scratch.expired_entries, kivec.expired_entries);               \
+    modify_field(scratch.range_elapsed_ticks, kivec.range_elapsed_ticks);       \
     modify_field(scratch.metrics0_end, kivec.metrics0_end);                     \
     
 /*
@@ -278,6 +298,9 @@ metadata age_tmo_cb_t                   session_accel_tmo;
 
 @pragma scratch_metadata
 metadata session_info_d                 session_info;
+
+@pragma scratch_metadata
+metadata conntrack_info_d               conntrack_info;
 
 @pragma scratch_metadata
 metadata scanner_session_summarize_t    session_summarize;
@@ -489,6 +512,7 @@ action session_fsm_exec(SCANNER_SESSION_FSM_DATA)
 SCANNER_AGE_TMO_CB_PRAGMA
 action session_norm_tmo_load(SCANNER_AGE_TMO_CB_DATA)
 {
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
     SCANNER_AGE_TMO_CB_USE(session_norm_tmo)
 }
 
@@ -498,6 +522,7 @@ action session_norm_tmo_load(SCANNER_AGE_TMO_CB_DATA)
 SCANNER_AGE_TMO_CB_PRAGMA
 action session_accel_tmo_load(SCANNER_AGE_TMO_CB_DATA)
 {
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
     SCANNER_AGE_TMO_CB_USE(session_accel_tmo)
 }
 
@@ -614,6 +639,118 @@ action session_round3_session3(SESSION_INFO_DATA)
     SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
     SESSION_KIVEC_AGE_TMO_USE(session_kivec5_scratch, session_kivec5)
     SESSION_INFO_USE(session_info)
+}
+
+action conntrack_round0_session0(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec2_scratch, session_kivec2)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round0_session1(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec2_scratch, session_kivec2)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round0_session2(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec2_scratch, session_kivec2)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round0_session3(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec2_scratch, session_kivec2)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round1_session0(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec3_scratch, session_kivec3)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round1_session1(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec3_scratch, session_kivec3)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round1_session2(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec3_scratch, session_kivec3)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round1_session3(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec3_scratch, session_kivec3)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round2_session0(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec4_scratch, session_kivec4)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round2_session1(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec4_scratch, session_kivec4)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round2_session2(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec4_scratch, session_kivec4)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round2_session3(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec4_scratch, session_kivec4)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round3_session0(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec5_scratch, session_kivec5)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round3_session1(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec5_scratch, session_kivec5)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round3_session2(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec5_scratch, session_kivec5)
+    CONNTRACK_INFO_USE(conntrack_info)
+}
+
+action conntrack_round3_session3(CONNTRACK_INFO_DATA)
+{
+    SESSION_KIVEC0_USE(session_kivec0_scratch, session_kivec0)
+    SESSION_KIVEC_AGE_TMO_USE(session_kivec5_scratch, session_kivec5)
+    CONNTRACK_INFO_USE(conntrack_info)
 }
 
 

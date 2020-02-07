@@ -83,6 +83,8 @@ static sdk_ret_t dev_identify(void);
 static sdk_ret_t lif_init(void);
 static sdk_ret_t attr_age_tmo_set(enum lif_attr attr,
                                   const pds_flow_age_timeouts_t *attr_age_tmo);
+static sdk_ret_t force_expired_ts_set(enum lif_attr attr,
+                                      bool force_expired_ts);
 static sdk_ret_t pollers_alloc(enum ftl_qtype qtype);
 static sdk_ret_t scanners_alloc(enum ftl_qtype qtype);
 
@@ -265,6 +267,20 @@ accel_aging_control(bool enable_sense)
     return ret;
 }
 
+sdk_ret_t
+force_session_expired_ts_set(bool force_expired_ts)
+{
+    return force_expired_ts_set(FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS,
+                                force_expired_ts);
+}
+
+sdk_ret_t
+force_conntrack_expired_ts_set(bool force_expired_ts)
+{
+    return force_expired_ts_set(FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS,
+                                force_expired_ts);
+}
+
 bool
 lif_init_done(void)
 {
@@ -383,6 +399,28 @@ attr_age_tmo_set(enum lif_attr attr,
     devcmd.req().lif_setattr.opcode = FTL_DEVCMD_OPCODE_LIF_SETATTR;
     devcmd.req().lif_setattr.attr = attr;
     devcmd.req().lif_setattr.age_tmo = *attr_age_tmo;
+
+    ret = devcmd.submit();
+    if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
+        PDS_TRACE_ERR("failed devcmd: error %d", ret);
+    }
+    return ret;
+}
+
+static sdk_ret_t
+force_expired_ts_set(enum lif_attr attr,
+                     bool force_expired_ts)
+{
+    /*
+     * force_expiry is only for debugging and can be dynamically set
+     * (no need for any lock)
+     */
+    devcmd_t        devcmd(ftl_lif);
+    sdk_ret_t       ret;
+
+    devcmd.req().lif_setattr.opcode = FTL_DEVCMD_OPCODE_LIF_SETATTR;
+    devcmd.req().lif_setattr.attr = attr;
+    devcmd.req().lif_setattr.force_expired_ts = force_expired_ts;
 
     ret = devcmd.submit();
     if ((ret != SDK_RET_OK) && (ret != SDK_RET_RETRY)) {
@@ -755,6 +793,7 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     queue_identity_t        *qident = &lif_ident.base.qident[qtype];
     queue_identity_t        *pollers_qident = &lif_ident.base.qident[FTL_QTYPE_POLLER];
     p4pd_table_properties_t tprop = {0};
+    uint32_t                tableid;
     sdk_ret_t               ret;
 
     devcmd->req_clr();
@@ -763,19 +802,19 @@ lif_queues_ctl_t::scanners_init(devcmd_t *devcmd)
     devcmd->req().scanners_init.opcode = FTL_DEVCMD_OPCODE_SCANNERS_INIT;
     devcmd->req().scanners_init.qtype = qtype;
     devcmd->req().scanners_init.qcount = qcount;
-    if (qtype == FTL_QTYPE_SCANNER_SESSION) {
-        p4pd_error_t p4pd_error = 
-            p4pd_global_table_properties_get(P4TBL_ID_SESSION_INFO_COMMON, &tprop);
-        if (p4pd_error != P4PD_SUCCESS) {
-            PDS_TRACE_ERR("failed to obtain session_info properties: "
-                          "error %d", p4pd_error);
-            return SDK_RET_HW_PROGRAM_ERR;
-        }
 
-        devcmd->req().scanners_init.scan_addr_base = tprop.base_mem_pa;
-        devcmd->req().scanners_init.scan_id_base = 0;
-        devcmd->req().scanners_init.scan_table_sz = tprop.tabledepth;
+    tableid = qtype == FTL_QTYPE_SCANNER_SESSION ?
+              P4TBL_ID_SESSION_INFO_COMMON : P4TBL_ID_CONNTRACK;
+    p4pd_error_t p4pd_error = p4pd_global_table_properties_get(tableid, &tprop);
+    if (p4pd_error != P4PD_SUCCESS) {
+        PDS_TRACE_ERR("failed to obtain properties for tableid %u: "
+                      "error %d", tableid, p4pd_error);
+        return SDK_RET_HW_PROGRAM_ERR;
     }
+
+    devcmd->req().scanners_init.scan_addr_base = tprop.base_mem_pa;
+    devcmd->req().scanners_init.scan_id_base = 0;
+    devcmd->req().scanners_init.scan_table_sz = tprop.tabledepth;
     PDS_TRACE_DEBUG("qtype %d scan_addr_base 0x%llx scan_table_sz %u",
                     qtype, tprop.base_mem_pa, tprop.tabledepth);
 

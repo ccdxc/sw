@@ -434,9 +434,9 @@ vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
 static void
 flow_init_h2s ()
 {
+#if 0
     sdk_ret_t                   ret = SDK_RET_OK;
 
-#if 0
     ret = create_h2s_v4_session_info(g_session_index);
     if (ret != SDK_RET_OK) {
         printf("Failed to program session info @ %u\n", g_session_index);
@@ -601,9 +601,9 @@ uint32_t    s2h_substrate_sip = 0x64656667;
 static void
 flow_init_s2h ()
 {
+#if 0
     sdk_ret_t                   ret = SDK_RET_OK;
 
-#if 0
     ret = create_s2h_v4_session_info(g_session_index, s2h_substrate_sip);
     if (ret != SDK_RET_OK) {
         printf("Failed to program session info @ %u\n", g_session_index);

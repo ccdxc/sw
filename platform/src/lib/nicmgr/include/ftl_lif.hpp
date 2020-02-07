@@ -262,8 +262,7 @@ public:
     int64_t qid_qstate_addr(uint32_t qid);
 
 private:
-    ftl_status_code_t scanner_session_init_single(const scanner_init_single_cmd_t *cmd);
-    ftl_status_code_t scanner_ct_init_single(const scanner_init_single_cmd_t *cmd);
+    ftl_status_code_t scanner_init_single(const scanner_init_single_cmd_t *cmd);
     ftl_status_code_t poller_init_single(const poller_init_single_cmd_t *cmd);
     ftl_status_code_t pgm_pc_offset_get(const char *pc_jump_label,
                                         uint8_t *pc_offset);
@@ -406,6 +405,12 @@ private:
                         const lif_attr_age_tmo_t *attr_age_tmo);
     void age_tmo_cb_get(lif_attr_age_tmo_t *attr_age_tmo,
                         const age_tmo_cb_t *age_tmo_cb);
+    void force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
+                                      uint64_t cb_addr,
+                                      uint8_t force_expired_ts);
+    void force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
+                                        uint64_t cb_addr,
+                                        uint8_t force_expired_ts);
     ftl_status_code_t normal_age_tmo_cb_select(void);
     ftl_status_code_t accel_age_tmo_cb_select(void);
 

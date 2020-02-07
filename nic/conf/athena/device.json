@@ -140,9 +140,9 @@
         {
             "name" : "ftl",
             "session_hw_scanners" : 4096,
-            "session_burst_size" : 4096,
+            "session_burst_size" : 2048,
             "session_burst_resched_time_us" : 10,
-            "conntrack_hw_scanners" : 0,
+            "conntrack_hw_scanners" : 2048,
             "conntrack_burst_size" : 4096,
             "conntrack_burst_resched_time_us" : 10,
             "sw_pollers" : 4,

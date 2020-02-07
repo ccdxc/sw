@@ -5,16 +5,31 @@ struct s1_tbl_k                         k;
 struct s1_tbl_session_fsm_exec_d        d;
 
 /*
+ * Relevant registers set by table engine on entry:
+ * 
+ * In addition, 
+ * R1 = table lookup hash value
+ * R2 = packet size
+ * R3 = random number
+ * R4 = current time
+ */
+ 
+/*
  * Registers usage
  */
-#define r_scan_id_next                  r1
-#define r_total_entries_scanned         r2
-#define r_expiry_scan_id_base           r3
-#define r_expiry_map_entries_scanned    r4
+#define r_total_entries_scanned         r1
+#define r_expiry_scan_id_base           r2
+#define r_expiry_map_entries_scanned    r3
+#define r_timestamp                     r4      // must use r4 (see above comments)
 #define r_session_info_addr             r5
 #define r_expiry_map_bit_pos            r6
-#define r_scratch                       r7
+#define r_fsm_state                     r7
 
+/*
+ * Registers reuse (post r_fsm_state brcase branch)
+ */
+#define r_scan_id_next                  r_fsm_state
+ 
 /*
  * Registers reuse (post expiry_scan_id_base computation)
  */
@@ -36,6 +51,10 @@ struct s1_tbl_session_fsm_exec_d        d;
     .param          session_round0_session1
     .param          session_round0_session2
     .param          session_round0_session3
+    .param          conntrack_round0_session0
+    .param          conntrack_round0_session1
+    .param          conntrack_round0_session2
+    .param          conntrack_round0_session3
     .param          session_summarize
     .align
 
@@ -44,7 +63,7 @@ session_fsm_exec:
     // Here we clear all tableX_valid bits (except metrics table 3) on behalf
     // of other stage1 functions (session_norm_tmo_load and 
     // session_accel_tmo_load). This is due to the fact that the FSM is 
-    // responsible for calculating which tables will be lanched for stage2.
+    // responsible for calculating which tables are launchable for stage2.
     
     CLEAR_TABLE_RANGE(0, 2)
     sne         c1, d.cb_activate, SCANNER_SESSION_CB_ACTIVATE
@@ -61,14 +80,15 @@ session_fsm_exec:
     add         r_expiry_map_bit_pos, d.expiry_map_bit_pos, r0
     phvwr       p.session_kivec0_session_table_addr, d.scan_addr_base
 
-    add         r_scratch, d.fsm_state, r0
+    add         r_fsm_state, d.fsm_state, r0
 _switch0:    
   .brbegin
-    br          r_scratch[1:0]
+    br          r_fsm_state[1:0]
     add         r_scan_id_next, d.scan_id_next, r0      // delay slot
 
   .brcase SCANNER_STATE_RESTART_RANGE
   
+    tblwr       d.range_start_ts, r_timestamp
     tblwr       d.scan_id_next, d.scan_id_base
     add         r_scan_id_next, d.scan_id_base, r0
 
@@ -163,31 +183,55 @@ _endif2:
     sle         c4, d.scan_range_sz, r_total_entries_scanned
     phvwr.c4    p.session_kivec8_range_full, 1
     tblwr       d.total_entries_scanned, r_total_entries_scanned
-    
+
+    // Calculate elapsed time at end of range
+    sub.c4      r_timestamp, r_timestamp, d.range_start_ts
+    phvwr.c4    p.session_kivec9_range_elapsed_ticks, r_timestamp
+        
     add         r_expiry_map_entries_scanned, r_expiry_map_entries_scanned, \
                 r_num_scannables
     sle         c5, SCANNER_EXPIRY_MAP_ENTRIES_TOTAL_BITS, \
                 r_expiry_map_entries_scanned
     phvwr.c5    p.session_kivec8_expiry_maps_full, 1
-    tblwr       d.expiry_map_entries_scanned, r_expiry_map_entries_scanned
     
-    // Issue session info read scans
+    // Issue session info or conntrack info read scans
     beq         r_num_scannables, r0, _resume_summarize
+    tblwr       d.expiry_map_entries_scanned, r_expiry_map_entries_scanned // delay slot
+_if4:    
+    bbeq        SESSION_KIVEC0_QTYPE, FTL_DEV_QTYPE_SCANNER_CONNTRACK, _else4
     add         r_session_info_addr, d.scan_addr_base, \
-                r_scan_id_next, SESSION_INFO_BYTES_SHFT      // delay slot
+                r_scan_id_next, CONNTRACK_INFO_BYTES_SHFT // delay slot
+_then4:                
+    add         r_session_info_addr, d.scan_addr_base, \
+                r_scan_id_next, SESSION_INFO_BYTES_SHFT
     SESSION_INFO_POSSIBLE_SCAN_INCR(0, SESSION_ROUND0,
                                     r_num_scannables, session_round0_session0, 
-                                    _scan_break)
+                                    _endif4)
     SESSION_INFO_POSSIBLE_SCAN_INCR(1, SESSION_ROUND0,
                                     r_num_scannables, session_round0_session1,
-                                    _scan_break)
+                                    _endif4)
     SESSION_INFO_POSSIBLE_SCAN_INCR(2, SESSION_ROUND0,
                                     r_num_scannables, session_round0_session2,
-                                    _scan_break)
+                                    _endif4)
     SESSION_INFO_POSSIBLE_SCAN_INCR(3, SESSION_ROUND0,
                                     r_num_scannables, session_round0_session3,
-                                    _scan_break)
-_scan_break:
+                                    _endif4)
+    b           _endif4
+    nop                                
+_else4:                
+    CONNTRACK_INFO_POSSIBLE_SCAN_INCR(0, CONNTRACK_ROUND0,
+                                    r_num_scannables, conntrack_round0_session0, 
+                                    _endif4)
+    CONNTRACK_INFO_POSSIBLE_SCAN_INCR(1, CONNTRACK_ROUND0,
+                                    r_num_scannables, conntrack_round0_session1,
+                                    _endif4)
+    CONNTRACK_INFO_POSSIBLE_SCAN_INCR(2, CONNTRACK_ROUND0,
+                                    r_num_scannables, conntrack_round0_session2,
+                                    _endif4)
+    CONNTRACK_INFO_POSSIBLE_SCAN_INCR(3, CONNTRACK_ROUND0,
+                                    r_num_scannables, conntrack_round0_session3,
+                                    _endif4)
+_endif4:
     phvwr.e     p.session_kivec0_num_scannables, r_num_scannables
     tbladd.f    d.scan_id_next, r_num_scannables
 

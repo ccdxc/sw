@@ -370,7 +370,7 @@ ftl_lif_state_event_t           FtlLif::lif_queues_stopping_ev_table[] = {
         FTL_LIF_ST_POST_INIT,
     },
     {
-        FTL_LIF_EV_SCANNERS_STOP,
+        FTL_LIF_EV_SCANNERS_QUIESCE,
         &FtlLif::ftl_lif_scanners_quiesce_action,
         FTL_LIF_ST_SAME,
     },
@@ -486,8 +486,6 @@ static void poller_cb_activate(int64_t qstate_addr);
 static void poller_cb_deactivate(int64_t qstate_addr);
 static void scanner_session_cb_activate(int64_t qstate_addr);
 static void scanner_session_cb_deactivate(int64_t qstate_addr);
-static void scanner_ct_cb_activate(int64_t qstate_addr);
-static void scanner_ct_cb_deactivate(int64_t qstate_addr);
 static const char *lif_state_str(ftl_lif_state_t state);
 static const char *lif_event_str(ftl_lif_event_t event);
 
@@ -671,6 +669,10 @@ FtlLif::CmdHandler(ftl_devcmd_t *req,
         ftl_lif_state_machine(FTL_LIF_EV_POLLERS_DEQ_BURST);
         break;
 
+    case FTL_DEVCMD_OPCODE_SCANNERS_START_SINGLE:
+        ftl_lif_state_machine(FTL_LIF_EV_SCANNERS_START_SINGLE);
+        break;
+
     case FTL_DEVCMD_OPCODE_ACCEL_AGING_CONTROL:
         ftl_lif_state_machine(FTL_LIF_EV_ACCEL_AGING_CONTROL);
         break;
@@ -757,7 +759,7 @@ FtlLif::ftl_lif_create_action(ftl_lif_event_t event)
 
     pd_qinfo[FTL_QTYPE_SCANNER_CONNTRACK] = {
         .type_num = FTL_QTYPE_SCANNER_CONNTRACK,
-        .size = HW_CB_MULTIPLE(SCANNER_CT_CB_TABLE_BYTES_SHFT),
+        .size = HW_CB_MULTIPLE(SCANNER_SESSION_CB_TABLE_BYTES_SHFT),
         .entries = log_2(spec->conntrack_hw_scanners),
     };
 
@@ -843,6 +845,20 @@ FtlLif::ftl_lif_setattr_action(ftl_lif_event_t event)
                        accel_age_cb_addr(), &cmd->age_tmo);
         break;
 
+    case FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS:
+        force_session_expired_ts_set(&normal_age_tmo_cb, 
+                              normal_age_cb_addr(), cmd->force_expired_ts);
+        force_session_expired_ts_set(&accel_age_tmo_cb, 
+                              accel_age_cb_addr(), cmd->force_expired_ts);
+        break;
+
+    case FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS:
+        force_conntrack_expired_ts_set(&normal_age_tmo_cb, 
+                              normal_age_cb_addr(), cmd->force_expired_ts);
+        force_conntrack_expired_ts_set(&accel_age_tmo_cb, 
+                              accel_age_cb_addr(), cmd->force_expired_ts);
+        break;
+
     default:
         NIC_LOG_ERR("{}: unknown ATTR {}", LifNameGet(), cmd->attr);
         fsm_ctx.devcmd.status = FTL_RC_EINVAL;
@@ -856,8 +872,10 @@ ftl_lif_event_t
 FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
 {
     lif_getattr_cmd_t  *cmd = &fsm_ctx.devcmd.req->lif_getattr;
+    lif_getattr_cpl_t  *cpl = &fsm_ctx.devcmd.rsp->lif_getattr;
 
     FTL_LIF_FSM_LOG();
+
     switch (cmd->attr) {
 
     case FTL_LIF_ATTR_NAME:
@@ -883,6 +901,14 @@ FtlLif::ftl_lif_getattr_action(ftl_lif_event_t event)
             age_tmo_cb_get((lif_attr_age_tmo_t *)fsm_ctx.devcmd.rsp_data,
                            &accel_age_tmo_cb);
         }
+        break;
+
+    case FTL_LIF_ATTR_FORCE_SESSION_EXPIRED_TS:
+        cpl->force_expired_ts = normal_age_tmo_cb.force_session_expired_ts;
+        break;
+
+    case FTL_LIF_ATTR_FORCE_CONNTRACK_EXPIRED_TS:
+        cpl->force_expired_ts = normal_age_tmo_cb.force_conntrack_expired_ts;
         break;
 
     default:
@@ -1132,7 +1158,8 @@ FtlLif::ftl_lif_scanners_start_single_action(ftl_lif_event_t event)
     scanners_start_single_cmd_t *cmd = &fsm_ctx.devcmd.req->scanners_start_single;
     scanners_start_single_cpl_t *cpl = &fsm_ctx.devcmd.rsp->scanners_start_single;
 
-    FTL_LIF_FSM_LOG();
+    // Don't log as this function may be called very frequently
+    //FTL_LIF_FSM_LOG();
     switch (cmd->qtype) {
 
     case FTL_QTYPE_SCANNER_SESSION:
@@ -1225,7 +1252,8 @@ FtlLif::age_tmo_cb_init(age_tmo_cb_t *age_tmo_cb,
     age_tmo_cb->udp_tmo = htonl(SCANNER_UDP_TMO_DFLT);
     age_tmo_cb->udp_est_tmo = htonl(SCANNER_UDP_EST_TMO_DFLT);
     age_tmo_cb->icmp_tmo = htonl(SCANNER_ICMP_TMO_DFLT);
-    age_tmo_cb->other_tmo = htonl(SCANNER_OTHER_TMO_DFLT);
+    age_tmo_cb->others_tmo = htonl(SCANNER_OTHERS_TMO_DFLT);
+    age_tmo_cb->session_tmo = htonl(SCANNER_SESSION_TMO_DFLT);
 
     age_tmo_cb->cb_activate = SCANNER_AGE_TMO_CB_ACTIVATE;
     age_tmo_cb->cb_select = cb_select;
@@ -1265,13 +1293,15 @@ FtlLif::age_tmo_cb_set(const char *which,
     age_tmo_cb->tcp_rst_tmo = htonl(std::min(attr_age_tmo->tcp_rst_tmo,
                                          (uint32_t)SCANNER_TCP_RST_TMO_MAX));
     age_tmo_cb->udp_tmo = htonl(std::min(attr_age_tmo->udp_tmo,
-                                          (uint32_t)SCANNER_UDP_TMO_MAX));
+                                         (uint32_t)SCANNER_UDP_TMO_MAX));
     age_tmo_cb->udp_est_tmo = htonl(std::min(attr_age_tmo->udp_est_tmo,
                                          (uint32_t)SCANNER_UDP_EST_TMO_MAX));
     age_tmo_cb->icmp_tmo = htonl(std::min(attr_age_tmo->icmp_tmo,
                                          (uint32_t)SCANNER_ICMP_TMO_MAX));
-    age_tmo_cb->other_tmo = htonl(std::min(attr_age_tmo->other_tmo,
-                                         (uint32_t)SCANNER_OTHER_TMO_MAX));
+    age_tmo_cb->others_tmo = htonl(std::min(attr_age_tmo->others_tmo,
+                                         (uint32_t)SCANNER_OTHERS_TMO_MAX));
+    age_tmo_cb->session_tmo = htonl(std::min(attr_age_tmo->session_tmo,
+                                         (uint32_t)SCANNER_SESSION_TMO_MAX));
     NIC_LOG_DEBUG("{}: {} inactivity timeout values change",
                   LifNameGet(), which);
     age_tmo_cb_get(&scratch_tmo, age_tmo_cb);
@@ -1296,16 +1326,48 @@ FtlLif::age_tmo_cb_get(lif_attr_age_tmo_t *attr_age_tmo,
     attr_age_tmo->udp_tmo = ntohl(age_tmo_cb->udp_tmo);
     attr_age_tmo->udp_est_tmo = ntohl(age_tmo_cb->udp_est_tmo);
     attr_age_tmo->icmp_tmo = ntohl(age_tmo_cb->icmp_tmo);
-    attr_age_tmo->other_tmo = ntohl(age_tmo_cb->other_tmo);
+    attr_age_tmo->others_tmo = ntohl(age_tmo_cb->others_tmo);
+    attr_age_tmo->session_tmo = ntohl(age_tmo_cb->session_tmo);
 
     NIC_LOG_DEBUG("    tcp_syn_tmo {} tcp_est_tmo {} tcp_fin_tmo {} "
                   "tcp_timewait_tmo {} tcp_rst_tmo {}",
                   attr_age_tmo->tcp_syn_tmo, attr_age_tmo->tcp_est_tmo, 
                   attr_age_tmo->tcp_fin_tmo, attr_age_tmo->tcp_timewait_tmo,
                   attr_age_tmo->tcp_rst_tmo);
-    NIC_LOG_DEBUG("    udp_tmo {} udp_est_tmo {} icmp_tmo {} other_tmo {}",
-                  attr_age_tmo->udp_tmo, attr_age_tmo->udp_est_tmo,
-                  attr_age_tmo->icmp_tmo, attr_age_tmo->other_tmo);
+    NIC_LOG_DEBUG("    udp_tmo {} udp_est_tmo {} icmp_tmo {} others_tmo {} "
+                  " session_tmo {}", attr_age_tmo->udp_tmo, 
+                  attr_age_tmo->udp_est_tmo, attr_age_tmo->icmp_tmo,
+                  attr_age_tmo->others_tmo, attr_age_tmo->session_tmo);
+}
+
+void
+FtlLif::force_session_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
+                                     uint64_t cb_addr,
+                                     uint8_t force_expired_ts)
+{
+    /*
+     * Timestamp set/get only used for SIM debugging purposes so
+     * it's fine to dynamically update it.
+     */
+    age_tmo_cb->force_session_expired_ts = force_expired_ts;
+    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, force_session_expired_ts),
+                    (uint8_t *)&age_tmo_cb->force_session_expired_ts,
+                    sizeof(age_tmo_cb->force_session_expired_ts));
+}
+
+void
+FtlLif::force_conntrack_expired_ts_set(age_tmo_cb_t *age_tmo_cb,
+                                       uint64_t cb_addr,
+                                       uint8_t force_expired_ts)
+{
+    /*
+     * Timestamp set/get only used for SIM debugging purposes so
+     * it's fine to dynamically update it.
+     */
+    age_tmo_cb->force_conntrack_expired_ts = force_expired_ts;
+    write_mem_small(cb_addr + offsetof(age_tmo_cb_t, force_conntrack_expired_ts),
+                    (uint8_t *)&age_tmo_cb->force_conntrack_expired_ts,
+                    sizeof(age_tmo_cb->force_conntrack_expired_ts));
 }
 
 ftl_status_code_t
@@ -1491,9 +1553,7 @@ ftl_lif_queues_ctl_t::init(const scanners_init_cmd_t *cmd)
     while ((single_cmd.index < cmd->qcount) && curr_scan_table_sz) {
         single_cmd.scan_range_sz = std::min(curr_scan_table_sz,
                                             single_cmd.scan_range_sz);
-        status = qtype() == FTL_QTYPE_SCANNER_SESSION ?
-                 scanner_session_init_single(&single_cmd) :
-                 scanner_ct_init_single(&single_cmd);
+        status = scanner_init_single(&single_cmd);
         if (status != FTL_RC_SUCCESS) {
             return status;
         }
@@ -1577,11 +1637,8 @@ ftl_lif_queues_ctl_t::start(void)
     switch (qtype()) {
 
     case FTL_QTYPE_SCANNER_SESSION:
-        cb_activate = &scanner_session_cb_activate;
-        break;
-
     case FTL_QTYPE_SCANNER_CONNTRACK:
-        cb_activate = &scanner_ct_cb_activate;
+        cb_activate = &scanner_session_cb_activate;
         break;
 
     case FTL_QTYPE_POLLER:
@@ -1657,11 +1714,8 @@ ftl_lif_queues_ctl_t::stop(void)
     switch (qtype()) {
 
     case FTL_QTYPE_SCANNER_SESSION:
-        cb_deactivate = &scanner_session_cb_deactivate;
-        break;
-
     case FTL_QTYPE_SCANNER_CONNTRACK:
-        cb_deactivate = &scanner_ct_cb_deactivate;
+        cb_deactivate = &scanner_session_cb_deactivate;
         break;
 
     case FTL_QTYPE_POLLER:
@@ -1863,7 +1917,7 @@ ftl_lif_queues_ctl_t::quiesce_idle(void)
 
 
 ftl_status_code_t
-ftl_lif_queues_ctl_t::scanner_session_init_single(const scanner_init_single_cmd_t *cmd)
+ftl_lif_queues_ctl_t::scanner_init_single(const scanner_init_single_cmd_t *cmd)
 {
     int64_t                 qstate_addr;
     int64_t                 poller_qstate_addr;
@@ -1929,78 +1983,7 @@ ftl_lif_queues_ctl_t::scanner_session_init_single(const scanner_init_single_cmd_
         return FTL_RC_ERROR;
     }
     qstate.summarize.poller_qstate_addr = poller_qstate_addr;
-    write_mem_small(qstate_addr, (uint8_t *)&qstate, sizeof(qstate));
-
-    return FTL_RC_SUCCESS;
-}
-
-ftl_status_code_t
-ftl_lif_queues_ctl_t::scanner_ct_init_single(const scanner_init_single_cmd_t *cmd)
-{
-    int64_t                 qstate_addr;
-    int64_t                 poller_qstate_addr;
-    uint32_t                qid = cmd->index;
-    scanner_ct_qstate_t     qstate = {0};
-    ftl_status_code_t       status;
-    uint8_t                 pc_offset;
-
-    if (qid >= qcount()) {
-        NIC_LOG_ERR("{}: qid {} exceeds max {}", lif.LifNameGet(),
-                    qid, qcount());
-        return FTL_RC_EQID;
-    }
-
-    qstate_addr = qid_qstate_addr(qid);
-    if (qstate_addr < 0) {
-        return FTL_RC_ERROR;
-    }
-
-    qid_high_ = std::max(qid_high_, qid);
-
-    status = pgm_pc_offset_get("scanner_conntrack_stage0", &pc_offset);
-    if (status != FTL_RC_SUCCESS) {
-        return status;
-    }
-    qstate.cb.qstate_1ring.pc_offset = pc_offset;
-    qstate.cb.qstate_1ring.eval_last = 1;
-    qstate.cb.qstate_1ring.cosB = cmd->cos_override ? cmd->cos : lif.cosB;
-    qstate.cb.qstate_1ring.host_wrings = 0;
-    qstate.cb.qstate_1ring.total_wrings = 1;
-    qstate.cb.qstate_1ring.pid = cmd->pid;
-
-    qstate.cb.normal_tmo_cb_addr = lif.normal_age_cb_addr();
-    qstate.cb.accel_tmo_cb_addr = lif.accel_age_cb_addr();
-    qstate.cb.scan_resched_ticks =
-           time_us_to_timer_ticks(cmd->scan_resched_time,
-                                  &qstate.cb.resched_uses_slow_timer);
-    /*
-     * burst size may be zero but range size must be > 0
-     */
-    assert(cmd->scan_range_sz);
-    qstate.fsm.scan_range_sz = cmd->scan_range_sz;
-    if (cmd->scan_burst_sz) {
-
-        /*
-         * round up burst size to next power of 2
-         */
-        qstate.fsm.scan_burst_sz = cmd->scan_burst_sz;
-        qstate.fsm.scan_burst_sz_shft = log_2(cmd->scan_burst_sz);
-    }
-    qstate.fsm.fsm_state = SCANNER_STATE_INITIAL;
-    qstate.fsm.scan_id_base = cmd->scan_id_base;
-    qstate.fsm.scan_id_next = cmd->scan_id_base;
-    qstate.fsm.scan_addr_base = cmd->scan_addr_base;
-
-    qstate.summarize.poller_qdepth_shft = cmd->poller_qdepth_shft;
-    poller_qstate_addr = lif.pd->lm_->get_lif_qstate_addr(cmd->poller_lif,
-                                      cmd->poller_qtype, cmd->poller_qid);
-    if (poller_qstate_addr < 0) {
-        NIC_LOG_ERR("{}: Failed to get qstate address for poller "
-                    "lif {} qtype {} qid {}", lif.LifNameGet(),
-                    cmd->poller_lif, cmd->poller_qtype, cmd->poller_qid);
-        return FTL_RC_ERROR;
-    }
-    qstate.summarize.poller_qstate_addr = poller_qstate_addr;
+    qstate.metrics0.min_range_elapsed_ticks = ~qstate.metrics0.min_range_elapsed_ticks;
     write_mem_small(qstate_addr, (uint8_t *)&qstate, sizeof(qstate));
 
     return FTL_RC_SUCCESS;
@@ -2134,47 +2117,6 @@ scanner_session_cb_deactivate(int64_t qstate_addr)
                                   offsetof(scanner_session_summarize_t, cb_activate),
                     (uint8_t *)&deactivate, sizeof(deactivate), false);
     mem_cache_invalidate(qstate_addr, sizeof(scanner_session_qstate_t));
-}
-
-static void
-scanner_ct_cb_activate(int64_t qstate_addr)
-{
-    scanner_ct_cb_activate_t    activate = SCANNER_CT_CB_ACTIVATE;
-
-    /*
-     * Activate the CB sections in this order: summarize, fsm, cb
-     */
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, summarize) +
-                                  offsetof(scanner_ct_summarize_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, fsm) +
-                                  offsetof(scanner_ct_fsm_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, cb) +
-                                  offsetof(scanner_ct_cb_t, cb_activate),
-                    (uint8_t *)&activate, sizeof(activate), false);
-    mem_cache_invalidate(qstate_addr, sizeof(scanner_ct_qstate_t));
-}
-
-static void
-scanner_ct_cb_deactivate(int64_t qstate_addr)
-{
-    scanner_ct_cb_activate_t    deactivate =
-            (scanner_ct_cb_activate_t)~SCANNER_CT_CB_ACTIVATE;
-
-    /*
-     * Deactivate the CB sections in this order: cb, fsm, summarize
-     */
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, cb) +
-                                  offsetof(scanner_ct_cb_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, fsm) +
-                                  offsetof(scanner_ct_fsm_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    write_mem_small(qstate_addr + offsetof(scanner_ct_qstate_t, summarize) +
-                                  offsetof(scanner_ct_summarize_t, cb_activate),
-                    (uint8_t *)&deactivate, sizeof(deactivate), false);
-    mem_cache_invalidate(qstate_addr, sizeof(scanner_ct_qstate_t));
 }
 
 /*

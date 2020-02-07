@@ -25,6 +25,10 @@ SRC_FILES := \
     $(SRC_DIR)/scanner_session_round1.s \
     $(SRC_DIR)/scanner_session_round2.s \
     $(SRC_DIR)/scanner_session_round3.s \
+    $(SRC_DIR)/scanner_conntrack_round0.s \
+    $(SRC_DIR)/scanner_conntrack_round1.s \
+    $(SRC_DIR)/scanner_conntrack_round2.s \
+    $(SRC_DIR)/scanner_conntrack_round3.s \
     $(SRC_DIR)/scanner_session_summarize.s \
     $(SRC_DIR)/scanner_session_poller_post.s \
     $(SRC_DIR)/scanner_session_metrics0.s \

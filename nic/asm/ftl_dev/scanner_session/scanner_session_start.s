@@ -42,15 +42,16 @@ scanner_session_start:
     bcf         [c1], _scanner_ring_empty
     add         r_qid, HW_MPU_TXDMA_INTRINSIC_QID, r0            // delay slot
     
-    phvwr       p.session_kivec0_qstate_addr, HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR
-    phvwrpair   p.session_kivec7_lif, HW_MPU_INTRINSIC_LIF, \
-                p.session_kivec7_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE
+    phvwrpair   p.session_kivec0_qstate_addr, HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR, \
+                p.session_kivec0_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE[0]
+    phvwr       p.session_kivec7_lif, HW_MPU_INTRINSIC_LIF
     SCANNER_DB_DATA(r_qid) 
     phvwr       p.db_data_no_index_data, r_db_data.dx
     
+    phvwr       p.poller_slot_data_scanner_qid, r_qid.wx
     sne         c1, d.cb_activate, SCANNER_SESSION_CB_ACTIVATE
     bcf         [c1], _scanner_cb_cfg_discard
-    phvwr       p.poller_slot_data_scanner_qid, r_qid.wx        // delay slot
+    phvwr       p.poller_slot_data_scanner_qtype, HW_MPU_TXDMA_INTRINSIC_QTYPE // delay slot
     
     SCANNER_DB_DATA_TIMER(r_qid, d.scan_resched_ticks)
     phvwr       p.db_data_burst_ticks_data, r_db_data.dx
@@ -96,6 +97,7 @@ _metrics_launch:
      * launched for the same table(s) would be required to relaunch the
      * the affected metrics table(s).
      */
+    SESSION_METRICS_SET(scan_invocations)
     SESSION_METRICS0_TABLE3_COMMIT_LAUNCH_e(HW_MPU_TXDMA_INTRINSIC_QSTATE_ADDR)
     
 /*

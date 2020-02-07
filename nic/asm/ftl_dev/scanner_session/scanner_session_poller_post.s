@@ -13,6 +13,7 @@ struct s7_tbl_session_poller_post_d     d;
 #define r_poller_slot_addr              r4
 #define r_fsm_state_next                r5
 #define r_db_addr                       r6
+#define r_scratch                       r7
 
     
 %%
@@ -31,6 +32,12 @@ session_poller_empty_post_eval:
 
     bbne        SESSION_KIVEC8_RANGE_HAS_POSTED, 0, session_poller_post
     CLEAR_TABLE0                                                // delay slot
+
+    // On SIM platform (debug capability enabled), let poller 
+    // reschedule us rather than using a timer.
+    or          r_scratch, SESSION_KIVEC0_FORCE_SESSION_EXPIRED_TS, \
+                           SESSION_KIVEC0_FORCE_CONNTRACK_EXPIRED_TS
+    bne         r_scratch, r0, session_poller_post
     
     // When using timer, send an update eval to quiet the scheduler
     // (unless scheduling was already disabled prior).
@@ -38,7 +45,7 @@ session_poller_empty_post_eval:
     // DMA0 = scheduler update eval
     
     SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
-                               SESSION_KIVEC7_QTYPE)
+                               SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -51,6 +58,7 @@ session_poller_empty_post_eval:
                                              r_db_addr,
                                              db_data_range_empty_ticks_data,
                                              db_data_range_empty_ticks_data)
+                                       
     .align
     
 /*
@@ -78,7 +86,7 @@ _if4:
     bcf         [!c3], _endif4
     phvwr.c3    p.poller_slot_data_flags, SCANNER_RESCHED_REQUESTED // delay slot
     SCANNER_DB_ADDR_SCHED_RESET(SESSION_KIVEC7_LIF,
-                                SESSION_KIVEC7_QTYPE)
+                                SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_0_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -126,7 +134,7 @@ _endif4:
      
     phvwr.!c3    p.poller_range_has_posted_posted, 1
     add         r_qstate_addr, SESSION_KIVEC0_QSTATE_ADDR, \
-                SCANNER_CT_CB_TABLE_SUMMARIZE_OFFSET + \
+                SCANNER_SESSION_CB_TABLE_SUMMARIZE_OFFSET + \
                 SCANNER_STRUCT_BYTE_OFFS(s6_tbl_session_summarize_d, range_has_posted)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_4_dma_cmd,
                                 r_qstate_addr,
@@ -145,7 +153,7 @@ _if8:
     // DMA5 = reschedule with a PI increment
     
     SCANNER_DB_ADDR_SCHED_PIDX_INC(SESSION_KIVEC7_LIF,
-                                   SESSION_KIVEC7_QTYPE)
+                                   SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_5_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -161,7 +169,7 @@ _else8:
     // DMA5 = scheduler update eval
     
     SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
-                               SESSION_KIVEC7_QTYPE)
+                               SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_5_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -216,7 +224,7 @@ _poller_qfull:
     // DMA1 = scheduler update eval
     
     SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
-                               SESSION_KIVEC7_QTYPE)
+                               SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_1_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -262,7 +270,7 @@ session_fsm_state_eval:
     // DMA1 = reschedule with a PI increment
     
     SCANNER_DB_ADDR_SCHED_PIDX_INC(SESSION_KIVEC7_LIF,
-                                   SESSION_KIVEC7_QTYPE)
+                                   SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_1_dma_cmd,
                                              r_db_addr,
                                              db_data_no_index_data,
@@ -276,7 +284,7 @@ _burst_full_resched:
     // DMA1 = scheduler update eval
     
     SCANNER_DB_ADDR_SCHED_EVAL(SESSION_KIVEC7_LIF,
-                               SESSION_KIVEC7_QTYPE)
+                               SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP(dma_p2m_1_dma_cmd,
                                 r_db_addr,
                                 db_data_no_index_data,
@@ -313,7 +321,7 @@ session_scan_disable:
     // DMA1 = disable scheduler
     
     SCANNER_DB_ADDR_SCHED_RESET(SESSION_KIVEC7_LIF,
-                                SESSION_KIVEC7_QTYPE)
+                                SESSION_KIVEC0_QTYPE)
     CAPRI_DMA_CMD_PHV2MEM_SETUP_STOP_FENCE_e(dma_p2m_1_dma_cmd,
                                              r_db_addr,
                                              db_data_no_index_data,

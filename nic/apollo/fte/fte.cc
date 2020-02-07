@@ -108,7 +108,7 @@ fte_rx_loop (int poller_qid)
 
     PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
-        if (poller_qid != -1) {
+        if ((poller_qid != -1) && !ftl_pollers_client::user_will_poll()) {
             ftl_pollers_client::poll(poller_qid);
         }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);

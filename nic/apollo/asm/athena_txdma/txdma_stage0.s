@@ -78,8 +78,3 @@ nicmgr_resp_stage0:
 scanner_session_stage0:
     j   scanner_session_start
     nop
-
-.align
-scanner_conntrack_stage0:
-    nop.e       // placeholder
-    nop

@@ -1,6 +1,7 @@
 #include "ftl_dev_shared_asm.h"
 
 struct phv_                             p;
+struct s1_tbl1_k                        k;
 struct s1_tbl1_session_norm_tmo_load_d  d;
 
 /*
@@ -34,7 +35,10 @@ _if0:
     sne         c2, d.cb_activate, SCANNER_AGE_TMO_CB_ACTIVATE  // delay slot
     bcf         [c2], _endif0
      
-    SESSION_KIVEC_AGE_TMO_LOAD_e(2)
+    SCANNER_KIVEC_FORCE_EXPIRED_TS_LOAD()    
+    SESSION_KIVEC_AGE_TMO_LOAD(2)
+    SESSION_KIVEC_SESSION_BASE_TMO_LOAD_e(2)            
     
 _endif0:
-    SESSION_KIVEC_AGE_TMO_DFLT_LOAD_e(2);
+    SESSION_KIVEC_AGE_TMO_DFLT_LOAD(2)
+    SESSION_KIVEC_SESSION_BASE_DFLT_TMO_LOAD_e(2)            

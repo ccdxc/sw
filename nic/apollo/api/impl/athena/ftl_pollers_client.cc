@@ -10,6 +10,11 @@
 
 #include "ftl_pollers_client.hpp"
 #include "ftl_dev_impl.hpp"
+#include "nic/apollo/api/include/athena/pds_flow_session.h"
+#include "nic/apollo/api/include/athena/pds_conntrack.h"
+
+#include <rte_spinlock.h>
+#include <rte_atomic.h>
 
 namespace ftl_pollers_client {
 
@@ -22,6 +27,52 @@ namespace ftl_pollers_client {
 #define FTL_POLLERS_BURST_BUF_SZ        (FTL_POLLERS_BURST_COUNT * \
                                          sizeof(poller_slot_data_t))
 static uint32_t             pollers_qcount;
+
+static void
+expiry_fn_dflt_fn(uint32_t expiry_id,
+                  pds_flow_age_expiry_type_t expiry_type);
+
+/*
+ * The user is expected to invoke poll_control() only once during
+ * initialization of the user code (as opposed to doing so dynamically
+ * multiple times during the course of execution). As a result, it is
+ * not necessary to atomically store/fetch the expiry_fn field (which is
+ * a multi-byte pointer). However, if in the future the above assumption 
+ * happens to prove false, the following #define may be enabled to get the
+ * needed protection.
+ */
+//#define POLLERS_EXPIRY_FN_ATOMIC
+
+#ifdef POLLERS_EXPIRY_FN_ATOMIC
+static rte_atomic64_t       pollers_expiry_fn = 
+                            RTE_ATOMIC64_INIT((int64_t)expiry_fn_dflt_fn);
+#else
+static pds_flow_expiry_fn_t pollers_expiry_fn = expiry_fn_dflt_fn;
+#endif
+volatile uint8_t            user_will_poll_;
+
+static inline void
+pollers_expiry_fn_set(pds_flow_expiry_fn_t expiry_fn)
+{
+    if (!expiry_fn) {
+        expiry_fn = expiry_fn_dflt_fn;
+    }
+#ifdef POLLERS_EXPIRY_FN_ATOMIC
+    rte_atomic64_set(&pollers_expiry_fn, (int64_t)expiry_fn);
+#else
+    pollers_expiry_fn = expiry_fn;
+#endif
+}
+
+static inline pds_flow_expiry_fn_t
+pollers_expiry_fn_get(void)
+{
+#ifdef POLLERS_EXPIRY_FN_ATOMIC
+    return (pds_flow_expiry_fn_t)rte_atomic64_read(&pollers_expiry_fn);
+#else
+    return pollers_expiry_fn;
+#endif
+}
 
 /*
  * Expiry submaps for unrolling loops
@@ -54,18 +105,12 @@ static void
 expiry_map_process(uint32_t map_id,
                    uint32_t table_id_base,
                    pds_flow_age_expiry_type_t expiry_type,
-                   uint64_t expiry_map,
-                   expiry_user_cb_t expiry_user_cb);
+                   uint64_t expiry_map);
 static void
 expiry_submap_process(uint32_t submap_id,
                       uint32_t expiry_id_base,
                       pds_flow_age_expiry_type_t expiry_type,
-                      uint8_t submap,
-                      expiry_user_cb_t expiry_user_cb);
-static void
-expiry_cb_dflt(uint32_t expiry_id,
-               pds_flow_age_expiry_type_t expiry_type);
-
+                      uint8_t submap);
 sdk_ret_t
 init(void)
 {
@@ -90,8 +135,8 @@ init(void)
         queue->qid = qid;
         if (qid < pollers_qcount) {
             queue->poller_slot_data =
-                   (poller_slot_data_t *)rte_malloc("poller_slot_data",
-                                                    FTL_POLLERS_BURST_BUF_SZ, 0);
+                   (poller_slot_data_t *)SDK_MALLOC(SDK_MEM_ALLOC_FTL_POLLER_SLOT_DATA,
+                                                    FTL_POLLERS_BURST_BUF_SZ);
             if (!queue->poller_slot_data) {
                 PDS_TRACE_ERR("failed to allocate slot data for qid %u", qid);
                 return SDK_RET_OOM;
@@ -109,6 +154,34 @@ qcount_get(void)
     return pollers_qcount;
 }
 
+sdk_ret_t
+expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
+{
+    *ret_fn_dflt = expiry_fn_dflt_fn;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+poll_control(bool user_will_poll,
+             pds_flow_expiry_fn_t expiry_fn)
+{
+    user_will_poll_ = user_will_poll;
+    pollers_expiry_fn_set(expiry_fn);
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+force_session_expired_ts_set(bool force_expired_ts)
+{
+    return ftl_dev_impl::force_session_expired_ts_set(force_expired_ts);
+}
+
+sdk_ret_t
+force_conntrack_expired_ts_set(bool force_expired_ts)
+{
+    return ftl_dev_impl::force_conntrack_expired_ts_set(force_expired_ts);
+}
+
 /*
  * Submit a burst dequeue on a poller queue corresponding to qid.
  *
@@ -121,8 +194,7 @@ qcount_get(void)
  */
 sdk_ret_t
 poll(uint32_t qid,
-     expiry_user_cb_t expiry_user_cb,
-     bool bringup_log)
+     bool debug_log)
 {
     client_queue_t              *queue = client_queue_get(qid);
     poller_slot_data_t          *slot_data;
@@ -135,22 +207,18 @@ poll(uint32_t qid,
         return SDK_RET_INVALID_ARG;
     }
 
-    if (!expiry_user_cb) {
-        expiry_user_cb = expiry_cb_dflt;
-    }
-
     burst_count = FTL_POLLERS_BURST_COUNT;
     ret = ftl_dev_impl::pollers_dequeue_burst(qid, queue->poller_slot_data,
                                               FTL_POLLERS_BURST_BUF_SZ,
                                               &burst_count);
     if ((ret == SDK_RET_OK) && burst_count) {
-        if (bringup_log) {
+        if (debug_log) {
             PDS_TRACE_DEBUG("pollers_dequeue_burst poller_qid %d burst_count %u",
                             qid, burst_count);
         }
         slot_data = queue->poller_slot_data;
         for (uint32_t i = 0; i < burst_count; i++, slot_data++) {
-            if (bringup_log) {
+            if (debug_log) {
                 PDS_TRACE_DEBUG("table_id_base %u scanner_qid %u scanner_qtype %u "
                                 "flags %u", slot_data->table_id_base,
                                 slot_data->scanner_qid, slot_data->scanner_qtype,
@@ -162,6 +230,23 @@ poll(uint32_t qid,
             }
 
             /*
+             * Note: loops are unrolled here for efficiency
+             */
+            expiry_type = slot_data->scanner_qtype == FTL_DEV_QTYPE_SCANNER_SESSION ?
+                          EXPIRY_TYPE_SESSION : EXPIRY_TYPE_CONNTRACK;
+
+#if SCANNER_EXPIRY_NUM_MAP_ENTRIES_MAX != 4
+#error "May need more unrolled calls to expiry_map_process"
+#endif
+            expiry_map_process(0, slot_data->table_id_base, expiry_type,
+                               slot_data->expiry_map[0]);
+            expiry_map_process(1, slot_data->table_id_base, expiry_type,
+                               slot_data->expiry_map[1]);
+            expiry_map_process(2, slot_data->table_id_base, expiry_type,
+                               slot_data->expiry_map[2]);
+            expiry_map_process(3, slot_data->table_id_base, expiry_type,
+                               slot_data->expiry_map[3]);
+            /*
              * Reschedule scanner if applicable
              */
             if (slot_data->flags & SCANNER_RESCHED_REQUESTED) {
@@ -169,24 +254,6 @@ poll(uint32_t qid,
                               (enum ftl_qtype)slot_data->scanner_qtype,
                               slot_data->scanner_qid);
             }
-
-            /*
-             * Note: loops are unrolled here for efficiency
-             */
-            expiry_type = slot_data->scanner_qtype == FTL_QTYPE_SCANNER_SESSION ?
-                          EXPIRY_TYPE_SESSION : EXPIRY_TYPE_CONNTRACK;
-
-#if SCANNER_EXPIRY_NUM_MAP_ENTRIES_MAX != 4
-#error "Need more unrolled calls to expiry_map_process"
-#endif
-            expiry_map_process(0, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[0], expiry_user_cb);
-            expiry_map_process(1, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[1], expiry_user_cb);
-            expiry_map_process(2, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[2], expiry_user_cb);
-            expiry_map_process(3, slot_data->table_id_base, expiry_type,
-                               slot_data->expiry_map[3], expiry_user_cb);
         }
     }
 
@@ -197,8 +264,7 @@ static void
 expiry_map_process(uint32_t map_id,
                    uint32_t table_id_base,
                    pds_flow_age_expiry_type_t expiry_type,
-                   uint64_t expiry_map,
-                   expiry_user_cb_t expiry_user_cb)
+                   uint64_t expiry_map)
 {
     expiry_submaps_t    submaps;
     uint32_t            expiry_id;
@@ -212,21 +278,21 @@ expiry_map_process(uint32_t map_id,
         expiry_id = table_id_base +
                     (map_id * sizeof(uint64_t) * BITS_PER_BYTE);
         expiry_submap_process(0, expiry_id, expiry_type,
-                              submaps.s.submap[0], expiry_user_cb);
+                              submaps.s.submap[0]);
         expiry_submap_process(1, expiry_id, expiry_type,
-                              submaps.s.submap[1], expiry_user_cb);
+                              submaps.s.submap[1]);
         expiry_submap_process(2, expiry_id, expiry_type,
-                              submaps.s.submap[2], expiry_user_cb);
+                              submaps.s.submap[2]);
         expiry_submap_process(3, expiry_id, expiry_type,
-                              submaps.s.submap[3], expiry_user_cb);
+                              submaps.s.submap[3]);
         expiry_submap_process(4, expiry_id, expiry_type,
-                              submaps.s.submap[4], expiry_user_cb);
+                              submaps.s.submap[4]);
         expiry_submap_process(5, expiry_id, expiry_type,
-                              submaps.s.submap[5], expiry_user_cb);
+                              submaps.s.submap[5]);
         expiry_submap_process(6, expiry_id, expiry_type,
-                              submaps.s.submap[6], expiry_user_cb);
+                              submaps.s.submap[6]);
         expiry_submap_process(7, expiry_id, expiry_type,
-                              submaps.s.submap[7], expiry_user_cb);
+                              submaps.s.submap[7]);
     }
 }
 
@@ -234,28 +300,68 @@ static void
 expiry_submap_process(uint32_t submap_id,
                       uint32_t expiry_id_base,
                       pds_flow_age_expiry_type_t expiry_type,
-                      uint8_t submap,
-                      expiry_user_cb_t expiry_user_cb)
+                      uint8_t submap)
 {
-    uint32_t    sub_expiry_id;
+    pds_flow_expiry_fn_t    expiry_fn = pollers_expiry_fn_get();
+    uint32_t                sub_expiry_id;
 
-    sub_expiry_id = expiry_id_base +
-                    (submap_id * sizeof(uint8_t) * BITS_PER_BYTE);
-    while (submap) {
-        if (submap & 1) {
-            expiry_user_cb(sub_expiry_id, expiry_type);
-        }
+#define SUBMAP_TST_BIT(bit)                                 \
+    if (submap & ((1 << (bit)))) {                          \
+        expiry_fn(sub_expiry_id + (bit), expiry_type);      \
+    }                                                       \
 
-        sub_expiry_id++;
-        submap >>= 1;
+    if (submap) {
+        sub_expiry_id = expiry_id_base +
+                        (submap_id * sizeof(uint8_t) * BITS_PER_BYTE);
+        SUBMAP_TST_BIT(0);
+        SUBMAP_TST_BIT(1);
+        SUBMAP_TST_BIT(2);
+        SUBMAP_TST_BIT(3);
+        SUBMAP_TST_BIT(4);
+        SUBMAP_TST_BIT(5);
+        SUBMAP_TST_BIT(6);
+        SUBMAP_TST_BIT(7);
     }
 }
 
 static void
-expiry_cb_dflt(uint32_t expiry_id,
-               pds_flow_age_expiry_type_t expiry_type)
+expiry_fn_dflt_fn(uint32_t expiry_id,
+                  pds_flow_age_expiry_type_t expiry_type)
 {
     PDS_TRACE_DEBUG("entry %u type %d expired", expiry_id, expiry_type);
+
+    switch (expiry_type) {
+
+    case EXPIRY_TYPE_SESSION: {
+        pds_flow_session_key_t  key = {0};
+
+        /*
+         * Temporary: the following code is just a placeholder as the API
+         * pds_flow_session_info_delete() alone is probably not sufficient
+         * for completely removing a flow.
+         */
+        key.session_info_id = expiry_id;
+        key.direction = HOST_TO_SWITCH | SWITCH_TO_HOST;
+        pds_flow_session_info_delete(&key);
+        break;
+    }
+
+    case EXPIRY_TYPE_CONNTRACK: {
+        pds_conntrack_key_t     key = {0};
+
+        /*
+         * Temporary: the following code is just a placeholder as the API
+         * pds_conntrack_state_delete() alone is probably not sufficient
+         * for completely removing a conntrack entry.
+         */
+        key.conntrack_id = expiry_id;
+        pds_conntrack_state_delete(&key);
+        break;
+    }
+
+    default:
+        break;
+    }
 }
 
 } // namespace ftl_pollers_client

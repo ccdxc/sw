@@ -5,6 +5,7 @@
 #include "ingress.h"
 #include "capri-macros.h"
 #include "ftl_dev_shared.h"
+#include "nic/apollo/p4/include/athena_defines.h"
 
 #define BITS_PER_BYTE                           8
 #define SIZE_IN_BITS(bytes)                     ((bytes) * BITS_PER_BYTE)
@@ -93,7 +94,7 @@
                p.common_te##_tbl##_phv_table_addr, _tbl_addr;                   \
     phvwri     p.common_te##_tbl##_phv_table_pc, _pc[33:6];                     \
     phvwr      p.app_header_table##_tbl##_valid, 1;                             \
-                            
+
 #define LOAD_TABLE_FOR_ADDR_e(_tbl, _lock_en, _tbl_addr, _tbl_sz, _pc)          \
     phvwrpair  p.{common_te##_tbl##_phv_table_lock_en...                        \
                   common_te##_tbl##_phv_table_raw_table_size},                  \
@@ -168,6 +169,15 @@
 #define SESSION_MPU_TABLES_MAX                  (CAPRI_MPU_TABLE_3 + 1)
 #define SESSION_MPU_TABLES_TOTAL                (SESSION_ROUNDS_MAX *           \
                                                  SESSION_MPU_TABLES_MAX)
+#define CONNTRACK_ROUND0                        0
+#define CONNTRACK_ROUND1                        1
+#define CONNTRACK_ROUND2                        2
+#define CONNTRACK_ROUND3                        3
+#define CONNTRACK_ROUNDS_MAX                    4
+
+#define CONNTRACK_MPU_TABLES_MAX                (CAPRI_MPU_TABLE_3 + 1)
+#define CONNTRACK_MPU_TABLES_TOTAL              (CONNTRACK_ROUNDS_MAX *         \
+                                                 CONNTRACK_MPU_TABLES_MAX)
 /*
  * Stage specific actions
  */
@@ -186,8 +196,49 @@
     k.{session_kivec0_session_id_curr_sbit0_ebit3...session_kivec0_session_id_curr_sbit28_ebit31}
 #define SESSION_KIVEC0_NUM_SCANNABLES                                           \
     k.{session_kivec0_num_scannables_sbit0_ebit3...session_kivec0_num_scannables_sbit4_ebit4}
+#define SESSION_KIVEC0_QTYPE                                                    \
+    k.{session_kivec0_qtype}
 #define SESSION_KIVEC0_CB_CFG_DISCARD                                           \
     k.{session_kivec0_cb_cfg_discard}
+#define SESSION_KIVEC0_FORCE_SESSION_EXPIRED_TS                                 \
+    k.{session_kivec0_force_session_expired_ts}
+#define SESSION_KIVEC0_FORCE_CONNTRACK_EXPIRED_TS                               \
+    k.{session_kivec0_force_conntrack_expired_ts}
+#define SESSION_KIVEC0_ROUND3_SESSION3                                          \
+    k.{session_kivec0_round3_session3_expired}
+#define SESSION_KIVEC0_ROUND3_SESSION2                                          \
+    k.{session_kivec0_round3_session2_expired}
+#define SESSION_KIVEC0_ROUND3_SESSION1                                          \
+    k.{session_kivec0_round3_session1_expired}
+#define SESSION_KIVEC0_ROUND3_SESSION0                                          \
+    k.{session_kivec0_round3_session0_expired}
+#define SESSION_KIVEC0_ROUND2_SESSION3                                          \
+    k.{session_kivec0_round2_session3_expired}
+#define SESSION_KIVEC0_ROUND2_SESSION2                                          \
+    k.{session_kivec0_round2_session2_expired}
+#define SESSION_KIVEC0_ROUND2_SESSION1                                          \
+    k.{session_kivec0_round2_session1_expired}
+#define SESSION_KIVEC0_ROUND2_SESSION0                                          \
+    k.{session_kivec0_round2_session0_expired}
+#define SESSION_KIVEC0_ROUND1_SESSION3                                          \
+    k.{session_kivec0_round1_session3_expired}
+#define SESSION_KIVEC0_ROUND1_SESSION2                                          \
+    k.{session_kivec0_round1_session2_expired}
+#define SESSION_KIVEC0_ROUND1_SESSION1                                          \
+    k.{session_kivec0_round1_session1_expired}
+#define SESSION_KIVEC0_ROUND1_SESSION0                                          \
+    k.{session_kivec0_round1_session0_expired}
+#define SESSION_KIVEC0_ROUND0_SESSION3                                          \
+    k.{session_kivec0_round0_session3_expired}
+#define SESSION_KIVEC0_ROUND0_SESSION2                                          \
+    k.{session_kivec0_round0_session2_expired}
+#define SESSION_KIVEC0_ROUND0_SESSION1                                          \
+    k.{session_kivec0_round0_session1_expired}
+#define SESSION_KIVEC0_ROUND0_SESSION0                                          \
+    k.{session_kivec0_round0_session0_expired}
+#define SESSION_KIVEC0_ROUNDS_SESSIONS_RANGE                                    \
+    k.{session_kivec0_round3_session3_expired...                                \
+       session_kivec0_round0_session0_expired}
     
 #define SESSION_KIVEC_ICMP_TMO(_vec)                                            \
     k.{session_kivec##_vec##_icmp_tmo_sbit0_ebit7...session_kivec##_vec##_icmp_tmo_sbit8_ebit12}
@@ -205,8 +256,8 @@
     k.{session_kivec##_vec##_tcp_timewait_tmo_sbit0_ebit3...session_kivec##_vec##_tcp_timewait_tmo_sbit12_ebit12}
 #define SESSION_KIVEC_TCP_RST_TMO(_vec)                                         \
     k.{session_kivec##_vec##_tcp_rst_tmo_sbit0_ebit6...session_kivec##_vec##_tcp_rst_tmo_sbit7_ebit12}
-#define SESSION_KIVEC_OTHER_TMO(_vec)                                           \
-    k.{session_kivec##_vec##_other_tmo_sbit0_ebit1...session_kivec##_vec##_other_tmo_sbit10_ebit12}
+#define SESSION_KIVEC_OTHERS_TMO(_vec)                                          \
+    k.{session_kivec##_vec##_others_tmo_sbit0_ebit1...session_kivec##_vec##_others_tmo_sbit10_ebit13}
     
 #define SESSION_KIVEC2_ICMP_TMO                                                 \
     SESSION_KIVEC_ICMP_TMO(2)
@@ -224,8 +275,8 @@
     SESSION_KIVEC_TCP_TIMEWAIT_TMO(2)
 #define SESSION_KIVEC2_TCP_RST_TMO                                              \
     SESSION_KIVEC_TCP_RST_TMO(2)
-#define SESSION_KIVEC2_OTHER_TMO                                                \
-    SESSION_KIVEC_OTHER_TMO(2)
+#define SESSION_KIVEC2_OTHERS_TMO                                               \
+    SESSION_KIVEC_OTHERS_TMO(2)
     
 #define SESSION_KIVEC3_ICMP_TMO                                                 \
     SESSION_KIVEC_ICMP_TMO(3)
@@ -243,8 +294,8 @@
     SESSION_KIVEC_TCP_TIMEWAIT_TMO(3)
 #define SESSION_KIVEC3_TCP_RST_TMO                                              \
     SESSION_KIVEC_TCP_RST_TMO(3)
-#define SESSION_KIVEC3_OTHER_TMO                                                \
-    SESSION_KIVEC_OTHER_TMO(3)
+#define SESSION_KIVEC3_OTHERS_TMO                                               \
+    SESSION_KIVEC_OTHERS_TMO(3)
     
 #define SESSION_KIVEC4_ICMP_TMO                                                 \
     SESSION_KIVEC_ICMP_TMO(4)
@@ -262,8 +313,8 @@
     SESSION_KIVEC_TCP_TIMEWAIT_TMO(4)
 #define SESSION_KIVEC4_TCP_RST_TMO                                              \
     SESSION_KIVEC_TCP_RST_TMO(4)
-#define SESSION_KIVEC4_OTHER_TMO                                                \
-    SESSION_KIVEC_OTHER_TMO(4)
+#define SESSION_KIVEC4_OTHERS_TMO                                               \
+    SESSION_KIVEC_OTHERS_TMO(4)
     
 #define SESSION_KIVEC5_ICMP_TMO                                                 \
     SESSION_KIVEC_ICMP_TMO(5)
@@ -281,15 +332,13 @@
     SESSION_KIVEC_TCP_TIMEWAIT_TMO(5)
 #define SESSION_KIVEC5_TCP_RST_TMO                                              \
     SESSION_KIVEC_TCP_RST_TMO(5)
-#define SESSION_KIVEC5_OTHER_TMO                                                \
-    SESSION_KIVEC_OTHER_TMO(5)
+#define SESSION_KIVEC5_OTHERS_TMO                                               \
+    SESSION_KIVEC_OTHERS_TMO(5)
     
 #define SESSION_KIVEC7_LIF                                                      \
     k.{session_kivec7_lif_sbit0_ebit7...session_kivec7_lif_sbit8_ebit10}
-#define SESSION_KIVEC7_QTYPE                                                    \
-    k.{session_kivec7_qtype}
 #define SESSION_KIVEC7_POLLER_QSTATE_ADDR                                       \
-    k.{session_kivec7_poller_qstate_addr_sbit0_ebit1...session_kivec7_poller_qstate_addr_sbit58_ebit63}
+    k.{session_kivec7_poller_qstate_addr_sbit0_ebit4...session_kivec7_poller_qstate_addr_sbit61_ebit63}
     
 #define SESSION_KIVEC8_EXPIRY_ID_BASE                                           \
     k.{session_kivec8_expiry_id_base}
@@ -310,8 +359,8 @@
     k.{session_kivec9_cb_cfg_discards}
 #define SESSION_KIVEC9_SCAN_INVOCATIONS                                         \
     k.{session_kivec9_scan_invocations}
-#define SESSION_KIVEC9_EXPIRED_ENTRIES                                          \
-    k.{session_kivec9_expired_entries_sbit0_ebit4...session_kivec9_expired_entries_sbit5_ebit7}
+#define SESSION_KIVEC9_RANGE_ELAPSED_TICKS                                      \
+    k.{session_kivec9_range_elapsed_ticks_sbit0_ebit4...session_kivec9_range_elapsed_ticks_sbit45_ebit47}
 #define SESSION_KIVEC9_METRICS0_RANGE                                           \
     k.{session_kivec9_metrics0_start...session_kivec9_metrics0_end}
 
@@ -320,7 +369,7 @@
  * Note: This involves bit truncation so neither phvwrpair nor phvwr with range
  * can be used.
  */
-#define SESSION_KIVEC_AGE_TMO_LOAD_e(_dst)                                      \
+#define SESSION_KIVEC_AGE_TMO_LOAD(_dst)                                        \
     phvwr       p.{session_kivec##_dst##_icmp_tmo}, d.icmp_tmo;                 \
     phvwr       p.{session_kivec##_dst##_udp_tmo}, d.udp_tmo;                   \
     phvwr       p.{session_kivec##_dst##_udp_est_tmo}, d.udp_est_tmo;           \
@@ -328,28 +377,54 @@
     phvwr       p.{session_kivec##_dst##_tcp_est_tmo}, d.tcp_est_tmo;           \
     phvwr       p.{session_kivec##_dst##_tcp_fin_tmo}, d.tcp_fin_tmo;           \
     phvwr       p.{session_kivec##_dst##_tcp_timewait_tmo}, d.tcp_timewait_tmo; \
-    phvwr.e     p.{session_kivec##_dst##_tcp_rst_tmo}, d.tcp_rst_tmo;           \
-    phvwr       p.{session_kivec##_dst##_other_tmo}, d.other_tmo;               \
+    phvwr       p.{session_kivec##_dst##_tcp_rst_tmo}, d.tcp_rst_tmo;           \
+    phvwr       p.{session_kivec##_dst##_others_tmo}, d.others_tmo;             \
 
-#define SESSION_KIVEC_AGE_TMO_DFLT_LOAD_e(_dst)                                 \
+#define SESSION_KIVEC_AGE_TMO_DFLT_LOAD(_dst)                                   \
     phvwrpair   p.session_kivec2_icmp_tmo, SCANNER_ICMP_TMO_DFLT,               \
                 p.session_kivec2_tcp_syn_tmo, SCANNER_TCP_SYN_TMO_DFLT;         \
     phvwrpair   p.session_kivec2_udp_tmo, SCANNER_UDP_TMO_DFLT,                 \
                 p.session_kivec2_udp_est_tmo, SCANNER_UDP_EST_TMO_DFLT;         \
     phvwrpair   p.session_kivec2_tcp_fin_tmo, SCANNER_TCP_FIN_TMO_DFLT,         \
                 p.session_kivec2_tcp_timewait_tmo, SCANNER_TCP_TIMEWAIT_TMO_DFLT;\
-    phvwrpair.e p.session_kivec2_tcp_rst_tmo, SCANNER_TCP_RST_TMO_DFLT,         \
-                p.session_kivec2_other_tmo, SCANNER_OTHER_TMO_DFLT;             \
+    phvwrpair   p.session_kivec2_tcp_rst_tmo, SCANNER_TCP_RST_TMO_DFLT,         \
+                p.session_kivec2_others_tmo, SCANNER_OTHERS_TMO_DFLT;           \
     phvwr       p.session_kivec2_tcp_est_tmo, SCANNER_TCP_EST_TMO_DFLT;         \
+
+#define SESSION_KIVEC_SESSION_BASE_TMO_LOAD_e(_dst)                             \
+    seq.e       c1, SESSION_KIVEC0_QTYPE, FTL_DEV_QTYPE_SCANNER_SESSION;        \
+    phvwr.c1    p.{session_kivec##_dst##_others_tmo}, d.session_tmo;            \
+    
+#define SESSION_KIVEC_SESSION_BASE_DFLT_TMO_LOAD_e(_dst)                        \
+    seq.e       c1, SESSION_KIVEC0_QTYPE, FTL_DEV_QTYPE_SCANNER_SESSION;        \
+    phvwr.c1    p.{session_kivec##_dst##_others_tmo}, SCANNER_SESSION_TMO_DFLT; \
 
 /*
  * Propagate a to_stageN kivec to another
  */
 #define SESSION_KIVEC_AGE_TMO_PROPAGATE(_dst, _src)                             \
     phvwr       p.{session_kivec##_dst##_icmp_tmo...                            \
-                   session_kivec##_dst##_other_tmo},                            \
+                   session_kivec##_dst##_others_tmo},                           \
                 k.{session_kivec##_src##_icmp_tmo_sbit0_ebit7...                \
-                   session_kivec##_src##_other_tmo_sbit10_ebit12};              \
+                   session_kivec##_src##_others_tmo_sbit10_ebit13};             \
+
+/*
+ * SIM platform doesn't provide a P4+ timestamp so use a debug method
+ * to induce timestamp expiration if configured.
+ */
+#define SCANNER_KIVEC_FORCE_EXPIRED_TS_LOAD()                                   \
+    phvwrpair   p.session_kivec0_force_session_expired_ts,                      \
+                d.force_session_expired_ts[0],                                  \
+                p.session_kivec0_force_conntrack_expired_ts,                    \
+                d.force_conntrack_expired_ts[0];                                \
+
+#define SCANNER_DEBUG_FORCE_SESSION_EXPIRED_TS()                                \
+    sne         c1, SESSION_KIVEC0_FORCE_SESSION_EXPIRED_TS, r0;                \
+    sub.c1      r_timestamp, r0, 1;                                             \
+
+#define SCANNER_DEBUG_FORCE_CONNTRACK_EXPIRED_TS()                              \
+    sne         c1, SESSION_KIVEC0_FORCE_CONNTRACK_EXPIRED_TS, r0;              \
+    sub.c1      r_timestamp, r0, 1;                                             \
 
 /*
  * Timestamp is in clock ticks with clock speed of 833Mhz, or
@@ -359,96 +434,235 @@
  *
  * Reference Capri Clock spreadsheet
  * (https://docs.google.com/spreadsheets/d/1LNUhA67uG3bOdQh8Z3XaKZ_b_CRh9j_bm88uMkpCOqg/edit?ts=5e0b93ee#gi)
- * Timestamp bits 47:23 give interval of 1.01E-02 (which is very close to 1/100 s)
+ * Timestamp bits 47:23 give interval of 1.01E-02 (which is very close to 1/100 s).
+ *
+ * Note also that the P4 timestamp written in session/conntrack entries already
+ * reflect bits [47:23] of the system time.
  */
 #define SCANNER_TS_CALC(_timestamp_data)                                        \
-    sub         r_timestamp, r_timestamp, _timestamp_data;                      \
-    add         r_timestamp, r0, r_timestamp[47:23];                            \
+    sub         r_timestamp, r_timestamp[47:23], _timestamp_data;               \
     divi        r_timestamp, r_timestamp, 100;                                  \
 
-#define SESSION_BRCASE_LKUP_TYPE(_lkup_type, _exp_bit, _tmo, _break_label)      \
-  .brcase _lkup_type;                                                           \
-    slt         c1, _tmo, r_timestamp;                                          \
-    b           _break_label;                                                   \
+#define SESSION_EXPIRY_CHECK_e(_exp_bit, _base_tmo)                             \
+    slt.e       c1, _base_tmo, r_timestamp;                                     \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
 
-#define SESSION_BRCASE_LKUP_TYPE_UNUSED(_unused_type, _break_label)             \
-  .brcase _unused_type;                                                         \
-    b           _break_label;                                                   \
-    nop;                                                                        \
+#define SESSION_EXPIRY_CHECK_KIVEC2_e(_expiry_bit)                              \
+    SESSION_EXPIRY_CHECK_e(_expiry_bit, SESSION_KIVEC2_OTHERS_TMO)              \
     
-#define SESSION_EXPIRY_CHECK_ALL_LKUP_TYPES(_exp_bit, _break_label,             \
-                                            _icmp_tmo, _udp_tmo, udp_est_tmo,   \
-                                            _tcp_syn_tmo, _tcp_est_tmo,         \
-                                            _tcp_fin_tmo, _tcp_wait_tmo,        \
-                                            _tcp_rst_tmo, _other_tmo)           \
-  .brbegin;                                                                     \
-    br          r_lkp_type[3:0];                                                \
-    nop;                                                                        \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_ICMP, _exp_bit,                   \
-                             _icmp_tmo, _break_label)                           \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_UDP, _exp_bit,                    \
-                             _udp_tmo, _break_label)                            \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_UDP_EST, _exp_bit,                \
-                             _udp_est_tmo, _break_label)                        \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_OTHER, _exp_bit,                  \
-                             _other_tmo, _break_label)                          \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_TCP_SYN, _exp_bit,                \
-                             _tcp_syn_tmo, _break_label)                        \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_TCP_EST, _exp_bit,                \
-                             _tcp_est_tmo, _break_label)                        \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_TCP_FIN, _exp_bit,                \
-                             _tcp_fin_tmo, _break_label)                        \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_TCP_TIMEWAIT, _exp_bit,           \
-                             _tcp_wait_tmo, _break_label)                       \
-    SESSION_BRCASE_LKUP_TYPE(SCANNER_LKP_TYPE_TCP_RST, _exp_bit,                \
-                             _tcp_rst_tmo, _break_label)                        \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED0, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED1, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED2, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED3, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED4, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED5, _break_label)     \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED(SCANNER_LKP_TYPE_UNUSED6, _break_label)     \
-  .brend;                                                                       \
-  
-#define SESSION_BRCASE_LKUP_TYPE_e(_lkup_type, _exp_bit, _tmo)                  \
-  .brcase _lkup_type;                                                           \
+#define SESSION_EXPIRY_CHECK_KIVEC3_e(_expiry_bit)                              \
+    SESSION_EXPIRY_CHECK_e(_expiry_bit, SESSION_KIVEC3_OTHERS_TMO)              \
+    
+#define SESSION_EXPIRY_CHECK_KIVEC4_e(_expiry_bit)                              \
+    SESSION_EXPIRY_CHECK_e(_expiry_bit, SESSION_KIVEC4_OTHERS_TMO)              \
+
+#define SESSION_EXPIRY_CHECK_KIVEC5_e(_expiry_bit)                              \
+    SESSION_EXPIRY_CHECK_e(_expiry_bit, SESSION_KIVEC5_OTHERS_TMO)              \
+
+#define CONNTRACK_EXPIRY_CHECK_KIVEC2_e(_expiry_bit)                            \
+    CONNTRACK_EXPIRY_CHECK_ALL_FLOW_TYPES_e(_expiry_bit,                        \
+                                            SESSION_KIVEC2_ICMP_TMO,            \
+                                            SESSION_KIVEC2_UDP_TMO,             \
+                                            SESSION_KIVEC2_UDP_EST_TMO,         \
+                                            SESSION_KIVEC2_TCP_SYN_TMO,         \
+                                            SESSION_KIVEC2_TCP_EST_TMO,         \
+                                            SESSION_KIVEC2_TCP_FIN_TMO,         \
+                                            SESSION_KIVEC2_TCP_TIMEWAIT_TMO,    \
+                                            SESSION_KIVEC2_TCP_RST_TMO,         \
+                                            SESSION_KIVEC2_OTHERS_TMO)          \
+
+#define CONNTRACK_EXPIRY_CHECK_KIVEC3_e(_expiry_bit)                            \
+    CONNTRACK_EXPIRY_CHECK_ALL_FLOW_TYPES_e(_expiry_bit,                        \
+                                            SESSION_KIVEC3_ICMP_TMO,            \
+                                            SESSION_KIVEC3_UDP_TMO,             \
+                                            SESSION_KIVEC3_UDP_EST_TMO,         \
+                                            SESSION_KIVEC3_TCP_SYN_TMO,         \
+                                            SESSION_KIVEC3_TCP_EST_TMO,         \
+                                            SESSION_KIVEC3_TCP_FIN_TMO,         \
+                                            SESSION_KIVEC3_TCP_TIMEWAIT_TMO,    \
+                                            SESSION_KIVEC3_TCP_RST_TMO,         \
+                                            SESSION_KIVEC3_OTHERS_TMO)          \
+
+#define CONNTRACK_EXPIRY_CHECK_KIVEC4_e(_expiry_bit)                            \
+    CONNTRACK_EXPIRY_CHECK_ALL_FLOW_TYPES_e(_expiry_bit,                        \
+                                            SESSION_KIVEC4_ICMP_TMO,            \
+                                            SESSION_KIVEC4_UDP_TMO,             \
+                                            SESSION_KIVEC4_UDP_EST_TMO,         \
+                                            SESSION_KIVEC4_TCP_SYN_TMO,         \
+                                            SESSION_KIVEC4_TCP_EST_TMO,         \
+                                            SESSION_KIVEC4_TCP_FIN_TMO,         \
+                                            SESSION_KIVEC4_TCP_TIMEWAIT_TMO,    \
+                                            SESSION_KIVEC4_TCP_RST_TMO,         \
+                                            SESSION_KIVEC4_OTHERS_TMO)          \
+
+#define CONNTRACK_EXPIRY_CHECK_KIVEC5_e(_expiry_bit)                            \
+    CONNTRACK_EXPIRY_CHECK_ALL_FLOW_TYPES_e(_expiry_bit,                        \
+                                            SESSION_KIVEC5_ICMP_TMO,            \
+                                            SESSION_KIVEC5_UDP_TMO,             \
+                                            SESSION_KIVEC5_UDP_EST_TMO,         \
+                                            SESSION_KIVEC5_TCP_SYN_TMO,         \
+                                            SESSION_KIVEC5_TCP_EST_TMO,         \
+                                            SESSION_KIVEC5_TCP_FIN_TMO,         \
+                                            SESSION_KIVEC5_TCP_TIMEWAIT_TMO,    \
+                                            SESSION_KIVEC5_TCP_RST_TMO,         \
+                                            SESSION_KIVEC5_OTHERS_TMO)          \
+
+#define CONNTRACK_EXPIRY_CHECK_OTHERS_FLOW_STATES_e(_exp_bit, _others_tmo)      \
+    slt.e       c1, _others_tmo, r_timestamp;                                   \
+    phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
+    
+#define CONNTRACK_EXPIRY_CHECK_ICMP_FLOW_STATES_e(_exp_bit, _icmp_tmo)          \
+    slt.e       c1, _icmp_tmo, r_timestamp;                                     \
+    phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
+    
+#define CONNTRACK_EXPIRY_CHECK_UDP_FLOW_STATES_e(_exp_bit, _udp_tmo,            \
+                                                 _udp_est_tmo)                  \
+    seq         c1, r_flow_state, CONNTRACK_FLOW_STATE_UNESTABLISHED;           \
+    slt.c1.e    c1, _udp_tmo, r_timestamp;                                      \
+    phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
+    slt.e       c1, _udp_est_tmo, r_timestamp;                                  \
+    phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
+    
+#define CONNTRACK_BRCASE_FLOW_STATE_e(_flow_state, _exp_bit, _tmo)              \
+  .brcase _flow_state;                                                          \
     slt.e       c1, _tmo, r_timestamp;                                          \
     phvwri.c1   p.session_kivec0_##_exp_bit##_expired, 1;                       \
 
-#define SESSION_BRCASE_LKUP_TYPE_UNUSED_e(_unused_type)                         \
-  .brcase _unused_type;                                                         \
+#define CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(_unused_state)                     \
+  .brcase _unused_state;                                                        \
     nop.e;                                                                      \
     nop;                                                                        \
     
-#define SESSION_EXPIRY_CHECK_ALL_LKUP_TYPES_e(_exp_bit, _icmp_tmo,              \
-                                              _udp_tmo, udp_est_tmo,            \
-                                              _tcp_syn_tmo, _tcp_est_tmo,       \
-                                              _tcp_fin_tmo, _tcp_wait_tmo,      \
-                                              _tcp_rst_tmo, _other_tmo)         \
+#define CONNTRACK_EXPIRY_CHECK_TCP_FLOW_STATES_e(_exp_bit, _tcp_syn_tmo,        \
+                                                 _tcp_est_tmo, _tcp_fin_tmo,    \
+                                                 _tcp_wait_tmo, _tcp_rst_tmo)   \
   .brbegin;                                                                     \
-    br          r_lkp_type[3:0];                                                \
+    br          r_flow_state[3:0];                                              \
     nop;                                                                        \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_ICMP, _exp_bit, _icmp_tmo)      \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_UDP, _exp_bit, _udp_tmo)        \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_UDP_EST, _exp_bit, udp_est_tmo) \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_OTHER, _exp_bit, _other_tmo)    \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_TCP_SYN, _exp_bit, _tcp_syn_tmo)\
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_TCP_EST, _exp_bit, _tcp_est_tmo)\
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_TCP_FIN, _exp_bit, _tcp_fin_tmo)\
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_TCP_TIMEWAIT, _exp_bit,         \
-                               _tcp_wait_tmo)                                   \
-    SESSION_BRCASE_LKUP_TYPE_e(SCANNER_LKP_TYPE_TCP_RST, _exp_bit, _tcp_rst_tmo)\
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED0)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED1)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED2)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED3)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED4)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED5)                 \
-    SESSION_BRCASE_LKUP_TYPE_UNUSED_e(SCANNER_LKP_TYPE_UNUSED6)                 \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_UNESTABLISHED,           \
+                                  _exp_bit, _tcp_syn_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_SYN_SENT,                \
+                                  _exp_bit, _tcp_syn_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_SYN_RECV,                \
+                                  _exp_bit, _tcp_syn_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_SYNACK_SENT,             \
+                                  _exp_bit, _tcp_syn_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_SYNACK_RECV,             \
+                                  _exp_bit, _tcp_syn_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_ESTABLISHED,             \
+                                  _exp_bit, _tcp_est_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_FIN_SENT,                \
+                                  _exp_bit, _tcp_fin_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_FIN_RECV,                \
+                                  _exp_bit, _tcp_fin_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_TIME_WAIT,               \
+                                  _exp_bit, _tcp_wait_tmo)                      \
+    CONNTRACK_BRCASE_FLOW_STATE_e(CONNTRACK_FLOW_STATE_RST_CLOSE,               \
+                                  _exp_bit, _tcp_rst_tmo)                       \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_REMOVED)          \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_RSVD0)            \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_RSVD1)            \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_RSVD2)            \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_RSVD3)            \
+    CONNTRACK_BRCASE_FLOW_STATE_UNUSED_e(CONNTRACK_FLOW_STATE_RSVD4)            \
   .brend;                                                                       \
 
+#define CONNTRACK_EXPIRY_CHECK_ALL_FLOW_TYPES_e(_exp_bit, _icmp_tmo,            \
+                                                _udp_tmo, _udp_est_tmo,         \
+                                                _tcp_syn_tmo, _tcp_est_tmo,     \
+                                                _tcp_fin_tmo, _tcp_wait_tmo,    \
+                                                _tcp_rst_tmo, _others_tmo)      \
+  .brbegin;                                                                     \
+    br          r_flow_type[1:0];                                               \
+    nop;                                                                        \
+    .brcase CONNTRACK_FLOW_TYPE_TCP;                                            \
+      CONNTRACK_EXPIRY_CHECK_TCP_FLOW_STATES_e(_exp_bit, _tcp_syn_tmo,          \
+                                               _tcp_est_tmo, _tcp_fin_tmo,      \
+                                               _tcp_wait_tmo, _tcp_rst_tmo)     \
+    .brcase CONNTRACK_FLOW_TYPE_UDP;                                            \
+      CONNTRACK_EXPIRY_CHECK_UDP_FLOW_STATES_e(_exp_bit, _udp_tmo, _udp_est_tmo)\
+    .brcase CONNTRACK_FLOW_TYPE_ICMP;                                           \
+      CONNTRACK_EXPIRY_CHECK_ICMP_FLOW_STATES_e(_exp_bit, _icmp_tmo)            \
+    .brcase CONNTRACK_FLOW_TYPE_OTHERS;                                         \
+      CONNTRACK_EXPIRY_CHECK_OTHERS_FLOW_STATES_e(_exp_bit, _others_tmo)        \
+  .brend;                                                                       \
+
+/*
+ * Common code macros to be used per round per session.
+ *
+ * NOTE: This code macro is deliberately written with a gap between the call
+ * to SCANNER_TS_CALC() and the one to SESSION_EXPIRY_CHECK_KIVEC() to reduce
+ * MPU stalls in referencing the result of the divide instruction.
+ */
+#define SESSION_ROUND_EXEC_e(_next_tbl, _next_round, _next_pc,                  \
+                             _inner_label0, _inner_label1, _inner_label2,       \
+                             _no_more_session_alt, _expiry_kivec_check_e)       \
+    seq         c2, d.valid_flag, r0;                                           \
+    bcf         [c2], _inner_label0;                                            \
+    SCANNER_TS_CALC(d.timestamp)                                                \
+_inner_label0:;                                                                 \
+    SESSION_INFO_NUM_SCANNABLES_CHECK_CF(c3, _next_tbl, _next_round,            \
+                                         SESSION_KIVEC0_NUM_SCANNABLES)         \
+    SESSION_INFO_POSSIBLE_SCAN_CHECK_CF(c3, _next_tbl,                          \
+                                        _next_pc, _inner_label1)                \
+    b           _inner_label2;                                                  \
+_inner_label1:;                                                                 \
+    _no_more_session_alt                                                        \
+_inner_label2:;                                                                 \
+    nop.c2.e;                                                                   \
+    nop;                                                                        \
+    _expiry_kivec_check_e                                                       \
+    
+#define SESSION_LAST_ROUND_EXEC_e(_inner_label0, _no_more_session_alt,          \
+                                  _expiry_kivec_check_e)                        \
+    seq         c2, d.valid_flag, r0;                                           \
+    bcf         [c2], _inner_label0;                                            \
+    SCANNER_TS_CALC(d.timestamp)                                                \
+_inner_label0:;                                                                 \
+    _no_more_session_alt                                                        \
+    nop.c2.e;                                                                   \
+    nop;                                                                        \
+    _expiry_kivec_check_e                                                       \
+    
+/*
+ * Common code macros to be used per round per conntrack entry.
+ *
+ * NOTE: This code macro is deliberately written with a gap between the call
+ * to SCANNER_TS_CALC() and the one to CONNTRACK_EXPIRY_CHECK_KIVEC() to reduce
+ * MPU stalls in referencing the result of the divide instruction.
+ */
+ #define CONNTRACK_ROUND_EXEC_e(_next_tbl, _next_round, _next_pc,               \
+                                _inner_label0, _inner_label1, _inner_label2,    \
+                                _no_more_conntrack_alt, _expiry_kivec_check_e)  \
+    seq         c2, d.valid_flag, r0;                                           \
+    bcf         [c2], _inner_label0;                                            \
+    add         r_flow_type, d.flow_type, r0;                                   \
+    SCANNER_TS_CALC(d.timestamp)                                                \
+_inner_label0:;                                                                 \
+    CONNTRACK_INFO_NUM_SCANNABLES_CHECK_CF(c3, _next_tbl, _next_round,          \
+                                           SESSION_KIVEC0_NUM_SCANNABLES)       \
+    CONNTRACK_INFO_POSSIBLE_SCAN_CHECK_CF(c3, _next_tbl,                        \
+                                          _next_pc, _inner_label1)              \
+    b           _inner_label2;                                                  \
+_inner_label1:;                                                                 \
+    _no_more_conntrack_alt                                                      \
+_inner_label2:;                                                                 \
+    nop.c2.e;                                                                   \
+    add         r_flow_state, d.flow_state, r0;                                 \
+    _expiry_kivec_check_e                                                       \
+
+#define CONNTRACK_LAST_ROUND_EXEC_e(_inner_label0, _no_more_conntrack_alt,      \
+                                    _expiry_kivec_check_e)                      \
+    seq         c2, d.valid_flag, r0;                                           \
+    bcf         [c2], _inner_label0;                                            \
+    add         r_flow_type, d.flow_type, r0;                                   \
+    SCANNER_TS_CALC(d.timestamp)                                                \
+_inner_label0:;                                                                 \
+    _no_more_conntrack_alt                                                      \
+    nop.c2.e;                                                                   \
+    add         r_flow_state, d.flow_state, r0;                                 \
+    _expiry_kivec_check_e                                                       \
+    
 /*
  * Issue a session_info scan for _tbl per the given _round, provided the scan
  * falls within the given _num_scannables. The session to read is given
@@ -464,6 +678,16 @@
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
                         TABLE_SIZE_512_BITS, _pc)                               \
     add         r_session_info_addr, r_session_info_addr, SESSION_INFO_BYTES;   \
+
+#define CONNTRACK_INFO_POSSIBLE_SCAN_INCR(_tbl, _round, _num_scannables,        \
+                                        _pc, _break_label)                      \
+    sle         c1, ((_round) * CONNTRACK_MPU_TABLES_MAX) + ((_tbl) + 1),       \
+                _num_scannables;                                                \
+    bcf         [!c1], _break_label;                                            \
+    nop;                                                                        \
+    LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
+                        TABLE_SIZE_512_BITS, _pc)                               \
+    add         r_session_info_addr, r_session_info_addr, CONNTRACK_INFO_BYTES; \
 
 /*
  * The following 2 macros are similar to SESSION_INFO_POSSIBLE_SCAN_INCR(),
@@ -488,11 +712,29 @@
     LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
                         TABLE_SIZE_512_BITS, _pc)                               \
                 
+#define CONNTRACK_INFO_NUM_SCANNABLES_CHECK_CF(_cf, _tbl, _round,               \
+                                             _num_scannables)                   \
+    sle         _cf, ((_round) * CONNTRACK_MPU_TABLES_MAX) + ((_tbl) + 1),      \
+                _num_scannables;                                                \
+    add         r_session_id, SESSION_KIVEC0_SESSION_ID_CURR,                   \
+                ((_round) * CONNTRACK_MPU_TABLES_MAX) + (_tbl);                 \
+    add         r_session_info_addr, SESSION_KIVEC0_SESSION_TABLE_ADDR,         \
+                r_session_id, CONNTRACK_INFO_BYTES_SHFT;                        \
+    
+#define CONNTRACK_INFO_POSSIBLE_SCAN_CHECK_CF(_cf, _tbl, _pc, _break_label)     \
+    bcf         [!_cf], _break_label;                                           \
+    nop;                                                                        \
+    LOAD_TABLE_FOR_ADDR(_tbl, TABLE_LOCK_DIS, r_session_info_addr,              \
+                        TABLE_SIZE_512_BITS, _pc)                               \
+                
 /*
  * When there is no more session scanning to launch for session 0 (i.e., table 0),
  * the following is the alternative launch.
  */
 #define SESSION_NO_MORE_SESSION0_ALT()                                          \
+    SESSION_SUMMARIZE_LAUNCH(0, SESSION_KIVEC0_QSTATE_ADDR, session_summarize)  \
+ 
+#define CONNTRACK_NO_MORE_SESSION0_ALT()                                        \
     SESSION_SUMMARIZE_LAUNCH(0, SESSION_KIVEC0_QSTATE_ADDR, session_summarize)  \
  
 /*
@@ -502,11 +744,17 @@
 #define SESSION_NO_MORE_SESSION1_2_ALT()                                        \
     nop;                                                                        \
 
+#define CONNTRACK_NO_MORE_SESSION1_2_ALT()                                      \
+    nop;                                                                        \
+
 /*
  * When there is no more session scanning to launch for session 3 (i.e., table 3),
  * the following is the alternative launch.
  */
 #define SESSION_NO_MORE_SESSION3_ALT()                                          \
+    SESSION_METRICS0_TABLE3_COMMIT_LAUNCH(SESSION_KIVEC0_QSTATE_ADDR)           \
+
+#define CONNTRACK_NO_MORE_SESSION3_ALT()                                        \
     SESSION_METRICS0_TABLE3_COMMIT_LAUNCH(SESSION_KIVEC0_QSTATE_ADDR)           \
 
 /*

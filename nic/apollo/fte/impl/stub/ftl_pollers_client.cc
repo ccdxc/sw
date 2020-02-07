@@ -12,6 +12,8 @@
 
 namespace ftl_pollers_client {
 
+volatile uint8_t    user_will_poll_;
+
 sdk_ret_t
 init(void)
 {
@@ -25,9 +27,34 @@ qcount_get(void)
 }
 
 sdk_ret_t
+expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
+{
+    *ret_fn_dflt = NULL;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+poll_control(bool user_will_poll,
+             pds_flow_expiry_fn_t expiry_fn)
+{
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+force_session_expired_ts_set(bool force_expired_ts)
+{
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+force_conntrack_expired_ts_set(bool force_expired_ts)
+{
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 poll(uint32_t qid,
-     expiry_user_cb_t expiry_user_cb,
-     bool bringup_log)
+     bool debug_log)
 {
     return SDK_RET_OK;
 }

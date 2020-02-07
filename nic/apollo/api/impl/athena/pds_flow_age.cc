@@ -39,6 +39,25 @@ pds_flow_age_sw_pollers_qcount(uint32_t *ret_qcount)
 }
 
 sdk_ret_t
+pds_flow_age_sw_pollers_expiry_fn_dflt(pds_flow_expiry_fn_t *ret_fn_dflt)
+{
+    return ftl_pollers_client::expiry_fn_dflt(ret_fn_dflt);
+}
+
+sdk_ret_t
+pds_flow_age_sw_pollers_poll_control(bool user_is_poller,
+                                     pds_flow_expiry_fn_t expiry_fn)
+{
+    return ftl_pollers_client::poll_control(user_is_poller, expiry_fn);
+}
+
+sdk_ret_t
+pds_flow_age_sw_pollers_poll(uint32_t poller_id)
+{
+    return ftl_pollers_client::poll(poller_id);
+}
+
+sdk_ret_t
 pds_flow_age_normal_timeouts_set(const pds_flow_age_timeouts_t *norm_age_timeouts)
 {
     return ftl_dev_impl::normal_timeouts_set(norm_age_timeouts);
@@ -54,13 +73,6 @@ sdk_ret_t
 pds_flow_age_accel_control(bool enable_sense)
 {
     return ftl_dev_impl::accel_aging_control(enable_sense);
-}
-
-sdk_ret_t
-pds_flow_age_pollers_poll(uint32_t poller_id,
-                          expiry_user_cb_t expiry_user_cb)
-{
-    return ftl_pollers_client::poll(poller_id, expiry_user_cb);
 }
 
 }

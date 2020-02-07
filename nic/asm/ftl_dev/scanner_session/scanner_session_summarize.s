@@ -52,9 +52,7 @@ _endif0:
     sne         c1, SESSION_KIVEC0_CB_CFG_DISCARD, r0
     sne         c2, d.cb_activate, SCANNER_SESSION_CB_ACTIVATE
     bcf         [c1 | c2], _scanner_cb_cfg_discard
-    add         r_expiry_sub_map, \
-                k.{session_kivec0_round3_session3_expired...\
-                   session_kivec0_round0_session0_expired}, r0  // delay slot
+    add         r_expiry_sub_map, SESSION_KIVEC0_ROUNDS_SESSIONS_RANGE, r0 // delay slot
                                               
     // Merge all the 1's bits from r_rounds_sessions_expired to their
     // corresponding positions in the poller expiry_maps maintained in the d-vec
@@ -103,8 +101,6 @@ _endsw0:
     tblwr.f     d.expiry_map3, r_expiry_map3
 _endif2:    
 
-    SESSION_METRICS_SET(scan_invocations)
-    
     // Note: expiry_maps are rearranged to little-endian for
     // sending to software poller
     phvwr       p.poller_slot_data_table_id_base, \
