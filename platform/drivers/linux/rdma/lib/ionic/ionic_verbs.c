@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -2595,14 +2595,11 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.resize_cq		= ionic_resize_cq,
 	.destroy_cq		= ionic_destroy_cq,
 	.create_srq		= ionic_create_srq,
-	.create_srq_ex		= ionic_create_srq_ex,
-	.get_srq_num		= ionic_get_srq_num,
 	.modify_srq		= ionic_modify_srq,
 	.query_srq		= ionic_query_srq,
 	.destroy_srq		= ionic_destroy_srq,
 	.post_srq_recv		= ionic_post_srq_recv,
 	.create_qp		= ionic_create_qp,
-	.create_qp_ex		= ionic_create_qp_ex,
 	.query_qp		= ionic_query_qp,
 	.modify_qp		= ionic_modify_qp,
 	.destroy_qp		= ionic_destroy_qp,
@@ -2613,4 +2610,8 @@ const struct verbs_context_ops ionic_ctx_ops = {
 	.alloc_mw		= ionic_alloc_mw,
 	.bind_mw		= ionic_bind_mw,
 	.dealloc_mw		= ionic_dealloc_mw,
+
+	.create_srq_ex		= ionic_create_srq_ex,
+	.get_srq_num		= ionic_get_srq_num,
+	.create_qp_ex		= ionic_create_qp_ex,
 };

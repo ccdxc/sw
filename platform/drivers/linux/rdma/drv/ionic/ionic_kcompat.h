@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  */
 
 #ifndef IONIC_KCOMPAT
@@ -39,14 +39,6 @@
 #if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 99,99)
 #else /* 4.10.0 and later */
 #define HAVE_NETDEV_MAX_MTU
-#endif
-
-#if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,11, /* RHEL */ 99,99)
-/* XXX: Later stable versions of 4.9 and 4.10 added refcount_t */
-#define refcount_t            atomic_t
-#define refcount_set          atomic_set
-#define refcount_dec_and_test atomic_dec_and_test
-#define refcount_inc          atomic_inc
 #endif
 
 #if IONIC_KCOMPAT_KERN_VERSION_PRIOR_TO(/* Linux */ 4,17, /* RHEL */ 99,99)
@@ -156,7 +148,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,9, /* RHEL */ 7,5, /* OFA */ 4_9b)
 #else /* 4.9.0 and later */
-#define HAVE_IB_PD_UNSAFE_DMA_RKEY
+#define HAVE_IB_PD_FLAGS
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,10, /* RHEL */ 7,4, /* OFA */ 4_10a)
@@ -241,7 +233,7 @@ static inline int ib_get_eth_speed(struct ib_device *dev, u8 port_num,
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,14, /* RHEL */ 7,5, /* OFA */ 4_14b)
 static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 {
-	return srq_type == IB_SRQT_XRC;
+	return (srq_type == IB_SRQT_XRC);
 }
 
 #define HAVE_GET_DEV_FW_STR_LEN
@@ -278,8 +270,6 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 4,19, /* RHEL */ 99,99, /* OFA */ 4_19a)
 #define HAVE_REQUIRED_IB_GID
-#define ib_gid_to_network_type(gid_type, gid) \
-	ib_gid_to_network_type(gid_type, (union ib_gid *)(gid))
 #else
 #define HAVE_AH_ATTR_CACHED_GID
 #endif
@@ -289,8 +279,9 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #define rdma_wr(wr) rdma_wr((struct ib_send_wr *)(wr))
 #define atomic_wr(wr) atomic_wr((struct ib_send_wr *)(wr))
 #define reg_wr(wr) reg_wr((struct ib_send_wr *)(wr))
+#define CONST
 #else
-#define HAVE_CONST_IB_WR
+#define CONST const
 #define HAVE_IBDEV_MAX_SEND_RECV_SGE
 #endif
 
@@ -311,32 +302,19 @@ static inline bool ib_srq_has_cq(enum ib_srq_type srq_type)
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,0, /* RHEL */ 99,99, /* OFA */ 5_0)
 
 struct ib_device_ops {
-#ifdef HAVE_CONST_IB_WR
-	int (*post_send)(struct ib_qp *qp, const struct ib_send_wr *send_wr,
-			 const struct ib_send_wr **bad_send_wr);
-	int (*post_recv)(struct ib_qp *qp, const struct ib_recv_wr *recv_wr,
-			 const struct ib_recv_wr **bad_recv_wr);
-#else
-	int (*post_send)(struct ib_qp *qp, struct ib_send_wr *send_wr,
-			 struct ib_send_wr **bad_send_wr);
-	int (*post_recv)(struct ib_qp *qp, struct ib_recv_wr *recv_wr,
-			 struct ib_recv_wr **bad_recv_wr);
-#endif
+	int (*post_send)(struct ib_qp *qp, CONST struct ib_send_wr *send_wr,
+			 CONST struct ib_send_wr **bad_send_wr);
+	int (*post_recv)(struct ib_qp *qp, CONST struct ib_recv_wr *recv_wr,
+			 CONST struct ib_recv_wr **bad_recv_wr);
 	void (*drain_rq)(struct ib_qp *qp);
 	void (*drain_sq)(struct ib_qp *qp);
 	int (*poll_cq)(struct ib_cq *cq, int num_entries, struct ib_wc *wc);
 	int (*peek_cq)(struct ib_cq *cq, int wc_cnt);
 	int (*req_notify_cq)(struct ib_cq *cq, enum ib_cq_notify_flags flags);
 	int (*req_ncomp_notif)(struct ib_cq *cq, int wc_cnt);
-#ifdef HAVE_CONST_IB_WR
 	int (*post_srq_recv)(struct ib_srq *srq,
-			     const struct ib_recv_wr *recv_wr,
-			     const struct ib_recv_wr **bad_recv_wr);
-#else
-	int (*post_srq_recv)(struct ib_srq *srq,
-			     struct ib_recv_wr *recv_wr,
-			     struct ib_recv_wr **bad_recv_wr);
-#endif
+			     CONST struct ib_recv_wr *recv_wr,
+			     CONST struct ib_recv_wr **bad_recv_wr);
 	int (*query_device)(struct ib_device *device,
 			    struct ib_device_attr *device_attr,
 			    struct ib_udata *udata);
@@ -361,7 +339,8 @@ struct ib_device_ops {
 				  struct ib_port_immutable *immutable);
 	enum rdma_link_layer (*get_link_layer)(struct ib_device *device,
 					       u8 port_num);
-	struct net_device *(*get_netdev)(struct ib_device *device, u8 port_num);
+	struct net_device *(*get_netdev)(struct ib_device *device,
+					 u8 port_num);
 #ifdef HAVE_REQUIRED_IB_GID
 	int (*query_gid)(struct ib_device *device, u8 port_num, int index,
 			 union ib_gid *gid);
@@ -375,8 +354,8 @@ struct ib_device_ops {
 	int (*add_gid)(const union ib_gid *gid, const struct ib_gid_attr *attr,
 		       void **context);
 	int (*del_gid)(const struct ib_gid_attr *attr, void **context);
-#endif
-#endif
+#endif /* HAVE_IB_GID_DEV_PORT_INDEX */
+#endif /* HAVE_REQUIRED_IB_GID */
 	int (*query_pkey)(struct ib_device *device, u8 port_num, u16 index,
 			  u16 *pkey);
 	struct ib_ucontext *(*alloc_ucontext)(struct ib_device *device,
@@ -397,11 +376,11 @@ struct ib_device_ops {
 	struct ib_ah *(*create_ah)(struct ib_pd *pd,
 				   struct rdma_ah_attr *ah_attr,
 				   struct ib_udata *udata);
-#endif
+#endif /* HAVE_CREATE_AH_FLAGS */
 #else
 	struct ib_ah *(*create_ah)(struct ib_pd *pd,
 				   struct rdma_ah_attr *ah_attr);
-#endif
+#endif /* HAVE_CREATE_AH_UDATA */
 	int (*modify_ah)(struct ib_ah *ah, struct rdma_ah_attr *ah_attr);
 	int (*query_ah)(struct ib_ah *ah, struct rdma_ah_attr *ah_attr);
 #ifdef HAVE_CREATE_AH_FLAGS
@@ -423,7 +402,8 @@ struct ib_device_ops {
 	int (*modify_qp)(struct ib_qp *qp, struct ib_qp_attr *qp_attr,
 			 int qp_attr_mask, struct ib_udata *udata);
 	int (*query_qp)(struct ib_qp *qp, struct ib_qp_attr *qp_attr,
-			int qp_attr_mask, struct ib_qp_init_attr *qp_init_attr);
+			int qp_attr_mask,
+			struct ib_qp_init_attr *qp_init_attr);
 	int (*destroy_qp)(struct ib_qp *qp);
 	struct ib_cq *(*create_cq)(struct ib_device *device,
 				   const struct ib_cq_init_attr *attr,
@@ -442,14 +422,14 @@ struct ib_device_ops {
 				     u64 virt_addr, int mr_access_flags,
 				     struct ib_udata *udata);
 #endif
-	int (*rereg_user_mr)(struct ib_mr *mr, int flags, u64 start, u64 length,
-			     u64 virt_addr, int mr_access_flags,
+	int (*rereg_user_mr)(struct ib_mr *mr, int flags, u64 start,
+			     u64 length, u64 virt_addr, int mr_access_flags,
 			     struct ib_pd *pd, struct ib_udata *udata);
 	int (*dereg_mr)(struct ib_mr *mr);
 	struct ib_mr *(*alloc_mr)(struct ib_pd *pd, enum ib_mr_type mr_type,
 				  u32 max_num_sg);
-	int (*map_mr_sg)(struct ib_mr *mr, struct scatterlist *sg, int sg_nents,
-			 unsigned int *sg_offset);
+	int (*map_mr_sg)(struct ib_mr *mr, struct scatterlist *sg,
+			 int sg_nents, unsigned int *sg_offset);
 	int (*check_mr_status)(struct ib_mr *mr, u32 check_mask,
 			       struct ib_mr_status *mr_status);
 	struct ib_mw *(*alloc_mw)(struct ib_pd *pd, enum ib_mw_type type,
@@ -467,83 +447,8 @@ struct ib_device_ops {
 			    struct rdma_hw_stats *stats, u8 port, int index);
 };
 
-static inline void ib_set_device_ops(struct ib_device *dev,
-				     const struct ib_device_ops *ops)
-{
-#define SET_DEVICE_OP(name) \
-	(dev->name = dev->name ?: ops->name)
-
-#ifdef HAVE_REQUIRED_IB_GID
-	SET_DEVICE_OP(add_gid);
-#endif
-	SET_DEVICE_OP(alloc_hw_stats);
-	SET_DEVICE_OP(alloc_mr);
-	SET_DEVICE_OP(alloc_mw);
-	SET_DEVICE_OP(alloc_pd);
-	SET_DEVICE_OP(alloc_ucontext);
-	SET_DEVICE_OP(alloc_xrcd);
-	SET_DEVICE_OP(attach_mcast);
-	SET_DEVICE_OP(check_mr_status);
-	SET_DEVICE_OP(create_ah);
-	SET_DEVICE_OP(create_cq);
-	SET_DEVICE_OP(create_qp);
-	SET_DEVICE_OP(create_srq);
-	SET_DEVICE_OP(dealloc_mw);
-	SET_DEVICE_OP(dealloc_pd);
-	SET_DEVICE_OP(dealloc_ucontext);
-	SET_DEVICE_OP(dealloc_xrcd);
-#ifdef HAVE_REQUIRED_IB_GID
-	SET_DEVICE_OP(del_gid);
-#endif
-	SET_DEVICE_OP(dereg_mr);
-	SET_DEVICE_OP(destroy_ah);
-	SET_DEVICE_OP(destroy_cq);
-	SET_DEVICE_OP(destroy_qp);
-	SET_DEVICE_OP(destroy_srq);
-	SET_DEVICE_OP(detach_mcast);
-	SET_DEVICE_OP(disassociate_ucontext);
-	SET_DEVICE_OP(drain_rq);
-	SET_DEVICE_OP(drain_sq);
-#ifdef HAVE_GET_DEV_FW_STR
-	SET_DEVICE_OP(get_dev_fw_str);
-#endif
-	SET_DEVICE_OP(get_dma_mr);
-	SET_DEVICE_OP(get_hw_stats);
-	SET_DEVICE_OP(get_link_layer);
-	SET_DEVICE_OP(get_netdev);
-	SET_DEVICE_OP(get_port_immutable);
-#ifdef HAVE_GET_VECTOR_AFFINITY
-	SET_DEVICE_OP(get_vector_affinity);
-#endif
-	SET_DEVICE_OP(map_mr_sg);
-	SET_DEVICE_OP(mmap);
-	SET_DEVICE_OP(modify_ah);
-	SET_DEVICE_OP(modify_cq);
-	SET_DEVICE_OP(modify_device);
-	SET_DEVICE_OP(modify_port);
-	SET_DEVICE_OP(modify_qp);
-	SET_DEVICE_OP(modify_srq);
-	SET_DEVICE_OP(peek_cq);
-	SET_DEVICE_OP(poll_cq);
-	SET_DEVICE_OP(post_recv);
-	SET_DEVICE_OP(post_send);
-	SET_DEVICE_OP(post_srq_recv);
-	SET_DEVICE_OP(query_ah);
-	SET_DEVICE_OP(query_device);
-#ifdef HAVE_REQUIRED_IB_GID
-	SET_DEVICE_OP(query_gid);
-#endif
-	SET_DEVICE_OP(query_pkey);
-	SET_DEVICE_OP(query_port);
-	SET_DEVICE_OP(query_qp);
-	SET_DEVICE_OP(query_srq);
-	SET_DEVICE_OP(reg_user_mr);
-	SET_DEVICE_OP(req_ncomp_notif);
-	SET_DEVICE_OP(req_notify_cq);
-	SET_DEVICE_OP(rereg_user_mr);
-	SET_DEVICE_OP(resize_cq);
-#undef SET_DEVICE_OP
-}
+#define HAVE_CUSTOM_IB_SET_DEVICE_OPS
+void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops);
 
 #undef dma_alloc_coherent
 #define dma_alloc_coherent dma_zalloc_coherent
@@ -580,7 +485,6 @@ static inline void ib_set_device_ops(struct ib_device *dev,
 #endif
 
 #if IONIC_KCOMPAT_VERSION_PRIOR_TO(/* Linux */ 5,4, /* RHEL */ 99,99, /* OFA */ 5_0)
-/* This is finally part of the stack in kernel 5.4 */
 enum ib_port_phys_state {
 	IB_PORT_PHYS_STATE_SLEEP = 1,
 	IB_PORT_PHYS_STATE_POLLING = 2,
@@ -592,8 +496,6 @@ enum ib_port_phys_state {
 };
 #else /* 5.4 and later */
 #endif
-
-/* other compat for not yet upstream changes */
 
 /**
  * roce_ud_header_unpack - Unpack UD header struct from RoCE wire format

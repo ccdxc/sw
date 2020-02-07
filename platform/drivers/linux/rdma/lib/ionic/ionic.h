@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -40,6 +40,7 @@
 #include <pthread.h>
 
 #include <infiniband/driver.h>
+#include <infiniband/verbs.h>
 #include <util/udma_barrier.h>
 #include <ccan/list.h>
 

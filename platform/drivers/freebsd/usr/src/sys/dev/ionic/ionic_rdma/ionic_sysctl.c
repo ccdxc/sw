@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -388,43 +388,6 @@ static void ionic_q_add(struct sysctl_ctx_list *ctx,
 		ionic_umem_add(ctx, parent, umem);
 }
 
-void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
-{
-	struct sysctl_ctx_list *ctx;
-	struct sysctl_oid_list *parent;
-
-	dev->debug = NULL;
-	dev->debug_aq = NULL;
-	dev->debug_cq = NULL;
-	dev->debug_eq = NULL;
-	dev->debug_mr = NULL;
-	dev->debug_qp = NULL;
-
-	if (!oidp)
-		return;
-
-	parent = SYSCTL_CHILDREN(oidp);
-
-	ctx = &dev->debug_ctx;
-	sysctl_ctx_init(ctx);
-
-	oidp = ionic_node(ctx, parent, "rdma", "RDMA Device");
-	if (!oidp) {
-		dev_err(&dev->ibdev.dev, "failed to create rdma node\n");
-		return;
-	}
-
-	dev->debug = oidp;
-
-	parent = SYSCTL_CHILDREN(oidp);
-
-	dev->debug_aq = ionic_node(ctx, parent, "aq", "AQ Info");
-	dev->debug_cq = ionic_node(ctx, parent, "cq", "CQ Info");
-	dev->debug_eq = ionic_node(ctx, parent, "eq", "EQ Info");
-	dev->debug_mr = ionic_node(ctx, parent, "mr", "MR/MW Info");
-	dev->debug_qp = ionic_node(ctx, parent, "qp", "QP/SRQ Info");
-}
-
 static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 {
 	struct ionic_ibdev *dev = context;
@@ -437,7 +400,7 @@ static int ionic_dev_reset_write(void *context, const char *buf, size_t count)
 	return 0;
 }
 
-void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
+static void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 {
 	struct sysctl_ctx_list *ctx;
 	struct sysctl_oid_list *parent;
@@ -534,6 +497,7 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 	ionic_int(ctx, parent, &dev->inuse_qpid.next_id,
 		  "next_qpid", "Next QP ID");
 
+#ifdef IONIC_SRQ_XRC
 	ionic_hweight(ctx, parent,
 		      dev->inuse_qpid.inuse,
 		      dev->size_srqid,
@@ -542,6 +506,7 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 		  "size_srqid", "Total SRQ IDs");
 	ionic_int(ctx, parent, &dev->next_srqid,
 		  "next_srqid", "Next SRQ ID");
+#endif /* IONIC_SRQ_XRC */
 
 	ionic_hweight(ctx, parent,
 		      dev->inuse_restbl.inuse,
@@ -557,6 +522,45 @@ void ionic_dbg_add_dev_info(struct ionic_ibdev *dev)
 		ionic_int(ctx, parent, &dev->inuse_restbl.order_next[i],
 			  cname, "Order Next Long");
 	}
+}
+
+void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp)
+{
+	struct sysctl_ctx_list *ctx;
+	struct sysctl_oid_list *parent;
+
+	dev->debug = NULL;
+	dev->debug_aq = NULL;
+	dev->debug_cq = NULL;
+	dev->debug_eq = NULL;
+	dev->debug_mr = NULL;
+	dev->debug_qp = NULL;
+
+	if (!oidp)
+		return;
+
+	parent = SYSCTL_CHILDREN(oidp);
+
+	ctx = &dev->debug_ctx;
+	sysctl_ctx_init(ctx);
+
+	oidp = ionic_node(ctx, parent, "rdma", "RDMA Device");
+	if (!oidp) {
+		dev_err(&dev->ibdev.dev, "failed to create rdma node\n");
+		return;
+	}
+
+	dev->debug = oidp;
+
+	parent = SYSCTL_CHILDREN(oidp);
+
+	dev->debug_aq = ionic_node(ctx, parent, "aq", "AQ Info");
+	dev->debug_cq = ionic_node(ctx, parent, "cq", "CQ Info");
+	dev->debug_eq = ionic_node(ctx, parent, "eq", "EQ Info");
+	dev->debug_mr = ionic_node(ctx, parent, "mr", "MR/MW Info");
+	dev->debug_qp = ionic_node(ctx, parent, "qp", "QP/SRQ Info");
+
+	ionic_dbg_add_dev_info(dev);
 }
 
 void ionic_dbg_rm_dev(struct ionic_ibdev *dev)

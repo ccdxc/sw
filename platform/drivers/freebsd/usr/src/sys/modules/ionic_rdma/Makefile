@@ -8,6 +8,12 @@ ionic_dcqcn.c \
 ionic_queue.c \
 ionic_kcompat.c \
 ionic_res.c \
+ionic_admin.c \
+ionic_controlpath.c \
+ionic_datapath.c  \
+ionic_pgtbl.c \
+ionic_srq.c \
+ionic_stats.c \
 device_if.h bus_if.h vnode_if.h pci_if.h \
 	opt_inet.h opt_inet6.h
 

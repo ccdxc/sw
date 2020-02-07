@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -138,7 +138,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 	rc = ibv_cmd_get_context(ibctx, &req.ibv_cmd, sizeof(req),
 				 &resp.ibv_resp, sizeof(resp));
 	if (rc)
-		goto out;
+		goto err_cmd;
 
 	ctx->pg_shift = resp.page_shift;
 
@@ -149,7 +149,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		fprintf(stderr, "ionic: Driver Min RDMA Version %u\n",
 			IONIC_MIN_RDMA_VERSION);
 		rc = EINVAL;
-		goto out;
+		goto err_cmd;
 	}
 
 	if (version > IONIC_MAX_RDMA_VERSION) {
@@ -158,7 +158,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		fprintf(stderr, "ionic: Driver Max RDMA Version %u\n",
 			IONIC_MAX_RDMA_VERSION);
 		rc = EINVAL;
-		goto out;
+		goto err_cmd;
 	}
 
 	ctx->version = version;
@@ -167,7 +167,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		fprintf(stderr, "ionic: qp opcodes %d want min %d\n",
 			ctx->opcodes, IONIC_V1_OP_BIND_MW + 1);
 		rc = EINVAL;
-		goto out;
+		goto err_cmd;
 	}
 
 	ctx->sq_qtype = resp.sq_qtype;
@@ -180,7 +180,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 				       resp.dbell_offset);
 	if (!ctx->dbpage) {
 		rc = errno;
-		goto out;
+		goto err_cmd;
 	}
 
 	pthread_mutex_init(&ctx->mut, NULL);
@@ -219,7 +219,7 @@ static int ionic_init_context(struct verbs_device *vdev,
 		ionic_lat_init(ctx->lats);
 	}
 
-out:
+err_cmd:
 	return rc;
 }
 

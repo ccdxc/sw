@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  */
 
 #ifndef IONIC_IBDEV_H
@@ -26,8 +26,11 @@
 #include <linux/xarray.h>
 #endif
 
-#define IONIC_MIN_RDMA_VERSION 0
-#define IONIC_MAX_RDMA_VERSION 1
+#define DRIVER_NAME		"ionic_rdma"
+#define DRIVER_SHORTNAME	"ionr"
+
+#define IONIC_MIN_RDMA_VERSION	0
+#define IONIC_MAX_RDMA_VERSION	1
 
 #define IONIC_DBPAGE_SIZE	0x1000
 #define IONIC_MAX_MRID		0xffffff
@@ -37,12 +40,15 @@
 #define IONIC_GID_TBL_LEN	256
 #define IONIC_PKEY_TBL_LEN	1
 
-#define IONIC_META_LAST ((void *)1ul)
-#define IONIC_META_POSTED ((void *)2ul)
+#define IONIC_META_LAST		((void *)1ul)
+#define IONIC_META_POSTED	((void *)2ul)
 
 #define IONIC_CQ_GRACE		100
 
 #define IONIC_ROCE_UDP_SPORT	28272
+
+/* resource is not reserved on the device, indicated in tbl_order */
+#define IONIC_RES_INVALID	-1
 
 struct dcqcn_root;
 struct ionic_aq;
@@ -257,7 +263,7 @@ struct ionic_cq {
 	u16			arm_any_prod;
 	u16			arm_sol_prod;
 
-	refcount_t		cq_refcnt;
+	struct kref		cq_kref;
 	struct completion	cq_rel_comp;
 
 	/* infrequently accessed, keep at end */
@@ -333,7 +339,7 @@ struct ionic_qp {
 	u16			rq_old_prod;
 	u16			rq_cmb_prod;
 
-	refcount_t		qp_refcnt;
+	struct kref		qp_kref;
 	struct completion	qp_rel_comp;
 
 	/* infrequently accessed, keep at end */
@@ -463,16 +469,91 @@ static inline bool ionic_ibop_is_local(enum ib_wr_opcode op)
 	return op == IB_WR_LOCAL_INV || op == IB_WR_REG_MR;
 }
 
+static inline int ionic_res_order(int count, int stride, int cl_stride)
+{
+	/* count becomes log2 of size in bytes */
+	count = order_base_2(count) + stride;
+
+	/* zero if less than one cache line */
+	if (count < cl_stride)
+		return 0;
+
+	return count - cl_stride;
+}
+
+static inline void ionic_qp_complete(struct kref *kref)
+{
+	struct ionic_qp *qp = container_of(kref, struct ionic_qp, qp_kref);
+
+	complete(&qp->qp_rel_comp);
+}
+
+static inline void ionic_cq_complete(struct kref *kref)
+{
+	struct ionic_cq *cq = container_of(kref, struct ionic_cq, cq_kref);
+
+	complete(&cq->cq_rel_comp);
+}
+
+/* ionic_admin.c */
+extern struct workqueue_struct *ionic_evt_workq;
 void ionic_admin_post(struct ionic_ibdev *dev, struct ionic_admin_wr *wr);
 void ionic_admin_post_aq(struct ionic_aq *aq, struct ionic_admin_wr *wr);
+void ionic_admin_wait(struct ionic_admin_wr *wr);
+int ionic_admin_busy_wait(struct ionic_admin_wr *wr);
 void ionic_admin_cancel(struct ionic_admin_wr *wr);
 
+int ionic_rdma_reset_devcmd(struct ionic_ibdev *dev);
+
+int ionic_create_rdma_admin(struct ionic_ibdev *dev);
+void ionic_destroy_rdma_admin(struct ionic_ibdev *dev);
+void ionic_kill_rdma_admin(struct ionic_ibdev *dev, bool fatal_path);
+
+void ionic_kill_ibdev(struct ionic_ibdev *dev, bool fatal_path);
+
+/* ionic_controlpath.c */
+void ionic_controlpath_setops(struct ionic_ibdev *dev);
+int ionic_get_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res);
+bool ionic_put_res(struct ionic_ibdev *dev, struct ionic_tbl_res *res);
+int ionic_create_cq_common(struct ionic_cq *cq,
+			   struct ionic_tbl_buf *buf,
+			   const struct ib_cq_init_attr *attr,
+			   struct ib_ucontext *ibctx,
+			   struct ib_udata *udata);
+void ionic_destroy_cq_common(struct ionic_ibdev *dev, struct ionic_cq *cq);
+void ionic_flush_qp(struct ionic_qp *qp);
+void ionic_notify_flush_cq(struct ionic_cq *cq);
+
+/* ionic_datapath.c */
+void ionic_datapath_setops(struct ionic_ibdev *dev);
+
+#ifdef IONIC_SRQ_XRC
+/* ionic_srq.c */
+void ionic_srq_setops(struct ionic_ibdev *dev);
+#endif
+
+/* ionic_stats.c */
+void ionic_stats_setops(struct ionic_ibdev *dev);
+
+/* ionic_pgtbl.c */
+__le64 ionic_pgtbl_dma(struct ionic_tbl_buf *buf, u64 va);
+__be64 ionic_pgtbl_off(struct ionic_tbl_buf *buf, u64 va);
+int ionic_pgtbl_page(struct ionic_tbl_buf *buf, u64 dma);
+int ionic_pgtbl_umem(struct ionic_tbl_buf *buf, struct ib_umem *umem);
+int ionic_pgtbl_init(struct ionic_ibdev *dev, struct ionic_tbl_res *res,
+		     struct ionic_tbl_buf *buf, struct ib_umem *umem,
+		     dma_addr_t dma, int limit);
+void ionic_pgtbl_unbuf(struct ionic_ibdev *dev, struct ionic_tbl_buf *buf);
+
+/* ionic_dcqcn.c */
 int ionic_dcqcn_init(struct ionic_ibdev *dev, int prof_count);
 void ionic_dcqcn_destroy(struct ionic_ibdev *dev);
 int ionic_dcqcn_select_profile(struct ionic_ibdev *dev,
 			       struct rdma_ah_attr *attr);
 
+/* ionic_ibdev.c */
 void ionic_ibdev_reset(struct ionic_ibdev *dev);
+void ionic_port_event(struct ionic_ibdev *dev, enum ib_event_type event);
 
 /* Global config knobs */
 extern bool ionic_dbg_enable;

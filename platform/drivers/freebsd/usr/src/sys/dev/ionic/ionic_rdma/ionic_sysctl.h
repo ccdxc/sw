@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB */
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -44,7 +44,6 @@ struct ionic_mr;
 struct ionic_qp;
 
 void ionic_dbg_add_dev(struct ionic_ibdev *dev, struct sysctl_oid *oidp);
-void ionic_dbg_add_dev_info(struct ionic_ibdev *dev);
 void ionic_dbg_rm_dev(struct ionic_ibdev *dev);
 
 void ionic_dbg_add_eq(struct ionic_ibdev *dev, struct ionic_eq *eq);

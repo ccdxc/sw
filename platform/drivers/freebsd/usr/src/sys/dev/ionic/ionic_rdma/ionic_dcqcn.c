@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -38,7 +38,7 @@ enum dcqcn_var {
 	NP_ICNP_802P_PRIO,		/* 0..7 (prio) */
 	NP_CNP_DSCP,			/* 0..63 (dscp) */
 
-	RP_TOKEN_BUCKET_SIZE,	/* 100..100000000 (100kb - 100gb) */
+	RP_TOKEN_BUCKET_SIZE,		/* 100..100000000 (100kb - 100gb) */
 	/* reaction point alpha update */
 	RP_INITIAL_ALPHA_VALUE,		/* 0..1023 */
 	RP_DCE_TCP_G,			/* 0..1023 */

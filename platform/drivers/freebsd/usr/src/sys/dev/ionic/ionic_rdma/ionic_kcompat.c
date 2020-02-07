@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -303,3 +303,82 @@ void sysfs_remove_groups(struct kobject *kobj,
 	for (i = 0; groups[i]; i++)
 		sysfs_remove_group(kobj, groups[i]);
 }
+
+#ifdef HAVE_CUSTOM_IB_SET_DEVICE_OPS
+void ib_set_device_ops(struct ib_device *dev, const struct ib_device_ops *ops)
+{
+#define SET_DEVICE_OP(name) \
+	(dev->name = dev->name ?: ops->name)
+
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(add_gid);
+#endif
+	SET_DEVICE_OP(alloc_hw_stats);
+	SET_DEVICE_OP(alloc_mr);
+	SET_DEVICE_OP(alloc_mw);
+	SET_DEVICE_OP(alloc_pd);
+	SET_DEVICE_OP(alloc_ucontext);
+	SET_DEVICE_OP(alloc_xrcd);
+	SET_DEVICE_OP(attach_mcast);
+	SET_DEVICE_OP(check_mr_status);
+	SET_DEVICE_OP(create_ah);
+	SET_DEVICE_OP(create_cq);
+	SET_DEVICE_OP(create_qp);
+	SET_DEVICE_OP(create_srq);
+	SET_DEVICE_OP(dealloc_mw);
+	SET_DEVICE_OP(dealloc_pd);
+	SET_DEVICE_OP(dealloc_ucontext);
+	SET_DEVICE_OP(dealloc_xrcd);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(del_gid);
+#endif
+	SET_DEVICE_OP(dereg_mr);
+	SET_DEVICE_OP(destroy_ah);
+	SET_DEVICE_OP(destroy_cq);
+	SET_DEVICE_OP(destroy_qp);
+	SET_DEVICE_OP(destroy_srq);
+	SET_DEVICE_OP(detach_mcast);
+	SET_DEVICE_OP(disassociate_ucontext);
+	SET_DEVICE_OP(drain_rq);
+	SET_DEVICE_OP(drain_sq);
+#ifdef HAVE_GET_DEV_FW_STR
+	SET_DEVICE_OP(get_dev_fw_str);
+#endif
+	SET_DEVICE_OP(get_dma_mr);
+	SET_DEVICE_OP(get_hw_stats);
+	SET_DEVICE_OP(get_link_layer);
+	SET_DEVICE_OP(get_netdev);
+	SET_DEVICE_OP(get_port_immutable);
+#ifdef HAVE_GET_VECTOR_AFFINITY
+	SET_DEVICE_OP(get_vector_affinity);
+#endif
+	SET_DEVICE_OP(map_mr_sg);
+	SET_DEVICE_OP(mmap);
+	SET_DEVICE_OP(modify_ah);
+	SET_DEVICE_OP(modify_cq);
+	SET_DEVICE_OP(modify_device);
+	SET_DEVICE_OP(modify_port);
+	SET_DEVICE_OP(modify_qp);
+	SET_DEVICE_OP(modify_srq);
+	SET_DEVICE_OP(peek_cq);
+	SET_DEVICE_OP(poll_cq);
+	SET_DEVICE_OP(post_recv);
+	SET_DEVICE_OP(post_send);
+	SET_DEVICE_OP(post_srq_recv);
+	SET_DEVICE_OP(query_ah);
+	SET_DEVICE_OP(query_device);
+#ifdef HAVE_REQUIRED_IB_GID
+	SET_DEVICE_OP(query_gid);
+#endif
+	SET_DEVICE_OP(query_pkey);
+	SET_DEVICE_OP(query_port);
+	SET_DEVICE_OP(query_qp);
+	SET_DEVICE_OP(query_srq);
+	SET_DEVICE_OP(reg_user_mr);
+	SET_DEVICE_OP(req_ncomp_notif);
+	SET_DEVICE_OP(req_notify_cq);
+	SET_DEVICE_OP(rereg_user_mr);
+	SET_DEVICE_OP(resize_cq);
+#undef SET_DEVICE_OP
+}
+#endif /* HAVE_CUSTOM_IB_SET_DEVICE_OPS */

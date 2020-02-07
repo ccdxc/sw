@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -721,7 +721,6 @@ static int ionic_comp_npg(struct ionic_qp *qp, struct ionic_v1_cqe *cqe)
 	meta->local_comp = true;
 
 	if (ionic_v1_cqe_error(cqe)) {
-		meta = &qp->sq_meta[cqe_idx];
 		meta->len = st_len;
 		meta->ibsts = ionic_to_ibv_status(st_len);
 		meta->remote = false;
@@ -2627,11 +2626,11 @@ static const struct ibv_context_ops ionic_ctx_ops = {
 
 void ionic_set_ops(struct ibv_context *ibctx)
 {
-	struct verbs_context *vctx = verbs_get_ctx(ibctx);
+	struct verbs_context *ionic_vctx = verbs_get_ctx(ibctx);
 
 	ibctx->ops = ionic_ctx_ops;
 
-	verbs_set_ctx_op(vctx, create_srq_ex, ionic_create_srq_ex);
-	verbs_set_ctx_op(vctx, get_srq_num, ionic_get_srq_num);
-	verbs_set_ctx_op(vctx, create_qp_ex, ionic_create_qp_ex);
+	verbs_set_ctx_op(ionic_vctx, create_srq_ex, ionic_create_srq_ex);
+	verbs_set_ctx_op(ionic_vctx, get_srq_num, ionic_get_srq_num);
+	verbs_set_ctx_op(ionic_vctx, create_qp_ex, ionic_create_qp_ex);
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0 OR Linux-OpenIB
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  */
 
 #include "ionic_ibdev.h"
@@ -28,7 +28,7 @@ enum dcqcn_var {
 	RP_CLAMP_TGT_RATE_ATI,		/* 0..1 (bool) */
 	RP_THRESHOLD,			/* 1..31 */
 	RP_TIME_RESET,			/* 1..32767 (x RP_DCE_TCP_RTT) */
-	RP_QP_RATE,				/* 1.. (Mbps) */
+	RP_QP_RATE,			/* 1.. (Mbps) */
 	RP_BYTE_RESET,			/* 1..4294967296 (B) */
 	RP_AI_RATE,			/* 1.. (Mbps) */
 	RP_HAI_RATE,			/* 1.. (Mbps) */

@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# usage:
+#
+# rdmadiff
+#
+
+cd "$(readlink -f "$(dirname "$0")/../..")"
+
+LINUX_DRV="platform/drivers/linux/rdma/drv/ionic"
+FBSD_DRV="platform/drivers/freebsd/usr/src/sys/dev/ionic/ionic_rdma"
+
+DRV_FILES=(
+    "ionic_ibdev.c"
+    "ionic_ibdev.h"
+    "ionic_admin.c"
+    "ionic_controlpath.c"
+    "ionic_datapath.c"
+    "ionic_dcqcn.c"
+    "ionic_fw.h"
+    "ionic_kcompat.c"
+    "ionic_kcompat.h"
+    "ionic_pgtbl.c"
+    "ionic_queue.c"
+    "ionic_queue.h"
+    "ionic_res.c"
+    "ionic_res.h"
+    "ionic_srq.c"
+    "ionic_stats.c"
+    # sysfs/sysctl not diffable
+)
+
+LINUX_LIB="platform/drivers/linux/rdma/lib/ionic"
+FBSD_LIB="platform/drivers/freebsd/usr/src/contrib/ofed/libionic"
+
+LIB_FILES=(
+    "ionic-abi.h"
+    "ionic.c"
+    "ionic_dbg.h"
+    "ionic_fw.h"
+    "ionic.h"
+    "ionic_memory.c"
+    "ionic_memory.h"
+    "ionic_queue.c"
+    "ionic_queue.h"
+    "ionic_stats.h"
+    "ionic_table.h"
+    "ionic_verbs.c"
+)
+
+for FNAME in "${DRV_FILES[@]}"; do
+    diff -u3 "${LINUX_DRV}/${FNAME}" "${FBSD_DRV}/${FNAME}"
+done
+
+for FNAME in "${LIB_FILES[@]}"; do
+    diff -u3 "${LINUX_LIB}/${FNAME}" "${FBSD_LIB}/${FNAME}"
+done

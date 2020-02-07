@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2019 Pensando Systems, Inc.  All rights reserved.
+ * Copyright (c) 2018-2020 Pensando Systems, Inc.  All rights reserved.
  *
  * This software is available to you under a choice of one of two
  * licenses.  You may choose to be licensed under the terms of the GNU
@@ -129,7 +129,7 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	struct ionic_ctx *ctx;
 	struct uionic_ctx req = {};
 	struct uionic_ctx_resp resp = {};
-	int rc, version;
+	int rc, version, level;
 
 	ionic_debug_file_init();
 
@@ -148,7 +148,6 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	ctx->pg_shift = resp.page_shift;
 
 	version = resp.version;
-
 	if (version < IONIC_MIN_RDMA_VERSION) {
 		fprintf(stderr, "ionic: Firmware RDMA Version %u\n",
 			version);
@@ -169,7 +168,6 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 
 	ctx->version = version;
 	ctx->opcodes = resp.qp_opcodes;
-
 	if (ctx->opcodes <= IONIC_V1_OP_BIND_MW) {
 		fprintf(stderr, "ionic: qp opcodes %d want min %d\n",
 			ctx->opcodes, IONIC_V1_OP_BIND_MW + 1);
@@ -208,19 +206,19 @@ static struct verbs_context *ionic_alloc_context(struct ibv_device *ibdev,
 	if (ionic_env_debug())
 		ctx->dbg_file = IONIC_DEBUG_FILE;
 
-	rc = ionic_env_stats();
-	if (rc) {
+	level = ionic_env_stats();
+	if (level) {
 		ctx->stats = calloc(1, sizeof(*ctx->stats));
 
-		if (ctx->stats && rc > 1)
+		if (ctx->stats && level > 1)
 			ctx->stats->histogram = 1;
 	}
 
-	rc = ionic_env_lats();
-	if (rc) {
+	level = ionic_env_lats();
+	if (level) {
 		ctx->lats = calloc(1, sizeof(*ctx->lats));
 
-		if (ctx->lats && rc > 1)
+		if (ctx->lats && level > 1)
 			ctx->lats->histogram = 1;
 
 		ionic_lat_init(ctx->lats);
@@ -259,6 +257,14 @@ static void ionic_free_context(struct ibv_context *ibctx)
 	free(ctx);
 }
 
+#define PCI_VENDOR_ID_PENSANDO 0x1dd8
+#define CNA(v, d) VERBS_PCI_MATCH(PCI_VENDOR_ID_##v, d, NULL)
+
+static const struct verbs_match_ent cna_table[] = {
+	CNA(PENSANDO, 0x1002), /* capri */
+	{}
+};
+
 static struct verbs_device *ionic_alloc_device(struct verbs_sysfs_dev *sysfs_dev)
 {
 	struct ionic_dev *dev;
@@ -286,14 +292,6 @@ static void ionic_uninit_device(struct verbs_device *vdev)
 	static_assert(sizeof(struct ionic_v1_bind_mw_bdy) == 48, "bad size");
 	static_assert(sizeof(struct ionic_v1_wqe) == 64, "bad size");
 }
-
-#define PCI_VENDOR_ID_PENSANDO 0x1dd8
-#define CNA(v, d) VERBS_PCI_MATCH(PCI_VENDOR_ID_##v, d, NULL)
-
-static const struct verbs_match_ent cna_table[] = {
-	CNA(PENSANDO, 0x1002), /* capri */
-	{}
-};
 
 static const struct verbs_device_ops ionic_dev_ops = {
 	.name			= "ionic",
