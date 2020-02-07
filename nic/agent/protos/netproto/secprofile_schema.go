@@ -15,6 +15,18 @@ import (
 
 var typesMapSecprofile = map[string]*api.Struct{
 
+	"netproto.RateLimits": &api.Struct{
+		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(RateLimits{}) },
+		Fields: map[string]api.Field{
+			"TcpHalfOpenSessionLimit": api.Field{Name: "TcpHalfOpenSessionLimit", CLITag: api.CLIInfo{ID: "tcp-half-open-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "tcp-half-open-session-limit", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"UdpActiveSessionLimit": api.Field{Name: "UdpActiveSessionLimit", CLITag: api.CLIInfo{ID: "udp-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "udp-active-session-limit", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"IcmpActiveSessionLimit": api.Field{Name: "IcmpActiveSessionLimit", CLITag: api.CLIInfo{ID: "icmp-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "icmp-active-session-limit", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+
+			"OtherActiveSessionLimit": api.Field{Name: "OtherActiveSessionLimit", CLITag: api.CLIInfo{ID: "other-active-session-limit", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "other-active-session-limit", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_UINT32"},
+		},
+	},
 	"netproto.SecurityProfile": &api.Struct{
 		Kind: "", APIGroup: "", Scopes: []string{}, GetTypeFn: func() reflect.Type { return reflect.TypeOf(SecurityProfile{}) },
 		Fields: map[string]api.Field{
@@ -52,29 +64,33 @@ var typesMapSecprofile = map[string]*api.Struct{
 		},
 
 		CLITags: map[string]api.CLIInfo{
-			"api-version":          api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
-			"attach-vrfs":          api.CLIInfo{Path: "Spec.AttachVrfs", Skip: false, Insert: "", Help: ""},
-			"drop":                 api.CLIInfo{Path: "Spec.Timeouts.Drop", Skip: false, Insert: "", Help: ""},
-			"generation-id":        api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
-			"icmp":                 api.CLIInfo{Path: "Spec.Timeouts.ICMP", Skip: false, Insert: "", Help: ""},
-			"icmp-drop":            api.CLIInfo{Path: "Spec.Timeouts.ICMPDrop", Skip: false, Insert: "", Help: ""},
-			"id":                   api.CLIInfo{Path: "Status.SecurityProfileID", Skip: false, Insert: "", Help: ""},
-			"kind":                 api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
-			"labels":               api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
-			"name":                 api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
-			"namespace":            api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
-			"resource-version":     api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
-			"self-link":            api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
-			"session-idle":         api.CLIInfo{Path: "Spec.Timeouts.SessionIdle", Skip: false, Insert: "", Help: ""},
-			"tcp":                  api.CLIInfo{Path: "Spec.Timeouts.TCP", Skip: false, Insert: "", Help: ""},
-			"tcp-close":            api.CLIInfo{Path: "Spec.Timeouts.TCPClose", Skip: false, Insert: "", Help: ""},
-			"tcp-connection-setup": api.CLIInfo{Path: "Spec.Timeouts.TCPConnectionSetup", Skip: false, Insert: "", Help: ""},
-			"tcp-drop":             api.CLIInfo{Path: "Spec.Timeouts.TCPDrop", Skip: false, Insert: "", Help: ""},
-			"tcp-half-close":       api.CLIInfo{Path: "Spec.Timeouts.TCPHalfClose", Skip: false, Insert: "", Help: ""},
-			"tenant":               api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
-			"udp":                  api.CLIInfo{Path: "Spec.Timeouts.UDP", Skip: false, Insert: "", Help: ""},
-			"udp-drop":             api.CLIInfo{Path: "Spec.Timeouts.UDPDrop", Skip: false, Insert: "", Help: ""},
-			"uuid":                 api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
+			"api-version":                 api.CLIInfo{Path: "APIVersion", Skip: false, Insert: "", Help: ""},
+			"attach-vrfs":                 api.CLIInfo{Path: "Spec.AttachVrfs", Skip: false, Insert: "", Help: ""},
+			"drop":                        api.CLIInfo{Path: "Spec.Timeouts.Drop", Skip: false, Insert: "", Help: ""},
+			"generation-id":               api.CLIInfo{Path: "GenerationID", Skip: false, Insert: "", Help: ""},
+			"icmp":                        api.CLIInfo{Path: "Spec.Timeouts.ICMP", Skip: false, Insert: "", Help: ""},
+			"icmp-active-session-limit":   api.CLIInfo{Path: "Spec.RateLimits.IcmpActiveSessionLimit", Skip: false, Insert: "", Help: ""},
+			"icmp-drop":                   api.CLIInfo{Path: "Spec.Timeouts.ICMPDrop", Skip: false, Insert: "", Help: ""},
+			"id":                          api.CLIInfo{Path: "Status.SecurityProfileID", Skip: false, Insert: "", Help: ""},
+			"kind":                        api.CLIInfo{Path: "Kind", Skip: false, Insert: "", Help: ""},
+			"labels":                      api.CLIInfo{Path: "Labels", Skip: false, Insert: "", Help: ""},
+			"name":                        api.CLIInfo{Path: "Name", Skip: false, Insert: "", Help: ""},
+			"namespace":                   api.CLIInfo{Path: "Namespace", Skip: false, Insert: "", Help: ""},
+			"other-active-session-limit":  api.CLIInfo{Path: "Spec.RateLimits.OtherActiveSessionLimit", Skip: false, Insert: "", Help: ""},
+			"resource-version":            api.CLIInfo{Path: "ResourceVersion", Skip: false, Insert: "", Help: ""},
+			"self-link":                   api.CLIInfo{Path: "SelfLink", Skip: false, Insert: "", Help: ""},
+			"session-idle":                api.CLIInfo{Path: "Spec.Timeouts.SessionIdle", Skip: false, Insert: "", Help: ""},
+			"tcp":                         api.CLIInfo{Path: "Spec.Timeouts.TCP", Skip: false, Insert: "", Help: ""},
+			"tcp-close":                   api.CLIInfo{Path: "Spec.Timeouts.TCPClose", Skip: false, Insert: "", Help: ""},
+			"tcp-connection-setup":        api.CLIInfo{Path: "Spec.Timeouts.TCPConnectionSetup", Skip: false, Insert: "", Help: ""},
+			"tcp-drop":                    api.CLIInfo{Path: "Spec.Timeouts.TCPDrop", Skip: false, Insert: "", Help: ""},
+			"tcp-half-close":              api.CLIInfo{Path: "Spec.Timeouts.TCPHalfClose", Skip: false, Insert: "", Help: ""},
+			"tcp-half-open-session-limit": api.CLIInfo{Path: "Spec.RateLimits.TcpHalfOpenSessionLimit", Skip: false, Insert: "", Help: ""},
+			"tenant":                      api.CLIInfo{Path: "Tenant", Skip: false, Insert: "", Help: ""},
+			"udp":                         api.CLIInfo{Path: "Spec.Timeouts.UDP", Skip: false, Insert: "", Help: ""},
+			"udp-active-session-limit":    api.CLIInfo{Path: "Spec.RateLimits.UdpActiveSessionLimit", Skip: false, Insert: "", Help: ""},
+			"udp-drop":                    api.CLIInfo{Path: "Spec.Timeouts.UDPDrop", Skip: false, Insert: "", Help: ""},
+			"uuid":                        api.CLIInfo{Path: "UUID", Skip: false, Insert: "", Help: ""},
 		},
 	},
 	"netproto.SecurityProfileEvent": &api.Struct{
@@ -103,6 +119,8 @@ var typesMapSecprofile = map[string]*api.Struct{
 			"AttachVrfs": api.Field{Name: "AttachVrfs", CLITag: api.CLIInfo{ID: "attach-vrfs", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "attach-vrfs", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Timeouts": api.Field{Name: "Timeouts", CLITag: api.CLIInfo{ID: "timeouts", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "timeouts", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.Timeouts"},
+
+			"RateLimits": api.Field{Name: "RateLimits", CLITag: api.CLIInfo{ID: "rate-limits", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "rate-limits", Pointer: true, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.RateLimits"},
 		},
 	},
 	"netproto.SecurityProfileStatus": &api.Struct{
