@@ -212,37 +212,39 @@ export class GenServiceUtility {
     // Only replay the last emitted event to new subscribers
     const sub = listFn().subscribe(resp => {
       const body = resp.body;
-      const events = body.items.map(item => {
-        return {
-          type: 'Created',
-          object: item,
-        };
-      });
-      eventUtility.processEvents({events: events});
-      observer.next(eventUtility.array);
-      // Get res version from last item
-      const watchBody = {};
-      if (body.items.length > 0) {
-        const lastItem = body.items[body.items.length - 1];
-        watchBody['resource-version'] = lastItem.meta['resource-version'];
-      }
-
-      // TODO: the retry should be replaced with an observable retry
-      const watchMethod = () => {
-        const watchSub = watchFn(watchBody).subscribe(watchResp => {
-          eventUtility.processEvents(watchResp);
-          observer.next(eventUtility.array);
-        },
-        (error) => {
-          const controller = Utility.getInstance().getControllerService();
-          controller.webSocketErrorHandler('Failed to get ' + key)(error);
-          setTimeout(() => {
-            watchMethod();
-          }, 5000);
+      if (body.items) {
+        const events = body.items.map(item => {
+          return {
+            type: 'Created',
+            object: item,
+          };
         });
-        this.subscriptions.push(watchSub);
-      };
-      watchMethod();
+        eventUtility.processEvents({events: events});
+        observer.next(eventUtility.array);
+        // Get res version from last item
+        const watchBody = {};
+        if (body.items.length > 0) {
+          const lastItem = body.items[body.items.length - 1];
+          watchBody['resource-version'] = lastItem.meta['resource-version'];
+        }
+
+        // TODO: the retry should be replaced with an observable retry
+        const watchMethod = () => {
+          const watchSub = watchFn(watchBody).subscribe(watchResp => {
+            eventUtility.processEvents(watchResp);
+            observer.next(eventUtility.array);
+          },
+          (error) => {
+            const controller = Utility.getInstance().getControllerService();
+            controller.webSocketErrorHandler('Failed to get ' + key)(error);
+            setTimeout(() => {
+              watchMethod();
+            }, 5000);
+          });
+          this.subscriptions.push(watchSub);
+        };
+        watchMethod();
+      }
     },
     (error) => {
       const controller = Utility.getInstance().getControllerService();

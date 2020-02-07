@@ -11,6 +11,8 @@ import { MetricsqueryService } from '@app/services/metricsquery.service';
 import { AuthUserPreference, IAuthUserPreference } from '@sdk/v1/models/generated/auth';
 import { Subscription } from 'rxjs';
 import { TimeRangeOption, citadelTimeOptions, citadelMaxTimePeriod } from '@app/components/shared/timerange/timerange.component';
+import { UIConfigsService } from '@app/services/uiconfigs.service';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-telemetry',
@@ -55,6 +57,7 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   maxTimePeriod = citadelMaxTimePeriod;
 
   constructor(protected controllerService: ControllerService,
+    protected uiconfigsService: UIConfigsService,
     protected clusterService: ClusterService,
     protected authService: AuthService,
     protected telemetryqueryService: MetricsqueryService) {
@@ -67,14 +70,18 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   setToolbar() {
-    this.controllerService.setToolbarData({
-      buttons: [
+    let buttons = [];
+    if (this.uiconfigsService.isAuthorized(UIRolePermissions.authuserpreference_update)) {
+      buttons = [
         {
           cssClass: 'global-button-primary telemetry-button',
           text: 'CREATE CHART',
           callback: () => { this.editChart(''); }
         },
-      ],
+      ];
+    }
+    this.controllerService.setToolbarData({
+      buttons: buttons,
       breadcrumb: [{ label: 'Metrics', url: Utility.getBaseUIUrl() + 'monitoring/metrics' }]
     });
   }
@@ -89,7 +96,6 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
           this.userPref = JSON.parse(userPrefObj.spec.options);
         }
         this.telemetryPref = this.userPref.telemetry;
-        console.log(this.telemetryPref);
       },
     );
   }

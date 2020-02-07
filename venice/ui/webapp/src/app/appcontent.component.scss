@@ -48,7 +48,7 @@
 .app-shell-doclink,
 .app-shell-doclink:hover {
   outline: none !important;
-  margin-left: 10px;
+  margin-left: 10px !important;
   @include primary-font(14px, black);
 
   .mat-button {
