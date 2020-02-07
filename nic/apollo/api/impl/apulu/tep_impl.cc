@@ -139,32 +139,49 @@ tep_impl::activate_create_tunnel_table_(pds_epoch_t epoch, tep_entry *tep,
                                         pds_tep_spec_t *spec) {
     sdk_ret_t ret;
     tep_entry *tep2;
-    nexthop_impl *nh_impl;
     p4pd_error_t p4pd_ret;
+    nexthop *nh;
+    nexthop_impl *nh_impl;
     nexthop_group *nhgroup;
-    pds_obj_key_t nh_key;
     nexthop_group_impl *nhgroup_impl;
+    pds_obj_key_t nh_key;
     pds_obj_key_t nhgroup_key;
     tunnel_actiondata_t tep_data = { 0 };
 
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
+        if (unlikely(nhgroup == NULL)) {
+            PDS_TRACE_ERR("nhgroup %s in TEP %s not found",
+                          spec->nh_group.str(), spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
         tep_data.tunnel_action.nexthop_base = nhgroup_impl->nh_base_hw_id();
         tep_data.tunnel_action.num_nexthops = nhgroup->num_nexthops();
     } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
-        nh_impl = (nexthop_impl *)nexthop_db()->find(&spec->nh)->impl();
+        nh = nexthop_db()->find(&spec->nh);
+        if (unlikely(nh == NULL)) {
+            PDS_TRACE_ERR("nh %s in TEP %s not found",
+                          spec->nh.str(), spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        nh_impl = (nexthop_impl *) nh->impl();
         tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
         tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
     } else if (spec->nh_type == PDS_NH_TYPE_OVERLAY) {
         // tunnel pointing to another tunnel case, do recursive resolution
         tep2 = tep_db()->find(&spec->tep);
+        if (unlikely(tep2 != NULL)) {
+            PDS_TRACE_ERR("tep %s in overlay TEP %s not found",
+                          spec->tep.str(), spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
         if (tep2->nh_type() == PDS_NH_TYPE_UNDERLAY) {
             nh_key = tep2->nh();
             nh_impl = (nexthop_impl *)nexthop_db()->find(&nh_key)->impl();
             tep_data.tunnel_action.nexthop_base = nh_impl->hw_id();
             tep_data.tunnel_action.num_nexthops = PDS_NUM_NH_NO_ECMP;
-        } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
+        } else if (tep2->nh_type() == PDS_NH_TYPE_UNDERLAY_ECMP) {
             nhgroup_key = tep2->nh_group();
             nhgroup = nexthop_group_db()->find(&spec->nh_group);
             tep_data.tunnel_action.nexthop_base =
@@ -207,6 +224,7 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
     sdk_ret_t ret;
     nexthop_impl *nh_impl;
     p4pd_error_t p4pd_ret;
+    nexthop *nh;
     nexthop_group *nhgroup;
     nexthop_actiondata_t nh_data;
     nexthop_group_impl *nhgroup_impl;
@@ -239,6 +257,11 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
     // now we need to update/fix the nexthop(s)
     if (spec->nh_type == PDS_NH_TYPE_UNDERLAY_ECMP) {
         nhgroup = nexthop_group_db()->find(&spec->nh_group);
+        if (unlikely(nhgroup == NULL)) {
+            PDS_TRACE_ERR("nhgroup %s in TEP %s not found",
+                          spec->nh_group.str(), spec->key.str());
+            SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
+        }
         nhgroup_impl = (nexthop_group_impl *)nhgroup->impl();
         for (uint32_t i = 0, nh_idx = nhgroup_impl->nh_base_hw_id();
              i < nhgroup->num_nexthops(); nh_idx++, i++) {
@@ -258,7 +281,13 @@ tep_impl::activate_create_tunnel2_(pds_epoch_t epoch, tep_entry *tep,
             }
         }
     } else if (spec->nh_type == PDS_NH_TYPE_UNDERLAY) {
-        nh_impl = (nexthop_impl *)nexthop_db()->find(&spec->nh)->impl();
+        nh = (nexthop *)nexthop_db()->find(&spec->nh);
+        if (unlikely(nh == NULL)) {
+            PDS_TRACE_ERR("nh %s in TEP %s not found",
+                          spec->nh.str(), spec->key.str());
+            SDK_ASSERT_RETURN(false, SDK_RET_INVALID_ARG);
+        }
+        nh_impl = (nexthop_impl *)nh->impl();
         p4pd_ret = p4pd_global_entry_read(P4TBL_ID_NEXTHOP,
                                           nh_impl->hw_id(),
                                           NULL, NULL, &nh_data);
