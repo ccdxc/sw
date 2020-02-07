@@ -21,6 +21,10 @@ var (
 	configVlanCfgRegex = regexp.MustCompile(`\(config-vlan-config\)\# `)
 	configPmapQos      = regexp.MustCompile(`\(config-pmap-nqos\)\# `)
 	configClassQos     = regexp.MustCompile(`\(config-pmap-nqos-c\)\# `)
+    configDscpQos      = regexp.MustCompile(`\(config-pmap-qos\)\# `)
+    configDscpClass    = regexp.MustCompile(`\(config-pmap-c-qos\)\# `)
+    configQueueQos     = regexp.MustCompile(`\(config-pmap-que\)\# `)
+    configQueueClass   = regexp.MustCompile(`\(config-pmap-c-que\)\# `)
 	configSystemQos    = regexp.MustCompile(`\(config-sys-qos\)\# `)
 )
 
@@ -35,6 +39,32 @@ type QosClass struct {
 type QosConfig struct {
 	Name    string
 	Classes []QosClass
+}
+
+//DscpClass qos classes
+type DscpClass struct {
+	Name   string
+	Dscp   string 
+	Cos    uint32
+}
+
+//DscpConfig qos config
+type DscpConfig struct {
+	Name    string
+	Classes []DscpClass
+}
+
+//QueueClass qos classes
+type QueueClass struct {
+	Name      string
+	Priority  uint32
+	Percent   uint32
+}
+
+//QueueConfig qos config
+type QueueConfig struct {
+	Name    string
+	Classes []QueueClass
 }
 
 type writerProxy struct {
@@ -207,6 +237,200 @@ func ConfigureQos(n3k *ConnectCtx, qosCfg *QosConfig, timeout time.Duration) (st
 	}
 
 	systemQosCmd := fmt.Sprintf("service-policy type network-qos %v\n", qosCfg.Name)
+
+	if err = exp.Send(systemQosCmd); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	exp.Send("exit\n") // exit system qos
+	time.Sleep(exitTimeout)
+
+	return "", nil
+}
+
+//ConfigureDscp configure qos on switch
+func ConfigureDscp(n3k *ConnectCtx, dscpCfg *DscpConfig, timeout time.Duration) (string, error) {
+
+	buf := &bytes.Buffer{}
+	exp, err := spawnExp(n3k, buf)
+	if err != nil {
+		return "", errors.Wrapf(err, "while spawn goexpect")
+	}
+	defer exp.Close()
+
+	_, _, err = exp.Expect(promptRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if err = exp.Send("conf\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	nwQos := fmt.Sprintf("class-map type network-qos %v\n", dscpCfg.Name)
+	if err = exp.Send(nwQos); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configDscpQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if len(dscpCfg.Classes) != 0 {
+		for _, dscpQosClass := range dscpCfg.Classes {
+			cmd := fmt.Sprintf("class-map type qos match-any %v\n", dscpQosClass.Name)
+
+			if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+			_, _, err = exp.Expect(configDscpClass, timeout)
+			if err != nil {
+				return buf.String(), err
+			}
+
+			cmd = fmt.Sprintf("match cos %v\n", dscpQosClass.Cos)
+			if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+    		cmd = fmt.Sprintf("match dscp %v\n", dscpQosClass.Dscp)
+    		if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+			exp.Send("exit\n") //exit configDscpClass
+			time.Sleep(exitTimeout)
+		}
+	}
+
+	if err = exp.Send("system qos\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	systemQosCmd := fmt.Sprintf("service-policy type network-qos %v\n", dscpCfg.Name)
+
+	if err = exp.Send(systemQosCmd); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	exp.Send("exit\n") // exit system qos
+	time.Sleep(exitTimeout)
+
+	return "", nil
+}
+
+//ConfigureQueue configure qos on switch
+func ConfigureQueue(n3k *ConnectCtx, queueCfg *QueueConfig, timeout time.Duration) (string, error) {
+
+	buf := &bytes.Buffer{}
+	exp, err := spawnExp(n3k, buf)
+	if err != nil {
+		return "", errors.Wrapf(err, "while spawn goexpect")
+	}
+	defer exp.Close()
+
+	_, _, err = exp.Expect(promptRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if err = exp.Send("conf\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configRegex, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	nwQos := fmt.Sprintf("policy-map type queuing %v\n", queueCfg.Name)
+	if err = exp.Send(nwQos); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configQueueQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+	defer func() {
+		exp.Send("exit\n")
+		time.Sleep(exitTimeout)
+	}()
+
+	if len(queueCfg.Classes) != 0 {
+		for _, queueQosClass := range queueCfg.Classes {
+			cmd := fmt.Sprintf("class type queuing %v\n", queueQosClass.Name)
+
+			if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+			_, _, err = exp.Expect(configQueueClass, timeout)
+			if err != nil {
+				return buf.String(), err
+			}
+
+			cmd = fmt.Sprintf("priority level %v\n", queueQosClass.Priority)
+			if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+    		cmd = fmt.Sprintf("bandwidth remaining percent %v\n", queueQosClass.Percent)
+    		if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+    		cmd = fmt.Sprintf("random-detect minimum-threshold 50 kbytes maximum-threshold 500 kbytes drop-probability 80 weight 15 ecn")
+    		if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+    		cmd = fmt.Sprintf("shape min 20 gbps max 20 gbps")
+    		if err = exp.Send(cmd); err != nil {
+				return buf.String(), err
+			}
+
+			exp.Send("exit\n") //exit configQueueClass
+			time.Sleep(exitTimeout)
+		}
+	}
+
+	if err = exp.Send("system qos\n"); err != nil {
+		return buf.String(), err
+	}
+	_, _, err = exp.Expect(configSystemQos, timeout)
+	if err != nil {
+		return buf.String(), err
+	}
+
+	systemQosCmd := fmt.Sprintf("service-policy type network-qos %v\n", queueCfg.Name)
 
 	if err = exp.Send(systemQosCmd); err != nil {
 		return buf.String(), err

@@ -78,12 +78,42 @@ type QosConfig struct {
 	Classes []QosClass
 }
 
+//DscpClass qos classes
+type DscpClass struct {
+	Name   string
+	Dscp   string
+	Cos    uint32
+}
+
+//DscpConfig qos config
+type DscpConfig struct {
+	Name    string
+	Classes []DscpClass
+}
+
+//QueueClass qos classes
+type QueueClass struct {
+	Name     string
+	Priority uint32
+	Percent  uint32
+}
+
+//QueueConfig qos config
+type QueueConfig struct {
+	Name    string
+	Classes []QueueClass
+}
+
 //Switch interface
 type Switch interface {
 	Disconnect()
 	SetNativeVlan(port string, vlan int) error
 	UnsetNativeVlan(port string, vlan int) error
 	LinkOp(port string, shutdown bool) error
+	SetPortQueuing(port string, enable bool, params string) error
+	SetPortQos(port string, enable bool, params string) error
+	SetPortPause(port string, enable bool) error
+	SetPortPfc(port string, enable bool) error
 	SetSpeed(port string, speed PortSpeed) error
 	SetFlowControlReceive(port string, enable bool) error
 	SetFlowControlSend(port string, enable bool) error
@@ -94,6 +124,8 @@ type Switch interface {
 	SetTrunkMode(port string) error
 	UnsetTrunkMode(port string) error
 	DoQosConfig(qosConfig *QosConfig) error
+	DoDscpConfig(dscpConfig *DscpConfig) error
+	DoQueueConfig(queueConfig *QueueConfig) error
 	CheckSwitchConfiguration(port string, mode PortMode, status PortStatus, speed PortSpeed) (string, error)
 }
 
@@ -231,6 +263,49 @@ func (sw *nexus3k) SetFlowControlReceive(port string, enable bool) error {
 	return sw.runConfigIFCommands(port, cmds)
 }
 
+func (sw *nexus3k) SetPortQos(port string, enable bool, params string) error {
+	var cmds []string
+	if enable {
+		cmds = []string{fmt.Sprintf("service-policy type qos input %s", params)}
+	} else {
+		cmds = []string{fmt.Sprintf("no service-policy type qos input %s", params)}
+	}
+	return sw.runConfigIFCommands(port, cmds)
+}
+
+func (sw *nexus3k) SetPortQueuing(port string, enable bool, params string) error {
+	var cmds []string
+	if enable {
+		cmds = []string{fmt.Sprintf("service-policy type queuing output %s", params)}
+	} else {
+		cmds = []string{fmt.Sprintf("no service-policy type queuing output %s", params)}
+	}
+	return sw.runConfigIFCommands(port, cmds)
+}
+
+func (sw *nexus3k) SetPortPause(port string, enable bool) error {
+	var cmds []string
+	if enable {
+		cmds = []string{"flowcontrol send on", "flowcontrol receive on"}
+
+	} else {
+		cmds = []string{"no flowcontrol send on", "no flowcontrol receive on"}
+	}
+
+	return sw.runConfigIFCommands(port, cmds)
+}
+
+func (sw *nexus3k) SetPortPfc(port string, enable bool) error {
+	var cmds []string
+	if enable {
+		cmds = []string{"no flowcontrol send on", "no flowcontrol receive on", "priority-flow-control mode on"}
+	} else {
+		cmds = []string{"no priority-flow-control mode on"}
+	}
+
+	return sw.runConfigIFCommands(port, cmds)
+}
+
 func (sw *nexus3k) SetFlowControlSend(port string, enable bool) error {
 	var cmds []string
 
@@ -341,6 +416,30 @@ func (sw *nexus3k) DoQosConfig(qosConfig *QosConfig) error {
 			Name: qClass.Name, PfsCos: qClass.PfsCos})
 	}
 	_, err := n3k.ConfigureQos(sw.ctx, &n3kQos, 5*time.Second)
+	return err
+}
+
+func (sw *nexus3k) DoDscpConfig(dscpConfig *DscpConfig) error {
+
+	n3kQos := n3k.DscpConfig{Name: dscpConfig.Name}
+
+	for _, qClass := range dscpConfig.Classes {
+		n3kQos.Classes = append(n3kQos.Classes, n3k.DscpClass{Dscp: qClass.Dscp,
+			Name: qClass.Name, Cos: qClass.Cos})
+	}
+	_, err := n3k.ConfigureDscp(sw.ctx, &n3kQos, 5*time.Second)
+	return err
+}
+
+func (sw *nexus3k) DoQueueConfig(queueConfig *QueueConfig) error {
+
+	n3kQos := n3k.QueueConfig{Name: queueConfig.Name}
+
+	for _, qClass := range queueConfig.Classes {
+		n3kQos.Classes = append(n3kQos.Classes, n3k.QueueClass{Priority: qClass.Priority,
+			Name: qClass.Name, Percent: qClass.Percent})
+	}
+	_, err := n3k.ConfigureQueue(sw.ctx, &n3kQos, 5*time.Second)
 	return err
 }
 

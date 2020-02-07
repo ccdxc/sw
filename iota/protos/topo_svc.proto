@@ -632,6 +632,43 @@ message NetworkPolicyQos {
 
 }
 
+message NetworkDscpClass {
+    //name of qos
+    string name = 1;
+
+    //dscp to be set
+    string dscp = 2;
+
+    //cos
+    uint32 cos = 3;
+}
+
+message NetworkDscpPolicy {
+
+    //Name of network dscp
+    string name = 1;
+
+    repeated NetworkDscpClass dscp_classes = 2;
+}
+
+message NetworkQueueClass {
+    //name of queue
+    string name = 1;
+
+    //dscp to be set
+    uint32 priority = 2;
+
+    //bandwidth remaining percent
+    uint32 percent = 3;
+}
+
+message NetworkQueuePolicy {
+
+    //Name of network queue policy
+    string name = 1;
+
+    repeated NetworkQueueClass queue_classes = 2;
+}
 message DataSwitch {
 
     enum Speed {
@@ -668,6 +705,13 @@ message DataSwitch {
 
     //disable igmp
     bool igmp_disabled = 10;
+
+    //Network dscp to be used.
+    NetworkDscpPolicy dscp = 11;
+
+    //Network queue to be used.
+    NetworkQueuePolicy queue = 12;
+
 }
 
 message License {
@@ -755,6 +799,10 @@ enum SwitchOp {
     NO_SHUT_PORTS       = 2;
     FLAP_PORTS          = 4;
     VLAN_CONFIG         = 5;
+    PORT_PAUSE_CONFIG   = 6;
+    PORT_PFC_CONFIG     = 7;
+    PORT_QOS_CONFIG     = 8;
+    PORT_QUEUING_CONFIG = 9;
 }
 
 message VlanConfig {
@@ -779,6 +827,24 @@ message SwitchFlapInfo {
     uint32  down_time = 3;
 }
 
+message PortPauseConfig {
+	bool enable	= 1;
+}
+
+message PortPfcConfig {
+	bool enable	= 1;
+}
+
+message PortQosConfig {
+	bool enable	    = 1;
+	string params	= 2;
+}
+
+message PortQueuingConfig {
+	bool enable 	= 1;
+	string params	= 2;
+}
+
 message SwitchMsg {
     // API Response
     IotaAPIResponse api_response        = 1;
@@ -798,6 +864,21 @@ message SwitchMsg {
         VlanConfig    vlan_config        = 5;
     }
 
+	oneof pause_info {
+		PortPauseConfig port_pause  	= 6;
+	}
+
+	oneof pfc_info {
+		PortPfcConfig port_pfc  		= 7;
+	}
+
+	oneof port_qos_info {
+		PortQosConfig port_qos       	= 8;
+	}
+
+	oneof port_queuing_info {
+		PortQueuingConfig port_queuing	= 9;
+	}
 }
 
 enum TestBedNodeType {

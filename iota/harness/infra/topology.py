@@ -781,6 +781,79 @@ class Topology(object):
         #Just return the switch IPs for now
         return switch_ips.keys()
 
+    def __doPortConfig(self, node_names, req):
+        switch_ips = {}
+        for node_name in node_names:
+            if node_name not in self.__nodes:
+                Logger.error("Node %s not found to flap port" % node_name)
+                return types.status.FAILURE
+            data_networks = self.__nodes[node_name].GetDataNetworks()
+            for nw in data_networks:
+                switch_ctx = switch_ips.get(nw.SwitchIP, None)
+                if not switch_ctx:
+                    switch_ctx = req.data_switches.add()
+                    switch_ips[nw.SwitchIP] = switch_ctx
+                switch_ctx.username = nw.SwitchUsername
+                switch_ctx.password = nw.SwitchPassword
+                switch_ctx.ip = nw.SwitchIP
+                switch_ctx.ports.append(nw.Name)
+        resp = api.DoSwitchOperation(req)
+        if not api.IsApiResponseOk(resp):
+            return types.status.FAILURE
+        return types.status.SUCCESS
+
+    def DisablePfcPorts(self, node_names):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_PFC_CONFIG
+        req.port_pfc.enable = False
+        return self.__doPortConfig(node_names, req)
+
+    def EnablePfcPorts(self, node_names):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_PFC_CONFIG
+        req.port_pfc.enable = True
+        return self.__doPortConfig(node_names, req)
+
+    def DisablePausePorts(self, node_names):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_PAUSE_CONFIG
+        req.port_pause.enable = False
+        return self.__doPortConfig(node_names, req)
+
+    def EnablePausePorts(self, node_names):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_PAUSE_CONFIG
+        req.port_pause.enable = True
+        return self.__doPortConfig(node_names, req)
+
+    def DisableQosPorts(self, node_names, params):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_QOS_CONFIG
+        req.port_qos.enable = False
+        req.port_qos.params = params
+        return self.__doPortConfig(node_names, req)
+
+    def EnableQosPorts(self, node_names, params):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_QOS_CONFIG
+        req.port_qos.enable = True
+        req.port_qos.params = params
+        return self.__doPortConfig(node_names, req)
+
+    def DisableQueuingPorts(self, node_names, params):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_QUEUING_CONFIG
+        req.port_queuing.enable = False
+        req.port_queuing.params = params
+        return self.__doPortConfig(node_names, req)
+
+    def EnableQueuingPorts(self, node_names, params):
+        req = topo_pb2.SwitchMsg()
+        req.op = topo_pb2.PORT_QUEUING_CONFIG
+        req.port_queuing.enable = True
+        req.port_queuing.params = params
+        return self.__doPortConfig(node_names, req)
+
     def FlapDataPorts(self, node_names, num_ports_per_node = 1, down_time = 5,
         flap_count = 1, interval = 5):
         req = topo_pb2.SwitchMsg()

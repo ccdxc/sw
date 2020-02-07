@@ -505,6 +505,88 @@ func setSwitchQosConfig(dataSwitch dataswitch.Switch, qos *iota.NetworkPolicyQos
 	return nil
 }
 
+func setSwitchDscpConfig(dataSwitch dataswitch.Switch, dscp *iota.NetworkDscpPolicy) error {
+
+	if dscp == nil {
+		return nil
+	}
+	log.Print("Doing Switch DSCP configuration successful..")
+	dscpCfg := dataswitch.DscpConfig{Name: dscp.Name}
+
+	for _, qClass := range dscp.GetDscpClasses() {
+		dscpCfg.Classes = append(dscpCfg.Classes, dataswitch.DscpClass{Dscp: qClass.Dscp,
+			Name: qClass.Name, Cos: qClass.Cos})
+	}
+	err := dataSwitch.DoDscpConfig(&dscpCfg)
+	if err != nil {
+		return errors.Wrap(err, "Setting DSCP config for switch failed")
+	}
+
+	log.Print("Switch DSCP configuration successful..")
+	return nil
+}
+
+func setSwitchQueueConfig(dataSwitch dataswitch.Switch, queue *iota.NetworkQueuePolicy) error {
+
+	if queue == nil {
+		return nil
+	}
+	log.Print("Doing Switch queue configuration successful..")
+	queueCfg := dataswitch.QueueConfig{Name: queue.Name}
+
+	for _, qClass := range queue.GetQueueClasses() {
+		queueCfg.Classes = append(queueCfg.Classes, dataswitch.QueueClass{Priority: qClass.Priority,
+			Name: qClass.Name, Percent: qClass.Percent})
+	}
+	err := dataSwitch.DoQueueConfig(&queueCfg)
+	if err != nil {
+		return errors.Wrap(err, "Setting queue config for switch failed")
+	}
+
+	log.Print("Switch queue configuration successful..")
+	return nil
+}
+
+func portQueuingOp(dataSwitch dataswitch.Switch, ports []string, enable bool, params string) error {
+	for _, port := range ports {
+		if err := dataSwitch.SetPortQueuing(port, enable, params); err != nil {
+			return errors.Wrap(err, "Setting port queuing failed")
+		}
+	}
+
+	return nil
+}
+
+func portQosOp(dataSwitch dataswitch.Switch, ports []string, enable bool, params string) error {
+	for _, port := range ports {
+		if err := dataSwitch.SetPortQos(port, enable, params); err != nil {
+			return errors.Wrap(err, "Setting port qos failed")
+		}
+	}
+
+	return nil
+}
+
+func portPauseOp(dataSwitch dataswitch.Switch, ports []string, enable bool) error {
+	for _, port := range ports {
+		if err := dataSwitch.SetPortPause(port, enable); err != nil {
+			return errors.Wrap(err, "Setting port pause failed")
+		}
+	}
+
+	return nil
+}
+
+func portPfcOp(dataSwitch dataswitch.Switch, ports []string, enable bool) error {
+	for _, port := range ports {
+		if err := dataSwitch.SetPortPfc(port, enable); err != nil {
+			return errors.Wrap(err, "Setting port priority flow control failed")
+		}
+	}
+
+	return nil
+}
+
 func portLinkOp(dataSwitch dataswitch.Switch, ports []string, shutdown bool) error {
 	for _, port := range ports {
 		if err := dataSwitch.LinkOp(port, shutdown); err != nil {
@@ -618,6 +700,22 @@ func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 				req.GetFlapInfo().GetInterval()); err != nil {
 				return errors.Wrap(err, "Port up operation failed")
 			}
+		case iota.SwitchOp_PORT_QUEUING_CONFIG:
+			if err := portQueuingOp(n3k, ds.GetPorts(), req.GetPortQueuing().GetEnable(), req.GetPortQueuing().GetParams()); err != nil {
+				return errors.Wrap(err, "Port queuing operation failed")
+			}
+		case iota.SwitchOp_PORT_QOS_CONFIG:
+			if err := portQosOp(n3k, ds.GetPorts(), req.GetPortQos().GetEnable(), req.GetPortQueuing().GetParams()); err != nil {
+				return errors.Wrap(err, "Port qos operation failed")
+			}
+		case iota.SwitchOp_PORT_PAUSE_CONFIG:
+			if err := portPauseOp(n3k, ds.GetPorts(), req.GetPortPause().GetEnable()); err != nil {
+				return errors.Wrap(err, "Port pause operation failed")
+			}
+		case iota.SwitchOp_PORT_PFC_CONFIG:
+			if err := portPfcOp(n3k, ds.GetPorts(), req.GetPortPfc().GetEnable()); err != nil {
+				return errors.Wrap(err, "Port priority flow control operation failed")
+			}
 
 		}
 	}
@@ -678,6 +776,16 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 
 		if err := setSwitchQosConfig(n3k, ds.GetQos()); err != nil {
 			return nil, errors.Wrap(err, "Configuring  QOS  on switch failed")
+
+		}
+
+		if err := setSwitchDscpConfig(n3k, ds.GetDscp()); err != nil {
+			return nil, errors.Wrap(err, "Configuring DSCP on switch failed")
+
+		}
+
+		if err := setSwitchQueueConfig(n3k, ds.GetQueue()); err != nil {
+			return nil, errors.Wrap(err, "Configuring queue policy on switch failed")
 
 		}
 
