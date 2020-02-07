@@ -19,6 +19,7 @@ e2e-targets:
    build-dependencies:
      - build-iris-arm
      - build-iota
+     - build-iris-arm-elba
    clusters:
      - image: build-7
        count: 2

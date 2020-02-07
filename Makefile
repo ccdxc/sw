@@ -694,11 +694,17 @@ naples-firmware-gold:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 FWTYPE=gold firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
 
-naples-firmware: 
+naples-firmware:
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 clean
 	$(MAKE) ws-tools
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 firmware
 	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 package-drivers
+
+naples-firmware-elba:
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba clean
+	$(MAKE) ws-tools
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba firmware
+	$(MAKE) -C nic PLATFORM=hw ARCH=aarch64 ASIC=elba package-drivers
 
 naples-firmware-tarball:
 	@if [ "x${RELEASE}" = "x" ]; then echo "RELEASE is not set"; else cd ../ ; asset-push --assets-server-colo NULL --remote-name sw-${PIPELINE}.tar.gz builds hourly ${RELEASE} sw || cd sw; fi
