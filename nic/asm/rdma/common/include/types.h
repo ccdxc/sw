@@ -112,7 +112,8 @@
     sll     _r, k.{phv_global_common_cb_addr_sbit0_ebit1...phv_global_common_cb_addr_sbit18_ebit24}, CQCB_ADDR_SHIFT;
 
 
-#define MAX_PYLD_DMA_CMDS_PER_SGE   3
+#define MAX_PYLD_DMA_CMDS_PER_SGE             3
+#define MAX_PYLD_DMA_CMDS_PER_RSVD_LKEY_SGE   1
 
 #define BTH_OPC_SVC_SHIFT 5
 

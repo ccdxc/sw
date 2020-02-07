@@ -32,7 +32,7 @@ struct req_tx_s3_t0_k k;
 #define K_PRIV_OPER_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, priv_oper_enable)
 #define K_SPEC_ENABLE CAPRI_KEY_FIELD(IN_TO_S_P, spec_enable)
 #define K_SPEC_MSG_PSN CAPRI_KEY_RANGE(IN_TO_S_P, spec_msg_psn_sbit0_ebit7, spec_msg_psn_sbit16_ebit23)
-
+#define TMP_D_DMA_CMD_IDX d[511:506]
 
 
 %%
@@ -96,9 +96,9 @@ sge_loop:
     sub            r3, r3, r4
 
     sle            c2, r3, r0
-    slt            c3, 1, K_NUM_VALID_SGES
+    slt            c4, 1, K_NUM_VALID_SGES
    
-    setcf          c4, [!c2 & c3 & c7]
+    setcf          c4, [!c2 & c4 & c7]
 
     // packet_len += transfer_bytes
     add            r5, r5, r4
@@ -106,9 +106,10 @@ sge_loop:
     cmov           r6, c7, 0, 1
     CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, sge_index, r6)
 
-    add            r4, r0, K_DMA_CMD_START_INDEX
-    add.!c7        r4, r4, MAX_PYLD_DMA_CMDS_PER_SGE
-    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_start_index, r4)
+    tblwr.l.c7     TMP_D_DMA_CMD_IDX, K_DMA_CMD_START_INDEX
+    cmov.!c7       r4, c6, MAX_PYLD_DMA_CMDS_PER_RSVD_LKEY_SGE, MAX_PYLD_DMA_CMDS_PER_SGE
+    tbladd.l.!c7   TMP_D_DMA_CMD_IDX, r4
+    CAPRI_SET_FIELD(r7, SGE_TO_LKEY_T, dma_cmd_start_index, TMP_D_DMA_CMD_IDX)
 
     // r6 = hbm_addr_get(PHV_GLOBA_KT_BASE_ADDR_GET())
     KT_BASE_ADDR_GET2(r6, r4)
@@ -118,7 +119,8 @@ sge_loop:
 
     seq            c6, r4, RDMA_RESERVED_LKEY_ID
     CAPRI_SET_FIELD_C(r7, SGE_TO_LKEY_T, rsvd_key_err, 1, c6)
-    crestore.c6    [c6], K_PRIV_OPER_ENABLE, 0x1
+    seq            c3, K_PRIV_OPER_ENABLE, 0x1
+    setcf          c3, [c3 & c6]
 
     // key_addr = hbm_addr_get(PHV_GLOBAL_KT_BASE_ADDR_GET())+
     //                     ((sge_p->lkey >> KEY_INDEX_MASK) * sizeof(key_entry_t));
@@ -134,7 +136,7 @@ sge_loop:
     // sge_index to invoke program in multiple MPUs
     CAPRI_GET_TABLE_0_OR_1_K(req_tx_phv_t, r7, c7)
     // aligned_key_addr and key_id sent to next stage to load lkey
-    CAPRI_NEXT_TABLE_I_READ_PC_C(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqlkey_rsvd_lkey_process, req_tx_sqlkey_process, r6, c6)
+    CAPRI_NEXT_TABLE_I_READ_PC_C(r7, CAPRI_TABLE_LOCK_EN, CAPRI_TABLE_SIZE_512_BITS, req_tx_sqlkey_rsvd_lkey_process, req_tx_sqlkey_process, r6, c3)
 
     // big-endian - subtract sizeof(sge_t) as sges are read from bottom to top in big-endian format
     // sge_p[1]
@@ -224,7 +226,8 @@ write_back:
 
 sge_recirc:
     // increment dma_cmd_start index by num of DMA cmds consumed for 2 SGEs per pass
-    add            r4, K_DMA_CMD_START_INDEX, (MAX_PYLD_DMA_CMDS_PER_SGE * 2)
+    add.c6         r4, TMP_D_DMA_CMD_IDX, MAX_PYLD_DMA_CMDS_PER_RSVD_LKEY_SGE
+    add.!c6        r4, TMP_D_DMA_CMD_IDX, MAX_PYLD_DMA_CMDS_PER_SGE
     // Error if there are no dma cmd space to compose
     beqi           r4, REQ_TX_DMA_CMD_PYLD_BASE_END, err_no_dma_cmds
     CAPRI_RESET_TABLE_2_ARG() // Branch Delay Slot
