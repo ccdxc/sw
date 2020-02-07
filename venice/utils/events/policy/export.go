@@ -297,8 +297,8 @@ func (m *ExportMgr) createSyslogWriters(ctx context.Context, syslogExportCfg *mo
 
 	writers := make(map[string]*syslogWriter)
 	for _, target := range targets {
-		tmp := strings.Split(target.GetTransport(), "/")                                     // e.g. transport = tcp/514
-		network, remoteAddr := tmp[0], fmt.Sprintf("%s:%s", target.GetDestination(), tmp[1]) // {tcp, udp, etc.}, <remote_addr>:<port>
+		tmp := strings.Split(target.GetTransport(), "/")                                                      // e.g. transport = tcp/514
+		network, remoteAddr := strings.ToLower(tmp[0]), fmt.Sprintf("%s:%s", target.GetDestination(), tmp[1]) // {tcp, udp, etc.}, <remote_addr>:<port>
 		writer, err := m.createSyslogWriter(ctx, monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[format]), network, remoteAddr, tag, priority)
 		if err != nil {
 			return nil, err

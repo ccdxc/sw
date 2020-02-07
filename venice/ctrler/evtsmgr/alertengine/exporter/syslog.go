@@ -92,7 +92,6 @@ func (s *syslogExport) createWriters(syslogExpConfig *monitoring.SyslogExport) (
 	for _, target := range syslogExpConfig.GetTargets() {
 		var writer syslog.Writer
 		network, remoteAddr := s.getSyslogServerInfo(target)
-
 		switch monitoring.MonitoringExportFormat(monitoring.MonitoringExportFormat_vvalue[syslogExpConfig.GetFormat()]) {
 		case monitoring.MonitoringExportFormat_SYSLOG_BSD:
 			writer, err = syslog.NewBsd(network, remoteAddr, priority, utils.GetHostname(), tag)
@@ -134,5 +133,5 @@ func (s *syslogExport) getSyslogServerInfo(cfg *monitoring.ExportConfig) (string
 		remoteAddr += ":" + tmp[1]
 	}
 
-	return network, remoteAddr
+	return strings.ToLower(network), remoteAddr
 }

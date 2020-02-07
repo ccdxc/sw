@@ -1380,7 +1380,7 @@ func TestEventsAlertEngineWithTCPSyslogExport(t *testing.T) {
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("tcp/%s", tmp[len(tmp)-1]),
+					Transport:   fmt.Sprintf("TCP/%s", tmp[len(tmp)-1]), // TCP or tcp should work
 				},
 			},
 		})
@@ -1545,7 +1545,7 @@ func TestEventsAlertEngineWithUDPSyslogExport(t *testing.T) {
 			Targets: []*monitoring.ExportConfig{
 				{
 					Destination: "127.0.0.1",
-					Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
+					Transport:   fmt.Sprintf("UDP/%s", tmp1[len(tmp1)-1]), // UDP or udp should work
 				},
 				{
 					Destination: "127.0.0.1",
@@ -1735,11 +1735,11 @@ func TestEventsExport(t *testing.T) {
 		[]*monitoring.ExportConfig{
 			{ // receivedMsgsAtUDPServer1
 				Destination: "127.0.0.1",
-				Transport:   fmt.Sprintf("udp/%s", tmp1[len(tmp1)-1]),
+				Transport:   fmt.Sprintf("UDP/%s", tmp1[len(tmp1)-1]), // UDP or udp should work
 			},
 			{ // receivedMsgsAtTCPServer1
 				Destination: "127.0.0.1",
-				Transport:   fmt.Sprintf("tcp/%s", tmp2[len(tmp2)-1]),
+				Transport:   fmt.Sprintf("TCP/%s", tmp2[len(tmp2)-1]), // TCP or tcp should work
 			},
 		}, nil)
 	eventPolicy1, err = ti.apiClient.MonitoringV1().EventPolicy().Create(context.Background(), eventPolicy1)
