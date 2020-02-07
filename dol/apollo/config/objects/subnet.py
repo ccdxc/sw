@@ -50,7 +50,12 @@ class SubnetObject(base.ConfigObjectBase):
         self.VPC = parent
         self.PfxSel = parent.PfxSel
         self.IPPrefix = {}
-        self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
+        if getattr(spec, 'v6prefix', None) != None or \
+                getattr(spec, 'v6prefixlen', None) != None:
+            self.IPPrefix[0] = parent.AllocIPv6SubnetPrefix(poolid)
+            self.IpV6Valid = True
+        else:
+            self.IpV6Valid = False
         if getattr(spec, 'v4prefix', None) != None:
             self.IPPrefix[1] = ipaddress.ip_network(spec.v4prefix.replace('\\', '/'))
         else:
@@ -91,7 +96,8 @@ class SubnetObject(base.ConfigObjectBase):
         self.Status = SubnetStatus()
         ################# PRIVATE ATTRIBUTES OF SUBNET OBJECT #####################
         self.__ip_address_pool = {}
-        self.__ip_address_pool[0] = Resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
+        if self.IpV6Valid:
+            self.__ip_address_pool[0] = Resmgr.CreateIpv6AddrPool(self.IPPrefix[0])
         self.__ip_address_pool[1] = Resmgr.CreateIpv4AddrPool(self.IPPrefix[1])
 
         self.__set_vrouter_attributes()
@@ -153,6 +159,8 @@ class SubnetObject(base.ConfigObjectBase):
             elif policyobj.PolicyType is 'subnet':
                 pfx = ipaddress.ip_network(self.IPPrefix[1])
         else:
+            if not self.IpV6Valid:
+                return
             if policyobj.PolicyType == 'default':
                 pfx = utils.IPV6_DEFAULT_ROUTE
             elif policyobj.PolicyType is 'subnet':
@@ -161,7 +169,8 @@ class SubnetObject(base.ConfigObjectBase):
 
     def __set_vrouter_attributes(self):
         # 1st IP address of the subnet becomes the vrouter.
-        self.VirtualRouterIPAddr[0] = next(self.__ip_address_pool[0])
+        if self.IpV6Valid:
+            self.VirtualRouterIPAddr[0] = next(self.__ip_address_pool[0])
         self.VirtualRouterIPAddr[1] = next(self.__ip_address_pool[1])
         self.VirtualRouterMACAddr = ResmgrClient[self.Node].VirtualRouterMacAllocator.get()
         return
@@ -196,9 +205,11 @@ class SubnetObject(base.ConfigObjectBase):
         spec.Id = self.GetKey()
         spec.VPCId = self.VPC.GetKey()
         utils.GetRpcIPv4Prefix(self.IPPrefix[1], spec.V4Prefix)
-        utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
+        if self.IpV6Valid:
+            utils.GetRpcIPv6Prefix(self.IPPrefix[0], spec.V6Prefix)
         spec.IPv4VirtualRouterIP = int(self.VirtualRouterIPAddr[1])
-        spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
+        if self.IpV6Valid:
+            spec.IPv6VirtualRouterIP = self.VirtualRouterIPAddr[0].packed
         spec.VirtualRouterMac = self.VirtualRouterMACAddr.getnum()
         spec.V4RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V4RouteTableId)
         spec.V6RouteTableId = utils.PdsUuid.GetUUIDfromId(self.V6RouteTableId)
@@ -364,7 +375,11 @@ class SubnetObjectClient(base.ConfigClientBase):
     def GenerateObjects(self, node, parent, vpc_spec_obj):
         poolid = 0
         for subnet_spec_obj in vpc_spec_obj.subnet:
-            parent.InitSubnetPefixPools(poolid, subnet_spec_obj.v6prefixlen, subnet_spec_obj.v4prefixlen)
+            if hasattr(subnet_spec_obj, 'v6prefixlen'):
+                v6prefixlen = subnet_spec_obj.v6prefixlen
+            else:
+                v6prefixlen = 0
+            parent.InitSubnetPefixPools(poolid, v6prefixlen, subnet_spec_obj.v4prefixlen)
             for c in range(subnet_spec_obj.count):
                 obj = SubnetObject(node, parent, subnet_spec_obj, poolid)
                 self.Objs[node].update({obj.SubnetId: obj})

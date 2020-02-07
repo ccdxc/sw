@@ -284,14 +284,14 @@ pds_flow_extract_nexthop_info(vlib_buffer_t *p0,
     }
 
     if (is_ip4) {
-        if (nexthop) {
-            ftlv4_cache_set_nexthop(nexthop & 0xff, ((nexthop >> 16) & 0x3), 1);
+        if (nexthop & 0xffff) {
+            ftlv4_cache_set_nexthop(nexthop & 0xffff, ((nexthop >> 16) & 0x3), 1);
         } else {
             ftlv4_cache_set_nexthop(0, 0, 0);
         }
     } else {
-        if (nexthop) {
-            ftlv6_cache_set_nexthop(nexthop & 0xff, ((nexthop >> 16) & 0x3), 1);
+        if (nexthop & 0xffff) {
+            ftlv6_cache_set_nexthop(nexthop & 0xffff, ((nexthop >> 16) & 0x3), 1);
         } else {
             ftlv6_cache_set_nexthop(0, 0, 0);
         }

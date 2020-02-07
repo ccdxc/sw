@@ -173,7 +173,8 @@ class VpcObject(base.ConfigObjectBase):
         return
 
     def InitSubnetPefixPools(self, poolid, v6pfxlen, v4pfxlen):
-        self.__ip_subnet_prefix_pool[0][poolid] =  Resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
+        if v6pfxlen:
+            self.__ip_subnet_prefix_pool[0][poolid] =  Resmgr.CreateIPv6SubnetPool(self.IPPrefix[0], v6pfxlen, poolid)
         self.__ip_subnet_prefix_pool[1][poolid] =  Resmgr.CreateIPv4SubnetPool(self.IPPrefix[1], v4pfxlen, poolid)
 
     def AllocIPv6SubnetPrefix(self, poolid):

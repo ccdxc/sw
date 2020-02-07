@@ -73,7 +73,6 @@ vpc:
         - id               : 1
           count            : 1
           v4prefixlen      : 24
-          v6prefixlen      : 64
           v4prefix         : '2.1.0.0\24'
           hostifidx        : 0x80000048
           fabricencap      : vxlan # vxlan or mplsodup
