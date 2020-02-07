@@ -369,6 +369,12 @@ void l2f_bd_t::handle_delete(NBB_ULONG bd_id) {
                     .append(" err=").append(std::to_string(ret)));
     }
     SDK_TRACE_DEBUG ("MS BD %d: Delete PDS Batch commit successful", bd_id);
+
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
 }
 
 void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
@@ -435,6 +441,12 @@ void l2f_bd_t::handle_add_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     }
     SDK_TRACE_DEBUG("MS BD %d If 0x%x: Bind PDS Batch commit successful",
                     ips_info_.bd_id, ifindex);
+
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
 }
 
 void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
@@ -493,6 +505,12 @@ void l2f_bd_t::handle_del_if(NBB_ULONG bd_id, ms_ifindex_t ifindex) {
     }
     SDK_TRACE_DEBUG("MS BD %d If 0x%x: Unbind PDS Batch commit successful",
                     ips_info_.bd_id, ifindex);
+
+    if (PDS_MOCK_MODE()) {
+        // Call the HAL callback in PDS mock mode
+        std::thread cb(pds_ms::hal_callback, SDK_RET_OK, cookie);
+        cb.detach();
+    }
 }
 
 // ------- Fastpath - Direct call from Mgmt Stub initiator thread ---------

@@ -100,11 +100,24 @@ void
 l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
                       mac_addr_t mac)
 {
-    NBB_CREATE_THREAD_CONTEXT
-    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
-    NBS_GET_SHARED_DATA();
+    ms_bd_id_t bd_id;
+    { // Enter Mgmt thread context
+        auto mgmt_ctxt = mgmt_state_t::thread_context();
+        auto uuid_obj = mgmt_ctxt.state()->lookup_uuid(subnet_key);
+        if (uuid_obj == nullptr) {
+            SDK_TRACE_ERR("Received MAC %s IP %s age for unknown Subnet %s",
+                          macaddr2str(mac), ipaddr2str(&ip), subnet_key.str());
+            return;
+        }
+        if (uuid_obj->obj_type() != uuid_obj_type_t::SUBNET) {
+            SDK_TRACE_ERR("Received MAC %s IP %s age with invalid UUID %s of type %s",
+                          macaddr2str(mac), ipaddr2str(&ip), subnet_key.str(),
+                          uuid_obj_type_str(uuid_obj->obj_type()));
+            return;
+        }
+        bd_id = ((subnet_uuid_obj_t*) uuid_obj)->ms_id();
+    } // Exit Mgmt thread context
 
-    ms_bd_id_t bd_id = pdsobjkey2msidx(subnet_key);
     if (ip_addr_is_zero(&ip)) {
         SDK_TRACE_DEBUG("Received MAC remove for Subnet %s BD %d MAC %s",
                         subnet_key.str(), bd_id, macaddr2str(mac));
@@ -112,6 +125,10 @@ l2f_local_mac_ip_del (const pds_obj_key_t& subnet_key, const ip_addr_t& ip,
         SDK_TRACE_DEBUG("Received MAC-IP remove for Subnet %s BD %d IP %s MAC %s",
                         subnet_key.str(), bd_id, ipaddr2str(&ip), macaddr2str(mac));
     }
+
+    NBB_CREATE_THREAD_CONTEXT
+    NBS_ENTER_SHARED_CONTEXT(l2f_proc_id);
+    NBS_GET_SHARED_DATA();
 
     ATG_MAI_MAC_IP_ID mac_ip_id = {0};
     mac_ip_id.bd_id.bd_type = ATG_L2_BRIDGE_DOMAIN_EVPN;

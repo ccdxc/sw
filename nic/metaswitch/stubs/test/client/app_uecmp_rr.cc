@@ -211,6 +211,26 @@ static void create_evpn_evi_proto_grpc () {
     }
 }
 
+static void delete_evpn_evi_proto_grpc () {
+    EvpnEviRequest  request;
+    EvpnResponse    response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request ();
+    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi UUID is same as subnet UUID
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+
+    printf ("Pushing EVPN Evi delete proto...\n");
+    ret_status = g_evpn_stub_->EvpnEviSpecDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
 static void create_route_proto_grpc (bool second=false) {
     CPStaticRouteRequest  request;
     CPStaticRouteResponse response;
@@ -271,7 +291,28 @@ static void create_evpn_evi_rt_proto_grpc () {
     }
 }
 
-static void create_l2f_test_mac_ip_proto_grpc () {
+static void delete_evpn_evi_rt_proto_grpc () {
+    EvpnEviRtRequest    request;
+    EvpnResponse        response;
+    ClientContext       context;
+    Status              ret_status;
+
+    auto proto_spec = request.add_request ();
+    proto_spec->set_id (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN); // evi rt UUID is same as subnet UUID
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_rt((const char *)g_test_conf_.rt, 8);
+
+    printf ("Pushing EVPN Evi RT Delete proto...\n");
+    ret_status = g_evpn_stub_->EvpnEviRtSpecDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void create_l2f_test_mac_ip_proto_grpc (bool second=false) {
     CPL2fTestCreateSpec request;
     CPL2fTestResponse   response;
     ClientContext       context;
@@ -279,15 +320,51 @@ static void create_l2f_test_mac_ip_proto_grpc () {
 
     auto proto_spec = &request;
     proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
-    auto ipaddr = proto_spec->mutable_ipaddr();
-    ipaddr->set_af(types::IP_AF_INET);
-    ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
+    if (!second) {
+        auto ipaddr = proto_spec->mutable_ipaddr();
+        ipaddr->set_af(types::IP_AF_INET);
+        ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
+    }
     char mac_addr[] = {0x00,0x12,0x23,0x45,0x67,0x8};
+    if (second) {
+        mac_addr[1] += 5;
+        mac_addr[4] -= 7;
+    }
     proto_spec->set_macaddr (mac_addr, 6);
     proto_spec->set_ifid (g_test_conf_.lif_if_index);
 
     printf ("Simulating EVPN MAC/IP learn...\n");
     ret_status = g_cp_test_stub_->CPL2fTestCreate(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void delete_l2f_test_mac_ip_proto_grpc (bool second=false) {
+    CPL2fTestDeleteSpec request;
+    CPL2fTestResponse   response;
+    ClientContext       context;
+    Status              ret_status;
+
+    auto proto_spec = &request;
+    proto_spec->set_subnetid (msidx2pdsobjkey(k_subnet_id).id, PDS_MAX_KEY_LEN);
+    if (!second) {
+        auto ipaddr = proto_spec->mutable_ipaddr();
+        ipaddr->set_af(types::IP_AF_INET);
+        ipaddr->set_v4addr(g_test_conf_.local_mai_ip);
+    }
+    char mac_addr[] = {0x00,0x12,0x23,0x45,0x67,0x8};
+    if (second) {
+        mac_addr[1] += 5;
+        mac_addr[4] -= 7;
+    }
+    proto_spec->set_macaddr (mac_addr, 6);
+
+    printf ("Simulating EVPN MAC/IP age...\n");
+    ret_status = g_cp_test_stub_->CPL2fTestDelete(&context, request, &response);
     if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
@@ -417,6 +494,49 @@ static void create_bgp_peer_af_proto_grpc (bool lo=false, bool second=false) {
     }
 }
 
+static void delete_bgp_peer_proto_grpc (bool lo=false, bool second=false) {
+    BGPPeerRequest  request;
+    BGPPeerResponse response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request();
+    auto peeraddr = proto_spec->mutable_peeraddr();
+    peeraddr->set_af(types::IP_AF_INET);
+    if (lo) {
+        if (second) {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr_2);
+        } else {
+            peeraddr->set_v4addr(g_test_conf_.remote_lo_ip_addr);
+        }
+    } else if (second) {
+        peeraddr->set_v4addr(g_test_conf_.remote_ip_addr_2);
+    } else {
+        peeraddr->set_v4addr(g_test_conf_.remote_ip_addr);
+    }
+    proto_spec->set_id(msidx2pdsobjkey(k_bgp_id).id);
+    auto localaddr = proto_spec->mutable_localaddr();
+    localaddr->set_af(types::IP_AF_INET);
+    if (lo && g_node_id !=3) {
+        localaddr->set_v4addr(g_test_conf_.local_lo_ip_addr);
+    } else {
+        localaddr->set_v4addr(0);
+    }
+
+    printf ("Deleting BGP %s Peer proto...\n", (lo) ? "Overlay" : "Underlay" );
+    if (g_node_id == 3) {
+        ret_status = g_rr_bgp_stub_->BGPPeerDelete(&context, request, &response);
+    } else {
+        ret_status = g_bgp_stub_->BGPPeerDelete(&context, request, &response);
+    }
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
 static void create_subnet_proto_grpc (bool second=false) {
     SubnetRequest   request;
     SubnetResponse  response;
@@ -440,10 +560,12 @@ static void create_subnet_proto_grpc (bool second=false) {
     } else {
     proto_encap->mutable_value()->set_vnid(g_test_conf_.vni);
     }
+    if (g_node_id == 2) {
     // TODO: Host IfIndex needs to refer to an actual LIF Index in HAL
     //       Else failure in non-mock PDS mode.
-    //proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
-    //                       PDS_MAX_KEY_LEN);
+    proto_spec->set_hostif(test::uuid_from_objid(g_test_conf_.lif_if_index).id,
+                           PDS_MAX_KEY_LEN);
+    }
     proto_spec->set_ipv4virtualrouterip(g_test_conf_.local_gwip_addr);
     proto_spec->set_virtualroutermac((uint64_t)0x001122334455);
     auto v4_prefix = proto_spec->mutable_v4prefix();
@@ -583,6 +705,68 @@ static void create_evpn_ip_vrf_rt_proto_grpc () {
     }
 }
 
+static void delete_vpc_proto_grpc () {
+    VPCDeleteRequest      request;
+    VPCDeleteResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
+    request.add_id(pds_ms::msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+
+    printf ("Pushing VPC Delete proto...\n");
+    ret_status = g_vpc_stub_->VPCDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus(0) != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus(0));
+        exit(1);
+    }
+}
+
+static void delete_evpn_ip_vrf_proto_grpc () {
+    EvpnIpVrfRequest request;
+    EvpnResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+
+    printf ("Pushing EVPN IP VRF Delete proto...\n");
+    ret_status = g_evpn_stub_->EvpnIpVrfSpecDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
+static void delete_evpn_ip_vrf_rt_proto_grpc () {
+    EvpnIpVrfRtRequest request;
+    EvpnResponse     response;
+    ClientContext   context;
+    Status          ret_status;
+
+    auto proto_spec = request.add_request();
+    proto_spec->set_id (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    proto_spec->set_vpcid (msidx2pdsobjkey(k_vpc_id).id, PDS_MAX_KEY_LEN);
+    NBB_BYTE rt[] = {0x00,0x02,0x00,0x00,0x00,0x00,0x00,0xc8};
+    proto_spec->set_rt(rt,8);
+    proto_spec->set_rttype(pds::EVPN_RT_IMPORT_EXPORT);
+
+    printf ("Pushing EVPN IP VRF RT Delete proto...\n");
+    ret_status = g_evpn_stub_->EvpnIpVrfRtSpecDelete(&context, request, &response);
+    if (!ret_status.ok() || (response.apistatus() != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus());
+        exit(1);
+    }
+}
+
 static void get_peer_status_all() {
     BGPPeerRequest       request;
     BGPPeerGetResponse   response;
@@ -705,6 +889,12 @@ int main(int argc, char** argv)
             create_intf_proto_grpc();
             create_intf_proto_grpc(false, true /* second interface */);
         }
+        if (g_node_id == 1) {
+            // Simulate the static route installed by NMD
+            // with higher Admin Distance
+            create_route_proto_grpc();
+            create_route_proto_grpc(true);
+        }
         create_bgp_global_proto_grpc();
         if (g_node_id != 3) {
             /*no IPv4 BGP sessions for Pegasus */
@@ -713,12 +903,6 @@ int main(int argc, char** argv)
             create_bgp_peer_proto_grpc(false, true /* second peer */);
             create_bgp_peer_af_proto_grpc(false, true);
             sleep(5);
-        }
-        if (g_node_id == 1) {
-            // Simulate the static route installed by NMD
-            // with higher Admin Distance
-            create_route_proto_grpc();
-            create_route_proto_grpc(true);
         }
         if (g_node_id == 3) {
             create_route_proto_grpc();
@@ -733,30 +917,88 @@ int main(int argc, char** argv)
         create_evpn_ip_vrf_proto_grpc();
         create_evpn_ip_vrf_rt_proto_grpc();
         create_subnet_proto_grpc();
-        create_subnet_proto_grpc(true);
         create_evpn_evi_proto_grpc();
         if (g_test_conf_.manual_rt) {
             create_evpn_evi_rt_proto_grpc();
         }
         }
-        if (g_node_id == 1) {
+        if (g_node_id == 2) {
             sleep(5);
             create_l2f_test_mac_ip_proto_grpc();
+            create_l2f_test_mac_ip_proto_grpc(true);
         }
         printf ("Testapp Config Init is successful!\n");
         return 0;
-    } else if (argc == 2) {
+    } else if (argc >= 2) {
         if (!strcmp(argv[1], "peer_status")) {
             get_peer_status_all();
             return 0;
         } else if (!strcmp (argv[1], "evpn_mac_ip")) {
             get_evpn_mac_ip_all();
             return 0;
+        } else if (!strcmp(argv[1], "vpc-del")) {
+            delete_evpn_ip_vrf_rt_proto_grpc();
+            delete_evpn_ip_vrf_proto_grpc();
+            delete_vpc_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "vpc-create")) {
+            create_vpc_proto_grpc();
+            create_evpn_ip_vrf_proto_grpc();
+            create_evpn_ip_vrf_rt_proto_grpc();
+            return 0;
         } else if (!strcmp(argv[1], "subnet-del")) {
+            delete_evpn_evi_rt_proto_grpc();
+            delete_evpn_evi_proto_grpc();
             delete_subnet_proto_grpc();
             return 0;
         } else if (!strcmp(argv[1], "subnet-create")) {
             create_subnet_proto_grpc();
+            create_evpn_evi_proto_grpc();
+            if (g_test_conf_.manual_rt) {
+                create_evpn_evi_rt_proto_grpc();
+            }
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-upeer-del")) {
+            if (argc < 3 || (!strcmp(argv[2], "1"))) {
+                // First underlay peer
+                delete_bgp_peer_proto_grpc();
+            } else {
+                // Second underlay peer
+                delete_bgp_peer_proto_grpc(false, true);
+            }
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-upeer-create")) {
+            printf ("argc = %d argv[2] %s\n", argc, argv[2]);
+            if (argc < 3 || (!strcmp(argv[2], "1"))) {
+                // First underlay peer
+                create_bgp_peer_proto_grpc();
+                create_bgp_peer_af_proto_grpc();
+            } else {
+                // Second underlay peer
+                create_bgp_peer_proto_grpc(false, true);
+                create_bgp_peer_af_proto_grpc(false, true);
+            } 
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-opeer-del")) {
+            // Overlay peer
+            delete_bgp_peer_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "bgp-opeer-create")) {
+            // Overlay peer
+            create_bgp_peer_proto_grpc(true);
+            create_bgp_peer_af_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "mac-ip-del")) {
+            // MAC-IP
+            delete_l2f_test_mac_ip_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "mac-del")) {
+            // MAC only
+            delete_l2f_test_mac_ip_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "mac-create")) {
+            // MAC only
+            create_l2f_test_mac_ip_proto_grpc(true);
             return 0;
         }
     }
