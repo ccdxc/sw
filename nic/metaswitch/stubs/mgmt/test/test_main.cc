@@ -14,6 +14,25 @@ class Client {
     Client(std::shared_ptr<grpc::Channel> channel)
         : stub_(pds::BGPSvc::NewStub(channel)) {}
 
+    void specCreate() {
+        pds::BGPRequest req;
+        pds::BGPResponse res;
+        grpc::ClientContext context;
+
+        auto ent = req.mutable_request();
+        ent->set_id(std::to_string(11));
+        ent->set_localasn(2);
+        ent->set_routerid(3);
+        grpc::Status status = stub_->BGPCreate(&context, req, &res);
+
+        if (status.ok()) {
+            std::cout << "inserted 1 more entry into rment table" << std::endl;
+        } else {
+            std::cout << status.error_code() << ": " << status.error_message()
+                      << std::endl;
+        }
+    }
+
     void peerCreate() {
         pds::BGPPeerRequest req;
         pds::BGPPeerResponse res;
@@ -52,7 +71,7 @@ class Client {
         auto peeraddr = ent->mutable_peeraddr();
         peeraddr->set_af(types::IP_AF_INET);
         peeraddr->set_v4addr(1);
-        ent->set_id(std::to_string(1));
+        ent->set_id(std::to_string(11));
         ent->set_state(pds::ADMIN_STATE_ENABLE);
         auto localaddr = ent->mutable_localaddr();
         localaddr->set_af(types::IP_AF_INET);
@@ -149,10 +168,10 @@ int main(int argc, char** argv) {
 
     client.peerGetAll();
     client.peerCreate();
+    client.specCreate();
     client.peerGet();
 //    sleep(25);
     client.peerGetAll();
-    client.peerDelete();
     client.peerGetAll();
 
     return 0;
