@@ -40,42 +40,43 @@ rsync -r --delete --delete-excluded \
 rsync "$TOP/nic/tools/print-cores.sh" "$GEN_DIR/"
 
 # Copy linux driver sources to gen dir
-mkdir -p "$GEN_DIR/drivers"
-rsync -r --delete --delete-excluded --copy-links \
-  --exclude=".git/" \
-  --exclude=".cache.mk" \
-  --exclude=".*.cmd" \
-  --exclude="*.o" \
-  --exclude="*.ko" \
-  --exclude="*.mod.c" \
-  --exclude="*.ur-safe" \
-  --exclude=".*.swp" \
-  --exclude="cscope.out" \
-  --exclude="tags" \
-  --exclude=".gitignore" \
-  --exclude="modules.order" \
-  --exclude="Module.symvers" \
-  --exclude=".tmp_versions/" \
-  "$DRIVERS_SRC/eth/" "$GEN_DIR/drivers/eth"
+mkdir -p "$GEN_DIR/drivers/eth/ionic"
+cp "$DRIVERS_SRC/eth/ionic/ionic.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_api.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_api.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_bus.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_bus_pci.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_bus_platform.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_debugfs.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_debugfs.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_dev.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_dev.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_devlink.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_devlink.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_ethtool.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_ethtool.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_lif.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_lif.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_main.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_rx_filter.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_rx_filter.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_stats.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_stats.h" \
+   "$DRIVERS_SRC/eth/ionic/ionic_txrx.c" \
+   "$DRIVERS_SRC/eth/ionic/ionic_txrx.h" \
+   "$DRIVERS_SRC/eth/ionic/kcompat.c" \
+   "$DRIVERS_SRC/eth/ionic/kcompat.h" \
+   "$DRIVERS_SRC/eth/ionic/kcompat_overflow.h" \
+   "$DRIVERS_SRC/eth/ionic/Kconfig" \
+   "$DRIVERS_SRC/eth/ionic/Makefile" \
+   "$DRIVERS_SRC/eth/ionic/README" \
+   "$GEN_DIR/drivers/eth/ionic"
 
 cp "$DRIVERS_SRC/Makefile" "$GEN_DIR/drivers/"
 
-rsync -r --copy-links \
-  --exclude=".git/" \
-  --exclude=".cache.mk" \
-  --exclude=".*.cmd" \
-  --exclude="*.o" \
-  --exclude="*.ko" \
-  --exclude="*.mod.c" \
-  --exclude="*.ur-safe" \
-  --exclude=".*.swp" \
-  --exclude="cscope.out" \
-  --exclude="tags" \
-  --exclude=".gitignore" \
-  --exclude="modules.order" \
-  --exclude="Module.symvers" \
-  --exclude=".tmp_versions/" \
-  "$COMMON_SRC/" "$GEN_DIR/common"
+mkdir -p "$GEN_DIR/common"
+cp "$COMMON_SRC/ionic_if.h" "$GEN_DIR/common"
+cp "$COMMON_SRC/ionic_regs.h" "$GEN_DIR/common"
 
 # Set version string
 if [ -n "$SW_VERSION" ] ; then
