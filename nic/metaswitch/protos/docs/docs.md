@@ -2025,7 +2025,7 @@ BGP peer AF configurations
 | PeerAddr | [.types.IPAddress](#pds..types.IPAddress) |  | BGP peer IP address |
 | Afi | [BGPAfi](#pds.BGPAfi) |  | BGP address family |
 | Safi | [BGPSafi](#pds.BGPSafi) |  | BGP sub-address family |
-| Disable | [bool](#bool) |  | disable adress family. IPv4-unicast and l2vpn-evpn address families are enabled by default |
+| Disable | [bool](#bool) |  | disable adress family. IPv4-unicast and l2vpn-evpn address families are enabled by default TODO: Disable field should become &#34;internal-only&#34; field once auto-gen support for this special case is added create/update should set Disable field to false delete should set Disable field to true |
 | NexthopSelf | [bool](#bool) |  | enforce this router to set self as next-hop for advertised routes |
 | DefaultOrig | [bool](#bool) |  | originate a default route to this peer |
 

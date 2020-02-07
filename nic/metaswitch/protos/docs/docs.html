@@ -5575,7 +5575,10 @@ VLAN tag </p></td>
                   <td><a href="#bool">bool</a></td>
                   <td></td>
                   <td><p>disable adress family. IPv4-unicast and l2vpn-evpn address families
-are enabled by default </p></td>
+are enabled by default
+TODO: Disable field should become &#34;internal-only&#34; field once auto-gen support for this special case is added
+create/update should set Disable field to false
+delete should set Disable field to true </p></td>
                 </tr>
               
                 <tr>
