@@ -169,7 +169,7 @@ int ionic_heartbeat_check(struct ionic *ionic)
 		bool trigger = false;
 
 		if (!fw_status || fw_status == 0xff) {
-			dev_info(ionic->dev, "FW status STOPPED\n");
+			dev_info(ionic->dev, "FW status STOPPED %u\n", fw_status);
 			if (lif && !test_bit(IONIC_LIF_F_FW_RESET, lif->state)) {
 				dev_info(ionic->dev, " ... triggering stop\n");
 				trigger = true;
@@ -190,7 +190,8 @@ int ionic_heartbeat_check(struct ionic *ionic)
 				dev_err(ionic->dev, "%s OOM\n", __func__);
 			} else {
 				work->type = IONIC_DW_TYPE_LIF_RESET;
-				if (fw_status & IONIC_FW_STS_F_RUNNING)
+				if (fw_status & IONIC_FW_STS_F_RUNNING &&
+				    fw_status != 0xff)
 					work->fw_status = 1;
 				ionic_lif_deferred_enqueue(&lif->deferred, work);
 			}

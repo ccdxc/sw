@@ -323,16 +323,8 @@ static int ionic_lif_quiesce(struct ionic_lif *lif)
 			.state = IONIC_LIF_DISABLE
 		},
 	};
-	struct device *dev = lif->ionic->dev;
-	int err;
 
-	err = ionic_adminq_post_wait(lif, &ctx);
-	if (err) {
-		dev_err(dev, "failed to quiesce lif, error = %d\n", err);
-		return err;
-	}
-	
-	return 0;
+	return ionic_adminq_post_wait(lif, &ctx);
 }
 
 static void ionic_lif_qcq_deinit(struct ionic_lif *lif, struct ionic_qcq *qcq)
@@ -2779,16 +2771,23 @@ static void ionic_lif_handle_fw_down(struct ionic_lif *lif)
 static void ionic_lif_handle_fw_up(struct ionic_lif *lif)
 {
 	struct ionic *ionic = lif->ionic;
+	int err;
 
 	netdev_info(lif->netdev, "FW Up: restarting LIFs\n");
 
-	ionic_qcqs_alloc(lif);
-	ionic_lifs_init(ionic);
-	clear_bit(IONIC_LIF_F_FW_RESET, lif->state);
+	err = ionic_qcqs_alloc(lif);
+	if (!err)
+		err = ionic_lifs_init(ionic);
+
+	if (!err)
+		clear_bit(IONIC_LIF_F_FW_RESET, lif->state);
 
 	ionic_link_status_check_request(lif);
 
-	netdev_info(lif->netdev, "FW Up: LIFs restarted\n");
+	if (!err)
+		netdev_info(lif->netdev, "FW Up: LIFs restarted\n");
+	else
+		netdev_info(lif->netdev, "FW Up: LIFs restart failed\n");
 }
 
 static void ionic_lif_free(struct ionic_lif *lif)

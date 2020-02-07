@@ -318,6 +318,7 @@ static int ionic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		dev_err(dev, "Cannot request PCI regions: %d, aborting\n", err);
 		goto err_out_pci_disable_device;
 	}
+	pcie_print_link_status(pdev);
 
 	err = ionic_map_bars(ionic);
 	if (err)
