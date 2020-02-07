@@ -249,7 +249,7 @@ def GetNaplesSystemInfoJson(n):
 def ShowNaples(n):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    AddPenctlCommand(req, n, "show naples --json")
+    AddPenctlCommand(req, n, "show dsc --json")
 
     resp = api.Trigger(req)
     cmd_resp = resp.commands[0]
@@ -258,7 +258,7 @@ def ShowNaples(n):
 def GetNaplesCfgSpecJson(n):
 
     req = api.Trigger_CreateExecuteCommandsRequest()
-    AddPenctlCommand(req, n, "show naples --json")
+    AddPenctlCommand(req, n, "show dsc --json")
 
     resp = api.Trigger(req)
     cmd_resp = resp.commands[0]
@@ -362,27 +362,27 @@ def RunPenctlOnHost(n, cmd):
         return cmd_resp.stdout
 
 def SetNaplesModeInband_Static(n, controllerip, mgmtip):
-    cmd = "update naples --id IOTATEST_INB --mgmt-ip {} --managed-by network --controllers {} --management-network inband".format(mgmtip, controllerip)
+    cmd = "update dsc --id IOTATEST_INB --mgmt-ip {} --managed-by network --controllers {} --management-network inband".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeInband_Dynamic(n):
     api.Logger.info("Setting Naples network mode to Inband Dynamic.")
-    cmd = "update naples --id IOTATEST_INB --managed-by network --management-network inband"
+    cmd = "update dsc --id IOTATEST_INB --managed-by network --management-network inband"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Static(n, controllerip, mgmtip):
     api.Logger.info("Setting Naples OOB network management IP statically for {}.".format(n))
-    cmd = "update naples --id IOTATEST_OOB --mgmt-ip {} --managed-by network --controllers {} --management-network oob".format(mgmtip, controllerip)
+    cmd = "update dsc --id IOTATEST_OOB --mgmt-ip {} --managed-by network --controllers {} --management-network oob".format(mgmtip, controllerip)
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeOOB_Dynamic(n):
     api.Logger.info("Setting Naples network mode to OOB Dynamic.")
-    cmd = "update naples --id IOTATEST_OOB --managed-by network --management-network inband --controllers 4.4.4.4"
+    cmd = "update dsc --id IOTATEST_OOB --managed-by network --management-network inband --controllers 4.4.4.4"
     return RunPenctlOnHost(n, cmd)
 
 def SetNaplesModeHost(n):
     api.Logger.info("Setting Naples network mode to Host Managed.")
-    cmd = "update naples --id IOTATEST_OOB --managed-by host"
+    cmd = "update dsc --id IOTATEST_OOB --managed-by host"
     return RunPenctlOnHost(n, cmd)
 
 def PenctlGetMode(n):
