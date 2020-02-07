@@ -114,6 +114,9 @@ const (
 	ErrPipelineInterfaceGet               = Error("ErrInterfaceGet")
 	ErrInvalidProfileFwdMode              = Error("ErrInvalidProfileFwdMode")
 	ErrInvalidProfilePolicyMode           = Error("ErrInvalidProfilePolicyMode")
+	ErrMirrorSessionReferencedByInterface = Error("ErrMirrorSessionReferencedByInterface")
+	ErrInvalidInterfaceTxMirrorSession    = Error("ErrInvalidInterfaceTxMirrorSession")
+	ErrInvalidInterfaceRxMirrorSession    = Error("ErrInvalidInterfaceRxMirrorSession")
 )
 
 // Const Info

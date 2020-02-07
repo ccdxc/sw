@@ -563,6 +563,20 @@
         "network": {
           "type": "string",
           "description": "Network that the interface is attached to, if any."
+        },
+        "TxMirrorSessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMirrorSession"
+          },
+          "description": "Tx MirrorSessions."
+        },
+        "RxMirrorSessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMirrorSession"
+          },
+          "description": "Rx MirrorSessions."
         }
       },
       "description": "InterfaceSpec captures all the interface level configuration."
@@ -628,6 +642,144 @@
         }
       }
     },
+    "netprotoMatchRule": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "Either Src or Dst or both must be specified, both cannot be * Src = * when not specified When Src is specified and resides on Pesnsando SmartNIC, matching pkts to/from src will be mirrored."
+        },
+        "destination": {
+          "$ref": "#/definitions/netprotoMatchSelector",
+          "description": "Dst = * when not specified When Dst is specified and resides on Pesnsando SmartNIC, matching pkts to/from dst will be mirrored."
+        }
+      },
+      "description": "MatchRule : This is used to select packets that need to be monitored (mirrored)."
+    },
+    "netprotoMatchSelector": {
+      "type": "object",
+      "properties": {
+        "addresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Automatically interpret the string as an octet, a CIDR or an hyphen separated range."
+        },
+        "proto-ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoProtoPort"
+          },
+          "description": "Match on the App info."
+        }
+      },
+      "description": "Common MatchSelector."
+    },
+    "netprotoMirrorCollector": {
+      "type": "object",
+      "properties": {
+        "export-config": {
+          "$ref": "#/definitions/netprotoMirrorExportConfig",
+          "description": "Collector export information for ERSPAN. Not required for VENICE collector."
+        },
+        "pcap-dir-name": {
+          "type": "string"
+        }
+      },
+      "description": "Mirror collector - can be an external device (via ERSPAN) or Venice (internal packet capture)."
+    },
+    "netprotoMirrorDir": {
+      "type": "string",
+      "enum": [
+        "BOTH",
+        "INGRESS",
+        "EGRESS"
+      ],
+      "default": "BOTH"
+    },
+    "netprotoMirrorExportConfig": {
+      "type": "object",
+      "required": [
+        "destination"
+      ],
+      "properties": {
+        "destination": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "IP address or URL of the collector/entity to which the data is to be exported. Length of string should be between 1 and 2048."
+        }
+      }
+    },
+    "netprotoMirrorSession": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "api-version": {
+          "type": "string"
+        },
+        "meta": {
+          "$ref": "#/definitions/apiObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/netprotoMirrorSessionSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/netprotoMirrorSessionStatus"
+        }
+      }
+    },
+    "netprotoMirrorSessionSpec": {
+      "type": "object",
+      "required": [
+        "mirror-direction"
+      ],
+      "properties": {
+        "vrf-name": {
+          "type": "string"
+        },
+        "collectors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMirrorCollector"
+          },
+          "description": "Mirrored packet collectors."
+        },
+        "match-rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/netprotoMatchRule"
+          },
+          "description": "Traffic Selection Rules - Matching pakcets are mirrored, based on packet filters and start/stop conditions."
+        },
+        "packet-size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mirror-direction": {
+          "$ref": "#/definitions/netprotoMirrorDir",
+          "enum": [
+            "both",
+            "ingress",
+            "egress"
+          ],
+          "default": "both"
+        }
+      }
+    },
+    "netprotoMirrorSessionStatus": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      },
+      "description": "MirrorSessionStatus captures the sg policy status."
+    },
     "netprotoPauseSpec": {
       "type": "object",
       "required": [
@@ -655,6 +807,20 @@
           "description": "RX Pause enabled."
         }
       }
+    },
+    "netprotoProtoPort": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "description": "Protocol for the app."
+        },
+        "port": {
+          "type": "string",
+          "description": "Port for the app."
+        }
+      },
+      "description": "ProtoPort captures protocol and port."
     },
     "netprotoTransceiverStatus": {
       "type": "object",

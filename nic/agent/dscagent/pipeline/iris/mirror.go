@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -22,6 +23,7 @@ const (
 )
 
 var mirrorSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
+var MirrorSessionToInterfaceMapping = map[string][]string{}
 
 // HandleMirrorSession handles crud operations on mirror session
 func HandleMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, oper types.Operation, mirror netproto.MirrorSession, vrfID uint64) error {
@@ -29,9 +31,9 @@ func HandleMirrorSession(infraAPI types.InfraAPI, telemetryClient halapi.Telemet
 	case types.Create:
 		return createMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
 	case types.Update:
-		return updateMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
+		return updateMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper)
 	case types.Delete:
-		return deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID)
+		return deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper)
 	default:
 		return errors.Wrapf(types.ErrUnsupportedOp, "Op: %s", oper)
 	}
@@ -150,8 +152,8 @@ func createMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	return nil
 }
 
-func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
-	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
+func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64, oper types.Operation) error {
+	if err := deleteMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID, oper); err != nil {
 		log.Error(errors.Wrapf(types.ErrMirrorSessionDeleteDuringUpdate, "MirrorSession: %s | MirrorSession: %v", mirror.GetKey(), err))
 	}
 	if err := createMirrorSessionHandler(infraAPI, telemetryClient, intfClient, epClient, mirror, vrfID); err != nil {
@@ -161,7 +163,13 @@ func updateMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.
 	return nil
 }
 
-func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64) error {
+func deleteMirrorSessionHandler(infraAPI types.InfraAPI, telemetryClient halapi.TelemetryClient, intfClient halapi.InterfaceClient, epClient halapi.EndpointClient, mirror netproto.MirrorSession, vrfID uint64, oper types.Operation) error {
+	// Check if the mirror session is referenced by any interface, only if delete request comes
+	if intfs, ok := MirrorSessionToInterfaceMapping[mirror.GetKey()]; ok && oper == types.Delete && len(intfs) != 0 {
+		return errors.Wrapf(types.ErrMirrorSessionReferencedByInterface, "MirrorSession: %s referenced by interfaces : %s", mirror.GetKey(), strings.Join(intfs, " "))
+	}
+	delete(MirrorSessionToInterfaceMapping, mirror.GetKey())
+
 	// Delete Flow Monitor rules
 	var flowMonitorDeleteReq halapi.FlowMonitorRuleDeleteRequestMsg
 	var mirrorSessionDeleteReq halapi.MirrorSessionDeleteRequestMsg

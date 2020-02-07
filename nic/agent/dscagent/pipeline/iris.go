@@ -623,6 +623,12 @@ func (i *IrisAPI) HandleInterface(oper types.Operation, intf netproto.Interface)
 		return nil, err
 	}
 
+	// Perform mirror session validations
+	if err = validator.ValidateInterfaceMirrorSession(i.InfraAPI, intf); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
 	log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjBegin)
 	defer log.Infof("Interface: %v | Op: %s | %s", intf, oper, types.InfoHandleObjEnd)
 

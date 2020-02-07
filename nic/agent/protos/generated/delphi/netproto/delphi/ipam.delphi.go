@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto4 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto5 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type IPAMPolicy struct {
 	Meta       *delphi.ObjectMeta    `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key        string                `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	IPAMPolicy *netproto4.IPAMPolicy `protobuf:"bytes,3,opt,name=IPAMPolicy" json:"IPAMPolicy,omitempty"`
+	IPAMPolicy *netproto5.IPAMPolicy `protobuf:"bytes,3,opt,name=IPAMPolicy" json:"IPAMPolicy,omitempty"`
 }
 
 func (m *IPAMPolicy) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *IPAMPolicy) GetKey() string {
 	return ""
 }
 
-func (m *IPAMPolicy) GetIPAMPolicy() *netproto4.IPAMPolicy {
+func (m *IPAMPolicy) GetIPAMPolicy() *netproto5.IPAMPolicy {
 	if m != nil {
 		return m.IPAMPolicy
 	}

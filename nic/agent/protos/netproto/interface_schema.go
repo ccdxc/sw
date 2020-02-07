@@ -129,6 +129,10 @@ var typesMapInterface = map[string]*api.Struct{
 			"IPAddress": api.Field{Name: "IPAddress", CLITag: api.CLIInfo{ID: "ip-address", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "ip-address", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
 
 			"Network": api.Field{Name: "Network", CLITag: api.CLIInfo{ID: "network", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "network", Pointer: false, Slice: false, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "TYPE_STRING"},
+
+			"TxMirrorSessions": api.Field{Name: "TxMirrorSessions", CLITag: api.CLIInfo{ID: "TxMirrorSessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.MirrorSession"},
+
+			"RxMirrorSessions": api.Field{Name: "RxMirrorSessions", CLITag: api.CLIInfo{ID: "RxMirrorSessions", Path: "", Skip: false, Insert: "", Help: ""}, JSONTag: "", Pointer: true, Slice: true, Mutable: true, Map: false, Inline: false, FromInline: false, KeyType: "", Type: "netproto.MirrorSession"},
 		},
 	},
 	"netproto.InterfaceStatus": &api.Struct{

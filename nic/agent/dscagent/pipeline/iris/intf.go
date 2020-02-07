@@ -38,6 +38,7 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 			return err
 		}
 	}
+	addMirrorSessionToInterfaceMappings(intf.Spec, intf.GetKey())
 	dat, _ := intf.Marshal()
 
 	if err := infraAPI.Store(intf.Kind, intf.GetKey(), dat); err != nil {
@@ -55,6 +56,13 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 			return err
 		}
 	}
+
+	for k, _ := range MirrorSessionToInterfaceMapping {
+		removeInterfaceFromMappings(k, intf.GetKey())
+	}
+
+	addMirrorSessionToInterfaceMappings(intf.Spec, intf.GetKey())
+
 	dat, _ := intf.Marshal()
 
 	if err := infraAPI.Store(intf.Kind, intf.GetKey(), dat); err != nil {
@@ -80,6 +88,8 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 		}
 	}
 
+	removeInterfaceMappings(intf.Spec, intf.GetKey())
+
 	if err := infraAPI.Delete(intf.Kind, intf.GetKey()); err != nil {
 		log.Error(errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err))
 		return errors.Wrapf(types.ErrBoltDBStoreDelete, "Interface: %s | Err: %v", intf.GetKey(), err)
@@ -88,6 +98,14 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 }
 
 func convertInterface(intf netproto.Interface) *halapi.InterfaceRequestMsg {
+	var txMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
+	var rxMirrorSessionhandles []*halapi.MirrorSessionKeyHandle
+	for _, ms := range intf.Spec.TxMirrorSessions {
+		txMirrorSessionhandles = append(txMirrorSessionhandles, convertMirrorSessionKeyHandle(ms.Status.MirrorSessionID))
+	}
+	for _, ms := range intf.Spec.RxMirrorSessions {
+		rxMirrorSessionhandles = append(rxMirrorSessionhandles, convertMirrorSessionKeyHandle(ms.Status.MirrorSessionID))
+	}
 	switch strings.ToLower(intf.Spec.Type) {
 	case "uplink_eth":
 		return &halapi.InterfaceRequestMsg{
@@ -100,6 +118,8 @@ func convertInterface(intf netproto.Interface) *halapi.InterfaceRequestMsg {
 							PortNum: intf.Status.IFUplinkStatus.PortID,
 						},
 					},
+					TxMirrorSessions: txMirrorSessionhandles,
+					RxMirrorSessions: rxMirrorSessionhandles,
 				},
 			},
 		}
@@ -115,6 +135,8 @@ func convertInterface(intf netproto.Interface) *halapi.InterfaceRequestMsg {
 							IsOobManagement: true,
 						},
 					},
+					TxMirrorSessions: txMirrorSessionhandles,
+					RxMirrorSessions: rxMirrorSessionhandles,
 				},
 			},
 		}
@@ -136,4 +158,40 @@ func convertIfKeyHandles(vlanID uint32, intfIDs ...uint64) (ifKeyHandles []*hala
 		ifKeyHandles = append(ifKeyHandles, &ifKeyHandle)
 	}
 	return
+}
+
+func addMirrorSessionsMappings(sessions []*netproto.MirrorSession, intf string) {
+	for _, ms := range sessions {
+		MirrorSessionToInterfaceMapping[ms.GetKey()] = append(MirrorSessionToInterfaceMapping[ms.GetKey()], intf)
+	}
+}
+
+func addMirrorSessionToInterfaceMappings(spec netproto.InterfaceSpec, intf string) {
+	addMirrorSessionsMappings(spec.TxMirrorSessions, intf)
+	addMirrorSessionsMappings(spec.RxMirrorSessions, intf)
+}
+
+func removeInterfaceFromMappings(ms string, intf string) {
+	length := len(MirrorSessionToInterfaceMapping[ms])
+	index := -1
+	for idx, intfKey := range MirrorSessionToInterfaceMapping[ms] {
+		if intf == intfKey {
+			index = idx
+			break
+		}
+	}
+	if index != -1 {
+		MirrorSessionToInterfaceMapping[ms][index] = MirrorSessionToInterfaceMapping[ms][length-1]
+		MirrorSessionToInterfaceMapping[ms] = MirrorSessionToInterfaceMapping[ms][:length-1]
+	}
+}
+
+func removeInterfaceMappings(spec netproto.InterfaceSpec, intf string) {
+	for _, ms := range spec.TxMirrorSessions {
+		removeInterfaceFromMappings(ms.GetKey(), intf)
+	}
+
+	for _, ms := range spec.RxMirrorSessions {
+		removeInterfaceFromMappings(ms.GetKey(), intf)
+	}
 }

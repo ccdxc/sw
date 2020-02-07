@@ -7,7 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import clientApi "github.com/pensando/sw/nic/delphi/gosdk/client_api"
-import netproto11 "github.com/pensando/sw/nic/agent/protos/netproto"
+import netproto12 "github.com/pensando/sw/nic/agent/protos/netproto"
 import delphi "github.com/pensando/sw/nic/delphi/proto/delphi"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -19,7 +19,7 @@ var _ = math.Inf
 type Vrf struct {
 	Meta *delphi.ObjectMeta `protobuf:"bytes,1,opt,name=Meta" json:"Meta,omitempty"`
 	Key  string             `protobuf:"bytes,2,opt,name=Key" json:"Key,omitempty"`
-	Vrf  *netproto11.Vrf    `protobuf:"bytes,3,opt,name=Vrf" json:"Vrf,omitempty"`
+	Vrf  *netproto12.Vrf    `protobuf:"bytes,3,opt,name=Vrf" json:"Vrf,omitempty"`
 }
 
 func (m *Vrf) GetDelphiMessage() proto.Message {
@@ -142,7 +142,7 @@ func (m *Vrf) GetKey() string {
 	return ""
 }
 
-func (m *Vrf) GetVrf() *netproto11.Vrf {
+func (m *Vrf) GetVrf() *netproto12.Vrf {
 	if m != nil {
 		return m.Vrf
 	}

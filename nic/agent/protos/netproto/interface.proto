@@ -12,7 +12,7 @@ import "google/api/annotations.proto";
 import public "github.com/pensando/sw/venice/utils/apigen/annotations/includes.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/pensando/sw/api/meta.proto";
-
+import "mirror.proto";
 
 // ---------------------------- Interface API ----------------------------
 // Interface controller api
@@ -94,6 +94,12 @@ message InterfaceSpec {
 
     // Network that the interface is attached to, if any.
     string Network           = 8  [(gogoproto.jsontag) = "network,omitemtpy"];
+
+    // Tx MirrorSessions
+    repeated MirrorSession TxMirrorSessions = 9;
+
+    // Rx MirrorSessions
+    repeated MirrorSession RxMirrorSessions = 10;
 }
 
 // InterfaceHostStatus is populated for PF and VF
