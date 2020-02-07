@@ -45,10 +45,8 @@ typedef struct batch_info_s {
 /// \brief    IPC message sent to config thread for API processing
 typedef struct api_msg_s {
     api_msg_id_t msg_id;
-    union {
-        // valid if msg_id is API_MSG_BATCH
-        batch_info_t batch;
-    };
+    // valid if msg_id is API_MSG_BATCH
+    batch_info_t batch;
 } api_msg_t;
 
 slab *api_msg_slab(void);

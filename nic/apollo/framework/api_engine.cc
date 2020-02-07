@@ -758,8 +758,8 @@ api_engine::activate_config_(dirty_obj_list_t::iterator it,
         SDK_ASSERT(obj_ctxt->cloned_obj == NULL);
         api_obj->del_from_db();
         del_from_dirty_list_(it, api_obj);
-        api_obj_ctxt_free_(obj_ctxt);
         api_base::free(obj_ctxt->obj_id, api_obj);
+        api_obj_ctxt_free_(obj_ctxt);
         break;
 
     case API_OP_CREATE:
@@ -1014,9 +1014,9 @@ api_engine::rollback_config_(dirty_obj_list_t::iterator it, api_base *api_obj,
 
 sdk_ret_t
 api_engine::batch_abort_(void) {
-    sdk_ret_t                     ret;
+    sdk_ret_t                     ret = SDK_RET_OK;
     dirty_obj_list_t::iterator    next_it;
-    api_obj_ctxt_t                    *octxt;
+    api_obj_ctxt_t                *octxt;
 
     PDS_API_ABORT_COUNTER_INC(abort, 1);
     PDS_TRACE_DEBUG("Initiating batch abort for epoch %u", batch_ctxt_.epoch);
@@ -1031,6 +1031,7 @@ api_engine::batch_abort_(void) {
         next_it++;
         octxt = batch_ctxt_.dom[*it];
         ret = rollback_config_(it, *it, octxt);
+        api_obj_ctxt_free_(octxt);
         SDK_ASSERT(ret == SDK_RET_OK);
     }
     PDS_TRACE_INFO("Finished config rollback stage");

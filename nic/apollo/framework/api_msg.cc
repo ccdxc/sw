@@ -21,10 +21,10 @@ static pds_epoch_t    g_api_epoch_ = 0xDEADFEED;
 
 /// \brief    wrapper function to allocate an API msg
 /// \return   pointer to allocated API msg or NULL
-static inline api_msg_t *
+static inline void *
 api_msg_alloc (void)
 {
-    return (api_msg_t *)api_msg_slab()->alloc();
+    return api_msg_slab()->alloc();
 }
 
 /// \brief    wrapper function to free an api msg
@@ -32,6 +32,7 @@ api_msg_alloc (void)
 static inline void
 api_msg_free (api_msg_t *msg)
 {
+    msg->~api_msg_t();
     api_msg_slab()->free(msg);
 }
 
@@ -57,6 +58,7 @@ pds_batch_ctxt_t
 api_batch_start (pds_batch_params_t *batch_params)
 {
     api_msg_t *api_msg;
+    void      *mem;
 
     if (unlikely((batch_params == NULL) ||
                  (batch_params->epoch == PDS_EPOCH_INVALID))) {
@@ -64,15 +66,19 @@ api_batch_start (pds_batch_params_t *batch_params)
     }
 
     // allocate IPC msg for this batch & initialize the context
-    api_msg = api::api_msg_alloc();
-    if (likely(api_msg)) {
-        api_msg->msg_id = api::API_MSG_ID_BATCH;
-        api_msg->batch.epoch = batch_params->epoch;
-        api_msg->batch.async = batch_params->async;
-        api_msg->batch.response_cb = batch_params->response_cb;
-        api_msg->batch.cookie = batch_params->cookie;
-        api_msg->batch.apis.reserve(1024);
+    mem = api::api_msg_alloc();
+    if (unlikely(mem == NULL)) {
+        return PDS_BATCH_CTXT_INVALID;
     }
+
+    api_msg = new (mem) api_msg_t();
+    api_msg->msg_id = api::API_MSG_ID_BATCH;
+    api_msg->batch.epoch = batch_params->epoch;
+    api_msg->batch.async = batch_params->async;
+    api_msg->batch.response_cb = batch_params->response_cb;
+    api_msg->batch.cookie = batch_params->cookie;
+    api_msg->batch.apis.reserve(1024);
+
     return (pds_batch_ctxt_t)api_msg;
 }
 
