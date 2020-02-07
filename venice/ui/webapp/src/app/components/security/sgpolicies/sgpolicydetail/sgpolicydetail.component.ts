@@ -907,7 +907,7 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
 
   updateFromNewRule(editedObject, index: number) {
     const policy = editedObject;
-    const policy1 = this.selectedPolicy.getFormGroupValues();
+    const policy1 = Utility.getLodash().cloneDeep(this.selectedPolicy.getFormGroupValues());
     policy1.spec.rules.splice(index, 0, policy.spec.rules[0]);
     return policy1;
   }
