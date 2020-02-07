@@ -283,3 +283,13 @@ $vertical-gutter: 5px;
 .sgpolicy-icons-button {
   cursor: pointer;
 }
+
+.sgpolicy-insert-icon svg {
+  height: 24px;
+  vertical-align: baseline;
+}
+
+.pensando-ui .global-table-action-icon.sgpolicy-insert-icon {
+  padding-left: 0;
+  padding-top: 3px;
+}

@@ -114,6 +114,8 @@ export class ControllerService {
     // security icons
     this.matIconRegistry.addSvgIcon('security-group', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-security-group.svg'));
     this.matIconRegistry.addSvgIcon('security-policy', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/icon-security-policy-black.svg'));
+    this.matIconRegistry.addSvgIcon('add-above', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-add-above.svg'));
+    this.matIconRegistry.addSvgIcon('add-below', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/security/ico-add-below.svg'));
 
     // Workload icons
     this.matIconRegistry.addSvgIcon('workloads-alert', this.domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/icons/workload/icon-workloads-alert.svg'));

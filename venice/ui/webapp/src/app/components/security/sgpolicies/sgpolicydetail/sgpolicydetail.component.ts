@@ -853,8 +853,8 @@ export class SgpolicydetailComponent extends TableviewAbstract<ISecurityNetworkS
     this.display = true;
   }
 
-  onAdd(rowData) {
-    this.newRuleIndex = rowData.order;
+  onAdd(rowData, isBefore: boolean = false) {
+    this.newRuleIndex = isBefore ? rowData.order : (rowData.order + 1);
     this.editObject = new SecurityNetworkSecurityPolicy(this.selectedPolicy);
     this.editObject.spec.rules = [];
     this.display = true;
