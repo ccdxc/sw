@@ -293,6 +293,9 @@ dependencies:
     - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
   nic/tools:
+    - reference: iota/test/standalone/sanity/apulu-networking
+    - reference: iota/test/standalone/sanity/esx
+    - reference: iota/test/standalone/sanity/freebsd
     - reference: iota/test/standalone/sanity/linux
     - reference: iota/test/venice
       exclude_dirs: ["arm_compiler","asic_sw_combined_sanity","client","gcov","hal","jenkins","ncc","package","server", "valgrind"]

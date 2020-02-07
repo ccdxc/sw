@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
 
 echo "Checking for cores....."
 for core_file in core.*; do
