@@ -75,13 +75,13 @@ typedef struct pds_flow_session_mplsogre_encap_s {
 } __PACK__ pds_flow_session_mplsogre_encap_t;
 
 /// \brief Encapsulation type
-typedef enum pds_encap_type_e {
+typedef enum pds_flow_session_encap_e {
     ENCAP_TYPE_NONE = 0,    ///< No encap
     ENCAP_TYPE_L2,          ///< L2 encap
     ENCAP_TYPE_MPLSOUDP,    ///< MPLS over UDP encap
     ENCAP_TYPE_MPLSOGRE,    ///< MPLS over GRE encap
     ENCAP_TYPE_GENEVE,      ///< Geneve encap
-} pds_encap_type_t;
+} pds_flow_session_encap_t;
 
 typedef enum pds_egress_action_e {
     EGRESS_ACTION_NONE = 0,        ///< Invalid
@@ -106,7 +106,7 @@ typedef struct pds_flow_session_rewrite_info_s {
     ///< Packet rewrite IP, could be v4 or v6
     uint8_t                                 user_packet_rewrite_ip[IP6_ADDR8_LEN];
     ///< Encapsulation type
-    pds_encap_type_t                        encap_type;
+    pds_flow_session_encap_t                encap_type;
     ///< Encapsulation data
     union {
         ///< L2 encap

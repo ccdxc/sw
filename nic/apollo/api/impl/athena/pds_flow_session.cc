@@ -19,12 +19,13 @@ using namespace sdk;
 
 extern "C" {
 
-sdk_ret_t
-pds_flow_session_info_create (pds_flow_session_spec_t *spec)
+static sdk_ret_t
+pds_flow_session_info_write (pds_flow_session_spec_t *spec, bool update)
 {
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
+    session_info_common_actiondata_t rd_session_common_actiondata = { 0 };
     session_info_common_session_info_common_t *session_cinfo;
     session_info_h2s_actiondata_t session_h2s_actiondata = { 0 };
     session_info_h2s_session_info_per_direction_t *session_h2sinfo;
@@ -43,6 +44,21 @@ pds_flow_session_info_create (pds_flow_session_spec_t *spec)
     if (!((spec->key.direction & HOST_TO_SWITCH) ||
         (spec->key.direction & SWITCH_TO_HOST)))
         return SDK_RET_INVALID_ARG;
+
+    // For update, check if there is an entry already at the index
+    if (update) {
+        if (p4pd_global_entry_read(P4TBL_ID_SESSION_INFO_COMMON, session_info_id,
+                                   NULL, NULL, &rd_session_common_actiondata) !=
+                                   P4PD_SUCCESS) {
+            PDS_TRACE_ERR("Failed to read session common table at index %u",
+                          session_info_id);
+            return SDK_RET_HW_READ_ERR;
+        }
+        session_cinfo =
+            &rd_session_common_actiondata.action_u.session_info_common_session_info_common;
+        if (!session_cinfo->valid_flag)
+            return SDK_RET_ENTRY_NOT_FOUND;
+    }
 
     // Session common table programming
     session_common_actiondata.action_id =
@@ -267,6 +283,12 @@ pds_flow_session_info_create (pds_flow_session_spec_t *spec)
 }
 
 sdk_ret_t
+pds_flow_session_info_create (pds_flow_session_spec_t *spec)
+{
+    return pds_flow_session_info_write(spec, false);
+}
+
+sdk_ret_t
 pds_flow_session_info_read (pds_flow_session_key_t *key,
                             pds_flow_session_info_t *info)
 {
@@ -292,6 +314,7 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
         (key->direction & SWITCH_TO_HOST)))
         return SDK_RET_INVALID_ARG;
 
+    // Check if there is an entry already at the index
     if (p4pd_global_entry_read(P4TBL_ID_SESSION_INFO_COMMON, session_info_id,
                                NULL, NULL, &session_common_actiondata) !=
                                P4PD_SUCCESS) {
@@ -302,7 +325,9 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
     session_cinfo =
         &session_common_actiondata.action_u.session_info_common_session_info_common;
     if (!session_cinfo->valid_flag)
-        return SDK_RET_OK;
+        return SDK_RET_ENTRY_NOT_FOUND;
+
+    info->spec.data.conntrack_id = session_cinfo->conntrack_id;
     if (key->direction & HOST_TO_SWITCH) {
         info->spec.data.host_to_switch_flow_info.policer_pps_id =
             session_cinfo->h2s_throttle_pps_id =
@@ -365,7 +390,7 @@ pds_flow_session_info_read (pds_flow_session_key_t *key,
                session_h2sinfo->nat_address,
                IP6_ADDR8_LEN);
         info->spec.data.host_to_switch_flow_info.rewrite_info.encap_type =
-            (pds_encap_type_t)session_h2sinfo->encap_type;
+            (pds_flow_session_encap_t)session_h2sinfo->encap_type;
         if (session_h2sinfo->encap_type == ENCAP_TYPE_L2) {
             info->spec.data.host_to_switch_flow_info.rewrite_info.u.l2_encap.insert_vlan_tag =
                 session_h2sinfo->add_vlan_tag_flag;
@@ -454,7 +479,7 @@ read_s2h:
                session_s2hinfo->nat_address,
                IP6_ADDR8_LEN);
         info->spec.data.switch_to_host_flow_info.rewrite_info.encap_type =
-            (pds_encap_type_t)session_s2hinfo->encap_type;
+            (pds_flow_session_encap_t)session_s2hinfo->encap_type;
         if (session_s2hinfo->encap_type == ENCAP_TYPE_L2) {
             info->spec.data.switch_to_host_flow_info.rewrite_info.u.l2_encap.insert_vlan_tag =
                 session_s2hinfo->add_vlan_tag_flag;
@@ -514,6 +539,7 @@ pds_flow_session_common_info_update (pds_flow_session_spec_t *spec)
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
+    session_info_common_actiondata_t rd_session_common_actiondata = { 0 };
     session_info_common_session_info_common_t *session_cinfo;
 
     if (!spec) {
@@ -528,6 +554,19 @@ pds_flow_session_common_info_update (pds_flow_session_spec_t *spec)
     if (!((spec->key.direction & HOST_TO_SWITCH) ||
         (spec->key.direction & SWITCH_TO_HOST)))
         return SDK_RET_INVALID_ARG;
+
+    // Check if there is an entry already at the index
+    if (p4pd_global_entry_read(P4TBL_ID_SESSION_INFO_COMMON, session_info_id,
+                               NULL, NULL, &rd_session_common_actiondata) !=
+                               P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read session common table at index %u",
+                      session_info_id);
+        return SDK_RET_HW_READ_ERR;
+    }
+    session_cinfo =
+        &rd_session_common_actiondata.action_u.session_info_common_session_info_common;
+    if (!session_cinfo->valid_flag)
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     session_common_actiondata.action_id =
         SESSION_INFO_COMMON_SESSION_INFO_COMMON_ID;
@@ -579,6 +618,8 @@ pds_flow_session_rewrite_info_update (pds_flow_session_spec_t *spec)
     session_info_h2s_session_info_per_direction_t *session_h2sinfo;
     session_info_s2h_actiondata_t session_s2h_actiondata = { 0 };
     session_info_s2h_session_info_per_direction_t *session_s2hinfo;
+    session_info_common_actiondata_t rd_session_common_actiondata = { 0 };
+    session_info_common_session_info_common_t *session_cinfo;
 
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -592,6 +633,19 @@ pds_flow_session_rewrite_info_update (pds_flow_session_spec_t *spec)
     if (!((spec->key.direction & HOST_TO_SWITCH) ||
         (spec->key.direction & SWITCH_TO_HOST)))
         return SDK_RET_INVALID_ARG;
+
+    // Check if there is an entry already at the index
+    if (p4pd_global_entry_read(P4TBL_ID_SESSION_INFO_COMMON, session_info_id,
+                               NULL, NULL, &rd_session_common_actiondata) !=
+                               P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read session common table at index %u",
+                      session_info_id);
+        return SDK_RET_HW_READ_ERR;
+    }
+    session_cinfo =
+        &rd_session_common_actiondata.action_u.session_info_common_session_info_common;
+    if (!session_cinfo->valid_flag)
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     if (spec->key.direction & HOST_TO_SWITCH) {
         session_h2s_actiondata.action_id =
@@ -777,7 +831,7 @@ pds_flow_session_rewrite_info_update (pds_flow_session_spec_t *spec)
 sdk_ret_t
 pds_flow_session_info_update (pds_flow_session_spec_t *spec)
 {
-    return pds_flow_session_info_create(spec);
+    return pds_flow_session_info_write(spec, true);
 }
 
 sdk_ret_t
@@ -786,6 +840,8 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
     p4pd_error_t p4pd_ret;
     uint32_t session_info_id;
     session_info_common_actiondata_t session_common_actiondata = { 0 };
+    session_info_common_actiondata_t rd_session_common_actiondata = { 0 };
+    session_info_common_session_info_common_t *session_cinfo;
     session_info_h2s_actiondata_t session_h2s_actiondata = { 0 };
     session_info_s2h_actiondata_t session_s2h_actiondata = { 0 };
 
@@ -801,6 +857,19 @@ pds_flow_session_info_delete (pds_flow_session_key_t *key)
     if (!((key->direction & HOST_TO_SWITCH) ||
         (key->direction & SWITCH_TO_HOST)))
         return SDK_RET_INVALID_ARG;
+
+    // Check if there is an entry already at the index
+    if (p4pd_global_entry_read(P4TBL_ID_SESSION_INFO_COMMON, session_info_id,
+                               NULL, NULL, &rd_session_common_actiondata) !=
+                               P4PD_SUCCESS) {
+        PDS_TRACE_ERR("Failed to read session common table at index %u",
+                      session_info_id);
+        return SDK_RET_HW_READ_ERR;
+    }
+    session_cinfo =
+        &rd_session_common_actiondata.action_u.session_info_common_session_info_common;
+    if (!session_cinfo->valid_flag)
+        return SDK_RET_ENTRY_NOT_FOUND;
 
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_SESSION_INFO_COMMON,
                                        session_info_id, NULL, NULL,

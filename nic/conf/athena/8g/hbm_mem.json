@@ -142,18 +142,24 @@
         },
         {
             "name": "flow_ohash",
-            "size": "32M",
+            "size": "64M",
             "cache": "p4ig",
-            "_comment": "512K * 64B"
+            "_comment": "1M * 64B"
         },
         {
-            "name": "session_info",
+            "name": "session_info_common",
             "size": "128M",
             "cache": "p4ig",
             "_comment": "4M * 32"
         },
         {
-            "name": "session_info_rewrite",
+            "name": "session_info_h2s",
+            "size": "256M",
+            "cache": "p4eg",
+            "_comment": "4M * 64B"
+        },
+        {
+            "name": "session_info_s2h",
             "size": "256M",
             "cache": "p4eg",
             "_comment": "4M * 64B"
