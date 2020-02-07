@@ -73,7 +73,7 @@ testbundles:
         - cpld/cpldupgrade.testbundle
         - hpe_ilo/hpe_ilo.testbundle
 
-    sanity_ext:
+    extended:
         # Relative paths from iota/test/iris/testbundles/
         - classic/rdma_ext.testbundle
 

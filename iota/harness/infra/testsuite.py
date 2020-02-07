@@ -155,6 +155,11 @@ class TestSuite:
                 tbun = testbundle.TestBundle(bunfile, self)
                 self.__testbundles.append(tbun)
 
+        if GlobalOptions.extended:
+            for bunfile in getattr(self.__spec.testbundles, 'extended', []):
+                tbun = testbundle.TestBundle(bunfile, self)
+                self.__testbundles.append(tbun)
+
         if GlobalOptions.regression:
             for bunfile in getattr(self.__spec.testbundles, 'regression', []):
                 tbun = testbundle.TestBundle(bunfile, self)
