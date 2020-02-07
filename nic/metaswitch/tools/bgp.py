@@ -14,13 +14,13 @@ def process_response(req_msg, resp_msg):
     if (resp_msg.ApiStatus != types_pb2.API_STATUS_OK):
         print ("Op failed: %d" % resp_msg.ApiStatus)
         return
-    if resp_msg.DESCRIPTOR.name == "BGPGetResponse":
-            resp = resp_msg.Response
-            spec = resp.Spec
-            print ("-----------------------");
-            print ("Spec: LocalASN : %d" % spec.LocalASN)
-            print ("Spec: RouterID: 0x%X" % spec.RouterId)
-            print ("Spec: ClusterID: 0x%X" % spec.ClusterId)
+    if "GetResponse" in resp_msg.DESCRIPTOR.name:
+        resp = resp_msg.Response
+        spec = resp.Spec
+        print ("-----------------------");
+        print ("Spec: LocalASN : %d" % spec.LocalASN)
+        print ("Spec: RouterID: 0x%X" % spec.RouterId)
+        print ("Spec: ClusterID: 0x%X" % spec.ClusterId)
     else:
         print ("Op Success")
     return
@@ -78,9 +78,9 @@ def init():
     return
 
 def print_help():
-    print ("Usage: %s <opt> UUID LocalASN RouterID ClusterID" % sys.argv[0])
+    print ("Usage: %s <opt> UUID LocalASN RouterID (hex) ClusterID (hex)" % sys.argv[0])
     print ("eg   : %s 1 100  1  0 0" %sys.argv[0])
-    print ("opt  : 1: create\t2: update\t3: delete\t4: get_peer")
+    print ("opt  : 1: create\t2: update\t3: delete\t4: get")
     print ("empty get does get-all")
     return
    
@@ -97,9 +97,9 @@ def read_args():
     if args > 2:
         asn = int (sys.argv[3])
     if args > 3:
-        routerid = int (sys.argv[4])
+        routerid = int (sys.argv[4],16)
     if args > 4:
-        clusterid = int (sys.argv[5])
+        clusterid = int (sys.argv[5],16)
     return
 
 if __name__ == '__main__':

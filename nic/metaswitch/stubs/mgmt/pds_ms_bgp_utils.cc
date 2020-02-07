@@ -125,17 +125,6 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
         SDK_TRACE_VERBOSE("BGP Peer Pre-set Create UUID %s Local IP %s Peer IP %s",
                           uuid.str(), ipaddr2str(&local_ipaddr),
                           ipaddr2str(&peer_ipaddr));
-
-        // Disable AFs for newly created Peer. User has to enable (create) address
-        // families as per the peer connectivity
-        BGPPeerAfSpec peer_af_spec;
-        populate_disable_peer_af_spec (req, &peer_af_spec,
-                                       BGP_AFI_IPV4, BGP_SAFI_UNICAST);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
-        populate_disable_peer_af_spec (req, &peer_af_spec,
-                                       BGP_AFI_L2VPN, BGP_SAFI_EVPN);
-        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
-
     } else if (uuid_obj->obj_type() == uuid_obj_type_t::BGP_PEER) {
         // BGP Peer Update - Fill keys
         bgp_peer_fill_keys_(req, (bgp_peer_uuid_obj_t*)uuid_obj);
@@ -149,6 +138,18 @@ bgp_peer_pre_set(pds::BGPPeerSpec &req, NBB_LONG row_status,
         // and the UUID need not be created or deleted
         SDK_TRACE_VERBOSE("Received BGP Peer request with UUID type %s",
                           uuid_obj_type_str(uuid_obj->obj_type()));
+    }
+
+    if (row_status == AMB_ROW_ACTIVE && !op_update) {
+        // Disable AFs for newly created Peer. User has to enable (create) address
+        // families as per the peer connectivity
+        BGPPeerAfSpec peer_af_spec;
+        populate_disable_peer_af_spec (req, &peer_af_spec,
+                                       BGP_AFI_IPV4, BGP_SAFI_UNICAST);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
+        populate_disable_peer_af_spec (req, &peer_af_spec,
+                                       BGP_AFI_L2VPN, BGP_SAFI_EVPN);
+        pds_ms_set_amb_bgp_peer_afi_safi(peer_af_spec, AMB_ROW_ACTIVE, correlator);
     }
 }
 

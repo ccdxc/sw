@@ -26,6 +26,7 @@ def process_response(req_msg, resp_msg):
             print ("Spec: RemoteASN : %d" % spec.RemoteASN)
             print ("Spec: Password : %s" % spec.Password)
             print ("Spec: AdminStatus : %d" % spec.State)
+            print ("Spec: RetryInterval : %d" % spec.ConnectRetry)
             status = resp.Status
             print ("Status: LocalAddr: %s" % long2ip(socket.ntohl(spec.LocalAddr.V4Addr)))
             print ("Status: PeerAddr : %s" % long2ip(socket.ntohl(spec.PeerAddr.V4Addr)))
@@ -60,8 +61,8 @@ def update_peer():
     req_msg.PeerAddr.V4Addr = paddr
     req_msg.LocalAddr.Af = 1
     req_msg.LocalAddr.V4Addr = laddr
-    req_msg.RemoteASN = 1
-    req_msg.ConnectRetry = 10
+    req_msg.RemoteASN = int(input("enter remote ASN: "))
+    req_msg.ConnectRetry = int (input ("enter retry interval: "))
     req_msg.SendComm = 2;
     req_msg.SendExtComm = 2;
     resp = stub.BGPPeerUpdate(req)
@@ -76,7 +77,6 @@ def get_peer():
     req_msg.PeerAddr.V4Addr = paddr
     req_msg.LocalAddr.Af = 1
     req_msg.LocalAddr.V4Addr = laddr
-    H
     resp =  stub.BGPPeerGet(req)     
     process_response(req, resp)
     return
