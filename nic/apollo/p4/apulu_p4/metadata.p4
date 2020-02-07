@@ -73,6 +73,7 @@ header_type control_metadata_t {
         session_tracking_en     : 1;
         local_mapping_done      : 1;
         flow_done               : 1;
+        parse_tcp_option_error  : 1;
     }
 }
 
@@ -100,9 +101,9 @@ header_type rewrite_metadata_t {
 
 header_type meter_metadata_t {
     fields {
-        meter_enabled           : 1;
-        meter_id                : 11;
-        meter_len               : 16;
+        meter_enabled       : 1;
+        meter_id            : 11;
+        meter_len           : 16;
     }
 }
 
@@ -125,13 +126,7 @@ header_type scratch_metadata_t {
         drop_stats_pkts     : 40;
         mac                 : 48;
         pad11               : 11;
-        tcp_state           : 4;
-        tcp_seq_num         : 32;
-        tcp_ack_num         : 32;
-        tcp_win_sz          : 16;
-        tcp_win_scale       : 4;
         timestamp           : 48;
-        tcp_flags           : 8;
         session_stats_addr  : 34;
         session_id          : 21;
         num_nexthops        : 4;
@@ -159,6 +154,16 @@ header_type scratch_metadata_t {
         policer_burst       : 40;
         policer_rate        : 40;
         policer_tbkt        : 40;
+
+        // tcp
+        tcp_flags           : 8;
+        tcp_state           : 4;
+        tcp_seq_num         : 32;
+        tcp_ack_num         : 32;
+        tcp_mss             : 16;
+        tcp_win_size        : 16;
+        tcp_win_scale       : 4;
+        tcp_exceptions      : 16;
     }
 }
 

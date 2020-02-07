@@ -98,6 +98,14 @@ header ipv6_t ipv6_2;
 header udp_t udp_2;
 
 header tcp_t tcp;
+header tcp_option_eol_t tcp_option_eol;
+header tcp_option_nop_t tcp_option_nop;
+header tcp_option_mss_t tcp_option_mss;
+header tcp_option_ws_t tcp_option_ws;
+header tcp_option_generic_t tcp_option_generic;
+@pragma hdr_len parser_metadata.tcp_options_len
+header tcp_options_blob_t tcp_option_blob;
+
 header icmp_t icmp;
 header icmp_echo_t icmp_echo;
 
@@ -130,6 +138,7 @@ metadata parser_ohi_t ohi;
 header_type parser_metadata_t {
     fields {
         mirror_blob_len : 8;
+        tcp_options_len : 8;
     }
 }
 @pragma pa_parser_local
@@ -548,8 +557,8 @@ parser parse_egress_icmp {
 @pragma xgress egress
 @pragma allow_set_meta key_metadata.sport
 @pragma allow_set_meta key_metadata.dport
-parser parse_egress_tcp {
-    extract(tcp);
+parser parse_egress_udp {
+    extract(udp_1);
     set_metadata(key_metadata.sport, latest.srcPort);
     set_metadata(key_metadata.dport, latest.dstPort);
     return ingress;
@@ -558,11 +567,90 @@ parser parse_egress_tcp {
 @pragma xgress egress
 @pragma allow_set_meta key_metadata.sport
 @pragma allow_set_meta key_metadata.dport
-parser parse_egress_udp {
-    extract(udp_1);
+parser parse_egress_tcp {
+    extract(tcp);
     set_metadata(key_metadata.sport, latest.srcPort);
     set_metadata(key_metadata.dport, latest.dstPort);
+    set_metadata(parser_metadata.tcp_options_len, (tcp.dataOffset << 2) - 20);
+    return select(parser_metadata.tcp_options_len) {
+        0 : ingress;
+        0x80 mask 0x80 : parse_egress_tcp_option_error;
+        default : parse_egress_tcp_option_blob;
+    }
+}
+
+@pragma xgress egress
+@pragma allow_set_meta control_metadata.tcp_option_error
+parser parse_egress_tcp_option_error {
+    set_metadata(control_metadata.parse_tcp_option_error, 1);
     return ingress;
+}
+
+@pragma xgress egress
+@pragma dont_advance_packet
+@pragma capture_payload_offset
+parser parse_egress_tcp_option_blob {
+    extract(tcp_option_blob);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len + 0);
+    return parse_egress_tcp_options;
+}
+
+@pragma xgress egress
+@pragma header_ordering tcp_option_generic tcp_option_mss tcp_option_ws tcp_option_nop tcp_option_eol
+parser parse_egress_tcp_options {
+    return select(parser_metadata.tcp_options_len, current(0, 8)) {
+        0x0000 mask 0xff00 : ingress;
+        0x8000 mask 0x8000 : parse_egress_tcp_option_error;
+        0x0000 mask 0x00ff : parse_egress_tcp_option_eol;
+        0x0001 mask 0x00ff : parse_egress_tcp_option_nop;
+        0x0002 mask 0x00ff : parse_egress_tcp_option_mss;
+        0x0003 mask 0x00ff : parse_egress_tcp_option_ws;
+        default : parse_egress_tcp_option_generic;
+    }
+}
+
+@pragma no_extract
+@pragma xgress egress
+parser parse_egress_tcp_option_eol {
+    extract(tcp_option_eol);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len - 1);
+    return parse_egress_tcp_options;
+}
+
+@pragma no_extract
+@pragma xgress egress
+parser parse_egress_tcp_option_nop {
+    extract(tcp_option_nop);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len - 1);
+    return parse_egress_tcp_options;
+}
+
+@pragma xgress egress
+parser parse_egress_tcp_option_mss {
+    extract(tcp_option_mss);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len - 4);
+    return parse_egress_tcp_options;
+}
+
+@pragma xgress egress
+parser parse_egress_tcp_option_ws {
+    extract(tcp_option_ws);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len - 3);
+    return parse_egress_tcp_options;
+}
+
+@pragma no_extract
+@pragma xgress egress
+parser parse_egress_tcp_option_generic {
+    extract(tcp_option_generic);
+    set_metadata(parser_metadata.tcp_options_len,
+                 parser_metadata.tcp_options_len - tcp_option_generic.optLength);
+    return parse_egress_tcp_options;
 }
 
 /******************************************************************************
@@ -820,6 +908,7 @@ field_list ipv4_1_icmp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share icmp.hdrChecksum tcp.checksum
 field_list_calculation ipv4_1_icmp_checksum {
     input {
         ipv4_1_icmp_checksum_list;
@@ -837,6 +926,7 @@ field_list ipv6_1_icmp_checksum_list {
 }
 
 @pragma checksum update_len capri_deparser_len.l4_payload_len
+@pragma checksum update_share icmp.hdrChecksum tcp.checksum
 field_list_calculation ipv6_1_icmp_checksum {
     input {
         ipv6_1_icmp_checksum_list;

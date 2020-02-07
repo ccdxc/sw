@@ -185,7 +185,7 @@ header_type tcp_option_four_sack_t {
     }
 }
 
-header_type tcp_option_unknown_t {
+header_type tcp_option_generic_t {
     fields {
         optType : 8;
         optLength : 8;

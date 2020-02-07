@@ -1546,6 +1546,25 @@ TEST_F(apulu_test, test1)
         }
     }
 
+    tcid++;
+    if (tcid_filter == 0 || tcid == tcid_filter) {
+        ipkt.resize(sizeof(g_snd_pkt10));
+        memcpy(ipkt.data(), g_snd_pkt10, sizeof(g_snd_pkt10));
+        epkt.resize(sizeof(g_rcv_pkt10));
+        memcpy(epkt.data(), g_rcv_pkt10, sizeof(g_rcv_pkt10));
+        std::cout << "[TCID=" << tcid << "] TCP OPTS PARSING" << std::endl;
+        for (i = 0; i < tcscale; i++) {
+            testcase_begin(tcid, i + 1);
+            step_network_pkt(ipkt, TM_PORT_UPLINK_0);
+            if (!getenv("SKIP_VERIFY")) {
+                get_next_pkt(opkt, port, cos);
+                EXPECT_TRUE(is_equal_encap_pkt(opkt, epkt));
+                EXPECT_TRUE(port == TM_PORT_UPLINK_1);
+            }
+            testcase_end(tcid, i + 1);
+        }
+    }
+
     exit_simulation();
 #endif
 

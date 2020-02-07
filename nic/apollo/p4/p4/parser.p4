@@ -128,7 +128,7 @@ header icmp_t icmp;
 // TCP options
 @pragma hdr_len parser_metadata.parse_tcp_counter
 header tcp_options_blob_t tcp_options_blob;
-header tcp_option_unknown_t tcp_option_unknown;
+header tcp_option_generic_t tcp_option_unknown;
 header tcp_option_eol_t tcp_option_eol;
 header tcp_option_nop_t tcp_option_nop;
 header tcp_option_nop_t tcp_option_nop_1;

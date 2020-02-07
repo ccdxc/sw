@@ -9,7 +9,10 @@ struct phv_                 p;
 
 %%
 
+.assert(offsetof(p, tcp_option_eol_valid) - offsetof(p, tcp_option_generic_valid) == 4)
+
 p4e_device_info:
+    phvwr           p.{tcp_option_eol_valid...tcp_option_generic_valid}, 0
     seq             c1, k.egress_recirc_valid, TRUE
     xor             r1, k.egress_recirc_mapping_done, 0x1
     phvwr.c1        p.control_metadata_mapping_ohash_lkp, r1
@@ -25,4 +28,4 @@ p4e_device_info:
 .assert $ < ASM_INSTRUCTION_OFFSET_MAX
 p4e_device_info_error:
     phvwr.e         p.capri_intrinsic_drop, 1
-    nop
+    phvwr.f         p.{tcp_option_eol_valid...tcp_option_generic_valid}, 0
