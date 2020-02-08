@@ -68,7 +68,6 @@ func TestVCWrite(t *testing.T) {
 
 	s, err := sim.NewVcSim(sim.Config{Addr: u.String()})
 	AssertOk(t, err, "Failed to create vcsim")
-	defer s.Destroy()
 	_, err = s.AddDC(defaultTestParams.TestDCName)
 	AssertOk(t, err, "failed dc create")
 	dc2 := "DC2"
@@ -77,6 +76,7 @@ func TestVCWrite(t *testing.T) {
 
 	sm, _, err := smmock.NewMockStateManager()
 	if err != nil {
+		s.Destroy()
 		t.Fatalf("Failed to create state manager. Err : %v", err)
 		return
 	}
@@ -133,7 +133,9 @@ func TestVCWrite(t *testing.T) {
 
 				attachedTags, err := tagClient.GetAttachedTags(context.Background(), dc.dcRef)
 				AssertOk(t, err, "failed to get tags")
-				AssertEquals(t, 1, len(attachedTags), "DC didn't have expected tags")
+				if len(attachedTags) != 1 {
+					return false, fmt.Errorf("DC didn't have expected tags, had %v", attachedTags)
+				}
 				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DC didn't have managed tag")
 
 				dvs := dc.GetPenDVS(createDVSName(name))
@@ -145,7 +147,9 @@ func TestVCWrite(t *testing.T) {
 
 				attachedTags, err = tagClient.GetAttachedTags(context.Background(), dvs.DvsRef)
 				AssertOk(t, err, "failed to get tags")
-				AssertEquals(t, 1, len(attachedTags), "DVS didn't have expected tags")
+				if len(attachedTags) != 1 {
+					return false, fmt.Errorf("DVS didn't have expected tags, had %v", attachedTags)
+				}
 				AssertEquals(t, defs.VCTagManaged, attachedTags[0].Name, "DVS didn't have managed tag")
 
 				for _, pgName := range pgNames {
@@ -157,7 +161,9 @@ func TestVCWrite(t *testing.T) {
 					}
 					attachedTags, err := tagClient.GetAttachedTags(context.Background(), pgObj.PgRef)
 					AssertOk(t, err, "failed to get tags")
-					AssertEquals(t, 2, len(attachedTags), "PG didn't have expected tags")
+					if len(attachedTags) != 2 {
+						return false, fmt.Errorf("PG didn't have expected tags, had %v", attachedTags)
+					}
 					expTags := []string{
 						fmt.Sprintf("%s", defs.VCTagManaged),
 						fmt.Sprintf("%s%d", defs.VCTagVlanPrefix, 100),

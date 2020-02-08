@@ -149,6 +149,7 @@ func (v *VCHub) Destroy(cleanRemote bool) {
 // UpdateConfig handles if the Orchestrator config has changed
 func (v *VCHub) UpdateConfig(config *orchestration.Orchestrator) {
 	// Restart vchub
+	v.Log.Infof("VCHub config updated, restarting...")
 	v.Destroy(false)
 	v.setupVCHub(v.StateMgr, v.OrchConfig, v.Log, v.opts...)
 }
