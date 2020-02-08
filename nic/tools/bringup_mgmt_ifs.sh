@@ -36,6 +36,14 @@ debug() {
     log "inb_mnic1_enslaved=$inb_mnic1_enslaved"
 }
 
+get_inb_mnic0_mac_addr() {
+    if [ -d "/sys/class/net/inb_mnic0/bonding_slave/" ]; then
+        inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/bonding_slave/perm_hwaddr`
+    else
+        inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/address`
+    fi
+}
+
 trap debug 0 1 2 3 6
 
 log "Waiting for mgmt interfaces to show up"
@@ -81,8 +89,7 @@ do
         fi
     fi
 
-    # bond0 will keep the mac address of the last slave which got enslaved so we are enslaving inb_mnic0 at last
-    if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ] && [ $inb_mnic1_up -eq 1 ]; then
+    if [ -d "/sys/class/net/inb_mnic0" ] && [ $inb_mnic0_up -eq 0 ]; then
         if [ $inb_mnic0_enslaved -eq 0 ]; then
             log "adding inb_mnic0 (inband mgmt0) interface to bond0"
             ifconfig bond0 up && ifenslave bond0 inb_mnic0 && inb_mnic0_enslaved=1
@@ -101,10 +108,12 @@ do
         fi
     fi
 
-    if [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ]; then
+    # We need to set inb_mnic0 mac address as bond0 mac address for consistent mac address for venice
+    if [ -d "/sys/class/net/inb_mnic1" ] && [ $inb_mnic1_up -eq 0 ] && [ $inb_mnic0_enslaved -eq 1 ]; then
         if [ $inb_mnic1_enslaved -eq 0 ]; then
             log "adding inb_mnic1 (inband mgmt1) interface to bond0"
-            ifconfig bond0 up && ifenslave bond0 inb_mnic1 && inb_mnic1_enslaved=1
+            get_inb_mnic0_mac_addr
+            ifconfig bond0 up && ifenslave bond0 inb_mnic1 && ifconfig bond0 hw ether $inb_mnic0_mac_addr && inb_mnic1_enslaved=1
         fi
 
         if [ $inb_mnic1_admin_up -eq 0 ]; then
@@ -123,12 +132,8 @@ do
     sleep 1
 
     if [ $int_mnic0_up -eq 1 ] && [ $oob_mnic0_up -eq 1 ] && [ $inb_mnic0_up -eq 1 ] && [ $inb_mnic1_up -eq 1 ]; then
-        if [ -d "/sys/class/net/inb_mnic0/bonding_slave/" ]; then
-            inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/bonding_slave/perm_hwaddr`
-        else
-            inb_mnic0_mac_addr=`cat /sys/class/net/inb_mnic0/address`
-        fi
 
+        get_inb_mnic0_mac_addr
         echo "setting inb_mnic0 mac address as bond0 mac address"
         ifconfig bond0 hw ether $inb_mnic0_mac_addr
         ifconfig bond0
