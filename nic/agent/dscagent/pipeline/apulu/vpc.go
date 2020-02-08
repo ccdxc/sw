@@ -80,7 +80,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF Spec Create received resp (%v)[%v, %v]", err, eVrfResp.ApiStatus, eVrfResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Configuring EVPN VRF status(%s)", eVrfResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Configuring EVPN VRF status(%s)", vrf.GetKey(), eVrfResp.ApiStatus)
 	}
 	log.Infof("VRF Config: %s: got response [%v/%v]", vrf.Name, eVrfResp.ApiStatus, eVrfResp.Response)
 
@@ -112,7 +112,7 @@ func createVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Configuring EVPN VRF RT status(%s)", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Configuring EVPN VRF RT status(%s)", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -170,7 +170,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 		}
 		if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 			log.Infof("EVPN VRF Spec Create received resp (%v)[%v, %v]", err, eVrfResp.ApiStatus, eVrfResp.Response)
-			return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Configuring EVPN VRF status(%s)", eVrfResp.ApiStatus)
+			return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Configuring EVPN VRF status(%s)", vrf.GetKey(), eVrfResp.ApiStatus)
 		}
 	}
 
@@ -256,7 +256,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Create received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Configuring EVPN VRF RT status(%s)", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Configuring EVPN VRF RT status(%s)", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Config: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -267,7 +267,7 @@ func updateVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Deleting EVPN VRF RT status(%s)", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Deleting EVPN VRF RT status(%s)", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Delete: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -325,7 +325,7 @@ func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfRTResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF RT Spec Delete received resp (%v)[%v, %v]", err, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Deleting EVPN VRF RT status(%s)", eVrfRTResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF RT Config: %s | Err: Deleting EVPN VRF RT status(%s)", vrf.GetKey(), eVrfRTResp.ApiStatus)
 	}
 	log.Infof("VRF RT Delete: %s: got response [%v/%v]", vrf.Name, eVrfRTResp.ApiStatus, eVrfRTResp.Response)
 
@@ -347,7 +347,7 @@ func deleteVPCHandler(infraAPI types.InfraAPI, client halapi.VPCSvcClient, msc m
 	}
 	if eVrfResp.ApiStatus != halapi.ApiStatus_API_STATUS_OK {
 		log.Infof("EVPN VRF Spec Delete received resp (%v)[%v, %v]", err, eVrfResp.ApiStatus, eVrfResp.Response)
-		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Deleting EVPN VRF status(%s)", eVrfResp.ApiStatus)
+		return errors.Wrapf(types.ErrControlPlaneHanlding, "VRF Config: %s | Err: Deleting EVPN VRF status(%s)", vrf.GetKey(), eVrfResp.ApiStatus)
 	}
 	log.Infof("VRF Delete: %s: got response [%v/%v]", vrf.Name, eVrfResp.ApiStatus, eVrfResp.Response)
 

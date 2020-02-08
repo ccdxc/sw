@@ -1,3 +1,5 @@
+// +build iris
+
 package fakehal
 
 import (
