@@ -31,7 +31,7 @@ static int fetch_port_fault_status (ms_ifindex_t &ifindex) {
     }
 
     auto eth_ifindex = ms_to_pds_eth_ifindex(ifindex);
-    ret = pds_if_read(&eth_ifindex, &info);
+    ret = api::pds_if_read(&eth_ifindex, &info);
     if (unlikely (ret != SDK_RET_OK)) {
         SDK_TRACE_ERR("%s", (std::string("PDS If Get failed for Eth If ")
                     .append(std::to_string(eth_ifindex))

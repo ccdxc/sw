@@ -13,6 +13,7 @@
 
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "nic/apollo/framework/impl_base.hpp"
+#include "nic/sdk/linkmgr/linkmgr.hpp"
 
 namespace api {
 namespace impl {
@@ -81,11 +82,11 @@ public:
     }
 
     // port APIs
-    virtual sdk_ret_t port_get_status(uint32_t port_num,
+    virtual sdk_ret_t port_get_status(pds_ifindex_t ifidx,
                                       port_status_t *status) override;
     virtual sdk_ret_t port_get_config(pds_ifindex_t ifidx,
                                       port_config_t *config) override;
-    virtual sdk_ret_t port_set_config(uint32_t port_num,
+    virtual sdk_ret_t port_set_config(pds_ifindex_t ifidx,
                                       port_config_t *config) override;
 
     // single wire management APIs
@@ -110,6 +111,11 @@ public:
 private:
     devapi_impl() {}
     ~devapi_impl() {}
+
+    static void port_get_config_(_In_ sdk::linkmgr::port_args_t *port_args, _Out_ void *ctxt);
+    static void port_get_status_(_In_ sdk::linkmgr::port_args_t *port_args, _Out_ void *ctxt);
+    static void populate_port_args_(_Out_ sdk::linkmgr::port_args_t *port_args,
+                                    _In_ port_config_t *config);
 
     static uint16_t lif_get_cos_bmp_(lif_info_t *info);
     static uint32_t lif_get_qcount_(lif_info_t *info);

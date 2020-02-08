@@ -159,11 +159,6 @@ sdk_ret_t pds_if_read(pds_obj_key_t *key, pds_if_info_t *info) {
     return SDK_RET_OK;
 }
 
-sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
-    info->status.state = PDS_IF_STATE_UP;
-    return SDK_RET_OK;
-}
-
 sdk_ret_t pds_if_read_all(if_read_cb_t cb, void *ctxt) {
     return SDK_RET_OK;
 }
@@ -554,4 +549,9 @@ namespace api {
     pds_state g_pds_state;
     pds_state::pds_state() { }
     pds_state::~pds_state() { }
-}
+
+    sdk_ret_t pds_if_read(const pds_ifindex_t *key, pds_if_info_t *info) {
+        info->status.state = PDS_IF_STATE_UP;
+        return SDK_RET_OK;
+    }
+}    // namespace api

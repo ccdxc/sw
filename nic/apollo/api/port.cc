@@ -21,6 +21,11 @@
 
 namespace api {
 
+typedef struct port_get_cb_ctxt_s {
+    void *ctxt;
+    port_get_cb_t port_get_cb;
+} port_get_cb_ctxt_t;
+
 /**
  * @brief        Handle link UP/Down events
  * @param[in]    port_event_info port event information
@@ -258,11 +263,6 @@ create_ports (void)
     return SDK_RET_OK;
 }
 
-typedef struct port_get_cb_ctxt_s {
-    void *ctxt;
-    port_get_cb_t port_get_cb;
-} port_get_cb_ctxt_t;
-
 bool
 if_walk_port_get_cb (void *entry, void *ctxt)
 {
@@ -326,6 +326,32 @@ port_get (const pds_obj_key_t *key, port_get_cb_t port_get_cb, void *ctxt)
         intf = if_db()->find(key);
         if (intf == NULL)  {
             PDS_TRACE_ERR("Port %s not found", key->str());
+            return SDK_RET_INVALID_OP;
+        }
+        if_walk_port_get_cb(intf, &cb_ctxt);
+    }
+    return SDK_RET_OK;
+}
+
+// @brief    get port information based on ifindex
+// @param[in]    key         ifindex of the port or 0 for all ports
+// @param[in]    port_get_cb callback invoked per port
+// @param[in]    ctxt        opaque context passed back to the callback
+// @return    SDK_RET_OK on success, failure status code on error
+sdk_ret_t
+port_get (const pds_ifindex_t *key, port_get_cb_t port_get_cb, void *ctxt)
+{
+    if_entry *intf;
+    api::port_get_cb_ctxt_t cb_ctxt;
+
+    cb_ctxt.ctxt = ctxt;
+    cb_ctxt.port_get_cb = port_get_cb;
+    if (*key == IFINDEX_INVALID) {
+        if_db()->walk(IF_TYPE_ETH, if_walk_port_get_cb, &cb_ctxt);
+    } else {
+        intf = if_db()->find(key);
+        if (intf == NULL)  {
+            PDS_TRACE_ERR("Port 0x%x not found", *key);
             return SDK_RET_INVALID_OP;
         }
         if_walk_port_get_cb(intf, &cb_ctxt);

@@ -49,8 +49,8 @@ enum class port_link_sm_t {
 
 enum class port_event_t {
     PORT_EVENT_LINK_NONE = 0,
-    PORT_EVENT_LINK_UP   = 1,
-    PORT_EVENT_LINK_DOWN = 2
+    PORT_EVENT_LINK_DOWN = 1,
+    PORT_EVENT_LINK_UP   = 2
 };
 
 typedef enum cable_type_e {
@@ -91,14 +91,14 @@ enum class port_type_t {
 
 enum class port_admin_state_t {
     PORT_ADMIN_STATE_NONE    = 0,
-    PORT_ADMIN_STATE_UP      = 1,
-    PORT_ADMIN_STATE_DOWN    = 2,
+    PORT_ADMIN_STATE_DOWN    = 1,
+    PORT_ADMIN_STATE_UP      = 2
 };
 
 enum class port_oper_status_t {
     PORT_OPER_STATUS_NONE = 0,
     PORT_OPER_STATUS_UP   = 1,
-    PORT_OPER_STATUS_DOWN = 2,
+    PORT_OPER_STATUS_DOWN = 2
 };
 
 enum class port_fec_type_t {

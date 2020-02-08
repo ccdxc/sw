@@ -781,7 +781,7 @@ pds_lif_api_spec_to_proto_spec (pds::LifSpec *proto_spec,
     }
     proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     if (api_spec->pinned_ifidx != IFINDEX_INVALID) {
-        ret = pds_if_read(&api_spec->pinned_ifidx, &pinned_ifinfo);
+        ret = api::pds_if_read(&api_spec->pinned_ifidx, &pinned_ifinfo);
         if (unlikely(ret != SDK_RET_OK)) {
             PDS_TRACE_ERR("Failed to find if for {}, err {}",
                           api_spec->pinned_ifidx, ret);

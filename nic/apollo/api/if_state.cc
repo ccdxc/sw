@@ -70,8 +70,8 @@ if_state::free(if_entry *intf) {
 }
 
 if_entry *
-if_state::find(pds_ifindex_t *ifindex) const {
-    return (if_entry *)(ifindex_ht_->lookup(ifindex));
+if_state::find(const pds_ifindex_t *ifindex) const {
+    return (if_entry *)(ifindex_ht_->lookup((void *)ifindex));
 }
 
 if_entry *

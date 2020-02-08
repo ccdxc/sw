@@ -53,7 +53,7 @@ public:
     /// \brief      lookup a interface in database given the ifindex
     /// \param[in]  key  ifindex for the interface object
     /// \return     pointer to the interface instance found or NULL
-    if_entry *find(pds_ifindex_t *key) const;
+    if_entry *find(const pds_ifindex_t *key) const;
 
     /// \brief      lookup a interface in database given the key
     /// \param[in]  key  key for the interface object

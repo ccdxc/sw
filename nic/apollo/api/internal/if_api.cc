@@ -15,6 +15,8 @@
 #include "nic/apollo/api/internal/pds_if.hpp"
 #include "nic/apollo/api/pds_state.hpp"
 
+namespace api {
+
 static inline if_entry *
 pds_if_entry_find (const pds_ifindex_t *key)
 {
@@ -37,3 +39,5 @@ pds_if_read (_In_ const pds_ifindex_t *key, _Out_ pds_if_info_t *info)
 
     return entry->read(info);
 }
+
+}    // namespace api

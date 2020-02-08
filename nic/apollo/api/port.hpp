@@ -17,6 +17,7 @@ namespace api {
 #define PDS_MAX_PORT        16
 
 typedef void (*port_get_cb_t)(sdk::linkmgr::port_args_t *port_info, void *ctxt);
+
 /**
   * @brief    get port information based on port number
   * @param[in]    key         key/uuid of the port or k_pds_obj_key_invalid for

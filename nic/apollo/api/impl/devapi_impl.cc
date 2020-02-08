@@ -25,6 +25,7 @@
 #include "nic/apollo/api/impl/devapi_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl.hpp"
 #include "nic/apollo/api/impl/lif_impl_state.hpp"
+#include "nic/apollo/api/internal/pds_if.hpp"
 
 namespace api {
 namespace impl {
@@ -306,72 +307,110 @@ devapi_impl::uplink_create(__UNUSED__ uint32_t uplink_ifidx,
     return SDK_RET_OK;
 }
 
+void
+devapi_impl::port_get_config_(sdk::linkmgr::port_args_t *port_args,
+                              void *ctxt) {
+    port_config_t *config = (port_config_t *)ctxt;
+
+    config->state =
+        sdk::lib::port_admin_state_enum_to_uint(port_args->admin_state);
+    config->speed = sdk::lib::port_speed_enum_to_mbps(port_args->port_speed);
+    config->mtu = port_args->mtu;
+    config->an_enable = port_args->auto_neg_enable;
+    config->fec_type = (uint8_t)port_args->fec_type;
+    config->pause_type = (uint8_t)port_args->pause;
+    if (port_args->tx_pause_enable == true) {
+        config->pause_type |= PORT_CFG_PAUSE_F_TX;
+    }
+    if (port_args->rx_pause_enable == true) {
+        config->pause_type |= PORT_CFG_PAUSE_F_RX;
+    }
+    config->loopback_mode = (uint8_t)port_args->loopback_mode;
+
+    PDS_TRACE_VERBOSE(
+            "if 0x%x, speed %u, mtu %u, state %u, an_enable %u, "
+            "fec_type %u, pause_type %u, loopback_mode %u",
+            sdk::lib::catalog::logical_port_to_ifindex(port_args->port_num),
+            config->speed, config->mtu, config->state,
+            config->an_enable, config->fec_type, config->pause_type,
+            config->loopback_mode);
+}
+
 sdk_ret_t
 devapi_impl::port_get_config(pds_ifindex_t ifidx, port_config_t *config) {
-    sdk_ret_t ret;
-    if_entry *intf;
-    port_args_t port_args = { 0 };
-
-    intf = if_db()->find(&ifidx);
-    if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to if for ifidx 0x%x", ifidx);
-        return SDK_RET_INVALID_ARG;
-    }
-
-    ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
-    config->speed = sdk::lib::port_speed_enum_to_mbps(port_args.port_speed);
-    config->mtu = port_args.mtu;
-    config->state =
-        sdk::lib::port_admin_state_enum_to_uint(port_args.admin_state);
-    config->an_enable = port_args.auto_neg_enable;
-    config->fec_type = (uint8_t)port_args.fec_type;
-    config->pause_type = (uint8_t)port_args.pause;
-    config->loopback_mode = (uint8_t)port_args.loopback_mode;
-
-    PDS_TRACE_DEBUG("if 0x%x, speed %u, mtu %u, state %u, an_enable %u, "
-                    "fec_type %u, pause_type %u, loopback_mode %u",
-                    ifidx, config->speed, config->mtu, config->state,
-                    config->an_enable, config->fec_type, config->pause_type,
-                    config->loopback_mode);
-    return ret;
+    return api::port_get(&ifidx, devapi_impl::port_get_config_, config);
 }
 
-// TODO: @akoradha please look at iris and fill this properly
-sdk_ret_t
-devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
-    sdk_ret_t ret;
-    if_entry *intf;
-    port_args_t port_args = { 0 };
+void
+devapi_impl::port_get_status_(sdk::linkmgr::port_args_t *port_args,
+                              void *ctxt) {
+    port_status_t *status = (port_status_t *)ctxt;
 
-    intf = if_db()->find(&ifidx);
-    if (intf == NULL) {
-        PDS_TRACE_ERR("Unable to if for ifidx 0x%x", ifidx);
-        return SDK_RET_INVALID_ARG;
-    }
-
-    ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
-
-    // status->speed =
-    // status->id =
+    status->id = port_args->port_num;
     status->status =
-        sdk::lib::port_oper_state_enum_to_uint(port_args.oper_status);
-    status->xcvr.state = port_args.xcvr_event_info.state;
-    // status->xcvr.phy =
-    status->xcvr.pid = port_args.xcvr_event_info.pid;
-    memcpy(status->xcvr.sprom, port_args.xcvr_event_info.xcvr_sprom,
+        sdk::lib::port_oper_state_enum_to_uint(port_args->oper_status);
+    status->speed = sdk::lib::port_speed_enum_to_mbps(port_args->port_speed);
+
+    status->xcvr.state = port_args->xcvr_event_info.state;
+    status->xcvr.phy = port_args->xcvr_event_info.cable_type;
+    status->xcvr.pid = port_args->xcvr_event_info.pid;
+    memcpy(status->xcvr.sprom, port_args->xcvr_event_info.xcvr_sprom,
            sizeof(status->xcvr.sprom));
 
-    PDS_TRACE_DEBUG("if 0x%x, status %u, xcvr state %u, pid %u",
-                    ifidx, status->status, status->xcvr.state,
-                    status->xcvr.pid);
-    return ret;
+    PDS_TRACE_VERBOSE(
+            "if 0x%x, status %u, xcvr state %u, pid %u",
+            sdk::lib::catalog::logical_port_to_ifindex(port_args->port_num),
+            status->status, status->xcvr.state,
+            status->xcvr.pid);
 }
 
-// TODO: @akoradha please look at iris and fill this properly
 sdk_ret_t
-devapi_impl::port_set_config(uint32_t port_num, port_config_t *config) {
-    PDS_TRACE_WARN("Not implemented");
-    return SDK_RET_OK;
+devapi_impl::port_get_status(pds_ifindex_t ifidx, port_status_t *status) {
+    return api::port_get(&ifidx, devapi_impl::port_get_status_, status);
+}
+
+void
+devapi_impl::populate_port_args_(sdk::linkmgr::port_args_t *port_args,
+                                 port_config_t *config) {
+    port_args->user_admin_state = port_args->admin_state =
+                    sdk::lib::port_admin_state_uint_to_enum(config->state);
+    port_args->port_speed = sdk::lib::port_speed_mbps_to_enum(config->speed);
+    port_args->mtu = config->mtu;
+    port_args->auto_neg_cfg = port_args->auto_neg_enable = config->an_enable;
+    port_args->fec_type = (port_fec_type_t)config->fec_type;
+    port_args->pause = (port_pause_type_t)
+                       (config->pause_type & PORT_CFG_PAUSE_TYPE_MASK);
+    port_args->tx_pause_enable = config->pause_type & PORT_CFG_PAUSE_F_TX;
+    port_args->rx_pause_enable = config->pause_type & PORT_CFG_PAUSE_F_RX;
+    port_args->loopback_mode = (port_loopback_mode_t)config->loopback_mode;
+    port_args->mac_stats_reset = config->reset_mac_stats;
+}
+
+sdk_ret_t
+devapi_impl::port_set_config(pds_ifindex_t ifidx, port_config_t *config) {
+    if_entry *intf;
+    sdk_ret_t ret;
+    port_args_t port_args = { 0 };
+
+    intf = if_db()->find(&ifidx);
+    if (intf == NULL)  {
+        PDS_TRACE_ERR("Port 0x%x not found", ifidx);
+        return SDK_RET_INVALID_ARG;
+    }
+
+    ret = sdk::linkmgr::port_get(intf->port_info(), &port_args);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Port 0x%x get failed", ifidx);
+        return SDK_RET_ERR;
+    }
+
+    populate_port_args_(&port_args, config);
+
+    ret = port_update(intf->port_info(), &port_args);
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_ERR("Failed to update port for ifidx 0x%x", ifidx);
+    }
+    return ret;
 }
 
 sdk_ret_t
