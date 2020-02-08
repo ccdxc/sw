@@ -16,7 +16,7 @@ import (
 	_ "github.com/pensando/sw/api/hooks/apiserver"
 	"github.com/pensando/sw/venice/citadel/meta"
 	"github.com/pensando/sw/venice/citadel/tproto"
-	"github.com/pensando/sw/venice/cmd/types/protos"
+	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/events/recorder"
 	"github.com/pensando/sw/venice/utils/kvstore/store"
@@ -186,6 +186,9 @@ func TestMetaBasic(t *testing.T) {
 			(w1.GetCluster(meta.ClusterTypeTstore).NodeMap["3333"].NumShards >= (meta.DefaultShardCount * meta.DefaultReplicaCount / 3)), w1.GetCluster(meta.ClusterTypeTstore)
 	}, "nodes did not get cluster update", "100ms", "30s")
 
+	_, err = w1.GetCluster(meta.ClusterTypeTstore).GetReplicaFromNode("1234")
+	Assert(t, err != nil, "Failed to raise error for getting replica from non-exist node 1234")
+
 	repl, err := w1.GetCluster(meta.ClusterTypeTstore).GetReplicaFromNode("1111")
 	AssertOk(t, err, "Error getting a replica from node 1111")
 	// check replica in node
@@ -251,6 +254,17 @@ func TestMetaBasic(t *testing.T) {
 		return (w1.GetCluster(meta.ClusterTypeTstore).ShardMap.Shards[0].NumReplicas == 1) &&
 			(len(w1.GetCluster(meta.ClusterTypeTstore).NodeMap) == 1), w1.GetCluster(meta.ClusterTypeTstore)
 	}, "shards and nodes did not go away", "100ms", "30s")
+
+	// Mock err for adding redundant replica to shard
+	if sd1 != nil && sd1.Replicas != nil {
+		primaryRepl, err := sd1.GetPrimaryreplica()
+		if err == nil && primaryRepl != nil {
+			redundantRepl := *primaryRepl
+			redundantRepl.ReplicaID = primaryRepl.ReplicaID + 1
+			ErrRedundantRepl := sd1.AddReplicas([]*meta.Replica{primaryRepl, &redundantRepl})
+			Assert(t, ErrRedundantRepl != nil, "Failed to raise error for adding redundant replica")
+		}
+	}
 
 	n3.Stop()
 	s1.Stop()
@@ -585,4 +599,7 @@ func TestGetMetastoreURLs(t *testing.T) {
 		Assert(t, s[i] == metaAddr[i]+":"+globals.KVStoreClientPort, "expected %s, got %s at %d", metaAddr[i]+":"+globals.KVStoreClientPort, s[i], i)
 
 	}
+
+	// Just call this function for test coverage, actually do nothing
+	meta.SetErrorRet(nil)
 }
