@@ -358,7 +358,6 @@ func (c *API) runMirrorSessionWatcher(ctx context.Context) error {
 			log.Error(errors.Wrapf(types.ErrTSMUnavailable, "Controller API: %v", c))
 			return errors.Wrapf(types.ErrTSMUnavailable, "Controller API: %v", c)
 		}
-		fmt.Println("BALERION: ", mirrorClient)
 		stream, err := mirrorClient.WatchMirrorSessions(c.WatchCtx, &api.ObjectMeta{})
 		if err != nil || stream == nil {
 			log.Error(errors.Wrapf(types.ErrMirrorSessionStream, "Controller API: %s", err))

@@ -10,15 +10,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/nic/agent/protos/netproto"
-
 	"github.com/mdlayher/arp"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 
+	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	halapi "github.com/pensando/sw/nic/agent/dscagent/types/irisproto"
+	"github.com/pensando/sw/nic/agent/protos/netproto"
 	"github.com/pensando/sw/venice/utils/log"
 )
 
@@ -150,20 +149,25 @@ func DeleteLateralNetAgentObjects(infraAPI types.InfraAPI, intfClient halapi.Int
 	log.Infof("Lateral object DB pre refcount decrement: %v", lateralDB)
 
 	// Remove Dependency
+	counter := 0
 	if tunnelOp {
-		for idx, dep := range lateralDB[tunnelCompositeKey] {
-			if dep == owner {
-				lateralDB[tunnelCompositeKey] = append(lateralDB[tunnelCompositeKey][:idx], lateralDB[tunnelCompositeKey][idx+1:]...)
+		for _, dep := range lateralDB[tunnelCompositeKey] {
+			if dep != owner {
+				lateralDB[tunnelCompositeKey][counter] = dep
+				counter++
 			}
 		}
-
+		lateralDB[tunnelCompositeKey] = lateralDB[tunnelCompositeKey][:counter]
 	}
 
-	for idx, dep := range lateralDB[collectorCompositeKey] {
-		if dep == owner {
-			lateralDB[collectorCompositeKey] = append(lateralDB[collectorCompositeKey][:idx], lateralDB[collectorCompositeKey][idx+1:]...)
+	counter = 0
+	for _, dep := range lateralDB[collectorCompositeKey] {
+		if dep != owner {
+			lateralDB[collectorCompositeKey][counter] = dep
+			counter++
 		}
 	}
+	lateralDB[collectorCompositeKey] = lateralDB[collectorCompositeKey][:counter]
 
 	log.Infof("Lateral object DB post refcount decrement: %v", lateralDB)
 
