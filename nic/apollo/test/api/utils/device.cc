@@ -81,6 +81,12 @@ device_feeder::spec_compare(const pds_device_spec_t *spec) const {
     return true;
 }
 
+bool
+device_feeder::status_compare(const pds_device_status_t *status1,
+                              const pds_device_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

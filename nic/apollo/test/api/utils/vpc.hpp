@@ -19,18 +19,14 @@ extern pds_obj_key_t k_vpc_key;
 // VPC test feeder class
 class vpc_feeder : public feeder {
 public:
-    pds_obj_key_t key;
-    pds_vpc_type_t type;
-    pds_encap_t fabric_encap;
-    std::string cidr_str;
-    ip_prefix_t pfx;
-    std::string vr_mac;
+    pds_vpc_spec_t spec;
 
     // Constructor
     vpc_feeder() { };
     vpc_feeder(const vpc_feeder& feeder) {
-        init(feeder.key, feeder.type, feeder.cidr_str,
-             feeder.vr_mac, feeder.num_obj);
+        init(feeder.spec.key, feeder.spec.type,
+             ipv4pfx2str(&feeder.spec.v4_prefix),
+             macaddr2str(feeder.spec.vr_mac), feeder.num_obj);
     }
 
     // Initialize feeder with the base set of values
@@ -47,13 +43,14 @@ public:
     // Compare routines
     bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_vpc_spec_t *spec) const;
-
+    bool status_compare(const pds_vpc_status_t *status1,
+                        const pds_vpc_status_t *status2) const;
 };
 
 // Dump prototypes
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vpc_spec_t *spec) {
-    os << &spec->key
+    os << spec->key.str()
        << " type: " << spec->type
        << " v4 cidr: " << ipv4pfx2str(&spec->v4_prefix)
        << " v6 cidr: " << ippfx2str(&spec->v6_prefix)
@@ -73,7 +70,7 @@ operator<<(std::ostream& os, const pds_vpc_status_t *status) {
 
 inline std::ostream&
 operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
-    os << "VPC info =>"
+    os << " VPC info =>"
        << &obj->spec
        << &obj->status
        << std::endl;
@@ -83,10 +80,7 @@ operator<<(std::ostream& os, const pds_vpc_info_t *obj) {
 inline std::ostream&
 operator<<(std::ostream& os, const vpc_feeder& obj) {
     os << "VPC feeder =>"
-       << &obj.key
-       << " cidr_str: " << obj.cidr_str
-       << " vnid: " << obj.fabric_encap.val.vnid
-       << " rmac: " << obj.vr_mac << " ";
+       << &obj.spec;
     return os;
 }
 

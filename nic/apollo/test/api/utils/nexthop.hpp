@@ -52,6 +52,8 @@ public:
     // Compare routines
     bool key_compare(const pds_obj_key_t *key) const;
     bool spec_compare(const pds_nexthop_spec_t *spec) const;
+    bool status_compare(const pds_nexthop_status_t *status1,
+                        const pds_nexthop_status_t *status2) const;
 };
 
 // Dump prototypes

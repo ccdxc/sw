@@ -55,5 +55,11 @@ vpc_peer_feeder::spec_compare(const pds_vpc_peer_spec_t *spec) const {
     return true;
 }
 
+bool
+vpc_peer_feeder::status_compare(const pds_vpc_peer_status_t *status1,
+                                const pds_vpc_peer_status_t *status2) const {
+    return true;
+}
+
 }    // namespace api
 }    // namespace test

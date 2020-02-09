@@ -120,6 +120,12 @@ subnet_feeder::spec_compare(const pds_subnet_spec_t *spec) const {
     return true;
 }
 
+bool
+subnet_feeder::status_compare(const pds_subnet_status_t *status1,
+                              const pds_subnet_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

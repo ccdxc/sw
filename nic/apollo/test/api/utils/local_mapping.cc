@@ -132,6 +132,12 @@ local_mapping_feeder::spec_compare(const pds_local_mapping_spec_t *spec) const {
     return true;
 }
 
+bool
+local_mapping_feeder::status_compare(const pds_mapping_status_t *status1,
+                                     const pds_mapping_status_t *status2) const {
+    return true;
+}
+
 void
 local_mapping_feeder::update_spec(uint32_t width) {
     // if key is L3, increment MAC

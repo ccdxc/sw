@@ -202,6 +202,12 @@ vnic_feeder::spec_compare(const pds_vnic_spec_t *spec) const {
     return true;
 }
 
+bool
+vnic_feeder::status_compare(const pds_vnic_status_t *status1,
+                            const pds_vnic_status_t *status2) const {
+    return true;
+}
+
 static vnic_feeder k_vnic_feeder;
 
 void sample_vnic_setup(pds_batch_ctxt_t bctxt) {

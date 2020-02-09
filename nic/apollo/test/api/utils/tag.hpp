@@ -72,6 +72,8 @@ public:
     // so comparision won't be possible
     bool key_compare(pds_obj_key_t *key) { return true; }
     bool spec_compare(pds_tag_spec_t *spec) { return true; }
+    bool status_compare(pds_tag_status_t *status1,
+                        pds_tag_status_t *status2) { return true; }
 };
 
 // Dump prototypes

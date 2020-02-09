@@ -17,69 +17,73 @@ void
 vpc_feeder::init(pds_obj_key_t key, pds_vpc_type_t type,
                  std::string cidr_str, std::string vr_mac,
                  uint32_t num_vpc) {
-    this->key = key;
-    this->type = type;
-    this->cidr_str = cidr_str;
-    this->vr_mac = vr_mac;
-    this->fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
-    this->fabric_encap.val.vnid = pdsobjkey2int(key) + 9999;
+    ip_prefix_t pfx;
+
+    memset(&spec, 0, sizeof(pds_vpc_spec_t));
+    spec.key = key;
+    spec.type = type;
+    mac_str_to_addr((char *)vr_mac.c_str(), spec.vr_mac);
+    spec.fabric_encap.type = PDS_ENCAP_TYPE_VXLAN;
+    spec.fabric_encap.val.value = pdsobjkey2int(key) + 9999;
     SDK_ASSERT(str2ipv4pfx((char *)cidr_str.c_str(), &pfx) == 0);
+    spec.v4_prefix.len = pfx.len;
+    spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
     num_obj = num_vpc;
 }
 
 void
 vpc_feeder::iter_next(int width) {
     ip_addr_t ipaddr = {0};
+    ip_prefix_t pfx = {0};
 
+    SDK_ASSERT(str2ipv4pfx((char *)ipv4pfx2str(&spec.v4_prefix), &pfx) == 0);
     ip_prefix_ip_next(&pfx, &ipaddr);
     memcpy(&pfx.addr, &ipaddr, sizeof(ip_addr_t));
-    key = int2pdsobjkey(pdsobjkey2int(key) + width);
+    spec.key = int2pdsobjkey(pdsobjkey2int(spec.key) + width);
+    spec.v4_prefix.len = pfx.len;
+    spec.v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
     if (artemis() || apulu())
-        fabric_encap.val.vnid += width;
+        spec.fabric_encap.val.value += width;
     cur_iter_pos++;
 }
 
 void
 vpc_feeder::key_build(pds_obj_key_t *key) const {
-    memset(key, 0, sizeof(pds_obj_key_t));
-    *key = this->key;
+    memcpy(key , &spec.key, sizeof(pds_obj_key_t));
 }
 
 void
-vpc_feeder::spec_build(pds_vpc_spec_t *spec) const {
-    memset(spec, 0, sizeof(pds_vpc_spec_t));
-    this->key_build(&spec->key);
-
-    spec->type = type;
-    spec->v4_prefix.len = pfx.len;
-    spec->v4_prefix.v4_addr = pfx.addr.addr.v4_addr;
-    spec->fabric_encap = fabric_encap;
-    mac_str_to_addr((char *)vr_mac.c_str(), spec->vr_mac);
+vpc_feeder::spec_build(pds_vpc_spec_t *vpc_spec) const {
+    memcpy(vpc_spec, &spec, sizeof(pds_vpc_spec_t));
 }
 
 bool
 vpc_feeder::key_compare(const pds_obj_key_t *key) const {
-    return (this->key == *key);
+    return (memcmp(key, &this->spec.key, sizeof(pds_obj_key_t)) == 0);
 }
 
 bool
 vpc_feeder::spec_compare(const pds_vpc_spec_t *spec) const {
-    if (spec->type != type)
+    if (spec->type != this->spec.type)
         return false;
 
-    if (memcmp(&spec->fabric_encap, &fabric_encap, sizeof(pds_encap_t))) {
+    if (memcmp(&spec->fabric_encap, &this->spec.fabric_encap, sizeof(pds_encap_t))) {
         return false;
     }
 
     if (apulu()) {
-        if (!vr_mac.empty()) {
-            mac_addr_t vrmac;
-            mac_str_to_addr((char *)vr_mac.c_str(), vrmac);
-            if (memcmp(&spec->vr_mac, vrmac, sizeof(mac_addr_t))) {
+        if (!this->spec.vr_mac) {
+            if (memcmp(&spec->vr_mac, this->spec.vr_mac, sizeof(mac_addr_t))) {
                 return false;
             }
         }
     }
+    return true;
+}
+
+bool
+vpc_feeder::status_compare(const pds_vpc_status_t *status1,
+                           const pds_vpc_status_t *status2) const {
     return true;
 }
 

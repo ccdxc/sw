@@ -115,5 +115,12 @@ mirror_session_feeder::spec_compare(
     return true;
 }
 
+bool
+mirror_session_feeder::status_compare(
+    const pds_mirror_session_status_t *status1,
+    const pds_mirror_session_status_t *status2) const {
+    return true;
+}
+
 }    // namespace api
 }    // namespace test

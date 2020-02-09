@@ -129,6 +129,12 @@ nexthop_feeder::spec_compare(const pds_nexthop_spec_t *spec) const {
     return true;
 }
 
+bool
+nexthop_feeder::status_compare(const pds_nexthop_status_t *status1,
+                               const pds_nexthop_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

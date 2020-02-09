@@ -170,6 +170,12 @@ tep_feeder::spec_compare(const pds_tep_spec_t *spec) const {
     return true;
 }
 
+bool
+tep_feeder::status_compare(const pds_tep_status_t *status1,
+                           const pds_tep_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

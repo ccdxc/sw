@@ -150,6 +150,12 @@ policy_feeder::spec_compare(const pds_policy_spec_t *spec) const {
     return true;
 }
 
+bool
+policy_feeder::status_compare(const pds_policy_status_t *status1,
+                              const pds_policy_status_t *status2) const {
+    return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

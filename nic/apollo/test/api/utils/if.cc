@@ -81,6 +81,12 @@ if_feeder::key_compare(const pds_obj_key_t *key) const {
     return(!memcmp(key, &spec_feeder.key, sizeof(pds_obj_key_t)));
 }
 
+bool
+if_feeder::status_compare(const pds_if_status_t *status1,
+                          const pds_if_status_t *status2) const {
+	return true;
+}
+
 //----------------------------------------------------------------------------
 // Misc routines
 //----------------------------------------------------------------------------

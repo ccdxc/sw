@@ -45,6 +45,8 @@ public:
 
     // Compare routines
     bool spec_compare(const pds_device_spec_t *spec) const;
+    bool status_compare(const pds_device_status_t *status1,
+                        const pds_device_status_t *status2) const;
 };
 
 // Dump prototypes
