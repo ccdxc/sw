@@ -240,6 +240,7 @@ build_vpp_aarch64() {
 }
 
 build_sdk_x86_64() {
+    docker_exec "rm -rf $DOCKER_SDK_DIR/build"
     echo "Building SDK - x86_64, check $SDK_DIR/sdk_build_x86_64.log"
     docker_root "mkdir -p /sdk && mount --bind ${DOCKER_SDK_DIR} /sdk && PLATFORM=sim make -C /sdk &> ${DOCKER_SDK_DIR}/sdk_build_x86_64.log"
     if [[ $? -ne 0 ]]; then

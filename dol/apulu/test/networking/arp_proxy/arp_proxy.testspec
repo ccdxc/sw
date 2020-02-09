@@ -121,6 +121,6 @@ session:
                     object  : ref://testcase/descriptors/id=DESC2
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=TX
                 - descriptor:
-                    negtest : callback://networking/packets/IsNegativeTestCase
+                    negtest : callback://networking/packets/IsARPProxyNegativeTestCase
                     object  : ref://testcase/descriptors/id=DESC4
                     ring    : callback://networking/packets/GetRingFromMapping/type=local,qid=RX

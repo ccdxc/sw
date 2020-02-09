@@ -32,27 +32,32 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
 {
     ethernet_header_t *e0;
     ethernet_arp_header_t *arp = NULL;
-    u32 offset = 0;
     arp_proxy_trace_t *trace;
     void *p4_rx_meta = NULL;
     mac_addr_t vr_mac;
     u32 bd_id = 0;
     bool remote = FALSE; // knob based on config for arp-proxy
                          // set based on device cfg
-    u32 dst_addr;
-    u16 vnic_id;
+    u32 dst;
+    u32 offset = 0;
+    u16 vnic_nh_hw_id;
 
     p4_rx_meta = (void*) (vlib_buffer_get_current(p0));
     bd_id = pds_ingress_bd_id_get(p4_rx_meta);
-    vnic_id = pds_vnic_id_get(p4_rx_meta);
-    if (PREDICT_FALSE(!is_vnic_present(vnic_id))) {
+    if (PREDICT_FALSE(!pds_vnic_data_fill(p4_rx_meta, &vnic_nh_hw_id,
+                                          &offset))) {
+        counter[ARP_PROXY_COUNTER_VNIC_MISSING]++;
         goto error;
     }
-    vnet_buffer(p0)->pds_arp_data.vnic_id = vnic_id;
-    if (PREDICT_FALSE(!(offset = pds_arp_pkt_offset_get(p4_rx_meta))))
-        goto error;
+    vnet_buffer(p0)->pds_arp_data.vnic_nh_hw_id = vnic_nh_hw_id;
+
     arp = (ethernet_arp_header_t*) (vlib_buffer_get_current(p0) + offset);
-    dst_addr = clib_net_to_host_u32(arp->ip4_over_ethernet[1].ip4.data_u32);
+    dst = clib_net_to_host_u32(arp->ip4_over_ethernet[1].ip4.data_u32);
+    if (PREDICT_FALSE(!pds_subnet_check(bd_id, dst))) {
+        counter[ARP_PROXY_COUNTER_SUBNET_CHECK_FAIL]++;
+        goto error;
+    }
+
     if (PREDICT_TRUE(
             arp->opcode ==
             clib_host_to_net_u16 (ETHERNET_ARP_OPCODE_request))) {
@@ -60,7 +65,7 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
         // if vnic is null, drop it
         // make sure the dst addr is in the same subnet
         // remote flag - reset based on device config
-        pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst_addr);
+        pds_dst_mac_get(p4_rx_meta, vr_mac, remote, dst);
 
         // Ethernet
         e0 = vlib_buffer_get_current(p0) + VPP_P4_TO_ARM_HDR_SZ;
@@ -85,13 +90,13 @@ arp_proxy_internal (vlib_buffer_t *p0, u16 *next0, u32 *counter,
         }
     } else {
         // TODO
+        counter[ARP_PROXY_COUNTER_NOT_ARP_REQUEST]++;
         goto error;
     }
     return;
 
 error:
     *next0 = ARP_PROXY_NEXT_DROP;
-    counter[ARP_PROXY_COUNTER_REPLY_FAILED]++;
     if (PREDICT_FALSE(node->flags & VLIB_NODE_FLAG_TRACE &&
                       p0->flags & VLIB_BUFFER_IS_TRACED)) {
         trace = vlib_add_trace (vm, node, p0, sizeof (trace[0]));
@@ -209,17 +214,12 @@ vlib_node_registration_t exit_node;
 always_inline void
 arp_proxy_exit_internal (vlib_buffer_t *p, u16 *next, u32 *counter)
 {
-    u16 vnic_id;
+    u16 vnic_nh_hw_id;
 
-    vnic_id = vnet_buffer(p)->pds_arp_data.vnic_id;
-    if (PREDICT_FALSE(!is_vnic_present(vnic_id))) {
-        *next = ARP_PROXY_NEXT_DROP;
-        counter[ARP_PROXY_EXIT_COUNTER_VNIC_MISSING_DROP]++;
-    } else {
-        arp_proxy_exit_internal_x1(p, vnic_id);
-        *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
-        counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR]++;
-    }
+    vnic_nh_hw_id = vnet_buffer(p)->pds_arp_data.vnic_nh_hw_id;
+    pds_arp_proxy_add_tx_hdrs_x1(p, vnic_nh_hw_id);
+    *next = ARP_PROXY_EXIT_NEXT_INTF_OUT;
+    counter[ARP_PROXY_EXIT_COUNTER_BUILD_P4_HDR]++;
 }
 
 static uword

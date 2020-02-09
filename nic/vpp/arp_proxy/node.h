@@ -10,7 +10,9 @@
 // ARP Proxy node
 #define foreach_arp_proxy_counter                           \
     _(REPLY_SUCCESS, "Reply success" )                      \
-    _(REPLY_FAILED, "Reply failed, drop" )                  \
+    _(SUBNET_CHECK_FAIL, "Subnet check failed")           \
+    _(VNIC_MISSING, "VNIC not present")                     \
+    _(NOT_ARP_REQUEST, "Not an ARP request" )               \
 
 #define foreach_arp_proxy_next                              \
     _(EXIT, "pds-arp-proxy-exit")                           \

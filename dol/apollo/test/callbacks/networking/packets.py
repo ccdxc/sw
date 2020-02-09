@@ -544,6 +544,13 @@ def GetExpectedPacket(testcase, args):
         return None
     return testcase.packets.Get(args.pkt)
 
+def IsARPProxyNegativeTestCase(testcase):
+    if "IPV4_ARP_PROXY_OUTSIDE_SUBNET" == testcase.module.name or \
+        "IPV4_ARP_PROXY_NO_MAPPING" == testcase.module.name:
+        logger.info("Negative test cases for ARP proxy")
+        return True
+    return False
+
 # used to check if packets are expected on the lif queue
 # True  - no packets expected
 # False - descriptor on expect is valid
@@ -615,25 +622,20 @@ def GetSrcMacInArpReply(testcase, packet, args):
 
 def GetEncapForARP(testcase, packet):
     vlan_encap = None
-    encaps = []
     if testcase.config.localmapping.VNIC.dot1Qenabled:
         vlan_encap = infra_api.GetPacketTemplate('ENCAP_QTAG')
     elif testcase.config.localmapping.VNIC.QinQenabled:
         vlan_encap = infra_api.GetPacketTemplate('ENCAP_QINQ')
-    else:
-        return encaps
-    encaps.append(vlan_encap)
-    return encaps
+    return [vlan_encap] if vlan_encap else []
 
 def __get_type_val(modargs):
     return __get_module_args_value(modargs, "type")
 
 def GetDstIpForARP(testcase, packet, args=None):
-    if "NO_MAPPING" in testcase.module.name:
-# select a dst ip which is not in mapping table
+    if "IPV4_ARP_PROXY_NO_MAPPING" == testcase.module.name:
+        # select a dst ip which is not in mapping table
         return testcase.config.devicecfg.IP
-    type = __get_type_val(testcase.module.args)
-    if type == "outside_subnet":
+    elif "IPV4_ARP_PROXY_OUTSIDE_SUBNET" == testcase.module.name:
         pfx = testcase.config.localmapping.VNIC.SUBNET.IPPrefix[1]
         nextpfx = str(pfx.broadcast_address + 2)
         return nextpfx

@@ -29,7 +29,7 @@ pds_arp_proxy_pipeline_init (void)
 }
 
 always_inline void
-pds_arp_proxy_add_tx_hdrs_x1 (vlib_buffer_t *b, u16 nh_hw_id)
+pds_arp_proxy_add_tx_hdrs_x1 (vlib_buffer_t *b, u16 vnic_nh_hw_id)
 {
     p4_tx_cpu_hdr_t *tx;
 
@@ -37,20 +37,8 @@ pds_arp_proxy_add_tx_hdrs_x1 (vlib_buffer_t *b, u16 nh_hw_id)
     tx->lif_flags = 0;
     tx->nexthop_valid = 1;
     tx->nexthop_type = NEXTHOP_TYPE_NEXTHOP;
-    tx->nexthop_id = clib_host_to_net_u16(nh_hw_id);
+    tx->nexthop_id = clib_host_to_net_u16(vnic_nh_hw_id);
     tx->lif_flags = clib_host_to_net_u16(tx->lif_flags);
-}
-
-always_inline void
-arp_proxy_exit_internal_x1 (vlib_buffer_t *p,
-                            u16 vnic_id)
-{
-    pds_impl_db_vnic_entry_t *vnic;
-
-    vnic = pds_impl_db_vnic_get(vnic_id);
-    if (PREDICT_TRUE(vnic != NULL)) {
-        pds_arp_proxy_add_tx_hdrs_x1(p, vnic->nh_hw_id);
-    }
 }
 
 #endif      //__VPP_IMPL_APULU_ARP_PROXY_H__

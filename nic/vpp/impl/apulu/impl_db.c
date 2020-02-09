@@ -94,16 +94,16 @@ void pds_impl_db_vnic_init()
 }
 
 int
-pds_impl_db_subnet_set (uint32_t subnet_ip,
-                        uint8_t pfx_len,
+pds_impl_db_subnet_set (uint8_t pfx_len,
+                        uint32_t vr_ip,
                         uint8_t *mac,
                         uint16_t subnet_hw_id)
 {
     POOL_IMPL_DB_ADD(subnet);
 
-    clib_memcpy(subnet_info->mac, mac, ETH_ADDR_LEN);
     subnet_info->prefix_len = pfx_len;
-    ip46_address_set_ip4(&subnet_info->vr_ip, (ip4_address_t *) &subnet_ip);
+    ip46_address_set_ip4(&subnet_info->vr_ip, (ip4_address_t *) &vr_ip);
+    clib_memcpy(subnet_info->mac, mac, ETH_ADDR_LEN);
     return 0;
 }
 

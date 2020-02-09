@@ -10,8 +10,8 @@ pds_cfg_db_subnet_set_cb (const pds_cfg_msg_t *msg)
 {
     int rc;
 
-    rc = pds_impl_db_subnet_set(msg->subnet.spec.v4_vr_ip,
-                                msg->subnet.spec.v4_prefix.len,
+    rc = pds_impl_db_subnet_set(msg->subnet.spec.v4_prefix.len,
+                                msg->subnet.spec.v4_vr_ip,
                                 (uint8_t *) msg->subnet.spec.vr_mac,
                                 msg->subnet.status.hw_id);
 

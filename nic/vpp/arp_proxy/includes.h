@@ -10,9 +10,10 @@
 #include <vnet/ethernet/arp.h>
 #include <vnet/plugin/plugin.h>
 #include <arp_proxy.h>
+#include <bd.h>
 #include <mapping.h>
-#include <vnic.h>
 #include <pkt.h>
+#include <vnic.h>
 #include "node.h"
 
 #endif  //__VPP_ARP_PROXY_INCLUDES_H__

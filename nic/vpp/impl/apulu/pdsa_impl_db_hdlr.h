@@ -24,8 +24,8 @@ int pds_impl_db_vnic_set(uint8_t *mac,
 
 int pds_impl_db_vnic_del(uint16_t vnic_hw_id);
 
-int pds_impl_db_subnet_set(uint32_t subnet_ip,
-                           uint8_t pfx_len,
+int pds_impl_db_subnet_set(uint8_t pfx_len,
+                           uint32_t vr_ip,
                            uint8_t *mac,
                            uint16_t subnet_hw_id);
 int pds_impl_db_subnet_del(uint16_t subnet_hw_id);

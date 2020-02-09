@@ -23,6 +23,7 @@ pds_l2vnid_get(uint16_t bd_id, uint32_t *l2_vni) {
 
     return p4pd_ret;
 }
-#ifdef __cplusplus 
+
+#ifdef __cplusplus
 }
 #endif

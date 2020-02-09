@@ -37,8 +37,8 @@ typedef struct {
 
 typedef struct {
     mac_addr_t mac;                 // subnet mac
-    u8 prefix_len;                  // subnet prefix
-    ip46_address_t vr_ip;           // subnet ip
+    u8 prefix_len;                  // subnet prefix len
+    ip46_address_t vr_ip;           // subnet VR ip
 } pds_impl_db_subnet_entry_t;
 
 #define foreach_impl_db_element                         \

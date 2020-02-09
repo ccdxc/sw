@@ -40,8 +40,5 @@ modules:
     - module:
         name    : IPV4_ARP_PROXY_OUTSIDE_SUBNET
         spec    : arp_proxy.testspec
-        args    :
-            - type      : outside_subnet
         iterate :
             - flow : filter://FlType=MAPPING,FwdMode=L2,Label=NETWORKING
-        ignore   : True

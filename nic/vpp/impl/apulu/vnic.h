@@ -7,6 +7,7 @@
 
 #include <nic/vpp/infra/utils.h>
 #include <nic/apollo/packet/apulu/p4_cpu_hdr.h>
+#include <impl_db.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,28 +25,22 @@ pds_vnic_id_get (void *hdr)
     return (((p4_rx_cpu_hdr_t *)hdr)->vnic_id);
 }
 
-// get arp packet header offset
-static inline int
-pds_arp_pkt_offset_get (void *hdr)
+// return FALSE if VNIC is not present,
+// else set vnic_nh_hw_id and return TRUE
+static inline bool
+pds_vnic_data_fill (void *hdr, u16 *vnic_nh_hw_id, u32 *offset)
 {
     u16 vnic_id;
     pds_impl_db_vnic_entry_t *vnic;
 
-    vnic_id = ((p4_rx_cpu_hdr_t *)hdr)->vnic_id;
+    vnic_id = pds_vnic_id_get(hdr);
     vnic = pds_impl_db_vnic_get(vnic_id);
-    return (VPP_P4_TO_ARM_HDR_SZ + vnic->l2_encap_len);
-}
-
-static inline bool
-is_vnic_present (u16 vnic_id)
-{
-    pds_impl_db_vnic_entry_t *vnic;
-
-    vnic = pds_impl_db_vnic_get(vnic_id);
-    if (vnic) {
-        return TRUE;
+    if (PREDICT_FALSE(vnic == NULL)) {
+        return FALSE;
     }
-    return FALSE;
+    *vnic_nh_hw_id = vnic->nh_hw_id;
+    *offset = VPP_P4_TO_ARM_HDR_SZ + vnic->l2_encap_len;
+    return TRUE;
 }
 
 #ifdef __cplusplus
