@@ -343,7 +343,8 @@
       <p-multiSelect class="newsgpolicy-multiselect" fxFlex="300px" appendTo="body"
                      styleClass="newsgpolicy-font"
                      [filter]="false" [showHeader]="false" [showToggleAll]="false"
-                     defaultLabel="Select Apps..."
+                     [defaultLabel]="!securityAppOptions || securityAppOptions.length < 1 ? 'No Apps Available' : 'Select Apps...'"
+                     [disabled]="!securityAppOptions || securityAppOptions.length < 1"
                      [options]="securityAppOptions"
                      [formControl]="data.rule.$formGroup.get('apps')">
       </p-multiSelect>
