@@ -48,10 +48,10 @@
 
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/core/trace.hpp"
-#include "nic/apollo/fte/fte.hpp"
 #include "nic/apollo/api/impl/athena/ftl_pollers_client.hpp"
+#include "fte_athena.hpp"
 
-namespace fte {
+namespace fte_ath {
 
 char const * g_eal_args[] = {"fte", "-l", "2,3", "--vdev=net_ionic0"};
 #define RTE_LOGTYPE_FTE RTE_LOGTYPE_USER1
@@ -106,9 +106,9 @@ fte_rx_loop (int poller_qid)
     struct rte_mbuf *pkts_burst[FTE_PKT_BATCH_SIZE];
     int numrx, numtx;
 
-    PDS_TRACE_DEBUG("\nFTE fte_rx_loop.. core:%u\n", rte_lcore_id());
+    PDS_TRACE_DEBUG("\nFTE_ATH fte_rx_loop.. core:%u\n", rte_lcore_id());
     while (1) {
-        if ((poller_qid != -1) && !ftl_pollers_client::user_will_poll()) {
+        if (poller_qid != -1) {
             ftl_pollers_client::poll(poller_qid);
         }
         numrx = rte_eth_rx_burst(0, 0, pkts_burst, FTE_PKT_BATCH_SIZE);

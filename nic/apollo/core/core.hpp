@@ -42,7 +42,6 @@ sdk_ret_t spawn_nicmgr_thread(pds_state *state);
 sdk_ret_t spawn_pciemgr_thread(pds_state *state);
 sdk_ret_t spawn_api_thread(pds_state *state);
 sdk_ret_t spawn_learn_thread(pds_state *state);
-sdk_ret_t spawn_fte_thread(pds_state *state);
 bool is_nicmgr_ready(void);
 void threads_stop(void);
 void threads_wait(void);

@@ -11,7 +11,7 @@
 #ifndef __FTE_FTE_HPP__
 #define __FTE_FTE_HPP__
 
-namespace fte {
+namespace fte_ath {
 
 struct stats_t {
     uint64_t tx;

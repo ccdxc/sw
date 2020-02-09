@@ -9,7 +9,7 @@ MODULE_INCS     = ${MODULE_GEN_DIR}
 MODULE_SOLIBS   = pdsproto thread trace logger svc pdsapi memhash sltcam \
                   rfc_${PIPELINE} event_thread pdsrfc pdsagentcore slhash \
                   pdsmshals pdsmsmgmt pdsmscommon pdsmsstubs pdsmsmgmtsvc \
-                  pdsfte ${NIC_${PIPELINE}_NICMGR_LIBS} ${NIC_FTL_LIBS} \
+                  ${NIC_${PIPELINE}_NICMGR_LIBS} \
                   sdkeventmgr
 MODULE_LDFLAGS  = -L$(MS_LIB_DIR)
 MODULE_LDLIBS   = ${NIC_THIRDPARTY_GOOGLE_LDLIBS} \

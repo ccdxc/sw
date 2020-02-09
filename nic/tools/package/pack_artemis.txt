@@ -190,7 +190,6 @@ nic/build/$ARCH/$PIPELINE/lib/libpcietlp.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libcfgspace.so                      /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libintrutils.so                     /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libmisc.so                          /nic/lib/
-nic/build/$ARCH/$PIPELINE/lib/libpdsfte.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsdkring.so                       /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libsysmon.so                        /nic/lib/
 nic/build/$ARCH/$PIPELINE/lib/libasicerror.so                     /nic/lib/

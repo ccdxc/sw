@@ -18,9 +18,13 @@ mkdir -p /dev/hugepages
 mount -t hugetlbfs nodev /dev/hugepages
 
 echo "Starting Agent: `date +%x_%H:%M:%S:%N`"
-BUILD_DIR=$NIC_DIR/build/x86_64/athena
 export COVFILE=$NIC_DIR/coverage/sim_bullseye_hal.cov
 rm -f $NIC_DIR/conf/pipeline.json
 ln -s $NIC_DIR/conf/athena/pipeline.json $NIC_DIR/conf/pipeline.json
+BUILD_DIR=$NIC_DIR/build/x86_64/athena
 $GDB $BUILD_DIR/bin/athena_app -c hal.json $* 2>&1
+
+# Use the following BUILD_DIR & GDB to run the athena_app built from Makefile
+#BUILD_DIR=$NIC_DIR/apollo/test/athena_app/obj
+#$GDB $BUILD_DIR/athena_app -c hal.json $* 2>&1
 #valgrind --leak-check=full --show-leak-kinds=all --gen-suppressions=all --error-limit=no --verbose --log-file=valgrind-out.txt --track-origins=yes $BUILD_DIR/bin/pdsagent -c hal.json -f apulu $* 2>&1

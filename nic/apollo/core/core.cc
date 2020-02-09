@@ -21,7 +21,6 @@
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
 #include "nic/apollo/learn/learn.hpp"
-#include "nic/apollo/fte/fte.hpp"
 
 using boost::property_tree::ptree;
 
@@ -281,39 +280,6 @@ spawn_api_thread (pds_state *state)
      g_thread_store[PDS_THREAD_ID_API] = new_thread;
      new_thread->start(new_thread);
      return SDK_RET_OK;
-}
-
-sdk_ret_t
-spawn_fte_thread (pds_state *state)
-{
-    uint32_t            tid;
-    char                thread_name[16];
-    uint64_t            data_cores_mask = state->data_cores_mask();
-    uint64_t            cores_mask = 0x0;
-    sdk::lib::thread    *new_thread;
-    string		pipeline = state->pipeline();
-
-    if (pipeline.compare("athena") != 0 ) {
-        PDS_TRACE_DEBUG("FTE thread supported only in Athena.\n");
-        return SDK_RET_OK;
-    }
-
-    cores_mask = 1 << (ffsl(data_cores_mask) - 1);
-    tid = PDS_THREAD_ID_FTE;
-    snprintf(thread_name, sizeof(thread_name), "fte");
-    PDS_TRACE_DEBUG("Spawning FTE thread %s", thread_name);
-    new_thread =
-        thread_create(static_cast<const char *>(thread_name), tid,
-                sdk::lib::THREAD_ROLE_DATA, cores_mask,
-                fte::fte_thread_start,
-                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_DATA),
-                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_DATA),
-                NULL);
-    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
-                            "%s thread create failure", thread_name);
-    new_thread->start(new_thread);
-
-    return SDK_RET_OK;
 }
 
 sdk_ret_t

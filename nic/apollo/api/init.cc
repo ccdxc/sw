@@ -331,9 +331,6 @@ pds_init (pds_init_params_t *params)
     // spin learn thread
     core::spawn_learn_thread(&api::g_pds_state);
 
-    // spin fte thread for Athena
-    core::spawn_fte_thread(&api::g_pds_state);
-
     // raise HAL_UP event
     sdk::ipc::broadcast(EVENT_ID_PDS_HAL_UP, NULL, 0);
 

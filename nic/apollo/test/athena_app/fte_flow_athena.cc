@@ -37,12 +37,12 @@
 #include "nic/sdk/include/sdk/table.hpp"
 #include "nic/apollo/core/trace.hpp"
 #include "nic/sdk/lib/table/ftl/ftl_base.hpp"
-#include "nic/apollo/fte/fte.hpp"
+#include "fte_athena.hpp"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
 #include "nic/apollo/api/include/athena/pds_flow_session.h"
 #include "gen/p4gen/p4/include/ftl.h"
 
-namespace fte {
+namespace fte_ath {
 
 #define IP_PROTOCOL_TCP 0x06
 #define IP_PROTOCOL_UDP 0x11

@@ -25,6 +25,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "trace.hpp"
+#include "fte_athena.hpp"
 
 namespace core {
 // number of trace files to keep
@@ -350,6 +351,8 @@ main (int argc, char **argv)
     core::logger_init();
 
     pds_init(&init_params);
+
+    fte_ath::fte_init();
 
     // wait forver
     printf("Initialization done ...\n");
