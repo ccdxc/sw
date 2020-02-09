@@ -616,7 +616,6 @@ func (c *API) postConfigHandler(r *http.Request) (interface{}, error) {
 	}
 
 	c.handleDSCInterfaceInfo(o)
-	c.handleDSCRoutingInfo(o)
 
 	var resp restapi.Response
 	err = c.HandleVeniceCoordinates(o)
@@ -687,8 +686,12 @@ func (c *API) handleDSCInterfaceInfo(obj types.DistributedServiceCardStatus) {
 	if strings.Contains(strings.ToLower(obj.DSCMode), "network") {
 		log.Infof("Controller API: handleDSCInterfaceInfo | Obj: %v", obj)
 
-		/*if err := c.PipelineAPI.HandleInterface(types.Create, ); err != nil {
-			log.Error(err)
-		}*/
+		if len(obj.DSCInterfaceIPs) != 0 {
+			for _, intf := range obj.DSCInterfaceIPs {
+				if err := c.PipelineAPI.HandleDSCL3Interface(intf); err != nil {
+					log.Error(err)
+				}
+			}
+		}
 	}
 }

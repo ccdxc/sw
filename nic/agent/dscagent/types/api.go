@@ -107,4 +107,7 @@ type PipelineAPI interface {
 
 	// HandleCPRoutingConfig handles creation of control plane route objects
 	HandleCPRoutingConfig(obj DSCStaticRoute) error
+
+	// HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
+	HandleDSCL3Interface(obj DSCInterfaceIP) error
 }

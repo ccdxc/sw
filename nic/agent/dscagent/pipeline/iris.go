@@ -1900,3 +1900,8 @@ func (i *IrisAPI) isLocalEP(nodeuuid string) bool {
 	selfNodeUUID, _ := net.ParseMAC(i.InfraAPI.GetDscName())
 	return epNodeUUID.String() == selfNodeUUID.String()
 }
+
+// HandleDSCL3Interface handles configuring L3 interfaces on DSC interfaces
+func (i *IrisAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
+	return errors.Wrapf(types.ErrNotImplemented, "Handle CP Routing Config not implemented by Iris Pipeline")
+}

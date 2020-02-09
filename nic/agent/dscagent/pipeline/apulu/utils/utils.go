@@ -13,7 +13,6 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
 	halapi "github.com/pensando/sw/nic/apollo/agent/gen/pds"
@@ -59,6 +58,17 @@ func convertID32(agentID uint32) []byte {
 	return pipelineID
 }
 
+// Ipv4Touint32 converts net.IP to 32 bit integer
+func Ipv4Touint32(ip net.IP) uint32 {
+	if ip == nil {
+		return 0
+	}
+	if len(ip) == 16 {
+		return binary.LittleEndian.Uint32(ip[12:16])
+	}
+	return binary.LittleEndian.Uint32(ip)
+}
+
 // ConvertID32 converts agent object 32 bit ID to HAL Object ID
 func ConvertID32(agentIDs ...uint32) [][]byte {
 	var halIDs [][]byte
@@ -91,7 +101,7 @@ func ConvertIPAddresses(addresses ...string) (ipAddresses []*halapi.IPAddress) {
 		v4Addr := &halapi.IPAddress{
 			Af: halapi.IPAF_IP_AF_INET,
 			V4OrV6: &halapi.IPAddress_V4Addr{
-				V4Addr: utils.Ipv4Touint32(addr),
+				V4Addr: Ipv4Touint32(addr),
 			},
 		}
 		ipAddresses = append(ipAddresses, v4Addr)
@@ -114,19 +124,6 @@ func MacStrtoUint64(macStr string) uint64 {
 	mac |= bytes[5]
 
 	return mac
-}
-
-// ConvertIPAddress converts IP Address string to hal ip address. TODO v6
-func ConvertIPAddress(address string) (ipAddress *halapi.IPAddress) {
-	addr := net.ParseIP(address)
-	v4Addr := &halapi.IPAddress{
-		Af: halapi.IPAF_IP_AF_INET,
-		V4OrV6: &halapi.IPAddress_V4Addr{
-			V4Addr: utils.Ipv4Touint32(addr),
-		},
-	}
-	ipAddress = v4Addr
-	return
 }
 
 // RDToBytes converts the RouteDistinguisher to bytes

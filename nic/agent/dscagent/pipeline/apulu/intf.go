@@ -7,8 +7,10 @@ package apulu
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/types"
@@ -32,8 +34,9 @@ func HandleInterface(infraAPI types.InfraAPI, client halapi.IfSvcClient, oper ty
 }
 
 func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, intf netproto.Interface) error {
-	intfReq := convertInterface(intf)
+	intfReq := convertInterface(infraAPI, intf)
 	resp, err := client.InterfaceCreate(context.Background(), intfReq)
+	log.Infof("createInterfaceHandler Resp: %v. Err: %v", resp, err)
 	if resp != nil {
 		if err := utils.HandleErr(types.Create, resp.ApiStatus, err, fmt.Sprintf("Create Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
 			return err
@@ -54,7 +57,7 @@ func createInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 }
 
 func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, intf netproto.Interface) error {
-	intfReq := convertInterface(intf)
+	intfReq := convertInterface(infraAPI, intf)
 	resp, err := client.InterfaceUpdate(context.Background(), intfReq)
 	if resp != nil {
 		if err := utils.HandleErr(types.Update, resp.ApiStatus, err, fmt.Sprintf("Update Failed for %s | %s", intf.GetKind(), intf.GetKey())); err != nil {
@@ -90,7 +93,7 @@ func deleteInterfaceHandler(infraAPI types.InfraAPI, client halapi.IfSvcClient, 
 	return nil
 }
 
-func convertInterface(intf netproto.Interface) *halapi.InterfaceRequest {
+func convertInterface(infraAPI types.InfraAPI, intf netproto.Interface) *halapi.InterfaceRequest {
 	var ifStatus halapi.IfStatus
 
 	if intf.Spec.AdminStatus == "UP" {
@@ -99,21 +102,68 @@ func convertInterface(intf netproto.Interface) *halapi.InterfaceRequest {
 		ifStatus = halapi.IfStatus_IF_STATUS_DOWN
 	}
 
+	uid, err := uuid.FromString(intf.UUID)
+	if err != nil {
+		log.Errorf("failed to parse UUID (%v)", err)
+		return nil
+	}
+
 	switch intf.Spec.Type {
 	case "L3":
+		portuid, err := uuid.FromString(intf.Status.InterfaceUUID)
+		if err != nil {
+			log.Errorf("failed to parse port UUID (%v)", err)
+			return nil
+		}
+
+		vDat, err := infraAPI.List("Vrf")
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
+			return nil
+		}
+
+		var vrf *netproto.Vrf
+		for _, v := range vDat {
+			var curVrf netproto.Vrf
+			err = curVrf.Unmarshal(v)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "Vrf: %s | Err: %v", curVrf.GetKey(), err))
+				continue
+			}
+			if curVrf.ObjectMeta.Name == intf.Spec.VrfName {
+				vrf = &curVrf
+				break
+			}
+		}
+
+		if vrf == nil {
+			log.Errorf("Failed to find vrf", intf.Spec.VrfName)
+			return nil
+		}
+
+		vpcuid, err := uuid.FromString(vrf.ObjectMeta.UUID)
+		if err != nil {
+			log.Errorf("failed to parse port UUID (%v)", err)
+			return nil
+		}
+
+		prefixLen, _ := strconv.Atoi(intf.Spec.Network)
 		// TODO: no sub interface support yet
 		return &halapi.InterfaceRequest{
 			BatchCtxt: nil,
 			Request: []*halapi.InterfaceSpec{
 				{
-					Id:          utils.ConvertID64(intf.Status.InterfaceID)[0],
+					Id:          uid.Bytes(),
 					Type:        halapi.IfType_IF_TYPE_L3,
 					AdminStatus: ifStatus,
 					Ifinfo: &halapi.InterfaceSpec_L3IfSpec{
 						L3IfSpec: &halapi.L3IfSpec{
-							VpcId:  utils.ConvertID64(0)[0], // TODO get the object references sorted out here
-							Prefix: nil,
-							PortId: utils.ConvertID64(0)[0],
+							VpcId: vpcuid.Bytes(),
+							Prefix: &halapi.IPPrefix{
+								Addr: utils.ConvertIPAddresses(intf.Spec.IPAddress)[0],
+								Len:  uint32(prefixLen),
+							},
+							PortId: portuid.Bytes(),
 							Encap: &halapi.Encap{
 								Type: halapi.EncapType_ENCAP_TYPE_NONE,
 								Value: &halapi.EncapVal{

@@ -9,9 +9,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gogo/protobuf/proto"
+	protoTypes "github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	uuid "github.com/satori/go.uuid"
 
@@ -102,6 +105,30 @@ func (a *ApuluAPI) PipelineInit() error {
 		return err
 	}
 	log.Infof("Apulu API: %s | %s", types.InfoPipelineInit, types.InfoSecurityProfileCreate)
+
+	c, _ := protoTypes.TimestampProto(time.Now())
+	defaultVrf := netproto.Vrf{
+		TypeMeta: api.TypeMeta{Kind: "Vrf"},
+		ObjectMeta: api.ObjectMeta{
+			Tenant:    "default",
+			Namespace: "default",
+			Name:      "underlay-vpc",
+			CreationTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			ModTime: api.Timestamp{
+				Timestamp: *c,
+			},
+			UUID: uuid.NewV4().String(),
+		},
+		Spec: netproto.VrfSpec{
+			VrfType: "INFRA",
+		},
+	}
+	if _, err := a.HandleVrf(types.Create, defaultVrf); err != nil {
+		log.Error(err)
+		return err
+	}
 
 	// initialize stream for Lif events
 	a.initEventStream()
@@ -923,6 +950,7 @@ func handleUplinkInterface(a *ApuluAPI, spec *halapi.PortSpec, status *halapi.Po
 			Tenant:    "default",
 			Namespace: "default",
 			Name:      ifName,
+			UUID:      uid.String(),
 		},
 		Spec: netproto.InterfaceSpec{
 			Type:    ifType,
@@ -1055,9 +1083,9 @@ func (a *ApuluAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 	defer a.Unlock()
 
 	staticRouteSpec := &msapi.CPStaticRouteSpec{
-		DestAddr:    apuluutils.ConvertIPAddress(obj.DestAddr),
+		DestAddr:    apuluutils.ConvertIPAddresses(obj.DestAddr)[0],
 		PrefixLen:   obj.DestPrefixLen,
-		NextHopAddr: apuluutils.ConvertIPAddress(obj.NextHop),
+		NextHopAddr: apuluutils.ConvertIPAddresses(obj.NextHop)[0],
 		State:       1,
 		AdminDist:   250,
 		Override:    true}
@@ -1073,5 +1101,66 @@ func (a *ApuluAPI) HandleCPRoutingConfig(obj types.DSCStaticRoute) error {
 		}
 	}
 
+	return nil
+}
+
+// HandleDSCL3Interface handles configuring L3 interface on DSC interfaces
+func (a *ApuluAPI) HandleDSCL3Interface(obj types.DSCInterfaceIP) error {
+	iDat, err := a.InfraAPI.List("Interface")
+	if err != nil {
+		log.Error(errors.Wrapf(types.ErrBadRequest, "Err: %v", types.ErrObjNotFound))
+		return err
+	}
+
+	var uplinkInterface *netproto.Interface
+	for _, o := range iDat {
+		var intf netproto.Interface
+		err = intf.Unmarshal(o)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "Interface: %s | Err: %v", intf.GetKey(), err))
+			continue
+		}
+		if intf.Spec.Type == netproto.InterfaceSpec_UPLINK_ETH.String() &&
+			intf.Status.IFUplinkStatus.PortID == uint32(obj.IfID)+1 {
+			uplinkInterface = &intf
+			break
+		}
+	}
+
+	log.Infof("Found uplink interface %v", uplinkInterface)
+	if uplinkInterface != nil {
+		l3uuid := uuid.NewV4().String()
+		i := netproto.Interface{
+			TypeMeta: api.TypeMeta{
+				Kind: "Interface",
+			},
+			ObjectMeta: api.ObjectMeta{
+				Tenant:    "default",
+				Namespace: "default",
+				Name:      netproto.InterfaceSpec_L3.String() + l3uuid,
+				UUID:      l3uuid,
+			},
+			Spec: netproto.InterfaceSpec{
+				Type:        netproto.InterfaceSpec_L3.String(),
+				VrfName:     "underlay-vpc",
+				IPAddress:   obj.IPAddress,
+				Network:     strconv.Itoa(int(obj.DestPrefixLen)),
+				AdminStatus: "UP",
+			},
+			Status: netproto.InterfaceStatus{
+				InterfaceUUID: uplinkInterface.UUID,
+			},
+		}
+
+		if _, err := a.HandleInterface(types.Create, i); err != nil {
+			log.Error(err)
+			return err
+		}
+		// Configure the default route
+		err := a.HandleCPRoutingConfig(types.DSCStaticRoute{DestAddr: "0.0.0.0", DestPrefixLen: 0, NextHop: obj.GatewayIP})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
