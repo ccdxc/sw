@@ -82,6 +82,7 @@ testbundles:
         #- classic/rdma_reg.testbundle
         #- classic/rdma_stress.testbundle
         - tso/tso_regr.testbundle
+        - rss/rss.testbundle
         - classic/driver-features.testbundle
         - storage/regression.testbundle
 

@@ -1,0 +1,74 @@
+meta:
+    name    : rss
+    os      : [ linux ]
+    nics    : [ pensando, intel, mellanox, broadcom ]
+    targetcount : 1 
+
+testcases:
+    -   name    : RSS-Queue-Hash-Enabled-v4
+        testcase: testcases.drivers.rss
+        disable : False
+        ignore  : True
+        stress  : True
+        iterators : 
+            type : nested
+            rxflowhash     : [ 'tcp4', 'udp4', 'ip4udp', 'ip4tcp']
+            rss            : ['enabled']
+            # vlantag      : ['on', 'off']
+            # hkey         : [ 'symmetric', 'msft']
+        args    :
+            timeout: 14000
+            type: host
+            maxqueues: 16
+            iperfthreads     :  1
+
+    -   name    : RSS-Queue-Hash-Disabled-v4
+        testcase: testcases.drivers.rss
+        disable : False
+        ignore  : True
+        stress  : True
+        iterators : 
+            type : nested
+            rxflowhash     : [ 'tcp4', 'udp4', 'ip4udp', 'ip4tcp']
+            rss            : ['disabled']
+            # vlantag        : ['on', 'off']
+            # hkey           : [ 'symmetric', 'msft']
+        args    :
+            timeout: 14000
+            type: host
+            maxqueues: 16
+            iperfthreads     :  1
+
+    -   name    : RSS-Queue-Hash-Enabled-v6
+        testcase: testcases.drivers.rss
+        disable : False
+        ignore  : True
+        stress  : True
+        iterators : 
+            type : nested
+            rxflowhash     : [  'tcp6', 'udp6', 'ip6udp', 'ip6tcp' ]
+            rss            : ['disabled']
+            # vlantag        : ['on', 'off']
+            # hkey           : [ 'symmetric', 'msft']
+        args    :
+            timeout: 14000
+            type: host
+            maxqueues: 16
+            iperfthreads     :  1
+
+    -   name    : RSS-Queue-Hash-Disabled-v6
+        testcase: testcases.drivers.rss
+        disable : False
+        ignore  : True
+        stress  : True
+        iterators : 
+            type : nested
+            rxflowhash     : [ 'tcp6', 'udp6', 'ip6udp','ip6tcp']
+            rss            : ['disabled']
+            # vlantag        : ['on', 'off']
+            # hkey           : [ 'symmetric', 'msft']
+        args    :
+            timeout: 14000
+            type: host
+            maxqueues: 16
+            iperfthreads     :  1

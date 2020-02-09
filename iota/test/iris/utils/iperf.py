@@ -14,12 +14,19 @@ def ServerCmd(port = None, time=None, run_core=None):
 
     return " ".join(cmd)
 
-def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_core=None,
-            ipproto='v4', num_of_streams = None, jsonOut=False, connect_timeout=None):
-    assert(port)
-    cmd = ["iperf3", "-c", str(server_ip), "-p", str(port)]
+def ClientCmd(server_ip, server_port = None, time=10, pktsize=None, proto='tcp', run_core=None,
+            ipproto='v4', num_of_streams = None, jsonOut=False, connect_timeout=None, 
+            client_ip=None,client_port=None, packet_count=None, bandwidth=None):
+    assert(server_port)
+    cmd = ["iperf3", "-c", str(server_ip), "-p", str(server_port)]
 
-    if time:
+    if client_ip:
+        cmd.extend(["-B", str(client_ip)])
+
+    if client_port:
+        cmd.extend(["--cport", str(client_port)])
+
+    if time and packet_count is None: 
         cmd.extend(["-t", str(time)])
 
     if run_core:
@@ -27,6 +34,9 @@ def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_co
 
     if proto == 'udp':
         cmd.append('-u')
+        if bandwidth: 
+            cmd.extend(["-b", str(bandwidth)])
+            cmd.append("-w10000")
 
     if jsonOut:
         cmd.append('-J')
@@ -46,6 +56,9 @@ def ClientCmd(server_ip, port = None, time=10, pktsize=None, proto='tcp', run_co
     if ipproto == 'v6':
         cmd.append("-6")
 
+    if packet_count: 
+        cmd.extend(["-k", str(packet_count)])
+        
     return " ".join(cmd)
 
 
