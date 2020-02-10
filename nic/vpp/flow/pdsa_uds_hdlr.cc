@@ -10,6 +10,7 @@
 #include <nic/sdk/include/sdk/table.hpp>
 #include <gen/p4gen/p4/include/ftl.h>
 #include <lib/table/ftl/ftl_base.hpp>
+#include <ftl_utils.hpp>
 
 static void
 ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
@@ -33,6 +34,7 @@ ftlv4_entry_iter_cb(sdk::table::sdk_table_api_params_t *params)
                 hwentry->get_key_metadata_ipv4_dst());
 
         flow->set_sessionidx(hwentry->get_session_index());
+        flow->set_vpc(ftlv4_get_lookup_id(hwentry));
         flow->set_flowrole(hwentry->get_flow_role());
         // Epoch is not present in apollo pipeline so commenting out for now
         // flow->set_epoch(hwentry->get_epoch());

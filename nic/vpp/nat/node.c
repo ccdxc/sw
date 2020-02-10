@@ -59,8 +59,8 @@ nat_internal (vlib_buffer_t *p0, u8 *next_idx, u16 *nexts, u32 *counter,
 
     vpc_id = vnet_buffer2(p0)->pds_nat_data.vpc_id;
     ip40 = vlib_buffer_get_current(p0);
-    pvt_ip.as_u32 = ip40->src_address.as_u32;
-    dip.as_u32 = ip40->dst_address.as_u32;
+    pvt_ip.as_u32 = clib_net_to_host_u32(ip40->src_address.as_u32);
+    dip.as_u32 = clib_net_to_host_u32(ip40->dst_address.as_u32);
     protocol = ip40->protocol;
     if (protocol == IP_PROTOCOL_UDP || protocol == IP_PROTOCOL_TCP) {
         udp0 = (udp_header_t *) (((u8 *) ip40) +

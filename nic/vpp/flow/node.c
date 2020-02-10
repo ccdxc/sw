@@ -522,11 +522,14 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         if (vnet_buffer(p0)->pds_flow_data.flags & VPP_CPU_FLAGS_NAPT_VALID) {
             // NAPT - both port and ip are changed
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
-            r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
+            if (ip40->protocol != IP_PROTOCOL_ICMP) {
+                r_dport = vnet_buffer2(p0)->pds_nat_data.xlate_port;
+            }
         } else if (vnet_buffer2(p0)->pds_nat_data.xlate_idx) {
             // static NAT
             r_dst_ip = vnet_buffer2(p0)->pds_nat_data.xlate_addr;
         }
+        lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
         ftlv4_cache_set_key(r_src_ip, r_dst_ip,
                             protocol, r_sport, r_dport, lkp_id);
         ftlv4_cache_set_session_index(session_id);
@@ -580,6 +583,7 @@ pds_flow_extract_prog_args_x1 (vlib_buffer_t *p0,
         ftlv6_cache_set_hash_log(vnet_buffer(p0)->pds_flow_data.flow_hash,
                                  pds_get_flow_log_en(p0));
         ftlv6_cache_advance_count(1);
+        lkp_id = vnet_buffer(p0)->pds_flow_data.egress_lkp_id;
         ftlv6_cache_set_key(dst_ip, src_ip, protocol, r_sport, r_dport, lkp_id);
         ftlv6_cache_set_session_index(session_id);
         ftlv6_cache_set_epoch(0xff);
