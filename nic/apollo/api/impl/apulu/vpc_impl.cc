@@ -243,6 +243,7 @@ vpc_impl::activate_create_(pds_epoch_t epoch, vpc_entry *vpc,
     vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
     vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    vni_data.vni_info.is_l3_vnid = TRUE;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
     // program the VNI table
@@ -274,6 +275,7 @@ vpc_impl::activate_update_(pds_epoch_t epoch, vpc_entry *vpc,
     vni_data.vni_info.bd_id = hw_id_;    // bd hw id = vpc hw id for a vpc
     vni_data.vni_info.vpc_id = hw_id_;
     memcpy(vni_data.vni_info.rmac, spec->vr_mac, ETH_ADDR_LEN);
+    vni_data.vni_info.is_l3_vnid = TRUE;
     PDS_IMPL_FILL_TABLE_API_PARAMS(&tparams, &vni_key, NULL, &vni_data,
                                    VNI_VNI_INFO_ID, vni_hdl_);
     // update the VNI table
