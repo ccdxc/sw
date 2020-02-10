@@ -5,7 +5,7 @@ feature:
     package  : test.networking
     module   : networking
     runorder : 15000
-    enable   : True
+    enable   : False 
     ignore   : True
 
 modules:

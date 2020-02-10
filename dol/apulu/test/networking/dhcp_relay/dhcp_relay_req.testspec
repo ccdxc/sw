@@ -13,43 +13,43 @@ packets:
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastMAC
+                dst     : callback://networking/dhcp/GetDhcpBroadcastMAC
             ipv4:
-                src     : callback://vpp/dhcp/GetDhcpClientSrcIp
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastIp
+                src     : callback://networking/dhcp/GetDhcpClientSrcIp
+                dst     : callback://networking/dhcp/GetDhcpBroadcastIp
             bootp:
                 op       : const/1
-                xid      : callback://vpp/dhcp/GetDhcpXid
+                xid      : callback://networking/dhcp/GetDhcpXid
                 chaddr   : ref://testcase/config/localmapping/VNIC/MACAddr
-                sname    : callback://vpp/dhcp/GetDhcpSname
-                file     : callback://vpp/dhcp/GetDhcpFile
+                sname    : callback://networking/dhcp/GetDhcpSname
+                file     : callback://networking/dhcp/GetDhcpFile
     - packet:
         id          : FROM_HOST_REQUEST_PKT
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
                 src     : ref://testcase/config/localmapping/VNIC/MACAddr
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastMAC
+                dst     : callback://networking/dhcp/GetDhcpBroadcastMAC
             ipv4:
-                src     : callback://vpp/dhcp/GetDhcpClientSrcIp
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastIp
+                src     : callback://networking/dhcp/GetDhcpClientSrcIp
+                dst     : callback://networking/dhcp/GetDhcpBroadcastIp
             bootp:
-                options  : callback://vpp/dhcp/GetDhcpOptions
+                options  : callback://networking/dhcp/GetDhcpOptions
     - packet:
         id          : TO_SERVER_REQUEST_PKT
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
                 src     : callback://networking/packets/GetUplinkPortMac
-                dst     : callback://vpp/dhcp/GetDhcpServerMAC
+                dst     : callback://networking/dhcp/GetDhcpServerMAC
             ipv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : callback://vpp/dhcp/GetDhcpServerIp
+                dst     : callback://networking/dhcp/GetDhcpServerIp
             bootp:
                 giaddr   : ref://testcase/config/devicecfg/IP
-                yiaddr   : callback://vpp/dhcp/GetAssignedIp
-                siaddr   : callback://vpp/dhcp/GetDhcpServerIp
-                options  : callback://vpp/dhcp/GetDhcpOptions
+                yiaddr   : callback://networking/dhcp/GetAssignedIp
+                siaddr   : callback://networking/dhcp/GetDhcpServerIp
+                options  : callback://networking/dhcp/GetDhcpOptions
 buffers:
     - buffer:
         id      : BUF1

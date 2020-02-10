@@ -13,26 +13,29 @@ packets:
         headers     :
             bootp:
                 op       : const/2
-                xid      : callback://vpp/dhcp/GetDhcpXid
+                xid      : callback://networking/dhcp/GetDhcpXid
                 chaddr   : ref://testcase/config/localmapping/VNIC/MACAddr
-                yiaddr   : callback://vpp/dhcp/GetAssignedIp
-                siaddr   : callback://vpp/dhcp/GetDhcpServerIp
+                yiaddr   : callback://networking/dhcp/GetAssignedIp
+                siaddr   : callback://networking/dhcp/GetDhcpServerIp
                 giaddr   : ref://testcase/config/devicecfg/IP
-                sname    : callback://vpp/dhcp/GetDhcpSname
-                file     : callback://vpp/dhcp/GetDhcpFile
+                sname    : callback://networking/dhcp/GetDhcpSname
+                file     : callback://networking/dhcp/GetDhcpFile
 
     - packet:
         id          : FROM_SERVER_OFFER_PKT
         clone       : ref://testcase/packets/id=BASE_PKT
         headers     :
             eth:
-                src     : callback://vpp/dhcp/GetDhcpServerMAC
+                src     : callback://networking/dhcp/GetDhcpServerMAC
                 dst     : callback://networking/packets/GetUplinkPortMac
             ipv4:
-                src     : callback://vpp/dhcp/GetDhcpServerIp
+                src     : callback://networking/dhcp/GetDhcpServerIp
                 dst     : ref://testcase/config/devicecfg/IP
+            udp:
+                sport   : 67
+                dport   : 68
             bootp:
-                options  : callback://vpp/dhcp/GetDhcpOptions
+                options  : callback://networking/dhcp/GetDhcpOptions
 
     - packet:
         id          : TO_HOST_OFFER_PKT
@@ -40,12 +43,12 @@ packets:
         headers     :
             eth:
                 src     : callback://networking/packets/GetPacketSrcMacAddrFromMapping
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastMAC
+                dst     : callback://networking/dhcp/GetDhcpBroadcastMAC
             ipv4:
                 src     : ref://testcase/config/devicecfg/IP
-                dst     : callback://vpp/dhcp/GetDhcpBroadcastIp
+                dst     : callback://networking/dhcp/GetDhcpBroadcastIp
             bootp:
-                options  : callback://vpp/dhcp/GetDhcpOptions
+                options  : callback://networking/dhcp/GetDhcpOptions
 
 buffers:
     - buffer:
