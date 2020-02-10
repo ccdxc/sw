@@ -66,6 +66,8 @@ export enum Telemetry_queryMetricsQuerySpec_function {
     'derivative' = "derivative",
     'difference' = "difference",
     'last' = "last",
+    'top' = "top",
+    'bottom' = "bottom",
 }
 
 export enum Telemetry_queryMetricsQuerySpec_sort_order {

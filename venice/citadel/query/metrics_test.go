@@ -193,6 +193,30 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 			pass: true,
 		},
 		{
+			desc: "Using TOP function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:   []string{"cpu"},
+				Function: telemetry_query.TsdbFunctionType_TOP.String(),
+			},
+			resp: "SELECT top(cpu,10),reporterID FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
+			desc: "Using BOTTOM function",
+			qs: &telemetry_query.MetricsQuerySpec{
+				TypeMeta: api.TypeMeta{
+					Kind: "test-db",
+				},
+				Fields:   []string{"cpu"},
+				Function: telemetry_query.TsdbFunctionType_BOTTOM.String(),
+			},
+			resp: "SELECT bottom(cpu,10),reporterID FROM test-db ORDER BY time ASC",
+			pass: true,
+		},
+		{
 			desc: "Name field",
 			qs: &telemetry_query.MetricsQuerySpec{
 				TypeMeta: api.TypeMeta{
@@ -679,7 +703,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				SortOrder: telemetry_query.SortOrder_Ascending.String(),
 			},
 			errMsgs: []string{
-				"Function MAX requires exactly one field",
+				"Function max requires exactly one field",
 			},
 			pass: false,
 		},
@@ -707,7 +731,7 @@ func TestValidateQuerySpec(t *testing.T) {
 				SortOrder: telemetry_query.SortOrder_Ascending.String(),
 			},
 			errMsgs: []string{
-				"Function MAX requires exactly one field",
+				"Function max requires exactly one field",
 			},
 			pass: false,
 		},

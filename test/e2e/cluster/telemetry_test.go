@@ -294,7 +294,9 @@ var _ = Describe("telemetry tests", func() {
 			qf = strings.ToLower(qf)
 			Eventually(func() bool {
 				fields := []string{}
-				if qf == telemetry_query.TsdbFunctionType_MAX.String() {
+				if qf == telemetry_query.TsdbFunctionType_MAX.String() ||
+					qf == telemetry_query.TsdbFunctionType_TOP.String() ||
+					qf == telemetry_query.TsdbFunctionType_BOTTOM.String() {
 					fields = append(fields, "CPUUsedPercent")
 				}
 				nodeQuery := &telemetry_query.MetricsQueryList{

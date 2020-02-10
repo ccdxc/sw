@@ -13,13 +13,15 @@ import "github.com/pensando/sw/api/fields/selector.proto";
 
 // TSDBFunctionType specifies an operation to perform on metrics
 enum TsdbFunctionType {
-    NONE = 0; // none
-    MEAN = 1; // returns average of the fields
-    MAX  = 2; // returns maximum of the fields
-    MEDIAN = 3; // returns median of the fields
+    NONE       = 0; // none
+    MEAN       = 1; // returns average of the fields
+    MAX        = 2; // returns maximum of the fields
+    MEDIAN     = 3; // returns median of the fields
     DERIVATIVE = 4; // returns derivative of the fields, defaults to 1s
     DIFFERENCE = 5; // returns difference between subsequent points
     LAST       = 6; // pick the entry with the most recent timestamp
+    TOP        = 7; // pick top 10 entries
+    BOTTOM     = 8; // pick bottom 10 entries
 }
 
 enum SortOrder {

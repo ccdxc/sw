@@ -28,6 +28,7 @@ var _ listerwatcher.WatcherClient
 
 // TsdbFunctionType_normal is a map of normalized values for the enum
 var TsdbFunctionType_normal = map[string]string{
+	"bottom":     "bottom",
 	"derivative": "derivative",
 	"difference": "difference",
 	"last":       "last",
@@ -35,6 +36,7 @@ var TsdbFunctionType_normal = map[string]string{
 	"mean":       "mean",
 	"median":     "median",
 	"none":       "none",
+	"top":        "top",
 }
 
 var TsdbFunctionType_vname = map[int32]string{
@@ -45,6 +47,8 @@ var TsdbFunctionType_vname = map[int32]string{
 	4: "derivative",
 	5: "difference",
 	6: "last",
+	7: "top",
+	8: "bottom",
 }
 
 var TsdbFunctionType_vvalue = map[string]int32{
@@ -55,6 +59,8 @@ var TsdbFunctionType_vvalue = map[string]int32{
 	"derivative": 4,
 	"difference": 5,
 	"last":       6,
+	"top":        7,
+	"bottom":     8,
 }
 
 func (x TsdbFunctionType) String() string {
