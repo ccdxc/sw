@@ -199,7 +199,9 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
     }
     rtable->af = spec->af;
     rtable->pbr_enabled = spec->enable_pbr;
-    rtable->default_nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+    rtable->default_nhid = 0;
+    PDS_IMPL_NH_VAL_SET_NH_INFO(rtable->default_nhid, NEXTHOP_TYPE_NEXTHOP,
+                                PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
     if (rtable->af == IP_AF_IPV4) {
         rtable->max_routes = route_table_impl_db()->v4_max_routes();
     } else {
@@ -260,11 +262,12 @@ route_table_impl::program_hw(api_base *api_obj, api_obj_ctxt_t *obj_ctxt) {
 
         switch (route_spec->nh_type) {
         case PDS_NH_TYPE_BLACKHOLE:
-            rtable->routes[i].nhid = PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID;
+            PDS_IMPL_NH_VAL_SET_NH_INFO(nh_val, NEXTHOP_TYPE_NEXTHOP,
+                                        PDS_IMPL_SYSTEM_DROP_NEXTHOP_HW_ID);
+            rtable->routes[i].nhid = nh_val;
             PDS_TRACE_DEBUG("Processing route table %s, route %s -> blackhole "
                             "nh id %u, ", spec->key.str(),
-                            ippfx2str(&rtable->routes[i].prefix),
-                            rtable->routes[i].nhid);
+                            ippfx2str(&rtable->routes[i].prefix), nh_val);
             break;
 
         case PDS_NH_TYPE_OVERLAY:
