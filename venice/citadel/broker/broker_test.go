@@ -151,7 +151,7 @@ func TestBrokerTstoreBasic(t *testing.T) {
 		log.Infof("Got result: %v", string(restr))
 
 		// query deprecated apis
-		_, err = brokers[0].ExecuteQuerySingle(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx))
+		_, err = brokers[0].ExecuteQuerySingle(context.Background(), "db0", fmt.Sprintf("SELECT * FROM cpu%d", idx), nil)
 		AssertOk(t, err, "Error executing query-single")
 
 		// test show commands
@@ -247,6 +247,10 @@ func TestBrokerTstoreBasic(t *testing.T) {
 	Assert(t, len(results) == numNodes, "got invalid number of results", results)
 	Assert(t, len(results[0].Series) == 1, "got invalid number of series", results[0].Series)
 	Assert(t, len(results[1].Series) == 1, "got invalid number of series", results[1].Series)
+
+	results, err = brokers[0].ExecuteQueryShard(context.Background(), "db0", "select * from cpu0", 7)
+	AssertOk(t, err, "Error executing query")
+	Assert(t, len(results[0].Series) == 1, "got invalid number of series", results[0].Series)
 
 	// delete the database
 	err = brokers[0].DeleteDatabase(context.Background(), "db0")

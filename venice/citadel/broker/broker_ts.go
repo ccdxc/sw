@@ -352,8 +352,9 @@ func (br *Broker) queryShard(ctx context.Context, shard *meta.Shard, database, q
 	return nil, errors.New("Query to allreplicas failed")
 }
 
-// ExecuteQuerySingle executes a query on data nodes, deprecated
-func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry string) ([]*query.Result, error) {
+// ExecuteQuerySingle executes a query on data nodes
+func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry string, shardIn *meta.Shard) ([]*query.Result, error) {
+	shard := shardIn
 	// parse the query
 	pq, err := influxql.ParseQuery(qry)
 	if err != nil {
@@ -380,10 +381,12 @@ func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry s
 					return nil, errors.New("fwlogs not supported")
 				}
 
-				shard, err := cl.ShardMap.GetShardForPoint(database, measurement.Name, "")
-				if err != nil {
-					br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
-					return nil, err
+				if shardIn == nil {
+					shard, err = cl.ShardMap.GetShardForPoint(database, measurement.Name, "")
+					if err != nil {
+						br.logger.Errorf("Error getting shard for %s/%s. Err: %v", database, measurement.Name, err)
+						return nil, err
+					}
 				}
 
 				resp, err := br.queryShard(ctx, shard, database, selStmt.String())
@@ -411,9 +414,31 @@ func (br *Broker) ExecuteQuerySingle(ctx context.Context, database string, qry s
 	return results, nil
 }
 
+// ExecuteQueryShard executes a query on shard, debug only
+func (br *Broker) ExecuteQueryShard(ctx context.Context, database string, qry string, shardID uint) ([]*query.Result, error) {
+	// get the cluster
+	cl := br.GetCluster(meta.ClusterTypeTstore)
+	if cl == nil || cl.ShardMap == nil || len(cl.ShardMap.Shards) == 0 {
+		return nil, errors.New("shard map is empty")
+	}
+
+	sm := cl.ShardMap
+
+	if shardID >= uint(sm.NumShards) {
+		return nil, fmt.Errorf("invalid shard, valid range 1-%d", sm.NumShards)
+	}
+
+	shard := sm.Shards[shardID]
+	if shard == nil {
+		return nil, fmt.Errorf("shard %d not found", shardID)
+	}
+
+	return br.ExecuteQuerySingle(ctx, database, qry, shard)
+}
+
 // ExecuteQuery executes a query on data nodes
 func (br *Broker) ExecuteQuery(ctx context.Context, database string, qry string) ([]*query.Result, error) {
-	return br.ExecuteQuerySingle(ctx, database, qry)
+	return br.ExecuteQuerySingle(ctx, database, qry, nil)
 }
 
 // WriteLines writes influx line protocol
