@@ -5,7 +5,6 @@ ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../../`
 #GDB='gdb --args'
 export CONFIG_PATH=$NIC_DIR/conf/
-export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
 export PERSISTENT_LOG_DIR=$NIC_DIR/
 #export CAPRI_MOCK_MODE=1

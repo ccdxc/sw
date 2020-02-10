@@ -1221,21 +1221,21 @@ TEST_F(apulu_test, test1)
                            .p4pd_pgm_name = "apulu_p4",
                            .p4pd_rxdma_pgm_name = "apulu_rxdma",
                            .p4pd_txdma_pgm_name = "apulu_txdma",
-                           .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                           .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_rxdma_cfg = {.table_map_cfg_file =
                                      "apulu/capri_rxdma_table_map.json",
                                  .p4pd_pgm_name = "apulu_p4",
                                  .p4pd_rxdma_pgm_name = "apulu_rxdma",
                                  .p4pd_txdma_pgm_name = "apulu_txdma",
-                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                                 .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_txdma_cfg = {.table_map_cfg_file =
                                      "apulu/capri_txdma_table_map.json",
                                  .p4pd_pgm_name = "apulu_p4",
                                  .p4pd_rxdma_pgm_name = "apulu_rxdma",
                                  .p4pd_txdma_pgm_name = "apulu_txdma",
-                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                                 .cfg_path = std::getenv("CONFIG_PATH")};
 
-    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    cfg.cfg_path = std::string(std::getenv("CONFIG_PATH"));
     std::string mpart_json = cfg.cfg_path + "/apulu/8g/hbm_mem.json";
 
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;

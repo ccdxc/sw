@@ -8,6 +8,7 @@
 #include "lib/catalog/catalog.hpp"
 #include "platform/utils/mpartition.hpp"
 #include "include/sdk/timestamp.hpp"
+#include "lib/shmmgr/shmmgr.hpp"
 
 #define TIME_STR_SIZE 30
 
@@ -53,6 +54,7 @@ typedef struct linkmgr_cfg_s {
     bool                process_mode;
     port_admin_state_t  admin_state; // default port admin state
     mpartition          *mempartition; // memory partition context from HAL
+    sdk::lib::shmmgr    *shmmgr; // shared memory manager instance from HAL
 } __PACK__ linkmgr_cfg_t;
 extern linkmgr_cfg_t g_linkmgr_cfg;
 

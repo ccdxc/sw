@@ -62,14 +62,22 @@ sdk_init (void)
 int
 nicmgr_if_init(void)
 {
+    devicemgr_cfg_t cfg;
     /*
      * Initializations needed by libnicmgr
      */
     utils::logger::init(false);
     sdk_init();
-    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM,
-                               FLAGS_nicmgr_config_file,
-                               sdk::lib::FORWARDING_MODE_NONE, false);
+
+    cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
+    cfg.cfg_path = std::string(getenv("HAL_CONFIG_PATH"));
+    cfg.device_conf_file = FLAGS_nicmgr_config_file;
+    cfg.fwd_mode = sdk::lib::FORWARDING_MODE_NONE;
+    cfg.micro_seg_en = false;
+    cfg.shm_mgr = NULL;
+    cfg.EV_A = NULL;
+
+    devmgr = new DeviceManager(&cfg);
     if (!devmgr) {
         fprintf(stderr, "Failed to init device manager\n");
         return -1;

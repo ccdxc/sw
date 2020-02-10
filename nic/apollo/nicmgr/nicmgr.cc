@@ -44,6 +44,7 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
     pds_state *state;
     string config_file;
     sdk::event_thread::event_thread *curr_thread;
+    devicemgr_cfg_t cfg;
 
     // get pds state
     state = (pds_state *)sdk::lib::thread::current_thread()->data();
@@ -60,9 +61,16 @@ nicmgrapi::nicmgr_thread_init(void *ctxt) {
 
     // initialize device manager
     PDS_TRACE_INFO("Initializing device manager ...");
-    g_devmgr = new DeviceManager(state->platform_type(), "",
-                                 sdk::lib::FORWARDING_MODE_NONE, false,
-                                 curr_thread->ev_loop());
+    cfg.platform_type = state->platform_type();
+    cfg.cfg_path = state->cfg_path();
+    cfg.device_conf_file = "";
+    cfg.fwd_mode = sdk::lib::FORWARDING_MODE_NONE;
+    cfg.micro_seg_en = false;
+    cfg.shm_mgr = NULL;
+    cfg.EV_A = curr_thread->ev_loop();
+
+    g_devmgr = new DeviceManager(&cfg);
+    SDK_ASSERT(g_devmgr);
     g_devmgr->LoadProfile(config_file, true);
 
     sdk::ipc::subscribe(EVENT_ID_PORT_STATUS, port_event_handler_, NULL);

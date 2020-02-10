@@ -667,7 +667,9 @@ Eth::CreateLocalDevice()
     if (skip_init) {
         NIC_LOG_DEBUG("{}: Skipping MNIC device creation", spec->name);
         if (spec->eth_type != ETH_HOST && spec->eth_type != ETH_HOST_MGMT) {
-            WRITE_DEVINFO(spec->name.c_str(), dev_resources.regs_mem_addr, dev_resources.lif_base);
+            WRITE_DEVINFO(DeviceManager::GetInstance()->CfgPath().c_str(),
+                          spec->name.c_str(), dev_resources.regs_mem_addr,
+                          dev_resources.lif_base);
         }
         return true;
     }

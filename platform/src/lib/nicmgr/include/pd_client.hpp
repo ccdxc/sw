@@ -87,8 +87,9 @@ const uint32_t kNumMaxLIFs = 2048;
 
 class PdClient {
 public:
-    static PdClient* factory(sdk::platform::platform_type_t platform, 
-                             std::string mpart_file);
+    static PdClient* factory(sdk::platform::platform_type_t platform,
+                             std::string mpart_file,
+                             std::string cfg_path);
     void update(void);
     void destroy(PdClient *pdc);
 

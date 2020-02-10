@@ -10,7 +10,7 @@ export VPP_IPC_MOCK_MODE=1
 export SKIP_VERIFY=1
 export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
-export HAL_CONFIG_PATH=${NICDIR}/conf
+export CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
 
 cfgfile=scale_cfg.json

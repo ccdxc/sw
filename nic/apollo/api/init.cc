@@ -210,7 +210,8 @@ pds_init (pds_init_params_t *params)
     }
 
     // parse global configuration
-    api::g_pds_state.set_cfg_path(std::string(std::getenv("HAL_CONFIG_PATH")));
+    SDK_ASSERT(std::getenv("CONFIG_PATH"));
+    api::g_pds_state.set_cfg_path(std::string(std::getenv("CONFIG_PATH")));
     if (api::g_pds_state.cfg_path().empty()) {
         api::g_pds_state.set_cfg_path(std::string("./"));
     } else {

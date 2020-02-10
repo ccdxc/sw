@@ -479,19 +479,6 @@ PdClient::create_dirs() {
     return 0;
 }
 
-static std::string
-hal_cfg_path()
-{
-    std::string hal_cfg_path;
-    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
-        hal_cfg_path = "/nic/conf/";
-    } else {
-        hal_cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
-    }
-
-    return hal_cfg_path;
-}
-
 void
 PdClient::init()
 {
@@ -541,15 +528,18 @@ void PdClient::update(void)
 }
 
 PdClient* PdClient::factory(sdk::platform::platform_type_t platform,
-                            std::string mpart_file)
+                            std::string mpart_file,
+                            std::string cfg_path)
 {
     int ret;
     PdClient *pdc = new PdClient();
 
     assert(pdc);
+    assert(!cfg_path.empty());
+
     pdc->platform_ = platform;
 
-    pdc->hal_cfg_path_ = hal_cfg_path();
+    pdc->hal_cfg_path_ = cfg_path;
     NIC_LOG_INFO("HAL config path {}", pdc->hal_cfg_path_);
 
     pdc->gen_dir_path_ = pdc->hal_cfg_path_ + "/gen";

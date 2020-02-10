@@ -7,7 +7,6 @@ NIC_DIR=`dirname $ABS_TOOLS_DIR/../../../../`
 # Enable the below to test with flow insertion
 export AGENT_TEST_HOOKS_LIB=libflowtestagenthooks.so
 export CONFIG_PATH=$NIC_DIR/conf/
-export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=$NIC_DIR/
 export PERSISTENT_LOG_DIR=$NIC_DIR/
 export CAPRI_MOCK_MODE=1

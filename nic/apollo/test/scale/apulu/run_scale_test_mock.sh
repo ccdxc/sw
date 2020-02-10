@@ -9,7 +9,7 @@ export CAPRI_MOCK_MEMORY_MODE=1
 export SKIP_VERIFY=1
 export BUILD_DIR=${NICDIR}/build/x86_64/apulu/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
-export HAL_CONFIG_PATH=${NICDIR}/conf
+export CONFIG_PATH=${NICDIR}/conf
 #export GDB='gdb --args'
 # @kalyanbade please figure out thats going on
 export VPP_IPC_MOCK_MODE=1

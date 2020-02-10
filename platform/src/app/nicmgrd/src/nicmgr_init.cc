@@ -126,6 +126,14 @@ nicmgr_init (platform_type_t platform,
     sdk::lib::device *device = NULL;
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     UpgradeMode upg_mode;
+    devicemgr_cfg_t cfg;
+    std::string hal_cfg_path;
+
+    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
+        hal_cfg_path = "/nic/conf/";
+    } else {
+        hal_cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    }
 
     // instantiate the logger
     utils::logger::init();
@@ -133,8 +141,7 @@ nicmgr_init (platform_type_t platform,
     NIC_LOG_INFO("Nicmgr initializing!");
 
     if (platform == platform_type_t::PLATFORM_TYPE_SIM) {
-        profile = std::string(getenv("HAL_CONFIG_PATH")) + "/../../" +
-                  "platform/src/app/nicmgrd/etc/eth.json";
+        profile = hal_cfg_path + "/../../" + "platform/src/app/nicmgrd/etc/eth.json";
         fwd_mode = sdk::lib::FORWARDING_MODE_CLASSIC;
         goto dev_init;
     } else {
@@ -165,8 +172,20 @@ dev_init:
 
     register_for_events();
 
-    devmgr = new DeviceManager(platform, device_file, fwd_mode, micro_seg_en,
-                               thread->ev_loop());
+    cfg.platform_type = platform;
+    cfg.cfg_path = hal_cfg_path;
+    cfg.device_conf_file = device_file;
+    cfg.fwd_mode = fwd_mode;
+    cfg.micro_seg_en = micro_seg_en;
+    cfg.shm_mgr = NULL;
+    cfg.EV_A = thread->ev_loop();
+
+    devmgr = new DeviceManager(&cfg);
+    if (!devmgr) {
+        NIC_LOG_ERR("Devmgr create failed");
+        exit(1);
+    }
+
     devmgr->SetUpgradeMode(upg_mode);
     devmgr->SetThread((sdk::lib::thread *)thread);
 

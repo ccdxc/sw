@@ -110,32 +110,32 @@ DevPcieEvHandler::reset(const int port, uint32_t rsttype, const uint32_t lifb, c
 /**
  * Device Manager
  */
-DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
-                             std::string device_conf_file,
-                             sdk::lib::dev_forwarding_mode_t fwd_mode,
-                             bool micro_seg_en,
-                             EV_P)
+DeviceManager::DeviceManager(devicemgr_cfg_t *cfg)
 {
     string device_json_file, hbm_mem_json_file;
+    sdk::platform::platform_type_t platform = cfg->platform_type;
 
     NIC_HEADER_TRACE("Initializing DeviceManager");
     init_done = false;
     instance = this;
 
+    assert(!cfg->cfg_path.empty());
+
     this->platform = platform;
+    this->cfg_path = cfg->cfg_path;
     NIC_LOG_DEBUG("Platform {}", platform);
 
     sdk::lib::pal_init(platform);
 
-    GetConfigFiles(device_conf_file, hbm_mem_json_file, device_json_file);
+    GetConfigFiles(cfg->device_conf_file, hbm_mem_json_file, device_json_file);
 
-    this->loop = (loop == NULL) ? EV_DEFAULT : loop;
-    this->fwd_mode = fwd_mode;
-    this->micro_seg_en = micro_seg_en;
+    this->loop = (cfg->loop == NULL) ? EV_DEFAULT : cfg->loop;
+    this->fwd_mode = cfg->fwd_mode;
+    this->micro_seg_en = cfg->micro_seg_en;
     this->device_json_file = device_json_file;
     this->dev_api = NULL;
 
-    pd = PdClient::factory(platform, hbm_mem_json_file);
+    pd = PdClient::factory(platform, hbm_mem_json_file, cfg->cfg_path);
     assert(pd);
     this->skip_hwinit = pd->is_dev_hwinit_done(NULL);
 
@@ -168,14 +168,11 @@ DeviceManager::DeviceManager(sdk::platform::platform_type_t platform,
 static std::string
 hal_cfg_path()
 {
-    std::string hal_cfg_path;
-    if (std::getenv("HAL_CONFIG_PATH") == NULL) {
-        hal_cfg_path = "/nic/conf/";
-    } else {
-        hal_cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    DeviceManager *devmgr = DeviceManager::GetInstance();
+    if (devmgr == NULL) {
+        throw runtime_error("Devmgr instance not found");
     }
-
-    return hal_cfg_path;
+    return devmgr->CfgPath();
 }
 
 void

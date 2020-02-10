@@ -2,7 +2,7 @@
 
 set -e
 export NIC_DIR=/nic/
-export HAL_CONFIG_PATH=$NIC_DIR/conf/
+export CONFIG_PATH=$NIC_DIR/conf/
 export NON_PERSISTENT_LOGDIR=/var/log/pensando/
 export HAL_LIBRARY_PATH=$NIC_DIR/lib:$NIC_DIR/../platform/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 export HAL_PBC_INIT_CONFIG="2x100_hbm"

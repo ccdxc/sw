@@ -18,6 +18,7 @@
 #endif
 
 #include "nic/sdk/lib/thread/thread.hpp"
+#include "nic/sdk/lib/shmmgr/shmmgr.hpp"
 #include "nic/sdk/platform/devapi/devapi.hpp"
 #include "nic/sdk/platform/devapi/devapi_types.hpp"
 #include "nic/sdk/include/sdk/timestamp.hpp"
@@ -77,6 +78,17 @@ typedef struct uplink_s {
     bool is_oob;
 } uplink_t;
 
+typedef struct devicemgr_cfg_s {
+    sdk::platform::platform_type_t platform_type;
+    std::string cfg_path;
+    std::string device_conf_file;
+    sdk::lib::dev_forwarding_mode_t fwd_mode;
+    bool micro_seg_en;
+    sdk::lib::shmmgr *shm_mgr;
+    EV_P;
+} devicemgr_cfg_t;
+
+
 class PdClient;
 class AdminQ;
 
@@ -97,10 +109,7 @@ class DevPcieEvHandler : public pciemgr::evhandler
 class DeviceManager
 {
 public:
-    DeviceManager(sdk::platform::platform_type_t platform,
-                  std::string device_conf_file,
-                  sdk::lib::dev_forwarding_mode_t fwd_mode,
-                  bool micro_seg_en, EV_P = NULL);
+    DeviceManager(devicemgr_cfg_t *cfg);
 
     int LoadProfile(std::string path, bool init_pci);
     void LoadState(std::vector<struct EthDevInfo *> eth_dev_info_list);
@@ -146,6 +155,7 @@ public:
     void SetUpgradeMode(UpgradeMode mode) { upgrade_mode = mode; }
     UpgradeMode GetUpgradeMode(void) { return upgrade_mode; }
     struct ev_loop *ev_loop(void) { return EV_A; }
+    string CfgPath(void) { return cfg_path; };
 
 private:
     static DeviceManager *instance;
@@ -166,6 +176,7 @@ private:
     sdk::lib::dev_forwarding_mode_t fwd_mode;
     bool micro_seg_en;
     string device_json_file;
+    string cfg_path;
 
     std::vector<struct EthDevInfo *> eth_dev_info_list;
 

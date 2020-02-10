@@ -712,21 +712,21 @@ TEST_F(artemis_test, test1)
                            .p4pd_pgm_name = "artemis_p4",
                            .p4pd_rxdma_pgm_name = "artemis_rxdma",
                            .p4pd_txdma_pgm_name = "artemis_txdma",
-                           .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                           .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_rxdma_cfg = {.table_map_cfg_file =
                                      "artemis/capri_rxdma_table_map.json",
                                  .p4pd_pgm_name = "artemis_p4",
                                  .p4pd_rxdma_pgm_name = "artemis_rxdma",
                                  .p4pd_txdma_pgm_name = "artemis_txdma",
-                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                                 .cfg_path = std::getenv("CONFIG_PATH")};
     p4pd_cfg_t p4pd_txdma_cfg = {.table_map_cfg_file =
                                      "artemis/capri_txdma_table_map.json",
                                  .p4pd_pgm_name = "artemis_p4",
                                  .p4pd_rxdma_pgm_name = "artemis_rxdma",
                                  .p4pd_txdma_pgm_name = "artemis_txdma",
-                                 .cfg_path = std::getenv("HAL_CONFIG_PATH")};
+                                 .cfg_path = std::getenv("CONFIG_PATH")};
 
-    cfg.cfg_path = std::string(std::getenv("HAL_CONFIG_PATH"));
+    cfg.cfg_path = std::string(std::getenv("CONFIG_PATH"));
     std::string mpart_json = cfg.cfg_path + "/artemis/8g/hbm_mem.json";
 
     platform_type_t platform = platform_type_t::PLATFORM_TYPE_SIM;

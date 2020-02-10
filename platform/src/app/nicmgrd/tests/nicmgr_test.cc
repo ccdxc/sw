@@ -118,10 +118,20 @@ sdk_init (void)
 void
 nicmgr_init()
 {
+    devicemgr_cfg_t cfg;
+
     utils::logger::init(false);
     sdk_init();
-    devmgr = new DeviceManager(platform_type_t::PLATFORM_TYPE_SIM, "../nic/conf/device.conf",
-                    sdk::lib::FORWARDING_MODE_NONE, false);
+
+    cfg.platform_type = platform_type_t::PLATFORM_TYPE_SIM;
+    cfg.cfg_path = std::string(getenv("HAL_CONFIG_PATH"));
+    cfg.device_conf_file = "../nic/conf/device.conf";
+    cfg.fwd_mode = sdk::lib::FORWARDING_MODE_NONE;
+    cfg.micro_seg_en = false;
+    cfg.shm_mgr = NULL;
+    cfg.EV_A = NULL;
+
+    devmgr = new DeviceManager(&cfg);
     EXPECT_TRUE(devmgr != NULL);
     devmgr->LoadProfile("../platform/src/app/nicmgrd/etc/eth.json", false);
     devmgr->HalEventHandler(true);

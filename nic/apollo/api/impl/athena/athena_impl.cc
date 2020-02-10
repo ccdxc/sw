@@ -582,7 +582,9 @@ sdk_ret_t
 athena_impl::pipeline_init(void) {
     sdk_ret_t  ret;
     p4pd_cfg_t p4pd_cfg;
+    std::string cfg_path = api::g_pds_state.cfg_path();
 
+    p4pd_cfg.cfg_path = cfg_path.c_str();
     ret = pipeline_p4_hbm_init(&p4pd_cfg);
     SDK_ASSERT(ret == SDK_RET_OK);
 

@@ -5,7 +5,6 @@ TOOLS_DIR=`dirname $0`
 ABS_TOOLS_DIR=`readlink -f $TOOLS_DIR`
 export NIC_DIR=`dirname $ABS_TOOLS_DIR`
 export CONFIG_PATH=$NIC_DIR/conf/
-export HAL_CONFIG_PATH=$NIC_DIR/conf/
 export LOG_DIR=/var/log/pensando/
 export PERSISTENT_LOG_DIR=/obfl/
 export LIBRARY_PATH=$NIC_DIR/lib:/usr/local/lib:/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH

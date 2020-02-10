@@ -1,7 +1,7 @@
 export NICDIR=`pwd`
 export BUILD_DIR=${NICDIR}/build/x86_64/apollo/
 export GEN_TEST_RESULTS_DIR=${BUILD_DIR}/gtest_results
-export HAL_CONFIG_PATH=${NICDIR}/conf/
+export CONFIG_PATH=${NICDIR}/conf/
 export ZMQ_SOC_DIR=${NICDIR}
 export PATH=${PATH}:${BUILD_DIR}/bin
 export NON_PERSISTENT_LOGDIR=${NICDIR}
