@@ -49,6 +49,7 @@ import (
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
 	tokenauthsvc "github.com/pensando/sw/venice/cmd/services/tokenauth"
+	cmdtypes "github.com/pensando/sw/venice/cmd/types"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
@@ -171,7 +172,7 @@ func launchCMDServices(m *testing.M, regURL, updURL string) (*rpckit.RPCServer, 
 		return nil, nil, fmt.Errorf("Error creating CertMgr instance: %v", err)
 	}
 	cmdenv.SmartNICRegRPCServer = regRPCServer
-	tInfo.stateMgr = cache.NewStatemgr(tInfo)
+	tInfo.stateMgr = cache.NewStatemgr(tInfo, func() cmdtypes.LeaderService { return cmdenv.LeaderService })
 	cmdenv.StateMgr = tInfo.stateMgr
 
 	// create and register the RPC handler for SmartNIC service

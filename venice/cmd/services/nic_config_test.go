@@ -32,6 +32,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc"
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/services/mock"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	diagmock "github.com/pensando/sw/venice/utils/diagnostics/mock"
@@ -131,7 +132,7 @@ func createCMD(m *testing.M) (*rpckit.RPCServer, error) {
 	// set cmd logger & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
-	cmdenv.StateMgr = cache.NewStatemgr(tInfo)
+	cmdenv.StateMgr = cache.NewStatemgr(tInfo, func() types.LeaderService { return cmdenv.LeaderService })
 	cmdenv.K8sService = &mock.K8sService{}
 	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("nic_config_test")
 	if err != nil {

@@ -193,7 +193,10 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 
 	if writeback || cachedState.dirty {
 		ok := false
-		for i := 0; i < maxAPIServerWriteRetries; i++ {
+		// DSCs updates are periodic and can come in a big batch after leader update,
+		// so we use lower retries number to avoid overloading ApiServer
+		maxDSCUpdateAPIServerWriteRetries := 2
+		for i := 0; i < maxDSCUpdateAPIServerWriteRetries; i++ {
 			ctx, cancel := context.WithTimeout(context.Background(), apiServerRPCTimeout)
 			if forceSpec {
 				updObj.ResourceVersion = ""
@@ -210,6 +213,7 @@ func (sm *Statemgr) UpdateSmartNIC(updObj *cluster.DistributedServiceCard, write
 			}
 			log.Errorf("Error updating SmartNIC object %+v: %v", updObj.ObjectMeta, err)
 			cancel()
+			time.Sleep(apiClientRetryInterval)
 		}
 		if !ok {
 			cachedState.dirty = true
@@ -294,6 +298,34 @@ func (sm *Statemgr) MarkSmartNICsDirty() {
 			s.Unlock()
 		} else {
 			log.Errorf("Error looking up DSC object %s in memdb", n.ObjectMeta.Name)
+		}
+	}
+}
+
+func (sm *Statemgr) retryDirtySmartNICs(done chan bool) {
+	log.Infof("RetryDirtySmartNICs Start")
+	ticker := time.NewTicker(time.Duration(2*maxAPIServerWriteRetries) * apiClientRetryInterval * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if sm.isLeader() {
+				nics, err := sm.ListSmartNICs()
+				if err != nil {
+					log.Infof("Error listing SmartNICs: %v", err)
+				}
+				for _, s := range nics {
+					s.Lock()
+					if s.dirty {
+						log.Infof("Pushing update for dirty DSC %s", s.DistributedServiceCard.Name)
+						sm.UpdateSmartNIC(s.DistributedServiceCard, true, false)
+					}
+					s.Unlock()
+				}
+			}
+		case <-done:
+			log.Infof("RetryDirtySmartNICs Stop")
+			return
 		}
 	}
 }

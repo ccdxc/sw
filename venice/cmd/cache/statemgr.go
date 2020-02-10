@@ -8,6 +8,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/cluster"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/utils/memdb"
 )
 
@@ -23,12 +24,18 @@ type APIClientGetter interface {
 	APIClient() cluster.ClusterV1Interface
 }
 
+// LeaderServiceGetter is an interface that returns a getter for leader services
+type LeaderServiceGetter func() types.LeaderService
+
 // Statemgr is the object state manager
 type Statemgr struct {
 	memDB *memdb.Memdb // database of all objects
 
 	// Implement APIClientGetter interface for ApiServer access
 	clientGetter APIClientGetter
+
+	// Implement LeaderServiceGetter
+	leaderService LeaderServiceGetter
 
 	// hostnameToSmartNICMap is a cache of known DistributedServiceCard objects indexed by hostname
 	hostnameToSmartNICMap     map[string]*cluster.DistributedServiceCard
@@ -73,13 +80,18 @@ func (sm *Statemgr) APIClient() cluster.ClusterV1Interface {
 	return sm.clientGetter.APIClient()
 }
 
+func (sm *Statemgr) isLeader() bool {
+	return sm.leaderService() != nil && sm.leaderService().IsLeader()
+}
+
 // NewStatemgr creates a new state manager object
-func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
+func NewStatemgr(clientGetter APIClientGetter, leaderSvc LeaderServiceGetter) *Statemgr {
 
 	// create new statemgr instance
 	statemgr := &Statemgr{
 		memDB:                 memdb.NewMemdb(),
 		clientGetter:          clientGetter,
+		leaderService:         leaderSvc,
 		hostnameToSmartNICMap: make(map[string]*cluster.DistributedServiceCard),
 		done:                  make(chan bool),
 	}
@@ -88,6 +100,9 @@ func NewStatemgr(clientGetter APIClientGetter) *Statemgr {
 	// are eventually pushed to ApiServer, we need to track dirty objects and
 	// re-trigger updates from a dedicated goroutine
 	go statemgr.retryDirtyHosts(statemgr.done)
+	// SmartNIC objects are updated periodically, but only if the DSC is sending
+	// heartbeat so we still need a background job to update
+	go statemgr.retryDirtySmartNICs(statemgr.done)
 
 	return statemgr
 }

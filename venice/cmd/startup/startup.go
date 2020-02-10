@@ -17,6 +17,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	"github.com/pensando/sw/venice/cmd/rolloutclient"
 	"github.com/pensando/sw/venice/cmd/services"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/cmd/utils"
 	rolloututils "github.com/pensando/sw/venice/ctrler/rollout/utils"
 	"github.com/pensando/sw/venice/globals"
@@ -319,7 +320,8 @@ func OnStart() {
 	// These must be instantiated regardless of whether node is part of a cluster or not,
 	// as they are needed  by the gRPC server that listens for cluster events
 	env.CfgWatcherService = apiclient.NewCfgWatcherService(env.Logger, globals.APIServer)
-	env.StateMgr = cache.NewStatemgr(env.CfgWatcherService)
+	// Leader service is not yet instantiated at this point, so we pass in a getter
+	env.StateMgr = cache.NewStatemgr(env.CfgWatcherService, func() types.LeaderService { return env.LeaderService })
 	env.ClusterBootstrapService = services.NewClusterBootstrapService(":" + env.Options.RESTPort)
 
 	// Instantiate handler for NIC registration and updates.

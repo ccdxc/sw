@@ -41,6 +41,7 @@ import (
 	. "github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
+	"github.com/pensando/sw/venice/cmd/types"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/certmgr"
 	"github.com/pensando/sw/venice/utils/certs"
@@ -110,7 +111,7 @@ func createRPCServer(url, certFile, keyFile, caFile string) (*rpckit.RPCServer, 
 	// set cmd logger, statemgr, certmgr & quorum nodes
 	cmdenv.Logger = tInfo.l
 	cmdenv.QuorumNodes = []string{"localhost"}
-	tInfo.stateMgr = cache.NewStatemgr(tInfo)
+	tInfo.stateMgr = cache.NewStatemgr(tInfo, func() types.LeaderService { return cmdenv.LeaderService })
 	cmdenv.StateMgr = tInfo.stateMgr
 	cmdenv.CertMgr, err = certmgr.NewTestCertificateMgr("smartnic-test")
 	if err != nil {

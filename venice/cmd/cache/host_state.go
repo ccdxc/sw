@@ -171,16 +171,19 @@ func (sm *Statemgr) retryDirtyHosts(done chan bool) {
 	for {
 		select {
 		case <-ticker.C:
-			hosts, err := sm.ListHosts()
-			if err != nil {
-				log.Infof("Error listing hosts")
-			}
-			for _, h := range hosts {
-				h.Lock()
-				if h.dirty {
-					sm.UpdateHost(h.Host, true)
+			if sm.isLeader() {
+				hosts, err := sm.ListHosts()
+				if err != nil {
+					log.Infof("Error listing hosts")
 				}
-				h.Unlock()
+				for _, h := range hosts {
+					h.Lock()
+					if h.dirty {
+						log.Infof("Pushing update for dirty host %s", h.Host.Name)
+						sm.UpdateHost(h.Host, true)
+					}
+					h.Unlock()
+				}
 			}
 		case <-done:
 			log.Infof("RetryDirtyHosts Stop")

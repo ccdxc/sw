@@ -57,6 +57,7 @@ import (
 	"github.com/pensando/sw/venice/cmd/grpc/server/smartnic"
 	cmdsvc "github.com/pensando/sw/venice/cmd/services"
 	"github.com/pensando/sw/venice/cmd/services/mock"
+	cmdtypes "github.com/pensando/sw/venice/cmd/types"
 	types "github.com/pensando/sw/venice/cmd/types/protos"
 	"github.com/pensando/sw/venice/ctrler/evtsmgr"
 	"github.com/pensando/sw/venice/ctrler/npm"
@@ -284,7 +285,7 @@ func (it *veniceIntegSuite) launchCMDServer() {
 	cmdenv.SmartNICRegRPCServer = rpcServer
 
 	cw := cmdapi.NewCfgWatcherService(it.logger, it.apiSrvAddr)
-	cmdenv.StateMgr = cache.NewStatemgr(cw)
+	cmdenv.StateMgr = cache.NewStatemgr(cw, func() cmdtypes.LeaderService { return cmdenv.LeaderService })
 
 	// create and register the RPC handler for SmartNIC service
 	it.smartNICServer = smartnic.NewRPCServer(
