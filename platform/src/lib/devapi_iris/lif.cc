@@ -214,7 +214,7 @@ devapi_lif::reset(void)
     NIC_LOG_DEBUG("Resetting lif: {}", get_id());
 
     // Remove Filters
-    remove_macfilters();
+    remove_macfilters(false, true);
     remove_vlanfilters(true /* skip_native_vlan */);
     remove_macvlanfilters();
 
@@ -249,7 +249,7 @@ devapi_lif::destroy(devapi_lif *lif, devapi_iris *dapi)
     // Remove from DB
     lif_db_.erase(lif->get_id());
 
-    lif->remove_macfilters();
+    lif->remove_macfilters(false, true);
     lif->remove_vlanfilters();
     lif->remove_macvlanfilters();
 
@@ -364,6 +364,14 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
             if (is_multicast(mac) && is_recallmc()) {
                 skip_registration = true;
             }
+            // In micro-seg mode, host lifs will be prom. So no need to install
+            // mac filters. For own mac we install as l2seg have to be creaetd.
+            if (!is_multicast(mac) && hal->get_micro_seg_en() &&
+                mac != MAC_TO_UINT64(info_.mac)) {
+                NIC_LOG_DEBUG("Skipping ucast mac registration for "
+                                "non-native mac in micro-seg");
+                skip_registration = true;
+            }
 
             if (!skip_registration) {
                 // Register new mac across all existing vlans
@@ -395,7 +403,6 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
         }
     } else {
         NIC_LOG_WARN("Mac already registered: {}", macaddr2str(mac));
-        return sdk::SDK_RET_ENTRY_EXISTS;
     }
 
 end:
@@ -1100,15 +1107,23 @@ devapi_lif::deprogram_mcfilters(void)
 }
 
 void
-devapi_lif::remove_macfilters(void)
+devapi_lif::remove_macfilters(bool skip_native_mac, bool update_db)
 {
     mac_t mac;
 
     NIC_LOG_DEBUG("lif-{}: Removing Mac Filters", get_id());
     for (auto it = mac_table_.begin(); it != mac_table_.end();) {
         mac = *it;
+        if (skip_native_mac && mac == MAC_TO_UINT64(info_.mac)) {
+            it++;
+            continue;
+        }
         del_mac(mac, false);
-        it = mac_table_.erase(it);
+        if (update_db) {
+            it = mac_table_.erase(it);
+        } else {
+            it++;
+        }
     }
     NIC_LOG_DEBUG("# of Mac Filters: {}", mac_table_.size());
 }
@@ -1364,6 +1379,7 @@ devapi_lif::set_micro_seg_en(bool en)
         lif = (devapi_lif *)(it->second);
         if (lif->is_host()) {
             lif->remove_vlanfilters(true);
+            lif->remove_macfilters(true, false);
         }
     }
 

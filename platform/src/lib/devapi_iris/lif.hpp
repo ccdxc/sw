@@ -96,7 +96,7 @@ public:
     sdk_ret_t upd_state(lif_state_t state);
     sdk_ret_t upd_rdma_sniff(bool rdma_sniff);
 
-    void remove_macfilters(void);
+    void remove_macfilters(bool skip_native_mac, bool update_d);
     void remove_vlanfilters(bool skip_native_vlan = false);
     void remove_macvlanfilters(void);
 

@@ -864,12 +864,12 @@ devapi_swm::enable_tx(uint32_t channel)
     channel_info_t *cinfo = NULL;
 
     if (tx_channel_ != -1) {
-        NIC_LOG_ERR("Channel {} already is tx enabled. Disable it before enabling: {}.",
+        NIC_LOG_WARN("Channel {} already is tx enabled. Force enabling tx on channel: {}.",
                     tx_channel_, channel);
     }
 
     if (tx_channel_ == (int)channel) {
-        NIC_LOG_DEBUG("channel {} already tx-enabled. noop", channel);
+        NIC_LOG_WARN("channel {} already tx-enabled. noop", channel);
         goto end;
     }
 

@@ -87,8 +87,11 @@ acl_uninstall_bcast_all (if_t *hal_if)
     AclDeleteRequest    req;
     AclDeleteResponse   rsp;
     uint32_t            acl_id;
+    uint32_t            if_idx;
 
-    acl_id = ACL_NCSI_BCAST_ALL;
+    if_idx = uplink_if_get_idx(hal_if);
+
+    acl_id = ACL_NCSI_BCAST_ALL + if_idx;
     req.mutable_key_or_handle()->set_acl_id(acl_id);
 
     HAL_TRACE_DEBUG("UnInstalling ACL for bcast-all");

@@ -441,7 +441,7 @@ uplinkpc_pd_depgm_output_mapping_tbl (pd_uplinkpc_t *pd_upif)
         HAL_TRACE_ERR("unable to deprogram omapping table. index:{}",
                       pd_upif->uppc_lport_id);
     } else {
-        HAL_TRACE_ERR("deprogrammed omapping table. index:{}",
+        HAL_TRACE_DEBUG("deprogrammed omapping table. index:{}",
                       pd_upif->uppc_lport_id);
     }
 

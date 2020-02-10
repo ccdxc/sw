@@ -262,7 +262,7 @@ l2seg_uplink_depgm_input_properties_tbl (pd_del_l2seg_uplink_args_t *args)
                           "table:input_properties index:{}",
                           l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
         } else {
-            HAL_TRACE_ERR("deprogrammed "
+            HAL_TRACE_DEBUG("deprogrammed "
                           "table:input_properties index:{}",
                           l2seg_pd->inp_prop_tbl_idx[uplink_ifpc_id]);
         }
