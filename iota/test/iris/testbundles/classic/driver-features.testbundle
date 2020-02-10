@@ -9,37 +9,6 @@ testcases:
         testcase: testcases.drivers.eventq
         enable : True
 
-    -   name    : UplinkIntf_INTR_COAL
-        testcase: testcases.drivers.interruptcoalescing
-        disable : False
-        ignore  : True
-        iterators :
-            type               : nested
-            pktsize            : [ 64 ]
-            coales_interval    : [ 0, 2, 3, 189, 193]
-            proto              : [ 'tcp']
-            ipproto            : [ 'v4']
-        args    :
-            timeout : 7200
-            coales_period        : 3
-            max_coales_interval  : 192
-            type           : remote_only
-            #capture_pcap  : True
-    -   name    : UplinkIntf_LEGACY_INTR
-        testcase: testcases.drivers.features
-        enable  : True
-        iterators :
-            type               : nested
-           # Preserve the order of legacy value since last value is what will be used
-           # for rest of runs.
-            legacy             : ['on', 'off']
-        args    :
-            timeout : 7200
-            test-type    : host
-            iperfthreads     :  1
-            #capture_pcap : true
-
-
     -   name    : UplinkIntf_TX_RING_SIZE
         testcase: testcases.drivers.features
         disable : False
@@ -197,29 +166,4 @@ testcases:
             timeout : 7200
             loops     : 100
 
-    -   name    : DriverWatchdog
-        testcase: testcases.drivers.watchdog
-        disable : True
-        iterators :
-        args    :
 
-    -   name    : DriverFwUpdate
-        testcase: testcases.drivers.driverfwupdate
-        disable : False
-        iterators :
-        args      :
-
-    -   name    : DriverStatsReset
-        testcase: testcases.drivers.driverstatsreset
-        disable : False
-        iterators :
-        args      :
-
-    -   name    : DriverFlowCtrl
-        testcase: testcases.drivers.driverflowctrl
-        disable : True
-        iterators :
-
-    -   name    : DriverLifReset
-        testcase: testcases.drivers.driverlifreset
-        disable : True

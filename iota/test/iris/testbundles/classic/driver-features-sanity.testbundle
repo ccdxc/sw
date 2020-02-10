@@ -252,7 +252,7 @@ testcases:
 
     -   name    : DriverWatchdog
         testcase: testcases.drivers.watchdog
-        disable : True
+        disable : False
         iterators :
         args    :
 
@@ -270,7 +270,7 @@ testcases:
 
     -   name    : DriverFlowCtrl
         testcase: testcases.drivers.driverflowctrl
-        disable : True
+        disable : False
         iterators :
 
     -   name    : DriverLifReset
