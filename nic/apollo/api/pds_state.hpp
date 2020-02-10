@@ -35,6 +35,7 @@
 #include "nic/apollo/api/dhcp_state.hpp"
 #include "nic/apollo/api/security_profile.hpp"
 #include "nic/apollo/api/include/pds_event.hpp"
+#include "nic/apollo/learn/learn_state.hpp"
 
 using std::string;
 
@@ -63,7 +64,8 @@ namespace api {
     ENTRY(PDS_STATE_POLICER,        18,            "policer")       \
     ENTRY(PDS_STATE_NAT,            19,            "nat")           \
     ENTRY(PDS_STATE_DHCP,           20,            "dhcp")          \
-    ENTRY(PDS_STATE_MAX,            21,            "max")
+    ENTRY(PDS_STATE_LEARN,          21,            "learn")         \
+    ENTRY(PDS_STATE_MAX,            22,            "max")
 
 SDK_DEFINE_ENUM(pds_state_t, PDS_STATE)
 SDK_DEFINE_ENUM_TO_STR(pds_state_t, PDS_STATE)
@@ -214,6 +216,9 @@ public:
     }
     void set_upg_event_cb(pds_upg_event_cb_t event_cb) { upg_event_cb_ = event_cb; }
     pds_upg_event_cb_t upg_event_cb(void) { return upg_event_cb_; }
+    learn_state *learn_db(void) {
+        return (learn_state *)state_[PDS_STATE_LEARN];
+    }
 
 private:
     string                  cfg_path_;
@@ -361,6 +366,12 @@ static inline dhcp_state *
 dhcp_db (void)
 {
     return api::g_pds_state.dhcp_db();
+}
+
+static inline learn_state *
+learn_db (void)
+{
+    return api::g_pds_state.learn_db();
 }
 
 #endif    // __PDS_STATE_HPP__

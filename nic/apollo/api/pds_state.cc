@@ -54,6 +54,7 @@ pds_state::init(void) {
     state_[PDS_STATE_POLICER] = new policer_state();
     state_[PDS_STATE_NAT] = new nat_state();
     state_[PDS_STATE_DHCP] = new dhcp_state();
+    state_[PDS_STATE_LEARN] = new learn_state();
     return SDK_RET_OK;
 }
 

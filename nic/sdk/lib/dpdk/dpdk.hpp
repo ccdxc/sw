@@ -89,11 +89,13 @@ public:
     static void destroy(dpdk_device *dev);
     static char * remove_header(dpdk_mbuf *packet, uint16_t len);
     static char * add_header(dpdk_mbuf *packet, uint16_t len);
+    static char * get_data_ptr(dpdk_mbuf *packet);
     dpdk_mbuf ** receive_packets(uint16_t rx_queue_id, uint16_t max_packets,
                                  uint16_t *recv_count);
     //Returns number of untransmitted packets
     uint16_t transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
                               uint16_t num_packets);
+    void drop_packets(dpdk_mbuf **packets, uint16_t num_packets);
 };
 
 }    // namespace dpdk

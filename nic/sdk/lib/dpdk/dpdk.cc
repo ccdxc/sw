@@ -65,7 +65,7 @@ init_dev_conf (struct rte_eth_conf *dev)
     dev->rxmode.offloads = DEV_RX_OFFLOAD_CHECKSUM;
     dev->rx_adv_conf.rss_conf.rss_key= NULL;
     dev->rx_adv_conf.rss_conf.rss_key_len = 0;
-    dev->rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IPV4 | 
+    dev->rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IPV4 |
                                        ETH_RSS_NONFRAG_IPV4_TCP |
                                        ETH_RSS_NONFRAG_IPV4_UDP |
                                        ETH_RSS_IPV6 |
@@ -289,6 +289,11 @@ dpdk_device::add_header(dpdk_mbuf *packet, uint16_t len) {
     return rte_pktmbuf_prepend((struct rte_mbuf *)packet, len);
 }
 
+char *
+dpdk_device::get_data_ptr(dpdk_mbuf *packet) {
+    return rte_pktmbuf_mtod((struct rte_mbuf *)packet, char *);
+}
+
 dpdk_mbuf **
 dpdk_device::receive_packets(uint16_t rx_queue_id, uint16_t max_packets,
                              uint16_t *recv_count) {
@@ -333,3 +338,11 @@ dpdk_device::transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
     return n_left;
 }
 
+void
+dpdk_device::drop_packets(dpdk_mbuf **packets, uint16_t num_packets) {
+    struct rte_mbuf **pkts = (struct rte_mbuf**)packets;
+
+    for (int i = 0; i < num_packets; i++) {
+        rte_pktmbuf_free((struct rte_mbuf *)pkts[i]);
+    }
+}

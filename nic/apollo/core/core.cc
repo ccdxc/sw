@@ -20,7 +20,7 @@
 #include "nic/apollo/api/debug.hpp"
 #include "nic/apollo/nicmgr/nicmgr.hpp"
 #include "nic/apollo/pciemgr/pciemgr.hpp"
-#include "nic/apollo/learn/learn.hpp"
+#include "nic/apollo/learn/learn_thread.hpp"
 
 using boost::property_tree::ptree;
 
@@ -285,26 +285,30 @@ spawn_api_thread (pds_state *state)
 sdk_ret_t
 spawn_learn_thread (pds_state *state)
 {
-    const char          *thread_name = "learn";
-    sdk::lib::thread    *new_thread;
+    sdk::event_thread::event_thread *new_thread;
 
-    if (learn::learn_thread_enabled()) {
-        // spawn learn thread
-        PDS_TRACE_DEBUG("Spawning learn thread %s", thread_name);
-        new_thread = thread_create(thread_name, PDS_THREAD_ID_LEARN,
-                sdk::lib::THREAD_ROLE_CONTROL, 0, //Control core
-                learn::learn_thread_start,
-                sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
-                NULL);
-        SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
-                                "%s thread create failure",
-                                thread_name);
-        g_thread_store[PDS_THREAD_ID_LEARN] = new_thread;
-        new_thread->start(new_thread);
-    } else {
+    if (!learn::learning_enabled()) {
         PDS_TRACE_DEBUG("Skip spawning learn thread");
+        return SDK_RET_OK;
     }
+
+    // spawn learn thread
+    PDS_TRACE_DEBUG("Spawning learn thread");
+    new_thread =
+        sdk::event_thread::event_thread::factory(
+            "learn", PDS_THREAD_ID_LEARN,
+            sdk::lib::THREAD_ROLE_CONTROL,
+            0,
+            learn::learn_thread_init_fn,
+            learn::learn_thread_exit_fn,
+            learn::learn_thread_event_cb,
+            sdk::lib::thread::priority_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            sdk::lib::thread::sched_policy_by_role(sdk::lib::THREAD_ROLE_CONTROL),
+            NULL);
+    SDK_ASSERT_TRACE_RETURN((new_thread != NULL), SDK_RET_ERR,
+                            "learn thread create failure");
+    g_thread_store[PDS_THREAD_ID_LEARN] = new_thread;
+    new_thread->start(new_thread);
     return SDK_RET_OK;
 }
 

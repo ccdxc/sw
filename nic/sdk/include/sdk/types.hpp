@@ -218,30 +218,40 @@ typedef enum lif_state {
 
 static inline
 std::string xcvrStateToStr (xcvr_state_t state) {
-    std::string str; 
- 
-    switch (state) { 
+    std::string str;
+
+    switch (state) {
     case XCVR_REMOVED:
         str = "xcvr removed";
         break;
     case XCVR_INSERTED:
-        str = "xcvr inserted"; 
+        str = "xcvr inserted";
         break;
     case XCVR_SPROM_PENDING:
-        str = "xcvr SPROM pending"; 
+        str = "xcvr SPROM pending";
         break;
     case XCVR_SPROM_READ:
-        str = "xcvr SPROM read"; 
-        break; 
+        str = "xcvr SPROM read";
+        break;
     case XCVR_SPROM_READ_ERR:
-        str = "xcvr SPROM Read Err"; 
-        break; 
-    default: 
-        str = "xcvr Invalid State"; 
+        str = "xcvr SPROM Read Err";
+        break;
+    default:
+        str = "xcvr Invalid State";
     }
-    
-    return str; 
-} 
+
+    return str;
+}
+
+// packet type classification
+typedef enum pkt_type_e {
+    PKT_TYPE_NONE,
+    PKT_TYPE_ARP,
+    PKT_TYPE_DHCP,
+    PKT_TYPE_NDP,
+    PKT_TYPE_IPV4,
+    PKT_TYPE_IPV6,
+} pkt_type_t;
 
 }    // namespace types
 }    // namespace sdk
@@ -268,6 +278,7 @@ using sdk::types::xcvr_type_t;
 using sdk::types::xcvr_state_t;
 using sdk::types::xcvr_pid_t;
 using sdk::types::lif_state_t;
+using sdk::types::pkt_type_t;
 
 #endif    // __SDK_TYPES_HPP__
 
