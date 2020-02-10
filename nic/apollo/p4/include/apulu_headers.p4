@@ -63,13 +63,15 @@ header_type apulu_p4_to_arm_header_t {
         vpc_id              : 16;
         vnic_id             : 16;
         dnat_id             : 16;
-        pad                 : 1;
+
         rx_packet           : 1;
         flow_hit            : 1;
         flow_role           : 1;
         is_local            : 1;
+        is_l3_vnid          : 1;
         snat_type           : 2;
         dnat_en             : 1;
+
         mapping_hit         : 1;
         sacl_action         : 1;
         sacl_root           : 3;

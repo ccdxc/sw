@@ -109,7 +109,7 @@ table vlan {
 /******************************************************************************/
 /* VNI info                                                                   */
 /******************************************************************************/
-action vni_info(vnic_id, bd_id, vpc_id, rmac) {
+action vni_info(vnic_id, bd_id, vpc_id, rmac, is_l3_vnid) {
     // on miss, drop the packet
 
     if (vnic_id != 0) {
@@ -123,6 +123,7 @@ action vni_info(vnic_id, bd_id, vpc_id, rmac) {
     }
     modify_field(scratch_metadata.mac, rmac);
     modify_field(control_metadata.tunneled_packet, TRUE);
+    modify_field(p4i_to_arm.is_l3_vnid, is_l3_vnid);
 
     // keys for local mapping lookup
     if (ipv4_2.valid == TRUE) {

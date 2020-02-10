@@ -38,21 +38,21 @@ typedef struct p4_rx_cpu_hdr_s {
         uint16_t flags_short;
         struct {
 #if __BYTE_ORDER == __BIG_ENDIAN
-            uint8_t  pad                : 1;
             uint8_t  rx_packet          : 1;
             uint8_t  flow_hit           : 1;
             uint8_t  flow_role          : 1;
             uint8_t  is_local           : 1;
+            uint8_t  is_l3_vnid         : 1;
             uint8_t  snat_type          : 2;
             uint8_t  dnat_en            : 1;
 #else
             uint8_t  dnat_en            : 1;
             uint8_t  snat_type          : 2;
+            uint8_t  is_l3_vnid         : 1;
             uint8_t  is_local           : 1;
             uint8_t  flow_role          : 1;
             uint8_t  flow_hit           : 1;
             uint8_t  rx_packet          : 1;
-            uint8_t  pad                : 1;
 #endif
 #if __BYTE_ORDER == __BIG_ENDIAN
             uint8_t  mapping_hit        : 1;
