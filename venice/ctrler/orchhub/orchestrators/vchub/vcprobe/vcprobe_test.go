@@ -299,6 +299,10 @@ func TestDVSAndPG(t *testing.T) {
 	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
 	AssertOk(t, err, "Failed to add DVS")
 
+	// Reconfigure should succeed
+	err = vcp.AddPenDVS(testParams.TestDCName, dvsCreateSpec)
+	AssertOk(t, err, "Failed to add DVS")
+
 	pgConfigSpecArray := testutils.GenPGConfigSpecArray(testParams, pvlanConfigSpecArray)
 	// startMicroSegVlanID := testParams.StartPVLAN + int32(testParams.TestNumPVLANPair*2)
 	var numPG int
@@ -308,10 +312,21 @@ func TestDVSAndPG(t *testing.T) {
 		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
 		AssertOk(t, err, "Failed to add new PG")
 
+		// Second add will result in reconfigure operation
+		err = vcp.AddPenPG(testParams.TestDCName, testParams.TestDVSName, &pgConfigSpecArray[i])
+		AssertOk(t, err, "Failed to add DVS")
+
+		// Rename PG and then rename it back
+		// VCSim doesn't support rename, so we don't check the rror
+		vcp.RenamePG(testParams.TestDCName, pgConfigSpecArray[i].Name, "TestPG")
+
 		pgName := fmt.Sprint(testParams.TestPGNameBase, i)
 		pgObj, err := vcp.GetPenPG(testParams.TestDCName, pgName)
 		AssertOk(t, err, "Failed to find created PG %s", pgName)
 		Assert(t, pgObj != nil, "Couldn't find created PG %s", pgName)
+		pgMo, err := vcp.GetPGConfig(testParams.TestDCName, pgName, []string{"config"})
+		AssertOk(t, err, "Failed to find created PG %s as mo ref", pgName)
+		Assert(t, pgMo != nil, "Couldn't find created PG %s as mo ref", pgName)
 	}
 	/*
 		for i := 0; i < testParams.TestNumPG; i++ {

@@ -20,6 +20,7 @@ import (
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe/mock"
 	"github.com/pensando/sw/venice/ctrler/orchhub/statemgr"
@@ -34,8 +35,10 @@ import (
 // Tests creation of internal DC state, creationg of DVS
 // and creation/deletion of networks in venice
 // trigger respective events in VC
+// Test PG with modified config gets reset on sync
 func TestVCSyncPG(t *testing.T) {
 	// Stale PGs should be deleted
+	// Modified PGs should be have config reset
 	// New PGs should be created
 	err := testutils.ValidateParams(defaultTestParams)
 	if err != nil {
@@ -76,7 +79,7 @@ func TestVCSyncPG(t *testing.T) {
 
 	pvlanConfigSpecArray := testutils.GenPVLANConfigSpecArray(defaultTestParams, "add")
 	dvsCreateSpec := testutils.GenDVSCreateSpec(defaultTestParams, pvlanConfigSpecArray)
-	_, err = dc1.AddDVS(dvsCreateSpec)
+	dvs, err := dc1.AddDVS(dvsCreateSpec)
 	AssertOk(t, err, "failed dvs create")
 
 	orchInfo1 := []*network.OrchestratorInfo{
@@ -89,6 +92,7 @@ func TestVCSyncPG(t *testing.T) {
 	// CREATING VENICE NETWORKS
 	smmock.CreateNetwork(sm, "default", "pg1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
 	smmock.CreateNetwork(sm, "default", "pg2", "10.1.2.0/24", "10.1.1.2", 101, nil, orchInfo1)
+	smmock.CreateNetwork(sm, "default", "pgModified", "10.1.2.0/24", "10.1.1.2", 102, nil, orchInfo1)
 
 	time.Sleep(1 * time.Second)
 
@@ -105,6 +109,17 @@ func TestVCSyncPG(t *testing.T) {
 		}
 		return true, nil
 	}, "Session is not Ready", "1s", "10s")
+
+	spec := testutils.GenPGConfigSpec(createPGName("pgStale"), 2, 3)
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec)
+	AssertOk(t, err, "failed to create pg")
+
+	spec1 := testutils.GenPGConfigSpec(createPGName("pgModified"), 4, 5)
+	spec1.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan = &types.VmwareDistributedVirtualSwitchVlanIdSpec{
+		VlanId: 4,
+	}
+	err = mockProbe.AddPenPG(dc1.Obj.Name, dvs.Obj.Name, &spec1)
+	AssertOk(t, err, "failed to create pg")
 
 	defer vchub.Destroy(false)
 
@@ -123,9 +138,20 @@ func TestVCSyncPG(t *testing.T) {
 				}
 
 				for _, pgName := range pgNames {
-					pgObj := dvs.GetPenPG(pgName)
-					if pgObj == nil {
+					penPG := dvs.GetPenPG(pgName)
+					if penPG == nil {
 						return false, fmt.Errorf("Failed to find %s in DC %s", pgName, name)
+					}
+					pgObj, err := mockProbe.GetPGConfig(dc1.Obj.Name, pgName, nil)
+					AssertOk(t, err, "Failed to get PG")
+
+					vlanSpec := pgObj.Config.DefaultPortConfig.(*types.VMwareDVSPortSetting).Vlan
+					pvlanSpec, ok := vlanSpec.(*types.VmwareDistributedVirtualSwitchPvlanSpec)
+					if !ok {
+						return false, fmt.Errorf("PG %s was not in pvlan mode", pgName)
+					}
+					if !useg.IsPGVlanSecondary(int(pvlanSpec.PvlanId)) {
+						return false, fmt.Errorf("PG should be in pvlan mode with odd vlan")
 					}
 				}
 				dvs.Lock()
@@ -144,14 +170,15 @@ func TestVCSyncPG(t *testing.T) {
 	// n2 should be in both
 	pg1 := createPGName("pg1")
 	pg2 := createPGName("pg2")
+	pg3 := createPGName("pgModified")
 
 	dcPgMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{pg1, pg2},
+		defaultTestParams.TestDCName: []string{pg1, pg2, pg3},
 	}
 
 	verifyPg(dcPgMap)
-
 }
+
 func TestVCSyncHost(t *testing.T) {
 	// Stale hosts should be deleted
 	// New hosts should be created

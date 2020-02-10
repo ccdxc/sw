@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sync"
-	"time"
 )
 
 // VlanMax is the highest allowed VLAN + 1
@@ -45,13 +44,12 @@ type VlanMgr struct {
 
 // NewVlanManager creates a vlan manager
 // Only vlans from startingVlan (inclusive) to endingVlan (exclusive) are available
-func NewVlanManager(startingVlan, endingVlan int, assignRandom bool) Inf {
+func NewVlanManager(startingVlan, endingVlan int, assignRandom bool, seed int64) Inf {
 	if startingVlan < 0 || endingVlan < startingVlan {
 		return nil
 	}
 
-	var randSeed = time.Now().Unix()
-	var r = rand.New(rand.NewSource(randSeed))
+	var r = rand.New(rand.NewSource(seed))
 
 	s := endingVlan - startingVlan
 	mgr := &VlanMgr{

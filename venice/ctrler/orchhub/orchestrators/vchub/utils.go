@@ -61,6 +61,10 @@ func createNetworkName(name string) string {
 	return strings.TrimPrefix(name, defs.DefaultPGPrefix)
 }
 
+func isPensandoPG(name string) bool {
+	return strings.HasPrefix(name, defs.DefaultPGPrefix)
+}
+
 func isPensandoDVS(name string) bool {
 	return strings.HasPrefix(name, defs.DefaultDVSPrefix)
 }

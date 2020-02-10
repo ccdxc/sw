@@ -15,11 +15,15 @@ func TestPG(t *testing.T) {
 	mgr, err := NewUsegAllocator()
 	tu.AssertOk(t, err, "Failed to create useg mgr")
 	// Set some before hand
-	key := fmt.Sprintf("PG-%d", ReservedPGVlanCount-2)
-	mgr.SetVlansForPG(key, ReservedPGVlanCount-2, ReservedPGVlanCount-1)
-	PGvlans[key] = []int{ReservedPGVlanCount - 2, ReservedPGVlanCount - 1}
+	key := fmt.Sprintf("PG-%d", FirstUsegVlan-2)
+	mgr.SetVlansForPG(key, FirstUsegVlan-2)
+	PGvlans[key] = []int{FirstUsegVlan - 2, FirstUsegVlan - 1}
+	key = fmt.Sprintf("PG-%d", FirstUsegVlan-4)
+	// Testing passing in the secondary instead of primary
+	mgr.SetVlansForPG(key, FirstUsegVlan-3)
+	PGvlans[key] = []int{FirstUsegVlan - 4, FirstUsegVlan - 3}
 
-	for index := 2; index < ReservedPGVlanCount-2; index += 2 {
+	for index := 2; index < FirstUsegVlan-4; index += 2 {
 		key := fmt.Sprintf("PG-%d", index)
 		v1, v2, err := mgr.AssignVlansForPG(key)
 		tu.AssertOk(t, err, "failed to assign vlans for %s", key)
@@ -30,7 +34,7 @@ func TestPG(t *testing.T) {
 	tu.Assert(t, err != nil, "Assign PG should have failed")
 
 	// Check the vlans
-	for index := 2; index < ReservedPGVlanCount; index += 2 {
+	for index := 2; index < FirstUsegVlan; index += 2 {
 		key := fmt.Sprintf("PG-%d", index)
 		v1, v2, err := mgr.GetVlansForPG(key)
 		tu.AssertOk(t, err, "failed to get vlans for %s", key)
@@ -38,14 +42,14 @@ func TestPG(t *testing.T) {
 	}
 
 	// Free them all
-	for index := 2; index < ReservedPGVlanCount; index += 2 {
+	for index := 2; index < FirstUsegVlan; index += 2 {
 		key := fmt.Sprintf("PG-%d", index)
 		err := mgr.ReleaseVlansForPG(key)
 		tu.AssertOk(t, err, "failed to release vlans for %s", key)
 	}
 
 	// Should be able to reassign them all (no leaks)
-	for index := 2; index < ReservedPGVlanCount; index += 2 {
+	for index := 2; index < FirstUsegVlan; index += 2 {
 		key := fmt.Sprintf("PG-%d", index)
 		v1, v2, err := mgr.AssignVlansForPG(key)
 		PGvlans[key] = []int{v1, v2}
@@ -62,7 +66,7 @@ func TestVlans(t *testing.T) {
 	doneCh := make(chan bool)
 
 	assignAll := func(host string, usegVlans map[string]int) {
-		for index := ReservedPGVlanCount; index < 4095; index++ {
+		for index := FirstUsegVlan; index < 4095; index++ {
 			key := fmt.Sprintf("EP-%d", index)
 			v1, err := mgr.AssignVlanForVnic(key, host)
 			usegVlans[key] = v1
@@ -74,7 +78,7 @@ func TestVlans(t *testing.T) {
 	}
 
 	setAll := func(host string, usegVlans map[string]int) {
-		for index := ReservedPGVlanCount; index < 4095; index++ {
+		for index := FirstUsegVlan; index < 4095; index++ {
 			key := fmt.Sprintf("EP-%d", index)
 			err := mgr.SetVlanForVnic(key, host, index)
 			usegVlans[key] = index
@@ -86,7 +90,7 @@ func TestVlans(t *testing.T) {
 	}
 
 	checkAll := func(host string, usegVlans map[string]int) {
-		for index := ReservedPGVlanCount; index < 4095; index++ {
+		for index := FirstUsegVlan; index < 4095; index++ {
 			key := fmt.Sprintf("EP-%d", index)
 			v1, err := mgr.GetVlanForVnic(key, host)
 			tu.AssertOk(t, err, "failed to assign vlan for %s", key)
@@ -95,7 +99,7 @@ func TestVlans(t *testing.T) {
 	}
 
 	freeAll := func(host string, usegVlans map[string]int) {
-		for index := ReservedPGVlanCount; index < 4095; index++ {
+		for index := FirstUsegVlan; index < 4095; index++ {
 			key := fmt.Sprintf("EP-%d", index)
 			err := mgr.ReleaseVlanForVnic(key, host)
 			tu.AssertOk(t, err, "failed to assign vlan for %s", key)

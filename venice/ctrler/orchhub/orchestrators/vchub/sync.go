@@ -10,6 +10,7 @@ import (
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
@@ -160,10 +161,10 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 			}
 		}
 
-		// For every PG, we mark the vlan it owns and create internal sate
-		// For every stale PG, we then attempt to delete it and clear internal
-		// state if it is successful
+		// For every PG, we mark the vlan it owns if it is a pensando PG
+		// If any PG of ours is not in PVLAN mode, we reset it
 		// For New networks, we create PGs for them
+
 		pgNameMap := map[string]api.ObjectMeta{}
 		for _, nw := range networks {
 			for _, orch := range nw.Network.Spec.Orchestrators {
@@ -175,38 +176,51 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 		}
 
 		for _, pg := range pgMap {
-			pgConfig := pg.Config
-			portConfig, ok := pgConfig.DefaultPortConfig.(*types.VMwareDVSPortSetting)
-			if !ok {
-				v.Log.Errorf("ignoring PG %s as casting to VMwareDVSPortSetting failed %+v", pg.Name, pgConfig.DefaultPortConfig)
+			// pgConfig := pg.Config
+			vlanConfig, err := extractVlanConfig(pg.Config)
+			if err != nil {
+				v.Log.Errorf("%s", err)
 				continue
 			}
-			vlanSpec, ok := portConfig.Vlan.(*types.VmwareDistributedVirtualSwitchPvlanSpec)
-			if !ok {
-				v.Log.Errorf("ignoring PG %s as casting to VmwareDistributedVirtualSwitchPvlanSpec failed %+v", pg.Name, portConfig.Vlan)
-				continue
-			}
-
-			secondaryPvlan := vlanSpec.PvlanId
-			primaryPvlan := secondaryPvlan - 1
 
 			pgName := pg.Name
 
-			// TODO: validate user didnt change pvlan
-			v.Log.Infof("setting PG vlans %s ", pg.Name)
-			// TODO: If a PG has the vlan already, we currently crash
-			err := penDVS.UsegMgr.SetVlansForPG(pgName, int(primaryPvlan), int(secondaryPvlan))
-			if err != nil {
-				// TODO: Reassign pg if it fails to assign
-				v.Log.Infof("Setting vlans %d %d for PG %s failed: err %s", primaryPvlan, secondaryPvlan, pg.Name, err)
-				continue
+			vlan := -1
+			switch vlanSpec := vlanConfig.(type) {
+			case *types.VmwareDistributedVirtualSwitchPvlanSpec:
+				// If the pg is in promiscuous, the pvlanID is the the primary vlan
+				// If it's isolated mode, it will be secondary VLAN
+				// This will be handled in setVlansForPG
+				vlan = int(vlanSpec.PvlanId)
+				if !useg.IsPGVlanSecondary(vlan) {
+					// Don't respect the given PG since it's not in secondary pvlan
+					vlan = -1
+				}
+			case *types.VmwareDistributedVirtualSwitchVlanIdSpec:
+				// TODO: Reserve vlanSpec.VlanId from useg space for all hosts.
+			case *types.VmwareDistributedVirtualSwitchTrunkVlanSpec:
+				// Do nothing for reserving vlans
+				// TODO: Generate event
 			}
-			meta, ok := pgNameMap[pgName]
+
+			_, ok := pgNameMap[pgName]
 			if !ok {
 				v.Log.Infof("No venice network info is available for this pg %s", pgName)
+				continue
 			}
-			err = penDVS.AddPenPG(pgName, meta)
-			v.Log.Infof("Create PG %s returned %s", pgName, err)
+
+			v.Log.Infof("setting PG vlans %s ", pg.Name)
+			// It may still be -1 if the user modified the PGs vlan spec
+			// Will set it back after we allocate the rest of the known pgs
+			// We only care about storing the vlan if it is our PG
+			if vlan != -1 && isPensandoPG(pgName) {
+				err := penDVS.UsegMgr.SetVlansForPG(pgName, vlan)
+				if err != nil {
+					// PG will be reassigned to a new value later
+					v.Log.Infof("Setting vlans %d for PG %s failed: err %s", vlan, pg.Name, err)
+					continue
+				}
+			}
 		}
 
 		for _, nw := range networks {
@@ -216,14 +230,9 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 				if orch.Name == v.VcID && orch.Namespace == dcName {
 					pgName := createPGName(nw.Network.Name)
 
-					_, ok := pgMap[pgName]
-					if !ok {
-						// exists on venice not on VC
-						// TODO: this order potentially limits scale if there are a lot
-						// of stale objects
-						err := penDVS.AddPenPG(pgName, nw.Network.ObjectMeta)
-						v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
-					}
+					err := penDVS.AddPenPG(pgName, nw.Network.ObjectMeta)
+					v.Log.Infof("Create Pen PG %s returned %s", pgName, err)
+
 					delete(pgMap, pgName)
 				} else {
 					v.Log.Debugf("vcID %s, dcName %s", v.VcID, dcName)
@@ -244,7 +253,14 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 				}
 			}
 			if !isUplink {
-				err := penDVS.RemovePenPG(pg.Name)
+				err := v.probe.RemovePenPG(dcName, pg.Name)
+				if err != nil {
+					v.Log.Errorf("Failed to delete PG %s, removing management tag", pg.Name)
+					tagErrs := v.probe.RemovePensandoTags(pg.Reference())
+					if len(tagErrs) != 0 {
+						v.Log.Errorf("Failed to remove tags, errs %v", tagErrs)
+					}
+				}
 				v.Log.Infof("Delete PG %s returned %s", pg.Name, err)
 			} else {
 				v.Log.Infof("Skipped deletion of PG as it is the uplink pg", pg.Name)

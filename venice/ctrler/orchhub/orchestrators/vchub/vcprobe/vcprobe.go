@@ -49,6 +49,8 @@ type ProbeInf interface {
 	// port_group.go functions
 	AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortgroupConfigSpec) error
 	GetPenPG(dcName string, pgName string) (*object.DistributedVirtualPortgroup, error)
+	GetPGConfig(dcName string, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error)
+	RenamePG(dcName, oldName string, newName string) error
 	RemovePenPG(dcName, pgName string) error
 
 	// distributed_vswitch.go functions
@@ -223,6 +225,12 @@ func (v *VCProbe) StartWatchers() {
 						v.Log.Debugf("Task watch Started")
 						v.startTaskWatch(&update.Obj)
 					})
+
+					tryForever(func() {
+						v.Log.Debugf("PG watch Started")
+						v.startWatch(defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
+					})
+
 				}, nil)
 		})
 

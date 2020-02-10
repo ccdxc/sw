@@ -5,6 +5,7 @@ import (
 
 	"github.com/vmware/govmomi/find"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
@@ -20,26 +21,36 @@ func (v *VCProbe) AddPenDVS(dcName string, dvsCreateSpec *types.DVSCreateSpec) e
 	defer v.ReleaseClientsRLock()
 
 	// Check if it exists first
-	if _, err := v.getPenDVS(dcName, dvsName, finder); err == nil {
-		// PenDVS exists
-		// TODO: check error isn't intermittent
-		return nil
+	var task *object.Task
+	var err error
+	if dvsObj, err := v.getPenDVS(dcName, dvsName, finder); err == nil {
+		var dvs mo.DistributedVirtualSwitch
+		err = dvsObj.Properties(v.ClientCtx, dvsObj.Reference(), []string{"config"}, &dvs)
+		if err != nil {
+			v.Log.Errorf("Failed at getting dvs properties, err: %s", err)
+			return err
+		}
+
+		dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().ConfigVersion = dvs.Config.GetDVSConfigInfo().ConfigVersion
+		v.Log.Infof("DC: %s - DVS already exists, reconfiguring...", dcName)
+		task, err = dvsObj.Reconfigure(v.ClientCtx, dvsCreateSpec.ConfigSpec.GetDVSConfigSpec())
+	} else {
+		dc, err := finder.Datacenter(v.ClientCtx, dcName)
+		if err != nil {
+			v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
+			return err
+		}
+
+		finder.SetDatacenter(dc)
+
+		folders, err := dc.Folders(v.ClientCtx)
+		if err != nil {
+			return err
+		}
+
+		task, err = folders.NetworkFolder.CreateDVS(v.ClientCtx, *dvsCreateSpec)
 	}
 
-	dc, err := finder.Datacenter(v.ClientCtx, dcName)
-	if err != nil {
-		v.Log.Errorf("Datacenter: %s doesn't exist, err: %s", dcName, err)
-		return err
-	}
-
-	finder.SetDatacenter(dc)
-
-	folders, err := dc.Folders(v.ClientCtx)
-	if err != nil {
-		return err
-	}
-
-	task, err := folders.NetworkFolder.CreateDVS(v.ClientCtx, *dvsCreateSpec)
 	if err != nil {
 		v.Log.Errorf("Failed at creating dvs: %s, err: %s", dvsName, err)
 		return err

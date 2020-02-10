@@ -13,6 +13,7 @@ import (
 // PenPG represents an instance of a port group on a DVS
 type PenPG struct {
 	*defs.State
+	DcName      string
 	probe       vcprobe.ProbeInf
 	PgName      string
 	PgRef       types.ManagedObjectReference
@@ -40,10 +41,6 @@ func (d *PenDVS) AddPenPG(pgName string, networkMeta api.ObjectMeta) error {
 func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, primaryVlan, secondaryVlan int) error {
 	d.Lock()
 	defer d.Unlock()
-
-	if d.getPenPG(pgName) != nil {
-		return nil
-	}
 
 	spec := types.DVPortgroupConfigSpec{
 		Name: pgName,
@@ -80,18 +77,22 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 		return err
 	}
 
-	penPG := &PenPG{
-		State:       d.State,
-		probe:       d.probe,
-		PgName:      pgName,
-		PgRef:       pg.Reference(),
-		NetworkMeta: networkMeta,
+	penPG := d.getPenPG(pgName)
+	if penPG == nil {
+		penPG = &PenPG{
+			State:  d.State,
+			probe:  d.probe,
+			DcName: d.DcName,
+			PgName: pgName,
+			PgRef:  pg.Reference(),
+		}
+		d.Pgs[pgName] = penPG
+		d.pgIDMap[pg.Reference().Value] = penPG
 	}
 
-	d.Pgs[pgName] = penPG
-	d.pgIDMap[pg.Reference().Value] = penPG
+	penPG.NetworkMeta = networkMeta
 
-	err = d.probe.TagObjAsManaged(pg.Reference())
+	err = d.probe.TagObjAsManaged(penPG.PgRef)
 	if err != nil {
 		d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)
 		// Error isn't worth failing the operation for
@@ -100,7 +101,7 @@ func (d *PenDVS) AddPenPGWithVlan(pgName string, networkMeta api.ObjectMeta, pri
 	nw, err := d.StateMgr.Controller().Network().Find(&networkMeta)
 	if err == nil {
 		externalVlan := int(nw.Spec.VlanID)
-		err = d.probe.TagObjWithVlan(pg.Reference(), externalVlan)
+		err = d.probe.TagObjWithVlan(penPG.PgRef, externalVlan)
 		if err != nil {
 			d.Log.Errorf("Failed to tag PG %s as managed, %s", pgName, err)
 			// Error isn't worth failing the operation for

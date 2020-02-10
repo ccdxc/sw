@@ -37,10 +37,6 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 	dcName := d.Name
 	dvsName := dvsCreateSpec.ConfigSpec.GetDVSConfigSpec().Name
 
-	if d.getPenDVS(dvsName) != nil {
-		return nil
-	}
-
 	err := d.probe.AddPenDVS(dcName, dvsCreateSpec)
 	if err != nil {
 		d.Log.Errorf("Failed to create %s in DC %s: %s", dvsName, dcName, err)
@@ -52,23 +48,25 @@ func (d *PenDC) AddPenDVS(dvsCreateSpec *types.DVSCreateSpec) error {
 		return err
 	}
 
-	useg, err := useg.NewUsegAllocator()
-	if err != nil {
-		d.Log.Errorf("Creating useg mgr for DC %s - penDVS %s failed, %v", dcName, dvsName, err)
-		return err
-	}
-	penDVS := &PenDVS{
-		State:   d.State,
-		probe:   d.probe,
-		DcName:  dcName,
-		DvsName: dvsName,
-		DvsRef:  dvs.Reference(),
-		UsegMgr: useg,
-		Pgs:     map[string]*PenPG{},
-		pgIDMap: map[string]*PenPG{},
-	}
+	if d.getPenDVS(dvsName) == nil {
+		useg, err := useg.NewUsegAllocator()
+		if err != nil {
+			d.Log.Errorf("Creating useg mgr for DC %s - penDVS %s failed, %v", dcName, dvsName, err)
+			return err
+		}
+		penDVS := &PenDVS{
+			State:   d.State,
+			probe:   d.probe,
+			DcName:  dcName,
+			DvsName: dvsName,
+			DvsRef:  dvs.Reference(),
+			UsegMgr: useg,
+			Pgs:     map[string]*PenPG{},
+			pgIDMap: map[string]*PenPG{},
+		}
 
-	d.DvsMap[dvsName] = penDVS
+		d.DvsMap[dvsName] = penDVS
+	}
 
 	err = d.probe.TagObjAsManaged(dvs.Reference())
 	if err != nil {

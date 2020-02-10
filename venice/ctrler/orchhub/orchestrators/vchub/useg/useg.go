@@ -3,6 +3,7 @@ package useg
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/pensando/sw/venice/ctrler/orchhub/utils/usegvlanmgr"
 )
@@ -57,7 +58,7 @@ type Inf interface {
 	// MigrationEvent(key string, oldHost string, newHost string)
 	AssignVlansForPG(pg string) (int, int, error)
 	GetVlansForPG(pg string) (int, int, error)
-	SetVlansForPG(pg string, primary int, secondary int) error
+	SetVlansForPG(pg string, vlan int) error
 	ReleaseVlansForPG(pg string) error
 }
 
@@ -78,11 +79,23 @@ func NewUsegAllocator() (Inf, error) {
 	return allocator, err
 }
 
-// ReservedPGVlanCount is the first vlan value
-// that is used for vnics
-// 0 and 1  are not used
 // for 500 PGs, we need the first 1000 vlans
-const ReservedPGVlanCount = 1002
+// PG space is FirstUsegVlan = FirstPGVlan
+
+// FirstPGVlan is the first vlan value used for PGs
+// 0 and 1  are not used
+const FirstPGVlan = int(2)
+
+// FirstUsegVlan is the lowest value
+// that is used for useg assignment
+const FirstUsegVlan = int(1002)
+
+// IsPGVlanSecondary returns whether the given vlan is primary or secondary pvlan
+func IsPGVlanSecondary(vlan int) bool {
+	// first PG Value is primary so mod 2 should
+	// not be equal if it is secondary
+	return FirstPGVlan%2 != vlan%2
+}
 
 // AssignVlanForVnic assings a vlan for the given vnic
 func (u *Allocator) AssignVlanForVnic(vnicKey string, host string) (int, error) {
@@ -173,8 +186,19 @@ func (u *Allocator) AssignVlansForPG(pg string) (int, int, error) {
 	return out1, out2, nil
 }
 
-// SetVlansForPG sets the vlans as belonging to the given PG
-func (u *Allocator) SetVlansForPG(pg string, primary int, secondary int) error {
+// SetVlansForPG sets the vlans as belonging to the given PG. Primary or secondary vlan
+// can be supplied
+func (u *Allocator) SetVlansForPG(pg string, vlan int) error {
+	primary := vlan
+	secondary := vlan + 1
+	if IsPGVlanSecondary(vlan) {
+		primary = vlan - 1
+		secondary = vlan
+	}
+	return u.setVlansForPG(pg, primary, secondary)
+}
+
+func (u *Allocator) setVlansForPG(pg string, primary int, secondary int) error {
 	key1, key2 := createPGKeys(pg)
 
 	var err error
@@ -241,7 +265,8 @@ func (u *Allocator) newHostVlanAllocator(host string) error {
 	if _, ok := u.hostMgrs[host]; ok {
 		return nil
 	}
-	vlanMgr := usegvlanmgr.NewVlanManager(ReservedPGVlanCount, usegvlanmgr.VlanMax, true)
+	seed := time.Now().Unix()
+	vlanMgr := usegvlanmgr.NewVlanManager(FirstUsegVlan, usegvlanmgr.VlanMax, true, seed)
 	u.hostMgrs[host] = vlanMgr
 	return nil
 }
@@ -250,7 +275,7 @@ func (u *Allocator) newHostVlanAllocator(host string) error {
 // allocations for PGs.
 // Caller must have the lock
 func (u *Allocator) newPGVlanAllocator() error {
-	mgr := usegvlanmgr.NewVlanManager(2, ReservedPGVlanCount, false)
+	mgr := usegvlanmgr.NewVlanManager(FirstPGVlan, FirstUsegVlan, false, 0)
 	u.pgVlanMgr = mgr
 	return nil
 }

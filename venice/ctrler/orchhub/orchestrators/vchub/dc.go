@@ -59,7 +59,7 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 
 	// Setup all the pvlan allocations now
 	// vlans 0 and 1 are reserved
-	for i := 2; i < useg.ReservedPGVlanCount; i += 2 {
+	for i := useg.FirstPGVlan; i < useg.FirstUsegVlan; i += 2 {
 		PvlanEntryProm := types.VMwareDVSPvlanMapEntry{
 			PrimaryVlanId:   int32(i),
 			PvlanType:       "promiscuous",

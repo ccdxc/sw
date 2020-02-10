@@ -1,11 +1,10 @@
 package vchub
 
 import (
+	"github.com/vmware/govmomi/vim25/types"
+
 	"github.com/pensando/sw/api/generated/network"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
-	"github.com/pensando/sw/venice/utils/kvstore"
-
-	"github.com/vmware/govmomi/vim25/types"
 )
 
 func (v *VCHub) startEventsListener() {
@@ -52,6 +51,8 @@ func (v *VCHub) handleVCEvent(m defs.VCEventMsg) {
 		v.handleWorkload(m)
 	case defs.HostSystem:
 		v.handleHost(m)
+	case defs.DistributedVirtualPortgroup:
+		v.handlePG(m)
 	case defs.Datacenter:
 		v.handleDC(m)
 	default:
@@ -95,62 +96,8 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		}
 		v.Log.Infof("new DC %s", name)
 		penDC, err := v.NewPenDC(name, m.Key)
-		if err != nil {
+		if err == nil {
 			v.probe.StartEventReceiver([]types.ManagedObjectReference{penDC.dcRef})
-		}
-	}
-}
-
-func (v *VCHub) handleNetworkEvent(evtType kvstore.WatchEventType, nw *network.Network) {
-	v.Log.Infof("Handling network event. %v", nw)
-
-	switch evtType {
-	case kvstore.Created:
-		if len(nw.Spec.Orchestrators) == 0 {
-			return
-		}
-		dcs := []string{}
-		for _, orch := range nw.Spec.Orchestrators {
-			if orch.Name == v.OrchConfig.GetName() {
-				dcs = append(dcs, orch.Namespace)
-			}
-		}
-		v.Log.Infof("Create network %s event for dcs %v", nw.Name, dcs)
-		for _, dc := range dcs {
-			v.DcMapLock.Lock()
-			penDC, ok := v.DcMap[dc]
-			v.DcMapLock.Unlock()
-			if !ok {
-				continue
-			}
-			pgName := createPGName(nw.Name)
-			penDC.AddPG(pgName, nw.ObjectMeta, "")
-		}
-	case kvstore.Updated:
-		// If wire vlan changes, workloads should be modified
-		// TODO: update workloads
-		// TODO: Update vcenter vlan tags
-		v.Log.Info("Update network event")
-	case kvstore.Deleted:
-		if len(nw.Spec.Orchestrators) == 0 {
-			return
-		}
-		dcs := []string{}
-		for _, orch := range nw.Spec.Orchestrators {
-			if orch.Name == v.OrchConfig.GetName() {
-				dcs = append(dcs, orch.Namespace)
-			}
-		}
-		v.Log.Infof("Delete network %s event for dcs %v", nw.Name, dcs)
-		for _, dc := range dcs {
-			v.DcMapLock.Lock()
-			penDC, ok := v.DcMap[dc]
-			v.DcMapLock.Unlock()
-			if !ok {
-				continue
-			}
-			pgName := createPGName(nw.Name)
-			penDC.RemovePG(pgName, "")
 		}
 	}
 }

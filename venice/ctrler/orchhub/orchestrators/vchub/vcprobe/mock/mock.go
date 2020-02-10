@@ -38,16 +38,24 @@ func (v *ProbeMock) AddPenPG(dcName, dvsName string, pgConfigSpec *types.DVPortg
 	return v.VCProbe.AddPenPG(dcName, dvsName, pgConfigSpec)
 }
 
+func extractVlanSpec(spec *types.DVPortgroupConfigSpec) (types.BaseVmwareDistributedVirtualSwitchVlanSpec, error) {
+	setting, ok := spec.DefaultPortConfig.(*types.VMwareDVSPortSetting)
+	if !ok {
+		return nil, fmt.Errorf("Spec does not have pvlan info")
+	}
+	return setting.Vlan, nil
+}
+
 func extractPvlanID(spec *types.DVPortgroupConfigSpec) (int32, error) {
 	setting, ok := spec.DefaultPortConfig.(*types.VMwareDVSPortSetting)
 	if !ok {
 		return -1, fmt.Errorf("Spec does not have pvlan info")
 	}
-	pvlanSpec, ok := setting.Vlan.(*types.VmwareDistributedVirtualSwitchPvlanSpec)
+	pvlanSpec, ok := setting.Vlan.(*types.VmwareDistributedVirtualSwitchVlanIdSpec)
 	if !ok {
 		return -1, fmt.Errorf("Spec does not have pvlan info")
 	}
-	return pvlanSpec.PvlanId, nil
+	return pvlanSpec.VlanId, nil
 }
 
 // ListPG lists PGs
@@ -77,16 +85,34 @@ func (v *ProbeMock) ListPG(dcRef *types.ManagedObjectReference) []mo.Distributed
 		if config == nil {
 			continue
 		}
-		pvlanID, err := extractPvlanID(config)
+		vlanConfig, err := extractVlanSpec(config)
 		if err == nil {
 			pg.Config.DefaultPortConfig = &types.VMwareDVSPortSetting{
-				Vlan: &types.VmwareDistributedVirtualSwitchPvlanSpec{
-					PvlanId: pvlanID,
-				},
+				Vlan: vlanConfig,
 			}
 		}
 	}
 	return pgs
+}
+
+// GetPGConfig gets PG configuration
+func (v *ProbeMock) GetPGConfig(dcName string, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error) {
+	pgObj, err := v.VCProbe.GetPGConfig(dcName, pgName, ps)
+	if err != nil {
+		return nil, err
+	}
+	pgMap := v.pgStateMap[dcName]
+	config := pgMap[pgName]
+	if config == nil {
+		return pgObj, nil
+	}
+	vlanConfig, err := extractVlanSpec(config)
+	if err == nil {
+		pgObj.Config.DefaultPortConfig = &types.VMwareDVSPortSetting{
+			Vlan: vlanConfig,
+		}
+	}
+	return pgObj, nil
 }
 
 // ListDVS lists DVS objects

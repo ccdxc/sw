@@ -278,6 +278,10 @@ func TestStore(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any()).Return(nil, nil).AnyTimes()
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
 
 				// Setup state for DC1
@@ -456,6 +460,10 @@ func TestStore(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any()).Return(nil, nil).AnyTimes()
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
@@ -647,6 +655,10 @@ func TestStore(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any()).Return(nil, nil).AnyTimes()
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
@@ -810,6 +822,10 @@ func TestStore(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any()).Return(nil, nil).AnyTimes()
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)
@@ -952,6 +968,10 @@ func TestStore(t *testing.T) {
 			setup: func(vchub *VCHub, mockCtrl *gomock.Controller) {
 				mockProbe := mock.NewMockProbeInf(mockCtrl)
 				vchub.probe = mockProbe
+				mockProbe.EXPECT().AddPenPG(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().GetPenPG(dcName, gomock.Any()).Return(nil, nil).AnyTimes()
+				mockProbe.EXPECT().TagObjAsManaged(gomock.Any()).Return(nil).AnyTimes()
+				mockProbe.EXPECT().TagObjWithVlan(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 				mockProbe.EXPECT().UpdateDVSPortsVlan(dcName, dvsName, gomock.Any()).Return(nil).AnyTimes()
 				// Setup state for DC1
 				addDCState(t, vchub, dcName)

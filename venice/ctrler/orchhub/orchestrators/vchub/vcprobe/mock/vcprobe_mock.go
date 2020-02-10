@@ -187,6 +187,31 @@ func (mr *MockProbeInfMockRecorder) GetPenPG(dcName, pgName interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenPG", reflect.TypeOf((*MockProbeInf)(nil).GetPenPG), dcName, pgName)
 }
 
+// GetPGConfig mocks base method
+func (m *MockProbeInf) GetPGConfig(dcName, pgName string, ps []string) (*mo.DistributedVirtualPortgroup, error) {
+	ret := m.ctrl.Call(m, "GetPGConfig", dcName, pgName, ps)
+	ret0, _ := ret[0].(*mo.DistributedVirtualPortgroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPGConfig indicates an expected call of GetPGConfig
+func (mr *MockProbeInfMockRecorder) GetPGConfig(dcName, pgName, ps interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPGConfig", reflect.TypeOf((*MockProbeInf)(nil).GetPGConfig), dcName, pgName, ps)
+}
+
+// RenamePG mocks base method
+func (m *MockProbeInf) RenamePG(dcName, oldName, newName string) error {
+	ret := m.ctrl.Call(m, "RenamePG", dcName, oldName, newName)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RenamePG indicates an expected call of RenamePG
+func (mr *MockProbeInfMockRecorder) RenamePG(dcName, oldName, newName interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenamePG", reflect.TypeOf((*MockProbeInf)(nil).RenamePG), dcName, oldName, newName)
+}
+
 // RemovePenPG mocks base method
 func (m *MockProbeInf) RemovePenPG(dcName, pgName string) error {
 	ret := m.ctrl.Call(m, "RemovePenPG", dcName, pgName)
