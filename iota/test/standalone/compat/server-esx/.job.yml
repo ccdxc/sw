@@ -8,6 +8,32 @@ rebase: true
 # e2e-targets is the scheduler for CI runs to specify baremetal or virtual machine. 
 e2e-targets:
   # baremetal + baremetal Esx test cases
+ compat-smc-1114S-esx:
+   commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
+   owners: ["email:dbarsky@pensando.io"]
+   area:
+   sub-area:
+   feature:
+   max-duration: 72h
+   build-dependencies:
+     - build-iris-arm
+     - build-iota
+   clusters:
+     - image: build-10
+       count: 1
+       resources:
+         servers:
+         - type: server-smc-1114S
+         nic-type: naples
+   provision:
+       username: vm
+       password: vm
+       vars:
+          BmOs: esx
+          VmOs: linux
+          EsxUsername: root
+          EsxPassword: Pen0trl!
+
  compat-ucs220-skylake-esx:
    commands: ["sh", "-c", "make compatibility && ./run_iota.sh --testsuite server_compat_hostpin"]
    owners: ["email:dbarsky@pensando.io"]
