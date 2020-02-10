@@ -12,6 +12,7 @@ import { SecurityProtoPort } from '@sdk/v1/models/generated/search';
 import { CreationForm } from '@app/components/shared/tableviewedit/tableviewedit.component';
 import { UIConfigsService } from '@app/services/uiconfigs.service';
 import { maxValueValidator, minValueValidator } from '@sdk/v1/utils/validators';
+import { UIRolePermissions } from '@sdk/v1/models/generated/UI-permissions-enum';
 
 @Component({
   selector: 'app-newsecurityapp',
@@ -101,7 +102,7 @@ export class NewsecurityappComponent extends CreationForm<ISecurityApp, Security
   }
 
   setToolbar() {
-    if (!this.isInline) {
+    if (!this.isInline && this.uiconfigsService.isFeatureEnabled(UIRolePermissions.securityapp_create)) {
       // If it is not inline, we change the toolbar buttons, and save the old one
       // so that we can set it back when we are done
       const currToolbar = this._controllerService.getToolbarData();

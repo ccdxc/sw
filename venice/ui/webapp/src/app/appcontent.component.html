@@ -39,24 +39,26 @@
           <span class="app-shell-spacer"></span>
           <div class="app-shell-toolbar-icon-div">
             <a mat-icon-button class="app-shell-doclink" [href]="docLink" target="_blank"
-               matTooltip="Docs">
+               matTooltip="Getting started and API documents">
               <mat-icon style="font-size: 28px;">library_books</mat-icon>
             </a>
             <ng-container *ngIf="!isUINavigationBlocked">
-              <button *featureGuard="'help'" mat-icon-button
+              <button *featureGuard="'help'" mat-icon-button matTooltip="Online help"
                       (click)="onToolbarIconClick($event, 'help')">
                 <mat-icon>help_outline</mat-icon>
               </button>
               <!-- Commenting out for August release -->
               <!-- <button mat-button>Save</button> -->
               <button *roleGuard="'monitoringAlert_read'" mat-icon-button
+                      matTooltip="Alert Notifications"
                       (click)="onToolbarIconClick($event, 'notifications')">
                 <mat-icon>notifications </mat-icon>
                 <span class="app-notification-number" [ngClass]=getAlertNotificationClass()
                       *ngIf="alertNumbers>0">{{alertNumbers}}</span>
               </button>
             </ng-container>
-            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu">
+            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarUserMenu"
+                    matTooltip="Login user">
               <mat-icon>person</mat-icon>
             </button>
             <mat-menu class="app-shell-toolbar-user-menu" #toolbarUserMenu="matMenu">
@@ -66,7 +68,8 @@
                 <span>Sign out</span>
               </button>
             </mat-menu>
-            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarAboutMenu">
+            <button mat-icon-button class="app-user-button" [matMenuTriggerFor]="toolbarAboutMenu"
+                    matTooltip="About and support">
               <mat-icon>info</mat-icon>
             </button>
             <mat-menu class="app-shell-toolbar-user-menu" #toolbarAboutMenu="matMenu">

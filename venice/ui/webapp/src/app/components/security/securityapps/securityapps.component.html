@@ -35,10 +35,10 @@
 
 <ng-template #actionTemplate let-rowData>
   <div class="global-column-action-icon-container" fxLayout="row" fxLayoutGap="5px">
-    <mat-icon matTooltip="Edit App"
+    <mat-icon matTooltip="Edit App" *roleGuard="'securityapp_update'"
               class="global-table-action-icon securityapp-table-action-icon-edit pointer"
               (click)="expandRowRequest($event, rowData)">edit</mat-icon>
-    <mat-icon matTooltip="Delete App"
+    <mat-icon matTooltip="Delete App" *roleGuard="'securityapp_delete'"
               class="global-table-action-icon securityapp-table-action-icon-edit pointer"
               (click)="onDeleteRecord($event, rowData)">delete</mat-icon>
   </div>
