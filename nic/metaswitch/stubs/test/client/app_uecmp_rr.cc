@@ -857,7 +857,7 @@ int main(int argc, char** argv)
     g_cp_test_stub_   = CPTestSvc::NewStub (channel);
 
     // TODO: Change channel port to 50057 when connecting to Pegasus
-    std::shared_ptr<Channel> rr_channel = grpc::CreateChannel("localhost:50054",
+    std::shared_ptr<Channel> rr_channel = grpc::CreateChannel("localhost:50057",
             grpc::InsecureChannelCredentials());
     g_rr_device_stub_  = DeviceSvc::NewStub (rr_channel);
     g_rr_if_stub_      = IfSvc::NewStub (rr_channel);
@@ -867,8 +867,8 @@ int main(int argc, char** argv)
     if (argc == 1)
     {
         // Send protos to grpc server
-        create_device_proto_grpc();
         if (g_node_id != 3) {
+            create_device_proto_grpc();
             create_underlay_vpc_proto_grpc();
         }
         // Create loopback intf for TEP IP on PDSA

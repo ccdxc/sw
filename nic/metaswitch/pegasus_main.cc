@@ -6,9 +6,13 @@
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/sdk/lib/thread/thread.hpp"
 #include "nic/apollo/api/include/pds_init.hpp"
+#include "nic/apollo/agent/svc/specs.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/bgp_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/gen/svc/evpn_gen.hpp"
 #include "nic/metaswitch/stubs/mgmt/pds_ms_mgmt_init.hpp"
+#include "nic/metaswitch/stubs/mgmt/gen/svc/cp_route_gen.hpp"
+#include "nic/metaswitch/stubs/mgmt/pds_ms_interface.hpp"
+#include "nic/apollo/agent/svc/interface.hpp"
 
 using namespace std;
 using grpc::Server;
@@ -20,12 +24,97 @@ using grpc::Status;
 static sdk::lib::thread *g_nbase_thread;
 std::string g_grpc_server_addr;
 
+// Pegasus needs to implement the Interface proto for loopback interfaces.
+// Metaswitch requires RRs to have a route reachability to the
+// BGP NLRI nexthops foe the RR to accept and reflect them.
+// This is achieved by creating a static default route pointing to a
+// loopback interface.
+Status
+IfSvcImpl::InterfaceCreate(ServerContext *context,
+                           const pds::InterfaceRequest *proto_req,
+                           pds::InterfaceResponse *proto_rsp) {
+    if ((proto_req == NULL) || (proto_req->request_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return Status::CANCELLED;
+    }
+
+    sdk_ret_t ret;
+    pds_batch_ctxt_t bctxt;
+
+    SDK_TRACE_INFO("Received gRPC Interface Request Create");
+
+    bctxt = proto_req->batchctxt().batchcookie();
+    for (int i = 0; i < proto_req->request_size(); i ++) {
+
+        pds_if_spec_t api_if_spec = {0};
+        auto api_spec = &api_if_spec;
+        auto request = proto_req->request(i);
+
+        if (request.type() != pds::IF_TYPE_LOOPBACK) {
+            SDK_TRACE_ERR("Cannot create non-loopback interfaces on Pegasus");
+            proto_rsp->set_apistatus(
+                types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED);
+            return Status::CANCELLED;
+        }
+        memcpy(api_spec->key.id, request.id().data(),
+               MIN(request.id().length(), PDS_MAX_KEY_LEN));
+
+        api_spec->admin_state = PDS_IF_STATE_UP;
+        api_spec->type = PDS_IF_TYPE_LOOPBACK;
+
+        // call the metaswitch api
+        if ((ret = pds_ms::interface_create(api_spec, bctxt)) != SDK_RET_OK) {
+            SDK_TRACE_ERR("Failed to create interface %s, err %d",
+                          api_spec->key.str(), ret);
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            return Status::CANCELLED;
+        }
+    }
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return Status::OK;
+}
+
+Status
+IfSvcImpl::InterfaceUpdate(ServerContext *context,
+                           const pds::InterfaceRequest *proto_req,
+                           pds::InterfaceResponse *proto_rsp) {
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED);
+    return Status::CANCELLED;
+}
+
+Status
+IfSvcImpl::InterfaceDelete(ServerContext *context,
+                           const pds::InterfaceDeleteRequest *proto_req,
+                           pds::InterfaceDeleteResponse *proto_rsp) {
+    proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_OPERATION_NOT_ALLOWED);
+    return Status::CANCELLED;
+}
+
+Status
+IfSvcImpl::InterfaceGet(ServerContext *context,
+                        const pds::InterfaceGetRequest *proto_req,
+                        pds::InterfaceGetResponse *proto_rsp) {
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
+}
+
+Status
+IfSvcImpl::LifGet(ServerContext *context,
+                  const pds::LifGetRequest *proto_req,
+                  pds::LifGetResponse *proto_rsp) {
+    proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+    return Status::OK;
+}
+
 static void
 svc_reg (void)
 {
     ServerBuilder         *server_builder;
     BGPSvcImpl            bgp_svc;
     EvpnSvcImpl           evpn_svc;
+    IfSvcImpl             intf_svc;
+    CPRouteSvcImpl        route_svc;
+
 
     grpc_init();
     g_grpc_server_addr =
@@ -36,6 +125,8 @@ svc_reg (void)
     server_builder->AddListeningPort(g_grpc_server_addr,
                                      grpc::InsecureServerCredentials());
 
+    server_builder->RegisterService(&intf_svc);
+    server_builder->RegisterService(&route_svc);
     server_builder->RegisterService(&bgp_svc);
     server_builder->RegisterService(&evpn_svc);
 

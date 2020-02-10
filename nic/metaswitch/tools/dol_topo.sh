@@ -77,11 +77,9 @@ if [ "$1" == "rr" ]; then
     rr=1
 fi
 
-# TODO: Change to start Container 1 (DUT) alone in PDS non-mock mode
-echo "start pdsagent in "$CONTAINER"1 in PDS_MOCK_MODE"
+echo "start pdsagent in "$CONTAINER"1"
 ret=0
 docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
-#docker exec -dit -w "$DOL_CFG"1 "$CONTAINER"1 sh -c 'PDS_MOCK_MODE=1 VPP_IPC_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
 
 if [ $ret -ne 0 ]; then
     echo "failed to start pdsagent in "$CONTAINER"1: $ret"
@@ -99,9 +97,7 @@ do
 	ret=0
     if [ "$i" = "3" ] && [ "$rr" = "1" ]; then
         echo "Starting Pegasus in "$CONTAINER"$i"
-#  TODO: Change to Pegasus
-#    docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/debug/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pegasus' || ret=$?
-   	docker exec -dit -w "$DOL_CFG"$i "$CONTAINER"$i sh -c 'PDS_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
+        docker exec -dit -w "$DOL_CFG"$i -e LD_LIBRARY_PATH=/sw/nic/third-party/metaswitch/output/x86_64/debug/ "$CONTAINER"$i sh -c '/sw/nic/build/x86_64/apulu/bin/pegasus' || ret=$?
     else
 	    echo "start pdsagent in "$CONTAINER"$i in PDS_MOCK_MODE"
     	docker exec -dit -w "$DOL_CFG"$i "$CONTAINER"$i sh -c 'PDS_MOCK_MODE=1 /sw/nic/apollo/tools/apulu/start-agent-mock.sh' || ret=$?
