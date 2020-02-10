@@ -78,6 +78,7 @@ LOGDIR=$R/obfl
 LOGFILE=$LOGDIR/fwupdate.log
 LOGMAXSZ=1048576
 PIDFILE=$R/var/run/fwupdate.pid
+DT_COMPAT=$R/proc/device-tree/compatible
 
 do_log_emit()
 {
@@ -266,6 +267,11 @@ main()
             log_info "BEGIN: $CMDLINE"
             fatal_err "Invalid package file"
         fi
+
+        # Verify that the package is compatible with this asic
+        check_asic_compat
+
+        # Launch an embedded installer, if present
         if [ $IS_CUSTOM_INSTALLER -eq 0 ]; then
             s=`mani_opt_value .installer`
             if [ "$s" != "null" ]; then
@@ -366,6 +372,29 @@ main()
     *)
         ;;
     esac
+}
+
+# If the package has a .asic_compat, and we know our asic type,
+# and they mismatch, then reject the package
+check_asic_compat()
+{
+    local this_asic=`this_asic_type`
+    local pkg_asic=`mani_opt_value .asic_compat`
+
+    # If we don't know what we are, then assume the package is ok
+    if [ "$this_asic" = "unknown" ]; then
+        return
+    fi
+
+    if [ "$pkg_asic" != "null" ]; then
+        # The package includes .asic_compat property; compare it.
+        if [ "$this_asic" != "$pkg_asic" ]; then
+            fatal "Package file incompatible with this ASIC"
+        fi
+    elif [ "$this_asic" != "capri" ]; then
+        # For non-capri, a .asic_compat property is mandatory
+        fatal "Package file incompatible with this ASIC"
+    fi
 }
 
 set_package_strategy()
@@ -1154,6 +1183,19 @@ partuuid_to_fwname()
     else
         fatal "partuuid_to_fwname: unknown uuid $uuid"
     fi
+}
+
+# asic type
+this_asic_type()
+{
+    local s=unknown
+
+    [ -f $DT_COMPAT ] && s=`cat $DT_COMPAT`
+    case "$s" in
+    pensando,*)     expr "$s" : '.*,\(.*\)'; ;;
+    unknown)        echo unknown; ;;
+    *)              echo foreign; ;;
+    esac
 }
 
 to_blocks()
