@@ -821,7 +821,8 @@ vnic_impl::add_mapping_entry_(pds_epoch_t epoch, vpc_entry *vpc,
                      spec->mac_addr, ETH_ADDR_LEN);
 
     // fill the data
-    mapping_data.nexthop_valid = true;
+    mapping_data.is_local = TRUE;
+    mapping_data.nexthop_valid = TRUE;
     mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     mapping_data.nexthop_id = nh_idx_;
     mapping_data.egress_bd_id =

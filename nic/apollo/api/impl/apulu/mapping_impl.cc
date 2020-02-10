@@ -675,6 +675,7 @@ mapping_impl::add_local_mapping_entries_(vpc_entry *vpc,
                                    ((vpc_impl *)vpc->impl())->hw_id(),
                                    &spec->key.ip_addr);
     memset(&mapping_data, 0, sizeof(mapping_data));
+    mapping_data.is_local = TRUE;
     mapping_data.nexthop_valid = TRUE;
     mapping_data.nexthop_type = NEXTHOP_TYPE_NEXTHOP;
     mapping_data.nexthop_id = vnic_impl_obj->nh_idx();
