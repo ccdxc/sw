@@ -52,7 +52,9 @@ export class AuthService extends Authv1Service {
   protected invokeAJAX(method: string, url: string, payload: any, opts: MethodOpts, forceReal: boolean = false): Observable<VeniceResponse> {
     const username = Utility.getInstance().getLoginName();
     const key = this.serviceUtility.convertEventID(opts);
-    if ( username && (username.length === 0 || !url.includes('/users/' + username)) && !this.uiconfigsService.isAuthorized(key)) {
+    // vs-1259 for update user own preference should always be authorized
+    if ( username && (username.length === 0 || (!url.includes('/users/' + username) && !url.includes('/user-preferences/' + username)))
+        && !this.uiconfigsService.isAuthorized(key)) {
       return NEVER;
     }
     const isOnline = !this.isToMockData() || forceReal;

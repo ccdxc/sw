@@ -70,18 +70,12 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
   }
 
   setToolbar() {
-    let buttons = [];
-    if (this.uiconfigsService.isAuthorized(UIRolePermissions.authuserpreference_update)) {
-      buttons = [
-        {
-          cssClass: 'global-button-primary telemetry-button',
-          text: 'CREATE CHART',
-          callback: () => { this.editChart(''); }
-        },
-      ];
-    }
     this.controllerService.setToolbarData({
-      buttons: buttons,
+      buttons: [{
+        cssClass: 'global-button-primary telemetry-button',
+        text: 'CREATE CHART',
+        callback: () => { this.editChart(''); }
+      }],
       breadcrumb: [{ label: 'Metrics', url: Utility.getBaseUIUrl() + 'monitoring/metrics' }]
     });
   }
@@ -146,10 +140,10 @@ export class TelemetryComponent extends BaseComponent implements OnInit, OnDestr
     userPref.telemetry.configuredGraphs[config.id] = config;
     if (!isUpdate) {
 
-    userPref.telemetry.items.push({
-      type: ChartItemType.chart,
-      graphID: config.id
-    });
+      userPref.telemetry.items.push({
+        type: ChartItemType.chart,
+        graphID: config.id
+      });
     }
     const onSuccess = (resp) => {
       if (isUpdate) {
