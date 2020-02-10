@@ -4,6 +4,8 @@
         "command": "/nic/tools/start-agent.sh",
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
+        "memory-limit": 800.0,
+        "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0x3"
     },
@@ -28,6 +30,8 @@
         "command": "/bin/sh /nic/tools/start-nmd.sh",
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
+        "memory-limit": 75.0,
+        "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0x3"
     },
@@ -36,6 +40,8 @@
         "command": "/nic/bin/netagent",
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
+        "memory-limit": 300.0,
+        "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0x3"
      }

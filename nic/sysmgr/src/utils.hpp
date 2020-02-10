@@ -28,6 +28,7 @@ extern void        exec_command(const std::string &command);
 extern void        exists_or_mkdir(const char *dir);
 extern void        launch(const std::string &name, const std::string &command,
                           unsigned long cpu_affinity, double mem_limit,
+                          int cpu_shares, const std::string &cpuset,
                           process_t *new_process);
 extern void        mkdirs(const char *dir);
 extern std::string parse_status(int status);

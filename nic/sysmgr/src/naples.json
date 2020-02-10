@@ -5,6 +5,7 @@
         "dependencies": [],
         "flags": [],
         "memory-limit": 800.0,
+        "cpu-max-percentage": 75,
         "timeout": 60.0,
         "cpu-affinity": "0xD"
     },
@@ -13,6 +14,8 @@
         "command": "/nic/bin/delphi_hub",
         "dependencies": [],
         "flags": [],
+        "memory-limit": 100.0,
+        "cpu-max-percentage": 50,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -77,6 +80,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
+        "memory-limit": 300.0,
+        "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -106,6 +111,8 @@
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
+        "memory-limit": 75.0,
+        "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -122,6 +129,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
+        "memory-limit": 350.0,
+        "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -138,6 +147,8 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
+        "memory-limit": 250.0,
+        "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -188,6 +199,8 @@
                 }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
+        "memory-limit": 250.0,
+        "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
     },
@@ -241,6 +254,8 @@
              }
          ],
          "flags": ["restartable", "save_stdout_on_crash"],
+         "memory-limit": 100.0,
+         "cpu-max-percentage": 20,
          "timeout": 0.0,
          "cpu-affinity": "0xD"
      }

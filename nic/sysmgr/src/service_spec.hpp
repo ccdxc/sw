@@ -39,7 +39,10 @@ public:
     int                            flags;
     double                         timeout;
     double                         mem_limit;
-    unsigned long                  cpu_affinity;
+    unsigned long                  cpu_affinity; //Directly calls
+                                                 //sched_affinity()
+    std::string                    cpuset;       //Acted on by cgroup infra.
+    int                            cpu_shares;
     static std::shared_ptr<ServiceSpec>   create();
 };
 typedef std::shared_ptr<ServiceSpec> ServiceSpecPtr;

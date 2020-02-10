@@ -88,6 +88,27 @@ static unsigned long cpu_affinity_from_obj(pt::ptree obj)
     return std::stoul(val, nullptr, 16);
 }
 
+#define MAX_CPUSHARES 1024  // Max value per cgroup definitions.
+static int cpu_shares_from_obj(pt::ptree obj)
+{
+    int cpu_percentage;
+    int cpu_shares;
+
+    if (obj.count("cpu-max-percentage") == 0) {
+        return (MAX_CPUSHARES);  // Not configured. So no control. Set to
+                                 // Max CPU shares.
+    } else {
+        cpu_percentage = obj.get<int>("cpu-max-percentage", 0);
+        if ((cpu_percentage > 100) ||
+            (cpu_percentage <= 0)) {
+            cpu_percentage = 100;   //if out of bounds configured value,
+                                    // leave it at 100% i.e. no control by
+                                    // cgroups.
+        }
+        return(((double)cpu_percentage/100) * MAX_CPUSHARES);
+    }
+}
+
 static ServiceSpecPtr spec_from_obj(pt::ptree obj)
 {
     ServiceSpecPtr spec = ServiceSpec::create();
@@ -100,6 +121,12 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
         spec->mem_limit = 0.0;
     } else {
         spec->mem_limit = obj.get<double>("memory-limit");
+    }
+    spec->cpu_shares = cpu_shares_from_obj(obj);
+    if (obj.count("cpuset") == 0) { 
+        spec->cpuset = "";
+    } else {
+        spec->cpuset = obj.get<std::string>("cpuset");
     }
     spec->dependencies = dependencies_from_obj(obj);
     spec->cpu_affinity = cpu_affinity_from_obj(obj);

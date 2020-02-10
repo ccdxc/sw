@@ -4,6 +4,8 @@
         "command": "/nic/tools/start-agent.sh",
         "dependencies": [],
         "flags": ["save_stdout_on_crash"],
+        "memory-limit": 800.0,
+        "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0x1"
     },

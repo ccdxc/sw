@@ -184,6 +184,7 @@ void close_on_exec(int fd)
 
 void launch(const std::string &name, const std::string &command,
             unsigned long cpu_affinity, double mem_limit,
+            int cpu_shares, const std::string &cpuset,
             process_t *new_process)
 {
     pid_t pid;
@@ -219,9 +220,18 @@ void launch(const std::string &name, const std::string &command,
         // replace the stderr with the "output" side of the "stderr" pipe
         replace_fd(errfds[1], 2);
         cpulock(cpu_affinity);
-        // add it to the cgroup if there is a mem_limit
+        
+        // Create cgroups for this process if any of them are configured.
+        pid = getpid();
         if (mem_limit) {
-            cg_add(name.c_str(), getpid());
+            cg_add(CG_MEMORY, name.c_str(), pid);
+        }
+        if (cpu_shares < MAX_CPUSHARES) { //Control needed only if less
+                                          //than max value is configured.
+            cg_add(CG_CPU, name.c_str(), pid);
+        }
+        if (cpuset.length() != 0) {
+            cg_add(CG_CPUSET, name.c_str(), pid);
         }
         exec_command(command);
     }

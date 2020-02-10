@@ -43,7 +43,8 @@ void Service::launch()
     process_t new_process;
 
     ::launch(this->spec->name, this->spec->command, this->spec->cpu_affinity,
-             this->spec->mem_limit, &new_process);
+             this->spec->mem_limit, this->spec->cpu_shares,
+             this->spec->cpuset, &new_process);
 
     this->pid = new_process.pid;
 
@@ -109,15 +110,32 @@ void Service::start_heartbeat()
 ServicePtr Service::create(ServiceSpecPtr spec)
 {
     ServicePtr svc = std::make_shared<Service>();
+    cg_limit_t cg_limit;
 
     g_log->info("Created service %s", spec->name.c_str());
 
     // If it has memory limitation, create a cgroup for it
     if (spec->mem_limit > 0.0) {
-        g_log->info("Creating cgroup with size %lf", spec->mem_limit);
-        cg_create(spec->name.c_str(), (size_t)spec->mem_limit * (1024 * 1024));
+        g_log->info("Creating cgroup (memory/%s) with limit %lf",
+                    spec->name.c_str(), spec->mem_limit);
+        cg_limit.memory = (size_t)spec->mem_limit * (1024 * 1024);
+        cg_create(CG_MEMORY, spec->name.c_str(), cg_limit);
     }
     
+    if (spec->cpu_shares < MAX_CPUSHARES) {
+        g_log->info("Creating cgroup (cpu/%s) with cpu shares %d",
+                    spec->name.c_str(), spec->cpu_shares);
+        cg_limit.cpu_shares = spec->cpu_shares;
+        cg_create(CG_CPU, spec->name.c_str(), cg_limit);
+    }
+
+    if (spec->cpuset.length() != 0) {
+        g_log->info("Creating cgroup (cpuset/%s) with cpu set %s",
+                    spec->name.c_str(), spec->cpuset.c_str());
+        cg_limit.cpuset = spec->cpuset.c_str();
+        cg_create(CG_CPUSET, spec->name.c_str(), cg_limit);
+    }
+
     for (auto spec_dep: spec->dependencies)
     {
         auto dep = ServiceDep::create(spec_dep);
@@ -212,8 +230,15 @@ void Service::on_child(pid_t pid)
         run_debug(this->pid);
     }
 
+    // Remove specific cgroup membership of the PID.
     if (spec->mem_limit > 0.0) {
-        cg_reset(this->pid);
+        cg_reset(CG_MEMORY, this->pid);
+    }
+    if (spec->cpu_shares < MAX_CPUSHARES) {
+        cg_reset(CG_CPU, this->pid);
+    }
+    if (spec->cpuset.length() != 0) {
+        cg_reset(CG_CPUSET, this->pid);
     }
 
     // SERVICE_CONFIG_STATE_OFF means we killed the process, don't worry about
