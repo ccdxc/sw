@@ -1,8 +1,8 @@
 #! /bin/bash
 set -e
 
-own_ip="169.254.0.2"
-trg_ip="169.254.0.1"
+own_ip="169.254.XX.2"
+trg_ip="169.254.XX.1"
 
 while [[ "$#" > 0 ]]; do
     case $1 in
@@ -18,8 +18,28 @@ done
 rm -f /root/.ssh/known_hosts
 chown vm:vm /pensando
 
+# find all the ionic interfaces and the mgmt interfaces
+ifs=""
+mgmt_ifs=""
+for net in /sys/class/net/* ; do
+    n=`basename $net`
+    if [ ! -e $net/device/vendor ] ; then
+	continue
+    fi
+    v=`cat $net/device/vendor`
+    if [ $v != "0x1dd8" ] ; then
+        continue
+    fi
+
+    ifs+=" $n"
+    d=`cat $net/device/device`
+    if [ $d == "0x1004" ] ; then
+        mgmt_ifs+=" $n"
+    fi
+done
+
 dhcp_disable() {
-    # Check if its centos
+    # Check if it is centos
     os_str=`awk -F= '/^NAME/{print $2}' /etc/os-release`
     os_version=`awk -F= '$1=="VERSION_ID" { print $2 ;}' /etc/os-release | sed -e 's/\([678]\)\../\1/'`
     if [[ $os_str == *"Ubuntu"* ]]; then
@@ -27,8 +47,8 @@ dhcp_disable() {
         return
     elif [[ $os_str == *"CentOS"* || $os_str == *"Red Hat"* ]]; then
         echo "CentOS/RHEL: Explicitly disabling DHCP on Naples IFs"
-        declare -a ifs=(`systool -c net | grep "Class Device"  | tail -4 | head -3 | cut -d = -f 2 | cut -d \" -f 2`)
-        for i in  "${ifs[@]}"
+
+        for i in $ifs
         do
             echo "$i"
             echo "DEVICE=$i" > /etc/sysconfig/network-scripts/ifcfg-$i
@@ -40,9 +60,9 @@ dhcp_disable() {
         else
 	    sudo service network restart
         fi
-        for i in  "${ifs[@]}"
+        for i in $ifs
         do
-           ifconfig $i up
+            ifconfig $i up
         done
     fi
 }
@@ -75,33 +95,49 @@ else
         insmod drivers/eth/ionic/ionic.ko || (dmesg && exit 1)
         sleep 2
 
-        #intmgmt=`systool -c net | grep "Class Device"  | tail -4 | head -1 | cut -d = -f 2 | cut -d \" -f 2`
-        bdf=`lspci -d :1004 | cut -d' ' -f1`
-
-        if [ -z "$bdf" ]; then
-            echo "No internal mgmt interface detected."
-            if [ -n "$no_mgmt" ]; then
-                echo "Internal mgmt interface is not required."
-                exit 0
-            fi
-
-            echo "ERROR: Internal mgmt interface is required."
-            exit 1
-        fi
-
-        intmgmt=`ls /sys/bus/pci/devices/0000:$bdf/net/`
-        echo "Internal mgmt interface $intmgmt detected at $bdf."
-
         dhcp_disable
-        ifconfig $intmgmt $own_ip/24
+
         if [ -n "$no_mgmt" ]; then
-            echo "Skip ping test of internal mgmt interface on host"
+            echo "Internal mgmt interface is not required."
             exit 0
         fi
-        if ! (ping -c 5 $trg_ip); then
-            ./print-cores.sh
+
+        num_nic=`echo $ifs | wc -w`
+        num_mgmt=`echo $mgmt_ifs | wc -w`
+        num_mgmt_expected=`expr $num_nic / 3`
+
+        if [[ $num_mgmt -ne $num_mgmt_expected ]]; then
+            echo "ERROR: Internal mgmt interface is required."
+            echo "Should have $num_mgmt_expected but see $num_mgmt"
             exit 1
         fi
+
+        # override possible command line setting
+        # with default settings if multiple NICs
+        if [ $num_mgmt -gt 1 ] ; then
+            own_ip="169.254.XX.2"
+            trg_ip="169.254.XX.1"
+        fi
+
+        for intmgmt in $mgmt_ifs ; do
+            pci=`ethtool -i $intmgmt | awk '/bus-info/ { print $2 }'`
+            echo "Internal mgmt interface $intmgmt detected at $pci"
+
+            s_hex=`echo $pci | cut -d: -f2 | tr [a-f] [A-F]`
+            s_dec=`echo "obase=10; ibase=16; $s_hex" | bc`
+            mgmt_ip=`echo $own_ip | sed -e s/XX/$s_dec/`
+            mnic_ip=`echo $trg_ip | sed -e s/XX/$s_dec/`
+
+            ifconfig $intmgmt $mgmt_ip/24
+            if [ -n "$no_mgmt" ]; then
+                echo "Skip ping test of internal mgmt interface on host"
+                exit 0
+            fi
+            if ! (ping -c 5 $mnic_ip); then
+                ./print-cores.sh
+                exit 1
+            fi
+        done
     fi
 fi
 
