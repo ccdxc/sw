@@ -989,7 +989,6 @@ public:
 //::                else:
 //::                    key_data_chain = itertools.chain(data_fields_list)
 //::                #endif
-//
 //::                for key_data_field in key_data_chain:
 //::                    # ignore if field is hash/hint/padding
 //::                    if not key_data_field.is_key_appdata_field():
@@ -1007,19 +1006,11 @@ public:
 //::                        #endif
 //::
 //::                        split_field_dict[split_field_name] = 1
-//::                        split_fields_list = get_split_field(split_field_name)
+//::                        field_get_str_list = key_data_field.get_field_str(split_field_name)
     ${field_type_str} get_${split_field_name}(void) {
         ${field_type_str} ${split_field_name} = 0x0;
-//::                        for split_field in split_fields_list:
-//::                            field_name = split_field.name()
-//::                            sbit = split_field.sbit()
-//::                            ebit = split_field.ebit()
-//::                            mask = 0
-//::                            for i in range(ebit-sbit+1):
-//::                                mask |= (1 << i)
-//::                            #endfor
-//::                            mask_str = str(hex(mask))
-        ${split_field_name} |= (${field_name} << ${sbit}) & ${mask_str};
+//::                        for field_get_str in field_get_str_list:
+        ${field_get_str}
 //::                        #endfor
         return ${split_field_name};
 //::                    else:

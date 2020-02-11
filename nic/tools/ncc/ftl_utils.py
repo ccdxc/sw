@@ -14,6 +14,9 @@ hash_field_cnt = 0
 # key: split_field_name, value: list of tuples (field_name, sbit, ebit)
 split_fields_dict = {}
 
+# key: split_field_name, value: split field width
+split_fields_width_dict = {}
+
 hash_hint_fields_dict = {}
 
 # list of fields other than key/data
@@ -151,9 +154,26 @@ def insert_split_fields_db(field_obj):
     else:
         split_fields_dict[split_field_name] = [field_obj]
 
+    ebit = field_obj.ebit()
+
+    if split_field_name in split_fields_width_dict:
+        if split_fields_width_dict[split_field_name] < (ebit + 1):
+            split_fields_width_dict[split_field_name] = ebit + 1
+    else:
+        split_fields_width_dict[split_field_name] = ebit + 1
+
+def get_split_field_width(field_name):
+    if field_name in split_fields_width_dict:
+        return split_fields_width_dict[field_name]
+    else:
+        return 0
+
 def split_fields_dict_reset():
     global split_fields_dict
+    global split_fields_width_dict
+
     split_fields_dict = {}
+    split_fields_width_dict = {}
 
 def next_pow_2(num):
     # return same number if already power of 2
@@ -168,7 +188,7 @@ def next_pow_2(num):
 
 set_field_template_1 = Template(
 """\
-${field_name} = (${field_arg} >> ${sbit}) & ${mask_str};\
+${field_name} = (${field_arg} >> ${shift}) & ${mask_str};\
 """)
 
 set_field_template_2 = Template(
@@ -183,7 +203,7 @@ memset(${field_name}, ${field_arg}, ${arr_len});\
 
 get_field_template_1 = Template(
 """\
-${field_arg} |= (${field_name} << ${sbit}) & ${mask_str};\
+${field_arg} |= (${field_name} << ${shift}) & ${mask_str};\
 """)
 
 get_field_template_2 = Template(
@@ -247,6 +267,7 @@ class Field:
         if self.is_field_split() and handle_split == True:
             split_field_name = self.split_name()
             split_fields_list = get_split_field(split_field_name)
+            split_field_width = get_split_field_width(split_field_name)
             for split_field in split_fields_list:
                 field_name = split_field.name()
                 sbit = split_field.sbit()
@@ -254,7 +275,8 @@ class Field:
                 mask = 0
                 for i in range(ebit-sbit+1):
                     mask |= (1 << i)
-                field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, sbit=sbit, mask_str=str(hex(mask))))
+                shift = split_field_width - (ebit + 1)
+                field_str_list.append(set_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
                 arr_len = get_bit_arr_length(field_width)
@@ -276,6 +298,7 @@ class Field:
         if self.is_field_split() and handle_split == True:
             split_field_name = self.split_name()
             split_fields_list = get_split_field(split_field_name)
+            split_field_width = get_split_field_width(split_field_name)
             for split_field in split_fields_list:
                 field_name = split_field.name()
                 sbit = split_field.sbit()
@@ -283,7 +306,8 @@ class Field:
                 mask = 0
                 for i in range(ebit-sbit+1):
                     mask |= (1 << i)
-                field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg, sbit=sbit, mask_str=str(hex(mask))))
+                shift = split_field_width - (ebit + 1)
+                field_str_list.append(get_field_template_1.substitute(field_name=field_name, field_arg=field_arg, shift=shift, mask_str=str(hex(mask))))
         else:
             if field_width > get_field_bit_unit():
                 arr_len = get_bit_arr_length(field_width)
