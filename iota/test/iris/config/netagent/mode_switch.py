@@ -19,7 +19,6 @@ def CreateConfigConsoleNoAuth():
 
 def Main(step):
     policy_mode = getattr(step, "policy_Mode", None)
-    mode_switch_sleep_time = 60 #sec
     agent_nodes = api.GetNaplesHostnames()
     fwd_mode = getattr(step, "fwd_mode", None)
     policy_mode = getattr(step, "policy_Mode", None)
@@ -103,10 +102,6 @@ def Main(step):
                     "policy_mode : %s"%(fwd_mode, policy_mode))
 
     netagent_api.switch_profile(fwd_mode, policy_mode)
-
-    api.Logger.info("Waiting for %d sec for HAL to switch profile, This is temporary"%
-                    (mode_switch_sleep_time))
-    time.sleep(mode_switch_sleep_time)
 
     api.Logger.info("Starting SSH server on Nodes")
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)

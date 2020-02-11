@@ -1,6 +1,7 @@
 #! /usr/bin/python3
 import os
 import pdb
+import time
 import ipaddress
 import requests
 import json
@@ -220,11 +221,11 @@ def PushBaseConfig(ignore_error = True, kinds=None):
         ret = PushConfigObjects(objects, ignore_error=ignore_error)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
-    if not kinds or 'Tunnel' in kinds:
-        objects = QueryConfigs(kind='Tunnel')
-        ret = PushConfigObjects(objects, ignore_error=ignore_error)
-        if not ignore_error and ret != api.types.status.SUCCESS:
-            return api.types.status.FAILURE
+    # if not kinds or 'Tunnel' in kinds:
+    #     objects = QueryConfigs(kind='Tunnel')
+    #     ret = PushConfigObjects(objects, ignore_error=ignore_error)
+    #     if not ignore_error and ret != api.types.status.SUCCESS:
+    #         return api.types.status.FAILURE
     if not kinds or 'MirrorSession' in kinds:
         objects = QueryConfigs(kind='MirrorSession')
         if objects:
@@ -268,11 +269,11 @@ def DeleteBaseConfig(ignore_error = True, kinds=None):
         ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
         if not ignore_error and ret != api.types.status.SUCCESS:
             return api.types.status.FAILURE
-    if not kinds or 'Tunnel' in kinds:
-        objects = QueryConfigs(kind='Tunnel')
-        ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
-        if not ignore_error and ret != api.types.status.SUCCESS:
-            return api.types.status.FAILURE
+    # if not kinds or 'Tunnel' in kinds:
+    #     objects = QueryConfigs(kind='Tunnel')
+    #     ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
+    #     if not ignore_error and ret != api.types.status.SUCCESS:
+    #         return api.types.status.FAILURE
     if not kinds or 'Endpoint' in kinds:
         objects = QueryConfigs(kind='Endpoint')
         ret = DeleteConfigObjects(objects, ignore_error=ignore_error)
@@ -323,18 +324,30 @@ def DeleteAllowAllPolicy(node_names = None, namespaces = None):
         DeleteConfigObjects(__allow_all_policies[ns], ignore_error=True)
         RemoveConfigObjects(__allow_all_policies[ns])
 
-def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True):
-    profile_json = api.GetTopologyDirectory() + "/" + "profile.json"
-    objects = QueryConfigs("profile")
+def switch_profile(fwd_mode="TRANSPARENT", policy_mode="BASENET", push=True,
+                   push_base_profile=False):
+    objects = QueryConfigs("Profile")
+    ret = api.types.status.SUCCESS
+    sleep_time = 60 #sec
 
-    if len(objects) == 0:
-        objects = AddOneConfig(profile_json)
+    if not push_base_profile:
+        if len(objects) == 0:
+            profile_json = api.GetTopologyDirectory() + "/" + "profile.json"
+            objects = AddOneConfig(profile_json)
 
-    for obj in objects:
-        obj.spec.fwd_mode = fwd_mode
-        obj.spec.policy_mode = policy_mode
+        for obj in objects:
+            obj.spec.fwd_mode = fwd_mode
+            obj.spec.policy_mode = policy_mode
 
-    return PushConfigObjects(objects) if push else api.types.status.SUCCESS
+    if push or push_base_profile:
+        ret = PushConfigObjects(objects)
+        if ret == api.types.status.SUCCESS:
+            api.Logger.info("Waiting for %d sec for HAL to switch "
+                            "profile, This is temporary"%
+                            (sleep_time))
+            time.sleep(sleep_time)
+
+    return ret
 
 def __findWorkloadsByIP(ip):
     wloads = api.GetWorkloads()

@@ -66,14 +66,20 @@ def Verify(tc):
     for cmd in tc.resp.commands:
         api.PrintCommandResults(cmd)
 
+    if  netagent_cfg_api.switch_profile(push_base_profile=True) != \
+        api.types.status.SUCCESS:
+        api.Logger.warn("Failed to push base profile")
+        return api.types.status.FAILURE
+
+    if netagent_cfg_api.PushBaseConfig(ignore_error = False) != \
+       api.types.status.SUCCESS:
+        api.Logger.info("policy push failed")
+        return api.types.status.FAILURE
+
     for cmd in tc.resp.commands:
         if cmd.exit_code != 0:
             api.Logger.info("cmd returned failure")
             return api.types.status.FAILURE
-        ret = netagent_cfg_api.PushBaseConfig(ignore_error = False)
-        if ret != api.types.status.SUCCESS:
-            api.Logger.info("policy push failed")
-            #return api.types.status.FAILURE
         if arping.ArPing(tc) != api.types.status.SUCCESS:
             api.Logger.info("arping failed on verify")
         if ping.TestPing(tc, 'local_only', 'ipv4', 64) != api.types.status.SUCCESS or ping.TestPing(tc, 'remote_only', 'ipv4', 64) != api.types.status.SUCCESS:
