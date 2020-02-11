@@ -14,6 +14,7 @@
 #include "nic/sdk/include/sdk/eth.hpp"
 #include "nic/sdk/include/sdk/ip.hpp"
 #include "nic/apollo/api/include/pds.hpp"
+#include "nic/apollo/api/include/pds_mirror.hpp"
 
 /// \defgroup PDS_INTF Interface API
 /// @{
@@ -77,6 +78,12 @@ typedef struct pds_if_spec_s {
         pds_l3_if_info_t     l3_if_info;
         pds_loopback_info_t  loopback_if_info;
     };
+    // Tx/egress mirror session id list, if any
+    uint8_t num_tx_mirror_sessions;
+    pds_obj_key_t tx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
+    // Rx/ingress mirror session id list, if any
+    uint8_t num_rx_mirror_sessions;
+    pds_obj_key_t rx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
 } __PACK__ pds_if_spec_t;
 
 /// \brief uplink interface status

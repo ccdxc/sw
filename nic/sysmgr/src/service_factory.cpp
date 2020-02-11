@@ -29,7 +29,7 @@ service_kind_from_obj(pt::ptree obj)
     } else if (obj.get<std::string>("kind") == "oneshot") {
         return SERVICE_ONESHOT;
     } else {
-        throw std::runtime_error("Unknown kind: " + 
+        throw std::runtime_error("Unknown kind: " +
                                  obj.get<std::string>("kind"));
     }
 }
@@ -37,7 +37,7 @@ service_kind_from_obj(pt::ptree obj)
 static int flags_from_obj(pt::ptree obj)
 {
    int flags = DEFAULT_SPEC_FLAGS;
-   
+
    for (auto flag: obj.get_child("flags")) {
        if (boost::iequals(flag.second.data(), "restartable")) {
            flags |= RESTARTABLE;
@@ -92,7 +92,6 @@ static unsigned long cpu_affinity_from_obj(pt::ptree obj)
 static int cpu_shares_from_obj(pt::ptree obj)
 {
     int cpu_percentage;
-    int cpu_shares;
 
     if (obj.count("cpu-max-percentage") == 0) {
         return (MAX_CPUSHARES);  // Not configured. So no control. Set to
@@ -123,7 +122,7 @@ static ServiceSpecPtr spec_from_obj(pt::ptree obj)
         spec->mem_limit = obj.get<double>("memory-limit");
     }
     spec->cpu_shares = cpu_shares_from_obj(obj);
-    if (obj.count("cpuset") == 0) { 
+    if (obj.count("cpuset") == 0) {
         spec->cpuset = "";
     } else {
         spec->cpuset = obj.get<std::string>("cpuset");
@@ -170,7 +169,7 @@ void ServiceFactory::load_config(std::string path)
         g_log->err("Config file '%s' not found", path.c_str());
         return;
     }
-    
+
     try
     {
         read_json(path, root);

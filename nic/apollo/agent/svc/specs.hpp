@@ -618,6 +618,16 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
         proto_admin_state_to_pds_admin_state(proto_spec.adminstatus());
     switch (proto_spec.type()) {
     case pds::IF_TYPE_L3:
+        if (proto_spec.txmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Tx Mirroring not supported on L3 interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        if (proto_spec.rxmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Rx Mirroring not supported on L3 interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
         api_spec->type = PDS_IF_TYPE_L3;
         pds_obj_key_proto_to_api_spec(&api_spec->l3_if_info.vpc,
                                       proto_spec.l3ifspec().vpcid());
@@ -632,9 +642,24 @@ pds_if_proto_to_api_spec (pds_if_spec_t *api_spec,
         break;
 
     case pds::IF_TYPE_LOOPBACK:
+        if (proto_spec.txmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Tx Mirroring not supported on loopback interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
+        if (proto_spec.rxmirrorsessionid_size()) {
+            PDS_TRACE_ERR("Rx Mirroring not supported on loopback interface {}",
+                          api_spec->key.str());
+            return SDK_RET_INVALID_ARG;
+        }
         api_spec->type = PDS_IF_TYPE_LOOPBACK;
         ippfx_proto_spec_to_api_spec(&api_spec->loopback_if_info.ip_prefix,
                                      proto_spec.loopbackifspec().prefix());
+        break;
+
+    case pds::IF_TYPE_UPLINK:
+        // TODO:
+        PDS_TRACE_ERR("Uplink interface type not handled");
         break;
 
     default:

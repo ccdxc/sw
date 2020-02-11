@@ -26,6 +26,10 @@ typedef struct pds_lif_spec_s {
     bool vlan_strip_en;
     ///< mac address of the device
     mac_addr_t mac;
+    // Tx/egress mirror session id list, if any
+    pds_obj_key_t tx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
+    // Rx/ingress mirror session id list, if any
+    pds_obj_key_t rx_mirror_sessions[PDS_MAX_MIRROR_SESSION];
 } pds_lif_spec_t;
 
 /// \brief lif status

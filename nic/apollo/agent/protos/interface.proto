@@ -85,19 +85,23 @@ message InterfaceSpec {
   // unique interface id
   // NOTE: interface ids start from 1, for IF_TYPE_UPLINK this id is in the
   //       range [1...max-ports#] and same for IF_TYPE_UPLINK_PC
-  bytes              Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes              Id            = 1 [(gogoproto.moretags) = "meta:mandatory"];
   // type of the interface
-  IfType             Type         = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  IfType             Type          = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // port up|down adminstratively
-  IfStatus           AdminStatus  = 3;
+  IfStatus           AdminStatus   = 3;
   // interface type specific configuration
   oneof ifinfo {
     // uplink specific configuration
-    UplinkSpec     UplinkSpec     = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
-    UplinkPCSpec   UplinkPCSpec   = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
-    L3IfSpec       L3IfSpec       = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
-    LoopbackIfSpec LoopbackIfSpec = 7 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_LOOPBACK"];
+    UplinkSpec     UplinkSpec      = 4 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK}"];
+    UplinkPCSpec   UplinkPCSpec    = 5 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_UPLINK_PC}"];
+    L3IfSpec       L3IfSpec        = 6 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_L3}"];
+    LoopbackIfSpec LoopbackIfSpec  = 7 [(gogoproto.moretags) = "meta:constraints={InterfaceSpec.Type==IF_TYPE_LOOPBACK"];
   }
+  // Tx/egress mirror session id list, if any
+  repeated bytes TxMirrorSessionId = 8;
+  // Rx/ingress mirror session id list, if any
+  repeated bytes RxMirrorSessionId = 9;
 }
 
 // operational status of uplink interface
@@ -179,13 +183,17 @@ message InterfaceDeleteResponse {
 /// Lif (Logical interface) object represents a device (eth/storage etc.)
 message LifSpec {
   // unique key of the lif
-  bytes         Id              = 1;
+  bytes         Id                 = 1;
   // type of the lif device
-  types.LifType Type            = 2;
+  types.LifType Type               = 2;
   // MAC address of the lif, if any
-  uint64        MacAddress      = 3;
+  uint64        MacAddress         = 3;
   // pinned uplink interface, if applicable for this device
-  bytes         PinnedInterface = 4;
+  bytes         PinnedInterface    = 4;
+  // Tx/egress mirror session id list, if any
+  repeated bytes TxMirrorSessionId = 5;
+  // Rx/ingress mirror session id list, if any
+  repeated bytes RxMirrorSessionId = 6;
 }
 
 message LifStatus {
