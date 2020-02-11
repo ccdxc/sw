@@ -215,19 +215,20 @@ ionic_adminq_check_err(struct lif *lif,
         const char *name;
         const char *status_str;
 
-        if (ctx &&
-            (ctx->comp.comp.status || is_timeout)) {
-                /* For FW upgrade use */
-                if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
-                    ctx->comp.comp.status == IONIC_RC_ENOENT) {
-                        return VMK_OK;
-                }
+        if (VMK_LIKELY(ctx)) {
+                name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
+        } else {
+                ionic_en_warn("ctx is null");
+                return VMK_FAILURE;
+        }
 
+        if (VMK_UNLIKELY(is_timeout)) {
                 do {
                         status = ionic_heartbeat_check(lif->ionic);
                         if (status == VMK_STATUS_PENDING) {
                                 vmk_WorldSleep(VMK_MSEC_PER_SEC);
                         } else if (status == VMK_FAILURE) {
+                                status = VMK_TIMEOUT;
                                 break;
                         } else if (status == VMK_OK) {
                                 /* if FW is alive, we can try
@@ -237,41 +238,58 @@ ionic_adminq_check_err(struct lif *lif,
                         }
                 } while(status == VMK_STATUS_PENDING);
 
-		name = ionic_opcode_to_str(ctx->cmd.cmd.opcode);
-		status_str = ionic_en_error_to_str(ctx->comp.comp.status);
-		ionic_en_err("%s (%d) failed: %s (%d) %s\n",
-			     name,
-			     ctx->cmd.cmd.opcode,
-			     status_str,
-			     ctx->comp.comp.status,
-			     (is_timeout ? "(timeout)" : ""));
-                if (is_timeout) {
-                        ionic_adminq_flush(lif);
-                }
-		return status;
-	}
+                ionic_en_err("%s: %s (%d) timeout",
+                             vmk_NameToString(&lif->uplink_handle->uplink_name),
+                             name,
+                             ctx->cmd.cmd.opcode);
 
-	return VMK_OK;
+                ionic_adminq_flush(lif);
+        } else {
+                if (VMK_LIKELY(!ctx->comp.comp.status)) {
+                        status = VMK_OK;
+                } else if (ctx->comp.comp.status) {
+                        /* For FW upgrade use */
+                        if (ctx->cmd.cmd.opcode == CMD_OPCODE_RX_FILTER_DEL &&
+                            ctx->comp.comp.status == IONIC_RC_ENOENT) {
+                                return VMK_OK;
+                        }
+	        	status_str = ionic_en_error_to_str(ctx->comp.comp.status);
+		        ionic_en_err("%s: %s (%d) failed: %s (%d)\n",
+                                     vmk_NameToString(&lif->uplink_handle->uplink_name),
+                                     name,
+	        		     ctx->cmd.cmd.opcode,
+		        	     status_str,
+			             ctx->comp.comp.status);
+                }
+        }
+
+	return status;
 }
 
-static vmk_Bool ionic_keep_posting = VMK_TRUE;
 
 VMK_ReturnStatus
 ionic_adminq_post_wait(struct lif *lif, struct ionic_admin_ctx *ctx)
 {
 	VMK_ReturnStatus status;
+        struct ionic_en_priv_data *priv_data;
         vmk_Bool is_timeout;
         vmk_Bool is_retry = VMK_FALSE;
 
-if (VMK_UNLIKELY(!ionic_keep_posting)) {
+        priv_data = IONIC_CONTAINER_OF(lif->ionic,
+                                       struct ionic_en_priv_data,
+                                       ionic);
+
+        if (VMK_UNLIKELY(!vmk_AtomicRead64(&priv_data->keep_posting_cmds))) {
                 return VMK_FAILURE;
         }
 
 retry:
         status = ionic_api_adminq_post(lif, ctx);
         if (status != VMK_OK) {
-                ionic_en_err("ionic_api_adminq_post() failed, "
-                              "status: %s", vmk_StatusToString(status));
+                ionic_en_err("%s: ionic_api_adminq_post() failed, "
+                             "status: %s",
+                             vmk_NameToString(&lif->uplink_handle->uplink_name),
+                             vmk_StatusToString(status));
                 return status;
         }
 
@@ -283,14 +301,24 @@ retry:
                                         ctx,
                                         is_timeout);
         if (status == VMK_RETRY && is_retry == VMK_FALSE) {
-                ionic_en_info("FW is still alive, try one more time");
+                ionic_en_info("%s: FW is still alive, try one more time",
+                              vmk_NameToString(&lif->uplink_handle->uplink_name));
                 is_retry = VMK_TRUE;
                 goto retry;
-        } else if(status != VMK_OK) {
-                ionic_keep_posting = VMK_FALSE;
-                ionic_en_err("ionic_adminq_check_err() failed, "
-                             "status: %s", vmk_StatusToString(status));
-                status = VMK_FAILURE;
+        } else if (status != VMK_OK) {
+                if (status == VMK_TIMEOUT && is_retry == VMK_TRUE) {
+                        vmk_AtomicWrite64(&priv_data->keep_posting_cmds,
+                                          VMK_FALSE);
+                } else {
+                        /* This is not a consecutive timeout failure, we
+                         * can set this flag back to true */
+                        vmk_AtomicWrite64(&priv_data->keep_posting_cmds,
+                                          VMK_TRUE);
+                }
+                ionic_en_err("%s: ionic_adminq_check_err() failed, "
+                             "status: %s",
+                             vmk_NameToString(&lif->uplink_handle->uplink_name),
+                             vmk_StatusToString(status));
         }
 
         return status;
@@ -340,6 +368,7 @@ ionic_dev_cmd_check_error(struct ionic *ionic)
                         if (status == VMK_STATUS_PENDING) {
                                 vmk_WorldSleep(VMK_MSEC_PER_SEC);
                         } else if (status == VMK_FAILURE) {
+                                status = VMK_TIMEOUT;
                                 break;
                         } else if (status == VMK_OK) {
                                 /* if FW is alive, we can try
@@ -400,9 +429,14 @@ VMK_ReturnStatus
 ionic_dev_cmd_wait_check(struct ionic *ionic, unsigned long max_wait)
 {
         VMK_ReturnStatus status;
+        struct ionic_en_priv_data *priv_data;
         vmk_Bool is_retry = VMK_FALSE;
 
-        if (VMK_UNLIKELY(!ionic_keep_posting)) {
+        priv_data = IONIC_CONTAINER_OF(ionic,
+                                       struct ionic_en_priv_data,
+                                       ionic);
+
+        if (VMK_UNLIKELY(!vmk_AtomicRead64(&priv_data->keep_posting_cmds))) {
                 return VMK_FAILURE;
         }
 
@@ -420,10 +454,17 @@ retry:
                 is_retry = VMK_TRUE;
                 goto retry;
         } else if(status != VMK_OK) {
-                ionic_keep_posting = VMK_FALSE;
-                ionic_en_err("ionic_dev_cmd_check_error() failed, "
+                if (status == VMK_TIMEOUT && is_retry == VMK_TRUE) {
+                        vmk_AtomicWrite64(&priv_data->keep_posting_cmds,
+                                          VMK_FALSE);
+                } else {
+                        /* This is not a consecutive timeout failure, we
+                         * can set this flag back to true */
+                        vmk_AtomicWrite64(&priv_data->keep_posting_cmds,
+                                          VMK_TRUE);
+                }
+                ionic_en_err("ionic_dev_cmd_check_err() failed, "
                              "status: %s", vmk_StatusToString(status));
-                status = VMK_FAILURE;
         }
 
         return status;
@@ -846,6 +887,9 @@ ionic_en_attach(vmk_Device device)                                // IN
         priv_data->heap_id                     = ionic_driver.heap_id;
         priv_data->lock_domain                 = ionic_driver.lock_domain;
         priv_data->mem_pool                    = ionic_driver.mem_pool;
+
+        vmk_AtomicWrite64(&priv_data->keep_posting_cmds,
+                          VMK_TRUE);
 
         status = vmk_DeviceSetAttachedDriverData(device, priv_data);
         if (status != VMK_OK) {

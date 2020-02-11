@@ -75,9 +75,14 @@ static void ionic_rx_clean(struct queue *q, struct desc_info *desc_info,
         }
 
         stats->pkts++;
-        stats->bytes += comp->len;
 
-        vmk_PktFrameLenSet(pkt, comp->len);
+        if (VMK_UNLIKELY(comp->len < 60)) {
+                vmk_PktFrameLenSet(pkt, 60);
+                stats->bytes += 60;
+        } else {
+                vmk_PktFrameLenSet(pkt, comp->len);
+                stats->bytes += comp->len;
+        }
 
         if (priv_data->uplink_handle.hw_features & ETH_HW_RX_HASH) {
                 switch (comp->pkt_type_color & IONIC_RXQ_COMP_PKT_TYPE_MASK) {
@@ -1130,8 +1135,7 @@ ionic_start_xmit(vmk_PktHandle *pkt,
 
         if (ionic_en_is_queue_stop(uplink_handle,
                                    tx_ring->shared_q_data_idx)) {
-                ionic_en_info("Queue: %d is not available",
-                           tx_ring->shared_q_data_idx);
+                stats->busy++;
                 return VMK_BUSY;
         }
 

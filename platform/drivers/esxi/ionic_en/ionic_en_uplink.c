@@ -145,13 +145,13 @@ ionic_en_priv_stats_get(vmk_AddrCookie driver_data,
                                         "\n    %s[%d]: packets=%lu, bytes=%lu,"
                                         " tso=%lu, csum=%lu, no_csum=%lu,"
                                         " linearize=%lu, frags=%lu, wake=%lu,"
-                                        " stop=%lu, clean=%lu",
+                                        " stop=%lu, clean=%lu, busy=%lu",
                                         "tx_queue", i, tx_stats->pkts,
                                         tx_stats->bytes, tx_stats->tso,
                                         tx_stats->csum, tx_stats->no_csum,
                                         tx_stats->linearize, tx_stats->frags,
                                         tx_stats->wake, tx_stats->stop,
-                                        tx_stats->clean);
+                                        tx_stats->clean, tx_stats->busy);
         }
 
         stat_buf += vmk_Sprintf((char *) stat_buf,
@@ -1576,7 +1576,6 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
                 goto world_create_err;
         }
 
-        uplink_handle->is_started = VMK_TRUE;
         uplink_handle->is_ready_notify_linkup = VMK_TRUE;
 
         vmk_WorldForceWakeup(uplink_handle->link_check_world);

@@ -25,6 +25,7 @@ struct tx_stats {
         u64 tso;
         u64 frags;
         u64 tx_queue_waken;
+        u64 busy;
 };
 
 struct rx_stats {
