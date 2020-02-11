@@ -45,7 +45,7 @@ mkdir -p /data/core
 echo "|/nic/bin/coremgr -P /data/core -p %p -e %e -m $CORE_MIN_DISK" > /proc/sys/kernel/core_pattern
 
 # Set the power voltage for the board
-/platform/bin/powerctl -set > /obfl/voltage.txt 2>&1
+/platform/bin/powerctl -set > /obfl/voltage.txt 2>&1 &
 
 #set GOGC variable to a smaller value since we are limited in memory in NAPLES
 # and current GOGC does not give back memory that easily to OS unless a memory span
@@ -126,6 +126,8 @@ else
 fi
 
 [[ $? -ne 0 ]] && echo "Aborting Sysinit - Sysmgr failed to start!" && exit 1
+
+HAL_CONFIG_PATH=/nic/conf /platform/bin/ncsid &
 
 echo "All processes brought up, please check ..."
 

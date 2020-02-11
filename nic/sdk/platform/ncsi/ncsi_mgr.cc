@@ -12,20 +12,11 @@ namespace sdk {
 namespace platform {
 namespace ncsi {
 
-
 int
-NcsiMgr::Init(std::string transport_mode, shared_ptr<IpcService> ipc)
+NcsiMgr::Init(transport* xport_obj, shared_ptr<IpcService> ipc)
 {
-    if (!(transport_mode.compare("RBT")))
-        xport = new rbt_transport();
-    else if (transport_mode.compare("MCTP"))
-        xport = new mctp_transport();
-    else {
-        printf("Illegal transport mode provided.");
-        return -1;
-    }
+    xport = xport_obj;
 
-    printf("Initializing ncsi transport in %s mode\n", transport_mode.c_str());
 
     //Initialize the transport interface
     xport->Init();
@@ -33,11 +24,11 @@ NcsiMgr::Init(std::string transport_mode, shared_ptr<IpcService> ipc)
     ncsi_cmd_hndlr = new CmdHndler(ipc, xport);
 
     memset(PktData, 0, sizeof(PktData));
-#if 1
+
     //Start timer thread to recv packets from transport interface
     this->loop = EV_DEFAULT;
     evutil_timer_start(EV_A_ &ncsi_rx_timer, NcsiMgr::RecvNcsiCtrlPkts, this, 0.0, 0.1);
-#endif
+
     return 0;
 }
 
@@ -51,6 +42,7 @@ NcsiMgr::RecvNcsiCtrlPkts(void *obj)
     pkt_sz = mgr->xport->RecvPkt(&PktData, 1500);
     if (pkt_sz < 0)
         return;
+#if 0
     printf("Received NCSI Packet:\n");
 
     for (int i=0; i < pkt_sz; i++) {
@@ -61,6 +53,7 @@ NcsiMgr::RecvNcsiCtrlPkts(void *obj)
     printf("\n");
 
     printf("Handling command now\n");
+#endif
 
     mgr->ncsi_cmd_hndlr->HandleCmd(PktData, pkt_sz);
 }

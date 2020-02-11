@@ -15,6 +15,13 @@ namespace ncsi {
 
 #define NCSI_PROTOCOL_ETHERTYPE 0x88F8
 
+#if 0
+uint8_t dummy_rsp[60] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x88, 0xf8, 0x00, 0x01,
+0x00, 0xa4, 0x81, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00,
+0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00, 0x00,0x00};
+#endif
+
 class rbt_transport : public transport {
 private:
     int sock_fd;
@@ -23,6 +30,12 @@ private:
     struct sockaddr_ll sock_addr;
 
 public:
+    rbt_transport(const char* iface_name)
+    {
+        memset(&ifr, 0, sizeof(ifr));
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), iface_name);
+    };
+
     int Init() {
         int rc;
         const unsigned char ether_broadcast_addr[]=
@@ -32,8 +45,6 @@ public:
         sock_fd = socket(AF_PACKET, SOCK_RAW | SOCK_NONBLOCK, htons(NCSI_PROTOCOL_ETHERTYPE));
 
         memset(&sock_addr, 0, sizeof(sock_addr));
-        memset(&ifr, 0, sizeof(ifr));
-        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "int_mnic0");
 
         if (ioctl(sock_fd, SIOCGIFINDEX, &ifr)==-1) {
                 printf("%s",strerror(errno));
@@ -54,12 +65,14 @@ public:
             return rc;
         }
         else {
-            printf("Opened socket succesfully\n");
+            printf("Opened socket succesfully for interface: %s\n", ifr.ifr_name);
+            //SendPkt(dummy_rsp, sizeof(dummy_rsp));
             return sock_fd;
         }
     };
     ssize_t SendPkt(const void *buf, size_t len) { return sendto(sock_fd, buf, len, 0, (struct sockaddr*)&sock_addr,sizeof(sock_addr)); };
     ssize_t RecvPkt(void *buf, size_t len) { return recvfrom(sock_fd, buf, 1500 /*ETH_FRAME_LEN*/, 0, NULL, NULL); };
+
 };
 
 } // namespace ncsi

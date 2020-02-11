@@ -362,6 +362,7 @@ devapi_lif::add_mac(mac_t mac, bool re_add)
         // if (is_classicfwd())
         if (true) {
             if (is_multicast(mac) && is_recallmc()) {
+                NIC_LOG_DEBUG("Skipping mac registration as its MC");
                 skip_registration = true;
             }
             // In micro-seg mode, host lifs will be prom. So no need to install

@@ -7,52 +7,20 @@
 
 #include <string>
 #include <memory>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include "pkt-defs.h"
 #include "ipc_service.h"
 #include "transport.h"
 #include "state_machine.h"
 #include "ncsi_param_db.h"
+#include "platform/utils/mpartition.hpp"
 
 #define SUPPORTED_NCSI_REV          0x1
 #define MAX_NCSI_CMDS               256
 #define MIN_802_3_FRAME_SZ          60
-#define NCSI_HDR_REV_OFFSET         16
+#define NCSI_HDR_REV_OFFSET         15
 #define NCSI_CMD_OPCODE_OFFSET      18
-
-/* NCSI capabilities */
-#define NCSI_CAP_HW_ARB                                 (0)
-#define NCSI_CAP_HOST_NC_DRV_STATUS                     (0 << 1)
-#define NCSI_CAP_NC_TO_MC_FLOW_CTRL                     (0 << 2)
-#define NCSI_CAP_MC_TO_NC_FLOW_CTRL                     (0 << 3)
-#define NCSI_CAP_ALL_MCAST_ADDR_SUPPORT                 (1 << 4)
-#define NCSI_CAP_HW_ARB_IMPL_STATUS                     (1 << 5) //1 means not impl
-
-#define NCSI_CAP_BCAST_FILTER_ARP                       (1)
-#define NCSI_CAP_BCAST_FILTER_DHCP_CLIENT               (1 << 1)
-#define NCSI_CAP_BCAST_FILTER_DHCP_SERVER               (1 << 2)
-#define NCSI_CAP_BCAST_FILTER_NETBIOS                   (1 << 3)
-
-#define NCSI_CAP_MCAST_IPV6_NEIGH_ADV                   (1)
-#define NCSI_CAP_MCAST_IPV6_ROUTER_ADV                  (1 << 1)
-#define NCSI_CAP_MCAST_DHCPV6_RELAY                     (1 << 2)
-#define NCSI_CAP_MCAST_DHCPV6_MCAST_SERVER_TO_CLIENT    (1 << 3)
-#define NCSI_CAP_MCAST_IPV6_MLD                         (1 << 4)
-#define NCSI_CAP_MCAST_IPV6_NEIGH_SOL                   (1 << 5)
-
-#define NCSI_CAP_BUFFERRING                             0x2000 //i.e 8192 bytes
-
-#define NCSI_CAP_AEN_CTRL_LINK_STATUS_CHANGE            (1)
-#define NCSI_CAP_AEN_CTRL_CONFIG_REQUIRED               (1 << 1)
-#define NCSI_CAP_AEN_CTRL_HOST_NC_DRV_STATUS_CHANGE     (0 >> 2)
-#define NCSI_CAP_AEN_CTRL_OEM_SPECIFIC                  (0 >> 16)
-
-#define NCSI_CAP_MCAST_FILTER_COUNT                     0
-#define NCSI_CAP_UCAST_FILTER_COUNT                     0
-#define NCSI_CAP_MIXED_MAC_FILTER_COUNT                 0x8
-#define NCSI_CAP_VLAN_FILTER_COUNT	                    0xF
-#define NCSI_CAP_VLAN_MODE_SUPPORT	                    0x3
-#define NCSI_CAP_CHANNEL_COUNT  	                    0x2
-
 
 /* Response codes */
 #define NCSI_RSP_COMMAND_COMPLETED      0x0
@@ -86,6 +54,101 @@ namespace sdk {
 namespace platform {
 namespace ncsi {
 
+using boost::property_tree::ptree;
+
+struct port_stats {
+	__le64 frames_rx_ok;
+	__le64 frames_rx_all;
+	__le64 frames_rx_bad_fcs;
+	__le64 frames_rx_bad_all;
+	__le64 octets_rx_ok;
+	__le64 octets_rx_all;
+	__le64 frames_rx_unicast;
+	__le64 frames_rx_multicast;
+	__le64 frames_rx_broadcast;
+	__le64 frames_rx_pause;
+	__le64 frames_rx_bad_length;
+	__le64 frames_rx_undersized;
+	__le64 frames_rx_oversized;
+	__le64 frames_rx_fragments;
+	__le64 frames_rx_jabber;
+	__le64 frames_rx_pripause;
+	__le64 frames_rx_stomped_crc;
+	__le64 frames_rx_too_long;
+	__le64 frames_rx_vlan_good;
+	__le64 frames_rx_dropped;
+	__le64 frames_rx_less_than_64b;
+	__le64 frames_rx_64b;
+	__le64 frames_rx_65b_127b;
+	__le64 frames_rx_128b_255b;
+	__le64 frames_rx_256b_511b;
+	__le64 frames_rx_512b_1023b;
+	__le64 frames_rx_1024b_1518b;
+	__le64 frames_rx_1519b_2047b;
+	__le64 frames_rx_2048b_4095b;
+	__le64 frames_rx_4096b_8191b;
+	__le64 frames_rx_8192b_9215b;
+	__le64 frames_rx_other;
+	__le64 frames_tx_ok;
+	__le64 frames_tx_all;
+	__le64 frames_tx_bad;
+	__le64 octets_tx_ok;
+	__le64 octets_tx_total;
+	__le64 frames_tx_unicast;
+	__le64 frames_tx_multicast;
+	__le64 frames_tx_broadcast;
+	__le64 frames_tx_pause;
+	__le64 frames_tx_pripause;
+	__le64 frames_tx_vlan;
+	__le64 frames_tx_less_than_64b;
+	__le64 frames_tx_64b;
+	__le64 frames_tx_65b_127b;
+	__le64 frames_tx_128b_255b;
+	__le64 frames_tx_256b_511b;
+	__le64 frames_tx_512b_1023b;
+	__le64 frames_tx_1024b_1518b;
+	__le64 frames_tx_1519b_2047b;
+	__le64 frames_tx_2048b_4095b;
+	__le64 frames_tx_4096b_8191b;
+	__le64 frames_tx_8192b_9215b;
+	__le64 frames_tx_other;
+	__le64 frames_tx_pri_0;
+	__le64 frames_tx_pri_1;
+	__le64 frames_tx_pri_2;
+	__le64 frames_tx_pri_3;
+	__le64 frames_tx_pri_4;
+	__le64 frames_tx_pri_5;
+	__le64 frames_tx_pri_6;
+	__le64 frames_tx_pri_7;
+	__le64 frames_rx_pri_0;
+	__le64 frames_rx_pri_1;
+	__le64 frames_rx_pri_2;
+	__le64 frames_rx_pri_3;
+	__le64 frames_rx_pri_4;
+	__le64 frames_rx_pri_5;
+	__le64 frames_rx_pri_6;
+	__le64 frames_rx_pri_7;
+	__le64 tx_pripause_0_1us_count;
+	__le64 tx_pripause_1_1us_count;
+	__le64 tx_pripause_2_1us_count;
+	__le64 tx_pripause_3_1us_count;
+	__le64 tx_pripause_4_1us_count;
+	__le64 tx_pripause_5_1us_count;
+	__le64 tx_pripause_6_1us_count;
+	__le64 tx_pripause_7_1us_count;
+	__le64 rx_pripause_0_1us_count;
+	__le64 rx_pripause_1_1us_count;
+	__le64 rx_pripause_2_1us_count;
+	__le64 rx_pripause_3_1us_count;
+	__le64 rx_pripause_4_1us_count;
+	__le64 rx_pripause_5_1us_count;
+	__le64 rx_pripause_6_1us_count;
+	__le64 rx_pripause_7_1us_count;
+	__le64 rx_pause_1us_count;
+	__le64 frames_tx_truncated;
+	uint8_t rsvd[312];
+};
+
 struct NcsiStats {
     //Incremented for each valid NCSI command packet
     uint32_t valid_cmd_rx_cnt;        
@@ -114,38 +177,44 @@ class CmdHndler {
 public:
     CmdHndler(std::shared_ptr<IpcService> IpcObj, transport *xport);
     int HandleCmd(const void* pkt, ssize_t sz);
+    void UpdateLinkStatus(uint32_t port, bool link_status);
 private:
 
     struct NcsiStats stats;
+    sdk::platform::utils::mpartition* mempartition;
     transport *xport;
 
     std::shared_ptr<IpcService> ipc;
     //void (*cmd_hndlr[MAX_NCSI_CMDS])(const void* cmd_pkt, ssize_t cmd_sz);
     CmdHndlrFunc CmdTable[MAX_NCSI_CMDS];
-    static NcsiParamDb NcsiDb[NCSI_CAP_CHANNEL_COUNT];
+    static NcsiParamDb* NcsiDb[NCSI_CAP_CHANNEL_COUNT];
     static uint64_t mac_addr_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_MIXED_MAC_FILTER_COUNT];
     static uint16_t vlan_filter_list[NCSI_CAP_CHANNEL_COUNT][NCSI_CAP_VLAN_FILTER_COUNT];
+    static uint8_t vlan_mode_list[NCSI_CAP_CHANNEL_COUNT];
     static StateMachine *StateM[NCSI_CAP_CHANNEL_COUNT];
+
+    void GetMacStats(uint32_t port, struct GetNicStatsRespPkt& resp);
+    void ReadMacStats(uint32_t port, struct port_stats& stats);
 
     int SendNcsiCmdResponse(const void *buf, ssize_t sz);
 
     int ValidateCmdPkt(const void *pkt, ssize_t sz);
-    int ConfigVlanFilter(uint16_t vlan, uint32_t port, bool enable);
+    int ConfigVlanFilter(uint8_t filter_idx, uint16_t vlan, uint32_t port, bool enable);
     int ConfigVlanMode(uint8_t vlan_mode, uint32_t port, bool enable);
-    int ConfigMacFilter(uint64_t mac_addr, uint32_t port, uint8_t mac_addr_type,
+    int ConfigMacFilter(uint8_t filter_idx, const uint8_t* mac_addr, uint32_t port, uint8_t mac_addr_type,
             bool enable);
-    void ChannelEnable(const void *cmd_pkt, ssize_t cmd_sz, bool enable);
-    void ChannelEnableNwTx(const void *cmd_pkt, ssize_t cmd_sz, bool enable);
-    
+    ssize_t EnableChannelRx(uint8_t ncsi_chan, bool enable);
+    ssize_t EnableChannelTx(uint8_t ncsi_chan, bool enable);
+    ssize_t DisableFilters(uint8_t ncsi_chan);
+    ssize_t EnableFilters(uint8_t ncsi_chan);
+
     // NCSI command handlers
     static void ClearInitState(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void SelectPackage(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void DeselectPackage(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void EnableChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
-    static void DisableChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void ResetChan(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void EnableChanNwTx(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
-    static void DisableChanNwTx(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void SetLink(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz);
     static void SetVlanFilter(void *obj, const void *cmd_pkt, ssize_t cmd_sz);

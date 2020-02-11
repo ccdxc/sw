@@ -6,6 +6,7 @@
 #define __NcsiParamDb_H__ 
 
 #include <string>
+#include <cstring>
 #include <memory>
 #include "pkt-defs.h"
 #include "ipc_service.h"
@@ -16,8 +17,9 @@ namespace ncsi {
 
 class NcsiParamDb {
 public:
-    void UpdateNcsiParam(struct VlanFilterMsg);
-    void UpdateNcsiParam(struct MacFilterMsg);
+    NcsiParamDb();
+    void UpdateNcsiParam(struct VlanFilterMsg& msg);
+    void UpdateNcsiParam(struct MacFilterMsg& msg);
     void UpdateNcsiParam(struct VlanModeMsg& msg);
     void UpdateNcsiParam(struct EnableChanMsg& msg);
     void UpdateNcsiParam(struct ResetChanMsg& msg);
@@ -25,8 +27,20 @@ public:
     void UpdateNcsiParam(struct SetLinkMsg& msg);
     void UpdateNcsiParam(struct EnableBcastFilterMsg& msg);
     void UpdateNcsiParam(struct EnableGlobalMcastFilterMsg& msg);
+    void GetNcsiParamRespPacket(struct GetParamRespPkt& resp_pkt) 
+    { 
+        memcpy(&resp_pkt, NcsiParamResp, sizeof(struct GetParamRespPkt));
+    }
+    void UpdateNcsiLinkStatus(bool status);
+    void GetNcsiLinkStatusRespPacket(struct GetLinkStatusRespPkt& resp_pkt) 
+    { 
+        memcpy(&resp_pkt, NcsiLinkStatusResp, sizeof(struct GetLinkStatusRespPkt));
+    }
+
+
 private:
-    struct GetParamRespPkt NcsiParamResp;
+    struct GetParamRespPkt* NcsiParamResp;
+    struct GetLinkStatusRespPkt* NcsiLinkStatusResp;
 };
 
 } // namespace ncsi

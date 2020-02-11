@@ -165,11 +165,6 @@ func bringAllLinksDown() error {
 		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesInbandInterface, err)
 	}
 
-	err = linkDown(ipif.NaplesOOBInterface)
-	if err != nil {
-		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesOOBInterface, err)
-	}
-
 	err = linkDown(ipif.NaplesINB0Interface)
 	if err != nil {
 		log.Errorf("Failed to bring down %v. Err : %v", ipif.NaplesINB0Interface, err)

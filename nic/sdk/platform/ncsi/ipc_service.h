@@ -25,7 +25,7 @@ struct VlanModeMsg {
 struct MacFilterMsg {
     uint32_t filter_id;
     uint32_t port;
-    uint64_t mac_addr;
+    uint8_t mac_addr[6];
     uint32_t addr_type;
     bool enable;
 };
@@ -86,7 +86,7 @@ public:
     virtual int PostMsg(struct EnableChanTxMsg& enable_ch_tx) = 0;
     virtual int PostMsg(struct EnableBcastFilterMsg& bcast_filter) = 0;
     virtual int PostMsg(struct EnableGlobalMcastFilterMsg& mcast_filter) = 0;
-
+    virtual int GetLinkStatus() = 0;
 };
 
 #endif // __IPC_SERVICE_H__

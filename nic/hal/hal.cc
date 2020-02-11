@@ -33,6 +33,7 @@
 #include "nic/delphi/utils/log.hpp"
 #include "nic/hal/plugins/cfg/nw/session.hpp"
 #include "platform/src/app/nicmgrd/src/nicmgr_init.hpp"
+#include "platform/utils/mpartition.hpp"
 
 extern "C" void __gcov_flush(void);
 
@@ -96,22 +97,6 @@ hal_sig_handler (int sig, siginfo_t *info, void *ptr)
     default:
         break;
     }
-}
-
-std::string
-hal_get_mpart_file_path (hal_cfg_t *hal_cfg)
-{
-    std::string cfg_path = hal_cfg->cfg_path;
-    char *feature_set = hal_cfg->feature_set;
-    hal_feature_profile_t profile = hal_cfg->device_cfg.feature_profile;
-    std::string profile_name;
-
-    profile_name = std::string(FEATURE_PROFILES_str(profile));
-    profile_name.replace(0, std::string("HAL_FEATURE_PROFILE").length(), "");
-    std::transform(profile_name.begin(), profile_name.end(),
-                   profile_name.begin(), ::tolower);
-
-    return cfg_path + "/" + feature_set + "/hbm_mem" + profile_name + ".json";
 }
 
 #if 0
@@ -255,7 +240,7 @@ hal_init (hal_cfg_t *hal_cfg)
     // read the startup device config
     hal_device_cfg_init(hal_cfg);
 
-    mpart_json = hal_get_mpart_file_path(hal_cfg);
+    mpart_json = sdk::platform::utils::mpartition::get_mpart_file_path(hal_cfg->cfg_path, hal_cfg->feature_set, (sdk::lib::dev_feature_profile_t)hal_cfg->device_cfg.feature_profile);
 
     // do SDK initialization, if any
     hal_sdk_init();
