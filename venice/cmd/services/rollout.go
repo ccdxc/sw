@@ -116,9 +116,10 @@ func (r *rolloutMgr) doOP(op rolloutproto.VeniceOp, version string) rolloutproto
 }
 func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 	var opStatus []rolloutproto.VeniceOpStatus
+	var opSpec rolloutproto.VeniceOpSpec
 	needtoUpdateStatus := false
 
-	for _, opSpec := range ro.Spec.Ops {
+	for _, opSpec = range ro.Spec.Ops {
 		key := statusKey{
 			op:      opSpec.Op,
 			version: opSpec.Version,
@@ -167,7 +168,7 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 				OpStatus: opStatus,
 			},
 		}
-		if utils.IsRunningOnVeniceAppl() {
+		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion && utils.IsRunningOnVeniceAppl() {
 			//Wait long enough for citadel to sync-data
 			log.Infof(" Waiting long enough (2mins) for services to comeup")
 			time.Sleep(serviceSyncDelaySeconds)
