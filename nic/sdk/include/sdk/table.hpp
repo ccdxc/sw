@@ -125,8 +125,6 @@ typedef enum sdk_table_health_state_s {
 //                     uint32_t capacity, uint32_t usage,
 //                     sdk_table_health_state_t *new_state);
 
-typedef base_table_entry_t *(*entry_alloc_cb_t) (uint32_t size);
-
 typedef struct sdk_table_factory_params_ {
     // TableID of this table given by P4
     uint32_t table_id;
@@ -149,8 +147,8 @@ typedef struct sdk_table_factory_params_ {
     //table_health_state_t health_state_; // health state
     // Health monitoring callback
     //table_health_monitor_func_t health_monitor_func;
-    uint32_t thread_id;
-    entry_alloc_cb_t entry_alloc_cb;
+    // Disable thread local stats
+    bool disable_tl_stats;
 } sdk_table_factory_params_t;
 
 typedef struct sdk_table_api_params_ {
@@ -198,7 +196,9 @@ typedef struct sdk_table_api_params_ {
     uint32_t entry_size;
 } sdk_table_api_params_t;
 
-typedef struct sdk_table_api_stats_ {
+typedef struct sdk_table_api_stats_ sdk_table_api_stats_t;
+
+struct sdk_table_api_stats_ {
     uint64_t insert;
     uint64_t insert_duplicate;
     uint64_t insert_fail;
@@ -214,9 +214,28 @@ typedef struct sdk_table_api_stats_ {
     uint64_t reserve_fail;
     uint64_t release;
     uint64_t release_fail;
-} sdk_table_api_stats_t;
 
-typedef struct sdk_table_stats_ {
+    void accumulate(const sdk_table_api_stats_t *v) {
+        insert += v->insert;
+        insert_duplicate += v->insert_duplicate;
+        insert_fail += v->insert_fail;
+        insert_recirc_fail += v->insert_recirc_fail;
+        remove += v->remove;
+        remove_not_found += v->remove_not_found;
+        remove_fail += v->remove_fail;
+        update += v->update;
+        update_fail += v->update_fail;
+        get += v->get;
+        get_fail += v->get_fail;
+        reserve += v->reserve;
+        reserve_fail += v->reserve_fail;
+        release += v->release;
+        release_fail += v->release_fail;
+    }
+};
+
+typedef struct sdk_table_stats_ sdk_table_stats_t;
+struct sdk_table_stats_ {
     uint64_t entries;
     uint64_t collisions;
     uint64_t insert;
@@ -225,7 +244,20 @@ typedef struct sdk_table_stats_ {
     uint64_t write;
     uint64_t insert_lvl[SDK_TABLE_MAX_RECIRC];
     uint64_t remove_lvl[SDK_TABLE_MAX_RECIRC];
-} sdk_table_stats_t;
+
+    void accumulate(const sdk_table_stats_t *v) {
+        entries += v->entries;
+        collisions += v->collisions;
+        insert += v->insert;
+        remove += v->remove;
+        read += v->read;
+        write += v->write;
+        for(auto i=0; i < SDK_TABLE_MAX_RECIRC; i++) {
+            insert_lvl[i] += v->insert_lvl[i];
+            remove_lvl[i] += v->remove_lvl[i];
+        }
+    }
+};
 
 typedef struct properties_ {
     std::string name;

@@ -100,8 +100,8 @@ public:
     // Debug string
     char* metastr() {
         static thread_local char str[256];
-        FTL_SNPRINTF(str, sizeof(str), "%p: tid:%d,idx:%d,slt:%d,hnt:%d,"
-                     "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, table_id,
+        FTL_SNPRINTF(str, sizeof(str), "%p: thread_id:%u,tid:%d,idx:%d,slt:%d,hnt:%d,"
+                     "more:%d,pndg:%d,hmsb:%#x,mat:%d exmat:%d", this, thread_id, table_id,
                      table_index, hint_slot, hint, more_hashs,
                      write_pending, hash_msbits, match, exmatch);
         return str;

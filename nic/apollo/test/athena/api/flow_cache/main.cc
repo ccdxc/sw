@@ -32,7 +32,8 @@ protected:
                        ::testing::UnitTest::GetInstance()->current_test_info()->name());
         
         ftl_mock_init();
-        pds_flow_cache_create(2);
+        pds_flow_cache_create();
+        pds_flow_cache_set_core_id(2);
     }
     virtual void TearDown() {
         //flow_hash::destroy(table);

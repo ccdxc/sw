@@ -12,6 +12,8 @@
 #include <ftl_wrapper.h>
 
 #define MAX_FLOWS_PER_FRAME (VLIB_FRAME_SIZE * 2)
+#define PDS_FLOW_SESSION_POOL_COUNT_MAX VLIB_FRAME_SIZE
+#define DISPLAY_BUF_SIZE (1*1024*1024)
 
 #define foreach_flow_classify_next                                  \
         _(IP4_FLOW_PROG, "pds-ip4-flow-program" )                   \
@@ -150,7 +152,6 @@ typedef struct pds_flow_hw_ctx_s {
     u8 dummy;
 } pds_flow_hw_ctx_t;
 
-#define PDS_FLOW_SESSION_POOL_COUNT_MAX VLIB_FRAME_SIZE
 
 typedef struct pds_flow_session_id_thr_local_pool_s {
     int16_t         pool_count;
@@ -160,13 +161,14 @@ typedef struct pds_flow_session_id_thr_local_pool_s {
 typedef struct pds_flow_main_s {
     u64 no_threads;
     volatile u32 *flow_prog_lock;
-    ftlv4 **table4;
-    ftlv6 **table6;
+    ftlv4 *table4;
+    ftlv6 *table6;
     pds_flow_hw_ctx_t *session_index_pool;
     pds_flow_session_id_thr_local_pool_t *session_id_thr_local_pool;
     u16 *nh_flags;
     u32 max_sessions;
     u32 *flow_idle_timeout;
+    char *stats_buf;
 } pds_flow_main_t;
 
 extern pds_flow_main_t pds_flow_main;
@@ -195,14 +197,14 @@ always_inline void * pds_flow_prog_get_table4(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table4[vlib_get_thread_index()];
+    return fm->table4;
 }
 
 always_inline void * pds_flow_prog_get_table6(void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table6[vlib_get_thread_index()];
+    return fm->table6;
 }
 
 always_inline void pds_session_id_alloc2(u32 *ses_id0, u32 *ses_id1)

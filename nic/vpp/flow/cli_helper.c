@@ -12,8 +12,8 @@ int clear_all_flow_entries()
     vlib_main_t *vm = vlib_get_main();
 
     vlib_worker_thread_barrier_sync(vm);
-    ret1 = ftlv4_clear(fm->table4[0], true, false);
-    ret2 = ftlv6_clear(fm->table6[0], true, false);
+    ret1 = ftlv4_clear(fm->table4, true, false);
+    ret2 = ftlv6_clear(fm->table6, true, false);
     pds_session_id_flush();
     vlib_worker_thread_barrier_release(vm);
 

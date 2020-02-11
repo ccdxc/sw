@@ -421,6 +421,7 @@ class ${table_name}: public ftl_base {
 public:
     static ftl_base *factory(sdk_table_factory_params_t *params);
     static void destroy(ftl_base *f);
+    virtual void set_thread_id(uint32_t id) override;
 
     ${table_name}() {}
     ~${table_name}(){}
@@ -429,16 +430,27 @@ public:
 
 protected:
     virtual sdk_ret_t genhash_(sdk_table_api_params_t *params) override;
-
+    virtual apistats *astats(void) override;
+    virtual tablestats *tstats(void) override;
+    virtual uint32_t thread_id(void) override;
 private:
     sdk_ret_t init_(sdk_table_factory_params_t *params);
+    apistats astats_;
+    tablestats tstats_;
+    bool disable_tl_stats;
     static thread_local ${table_entry_name} entry_[FTL_MAX_RECIRCS];
+    static thread_local apistats tl_astats_;
+    static thread_local tablestats tl_tstats_;
+    static thread_local uint32_t thread_id_;
 };
 """)
 
 ftl_table_template_cc = Template(
 """\
 thread_local ${table_entry_name} ${table_name}::entry_[FTL_MAX_RECIRCS];
+thread_local apistats ${table_name}::tl_astats_;
+thread_local tablestats ${table_name}::tl_tstats_;
+thread_local uint32_t ${table_name}::thread_id_ = 0;
 
 ftl_base*
 ${table_name}::factory(sdk_table_factory_params_t *params) {
@@ -471,6 +483,7 @@ ${table_name}::init_(sdk_table_factory_params_t *params) {
     params->table_id = ${tableid};
     params->max_recircs = FTL_MAX_RECIRCS;
     params->num_hints = ${num_hints};
+    disable_tl_stats = params->disable_tl_stats;
     return ftl_base::init_(params);
 }
 
@@ -518,6 +531,27 @@ ${table_name}::genhash_(sdk_table_api_params_t *params) {
                       params->hash_32b);
     return SDK_RET_OK;
 }
+
+apistats *
+${table_name}::astats(void) {
+    return disable_tl_stats ? &astats_ : &tl_astats_;
+}
+
+tablestats *
+${table_name}::tstats(void) {
+    return disable_tl_stats ? &tstats_ : &tl_tstats_;
+}
+
+void
+${table_name}::set_thread_id(uint32_t id) {
+    thread_id_ = id;
+}
+
+uint32_t
+${table_name}::thread_id(void) {
+    return thread_id_;
+}
+
 """)
 
 #####################################

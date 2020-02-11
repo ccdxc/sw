@@ -144,7 +144,7 @@ fte_launch_one_lcore (__attribute__((unused)) void *dummy)
 {
     int poller_qid;
 
-    fte_ftl_init(rte_lcore_id());
+    fte_ftl_set_core_id(rte_lcore_id());
 
     poller_qid = rte_lcore_index(rte_lcore_id());
     if (poller_qid >= (int)pollers_client_qcount) {
@@ -288,6 +288,8 @@ static int
 fte_main (void)
 {
     int ret;
+    sdk_ret_t sdk_ret;
+
     // init EAL
     ret = rte_eal_init(NELEMS(g_eal_args), (char**)g_eal_args);
     if (ret < 0) {
@@ -314,6 +316,12 @@ fte_main (void)
                  ret, FTE_PID);
     }
     rte_eth_promiscuous_enable(FTE_PID);
+
+    // init FTL
+    if ((sdk_ret = fte_ftl_init()) != SDK_RET_OK) {
+        rte_exit(EXIT_FAILURE, "fte_ftl_init:err=%d",
+                 sdk_ret);
+    }
 
     ret = 0;
     // launch per-lcore init on every lcore

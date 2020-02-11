@@ -28,7 +28,7 @@ using namespace sdk::table;
 extern "C" {
 
 // Per thread address of table object
-static thread_local ftl_base *ftl_table;
+static ftl_base *ftl_table;
 
 uint32_t ftl_entry_count;
 thread_local bool ftl_entry_valid;
@@ -102,7 +102,7 @@ flow_cache_entry_setup_key (flow_hash_entry_t *entry,
 }
 
 sdk_ret_t
-pds_flow_cache_create (uint32_t core_id)
+pds_flow_cache_create ()
 {
     sdk_table_factory_params_t factory_params = { 0 };
 
@@ -111,16 +111,20 @@ pds_flow_cache_create (uint32_t core_id)
     factory_params.max_recircs = 8;
     factory_params.key2str = pds_flow6_key2str;
     factory_params.appdata2str = pds_flow6_appdata2str;
-    factory_params.thread_id = core_id;
     // TODO: Remove this later
     factory_params.entry_trace_en = true;
-    factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
 
     if ((ftl_table = flow_hash::factory(&factory_params)) == NULL) {
-        PDS_TRACE_ERR("Table creation failed in thread %u", core_id);
+        PDS_TRACE_ERR("Table creation failed.");
         return SDK_RET_OOM;
     }
     return SDK_RET_OK;
+}
+
+void
+pds_flow_cache_set_core_id (unsigned int core_id)
+{
+    ftl_table->set_thread_id(core_id);
 }
 
 sdk_ret_t

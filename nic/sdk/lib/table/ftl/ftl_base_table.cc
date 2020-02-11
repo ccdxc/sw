@@ -42,7 +42,9 @@ base_table::iterate_(Apictx *ctx) {
     ctx->table_id = table_id_;
     for ( ; i < table_size_; i++) {
         ctx->table_index = i;
+        buckets_[i].lock_();
         buckets_[i].iterate_(ctx);
+        buckets_[i].unlock_();
     }
     return SDK_RET_OK;
 }

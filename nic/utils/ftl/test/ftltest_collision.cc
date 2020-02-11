@@ -4,9 +4,6 @@
 
 #include "ftltest_base.hpp"
 
-#define MAX_COUNT     5
-#define HASH_VALUE    0xDEADBEEF
-
 class collision: public ftl_test_base {
 protected:
     sdk_ret_t remove_collision_from_center(uint32_t count,

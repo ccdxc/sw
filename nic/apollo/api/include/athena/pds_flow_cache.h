@@ -82,11 +82,16 @@ typedef struct pds_flow_info_s {
 
 
 /// \brief     create flow cache table
-/// \param[in] core_id core id
 /// \return    #SDK_RET_OK on success, failure status code on error
+/// \remark    This needs to be called precise once by application.
+sdk_ret_t pds_flow_cache_create(void);
+
+/// \brief     set valid core id.
+/// \return    void
 /// \remark    A valid core id should be passed
 //             This needs to be called on every data core of the application
-sdk_ret_t pds_flow_cache_create(uint32_t core_id);
+void pds_flow_cache_set_core_id(uint32_t core_id);
+
 
 /// \brief     create flow cache entry
 /// \param[in] spec flow specification

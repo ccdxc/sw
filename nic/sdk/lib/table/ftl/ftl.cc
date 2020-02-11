@@ -8,10 +8,6 @@
 #include <cinttypes>
 #include "ftl_base.hpp"
 
-std::map<int, sdk::table::ftl_table_info *>
-            sdk::table::ftl_base::table_info_cache;
-static std::mutex mtx;
-
 thread_local Apictx ftl_base::apictx_[FTL_MAX_API_CONTEXTS + 1];
 
 #define FTL_API_BEGIN(_name) {\
@@ -32,77 +28,10 @@ thread_local Apictx ftl_base::apictx_[FTL_MAX_API_CONTEXTS + 1];
         FTL_API_END(props_->name.c_str(), (_status));\
 }
 
-void
-ftl_base::add_table_to_cache_(uint32_t table_id,
-                              sdk::table::properties_t *props,
-                              void *table) {
-    ftl_table_info *info = NULL;
-
-    mtx.lock();
-    if (table_info_cache.find(table_id) != table_info_cache.end()) {
-        info = table_info_cache[table_id];
-    } else {
-        info = new ftl_table_info();
-    }
-    SDK_ASSERT(info);
-    info->set_table(table);
-    info->set_props(props);
-    info->increment_ref_count();
-    table_info_cache[table_id] = info;
-    mtx.unlock();
-}
-
-sdk::table::ftl_table_info *
-ftl_base::get_cached_table_(uint32_t table_id) {
-    mtx.lock();
-    if (table_info_cache.find(table_id) == table_info_cache.end()) {
-        mtx.unlock();
-        return NULL;
-    }
-    table_info_cache[table_id]->increment_ref_count();
-    mtx.unlock();
-    return table_info_cache[table_id];
-}
-
-bool
-ftl_base::remove_table_from_cache_(uint32_t table_id) {
-    ftl_table_info *info = NULL;
-    mtx.lock();
-    if (table_info_cache.find(table_id) == table_info_cache.end()) {
-        goto error;
-    }
-
-    info = table_info_cache[table_id];
-    info->decrement_ref_count();
-    if (info->get_ref_count() != 0) {
-        goto done;
-    }
-    table_info_cache.erase(table_id);
-    info->~ftl_table_info();
-
-done:
-    mtx.unlock();
-    return true;
-
-error:
-    mtx.unlock();
-    return false;
-
-}
-
 sdk_ret_t
 ftl_base::init_(sdk_table_factory_params_t *params) {
     p4pd_error_t p4pdret;
     p4pd_table_properties_t tinfo, ctinfo;
-    thread_id_ = params->thread_id;
-    ftl_table_info *info = NULL;
-
-    info = get_cached_table_(params->table_id);
-    if (info) {
-        props_ = info->get_props();
-        main_table_ = info->get_table();
-        goto skip_tables;
-    }
 
     props_ = (sdk::table::properties_t *)SDK_CALLOC(SDK_MEM_ALLOC_FTL_PROPERTIES,
                                                  sizeof(sdk::table::properties_t));
@@ -161,9 +90,7 @@ ftl_base::init_(sdk_table_factory_params_t *params) {
     FTL_TRACE_INFO("- stable base_mem_pa:%#lx base_mem_va:%#lx",
                    props_->stable_base_mem_pa, props_->stable_base_mem_va);
 
-    add_table_to_cache_(params->table_id, props_, main_table_);
-
-skip_tables:
+    clear_stats();
 
     return SDK_RET_OK;
 }
@@ -177,16 +104,6 @@ ftl_base::destroy(ftl_base *t) {
         FTL_API_BEGIN("DestroyTable");
         FTL_TRACE_VERBOSE("%p", t);
 
-        if (t->remove_table_from_cache_(t->props_->ptable_id)) {
-            main_table::destroy_(static_cast<main_table*>(t->main_table_));
-            FTL_API_END("DestroyTable", SDK_RET_OK);
-            t->main_table_ = NULL;
-            if (t->props_ != NULL) {
-                t->props_->~properties_t();
-                SDK_FREE(SDK_MEM_ALLOC_FTL_PROPERTIES,t->props_);
-                t->props_ = NULL;
-            }
-        }
         t->~ftl_base();
         SDK_FREE(SDK_MEM_ALLOC_FTL, t);
         t = NULL;
@@ -198,7 +115,7 @@ ftl_base::destroy(ftl_base *t) {
 //---------------------------------------------------------------------------
 sdk_ret_t
 ftl_base::ctxinit_(sdk_table_api_op_t op,
-              sdk_table_api_params_t *params) {
+                   sdk_table_api_params_t *params) {
     int index;
 
     FTL_TRACE_VERBOSE("op:%d", op);
@@ -211,7 +128,7 @@ ftl_base::ctxinit_(sdk_table_api_op_t op,
     }
 
     index = 0;
-    get_apictx(index)->init(op, params, props_, &tstats_, thread_id_,
+    get_apictx(index)->init(op, params, props_, tstats(), thread_id(),
                             this, get_entry(index), params->entry_size);
     return SDK_RET_OK;
 }
@@ -237,7 +154,7 @@ __label__ done;
 
 done:
     time_profile_end(sdk::utils::time_profile::TABLE_LIB_FTL_INSERT);
-    api_stats_.insert(ret);
+    astats()->insert(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -265,7 +182,7 @@ ftl_base::update(sdk_table_api_params_t *params) {
     }
 
 update_return:
-    api_stats_.update(ret);
+    astats()->update(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -293,7 +210,7 @@ ftl_base::remove(sdk_table_api_params_t *params) {
     }
 
 remove_return:
-    api_stats_.remove(ret);
+    astats()->remove(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -321,7 +238,7 @@ ftl_base::get(sdk_table_api_params_t *params) {
     }
 
 get_return:
-    api_stats_.get(ret);
+    astats()->get(ret);
     FTL_API_END_(ret);
     return ret;
 }
@@ -334,8 +251,8 @@ sdk_ret_t
 ftl_base::stats_get(sdk_table_api_stats_t *api_stats,
                        sdk_table_stats_t *table_stats) {
     FTL_API_BEGIN_();
-    api_stats_.get(api_stats);
-    tstats_.get(table_stats);
+    astats()->get(api_stats);
+    tstats()->get(table_stats);
     FTL_API_END_(SDK_RET_OK);
 
     return SDK_RET_OK;
@@ -389,8 +306,8 @@ sdk_ret_t
 ftl_base::clear_stats(void) {
     FTL_API_BEGIN_();
 
-    api_stats_.clear();
-    tstats_.clear();
+    astats()->clear();
+    tstats()->clear();
 
     FTL_API_END_(SDK_RET_OK);
     return SDK_RET_OK;

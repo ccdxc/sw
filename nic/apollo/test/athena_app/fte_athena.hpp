@@ -22,7 +22,8 @@ struct stats_t {
 void fte_init(void);
 
 void fte_flow_prog(struct rte_mbuf *m);
-void fte_ftl_init(unsigned int);
+void fte_ftl_set_core_id(unsigned int core_id);
+sdk_ret_t fte_ftl_init(void);
 
 }    // namespace fte
 

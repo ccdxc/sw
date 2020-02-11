@@ -32,7 +32,6 @@ TEST_F(basic, insert_get)
     ASSERT_TRUE(rs == sdk::SDK_RET_OK);
 }
 
-
 TEST_F(basic, repeated_update)
 {
     sdk_ret_t rs;

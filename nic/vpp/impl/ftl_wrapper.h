@@ -34,8 +34,7 @@ void session_get_addr(uint32_t ses_id, uint8_t **ses_addr,
                       uint32_t *entry_size);
 
 ftlv4 * ftlv4_create(void *key2str,
-                     void *appdata2str,
-                     uint32_t thread_id);
+                     void *appdata2str);
 
 void ftlv4_delete(ftlv4 *obj);
 
@@ -46,15 +45,18 @@ int ftlv4_dump_hw_entry(ftlv4 *obj, uint32_t src, uint32_t dst,
                         uint16_t dport, uint16_t lookup_id,
                         char *buf, int max_len);
 
+void ftlv4_init_stats_cache(void);
+
+void ftlv4_cache_stats(ftlv4 *obj);
+
 void ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len);
+
+void ftlv4_dump_stats_cache(char *buf, int max_len);
 
 int ftlv4_clear(ftlv4 *obj, bool clear_global_state,
                 bool clear_thread_local_state);
 
 uint64_t ftlv4_get_flow_count(ftlv4 *obj);
-
-void ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
-                              char *buf, int max_len);
 
 void ftlv4_cache_batch_init(void);
 
@@ -89,9 +91,10 @@ void ftlv4_cache_set_hash_log(uint32_t val, uint8_t log);
 
 void ftlv4_cache_batch_flush(ftlv4 *obj, int *status);
 
+void ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id);
+
 ftlv6 * ftlv6_create(void *key2str,
-                     void *appdata2str,
-                     uint32_t thread_id);
+                     void *appdata2str);
 
 void ftlv6_delete(ftlv6 *obj);
 
@@ -102,15 +105,18 @@ int ftlv6_dump_hw_entry(ftlv6 *obj, uint8_t *src, uint8_t *dst,
                         uint16_t dport, uint16_t lookup_id,
                         char *buf, int max_len);
 
+void ftlv6_init_stats_cache(void);
+
+void ftlv6_cache_stats(ftlv6 *obj);
+
 void ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len);
+
+void ftlv6_dump_stats_cache(char *buf, int max_len);
 
 int ftlv6_clear(ftlv6 *obj, bool clear_global_state,
                 bool clear_thread_local_state);
 
 uint64_t ftlv6_get_flow_count(ftlv6 *obj);
-
-void ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
-                              char *buf, int max_len);
 
 void ftlv6_cache_batch_init(void);
 
@@ -165,6 +171,8 @@ void ftlv6_set_key(v6_flow_entry *entry,
 int ftlv4_remove(ftlv4 *obj, v4_flow_entry *entry, uint32_t hash, uint8_t log);
 
 int ftlv6_remove(ftlv6 *obj, v6_flow_entry *entry, uint32_t hash, uint8_t log);
+
+void ftlv6_set_thread_id(ftlv6 *obj, uint32_t thread_id);
 
 #ifdef __cplusplus
 }

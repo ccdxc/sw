@@ -17,8 +17,6 @@ VLIB_PLUGIN_REGISTER () = {
 
 extern u8 g_dis_reinject;
 
-#define DISPLAY_BUF_SIZE (1*1024*1024)
-
 static clib_error_t *
 set_flow_test_command_fn (vlib_main_t * vm,
                           unformat_input_t * input,
@@ -64,6 +62,58 @@ VLIB_CLI_COMMAND (set_flow_test_command, static) =
     .function = set_flow_test_command_fn,
 };
 
+static void
+get_worker_flow_stats_summary_ftlv4 (vlib_main_t * vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    ftlv4_cache_stats(fm->table4);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) get_worker_flow_stats_summary_ftlv4, 0 /* disable */ );
+}
+
+static void
+get_worker_flow_stats_summary_ftlv6 (vlib_main_t * vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    ftlv6_cache_stats(fm->table6);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) get_worker_flow_stats_summary_ftlv6, 0 /* disable */ );
+}
+
+static void
+get_worker_flow_stats_ftlv4 (vlib_main_t * vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    ftlv4_dump_stats(fm->table4, fm->stats_buf, DISPLAY_BUF_SIZE - 1);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) get_worker_flow_stats_ftlv4, 0 /* disable */ );
+}
+
+static void
+get_worker_flow_stats_ftlv6 (vlib_main_t * vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+
+    ftlv6_dump_stats(fm->table6, fm->stats_buf, DISPLAY_BUF_SIZE - 1);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) get_worker_flow_stats_ftlv6, 0 /* disable */ );
+}
+
 static clib_error_t *
 show_flow_stats_command_fn (vlib_main_t * vm,
                             unformat_input_t * input,
@@ -77,9 +127,9 @@ show_flow_stats_command_fn (vlib_main_t * vm,
 
     while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
         if (unformat(input, "thread %u", &thread_id)) {
-            if (thread_id >= fm->no_threads) {
+            if (thread_id == 0 || thread_id >= fm->no_threads) {
                 vlib_cli_output(vm, "ERROR: Invalid thread-id, "
-                                "valid range - 0 - %u", fm->no_threads - 1);
+                                "valid range - 1 - %u", fm->no_threads - 1);
                 goto done;
             }
             if (detail) {
@@ -118,37 +168,59 @@ show_flow_stats_command_fn (vlib_main_t * vm,
             vlib_cli_output(vm, "IPv4 flow statistics\n");
             if (detail) {
                 vlib_cli_output(vm, "Total number of IPv4 flow entries in hardware %u",
-                                ftlv4_get_flow_count(fm->table4[0]));
+                                ftlv4_get_flow_count(fm->table4));
             }
-            for (i = 0; i < no_of_threads; i++) {
+            for (i = 1; i < no_of_threads; i++) {
                 if ((!all_threads) && (thread_id != i)) {
                     continue;
                 }
                 vlib_worker_thread_t *w = vlib_worker_threads + i;
-                ftlv4_dump_stats(fm->table4[i], buf, DISPLAY_BUF_SIZE - 1);
+                clib_callback_enable_disable
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) get_worker_flow_stats_ftlv4, 1 /* enable */ );
+                while (clib_callback_is_set
+                        (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                         vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                         (void *) get_worker_flow_stats_ftlv4)) {
+                    vlib_cli_output(vm, "Getting stats for worker %d", i);
+                    usleep(100000);
+                }
                 vlib_cli_output(vm, "---------------------\n");
                 if (w->cpu_id > -1) {
                     vlib_cli_output (vm, "Thread %d %s (lcore %u)\n", i, w->name,
-                            w->cpu_id);
+                                     w->cpu_id);
                 } else {
                     vlib_cli_output (vm, "Thread %d %s\n", i, w->name);
                 }
                 vlib_cli_output(vm, "---------------------\n");
-                vlib_cli_output(vm, "%s", buf);
+                vlib_cli_output(vm, "%s", fm->stats_buf);
             }
         }
         if (ip6) {
             vlib_cli_output(vm, "\nIPv6 flow statistics\n");
             if (detail) {
                 vlib_cli_output(vm, "Total number of IPv6 flow entries in hardware %u",
-                                ftlv6_get_flow_count(fm->table6[0]));
+                                ftlv6_get_flow_count(fm->table6));
             }
-            for (i = 0; i < no_of_threads; i++) {
+            for (i = 1; i < no_of_threads; i++) {
                 if ((!all_threads) && (thread_id != i)) {
                     continue;
                 }
                 vlib_worker_thread_t *w = vlib_worker_threads + i;
-                ftlv6_dump_stats(fm->table6[i], buf, DISPLAY_BUF_SIZE - 1);
+                clib_callback_enable_disable
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) get_worker_flow_stats_ftlv6, 1 /* enable */ );
+                while (clib_callback_is_set
+                        (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                         vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                         (void *) get_worker_flow_stats_ftlv6)) {
+                    vlib_cli_output(vm, "Getting stats for worker %d", i);
+                    usleep(100000);
+                }
                 vlib_cli_output(vm, "---------------------\n");
                 if (w->cpu_id > -1) {
                     vlib_cli_output (vm, "Thread %d %s (lcore %u)\n", i, w->name,
@@ -157,7 +229,7 @@ show_flow_stats_command_fn (vlib_main_t * vm,
                     vlib_cli_output (vm, "Thread %d %s\n", i, w->name);
                 }
                 vlib_cli_output(vm, "---------------------\n");
-                vlib_cli_output(vm, "%s", buf);
+                vlib_cli_output(vm, "%s", fm->stats_buf);
             }
         }
         goto done;
@@ -167,15 +239,45 @@ show_flow_stats_command_fn (vlib_main_t * vm,
     if (ip4) {
         vlib_cli_output(vm, "\nIPv4 flow statistics summary:\n");
         vlib_cli_output(vm, "Total number of IPv4 flow entries in hardware %u",
-                        ftlv4_get_flow_count(fm->table4[0]));
-        ftlv4_dump_stats_summary(fm->table4, no_of_threads, buf, DISPLAY_BUF_SIZE - 1);
+                        ftlv4_get_flow_count(fm->table4));
+        ftlv4_init_stats_cache();
+        for (i = 1; i < no_of_threads; i++) {
+            clib_callback_enable_disable
+                (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                 vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                 vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                 (void *) get_worker_flow_stats_summary_ftlv4, 1 /* enable */ );
+            while (clib_callback_is_set
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) get_worker_flow_stats_summary_ftlv4)) {
+                vlib_cli_output(vm, "Getting stats for worker %d", i);
+                usleep(100000);
+            }
+        }
+        ftlv4_dump_stats_cache(buf, DISPLAY_BUF_SIZE - 1);
         vlib_cli_output(vm, "%s", buf);
     }
     if (ip6) {
         vlib_cli_output(vm, "\nIPv6 flow statistics summary:\n");
         vlib_cli_output(vm, "Total number of IPv6 flow entries in hardware %u",
-                        ftlv6_get_flow_count(fm->table6[0]));
-        ftlv6_dump_stats_summary(fm->table6, no_of_threads, buf, DISPLAY_BUF_SIZE - 1);
+                        ftlv6_get_flow_count(fm->table6));
+        ftlv6_init_stats_cache();
+        for (i = 1; i < no_of_threads; i++) {
+            clib_callback_enable_disable
+                (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                 vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                 vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                 (void *) get_worker_flow_stats_summary_ftlv6, 1 /* enable */ );
+            while (clib_callback_is_set
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) get_worker_flow_stats_summary_ftlv6)) {
+                vlib_cli_output(vm, "Getting stats for worker %d", i);
+                usleep(100000);
+            }
+        }
+        ftlv6_dump_stats_cache(buf, DISPLAY_BUF_SIZE - 1);
         vlib_cli_output(vm, "%s", buf);
     }
 
@@ -191,6 +293,7 @@ VLIB_CLI_COMMAND (show_flow_stats_command, static) =
     .path = "show flow statistics",
     .short_help = "show flow statistics [detail] [thread <thread-id>] [ip4 | ip6]",
     .function = show_flow_stats_command_fn,
+    .is_mp_safe = 1,
 };
 
 static clib_error_t *
@@ -260,7 +363,7 @@ dump_flow_entry_command_fn (vlib_main_t * vm,
 
     vlib_worker_thread_barrier_sync(vm);
     if (ip4) {
-        ret = ftlv4_dump_hw_entry(fm->table4[0],
+        ret = ftlv4_dump_hw_entry(fm->table4,
                                   clib_net_to_host_u32(src.ip4.as_u32),
                                   clib_net_to_host_u32(dst.ip4.as_u32),
                                   ip_proto,
@@ -269,7 +372,7 @@ dump_flow_entry_command_fn (vlib_main_t * vm,
                                   (u16)lkp_id,
                                   buf, DISPLAY_BUF_SIZE-1);
     } else {
-        ret = ftlv6_dump_hw_entry(fm->table6[0],
+        ret = ftlv6_dump_hw_entry(fm->table6,
                                   src.ip6.as_u8,
                                   dst.ip6.as_u8,
                                   ip_proto,
@@ -300,6 +403,7 @@ VLIB_CLI_COMMAND (dump_flow_entry_command, static) =
                   "[destination-port <UDP/TCP port number>] "
                   "lookup-id <number>",
     .function = dump_flow_entry_command_fn,
+    .is_mp_safe = 1,
 };
 
 static clib_error_t *
@@ -340,7 +444,7 @@ dump_flow_entries_command_fn (vlib_main_t * vm,
     if (ip4) {
         vlib_cli_output(vm, "Reading IPv4 flow entries from HW, Please wait...\n");
         vlib_worker_thread_barrier_sync(vm);
-        ret = ftlv4_dump_hw_entries(fm->table4[0], logfile, detail);
+        ret = ftlv4_dump_hw_entries(fm->table4, logfile, detail);
         vlib_worker_thread_barrier_release(vm);
         if (ret < 0) {
             vlib_cli_output(vm, "Error writing IPv4 to %s\n", logfile);
@@ -352,7 +456,7 @@ dump_flow_entries_command_fn (vlib_main_t * vm,
     if (ip6) {
         vlib_cli_output(vm, "Reading IPv6 flow entries from HW, Please wait...\n");
         vlib_worker_thread_barrier_sync(vm);
-        ret = ftlv6_dump_hw_entries(fm->table6[0], logfile, detail);
+        ret = ftlv6_dump_hw_entries(fm->table6, logfile, detail);
         vlib_worker_thread_barrier_release(vm);
         if (ret < 0) {
             vlib_cli_output(vm, "Error writing IPv6 to %s\n", logfile);
@@ -373,6 +477,7 @@ VLIB_CLI_COMMAND (dump_flow_entries_command, static) =
     .short_help = "dump flow entries file "
                   "<absolute file path to dump hw entries> [detail] [ip4 | ip6]",
     .function = dump_flow_entries_command_fn,
+    .is_mp_safe = 1,
 };
 
 static clib_error_t *
@@ -404,7 +509,32 @@ VLIB_CLI_COMMAND (clear_flow_entries_command, static) =
     .path = "clear flow entries",
     .short_help = "clear flow entries",
     .function = clear_flow_entries_command_fn,
+    .is_mp_safe = 1,
 };
+
+static void
+clear_worker_flow_stats_ftlv4(vlib_main_t *vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    (void)ftlv4_clear(fm->table4, false, true);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) clear_worker_flow_stats_ftlv4, 0 /* disable */ );
+}
+
+static void
+clear_worker_flow_stats_ftlv6(vlib_main_t *vm)
+{
+    pds_flow_main_t *fm = &pds_flow_main;
+    (void)ftlv6_clear(fm->table6, false, true);
+    clib_callback_enable_disable
+        (vm->worker_thread_main_loop_callbacks,
+         vm->worker_thread_main_loop_callback_tmp,
+         vm->worker_thread_main_loop_callback_lock,
+         (void *) clear_worker_flow_stats_ftlv6, 0 /* disable */ );
+}
 
 static clib_error_t *
 clear_flow_stats_command_fn (vlib_main_t * vm,
@@ -412,15 +542,14 @@ clear_flow_stats_command_fn (vlib_main_t * vm,
                              vlib_cli_command_t * cmd)
 {
     pds_flow_main_t *fm = &pds_flow_main;
-    int ret1 = 0, ret2 = 0;
     u32 all_threads = 1, thread_id, ip4 = 0, ip6 = 0, af_set = 0;
     uint32_t i = 0;
 
     while (unformat_check_input (input) != UNFORMAT_END_OF_INPUT) {
         if (unformat(input, "thread %u", &thread_id)) {
-            if (thread_id >= fm->no_threads) {
+            if ((thread_id == 0) || (thread_id >= fm->no_threads)) {
                 vlib_cli_output(vm, "ERROR: Invalid thread-id, "
-                                "valid range - 0 - %u", fm->no_threads - 1);
+                                "valid range - 1 - %u", fm->no_threads - 1);
                 goto done;
             }
             all_threads = 0;
@@ -438,43 +567,72 @@ clear_flow_stats_command_fn (vlib_main_t * vm,
         ip4 = ip6 = 1;
     }
 
-    vlib_worker_thread_barrier_sync(vm);
     if (all_threads) {
-        for (i = 0; ((i < fm->no_threads) && (!ret1) && (!ret2)); i++) {
+        for (i = 1; i < fm->no_threads; i++) {
             if (ip4) {
                 vlib_cli_output(vm, "Clearing IPv4 flow statistcs for thread[%d]", i);
-                ret1 = ftlv4_clear(fm->table4[i], false, true);
+                clib_callback_enable_disable
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) clear_worker_flow_stats_ftlv4, 1 /* enable */ );
+                while (clib_callback_is_set
+                        (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                         vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                         (void *) clear_worker_flow_stats_ftlv4)) {
+                    vlib_cli_output(vm, "Clearing stats for worker %d", i);
+                    usleep(100000);
+                }
             }
             if (ip6) {
                 vlib_cli_output(vm, "Clearing IPv6 flow statistcs for thread[%d]", i);
-                ret2 = ftlv6_clear(fm->table6[i], false, true);
+                clib_callback_enable_disable
+                    (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                     vlib_mains[i]->worker_thread_main_loop_callback_tmp,
+                     vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                     (void *) clear_worker_flow_stats_ftlv6, 1 /* enable */ );
+                while (clib_callback_is_set
+                        (vlib_mains[i]->worker_thread_main_loop_callbacks,
+                         vlib_mains[i]->worker_thread_main_loop_callback_lock,
+                         (void *) clear_worker_flow_stats_ftlv6)) {
+                    vlib_cli_output(vm, "Clearing stats for worker %d", i);
+                    usleep(100000);
+                }
             }
         }
     } else {
         if (ip4) {
             vlib_cli_output(vm, "Clearing IPv4 flow statistcs for thread[%d]", thread_id);
-            ret1 = ftlv4_clear(fm->table4[thread_id], false, true);
+            clib_callback_enable_disable
+                (vlib_mains[thread_id]->worker_thread_main_loop_callbacks,
+                 vlib_mains[thread_id]->worker_thread_main_loop_callback_tmp,
+                 vlib_mains[thread_id]->worker_thread_main_loop_callback_lock,
+                 (void *) clear_worker_flow_stats_ftlv4, 1 /* enable */ );
+            while (clib_callback_is_set
+                    (vlib_mains[thread_id]->worker_thread_main_loop_callbacks,
+                     vlib_mains[thread_id]->worker_thread_main_loop_callback_lock,
+                     (void *) clear_worker_flow_stats_ftlv4)) {
+                vlib_cli_output(vm, "Clearing stats for worker %d", i);
+                usleep(100000);
+            }
         }
         if (ip6) {
             vlib_cli_output(vm, "Clearing IPv6 flow statistcs for thread[%d]", thread_id);
-            ret2 = ftlv6_clear(fm->table6[thread_id], false, true);
+            clib_callback_enable_disable
+                (vlib_mains[thread_id]->worker_thread_main_loop_callbacks,
+                 vlib_mains[thread_id]->worker_thread_main_loop_callback_tmp,
+                 vlib_mains[thread_id]->worker_thread_main_loop_callback_lock,
+                 (void *) clear_worker_flow_stats_ftlv6, 1 /* enable */ );
+            while (clib_callback_is_set
+                    (vlib_mains[thread_id]->worker_thread_main_loop_callbacks,
+                     vlib_mains[thread_id]->worker_thread_main_loop_callback_lock,
+                     (void *) clear_worker_flow_stats_ftlv6)) {
+                vlib_cli_output(vm, "Clearing stats for worker %d", i);
+                usleep(100000);
+            }
         }
     }
-    vlib_worker_thread_barrier_release(vm);
-    if (ret1) {
-        vlib_cli_output(vm, "ERROR: Failed to clear IPv4 flow "
-                        "statistics for thread[%u]",
-                        (all_threads ? i : thread_id));
-    }
-    if (ret2) {
-        vlib_cli_output(vm, "ERROR: Failed to clear IPv6 flow "
-                        "statistics for thread[%u]",
-                        (all_threads ? i : thread_id));
-    }
-
-    if (!ret1 && !ret2) {
-        vlib_cli_output(vm, "Successfully cleared flow statistics");
-    }
+    vlib_cli_output(vm, "Successfully cleared flow statistics");
 
 done:
     return 0;
@@ -485,6 +643,7 @@ VLIB_CLI_COMMAND (clear_flow_stats_command, static) =
     .path = "clear flow statistics",
     .short_help = "clear flow statistics [thread <thread-id>] [ip4 | ip6]",
     .function = clear_flow_stats_command_fn,
+    .is_mp_safe = 1,
 };
 
 static clib_error_t *

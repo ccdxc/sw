@@ -138,7 +138,7 @@ using sdk::table::sdk_table_factory_params_t;
 sdk_ret_t
 flow_table_init(void)
 {
-    return pds_flow_cache_create(0);
+    return pds_flow_cache_create();
 }
 
 void dump_pkt(std::vector<uint8_t> &pkt)
@@ -319,12 +319,12 @@ create_h2s_v4_session_info_rewrite(uint32_t session_index,
 
 #if 0
 sdk_ret_t
-create_v4_session_info_h2s(uint32_t session_index, 
+create_v4_session_info_h2s(uint32_t session_index,
 #endif
 sdk_ret_t
-create_v4_session_info_all(uint32_t session_index, 
+create_v4_session_info_all(uint32_t session_index,
                     mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac, uint16_t substrate_vlan,
-                    uint32_t substrate_sip, uint32_t substrate_dip, 
+                    uint32_t substrate_sip, uint32_t substrate_dip,
                     uint16_t substrate_udp_sport, uint16_t substrate_udp_dport,
                     uint32_t mpls1_label, uint32_t mpls2_label)
 
@@ -351,8 +351,8 @@ create_v4_session_info_all(uint32_t session_index,
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
 
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip; 
-    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip; 
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip;
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip;
 
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
     spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
@@ -453,7 +453,7 @@ uint8_t g_snd_pkt_s2h[] = {
 };
 
 /*
- * S2H Specific fields 
+ * S2H Specific fields
  */
 uint32_t    g_s2h_mpls1_label = 0x12345;
 uint32_t    g_s2h_mpls2_label = 0x6789a;
@@ -561,9 +561,9 @@ setup_flow(void)
     }
 
 
-    ret = create_v4_session_info_all(g_session_index, 
+    ret = create_v4_session_info_all(g_session_index,
                     &substrate_dmac, &substrate_smac, substrate_vlan,
-                    substrate_sip, substrate_dip, 
+                    substrate_sip, substrate_dip,
                     substrate_udp_sport, substrate_udp_dport,
                     mpls1_label, mpls2_label);
 

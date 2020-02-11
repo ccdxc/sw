@@ -54,6 +54,9 @@ p4pd_table_properties_t g_session_tbl_ctx;
 static int skip_ftl_program = 0;
 static int skip_session_program = 0;
 
+static sdk_table_api_stats_t g_api_stats;
+static sdk_table_stats_t g_table_stats;
+
 void
 set_skip_ftl_program(int val)
 {
@@ -230,15 +233,12 @@ ftl_aggregate_table_stats(sdk_table_stats_t *table_stat1,
 
 ftlv4 *
 ftlv4_create(void *key2str,
-             void *appdata2str,
-             uint32_t thread_id)
+             void *appdata2str)
 {
     sdk_table_factory_params_t factory_params = {0};
 
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
-    factory_params.thread_id = thread_id;
-    factory_params.entry_alloc_cb = ipv4_flow_hash_entry_t::alloc;
 
     return ipv4_flow_hash::factory(&factory_params);
 }
@@ -454,6 +454,24 @@ done:
 }
 
 void
+ftlv4_init_stats_cache(void)
+{
+    memset(&g_api_stats, 0, sizeof(g_api_stats));
+    memset(&g_table_stats, 0, sizeof(g_table_stats));
+}
+
+void
+ftlv4_cache_stats(ftlv4 *obj)
+{
+    sdk_table_api_stats_t api_stats;
+    sdk_table_stats_t table_stats;
+
+    obj->stats_get(&api_stats, &table_stats);
+    g_api_stats.accumulate(&api_stats);
+    g_table_stats.accumulate(&table_stats);
+}
+
+void
 ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len)
 {
     sdk_table_api_stats_t api_stats;
@@ -461,6 +479,12 @@ ftlv4_dump_stats(ftlv4 *obj, char *buf, int max_len)
 
     obj->stats_get(&api_stats, &table_stats);
     ftl_print_stats(&api_stats, &table_stats, buf, max_len);
+}
+
+void
+ftlv4_dump_stats_cache(char *buf, int max_len)
+{
+    ftl_print_stats(&g_api_stats, &g_table_stats, buf, max_len);
 }
 
 static void
@@ -492,31 +516,6 @@ ftlv4_get_flow_count(ftlv4 *obj)
     }
 
     return count;
-}
-
-void
-ftlv4_dump_stats_summary(ftlv4 **obj_arr, uint32_t obj_count,
-                         char *buf, int max_len)
-{
-    sdk_table_api_stats_t api_stats, api_tmp_stats;
-    sdk_table_stats_t table_stats, table_tmp_stats;
-    ftlv4 *obj = NULL;
-
-    if (!obj_count || !obj_arr || !obj_arr[0]) {
-        return;
-    }
-
-    obj = obj_arr[0];
-    obj->stats_get(&api_stats, &table_stats);
-
-    for (uint32_t j = 1; j < obj_count; j++) {
-        obj = obj_arr[j];
-        obj->stats_get(&api_tmp_stats, &table_tmp_stats);
-
-        ftl_aggregate_api_stats(&api_stats, &api_tmp_stats);
-        ftl_aggregate_table_stats(&table_stats, &table_tmp_stats);
-    }
-    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 
 static void
@@ -630,17 +629,21 @@ ftlv4_cache_batch_flush(ftlv4 *obj, int *status)
     }
 }
 
+void
+ftlv4_set_thread_id(ftlv4 *obj, uint32_t thread_id)
+{
+    obj->set_thread_id(thread_id);
+    return;
+}
+
 ftlv6 *
 ftlv6_create(void *key2str,
-             void *appdata2str,
-             uint32_t thread_id)
+             void *appdata2str)
 {
     sdk_table_factory_params_t factory_params = {0};
 
     factory_params.key2str = (key2str_t) (key2str);
     factory_params.appdata2str = (appdata2str_t) (appdata2str);
-    factory_params.thread_id = thread_id;
-    factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
 
     return flow_hash::factory(&factory_params);
 }
@@ -858,6 +861,40 @@ done:
     return retcode;
 }
 
+void
+ftlv6_init_stats_cache(void)
+{
+    memset(&g_api_stats, 0, sizeof(g_api_stats));
+    memset(&g_table_stats, 0, sizeof(g_table_stats));
+}
+
+void
+ftlv6_cache_stats(ftlv6 *obj)
+{
+    sdk_table_api_stats_t api_stats;
+    sdk_table_stats_t table_stats;
+
+    obj->stats_get(&api_stats, &table_stats);
+    g_api_stats.accumulate(&api_stats);
+    g_table_stats.accumulate(&table_stats);
+}
+
+void
+ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len)
+{
+    sdk_table_api_stats_t api_stats;
+    sdk_table_stats_t table_stats;
+
+    obj->stats_get(&api_stats, &table_stats);
+    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
+}
+
+void
+ftlv6_dump_stats_cache(char *buf, int max_len)
+{
+    ftl_print_stats(&g_api_stats, &g_table_stats, buf, max_len);
+}
+
 static void
 ftlv6_hw_entry_count_cb(sdk_table_api_params_t *params)
 {
@@ -887,41 +924,6 @@ ftlv6_get_flow_count(ftlv6 *obj)
     }
 
     return count;
-}
-
-void
-ftlv6_dump_stats(ftlv6 *obj, char *buf, int max_len)
-{
-    sdk_table_api_stats_t api_stats;
-    sdk_table_stats_t table_stats;
-
-    obj->stats_get(&api_stats, &table_stats);
-    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
-}
-
-void
-ftlv6_dump_stats_summary(ftlv6 **obj_arr, uint32_t obj_count,
-                         char *buf, int max_len)
-{
-    sdk_table_api_stats_t api_stats, api_tmp_stats;
-    sdk_table_stats_t table_stats, table_tmp_stats;
-    ftlv6 *obj = NULL;
-
-    if (!obj_count || !obj_arr || !obj_arr[0]) {
-        return;
-    }
-
-    obj = obj_arr[0];
-    obj->stats_get(&api_stats, &table_stats);
-
-    for (uint32_t j = 1; j < obj_count; j++) {
-        obj = obj_arr[j];
-        obj->stats_get(&api_tmp_stats, &table_tmp_stats);
-
-        ftl_aggregate_api_stats(&api_stats, &api_tmp_stats);
-        ftl_aggregate_table_stats(&table_stats, &table_tmp_stats);
-    }
-    ftl_print_stats(&api_stats, &table_stats, buf, max_len);
 }
 
 static void
@@ -1033,6 +1035,13 @@ ftlv6_cache_batch_flush(ftlv6 *obj, int *status)
        status[i] = ftlv6_insert(obj, g_ip6_flow_cache.ip6_flow + i,
                                 g_ip6_flow_cache.ip6_hash[i], 0);
     }
+}
+
+void
+ftlv6_set_thread_id(ftlv6 *obj, uint32_t thread_id)
+{
+    obj->set_thread_id(thread_id);
+    return;
 }
 
 }

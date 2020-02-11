@@ -9,7 +9,10 @@
 //----------------------------------------------------------------------------
 #include <stdint.h>
 #include <rte_mbuf.h>
+#include "nic/sdk/include/sdk/base.hpp"
 #include "nic/apollo/fte/fte.hpp"
+
+using sdk::sdk_ret_t;
 
 namespace fte {
 
@@ -19,8 +22,14 @@ fte_flow_prog (struct rte_mbuf *m)
     return;    
 }
 
+sdk_ret_t
+fte_ftl_init (void)
+{
+    return SDK_RET_OK;
+}
+
 void
-fte_ftl_init (unsigned int lcore_id)
+fte_ftl_set_core_id (unsigned int)
 {
     return;
 }

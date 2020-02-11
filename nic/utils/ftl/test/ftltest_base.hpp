@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 #include <cinttypes>
+#include <atomic>
 
 #include "include/sdk/base.hpp"
 #include "include/sdk/table.hpp"
@@ -21,6 +22,12 @@
 
 #define WITH_HASH true
 #define WITHOUT_HASH false
+#define MAX_COUNT     5
+#define HASH_VALUE    0xDEADBEEF
+
+#define GET_AUTOMIC(v) (v.load(std::memory_order_relaxed))
+
+using namespace std;
 
 using sdk::table::ftl_base;
 using sdk::table::sdk_table_api_params_t;
@@ -33,37 +40,28 @@ using sdk::table::sdk_table_factory_params_t;
 class ftl_test_base: public ::testing::Test {
 protected:
     ftl_base *table;
-    uint32_t num_insert;
-    uint32_t num_remove;
-    uint32_t num_update;
-    uint32_t num_reserve;
-    uint32_t num_release;
-    uint32_t num_get;
+    atomic_uint num_insert;
+    atomic_uint num_remove;
+    atomic_uint num_update;
+    atomic_uint num_reserve;
+    atomic_uint num_release;
+    atomic_uint num_get;
     
-    uint32_t table_count;
+    atomic_uint table_count;
     sdk_table_api_stats_t api_stats;
     sdk_table_stats_t table_stats;
 
 protected:
     ftl_test_base() {}
     virtual ~ftl_test_base() {}
-    
+
     virtual void SetUp() {
         SDK_TRACE_INFO("============== SETUP : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
         
         ftl_mock_init();
-        
-        sdk_table_factory_params_t params = { 0 };
-        params.entry_trace_en = true;
-
-#ifdef IRIS
-        table = flow_hash_info::factory(&params);
-#else
-        table = flow_hash::factory(&params);
-#endif
-        assert(table);
+        table_create();
 
         num_insert = 0;
         num_remove = 0;
@@ -75,8 +73,8 @@ protected:
         table_count = 0;
         memset(&api_stats, 0, sizeof(api_stats));
         memset(&table_stats, 0, sizeof(table_stats));
-        print_stats();
     }
+
     virtual void TearDown() {
         validate_stats();
 #ifdef IRIS
@@ -88,6 +86,19 @@ protected:
         SDK_TRACE_INFO("============== TEARDOWN : %s.%s ===============",
                           ::testing::UnitTest::GetInstance()->current_test_info()->test_case_name(),
                           ::testing::UnitTest::GetInstance()->current_test_info()->name());
+    }
+
+    virtual void table_create() {
+        sdk_table_factory_params_t params = { 0 };
+        params.entry_trace_en = true;
+        params.disable_tl_stats = true;
+
+#ifdef IRIS
+        table = flow_hash_info::factory(&params);
+#else
+        table = flow_hash::factory(&params);
+#endif
+        assert(table);
     }
 
 private:
@@ -112,22 +123,33 @@ private:
     }
 
 public:
+    void set_thread_id(uint32_t id) {
+        table->set_thread_id(id);
+    }
+
+    sdk_ret_t insert_helper(uint32_t index, sdk_ret_t expret,
+                            bool with_hash, uint32_t hash_32b) {
+        auto params = gen_entry(index, with_hash, hash_32b);
+        auto rs = insert_(params);
+        MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        if (rs == SDK_RET_OK) {
+            assert(params->handle.valid());
+            table_count++;
+        }
+        return rs;
+    }
+
     sdk_ret_t insert(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash, hash_32b);
-            auto rs = insert_(params);
-            MHTEST_CHECK_RETURN(rs == expret, rs);
-            if (rs == SDK_RET_OK) {
-                assert(params->handle.valid());
-                table_count++;
-            }
+            auto rs = insert_helper(i, expret, with_hash, hash_32b);
+            MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
         }
         return SDK_RET_OK;
     }
 
     sdk_ret_t remove_helper(uint32_t index, sdk_ret_t expret,
-                           bool with_hash, uint32_t hash_32b) {
+                            bool with_hash, uint32_t hash_32b) {
         auto params = gen_entry(index, with_hash, hash_32b);
         auto rs = remove_(params);
         MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
@@ -146,12 +168,32 @@ public:
         return SDK_RET_OK;
     }
 
+    sdk_ret_t update_helper(uint32_t index, sdk_ret_t expret,
+                     bool with_hash = false, uint32_t hash_32b = 0) {
+        auto params = gen_entry(index, with_hash, hash_32b);
+        auto rs = update_(params);
+        MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        return SDK_RET_OK;
+    }
+
     sdk_ret_t update(uint32_t count, sdk_ret_t expret,
                      bool with_hash = false, uint32_t hash_32b = 0) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash, hash_32b);
-            auto rs = update_(params);
+            auto rs = update_helper(i, expret, with_hash, hash_32b);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        }
+        return SDK_RET_OK;
+    }
+
+    sdk_ret_t get_helper(uint32_t index, sdk_ret_t expret,
+                         bool with_hash = false) {
+        auto params = gen_entry(index, with_hash);
+        auto params2 = gen_entry(index, with_hash);
+        auto rs = get_(params);
+        MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
+        assert(params->handle.valid());
+        if (!params->entry->compare_key(params2->entry)) {
+            return sdk::SDK_RET_ENTRY_NOT_FOUND;
         }
         return SDK_RET_OK;
     }
@@ -159,35 +201,35 @@ public:
     sdk_ret_t get(uint32_t count, sdk_ret_t expret,
                   bool with_hash = false) {
         for (auto i = 0; i < count; i++) {
-            auto params = gen_entry(i, with_hash);
-            auto params2 = gen_entry(i, with_hash);
-            auto rs = get_(params);
+            auto rs = get_helper(i, expret, with_hash);
             MHTEST_CHECK_RETURN(rs == expret, sdk::SDK_RET_MAX);
-            assert(params->handle.valid());
-            if (!params->entry->compare_key(params2->entry)) {
-                return sdk::SDK_RET_ENTRY_NOT_FOUND;
-            }
         }
         return SDK_RET_OK;
     }
 
-    void print_stats() {
+    virtual void get_stats() {
         //auto hw_count = ftl_mock_get_valid_count(FTL_TBLID_IPV6);
         table->stats_get(&api_stats, &table_stats);
-        SDK_TRACE_INFO("GTest Table Stats: Entries:%d", table_count);
+    }
+
+    void display_stats() {
+        SDK_TRACE_INFO("GTest Table Stats: Entries:%d", GET_AUTOMIC(table_count));
         //SDK_TRACE_INFO("HW Table Stats: Entries=%d", hw_count);
         SDK_TRACE_INFO("SW Table Stats: Entries=%d Collisions:%d",
-                          table_stats.entries, table_stats.collisions);
+                       table_stats.entries, table_stats.collisions);
         SDK_TRACE_INFO("Test  API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
-                          num_insert, num_update, num_get, num_remove, num_reserve, num_release);
+                       GET_AUTOMIC(num_insert), GET_AUTOMIC(num_update), GET_AUTOMIC(num_get),
+                       GET_AUTOMIC(num_remove), GET_AUTOMIC(num_reserve), GET_AUTOMIC(num_release));
         SDK_TRACE_INFO("Table API Stats: Insert=%d Update=%d Get=%d Remove:%d Reserve:%d Release:%d",
-                          api_stats.insert, api_stats.update, api_stats.get,
-                          api_stats.remove, api_stats.reserve, api_stats.release);
-        return;    
+                       api_stats.insert, api_stats.update, api_stats.get,
+                       api_stats.remove, api_stats.reserve, api_stats.release);
+        return;
     }
 
     sdk_ret_t validate_stats() {
-        print_stats();
+        get_stats();
+        display_stats();
+
         EXPECT_TRUE(api_stats.insert >= api_stats.remove);
         EXPECT_EQ(table_count, table_stats.entries);
         EXPECT_EQ(num_insert, api_stats.insert + api_stats.insert_duplicate + api_stats.insert_fail);

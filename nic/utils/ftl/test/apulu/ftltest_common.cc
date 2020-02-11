@@ -34,9 +34,9 @@ fill_entry (uint32_t index, flow_hash_entry_t *entry)
 
 sdk_table_api_params_t *
 gen_entry (uint32_t index, bool with_hash, uint32_t hash_32b) {
-    static flow_hash_entry_t entry[POOL_SIZE];
-    static sdk_table_api_params_t params[POOL_SIZE];
-    static uint32_t pidx = 0;
+    static thread_local flow_hash_entry_t entry[POOL_SIZE];
+    static thread_local sdk_table_api_params_t params[POOL_SIZE];
+    static thread_local uint32_t pidx = 0;
 
     fill_entry(index+1, &entry[pidx]);
     params[pidx].entry = &entry[pidx];

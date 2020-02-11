@@ -4,18 +4,18 @@
 
 #include "node.h"
 
-// Return main thread's pointer to FTL v4 flow table
+// Return pointer to FTL v4 flow table
 void * pds_flow_get_table4 (void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
     
-    return fm->table4[0];
+    return fm->table4;
 }
 
-// Return main thread's pointer to FTL v6 flow table
+// Return pointer to FTL v6 flow table
 void * pds_flow_get_table6 (void)
 {
     pds_flow_main_t *fm = &pds_flow_main;
 
-    return fm->table6[0];
+    return fm->table6;
 }

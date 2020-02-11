@@ -188,7 +188,7 @@ done:
 //---------------------------------------------------------------------------
 sdk_ret_t
 main_table::find_(Apictx *ctx,
-                      Apictx **match_ctx) {
+                  Apictx **match_ctx) {
 __label__ done;
     if (!ctx->inited) {
         // If entry_valid, then context is already initialized.

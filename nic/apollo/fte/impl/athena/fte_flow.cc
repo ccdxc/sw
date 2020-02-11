@@ -249,15 +249,24 @@ fte_flow_prog (struct rte_mbuf *m)
     return;    
 }
 
-void
-fte_ftl_init (unsigned int lcore_id)
+sdk_ret_t
+fte_ftl_init (void)
 {
-    if (pds_flow_cache_create(lcore_id) != SDK_RET_OK) {
-        PDS_TRACE_DEBUG("pds_flow_cache_create failed. core#:%d \n", lcore_id);
-        return;
+    sdk_ret_t ret;
+    ret = pds_flow_cache_create();
+    if (ret != SDK_RET_OK) {
+        PDS_TRACE_DEBUG("pds_flow_cache_create failed\n");
+        return ret;
     }
-    PDS_TRACE_DEBUG("pds_flow_cache_create success. core#:%d \n", lcore_id);
-    return;     
+    PDS_TRACE_DEBUG("pds_flow_cache_create success.\n");
+    return ret;
+}
+
+void
+fte_ftl_set_core_id (unsigned int core_id)
+{
+    pds_flow_cache_set_core_id(core_id);
+    PDS_TRACE_DEBUG("pds_flow_cache_set_core_id success. core#: %u\n", core_id);
 }
 
 } // namespace fte

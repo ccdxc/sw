@@ -661,9 +661,9 @@ pds_flow_program_hw_ip6 (u16 *next, u32 *counter)
 }
 
 always_inline uword
-pds_flow_prog (vlib_main_t * vm,
-               vlib_node_runtime_t * node,
-               vlib_frame_t * from_frame, u8 is_ip4)
+pds_flow_prog (vlib_main_t *vm,
+               vlib_node_runtime_t *node,
+               vlib_frame_t *from_frame, u8 is_ip4)
 {
     u32 counter[FLOW_PROG_COUNTER_LAST] = {0};
 
@@ -917,11 +917,18 @@ pds_flow_classify_trace_add (vlib_main_t *vm,
 }
 
 static uword
-pds_flow_classify (vlib_main_t * vm,
-                   vlib_node_runtime_t * node,
-                   vlib_frame_t * from_frame)
+pds_flow_classify (vlib_main_t *vm,
+                   vlib_node_runtime_t *node,
+                   vlib_frame_t *from_frame)
 {
     u32 counter[FLOW_CLASSIFY_COUNTER_LAST] = {0};
+    static __thread u8 ftl_init_done = 0;
+
+    if (PREDICT_FALSE(!ftl_init_done)) {
+        ftlv4_set_thread_id(pds_flow_prog_get_table4(), node->thread_index);
+        ftlv6_set_thread_id(pds_flow_prog_get_table6(), node->thread_index);
+        ftl_init_done = 1;
+    }
 
     PDS_PACKET_LOOP_START {
         PDS_PACKET_DUAL_LOOP_START(WRITE, WRITE) {
@@ -986,10 +993,6 @@ pds_flow_init (vlib_main_t * vm)
 
     fm->max_sessions = pds_session_get_max();
     pool_init_fixed(fm->session_index_pool, fm->max_sessions);
-    vec_validate_aligned(fm->table4, no_of_threads - 1,
-                         CLIB_CACHE_LINE_BYTES);
-    vec_validate_aligned(fm->table6, no_of_threads - 1,
-                         CLIB_CACHE_LINE_BYTES);
 
     vec_validate(fm->session_id_thr_local_pool,
                  no_of_threads - 1);
@@ -1004,11 +1007,13 @@ pds_flow_init (vlib_main_t * vm)
                                                 CLIB_CACHE_LINE_BYTES);
     clib_atomic_release(fm->flow_prog_lock);
 
+    fm->table4 = ftlv4_create((void *) pds_flow4_key2str,
+                              (void *) pds_flow_appdata2str);
+    fm->table6 = ftlv6_create((void *) pds_flow6_key2str,
+                              (void *) pds_flow_appdata2str);
+    vec_validate_init_empty(fm->stats_buf, DISPLAY_BUF_SIZE, 0);
+
     for (i = 0; i < no_of_threads; i++) {
-        fm->table4[i] = ftlv4_create((void *) pds_flow4_key2str,
-                                     (void *) pds_flow_appdata2str, i);
-        fm->table6[i] = ftlv6_create((void *) pds_flow6_key2str,
-                                     (void *) pds_flow_appdata2str, i);
         fm->session_id_thr_local_pool[i].pool_count = -1;
     }
 
