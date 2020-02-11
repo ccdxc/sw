@@ -351,6 +351,10 @@
                                                        v_amb_get->data_offset);
             }
 
+            if (!pds_ms_pre_fill_get_{{$struct | ToLower}}(v_{{$struct | ToLower}})) {
+                goto replyback;
+            }
+
             for (bulk_row = 0; bulk_row < v_amb_get->bulk_returned; bulk_row++)
             {
         {{$reqfields := $rootMsg.Fields}}
@@ -464,6 +468,7 @@
             {{else}}
             pds_ms_check_get_{{$struct | ToLower}}_spec_response_count += v_amb_get->bulk_returned;
             {{end}}
+replyback:
             if (specific_get) {
                 /*************************************************************************/
                 /* Free the buffer.                                                      */
@@ -820,6 +825,19 @@
         NBB_TRC_EXIT();
         return;
     } /* pds_ms_getall_{{$struct | ToLower}} */
+
+    pre_fill_get_{{$struct | ToLower}}_func_type pre_fill_get_{{$struct | ToLower}}_func = NULL;
+
+    NBB_VOID pds_ms_reg_pre_fill_get_{{$struct | ToLower}}(pre_fill_get_{{$struct | ToLower}}_func_type func) {
+        pre_fill_get_{{$struct | ToLower}}_func = func;
+    } /* pds_ms_reg_pre_fill_get_{{$struct | ToLower}} */
+
+    bool pds_ms_pre_fill_get_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}}) {
+        if (pre_fill_get_{{$struct | ToLower}}_func != NULL) {
+            return pre_fill_get_{{$struct | ToLower}}_func(v_{{$struct | ToLower}});
+        }
+        return true;
+    } /* pds_ms_pre_fill_get_{{$struct | ToLower}} */
 
     pre_get_{{$struct | ToLower}}_func_type pre_get_{{$struct | ToLower}}_func = NULL;
 

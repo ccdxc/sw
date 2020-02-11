@@ -67,9 +67,12 @@ extern "C" {
     typedef void (*post_get_{{$struct | ToLower}}_func_type)(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
     typedef void (*pre_getall_{{$struct | ToLower}}_func_type)(pds::{{$rootMsg.GetName}}* resp);
     typedef void (*post_getall_{{$struct | ToLower}}_func_type)(pds::{{$rootMsg.GetName}}* resp);
+    typedef bool (*pre_fill_get_{{$struct | ToLower}}_func_type)({{$struct | ToLower}}* v_{{$struct | ToLower}});
     NBB_VOID pds_ms_check_get_{{$struct | ToLower}}(NBB_CXT_T NBB_CXT);
     NBB_VOID pds_ms_get_{{$struct | ToLower}}_oid(pds::{{$msgName}} &req,
                                        NBB_ULONG *oid  NBB_CCXT_T NBB_CXT);
+    NBB_VOID pds_ms_reg_pre_fill_get_{{$struct | ToLower}}(pre_fill_get_{{$struct | ToLower}}_func_type);
+    bool     pds_ms_pre_fill_get_{{$struct | ToLower}}({{$struct | ToLower}} *v_{{$struct | ToLower}});
     NBB_VOID pds_ms_reg_pre_get_{{$struct | ToLower}}(pre_get_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_reg_post_get_{{$struct | ToLower}}(post_get_{{$struct | ToLower}}_func_type);
     NBB_VOID pds_ms_pre_get_{{$struct | ToLower}}(pds::{{$msgName}} &req, pds::{{$rootMsg.GetName}}* resp);
