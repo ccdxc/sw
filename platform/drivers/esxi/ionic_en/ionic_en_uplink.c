@@ -1554,8 +1554,12 @@ ionic_en_uplink_start_io(vmk_AddrCookie driver_data)              // IN
          status = ionic_open(lif);
         //vmk_SpinlockLock(priv_data->ionic.lifs_lock);
         if (status != VMK_OK) {
-                ionic_en_err("ionic_open() failed, status: %s",
-                          vmk_StatusToString(status));
+                if (status == VMK_NOT_READY) {
+                        status = VMK_OK;
+                } else {
+                        ionic_en_err("ionic_open() failed, status: %s",
+                                  vmk_StatusToString(status));
+                }
                 goto out;
         }
 

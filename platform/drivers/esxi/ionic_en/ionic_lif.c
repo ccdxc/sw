@@ -158,7 +158,7 @@ ionic_open(struct lif *lif)
                 ionic_en_info("%s, Port is not UP, skip enabling all the queues.",
                               vmk_NameToString(&lif->uplink_handle->uplink_name));
                 priv_data->is_queues_enabled = VMK_FALSE;
-                return VMK_OK;
+                return VMK_NOT_READY;
         }
 
         max_rx_normal_queues = lif->uplink_handle->max_rx_normal_queues;
