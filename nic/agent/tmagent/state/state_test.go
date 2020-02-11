@@ -946,29 +946,46 @@ func TestProcessFWEvent(t *testing.T) {
 		} {
 			if k == "rfc3164" {
 				for _, c := range v {
-					// rfc3164: map[priority:14 facility:1 severity:6 timestamp:2018-11-13 19:29:50 +0000 UTC
-					// hostname:Ranjiths-MBP.pensando.io tag:mytag
-					// content:{\"action\":\"SECURITY_RULE_ACTION_ALLOW\",\"dPort\":\"10000\",\"dest\":\"192.168.20.1\",\"direction\":\"0\",\"ipProt\":\"20000\",\"rule-id\":\"0\",\"src\":\"192.168.10.1\"}\n]"
+
+					// rfc3164: [content:
+					// [{"action":"implicit_deny","destination-address":"192.168.20.1","destination-port":10000,
+					// "direction":"","protocol":"20000","rule-id":0,"session-id":0,"session-state":"flow_create",
+					// "source-address":"192.168.10.1","source-port":0,"timestamp":"0001-01-01T00:00:00Z"}]
 					l, err := parseRfc3164(c)
 					AssertOk(t, err, "failed to get %s syslog", k)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]),
-						strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), fmt.Sprintf("%d", e.fwEvent.Dport)), "failed to match, expected %s, got %+v", e.fwEvent.Dport, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), destIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Dipv4, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["content"]), srcIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Sipv4, l)
+					m, ok := l["content"]
+					Assert(t, ok, "failed to get message from syslog  %+v", l)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m),
+						strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))),
+						"failed to match, expected %s, got %+v", e.fwEvent.Fwaction, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), fmt.Sprintf("%d", e.fwEvent.Dport)),
+						"failed to match, expected %s, got %+v", e.fwEvent.Dport, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), destIPStr),
+						"failed to match, expected %s, got %+v", e.fwEvent.Dipv4, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), srcIPStr),
+						"failed to match, expected %s, got %+v", e.fwEvent.Sipv4, m)
 
 				}
 			} else {
 				for _, c := range v {
 					l, err := parseRfc5424(c)
 					AssertOk(t, err, "failed to get %s syslog", k)
-					// rfc5424 map[priority:14 severity:6 msg_id:0 message:\n structured_data:[firewall@Pensando rule-id=\"0\" src=\"192.168.10.1\"
-					// dest=\"192.168.20.1\" dPort=\"10000\" ipProt=\"20000\" action=\"SECURITY_RULE_ACTION_ALLOW\" direction=\"0\"] facility:1
-					// version:1 timestamp:2018-11-13 19:29:50 -0800 PST hostname:Ranjiths-MBP.pensando.io app_name:- proc_id:28973]"
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))), "failed to match, expected %s, got %+v", e.fwEvent.Fwaction, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), fmt.Sprintf("%d", e.fwEvent.Dport)), "failed to match, expected %s, got %+v", e.fwEvent.Dport, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), destIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Dipv4, l)
-					Assert(t, strings.Contains(fmt.Sprintf("%s", l["structured_data"]), srcIPStr), "failed to match, expected %s, got %+v", e.fwEvent.Sipv4, l)
+					m, ok := l["message"]
+					Assert(t, ok, "failed to get message from syslog  %+v", l)
+					// rfc5424: [app_name:pen-tmagent facility:16 hostname:rchirakk-cluster-1
+					// message:[{"action":"implicit_deny","destination-address":"192.168.20.1",
+					// "destination-port":10000,"direction":"","protocol":"20000","rule-id":0,
+					// "session-id":0,"session-state":"flow_create","source-address":"192.168.10.1",
+					// "source-port":0,"timestamp":"0001-01-01T00:00:00Z"}]
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m),
+						strings.ToLower(strings.TrimPrefix(e.fwEvent.Fwaction.String(), "SECURITY_RULE_ACTION_"))),
+						"failed to match, expected %s, got %+v", e.fwEvent.Fwaction, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), fmt.Sprintf("%d", e.fwEvent.Dport)),
+						"failed to match, expected %s, got %+v", e.fwEvent.Dport, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), destIPStr),
+						"failed to match, expected %v , got %+v", e.fwEvent.Dipv4, m)
+					Assert(t, strings.Contains(fmt.Sprintf("%s", m), srcIPStr),
+						"failed to match, expected %s, got %+v", e.fwEvent.Sipv4, m)
 				}
 			}
 		}

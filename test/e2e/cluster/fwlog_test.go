@@ -436,12 +436,67 @@ var _ = Describe("fwlog policy tests", func() {
 					return nil
 				}, "20s", "2s").Should(BeNil(), "failed to send syslog")
 
+				flowKeys := []string{"destination-port",
+					"destination-address",
+					"source-address",
+					"source-port",
+					"protocol",
+					"action",
+					"direction",
+					"rule-id",
+					"session-id",
+					"session-state",
+					"timestamp",
+				}
+
+				fieldMap := map[string]string{
+					monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String(): "message",
+					monitoring.MonitoringExportFormat_SYSLOG_BSD.String():     "content",
+				}
 				// check collectors
 				for _, col := range syslogCollectors {
 					By(fmt.Sprintf("verify syslog from %v in collector :%+v", naples, col))
 					Eventually(func() error {
 						select {
-						case <-col.ch:
+						case d := <-col.ch:
+							if col.format == monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String() ||
+								col.format == monitoring.MonitoringExportFormat_SYSLOG_BSD.String() {
+
+								mi, ok := d[fieldMap[col.format]]
+								if !ok {
+									err := fmt.Errorf("no message field in %+v", d)
+									fmt.Printf("%v\n", err)
+									return err
+								}
+
+								jmsg, ok := mi.(string)
+								if !ok {
+									err := fmt.Errorf("invalid type for message in %+v", d)
+									fmt.Printf("%v\n", err)
+									return err
+								}
+
+								msg := []map[string]interface{}{}
+								err := json.Unmarshal([]byte(jmsg), &msg)
+								if err != nil {
+									fmt.Printf("%v\n", err)
+									return err
+								}
+
+								// check flow keys in syslog
+								for _, m := range msg {
+									for _, f := range flowKeys {
+										if _, ok := m[f]; !ok {
+											err := fmt.Errorf("no fields %v in %+v", f, m)
+											fmt.Printf("%v\n", err)
+											return err
+										}
+									}
+								}
+							} else {
+								return fmt.Errorf("invalid format %v", col.format)
+							}
+
 							return nil
 
 						case <-time.After(time.Second):

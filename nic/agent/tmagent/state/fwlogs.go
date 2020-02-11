@@ -1,6 +1,7 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -87,33 +88,45 @@ func (s *PolicyState) FwlogInit(path string) error {
 func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 	ipSrc := netutils.IPv4Uint32ToString(ev.GetSipv4())
 	ipDest := netutils.IPv4Uint32ToString(ev.GetDipv4())
-	dPort := fmt.Sprintf("%v", ev.GetDport())
-	sPort := fmt.Sprintf("%v", ev.GetSport())
 	ipProt := fmt.Sprintf("%v", strings.TrimPrefix(ev.GetIpProt().String(), "IPPROTO_"))
 	action := fmt.Sprintf("%v", strings.ToLower(strings.TrimPrefix(ev.GetFwaction().String(), "SECURITY_RULE_ACTION_")))
 	dir := flowDirectionName[ev.GetDirection()]
-	ruleID := fmt.Sprintf("%v", ev.GetRuleId())
-	sessionID := fmt.Sprintf("%v", ev.GetSessionId())
 	state := strings.ToLower(strings.Replace(halproto.FlowLogEventType_name[int32(ev.GetFlowaction())], "LOG_EVENT_TYPE_", "", 1))
 	unixnano := ev.GetTimestamp()
+
 	if unixnano != 0 {
 		// if a timestamp was specified in the msg, use it
 		ts = time.Unix(0, unixnano)
 	}
 
-	point := &tsdb.Point{
-		Tags:   map[string]string{"destination-port": dPort},
-		Fields: map[string]interface{}{"destination": ipDest, "source": ipSrc, "source-port": sPort, "protocol": ipProt, "action": action, "direction": dir, "rule-id": ruleID, "session-id": sessionID, "session-state": state},
+	fields := map[string]interface{}{
+		"destination-port":    ev.GetDport(),
+		"destination-address": ipDest,
+		"source-address":      ipSrc,
+		"source-port":         ev.GetSport(),
+		"protocol":            ipProt,
+		"action":              action,
+		"direction":           dir,
+		"rule-id":             ev.GetRuleId(),
+		"session-id":          ev.GetSessionId(),
+		"session-state":       state,
+		"timestamp":           ts.Format(time.RFC3339Nano),
 	}
 
 	// icmp fields
 	if ev.GetIpProt() == halproto.IPProtocol_IPPROTO_ICMP {
-		point.Fields["icmp-type"] = int64(ev.GetIcmptype())
-		point.Fields["icmp-id"] = int64(ev.GetIcmpid())
-		point.Fields["icmp-code"] = int64(ev.GetIcmpcode())
+		fields["icmp-type"] = int64(ev.GetIcmptype())
+		fields["icmp-id"] = int64(ev.GetIcmpid())
+		fields["icmp-code"] = int64(ev.GetIcmpcode())
 	}
 
-	log.Debugf("Fwlog: %+v", point)
+	log.Debugf("Fwlog: %+v", fields)
+
+	jsonMsg, err := json.Marshal([]map[string]interface{}{fields})
+	if err != nil {
+		log.Errorf("failed to marshal, %v", err)
+		return
+	}
 
 	// disable fwlog reporting to Venice for A release
 	//s.fwTable.Points([]*tsdb.Point{point}, ts)
@@ -124,17 +137,13 @@ func (s *PolicyState) handleTsDB(ev *halproto.FWEvent, ts time.Time) {
 		ev.DestVrf:   true,
 	}
 
-	for k, v := range point.Fields {
-		point.Tags[k] = fmt.Sprintf("%v", v)
-	}
-
 	// check dest/src vrf
 	s.fwLogCollectors.Range(func(k interface{}, v interface{}) bool {
 		if col, ok := v.(*fwlogCollector); ok {
 			col.Lock()
 			if _, ok := vrfList[col.vrf]; ok {
 				if col.syslogFd != nil && col.filter&(1<<uint32(ev.Fwaction)) != 0 {
-					s.sendFwLog(col, point.Tags)
+					s.sendFwLog(col, string(jsonMsg))
 				}
 			} else {
 				log.Errorf("invalid collector")

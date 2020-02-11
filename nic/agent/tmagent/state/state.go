@@ -692,31 +692,12 @@ func (s *PolicyState) ListFwlogPolicy(tx context.Context) ([]*tpmprotos.FwlogPol
 }
 
 // send fwlog to collector
-func (s *PolicyState) sendFwLog(c *fwlogCollector, data map[string]string) {
-	if c.format == monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String() {
-		if err := c.syslogFd.Info(&syslog.Message{
-			Msg:   data["action"],
-			MsgID: data["rule-id"], // set rule-id
-			StructuredData: syslog.StrData{
-				fmt.Sprintf("firewall-log@%d", globals.PensandoPEN): data,
-			},
-		}); err != nil {
-			c.txErr++
-			log.Debugf("failed to send to %v://%v:%v, %v", c.proto, c.destination, c.port, err)
-			s.closeSyslog(c)
-		}
-		c.txCount++
-	} else {
-		d, err := json.Marshal(data)
-		if err != nil {
-			c.txErr++
-			log.Debugf("marshal error [%v] %s", data, err)
-			return
-		}
+func (s *PolicyState) sendFwLog(c *fwlogCollector, msg string) {
+	if c.format == monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String() ||
+		c.format == monitoring.MonitoringExportFormat_SYSLOG_BSD.String() {
 
 		if err := c.syslogFd.Info(&syslog.Message{
-			MsgID: data["rule-id"], // set rule-id
-			Msg:   string(d),
+			Msg: msg,
 		}); err != nil {
 			c.txErr++
 			log.Debugf("failed to send to %v://%v:%v, %v", c.proto, c.destination, c.port, err)
