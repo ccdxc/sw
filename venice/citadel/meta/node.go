@@ -169,7 +169,7 @@ func (l *Node) runElection(ctx context.Context) {
 				return
 			}
 
-			log.Infof("%s Received leader election event: %+v", l.nodeUUID, evt)
+			log.Infof("%s Received leader election event: %+v isLeader: %v ", l.nodeUUID, evt, l.IsLeader())
 
 			// run the leader FSM
 			switch evt.Type {
@@ -327,7 +327,29 @@ func (l *Node) runLeader(ctx context.Context, nodeWatcher kvstore.Watcher) {
 			// handle event type
 			switch evt.Type {
 			case kvstore.WatcherError:
-				log.Errorf("Got node watch error. Retrying")
+				log.Errorf("Got node watch error %+v. Retrying", evt)
+
+			retryLoop:
+				for i := 0; i < l.clusterCfg.MetaStoreRetry; i++ {
+					var err error
+
+					// return if node is stopped
+					if l.isStopped || ctx.Err() != nil {
+						return
+					}
+
+					log.Warnf("Node watcher channel closed. Retrying")
+					time.Sleep(time.Second)
+
+					// restart the prefix watcher
+					nodeWatcher, err = l.kvs.PrefixWatch(ctx, NodesMetastoreURL, "")
+					if err == nil {
+						break retryLoop
+					}
+
+					log.Errorf("Error(attempt %d) watching kvstore. Err: %v", i+1, err)
+				}
+
 				continue
 			case kvstore.Created:
 				fallthrough
