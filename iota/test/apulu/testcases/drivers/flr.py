@@ -26,7 +26,6 @@ def _triggerFLR(hostname, pci):
     resp = api.Trigger(req)
     if resp == None:
         api.Logger.error("Failed to trigger FLR on host %s pci %s" % (hostname, pci))
-        api.PrintCommandResults(cmd)
         return api.types.status.FAILURE
 
     cmd = resp.commands.pop()
@@ -46,7 +45,6 @@ def _bindDriver(hostname, pci):
     resp = api.Trigger(req)
     if resp == None:
         api.Logger.error("Failed to trigger bind on host %s pci %s" % (hostname, pci))
-        api.PrintCommandResults(cmd)
         return api.types.status.FAILURE
 
     cmd = resp.commands.pop()
@@ -66,7 +64,6 @@ def _unbindDriver(hostname, pci):
     resp = api.Trigger(req)
     if resp == None:
         api.Logger.error("Failed to trigger unbind on host %s pci %s" % (hostname, pci))
-        api.PrintCommandResults(cmd)
         return api.types.status.FAILURE
 
     cmd = resp.commands.pop()
@@ -86,7 +83,6 @@ def _getPci(hostname, intf):
     resp = api.Trigger(req)
     if resp == None:
         api.Logger.error("Failed to trigger unbind on host %s pci %s" % (hostname, pci))
-        api.PrintCommandResults(cmd)
         return None
 
     cmd = resp.commands.pop()
