@@ -187,6 +187,11 @@ hal_initialize (bool disable_fte, const char c_file[], string vmotion_port, bool
     }
 
     sleep(5);
+
+    hal::utils::trace_init("hal", 0, true, "hal.log", NULL,
+            TRACE_FILE_SIZE_DEFAULT, TRACE_NUM_FILES_DEFAULT,
+            ::utils::trace_debug, ::utils::trace_debug);
+
     printf("HAL Initialized\n");
 }
 

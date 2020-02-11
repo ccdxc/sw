@@ -88,6 +88,15 @@ hal_test_utils_check_slab_leak (slab_stats_t *pre,
     for (uint32_t i = hal::HAL_SLAB_NONE; i < hal::HAL_SLAB_MAX; i++) {
         // if (memcmp(pre, post, sizeof(slab_stats_t))) {
         if (pre->num_in_use != post->num_in_use) {
+            // For HAL_SLAB_PORT_TIMER_CTXT slab, efore start of test
+            // pre->num_in_use might be non-zero indicating a possible
+            // pending port event for which the slab memory is allocated but
+            // not processed yet; by the time the test completes it could have
+            // been free'd and hence post->num_in_use can be less than value before
+            // start of test. This might be incorrectly categorized as leak;
+            // hence skipping that for port-timer slab only.
+            if ((pre->slab_id == hal::HAL_SLAB_PORT_TIMER_CTXT) && (pre->num_in_use > post->num_in_use))
+                continue;
             *is_leak = true;
             HAL_TRACE_DEBUG("-----  Leaked  ------");
             hal_test_utils_trace(pre, post);
