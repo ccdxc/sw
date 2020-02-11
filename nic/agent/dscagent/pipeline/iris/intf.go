@@ -57,7 +57,7 @@ func updateInterfaceHandler(infraAPI types.InfraAPI, client halapi.InterfaceClie
 		}
 	}
 
-	for k, _ := range MirrorSessionToInterfaceMapping {
+	for k := range MirrorSessionToInterfaceMapping {
 		removeInterfaceFromMappings(k, intf.GetKey())
 	}
 

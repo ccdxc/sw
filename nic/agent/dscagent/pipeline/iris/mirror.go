@@ -23,6 +23,8 @@ const (
 )
 
 var mirrorSessionToFlowMonitorRuleMapping = map[string][]*halapi.FlowMonitorRuleKeyHandle{}
+
+// MirrorSessionToInterfaceMapping maps mirror sessions to the interfaces
 var MirrorSessionToInterfaceMapping = map[string][]string{}
 
 // HandleMirrorSession handles crud operations on mirror session

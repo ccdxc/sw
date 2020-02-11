@@ -27,10 +27,7 @@ func addDummyVrf() error {
 	}
 	dat, _ := vrf.Marshal()
 
-	if err := infraAPI.Store(vrf.Kind, vrf.GetKey(), dat); err != nil {
-		return err
-	}
-	return nil
+	return infraAPI.Store(vrf.Kind, vrf.GetKey(), dat)
 }
 
 func TestHandleInterface(t *testing.T) {
