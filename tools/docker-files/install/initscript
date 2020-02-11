@@ -40,6 +40,7 @@ cp -f /target/etc/pensando/pen-influx/influxdb.conf /host/etc/pensando/configs/p
 cp -f /target/etc/pensando/shared/common/venice.json /host/etc/pensando/configs/shared/common/venice.json
 cp -f /target/etc/pensando/shared/common/venice.conf /host/etc/pensando/configs/shared/common/venice.conf
 cp -f /target/usr/bin/gettechsupport.sh /host/usr/pensando/bin/gettechsupport.sh
+cp -f /target/usr/bin/penctl.linux /host/usr/pensando/bin/penctl
 
 
 #move to directories that are expected by the various services
