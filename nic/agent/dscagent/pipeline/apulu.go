@@ -45,6 +45,7 @@ type ApuluAPI struct {
 	EventClient             halapi.EventSvcClient
 	PortClient              halapi.PortSvcClient
 	CPRouteSvcClient        msapi.CPRouteSvcClient
+	MirrorClient            halapi.MirrorSvcClient
 }
 
 // NewPipelineAPI returns the implemetor of PipelineAPI
@@ -61,14 +62,14 @@ func NewPipelineAPI(infraAPI types.InfraAPI) (*ApuluAPI, error) {
 		SubnetClient:            halapi.NewSubnetSvcClient(conn),
 		DeviceSvcClient:         halapi.NewDeviceSvcClient(conn),
 		SecurityPolicySvcClient: halapi.NewSecurityPolicySvcClient(conn),
-
-		DHCPRelayClient:  halapi.NewDHCPSvcClient(conn),
-		InterfaceClient:  halapi.NewIfSvcClient(conn),
-		PortClient:       halapi.NewPortSvcClient(conn),
-		EventClient:      halapi.NewEventSvcClient(conn),
-		CPRouteSvcClient: msapi.NewCPRouteSvcClient(conn),
-		RoutingClient:    msapi.NewBGPSvcClient(conn),
-		EvpnClient:       msapi.NewEvpnSvcClient(conn),
+		DHCPRelayClient:         halapi.NewDHCPSvcClient(conn),
+		InterfaceClient:         halapi.NewIfSvcClient(conn),
+		PortClient:              halapi.NewPortSvcClient(conn),
+		EventClient:             halapi.NewEventSvcClient(conn),
+		CPRouteSvcClient:        msapi.NewCPRouteSvcClient(conn),
+		RoutingClient:           msapi.NewBGPSvcClient(conn),
+		EvpnClient:              msapi.NewEvpnSvcClient(conn),
+		MirrorClient:            halapi.NewMirrorSvcClient(conn),
 	}
 
 	if err := a.PipelineInit(); err != nil {
@@ -714,9 +715,119 @@ func (a *ApuluAPI) HandleIPAMPolicy(oper types.Operation, policy netproto.IPAMPo
 	return
 }
 
-// HandleMirrorSession unimplemented
+// HandleMirrorSession handles CRUDs for MirrorSession object
 func (a *ApuluAPI) HandleMirrorSession(oper types.Operation, mirror netproto.MirrorSession) (mirrors []netproto.MirrorSession, err error) {
-	return nil, errors.Wrapf(types.ErrNotImplemented, "Mirror Session not implemented by Apulu Pipeline")
+	a.Lock()
+	defer a.Unlock()
+
+	err = utils.ValidateMeta(oper, mirror.Kind, mirror.ObjectMeta)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	// Handle Get and LIST. This doesn't need any pipeline specific APIs
+	switch oper {
+	case types.Get:
+		var (
+			dat []byte
+			obj netproto.MirrorSession
+		)
+		dat, err = a.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+		err = obj.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+		mirrors = append(mirrors, obj)
+
+		return
+	case types.List:
+		var (
+			dat [][]byte
+		)
+		dat, err = a.InfraAPI.List(mirror.Kind)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+
+		for _, o := range dat {
+			var mirror netproto.MirrorSession
+			err := proto.Unmarshal(o, &mirror)
+			if err != nil {
+				log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+				continue
+			}
+			mirrors = append(mirrors, mirror)
+		}
+
+		return
+	case types.Create:
+		// Alloc ID if ID field is empty. This will be pre-populated in case of config replays
+		if mirror.Status.MirrorSessionID == 0 {
+			mirror.Status.MirrorSessionID = a.InfraAPI.AllocateID(types.MirrorSessionID, 0)
+		}
+
+	case types.Update:
+		// Get to ensure that the object exists
+		var existingMirrorSession netproto.MirrorSession
+		dat, err := a.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound))
+			return nil, errors.Wrapf(types.ErrBadRequest, "MirrorSession: %s | Err: %v", mirror.GetKey(), types.ErrObjNotFound)
+		}
+		err = existingMirrorSession.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+
+		// Check for idempotency
+		if proto.Equal(&mirror.Spec, &existingMirrorSession.Spec) {
+			//log.Infof("MirrorSession: %s | Info: %s ", mirror.GetKey(), types.InfoIgnoreUpdate)
+			return nil, nil
+		}
+
+		// Reuse ID from store
+		mirror.Status.MirrorSessionID = existingMirrorSession.Status.MirrorSessionID
+	case types.Delete:
+		var existingMirrorSession netproto.MirrorSession
+		dat, err := a.InfraAPI.Read(mirror.Kind, mirror.GetKey())
+		if err != nil {
+			log.Infof("Controller API: %s | Err: %s", types.InfoIgnoreDelete, err)
+			return nil, nil
+		}
+		err = existingMirrorSession.Unmarshal(dat)
+		if err != nil {
+			log.Error(errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err))
+			return nil, errors.Wrapf(types.ErrUnmarshal, "MirrorSession: %s | Err: %v", mirror.GetKey(), err)
+		}
+		mirror = existingMirrorSession
+	}
+	log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjBegin)
+	defer log.Infof("MirrorSession: %v | Op: %s | %s", mirror, oper, types.InfoHandleObjEnd)
+
+	// Perform object validations
+	vrf, err := validator.ValidateMirrorSession(a.InfraAPI, mirror, oper)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+	// Update Mirror session ID to be under 8. TODO remove this once HAL doesn't rely on agents to provide its hardware ID
+	mirror.Status.MirrorSessionID = mirror.Status.MirrorSessionID % types.MaxMirrorSessions
+	// Take a lock to ensure a single HAL API is active at any given point
+	err = apulu.HandleMirrorSession(a.InfraAPI, a.MirrorClient, oper, mirror, vrf.Status.VrfID)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return
 }
 
 // HandleFlowExportPolicy unimplemented

@@ -137,7 +137,7 @@ func convertInterface(infraAPI types.InfraAPI, intf netproto.Interface) *halapi.
 		}
 
 		if vrf == nil {
-			log.Errorf("Failed to find vrf", intf.Spec.VrfName)
+			log.Errorf("Failed to find vrf %s", intf.Spec.VrfName)
 			return nil
 		}
 

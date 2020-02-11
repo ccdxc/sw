@@ -29,20 +29,21 @@ message RSpanSpec {
 // ERSpanSpec is the configuration specification for ERSPAN
 message ERSpanSpec {
   // VPC id
-  bytes           VPCId  = 1;
+  bytes           VPCId     = 1;
   oneof erspandst {
       // tunnel (aka. TEP) as the ERSPAN destination
-      bytes     TunnelId = 2;
+      bytes     TunnelId    = 2;
       // local/remote mapping as the ERSPAN destination
-      MappingKey Mapping = 3;
+      MappingKey Mapping    = 3;
+      // Destination IP address to be used for ERSPAN
+      types.IPAddress DstIP = 4;
   }
   // Source IP address to be used for ERSPAN
-  // NOTE: only IPv6 is supported
-  types.IPAddress SrcIP  = 4;
+  types.IPAddress SrcIP     = 5;
   // DSCP value to use in the packet
-  uint32          Dscp   = 5;
+  uint32          Dscp      = 6;
   // Span ID to use in the packet
-  uint32          SpanId = 6;
+  uint32          SpanId    = 7;
 }
 
 // MirrorSessionSpec captures configuration of Mirror session
