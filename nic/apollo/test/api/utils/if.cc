@@ -21,6 +21,7 @@ void
 if_feeder::init(pds_obj_key_t key, std::string ip_pfx_str,
                 pds_if_type_t type, int num_ifs) {
     pds_ifindex_t eth_ifindex;
+    memset(&this->spec_feeder, 0, sizeof(pds_if_spec_t));
 
     memset(&spec_feeder, 0, sizeof(spec_feeder));
     spec_feeder.key = key;

@@ -82,6 +82,8 @@ api_base::factory(api_ctxt_t *api_ctxt) {
         return security_profile::factory(&api_ctxt->api_params->security_profile_spec);
 
     default:
+        PDS_TRACE_ERR("factory method not implemented for obj id %u\n",
+                                                     api_ctxt->obj_id);
         break;
     }
     return NULL;
@@ -153,6 +155,8 @@ api_base::build(api_ctxt_t *api_ctxt) {
         return security_profile::build(&api_ctxt->api_params->security_profile_spec.key);
 
     default:
+        PDS_TRACE_ERR("build method not implemented for obj id %u\n",
+                                                   api_ctxt->obj_id);
         break;
     }
     return NULL;
@@ -266,6 +270,7 @@ api_base::free(obj_id_t obj_id, api_base *api_obj) {
         return security_profile::free((security_profile *)api_obj);
 
     default:
+        PDS_TRACE_ERR("free method not implemented for obj id %u\n", obj_id);
         break;
     }
     return SDK_RET_INVALID_OP;
@@ -384,6 +389,8 @@ api_base::find_obj(api_ctxt_t *api_ctxt) {
         return NULL;
 
     default:
+        PDS_TRACE_ERR("find_obj api_ctx method not implemented for obj id %u\n",
+                                                              api_ctxt->obj_id);
         break;
     }
     return NULL;
@@ -432,7 +439,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
 
     case OBJ_ID_MIRROR_SESSION:
     case OBJ_ID_METER:
-        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        PDS_TRACE_ERR("find_obj method no implemented for obj id %u\n", obj_id);
         break;
 
     case OBJ_ID_TAG:
@@ -444,7 +451,7 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     case OBJ_ID_VPC_PEER:
-        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        PDS_TRACE_ERR("find_obj method no implemented for obj id %u\n", obj_id);
         break;
 
     case OBJ_ID_NEXTHOP:
@@ -476,7 +483,8 @@ api_base::find_obj(obj_id_t obj_id, void *key) {
         break;
 
     default:
-        PDS_TRACE_ERR("find_obj() no implemented for obj id %u\n", obj_id);
+        PDS_TRACE_ERR("find_obj obj_id method not implemented for obj id %u\n",
+                                                                       obj_id);
         break;
     }
 
