@@ -201,7 +201,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_TOP.String(),
 			},
-			resp: "SELECT top(cpu,10),reporterID FROM test-db ORDER BY time ASC",
+			resp: "SELECT top(cpu,reporterID,10) FROM test-db ORDER BY time ASC",
 			pass: true,
 		},
 		{
@@ -213,7 +213,7 @@ func TestBuildMetricsCitadelQuery(t *testing.T) {
 				Fields:   []string{"cpu"},
 				Function: telemetry_query.TsdbFunctionType_BOTTOM.String(),
 			},
-			resp: "SELECT bottom(cpu,10),reporterID FROM test-db ORDER BY time ASC",
+			resp: "SELECT bottom(cpu,reporterID,10) FROM test-db ORDER BY time ASC",
 			pass: true,
 		},
 		{

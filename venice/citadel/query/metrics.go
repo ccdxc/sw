@@ -247,7 +247,7 @@ func buildCitadelMetricsQuery(qs *telemetry_query.MetricsQuerySpec) (string, err
 			selectedFields = newFields
 		case telemetry_query.TsdbFunctionType_TOP.String(),
 			telemetry_query.TsdbFunctionType_BOTTOM.String():
-			selectedFields = []string{fmt.Sprintf("%s(%s,10),reporterID", qs.Function, selectedFields[0])}
+			selectedFields = []string{fmt.Sprintf("%s(%s,reporterID,10)", qs.Function, selectedFields[0])}
 
 		case telemetry_query.TsdbFunctionType_NONE.String():
 			//none
