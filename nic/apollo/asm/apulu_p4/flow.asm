@@ -45,6 +45,7 @@ flow_hash:
 label_flow_miss:
     phvwrpair.c7    p.p4i_to_arm_flow_hit, TRUE, \
                         p.p4i_to_arm_flow_role, d.flow_hash_d.flow_role
+    phvwr.c7        p.p4i_to_arm_session_id, d.{flow_hash_d.session_index}.wx
     phvwr.e         p.control_metadata_flow_miss, TRUE
     phvwr.f         p.control_metadata_flow_done, TRUE
 

@@ -12,6 +12,7 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.epoch, epoch);
         modify_field(scratch_metadata.flag, force_flow_miss);
+        modify_field(scratch_metadata.session_id, session_index);
         // entry is old or force_flow_miss is true
         if ((scratch_metadata.epoch < control_metadata.epoch) or
             (force_flow_miss == TRUE)) {
@@ -20,11 +21,12 @@ action flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             if (force_flow_miss == TRUE) {
                 modify_field(p4i_to_arm.flow_hit, TRUE);
                 modify_field(p4i_to_arm.flow_role, flow_role);
+                modify_field(p4i_to_arm.session_id,
+                             scratch_metadata.session_id);
             }
         } else {
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
-            modify_field(scratch_metadata.session_id, session_index);
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
@@ -151,6 +153,7 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
         // if hardware register indicates hit, take the results
         modify_field(scratch_metadata.epoch, epoch);
         modify_field(scratch_metadata.flag, force_flow_miss);
+        modify_field(scratch_metadata.session_id, session_index);
         // entry is old or force_flow_miss is true
         if ((scratch_metadata.epoch < control_metadata.epoch) or
             (force_flow_miss == TRUE)) {
@@ -159,11 +162,12 @@ action ipv4_flow_hash(epoch, session_index, nexthop_valid, nexthop_type,
             if (force_flow_miss == TRUE) {
                 modify_field(p4i_to_arm.flow_hit, TRUE);
                 modify_field(p4i_to_arm.flow_role, flow_role);
+                modify_field(p4i_to_arm.session_id,
+                             scratch_metadata.session_id);
             }
         } else {
             modify_field(control_metadata.flow_done, TRUE);
             modify_field(scratch_metadata.flag, nexthop_valid);
-            modify_field(scratch_metadata.session_id, session_index);
             if (tcp.flags & (TCP_FLAG_FIN|TCP_FLAG_RST) != 0) {
                 modify_field(control_metadata.flow_miss, TRUE);
                 modify_field(control_metadata.force_flow_miss, TRUE);
