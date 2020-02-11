@@ -94,9 +94,14 @@ Status
             {{if hasExtension "venice.pdsaSetGlobOpts" $reqMsg}}
               {{$param := (getPdsaSetGlobalOpts $reqMsg $cam)}}
               {{$struct := $param.Struct}}
+              {{$updForDel := $param.UpdateForDelete}}
               {{if (HasSuffix $rpc "Delete")}}
         pds_ms_pre_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+                {{if $updForDel}}
+        pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_ACTIVE, correlator, TRUE);
+                {{else}}
         pds_ms_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
+                {{end}}
         pds_ms_post_set_{{$struct | ToLower}}(proto_spec, AMB_ROW_DESTROY, correlator);
               {{end}}
               {{if (HasSuffix $rpc "Create")}}

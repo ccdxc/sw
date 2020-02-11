@@ -5,10 +5,11 @@ package venice;
 import "google/protobuf/descriptor.proto";
 
 message GlobalOpts {
-    string OidLen   = 1;
-    string Mib      = 2;
-    string FillFn   = 3;
-    string ActionFn = 4;
+    string OidLen          = 1;
+    string Mib             = 2;
+    string FillFn          = 3;
+    string ActionFn        = 4;
+    bool   UpdateForDelete = 5;
 }
 
 // Venice Option extensions applicable to messages

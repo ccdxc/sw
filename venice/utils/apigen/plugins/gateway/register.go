@@ -81,12 +81,13 @@ func (s *scratchVars) getStr(id int) string {
 
 // PdsaGlobalOpts holds raw venice.pdsaSetGlobOpts
 type PdsaGlobalOpts struct {
-	OidLen   string
-	OidFam   string
-	Struct   string
-	Mib      string
-	FillFn   string
-	ActionFn string
+	OidLen          string
+	OidFam          string
+	Struct          string
+	Mib             string
+	FillFn          string
+	ActionFn        string
+	UpdateForDelete bool
 }
 
 // PenctlCmdOpts holds raw PenctlCmd options data from .proto files
@@ -1096,6 +1097,7 @@ func getPdsaSetGlobalOpts(m *descriptor.Message, cam *CamInfo) (PdsaGlobalOpts, 
 	pdsaGlobOpts.OidFam = getFamFromCam(cam, r.Mib)
 	pdsaGlobOpts.FillFn = r.FillFn
 	pdsaGlobOpts.ActionFn = r.ActionFn
+	pdsaGlobOpts.UpdateForDelete = r.UpdateForDelete
 	return pdsaGlobOpts, nil
 }
 
