@@ -18,6 +18,8 @@ import (
 	export "github.com/pensando/sw/venice/utils/techsupport/exporter"
 )
 
+const maxRetry = 3
+
 func (ag *TSMClient) handleTechSupportEvents(events *tsproto.TechSupportRequestEventList) {
 	log.Infof("Handling Techsupport Event")
 
@@ -273,14 +275,21 @@ func (ag *TSMClient) do(work *tsproto.TechSupportRequest) error {
 			uri := fmt.Sprintf("/objstore/v1/downloads/tenant/default/techsupport/%v", vosTarget)
 			work.Status.URI = uri
 			log.Infof("Send to VENICE. WORK : %v. URL : %v", work, uri)
-			err = export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
-			if err != nil {
-				delErr := ag.deleteTechsupportFiles(work)
-				if delErr != nil {
-					log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+			for i := 0; i < maxRetry; i++ {
+				err = export.SendToVenice(ag.resolverClient, tarballFile, vosTarget)
+				if err == nil {
+					return nil
 				}
-				return err
+
+				log.Errorf("retry[%d] failed to send techsupport to Venice, %v", i+1, err)
+				//continue
 			}
+			delErr := ag.deleteTechsupportFiles(work)
+			if delErr != nil {
+				log.Errorf("Delete techsupport files failed. Err : %v", delErr)
+			}
+			return err
+
 		case "HTTPS":
 			log.Info("Transfer file using HTTPs")
 			err = export.SendToHTTP(tarballFile, destination.Path, "", "")
