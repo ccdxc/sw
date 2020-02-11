@@ -29,6 +29,7 @@ var (
 	portAdminState string
 	portSpeed      string
 	aacsServerPort int32
+	portNumLanes   uint32
 )
 
 var portClearStatsCmd = &cobra.Command{
@@ -90,7 +91,16 @@ var portDebugAacsStopCmd = &cobra.Command{
 // ValidateMtu returns true if the MTU is within 64-9216
 func ValidateMtu(mtu uint32) bool {
 	if mtu < 64 || mtu > 9216 {
-		fmt.Printf("Invalid MTU. MTU must be in the range 64-9216")
+		fmt.Printf("Invalid MTU. MTU must be in the range 64-9216\n")
+		return false
+	}
+	return true
+}
+
+// ValidateNumLanes returns true if the numLanes is between 1 to 4
+func ValidateNumLanes(numLanes uint32) bool {
+	if numLanes < 1 || numLanes > 4 {
+		fmt.Printf("Invalid num-lanes. num-lanes must be in the range 1-4\n")
 		return false
 	}
 	return true
@@ -118,6 +128,7 @@ func init() {
 	portDebugCmd.Flags().StringVar(&portAdminState, "admin-state", "up", "Set port admin state - up, down")
 	portDebugCmd.Flags().StringVar(&portSpeed, "speed", "", "Set port speed - none, 1g, 10g, 25g, 40g, 50g, 100g")
 	portDebugCmd.Flags().Uint32Var(&portMtu, "mtu", 0, "Specify port MTU")
+	portDebugCmd.Flags().Uint32Var(&portNumLanes, "num-lanes", 4, "Specify number of lanes")
 
 	// debug port aacs-server-start
 	portDebugCmd.AddCommand(portDebugAacsStartCmd)
@@ -693,7 +704,8 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	if cmd.Flags().Changed("pause") == false && cmd.Flags().Changed("tx-pause") == false &&
 		cmd.Flags().Changed("rx-pause") == false && cmd.Flags().Changed("fec-type") == false &&
 		cmd.Flags().Changed("auto-neg") == false && cmd.Flags().Changed("mtu") == false &&
-		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false {
+		cmd.Flags().Changed("admin-state") == false && cmd.Flags().Changed("speed") == false &&
+		cmd.Flags().Changed("num-lanes") == false {
 		fmt.Printf("Command arguments not provided correctly. Refer to help string for guidance\n")
 		return
 	}
@@ -704,6 +716,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 	speed := inputToSpeed("none")
 	autoNeg := false
 	var mtu uint32
+	var numLanes uint32
 	txPauseEnable := true
 	rxPauseEnable := true
 
@@ -780,6 +793,13 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		mtu = portMtu
 	}
 
+	if cmd.Flags().Changed("num-lanes") == true {
+		if ValidateNumLanes(portNumLanes) == false {
+			return
+		}
+		numLanes = portNumLanes
+	}
+
 	client := halproto.NewPortClient(c)
 
 	var req *halproto.PortGetRequest
@@ -840,6 +860,9 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 		if cmd.Flags().Changed("mtu") == false {
 			mtu = resp.GetSpec().GetMtu()
 		}
+		if cmd.Flags().Changed("num-lanes") == false {
+			numLanes = resp.GetSpec().GetNumLanes()
+		}
 
 		var portSpec *halproto.PortSpec
 		portSpec = &halproto.PortSpec{
@@ -852,7 +875,7 @@ func portDebugCmdHandler(cmd *cobra.Command, args []string) {
 			PortType:      resp.GetSpec().GetPortType(),
 			AdminState:    adminState,
 			PortSpeed:     speed,
-			NumLanes:      resp.GetSpec().GetNumLanes(),
+			NumLanes:      numLanes,
 			FecType:       fecType,
 			AutoNegEnable: autoNeg,
 			DebounceTime:  resp.GetSpec().GetDebounceTime(),
