@@ -207,7 +207,7 @@ func validateCluster() {
 		// refer PR https://github.com/pensando/sw/pull/15711
 		// Ignore condition Ready == false (i.e. consider the pod good assuming all other conditions are True)
 		return ts.tu.LocalCommandOutput(`kubectl get pods --all-namespaces -o json  | jq-linux64 -r '.items[] | select(.status.phase != "Running" or ([ .status.conditions[] | select(.type != "Ready" and .status == "False") ] | length ) > 0 ) | .metadata.namespace + "/" + .metadata.name'`)
-	}, 95, 1).Should(BeEmpty(), "All pods should be in Ready state")
+	}, 180, 1).Should(BeEmpty(), "All pods should be in Ready state")
 
 	apiGwAddr := ts.tu.ClusterVIP + ":" + globals.APIGwRESTPort
 	apiClient, err := apiclient.NewRestAPIClient(apiGwAddr)
@@ -327,7 +327,7 @@ func validateCluster() {
 		By(fmt.Sprintf("ts: %s cluster health status: %v", time.Now().String(), cl.Status.Conditions))
 		By(fmt.Sprintf("ts: %s kubectl get pods -o wide: %s", time.Now().String(), ts.tu.LocalCommandOutput("kubectl get pods -o wide")))
 		return false
-	}, 60, 5).Should(BeTrue(), "cluster should be in healthy state")
+	}, 180, 5).Should(BeTrue(), "cluster should be in healthy state")
 
 	// Bootstrap port should be shut on all nodes that are part of the cluster and open on those that are not
 	Eventually(func() bool {

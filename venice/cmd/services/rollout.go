@@ -41,7 +41,7 @@ type rolloutMgr struct {
 	veniceRunVersion    func(version string) error
 }
 
-const syncDelaySeconds = 120
+const syncDelaySeconds = 240
 
 var serviceSyncDelaySeconds = syncDelaySeconds * time.Second
 
@@ -170,7 +170,7 @@ func (r *rolloutMgr) handleVeniceRollout(ro *rolloutproto.VeniceRollout) {
 		}
 		if opSpec.Op == rolloutproto.VeniceOp_VeniceRunVersion && utils.IsRunningOnVeniceAppl() {
 			//Wait long enough for citadel to sync-data
-			log.Infof(" Waiting long enough (2mins) for services to comeup")
+			log.Infof(" Waiting long enough (4mins) for services to comeup")
 			time.Sleep(serviceSyncDelaySeconds)
 		}
 		log.Infof(" Writing venice rollout status :%#v ", s)
@@ -283,7 +283,7 @@ func (r *rolloutMgr) handleServiceRollout(ro *rolloutproto.ServiceRollout) {
 			},
 		}
 		//Wait long enough for citadel to sync-data
-		log.Infof(" Waiting long enough(2mins) for services to sync data")
+		log.Infof(" Waiting long enough(4mins) for services to sync data")
 		time.Sleep(serviceSyncDelaySeconds)
 		log.Infof(" Writing service rollout status :%#v ", s)
 		r.serviceStatusWriter.WriteServiceStatus(context.TODO(), &s)

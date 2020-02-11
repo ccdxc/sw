@@ -12,13 +12,12 @@ import (
 	rfc5424u "github.com/jeromer/syslogparser/rfc5424"
 
 	"github.com/pensando/sw/api/generated/monitoring"
-	"github.com/pensando/sw/venice/utils/log"
 )
 
 func parseRfc3164(buff []byte) (syslogparser.LogParts, error) {
 	p := rfc3164.NewParser(buff)
 	if err := p.Parse(); err != nil {
-		log.Errorf("failed to create new Rfc3164 parser, %s", err)
+		fmt.Printf("failed to create new Rfc3164 parser, %s \n", err)
 		return nil, err
 	}
 	return p.Dump(), nil
@@ -27,7 +26,7 @@ func parseRfc3164(buff []byte) (syslogparser.LogParts, error) {
 func parseRfc5424(buff []byte) (syslogparser.LogParts, error) {
 	p := rfc5424u.NewParser(buff)
 	if err := p.Parse(); err != nil {
-		log.Errorf("failed to create new Rfc5424 parser, %s", err)
+		fmt.Printf("failed to create new Rfc5424 parser, %s\n", err)
 		return nil, err
 	}
 	return p.Dump(), nil
@@ -38,14 +37,14 @@ func parseSyslog(logType string, buff []byte) (syslogparser.LogParts, error) {
 	case monitoring.MonitoringExportFormat_SYSLOG_BSD.String():
 		lp, err := parseRfc3164(buff)
 		if err != nil {
-			log.Errorf("stop syslog, %v", err)
+			fmt.Printf("stop syslog, %v \n", err)
 			return nil, err
 		}
 		return lp, nil
 	case monitoring.MonitoringExportFormat_SYSLOG_RFC5424.String():
 		lp, err := parseRfc5424(buff)
 		if err != nil {
-			log.Errorf("stop syslog, %v", err)
+			fmt.Printf("stop syslog, %v\n", err)
 			return nil, err
 		}
 		return lp, nil
@@ -71,7 +70,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 			}()
 
 			numMsg := map[string]int{} // updated by single goroutine
-			log.Infof("udp syslog server %s ready", l.LocalAddr().String())
+			fmt.Printf("udp syslog server %s ready \n", l.LocalAddr().String())
 			for ctx.Err() == nil {
 				buff := make([]byte, 1024)
 				l.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
@@ -79,17 +78,17 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 				if err != nil {
 					for _, s := range []string{"closed network connection", "EOF"} {
 						if strings.Contains(err.Error(), s) {
-							log.Infof("%s closed", l.LocalAddr().String())
+							fmt.Printf("%s closed\n", l.LocalAddr().String())
 							return
 						}
 					}
 					continue
 				}
 				numMsg[raddr.String()]++
-				log.Infof("[%v] server %v received: %v", numMsg[raddr.String()], l.LocalAddr().(*net.UDPAddr).String(), string(buff[:n]))
+				fmt.Printf("[%v] server %v received: %v\n", numMsg[raddr.String()], l.LocalAddr().(*net.UDPAddr).String(), string(buff[:n]))
 				lp, err := parseSyslog(logType, buff[:n])
 				if err != nil {
-					log.Errorf("stop syslog server %v", err)
+					fmt.Printf("stop syslog server %v\n", err)
 					return
 				}
 				ch <- lp
@@ -112,7 +111,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 			for ctx.Err() == nil {
 				nc, err := l.Accept()
 				if err != nil {
-					log.Errorf("failed to accept connection, %s", err)
+					fmt.Printf("failed to accept connection, %s\n", err)
 					return
 				}
 
@@ -120,7 +119,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 					defer func() { conn.Close() }()
 
 					numMsg := 0
-					log.Infof("tcp syslog server %s ready %v", l.Addr().String(), conn.RemoteAddr().String())
+					fmt.Printf("tcp syslog server %s ready %v\n", l.Addr().String(), conn.RemoteAddr().String())
 					for ctx.Err() == nil {
 						buff := make([]byte, 1024)
 						conn.SetReadDeadline(time.Now().Add(time.Millisecond * 500))
@@ -128,7 +127,7 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 						if err != nil {
 							for _, s := range []string{"closed network connection", "EOF"} {
 								if strings.Contains(err.Error(), s) {
-									log.Infof("%s closed", l.Addr().String())
+									fmt.Printf("%s closed \n", l.Addr().String())
 									return
 								}
 							}
@@ -136,10 +135,10 @@ func Server(ctx context.Context, addr string, logType string, proto string) (str
 						}
 
 						numMsg++
-						log.Infof("[%v] server %v received: %v", numMsg, l.Addr().String(), string(buff[:n]))
+						fmt.Printf("[%v] server %v received: %v \n", numMsg, l.Addr().String(), string(buff[:n]))
 						lp, err := parseSyslog(logType, buff[:n])
 						if err != nil {
-							log.Errorf("stop syslog server %v", err)
+							fmt.Printf("stop syslog server %v\n", err)
 							return
 						}
 						ch <- lp

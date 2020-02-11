@@ -356,7 +356,18 @@ func (hsrv *HTTPServer) dnodeReqHandler(w http.ResponseWriter, r *http.Request) 
 
 // healthReqHandler handles health check requests
 func (hsrv *HTTPServer) healthReqHandler(r *http.Request) (interface{}, error) {
-	return "OK", hsrv.broker.ClusterCheck()
+	if err := hsrv.broker.ClusterCheck(); err != nil {
+		return nil, err
+	}
+	if hsrv.dnode != nil {
+		if hsrv.dnode.HasPendingSync() {
+			return nil, fmt.Errorf("sync pending")
+		}
+	} else {
+		return nil, fmt.Errorf("node is not ready")
+	}
+
+	return nil, nil
 }
 
 // infoReqHandler returns cluster state
