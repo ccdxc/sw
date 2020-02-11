@@ -197,6 +197,7 @@ var ValidatorArgMap = map[string][]CheckArgs{
 	"Duration":        {IsString, IsString},
 	"EmptyOrDuration": {IsString, IsString},
 	"ProtoPort":       {},
+	"ProtoPortRange":  {},
 	"RegExp":          {IsValidRegExp},
 	"EmptyOrRegExp":   {IsValidRegExp},
 	"ValidGroup":      {},
@@ -251,6 +252,7 @@ var ValidatorProfileMap = map[string]func(field *descriptor.Field, reg *descript
 	"Duration":        durationProfile,
 	"EmptyOrDuration": emptyOrDurationProfile,
 	"ProtoPort":       protoPortProfile,
+	"ProtoPortRange":  protoPortRangeProfile,
 	"RegExp":          regexpProfile,
 	"EmptyOrRegExp":   emptyOrRegexpProfile,
 	"ValidGroup":      validGroupProfile,
@@ -511,6 +513,13 @@ func protoPortProfile(field *descriptor.Field, reg *descriptor.Registry, ver str
 	return nil
 }
 
+func protoPortRangeProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
+	str := "tcp/1234-1235"
+	prof.Example[ver] = prof.Example[ver] + str
+	prof.DocStrings[ver] = append(prof.DocStrings[ver], "should be a valid layer 3 or layer 4 protocol and port range")
+	prof.Required[ver] = true
+	return nil
+}
 func validGroupProfile(field *descriptor.Field, reg *descriptor.Registry, ver string, args []string, prof *FieldProfile) error {
 	str := "auth"
 	prof.Example[ver] = prof.Example[ver] + str

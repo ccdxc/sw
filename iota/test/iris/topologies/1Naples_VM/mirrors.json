@@ -33,7 +33,7 @@
             "proto-ports": [
               {
                 "protocol": "icmp",
-                "port": "0/0"
+                "port": "0"
               }
             ]
           }
@@ -51,7 +51,7 @@
             "proto-ports": [
               {
                 "protocol": "tcp",
-                "port": "0/0"
+                "port": "0"
               }
             ]
           }
@@ -69,7 +69,7 @@
             "proto-ports": [
               {
                 "protocol": "udp",
-                "port": "0/0"
+                "port": "0"
               }
             ]
           }

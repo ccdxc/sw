@@ -245,6 +245,26 @@ func TestParsers(t *testing.T) {
 			t.Errorf("parseMetricFieldInfo passed")
 		}
 	}
+	{
+		in := &venice.GlobalOpts{FillFn: "test"}
+		out, err := parseGlobalOpts(in)
+		if err != nil {
+			t.Fatalf("parseGlobalOpts failed (%s)", err)
+		}
+		if !reflect.DeepEqual(out.(*venice.GlobalOpts), in) {
+			t.Errorf("parseGlobalOpts returned value wrong [%v]", out)
+		}
+	}
+	{
+		in := &venice.PdsaFields{Field: "test"}
+		out, err := parsePdsaFieldOptions(in)
+		if err != nil {
+			t.Fatalf("parsePdsaFieldOptions failed (%s)", err)
+		}
+		if out.(venice.PdsaFields).Field != in.Field {
+			t.Errorf("parsePdsaFieldOptions returned value wrong [%v]", out)
+		}
+	}
 }
 
 func TestParseValidator(t *testing.T) {

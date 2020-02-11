@@ -56,7 +56,7 @@ def get_app_proto(protocol, dport):
     app = {}
     app['protocol'] = protocol
     if protocol == 'icmp':
-        app['port'] = '0/0'
+        app['port'] = '0'
         #proto_str = str(protocol).upper() + '/' + '0' + '/' + '0'
     else:
         if dport == 'any':

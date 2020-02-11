@@ -375,7 +375,7 @@ func knownIcmpTypeCodeVldtr(l3l4Info []string) bool {
 	return false
 }
 
-func strProtoPortVldtr(in string) error {
+func strProtoPortVldtr(in string, allowRange bool) error {
 	// Acceptable string formats are -
 	// L4_proto/port E.g. tcp/1234
 	// L3proto E.g. arp
@@ -448,18 +448,59 @@ func strProtoPortVldtr(in string) error {
 				return fmt.Errorf("Value had invalid format for %s, protocol number must be an 8 bit value", l3l4proto)
 			}
 		} else {
-			_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
-			if err != nil {
-				return fmt.Errorf("Value had invalid format for %s, protocol number must be a 16 bit value", l3l4proto)
+			if !allowRange {
+				_, err = strconv.ParseUint(l3l4Info[p], 0, 16)
+				if err != nil {
+					return fmt.Errorf("Value had invalid format for %s, protocol number must be a 16 bit value", l3l4proto)
+				}
+			} else { // validate port range
+				totalPorts := 0
+				portList := strings.Split(l3l4Info[p], ",")
+				for _, pr := range portList {
+					ports := strings.Split(pr, "-")
+					for _, port := range ports {
+						i, err := strconv.Atoi(port)
+						if err != nil {
+							return fmt.Errorf("port %v must be an integer value", port)
+						}
+						if 0 > i || i > 65535 {
+							return fmt.Errorf("port %v outside range", port)
+						}
+						totalPorts++
+					}
+					if len(ports) == 2 {
+						first, _ := strconv.Atoi(ports[0])
+						second, _ := strconv.Atoi(ports[1])
+
+						if first == 0 && second == 0 {
+							return fmt.Errorf("invalid port range %v. upper and lower port range bounds must not be 0", pr)
+						}
+
+						if first > second {
+							return fmt.Errorf("Invalid port range %v. first number bigger than second", pr)
+						}
+						totalPorts += second - first - 1 // first & last ports are already counted
+					} else if len(ports) > 2 {
+						return fmt.Errorf("Invalid port range format: %v", pr)
+					}
+				}
+				if totalPorts > 50 {
+					return fmt.Errorf("too large port range, limit 50")
+				}
 			}
 		}
 	}
 	return nil
 }
 
+// ProtoPortRange validates L3/L4 protocol and port range
+func ProtoPortRange(port string) error {
+	return strProtoPortVldtr(port, true)
+}
+
 // ProtoPort validates L3/L4 protocol and port
 func ProtoPort(port string) error {
-	return strProtoPortVldtr(port)
+	return strProtoPortVldtr(port, false)
 }
 
 // ValidKind validates that the kind is one of the registered Kinds

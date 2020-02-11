@@ -34,7 +34,7 @@ func GenerateSimpleTrafficMap(proto string, workloadNum int) trafficMap {
 	switch proto {
 	case "icmp":
 		entry.port = 0
-		entry.pStr = "icmp/0/0"
+		entry.pStr = "icmp/0"
 		entry.flowcount = 1
 	case "tcp":
 		entry.port = rand.Intn(32000) + 1024
@@ -134,7 +134,7 @@ var _ = Describe("mirror tests", func() {
 			veniceCollector := ts.model.VeniceNodes().Leader()
 			// add permit rules for workload pairs
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork().Any(1)
-			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp/0/0")
+			msc := ts.model.NewMirrorSession("test-mirror").AddRulesForWorkloadPairs(workloadPairs, "icmp")
 			msc.AddVeniceCollector(veniceCollector, "udp/4545", 0)
 			Expect(msc.Commit()).Should(Succeed())
 

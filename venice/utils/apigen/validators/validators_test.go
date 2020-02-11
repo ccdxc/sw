@@ -361,6 +361,55 @@ func TestL3L4Proto(t *testing.T) {
 	}
 }
 
+func TestL3L4ProtoRange(t *testing.T) {
+
+	cases := []struct {
+		s      string
+		errMsg string
+	}{
+		// Good cases
+		{s: "TCP/1234-1235"},
+		{s: "TCP/1234-1234"},
+		{s: "TCP/1234,1235"},
+		{s: "TCP/1234,1235-1236,1238"},
+		{s: "TCP/1234"},
+		{s: "Udp"},
+		{s: "udp/65535"},
+		{s: "IcMp"},
+		{s: "aRP"},
+		{s: "ipprotocol/17"},
+		{s: "ethertype/0x806"},
+		{s: "icmp/1"},
+		{s: "icmp/3/2"},
+		{s: "icmp/echo reply"},
+		{s: "icmp/redirect/5"},
+		// Bad cases
+		{s: "TCP/1234-1294", errMsg: "too large port range, limit 50"},
+		{s: "TCP/1234-1224", errMsg: "Invalid port range 1234-1224. first number bigger than second"},
+		{s: "", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
+		{s: "SCP/1234", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
+		{s: "Udp/1/2", errMsg: "Value had invalid format for udp, unexpected second '/' "},
+		{s: "udp/-123", errMsg: "port  must be an integer value"},
+		{s: "foo", errMsg: "Protocol must be a valid L3 or L4 <protocol>/<port>"},
+		{s: "ipprotocol", errMsg: "Value had invalid format for ipprotocol, expected ipprotocol/<port>"},
+		{s: "ipprotocol/17/1/2", errMsg: "Value had invalid format for ipprotocol, unexpected second '/' "},
+		{s: "ethertype/0x806/10", errMsg: "Value had invalid format for ethertype, unexpected second '/' "},
+		{s: "ethertype", errMsg: "Value had invalid format for ethertype, expected ethertype/<protocol number>"},
+		{s: "ethertype/abc", errMsg: "Value had invalid format for ethertype, protocol number must be a 16 bit value"},
+		{s: "ipprotocol/xyz", errMsg: "Value had invalid format for ipprotocol, protocol number must be an 8 bit value"},
+		{s: "ipprotocol/500", errMsg: "Value had invalid format for ipprotocol, protocol number must be an 8 bit value"},
+		{s: "icmp/xyz", errMsg: "port xyz must be an integer value"},
+	}
+	for i, c := range cases {
+		err := ProtoPortRange(c.s)
+		if err == nil && c.errMsg != "" {
+			t.Errorf("Test case %d:%v Validation should have failed", i, c.s)
+		} else if err != nil && err.Error() != c.errMsg {
+			t.Errorf("Test case %d:%v Validation should have failed with %s but got %s", i, c.s, c.errMsg, err.Error())
+		}
+	}
+}
+
 func TestDuration(t *testing.T) {
 	cases := []struct {
 		input  string

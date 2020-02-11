@@ -771,7 +771,7 @@ func init() {
 	validatorMapMirror["AppProtoSelector"]["all"] = append(validatorMapMirror["AppProtoSelector"]["all"], func(path string, i interface{}) error {
 		m := i.(*AppProtoSelector)
 		for k, v := range m.ProtoPorts {
-			if err := validators.EmptyOr(validators.ProtoPort, v, nil); err != nil {
+			if err := validators.EmptyOr(validators.ProtoPortRange, v, nil); err != nil {
 				return fmt.Errorf("%v[%v] failed validation: %s", path+"."+"ProtoPorts", k, err.Error())
 			}
 		}

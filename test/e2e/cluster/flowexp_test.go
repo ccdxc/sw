@@ -41,7 +41,7 @@ var _ = Describe("flow export policy tests", func() {
 			By("cleanup flow export policy")
 			if testFlowExpSpecList, err := flowExpClient.List(ctx, &api.ListWatchOptions{}); err == nil {
 				for i := range testFlowExpSpecList {
-					By(fmt.Sprintf("delete %v", testFlowExpSpecList[i].ObjectMeta))
+					fmt.Printf("delete %v\n", testFlowExpSpecList[i].ObjectMeta)
 					flowExpClient.Delete(ctx, &testFlowExpSpecList[i].ObjectMeta)
 				}
 			}
@@ -61,7 +61,7 @@ var _ = Describe("flow export policy tests", func() {
 			By("cleanup flow exp policy")
 			if testFlowExpSpecList, err := flowExpClient.List(ctx, &api.ListWatchOptions{}); err == nil {
 				for i := range testFlowExpSpecList {
-					By(fmt.Sprintf("delete %v", testFlowExpSpecList[i].ObjectMeta))
+					fmt.Printf("delete %v \n", testFlowExpSpecList[i].ObjectMeta)
 					flowExpClient.Delete(ctx, &testFlowExpSpecList[i].ObjectMeta)
 				}
 			}
@@ -89,7 +89,7 @@ var _ = Describe("flow export policy tests", func() {
 								IPAddresses: []string{"any"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"tcp/5500"},
+								ProtoPorts: []string{"tcp/5500", "tcp/4400-4402"},
 							},
 						},
 					},
@@ -153,8 +153,6 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					fmt.Printf("naples-%v: policy  %+v\n", naples, naplesPol)
-
 					if len(naplesPol) != len(testFwSpecList) {
 						fmt.Printf("received flow export policy from naples: %v, %v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -209,8 +207,6 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
-
 					if len(naplesPol) != len(testFwSpecList) {
 						fmt.Printf("received flow export policy from naples: %v, %v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -260,8 +256,6 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
-
 					if len(naplesPol) != 0 {
 						fmt.Printf("received flow export policy from naples:%v, %+v \n", naples, naplesPol)
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected 0", naples, len(naplesPol))
@@ -278,12 +272,14 @@ var _ = Describe("flow export policy tests", func() {
 			ctx := ts.tu.MustGetLoggedInContext(pctx)
 
 			testFwSpecList := make([]monitoring.FlowExportPolicySpec, tpm.MaxNumCollectorsPerPolicy)
+			var expFlowRules int
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				testFwSpecList[i] = monitoring.FlowExportPolicySpec{
 					VrfName:  globals.DefaultVrf,
 					Interval: "10s",
 					Format:   monitoring.FlowExportPolicySpec_Ipfix.String(),
+
 					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
@@ -293,10 +289,11 @@ var _ = Describe("flow export policy tests", func() {
 								IPAddresses: []string{fmt.Sprintf("192.168.200.%d", i+1)},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
-								ProtoPorts: []string{"tcp/5500"},
+								ProtoPorts: []string{"tcp/5500-5503"},
 							},
 						},
 					},
+
 					Exports: []monitoring.ExportConfig{
 						{
 							Destination: "192.168.10.1",
@@ -308,6 +305,8 @@ var _ = Describe("flow export policy tests", func() {
 						},
 					},
 				}
+				// expected match flows
+				expFlowRules += 4
 			}
 
 			// use token api to get NAPLES access credentials
@@ -355,8 +354,6 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					fmt.Printf("naples-%v: policy  %+v \n", naples, naplesPol)
-
 					if len(naplesPol) != len(testFwSpecList) {
 						By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
 						return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), len(testFwSpecList))
@@ -372,29 +369,33 @@ var _ = Describe("flow export policy tests", func() {
 						}
 					}{}
 
-					By(fmt.Sprintf("received debug info %+v", string(st)))
+					fmt.Printf("received debug info %+v \n", string(st))
 					if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
-						By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+						fmt.Printf("received flow export debug from naples: %v, %+v \n", naples, st)
 						return err
 					}
 
-					if len(naplesDbg.FlowRuleTable) != tpm.MaxNumCollectorsPerPolicy {
-						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxNumCollectorsPerPolicy))
+					if len(naplesDbg.FlowRuleTable) != expFlowRules {
+						err := fmt.Errorf("received %d(%+v) rules, expected %v", len(naplesDbg.FlowRuleTable), naplesDbg.FlowRuleTable, tpm.MaxNumCollectorsPerPolicy)
+						fmt.Print(err)
 						return err
 					}
 
 					if len(naplesDbg.CollectorTable) != tpm.MaxNumCollectorsPerPolicy {
-						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
+						err := fmt.Errorf("received %d collectors, expected 2", len(naplesDbg.CollectorTable))
+						fmt.Print(err)
 						return err
 					}
 
 					for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxNumCollectorsPerPolicy {
-							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
+							err := fmt.Errorf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames))
+							fmt.Print(err)
 							return err
 						}
 						if len(naplesDbg.FlowRuleTable[i].PolicyNames) != 1 {
-							By(fmt.Sprintf("received %d policynames in flow-rule, expected 1", len(naplesDbg.FlowRuleTable)))
+							err := fmt.Errorf("received %d policynames in flow-rule, expected 1", len(naplesDbg.FlowRuleTable))
+							fmt.Print(err)
 							return err
 						}
 					}
@@ -406,6 +407,7 @@ var _ = Describe("flow export policy tests", func() {
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
 				expRules := tpm.MaxNumCollectorsPerPolicy - i - 1
 				expCollectors := tpm.MaxNumCollectorsPerPolicy - i*2
+				expFlowRules -= 4
 
 				flowPolicy := &monitoring.FlowExportPolicy{
 					TypeMeta: api.TypeMeta{
@@ -437,14 +439,13 @@ var _ = Describe("flow export policy tests", func() {
 
 						var naplesPol []tpmprotos.FlowExportPolicy
 						if err := json.Unmarshal([]byte(st), &naplesPol); err != nil {
-							By(fmt.Sprintf("received flow export policy from naples: %v, %+v", naples, st))
+							err := fmt.Errorf("received flow export policy from naples: %v, %+v", naples, st)
+							fmt.Print(err)
 							return err
 						}
 
-						fmt.Printf("naples-%v: policy %+v \n", naples, naplesPol)
-
 						if len(naplesPol) != expRules {
-							By(fmt.Sprintf("received flow export policy from naples: %v, %v", naples, naplesPol))
+							fmt.Printf("received flow export policy from naples: %v, %v\n", naples, naplesPol)
 							return fmt.Errorf("invalid number of policy in %v, got %d, expected %d", naples, len(naplesPol), expRules)
 						}
 
@@ -460,30 +461,36 @@ var _ = Describe("flow export policy tests", func() {
 
 						By(fmt.Sprintf("received debug info %+v", string(st)))
 						if err := json.Unmarshal([]byte(st), &naplesDbg); err != nil {
-							By(fmt.Sprintf("received flow export debug from naples: %v, %+v", naples, st))
+							err := fmt.Errorf("received flow export debug from naples: %v, %+v", naples, st)
+							fmt.Print(err)
 							return err
 						}
 
-						if len(naplesDbg.FlowRuleTable) != expRules {
-							By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules))
+						if len(naplesDbg.FlowRuleTable) != expFlowRules {
+							err := fmt.Errorf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules)
+							fmt.Print(err)
 							return err
 						}
 
-						for j := 0; j < expRules; j++ {
+						for j := 0; j < expFlowRules; j++ {
 							if len(naplesDbg.FlowRuleTable[j].PolicyNames) != 1 {
-								By(fmt.Sprintf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable)))
+								err := fmt.Errorf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable))
+								fmt.Print(err)
 								return err
 							}
 						}
 
 						if len(naplesDbg.CollectorTable) != expCollectors {
-							By(fmt.Sprintf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors))
+							err := fmt.Errorf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors)
+							fmt.Print(err)
 							return err
 						}
 
 						for j := 0; j < expCollectors; j++ {
 							if len(naplesDbg.CollectorTable[j].PolicyNames) != 1 {
-								By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[j].PolicyNames)))
+								err := fmt.Errorf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[j].PolicyNames))
+								fmt.Print(err)
+
 								return err
 							}
 						}
@@ -510,10 +517,10 @@ var _ = Describe("flow export policy tests", func() {
 					MatchRules: []*monitoring.MatchRule{
 						{
 							Src: &monitoring.MatchSelector{
-								IPAddresses: []string{fmt.Sprintf("192.168.20.%d", i+1)},
+								IPAddresses: []string{"192.168.20.11"},
 							},
 							Dst: &monitoring.MatchSelector{
-								IPAddresses: []string{fmt.Sprintf("192.168.20.%d", i+1)},
+								IPAddresses: []string{"192.168.200.11"},
 							},
 							AppProtoSel: &monitoring.AppProtoSelector{
 								ProtoPorts: []string{"tcp/5500"},
@@ -598,27 +605,38 @@ var _ = Describe("flow export policy tests", func() {
 						return err
 					}
 
-					if len(naplesDbg.FlowRuleTable) != tpm.MaxNumCollectorsPerPolicy {
-						By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), tpm.MaxNumCollectorsPerPolicy))
+					if len(naplesDbg.FlowRuleTable) != 1 {
+						err := fmt.Errorf("received %d rules, expected 1", len(naplesDbg.FlowRuleTable))
+						fmt.Print(err)
 						return err
 					}
 
-					By(fmt.Sprintf("received  info %+v", naplesDbg))
+					fmt.Printf("received  info %+v \n", naplesDbg)
 
 					if len(naplesDbg.CollectorTable) != tpm.MaxNumCollectorsPerPolicy {
-						By(fmt.Sprintf("received %d collectors, expected 2", len(naplesDbg.CollectorTable)))
+						err := fmt.Errorf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), tpm.MaxNumCollectorsPerPolicy)
+						fmt.Print(err)
 						return err
 					}
 
 					for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
-						if len(naplesDbg.CollectorTable[i].PolicyNames) != tpm.MaxNumCollectorsPerPolicy {
-							By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[i].PolicyNames)))
+						if len(naplesDbg.CollectorTable[i].PolicyNames) != 1 {
+							err := fmt.Errorf("received %d policynames in collector, expected 1", len(naplesDbg.CollectorTable[i].PolicyNames))
+							fmt.Print(err)
 							return err
 						}
-						if len(naplesDbg.FlowRuleTable[i].PolicyNames) != 1 {
-							By(fmt.Sprintf("received %d policynames in flow-rule, expected 1", len(naplesDbg.FlowRuleTable)))
-							return err
-						}
+					}
+
+					if len(naplesDbg.FlowRuleTable) != 1 {
+						err := fmt.Errorf("received %+v flows, expected 1", naplesDbg.FlowRuleTable)
+						fmt.Print(err)
+						return err
+					}
+
+					if len(naplesDbg.FlowRuleTable[0].PolicyNames) != tpm.MaxNumCollectorsPerPolicy {
+						err := fmt.Errorf("received %+v policynames in flow-rule, expected 1", naplesDbg.FlowRuleTable[0].PolicyNames)
+						fmt.Print(err)
+						return err
 					}
 
 				}
@@ -626,7 +644,7 @@ var _ = Describe("flow export policy tests", func() {
 			}, 180, 2).Should(BeNil(), "failed to find flow export policy")
 
 			for i := 0; i < tpm.MaxNumCollectorsPerPolicy; i++ {
-				expRules := tpm.MaxNumCollectorsPerPolicy - 2*i
+				expRules := 1 - i
 				expCollectors := tpm.MaxNumCollectorsPerPolicy - 1 - i
 
 				flowPolicy := &monitoring.FlowExportPolicy{
@@ -687,25 +705,29 @@ var _ = Describe("flow export policy tests", func() {
 						}
 
 						if len(naplesDbg.FlowRuleTable) != expRules {
-							By(fmt.Sprintf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules))
+							err := fmt.Errorf("received %d rules, expected %v", len(naplesDbg.FlowRuleTable), expRules)
+							fmt.Print(err)
 							return err
 						}
 
 						for j := 0; j < expRules; j++ {
 							if len(naplesDbg.FlowRuleTable[j].PolicyNames) != 1 {
-								By(fmt.Sprintf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable)))
+								err := fmt.Errorf("received %d policynames, expected 1", len(naplesDbg.FlowRuleTable))
+								fmt.Print(err)
 								return err
 							}
 						}
 
 						if len(naplesDbg.CollectorTable) != expCollectors {
-							By(fmt.Sprintf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors))
+							err := fmt.Errorf("received %d collectors, expected %d", len(naplesDbg.CollectorTable), expCollectors)
+							fmt.Print(err)
 							return err
 						}
 
 						for j := 0; j < expCollectors; j++ {
 							if len(naplesDbg.CollectorTable[j].PolicyNames) != 1 {
-								By(fmt.Sprintf("received %d policynames in collector, expected 2", len(naplesDbg.CollectorTable[j].PolicyNames)))
+								err := fmt.Errorf("received %d policynames in collector, expected 1", len(naplesDbg.CollectorTable[j].PolicyNames))
+								fmt.Print(err)
 								return err
 							}
 						}
@@ -1175,6 +1197,57 @@ var _ = Describe("flow export policy tests", func() {
 						Spec: monitoring.FlowExportPolicySpec{
 							Interval: "10s",
 							Format:   "NETFLOW",
+							Exports: []monitoring.ExportConfig{
+								{
+									Destination: "192.168.100.1",
+									Transport:   "TCP/5055",
+								},
+							},
+						},
+					},
+				},
+				{
+					name: "port range",
+					fail: true,
+					policy: monitoring.FlowExportPolicy{
+						TypeMeta: api.TypeMeta{
+							Kind: "flowExportPolicy",
+						},
+						ObjectMeta: api.ObjectMeta{
+							Namespace: globals.DefaultNamespace,
+							Name:      globals.DefaultTenant,
+							Tenant:    globals.DefaultTenant,
+						},
+
+						Spec: monitoring.FlowExportPolicySpec{
+							Interval: "10s",
+							Format:   "NETFLOW",
+							MatchRules: []*monitoring.MatchRule{
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.1"},
+									},
+
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.1.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1000-1005"},
+									},
+								},
+
+								{
+									Src: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.1"},
+									},
+									Dst: &monitoring.MatchSelector{
+										IPAddresses: []string{"1.1.2.2"},
+									},
+									AppProtoSel: &monitoring.AppProtoSelector{
+										ProtoPorts: []string{"TCP/1010-1012,1013"},
+									},
+								},
+							},
 							Exports: []monitoring.ExportConfig{
 								{
 									Destination: "192.168.100.1",

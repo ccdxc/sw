@@ -937,7 +937,7 @@
           },
           {
             "name": "app-protocol-selectors.proto-ports",
-            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port/type.",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port range.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -6170,7 +6170,7 @@
           },
           {
             "name": "app-protocol-selectors.proto-ports",
-            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port/type.",
+            "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port range.",
             "in": "query",
             "required": false,
             "type": "array",
@@ -13845,8 +13845,8 @@
           "items": {
             "type": "string"
           },
-          "example": "tcp/1234, arp",
-          "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port/type."
+          "example": "tcp/1234-1235",
+          "description": "ports - Includes protocol name and port Eg [\"tcp/1234\", \"udp\"]. Should be a valid layer 3 or layer 4 protocol and port range."
         },
         "applications": {
           "type": "array",

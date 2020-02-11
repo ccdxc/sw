@@ -205,14 +205,38 @@ func GetProtocol(protocol string) int32 {
 	//return -1
 }
 
-// GetPort extracts port from string "TCP/123"
-func GetPort(port string) int32 {
-	v, err := strconv.Atoi(strings.TrimSpace(port))
-	if err != nil {
-		log.Errorf("Found invalid port %s", port)
-		return -1
+// GetPortList extracts port from string "TCP/123,124,135"
+func GetPortList(portRange string) ([]int32, error) {
+	portList := []int32{}
+
+	// no ports ?
+	if len(portRange) == 0 {
+		return []int32{0}, nil
 	}
-	return int32(v)
+
+	for _, ports := range strings.Split(portRange, ",") {
+		values := strings.Split(ports, "-")
+		start, err := strconv.Atoi(values[0])
+		if err != nil {
+			return nil, err
+		}
+
+		if len(values) == 1 {
+			portList = append(portList, int32(start))
+
+		} else {
+			end, err := strconv.Atoi(values[1])
+			if err != nil {
+				return nil, err
+			}
+
+			for i := start; i <= end; i++ {
+				portList = append(portList, int32(i))
+			}
+		}
+	}
+
+	return portList, nil
 }
 
 func isIpv4(ip string) bool {
@@ -372,28 +396,30 @@ func ExpandCompositeMatchRule(objMeta api.ObjectMeta, rule *netproto.MatchRule, 
 			// Ports specified by controller will be in the form
 			// "tcp/5000"
 			for _, protoPort := range destSelectors.ProtoPorts {
-				protoAny := false
-				portAny := false
-				protoType := int32(0)
-				portNum := int32(0)
+				var protocol int32
 				if !strings.Contains(protoPort.Protocol, "any") {
-					protoType = GetProtocol(protoPort.Protocol)
-				} else {
-					protoAny = true
+					protocol = GetProtocol(protoPort.Protocol)
 				}
+
 				if !strings.Contains(protoPort.Port, "any") {
-					portNum = GetPort(protoPort.Port)
+					pn, err := GetPortList(protoPort.Port)
+					if err != nil {
+						log.Errorf("failed to parse port %v, %v", protoPort.Port, err)
+						continue
+					}
+
+					for _, p := range pn {
+						appPorts = append(appPorts, &types.AppPortDetails{
+							Ipproto: protocol,
+							L4port:  p,
+						})
+					}
 				} else {
-					portAny = true
+					appPorts = append(appPorts, &types.AppPortDetails{
+						Ipproto: protocol,
+					})
 				}
-				appPort := &types.AppPortDetails{}
-				if !protoAny {
-					appPort.Ipproto = protoType
-				}
-				if !portAny {
-					appPort.L4port = portNum
-				}
-				appPorts = append(appPorts, appPort)
+				log.Infof("added port %+v", appPorts)
 			}
 		} else {
 			appPort := &types.AppPortDetails{}
@@ -416,9 +442,9 @@ func CreateIPAddrCrossProductRuleList(srcIPs, destIPs []*types.IPAddrDetails, ap
 	}
 	var flowMonitorRules []*types.FlowMonitorIPRuleDetails
 
-	log.Infof("SrcIPs: %v", srcIPs)
-	log.Infof("DstIPs: %v", destIPs)
-	log.Infof("AppPorts: %v", appPorts)
+	log.Infof("SrcIPs: %+v", srcIPs)
+	log.Infof("DstIPs: %+v", destIPs)
+	log.Infof("AppPorts: %+v", appPorts)
 
 	for i := 0; i < len(srcIPs); i++ {
 		for j := 0; j < len(destIPs); j++ {

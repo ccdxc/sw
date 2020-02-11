@@ -94,7 +94,7 @@
                             "proto-ports": [
                                 {
                                     "protocol": "icmp", 
-                                    "port": "0/0"
+                                    "port": "0"
                                 }
                             ], 
                             "addresses": [
@@ -112,7 +112,7 @@
                             "proto-ports": [
                                 {
                                     "protocol": "icmp", 
-                                    "port": "0/0"
+                                    "port": "0"
                                 }
                             ], 
                             "addresses": [
