@@ -292,9 +292,18 @@ export const sideNavMenu: SideNavItem[] = [
         icon: {
           cssClass: 'material-icons',
           matIconName: 'security'
-          },
-          roleGuard: UIRolePermissions.adminrole,
+        },
+        roleGuard: UIRolePermissions.adminrole,
         link: ['/admin', 'certificate']
+      },
+      {
+        label: 'API Capture',
+        icon: {
+          cssClass: 'material-icons',
+          matIconName: 'library_books'
+        },
+        featureGuard: Features.apiCapture,
+        link: ['/admin', 'api']
       }
     ]
   },

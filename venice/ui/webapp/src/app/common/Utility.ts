@@ -8,8 +8,9 @@ import { AUTH_BODY, AUTH_KEY } from '@app/core/auth/auth.reducer';
 import { IAuthUser } from '@sdk/v1/models/generated/auth';
 import { CategoryMapping } from '@sdk/v1/models/generated/category-mapping.model';
 import { ClusterDistributedServiceCard, ClusterDistributedServiceCardStatus_admission_phase, ClusterDSCCondition, ClusterDSCCondition_status, ClusterDSCCondition_type, ClusterNode, ClusterNodeCondition_status, ClusterNodeCondition_type } from '@sdk/v1/models/generated/cluster';
-import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
 import { FieldsRequirement_operator, IFieldsSelector, MonitoringAlert } from '@sdk/v1/models/generated/monitoring';
+import { ILabelsSelector, RolloutRollout } from '@sdk/v1/models/generated/rollout';
+import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
 import { StagingBuffer, StagingCommitAction } from '@sdk/v1/models/generated/staging';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -22,7 +23,6 @@ import { Eventtypes } from '../enum/eventtypes.enum';
 import { ControllerService } from '../services/controller.service';
 import { LogService } from '../services/logging/log.service';
 import { UIConfigsService } from '../services/uiconfigs.service';
-import { SearchSearchRequest, SearchSearchRequest_mode } from '@sdk/v1/models/generated/search';
 
 /**
  * VeniceObjectCacheStore is for data-cache.
@@ -50,6 +50,10 @@ export interface VeniceObjectCache {
 export class Utility {
 
   static instance: Utility;
+
+  public static DATA_CACHE_TYPE_DSC = 'DistributedServiceCard';
+  public static DATA_CACHE_TYPE_WORKLOAD = 'Workload';
+  public static DATA_CACHE_TYPE_HOST = 'Host';
 
   // Define how long to keep cache data.
   public static DEFAULT_CACHE_DURATION: number = 1000 * 60 * 60; // 60 minutes
@@ -88,6 +92,101 @@ export class Utility {
   public static UNSUPPORTED_CATEGORIES = ['Diagnostics', 'Orchestration'];
   public static UNSUPPORTED_KINDS = ['License', 'Module', 'StatsPolicy', 'ArchiveRequest', 'Network', 'Service', 'LbPolicy', 'Orchestration', 'FirewallProfile', 'VirtualRouter', 'NetworkInterface', 'IPAMPolicy', 'RoutingConfig', 'RouteTable', 'Bucket', 'Object', 'Orchestrator', 'SecurityGroup', 'Certificate', 'TrafficEncryptionPolicy'];
 
+  public static allColors = [
+    '#97b8df',
+    '#61b3a0',
+    '#b592e3',
+    '#ff9cee',
+    '#ffb886',
+    '#ff7184',
+    '#e62e71',
+    // Following colors taken from jQuery color plugin
+    // Commented out ones that are too light
+    // aqua:
+    // "#00ffff",
+    // azure:
+    // "#f0ffff",
+    // beige:
+    // "#f5f5dc",
+    // black:
+    // "#000000",
+    // blue:
+    // "#0000ff",
+    // brown:
+    '#a52a2a',
+    // cyan:
+    // "#00ffff",
+    // darkblue:
+    '#00008b',
+    // darkcyan:
+    '#008b8b',
+    // darkgrey:
+    // "#a9a9a9",
+    // darkgreen:
+    '#006400',
+    // darkkhaki:
+    // "#bdb76b",
+    // darkmagenta:
+    '#8b008b',
+    // darkolivegreen:
+    '#556b2f',
+    // darkorange:
+    '#ff8c00',
+    // darkorchid:
+    '#9932cc',
+    // darkred:
+    '#8b0000',
+    // darksalmon:
+    '#e9967a',
+    // darkviolet:
+    '#9400d3',
+    // fuchsia:
+    // "#ff00ff",
+    // gold:
+    // "#ffd700",
+    // green:
+    '#008000',
+    // indigo:
+    '#4b0082',
+    // khaki:
+    // "#f0e68c",
+    // lightblue:
+    '#add8e6',
+    // lightcyan:
+    // "#e0ffff",
+    // lightgreen:
+    // "#90ee90",
+    // lightgrey:
+    // "#d3d3d3",
+    // lightpink:
+    '#ffb6c1',
+    // lightyellow:
+    // "#ffffe0",
+    // lime:
+    // "#00ff00",
+    // magenta:
+    // "#ff00ff",
+    // maroon:
+    '#800000',
+    // navy:
+    '#000080',
+    // olive:
+    '#808000',
+    // orange:
+    '#ffa500',
+    // pink:
+    '#ffc0cb',
+    // purple:
+    '#800080',
+    // red:
+    // "#ff0000",
+    // silver:
+    // "#c0c0c0",
+    // white:
+    // "#ffffff",
+    // yellow:
+    // "#ffff00"
+  ];
 
   myControllerService: ControllerService;
   myLogService: LogService;
@@ -96,11 +195,23 @@ export class Utility {
   private _maintenanceMode: boolean = false;
   private _currentRollout: RolloutRollout = null;
   private _enableDataCache: boolean = false;
-
+  private _veniceAPIVersion: string = 'v1';
+  public veniceAPISampleMap: RestAPIRequestResponse = {};
   // Defince data cache store
   private veniceObjectCacheStore: VeniceObjectCacheStore = {};
 
   private constructor() { }
+
+  public static convertHexColorToRGBColor(hexColor: string): string {
+    return this.convertHexColorToRGBAColor(hexColor, 1);
+  }
+
+  public static convertHexColorToRGBAColor(hexColor: string, opacity: number): string {
+    const rColor = parseInt(hexColor.substring(1, 3), 16);
+    const gColor = parseInt(hexColor.substring(3, 5), 16);
+    const bColor = parseInt(hexColor.substring(5), 16);
+    return `rgba(${rColor}, ${gColor}, ${bColor}, ${opacity})`;
+  }
 
   /**
   * Takes in a list of objects, and reads their labels to build a map
@@ -740,7 +851,7 @@ export class Utility {
     }
   }
 
-  static getLodash(): _.LoDashStatic {
+  static getLodash() {
     return _;
   }
 
@@ -1044,7 +1155,7 @@ export class Utility {
 
   public static getCategories(): any[] {
     let cats = Object.keys(CategoryMapping);
-    cats  = cats.filter( (cat) => !Utility.UNSUPPORTED_CATEGORIES.includes(cat) ); // filter out unsupported categories
+    cats = cats.filter((cat) => !Utility.UNSUPPORTED_CATEGORIES.includes(cat)); // filter out unsupported categories
     cats = cats.sort();
     return cats;
   }
@@ -1054,7 +1165,7 @@ export class Utility {
     let kinds = [];
     cats.filter((cat) => {
       let catKeys = Object.keys(CategoryMapping[cat]);
-      catKeys = catKeys.filter ( (kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
+      catKeys = catKeys.filter((kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
       kinds = kinds.concat(catKeys);
     });
     kinds = kinds.sort();
@@ -1089,8 +1200,8 @@ export class Utility {
     if (!obj) {
       return [];
     }
-    let kinds  = Object.keys(obj);
-    kinds = kinds.filter( (kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
+    let kinds = Object.keys(obj);
+    kinds = kinds.filter((kind) => !Utility.UNSUPPORTED_KINDS.includes(kind)); // filter out unsupported kinds
     return kinds;
   }
 
@@ -2075,7 +2186,85 @@ export class Utility {
     this._enableDataCache = flag;
   }
 
+  getVeniceAPIVersion(): string {
+    return this._veniceAPIVersion;
+  }
 
+  setVeniceAPIVersion(version: string) {
+    this._veniceAPIVersion = version;
+  }
+
+  /**
+   * 2020-01 api-capture feature, we use httpInterceptor to capture API.
+   * TODO: Should subscribe AJAX.end event in release B.
+   */
+  onRESTSample(request: any, response: any) {
+    // We don't use 'Features.apiCapture' here to avoid circular importing. We have to hard-code 'apiCapture' string
+    if (! (this.getUIConfigsService() && this.getUIConfigsService().isFeatureEnabled('apiCapture'))) {
+      return;
+      // Capturing API REST request-response content consumes resources. We should just let it by-pass by default
+    }
+    if (request.url.indexOf(this.getVeniceAPIVersion()) > -1) {
+      const catKind = this.findCatKindFromRequestURL(request, response);
+      const urlData: UrlData = {
+        // not all response object contains kind, such as metrics query.
+        category: catKind.category,
+        kind: catKind.kind,
+        method: request.method.toString(),
+        request: request.body,
+        response: this.checkResponseData(request, response.body),
+        url: request.url.replace(window.origin, '')
+      };
+      this.veniceAPISampleMap[request.url] = urlData;
+    }
+  }
+
+  findCatKindFromRequestURL(request: any, response: any): { category: string, kind: string } {
+    let category: string;
+    let kind: string;
+    const url: string[] = request.url.replace(window.origin, '').split(this.getVeniceAPIVersion());
+    category = url[0].split('/')[(url[0].split('/')).length - 2];
+    if (url[1].split('/').length > 2) {
+      kind = (url[1].toLowerCase().replace('/tenant/' + this.getTenant(), '')).split('/')[1];
+    } else {
+      kind = url[1].split('/')[1];
+    }
+    return {
+      category: category,
+      kind: kind
+    };
+  }
+
+  checkResponseData(request: any, responseData: any): Object {
+    try {
+      if (!responseData) {
+        return responseData;
+      }
+      if (request['url'].indexOf('/search/v1/query') >= 0) {
+        if (responseData['entries'] && responseData['entries'].length > 2) {
+          responseData['entries'].length = 2;
+          return responseData;
+        }
+      }
+      if (request['url'].indexOf('/telemetry/v1/metrics') >= 0) {
+        if (responseData['results'] && responseData['results'].length > 2) {
+          responseData['results'].length = 2;
+          return responseData;
+        }
+      }
+      if (responseData['body'] && typeof (responseData['body']['items']) !== 'undefined') {
+        const items = responseData['body']['items'];
+        if (items.length > 2) {
+          responseData['body']['items'].length = 2;
+          return responseData;
+        }
+      }
+    } catch (error) {
+      // do nothing
+      console.error('Utility.ts.checkResponseData() ', error);
+    }
+    return responseData;
+  }
   /**
    * @param kind
    * @param veniceObjectCache
@@ -2083,7 +2272,7 @@ export class Utility {
   setVeniceObjectCache(kind: string, veniceObjectCache: VeniceObjectCache) {
     if (this.isDataCacheEnabled()) {
       return this.veniceObjectCacheStore[kind] = veniceObjectCache;
-     }
+    }
   }
 
   getVeniceObjectCache(kind: string): VeniceObjectCache {
@@ -2112,7 +2301,22 @@ export class Utility {
   clearAllVeniceObjectCacheData() {
     this.veniceObjectCacheStore = {};
   }
+}
 
+export interface RestAPIRequestResponse {
+  [key: string]: UrlData;
+}
+export interface UrlData {
+  category?: string;
+  kind?: string;
+  method?: Method;
+  url?: string;
+  request?: Object;
+  response?: Object;
+  id?: number;
+  comment?: string;
+}
 
-
+export enum Method {
+  GET, PUT, POST, DELETE, WATCH
 }

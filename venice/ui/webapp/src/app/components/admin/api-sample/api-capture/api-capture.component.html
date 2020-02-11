@@ -1,0 +1,81 @@
+<app-tableheader title="{{isLiveApiTabSelect? 'Live API Capture': 'API Samples'}}"
+                 [attr.title]="isLiveApiTabSelect? 'Live API Capture': 'API Samples'" fxLayout="row"
+                 [tableMenuItems]="tableMenuItems"
+                 [enableColumnSelect]="false" [cols]="cols" [icon]="headerIcon">
+</app-tableheader>
+
+<p-table #apiCapture [columns]="cols" [value]="apiDetails" [scrollable]="true" [rows]="20"
+         rowExpandMode="single"
+         dataKey="id" styleClass="api-capture-table" sortField="category" sortOrder="1"
+         [globalFilterFields]="headerList">
+
+  <ng-template pTemplate="caption">
+    <div style="text-align: right">
+      <i class="fa fa-search"></i>
+      <input type="text" pInputText size="40" placeholder="Search"
+             (input)="apiCapture.filterGlobal($event.target.value, 'contains')" style="width:auto">
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="api-capture-expand-row"></th>
+      <th *ngFor="let col of columns" [ngStyle]="{'width':'col.width'}" [fxFlex]="col.width"
+          [pSortableColumn]="col.field" [ngClass]="col.class">
+        {{col.header}}
+      </th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-rowData let-columns="columns" let-expanded="expanded">
+    <tr class="api-capture-table-row">
+      <td>
+        <a href="#" [pRowToggler]="rowData">
+          <i [ngClass]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+        </a>
+      </td>
+      <td *ngFor="let col of columns;let i=index" [fxFlex]="col.width" [ngClass]="col.class">
+        <ng-container [ngSwitch]="col.field">
+          <ng-container *ngSwitchCase="'kind'">
+            <span [matTooltip]="rowData.comment"> {{rowData[col.field]}}
+              {{rowData.comment ? ' (' + rowData.comment + ')' : ''}} </span>
+          </ng-container>
+          <ng-container *ngSwitchCase="'url'">
+            <span (click)="downloadSelectedRow(rowData)" class="api-url"
+                  [matTooltip]="'Download api sample file ' + rowData[col.field] ">{{rowData[col.field]}}</span>
+          </ng-container>
+          <ng-container *ngSwitchDefault>
+            {{rowData[col.field]}}
+          </ng-container>
+        </ng-container>
+      </td>
+    </tr>
+  </ng-template>
+
+
+  <ng-template pTemplate="rowexpansion" let-rowData let-columns="columns">
+    <tr>
+      <td>
+        <div class="ui-g ui-fluid">
+          <div class="api-capture-detail api-capture-rowExpand">
+            <div *ngFor="let col of columns;let i=index">
+              <b> {{col.field}}</b>: {{rowData[col.field]}}
+            </div>
+            <div *ngIf="rowData.comment">
+              <b>Comment</b>: {{rowData.comment}}
+            </div>
+            <div>
+              <b>Request</b>:
+              <pre>{{convertJsonString(rowData.request)}}</pre>
+            </div>
+            <div>
+              <b>Response</b>:
+              <pre>{{convertJsonString(rowData.response)}}</pre>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+</p-table>

@@ -66,6 +66,7 @@ export class VeniceUIHttpInterceptor implements HttpInterceptor {
         tap(event => {
           if (event instanceof HttpResponse) {
             const elapsed = Date.now() - started;
+            Utility.getInstance().onRESTSample(req, event);
             this.logger.log(`VeniceUIHttpInterceptor log: Request for ${req.urlWithParams} took ${elapsed} ms.`, this.getClassName());
           }
         }),

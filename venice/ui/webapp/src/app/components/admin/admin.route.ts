@@ -60,6 +60,15 @@ const routes: Routes = [
         loadChildren: '@app/components/admin/updatecluster-tls/updatecluster-tls.module#UpdateclusterTLSModule'
       }
     ]
+  },
+  {
+    path: 'api',
+    children: [
+      {
+        path: '',
+        loadChildren: '@app/components/admin/api-sample/api-sample.module#ApiSampleModule'
+      }
+    ]
   }
   ];
 

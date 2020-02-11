@@ -17,7 +17,8 @@ export enum Features {
   showDebugMetrics = 'showDebugMetrics',
   troubleshooting = 'troubleshooting',
   securitygroup = 'securitygroup',
-  dataCache = 'dataCache'
+  dataCache = 'dataCache',
+  apiCapture = 'apiCapture'
 }
 
 interface MetricsQuery {
@@ -141,10 +142,26 @@ export class UIConfigsService {
         UIRolePermissions.monitoringflowexportpolicy_read,
       ],
     },
+    'troubleshoot/troubleshooting': {
+      requiredPerm: [
+        UIRolePermissions.adminrole,
+      ],
+      requiredFeatures: [
+        Features.troubleshooting,
+      ]
+    },
     'admin/techsupport': {
       requiredPerm: [
         UIRolePermissions.monitoringtechsupportrequest_read,
       ],
+    },
+    'admin/api': {
+      requiredPerm: [
+        UIRolePermissions.adminrole,
+      ],
+      requiredFeatures: [
+        Features.apiCapture,
+      ]
     },
   };
 
@@ -214,7 +231,6 @@ export class UIConfigsService {
   }
 
   checkMetricPermissions() {
-    console.log('sessionsummarymetrics_read');
     const authBody = JSON.parse(sessionStorage.getItem(AUTH_BODY));
     if (authBody != null && authBody.meta != null && authBody.meta.name != null) {
       const req: IAuthSubjectAccessReviewRequest = {

@@ -1,0 +1,62 @@
+@import "src/global-mixins";
+
+.api-capture-requests {
+  @include primary-font();
+}
+
+.tableheader-icon-button {
+  padding: 5px !important;
+}
+
+.api-url {
+  color: #8cafda;
+  cursor: pointer;
+}
+
+.api-url:hover {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
+
+.api-capture-requests-widget {
+  height: 100%;
+
+  .global-primeng-table .ui-table .ui-table-tbody>tr,
+  .global-primeng-table-lazyload .ui-table .ui-table-tbody>tr {
+    height: 80px;
+  }
+}
+
+.api-capture-table {
+  height: 100%;
+}
+
+.api-capture-table-row {
+  cursor: default;
+}
+
+.api-capture-expand-row {
+  width: 3em;
+}
+
+.api-samples-capture app-api-capture>p-table>div.ui-table-scrollable-body {
+  max-height: 100% !important;
+}
+
+.api-capture-detail {
+  padding: 10px;
+  width: 100%;
+  max-height: 250px;
+  overflow: auto;
+}
+
+.api-capture-detail-rowExpand-tr {
+  height: 0px !important;
+  // text-top interferes with the animation
+  vertical-align: top !important;
+
+  >td {
+    padding: 0px !important; // Padding interferes with animation on the rowexpands exit
+  }
+}

@@ -1,0 +1,18 @@
+<app-pagebody class="api-samples-capture" [icon]="bodyicon" style="height:100%">
+
+  <mat-tab-group fxFlex [disableRipple]="true"
+                 (selectedIndexChange)="selectedIndexChangeEvent($event)">
+    <mat-tab label="API Capture">
+      <ng-container *ngTemplateOutlet="ApiCaptureTemplate"></ng-container>
+    </mat-tab>
+    <mat-tab label="Live API Capture">
+      <ng-container *ngTemplateOutlet="ApiCaptureTemplate"></ng-container>
+    </mat-tab>
+  </mat-tab-group>
+</app-pagebody>
+
+<ng-template #ApiCaptureTemplate>
+  <div class="api-samples-capture-table">
+    <app-api-capture [isLiveApiTabSelect]="apiLiveTrack"></app-api-capture>
+  </div>
+</ng-template>
