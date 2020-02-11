@@ -33,6 +33,7 @@
 #include "gen/p4gen/p4/include/ftl_table.hpp"
 #include "nic/apollo/api/include/athena/pds_vnic.h"
 #include "nic/apollo/api/include/athena/pds_flow_cache.h"
+#include "nic/apollo/api/include/athena/pds_flow_session.h"
 
 namespace core {
 // number of trace files to keep
@@ -127,43 +128,16 @@ sdk_logger (sdk_trace_level_e tracel_level, const char *format, ...)
 }
 } // namespace core
 
-using sdk::table::ftl_base;
-using sdk::table::flow_hash;
+#if 0
 using sdk::table::sdk_table_api_params_t;
 using sdk::table::sdk_table_api_stats_t;
 using sdk::table::sdk_table_stats_t;
 using sdk::table::sdk_table_factory_params_t;
-
-ftl_base *flow_table;
-
-sdk_ret_t 
-insert_ (flow_hash_entry_t *flow_entry)
-{
-    sdk_table_api_params_t params;
-
-    memset(&params, 0, sizeof(params));
-    params.entry = flow_entry;
-    params.entry_size = flow_hash_entry_t::entry_size();
-    return flow_table->insert(&params);
-}
+#endif
 
 sdk_ret_t
 flow_table_init(void)
 {
-#if 0
-    sdk_table_factory_params_t  factory_params;
-
-    memset(&factory_params, 0, sizeof(factory_params));
-    factory_params.table_id = P4TBL_ID_FLOW;
-    factory_params.num_hints = 2;
-    factory_params.max_recircs = 8;
-    factory_params.key2str = NULL;
-    factory_params.appdata2str = NULL;
-    factory_params.entry_trace_en = true;
-    factory_params.entry_alloc_cb = flow_hash_entry_t::alloc;
-    flow_table = flow_hash::factory(&factory_params);
-    assert(flow_table);
-#endif
     return pds_flow_cache_create(0);
 }
 
@@ -341,6 +315,57 @@ create_h2s_v4_session_info_rewrite(uint32_t session_index,
     }
     return SDK_RET_OK;
 }
+#else
+
+#if 0
+sdk_ret_t
+create_v4_session_info_h2s(uint32_t session_index, 
+#endif
+sdk_ret_t
+create_v4_session_info_all(uint32_t session_index, 
+                    mac_addr_t *substrate_dmac, mac_addr_t *substrate_smac, uint16_t substrate_vlan,
+                    uint32_t substrate_sip, uint32_t substrate_dip, 
+                    uint16_t substrate_udp_sport, uint16_t substrate_udp_dport,
+                    uint32_t mpls1_label, uint32_t mpls2_label)
+
+{
+    sdk_ret_t                       ret = SDK_RET_OK;
+    pds_flow_session_spec_t         spec;
+
+    memset(&spec, 0, sizeof(spec));
+    spec.key.session_info_id = session_index;
+    //spec.key.direction = (HOST_TO_SWITCH | SWITCH_TO_HOST);
+    spec.key.direction = (HOST_TO_SWITCH);
+
+    spec.data.host_to_switch_flow_info.rewrite_info.strip_l2_header = TRUE;
+    spec.data.host_to_switch_flow_info.rewrite_info.strip_vlan_tag = TRUE;
+
+    spec.data.host_to_switch_flow_info.rewrite_info.user_packet_rewrite_type = REWRITE_TYPE_NONE;
+
+    spec.data.host_to_switch_flow_info.rewrite_info.encap_type = ENCAP_TYPE_MPLSOUDP;
+
+    sdk::lib::memrev(spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.dmac,
+            (uint8_t*)substrate_dmac, sizeof(mac_addr_t));
+    sdk::lib::memrev(spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.smac,
+            (uint8_t*)substrate_smac, sizeof(mac_addr_t));
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.insert_vlan_tag = TRUE;
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.l2_encap.vlan_id = substrate_vlan;
+
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_saddr = substrate_sip; 
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.ip_encap.ip_daddr = substrate_dip; 
+
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.udp_encap.udp_sport = substrate_udp_sport;
+
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls1_label = mpls1_label;
+    spec.data.host_to_switch_flow_info.rewrite_info.u.mplsoudp_encap.mpls2_label = mpls2_label;
+
+    ret = pds_flow_session_info_create(&spec);
+    if (ret != SDK_RET_OK) {
+        printf("Failed to program session info : %u\n", ret);
+    }
+    return ret;
+}
 #endif
 
 sdk_ret_t
@@ -348,34 +373,6 @@ create_v4_flow (uint16_t vnic_id, ipv4_addr_t v4_addr_sip, ipv4_addr_t v4_addr_d
         uint8_t proto, uint16_t sport, uint16_t dport,
         pds_flow_spec_index_type_t index_type, uint32_t index)
 {
-#if 0
-    flow_hash_entry_t   flow_entry;
-    ipv6_addr_t         v6_addr_sip, v6_addr_dip;
-
-    memset(&v6_addr_sip, 0, sizeof(v6_addr_sip));
-    memcpy(v6_addr_sip.addr8, &v4_addr_sip, sizeof(v4_addr_sip));
-    memset(&v6_addr_dip, 0, sizeof(v6_addr_dip));
-    memcpy(v6_addr_dip.addr8, &v4_addr_dip, sizeof(v4_addr_dip));
-
-    flow_entry.clear();
-
-    flow_entry.key_metadata_sport = sport;
-    flow_entry.key_metadata_dport = dport;
-
-    flow_entry.key_metadata_ktype = KEY_TYPE_IPV4;
-
-    flow_entry.key_metadata_proto = proto;
-
-    memcpy(flow_entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
-    memcpy(flow_entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
-
-    flow_entry.session_index = session_index;
-
-    auto ret = insert_(&flow_entry);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-#endif
     pds_flow_spec_t             spec;
 
 
@@ -431,34 +428,6 @@ vlan_to_vnic_map(uint16_t vlan_id, uint16_t vnic_id)
     return ret;
 }
 
-static void
-flow_init_h2s ()
-{
-#if 0
-    sdk_ret_t                   ret = SDK_RET_OK;
-
-    ret = create_h2s_v4_session_info(g_session_index);
-    if (ret != SDK_RET_OK) {
-        printf("Failed to program session info @ %u\n", g_session_index);
-    }
-
-    ret = create_h2s_v4_session_info_rewrite(g_session_index, &substrate_dmac,
-        &substrate_smac, substrate_vlan, substrate_sip,
-        substrate_dip, substrate_ip_ttl, substrate_udp_sport,
-        substrate_udp_dport, mpls1_label, mpls2_label);
-    if (ret != SDK_RET_OK) {
-        printf("Failed to program session info rewrite @ %u\n", g_session_index);
-    }
-
-    ret = create_h2s_v4_flow (g_h2s_port, g_h2s_vlan, g_h2s_sip,
-            g_h2s_dip, g_h2s_proto, g_h2s_sport, g_h2s_dport, g_session_index);
-    if (ret != SDK_RET_OK) {
-        printf("Failed to insert flow entry\n");
-    }
-    g_session_index++;
-#endif
-}
-
 /*
  * Switch to Host:
  * Layer 1
@@ -484,15 +453,10 @@ uint8_t g_snd_pkt_s2h[] = {
 };
 
 /*
- * Key fields 
+ * S2H Specific fields 
  */
 uint32_t    g_s2h_mpls1_label = 0x12345;
 uint32_t    g_s2h_mpls2_label = 0x6789a;
-uint32_t    g_s2h_sip = 0xc0000201;
-uint32_t    g_s2h_dip = 0x02000001;
-uint8_t     g_s2h_proto = 0x11;
-uint16_t    g_s2h_sport = 0x2710;
-uint16_t    g_s2h_dport = 0x03e8;
 
 #if 0
 sdk_ret_t
@@ -549,40 +513,6 @@ create_s2h_v4_session_info_rewrite(uint32_t session_index,
     return SDK_RET_OK;
 }
 
-sdk_ret_t
-create_s2h_v4_flow (uint8_t port, ipv4_addr_t v4_addr_sip,
-        ipv4_addr_t v4_addr_dip, uint8_t proto, uint16_t sport,
-        uint16_t dport, uint32_t session_index)
-{
-    flow_hash_entry_t   flow_entry;
-    ipv6_addr_t         v6_addr_sip, v6_addr_dip;
-
-    memset(&v6_addr_sip, 0, sizeof(v6_addr_sip));
-    memcpy(v6_addr_sip.addr8, &v4_addr_sip, sizeof(v4_addr_sip));
-    memset(&v6_addr_dip, 0, sizeof(v6_addr_dip));
-    memcpy(v6_addr_dip.addr8, &v4_addr_dip, sizeof(v4_addr_dip));
-
-    flow_entry.clear();
-
-    flow_entry.key_metadata_sport = sport;
-    flow_entry.key_metadata_dport = dport;
-
-    flow_entry.key_metadata_ktype = KEY_TYPE_IPV4;
-
-    flow_entry.key_metadata_proto = proto;
-
-    memcpy(flow_entry.key_metadata_src, v6_addr_sip.addr8, sizeof(ipv6_addr_t));
-    memcpy(flow_entry.key_metadata_dst, v6_addr_dip.addr8, sizeof(ipv6_addr_t));
-
-    flow_entry.session_index = session_index;
-
-    auto ret = insert_(&flow_entry);
-    if (ret != SDK_RET_OK) {
-        return ret;
-    }
-
-    return SDK_RET_OK;
-}
 #endif
 
 /*
@@ -592,37 +522,26 @@ mac_addr_t  ep_smac = {0x00, 0x00, 0xF1, 0xD0, 0xD1, 0xD0};
 mac_addr_t  ep_dmac = {0x00, 0x00, 0x00, 0x40, 0x08, 0x01};
 uint16_t    vnic_vlan = 0x01;
 
-/*
- * Configuration validation
- */
-uint32_t    s2h_substrate_sip = 0x64656667;
-
-
-static void
-flow_init_s2h ()
+static sdk_ret_t
+mpls_label_to_vnic_map(uint32_t mpls_label, uint16_t vnic_id)
 {
-#if 0
-    sdk_ret_t                   ret = SDK_RET_OK;
+    pds_mpls_label_to_vnic_map_spec_t       spec;
+    sdk_ret_t                               ret = SDK_RET_OK;
 
-    ret = create_s2h_v4_session_info(g_session_index, s2h_substrate_sip);
-    if (ret != SDK_RET_OK) {
-        printf("Failed to program session info @ %u\n", g_session_index);
-    }
+    spec.key.mpls_label = mpls_label;
+    spec.data.vnic_type = VNIC_TYPE_L3;
+    spec.data.vnic_id = vnic_id;
 
-    ret = create_s2h_v4_session_info_rewrite(g_session_index, &ep_dmac,
-            &ep_smac, vnic_vlan);
+    ret = pds_mpls_label_to_vnic_map_create(&spec);
     if (ret != SDK_RET_OK) {
-        printf("Failed to program session info rewrite @ %u\n", g_session_index);
+        printf("Failed to setup MPLS Label: %u to VNIC:%hu mapping\n",
+                mpls_label, vnic_id);
     }
-
-    ret = create_s2h_v4_flow (g_s2h_port, g_s2h_sip, g_s2h_dip, g_s2h_proto,
-            g_s2h_sport, g_s2h_dport, g_session_index);
-    if (ret != SDK_RET_OK) {
-        printf("Failed to insert flow entry\n");
-    }
-#endif
-    g_session_index++;
+    printf("Setup MPLS Label: %u to VNIC:%hu mapping\n",
+            mpls_label, vnic_id);
+    return ret;
 }
+
 
 sdk_ret_t
 setup_flow(void)
@@ -634,6 +553,19 @@ setup_flow(void)
     if (ret != SDK_RET_OK) {
         return ret;
     }
+
+    // Setup VNIC Mappings
+    ret = mpls_label_to_vnic_map(g_s2h_mpls2_label, g_h2s_vnic_id);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
+
+
+    ret = create_v4_session_info_all(g_session_index, 
+                    &substrate_dmac, &substrate_smac, substrate_vlan,
+                    substrate_sip, substrate_dip, 
+                    substrate_udp_sport, substrate_udp_dport,
+                    mpls1_label, mpls2_label);
 
     // Setup Normalized Flow entry
     ret = create_v4_flow(g_h2s_vnic_id, g_h2s_sip, g_h2s_dip,
@@ -740,10 +672,7 @@ main (int argc, char **argv)
         fprintf(stderr, "pipeline.json doesn't have pipeline field\n");
         exit(1);
     }
-    if ((pipeline.compare("apollo") != 0) &&
-        (pipeline.compare("artemis") != 0) &&
-        (pipeline.compare("athena") != 0) &&
-        (pipeline.compare("apulu") != 0)) {
+    if  (pipeline.compare("athena") != 0) {
         fprintf(stderr, "Unknown pipeline %s\n", pipeline.c_str());
         exit(1);
     }
@@ -786,7 +715,7 @@ main (int argc, char **argv)
     //send_packet("h2s pkt:flow-miss", g_snd_pkt_h2s_flow_miss, sizeof(g_snd_pkt_h2s_flow_miss), g_h2s_port, NULL, 0, 0);
     send_packet("h2s pkt", g_snd_pkt_h2s, sizeof(g_snd_pkt_h2s), g_h2s_port, NULL, 0, 0);
 
-    //send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);
+    send_packet("s2h pkt", g_snd_pkt_s2h, sizeof(g_snd_pkt_s2h), g_s2h_port, NULL, 0, 0);
 
 
     while (1);

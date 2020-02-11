@@ -120,8 +120,6 @@ typedef struct pds_flow_session_rewrite_info_s {
 
 /// \brief Session data
 typedef struct pds_flow_session_flow_data_s {
-    ///< Session entry valid bit
-    uint8_t                         session_info_valid;
     ///< Epoch1 value
     uint16_t                        epoch1;
     ///< Epoch1 id

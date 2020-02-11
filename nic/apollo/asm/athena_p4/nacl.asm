@@ -15,15 +15,13 @@ nacl_permit:
 .align
 nacl_redirect:
     phvwr.!c1.e     p.capri_intrinsic_drop, 1
-    sne             c2, d.u.nacl_redirect_d.redir_type, NACL_REDIR_UPLINK
-    phvwr.c2        p.p4i_to_p4e_header_redir_to_rxdma, TRUE
-    phvwr.!c2       p.p4i_to_p4e_header_forward_to_uplink, TRUE
+    //phvwr           p.control_metadata_redir_type, d.u.nacl_redirect_d.redir_type
     
-    phvwr           p.p4i_to_p4e_header_nacl_redir_oport, d.u.nacl_redirect_d.oport
-    phvwr           p.p4i_to_p4e_header_nacl_redir_lif, d.u.nacl_redirect_d.lif
-    phvwr           p.p4i_to_p4e_header_nacl_redir_qtype, d.u.nacl_redirect_d.qtype
-    phvwr           p.p4i_to_p4e_header_nacl_redir_qid, d.u.nacl_redirect_d.qid
-    phvwr           p.p4i_to_p4e_header_nacl_redir_app_id, d.u.nacl_redirect_d.app_id
+    phvwr           p.control_metadata_redir_oport, d.u.nacl_redirect_d.oport
+    phvwr           p.control_metadata_redir_lif, d.u.nacl_redirect_d.lif
+    phvwr           p.control_metadata_redir_qtype, d.u.nacl_redirect_d.qtype
+    phvwr           p.control_metadata_redir_qid, d.u.nacl_redirect_d.qid
+    phvwr           p.control_metadata_redir_app_id, d.u.nacl_redirect_d.app_id
     phvwr.e         p.capri_intrinsic_drop, 0
     phvwr           p.control_metadata_p4i_drop_reason, 0
 

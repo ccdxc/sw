@@ -7,21 +7,15 @@ action nacl_permit() {
 }
 
 action nacl_redirect(redir_type, app_id, oport, lif, qtype, qid) {
-    modify_field(p4i_to_p4e_header.redir_to_rxdma, redir_type);
-    modify_field(p4i_to_p4e_header.nacl_redir_oport, oport);
-    modify_field(p4i_to_p4e_header.nacl_redir_lif, lif);
-    modify_field(p4i_to_p4e_header.nacl_redir_qtype, qtype);
-    modify_field(p4i_to_p4e_header.nacl_redir_qid, qid);
-    modify_field(p4i_to_p4e_header.nacl_redir_app_id, app_id);
+    modify_field(control_metadata.redir_type, redir_type);
+    modify_field(control_metadata.redir_oport, oport);
+    modify_field(control_metadata.redir_lif, lif);
+    modify_field(control_metadata.redir_qtype, qtype);
+    modify_field(control_metadata.redir_qid, qid);
+    modify_field(control_metadata.redir_app_id, app_id);
 
     modify_field(capri_intrinsic.drop, 0);
     modify_field(control_metadata.p4i_drop_reason, 0);
-    if (app_id == P4PLUS_APPTYPE_CPU) {
-        modify_field(p4i_to_p4e_header.redir_to_rxdma, TRUE);
-    }
-    else {
-        modify_field(p4i_to_p4e_header.forward_to_uplink, TRUE);
-    }
 }
 
 @pragma stage 5

@@ -105,7 +105,7 @@ action session_info_per_direction(valid_flag,
 }
 
 
-@pragma stage 3
+@pragma stage 1
 @pragma hbm_table
 @pragma table_write
 @pragma index_table
@@ -119,7 +119,7 @@ table session_info_common {
     size : SESSION_TABLE_SIZE;
 }
 
-@pragma stage 3
+@pragma stage 4
 @pragma hbm_table
 @pragma table_write
 @pragma index_table
@@ -133,7 +133,7 @@ table session_info_h2s {
     size : SESSION_TABLE_SIZE;
 }
 
-@pragma stage 3
+@pragma stage 4
 @pragma hbm_table
 @pragma table_write
 @pragma index_table
@@ -150,12 +150,11 @@ table session_info_s2h {
 control session_info_lookup {
     if (control_metadata.flow_miss == FALSE) {
         apply(session_info_common);
-    }
-
-    if (control_metadata.direction == RX_FROM_SWITCH) {
-        apply(session_info_s2h);
-    }
-    else {
-        apply(session_info_h2s);
+        if (control_metadata.direction == RX_FROM_SWITCH) {
+            apply(session_info_s2h);
+        }
+        else {
+            apply(session_info_h2s);
+        }
     }
 }

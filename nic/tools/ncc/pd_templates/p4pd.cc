@@ -1229,7 +1229,7 @@ ${table}_index_mapper(uint32_t tableid,
 //::                        #endfor
 //::                    #endif
 //::                #endfor
-    return (*hwkey);
+    return (_hwkey);
 }
 //::        #endif
 

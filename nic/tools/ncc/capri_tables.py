@@ -5280,10 +5280,10 @@ class capri_gress_tm:
                         if 'index_table' in t._parsed_pragmas or \
                             (key_size < 32 and (ctable.num_entries >= (1<<key_size))):
                             ctable.match_type = match_type.EXACT_IDX
-                            if key_size > 16:
-                                ncc_assert(len(key_cfs) == 1, \
-                                    "Only one key field is supported for index table %s with idx > 16" % \
-                                    ctable.p4_table.name)
+                            #if key_size > 16:
+                            #    ncc_assert(len(key_cfs) == 1, \
+                            #        "Only one key field is supported for index table %s with idx > 16" % \
+                            #        ctable.p4_table.name)
                             for cf in key_cfs:
                                 cf.is_index_key = True
                     else:
@@ -5899,8 +5899,7 @@ class capri_table_mapper:
                                                                'depth':depth,
                                                                'layout':OrderedDict()})
             if 'hbm' in tspec.keys():
-                width = pad_to_power2(tspec['hbm']['width'])
-                width = table_width_to_allocation_units('hbm', width)
+                width = pad_to_power2(tspec['hbm']['width']) / 8
                 self.insert_table('hbm', tspec['region'], {'name':tspec['name'],
                                                               'stage':tspec['stage'],
                                                               'width':width,

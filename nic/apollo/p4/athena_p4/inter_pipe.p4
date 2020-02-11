@@ -42,9 +42,16 @@ control ingress_inter_pipe {
 /*****************************************************************************/
 action p4i_to_p4e_state() {
     if (p4i_to_p4e_header.valid == TRUE) {
-        modify_field(control_metadata.forward_to_uplink, p4i_to_p4e_header.forward_to_uplink);
-        modify_field(control_metadata.redir_to_rxdma, p4i_to_p4e_header.redir_to_rxdma);
-        modify_field(control_metadata.update_checksum, p4i_to_p4e_header.update_checksum);
+        if (p4i_to_p4e_header.flow_miss != TRUE) {
+            if (p4i_to_p4e_header.index_type == FLOW_CACHE_INDEX_TYPE_SESSION_INFO) {
+                modify_field(control_metadata.session_index, p4i_to_p4e_header.index);
+                modify_field(control_metadata.session_index_valid, TRUE);
+            }
+            if (p4i_to_p4e_header.index_type == FLOW_CACHE_INDEX_TYPE_CONNTRACK_INFO) {
+                modify_field(control_metadata.conntrack_index, p4i_to_p4e_header.index);
+                modify_field(control_metadata.conntrack_index_valid , TRUE);
+            }
+        }
     }
 }
 
@@ -56,8 +63,7 @@ table p4i_to_p4e_state {
 }
 
 action p4e_to_uplink() {
-    modify_field(capri_intrinsic.tm_oport, p4i_to_p4e_header.nacl_redir_oport);
-    modify_field(capri_intrinsic.lif, p4i_to_p4e_header.nacl_redir_lif); /* TODO: Is LIF required for uplinks? */
+    modify_field(capri_intrinsic.tm_oport, control_metadata.redir_oport);
 }
 
 @pragma stage 5
@@ -70,19 +76,18 @@ table p4e_to_uplink {
 
 action p4e_to_rxdma() {
     modify_field(capri_intrinsic.tm_oport, TM_PORT_DMA);
-    modify_field(capri_intrinsic.lif, p4i_to_p4e_header.nacl_redir_lif);
+    modify_field(capri_intrinsic.lif, control_metadata.redir_lif);
     add_header(capri_p4_intrinsic);
     add_header(capri_rxdma_intrinsic);
-    modify_field(capri_rxdma_intrinsic.qid, p4i_to_p4e_header.nacl_redir_qid);
-    modify_field(capri_rxdma_intrinsic.qtype, p4i_to_p4e_header.nacl_redir_qtype);
+    modify_field(capri_rxdma_intrinsic.qid, control_metadata.redir_qid);
+    modify_field(capri_rxdma_intrinsic.qtype, control_metadata.redir_qtype);
     modify_field(capri_rxdma_intrinsic.rx_splitter_offset,
             CAPRI_GLOBAL_INTRINSIC_HDR_SZ + CAPRI_P4_INTRINSIC_HDR_SZ +
             CAPRI_RXDMA_INTRINSIC_HDR_SZ + P4PLUS_CLASSIC_NIC_HDR_SZ);
     add_header(p4e_to_p4plus_classic_nic);
-    modify_field(p4e_to_p4plus_classic_nic.p4plus_app_id, p4i_to_p4e_header.nacl_redir_app_id);
+    modify_field(p4e_to_p4plus_classic_nic.p4plus_app_id, control_metadata.redir_app_id);
     add_header(p4e_to_p4plus_classic_nic_ip);
 
-    //modify_field(p4e_to_p4plus_classic_nic.packet_len, capri_p4_intrinsic.packet_len);
     modify_field(p4e_to_p4plus_classic_nic.packet_len, p4i_to_p4e_header.packet_len);
 
     if (ipv4_1.valid == TRUE) {

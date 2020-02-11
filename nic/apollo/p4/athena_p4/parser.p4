@@ -470,6 +470,8 @@ parser parse_mpls_src {
 
 parser parse_mpls_dst {
     extract(mpls_dst);
+    set_metadata(control_metadata.mpls_label_b20_b4, mpls_dst.label_b20_b4);
+    set_metadata(control_metadata.mpls_label_b3_b0, mpls_dst.label_b3_b0 + 0);
     return select(mpls_dst.bos) {
         0: parse_mpls_label3_1;
         default: parse_mpls_payload;

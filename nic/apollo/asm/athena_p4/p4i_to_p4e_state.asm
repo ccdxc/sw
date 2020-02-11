@@ -10,8 +10,15 @@ struct phv_                 p;
 
 p4i_to_p4e_state:
     seq             c1, k.p4i_to_p4e_header_valid, TRUE
-    phvwr.c1        p.control_metadata_forward_to_uplink, k.p4i_to_p4e_header_forward_to_uplink
-    phvwr.c1        p.control_metadata_redir_to_rxdma, k.p4i_to_p4e_header_redir_to_rxdma
+    seq.c1          c1, k.p4i_to_p4e_header_flow_miss, FALSE
+    
+    seq.c1          c2, k.p4i_to_p4e_header_index_type, FLOW_CACHE_INDEX_TYPE_SESSION_INFO
+    phvwr.c2        p.control_metadata_session_index_valid, TRUE
+    phvwr.c2        p.control_metadata_session_index, k.p4i_to_p4e_header_index
+
+    seq.c1          c2, k.p4i_to_p4e_header_index_type, FLOW_CACHE_INDEX_TYPE_CONNTRACK_INFO
+    phvwr.c2        p.control_metadata_conntrack_index_valid, TRUE
+    phvwr.c2        p.control_metadata_conntrack_index, k.p4i_to_p4e_header_index
 
     nop.e
     nop

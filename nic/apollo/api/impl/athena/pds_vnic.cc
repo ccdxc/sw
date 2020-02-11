@@ -119,12 +119,26 @@ pds_vlan_to_vnic_map_delete (pds_vlan_to_vnic_map_key_t *key)
     return SDK_RET_OK;
 }
 
+uint64_t
+static inline pds_mpls_label_to_hw_id(uint32_t mpls_label)
+{
+    mpls_label_to_vnic_swkey_t  swkey;
+    uint64_t    hw_idx;
+
+    swkey.control_metadata_mpls_label_b20_b4 = (mpls_label >> 4);
+    swkey.control_metadata_mpls_label_b3_b0 = (mpls_label & 0x000f);
+    hw_idx = p4pd_index_to_hwindex_map(P4TBL_ID_MPLS_LABEL_TO_VNIC, (void*) &swkey);
+    PDS_TRACE_ERR("mpls_label: %x: hwidx: %x\n", mpls_label, (uint32_t)hw_idx);
+    return hw_idx;
+}
+
 sdk_ret_t
 pds_mpls_label_to_vnic_map_create (pds_mpls_label_to_vnic_map_spec_t *spec)
 {
     p4pd_error_t p4pd_ret;
     uint32_t mpls_label;
     mpls_label_to_vnic_actiondata_t mpls_label_to_vnic_actiondata = { 0 };
+    uint64_t                    hw_idx = 0;
     
     if (!spec) {
         PDS_TRACE_ERR("spec is null");
@@ -142,8 +156,9 @@ pds_mpls_label_to_vnic_map_create (pds_mpls_label_to_vnic_map_spec_t *spec)
         spec->data.vnic_id;
     mpls_label_to_vnic_actiondata.action_u.mpls_label_to_vnic_mpls_label_to_vnic.vnic_type =
         spec->data.vnic_type;
+    hw_idx = pds_mpls_label_to_hw_id(mpls_label);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_MPLS_LABEL_TO_VNIC,
-                                       mpls_label, NULL, NULL,
+                                       hw_idx, NULL, NULL,
                                        &mpls_label_to_vnic_actiondata);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to write mpls label to vnic table at index %u",
@@ -160,6 +175,7 @@ pds_mpls_label_to_vnic_map_read (pds_mpls_label_to_vnic_map_key_t *key,
     p4pd_error_t p4pd_ret;
     uint32_t mpls_label;
     mpls_label_to_vnic_actiondata_t mpls_label_to_vnic_actiondata = { 0 };
+    uint64_t                    hw_idx = 0;
  
     if (!key || !info) {
         PDS_TRACE_ERR("key/info is null");
@@ -171,8 +187,9 @@ pds_mpls_label_to_vnic_map_read (pds_mpls_label_to_vnic_map_key_t *key,
         return SDK_RET_INVALID_ARG;
     }
 
+    hw_idx = pds_mpls_label_to_hw_id(mpls_label);
     p4pd_ret = p4pd_global_entry_read(P4TBL_ID_MPLS_LABEL_TO_VNIC,
-                                      mpls_label, NULL, NULL,
+                                      hw_idx, NULL, NULL,
                                       &mpls_label_to_vnic_actiondata);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to read mpls label to vnic table at index %u",
@@ -198,6 +215,7 @@ pds_mpls_label_to_vnic_map_delete (pds_mpls_label_to_vnic_map_key_t *key)
     p4pd_error_t p4pd_ret;
     uint32_t mpls_label;
     mpls_label_to_vnic_actiondata_t mpls_label_to_vnic_actiondata = { 0 };
+    uint64_t                    hw_idx = 0;
  
     if (!key) {
         PDS_TRACE_ERR("key is null");
@@ -209,8 +227,9 @@ pds_mpls_label_to_vnic_map_delete (pds_mpls_label_to_vnic_map_key_t *key)
         return SDK_RET_INVALID_ARG;
     }
 
+    hw_idx = pds_mpls_label_to_hw_id(mpls_label);
     p4pd_ret = p4pd_global_entry_write(P4TBL_ID_MPLS_LABEL_TO_VNIC,
-                                       mpls_label, NULL, NULL,
+                                       hw_idx, NULL, NULL,
                                        &mpls_label_to_vnic_actiondata);
     if (p4pd_ret != P4PD_SUCCESS) {
         PDS_TRACE_ERR("Failed to clear mpls label to vnic table at index %u",

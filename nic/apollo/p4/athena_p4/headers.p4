@@ -240,12 +240,17 @@ header_type vxlan_t {
     }
 }
 
+/*
+ * The MPLS label has been split into 2 parts
+ * to be able to setup metadata directly in the parser
+ */
 header_type mpls_t {
     fields {
-        label : 20;
-        exp : 3;
-        bos : 1;
-        ttl : 8;
+        label_b20_b4            : 16;
+        label_b3_b0             : 4;
+        exp                     : 3;
+        bos                     : 1;
+        ttl                     : 8;
     }
 }
 
@@ -265,23 +270,12 @@ header_type p4i_to_p4e_header_t {
     fields {
         index                   : 22;
         index_type              : 1;
-        counterset1             : 24;
-        counterset2             : 24;
-        histogram               : 24;
+        pad0                    : 1;
         packet_len              : 16;
-        nacl_redir_oport        : 4;
-        nacl_redir_app_id       : 4;
-        nacl_redir_lif          : 11;
-        nacl_redir_qtype        : 3;
-        pad0                    : 2;
-        nacl_redir_qid          : 24;
-        packet_type             : 2;
         flow_miss               : 1;
-        forward_to_uplink       : 1;
-        redir_to_rxdma          : 1;
         direction               : 1;
         update_checksum         : 1;
-        pad1                    : 1;
+        pad1                    : 6;
     }
 }
 

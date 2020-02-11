@@ -100,7 +100,7 @@ action offloads() {
 
     if ((scratch_metadata.update_ip_chksum == TRUE) or
         (scratch_metadata.update_l4_chksum == TRUE)) {
-        //modify_field(p4i_i2e.update_checksum, TRUE);
+        modify_field(p4i_to_p4e_header.update_checksum, TRUE);
     }
 }
 

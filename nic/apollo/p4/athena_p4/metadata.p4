@@ -55,7 +55,10 @@ header_type control_metadata_t {
         add_vlan_tag_flag                   : 1;
         nat_type                            : 2;
         encap_type                          : 2;
-        mpls_label                          : 20;
+        mpls_label_b20_b4                   : 16;
+        mpls_label_b3_b0                    : 8;
+
+        /* Rewrite info */
         nat_address                         : 128;
         dmac                                : 48;
         smac                                : 48;
@@ -67,8 +70,9 @@ header_type control_metadata_t {
         mpls_label1                         : 20;
         mpls_label2                         : 20;
         mpls_label3                         : 20;
+
+        /* Session Info */
         egress_action                       : 3;
-        p4plus_app_id                       : 8;
         statistics_id                       : 9;
         histogram_id                        : 9;
         allowed_flow_state_bitmask          : 10;
@@ -82,10 +86,19 @@ header_type control_metadata_t {
         epoch2_id                           : 20;
         throttle_pps                        : 13;
         throttle_bw                         : 13;
+
         rx_packet_len                       : 14;
         tx_packet_len                       : 14;
         p4i_drop_reason                     : 32;
         p4e_drop_reason                     : 32;
+
+        // NACL Results
+        redir_type          : 1;
+        redir_oport         : 4;
+        redir_lif           : 11;
+        redir_qtype         : 3;
+        redir_qid           : 24;
+        redir_app_id        : 4;
     }
 }
 
@@ -166,6 +179,15 @@ header_type scratch_metadata_t {
         // Conntrack
         flow_type           : 2;
         flow_state          : 4;
+
+        // NACL Results
+        redir_type          : 1;
+        redir_oport         : 4;
+        redir_lif           : 11;
+        redir_qtype         : 3;
+        redir_qid           : 24;
+        redir_app_id        : 4;
+        
     }
 }
 

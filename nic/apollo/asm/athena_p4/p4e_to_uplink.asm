@@ -25,4 +25,4 @@ p4e_to_uplink:
                         capri_intrinsic_valid }, 0x03
 
 
-    phvwr           p.capri_intrinsic_tm_oport, k.p4i_to_p4e_header_nacl_redir_oport
+    phvwr           p.capri_intrinsic_tm_oport, k.control_metadata_redir_oport
