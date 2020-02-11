@@ -222,10 +222,11 @@ NBB_VOID evpn_ip_vrf_rt_fill_name_oid (EvpnIpVrfRtSpec& req, NBB_ULONG *oid);
 NBB_VOID evpn_ip_vrf_get_name_field (EvpnIpVrfSpec* req, AMB_EVPN_IP_VRF *data);
 NBB_VOID evpn_ip_vrf_rt_get_name_field (EvpnIpVrfRtSpec* req,
                                         AMB_EVPN_IP_VRF_RT *data);
-NBB_VOID rtm_strt_fill_func (CPStaticRouteSpec&      req,
-                             AMB_GEN_IPS             *mib_msg,
-                             AMB_CIPR_RTM_STATIC_RT  *data,
-                             NBB_LONG                row_status);
+NBB_VOID rtm_strt_set_fill_func (CPStaticRouteSpec&      req,
+                                 AMB_GEN_IPS             *mib_msg,
+                                 AMB_CIPR_RTM_STATIC_RT  *data,
+                                 NBB_LONG                row_status);
+NBB_VOID rtm_strt_get_fill_func (CPStaticRouteSpec& req, NBB_ULONG *oid);
 NBB_VOID lim_intf_addr_fill_func (LimInterfaceAddrSpec&  req,
                                   AMB_GEN_IPS           *mib_msg,
                                   AMB_LIM_L3_IF_ADDR    *data,

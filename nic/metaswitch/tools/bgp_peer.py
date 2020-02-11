@@ -27,6 +27,8 @@ def process_response(req_msg, resp_msg):
             print ("Spec: Password : %s" % spec.Password)
             print ("Spec: AdminStatus : %d" % spec.State)
             print ("Spec: RetryInterval : %d" % spec.ConnectRetry)
+            print ("Spec: HoldTime : %d" % spec.HoldTime)
+            print ("Spec: KeepAlive: %d" % spec.KeepAlive)
             status = resp.Status
             print ("Status: LocalAddr: %s" % long2ip(socket.ntohl(spec.LocalAddr.V4Addr)))
             print ("Status: PeerAddr : %s" % long2ip(socket.ntohl(spec.PeerAddr.V4Addr)))
@@ -48,6 +50,7 @@ def create_peer():
     req_msg.ConnectRetry = 10
     req_msg.SendComm = 2;
     req_msg.SendExtComm = 2;
+    req_msg.Password = "test"
     resp = stub.BGPPeerCreate(req)     
     process_response(req, resp)
     return
@@ -63,6 +66,8 @@ def update_peer():
     req_msg.LocalAddr.V4Addr = laddr
     req_msg.RemoteASN = int(input("enter remote ASN: "))
     req_msg.ConnectRetry = int (input ("enter retry interval: "))
+    req_msg.HoldTime = int(input("enter Holdtime: "))
+    req_msg.KeepAlive = int(input("enter KeepAliveTimer: "))
     req_msg.SendComm = 2;
     req_msg.SendExtComm = 2;
     resp = stub.BGPPeerUpdate(req)

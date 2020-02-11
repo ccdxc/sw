@@ -16,6 +16,7 @@ service CPRouteSvc
   rpc CPStaticRouteCreate (CPStaticRouteRequest) returns (CPStaticRouteResponse) {}
   rpc CPStaticRouteUpdate(CPStaticRouteRequest) returns (CPStaticRouteResponse) {}
   rpc CPStaticRouteDelete (CPStaticRouteRequest) returns (CPStaticRouteResponse) {}
+  rpc CPStaticRouteGet (CPStaticRouteRequest) returns (CPStaticRouteGetResponse) {}
   rpc CPRouteGet (CPRouteGetRequest) returns (CPRouteGetResponse) {}
 }
 
@@ -56,7 +57,7 @@ message CPRouteStatus {
   // type of route
   RouteType       Type          = 6 [(venice.pdsaFields) = {Field:"type"}];
   // protocol via which the route is learned
-  RouteProtocol   proto         = 7 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
+  RouteProtocol   Proto         = 7 [(venice.pdsaFields) = {Field:"proto", GetKeyOidIndex: "AMB_QCR_RIB_PROTO_INDEX"}];
 }
 
 // control plane route object
@@ -80,7 +81,12 @@ message CPStaticRouteSpec {
   option (venice.pdsaSetGlobOpts) = {
     OidLen: "AMB_QCR_STRT_OID_LEN",
     Mib:    "rtmStaticRtTable"
-    FillFn: "rtm_strt_fill_func"
+    FillFn: "rtm_strt_set_fill_func"
+  };
+  option (venice.pdsaGetGlobOpts) = {
+    OidLen: "AMB_QCR_STRT_OID_LEN",
+    Mib:    "rtmStaticRtTable"
+    FillFn: "rtm_strt_get_fill_func"
   };
     
   // route table id this route belongs to
@@ -88,7 +94,7 @@ message CPStaticRouteSpec {
   // destination address 
   types.IPAddress DestAddr     = 2 [(venice.pdsaFields) = {Field: "dest_addr", IsZeroIPValid: True, SetKeyOidAddrIndex: "AMB_QCR_STRT_DEST_ADDR_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_STRT_DEST_ADDR_TYPE_IX"}];
   // destination address prefix length
-  uint32          PrefixLen    = 3 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
+  uint32          PrefixLen    = 3 [(venice.pdsaFields) = {Field: "dest_len", SetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX", GetKeyOidIndex: "AMB_QCR_STRT_DEST_LEN_INDEX"}];
   // next-hop address
   types.IPAddress NextHopAddr  = 4 [(venice.pdsaFields) = {Field: "next_hop", IsZeroIPValid: True, SetKeyOidAddrIndex: "AMB_QCR_STRT_NEXT_HOP_INDEX", SetKeyOidAddrTypeIndex: "AMB_QCR_STRT_NEXT_HOP_TYPE_IX"}];
   // route is enabled or not
@@ -100,7 +106,7 @@ message CPStaticRouteSpec {
 
   // internal only
   bytes           InterfaceId  = 1000; // outgoing interface UUID needed on pegasus
-  uint32          IfIndex      = 1001 [(venice.pdsaFields) = {Field: "if_index", SetKeyOidIndex: "AMB_QCR_STRT_IF_INDEX_INDEX"}];
+  uint32          IfIndex      = 1001 [(venice.pdsaFields) = {Field: "if_index", SetKeyOidIndex: "AMB_QCR_STRT_IF_INDEX_INDEX", GetKeyOidIndex: "AMB_QCR_STRT_IF_INDEX_INDEX"}];
 }
 
 // control plane static route create, delete and update message
@@ -112,8 +118,18 @@ message CPStaticRouteRequest {
 message CPStaticRouteStatus {
 }
 
-// response message
+// control plane static route object
+message CPStaticRoute {
+    CPStaticRouteSpec Spec = 1;
+}
+
+// response messages
 message CPStaticRouteResponse {
   types.ApiStatus     ApiStatus = 1;
   CPStaticRouteStatus Response  = 2;
+}
+
+message CPStaticRouteGetResponse {
+  types.ApiStatus        ApiStatus = 1;
+  repeated CPStaticRoute Response  = 2;
 }

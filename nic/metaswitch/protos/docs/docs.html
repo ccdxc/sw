@@ -967,6 +967,14 @@
                 </li>
               
                 <li>
+                  <a href="#pds.CPStaticRoute"><span class="badge">M</span>CPStaticRoute</a>
+                </li>
+              
+                <li>
+                  <a href="#pds.CPStaticRouteGetResponse"><span class="badge">M</span>CPStaticRouteGetResponse</a>
+                </li>
+              
+                <li>
                   <a href="#pds.CPStaticRouteRequest"><span class="badge">M</span>CPStaticRouteRequest</a>
                 </li>
               
@@ -6367,10 +6375,63 @@ as cluster ID </p></td>
                 </tr>
               
                 <tr>
-                  <td>proto</td>
+                  <td>Proto</td>
                   <td><a href="#pds.RouteProtocol">RouteProtocol</a></td>
                   <td></td>
                   <td><p>protocol via which the route is learned </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds.CPStaticRoute">CPStaticRoute</h3>
+        <p>control plane static route object</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>Spec</td>
+                  <td><a href="#pds.CPStaticRouteSpec">CPStaticRouteSpec</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="pds.CPStaticRouteGetResponse">CPStaticRouteGetResponse</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>ApiStatus</td>
+                  <td><a href="#pds..types.ApiStatus">.types.ApiStatus</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>Response</td>
+                  <td><a href="#pds.CPStaticRoute">CPStaticRoute</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
                 </tr>
               
             </tbody>
@@ -6403,7 +6464,7 @@ as cluster ID </p></td>
         
       
         <h3 id="pds.CPStaticRouteResponse">CPStaticRouteResponse</h3>
-        <p>response message</p>
+        <p>response messages</p>
 
         
           <table class="field-table">
@@ -6629,6 +6690,13 @@ outgoing interface UUID needed on pegasus </p></td>
                 <td>CPStaticRouteDelete</td>
                 <td><a href="#pds.CPStaticRouteRequest">CPStaticRouteRequest</a></td>
                 <td><a href="#pds.CPStaticRouteResponse">CPStaticRouteResponse</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>CPStaticRouteGet</td>
+                <td><a href="#pds.CPStaticRouteRequest">CPStaticRouteRequest</a></td>
+                <td><a href="#pds.CPStaticRouteGetResponse">CPStaticRouteGetResponse</a></td>
                 <td><p></p></td>
               </tr>
             

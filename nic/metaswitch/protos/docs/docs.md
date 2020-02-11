@@ -227,6 +227,8 @@
     - [CPRouteGetRequest](#pds.CPRouteGetRequest)
     - [CPRouteGetResponse](#pds.CPRouteGetResponse)
     - [CPRouteStatus](#pds.CPRouteStatus)
+    - [CPStaticRoute](#pds.CPStaticRoute)
+    - [CPStaticRouteGetResponse](#pds.CPStaticRouteGetResponse)
     - [CPStaticRouteRequest](#pds.CPStaticRouteRequest)
     - [CPStaticRouteResponse](#pds.CPStaticRouteResponse)
     - [CPStaticRouteSpec](#pds.CPStaticRouteSpec)
@@ -2357,7 +2359,38 @@ control plane route table
 | NHAddr | [.types.IPAddress](#pds..types.IPAddress) |  | next-hop address |
 | IfIndex | [uint32](#uint32) |  | interface index, if the next-hop is an interface |
 | Type | [RouteType](#pds.RouteType) |  | type of route |
-| proto | [RouteProtocol](#pds.RouteProtocol) |  | protocol via which the route is learned |
+| Proto | [RouteProtocol](#pds.RouteProtocol) |  | protocol via which the route is learned |
+
+
+
+
+
+
+<a name="pds.CPStaticRoute"/>
+
+### CPStaticRoute
+control plane static route object
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| Spec | [CPStaticRouteSpec](#pds.CPStaticRouteSpec) |  |  |
+
+
+
+
+
+
+<a name="pds.CPStaticRouteGetResponse"/>
+
+### CPStaticRouteGetResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| ApiStatus | [.types.ApiStatus](#pds..types.ApiStatus) |  |  |
+| Response | [CPStaticRoute](#pds.CPStaticRoute) | repeated |  |
 
 
 
@@ -2382,7 +2415,7 @@ control plane static route create, delete and update message
 <a name="pds.CPStaticRouteResponse"/>
 
 ### CPStaticRouteResponse
-response message
+response messages
 
 
 | Field | Type | Label | Description |
@@ -2473,6 +2506,7 @@ Control Plane Route service definition
 | CPStaticRouteCreate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
 | CPStaticRouteUpdate | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
 | CPStaticRouteDelete | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteResponse](#pds.CPStaticRouteRequest) |  |
+| CPStaticRouteGet | [CPStaticRouteRequest](#pds.CPStaticRouteRequest) | [CPStaticRouteGetResponse](#pds.CPStaticRouteRequest) |  |
 | CPRouteGet | [CPRouteGetRequest](#pds.CPRouteGetRequest) | [CPRouteGetResponse](#pds.CPRouteGetRequest) |  |
 
  

@@ -298,7 +298,7 @@ message BGPNLRIPrefixStatus {
   // prefix in NLRI
   bytes      Prefix           = 3 [(venice.pdsaFields) = {Field: "prfx", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_INDEX" GetKeyOidLenIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
   // prefix length
-  uint32     PrefixLen        = 4 [(venice.pdsaFields) = {Field: "prefxlen", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
+  uint32     PrefixLen        = 4 [(venice.pdsaFields) = {Field: "prfxlen", GetKeyOidIndex: "AMB_BGP_NLPF_PRFX_LEN_INDEX"}];
   // route source (learned from BGP peer or AFM)
   NLRISrc    RouteSource      = 5 [(venice.pdsaFields) = {Field: "peer_or_afm", GetKeyOidIndex: "AMB_BGP_NLPF_PEER_OR_AFM_INDEX"}];
   // route source index

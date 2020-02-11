@@ -9,10 +9,10 @@
 
 namespace pds {
 NBB_VOID
-rtm_strt_fill_func (CPStaticRouteSpec&      req,
-                    AMB_GEN_IPS             *mib_msg,
-                    AMB_CIPR_RTM_STATIC_RT  *data,
-                    NBB_LONG                row_status)
+rtm_strt_set_fill_func (CPStaticRouteSpec&      req,
+                        AMB_GEN_IPS             *mib_msg,
+                        AMB_CIPR_RTM_STATIC_RT  *data,
+                        NBB_LONG                row_status)
 {
     // Local variables
     NBB_ULONG *oid = (NBB_ULONG *)((NBB_BYTE *)mib_msg + mib_msg->oid_offset);
@@ -24,6 +24,13 @@ rtm_strt_fill_func (CPStaticRouteSpec&      req,
 
     data->action                   = ATG_QC_ROUTE_ACTION_FORWARD;
     AMB_SET_FIELD_PRESENT (mib_msg, AMB_OID_QCR_STRT_ACTION);
+}
+
+NBB_VOID
+rtm_strt_get_fill_func (CPStaticRouteSpec& req, NBB_ULONG *oid)
+{
+    // For now, static route will always be configured on default VRF
+    oid[AMB_QCR_STRT_FTE_INDEX_INDEX] = PDS_MS_RTM_DEF_ENT_INDEX;
 }
 
 NBB_VOID

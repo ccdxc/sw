@@ -162,29 +162,31 @@ Status
                       {{$param := (getPdsaGetGlobalOpts $statusMsg $cam)}}
                       {{$struct := $param.Struct}}
                       {{$specType := getCppTypeFieldFromProto .Type .GetTypeName}}
-                {{$specType}} proto_status;
-                      {{range $statusMsg.Fields}}
-                        {{if hasExtension "venice.pdsaFields" .}}
-                          {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
-                          {{if not (eq $fieldOpt.IsReadOnly true)}}
-                            {{if (eq $fieldOpt.IsKey true) }}
-                              {{if (eq .GetTypeName ".types.IPAddress")}}
-                auto {{$fieldOpt.Name | ToLower}}_addr = proto_status.mutable_{{$fieldOpt.Name | ToLower}}();
-                {{$fieldOpt.Name | ToLower}}_addr->set_af(proto_spec.{{.GetName | ToLower}}().af());
-                {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(proto_spec.{{.GetName | ToLower}}().v4addr());
+                if (ret == types::API_STATUS_OK) {
+                    {{$specType}} proto_status;
+                    {{range $statusMsg.Fields}}
+                      {{if hasExtension "venice.pdsaFields" .}}
+                        {{$fieldOpt := (getPdsaFieldOpt . $cam $struct)}}
+                        {{if not (eq $fieldOpt.IsReadOnly true)}}
+                          {{if (eq $fieldOpt.IsKey true) }}
+                            {{if (eq .GetTypeName ".types.IPAddress")}}
+                    auto {{$fieldOpt.Name | ToLower}}_addr = proto_status.mutable_{{$fieldOpt.Name | ToLower}}();
+                    {{$fieldOpt.Name | ToLower}}_addr->set_af(proto_spec.{{.GetName | ToLower}}().af());
+                    {{$fieldOpt.Name | ToLower}}_addr->set_v4addr(proto_spec.{{.GetName | ToLower}}().v4addr());
                               {{else}}
-                proto_status.set_{{.GetName | ToLower}}(proto_spec.{{.GetName | ToLower}}());
+                    proto_status.set_{{.GetName | ToLower}}(proto_spec.{{.GetName | ToLower}}());
                               {{end}}
                             {{end}}
                           {{end}}
                         {{end}}
                       {{end}}  
-                PDS_MS_GET_SHARED_START();
-                pds_ms_pre_get_{{$struct | ToLower}}(proto_status, resp);
-                pds_ms_get_{{$struct | ToLower}}(proto_status, resp);
-                pds_ms_post_get_{{$struct | ToLower}}(proto_status, resp);
-                PDS_MS_GET_SHARED_END();
-                ret = pds_ms::mgmt_state_t::ms_response_wait();
+                    PDS_MS_GET_SHARED_START();
+                    pds_ms_pre_get_{{$struct | ToLower}}(proto_status, resp);
+                    pds_ms_get_{{$struct | ToLower}}(proto_status, resp);
+                    pds_ms_post_get_{{$struct | ToLower}}(proto_status, resp);
+                    PDS_MS_GET_SHARED_END();
+                    ret = pds_ms::mgmt_state_t::ms_response_wait();
+                }
                     {{end}}
                   {{end}}
                 {{end}}
