@@ -679,9 +679,14 @@ func (sm *SysModel) CheckNaplesHealth(node *objects.Naples) error {
 		log.Errorf("%v", nerr)
 		return nerr
 	}
-
+	mode := "OOB"
+	for _, naples := range sm.NaplesNodes {
+		if naples.Nodeuuid == node.Nodeuuid && naples.GetTestNode().InstanceParams().Resource.InbandMgmt {
+			mode = "INBAND"
+		}
+	}
 	// check naples status
-	if naplesStatus.Spec.Mode != "NETWORK" || naplesStatus.Spec.NetworkMode != "OOB" {
+	if naplesStatus.Spec.Mode != "NETWORK" || naplesStatus.Spec.NetworkMode != mode {
 		nerr := fmt.Errorf("Invalid NMD mode configuration: %+v", naplesStatus.Spec)
 		log.Errorf("%v", nerr)
 		return nerr
@@ -765,6 +770,10 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode) error {
 	trig := sm.Tb.NewTrigger()
 	for _, node := range nodes {
 		if testbed.IsNaplesHW(node.Personality) {
+			modeNW := "oob"
+			if node.InstanceParams().Resource.InbandMgmt {
+				modeNW = "inband"
+			}
 			for _, naplesConfig := range node.NaplesConfigs.Configs {
 
 				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
@@ -793,8 +802,8 @@ func (sm *SysModel) DoModeSwitchOfNaples(nodes []*testbed.TestNode) error {
 				// trigger mode switch
 				for _, naples := range node.NaplesConfigs.Configs {
 					penctlNaplesURL := "http://" + naples.NaplesIpAddress
-					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
-						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
+					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network %s --controllers %s --id %s --primary-mac %s",
+						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, modeNW, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
 					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
 				}
 			}

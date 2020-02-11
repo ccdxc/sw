@@ -749,26 +749,29 @@ message TestBedMsg {
     // First one will always be native vlan
     repeated uint32 allocated_vlans     = 6;
 
+    // Native vlan for the testbed
+    uint32  native_vlan                 = 7;
+
     // List of node IP addresses
-    repeated TestBedNode nodes          = 7;
+    repeated TestBedNode nodes          = 8;
 
     // Node username
-    string username                     = 8;
+    string username                     = 9;
 
     // Node password
-    string password                     = 9;
+    string password                     = 10;
 
     // Testbed ID
-    uint32 testbed_id                   = 10;
+    uint32 testbed_id                   = 11;
 
     // DataSwitch
-    repeated DataSwitch data_switches   = 11;
+    repeated DataSwitch data_switches   = 12;
 
     // Reboot Nodes
-    bool reboot_nodes                   = 12;
+    bool reboot_nodes                   = 13;
 
     // global licenses
-    repeated License licenses           = 13;
+    repeated License licenses           = 14;
 }
 
 message TestNodesMsg {
@@ -957,6 +960,9 @@ message TestBedNode {
     string license                  = 23;
 
     ApcInfo apc_info                = 24;
+
+    //mgmt intf
+    string mgmt_intf                = 25;
 }
 
 // CopyDirection defines direction whether to copy in or copy out

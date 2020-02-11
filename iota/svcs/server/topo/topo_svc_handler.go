@@ -128,6 +128,9 @@ func (ts *TopologyService) InstallImage(ctx context.Context, req *iota.TestBedMs
 				cmd += fmt.Sprintf(" --cimc-ip %s", node.CimcIpAddress)
 				cmd += fmt.Sprintf(" --image %s/nic/naples_fw.tar", wsdir)
 				cmd += fmt.Sprintf(" --mode hostpin")
+				if node.MgmtIntf != "" {
+					cmd += fmt.Sprintf(" --mgmt-intf %v", node.MgmtIntf)
+				}
 				if node.ServerType != "" {
 					cmd += fmt.Sprintf("  --server %v", node.ServerType)
 				}
@@ -265,7 +268,7 @@ func (ts *TopologyService) InitTestBed(ctx context.Context, req *iota.TestBedMsg
 	if req.DataSwitches != nil && req.TestbedId != 0 {
 		//Allocate only if TB ID chabged or vlan not allocated
 		if ts.switchProgrammingRequired(req) {
-			if vlans, err = testbed.SetUpTestbedSwitch(req.DataSwitches, req.TestbedId); err != nil {
+			if vlans, err = testbed.SetUpTestbedSwitch(req.DataSwitches, req.TestbedId, req.NativeVlan); err != nil {
 				log.Errorf("TOPO SVC | InitTestBed | Could not initialize switch id: %d, Err: %v", req.TestbedId, err)
 				req.ApiResponse.ErrorMsg = fmt.Sprintf("Switch configuration failed %d. Err: %v", req.TestbedId, err)
 				return req, nil

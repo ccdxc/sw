@@ -76,12 +76,14 @@ type InstanceParams struct {
 		NICType    string // NIC type (naples, intel, mellanox etc)
 		NICUuid    string // NIC's mac address
 		ServerType string // baremetal server type (server-a or server-d)
+		InbandMgmt bool
 		Network    struct {
 			Address string
 			Gateway string
 			IPRange string
 		}
 	}
+
 	DataNetworks []DataNetworkParams // data networks
 	Nics         []Nic
 }
@@ -95,6 +97,48 @@ type Params struct {
 		Vars     map[string]string // custom variables passed from .job.yml
 	}
 	Instances []InstanceParams // nodes in the testbed
+	Network   struct {
+		VlanID int
+	}
+}
+
+func (n Nic) isNaples() bool {
+	switch n.Type {
+	case "naples":
+		fallthrough
+	case "pensando":
+		return true
+	}
+
+	return false
+}
+
+const (
+	naplesInband  = "inb_mnic0"
+	naplesOutband = "oob_mnic0"
+)
+
+func (inst *InstanceParams) getNicMgmtIP() (string, error) {
+
+	useInband := false
+	if inst.Resource.InbandMgmt {
+		useInband = true
+	}
+
+	for _, nic := range inst.Nics {
+		if nic.isNaples() {
+			for _, port := range nic.Ports {
+				if useInband && port.Name == naplesInband {
+					return port.IP, nil
+				}
+				if !useInband && port.Name == naplesOutband {
+					return port.IP, nil
+				}
+			}
+		}
+	}
+
+	return inst.NicMgmtIP, nil
 }
 
 // TestNode contains state of a node in the testbed
@@ -640,7 +684,7 @@ func (tb *TestBed) setupVeniceIPs(node *TestNode) error {
 }
 
 func (tb *TestBed) setupNode(node *TestNode) error {
-
+	var err error
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 	tbn := iota.TestBedNode{
 		Type:                node.Type,
@@ -655,6 +699,13 @@ func (tb *TestBed) setupNode(node *TestNode) error {
 		NicUuid:             node.instParams.Resource.NICUuid,
 		NodeName:            node.NodeName,
 	}
+
+	tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
+	if err != nil {
+		return err
+	}
+	node.instParams.NicMgmtIP = tbn.NicIpAddress
+
 	// set esx user name when required
 	if node.topoNode.HostOS == "vcenter" {
 		tbn.Os = iota.TestBedNodeOs_TESTBED_NODE_OS_VCENTER
@@ -763,6 +814,11 @@ func (tb *TestBed) DeleteNodes(nodes []*TestNode) error {
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
 		}
+		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
+		if err != nil {
+			return err
+		}
+		node.instParams.NicMgmtIP = tbn.NicIpAddress
 		// set esx user name when required
 		if node.topoNode.HostOS == "esx" {
 			tbn.EsxUsername = tb.Params.Provision.Vars["EsxUsername"]
@@ -1152,6 +1208,7 @@ func (tb *TestBed) saveNaplesCache() error {
 // setupTestBed sets up testbed
 func (tb *TestBed) setupTestBed() error {
 
+	var err error
 	tb.initNaplesCache()
 	client := iota.NewTopologyApiClient(tb.iotaClient.Client)
 
@@ -1165,6 +1222,7 @@ func (tb *TestBed) setupTestBed() error {
 		ApiResponse:    &iota.IotaAPIResponse{},
 		Nodes:          []*iota.TestBedNode{},
 		DataSwitches:   []*iota.DataSwitch{},
+		NativeVlan:     uint32(tb.Params.Network.VlanID),
 	}
 
 	if tb.Params.Provision.Vars["VcenterUsername"] != "" {
@@ -1192,6 +1250,11 @@ func (tb *TestBed) setupTestBed() error {
 			NicUuid:             node.instParams.Resource.NICUuid,
 			NodeName:            node.NodeName,
 		}
+		tbn.NicIpAddress, err = node.instParams.getNicMgmtIP()
+		if err != nil {
+			return err
+		}
+		node.instParams.NicMgmtIP = tbn.NicIpAddress
 
 		//For now hack up until we get the vendor information
 		if node.instParams.Resource.ServerType == "hpe" {
@@ -1499,231 +1562,6 @@ func (tb *TestBed) setupTestBed() error {
 	//Start naples console logging for debugging
 	return tb.StartNaplesConsoleLogging()
 }
-
-/*
-// SetUpNaplesAuthenticationOnHosts changes naples to managed mode
-func (sm *SysModel) SetUpNaplesAuthenticationOnHosts(hc *HostCollection) error {
-
-	testNodes := []*TestNode{}
-
-	for _, node := range hc.hosts {
-		for _, testNode := range sm.tb.Nodes {
-			if node.iotaNode.Name == testNode.iotaNode.Name {
-				testNodes = append(testNodes, testNode)
-			}
-		}
-	}
-
-	return sm.joinNaplesToVenice(testNodes)
-}
-
-func (sm *SysModel) joinNaplesToVenice(nodes []*TestNode) error {
-
-	// get token ao authenticate to agent
-	veniceCtx, err := sm.VeniceLoggedInCtx(context.Background())
-	if err != nil {
-		nerr := fmt.Errorf("Could not get Venice logged in context: %v", err)
-		log.Errorf("%v", nerr)
-		return nerr
-	}
-
-	ctx, cancel := context.WithTimeout(veniceCtx, 180*time.Second)
-	defer cancel()
-	var token string
-	for i := 0; true; i++ {
-
-		token, err = utils.GetNodeAuthToken(ctx, sm.GetVeniceURL()[0], []string{"*"})
-		if err == nil {
-			break
-		}
-		if i == 6 {
-
-			nerr := fmt.Errorf("Could not get naples authentication token from Venice: %v", err)
-			log.Errorf("%v", nerr)
-			return nerr
-		}
-	}
-
-	//After reloading make sure we setup the host
-	trig := sm.tb.NewTrigger()
-	for _, node := range nodes {
-		if IsNaplesHW(node.Personality) {
-			cmd := fmt.Sprintf("echo \"%s\" > %s", token, agentAuthTokenFile)
-			trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			for _, naples := range node.NaplesConfigs.Configs {
-				penctlNaplesURL := "http://" + naples.NaplesIpAddress
-				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s update ssh-pub-key -f ~/.ssh/id_rsa.pub",
-					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
-				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-				//enable sshd
-				cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s  -a %s system enable-sshd",
-					penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, agentAuthTokenFile)
-				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-			}
-		}
-	}
-
-	resp, err := trig.Run()
-	if err != nil {
-		return fmt.Errorf("Error update public key on naples. Err: %v", err)
-	}
-
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("Changing naples mode failed. %+v", cmdResp)
-			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
-				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
-		}
-	}
-
-	trig = sm.tb.NewTrigger()
-	//Make sure we can run command on naples
-	for _, node := range nodes {
-		if IsNaplesHW(node.Personality) {
-			for _, naples := range node.NaplesConfigs.Configs {
-				trig.AddCommand(fmt.Sprintf("date"), naples.Name, node.NodeName)
-			}
-		}
-	}
-
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("Running commad on naples failed after mode switch. %+v", cmdResp)
-			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v",
-				cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
-		}
-	}
-
-	return nil
-}
-*/
-/*
- * Create system config file to eanble cosole with out triggering
- * authentivcation.
- */
-const NaplesConfigSpecLocal = "/tmp/system-config.json"
-
-/*
-type ConsoleMode struct {
-	Console string `json:"console"`
-}
-
-func CreateConfigConsoleNoAuth() {
-	var ConfigSpec = []byte(`
-        {"console":"enable"}`)
-
-	consolemode := ConsoleMode{}
-	json.Unmarshal(ConfigSpec, &consolemode)
-
-	ConfigSpecJson, _ := json.Marshal(consolemode)
-	ioutil.WriteFile(NaplesConfigSpecLocal, ConfigSpecJson, 0644)
-}
-
-func (sm *SysModel) doModeSwitchOfNaples(nodes []*TestNode) error {
-
-	if os.Getenv("REBOOT_ONLY") != "" {
-		log.Infof("Skipping naples setup as it is just reboot")
-		return nil
-	}
-
-	log.Infof("Setting up Naples in network managed mode")
-
-	// set date, untar penctl and trigger mode switch
-	trig := sm.tb.NewTrigger()
-	for _, node := range nodes {
-		if IsNaplesHW(node.Personality) {
-			for _, naplesConfig := range node.NaplesConfigs.Configs {
-
-				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
-				err := sm.tb.CopyToHost(node.NodeName, []string{penctlPkgName}, "")
-				if err != nil {
-					return fmt.Errorf("Error copying penctl package to host. Err: %v", err)
-				}
-				// untar the package
-				cmd := fmt.Sprintf("tar -xvf %s", filepath.Base(penctlPkgName))
-				trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-
-				// clean up roots of trust, if any
-				trig.AddCommand(fmt.Sprintf("rm -rf %s", globals.NaplesTrustRootsFile), naplesConfig.Name, node.NodeName)
-
-				// disable watchdog for naples
-				trig.AddCommand(fmt.Sprintf("touch /data/no_watchdog"), naplesConfig.Name, node.NodeName)
-
-				// Set up config file to enable console unconditionally (i.e.
-				// with out triggering authentication).
-				CreateConfigConsoleNoAuth()
-				err = sm.tb.CopyToNaples(node.NodeName, []string{NaplesConfigSpecLocal}, globals.NaplesConfig)
-				if err != nil {
-					return fmt.Errorf("Error copying config spec file to Naples. Err: %v", err)
-				}
-
-				// trigger mode switch
-				for _, naples := range node.NaplesConfigs.Configs {
-					penctlNaplesURL := "http://" + naples.NaplesIpAddress
-					cmd = fmt.Sprintf("NAPLES_URL=%s %s/entities/%s_host/%s/%s update naples --managed-by network --management-network oob --controllers %s --id %s --primary-mac %s",
-						penctlNaplesURL, hostToolsDir, node.NodeName, penctlPath, penctlLinuxBinary, veniceIPs, naplesConfig.Name, naplesConfig.NodeUuid)
-					trig.AddCommand(cmd, node.NodeName+"_host", node.NodeName)
-				}
-			}
-		} else if node.Personality == iota.PersonalityType_PERSONALITY_NAPLES_SIM {
-			// trigger mode switch on Naples sim
-			for _, naplesConfig := range node.NaplesConfigs.Configs {
-				veniceIPs := strings.Join(naplesConfig.VeniceIps, ",")
-				cmd := fmt.Sprintf("LD_LIBRARY_PATH=/naples/nic/lib64 /naples/nic/bin/penctl update naples --managed-by network --management-network oob --controllers %s --mgmt-ip %s/16  --primary-mac %s --id %s --localhost", veniceIPs, naplesConfig.ControlIp, naplesConfig.NodeUuid, naplesConfig.Name)
-				trig.AddCommand(cmd, naplesConfig.Name, node.iotaNode.Name)
-			}
-		}
-	}
-	resp, err := trig.Run()
-	if err != nil {
-		return fmt.Errorf("Error untaring penctl package. Err: %v", err)
-	}
-	log.Debugf("Got trigger resp: %+v", resp)
-
-	// check the response
-	for _, cmdResp := range resp {
-		if cmdResp.ExitCode != 0 {
-			log.Errorf("Changing naples mode failed. %+v", cmdResp)
-			return fmt.Errorf("Changing naples mode failed. exit code %v, Out: %v, StdErr: %v", cmdResp.ExitCode, cmdResp.Stdout, cmdResp.Stderr)
-
-		}
-	}
-
-	// reload naples
-	var hostNames string
-	nodeMsg := &iota.NodeMsg{
-		ApiResponse: &iota.IotaAPIResponse{},
-		Nodes:       []*iota.Node{},
-	}
-	for _, node := range nodes {
-		if IsNaplesHW(node.Personality) {
-			nodeMsg.Nodes = append(nodeMsg.Nodes, &iota.Node{Name: node.iotaNode.Name})
-			hostNames += node.iotaNode.Name + ", "
-
-		}
-	}
-	log.Infof("Reloading Naples: %v", hostNames)
-
-	reloadMsg := &iota.ReloadMsg{
-		NodeMsg: nodeMsg,
-	}
-	// Trigger App
-	topoClient := iota.NewTopologyApiClient(sm.tb.iotaClient.Client)
-	reloadResp, err := topoClient.ReloadNodes(context.Background(), reloadMsg)
-	if err != nil {
-		return fmt.Errorf("Failed to reload Naples %+v. | Err: %v", reloadMsg.NodeMsg.Nodes, err)
-	} else if reloadResp.ApiResponse.ApiStatus != iota.APIResponseType_API_STATUS_OK {
-		return fmt.Errorf("Failed to reload Naples %v. API Status: %+v | Err: %v", reloadMsg.NodeMsg.Nodes, reloadResp.ApiResponse, err)
-	}
-
-	return nil
-}
-
-*/
 
 // cleanUpNaplesConfig cleans up naples config
 func (tb *TestBed) cleanUpNaplesConfig(nodes []*TestNode) error {

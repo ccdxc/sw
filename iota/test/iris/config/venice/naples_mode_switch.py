@@ -6,6 +6,11 @@ import iota.harness.api as api
 import iota.test.iris.testcases.penctl.common as common
 
 
+def __get_mgmt_nw()
+    if os.environ.get("JOB_ID") is not None:
+        return "inband"
+    return "oob"
+
 def Main(step):
     req = api.Trigger_CreateExecuteCommandsRequest(serial = True)
     venice_ips = api.GetVeniceMgmtIpAddresses()
@@ -16,7 +21,7 @@ def Main(step):
         cmd = "date -s '{}'".format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         api.Trigger_AddNaplesCommand(req, n, cmd)
         api.Logger.info("Running mode switch on node : %s" % n)
-        mode_switch_cmd = "update naples --managed-by network --management-network oob --hostname {} --primary-mac {}".format(n, uuidMap[n])
+        mode_switch_cmd = "update naples --managed-by network --management-network oob --hostname {} --primary-mac {}".format(__get_mgmt_nw(), n, uuidMap[n])
         common.AddPenctlCommand(req, n, mode_switch_cmd)
 
     resp = api.Trigger(req)

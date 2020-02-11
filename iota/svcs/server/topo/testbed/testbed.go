@@ -724,7 +724,7 @@ func DoSwitchOperation(ctx context.Context, req *iota.SwitchMsg) (err error) {
 }
 
 // SetUpTestbedSwitch allocates vlans based on the switch port ID
-func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vlans []uint32, err error) {
+func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32, nativeVlan uint32) (vlans []uint32, err error) {
 
 	getSpeed := func(speed iota.DataSwitch_Speed) dataswitch.PortSpeed {
 		switch speed {
@@ -744,8 +744,10 @@ func SetUpTestbedSwitch(dsSwitches []*iota.DataSwitch, switchPortID uint32) (vla
 
 	//First one will always be native vlan
 	inBandVlans := constants.InbandVlanEnd - constants.InbandVlanStart
-	nativeVlan := constants.InbandVlanStart + (switchPortID % (uint32)(inBandVlans))
-	vlans = append(vlans, nativeVlan)
+	if nativeVlan == 0 {
+		nativeVlan = constants.InbandVlanStart + (switchPortID % (uint32)(inBandVlans))
+		vlans = append(vlans, nativeVlan)
+	}
 
 	startTrunkVlan := (switchPortID * constants.VlansPerTestBed) % constants.MaxDataVlanRange
 	if startTrunkVlan == 0 {

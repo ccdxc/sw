@@ -21,7 +21,6 @@ from enum import auto, Enum, unique
 HOST_NAPLES_DIR                 = "/naples"
 NAPLES_TMP_DIR                  = "/data"
 HOST_ESX_NAPLES_IMAGES_DIR      = "/home/vm"
-NAPLES_OOB_NIC                  = "oob_mnic0"
 UPGRADE_TIMEOUT                 = 600
 NAPLES_CONFIG_SPEC_LOCAL        = "/tmp/system-config.json"
 
@@ -100,6 +99,8 @@ parser.add_argument('--mnic-ip', dest='mnic_ip',
                     default="", help='Mnic IP.')
 parser.add_argument('--oob-ip', dest='oob_ip',
                     default=None, help='Oob IP.')
+parser.add_argument('--mgmt-intf', dest='mgmt_intf',
+                    default="oob_mnic0", help='Management Interface (oob_mnic0 or bond0).')
 parser.add_argument('--naples-mem-size', dest='mem_size',
                     default=None, help='Naples memory size')
 parser.add_argument('--skip-driver-install', dest='skip_driver_install',
@@ -479,7 +480,7 @@ class NaplesManagement(EntityManagement):
 
     def __run_dhclient(self):
         try:
-            self.SendlineExpect("dhclient " + NAPLES_OOB_NIC, "#", timeout = 10)
+            self.SendlineExpect("dhclient " + GlobalOptions.mgmt_intf, "#", timeout = 10)
         except:
             #Send Ctrl-c as we did not get IP
             self.SendlineExpect('\003', "#")
@@ -602,7 +603,7 @@ class NaplesManagement(EntityManagement):
 
     def ReadExternalIP(self):
         self.__run_dhclient()
-        output = self.RunCommandOnConsoleWithOutput("ifconfig oob_mnic0")
+        output = self.RunCommandOnConsoleWithOutput("ifconfig " + GlobalOptions.mgmt_intf)
         ifconfig_regexp = "addr:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
         x = re.findall(ifconfig_regexp, output)
         if len(x) > 0:
