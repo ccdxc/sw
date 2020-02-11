@@ -17,7 +17,7 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_policy_spec_t *api_spec;
+    pds_policy_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -42,23 +42,18 @@ SecurityPolicySvcImpl::SecurityPolicyCreate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_policy_spec_t *)
-                   core::agent_state::state()->policy_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        ret = pds_policy_proto_to_api_spec(api_spec,
+        memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+        ret = pds_policy_proto_to_api_spec(&api_spec,
                                            proto_req->request(i));
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = core::policy_create(&key, api_spec, bctxt);
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rules);
-            api_spec->rules = NULL;
+        ret = core::policy_create(&key, &api_spec, bctxt);
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;
@@ -89,7 +84,7 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
     sdk_ret_t ret;
     pds_batch_ctxt_t bctxt;
     pds_obj_key_t key = { 0 };
-    pds_policy_spec_t *api_spec;
+    pds_policy_spec_t api_spec;
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
@@ -114,23 +109,18 @@ SecurityPolicySvcImpl::SecurityPolicyUpdate(ServerContext *context,
     }
 
     for (int i = 0; i < proto_req->request_size(); i ++) {
-        api_spec = (pds_policy_spec_t *)
-                   core::agent_state::state()->policy_slab()->alloc();
-        if (api_spec == NULL) {
-            ret = SDK_RET_OOM;
-            goto end;
-        }
-        ret = pds_policy_proto_to_api_spec(api_spec,
+        memset(&api_spec, 0, sizeof(pds_policy_spec_t));
+        ret = pds_policy_proto_to_api_spec(&api_spec,
                                            proto_req->request(i));
         if (unlikely(ret != SDK_RET_OK)) {
             goto end;
         }
         auto request = proto_req->request(i);
         pds_obj_key_proto_to_api_spec(&key, request.id());
-        ret = core::policy_update(&key, api_spec, bctxt);
-        if (api_spec->rules != NULL) {
-            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec->rules);
-            api_spec->rules = NULL;
+        ret = core::policy_update(&key, &api_spec, bctxt);
+        if (api_spec.rules != NULL) {
+            SDK_FREE(PDS_MEM_ALLOC_SECURITY_POLICY, api_spec.rules);
+            api_spec.rules = NULL;
         }
         if (ret != SDK_RET_OK) {
             goto end;

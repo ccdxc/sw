@@ -77,6 +77,12 @@ public:
     ///            if not found
     security_profile *remove(security_profile *profile);
 
+    /// \brief API to walk all the db elements
+    /// \param[in] walk_cb    callback to be invoked for every node
+    /// \param[in] ctxt       opaque context passed back to the callback
+    /// \return   SDK_RET_OK on success, failure status code on error
+    sdk_ret_t walk(state_walk_cb_t walk_cb, void *ctxt) override;
+
     /// \brief      free security security profile instance back to slab
     /// \param[in]  profile   pointer to the allocated security profile instance
     void free(security_profile *profile);

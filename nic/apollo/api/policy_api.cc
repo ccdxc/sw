@@ -71,6 +71,40 @@ pds_policy_read (_In_ pds_obj_key_t *key, _Out_ pds_policy_info_t *info)
     return entry->read(info);
 }
 
+typedef struct pds_policy_read_args_s {
+    policy_read_cb_t cb;
+    void *ctxt;
+} pds_policy_read_args_t;
+
+bool
+pds_policy_info_from_entry (void *entry, void *ctxt)
+{
+    policy *pol = (policy *)entry;
+    pds_policy_read_args_t *args = (pds_policy_read_args_t *)ctxt;
+    pds_policy_info_t info;
+
+    memset(&info, 0, sizeof(pds_policy_info_t));
+
+    // call entry read
+    pol->read(&info);
+
+    // call cb on info
+    args->cb(&info, args->ctxt);
+
+    return false;
+}
+
+sdk_ret_t
+pds_policy_read_all (policy_read_cb_t policy_read_cb, void *ctxt)
+{
+    pds_policy_read_args_t args = {0};
+
+    args.ctxt = ctxt;
+    args.cb = policy_read_cb;
+
+    return policy_db()->walk(pds_policy_info_from_entry, &args);
+}
+
 sdk_ret_t
 pds_policy_update (_In_ pds_policy_spec_t *spec, _In_ pds_batch_ctxt_t bctxt)
 {

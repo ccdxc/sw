@@ -72,7 +72,7 @@ pds_meter_read (_In_ pds_obj_key_t *key, _Out_ pds_meter_info_t *info)
     return entry->read(info);
 }
 
-typedef struct pds_lif_read_args_s {
+typedef struct pds_meter_read_args_s {
     meter_read_cb_t cb;
     void *ctxt;
 } pds_meter_read_args_t;

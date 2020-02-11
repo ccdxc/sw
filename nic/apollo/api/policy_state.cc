@@ -72,6 +72,11 @@ policy_state::find_policy(pds_obj_key_t *policy_key) const {
     return (policy *)(policy_ht_->lookup(policy_key));
 }
 
+sdk_ret_t
+policy_state::walk(state_walk_cb_t walk_cb, void *ctxt) {
+    return policy_ht_->walk(walk_cb, ctxt);
+}
+
 security_profile *
 policy_state::alloc_security_profile(void) {
     return ((security_profile *)security_profile_slab_->alloc());

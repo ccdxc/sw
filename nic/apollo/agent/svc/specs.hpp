@@ -2170,7 +2170,7 @@ pds_policy_api_stats_to_proto (pds::SecurityPolicyStats *proto_stats,
 
 // populate proto buf from policy API info
 static inline void
-pds_policy_api_info_to_proto (const pds_policy_info_t *api_info, void *ctxt)
+pds_policy_api_info_to_proto (pds_policy_info_t *api_info, void *ctxt)
 {
     pds::SecurityPolicyGetResponse *proto_rsp = (pds::SecurityPolicyGetResponse *)ctxt;
     auto policy = proto_rsp->add_response();

@@ -157,12 +157,6 @@ cfg_db::init(void) {
     }
     route_table_map_ = new(mem) route_table_db_t();
 
-    mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(policy_db_t));
-    if (mem == NULL) {
-        return false;
-    }
-    policy_map_ = new(mem) policy_db_t();
-
     mem = CALLOC(MEM_ALLOC_ID_INFRA, sizeof(mirror_session_db_t));
     if (mem == NULL) {
         return false;
@@ -203,9 +197,6 @@ cfg_db::init(void) {
     slabs_[SLAB_ID_NEXTHOP_GROUP] =
         slab::factory("nh-group", SLAB_ID_NEXTHOP_GROUP, sizeof(pds_nexthop_group_spec_t),
                       16, true, true, true);
-    slabs_[SLAB_ID_POLICY] =
-        slab::factory("policy", SLAB_ID_POLICY, sizeof(pds_policy_spec_t),
-                      16, true, true, true);
     slabs_[SLAB_ID_MIRROR] =
         slab::factory("mirror_session", SLAB_ID_MIRROR,
                       sizeof(pds_mirror_session_spec_t),
@@ -226,7 +217,6 @@ cfg_db::cfg_db() {
     tag_map_ = NULL;
     route_table_map_ = NULL;
     mirror_session_map_ = NULL;
-    policy_map_ = NULL;
     nh_map_ = NULL;
     nh_group_map_ = NULL;
     memset(&device_, 0, sizeof(pds_device_spec_t));
@@ -269,7 +259,6 @@ cfg_db::~cfg_db() {
     FREE(MEM_ALLOC_ID_INFRA, tag_map_);
     FREE(MEM_ALLOC_ID_INFRA, route_table_map_);
     FREE(MEM_ALLOC_ID_INFRA, mirror_session_map_);
-    FREE(MEM_ALLOC_ID_INFRA, policy_map_);
     FREE(MEM_ALLOC_ID_INFRA, nh_map_);
     FREE(MEM_ALLOC_ID_INFRA, nh_group_map_);
     for (i = SLAB_ID_MIN; i < SLAB_ID_MAX; i++) {
@@ -600,33 +589,6 @@ agent_state::route_table_db_walk(route_table_walk_cb_t cb, void *ctxt) {
     }
 
     return SDK_RET_OK;
-}
-
-sdk_ret_t
-agent_state::add_to_policy_db(pds_obj_key_t *key, pds_policy_spec_t *spec) {
-    ADD_TO_OBJ_DB(policy, key, spec);
-}
-
-pds_policy_spec_t *
-agent_state::find_in_policy_db(pds_obj_key_t *key) {
-    FIND_IN_OBJ_DB(policy, key);
-}
-
-sdk_ret_t
-agent_state::policy_db_walk(policy_walk_cb_t cb, void *ctxt) {
-    auto it_begin = DB_BEGIN(policy);
-    auto it_end = DB_END(policy);
-
-    for (auto it = it_begin; it != it_end; it ++) {
-        cb(it->second, ctxt);
-    }
-
-    return SDK_RET_OK;
-}
-
-bool
-agent_state::del_from_policy_db(pds_obj_key_t *key) {
-    DEL_FROM_OBJ_DB(policy, key);
 }
 
 sdk_ret_t

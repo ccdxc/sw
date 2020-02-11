@@ -175,6 +175,14 @@ sdk_ret_t pds_policy_create(pds_policy_spec_t *policy,
 /// \return    #SDK_RET_OK on success, failure status code on error
 sdk_ret_t pds_policy_read(pds_obj_key_t *key, pds_policy_info_t *info);
 
+typedef void (*policy_read_cb_t)(pds_policy_info_t *info, void *ctxt);
+
+/// \brief      read all policy
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t pds_policy_read_all(policy_read_cb_t policy_get_cb, void *ctxt);
+
 /// \brief    update policy
 /// \param[in] policy    policy configuration
 /// \param[in] bctxt batch context if API is invoked in a batch

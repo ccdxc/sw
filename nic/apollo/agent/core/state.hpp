@@ -15,7 +15,6 @@
 #include "nic/apollo/api/include/pds_tep.hpp"
 #include "nic/apollo/api/include/pds_vnic.hpp"
 #include "nic/apollo/api/include/pds_route.hpp"
-#include "nic/apollo/api/include/pds_policy.hpp"
 #include "nic/apollo/api/include/pds_mirror.hpp"
 #include "nic/apollo/api/include/pds_tag.hpp"
 #include "nic/apollo/api/include/pds_nexthop.hpp"
@@ -33,7 +32,6 @@ typedef sdk_ret_t (*subnet_walk_cb_t)(pds_subnet_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*service_walk_cb_t)(pds_svc_mapping_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*vnic_walk_cb_t)(pds_vnic_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*tag_walk_cb_t)(pds_tag_spec_t *spec, void *ctxt);
-typedef sdk_ret_t (*policy_walk_cb_t)(pds_policy_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*route_table_walk_cb_t)(pds_route_table_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*tep_walk_cb_t)(pds_tep_spec_t *spec, void *ctxt);
 typedef sdk_ret_t (*nh_walk_cb_t)(pds_nexthop_spec_t *spec, void *ctxt);
@@ -51,10 +49,8 @@ typedef enum slab_id_e {
     SLAB_ID_SERVICE,
     SLAB_ID_TEP,
     SLAB_ID_VNIC,
-    SLAB_ID_METER,
     SLAB_ID_TAG,
     SLAB_ID_ROUTE,
-    SLAB_ID_POLICY,
     SLAB_ID_MIRROR,
     SLAB_ID_NEXTHOP,
     SLAB_ID_NEXTHOP_GROUP,
@@ -70,7 +66,6 @@ typedef unordered_map<pds_obj_key_t, pds_tep_spec_t *, pds_obj_key_hash> tep_db_
 typedef unordered_map<pds_obj_key_t, pds_vnic_spec_t *, pds_obj_key_hash> vnic_db_t;
 typedef unordered_map<pds_obj_key_t, pds_route_table_spec_t *, pds_obj_key_hash> route_table_db_t;
 typedef unordered_map<pds_obj_key_t, pds_tag_spec_t *, pds_obj_key_hash> tag_db_t;
-typedef unordered_map<pds_obj_key_t, pds_policy_spec_t*, pds_obj_key_hash> policy_db_t;
 typedef unordered_map<uint32_t, pds_mirror_session_spec_t *> mirror_session_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_spec_t *, pds_obj_key_hash> nh_db_t;
 typedef unordered_map<pds_obj_key_t, pds_nexthop_group_spec_t *, pds_obj_key_hash> nh_group_db_t;
@@ -92,7 +87,6 @@ public:
     vnic_db_t *vnic_map(void) { return vnic_map_; }
     tag_db_t *tag_map(void) { return tag_map_; }
     route_table_db_t *route_table_map(void) { return route_table_map_; }
-    policy_db_t *policy_map(void) { return policy_map_; }
     nh_db_t *nh_map(void) { return nh_map_; }
     nh_group_db_t *nh_group_map(void) { return nh_group_map_; }
     const pds_obj_key_t& underlay_vpc(void) const { return underlay_vpc_; }
@@ -131,9 +125,6 @@ public:
     slab_ptr_t route_table_slab(void) const {
         return slabs_[SLAB_ID_ROUTE];
     }
-    slab_ptr_t policy_slab(void) const {
-        return slabs_[SLAB_ID_POLICY];
-    }
     slab_ptr_t mirror_session_slab(void) const {
         return slabs_[SLAB_ID_MIRROR];
     }
@@ -161,7 +152,6 @@ private:
     vnic_db_t *vnic_map_;
     tag_db_t *tag_map_;
     route_table_db_t *route_table_map_;
-    policy_db_t *policy_map_;
     pds_device_spec_t device_;
     mirror_session_db_t *mirror_session_map_;
     slab_ptr_t slabs_[SLAB_ID_MAX - SLAB_ID_MIN + 1];
@@ -250,13 +240,6 @@ public:
         return cfg_db_->route_table_slab();
     }
 
-    sdk_ret_t add_to_policy_db(pds_obj_key_t *key,
-                               pds_policy_spec_t *spec);
-    pds_policy_spec_t *find_in_policy_db(pds_obj_key_t *key);
-    bool del_from_policy_db(pds_obj_key_t *key);
-    sdk_ret_t policy_db_walk(policy_walk_cb_t cb, void *ctxt);
-    slab_ptr_t policy_slab(void) const { return cfg_db_->policy_slab(); }
-
     const pds_obj_key_t& underlay_vpc(void) const {
         return cfg_db_->underlay_vpc();
     }
@@ -300,7 +283,6 @@ private:
     route_table_db_t *route_table_map(void) const { return
         cfg_db_->route_table_map();
     }
-    policy_db_t *policy_map(void) const { return cfg_db_->policy_map();  }
     mirror_session_db_t *mirror_session_map(void) const {
         return cfg_db_->mirror_session_map();
     }
