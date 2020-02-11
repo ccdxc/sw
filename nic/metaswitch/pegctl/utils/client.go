@@ -20,7 +20,7 @@ func CreateNewGRPCClient() (*grpc.ClientConn, error) {
 	if pdsPort == "" {
 		pdsPort = pegasusGRPCDefaultPort
 	}
-	srvURL := pegasusGRPCDefaultBaseURL + ":" + pegasusGRPCDefaultPort
+	srvURL := pegasusGRPCDefaultBaseURL + ":" + pdsPort
 	var grpcOpts []grpc.DialOption
 	grpcOpts = append(grpcOpts, grpc.WithMaxMsgSize(math.MaxInt32-1))
 	grpcOpts = append(grpcOpts, grpc.WithInsecure())
