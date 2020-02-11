@@ -22,6 +22,8 @@ message TypeMeta {
 message ListMeta {
   // Resource version of object store at the time of list generation.
   string ResourceVersion = 1 [(gogoproto.jsontag) = "resource-version,omitempty"];
+  // TotalCount is the total count of results (non paginated) that the server holds
+  int32 TotalCount = 2 [(gogoproto.jsontag) = "total-count,omitempty"];
 }
 
 message Timestamp {
@@ -103,10 +105,13 @@ message ListWatchOptions {
   string FieldSelector                = 3 [(gogoproto.jsontag) = "field-selector,omitempty"];
   // FieldChangeSelector specifies to generate a watch notification on change in field(s) specified.
   repeated string FieldChangeSelector = 5 [(gogoproto.jsontag) = "field-change-selector,omitempty"];
-  // from represents the start offset (zero based), used for pagination.
-  // results returned would be in the range [from ... from+max-results-1]
+  // From represents the start index number (1 based - first object starts from index 1), of the results list.
+  // The results returned would be in the range [from ... (from + (max-results - 1))].
+  // If From = 0, the server will attempt to return all the results in the list without pagination
   int32 From                          = 6 [(gogoproto.jsontag) = "from,omitempty"];
-  // max. number of events to be fetched for the request.
+  // MaxResults is the maximum number of results to be returned as part of the response, per page
+  // If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err
+  // If MaxResults is 0, the server will return all the results without pagination
   int32 MaxResults                    = 7 [(gogoproto.jsontag) = "max-results,omitempty"];
   // order to sort List results in.
   string SortOrder                    = 8 [(gogoproto.jsontag) = "sort-order,omitempty", (venice.check) = "StrEnum(ListWatchOptions.SortOrders)"];

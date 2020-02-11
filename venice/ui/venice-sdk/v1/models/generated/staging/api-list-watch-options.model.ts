@@ -52,9 +52,9 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
     'field-selector': string = null;
     /** FieldChangeSelector specifies to generate a watch notification on change in field(s) specified. */
     'field-change-selector': Array<string> = null;
-    /** From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]. */
+    /** From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination. */
     'from': number = null;
-    /** Max. number of events to be fetched for the request. */
+    /** MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination. */
     'max-results': number = null;
     /** Order to sort List results in. */
     'sort-order': ApiListWatchOptions_sort_order = null;
@@ -118,12 +118,12 @@ export class ApiListWatchOptions extends BaseModel implements IApiListWatchOptio
             type: 'Array<string>'
         },
         'from': {
-            description:  `From represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].`,
+            description:  `From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.`,
             required: false,
             type: 'number'
         },
         'max-results': {
-            description:  `Max. number of events to be fetched for the request.`,
+            description:  `MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.`,
             required: false,
             type: 'number'
         },

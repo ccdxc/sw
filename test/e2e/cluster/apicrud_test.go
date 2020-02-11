@@ -173,53 +173,73 @@ func testAPICRUDOps() func() {
 					IPv4Gateway: "10.1.1.1",
 				},
 			}
-			{ // Cleanup if objects already exists
-				var del1, del2 bool
-				objMeta1, objMeta2 := netw.ObjectMeta, netw.ObjectMeta
-				objMeta2.Name = "e2eNetwork2"
-				if ret, err := grpcClient.NetworkV1().Network().Get(lctx, &objMeta1); err == nil {
-					del1 = true
-					expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
-				}
-				if ret, err := grpcClient.NetworkV1().Network().Get(lctx, &objMeta2); err == nil {
-					del2 = true
-					expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
-				}
-				// Wait to receive event before proceeding
-				if len(expNEvents) > 0 {
-					Eventually(func() string {
-						rcvNEventsMutex.Lock()
-						defer rcvNEventsMutex.Unlock()
-						if len(rcvNEvents) == len(expNEvents) {
-							return "success"
-						}
-						return fmt.Sprintf("got %v Tenant events expecing %v events", len(rcvTEvents), len(expTEvents))
-					}, 10, 1).Should(Equal("success"), "Number of bulk Tenant watch events did not match")
-				}
-
-				if del1 {
-					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &objMeta1)
-					Expect(err).To(BeNil())
-					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
-				}
-				if del2 {
-					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &objMeta2)
-					Expect(err).To(BeNil())
-					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+			numNetw := 20 // Number of networks
+			{             // Cleanup if object already exists
+				for i := 0; i < numNetw; i++ {
+					var del bool
+					objMeta := netw.ObjectMeta
+					objMeta.Name = "e2eNetwork" + strconv.Itoa(i)
+					if ret, err := grpcClient.NetworkV1().Network().Get(lctx, &objMeta); err == nil {
+						del = true
+						expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+					}
+					// Wait to receive event before proceeding
+					if len(expNEvents) > 0 {
+						Eventually(func() string {
+							rcvNEventsMutex.Lock()
+							defer rcvNEventsMutex.Unlock()
+							if len(rcvNEvents) == len(expNEvents) {
+								return "success"
+							}
+							return fmt.Sprintf("got %v Tenant events expecing %v events", len(rcvTEvents), len(expTEvents))
+						}, 10, 1).Should(Equal("success"), "Number of bulk Tenant watch events did not match")
+					}
+					if del {
+						ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &objMeta)
+						Expect(err).To(BeNil())
+						expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+					}
 				}
 			}
-			{ // Create network via GRPC
-				ret, err := grpcClient.NetworkV1().Network().Create(lctx, &netw)
+			{ // Create networks via GRPC
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Create(lctx, &netw)
+					Expect(err).Should(BeNil(), fmt.Sprintf("got error Creating network %s (%s)", objMeta.Name, err))
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+				}
+			}
+			{ // List operation
+				// List all the networks, from:0
+				retList, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{From: 0})
 				Expect(err).To(BeNil())
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+				Expect(len(retList)).To(Equal(numNetw))
+				for _, retNetw := range retList {
+					netwFound := false
+					for i := 0; i < numNetw; i++ {
+						objMeta := &netw.ObjectMeta
+						objMeta.Name = "e2eNetwork" + strconv.Itoa(i)
+						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
+							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
+							netwFound = true
+							break
+						}
+					}
+					Expect(netwFound).To(Equal(true), "Network not found "+retNetw.Name)
+				}
 			}
 			{ // Update operation
 				netw.Spec.IPv4Gateway = "10.1.1.254"
-				ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
-				Expect(err).To(BeNil())
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
+					Expect(err).To(BeNil())
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
+				}
 			}
 			{ // Get operations
 				ret, err := grpcClient.NetworkV1().Network().Get(lctx, &netw.ObjectMeta)
@@ -227,10 +247,14 @@ func testAPICRUDOps() func() {
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 			}
 			{ // Delete operation
-				ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
-				Expect(err).To(BeNil())
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
+					Expect(err).To(BeNil())
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+				}
 			}
 		}
 
@@ -243,7 +267,7 @@ func testAPICRUDOps() func() {
 				ObjectMeta: api.ObjectMeta{
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
-					Name:      "e2eNetwork2",
+					Name:      "e2eNetwork21",
 				},
 				Spec: network.NetworkSpec{
 					Type:        network.NetworkType_Bridged.String(),
@@ -251,22 +275,46 @@ func testAPICRUDOps() func() {
 					IPv4Gateway: "11.1.1.1",
 				},
 			}
-			{ // Create network via GRPC
-				var ret *network.Network
-				var err error
-				Eventually(func() error {
-					ret, err = grpcClient.NetworkV1().Network().Create(lctx, &netw)
-					return err
-				}, 30, 1).Should(BeNil(), "should be able to create Network")
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+			numNetw := 30 // Number of networks
+			{             // Create network via GRPC
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork2" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Create(lctx, &netw)
+					Expect(err).To(BeNil())
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Created)
+				}
+			}
+			{ // List operation
+				// List networks from index 10 to 19, both inclusive
+				retList, err := grpcClient.NetworkV1().Network().List(lctx, &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTime.String(), From: 11, MaxResults: 10})
+				Expect(err).To(BeNil())
+				Expect(len(retList)).To(Equal(10))
+				for _, retNetw := range retList {
+					netwFound := false
+					for i := 10; i < 20; i++ {
+						objMeta := &netw.ObjectMeta
+						objMeta.Name = "e2eNetwork2" + strconv.Itoa(i)
+						if retNetw.GetObjectMeta().GetName() == objMeta.Name {
+							Expect(reflect.DeepEqual(retNetw.Spec, netw.Spec)).To(Equal(true))
+							netwFound = true
+							break
+						}
+					}
+					Expect(netwFound).To(Equal(true), "Network not found "+retNetw.Name)
+				}
 			}
 			{ // Update network operation
 				netw.Spec.IPv4Gateway = "11.1.1.254"
-				ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
-				Expect(err).To(BeNil())
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork2" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Update(lctx, &netw)
+					Expect(err).To(BeNil())
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Updated)
+				}
 			}
 			{ // Get operation
 				var ret *network.Network
@@ -278,10 +326,14 @@ func testAPICRUDOps() func() {
 				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
 			}
 			{ // Delete operation
-				ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
-				Expect(err).To(BeNil())
-				Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
-				expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+				for i := 0; i < numNetw; i++ {
+					objMeta := &netw.ObjectMeta
+					objMeta.Name = "e2eNetwork2" + strconv.Itoa(i)
+					ret, err := grpcClient.NetworkV1().Network().Delete(lctx, &netw.ObjectMeta)
+					Expect(err).To(BeNil())
+					Expect(reflect.DeepEqual(ret.Spec, netw.Spec)).To(Equal(true))
+					expNEvents = addToWatchList(expNEvents, ret, kvstore.Deleted)
+				}
 			}
 		}
 		// Validate Watch Events
@@ -403,6 +455,7 @@ var _ = Describe("api crud tests", func() {
 	}
 
 	saveConfig := func(cfg *savedConfig) {
+		var err error
 		grpcClient := ts.tu.APIClient
 		Expect(grpcClient).ShouldNot(BeNil())
 		netw := network.Network{
@@ -413,7 +466,7 @@ var _ = Describe("api crud tests", func() {
 			ObjectMeta: api.ObjectMeta{
 				Tenant:    globals.DefaultTenant,
 				Namespace: globals.DefaultNamespace,
-				Name:      "e2eSaveNetwork1",
+				Name:      "e2eSaveNetwork",
 			},
 			Spec: network.NetworkSpec{
 				Type:        network.NetworkType_Bridged.String(),
@@ -421,10 +474,14 @@ var _ = Describe("api crud tests", func() {
 				IPv4Gateway: "10.1.1.1",
 			},
 		}
-		_, err := grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
-		netw.Name = "e2eSaveNetwork2"
-		_, err = grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
-		cfg.networks, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+
+		numNetw := 40 // Create 40 networks
+		for i := 0; i < numNetw; i++ {
+			netw.ObjectMeta.Name = "e2eSaveNetwork2" + strconv.Itoa(i)
+			_, err := grpcClient.NetworkV1().Network().Create(context.Background(), &netw)
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error Creatring network %s (%s)", netw.ObjectMeta.Name, err))
+		}
+		cfg.networks, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 		Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 		cfg.tenants, err = grpcClient.ClusterV1().Tenant().List(context.Background(), &api.ListWatchOptions{})
 		Expect(err).Should(BeNil(), fmt.Sprintf("got error listing tenants (%s)", err))
@@ -442,16 +499,65 @@ var _ = Describe("api crud tests", func() {
 		return func() {
 			grpcClient := ts.tu.APIClient
 			Expect(grpcClient).ShouldNot(BeNil())
-			netws, err := grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+
+			// List last 10 networks
+			netws, err := grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 31, MaxResults: 20, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
 			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
-			tens, err := grpcClient.ClusterV1().Tenant().List(context.Background(), &api.ListWatchOptions{})
-			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing tenants (%s)", err))
+			Expect(len(netws)).Should(Equal(10))
+			// By(fmt.Sprintf("Got Networks [%+v]", netws))
+			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
+			for _, n := range netws {
+				found := false
+				for _, n1 := range cfg.networks[30:] {
+					if n1.Name == n.Name {
+						found = true
+						Expect(reflect.DeepEqual(n1.Spec, n.Spec)).Should(BeTrue(), fmt.Sprintf("Specs dont match [%+v][%+v]", n1, n))
+					}
+				}
+				Expect(found).Should(BeTrue(), fmt.Sprintf("not found object [%v]", n.Name))
+			}
+
+			// List last 10-17 networks
+			netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 11, MaxResults: 7, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
+			Expect(len(netws)).Should(Equal(7))
+			// By(fmt.Sprintf("Got Networks [%+v]", netws))
+			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
+			for _, n := range netws {
+				found := false
+				for _, n1 := range cfg.networks[10:17] {
+					if n1.Name == n.Name {
+						found = true
+						Expect(reflect.DeepEqual(n1.Spec, n.Spec)).Should(BeTrue(), fmt.Sprintf("Specs dont match [%+v][%+v]", n1, n))
+					}
+				}
+				Expect(found).Should(BeTrue(), fmt.Sprintf("not found object [%v]", n.Name))
+			}
+
+			// List first 25 networks
+			netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{From: 1, MaxResults: 25, SortOrder: api.ListWatchOptions_ByCreationTime.String(), ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
+			Expect(len(netws)).Should(Equal(25))
+			// By(fmt.Sprintf("Got Networks [%+v]", netws))
+			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
+			for _, n := range netws {
+				found := false
+				for _, n1 := range cfg.networks[0:25] {
+					if n1.Name == n.Name {
+						found = true
+						Expect(reflect.DeepEqual(n1.Spec, n.Spec)).Should(BeTrue(), fmt.Sprintf("Specs dont match [%+v][%+v]", n1, n))
+					}
+				}
+				Expect(found).Should(BeTrue(), fmt.Sprintf("not found object [%v]", n.Name))
+			}
+
+			// List all networks, From = 0
+			netws, err = grpcClient.NetworkV1().Network().List(context.Background(), &api.ListWatchOptions{ObjectMeta: api.ObjectMeta{Tenant: globals.DefaultTenant}})
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing networks (%s)", err))
 			Expect(len(netws)).Should(Equal(len(cfg.networks)))
-			Expect(len(tens)).Should(Equal(len(cfg.tenants)))
-			By(fmt.Sprintf("Got Tenants [%+v]", tens))
-			By(fmt.Sprintf("Saved Tenants [%+v]", cfg.tenants))
-			By(fmt.Sprintf("Got Networks [%+v]", netws))
-			By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
+
+			// By(fmt.Sprintf("Got Networks [%+v]", netws))
+			// By(fmt.Sprintf("Saved Networks [%+v]", cfg.networks))
 			for _, n := range netws {
 				found := false
 				for _, n1 := range cfg.networks {
@@ -462,6 +568,12 @@ var _ = Describe("api crud tests", func() {
 				}
 				Expect(found).Should(BeTrue(), fmt.Sprintf("not found object [%v]", n.Name))
 			}
+
+			tens, err := grpcClient.ClusterV1().Tenant().List(context.Background(), &api.ListWatchOptions{})
+			Expect(err).Should(BeNil(), fmt.Sprintf("got error listing tenants (%s)", err))
+			Expect(len(tens)).Should(Equal(len(cfg.tenants)))
+			By(fmt.Sprintf("Got Tenants [%+v]", tens))
+			By(fmt.Sprintf("Saved Tenants [%+v]", cfg.tenants))
 			for _, n := range tens {
 				found := false
 				for _, n1 := range cfg.tenants {

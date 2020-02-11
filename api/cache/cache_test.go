@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -14,7 +16,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	cachemocks "github.com/pensando/sw/api/cache/mocks"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/venice/utils/kvstore"
 	"github.com/pensando/sw/venice/utils/kvstore/memkv"
 	kvs "github.com/pensando/sw/venice/utils/kvstore/store"
@@ -1156,4 +1158,292 @@ func TestRollback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expecting Get to succeed")
 	}
+}
+
+func TestCacheListPaginated(t *testing.T) {
+	b := &testObj{}
+	scheme := runtime.NewScheme()
+	scheme.AddKnownTypes(b)
+	kstr, err := memkv.NewMemKv([]string{"test-cluster"}, runtime.NewJSONCodec(scheme))
+	if err != nil {
+		t.Fatalf("unable to create memkv")
+	}
+	str := &cachemocks.FakeStore{}
+	c := cache{
+		store:     str,
+		pool:      &connPool{},
+		queues:    &mocks.FakeWatchPrefixes{},
+		logger:    log.GetNewLogger(log.GetDefaultConfig("cacheTest")),
+		active:    true,
+		versioner: runtime.NewObjectVersioner(),
+	}
+	c.pool.AddToPool(kstr)
+	key := "/testkey"
+	ctx := context.TODO()
+	testBooks := []*testObj{}
+
+	// Create and add 20 books to the cache
+	for i := 0; i < 20; i++ {
+		// Adding a sleep here to prevent objs from having the same CreationTimestamp
+		time.Sleep(1 * time.Millisecond)
+		resVer := 100 + i
+		b := &testObj{}
+		b.ResourceVersion = strconv.Itoa(resVer)
+		b.Name = "book" + strconv.Itoa(i)
+		ts, _ := types.TimestampProto(time.Now())
+		b.CreationTime.Timestamp = *ts
+
+		testBooks = append(testBooks, b)
+	}
+
+	expected := []runtime.Object{}
+	exp := []runtime.Object{}
+
+	all := []runtime.Object{}
+	for _, testBook := range testBooks {
+		all = append(all, testBook)
+	}
+
+	sort.Slice(all, c.sortByName(all, true))
+	for _, testBook := range all[0:5] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+	listfn := func(key string, opts api.ListWatchOptions) []runtime.Object {
+		return all
+	}
+	str.Listfn = listfn
+	into := &testObjList{}
+
+	opts := api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String(), From: 1, MaxResults: 5}
+
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination get object 5:12
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+
+	for _, testBook := range all[5:12] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String(), From: 6, MaxResults: 7}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination get object 15:end
+	// MaxResults > Num objects, last page case
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+
+	for _, testBook := range all[15:] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByName.String(), From: 16, MaxResults: 7}
+	into = &testObjList{}
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination test sorted by name reverse
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+	sort.Slice(all, c.sortByName(all, false))
+	for _, testBook := range all[0:10] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByNameReverse.String(), From: 1, MaxResults: 10}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination sorted by Version
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+	sort.Slice(all, c.sortByVersion(all, true))
+	for _, testBook := range all {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByVersion.String(), From: 1, MaxResults: 30}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination sorted by Version Reverse
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+	sort.Slice(all, c.sortByVersion(all, false))
+	for _, testBook := range all[10:15] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByVersionReverse.String(), From: 11, MaxResults: 5}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination sorted by Creation Time
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+	sort.Slice(all, c.sortByCreationTime(all, true))
+	for _, testBook := range all[10:15] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTime.String(), From: 11, MaxResults: 5}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Pagination sorted by Creation Time Reverse
+	expected = []runtime.Object{}
+	exp = []runtime.Object{}
+	sort.Slice(all, c.sortByCreationTime(all, false))
+	for _, testBook := range all[10:15] {
+		expected = append(expected, testBook)
+		exp = append(exp, testBook)
+	}
+
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTimeReverse.String(), From: 11, MaxResults: 5}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != len(expected) {
+		t.Errorf("expecting %d objects, got %d", len(expected), len(into.Items))
+	}
+	for _, v := range into.Items {
+		for i, cmp := range exp {
+			if reflect.DeepEqual(v, cmp) {
+				expected[i] = nil
+			}
+		}
+	}
+	for _, cmp := range expected {
+		if cmp != nil {
+			t.Errorf("Found an object that was not matched in list %+v", cmp)
+		}
+	}
+
+	// Test with From > len of list
+	opts = api.ListWatchOptions{SortOrder: api.ListWatchOptions_ByCreationTimeReverse.String(), From: 1000, MaxResults: 5}
+	into = &testObjList{}
+
+	c.ListFiltered(ctx, key, into, opts)
+	if len(into.Items) != 0 {
+		t.Errorf("expecting %d objects, got %d", 0, len(into.Items))
+	}
+
 }

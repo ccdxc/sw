@@ -10,6 +10,7 @@ import { BaseModel, PropInfoItem } from '../basemodel/base-model';
 
 export interface IApiListMeta {
     'resource-version'?: string;
+    'total-count'?: number;
     '_ui'?: any;
 }
 
@@ -19,11 +20,18 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     '_ui': any = {};
     /** Resource version of object store at the time of list generation. */
     'resource-version': string = null;
+    /** TotalCount is the total count of results (non paginated) that the server holds. */
+    'total-count': number = null;
     public static propInfo: { [prop in keyof IApiListMeta]: PropInfoItem } = {
         'resource-version': {
             description:  `Resource version of object store at the time of list generation.`,
             required: false,
             type: 'string'
+        },
+        'total-count': {
+            description:  `TotalCount is the total count of results (non paginated) that the server holds.`,
+            required: false,
+            type: 'number'
         },
     }
 
@@ -68,6 +76,13 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
         } else {
             this['resource-version'] = null
         }
+        if (values && values['total-count'] != null) {
+            this['total-count'] = values['total-count'];
+        } else if (fillDefaults && ApiListMeta.hasDefaultValue('total-count')) {
+            this['total-count'] = ApiListMeta.propInfo['total-count'].default;
+        } else {
+            this['total-count'] = null
+        }
         this.setFormGroupValuesToBeModelValues();
     }
 
@@ -76,6 +91,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
         if (!this._formGroup) {
             this._formGroup = new FormGroup({
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), ApiListMeta.propInfo['resource-version']),
+                'total-count': CustomFormControl(new FormControl(this['total-count']), ApiListMeta.propInfo['total-count']),
             });
         }
         return this._formGroup;
@@ -88,6 +104,7 @@ export class ApiListMeta extends BaseModel implements IApiListMeta {
     setFormGroupValuesToBeModelValues() {
         if (this._formGroup) {
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
+            this._formGroup.controls['total-count'].setValue(this['total-count']);
         }
     }
 }

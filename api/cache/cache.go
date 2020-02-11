@@ -15,12 +15,12 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
-	"github.com/pensando/sw/api/interfaces"
+	apiintf "github.com/pensando/sw/api/interfaces"
 	"github.com/pensando/sw/api/requirement"
-	"github.com/pensando/sw/api/utils"
+	apiutils "github.com/pensando/sw/api/utils"
 	"github.com/pensando/sw/venice/apiserver"
 	"github.com/pensando/sw/venice/globals"
 	"github.com/pensando/sw/venice/utils/ctxutils"
@@ -1271,6 +1271,26 @@ func (c *cache) ListFiltered(ctx context.Context, prefix string, into runtime.Ob
 			return fmt.Errorf("unknown sort order [%s]", opts.SortOrder)
 		}
 	}
+
+	totalNumItems := len(items)
+	if opts.GetFrom() > 0 {
+		// Apply pagination logic
+		startIndex, endIndex, err := processPaginationOptions(ctx, items, opts)
+		if err != nil {
+			return fmt.Errorf("Pagination filter apply failed: %s", err.Error())
+		}
+		items = items[startIndex:endIndex]
+	}
+
+	// Set the TotalCount in ListMeta
+	lmi := reflect.ValueOf(into).Elem().FieldByName("ListMeta")
+	if !lmi.IsValid() {
+		return fmt.Errorf("Decode error: missing ListMeta field")
+	}
+	i := (lmi.Interface()).(api.ListMeta)
+	i.TotalCount = int32(totalNumItems)
+	lmi.Set(reflect.ValueOf(i))
+
 	for _, kvo := range items {
 		if ptr {
 			v.Set(reflect.Append(v, reflect.ValueOf(kvo)))

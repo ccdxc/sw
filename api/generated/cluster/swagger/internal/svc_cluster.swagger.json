@@ -1166,7 +1166,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1174,7 +1174,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1854,7 +1854,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -1862,7 +1862,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -2617,7 +2617,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -2625,7 +2625,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3126,7 +3126,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3134,7 +3134,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3782,7 +3782,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3790,7 +3790,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3949,7 +3949,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -3957,7 +3957,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4116,7 +4116,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4124,7 +4124,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4283,7 +4283,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4291,7 +4291,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4450,7 +4450,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4458,7 +4458,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4617,7 +4617,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4625,7 +4625,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4784,7 +4784,7 @@
           },
           {
             "name": "from",
-            "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1].",
+            "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4792,7 +4792,7 @@
           },
           {
             "name": "max-results",
-            "description": "max. number of events to be fetched for the request.",
+            "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination.",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -4837,6 +4837,11 @@
         "resource-version": {
           "type": "string",
           "description": "Resource version of object store at the time of list generation."
+        },
+        "total-count": {
+          "type": "integer",
+          "format": "int32",
+          "description": "TotalCount is the total count of results (non paginated) that the server holds."
         }
       },
       "description": "ListMeta contains the metadata for list of objects."
@@ -4912,12 +4917,12 @@
         "from": {
           "type": "integer",
           "format": "int32",
-          "description": "from represents the start offset (zero based), used for pagination. results returned would be in the range [from ... from+max-results-1]."
+          "description": "From represents the start index number (1 based - first object starts from index 1), of the results list. The results returned would be in the range [from ... (from + (max-results - 1))]. If From = 0, the server will attempt to return all the results in the list without pagination."
         },
         "max-results": {
           "type": "integer",
           "format": "int32",
-          "description": "max. number of events to be fetched for the request."
+          "description": "MaxResults is the maximum number of results to be returned as part of the response, per page If MaxResults is more than the maximum number of results per page supported by the server, the server will return an err If MaxResults is 0, the server will return all the results without pagination."
         },
         "sort-order": {
           "type": "string",

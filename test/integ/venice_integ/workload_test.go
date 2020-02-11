@@ -5,6 +5,8 @@ package veniceinteg
 import (
 	"fmt"
 
+	stringconv "strconv"
+
 	"github.com/pensando/sw/nic/agent/dscagent"
 	agentTypes "github.com/pensando/sw/nic/agent/dscagent/types"
 	"github.com/pensando/sw/nic/agent/protos/netproto"
@@ -193,4 +195,107 @@ func (it *veniceIntegSuite) TestVeniceIntegWorkload(c *C) {
 	// TODO: add when delete of network is supported
 	//_, err = it.deleteNetwork("default", "Network-Vlan-1")
 	//AssertOk(c, err, "Error deleting network")
+}
+
+// Test pagination
+func (it *veniceIntegSuite) TestVeniceIntegWorkloadPaginated(c *C) {
+	numWorkloads := 20 // For pagination test
+	wrloads := make(map[string]*workload.Workload)
+	it.createHostObjects()
+	defer it.deleteHostObjects()
+
+	ctx, err := it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
+
+	workLoadCount := 0
+	// create 20 workload on each NIC/host
+	for i, sn := range it.snics {
+
+		for j := 0; j < numWorkloads; j++ {
+			// workload params
+			var name string
+			if name, err = strconv.ParseMacAddr(sn.macAddr); err != nil {
+				name = sn.agent.InfraAPI.GetDscName()
+			}
+			wrloadName := fmt.Sprintf("testWorkload-%s-%s", name, stringconv.Itoa(workLoadCount))
+
+			wl := &workload.Workload{
+				TypeMeta: api.TypeMeta{Kind: "Workload"},
+				ObjectMeta: api.ObjectMeta{
+					Name:      wrloadName,
+					Namespace: "default",
+					Tenant:    "default",
+				},
+				Spec: workload.WorkloadSpec{
+					HostName: fmt.Sprintf("host%d", i),
+					Interfaces: []workload.WorkloadIntfSpec{
+						{
+							MACAddress:   sn.macAddr,
+							MicroSegVlan: uint32(i + 100),
+							ExternalVlan: 1,
+						},
+					},
+				},
+			}
+			wrloads[wrloadName] = wl
+
+			// create workload
+			_, err = it.restClient.WorkloadV1().Workload().Create(ctx, wl)
+			AssertOk(c, err, "Error creating workload:"+wrloadName)
+			log.Infof("Created workload: %+v", *wl)
+			workLoadCount++
+		}
+	}
+
+	ctx, err = it.loggedInCtx()
+	AssertOk(c, err, "Error creating logged in context")
+
+	// Test pagination
+
+	// list workloads 5 till 9 (acc to 0 index)
+	var numExpResults int32 = 5
+	wrlist, err := it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{From: 6, MaxResults: numExpResults, SortOrder: api.ListWatchOptions_ByCreationTime.String()})
+	AssertOk(c, err, "Error listing workloads")
+	Assert(c, (len(wrlist) == int(numExpResults)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), numExpResults))
+
+	for _, gwr := range wrlist {
+		AssertEquals(c, gwr.Spec.HostName, wrloads[gwr.ObjectMeta.Name].Spec.HostName, "workload params did not match")
+	}
+
+	// list workloads 7 till 15 (acc to 0 index), sorted creation time reverse
+	numExpResults = 9
+	wrlist, err = it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{From: 7, MaxResults: numExpResults, SortOrder: api.ListWatchOptions_ByCreationTimeReverse.String()})
+	AssertOk(c, err, "Error listing workloads")
+	Assert(c, (len(wrlist) == int(numExpResults)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), numExpResults))
+
+	for _, gwr := range wrlist {
+		AssertEquals(c, gwr.Spec.HostName, wrloads[gwr.ObjectMeta.Name].Spec.HostName, "workload params did not match")
+	}
+
+	// List all Workloads
+	numExpResults = int32(workLoadCount)
+	wrlist, err = it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{})
+	AssertOk(c, err, "Error listing workloads")
+	Assert(c, (len(wrlist) == int(numExpResults)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), numExpResults))
+
+	for _, gwr := range wrlist {
+		AssertEquals(c, gwr.Spec.HostName, wrloads[gwr.ObjectMeta.Name].Spec.HostName, "workload params did not match")
+	}
+
+	// List last 10 workloads, set
+	wrlist, err = it.restClient.WorkloadV1().Workload().List(ctx, &api.ListWatchOptions{From: (int32(workLoadCount) - numExpResults), MaxResults: numExpResults})
+	AssertOk(c, err, "Error listing workloads")
+	Assert(c, (len(wrlist) == int(numExpResults)), fmt.Sprintf("Invalid number of workloads: expected %d found %d", len(wrlist), numExpResults))
+
+	for _, gwr := range wrlist {
+		AssertEquals(c, gwr.Spec.HostName, wrloads[gwr.ObjectMeta.Name].Spec.HostName, "workload params did not match")
+	}
+
+	// Delete the workloads
+	for wlName, wl := range wrloads {
+		_, err = it.apisrvClient.WorkloadV1().Workload().Delete(ctx, &wl.ObjectMeta)
+		AssertOk(c, err, "Error deleting workload "+wlName)
+	}
+
+	fmt.Println("Done test")
 }

@@ -13,6 +13,7 @@ export interface IEventsEventList {
     'kind'?: string;
     'api-version'?: string;
     'resource-version'?: string;
+    'total-count'?: number;
     'items'?: Array<IEventsEvent>;
     '_ui'?: any;
 }
@@ -24,6 +25,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
     'kind': string = null;
     'api-version': string = null;
     'resource-version': string = null;
+    'total-count': number = null;
     'items': Array<EventsEvent> = null;
     public static propInfo: { [prop in keyof IEventsEventList]: PropInfoItem } = {
         'kind': {
@@ -37,6 +39,10 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
         'resource-version': {
             required: false,
             type: 'string'
+        },
+        'total-count': {
+            required: false,
+            type: 'number'
         },
         'items': {
             required: false,
@@ -100,6 +106,13 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
         } else {
             this['resource-version'] = null
         }
+        if (values && values['total-count'] != null) {
+            this['total-count'] = values['total-count'];
+        } else if (fillDefaults && EventsEventList.hasDefaultValue('total-count')) {
+            this['total-count'] = EventsEventList.propInfo['total-count'].default;
+        } else {
+            this['total-count'] = null
+        }
         if (values) {
             this.fillModelArray<EventsEvent>(this, 'items', values['items'], EventsEvent);
         } else {
@@ -115,6 +128,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
                 'kind': CustomFormControl(new FormControl(this['kind']), EventsEventList.propInfo['kind']),
                 'api-version': CustomFormControl(new FormControl(this['api-version']), EventsEventList.propInfo['api-version']),
                 'resource-version': CustomFormControl(new FormControl(this['resource-version']), EventsEventList.propInfo['resource-version']),
+                'total-count': CustomFormControl(new FormControl(this['total-count']), EventsEventList.propInfo['total-count']),
                 'items': new FormArray([]),
             });
             // generate FormArray control elements
@@ -137,6 +151,7 @@ export class EventsEventList extends BaseModel implements IEventsEventList {
             this._formGroup.controls['kind'].setValue(this['kind']);
             this._formGroup.controls['api-version'].setValue(this['api-version']);
             this._formGroup.controls['resource-version'].setValue(this['resource-version']);
+            this._formGroup.controls['total-count'].setValue(this['total-count']);
             this.fillModelArray<EventsEvent>(this, 'items', this['items'], EventsEvent);
         }
     }
