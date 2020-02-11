@@ -1,6 +1,4 @@
-// +build iris
-
-package iris
+package common
 
 import (
 	"github.com/pkg/errors"
@@ -10,8 +8,7 @@ import (
 	"github.com/pensando/sw/venice/utils/log"
 )
 
-// HandleApp handles crud operations on app
-func HandleApp(infraAPI types.InfraAPI, oper types.Operation, app netproto.App) error {
+func handleApp(infraAPI types.InfraAPI, oper types.Operation, app netproto.App) error {
 	switch oper {
 	case types.Create:
 		return createAppHandler(infraAPI, app)

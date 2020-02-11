@@ -1,6 +1,4 @@
-// +build iris
-
-package iris
+package common
 
 import (
 	"testing"
@@ -41,22 +39,22 @@ func TestHandleApp(t *testing.T) {
 		},
 	}
 
-	err := HandleApp(infraAPI, types.Create, dns)
+	err := handleApp(infraAPI, types.Create, dns)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleApp(infraAPI, types.Update, dns)
+	err = handleApp(infraAPI, types.Update, dns)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleApp(infraAPI, types.Delete, dns)
+	err = handleApp(infraAPI, types.Delete, dns)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = HandleApp(infraAPI, 42, dns)
+	err = handleApp(infraAPI, 42, dns)
 	if err == nil {
 		t.Fatal("Invalid op must return a valid error.")
 	}
@@ -94,17 +92,17 @@ func TestHandleAppInfraFailures(t *testing.T) {
 	}
 
 	i := newBadInfraAPI()
-	err := HandleApp(i, types.Create, dns)
+	err := handleApp(i, types.Create, dns)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 
-	err = HandleApp(i, types.Update, dns)
+	err = handleApp(i, types.Update, dns)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}
 
-	err = HandleApp(i, types.Delete, dns)
+	err = handleApp(i, types.Delete, dns)
 	if err == nil {
 		t.Fatalf("Must return a valid error. Err: %v", err)
 	}

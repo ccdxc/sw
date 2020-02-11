@@ -19,6 +19,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 
 	"github.com/pensando/sw/api"
+	"github.com/pensando/sw/nic/agent/dscagent/common"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu"
 	apuluutils "github.com/pensando/sw/nic/agent/dscagent/pipeline/apulu/utils"
 	"github.com/pensando/sw/nic/agent/dscagent/pipeline/utils"
@@ -478,9 +479,13 @@ func (a *ApuluAPI) HandleTunnel(oper types.Operation, tun netproto.Tunnel) ([]ne
 	return nil, errors.Wrapf(types.ErrNotImplemented, "Tunnel %s is not implemented by Apulu Pipeline", oper)
 }
 
-// HandleApp unimplemented
-func (a *ApuluAPI) HandleApp(oper types.Operation, app netproto.App) ([]netproto.App, error) {
-	return nil, errors.Wrapf(types.ErrNotImplemented, "App %s is not implemented by Apulu Pipeline", oper)
+// HandleApp handles CRUD Methods for App Object
+func (a *ApuluAPI) HandleApp(oper types.Operation, app netproto.App) (apps []netproto.App, err error) {
+	a.Lock()
+	defer a.Unlock()
+
+	apps, err = common.HandleApp(a.InfraAPI, oper, app)
+	return
 }
 
 // HandleNetworkSecurityPolicy unimplemented
