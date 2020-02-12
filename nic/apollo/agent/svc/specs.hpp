@@ -1179,7 +1179,7 @@ pds_vnic_proto_to_api_spec (pds_vnic_spec_t *api_spec,
 {
     uint32_t msid;
 
-    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.vnicid());
+    pds_obj_key_proto_to_api_spec(&api_spec->key, proto_spec.id());
     if (proto_spec.hostname().empty()) {
         api_spec->hostname[0] = '\0';
     } else {
@@ -1275,7 +1275,7 @@ pds_vnic_api_spec_to_proto (pds::VnicSpec *proto_spec,
     if (!api_spec || !proto_spec) {
         return;
     }
-    proto_spec->set_vnicid(api_spec->key.id, PDS_MAX_KEY_LEN);
+    proto_spec->set_id(api_spec->key.id, PDS_MAX_KEY_LEN);
     proto_spec->set_hostname(api_spec->hostname);
     proto_spec->set_subnetid(api_spec->subnet.id, PDS_MAX_KEY_LEN);
     pds_encap_to_proto_encap(proto_spec->mutable_vnicencap(),

@@ -131,12 +131,12 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def PopulateKey(self, grpcmsg):
-        grpcmsg.VnicId.append(self.GetKey())
+        grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.VnicId = self.GetKey()
+        spec.Id = self.GetKey()
         spec.SubnetId = self.SUBNET.GetKey()
         if self.dot1Qenabled:
             spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q
@@ -167,7 +167,7 @@ class VnicObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.VnicId != self.GetKey():
+        if spec.Id != self.GetKey():
             return False
         # if int(spec.SubnetId) != self.SUBNET.SubnetId:
         #     return False
@@ -193,7 +193,7 @@ class VnicObject(base.ConfigObjectBase):
         return True
 
     def ValidateYamlSpec(self, spec):
-        if  utils.GetYamlSpecAttr(spec, 'vnicid') != self.GetKey():
+        if  utils.GetYamlSpecAttr(spec, 'id') != self.GetKey():
             return False
         if utils.IsPipelineApulu():
             if self.UseHostIf and self.SUBNET.HostIfUuid:
@@ -380,9 +380,9 @@ class VnicObjectClient(base.ConfigClientBase):
 
     def GetKeyfromSpec(self, spec, yaml=False):
         if yaml:
-            uuid = spec['vnicid']
+            uuid = spec['id']
         else:
-            uuid = spec.VnicId
+            uuid = spec.Id
         return utils.PdsUuid.GetIdfromUUID(uuid)
 
     def AssociateObjects(self, node):

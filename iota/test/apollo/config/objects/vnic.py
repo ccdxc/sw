@@ -77,7 +77,7 @@ class VnicObject(base.ConfigObjectBase):
     def GetGrpcCreateMessage(self):
         grpcmsg = vnic_pb2.VnicRequest()
         spec = grpcmsg.Request.add()
-        spec.VnicId = self.VnicId
+        spec.Id = self.VnicId
         spec.SubnetId = self.SUBNET.SubnetId
         spec.VPCId = self.SUBNET.VPC.VPCId
         spec.VnicEncap.type = types_pb2.ENCAP_TYPE_DOT1Q

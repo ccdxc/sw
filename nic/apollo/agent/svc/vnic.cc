@@ -47,7 +47,7 @@ VnicSvcImpl::VnicCreate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.vnicid());
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
@@ -114,7 +114,7 @@ VnicSvcImpl::VnicUpdate(ServerContext *context,
             goto end;
         }
         auto request = proto_req->request(i);
-        pds_obj_key_proto_to_api_spec(&key, request.vnicid());
+        pds_obj_key_proto_to_api_spec(&key, request.id());
         ret = pds_vnic_proto_to_api_spec(api_spec, request);
         if (ret != SDK_RET_OK) {
             core::agent_state::state()->vnic_slab()->free(api_spec);
@@ -153,7 +153,7 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
     bool batched_internally = false;
     pds_batch_params_t batch_params;
 
-    if ((proto_req == NULL) || (proto_req->vnicid_size() == 0)) {
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
         proto_rsp->add_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
         return Status::CANCELLED;
     }
@@ -171,8 +171,8 @@ VnicSvcImpl::VnicDelete(ServerContext *context,
         batched_internally = true;
     }
 
-    for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key, proto_req->vnicid(i));
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vnic_delete(&key, bctxt);
         if (ret != SDK_RET_OK) {
             goto end;
@@ -208,8 +208,8 @@ VnicSvcImpl::VnicGet(ServerContext *context,
         return Status::OK;
     }
 
-    for (int i = 0; i < proto_req->vnicid_size(); i++) {
-        pds_obj_key_proto_to_api_spec(&key, proto_req->vnicid(i));
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        pds_obj_key_proto_to_api_spec(&key, proto_req->id(i));
         ret = core::vnic_get(&key, &info);
         if (ret != SDK_RET_OK) {
             proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
@@ -219,7 +219,7 @@ VnicSvcImpl::VnicGet(ServerContext *context,
         pds_vnic_api_info_to_proto(&info, proto_rsp);
     }
 
-    if (proto_req->vnicid_size() == 0) {
+    if (proto_req->id_size() == 0) {
         ret = core::vnic_get_all(pds_vnic_api_info_to_proto, proto_rsp);
         proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     }

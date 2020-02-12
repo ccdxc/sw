@@ -23,7 +23,7 @@ service VnicSvc {
 //       unique across VPCs
 message VnicSpec {
   // unique vnic id
-  bytes           VnicId                = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  bytes           Id                    = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // id of the subnet this vnic belongs to
   bytes           SubnetId              = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
   // vnic encap information to be used while sending packets to this vnic
@@ -120,7 +120,7 @@ message VnicResponse {
 
 // vnic get request
 message VnicGetRequest {
-  repeated bytes VnicId = 1; // batched request
+  repeated bytes Id = 1; // batched request
 }
 
 // vnic get response
@@ -134,7 +134,7 @@ message VnicDeleteRequest {
   // optional batch context, if this request is part of batch of API calls
   types.BatchCtxt BatchCtxt = 1;
   // batched request
-  repeated bytes VnicId     = 2;
+  repeated bytes Id     = 2;
 }
 
 // vnic delete response
