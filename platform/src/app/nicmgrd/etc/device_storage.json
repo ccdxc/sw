@@ -65,10 +65,10 @@
             "dev_uuid" : 1,
             "type": "host",
             "lif_count" : 1,
-            "rxq_count" : 16,
-            "txq_count" : 16,
+            "rxq_count" : 32,
+            "txq_count" : 32,
             "adminq_count" : 1,
-            "intr_count" : 64,
+            "intr_count" : 66,
             "cmb_size" : 1,
             "pcie" : {
                 "port" : 0,
@@ -86,10 +86,10 @@
                 "adminq_count" : 15,
                 "num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
-                "pte_count" : 1048576,
+                "pte_count" : 8388608,
                 "prefetch_count" : 0,
                 "key_count" : 262144,
-                "ah_count"  : 8192
+                "ah_count" : 8192
             }
         },
         {
@@ -97,10 +97,10 @@
             "dev_uuid" : 2,
             "type": "host",
             "lif_count" : 1,
-            "rxq_count" : 16,
-            "txq_count" : 16,
+            "rxq_count" : 32,
+            "txq_count" : 32,
             "adminq_count" : 1,
-            "intr_count" : 64,
+            "intr_count" : 66,
             "cmb_size" : 1,
             "pcie" : {
                 "port" : 0,
@@ -118,10 +118,10 @@
                 "adminq_count" : 15,
                 "num_dcqcn_profiles" : 8,
                 "pid_count" : 256,
-                "pte_count" : 1048576,
+                "pte_count" : 8388608,
                 "prefetch_count" : 0,
                 "key_count" : 262144,
-                "ah_count"  : 8192
+                "ah_count" : 8192
             }
         },
         {
@@ -136,6 +136,28 @@
             "pcie" : {
                 "port" : 0,
                 "total_vfs" : 0
+            }
+        }
+    ],
+
+    "accel_dev" : [
+        {
+            "name" : "accel",
+            "lif_count" : 1,
+            "seq_queue_count" : 32768,
+            "adminq_count" : 1,
+            "intr_count" : 64,
+            "rate_limit" : {
+                "rx_limit_gbps" : 0,
+                "rx_burst_gb"   : 0,
+                "tx_limit_gbps" : 0,
+                "tx_burst_gb"   : 0
+            },
+            "publish_interval" : {
+                "sec_fraction" : 2
+            },
+            "pcie" : {
+                "port" : 0
             }
         }
     ]

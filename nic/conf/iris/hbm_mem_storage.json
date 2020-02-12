@@ -540,10 +540,16 @@
             "reset": true
         },
         {
+            "_comment" : "512 entries of 128 Bytes each",
+            "name": "flow_telemetry_stats",
+            "size": "64K",
+            "reset": true
+        },
+        {
             "name": "qos-dscp-cos-map",
             "size": "64B",
             "reset": true
-        },   
+        },
         {
             "_comment" : "32 entries of 64 Bytes each",
             "name": "opaque_tag",
