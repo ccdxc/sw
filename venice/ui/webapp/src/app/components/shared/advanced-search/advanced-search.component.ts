@@ -50,6 +50,7 @@ export interface LocalSearchRequest {
 export interface LocalSearchResult {
   searchRes: Array<string>;
   err: boolean;
+  errString: string;
 }
 
 @Component({
@@ -292,30 +293,33 @@ export class AdvancedSearchComponent implements OnInit {
   }
 
   /**
-   * Format any valid string date input to yyyy-mm-dd
-   * if the date is invalid, it will return the original input.
+   * User can enter anything on every browser
    * @param date
    */
+
   formatDate(date: string): string {
-    const timestamp = moment(date, 'yyyy-mm-dd');
+    // Removing UTC fixes the incorrect date format issue on firefox
+    // TODO: need to remove other timezones for later
+    let d = Date.parse(date);
+    let myDate = new Date(d);
+    if (isNaN(d)) {
+      date = date.replace(/\s*UTC\s*/gi, '');
+      const startDate = moment(date, 'YYYY-MM-DD HH:mm:ss').toDate();
+      d = startDate.getTime();
 
-    if (timestamp.isValid() !== false) {
-      const d = new Date(date),
-        year = d.getFullYear();
-      let month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate();
-
-      if (month.length < 2) {
-        month = '0' + month;
+      if (isNaN(d)) {
+        throw new Error('Invalid Date Format: Should be of the form YYYY-MM-DD HH:mm:ss Z');
+      } else {
+        // User may paste in "2020-02-12 02:46:36 UTC"
+        // If we take out "UTC", we have to convert date UTC time for backend to process
+        const now = new Date();
+        const hourDifference = (now.getTimezoneOffset()) / 60;
+        const i = (hourDifference > 0) ? -1 : 1;
+        d = d + (i * hourDifference) * 1000 * 60 * 60;
+        myDate = new Date(d);
+        return myDate.toISOString();
       }
-      if (day.length < 2) {
-        day = '0' + day;
-      }
-
-      return [year, month, day].join('-');
     } else {
-      const d = Date.parse(date);
-      const myDate = new Date(d);
       return myDate.toISOString();
     }
 
@@ -348,7 +352,11 @@ export class AdvancedSearchComponent implements OnInit {
         if (field !== '') {
           const type = Utility.getNestedPropInfo(instance, ele.keyFormControl) ? Utility.getNestedPropInfo(instance, ele.keyFormControl).type : '';
           if (type === 'Date') {
-            processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+            try {
+              processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+            } catch (error) {
+               throw error;
+            }
           } else {
             processedValue = ele.valueFormControl.map(e => e);
           }
@@ -404,13 +412,19 @@ export class AdvancedSearchComponent implements OnInit {
    * @returns {LocalSearchResult}
    */
   getLocalSearchResult(field, order, searchObject): LocalSearchResult {
-    const localSearchRequest: LocalSearchRequest = this.getLocalSearchRequest(order, field);
     let localSearchResult: LocalSearchResult = {
       searchRes: null,
-      err: false
+      err: false,
+      errString: ''
     };
-    if (localSearchRequest.query != null && localSearchRequest.query.length > 0) {
-      localSearchResult = this.localSearch(localSearchRequest, searchObject);
+    try {
+      const localSearchRequest: LocalSearchRequest = this.getLocalSearchRequest(order, field);
+      if (localSearchRequest.query != null && localSearchRequest.query.length > 0) {
+        localSearchResult = this.localSearch(localSearchRequest, searchObject);
+      }
+    } catch (error) {
+      localSearchResult.err = true;
+      localSearchResult.errString = error.toString();
     }
     return localSearchResult;
   }
@@ -431,7 +445,11 @@ export class AdvancedSearchComponent implements OnInit {
         if (field !== '') {
           const type = Utility.getNestedPropInfo(instance, ele.keyFormControl) ? Utility.getNestedPropInfo(instance, ele.keyFormControl).type : '';
           if (type === 'Date') {
-            processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+            try {
+              processedValue = ele.valueFormControl.map(e => this.formatDate(e));
+            } catch (error) {
+               throw error;
+            }
           } else {
             processedValue = ele.valueFormControl.map(e => e);
           }
@@ -464,7 +482,8 @@ export class AdvancedSearchComponent implements OnInit {
   localSearch(searchReq: LocalSearchRequest, searchObj: { [key: string]: any }): LocalSearchResult {
     const res: LocalSearchResult = {
       searchRes: [],
-      err: false
+      err: false,
+      errString: ''
     };
     searchReq.query.forEach(q => {
       this.localSearchQueryRequirement(res, q, searchObj);
@@ -476,6 +495,7 @@ export class AdvancedSearchComponent implements OnInit {
     if (!res.err && q.key in searchObj) {
       if (this.localSearchFields[q.key] && q.values.length !== 1) {
         res.err = true;
+        res.errString = 'Length of search values don\'t match with accepted length';
       } else {
         let conditionRes: Array<string> = [];
         q.values.forEach(value => {

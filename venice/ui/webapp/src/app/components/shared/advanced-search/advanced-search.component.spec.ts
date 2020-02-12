@@ -142,6 +142,7 @@ describe('AdvancedSearchComponent', () => {
     expect(remReq.query.texts[0].text).toEqual(['"Admitted"']);
     expect(remReq.query.fields.requirements.length).toBe(0);
     expect(locRes.err).toEqual(false);
+    expect(locRes.errString).toEqual('');
     expect(locRes.searchRes).toEqual(['00ae.cd00.1142']);
   });
 

@@ -692,7 +692,7 @@ export class NaplesComponent extends TablevieweditAbstract<IClusterDistributedSe
     searchSearchRequest = this.customizeSearchRequest(searchSearchRequest);
     const localSearchResult = this.advancedSearchComponent.getLocalSearchResult(field, order, this.searchObject);
     if (localSearchResult.err) {
-      this.controllerService.invokeInfoToaster('Invalid', 'Length of search values don\'t match with accepted length');
+      this.controllerService.invokeErrorToaster('Error', localSearchResult.errString);
       return;
     }
     if ((searchSearchRequest.query != null && (searchSearchRequest.query.fields != null && searchSearchRequest.query.fields.requirements != null

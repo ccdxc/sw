@@ -703,21 +703,26 @@ export abstract class TablevieweditAbstract<I, T extends I> extends TableviewAbs
   onSearchDataObjects(field, order, kind: string, maxSearchRecords, advSearchCols: TableCol[], dataObjects, advancedSearchComponent: AdvancedSearchComponent,
      isShowToasterOnSearchHasResult: boolean = false,
      isShowToasterOnSearchNoResult: boolean = true ): any[] | ReadonlyArray<any> {
-    const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
-    const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
-    const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
-    const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
+       try {
+        const searchSearchRequest = advancedSearchComponent.getSearchRequest(field, order, kind, true, maxSearchRecords);
+        const localSearchRequest: LocalSearchRequest = advancedSearchComponent.getLocalSearchRequest(field, order);
+        const requirements: FieldsRequirement[] = (searchSearchRequest.query.fields.requirements) ? searchSearchRequest.query.fields.requirements : [];
+        const localRequirements: FieldsRequirement[] = (localSearchRequest.query) ? localSearchRequest.query as FieldsRequirement[] : [];
 
-    const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
-    const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
-    if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
-      this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
-    } else {
-      if (isShowToasterOnSearchHasResult) {
-          this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
-      }
-    }
-    return searchResults;
+        const searchTexts: SearchTextRequirement[] = searchSearchRequest.query.texts;
+        const searchResults = TableUtility.searchTable(requirements, localRequirements, searchTexts, advSearchCols, dataObjects); // Putting this.dataObjects here enables search on search. Otherwise, use this.dataObjectsBackup
+        if (isShowToasterOnSearchNoResult && (!searchResults || searchResults.length === 0)) {
+          this.controllerService.invokeInfoToaster('Information', 'No ' + kind + ' records found. Please change search criteria.');
+        } else {
+          if (isShowToasterOnSearchHasResult) {
+              this.controllerService.invokeInfoToaster('Information', 'Found ' + searchResults.length + ' ' + kind + ' records');
+          }
+        }
+        return searchResults;
+        } catch (error) {
+         this.controllerService.invokeErrorToaster('Error', error.toString());
+         return [];
+       }
   }
 }
 

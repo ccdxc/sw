@@ -147,10 +147,13 @@ export class AuditeventsComponent extends TableviewAbstract<IAuditAuditEvent, Au
     order = this.tableWrapper.table.sortOrder) {
 
     this.loading = true;
-
+    try {
     const searchSearchRequest = this.advancedSearchComponent.getSearchRequest(field, order, 'AuditEvent', false, this.maxRecords);
 
     this._callSearchRESTAPI(searchSearchRequest);
+    } catch (error) {
+      this.controllerService.invokeErrorToaster('Input error', error.toString());
+    }
   }
 
   onTableSort(event: LazyLoadEvent) {
