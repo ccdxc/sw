@@ -3513,6 +3513,11 @@ try_fewer:
 		nrdma_eqs >>= 1;
 		goto try_again;
 	}
+	/* Cut Eth EQs in half */
+	if (neth_eqs > 1) {
+		neth_eqs >>= 1;
+		goto try_again;
+	}
 	/* Cut number of lifs */
 	if (nlifs > 1) {
 		nlifs >>= 1;
