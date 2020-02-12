@@ -177,6 +177,7 @@ static inline void xa_erase_irq(struct xarray *xa, unsigned long idx)
 #define HAVE_REQUIRED_IB_GID
 #define HAVE_IB_PD_FLAGS
 #define HAVE_IB_GID_DEV_PORT_INDEX
+#define HAVE_GET_DEV_FW_STR
 #define HAVE_GET_DEV_FW_STR_LEN
 #define HAVE_CREATE_AH_UDATA
 #define HAVE_QP_RWQ_IND_TBL
