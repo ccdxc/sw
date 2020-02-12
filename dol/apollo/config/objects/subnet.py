@@ -123,6 +123,7 @@ class SubnetObject(base.ConfigObjectBase):
         logger.info('- HostIfIdx:%s' % (self.HostIfIdx))
         logger.info('- HostIfUuid:%s' % (self.HostIfUuid))
         logger.info("- VirtualRouter IP:%s" % (self.VirtualRouterIPAddr))
+        logger.info("- VRMac:%s" % (self.VirtualRouterMACAddr))
         logger.info("- TableIds V4:%d|V6:%d" % (self.V4RouteTableId, self.V6RouteTableId))
         logger.info("- NaclIDs IngV4:%s|IngV6:%s|EgV4:%s|EgV6:%s" %\
                     (self.IngV4SecurityPolicyIds, self.IngV6SecurityPolicyIds, self.EgV4SecurityPolicyIds, self.EgV6SecurityPolicyIds))

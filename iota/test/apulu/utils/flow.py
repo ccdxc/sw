@@ -33,6 +33,8 @@ def verifyFlowLogging(af, workload_pairs):
     return api.types.status.SUCCESS
 
 def clearFlowTable(workload_pairs):
+    if api.GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]
@@ -73,6 +75,8 @@ def parseFlowEntries(entries, w1, w2):
     return iflow_found, rflow_found
 
 def verifyFlowTable(af, workload_pairs):
+    if api.GlobalOptions.dryrun:
+        return api.types.status.SUCCESS
     for pair in workload_pairs:
         w1 = pair[0]
         w2 = pair[1]

@@ -50,12 +50,20 @@
 		NodeHealth
 		NetworkQosClass
 		NetworkPolicyQos
+		NetworkDscpClass
+		NetworkDscpPolicy
+		NetworkQueueClass
+		NetworkQueuePolicy
 		DataSwitch
 		License
 		TestBedMsg
 		TestNodesMsg
 		VlanConfig
 		SwitchFlapInfo
+		PortPauseConfig
+		PortPfcConfig
+		PortQosConfig
+		PortQueuingConfig
 		SwitchMsg
 		TestBedNode
 		EntityCopyMsg

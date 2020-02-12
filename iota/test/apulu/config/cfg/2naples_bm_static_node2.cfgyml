@@ -115,7 +115,6 @@ vpc:
           vroutermac       : macaddr/0055.0100.0002
           vnic:
             - id        : 2
-              type      : igw
               count     : 1             # 1 untagged VNIC
               vmac      : macaddr/00ae.cd00.000b
               hostifidx : 0x80000049
@@ -129,6 +128,8 @@ vpc:
               srcguard: false         # true or false (default false)
               public  : false
               tagged  : false         # true or false (default true)
+              igwvnic : true
+              remoteroutes : '50.5.0.0\16'
       nexthop:
         - id         : 3
           type       : overlay

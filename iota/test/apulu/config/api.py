@@ -10,7 +10,7 @@ import iota.harness.api as api
 
 WORKLOAD_PAIR_TYPE_LOCAL_ONLY    = 1
 WORKLOAD_PAIR_TYPE_REMOTE_ONLY   = 2
-WORKLOAD_PAIR_TYPE_ANY           = 3
+WORKLOAD_PAIR_TYPE_IGW_ONLY      = 3
 
 class Endpoint:
     def __init__(self, vnic_inst, ip_addresses):
@@ -19,6 +19,16 @@ class Endpoint:
         self.vlan = vnic_inst.VlanId
         self.ip_addresses = ip_addresses
         self.node_name = vnic_inst.Node
+
+class VnicRoute:
+    def __init__(self, vnic_inst, ip_addresses):
+        self.routes = vnic_inst.RemoteRoutes
+        self.gw = vnic_inst.SUBNET.VirtualRouterIPAddr[1]
+        self.node_name = vnic_inst.Node
+        if ip_addresses:
+            self.vnic_ip = ip_addresses[0]
+        else:
+            self.vnic_ip = None
 
 def __get_vnic_ip_address(vnic_addresses, iptype):
     for ipaddr in vnic_addresses:
@@ -46,6 +56,19 @@ def GetEndpoints():
 
     return eps
 
+def GetVnicRoutes():
+    naplesHosts = api.GetNaplesHostnames()
+    vnic_routes = []
+    for node in naplesHosts:
+        vnics = vnic.client.Objects(node)
+        for vnic_inst in vnics:
+            vnic_addresses = lmapping.client.GetVnicAddresses(vnic_inst)
+            if vnic_inst.RemoteRoutes:
+                route = VnicRoute(vnic_inst, vnic_addresses)
+                vnic_routes.append(route)
+    return vnic_routes
+
+
 def GetObjClient(objname):
     return ObjClient[objname]
 
@@ -66,6 +89,13 @@ def __vnics_in_same_segment(vnic1, vnic2):
             if ipaddress.ip_interface(vnic1_ip).network == ipaddress.ip_interface(vnic2_ip).network:
                 return True
 
+    return False
+
+def __vnics_are_local_to_igw_pair(vnic1, vnic2):
+    if vnic1.Node == vnic2.Node:
+        return False
+    if vnic1.LocalVnic == True and vnic2.IgwVnic == True:
+        return True
     return False
 
 
@@ -90,7 +120,11 @@ def __getWorkloadPairsBy(wl_pair_type):
         for vnic2 in vnics:
             if vnic1 == vnic2:
                 continue
-            if not __vnics_in_same_segment(vnic1, vnic2):
+            find_in_same_segment = \
+                    (wl_pair_type == WORKLOAD_PAIR_TYPE_LOCAL_ONLY or \
+                    wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY)
+
+            if find_in_same_segment and not __vnics_in_same_segment(vnic1, vnic2):
                 continue
 
             w1 = __findWorkloadByVnic(vnic1)
@@ -100,12 +134,14 @@ def __getWorkloadPairsBy(wl_pair_type):
                 continue
             elif wl_pair_type == WORKLOAD_PAIR_TYPE_REMOTE_ONLY and vnic1.Node == vnic2.Node:
                 continue
+            elif wl_pair_type == WORKLOAD_PAIR_TYPE_IGW_ONLY and not __vnics_are_local_to_igw_pair(vnic1, vnic2):
+                continue
 
             wl_pairs.append((w1, w2))
 
     return wl_pairs
 
-def GetPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_ANY):
+def GetPingableWorkloadPairs(wl_pair_type = WORKLOAD_PAIR_TYPE_REMOTE_ONLY):
     return __getWorkloadPairsBy(wl_pair_type=wl_pair_type)
 
 def __getObjects(objtype):

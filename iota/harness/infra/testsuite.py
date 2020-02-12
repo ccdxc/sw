@@ -216,8 +216,6 @@ class TestSuite:
         return types.status.SUCCESS
 
     def __setup_config(self):
-        if GlobalOptions.dryrun:
-            return types.status.SUCCESS
         for s in self.__spec.setup.config:
             # Reset the running directory before every step
             Logger.info("Starting Config Step: ", s.step)

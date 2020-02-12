@@ -94,6 +94,8 @@ vpc:
               srcguard: false         # true or false (default false)
               public  : false
               tagged  : false         # true or false (default true)
+              localvnic : true
+              remoteroutes : '64.0.0.0\24'
           rmap:                       # Remote IP mappings per subnet
             - id       : 2
               count    : 1

@@ -84,6 +84,13 @@ class VnicObject(base.ConfigObjectBase):
         self.QinQenabled = False
         self.DeriveOperInfo(node)
         self.Mutable = True if (utils.IsUpdateSupported() and self.IsOriginFixed()) else False
+        self.LocalVnic = getattr(spec, 'localvnic', False)
+        self.IgwVnic = getattr(spec, 'igwvnic', False)
+        remote_routes = getattr(spec, 'remoteroutes', None)
+        if remote_routes:
+            self.RemoteRoutes = remote_routes.replace('\\', '/').split(',')
+        else:
+            self.RemoteRoutes = None
         self.Show()
 
         ############### CHILDREN OBJECT GENERATION
