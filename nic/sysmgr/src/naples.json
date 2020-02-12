@@ -80,7 +80,6 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash", "cap_stdout_stderr"],
-        "memory-limit": 300.0,
         "cpu-max-percentage": 75,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
@@ -111,7 +110,6 @@
             }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "memory-limit": 75.0,
         "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
@@ -129,7 +127,6 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "memory-limit": 350.0,
         "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
@@ -147,7 +144,6 @@
                 "service-name": "hal"
             }],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "memory-limit": 250.0,
         "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
@@ -199,7 +195,6 @@
                 }
         ],
         "flags": ["restartable", "save_stdout_on_crash"],
-        "memory-limit": 250.0,
         "cpu-max-percentage": 25,
         "timeout": 0.0,
         "cpu-affinity": "0xC"
