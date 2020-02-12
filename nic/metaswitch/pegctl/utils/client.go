@@ -6,8 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/pensando/sw/venice/utils/log"
 	"github.com/pensando/sw/venice/globals"
+	"github.com/pensando/sw/venice/utils/log"
 )
 
 const (
