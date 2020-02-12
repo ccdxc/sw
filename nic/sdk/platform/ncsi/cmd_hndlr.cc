@@ -1034,6 +1034,7 @@ void CmdHndler::GetLinkStatus(void *obj, const void *cmd_pkt, ssize_t cmd_sz)
     memcpy(&resp.rsp.NcsiHdr, &cmd->cmd.NcsiHdr, sizeof(resp.rsp.NcsiHdr));
  
     NCSI_CMD_BEGIN_BANNER();
+    resp.status = htonl(0x100071);
     SDK_TRACE_INFO("ncsi_channel: 0x%x, link_status: 0x%x", cmd->cmd.NcsiHdr.channel, ntohl(resp.status));
 
     sm_ret = StateM[cmd->cmd.NcsiHdr.channel]->UpdateState(CMD_GET_LINK_STATUS);

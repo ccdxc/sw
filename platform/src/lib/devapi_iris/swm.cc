@@ -129,6 +129,8 @@ devapi_swm::get_channels_info(std::set<channel_info_t *>* channels_info)
 
     for (auto it = channel_state_.cbegin(); it != channel_state_.cend(); it++) {
         src_cinfo = (channel_info_t *)(it->second);
+        NIC_LOG_DEBUG("channel: {}, rx: {}, tx: {}", src_cinfo->channel,
+                      src_cinfo->rx_en, src_cinfo->tx_en);
         mem = (channel_info_t *)DEVAPI_CALLOC(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO,
                                               sizeof(channel_info_t));
         dst_cinfo = new (mem) channel_info_t();
@@ -866,6 +868,7 @@ devapi_swm::enable_tx(uint32_t channel)
     if (tx_channel_ != -1) {
         NIC_LOG_WARN("Channel {} already is tx enabled. Force enabling tx on channel: {}.",
                     tx_channel_, channel);
+        disable_tx(tx_channel_);
     }
 
     if (tx_channel_ == (int)channel) {

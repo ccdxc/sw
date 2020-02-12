@@ -308,6 +308,8 @@ ncsi_ipc_channel_get (ncsi_ipc_msg_t *msg)
             rsp->set_api_status(types::API_STATUS_OK);
             NIC_LOG_DEBUG("Channel: {}, tx_en: {}, rx_en: {}",
                           cinfo->channel, cinfo->tx_en, cinfo->rx_en);
+        } else {
+            NIC_LOG_DEBUG("Skipping for channel: {}", cinfo->channel);
         }
         channels_info.erase(it++);
         DEVAPI_FREE(DEVAPI_MEM_ALLOC_SWM_CHANNEL_INFO, cinfo);

@@ -127,7 +127,7 @@ func init() {
 	ncsiDebugCmd.AddCommand(ncsiChannelDebugCmd)
 	ncsiChannelDebugCmd.Flags().StringVar(&rxCh, "rx", "enable", "Enable channel RX enable | disable")
 	ncsiChannelDebugCmd.Flags().StringVar(&txCh, "tx", "enable", "Enable channel TX enable | disable")
-	ncsiChannelDebugCmd.Flags().Uint32Var(&channelID, "ch", 0, "Specify channel id")
+	ncsiChannelDebugCmd.Flags().Uint32Var(&channelID, "ch", 0xFF, "Specify channel id")
 }
 
 func ncsiVlanDebugCmdHandler(cmd *cobra.Command, args []string) {
