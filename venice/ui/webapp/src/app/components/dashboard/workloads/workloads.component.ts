@@ -149,14 +149,15 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   getWorkloads() {
     const subscription = this.workloadService.ListWorkloadCache().subscribe(
       (response) => {
-        this.workloads = response;
+        if (response.connIsErrorState) {
+          this.getWorkloadsFailed = true;
+          this.checkFailureState();
+          return;
+        }
+        this.workloads = response.data;
         this.firstStat.value = this.workloads.length.toString();
         this.cardState = CardStates.READY;
         this.computeAvg();
-      },
-      (err) => {
-        this.getWorkloadsFailed = true;
-        this.checkFailureState();
       }
     );
     this.subscriptions.push(subscription);
@@ -165,15 +166,16 @@ export class WorkloadsComponent implements OnInit, OnChanges, OnDestroy {
   getHosts() {
     const subscription = this.clusterService.ListHostCache().subscribe(
       response => {
-        this.hosts = response;
+        if (response.connIsErrorState) {
+          this.getHostsFailed = true;
+          this.checkFailureState();
+          return;
+        }
+        this.hosts = response.data;
         this.secondStat.value = this.hosts.length.toString();
         this.cardState = CardStates.READY;
         this.computeAvg();
       },
-      (err) => {
-        this.getHostsFailed = true;
-        this.checkFailureState();
-      }
     );
     this.subscriptions.push(subscription);
   }

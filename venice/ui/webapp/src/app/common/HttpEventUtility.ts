@@ -6,6 +6,11 @@ export enum EventTypes {
   delete = 'Deleted',
 }
 
+export interface ChangeEvent<T> {
+  type: EventTypes;
+  object: T;
+}
+
 /**
  * Utility for handling event from watch streams. It can be used for any watch API.
  * It processes the events and keeps the updated object in a readonly array.
@@ -61,7 +66,7 @@ export class HttpEventUtility<T> {
       this._updateRecordsMap = {};
       Object.keys(EventTypes).forEach( (key) => this._updateRecordsMap[EventTypes[key]] = []);
 
-      const events = eventChunk.events;
+      const events: ChangeEvent<T>[] = eventChunk.events;
       if (events == null) {
         return;
       }

@@ -9,8 +9,14 @@ import { MethodOpts } from '@sdk/v1/services/generated/abstract.service';
 import * as oboe from 'oboe';
 import { NEVER, Observable, Subject, Subscriber, Subscription, TeardownLogic, BehaviorSubject, ReplaySubject } from 'rxjs';
 import { WebSocketSubject } from 'rxjs/observable/dom/WebSocketSubject';
-import { delay, publishReplay, refCount } from 'rxjs/operators';
-import { HttpEventUtility } from '@app/common/HttpEventUtility';
+import { delay, publishReplay, refCount, bufferTime } from 'rxjs/operators';
+import { HttpEventUtility, ChangeEvent } from '@app/common/HttpEventUtility';
+
+export interface ServerEvent<T> {
+  data: ReadonlyArray<T>;
+  events: ChangeEvent<T>[];
+  connIsErrorState: boolean;
+}
 
 /**
  * This class is the core component of invoking REST API.  All *.service.ts use this class.
@@ -36,7 +42,7 @@ export class GenServiceUtility {
   protected urlServiceMap: { [method: string]: Observable<VeniceResponse> } = {};
   protected dataCacheMap: { [method: string]: WebSocketSubject<any> } = {};
   protected urlWsMap: { [method: string]: WebSocketSubject<any> } = {};
-  protected cacheMap: { [method: string]: ReplaySubject<ReadonlyArray<any>> } = {};
+  protected cacheMap: { [method: string]: ReplaySubject<ServerEvent<any>> } = {};
   protected ajaxStartCallback: (payload: any) => void;
   protected ajaxEndCallback: (payload: any) => void;
   protected useWebSockets: boolean;
@@ -56,6 +62,7 @@ export class GenServiceUtility {
       this.teardown();
     });
   }
+
 
   setId(inputId: string) {
     this.id = (inputId) ? inputId : this.id;
@@ -203,7 +210,7 @@ export class GenServiceUtility {
   }
 
   public createDataCache<T>(constructor: any, key: string, listFn: () => Observable<VeniceResponse>, watchFn: (query: any) => Observable<VeniceResponse>) {
-    let observer = new ReplaySubject<ReadonlyArray<T>>(1);
+    let observer = new ReplaySubject<ServerEvent<T>>(1);
     if (this.cacheMap[key] != null) {
       // Fetch same observable that we have given out
       observer = this.cacheMap[key];
@@ -213,30 +220,55 @@ export class GenServiceUtility {
     const sub = listFn().subscribe(resp => {
       const body = resp.body;
       if (body.items) {
+        let resVersion = 0;
         const events = body.items.map(item => {
+          const ver = parseInt(item.meta['resource-version'], 10);
+          if (ver > resVersion) {
+            resVersion = ver;
+          }
           return {
             type: 'Created',
             object: item,
           };
         });
         eventUtility.processEvents({events: events});
-        observer.next(eventUtility.array);
-        // Get res version from last item
+        observer.next({
+          data: eventUtility.array,
+          events: [],
+          connIsErrorState: false,
+        });
         const watchBody = {};
         if (body.items.length > 0) {
-          const lastItem = body.items[body.items.length - 1];
-          watchBody['resource-version'] = lastItem.meta['resource-version'];
+          watchBody['O.resource-version'] = (resVersion + 1).toString();
         }
 
         // TODO: the retry should be replaced with an observable retry
         const watchMethod = () => {
-          const watchSub = watchFn(watchBody).subscribe(watchResp => {
-            eventUtility.processEvents(watchResp);
-            observer.next(eventUtility.array);
+          // buffer events for 250ms before acting on them
+          const watchSub = watchFn(watchBody).pipe(bufferTime(250)).subscribe(watchResp => {
+            let evts = [];
+            (<any[]>watchResp).forEach(item => {
+              if (item.events != null) {
+                evts = events.concat(item.events);
+              }
+            });
+            eventUtility.processEvents({
+              events: evts,
+            });
+            observer.next({
+              data: eventUtility.array,
+              events: evts,
+              connIsErrorState: false,
+            });
           },
           (error) => {
             const controller = Utility.getInstance().getControllerService();
             controller.webSocketErrorHandler('Failed to get ' + key)(error);
+            observer.next({
+              data: eventUtility.array,
+              events: [],
+              connIsErrorState: true,
+            });
             setTimeout(() => {
               watchMethod();
             }, 5000);
@@ -249,6 +281,11 @@ export class GenServiceUtility {
     (error) => {
       const controller = Utility.getInstance().getControllerService();
       controller.invokeRESTErrorToaster('Error', 'Failed to get ' + key);
+      observer.next({
+        data: eventUtility.array,
+        events: [],
+        connIsErrorState: true,
+      });
       setTimeout(() => {
         // Rerun cache
         this.createDataCache(constructor, key, listFn, watchFn);
@@ -258,8 +295,7 @@ export class GenServiceUtility {
     this.cacheMap[key] = observer;
   }
 
-  public handleListFromCache(key: string): Observable<ReadonlyArray<any>> {
-    console.log('using cache');
+  public handleListFromCache(key: string): Observable<ServerEvent<any>> {
     return this.cacheMap[key];
   }
 
