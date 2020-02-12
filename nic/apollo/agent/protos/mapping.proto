@@ -32,11 +32,11 @@ message L2MappingKey {
   uint64 MACAddr  = 2;
 }
 
-// MappingKey uniquley identifies the IP in the entire fabric
+// MappingKey uniquely identifies the IP in the entire fabric
 message MappingKey {
   oneof keyinfo {
     // IP mapping key
-    L3MappingKey IPKey = 1;
+    L3MappingKey IPKey  = 1;
     // MAC mapping key
     L2MappingKey MACKey = 2;
   }
@@ -45,33 +45,43 @@ message MappingKey {
 // MappingSpec captures configuration of each mapping
 // NOTE: Mapping is either on the local host/TEP or remote TEP
 message MappingSpec {
-  // key to identify the mapping
-  MappingKey          Id             = 1;
+  // unique mapping id
+  bytes           Id             = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  oneof mac_or_ip {
+    // IP mapping key
+    L3MappingKey  IPKey          = 2 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+    // MAC mapping key
+    L2MappingKey  MACKey         = 3 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  }
   // subnet this mapping is in
-  bytes               SubnetId       = 2 [(gogoproto.moretags) = "meta:mandatory"];
+  bytes           SubnetId       = 4 [(gogoproto.moretags) = "meta:mandatory"];
   // dstinfo is expected to empty for local mappings
   oneof dstinfo {
       // if IP is that of local vnic, corresponding vnic id
-      bytes           VnicId         = 3;
+      // this is mandatory attribute for local IP mappings
+      bytes       VnicId         = 5;
       // Tunnel ID of the remote TEP for remote mapping
-      bytes           TunnelId       = 4;
+      // this is mandatory attribute for remote MAC/IP mappings for
+      // non-ECMP cases
+      bytes       TunnelId       = 6;
       // overlay nexthop/TEP group for remote mappings
-      bytes           NexthopGroupId = 5;
+      // this is mandatory attribute for remote MAC/IP mappings for ECMP cases
+      bytes       NexthopGroupId = 7;
   }
   // overlay MAC address of this mapping
-  uint64              MACAddr        = 6 [(gogoproto.moretags) = "meta:mandatory"];
+  uint64          MACAddr        = 8 [(gogoproto.moretags) = "meta:mandatory"];
   // fabric encap information specific to this mapping, if any
-  types.Encap         Encap          = 7 [(gogoproto.moretags) = "meta:mandatory"];
+  types.Encap    Encap           = 9 [(gogoproto.moretags) = "meta:mandatory"];
   // public IP, if overlay IP has corresponding public IP
-  types.IPAddress     PublicIP       = 8;
+  types.IPAddress PublicIP       = 10;
   // provider/underlay IP corresponding to the overlay IP, if any
-  types.IPAddress     ProviderIp     = 9;
+  types.IPAddress ProviderIp     = 11;
   // tag/label/security group of this IP mapping, these tags/labels/SGs can be
   // used// in defining security policy rules
   // NOTE:
   // 1. service tag 0 is invalid
   // 2. a maximum of 5 tags are supported
-  repeated uint32     Tags           = 10;
+  repeated uint32 Tags           = 12;
 }
 
 // operational status of a mapping

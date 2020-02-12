@@ -3629,14 +3629,14 @@ pds_local_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
     switch (local_spec->key.type) {
     case PDS_MAPPING_TYPE_L2:
         {
-            auto key = proto_spec->mutable_id()->mutable_mackey();
+            auto key = proto_spec->mutable_mackey();
             key->set_macaddr(MAC_TO_UINT64(local_spec->key.mac_addr));
             key->set_subnetid(local_spec->key.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
         {
-            auto key = proto_spec->mutable_id()->mutable_ipkey();
+            auto key = proto_spec->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
                                           &local_spec->key.ip_addr);
             key->set_vpcid(local_spec->key.vpc.id, PDS_MAX_KEY_LEN);
@@ -3669,24 +3669,21 @@ static inline sdk_ret_t
 pds_local_mapping_proto_to_api_spec (pds_local_mapping_spec_t *local_spec,
                                      const pds::MappingSpec &proto_spec)
 {
-    pds::MappingKey key;
-
-    key = proto_spec.id();
-    switch (key.keyinfo_case()) {
-    case pds::MappingKey::kIPKey:
+    switch (proto_spec.mac_or_ip_case()) {
+    case pds::MappingSpec::kIPKey:
         local_spec->key.type = PDS_MAPPING_TYPE_L3;
         pds_obj_key_proto_to_api_spec(&local_spec->key.vpc,
-                                      key.ipkey().vpcid());
+                                      proto_spec.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&local_spec->key.ip_addr,
-                                      key.ipkey().ipaddr());
+                                      proto_spec.ipkey().ipaddr());
         pds_obj_key_proto_to_api_spec(&local_spec->subnet,
                                       proto_spec.subnetid());
         break;
 
-    case pds::MappingKey::kMACKey:
+    case pds::MappingSpec::kMACKey:
     default:
         PDS_TRACE_ERR("Unsupported local mapping key type %u, local mappings "
-                      "can only be L3 mappings", key.keyinfo_case());
+                      "can only be L3 mappings", proto_spec.mac_or_ip_case());
         return SDK_RET_INVALID_ARG;
     }
     if (proto_spec.dstinfo_case() != pds::MappingSpec::kVnicId) {
@@ -3736,14 +3733,14 @@ pds_remote_mapping_api_spec_to_proto (pds::MappingSpec *proto_spec,
     switch (remote_spec->key.type) {
     case PDS_MAPPING_TYPE_L2:
         {
-            auto key = proto_spec->mutable_id()->mutable_mackey();
+            auto key = proto_spec->mutable_mackey();
             key->set_macaddr(MAC_TO_UINT64(remote_spec->key.mac_addr));
             key->set_subnetid(remote_spec->key.subnet.id, PDS_MAX_KEY_LEN);
         }
         break;
     case PDS_MAPPING_TYPE_L3:
         {
-            auto key = proto_spec->mutable_id()->mutable_ipkey();
+            auto key = proto_spec->mutable_ipkey();
             ipaddr_api_spec_to_proto_spec(key->mutable_ipaddr(),
                                           &remote_spec->key.ip_addr);
             key->set_vpcid(remote_spec->key.vpc.id, PDS_MAX_KEY_LEN);
@@ -3826,25 +3823,22 @@ static inline sdk_ret_t
 pds_remote_mapping_proto_to_api_spec (pds_remote_mapping_spec_t *remote_spec,
                                       const pds::MappingSpec &proto_spec)
 {
-    pds::MappingKey key;
-
-    key = proto_spec.id();
-    switch (key.keyinfo_case()) {
-    case pds::MappingKey::kMACKey:
+    switch (proto_spec.mac_or_ip_case()) {
+    case pds::MappingSpec::kMACKey:
         remote_spec->key.type = PDS_MAPPING_TYPE_L2;
         pds_obj_key_proto_to_api_spec(&remote_spec->key.subnet,
-                                      key.mackey().subnetid());
+                                      proto_spec.mackey().subnetid());
         MAC_UINT64_TO_ADDR(remote_spec->key.mac_addr,
-                           key.mackey().macaddr());
+                           proto_spec.mackey().macaddr());
         remote_spec->subnet = remote_spec->key.subnet;
         break;
 
-    case pds::MappingKey::kIPKey:
+    case pds::MappingSpec::kIPKey:
         remote_spec->key.type = PDS_MAPPING_TYPE_L3;
         pds_obj_key_proto_to_api_spec(&remote_spec->key.vpc,
-                                      key.ipkey().vpcid());
+                                      proto_spec.ipkey().vpcid());
         ipaddr_proto_spec_to_api_spec(&remote_spec->key.ip_addr,
-                                      key.ipkey().ipaddr());
+                                      proto_spec.ipkey().ipaddr());
         pds_obj_key_proto_to_api_spec(&remote_spec->subnet,
                                       proto_spec.subnetid());
         break;

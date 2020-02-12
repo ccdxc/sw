@@ -93,15 +93,19 @@ class LocalMappingObject(base.ConfigObjectBase):
         return super().IsFilterMatch(selectors.flow.filters)
 
     def PopulateKey(self, grpcmsg):
-        key = grpcmsg.Id.add()
-        key.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
-        utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
+        if grpcmsg.__class__.__name__ == 'MappingDeleteRequest' or grpcmsg.__class__.__name__ == 'MappingGetRequest':
+            key = grpcmsg.Id.add()
+            key.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
+            utils.GetRpcIPAddr(self.IPAddr, key.IPKey.IPAddr)
+        else:
+            grpcmsg.Id.append(self.GetKey())
         return
 
     def PopulateSpec(self, grpcmsg):
         spec = grpcmsg.Request.add()
-        spec.Id.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
-        utils.GetRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr)
+        spec.Id = self.GetKey()
+        spec.IPKey.VPCId = self.VNIC.SUBNET.VPC.GetKey()
+        utils.GetRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr)
         spec.SubnetId = self.VNIC.SUBNET.GetKey()
         spec.VnicId = self.VNIC.GetKey()
         spec.MACAddr = self.VNIC.MACAddr.getnum()
@@ -116,7 +120,7 @@ class LocalMappingObject(base.ConfigObjectBase):
     def ValidateSpec(self, spec):
         if spec.Id.IPKey.VPCId != self.VNIC.SUBNET.VPC.GetKey():
             return False
-        if not utils.ValidateRpcIPAddr(self.IPAddr, spec.Id.IPKey.IPAddr):
+        if not utils.ValidateRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr):
             return False
         return True
 
