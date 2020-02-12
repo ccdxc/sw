@@ -104,7 +104,7 @@ class RemoteMappingObject(base.ConfigObjectBase):
         return
 
     def ValidateSpec(self, spec):
-        if spec.Id.IPKey.VPCId != self.SUBNET.VPC.GetKey():
+        if spec.IPKey.VPCId != self.SUBNET.VPC.GetKey():
             return False
         if not utils.ValidateRpcIPAddr(self.IPAddr, spec.IPKey.IPAddr):
             return False
