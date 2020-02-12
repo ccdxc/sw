@@ -3,6 +3,7 @@
 //------------------------------------------------------------------------------
 
 #include "nic/metaswitch/stubs/test/hals/ipsfeeder/underlay_ecmp_ips_feeder.hpp"
+#include "nic/metaswitch/stubs/common/pds_ms_state.hpp"
 
 namespace pds_ms_test {
 
@@ -18,13 +19,31 @@ void underlay_ecmp_ips_feeder_t::init(std::vector<nhinfo_t>&& nhs) {
     NBB_CREATE_STATIC_THREAD_CXT
     nbs_enter_shared_context(hals_proc_id, &saved_context NBB_CCXT);
 
+    uint32_t l3_if = 200; // Dummy number used to generate L3If UUId
+    auto state_ctxt = pds_ms::state_t::thread_context();
+    for (auto& nhi: nhs) {
+        auto l3_if_uuid = pds_ms::msidx2pdsobjkey(l3_if);
+        auto new_if_obj = new pds_ms::if_obj_t(nhi.l3_ifindex, l3_if_uuid);
+        state_ctxt.state()->if_store().add_upd(nhi.l3_ifindex, new_if_obj);
+        ms_iflist.push_back(nhi.l3_ifindex);
+        ++ l3_if;
+    }
     underlay_ecmp_input_params_t::init(std::move(nhs));
     pathset_id = 1;
 }
 
-void 
-underlay_ecmp_ips_feeder_t::fill_add_update_sz_array(
-                              NBB_BUF_SIZE (&size_array)[OFL_ATG_NHPI_ADD_UPDATE_ECMP + 1]) {
+void underlay_ecmp_ips_feeder_t::cleanup(void) {
+    auto state_ctxt = pds_ms::state_t::thread_context();
+    for (auto ms_ifindex: ms_iflist) {
+        state_ctxt.state()->if_store().erase(ms_ifindex);
+    }
+    nbs_exit_shared_context(&saved_context);
+    NBB_DESTROY_STATIC_THREAD_CXT
+}
+
+void underlay_ecmp_ips_feeder_t::fill_add_update_sz_array(
+                NBB_BUF_SIZE (&size_array)[OFL_ATG_NHPI_ADD_UPDATE_ECMP + 1]) {
+
     static_assert(OFL_ATG_NHPI_ADD_UPDATE_ECMP == 5);
     size_array[0] = NBB_ALIGN_OFFSET(sizeof(ATG_NHPI_ADD_UPDATE_ECMP));
     // Total remaining nexthops

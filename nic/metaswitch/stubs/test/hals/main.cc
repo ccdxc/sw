@@ -92,12 +92,6 @@ TEST_F(pds_ms_hals_test, phy_port_test) {
     test_input->trigger_update();
     test_output->validate();
 
-    // Delete
-    std::cout << "=== IF Delete test ===" << std::endl;
-    test_output->expect_delete();
-    test_input->trigger_delete();
-    test_output->validate();
-
     // Mock batch update failure
     std::cout << "=== IF Spec Create failure test ===" << std::endl;
     test_input->next();

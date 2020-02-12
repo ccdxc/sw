@@ -57,7 +57,7 @@ cp_route_pre_set (pds::CPStaticRouteSpec &req, NBB_LONG row_status,
                             .append(uuid_obj_type_str(uuid_obj->obj_type()))
                             .append(" for interface in CP Route proto"));
     }
-    auto ifindex = ((pds_ms::interface_uuid_obj_t *) uuid_obj)->ms_id().ms_ifindex;
+    auto ifindex = ((pds_ms::interface_uuid_obj_t *) uuid_obj)->ms_id();
     req.set_ifindex(ifindex);
     SDK_TRACE_DEBUG("Setting CP Route Interface index 0x%x from UUID %s",
                     ifindex, uuid.str());

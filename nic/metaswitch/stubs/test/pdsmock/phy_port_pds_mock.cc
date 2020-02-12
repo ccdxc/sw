@@ -24,11 +24,7 @@ void load_phy_port_test_output ()
 pds_obj_key_t phy_port_pds_mock_t::make_l3if_key_
                             (const phy_port_input_params_t& input)
 {
-    pds_ifindex_t eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT,
-                                            input.phy_port,
-                                            ETH_IF_DEFAULT_CHILD_PORT);
-    auto ms_ifindex = pds_ms::pds_to_ms_ifindex(eth_ifindex, IF_TYPE_ETH);
-    return pds_ms::msidx2pdsobjkey(ms_ifindex);
+    return pds_ms::msidx2pdsobjkey(input.l3_if);
 }
 
 void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& input,
@@ -41,19 +37,6 @@ void phy_port_pds_mock_t::generate_addupd_specs(const phy_port_input_params_t& i
     spec.key = make_l3if_key_(input);
     spec.type = PDS_IF_TYPE_L3;
     spec.admin_state = input.admin_state ? PDS_IF_STATE_UP:PDS_IF_STATE_DOWN;
-
-    // Get Linux MAC address
-    auto fp = popen ("ifconfig eth0 | grep ether | awk '{print $2}'", "r");
-    if (!fp) {
-        throw std::runtime_error ("ERROR Fetching Linux MAC");
-    }
-    char buf[100];
-    while (std::fgets(buf, sizeof buf, fp) != NULL) {
-        std::cout << '"' << buf << '"' << '\n';
-    }
-    pclose (fp);
-
-    mac_str_to_addr(buf, spec.l3_if_info.mac_addr);
     eth_ifindex = ETH_IFINDEX(ETH_IF_DEFAULT_SLOT, input.phy_port,
                               ETH_IF_DEFAULT_CHILD_PORT);
     spec.l3_if_info.port = api::uuid_from_objid(eth_ifindex);
@@ -78,8 +61,8 @@ void phy_port_pds_mock_t::validate_()
         // Verify all temporary objects and cookies are freed
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_));
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID), (num_if_objs_));
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t)0);
         return;
     }
 
@@ -90,14 +73,14 @@ void phy_port_pds_mock_t::validate_()
         auto state = state_ctxt.state();
         if (op_delete_) {
             // Object is removed from store synchronously for deletes
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_-1));
+            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID), (num_if_objs_-1));
         } else {
-            ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == (num_if_objs_+1));
+            ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID), (num_if_objs_+1));
         }
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 1);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t)1);
     }
 
-    ASSERT_TRUE (pds_ret_status != mock_pds_batch_async_fail_);
+    ASSERT_NE (pds_ret_status, mock_pds_batch_async_fail_);
 
     // Mock callback
     auto pds_mock = dynamic_cast<pds_mock_t*>(test_params()->test_output);
@@ -109,17 +92,17 @@ void phy_port_pds_mock_t::validate_()
         // Verify no change to slab - all temporary objects released
         auto state_ctxt = pds_ms::state_t::thread_context();
         auto state = state_ctxt.state();
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == num_if_objs_);
-        ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID), num_if_objs_);
+        ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t)0);
         return;
     }
 
-    if (op_create_) { ++num_if_objs_;}
+//    if (op_create_) { ++num_if_objs_;}
     if (op_delete_) { --num_if_objs_;}
     auto state_ctxt = pds_ms::state_t::thread_context();
     auto state = state_ctxt.state();
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID) == num_if_objs_);
-    ASSERT_TRUE (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID) == 0);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_IF_SLAB_ID), num_if_objs_);
+    ASSERT_EQ (state->get_slab_in_use (pds_ms::PDS_MS_COOKIE_SLAB_ID), (uint32_t)0);
 }
 
 } // End namespace pds_ms_test

@@ -42,9 +42,10 @@ ms_to_pds_eth_ifindex (uint32_t ms_ifindex)
     return ((IF_TYPE_ETH << IF_TYPE_SHIFT) | ms_ifindex);
 }
 
-static std::string 
+std::string 
 pds_ifindex_to_ifname (uint32_t pds_ifindex)
 {
+    // TODO : Get Linux IfName from LIF walk for EthIfIndex
     // Hardcoding the interface name to be same as Linux interface name.
     // uplink 1 - dsc0
     // uplink 2 - dsc1

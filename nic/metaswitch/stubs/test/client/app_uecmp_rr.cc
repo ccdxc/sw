@@ -122,11 +122,11 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         }
     } else {
         if (second) {
-            pds_if.key = msidx2pdsobjkey(k_l3_if_id_2);
+            pds_if.key = test::uuid_from_objid(k_l3_if_id_2);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr_2;
             pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index_2);
         } else {
-            pds_if.key = msidx2pdsobjkey(k_l3_if_id);
+            pds_if.key = test::uuid_from_objid(k_l3_if_id);
             pds_if.l3_if_info.ip_prefix.addr.addr.v4_addr = g_test_conf_.local_ip_addr;
             pds_if.l3_if_info.port = test::uuid_from_objid(g_test_conf_.eth_if_index);
         }
@@ -149,6 +149,29 @@ static void create_intf_proto_grpc (bool lo=false, bool second=false) {
         printf("%s failed! ret_status=%d (%s) response.status=%d\n",
                 __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
                 response.apistatus());
+        exit(1);
+    }
+}
+
+static void delete_lo_proto_grpc () {
+    InterfaceDeleteRequest  request;
+    InterfaceDeleteResponse response;
+    ClientContext       context;
+    Status              ret_status;
+
+    request.mutable_batchctxt()->set_batchcookie(1);
+    request.add_id(pds_ms::msidx2pdsobjkey(k_lo_if_id).id, PDS_MAX_KEY_LEN);
+
+    printf ("Pushing Loopback Interface Delete Proto...\n");
+    if (g_node_id == 3) {
+        ret_status = g_rr_if_stub_->InterfaceDelete(&context, request, &response);
+    } else {
+        ret_status = g_if_stub_->InterfaceDelete(&context, request, &response);
+    }
+    if (!ret_status.ok() || (response.apistatus(0) != types::API_STATUS_OK)) {
+        printf("%s failed! ret_status=%d (%s) response.status=%d\n",
+                __FUNCTION__, ret_status.error_code(), ret_status.error_message().c_str(),
+                response.apistatus(0));
         exit(1);
     }
 }
@@ -999,6 +1022,12 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[1], "mac-create")) {
             // MAC only
             create_l2f_test_mac_ip_proto_grpc(true);
+            return 0;
+        } else if (!strcmp(argv[1], "lo-delete")) {
+            delete_lo_proto_grpc();
+            return 0;
+        } else if (!strcmp(argv[1], "lo-create")) {
+            create_intf_proto_grpc(true);
             return 0;
         }
     }

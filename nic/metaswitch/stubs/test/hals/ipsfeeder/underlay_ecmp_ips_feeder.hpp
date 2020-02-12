@@ -24,10 +24,7 @@ public:
                               NBB_BUF_SIZE (&size_array)[OFL_ATG_NHPI_ADD_UPDATE_ECMP + 1]);
     void init(std::vector<nhinfo_t>&& nhs) override;
 
-    void cleanup(void) override {
-        nbs_exit_shared_context(&saved_context);
-        NBB_DESTROY_STATIC_THREAD_CXT
-    }
+    void cleanup(void) override;
 
     void trigger_create(void) override {
         op_create_ = true;
@@ -58,6 +55,7 @@ private:
 
     pds_ms::hals_l3_integ_subcomp_t hal_is;
     bool op_create_ = false;
+    std::vector<uint32_t> ms_iflist;
     NBB_SAVED_CONTEXT saved_context;
 };
 

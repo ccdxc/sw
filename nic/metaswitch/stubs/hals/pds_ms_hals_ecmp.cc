@@ -95,7 +95,8 @@ pds_obj_key_t hals_ecmp_t::make_pds_nhgroup_key_(void) {
 }
 
 void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
-                                 (pds_nexthop_group_spec_t& nhgroup_spec) {
+                                 (pds_nexthop_group_spec_t& nhgroup_spec,
+                                  state_t::context_t& state_ctxt) {
     int i = 0, num_repeats = 0;
     if (op_create_) {
         num_repeats = 1;
@@ -122,10 +123,15 @@ void hals_ecmp_t::make_pds_underlay_nhgroup_spec_
         for (auto& nh: ips_info_.nexthops) {
             // Nexthop key is unused
             nhgroup_spec.nexthops[i].type = PDS_NH_TYPE_UNDERLAY;
-            // TODO: The incoming L3 Intf UUID needs to be cached and
-            // looked up here
-            nhgroup_spec.nexthops[i].l3_if = 
-                msidx2pdsobjkey(nh.ms_ifindex);
+
+            // Fetch underlay L3 interface UUID from If Store
+            auto phy_if_obj = state_ctxt.state()->if_store().get(nh.ms_ifindex);
+            if (phy_if_obj == nullptr) {
+                throw Error(std::string("Underlay ECMP with unknown dest interface ")
+                            .append(std::to_string (nh.ms_ifindex)));
+            }
+            nhgroup_spec.nexthops[i].l3_if = phy_if_obj->phy_port_properties().l3_if_uuid;
+
             memcpy(nhgroup_spec.nexthops[i].underlay_mac, nh.mac_addr.m_mac,
                    ETH_ADDR_LEN);
             SDK_TRACE_DEBUG("MS ECMP %ld Add NH MSIfIndex 0x%lx PDSIf"
@@ -191,7 +197,7 @@ pds_nexthop_group_spec_t hals_ecmp_t::make_pds_nhgroup_spec_(state_t::context_t&
     nhgroup_spec.key = make_pds_nhgroup_key_();
     nhgroup_spec.type = ips_info_.pds_nhgroup_type;
     if (ips_info_.pds_nhgroup_type == PDS_NHGROUP_TYPE_UNDERLAY_ECMP) {
-        make_pds_underlay_nhgroup_spec_(nhgroup_spec);
+        make_pds_underlay_nhgroup_spec_(nhgroup_spec, state_ctxt);
     } else {
         make_pds_overlay_nhgroup_spec_(nhgroup_spec, state_ctxt);
     }

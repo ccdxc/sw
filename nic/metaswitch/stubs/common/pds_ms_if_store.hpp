@@ -37,12 +37,18 @@ public:
 
     struct phy_port_properties_t { // Uplink L3 ports
         ms_ifindex_t ifindex;
-        bool         admin_state;
+        bool         admin_state = false;
         mac_addr_t   mac_addr;
-        uint32_t     lnx_ifindex;
-        void         *fri_worker; // FRI worker context
-        bool         hal_created; // Intf created in HAL ?
-        bool         switchport;  // Switchport ?
+        uint32_t     lnx_ifindex = 0;
+        void         *fri_worker = nullptr; // FRI worker context
+        bool         hal_created = false; // Intf created in HAL ?
+        bool         switchport = false;  // Switchport ?
+        pds_obj_key_t l3_if_uuid;
+
+        phy_port_properties_t(ms_ifindex_t ifi, const pds_obj_key_t& uuid) {
+            memset (this->mac_addr, 0, ETH_ADDR_LEN);
+            ifindex = ifi; l3_if_uuid = uuid;       
+        }
     };
     struct vxlan_tunnel_properties_t { // All TEPs
         ms_ifindex_t ifindex;
@@ -65,8 +71,8 @@ public:
         ms_bd_id_t bd_id;
     };
 
-    if_obj_t(const phy_port_properties_t& port)
-        : prop_(port) {};
+    if_obj_t(ms_ifindex_t ms_ifindex, const pds_obj_key_t& l3_if_uuid)
+        : prop_(ms_ifindex, l3_if_uuid) {};
     if_obj_t(const vxlan_tunnel_properties_t& vxt)
         : prop_(vxt) {};
     if_obj_t(const vxlan_port_properties_t& vxp)
@@ -106,8 +112,9 @@ private:
             vxlan_port_properties_t    vxp_;
             irb_properties_t           irb_;
         };
-        properties_t(const phy_port_properties_t& phy_port)
-            : iftype_(ms_iftype_t::PHYSICAL_PORT), phy_port_(phy_port) {};
+        properties_t(ms_ifindex_t ms_ifindex, const pds_obj_key_t& l3_if_uuid)
+            : iftype_(ms_iftype_t::PHYSICAL_PORT),
+              phy_port_(ms_ifindex, l3_if_uuid) {};
         properties_t(const vxlan_tunnel_properties_t& vxt)
             : iftype_(ms_iftype_t::VXLAN_TUNNEL), vxt_(vxt) {};
         properties_t(const vxlan_port_properties_t& vxp)

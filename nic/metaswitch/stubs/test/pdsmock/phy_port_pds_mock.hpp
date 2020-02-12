@@ -21,6 +21,7 @@ public:
         auto phy_port_input = dynamic_cast<phy_port_input_params_t*>
                                  (test_params()->test_input);
         generate_addupd_specs(*phy_port_input, expected_pds);
+        ++num_if_objs_;
     }
     void expect_update() override {
         op_create_ = false; op_delete_ = false;
@@ -29,13 +30,15 @@ public:
                                  (test_params()->test_input);
         generate_addupd_specs(*phy_port_input, expected_pds);
     }
-    void expect_delete() override {
-        op_create_ = false; op_delete_ = true;
-        clear_batches();
-        auto phy_port_input = dynamic_cast<phy_port_input_params_t*>
-                                 (test_params()->test_input);
-        generate_del_specs(*phy_port_input, expected_pds);
+    void expect_pds_spec_op_fail(void) override {
+        pds_mock_t::expect_pds_spec_op_fail();
+        ++num_if_objs_;
     }
+    void expect_pds_batch_commit_fail(void) override {
+        pds_mock_t::expect_pds_batch_commit_fail();
+        ++num_if_objs_;
+    }
+
     void expect_create_pds_async_fail() override {
         mock_pds_batch_async_fail_ = true;
         expect_create();
@@ -45,7 +48,7 @@ public:
         num_if_objs_ = 0;
     }
 private:
-    int           num_if_objs_ = 0;
+    uint32_t           num_if_objs_ = 0;
     void generate_addupd_specs(const phy_port_input_params_t& input,
                                batch_spec_t& pds_batch);
     void generate_del_specs(const phy_port_input_params_t& input,

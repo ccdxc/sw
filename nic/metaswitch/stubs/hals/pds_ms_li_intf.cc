@@ -68,20 +68,16 @@ void li_intf_t::parse_ips_info_(ATG_LIPI_PORT_ADD_UPDATE* port_add_upd_ips) {
 
 void li_intf_t::fetch_store_info_(pds_ms::state_t* state) {
     store_info_.phy_port_if_obj = state->if_store().get(ips_info_.ifindex);
-    if (op_delete_) {
-        if (unlikely(store_info_.phy_port_if_obj == nullptr)) {
-            throw Error(std::string("Port delete for unknown IfIndex ")
-                        .append(std::to_string(ips_info_.ifindex)));
-        }
-        return;
+
+    // If Store entry should have already been created in the Mgmt Stub 
+    if (unlikely(store_info_.phy_port_if_obj == nullptr)) {
+        throw Error(std::string("LI Port AddUpdate for unknown MS IfIndex ")
+                    .append(std::to_string(ips_info_.ifindex)));
     }
-    if (store_info_.phy_port_if_obj == nullptr) {
-        op_create_ = true;
-        return;
-    }
+
     if (!store_info_.phy_port_if_obj->phy_port_properties().hal_created) {
-        // If Obj was saved in store to cache the linux parameters
-        // but not yet created in HAL - issue HAL PDS create now
+        // Obj was saved in store to cache the UUID and linux parameters
+        // but not yet created in HAL - HAL PDS create now
         op_create_ = true;
     }
 }
@@ -90,25 +86,10 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
     void *fw = nullptr;
     std::unique_ptr<if_obj_t> new_if_obj;
     FRL_FAULT_STATE fault_state;
-    if (store_info_.phy_port_if_obj == nullptr) {
-        // This is the first time we are seeing this uplink interface
-        auto port_prop = if_obj_t::phy_port_properties_t {0};
-        port_prop.ifindex = ips_info_.ifindex;
-        new_if_obj.reset(new if_obj_t(port_prop));
 
-        // TODO: Move Linux Intf param fetch to the Mgmt Stub
-        auto& phy_port_prop = new_if_obj->phy_port_properties();
-        if (!get_linux_intf_params(ips_info_.if_name,
-                                   &phy_port_prop.lnx_ifindex,
-                                   phy_port_prop.mac_addr)) {
-            throw Error (std::string("Could not fetch Linux params (S-MAC) for ")
-                         .append(ips_info_.if_name));
-        }
-    } else {
-        // Create a new object in order to store the updated fields
-        // but do not save it in the Global State yet
-        new_if_obj.reset(new if_obj_t(*(store_info_.phy_port_if_obj)));
-    }
+    // Create a new object in order to store the updated fields
+    // but do not save it in the Global State yet
+    new_if_obj.reset(new if_obj_t(*(store_info_.phy_port_if_obj)));
     auto& phy_port_prop = new_if_obj->phy_port_properties();
     if (op_create_) {
         phy_port_prop.hal_created = true;
@@ -159,9 +140,7 @@ bool li_intf_t::cache_new_obj_in_cookie_(void) {
 }
 
 pds_obj_key_t li_intf_t::make_pds_if_key_(void) {
-    //TODO: The incoming UUID in L3 Intf create needs to be stored
-    // and looked up here 
-    return msidx2pdsobjkey(ips_info_.ifindex);
+    return store_info_.phy_port_if_obj->phy_port_properties().l3_if_uuid;
 }
 
 pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
@@ -180,8 +159,9 @@ pds_if_spec_t li_intf_t::make_pds_if_spec_(void) {
     auto ifindex = ms_to_pds_eth_ifindex (ips_info_.ifindex);
     spec.l3_if_info.port = api::uuid_from_objid(ifindex);
 
-    SDK_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x Port UUID %s",
-                   ips_info_.ifindex, ifindex, spec.l3_if_info.port.str());
+    SDK_TRACE_INFO("Populate PDS IfSpec MS L3IfIndex 0x%x PDS EthIfIndex 0x%x L3 UUID %s Port UUID %s",
+                   ips_info_.ifindex, ifindex, spec.key.str(),
+                   spec.l3_if_info.port.str());
     memcpy (spec.l3_if_info.mac_addr, port_prop.mac_addr, ETH_ADDR_LEN);
     return spec;
 }
@@ -338,48 +318,7 @@ void li_intf_t::handle_delete(NBB_ULONG ifindex) {
     // if there is a subsequent create from MS.
 
     ips_info_.ifindex = ifindex;
-    SDK_TRACE_INFO ("MS If 0x%lx: Delete IPS", ips_info_.ifindex);
-
-    // Empty cookie to force async PDS.
-    cookie_uptr_.reset (new cookie_t);
-    pds_bctxt_guard = make_batch_pds_spec_ ();
-
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pds_ms::state_t::thread_context();
-        // If we have batched multiple IPS earlier flush it now
-        // Cannot add a Tunnel create to an existing batch
-        state_ctxt.state()->flush_outstanding_pds_batch();
-    } // End of state thread_context
-      // Do Not access/modify global state after this
-
-    cookie_uptr_->send_ips_reply =
-        [ifindex] (bool pds_status, bool ips_mock) -> void {
-            // ----------------------------------------------------------------
-            // This block is executed asynchronously when PDS response is rcvd
-            // ----------------------------------------------------------------
-            SDK_TRACE_DEBUG("+++++++ Phy port 0x%x Delete: Rcvd Async PDS"
-                            " response %s ++++++++",
-                            ifindex, (pds_status) ? "Success" : "Failure");
-
-        };
-    // All processing complete, only batch commit remains -
-    // safe to release the cookie_uptr_ unique_ptr
-    auto cookie = cookie_uptr_.release();
-    auto ret = pds_batch_commit(pds_bctxt_guard.release());
-    if (unlikely (ret != SDK_RET_OK)) {
-        delete cookie;
-        throw Error(std::string("Batch commit failed for delete MS If ")
-                    .append(std::to_string(ips_info_.ifindex))
-                    .append(" err=").append(std::to_string(ret)));
-    }
-    SDK_TRACE_DEBUG ("MS If 0x%lx: Delete PDS Batch commit successful",
-                     ips_info_.ifindex);
-
-    { // Enter thread-safe context to access/modify global state
-        auto state_ctxt = pds_ms::state_t::thread_context();
-        // Deletes are synchronous - Delete the store entry immediately
-        state_ctxt.state()->if_store().erase(ifindex);
-    }
+    SDK_TRACE_INFO ("MS If 0x%lx: Delete IPS no-op", ips_info_.ifindex);
 }
 
 } // End namespace

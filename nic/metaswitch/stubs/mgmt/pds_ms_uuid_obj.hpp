@@ -177,22 +177,26 @@ void subnet_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id
 class interface_uuid_obj_t : public slab_obj_t<interface_uuid_obj_t>,
                             public uuid_obj_t {
 public:
-    struct ms_id_t {
-        uint32_t  ms_ifindex;
-        ms_id_t(const uint32_t &i)
-            : ms_ifindex(i) {};
+    using ms_id_t = uint32_t;
+    struct info_t {
+        ms_id_t  ms_ifindex;
+        uint32_t  eth_ifindex = 0;
+        info_t(uint32_t ifi, uint32_t eifi)
+            : ms_ifindex(ifi), eth_ifindex (eifi) {};
     };
-    interface_uuid_obj_t(const pds_obj_key_t& uuid, const uint32_t &i)
+    interface_uuid_obj_t(const pds_obj_key_t& uuid, uint32_t ifi, uint32_t eifi)
         : uuid_obj_t(uuid_obj_type_t::INTERFACE, uuid),
-          mib_keys_(i) {};
+          info_(ifi, eifi) {};
 
-    ms_id_t& ms_id() { return mib_keys_; }
+    ms_id_t ms_id() { return info_.ms_ifindex; }
+    info_t info() { return info_; }
+
     std::string str() override {
         return std::string("Interface IfIdx ")
-               .append(std::to_string(mib_keys_.ms_ifindex));
+               .append(std::to_string(info_.ms_ifindex));
     }
 private:
-    ms_id_t  mib_keys_;
+    info_t  info_;
 };
 using interface_uuid_obj_uptr_t = std::unique_ptr<interface_uuid_obj_t>;
 void interface_uuid_obj_slab_init(slab_uptr_t slabs_[], sdk::lib::slab_id_t slab_id);

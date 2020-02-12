@@ -88,6 +88,8 @@ static inline uint32_t ms_ifindex_to_pds_type (uint32_t ms_ifindex) {
     return IF_TYPE_NONE;
 }
 
+std::string pds_ifindex_to_ifname(uint32_t pds_ifindex);
+
 } // End namespace
 
 #endif
