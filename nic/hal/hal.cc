@@ -312,14 +312,6 @@ hal_init (hal_cfg_t *hal_cfg)
                             "HAL thread initialization failure");
     HAL_TRACE_DEBUG("Spawned all HAL threads");
 
-    // do platform dependent clock delta computation initialization
-    if (hal_cfg->features != HAL_FEATURE_SET_GFT) {
-        ret = pd::hal_pd_clock_delta_comp_init(hal_cfg);
-        SDK_ASSERT_TRACE_RETURN((ret == HAL_RET_OK), ret,
-                                "Clock delta computation initialization failure");
-        HAL_TRACE_DEBUG("Platform clock delta computation init done");
-    }
-
     // unless periodic thread is fully initialized and
     // done calling all plugins' thread init callbacks
     // we shouldn't spawn FTE threads

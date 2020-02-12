@@ -22,6 +22,7 @@
 #include "nic/sdk/include/sdk/types.hpp"
 #include "gen/proto/delphi.pb.h"
 #include "gen/proto/ftestats/ftestats.delphi.hpp"
+#include "nic/hal/pd/hal_pd.hpp"
 
 #define FTE_EXPORT_STATS_SIZE     7
 #define FTE_LIFQ_METRICS_OFFSET   16
@@ -120,7 +121,16 @@ void
 fte_start(void *ctxt)
 {
     sdk::lib::thread   *curr_thread = (sdk::lib::thread *)ctxt;
+    hal::hal_cfg_t     *hal_cfg = (hal::hal_cfg_t *)curr_thread->data();
+    hal_ret_t          ret = HAL_RET_OK;
     uint8_t            fte_id;
+
+    // do platform dependent clock delta computation initialization
+    if (hal_cfg->features != hal::HAL_FEATURE_SET_GFT) {
+        ret = hal::pd::hal_pd_clock_delta_comp_init(hal_cfg);
+        SDK_ASSERT(ret == HAL_RET_OK);
+        HAL_TRACE_DEBUG("Platform clock delta computation init done");
+    }
 
     fte_id = curr_thread->thread_id() - hal::HAL_THREAD_ID_FTE_MIN;
     SDK_ASSERT(t_inst == NULL);
