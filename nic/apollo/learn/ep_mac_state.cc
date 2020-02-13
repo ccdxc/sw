@@ -20,7 +20,7 @@ ep_mac_state::ep_mac_state() {
         ht::factory(EP_MAX_MAC_ENTRY >> 1, ep_mac_entry::ep_mac_key_func_get,
                     sizeof(ep_mac_key_t));
     SDK_ASSERT(ep_mac_ht_ != NULL);
-    ep_mac_slab_ = slab::factory("ep_mac", LEARN_SLAB_ID_EP_MAC,
+    ep_mac_slab_ = slab::factory("ep_mac", api::PDS_SLAB_ID_MAC_ENTRY,
                                 sizeof(ep_mac_entry), 16, true);
     SDK_ASSERT(ep_mac_slab_ != NULL);
 }
@@ -51,7 +51,7 @@ ep_mac_state::remove(ep_mac_entry *mac) {
     return (ep_mac_entry *)(ep_mac_ht_->remove(&mac->key_));
 }
 
-const ep_mac_entry *
+ep_mac_entry *
 ep_mac_state::find(ep_mac_key_t *key) const {
     return (ep_mac_entry *)(ep_mac_ht_->lookup(key));
 }

@@ -20,7 +20,7 @@ ep_ip_state::ep_ip_state() {
         ht::factory(EP_MAX_IP_ENTRY >> 1, ep_ip_entry::ep_ip_key_func_get,
                     sizeof(ep_ip_key_t));
     SDK_ASSERT(ep_ip_ht_ != NULL);
-    ep_ip_slab_ = slab::factory("ep_ip", LEARN_SLAB_ID_EP_IP,
+    ep_ip_slab_ = slab::factory("ep_ip", api::PDS_SLAB_ID_IP_ENTRY,
                                 sizeof(ep_ip_entry), 16, true);
     SDK_ASSERT(ep_ip_slab_ != NULL);
 }
@@ -51,7 +51,7 @@ ep_ip_state::remove(ep_ip_entry *ip) {
     return (ep_ip_entry *)(ep_ip_ht_->remove(&ip->key_));
 }
 
-const ep_ip_entry *
+ep_ip_entry *
 ep_ip_state::find(ep_ip_key_t *key) const {
     return (ep_ip_entry *)(ep_ip_ht_->lookup(key));
 }

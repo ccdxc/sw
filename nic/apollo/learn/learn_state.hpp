@@ -38,7 +38,6 @@ enum {
 typedef struct learn_counters_s {
     uint64_t    rx_pkts;            ///< learn pkts received
     uint64_t    tx_pkts;            ///< learn pkts injected back to p4
-    uint64_t    drop_pkts;          ///< learn pkts dropped
     uint64_t    vnics;              ///< vnic count
     uint64_t    l3_mappings ;       ///< local ip-mac mapping count
     uint64_t    api_calls;          ///< count of API calls made
@@ -113,25 +112,21 @@ public:
     /// \return     timeout value in seconds
     uint16_t arp_probe_timeout(void) const { return arp_probe_timeout_secs_; }
 
-    /// \brief      return aging time granularity
-    /// \return     tick value in number of seconds
-    uint16_t aging_tick(void) const { return aging_secs_per_tick_; }
-
     /// \brief      return learn packer poll frequency
     /// \return     poll interval in seconds
     uint16_t pkt_poll_interval_msecs(void) const {
         return pkt_poll_interval_msecs_;
     }
 
-    /// \brief      return endpoint mac state
-    /// \return     pointer to endpoint mac state
+    /// \brief      return endpoint MAC state
+    /// \return     pointer to endpoint MAC state
     ep_mac_state *ep_mac_db(void) { return ep_mac_state_; }
 
-    /// \brief      return endpoint mac state
-    /// \return     pointer to endpoint mac state
+    /// \brief      return endpoint MAC state
+    /// \return     pointer to endpoint MAC state
     ep_ip_state *ep_ip_db(void) { return ep_ip_state_; }
 
-    /// \brief API to walk mac and IP entires
+    /// \brief API to walk MAC and IP entires
     /// \param[in] walk_cb    callback to be invoked for every entry
     /// \param[in] ctxt       opaque context passed back to the callback
     /// \return   SDK_RET_OK on success, failure status code on error
@@ -151,12 +146,11 @@ private:
     pds_epoch_t epoch_;                 ///< epoch for api batch
     rte_indexer *vnic_objid_idxr_;      ///< vnic object id
     dpdk_device *learn_lif_;            ///< learn lif device
-    uint16_t aging_secs_per_tick_;      ///< endpoint age granularity
     uint16_t ep_timeout_secs_;          ///< endpoint age
     uint16_t arp_probe_timeout_secs_;   ///< arp probe timeout
     uint16_t pkt_poll_interval_msecs_;  ///< learn pkt poll frequency
     learn_counters_t counters_;         ///< debug counters
-    ep_mac_state *ep_mac_state_;        ///< endpoint mac state
+    ep_mac_state *ep_mac_state_;        ///< endpoint MAC state
     ep_ip_state *ep_ip_state_;          ///< endpoint IP state
 };
 

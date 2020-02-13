@@ -346,3 +346,8 @@ dpdk_device::drop_packets(dpdk_mbuf **packets, uint16_t num_packets) {
         rte_pktmbuf_free((struct rte_mbuf *)pkts[i]);
     }
 }
+
+dpdk_mbuf *
+dpdk_device::alloc_mbuf(void) {
+    return (dpdk_mbuf *) rte_pktmbuf_alloc(dpdk_config.rte_mp);
+}

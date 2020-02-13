@@ -96,6 +96,7 @@ public:
     uint16_t transmit_packets(uint16_t tx_queue_id, dpdk_mbuf **packets,
                               uint16_t num_packets);
     void drop_packets(dpdk_mbuf **packets, uint16_t num_packets);
+    dpdk_mbuf *alloc_mbuf(void);
 };
 
 }    // namespace dpdk

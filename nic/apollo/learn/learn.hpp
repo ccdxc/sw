@@ -25,14 +25,14 @@ namespace learn {
 /// all endpoint state changes are done in the context on learn thread
 /// if the state is LEARNING, UPDATING or DELETING, it indicates that an
 /// event is currently modifying p4 one or more p4 table entries and a
-/// subsequent event that needs to manipulate the same ep must wait
+/// subsequent event that needs to manipulate the same EP must wait
 typedef enum {
-    EP_STATE_LEARNING,      ///< ep is being programmed
-    EP_STATE_CREATED,       ///< ep is programmed
-    EP_STATE_PROBING,       ///< ep is awaiting arp probe response
-    EP_STATE_UPDATING,      ///< ep is being updated
-    EP_STATE_DELETING,      ///< ep is being deleted
-    EP_STATE_DELETED,       ///< ep is deleted
+    EP_STATE_LEARNING,      ///< EP is being programmed
+    EP_STATE_CREATED,       ///< EP is programmed
+    EP_STATE_PROBING,       ///< EP is awaiting arp probe response
+    EP_STATE_UPDATING,      ///< EP is being updated
+    EP_STATE_DELETING,      ///< EP is being deleted
+    EP_STATE_DELETED,       ///< EP is deleted
 } ep_state_t;
 
 /// \brief key to L2 endpoint data base
@@ -49,29 +49,15 @@ typedef struct {
 
 /// \brief learn type of the endpoint under process
 typedef enum {
-    EP_LT_NONE,             ///< existing entry, nothing to learn
-    EP_LT_NEW_LOCAL,        ///< new local learn
-    EP_LT_NEW_REMOTE,       ///< new remote learn
-    EP_LT_MOVE_L2L,         ///< local to local move
-    EP_LT_MOVE_R2L,         ///< remote to local move
-    EP_LT_MOVE_L2R,         ///< local to remote move
-    EP_LT_MOVE_R2R,         ///< remote to remote move
+    LEARN_TYPE_INVALID = 0,      ///< learn type not available
+    LEARN_TYPE_NONE,             ///< existing entry, nothing to learn
+    LEARN_TYPE_NEW_LOCAL,        ///< new local learn
+    LEARN_TYPE_NEW_REMOTE,       ///< new remote learn
+    LEARN_TYPE_MOVE_L2L,         ///< local to local move
+    LEARN_TYPE_MOVE_R2L,         ///< remote to local move
+    LEARN_TYPE_MOVE_L2R,         ///< local to remote move
+    LEARN_TYPE_MOVE_R2R,         ///< remote to remote move
 } ep_learn_type_t;
-
-/// \brief slab ids for objects allocated in learn
-enum {
-    LEARN_SLAB_ID_MIN = 0,
-    LEARN_SLAB_ID_EP_IP = LEARN_SLAB_ID_MIN,
-    LEARN_SLAB_ID_EP_MAC,
-    LEARN_SLAB_ID_OBJ_MAX,
-    LEARN_SLAB_ID_MAX = 4,
-};
-
-/// \brief destination for pkts sent out from learn
-typedef enum {
-    LEARN_PKT_NEXTHOP_NONE = 0,         ///< send pkt back to p4 ingress
-    LEARN_PKT_NEXTHOP_DATAPATH_MNIC,    ///< send pkt to datapath mnic (VPP)
-} learn_nexthop_t;
 
 }    // namespace learn
 

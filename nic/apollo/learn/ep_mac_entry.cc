@@ -10,6 +10,7 @@
 
 #include "nic/apollo/api/pds_state.hpp"
 #include "nic/apollo/core/mem.hpp"
+#include "nic/apollo/learn/ep_aging.hpp"
 #include "nic/apollo/learn/ep_mac_entry.hpp"
 #include "nic/apollo/learn/ep_mac_state.hpp"
 #include "nic/apollo/learn/learn_state.hpp"
@@ -39,6 +40,8 @@ ep_mac_entry::factory(ep_mac_key_t *key, uint32_t vnic_obj_id) {
         new (ep_mac) ep_mac_entry();
         memcpy(&ep_mac->key_, key, sizeof(ep_mac_key_t));
         ep_mac->vnic_obj_id_ = vnic_obj_id;
+        learn_ep_aging_timer_init(&ep_mac->aging_timer_, (void *)ep_mac,
+                                  PDS_MAPPING_TYPE_L2);
     }
     return ep_mac;
 }
@@ -51,7 +54,7 @@ ep_mac_entry::destroy(ep_mac_entry *ep_mac) {
 
 sdk_ret_t
 ep_mac_entry::delay_delete(void) {
-    return api::delay_delete_to_slab(LEARN_SLAB_ID_EP_MAC, this);
+    return api::delay_delete_to_slab(api::PDS_SLAB_ID_MAC_ENTRY, this);
 }
 
 sdk_ret_t

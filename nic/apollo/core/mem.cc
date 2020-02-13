@@ -14,6 +14,8 @@
 #include "nic/apollo/api/subnet.hpp"
 #include "nic/apollo/api/vnic.hpp"
 #include "nic/apollo/api/pds_state.hpp"
+#include "nic/apollo/learn/ep_ip_entry.hpp"
+#include "nic/apollo/learn/ep_mac_entry.hpp"
 
 sdk_logger::trace_cb_t    g_trace_cb;
 
@@ -118,6 +120,14 @@ slab_delay_delete_cb (void *timer, uint32_t slab_id, void *elem)
 
     case PDS_SLAB_ID_SECURITY_PROFILE:
         security_profile::destroy((security_profile *)elem);
+        break;
+
+    case PDS_SLAB_ID_MAC_ENTRY:
+        ep_mac_entry::destroy((ep_mac_entry *)elem);
+        break;
+
+    case PDS_SLAB_ID_IP_ENTRY:
+        ep_ip_entry::destroy((ep_ip_entry *)elem);
         break;
 
     default:

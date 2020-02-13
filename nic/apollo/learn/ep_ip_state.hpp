@@ -54,7 +54,7 @@ public:
     /// \brief      lookup an IP entry in database given the key
     /// \param[in]  key   IP entry key
     /// \return     pointer to the IP entry found or NULL
-    const ep_ip_entry *find(ep_ip_key_t *key) const;
+    ep_ip_entry *find(ep_ip_key_t *key) const;
 
     /// \brief API to walk the IP entries
     /// \param[in] walk_cb    callback to be invoked for every entry
