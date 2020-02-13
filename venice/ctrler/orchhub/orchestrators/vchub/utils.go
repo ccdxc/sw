@@ -16,8 +16,10 @@ import (
 var (
 	// VcLabelPrefix is the prefix applied to tags picked up from vcenter
 	VcLabelPrefix = fmt.Sprintf("%s%s", globals.SystemLabelPrefix, "vcenter.")
-	// VMNameKey is the display name of the vm in vcenter
-	VMNameKey = createLabelKey("vm-name")
+	// NameKey is the display name of the vm in vcenter
+	NameKey = createLabelKey("display-name")
+	// NamespaceKey is the datacenter Name in vcenter
+	NamespaceKey = createLabelKey("name-space") // typically DC Name
 )
 
 func createLabelKey(tag string) string {
@@ -34,23 +36,32 @@ func generateLabelsFromTags(existingLabels map[string]string, tagMsg defs.TagMsg
 			labels[key] = fmt.Sprintf("%s:%s", labels[key], tagEntry.Name)
 		}
 	}
-	// Only labels that aren't tag based are vm-name and orch-name
-	// Add old values of vm-name and orch-name
-	// TODO: vm-name and orch-name could technically conflict
-	// with cateory names. Is this ok?
-	// In case of conflict, we overwrite with vm/orch name
-	if v, ok := existingLabels[VMNameKey]; ok {
-		labels[VMNameKey] = v
-	}
-
-	if v, ok := existingLabels[utils.OrchNameKey]; ok {
-		labels[utils.OrchNameKey] = v
-	}
+	retainSpecialLabels(existingLabels, labels)
 	return labels
 }
 
-func addVMNameLabel(labels map[string]string, name string) {
-	labels[VMNameKey] = name
+func retainSpecialLabels(existingLabels, newLabels map[string]string) {
+	// Add old values of orch-name, name, name-space etc
+	// TODO: vm-name and orch-name could technically conflict
+	// with cateory names. Is this ok?
+	// In case of conflict, we overwrite with vm/orch name
+	if v, ok := existingLabels[utils.OrchNameKey]; ok {
+		newLabels[utils.OrchNameKey] = v
+	}
+	if v, ok := existingLabels[NameKey]; ok {
+		newLabels[NameKey] = v
+	}
+	if v, ok := existingLabels[NamespaceKey]; ok {
+		newLabels[NamespaceKey] = v
+	}
+}
+
+func addNameLabel(labels map[string]string, name string) {
+	labels[NameKey] = name
+}
+
+func addNamespaceLabel(labels map[string]string, name string) {
+	labels[NamespaceKey] = name
 }
 
 func createPGName(networkName string) string {
@@ -65,16 +76,33 @@ func isPensandoPG(name string) bool {
 	return strings.HasPrefix(name, defs.DefaultPGPrefix)
 }
 
-func isPensandoDVS(name string) bool {
-	return strings.HasPrefix(name, defs.DefaultDVSPrefix)
+func isPensandoDVS(name, dcName string) bool {
+	return createDVSName(dcName) == name
 }
 
 func createDVSName(dcName string) string {
 	return fmt.Sprintf("%s%s", defs.DefaultDVSPrefix, dcName)
 }
 
-func isObjForDC(key string, vcID string, dcID string) bool {
-	return strings.HasPrefix(key, utils.CreateGlobalKeyPrefix(vcID, dcID))
+func isObjForDC(labels map[string]string, vcID string, dcName string) bool {
+	if labels == nil {
+		return false
+	}
+	vc, ok := labels[utils.OrchNameKey]
+	if !ok {
+		return false
+	}
+	dc, ok := labels[NamespaceKey]
+	if !ok {
+		return false
+	}
+	if vc != vcID {
+		return false
+	}
+	if dc != dcName {
+		return false
+	}
+	return true
 }
 
 func isPensandoHost(hConfig *types.HostConfigInfo) bool {
@@ -94,17 +122,22 @@ func isPensandoHost(hConfig *types.HostConfigInfo) bool {
 }
 
 func createVMWorkloadName(orchID, namespace, objName string) string {
-	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, namespace, objName))
+	// don't include namespace (DC name) in the workload name
+	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, "", objName))
 }
 
 func createVmkWorkloadName(orchID, namespace, objName string) string {
-	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, utils.CreateGlobalKey(orchID, namespace, objName))
+	// don't include namespace (DC name) in the vmk workload name
+	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, createHostName(orchID, "", objName))
 }
 
 func createVmkWorkloadNameFromHostName(hostName string) string {
+	// uses apiserver host object.Name
 	return fmt.Sprintf("%s%s%s", defs.VmkWorkloadPrefix, utils.Delim, hostName)
 }
 
 func createHostName(orchID, namespace, objName string) string {
-	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, namespace, objName))
+	// Remove DC name from the host name. On events like workload update, the DC of the event is
+	// different from the DC where the host is
+	return fmt.Sprintf("%s", utils.CreateGlobalKey(orchID, "" /* namespace */, objName))
 }

@@ -39,7 +39,6 @@ type ProbeInf interface {
 	ClearState()
 	StartWatchers()
 	StartEventReceiver(refs []types.ManagedObjectReference)
-	TestReceiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent)
 	ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine
 	ListDC() []mo.Datacenter
 	ListDVS(dcRef *types.ManagedObjectReference) []mo.VmwareDistributedVirtualSwitch
@@ -205,27 +204,24 @@ func (v *VCProbe) StartWatchers() {
 					for _, prop := range update.ChangeSet {
 						dcName = prop.Val.(string)
 					}
-					if v.ForceDCname != "" && dcName != v.ForceDCname {
+
+					_, ok := v.ForceDCNames[dcName]
+					if len(v.ForceDCNames) > 0 && !ok {
 						v.Log.Infof("Skipping DC event for DC %s", dcName)
 						return
 					}
 
 					// Starting watches on objects inside the given DC
 					tryForever(func() {
-						v.Log.Debugf("Host watch Started")
-						v.startWatch(defs.HostSystem, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
+						v.Log.Debugf("Host watch Started on DC %s", dcName)
+						v.startWatch(defs.HostSystem, []string{"config", "name"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
 					})
 
 					tryForever(func() {
-						v.Log.Debugf("VM watch Started")
+						v.Log.Debugf("VM watch Started on DC %s", dcName)
 						vmProps := []string{"config", "name", "runtime", "overallStatus", "customValue"}
 						v.startWatch(defs.VirtualMachine, vmProps, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
 					})
-					tryForever(func() {
-						v.Log.Debugf("Task watch Started")
-						v.startTaskWatch(&update.Obj)
-					})
-
 					tryForever(func() {
 						v.Log.Debugf("PG watch Started")
 						v.startWatch(defs.DistributedVirtualPortgroup, []string{"config"}, v.vcEventHandlerForDC(update.Obj.Value, dcName), &update.Obj)
@@ -251,21 +247,6 @@ func (v *VCProbe) StartWatchers() {
 	}
 
 	return
-}
-
-func (v *VCProbe) startTaskWatch(container *types.ManagedObjectReference) {
-	_, _, viewMgr, _ := v.GetClientsWithRLock()
-	v.ReleaseClientsRLock()
-	taskView, err := viewMgr.CreateTaskView(v.ClientCtx, container)
-	if err != nil {
-		v.Log.Errorf("Cannot create a task view = %s", err)
-	}
-	for v.ClientCtx.Err() == nil {
-		taskView.Collect(v.ClientCtx, func(tasks []types.TaskInfo) {
-		})
-		// XXX reconnect....
-		time.Sleep(1 * time.Second)
-	}
 }
 
 func (v *VCProbe) startWatch(vcKind defs.VCObject, props []string, updateFn func(objUpdate types.ObjectUpdate, kind defs.VCObject), container *types.ManagedObjectReference) {
@@ -476,14 +457,30 @@ func (v *VCProbe) StartEventReceiver(refs []types.ManagedObjectReference) {
 	go v.runEventReceiver(refs)
 }
 
-func (v *VCProbe) runEventReceiver(refs []types.ManagedObjectReference) {
-	defer v.WatcherWg.Done()
+func (v *VCProbe) initEventTracker(refs []types.ManagedObjectReference) {
 	v.EventTrackerLock.Lock()
+	defer v.EventTrackerLock.Unlock()
 	for _, r := range refs {
 		v.Log.Debugf("Start Event Receiver for %s", r.Value)
 		v.LastEvent[r.Value] = 0
 	}
-	v.EventTrackerLock.Unlock()
+}
+
+func (v *VCProbe) deleteEventTracker(refs []types.ManagedObjectReference) {
+	v.EventTrackerLock.Lock()
+	defer v.EventTrackerLock.Unlock()
+	for _, ref := range refs {
+		if _, ok := v.LastEvent[ref.Value]; ok {
+			v.Log.Infof("Stop event receiver for %s", ref.Value)
+			delete(v.LastEvent, ref.Value)
+		}
+	}
+}
+
+func (v *VCProbe) runEventReceiver(refs []types.ManagedObjectReference) {
+	defer v.WatcherWg.Done()
+	v.initEventTracker(refs)
+	defer v.deleteEventTracker(refs)
 
 releaseEventTracker:
 	for v.ClientCtx.Err() == nil {
@@ -500,17 +497,11 @@ releaseEventTracker:
 			break releaseEventTracker
 		}
 		// Events() return after delivering last N events, restart it
-		// TODO there should be a way to request events older than a eventId, not clear if that is
+		// TODO there should be a way to request events newer than a eventId, not clear if that is
 		// supported
 		eventMgr.Events(v.ClientCtx, refs, 10, false, false, v.receiveEvents)
 		time.Sleep(500 * time.Millisecond)
 	}
-	v.EventTrackerLock.Lock()
-	for _, r := range refs {
-		v.Log.Debugf("Stop Event Receiver for %s", r.Value)
-		delete(v.LastEvent, r.Value)
-	}
-	v.EventTrackerLock.Unlock()
 	v.Log.Infof("Event Receiver Exited")
 }
 
@@ -539,8 +530,8 @@ func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types
 			// v.Log.Infof("Old Event %d, last %d", ev.GetEvent().Key, v.LastEvent)
 			continue
 		}
-		if skipped := lastEvent - ev.GetEvent().Key; skipped > 1 {
-			v.Log.Errorf("Skipped %d events", skipped)
+		if skipped := ev.GetEvent().Key - lastEvent; skipped > 1 {
+			v.Log.Errorf("Skipped %d events on %s", skipped, ref.Value)
 		}
 		lastEvent = ev.GetEvent().Key
 
@@ -553,170 +544,144 @@ func (v *VCProbe) receiveEvents(ref types.ManagedObjectReference, events []types
 		// RelocateFailedEvents are received when vmotion fails or cancelled. In this case there is
 		// no workload watch event, as there is no change done to workload.
 
-		var msgType defs.VCNotificationType
-		vmKey := ""
-		hostKey := ""
-		reason := ""
-		dstHostName := ""
-		dstDcName := ""
-		hotMigration := false
-
 		// Ignore all events that do not point to Pen-DVS, e.Dvs.Dvs is not populated
-		switch ev.(type) {
+		switch e := ev.(type) {
 		case *types.VmEmigratingEvent:
 			// TODO: this event does not contain useful information, but it is generated
 			// after migration start event.. it may be a good time assume that traffic on
 			// host1 has stopped at this time and change the vlan-overrides ??
-			e := ev.(*types.VmEmigratingEvent)
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
 		case *types.VmBeingHotMigratedEvent:
-			e := ev.(*types.VmBeingHotMigratedEvent)
-			msgType = defs.VMotionStart
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.DestHost.Host.Value
-			hotMigration = true
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Dest Host %v", e.DestHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
+			msg := defs.VMotionStartMsg{
+				VMKey:        e.Vm.Vm.Value,
+				DstHostKey:   e.DestHost.Host.Value,
+				DcID:         ref.Value,
+				HotMigration: true,
+			}
+			v.generateMigrationEvent(defs.VMotionStart, msg)
 		case *types.VmBeingMigratedEvent:
-			e := ev.(*types.VmBeingMigratedEvent)
-			msgType = defs.VMotionStart
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.DestHost.Host.Value
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Dest Host %v", e.DestHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionStartMsg{
+				VMKey:      e.Vm.Vm.Value,
+				DstHostKey: e.DestHost.Host.Value,
+				DcID:       ref.Value,
+			}
+			v.generateMigrationEvent(defs.VMotionStart, msg)
 		case *types.VmBeingRelocatedEvent:
-			e := ev.(*types.VmBeingRelocatedEvent)
-			msgType = defs.VMotionStart
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.DestHost.Host.Value
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Dest Host %v", e.DestHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionStartMsg{
+				VMKey:      e.Vm.Vm.Value,
+				DstHostKey: e.DestHost.Host.Value,
+				DcID:       ref.Value,
+			}
+			v.generateMigrationEvent(defs.VMotionStart, msg)
 		case *types.VmMigratedEvent:
-			e := ev.(*types.VmMigratedEvent)
-			msgType = defs.VMotionDone
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.SourceHost.Host.Value
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Src Host %v", e.SourceHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionDoneMsg{
+				VMKey:      e.Vm.Vm.Value,
+				SrcHostKey: e.SourceHost.Host.Value,
+				DcID:       ref.Value,
+			}
+			v.generateMigrationEvent(defs.VMotionDone, msg)
 		case *types.VmRelocatedEvent:
-			e := ev.(*types.VmRelocatedEvent)
-			msgType = defs.VMotionDone
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.SourceHost.Host.Value
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Src Host %v", e.SourceHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionDoneMsg{
+				VMKey:      e.Vm.Vm.Value,
+				SrcHostKey: e.SourceHost.Host.Value,
+				DcID:       ref.Value,
+			}
+			v.generateMigrationEvent(defs.VMotionDone, msg)
 		case *types.VmRelocateFailedEvent:
-			e := ev.(*types.VmRelocateFailedEvent)
-			msgType = defs.VMotionFailed
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.DestHost.Host.Value
-			reason = e.Reason.LocalizedMessage
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Dest Host %v", e.DestHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionFailedMsg{
+				VMKey:      e.Vm.Vm.Value,
+				DstHostKey: e.DestHost.Host.Value,
+				DcID:       ref.Value,
+				Reason:     e.Reason.LocalizedMessage,
+			}
+			v.generateMigrationEvent(defs.VMotionFailed, msg)
 		case *types.VmFailedMigrateEvent:
-			e := ev.(*types.VmFailedMigrateEvent)
-			msgType = defs.VMotionFailed
-			vmKey = e.Vm.Vm.Value
-			hostKey = e.DestHost.Host.Value
-			reason = e.Reason.LocalizedMessage
-			v.Log.Infof("Event %d - %T for VM %s", e.GetEvent().Key, e, e.Vm.Vm.Value)
-			v.Log.Debugf("Dest Host %v", e.DestHost.Host.Value)
+			v.Log.Infof("Event %d - %s - %T for VM %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value)
+			msg := defs.VMotionFailedMsg{
+				VMKey:      e.Vm.Vm.Value,
+				DstHostKey: e.DestHost.Host.Value,
+				DcID:       ref.Value,
+				Reason:     e.Reason.LocalizedMessage,
+			}
+			v.generateMigrationEvent(defs.VMotionFailed, msg)
 		case *types.MigrationEvent:
 			// TODO: This may be a generic vMotion failure.. but it does not have DestHost Info
 			// Do we need to handle it?
-			e := ev.(*types.MigrationEvent)
-			reason = e.Fault.LocalizedMessage
-			v.Log.Infof("Event %d - %T for VM %s reason %s", e.GetEvent().Key, e, e.Vm.Vm.Value, reason)
+			v.Log.Infof("Event %d - %s - %T for VM %s reason %s", e.GetEvent().Key, ref.Value, e, e.Vm.Vm.Value, e.Fault.LocalizedMessage)
+			msg := defs.VMotionFailedMsg{
+				VMKey:  e.Vm.Vm.Value,
+				DcID:   ref.Value,
+				Reason: e.Fault.LocalizedMessage,
+			}
+			v.generateMigrationEvent(defs.VMotionFailed, msg)
 		case *types.EventEx:
-			e := ev.(*types.EventEx)
 			s := strings.Split(e.EventTypeId, ".")
 			evType := s[len(s)-1]
 			if evType == "VmHotMigratingWithEncryptionEvent" {
-				v.Log.Debugf("EventEx %d - TypeId %s", e.GetEvent().Key, e.EventTypeId)
+				v.Log.Debugf("EventEx %d - %s - TypeId %s", e.GetEvent().Key, ref.Value, e.EventTypeId)
+				msg := defs.VMotionStartMsg{
+					VMKey:        e.Vm.Vm.Value,
+					DcID:         ref.Value,
+					HotMigration: true,
+				}
 				argsMap := map[string]int{}
 				for i, kvarg := range e.Arguments {
 					argsMap[kvarg.Key] = i
 				}
-				msgType = defs.VMotionStart
-				hotMigration = true
-				vmKey = e.Vm.Vm.Value
 				if i, ok := argsMap["destHost"]; ok {
-					dstHostName, _ = e.Arguments[i].Value.(string)
+					msg.DstHostName, _ = e.Arguments[i].Value.(string)
 				}
 				if i, ok := argsMap["destDatacenter"]; ok {
-					dstDcName, _ = e.Arguments[i].Value.(string)
+					msg.DstDcName, _ = e.Arguments[i].Value.(string)
 				}
+				v.generateMigrationEvent(defs.VMotionStart, msg)
 			} else {
-				v.Log.Debugf("Ignored EventEx %d - TypeId %s... (+%v)", e.GetEvent().Key,
-					e.EventTypeId, e)
+				// v.Log.Debugf("Ignored EventEx %d - %s - TypeId %s...", e.GetEvent().Key, ref.Value, e.EventTypeId)
 			}
 		case *types.ExtendedEvent:
-			e := ev.(*types.ExtendedEvent)
-			v.Log.Debugf("Ignored ExtendedEvent %d - TypeId %s ... (+%v)", e.GetEvent().Key,
-				e.EventTypeId, e)
+			// v.Log.Debugf("Ignored ExtendedEvent %d - TypeId %s ...", e.GetEvent().Key, ref.Value, e.EventTypeId)
 		default:
-			v.Log.Debugf("Ignored Event %d - %T received ... (+%v)", ev.GetEvent().Key, ev, ev)
-		}
-		switch msgType {
-		case defs.VMotionStart:
-			// TODO: create a new hight priority channel for events
-			v.outbox <- defs.Probe2StoreMsg{
-				MsgType: defs.VCNotification,
-				Val: defs.VCNotificationMsg{
-					Type: msgType,
-					Msg: defs.VMotionStartMsg{
-						VMKey:        vmKey,
-						DstHostKey:   hostKey,
-						DstHostName:  dstHostName,
-						DcID:         ref.Value,
-						DstDcName:    dstDcName,
-						HotMigration: hotMigration,
-					},
-				},
-			}
-		case defs.VMotionFailed:
-			v.outbox <- defs.Probe2StoreMsg{
-				MsgType: defs.VCNotification,
-				Val: defs.VCNotificationMsg{
-					Type: msgType,
-					Msg: defs.VMotionFailedMsg{
-						VMKey:      vmKey,
-						Reason:     reason,
-						DstHostKey: hostKey,
-						DcID:       ref.Value,
-					},
-				},
-			}
-		case defs.VMotionDone:
-			// TODO: create a new hight priority channel for events
-			v.outbox <- defs.Probe2StoreMsg{
-				MsgType: defs.VCNotification,
-				Val: defs.VCNotificationMsg{
-					Type: msgType,
-					Msg: defs.VMotionDoneMsg{
-						VMKey:      vmKey,
-						SrcHostKey: hostKey,
-						DcID:       ref.Value,
-					},
-				},
-			}
-		default:
+			// v.Log.Debugf("Ignored Event %d - %s - %T received ... (+%v)", ev.GetEvent().Key, ref.Value, ev, ev)
+			// v.Log.Debugf("Ignored Event %d - %s - %T received ...", ev.GetEvent().Key, ref.Value, ev)
 		}
 	}
 	v.LastEvent[ref.Value] = lastEvent
 	return nil
 }
 
-// TestReceiveEvents provides entry point for unit testing events
-func (v *VCProbe) TestReceiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent) {
-	v.Log.Debugf("Test ReceiveEvents")
-	v.EventTrackerLock.Lock()
-	v.LastEvent[ref.Value] = 0
-	v.EventTrackerLock.Unlock()
-
-	v.receiveEvents(ref, events)
-
-	v.EventTrackerLock.Lock()
-	delete(v.LastEvent, ref.Value)
-	v.EventTrackerLock.Unlock()
+func (v *VCProbe) generateMigrationEvent(msgType defs.VCNotificationType, msg interface{}) {
+	// TODO: create a new high priority channel for events
+	switch msgType {
+	case defs.VMotionStart:
+		v.outbox <- defs.Probe2StoreMsg{
+			MsgType: defs.VCNotification,
+			Val: defs.VCNotificationMsg{
+				Type: msgType,
+				Msg:  msg.(defs.VMotionStartMsg),
+			},
+		}
+	case defs.VMotionFailed:
+		v.outbox <- defs.Probe2StoreMsg{
+			MsgType: defs.VCNotification,
+			Val: defs.VCNotificationMsg{
+				Type: msgType,
+				Msg:  msg.(defs.VMotionFailedMsg),
+			},
+		}
+	case defs.VMotionDone:
+		v.outbox <- defs.Probe2StoreMsg{
+			MsgType: defs.VCNotification,
+			Val: defs.VCNotificationMsg{
+				Type: msgType,
+				Msg:  msg.(defs.VMotionDoneMsg),
+			},
+		}
+	default:
+	}
 }

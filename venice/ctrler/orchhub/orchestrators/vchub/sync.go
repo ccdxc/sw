@@ -11,7 +11,6 @@ import (
 	"github.com/pensando/sw/api/generated/ctkit"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/useg"
-	"github.com/pensando/sw/venice/ctrler/orchhub/utils"
 )
 
 func (v *VCHub) sync() {
@@ -64,10 +63,13 @@ func (v *VCHub) sync() {
 		4, Delete stale venice objects push oper to store
 		5. Push existing objects and creates.
 	**/
+	vmkMap := map[string]bool{}
+
 	dcs := v.probe.ListDC()
 	for _, dc := range dcs {
 		// TODO: Remove
-		if v.ForceDCname != "" && dc.Name != v.ForceDCname {
+		_, ok := v.ForceDCNames[dc.Name]
+		if len(v.ForceDCNames) > 0 && !ok {
 			v.Log.Infof("Skipping DC %s", dc.Name)
 			continue
 		}
@@ -85,14 +87,14 @@ func (v *VCHub) sync() {
 		vcHosts := v.ListPensandoHosts(&dcRef)
 
 		v.syncNetwork(nw, dc, dvsObjs, pgs)
-		v.syncHosts(dc, vcHosts, hosts)
-		v.syncVMs(workloads, dc, dvsObjs, vms, pgs)
+		v.syncHosts(dc, vcHosts, hosts, vmkMap)
+		v.syncVMs(workloads, dc, dvsObjs, vms, pgs, vmkMap)
 	}
 
 	v.Log.Infof("Sync done for VCHub. %v", v)
 }
 
-func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host) {
+func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ctkit.Host, vmkMap map[string]bool) {
 	v.Log.Debug("Syncing hosts")
 	vcHostMap := map[string]bool{}
 	for _, vcHost := range vcHosts {
@@ -102,8 +104,8 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 
 	// Deleting stale hosts
 	for _, host := range hosts {
-		if !isObjForDC(host.Name, v.VcID, dc.Self.Value) {
-			// Filter out hosts not for this Orch/DC
+		if !isObjForDC(host.Labels, v.VcID, dc.Name) {
+			// Filter out hosts not for this Orch
 			v.Log.Debugf("Skipping host %s", host.Name)
 			continue
 		}
@@ -111,9 +113,9 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 			// host no longer exists
 			// Delete vmkWorkload if created for this host
 			wlName := createVmkWorkloadNameFromHostName(host.Name)
-			v.deleteWorkloadByName(dc.Self.Value, wlName)
+			v.deleteWorkloadByName(wlName)
 
-			v.Log.Debugf("Deleting host %s", host.Name)
+			v.Log.Debugf("Deleting stale host %s", host.Name)
 			v.deleteHost(&host.Host)
 		}
 	}
@@ -132,9 +134,15 @@ func (v *VCHub) syncHosts(dc mo.Datacenter, vcHosts []mo.HostSystem, hosts []*ct
 					Op:   "add",
 					Val:  *(host.Config),
 				},
+				types.PropertyChange{
+					Name: string(defs.HostPropName),
+					Op:   "add",
+					Val:  host.Name,
+				},
 			},
 		}
-		v.Log.Debugf("Process config change for host %s", host.Name)
+		v.Log.Debugf("Process config change for host %s", host.Reference().Value)
+		vmkMap[createVmkWorkloadName(v.VcID, dc.Reference().Value, host.Reference().Value)] = true
 		v.handleHost(m)
 	}
 }
@@ -145,7 +153,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)
 	for _, dvs := range dvsObjs {
-		if !isPensandoDVS(dvs.Name) {
+		if !isPensandoDVS(dvs.Name, dcName) {
 			v.Log.Debugf("Skipping dvs %s", dvs.Name)
 			continue
 		}
@@ -226,7 +234,6 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 		for _, nw := range networks {
 			v.Log.Debugf("Checking nw %s", nw.Network.Name)
 			for _, orch := range nw.Network.Spec.Orchestrators {
-				v.Log.Debugf("Checking nw %s orch config %v", orch)
 				if orch.Name == v.VcID && orch.Namespace == dcName {
 					pgName := createPGName(nw.Network.Name)
 
@@ -235,9 +242,8 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 
 					delete(pgMap, pgName)
 				} else {
-					v.Log.Debugf("vcID %s, dcName %s", v.VcID, dcName)
-					v.Log.Debugf("vcID is equal %v", orch.Name == v.VcID)
-					v.Log.Debugf("orch name is equal %v", orch.Name == dcName)
+					v.Log.Debugf("vcID %s  dcName %s does not match orch-spec %s - %s",
+						v.VcID, dcName, orch.Name, orch.Namespace)
 				}
 			}
 		}
@@ -269,7 +275,7 @@ func (v *VCHub) syncNetwork(networks []*ctkit.Network, dc mo.Datacenter, dvsObjs
 	}
 }
 
-func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup) {
+func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs []mo.VmwareDistributedVirtualSwitch, vms []mo.VirtualMachine, pgs []mo.DistributedVirtualPortgroup, vmkMap map[string]bool) {
 	v.Log.Debug("Syncing vms")
 	dcName := dc.Name
 	penDC := v.GetDC(dcName)
@@ -279,27 +285,28 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 	for _, pg := range pgs {
 		pgKeyToName[pg.Self.Value] = pg.Name
 	}
-
-	// Set assignments.
 	vmMap := map[string]mo.VirtualMachine{}
-
 	for _, vm := range vms {
 		// TODO: check the vm is for us
-		vmName := utils.CreateGlobalKey(v.VcID, dc.Self.Value, vm.Self.Value)
+		vmName := createVMWorkloadName(v.VcID, dc.Self.Value, vm.Self.Value)
 		vmMap[vmName] = vm
 	}
 
 	// Deleting stale workloads and build useg state
 	for _, workload := range workloads {
-		if !isObjForDC(workload.Name, v.VcID, dc.Self.Value) {
+		if !isObjForDC(workload.Labels, v.VcID, dcName) {
 			// Filter out workloads not for this Orch/DC
 			v.Log.Debugf("Skipping workload %s", workload.Name)
 			continue
 		}
+		if _, ok := vmkMap[workload.Name]; ok {
+			// do not delete vmkWorkloads
+			continue
+		}
 		if _, ok := vmMap[workload.Name]; !ok {
 			// workload no longer exists
-			v.Log.Debugf("Deleting workload %s", workload.Name)
-			v.deleteWorkload(&workload.Workload, dcName)
+			v.Log.Debugf("Deleting stale workload %s", workload.Name)
+			v.deleteWorkload(&workload.Workload)
 			continue
 		}
 		// build useg state
@@ -360,7 +367,7 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 			if !ok {
 				continue
 			}
-			host := utils.CreateGlobalKey(v.VcID, dc.Self.Value, vm.Runtime.Host.Value)
+			host := createHostName(v.VcID, dc.Self.Value, vm.Runtime.Host.Value)
 			vlan, err := penDvs.UsegMgr.GetVlanForVnic(macStr, host)
 			if err != nil {
 				continue // Skipping delete from overrides map
@@ -433,7 +440,6 @@ func (v *VCHub) syncVMs(workloads []*ctkit.Workload, dc mo.Datacenter, dvsObjs [
 		}
 		v.handleWorkload(m)
 	}
-
 }
 
 func (v *VCHub) extractOverrides(ports []types.DistributedVirtualPort) map[string]int {

@@ -277,9 +277,10 @@ func TestVCSyncHost(t *testing.T) {
 	// CREATING HOSTS
 	staleHost := cluster.Host{
 		ObjectMeta: api.ObjectMeta{
-			Name:      utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
+			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, "hostsystem-00000"),
 			Namespace: "default",
 			// Don't set Tenant as object is not scoped inside Tenant in proto file.
+			Labels: map[string]string{},
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "Host",
@@ -292,12 +293,15 @@ func TestVCSyncHost(t *testing.T) {
 			},
 		},
 	}
+	utils.AddOrchNameLabel(staleHost.Labels, orchConfig.Name)
+	addNamespaceLabel(staleHost.Labels, dc1.Obj.Name)
 	sm.Controller().Host().Create(&staleHost)
 	host1 := cluster.Host{
 		ObjectMeta: api.ObjectMeta{
-			Name:      utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
 			Namespace: "default",
 			// Don't set Tenant as object is not scoped inside Tenant in proto file.
+			Labels: map[string]string{},
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "Host",
@@ -310,6 +314,8 @@ func TestVCSyncHost(t *testing.T) {
 			},
 		},
 	}
+	utils.AddOrchNameLabel(host1.Labels, orchConfig.Name)
+	addNamespaceLabel(host1.Labels, dc1.Obj.Name)
 	sm.Controller().Host().Create(&host1)
 
 	time.Sleep(1 * time.Second)
@@ -339,7 +345,7 @@ func TestVCSyncHost(t *testing.T) {
 				hosts, err := sm.Controller().Host().List(context.Background(), &opts)
 				AssertOk(t, err, "failed to get hosts")
 				if len(hostnames) != len(hosts) {
-					return false, fmt.Errorf("expected %d hosts but only got %d", len(hostnames), len(hosts))
+					return false, fmt.Errorf("expected %d hosts but got %d", len(hostnames), len(hosts))
 				}
 			}
 			return true, nil
@@ -347,7 +353,7 @@ func TestVCSyncHost(t *testing.T) {
 	}
 
 	dcHostMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{host1.Name, utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value)},
+		defaultTestParams.TestDCName: []string{host1.Name, createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem2.Obj.Self.Value)},
 	}
 
 	verifyHosts(dcHostMap)
@@ -421,6 +427,15 @@ func TestVCSyncVM(t *testing.T) {
 		os.Exit(1)
 	}
 
+	orchInfo1 := []*network.OrchestratorInfo{
+		{
+			Name:      orchConfig.Name,
+			Namespace: defaultTestParams.TestDCName,
+		},
+	}
+
+	// Create network
+	smmock.CreateNetwork(sm, "default", "pg1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
 	hostSystem1, err := dc1.AddHost("host1")
 	AssertOk(t, err, "failed host1 create")
 	err = dvs.AddHost(hostSystem1)
@@ -468,7 +483,7 @@ func TestVCSyncVM(t *testing.T) {
 	// CREATING HOSTS
 	host1 := cluster.Host{
 		ObjectMeta: api.ObjectMeta{
-			Name:      utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
+			Name:      createHostName(orchConfig.Name, dc1.Obj.Self.Value, hostSystem1.Obj.Self.Value),
 			Namespace: "default",
 			// Don't set Tenant as object is not scoped inside Tenant in proto file.
 		},
@@ -488,9 +503,10 @@ func TestVCSyncVM(t *testing.T) {
 	// CREATING WORKLOADS
 	staleWorkload := workload.Workload{
 		ObjectMeta: api.ObjectMeta{
-			Name:      utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
+			Name:      createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, "staleWorkload"),
 			Namespace: "default",
 			Tenant:    "default",
+			Labels:    map[string]string{},
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "Workload",
@@ -505,13 +521,22 @@ func TestVCSyncVM(t *testing.T) {
 			},
 		},
 	}
+
+	vchub.addWorkloadLabels(&staleWorkload, "staleWorkload", dc1.Obj.Name)
+	tagMsg := defs.TagMsg{
+		Tags: []defs.TagEntry{
+			{Name: "tag_a", Category: "Venice"},
+		},
+	}
+	generateLabelsFromTags(staleWorkload.Labels, tagMsg)
 	sm.Controller().Workload().Create(&staleWorkload)
 
 	workloadExisting := workload.Workload{
 		ObjectMeta: api.ObjectMeta{
-			Name:      utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, vmExisting.Self.Value),
+			Name:      createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmExisting.Self.Value),
 			Namespace: "default",
 			Tenant:    "default",
+			Labels:    map[string]string{},
 		},
 		TypeMeta: api.TypeMeta{
 			Kind: "Workload",
@@ -526,6 +551,7 @@ func TestVCSyncVM(t *testing.T) {
 			},
 		},
 	}
+	vchub.addWorkloadLabels(&workloadExisting, "vmExisting", dc1.Obj.Name)
 	sm.Controller().Workload().Create(&workloadExisting)
 
 	portUpdate := vcprobe.PenDVSPortSettings{
@@ -535,19 +561,11 @@ func TestVCSyncVM(t *testing.T) {
 	}
 	mockProbe.UpdateDVSPortsVlan(dc1.Obj.Name, dvs.Obj.Name, portUpdate)
 
-	orchInfo1 := []*network.OrchestratorInfo{
-		{
-			Name:      orchConfig.Name,
-			Namespace: dc1.Obj.Name,
-		},
-	}
-	smmock.CreateNetwork(sm, "default", "pg1", "10.1.1.0/24", "10.1.1.1", 100, nil, orchInfo1)
-
 	time.Sleep(1 * time.Second)
 
 	vchub.Sync()
 
-	verifyWorkloads := func(dcWorkloadMap map[string][]string) {
+	verifyWorkloads := func(dcWorkloadMap map[string][]string, errMsg string) {
 		AssertEventually(t, func() (bool, interface{}) {
 			for name, wlNames := range dcWorkloadMap {
 				dc := vchub.GetDC(name)
@@ -572,7 +590,7 @@ func TestVCSyncVM(t *testing.T) {
 					}
 					for _, inf := range wl.Spec.Interfaces {
 						if inf.ExternalVlan != 100 {
-							return false, fmt.Errorf("interface did not have external valn set correctly")
+							return false, fmt.Errorf("interface did not have external valn set correctly - found %d", inf.ExternalVlan)
 						}
 					}
 				}
@@ -580,18 +598,18 @@ func TestVCSyncVM(t *testing.T) {
 				workloadObjs, err := sm.Controller().Workload().List(context.Background(), &opts)
 				AssertOk(t, err, "failed to get workloads")
 				if len(wlNames) != len(workloadObjs) {
-					return false, fmt.Errorf("expected %d workloads but only got %d", len(wlNames), len(workloadObjs))
+					return false, fmt.Errorf("expected %d workloads but got %d", len(wlNames), len(workloadObjs))
 				}
 			}
 			return true, nil
-		}, "Failed to find hosts")
+		}, errMsg, "1s", "10s")
 	}
 
 	dcWorkloadMap := map[string][]string{
-		defaultTestParams.TestDCName: []string{workloadExisting.Name, utils.CreateGlobalKey(orchConfig.Name, dc1.Obj.Self.Value, vmNew.Self.Value)},
+		defaultTestParams.TestDCName: []string{workloadExisting.Name, createVMWorkloadName(orchConfig.Name, dc1.Obj.Self.Value, vmNew.Self.Value)},
 	}
 
-	verifyWorkloads(dcWorkloadMap)
+	verifyWorkloads(dcWorkloadMap, "Failed to verify workloads")
 
 	dvsPorts, err := mockProbe.GetPenDVSPorts(dc1.Obj.Name, dvs.Obj.Name, &types.DistributedVirtualSwitchPortCriteria{})
 	AssertOk(t, err, "Failed to get port info")
@@ -633,7 +651,7 @@ func TestVCSyncVM(t *testing.T) {
 
 }
 
-func TestSyncVmkNics(t *testing.T) {
+func TestVCSyncVmkNics(t *testing.T) {
 	err := testutils.ValidateParams(defaultTestParams)
 	if err != nil {
 		t.Fatalf("Failed at validating test parameters")

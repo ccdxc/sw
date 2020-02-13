@@ -68,6 +68,8 @@ func (v *VCHub) handleVCNotification(m defs.VCNotificationMsg) {
 		v.handleVMotionStart(m.Msg.(defs.VMotionStartMsg))
 	case defs.VMotionFailedMsg:
 		v.handleVMotionFailed(m.Msg.(defs.VMotionFailedMsg))
+	case defs.VMotionDoneMsg:
+		v.handleVMotionDone(m.Msg.(defs.VMotionDoneMsg))
 	}
 }
 
@@ -90,7 +92,8 @@ func (v *VCHub) handleDC(m defs.VCEventMsg) {
 		}
 		v.DcMapLock.Unlock()
 		// We create DVS and check networks
-		if v.ForceDCname != "" && name != v.ForceDCname {
+		_, ok := v.ForceDCNames[name]
+		if len(v.ForceDCNames) > 0 && !ok {
 			v.Log.Infof("Skipping DC event for DC %s", name)
 			continue
 		}

@@ -16,7 +16,12 @@ import (
 )
 
 func (v *VCHub) handleHost(m defs.VCEventMsg) {
-	v.Log.Debugf("Got handle host event")
+	v.Log.Debugf("Got handle host event for host %s in DC %s", m.Key, m.DcID)
+	penDC := v.GetDC(m.DcName)
+	if penDC == nil {
+		return
+	}
+
 	meta := &api.ObjectMeta{
 		Name: createHostName(m.Originator, m.DcID, m.Key),
 	}
@@ -51,18 +56,29 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		return
 	}
 
-	penDC := v.GetDC(m.DcName)
 	var hConfig *types.HostConfigInfo
-
+	var dispName string
 	for _, prop := range m.Changes {
-		configProp, ok := prop.Val.(types.HostConfigInfo)
-		if !ok {
-			v.Log.Errorf("Failed to cast to HostConfigInfo. Prop Name: %s", prop.Name)
-			return
+		switch defs.VCProp(prop.Name) {
+		case defs.HostPropConfig:
+			propConfig, _ := prop.Val.(types.HostConfigInfo)
+			hConfig = &propConfig
+		case defs.HostPropName:
+			dispName = prop.Val.(string)
+			if hostObj.Labels == nil {
+				hostObj.Labels = make(map[string]string)
+			}
+			addNameLabel(hostObj.Labels, dispName)
+			penDC.addHostNameKey(dispName, m.Key)
+		default:
+			v.Log.Errorf("host prop change %s - not handled", prop.Name)
 		}
-		hConfig = &configProp
 	}
+	// TODO: check if name changed - need to find and delete old Name2Key entry
+	// Name of a host cannot change easily (used for DNS resolution etc), not
+	// handled rightnow
 	if hConfig == nil {
+		v.Log.Debugf("No Config change for the host - ignore the event")
 		return
 	}
 
@@ -74,6 +90,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	var penDVS *PenDVS
 	for _, dvsProxy := range nwInfo.ProxySwitch {
+		v.Log.Debugf("Proxy switch %s", dvsProxy.DvsName)
 		penDVS = penDC.GetDVS(dvsProxy.DvsName)
 		if penDVS != nil {
 			break
@@ -114,6 +131,7 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 
 	if len(DSCs) == 0 {
 		// Not a pensando host
+		v.Log.Infof("Host %s is ignored - not a Pensando host", m.Key)
 		return
 	}
 
@@ -128,10 +146,10 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 	if hostObj.Labels == nil {
 		hostObj.Labels = make(map[string]string)
 	}
-
 	if existingHost == nil && v.OrchConfig != nil {
 		utils.AddOrchNameLabel(hostObj.Labels, v.OrchConfig.Name)
 	}
+	addNamespaceLabel(hostObj.Labels, penDC.Name)
 
 	if existingHost == nil {
 		v.Log.Infof("Creating host %s", hostObj.Name)
@@ -139,12 +157,12 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 		v.pCache.RevalidateKind(workloadKind)
 	}
 
-	// TODO the host name is not correct here.. fix it
-	v.syncHostVmkNics(penDC, penDVS, m.Key, hostObj.Name, hConfig)
+	v.syncHostVmkNics(penDC, penDVS, m.Key, hConfig)
 
 	// If different, write to apiserver
 	if reflect.DeepEqual(hostObj, existingHost) {
 		// Nothing to do
+		v.Log.Debugf("host event ignored - nothing changed")
 		return
 	}
 
@@ -158,12 +176,32 @@ func (v *VCHub) handleHost(m defs.VCEventMsg) {
 }
 
 func (v *VCHub) deleteHost(obj *cluster.Host) {
+	if obj.Labels == nil {
+		// all hosts created from orchhub will have labels
+		v.Log.Debugf("deleteHost - no lables")
+		return
+	}
+	dcName, ok := obj.Labels[NamespaceKey]
+	if !ok {
+		v.Log.Debugf("deleteHost - no namespace")
+		return
+	}
+	penDC := v.GetDC(dcName)
+	hostName, ok := obj.Labels[NameKey]
+	if penDC != nil && ok {
+		if hKey, ok := penDC.findHostKeyByName(hostName); ok {
+			// Delete vmkworkload
+			vmkWlName := createVmkWorkloadName(v.VcID, penDC.dcRef.Value, hKey)
+			v.deleteWorkloadByName(vmkWlName)
+			penDC.delHostNameKey(hostName)
+		}
+	}
 	// Delete from apiserver
 	v.StateMgr.Controller().Host().Delete(obj)
 	return
 }
 
-func (v *VCHub) findHostByName(hostName string) *cluster.Host {
+func (v *VCHub) findHost(hostName string) *cluster.Host {
 	meta := &api.ObjectMeta{
 		Name: hostName,
 	}
@@ -172,4 +210,21 @@ func (v *VCHub) findHostByName(hostName string) *cluster.Host {
 		return nil
 	}
 	return &ctkitHost.Host
+}
+
+func (v *VCHub) getDCNameForHost(hostName string) string {
+	hostObj := v.findHost(hostName)
+	if hostObj == nil {
+		v.Log.Errorf("Host %s not found", hostName)
+		return ""
+	}
+	if hostObj.Labels == nil {
+		v.Log.Errorf("Host %s has no labels", hostName)
+		return ""
+	}
+	if dcName, ok := hostObj.Labels[NamespaceKey]; ok {
+		return dcName
+	}
+	v.Log.Errorf("Host %s has no namespace label", hostName)
+	return ""
 }

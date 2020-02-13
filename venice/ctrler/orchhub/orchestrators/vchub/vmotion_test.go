@@ -12,6 +12,7 @@ import (
 
 	"github.com/pensando/sw/api"
 	"github.com/pensando/sw/api/generated/network"
+	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/defs"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/sim"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/testutils"
 	"github.com/pensando/sw/venice/ctrler/orchhub/orchestrators/vchub/vcprobe"
@@ -205,33 +206,77 @@ func TestVmotion(t *testing.T) {
 	}
 	verifyVMWorkloads(testWorkloads, "VM not found on host1")
 
-	// move VM to host2 - build the event and all event receiver directly ??
+	// move VM to host2 - build the event and call event receiver directly
 
 	vchub.Wg.Add(1)
 	go vchub.startEventsListener()
 
 	logger.Infof("===== Move VM to host2 =====")
-	vmEventArg := types.VmEventArgument{Vm: vm1.Reference()}
-	// Generate migration start event
-	events1 := []types.BaseEvent{
-		&types.VmBeingHotMigratedEvent{
-			VmEvent:  types.VmEvent{Event: types.Event{Key: 1, Vm: &vmEventArg}},
-			DestHost: types.HostEventArgument{Host: penHost2.Obj.Reference()},
-		},
+
+	startMsg1 := defs.VMotionStartMsg{
+		VMKey:        vm1.Self.Value,
+		DstHostKey:   penHost2.Obj.Self.Value,
+		DcID:         dc.Obj.Self.Value,
+		HotMigration: true,
 	}
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
+	m := defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+
+	vchub.handleVCNotification(m)
 
 	err = dc.UpdateVMHost(vm1, "host2")
 	AssertOk(t, err, "VM host update failed")
+	// vcsim does not send events ???
+	// XXX call handleWorkload() directly
+	vchub.sync()
 
-	// send done event
-	events2 := []types.BaseEvent{
-		&types.VmMigratedEvent{
-			VmEvent:    types.VmEvent{Event: types.Event{Key: 2, Vm: &vmEventArg}},
-			SourceHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
-		},
+	doneMsg1 := defs.VMotionDoneMsg{
+		VMKey:      vm1.Self.Value,
+		SrcHostKey: penHost1.Obj.Self.Value,
+		DcID:       dc.Obj.Self.Value,
 	}
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events2)
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionDone,
+		Msg:  doneMsg1,
+	}
+	vchub.handleVCNotification(m)
+
+	// Send erroneous vmotion start events and test that vm does not move
+	// send start to host2 again
+	vchub.handleVCNotification(m)
+	// use DstHost name similar to EventEx
+	startMsg1.DstHostKey = ""
+	startMsg1.DstHostName = "junkHost"
+	startMsg1.DstDcName = defaultTestParams.TestDCName
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+
+	startMsg1.DstHostName = ""
+	startMsg1.DstDcName = defaultTestParams.TestDCName
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+
+	startMsg1.DcID = "junkDC"
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+
+	startMsg1.DcID = ""
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
 
 	// Verify that VM is on host2 by getting workload for the vm
 	host2Name := createHostName(orchInfo1[0].Name, dc.Obj.Self.Value, penHost2.Obj.Self.Value)
@@ -240,23 +285,28 @@ func TestVmotion(t *testing.T) {
 
 	logger.Infof("===== Move VM to host1 and Abort migration =====")
 	// Generate migration start event
-	events1 = []types.BaseEvent{
-		&types.VmBeingHotMigratedEvent{
-			VmEvent:  types.VmEvent{Event: types.Event{Key: 3, Vm: &vmEventArg}},
-			DestHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
-		},
+	startMsg1.VMKey = vm1.Self.Value
+	startMsg1.DstHostKey = penHost1.Obj.Self.Value
+	startMsg1.DcID = dc.Obj.Self.Value
+	startMsg1.HotMigration = true
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
 	}
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
+	vchub.handleVCNotification(m)
 
-	// XXX Workload object should show on host1 (spec not status)
-
-	events3 := []types.BaseEvent{
-		&types.VmFailedMigrateEvent{
-			VmEvent:  types.VmEvent{Event: types.Event{Key: 22, Vm: &vmEventArg}},
-			DestHost: types.HostEventArgument{Host: penHost1.Obj.Reference()},
-		},
+	// XXX Workload object should show on host1 (spec not status) - actions not implemented in local env
+	failedMsg1 := defs.VMotionFailedMsg{
+		VMKey:      vm1.Self.Value,
+		DstHostKey: penHost2.Obj.Self.Value,
+		DcID:       dc.Obj.Self.Value,
+		Reason:     "Testing",
 	}
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events3)
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionFailed,
+		Msg:  failedMsg1,
+	}
+	vchub.handleVCNotification(m)
 
 	// work should be back on host2
 
@@ -287,26 +337,20 @@ func TestVmotion(t *testing.T) {
 	AssertOk(t, err, "failed to add pNic")
 
 	// move VM to host3, non-pensando host
-	logger.Infof("===== Move VM to host3 =====")
+	logger.Infof("===== Move VM to non-pensando host3 =====")
+	startMsg1.VMKey = vm1.Self.Value
+	startMsg1.DstHostKey = host3.Obj.Self.Value
+	startMsg1.DcID = dc.Obj.Self.Value
+	startMsg1.HotMigration = true
+	m = defs.VCNotificationMsg{
+		Type: defs.VMotionStart,
+		Msg:  startMsg1,
+	}
+	vchub.handleVCNotification(m)
+
 	err = dc.UpdateVMHost(vm1, "host3")
 	AssertOk(t, err, "VM host update failed")
-	vmEvent := types.VmBeingRelocatedEvent{
-		VmRelocateSpecEvent: types.VmRelocateSpecEvent{
-			VmEvent: types.VmEvent{
-				Event: types.Event{
-					Key: 2,
-					Vm: &types.VmEventArgument{
-						Vm: vm1.Reference(),
-					},
-				},
-			},
-		},
-		DestHost: types.HostEventArgument{
-			Host: host3.Obj.Reference(),
-		},
-	}
-	vchub.probe.TestReceiveEvents(dc.Obj.Reference(), []types.BaseEvent{&vmEvent})
-	delete(testWorkloads, vmName)
 	vchub.sync()
+	delete(testWorkloads, vmName)
 	verifyVMWorkloads(testWorkloads, "VM not removed")
 }

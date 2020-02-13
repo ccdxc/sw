@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/vmware/govmomi/vim25/mo"
@@ -32,7 +33,8 @@ type VCHub struct {
 	probe        vcprobe.ProbeInf
 	DcMapLock    sync.Mutex
 	// TODO: don't use DC display name as key, use ID instead
-	DcMap map[string]*PenDC
+	DcMap        map[string]*PenDC
+	DcID2NameMap map[string]string
 	// Opts is options used during creation of this instance
 	opts []Option
 }
@@ -71,29 +73,34 @@ func (v *VCHub) setupVCHub(stateMgr *statemgr.Statemgr, config *orchestration.Or
 	}
 	vcURL.User = url.UserPassword(config.Spec.Credentials.UserName, config.Spec.Credentials.Password)
 
-	// TODO: remove forceDC
 	if config.Labels == nil {
+		logger.Infof("No DCs specified, handle all DCs in a vcenter")
 		config.Labels = map[string]string{}
 	}
-	forceDC, ok := config.Labels["force-dc-name"]
+	forceDCMap := map[string]bool{}
+	forceDC, ok := config.Labels["force-dc-names"]
 	if ok {
 		logger.Infof("Foced DC %s: Only events for this DC will be processed", forceDC)
+		forceDCs := strings.Split(forceDC, ",")
+		for _, dc := range forceDCs {
+			forceDCMap[dc] = true
+		}
 	}
-
 	state := defs.State{
-		VcURL:       vcURL,
-		VcID:        config.GetName(),
-		Ctx:         ctx,
-		Log:         logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
-		StateMgr:    stateMgr,
-		OrchConfig:  config,
-		Wg:          &sync.WaitGroup{},
-		ForceDCname: forceDC,
+		VcURL:        vcURL,
+		VcID:         config.GetName(),
+		Ctx:          ctx,
+		Log:          logger.WithContext("submodule", fmt.Sprintf("VCHub-%s", config.GetName())),
+		StateMgr:     stateMgr,
+		OrchConfig:   config,
+		Wg:           &sync.WaitGroup{},
+		ForceDCNames: forceDCMap,
 	}
 
 	v.State = &state
 	v.cancel = cancel
 	v.DcMap = map[string]*PenDC{}
+	v.DcID2NameMap = map[string]string{}
 	v.vcReadCh = make(chan defs.Probe2StoreMsg, storeQSize)
 	v.opts = opts
 	v.setupPCache()
@@ -160,8 +167,9 @@ func (v *VCHub) deleteAllDVS() {
 	defer v.DcMapLock.Unlock()
 
 	for _, dc := range v.DcMap {
-		if v.ForceDCname != "" && dc.Name != v.ForceDCname {
-			log.Infof("Skipping deletion of DVS from %v.", v.ForceDCname)
+		_, ok := v.ForceDCNames[dc.Name]
+		if len(v.ForceDCNames) > 0 && !ok {
+			log.Infof("Skipping deletion of DVS from %v.", dc.Name)
 			continue
 		}
 

@@ -80,7 +80,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -166,7 +166,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -308,7 +308,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -373,7 +373,7 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
@@ -481,7 +481,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -528,7 +528,7 @@ func TestStore(t *testing.T) {
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
+				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the deleted inf")
 			},
 		},
@@ -551,7 +551,7 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
@@ -581,7 +581,7 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
@@ -678,7 +678,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -709,7 +709,7 @@ func TestStore(t *testing.T) {
 					if len(item.Spec.Interfaces) != 2 {
 						return false, nil
 					}
-					if item.Spec.HostName != "127.0.0.1:8990-DC1-hostsystem-25" {
+					if item.Spec.HostName != createHostName(v.VcID, dcName, "hostsystem-25") {
 						return false, nil
 					}
 					return true, nil
@@ -724,9 +724,9 @@ func TestStore(t *testing.T) {
 				}
 				AssertEquals(t, expWorkload.Spec.Interfaces, item.Spec.Interfaces, "Interfaces were not equal")
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
+				_, err := usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
-				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-25")
+				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-25"))
 				AssertOk(t, err, "Vlan should be assigned on the new host")
 			},
 		},
@@ -749,7 +749,7 @@ func TestStore(t *testing.T) {
 									Network: &types.HostNetworkInfo{
 										Pnic: []types.PhysicalNic{
 											types.PhysicalNic{
-												Mac: "aa:bb:cc:dd:ee:ff",
+												Mac: macStr,
 											},
 										},
 										ProxySwitch: []types.HostProxySwitch{
@@ -843,7 +843,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -881,7 +881,7 @@ func TestStore(t *testing.T) {
 				AssertEquals(t, len(expWorkload.Spec.Interfaces), len(item.Spec.Interfaces), "Interfaces were not equal")
 
 				usegMgr := v.GetDC(dcName).GetPenDVS(dvsName).UsegMgr
-				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", "127.0.0.1:8990-DC1-hostsystem-21")
+				_, err = usegMgr.GetVlanForVnic("aabb.ccdd.ddff", createHostName(v.VcID, dcName, "hostsystem-21"))
 				Assert(t, err != nil, "Vlan should not have still be assigned for the inf on the old host")
 			},
 		},
@@ -989,7 +989,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1070,7 +1070,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-40",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-40"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1080,10 +1080,11 @@ func TestStore(t *testing.T) {
 						APIVersion: "v1",
 					},
 					ObjectMeta: api.ObjectMeta{
-						Name: "127.0.0.1:8990-DC1-virtualmachine-40",
+						Name: createVMWorkloadName(v.VcID, dcName, "virtualmachine-40"),
 						Labels: map[string]string{
-							VMNameKey:         "test-vm",
-							utils.OrchNameKey: "127.0.0.1:8990",
+							NameKey:           "test-vm",
+							NamespaceKey:      dcName,
+							utils.OrchNameKey: v.VcID,
 						},
 						Tenant:    globals.DefaultTenant,
 						Namespace: globals.DefaultNamespace,
@@ -1174,7 +1175,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1193,7 +1194,7 @@ func TestStore(t *testing.T) {
 					},
 					ObjectMeta: *expMeta,
 					Spec: workload.WorkloadSpec{
-						HostName: "127.0.0.1:8990-DC1-hostsystem-21",
+						HostName: createHostName(v.VcID, dcName, "hostsystem-21"),
 					},
 				}
 
@@ -1273,7 +1274,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1330,7 +1331,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 				}
@@ -1348,6 +1349,36 @@ func TestStore(t *testing.T) {
 				{
 					MsgType: defs.VCEvent,
 					Val: defs.VCEventMsg{
+						VcObject:   defs.HostSystem,
+						DcID:       dcName,
+						DcName:     dcName,
+						Key:        "hostsystem-21",
+						Originator: "127.0.0.1:8990",
+						Changes: []types.PropertyChange{
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "config",
+								Val: types.HostConfigInfo{
+									Network: &types.HostNetworkInfo{
+										Pnic: []types.PhysicalNic{
+											types.PhysicalNic{
+												Mac: macStr,
+											},
+										},
+										ProxySwitch: []types.HostProxySwitch{
+											types.HostProxySwitch{
+												DvsName: dvsName,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				{
+					MsgType: defs.VCEvent,
+					Val: defs.VCEventMsg{
 						VcObject:   defs.VirtualMachine,
 						DcID:       dcName,
 						DcName:     dcName,
@@ -1359,6 +1390,16 @@ func TestStore(t *testing.T) {
 								Name: "config",
 								Val: types.VirtualMachineConfigInfo{
 									Name: "test-vm",
+								},
+							},
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "runtime",
+								Val: types.VirtualMachineRuntimeInfo{
+									Host: &types.ManagedObjectReference{
+										Type:  "HostSystem",
+										Value: "hostsystem-21",
+									},
 								},
 							},
 							types.PropertyChange{
@@ -1391,13 +1432,14 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name:      "127.0.0.1:8990-DC1-virtualmachine-41",
+					Name:      createVMWorkloadName(v.VcID, dcName, "virtualmachine-41"),
 					Tenant:    globals.DefaultTenant,
 					Namespace: globals.DefaultNamespace,
 					Labels: map[string]string{
 						fmt.Sprintf("%s%s", VcLabelPrefix, "cat1"): "tag1:tag2",
 						fmt.Sprintf("%s%s", VcLabelPrefix, "cat2"): "tag1",
-						VMNameKey:         "test-vm",
+						NameKey:           "test-vm",
+						NamespaceKey:      dcName,
 						utils.OrchNameKey: "127.0.0.1:8990",
 					},
 				}
@@ -1459,7 +1501,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-DC1-hostsystem-44",
+					Name: createHostName(v.VcID, dcName, "hostsystem-44"),
 				}
 				expHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -1558,7 +1600,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-DC1-hostsystem-41",
+					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -1644,7 +1686,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-DC1-hostsystem-41",
+					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
 				}
 				existingHost := &cluster.Host{
 					TypeMeta: api.TypeMeta{
@@ -1703,6 +1745,11 @@ func TestStore(t *testing.T) {
 									},
 								},
 							},
+							types.PropertyChange{
+								Op:   types.PropertyChangeOpAdd,
+								Name: "name",
+								Val:  "hostsystem_41",
+							},
 						},
 					},
 				},
@@ -1725,7 +1772,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-DC1-hostsystem-41",
+					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
 				}
 
 				time.Sleep(50 * time.Millisecond)
@@ -1763,7 +1810,7 @@ func TestStore(t *testing.T) {
 			},
 			verify: func(v *VCHub) {
 				expMeta := &api.ObjectMeta{
-					Name: "127.0.0.1:8990-DC1-hostsystem-41",
+					Name: createHostName(v.VcID, dcName, "hostsystem-41"),
 				}
 
 				time.Sleep(50 * time.Millisecond)
@@ -1921,6 +1968,7 @@ func addDCState(t *testing.T, vchub *VCHub, dcName string) {
 		DvsMap: map[string]*PenDVS{
 			dvsName: penDVS,
 		},
+		HostName2Key: map[string]string{},
 	}
 }
 

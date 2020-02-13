@@ -512,7 +512,10 @@ func TestEventReceiver(t *testing.T) {
 			VmEvent: types.VmEvent{Event: types.Event{Key: 23, Vm: &vmEventArg}},
 		},
 	}
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events1)
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events2)
-	vcp.TestReceiveEvents(dc.Obj.Reference(), events3)
+	evtObjs := []types.ManagedObjectReference{dc.Obj.Reference()}
+	vcp.initEventTracker(evtObjs)
+	vcp.receiveEvents(dc.Obj.Reference(), events1)
+	vcp.receiveEvents(dc.Obj.Reference(), events2)
+	vcp.receiveEvents(dc.Obj.Reference(), events3)
+	vcp.deleteEventTracker(evtObjs)
 }

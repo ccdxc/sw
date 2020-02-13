@@ -96,7 +96,9 @@ type VCProp string
 
 const (
 	// HostPropConfig identifies host's config property
-	HostPropConfig = VCProp("host-config")
+	HostPropConfig = VCProp("config")
+	// HostPropName identifies the Host's name property
+	HostPropName = VCProp("name")
 	// VMPropConfig identifies the VM's config property
 	VMPropConfig = VCProp("config")
 	// VMPropName identifies the VM's name property
@@ -131,7 +133,7 @@ const (
 	// VMotionFailed indicates failure/cancellation of a VM migration/relocation
 	VMotionFailed = VCNotificationType("VMotion Failed")
 	// VMotionDone indicates completion of a VM migration/relocation
-	VMotionDone = VCNotificationType("VMotionDone")
+	VMotionDone = VCNotificationType("VMotion Done")
 )
 
 // VCNotificationMsg defines notifications from VC Event manager
@@ -190,9 +192,9 @@ type State struct {
 	StateMgr   *statemgr.Statemgr
 	OrchConfig *orchestration.Orchestrator
 	Wg         *sync.WaitGroup
-	// If supplied, we only process events if the DC name matches this
+	// If supplied, we only process events if the DC name matches any of this
 	// TODO: for testing locally only, remove eventually
-	ForceDCname string
+	ForceDCNames map[string]bool
 }
 
 const (

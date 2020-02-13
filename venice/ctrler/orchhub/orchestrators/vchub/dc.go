@@ -18,8 +18,9 @@ type PenDC struct {
 	Name  string
 	dcRef types.ManagedObjectReference
 	// Map from dvs display name to PenDVS inside this DC
-	DvsMap map[string]*PenDVS
-	probe  vcprobe.ProbeInf
+	DvsMap       map[string]*PenDVS
+	probe        vcprobe.ProbeInf
+	HostName2Key map[string]string
 }
 
 // NewPenDC creates a new penDC object
@@ -37,13 +38,18 @@ func (v *VCHub) NewPenDC(dcName, dcID string) (*PenDC, error) {
 			Value: dcID,
 		}
 		dc = &PenDC{
-			State:  v.State,
-			probe:  v.probe,
-			Name:   dcName,
-			dcRef:  dcRef,
-			DvsMap: map[string]*PenDVS{},
+			State:        v.State,
+			probe:        v.probe,
+			Name:         dcName,
+			dcRef:        dcRef,
+			DvsMap:       map[string]*PenDVS{},
+			HostName2Key: map[string]string{},
 		}
 		v.DcMap[dcName] = dc
+		if v.DcID2NameMap == nil {
+			v.DcID2NameMap = map[string]string{}
+		}
+		v.DcID2NameMap[dcID] = dcName
 		err := v.probe.TagObjAsManaged(dcRef)
 		if err != nil {
 			v.Log.Errorf("Failed to tag DC as managed, %s", err)
@@ -112,10 +118,12 @@ func (v *VCHub) GetDC(name string) *PenDC {
 func (v *VCHub) GetDCFromID(dcID string) *PenDC {
 	v.DcMapLock.Lock()
 	defer v.DcMapLock.Unlock()
-	for _, dc := range v.DcMap {
-		if dc.dcRef.Value == dcID {
-			return dc
-		}
+	dcName, ok := v.DcID2NameMap[dcID]
+	if !ok {
+		return nil
+	}
+	if dc, ok := v.DcMap[dcName]; ok {
+		return dc
 	}
 	return nil
 }
@@ -194,4 +202,25 @@ func (d *PenDC) RemovePG(pgName string, dvsName string) []error {
 		}
 	}
 	return errs
+}
+
+func (d *PenDC) addHostNameKey(name, key string) {
+	d.Lock()
+	defer d.Unlock()
+	d.HostName2Key[name] = key
+}
+
+func (d *PenDC) delHostNameKey(name string) {
+	d.Lock()
+	defer d.Unlock()
+	if _, ok := d.HostName2Key[name]; ok {
+		delete(d.HostName2Key, name)
+	}
+}
+
+func (d *PenDC) findHostKeyByName(name string) (string, bool) {
+	d.Lock()
+	defer d.Unlock()
+	key, ok := d.HostName2Key[name]
+	return key, ok
 }

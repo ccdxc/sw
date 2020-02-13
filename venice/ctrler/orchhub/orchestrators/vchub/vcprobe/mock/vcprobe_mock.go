@@ -92,16 +92,6 @@ func (mr *MockProbeInfMockRecorder) StartEventReceiver(refs interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartEventReceiver", reflect.TypeOf((*MockProbeInf)(nil).StartEventReceiver), refs)
 }
 
-// TestReceiveEvents mocks base method
-func (m *MockProbeInf) TestReceiveEvents(ref types.ManagedObjectReference, events []types.BaseEvent) {
-	m.ctrl.Call(m, "TestReceiveEvents", ref, events)
-}
-
-// TestReceiveEvents indicates an expected call of TestReceiveEvents
-func (mr *MockProbeInfMockRecorder) TestReceiveEvents(ref, events interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TestReceiveEvents", reflect.TypeOf((*MockProbeInf)(nil).TestReceiveEvents), ref, events)
-}
-
 // ListVM mocks base method
 func (m *MockProbeInf) ListVM(dcRef *types.ManagedObjectReference) []mo.VirtualMachine {
 	ret := m.ctrl.Call(m, "ListVM", dcRef)
