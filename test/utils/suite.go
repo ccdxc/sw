@@ -478,6 +478,11 @@ func (tu *TestUtils) SetupObjstoreClient() error {
 	return err
 }
 
+// Resolver returns the resolver associated with the test utils
+func (tu *TestUtils) Resolver() resolver.Interface {
+	return tu.resolver
+}
+
 // Close any open connections to nodes
 func (tu *TestUtils) Close() {
 

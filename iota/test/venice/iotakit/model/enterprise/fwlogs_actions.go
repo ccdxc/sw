@@ -1,14 +1,13 @@
-package iotakit
+package enterprise
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pensando/sw/api"
 )
 
 // GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
-func (act *ActionCtx) GetFwLogObjectCount(tenantName string, bucketName string) (int, error) {
+func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string) (int, error) {
 	opts := api.ListWatchOptions{
 		ObjectMeta: api.ObjectMeta{
 			Tenant:    tenantName,
@@ -16,23 +15,18 @@ func (act *ActionCtx) GetFwLogObjectCount(tenantName string, bucketName string) 
 		},
 	}
 
-	ctx, err := act.model.VeniceLoggedInCtx(context.TODO())
+	ctx, err := sm.VeniceLoggedInCtx(context.Background())
 	if err != nil {
 		return 0, err
 	}
 
-	restClients, err := act.model.VeniceRestClient()
-	if err != nil {
-		return 0, err
-	}
-
-	ctx2, err := act.model.VeniceLoggedInCtx(ctx)
+	restClients, err := sm.VeniceRestClient()
 	if err != nil {
 		return 0, err
 	}
 
 	for _, restClient := range restClients {
-		list, err := restClient.ObjstoreV1().Object().List(ctx2, &opts)
+		list, err := restClient.ObjstoreV1().Object().List(ctx, &opts)
 		if err != nil {
 			return 0, err
 		}
@@ -41,5 +35,5 @@ func (act *ActionCtx) GetFwLogObjectCount(tenantName string, bucketName string) 
 		}
 	}
 
-	return 0, fmt.Errorf("internal error while getting object count under default.fwlogs bucket")
+	return 0, nil
 }

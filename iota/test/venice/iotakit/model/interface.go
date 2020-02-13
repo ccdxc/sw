@@ -79,6 +79,7 @@ type ClusterActionIntf interface {
 	VerifyClusterStatus() error
 
 	FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error
+	GetFwLogObjectCount(tenantName string, bucketName string) (int, error)	
 	VerifyRuleStats(timestr string, spc *objects.NetworkSecurityPolicyCollection, minCounts []map[string]float64) error
 	AddNaplesNodes(names []string) error
 	DeleteNaplesNodes(names []string) error

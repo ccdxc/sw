@@ -110,7 +110,7 @@ func (s *service) handleVeniceCoordinates(obj *delphiProto.DistributedServiceCar
 		}
 
 		// Init ObjectStore(MinIO)
-		if err := s.tmagent.tpState.ObjStoreInit(s.tmagent.nodeUUID, s.tmagent.resolverClient, time.Duration(30)*time.Second, nil); err != nil {
+		if err := s.tmagent.tpState.ObjStoreInit(s.tmagent.nodeUUID, s.tmagent.resolverClient, time.Duration(1)*time.Minute, nil); err != nil {
 			log.Fatalf("failed to init minio, err: %v", err)
 		}
 

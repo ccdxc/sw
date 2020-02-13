@@ -1271,6 +1271,12 @@ func (m *fakeOclient) PutObjectOfSize(ctx context.Context, objectName string, re
 	return m.written, m.retErr
 }
 
+// PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
+func (m *fakeOclient) PutObjectExplicit(ctx context.Context,
+	serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
+	return m.written, m.retErr
+}
+
 // PutStreamObject is a mock client implementation
 func (m *fakeOclient) PutStreamObject(ctx context.Context, objectName string, metaData map[string]string) (io.WriteCloser, error) {
 	return m, m.retErr

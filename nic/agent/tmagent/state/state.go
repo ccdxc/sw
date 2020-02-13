@@ -34,19 +34,20 @@ const maxCollectorsInVrf = 4
 
 // PolicyState keeps the policy agent state
 type PolicyState struct {
-	ctx             context.Context
-	cancel          context.CancelFunc
-	emstore         emstore.Emstore
-	netAgentURL     string
-	fwLogCollectors sync.Map
-	fwTable         tsdb.Obj
-	objStoreClients map[string]objstore.Client // map[bucketName]Client
-	hostname        string
-	appName         string
-	shm             *ipc.SharedMem
-	ipc             []*ipc.IPC
-	wg              sync.WaitGroup
-	logsChannel     chan map[string]interface{}
+	ctx                context.Context
+	cancel             context.CancelFunc
+	emstore            emstore.Emstore
+	netAgentURL        string
+	fwLogCollectors    sync.Map
+	fwTable            tsdb.Obj
+	objStoreClients    map[string]objstore.Client // map[bucketName]Client
+	hostname           string
+	appName            string
+	shm                *ipc.SharedMem
+	ipc                []*ipc.IPC
+	wg                 sync.WaitGroup
+	logsChannel        chan singleLog
+	objStoreFileFormat fileFormat
 }
 
 type fwlogCollector struct {
@@ -91,7 +92,8 @@ func NewTpAgent(pctx context.Context, agentPort string) (*PolicyState, error) {
 		appName:         globals.Tmagent,
 		objStoreClients: map[string]objstore.Client{},
 		// This channel is used for transmitting logs from the collector to the transmitter routine
-		logsChannel: make(chan map[string]interface{}, 10000),
+		logsChannel:        make(chan singleLog, 10000),
+		objStoreFileFormat: csvFileFormat,
 	}
 
 	state.connectSyslog()

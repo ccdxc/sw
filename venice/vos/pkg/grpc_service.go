@@ -56,7 +56,13 @@ func (g *grpcBackend) start(ctx context.Context) {
 var errNotImplemented = errors.New("Not implemented")
 
 func (g *grpcBackend) validateNamespace(in *objstore.Object) (string, error) {
-	if _, ok := objstore.Buckets_value[strings.ToLower(in.Namespace)]; !ok {
+	// The namespace name will be considered valid if its prefix matches the
+	// namespaces defined in the model
+	// Todo: should we allow prefix match for all the namespaces defined in the model
+	// or just for fwlogs. It should not matter even if we allow for all since there
+	// are no buckets getting created with those names.
+	prefix := strings.Split(in.Namespace, ".")[0]
+	if _, ok := objstore.Buckets_value[strings.ToLower(prefix)]; !ok {
 		str := ""
 		for k := range objstore.Buckets_value {
 			str = str + "," + k

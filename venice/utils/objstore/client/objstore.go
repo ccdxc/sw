@@ -37,6 +37,11 @@ type objStoreBackend interface {
 	// PutObjectOfSize uploads object of size to the object store
 	PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, userMeta map[string]string) (int64, error)
 
+	// PutObjectExplicit will override the default service name given at time of initializing the client with the given
+	// service name.
+	// In terms of MinIO, the given serviceName will become the MinIO's bucket name
+	PutObjectExplicit(ctx context.Context, serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error)
+
 	// GetObject gets the object from object store
 	GetObject(ctx context.Context, objectName string) (io.ReadCloser, error)
 
@@ -201,6 +206,26 @@ func (c *client) PutObjectOfSize(ctx context.Context, objectName string, reader 
 	}
 
 	return 0, fmt.Errorf("maximum retries exceeded to upload %s", objectName)
+}
+
+// PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
+func (c *client) PutObjectExplicit(ctx context.Context,
+	serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
+	for retry := 0; retry < maxRetry; retry++ {
+		n, err := c.client.PutObjectExplicit(ctx, serviceName, objectName, reader, metaData)
+		if err == nil {
+			return n, err
+		}
+
+		if !strings.Contains(err.Error(), connectErr) {
+			return 0, err
+		}
+		if err := c.connect(); err != nil {
+			return 0, err
+		}
+	}
+
+	return 0, fmt.Errorf("maximum retries exceeded to upload %s under bucket %s", objectName, serviceName)
 }
 
 type streamObj struct {

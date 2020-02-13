@@ -1,14 +1,16 @@
-// {C} Copyright 2019 Pensando Systems Inc. All rights reserved.
-
 package firewall_test
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+const timeFormat = "2006-01-02T15:04:05"
+const bucketPrefix = "default"
 
 var _ = Describe("tests for storing firewall logs in object store", func() {
 	var startTime time.Time
@@ -45,26 +47,42 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 	// For now, just checking that number of objects in the bucket are increasing when logs are getting uploaded
 	// to the bucket.
 	Context("tags:type=basic;datapath=true;duration=short;store=objectstore verify fwlog on traffic ", func() {
-		It("tags:sanity=true should log ICMP allow in fwlog", func() {
-			Skip("Disabling as this test is failing")
+		It("tags:sanity=true should push fwlog to objectstore", func() {
 			if !ts.tb.HasNaplesHW() {
 				Skip("Disabling on naples sim till shm flag is enabled")
 			}
 
-			objs, err := ts.model.ConfigClient().ListObjectStoreObjects()
-			Expect(err).ShouldNot(HaveOccurred())
-
-			currentObjectCount := 0
-			for _, obj := range objs {
-				if obj.ObjectMeta.Tenant == "default" && obj.ObjectMeta.Namespace == "fwlogs" {
-					currentObjectCount++
-				}
-			}
-			Expect(err).ShouldNot(HaveOccurred())
-
 			Expect(ts.model.DefaultNetworkSecurityPolicy().Delete()).Should(Succeed())
 
 			workloadPairs := ts.model.WorkloadPairs().WithinNetwork()
+
+			t := time.Now()
+			y, m, dt := t.Date()
+			h, _, _ := t.Clock()
+			timestamp := time.Date(y, m, dt, h, 0, 0, 0, time.UTC)
+
+			// Get the naples id from the workload
+			workloadA := workloadPairs.Pairs[0].First
+			workloadB := workloadPairs.Pairs[0].Second
+			naplesAMac := workloadA.NaplesMAC()
+			naplesBMac := workloadB.NaplesMAC()
+
+			bucketAName :=
+				"fwlogs." + naplesAMac + "-" +
+					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
+			bucketBName :=
+				"fwlogs." + naplesBMac + "-" +
+					strings.Replace(strings.Replace(timestamp.UTC().Format(timeFormat), ":", "-", -1), "T", "t", -1)
+
+			By(fmt.Sprintf("bucketAName %s bucketBName %s", bucketPrefix+"."+bucketAName, bucketPrefix+"."+bucketBName))
+
+			currentObjectCountBucketA, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketAName)
+			Expect(err).ShouldNot(HaveOccurred())
+			currentObjectCountBucketB, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketBName)
+			Expect(err).ShouldNot(HaveOccurred())
+
+			By(fmt.Sprintf("currentObjectCountBucketA %d, currentObjectCountBucketB %d",
+				currentObjectCountBucketA, currentObjectCountBucketB))
 
 			policy := ts.model.NewNetworkSecurityPolicy("test-policy").AddRule("any", "any", "icmp", "PERMIT")
 			Expect(policy.Commit()).ShouldNot(HaveOccurred())
@@ -82,19 +100,14 @@ var _ = Describe("tests for storing firewall logs in object store", func() {
 
 			// check object count
 			Eventually(func() bool {
-
-				objs, err := ts.model.ConfigClient().ListObjectStoreObjects()
+				newObjectCountBucketA, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketAName)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				newObjectCount := 0
-				for _, obj := range objs {
-					if obj.ObjectMeta.Tenant == "default" && obj.ObjectMeta.Namespace == "fwlogs" {
-						newObjectCount++
-					}
-				}
-
-				return newObjectCount > currentObjectCount
-			}).Should(BeTrue())
+				newObjectCountBucketB, err := ts.model.GetFwLogObjectCount(bucketPrefix, bucketBName)
+				Expect(err).ShouldNot(HaveOccurred())
+				By(fmt.Sprintf("newObjectCountBucketA %d, newObjectCountBucketB %d",
+					newObjectCountBucketA, newObjectCountBucketB))
+				return newObjectCountBucketA > currentObjectCountBucketA && newObjectCountBucketB > currentObjectCountBucketB
+			}, time.Second*100).Should(BeTrue())
 		})
 	})
 })

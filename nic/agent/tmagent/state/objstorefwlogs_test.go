@@ -1,3 +1,5 @@
+// {C} Copyright 2020 Pensando Systems Inc. All rights reserved.
+
 package state
 
 import (
@@ -50,7 +52,7 @@ func TestProcessFWEventForObjStore(t *testing.T) {
 	minioServer(l)
 	defer l.Close()
 	url := l.Addr().(*net.TCPAddr).String()
-	//url := "127.0.0.1:9000"
+	// url := "127.0.0.1:9000"
 
 	c := gomock.NewController(t)
 	defer c.Finish()

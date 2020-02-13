@@ -138,5 +138,10 @@ func (sm *SysModel) DefaultNetworkSecurityPolicy() *objects.NetworkSecurityPolic
 
 //FindFwlogForWorkloadPairs find fwlog pairs
 func (sm *SysModel) FindFwlogForWorkloadPairs(protocol, fwaction, timestr string, port uint32, wpc *objects.WorkloadPairCollection) error {
-	return fmt.Errorf("Not implemented.")
+	return fmt.Errorf("not implemented")
+}
+
+// GetFwLogObjectCount gets the object count for firewall logs under the bucket with the given name
+func (sm *SysModel) GetFwLogObjectCount(tenantName string, bucketName string) (int, error) {
+	return 0, fmt.Errorf("not implemented")
 }

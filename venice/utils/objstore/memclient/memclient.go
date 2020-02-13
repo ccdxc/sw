@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pensando/sw/venice/utils/objstore/client"
+	objstore "github.com/pensando/sw/venice/utils/objstore/client"
 )
 
 type memBuffer struct {
@@ -50,6 +50,12 @@ func (m *memClient) PutObject(ctx context.Context, objectName string, reader io.
 
 // PutObjectOfSize uploads object of "size' to object store
 func (m *memClient) PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error) {
+	return 0, errors.New("unimplemented")
+}
+
+// PutObjectExplicit uploads an object to object store under the given bucket name (i.e. serviceName)
+func (m *memClient) PutObjectExplicit(ctx context.Context,
+	serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error) {
 	return 0, errors.New("unimplemented")
 }
 

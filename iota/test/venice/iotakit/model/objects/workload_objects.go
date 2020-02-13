@@ -51,6 +51,10 @@ func (w *Workload) NaplesUUID() string {
 	return w.host.Naples.SmartNic.Name
 }
 
+func (w *Workload) NaplesMAC() string {
+	return w.host.Naples.Node.Nodeuuid
+}
+
 func (w *Workload) NodeName() string {
 	return w.iotaWorkload.NodeName
 }

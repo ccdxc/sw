@@ -16,6 +16,11 @@ type Client interface {
 	// PutObjectOfSize uploads object of "size' to object store
 	PutObjectOfSize(ctx context.Context, objectName string, reader io.Reader, size int64, metaData map[string]string) (int64, error)
 
+	// PutObjectExplicit will override the default service name given at time of initializing the client with the given
+	// service name.
+	// In terms of MinIO, the given serviceName will become the MinIO's bucket name
+	PutObjectExplicit(ctx context.Context, serviceName string, objectName string, reader io.Reader, metaData map[string]string) (int64, error)
+
 	// PutStreamObject uploads stream of objects to the object store
 	// each write() uploads a new object
 	// caller must close() after write() to close the stream
